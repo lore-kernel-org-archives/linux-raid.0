@@ -2,100 +2,482 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE3ECC433F5
-	for <linux-raid@archiver.kernel.org>; Sun, 24 Apr 2022 08:00:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13DEAC433F5
+	for <linux-raid@archiver.kernel.org>; Sun, 24 Apr 2022 22:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238622AbiDXID2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 24 Apr 2022 04:03:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59728 "EHLO
+        id S239854AbiDXWhk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 24 Apr 2022 18:37:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236822AbiDXID1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 24 Apr 2022 04:03:27 -0400
-Received: from out0.migadu.com (out0.migadu.com [94.23.1.103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28F8B3524B;
-        Sun, 24 Apr 2022 01:00:27 -0700 (PDT)
-Subject: Re: [PATCH v2 00/12] Improve Raid5 Lock Contention
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1650787222;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=gLLGzwk8fcXEWz+exNqSl7CbwMy3y1DnQlR3cQo6pOM=;
-        b=kxd5j0CDABqAmfdF5I1+eE0CSu2jldOESNMCBSr5p2ePClJy+932zJZLSSyYPFhc8RpLLH
-        sDVHG4pYUhd2jvjUF+y3sybLkSQgSooy1HP0Wi9/GzARheb7uyTNX1CDttD7pFpbkWFBIF
-        UVXImihoFCh2w4CJNBGWmxXLUxg/kXI=
-To:     Logan Gunthorpe <logang@deltatee.com>, Xiao Ni <xni@redhat.com>
-Cc:     open list <linux-kernel@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Song Liu <song@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-References: <20220420195425.34911-1-logang@deltatee.com>
- <CALTww28fwNpm0O_jc7-2Xr0JSX9i6F1kgoUQ8m_k6ZgPa1XxXw@mail.gmail.com>
- <c14c0103-9cbd-7d0f-486b-344dd33725ab@deltatee.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <4094aed9-d22d-d14f-07a7-5abe599beeab@linux.dev>
-Date:   Sun, 24 Apr 2022 16:00:15 +0800
+        with ESMTP id S239846AbiDXWhd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 24 Apr 2022 18:37:33 -0400
+X-Greylist: delayed 518 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 24 Apr 2022 15:34:30 PDT
+Received: from mail.stoffel.org (li1843-175.members.linode.com [172.104.24.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7213FDE0B0
+        for <linux-raid@vger.kernel.org>; Sun, 24 Apr 2022 15:34:30 -0700 (PDT)
+Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by mail.stoffel.org (Postfix) with ESMTPSA id 059D923BDB;
+        Sun, 24 Apr 2022 18:25:52 -0400 (EDT)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+        id 41870A7B2D; Sun, 24 Apr 2022 18:25:51 -0400 (EDT)
 MIME-Version: 1.0
-In-Reply-To: <c14c0103-9cbd-7d0f-486b-344dd33725ab@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <25189.52847.196112.389335@quad.stoffel.home>
+Date:   Sun, 24 Apr 2022 18:25:51 -0400
+From:   "John Stoffel" <john@stoffel.org>
+To:     Turritopsis Dohrnii Teo En Ming <teo.en.ming@protonmail.com>
+Cc:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "ceo@teo-en-ming-corp.com" <ceo@teo-en-ming-corp.com>
+Subject: Re: arcconf Linux utility for Adaptec AAC-RAID (Rocket) (rev 02) (IBM ServeRAID 8k/8k-l8) unable to query RAID controller
+In-Reply-To: <iddAq1G1O5s0ZaXiG770cpphw7qFQJvJxEpC9C6KNBOPlTh3tisL-yqiUeWxokp-rHBqFCovWBDJdDea1B48qzcD1YCeipV3M7sKtGiX21o=@protonmail.com>
+References: <iddAq1G1O5s0ZaXiG770cpphw7qFQJvJxEpC9C6KNBOPlTh3tisL-yqiUeWxokp-rHBqFCovWBDJdDea1B48qzcD1YCeipV3M7sKtGiX21o=@protonmail.com>
+X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+>>>>> "Turritopsis" == Turritopsis Dohrnii Teo En Ming <teo.en.ming@protonmail.com> writes:
+
+Turritopsis> Subject: arcconf Linux utility for Adaptec AAC-RAID
+Turritopsis> (Rocket) (rev 02) (IBM ServeRAID 8k/8k-l8) unable to
+Turritopsis> query RAID controller Good day from Singapore,
+
+Turritopsis> Our client has IBM System x3650 server (machine type:
+Turritopsis> 7979). Operating system is CentOS Linux 6.10 (32-bit).
+
+Ancient... you're running old mdadm code and kernel... and if it's
+critical enough, you could/might be able to get support from Redhat if
+you pay them enough... and since it's a hardware RAID controller card,
+mdadm and Linux Raid isn't doing anything here, so we're really the
+wrong group to ask for help.   But see below...
+
+Turritopsis> Recently we keep getting the following error messages
+Turritopsis> (output generated by dmesg).
+
+These errors look to be a bad sector on one of the disks.  But since
+you're also using a hardware RAID controller... I would copy your data
+off ASAP onto some new media before you lose any thing more.
+
+Just ask them how much it will cost to keep the business running if
+they complain about the cost of three replacement disks on the
+system.
+
+But basically, I would:
+
+0. copy the data somewhere else, especially if it's critical
+1. copy the data somewhere else, especially if it's critical.
+2. Try running 'badblocks' on /dev/sda to see if you can force it to
+   re-write bad sectors.  See man page for flags to use.
+3. You can also try to boot the system to the BIOS and see if there's
+   a BIOS screen for the AAC-RAID controller which lets you scrub the
+   array or look for bad blocks.
+
+Good luck,
+John
+
+Turritopsis> <CODE>
+
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 09 2a d1 50 00 02 00 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801040
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 09 2a cf 50 00 02 00 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800528
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 09 2a d3 50 00 02 00 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801552
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> JBD2: Detected IO errors while flushing file data on dm-0-8
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a cf 38 00 01 00 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800504
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 38 00 01 00 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800760
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800704
+
+Turritopsis> </CODE>
+
+Turritopsis> /dev/sda is a RAID 5 array with 3 harddisks of 136.6 GB capacity each.
+
+Turritopsis> <CODE>
+
+Turritopsis> [root@teo-en-ming-server ~]# fdisk /dev/sda
+
+Turritopsis> WARNING: DOS-compatible mode is deprecated. It's strongly recommended to
+Turritopsis>          switch off the mode (command 'c') and change display units to
+Turritopsis>          sectors (command 'u').
+
+Turritopsis> Command (m for help): p
+
+Turritopsis> Disk /dev/sda: 293.4 GB, 293378981888 bytes
+Turritopsis> 255 heads, 63 sectors/track, 35667 cylinders
+Turritopsis> Units = cylinders of 16065 * 512 = 8225280 bytes
+Turritopsis> Sector size (logical/physical): 512 bytes / 512 bytes
+Turritopsis> I/O size (minimum/optimal): 512 bytes / 512 bytes
+Turritopsis> Disk identifier: 0x8b047782
+
+Turritopsis>    Device Boot      Start         End      Blocks   Id  System
+Turritopsis> /dev/sda1   *           1          64      512000   83  Linux
+Turritopsis> Partition 1 does not end on cylinder boundary.
+Turritopsis> /dev/sda2              64       35668   285989888   8e  Linux LVM
+
+Turritopsis> Command (m for help):
+
+Turritopsis> </CODE>
+
+Turritopsis> We rebooted the server several times. The next morning we still get the same error messages.
+
+Turritopsis> <CODE>
+
+Turritopsis> sd 0:0:0:0: [sda] 573005824 512-byte logical blocks: (293 GB/273 GiB)
+Turritopsis> sd 0:0:0:0: [sda] Write Protect is off
+Turritopsis> sd 0:0:0:0: [sda] Mode Sense: 06 00 10 00
+Turritopsis> sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
+Turritopsis>  sda: sda1 sda2
+Turritopsis> sd 0:0:0:0: [sda] Attached SCSI removable disk
+Turritopsis> dracut: Scanning devices sda2  for LVM logical volumes vg_teo-en-ming-server/lv_swap vg_teo-en-ming-server/lv_root
+Turritopsis> EXT4-fs (sda1): mounted filesystem with ordered data mode. Opts:
+Turritopsis> SELinux: initialized (dev sda1, type ext4), uses xattr
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 80 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800704
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800704
+Turritopsis> Buffer I/O error on device sda, logical block 19225088
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800704
+Turritopsis> Buffer I/O error on device sda, logical block 19225088
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800704
+Turritopsis> Buffer I/O error on device sda, logical block 19225088
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800704
+Turritopsis> Buffer I/O error on device sda, logical block 19225088
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 08 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800712
+Turritopsis> Buffer I/O error on device sda, logical block 19225089
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 08 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800712
+Turritopsis> Buffer I/O error on device sda, logical block 19225089
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 08 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800712
+Turritopsis> Buffer I/O error on device sda, logical block 19225089
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 08 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800712
+Turritopsis> Buffer I/O error on device sda, logical block 19225089
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 10 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800720
+Turritopsis> Buffer I/O error on device sda, logical block 19225090
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 10 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800976
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 10 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800976
+Turritopsis> Buffer I/O error on device sda, logical block 19225122
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 10 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800976
+Turritopsis> Buffer I/O error on device sda, logical block 19225122
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 18 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800984
+Turritopsis> Buffer I/O error on device sda, logical block 19225123
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 18 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800984
+Turritopsis> Buffer I/O error on device sda, logical block 19225123
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 18 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800984
+Turritopsis> Buffer I/O error on device sda, logical block 19225123
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 18 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800984
+Turritopsis> Buffer I/O error on device sda, logical block 19225123
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 20 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800992
+Turritopsis> Buffer I/O error on device sda, logical block 19225124
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 20 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800992
+Turritopsis> Buffer I/O error on device sda, logical block 19225124
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 20 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153800992
+Turritopsis> Buffer I/O error on device sda, logical block 19225124
+Turritopsis> Buffer I/O error on device sda, logical block 19225124
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 28 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801256
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 28 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801256
+Turritopsis> Buffer I/O error on device sda, logical block 19225157
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 28 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801256
+Turritopsis> Buffer I/O error on device sda, logical block 19225157
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 28 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801256
+Turritopsis> Buffer I/O error on device sda, logical block 19225157
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 30 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801264
+Turritopsis> Buffer I/O error on device sda, logical block 19225158
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 30 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801264
+Turritopsis> Buffer I/O error on device sda, logical block 19225158
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 30 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801264
+Turritopsis> Buffer I/O error on device sda, logical block 19225158
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 30 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801264
+Turritopsis> Buffer I/O error on device sda, logical block 19225158
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 38 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801272
+Turritopsis> Buffer I/O error on device sda, logical block 19225159
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 38 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801272
+Turritopsis> Buffer I/O error on device sda, logical block 19225159
+Turritopsis> Buffer I/O error on device sda, logical block 19225159
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 30 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801520
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 38 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801528
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 38 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801528
+Turritopsis> Buffer I/O error on device sda, logical block 19225191
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 38 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801528
+Turritopsis> Buffer I/O error on device sda, logical block 19225191
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 38 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801528
+Turritopsis> Buffer I/O error on device sda, logical block 19225191
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 40 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801536
+Turritopsis> Buffer I/O error on device sda, logical block 19225192
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 40 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801536
+Turritopsis> Buffer I/O error on device sda, logical block 19225192
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 40 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801536
+Turritopsis> Buffer I/O error on device sda, logical block 19225192
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 40 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801536
+Turritopsis> Buffer I/O error on device sda, logical block 19225192
+Turritopsis> sd 0:0:0:0: [sda]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Turritopsis> sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
+Turritopsis> sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
+Turritopsis> sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 48 00 00 08 00
+Turritopsis> end_request: critical target error, dev sda, sector 153801544
+Turritopsis> Buffer I/O error on device sda, logical block 19225193
+Turritopsis> Buffer I/O error on device sda, logical block 19225193
+Turritopsis> Buffer I/O error on device sda, logical block 19225193
+
+Turritopsis> </CODE>
+
+Turritopsis> Based on the following discussion thread, we think that the RAID controller may be failing.
+
+Turritopsis> Discussion thread: Which disk is bad in raid6 array
+Turritopsis> Link: https://serverfault.com/questions/384935/which-disk-is-bad-in-raid6-array
+
+Turritopsis> I had downloaded 32-bit arcconf Linux utility from the following link.
+
+Turritopsis> Link: https://hwraid.le-vert.net/wiki/Adaptec
+
+Turritopsis> <CODE>
+
+Turritopsis> [root@teo-en-ming-server log]# lspci -vvv | grep RAID
+Turritopsis> 04:00.0 RAID bus controller: Adaptec AAC-RAID (Rocket) (rev 02)
+Turritopsis>         Subsystem: IBM ServeRAID 8k/8k-l8
+
+Turritopsis> </CODE>
+
+Turritopsis> However, we keep getting segmentation fault running arcconf utility.
+
+Turritopsis> <CODE>
+
+Turritopsis> [root@teo-en-ming-server log]# /usr/local/sbin/arcconf getconfig 1
+Turritopsis> Segmentation fault (core dumped)
+
+Turritopsis> </CODE>
+
+Turritopsis> These are the Linux Kernel messages.
+
+Turritopsis> <CODE>
+
+Turritopsis> Apr 22 11:11:33 teo-en-ming-server kernel: aacraid: Host adapter abort request (0,0,0,0)
+Turritopsis> Apr 22 11:11:33 teo-en-ming-server kernel: aacraid: Host adapter reset request. SCSI hang ?
+Turritopsis> Apr 22 11:11:33 teo-en-ming-server kernel: AAC: Host adapter BLINK LED 0x4
+Turritopsis> Apr 22 11:11:33 teo-en-ming-server kernel: AAC0: adapter kernel panic'd 4.
+Turritopsis> Apr 22 11:12:23 teo-en-ming-server kernel: IRQ 17/aacraid: IRQF_DISABLED is not guaranteed on shared IRQs
+Turritopsis> Apr 22 11:14:37 teo-en-ming-server kernel: aacraid: Host adapter abort request (0,0,0,0)
+Turritopsis> Apr 22 11:14:37 teo-en-ming-server kernel: aacraid: Host adapter reset request. SCSI hang ?
+Turritopsis> Apr 22 11:14:37 teo-en-ming-server kernel: AAC: Host adapter BLINK LED 0x4
+Turritopsis> Apr 22 11:14:37 teo-en-ming-server kernel: AAC0: adapter kernel panic'd 4.
+Turritopsis> Apr 22 11:15:28 teo-en-ming-server kernel: IRQ 17/aacraid: IRQF_DISABLED is not guaranteed on shared IRQs
+Turritopsis> Apr 22 11:16:34 teo-en-ming-server kernel: aacraid: Host adapter abort request (0,0,0,0)
+Turritopsis> Apr 22 11:16:34 teo-en-ming-server kernel: aacraid: Host adapter reset request. SCSI hang ?
+Turritopsis> Apr 22 11:16:34 teo-en-ming-server kernel: AAC: Host adapter BLINK LED 0x4
+Turritopsis> Apr 22 11:16:34 teo-en-ming-server kernel: AAC0: adapter kernel panic'd 4.
+
+Turritopsis> </CODE>
+
+Turritopsis> It seems that I could not query the RAID controller. It keeps saying that the RAID controller adapter has kernel panics.
+
+Turritopsis> arcconf is a Linux utility to query the RAID controller.
+
+Turritopsis> <CODE>
+
+Turritopsis> [root@teo-en-ming-server cmdline]# lspci -nn | grep RAID
+Turritopsis> 04:00.0 RAID bus controller [0104]: Adaptec AAC-RAID (Rocket) [9005:0286] (rev 02)
+
+Turritopsis> </CODE>
+
+Turritopsis> Do you know why I keep getting segmentation fault running arcconf Linux utility?
+
+Turritopsis> Regards,
+
+Turritopsis> Mr. Turritopsis Dohrnii Teo En Ming
+Turritopsis> Targeted Individual in Singapore
+Turritopsis> 24 April 2022 Sunday
 
 
-On 4/22/22 12:02 AM, Logan Gunthorpe wrote:
->
-> On 2022-04-21 02:45, Xiao Ni wrote:
->> Could you share the commands to get the test result (lock contention
->> and performance)?
-> Sure. The performance we were focused on was large block writes. So we
-> setup raid5 instances with varying number of disks and ran the following
-> fio script directly on the drive.
->
-> [simple]
-> filename=/dev/md0
-> ioengine=libaio
-> rw=write
-> direct=1
-> size=8G
-> blocksize=2m
-> iodepth=16
-> runtime=30s
-> time_based=1
-> offset_increment=8G
-> numjobs=12
-> ￼
-> (We also played around with tuning this but didn't find substantial
-> changes once the bottleneck was hit)
 
-Nice, I suppose other IO patterns keep the same performance as before.
 
-> We tuned md with parameters like:
->
-> echo 4 > /sys/block/md0/md/group_thread_cnt
-> echo 8192 > /sys/block/md0/md/stripe_cache_size
->
-> For lock contention stats, we just used lockstat[1]; roughly like:
->
-> echo 1 > /proc/sys/kernel/lock_stat
-> fio test.fio
-> echo 0 > /proc/sys/kernel/lock_stat
-> cat /proc/lock_stat
->
-> And compared the before and after.
 
-Thanks for your effort, besides the performance test, please try to run
-mdadm test suites to avoid regression.
-
-Thanks,
-Guoqing
