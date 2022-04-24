@@ -2,470 +2,141 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 280CCC433EF
-	for <linux-raid@archiver.kernel.org>; Sun, 24 Apr 2022 03:15:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F089C433EF
+	for <linux-raid@archiver.kernel.org>; Sun, 24 Apr 2022 07:54:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237934AbiDXDSH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 23 Apr 2022 23:18:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49222 "EHLO
+        id S238605AbiDXH5H (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 24 Apr 2022 03:57:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237933AbiDXDSF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 23 Apr 2022 23:18:05 -0400
-Received: from mail-0301.mail-europe.com (mail-0301.mail-europe.com [188.165.51.139])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3620F137
-        for <linux-raid@vger.kernel.org>; Sat, 23 Apr 2022 20:15:04 -0700 (PDT)
-Date:   Sun, 24 Apr 2022 03:14:50 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-        s=protonmail; t=1650770100;
-        bh=z3ZL/i8u9o8MkYuVRslgYf07+VIYHN5Wez79U0lot70=;
-        h=Date:To:From:Cc:Reply-To:Subject:Message-ID:Feedback-ID:From:To:
-         Cc:Date:Subject:Reply-To:Feedback-ID:Message-ID;
-        b=uJfO9+CdBY3HX1rHfOENH+WsbyuPGSE4rKTITzUMT5qHxOVuhHRLC50iStUP8r3vH
-         go633bh4HXlfjczcglwYg86YCOkAhoCogN3N6/o9O+4pBPYotWYphPMU2GW4X3jqoX
-         7RrSrqPdwxNUTQ/h4NCB0YkKxw7looPMZEZwib6WSOIYcAMDJgT1corWxo/DfQqOhz
-         66qlOfeVYp3ejZYtLzhaMfayhVIj/j2r382WSyoXw6QwMzKf0eUTKuQWOcpUML41FA
-         yaHNj43i8NhIMfljV0aQIYDBcYJ6U3uqy5WXmEp35AG8m4MRQ9lYlbXWmGdI9yoQLe
-         9BKiGYnLgiVNA==
-To:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-From:   Turritopsis Dohrnii Teo En Ming <teo.en.ming@protonmail.com>
-Cc:     "ceo@teo-en-ming-corp.com" <ceo@teo-en-ming-corp.com>
-Reply-To: Turritopsis Dohrnii Teo En Ming <teo.en.ming@protonmail.com>
-Subject: arcconf Linux utility for Adaptec AAC-RAID (Rocket) (rev 02) (IBM ServeRAID 8k/8k-l8) unable to query RAID controller
-Message-ID: <iddAq1G1O5s0ZaXiG770cpphw7qFQJvJxEpC9C6KNBOPlTh3tisL-yqiUeWxokp-rHBqFCovWBDJdDea1B48qzcD1YCeipV3M7sKtGiX21o=@protonmail.com>
-Feedback-ID: 39510961:user:proton
+        with ESMTP id S236104AbiDXH5G (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 24 Apr 2022 03:57:06 -0400
+Received: from out1.migadu.com (out1.migadu.com [IPv6:2001:41d0:2:863f::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64F4250E2E;
+        Sun, 24 Apr 2022 00:54:05 -0700 (PDT)
+Subject: Re: [PATCH v2 00/12] Improve Raid5 Lock Contention
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1650786842;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=pZlnO1aXBh01kcuQ15a/gZjrzcBMC4o92+5+PIm2aZc=;
+        b=v3dj7XDjwjO75cGzle+yAttkBNP1o89NVLFTzy7nL3nyfjAzLoOZMklV6HQ9HvE1v2n86H
+        Z3/6ADw4XkDLPHolwb4N1d1wblx9eiTJNZK3BS+4gtf9H+X+Q+OCXFJGlUKpTrrR5XBztJ
+        u7VFOGd3kDWP5gFTPyXOQFCUrTtdne4=
+To:     Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+References: <20220420195425.34911-1-logang@deltatee.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <243b3e7f-1fa1-700c-a850-caaf45d95cde@linux.dev>
+Date:   Sun, 24 Apr 2022 15:53:54 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20220420195425.34911-1-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Subject: arcconf Linux utility for Adaptec AAC-RAID (Rocket) (rev 02) (IBM =
-ServeRAID 8k/8k-l8) unable to query RAID controller
-
-Good day from Singapore,
-
-Our client has IBM System x3650 server (machine type: 7979). Operating syst=
-em is CentOS Linux 6.10 (32-bit).
-
-Recently we keep getting the following error messages (output generated by =
-dmesg).
-
-<CODE>
-
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 09 2a d1 50 00 02 00 00
-end_request: critical target error, dev sda, sector 153801040
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 09 2a cf 50 00 02 00 00
-end_request: critical target error, dev sda, sector 153800528
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 09 2a d3 50 00 02 00 00
-end_request: critical target error, dev sda, sector 153801552
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-JBD2: Detected IO errors while flushing file data on dm-0-8
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a cf 38 00 01 00 00
-end_request: critical target error, dev sda, sector 153800504
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 38 00 01 00 00
-end_request: critical target error, dev sda, sector 153800760
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
-end_request: critical target error, dev sda, sector 153800704
-
-</CODE>
-
-/dev/sda is a RAID 5 array with 3 harddisks of 136.6 GB capacity each.
-
-<CODE>
-
-[root@teo-en-ming-server ~]# fdisk /dev/sda
-
-WARNING: DOS-compatible mode is deprecated. It's strongly recommended to
-         switch off the mode (command 'c') and change display units to
-         sectors (command 'u').
-
-Command (m for help): p
-
-Disk /dev/sda: 293.4 GB, 293378981888 bytes
-255 heads, 63 sectors/track, 35667 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x8b047782
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1          64      512000   83  Linux
-Partition 1 does not end on cylinder boundary.
-/dev/sda2              64       35668   285989888   8e  Linux LVM
-
-Command (m for help):
-
-</CODE>
-
-We rebooted the server several times. The next morning we still get the sam=
-e error messages.
-
-<CODE>
-
-sd 0:0:0:0: [sda] 573005824 512-byte logical blocks: (293 GB/273 GiB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 06 00 10 00
-sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO =
-and FUA
- sda: sda1 sda2
-sd 0:0:0:0: [sda] Attached SCSI removable disk
-dracut: Scanning devices sda2  for LVM logical volumes vg_teo-en-ming-serve=
-r/lv_swap vg_teo-en-ming-server/lv_root
-EXT4-fs (sda1): mounted filesystem with ordered data mode. Opts:
-SELinux: initialized (dev sda1, type ext4), uses xattr
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 80 00
-end_request: critical target error, dev sda, sector 153800704
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
-end_request: critical target error, dev sda, sector 153800704
-Buffer I/O error on device sda, logical block 19225088
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
-end_request: critical target error, dev sda, sector 153800704
-Buffer I/O error on device sda, logical block 19225088
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
-end_request: critical target error, dev sda, sector 153800704
-Buffer I/O error on device sda, logical block 19225088
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 00 00 00 08 00
-end_request: critical target error, dev sda, sector 153800704
-Buffer I/O error on device sda, logical block 19225088
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 08 00 00 08 00
-end_request: critical target error, dev sda, sector 153800712
-Buffer I/O error on device sda, logical block 19225089
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 08 00 00 08 00
-end_request: critical target error, dev sda, sector 153800712
-Buffer I/O error on device sda, logical block 19225089
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 08 00 00 08 00
-end_request: critical target error, dev sda, sector 153800712
-Buffer I/O error on device sda, logical block 19225089
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 08 00 00 08 00
-end_request: critical target error, dev sda, sector 153800712
-Buffer I/O error on device sda, logical block 19225089
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d0 10 00 00 08 00
-end_request: critical target error, dev sda, sector 153800720
-Buffer I/O error on device sda, logical block 19225090
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 10 00 00 08 00
-end_request: critical target error, dev sda, sector 153800976
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 10 00 00 08 00
-end_request: critical target error, dev sda, sector 153800976
-Buffer I/O error on device sda, logical block 19225122
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 10 00 00 08 00
-end_request: critical target error, dev sda, sector 153800976
-Buffer I/O error on device sda, logical block 19225122
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 18 00 00 08 00
-end_request: critical target error, dev sda, sector 153800984
-Buffer I/O error on device sda, logical block 19225123
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 18 00 00 08 00
-end_request: critical target error, dev sda, sector 153800984
-Buffer I/O error on device sda, logical block 19225123
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 18 00 00 08 00
-end_request: critical target error, dev sda, sector 153800984
-Buffer I/O error on device sda, logical block 19225123
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 18 00 00 08 00
-end_request: critical target error, dev sda, sector 153800984
-Buffer I/O error on device sda, logical block 19225123
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 20 00 00 08 00
-end_request: critical target error, dev sda, sector 153800992
-Buffer I/O error on device sda, logical block 19225124
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 20 00 00 08 00
-end_request: critical target error, dev sda, sector 153800992
-Buffer I/O error on device sda, logical block 19225124
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d1 20 00 00 08 00
-end_request: critical target error, dev sda, sector 153800992
-Buffer I/O error on device sda, logical block 19225124
-Buffer I/O error on device sda, logical block 19225124
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 28 00 00 08 00
-end_request: critical target error, dev sda, sector 153801256
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 28 00 00 08 00
-end_request: critical target error, dev sda, sector 153801256
-Buffer I/O error on device sda, logical block 19225157
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 28 00 00 08 00
-end_request: critical target error, dev sda, sector 153801256
-Buffer I/O error on device sda, logical block 19225157
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 28 00 00 08 00
-end_request: critical target error, dev sda, sector 153801256
-Buffer I/O error on device sda, logical block 19225157
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 30 00 00 08 00
-end_request: critical target error, dev sda, sector 153801264
-Buffer I/O error on device sda, logical block 19225158
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 30 00 00 08 00
-end_request: critical target error, dev sda, sector 153801264
-Buffer I/O error on device sda, logical block 19225158
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 30 00 00 08 00
-end_request: critical target error, dev sda, sector 153801264
-Buffer I/O error on device sda, logical block 19225158
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 30 00 00 08 00
-end_request: critical target error, dev sda, sector 153801264
-Buffer I/O error on device sda, logical block 19225158
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 38 00 00 08 00
-end_request: critical target error, dev sda, sector 153801272
-Buffer I/O error on device sda, logical block 19225159
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d2 38 00 00 08 00
-end_request: critical target error, dev sda, sector 153801272
-Buffer I/O error on device sda, logical block 19225159
-Buffer I/O error on device sda, logical block 19225159
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 30 00 00 08 00
-end_request: critical target error, dev sda, sector 153801520
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 38 00 00 08 00
-end_request: critical target error, dev sda, sector 153801528
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 38 00 00 08 00
-end_request: critical target error, dev sda, sector 153801528
-Buffer I/O error on device sda, logical block 19225191
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 38 00 00 08 00
-end_request: critical target error, dev sda, sector 153801528
-Buffer I/O error on device sda, logical block 19225191
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 38 00 00 08 00
-end_request: critical target error, dev sda, sector 153801528
-Buffer I/O error on device sda, logical block 19225191
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 40 00 00 08 00
-end_request: critical target error, dev sda, sector 153801536
-Buffer I/O error on device sda, logical block 19225192
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 40 00 00 08 00
-end_request: critical target error, dev sda, sector 153801536
-Buffer I/O error on device sda, logical block 19225192
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 40 00 00 08 00
-end_request: critical target error, dev sda, sector 153801536
-Buffer I/O error on device sda, logical block 19225192
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 40 00 00 08 00
-end_request: critical target error, dev sda, sector 153801536
-Buffer I/O error on device sda, logical block 19225192
-sd 0:0:0:0: [sda]  Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-sd 0:0:0:0: [sda]  Sense Key : Hardware Error [current]
-sd 0:0:0:0: [sda]  Add. Sense: Internal target failure
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 09 2a d3 48 00 00 08 00
-end_request: critical target error, dev sda, sector 153801544
-Buffer I/O error on device sda, logical block 19225193
-Buffer I/O error on device sda, logical block 19225193
-Buffer I/O error on device sda, logical block 19225193
-
-</CODE>
-
-Based on the following discussion thread, we think that the RAID controller=
- may be failing.
-
-Discussion thread: Which disk is bad in raid6 array
-Link: https://serverfault.com/questions/384935/which-disk-is-bad-in-raid6-a=
-rray
-
-I had downloaded 32-bit arcconf Linux utility from the following link.
-
-Link: https://hwraid.le-vert.net/wiki/Adaptec
-
-<CODE>
-
-[root@teo-en-ming-server log]# lspci -vvv | grep RAID
-04:00.0 RAID bus controller: Adaptec AAC-RAID (Rocket) (rev 02)
-        Subsystem: IBM ServeRAID 8k/8k-l8
-
-</CODE>
-
-However, we keep getting segmentation fault running arcconf utility.
-
-<CODE>
-
-[root@teo-en-ming-server log]# /usr/local/sbin/arcconf getconfig 1
-Segmentation fault (core dumped)
-
-</CODE>
-
-These are the Linux Kernel messages.
-
-<CODE>
-
-Apr 22 11:11:33 teo-en-ming-server kernel: aacraid: Host adapter abort requ=
-est (0,0,0,0)
-Apr 22 11:11:33 teo-en-ming-server kernel: aacraid: Host adapter reset requ=
-est. SCSI hang ?
-Apr 22 11:11:33 teo-en-ming-server kernel: AAC: Host adapter BLINK LED 0x4
-Apr 22 11:11:33 teo-en-ming-server kernel: AAC0: adapter kernel panic'd 4.
-Apr 22 11:12:23 teo-en-ming-server kernel: IRQ 17/aacraid: IRQF_DISABLED is=
- not guaranteed on shared IRQs
-Apr 22 11:14:37 teo-en-ming-server kernel: aacraid: Host adapter abort requ=
-est (0,0,0,0)
-Apr 22 11:14:37 teo-en-ming-server kernel: aacraid: Host adapter reset requ=
-est. SCSI hang ?
-Apr 22 11:14:37 teo-en-ming-server kernel: AAC: Host adapter BLINK LED 0x4
-Apr 22 11:14:37 teo-en-ming-server kernel: AAC0: adapter kernel panic'd 4.
-Apr 22 11:15:28 teo-en-ming-server kernel: IRQ 17/aacraid: IRQF_DISABLED is=
- not guaranteed on shared IRQs
-Apr 22 11:16:34 teo-en-ming-server kernel: aacraid: Host adapter abort requ=
-est (0,0,0,0)
-Apr 22 11:16:34 teo-en-ming-server kernel: aacraid: Host adapter reset requ=
-est. SCSI hang ?
-Apr 22 11:16:34 teo-en-ming-server kernel: AAC: Host adapter BLINK LED 0x4
-Apr 22 11:16:34 teo-en-ming-server kernel: AAC0: adapter kernel panic'd 4.
-
-</CODE>
-
-It seems that I could not query the RAID controller. It keeps saying that t=
-he RAID controller adapter has kernel panics.
-
-arcconf is a Linux utility to query the RAID controller.
-
-<CODE>
-
-[root@teo-en-ming-server cmdline]# lspci -nn | grep RAID
-04:00.0 RAID bus controller [0104]: Adaptec AAC-RAID (Rocket) [9005:0286] (=
-rev 02)
-
-</CODE>
-
-Do you know why I keep getting segmentation fault running arcconf Linux uti=
-lity?
-
-Regards,
-
-Mr. Turritopsis Dohrnii Teo En Ming
-Targeted Individual in Singapore
-24 April 2022 Sunday
 
 
+On 4/21/22 3:54 AM, Logan Gunthorpe wrote:
+> Hi,
+>
+> This is v2 of this series which addresses Christoph's feedback and
+> fixes some bugs. The first posting is at [1]. A git branch is
+> available at [2].
+>
+> --
+>
+> I've been doing some work trying to improve the bulk write performance
+> of raid5 on large systems with fast NVMe drives. The bottleneck appears
+> largely to be lock contention on the hash_lock and device_lock. This
+> series improves the situation slightly by addressing a couple of low
+> hanging fruit ways to take the lock fewer times in the request path.
+>
+> Patch 9 adjusts how batching works by keeping a reference to the
+> previous stripe_head in raid5_make_request(). Under most situtations,
+> this removes the need to take the hash_lock in stripe_add_to_batch_list()
+> which should reduce the number of times the lock is taken by a factor of
+> about 2.
+>
+> Patch 12 pivots the way raid5_make_request() works. Before the patch, the
+> code must find the stripe_head for every 4KB page in the request, so each
+> stripe head must be found once for every data disk. The patch changes this
+> so that all the data disks can be added to a stripe_head at once and the
+> number of times the stripe_head must be found (and thus the number of
+> times the hash_lock is taken) should be reduced by a factor roughly equal
+> to the number of data disks.
+>
+> The remaining patches are just cleanup and prep patches for those two
+> patches.
+>
+> Doing apples to apples testing this series on a small VM with 5 ram
+> disks, I saw a bandwidth increase of roughly 14% and lock contentions
+> on the hash_lock (as reported by lock stat) reduced by more than a factor
+> of 5 (though it is still significantly contended).
+>
+> Testing on larger systems with NVMe drives saw similar small bandwidth
+> increases from 3% to 20% depending on the parameters. Oddly small arrays
+> had larger gains, likely due to them having lower starting bandwidths; I
+> would have expected larger gains with larger arrays (seeing there
+> should have been even fewer locks taken in raid5_make_request()).
+>
+> Logan
+>
+> [1] https://lkml.kernel.org/r/20220407164511.8472-1-logang@deltatee.com
+> [2] https://github.com/sbates130272/linux-p2pmem raid5_lock_cont_v2
+>
+> --
+>
+> Changes since v1:
+>    - Rebased on current md-next branch (190a901246c69d79)
+>    - Added patch to create a helper for checking if a sector
+>      is ahead of the reshape (per Christoph)
+>    - Reworked the __find_stripe() patch to create a find_get_stripe()
+>      helper (per Christoph)
+>    - Added more patches to further refactor raid5_make_request() and
+>      pull most of the loop body into a helper function (per Christoph)
+>    - A few other minor cleanups (boolean return, droping casting when
+>      printing sectors, commit message grammar) as suggested by Christoph.
+>    - Fixed two uncommon but bad data corruption bugs in that were found.
+>
+> --
+>
+> Logan Gunthorpe (12):
+>    md/raid5: Factor out ahead_of_reshape() function
+>    md/raid5: Refactor raid5_make_request loop
+>    md/raid5: Move stripe_add_to_batch_list() call out of add_stripe_bio()
+>    md/raid5: Move common stripe count increment code into __find_stripe()
+>    md/raid5: Factor out helper from raid5_make_request() loop
+>    md/raid5: Drop the do_prepare flag in raid5_make_request()
+>    md/raid5: Move read_seqcount_begin() into make_stripe_request()
+>    md/raid5: Refactor for loop in raid5_make_request() into while loop
+>    md/raid5: Keep a reference to last stripe_head for batch
+>    md/raid5: Refactor add_stripe_bio()
+>    md/raid5: Check all disks in a stripe_head for reshape progress
+>    md/raid5: Pivot raid5_make_request()
 
+Generally, I don't object the cleanup patches since the code looks more 
+cleaner.
+But my concern is that since some additional function calls are added to 
+hot path
+(raid5_make_request), could the performance be affected?
 
+And I think patch 9 and patch 12 are helpful for performance 
+improvement,  did
+you measure the performance without those cleanup patches?
 
+Thanks,
+Guoqing
