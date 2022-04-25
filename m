@@ -2,101 +2,117 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A34E7C433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Apr 2022 22:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F084CC433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 25 Apr 2022 23:07:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234383AbiDYWY0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 25 Apr 2022 18:24:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40854 "EHLO
+        id S236153AbiDYXKb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 25 Apr 2022 19:10:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232405AbiDYVYF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Apr 2022 17:24:05 -0400
+        with ESMTP id S231320AbiDYXKa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Apr 2022 19:10:30 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76AEC8BF5D;
-        Mon, 25 Apr 2022 14:21:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2FB6344EA;
+        Mon, 25 Apr 2022 16:07:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0FCA161422;
-        Mon, 25 Apr 2022 21:21:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B989C385A7;
-        Mon, 25 Apr 2022 21:20:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 489716159F;
+        Mon, 25 Apr 2022 23:07:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC25CC385A4;
+        Mon, 25 Apr 2022 23:07:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650921659;
-        bh=yeW9+BBUV3mLk/jfmzfFnnmQesZ+9KRuhHEuOliabrk=;
+        s=k20201202; t=1650928044;
+        bh=Ut2ZRekUxD3QDPwVjN7a9GtFeGn15HzJsW2Jd7x6WHc=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=E/JcjnDmi7uOq5bko2zU6SjHLd+HzINwHPRYwmO9Gp0hKeaMyU1dxx9ZmrEOsf7Zj
-         pIEW7sM6WK2FbIV/zrXyRju9itO4v7kfA4YUtVR7YRq0ogeDwPDsZSduI6gyqAynkM
-         6+hoAgKuLvu9CXOOLyq/V+VIIs6ASajy7LDcx8lpWHipD89wNms2zwFjMBIeYpahuu
-         cnMBtBCYdPAee6EVicQpPLLhoG8TccCTbBG/wetCvdki0dmUZOKfS/pyCP95jBMqkA
-         X6ioiWzvNJ2dRltuNo5uLSf+DExXSHn3aZg9HC1nCRXd7GCxkGFURSpczrBLiH8Qxo
-         K+k8Ys/6UzJhA==
-Received: by mail-yb1-f177.google.com with SMTP id r189so29435566ybr.6;
-        Mon, 25 Apr 2022 14:20:59 -0700 (PDT)
-X-Gm-Message-State: AOAM532D1L70MPCgiEa466nVhgk3bkILwVvwn1ckPI7QwS0DUNGpkOMK
-        90VxGDR8EQS8O2EalmgleKAGU0VajX5sNNFibSo=
-X-Google-Smtp-Source: ABdhPJwWKrStNu9Uj5Vqn7auM4uV4Q5j2aLQeQPBqYMe2nRVht9c4yaM2xOWTUMUx+yYi+q7fhM3ZxXsG5XCzei+6us=
-X-Received: by 2002:a05:6902:114c:b0:641:87a7:da90 with SMTP id
- p12-20020a056902114c00b0064187a7da90mr18971886ybu.561.1650921658476; Mon, 25
- Apr 2022 14:20:58 -0700 (PDT)
+        b=SrLeQ7BYOQV3gbx/xV6FBPbDdBrkKBK7gIyk2aOVaxRiHXr5YCy1Vgmzb8N3zAe7e
+         Pr4qwqQtO95puqyNoDNSVZpTcrmwpArWj/kNV2cIXLykpj+wmPFT7Pecc5bdOQZDx4
+         v1vv/cDEERdRWM/5yTCzzKCSy5Kg15moSEFzpo1X2qEvV1pR5EHCoF8FP9dMpZZok2
+         MLwhOLpWBt4oAUKVAMXd+1Sb8DA+j+pnVYw9KsNC137J7Q1RkFqTI/YXRnm53+HtvM
+         B9XV3FddnfsO+Oi3jxnsjTVhJIk16NaE5ap57ek2mTjN8ZMq96tRBfXdUGtzi5YvCS
+         qvOE52J3jJkgw==
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-2f7b815ac06so88986357b3.3;
+        Mon, 25 Apr 2022 16:07:24 -0700 (PDT)
+X-Gm-Message-State: AOAM530D+oGJZCg7cFneD2UXLUY5pei2U5KsSQipwWAKtBbCj7iFN2sA
+        VFgCc/e6k31XjXgzP/p6nfeMZUV+fdHZ05spjFg=
+X-Google-Smtp-Source: ABdhPJyKbwPs2SJGQho7ABhnYBSNq5EWScjCubZCtYQyvJvyuOOf86BcYUT1UWFghtLaFZJt5OTZVbMz3mw3nawntkY=
+X-Received: by 2002:a81:9b57:0:b0:2f1:49eb:1ad9 with SMTP id
+ s84-20020a819b57000000b002f149eb1ad9mr19571548ywg.130.1650928043709; Mon, 25
+ Apr 2022 16:07:23 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220421194558.59667-1-david.sloan@eideticom.com>
-In-Reply-To: <20220421194558.59667-1-david.sloan@eideticom.com>
+References: <20220420195425.34911-1-logang@deltatee.com>
+In-Reply-To: <20220420195425.34911-1-logang@deltatee.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 25 Apr 2022 14:20:47 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7B=n6HYSCJxfQbumO4-e5TacvUGbOXBMHfB-TvD0M7zA@mail.gmail.com>
-Message-ID: <CAPhsuW7B=n6HYSCJxfQbumO4-e5TacvUGbOXBMHfB-TvD0M7zA@mail.gmail.com>
-Subject: Re: [PATCH] md: Replace role magic numbers with defined constants
-To:     David Sloan <david.sloan@eideticom.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>
+Date:   Mon, 25 Apr 2022 16:07:13 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6j7UYn-jH9-kmBfe5h+PJ_HjP9v6dW+VDKiMW+t+XUhA@mail.gmail.com>
+Message-ID: <CAPhsuW6j7UYn-jH9-kmBfe5h+PJ_HjP9v6dW+VDKiMW+t+XUhA@mail.gmail.com>
+Subject: Re: [PATCH v2 00/12] Improve Raid5 Lock Contention
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Apr 21, 2022 at 12:46 PM David Sloan <david.sloan@eideticom.com> wrote:
+On Wed, Apr 20, 2022 at 12:55 PM Logan Gunthorpe <logang@deltatee.com> wrote:
 >
-> There are several instances where magic numbers are used in md.c instead
-> of the defined constants in md_p.h. This patch set improves code
-> readability by replacing all occurrences of 0xffff, 0xfffe, and 0xfffd when
-> relating to md roles with their equivalent defined constant.
+> Hi,
 >
-> Signed-off-by: David Sloan <david.sloan@eideticom.com>
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-
-Thanks for the clean up!
-
-> ---
->  drivers/md/md.c | 13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
+> This is v2 of this series which addresses Christoph's feedback and
+> fixes some bugs. The first posting is at [1]. A git branch is
+> available at [2].
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 309b3af906ad..b34b72fc5887 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2645,11 +2645,12 @@ static bool does_sb_need_changing(struct mddev *mddev)
->         rdev_for_each(rdev, mddev) {
->                 role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
->                 /* Device activated? */
-> -               if (role == 0xffff && rdev->raid_disk >=0 &&
-> +               if (role == MD_DISK_ROLE_SPARE && rdev->raid_disk >= 0 &&
->                     !test_bit(Faulty, &rdev->flags))
->                         return true;
->                 /* Device turned faulty? */
-> -               if (test_bit(Faulty, &rdev->flags) && (role < 0xfffd))
-> +               if (test_bit(Faulty, &rdev->flags) &&
-> +                   role < MD_DISK_ROLE_JOURNAL)
+> --
+>
+> I've been doing some work trying to improve the bulk write performance
+> of raid5 on large systems with fast NVMe drives. The bottleneck appears
+> largely to be lock contention on the hash_lock and device_lock. This
+> series improves the situation slightly by addressing a couple of low
+> hanging fruit ways to take the lock fewer times in the request path.
+>
+> Patch 9 adjusts how batching works by keeping a reference to the
+> previous stripe_head in raid5_make_request(). Under most situtations,
+> this removes the need to take the hash_lock in stripe_add_to_batch_list()
+> which should reduce the number of times the lock is taken by a factor of
+> about 2.
+>
+> Patch 12 pivots the way raid5_make_request() works. Before the patch, the
+> code must find the stripe_head for every 4KB page in the request, so each
+> stripe head must be found once for every data disk. The patch changes this
+> so that all the data disks can be added to a stripe_head at once and the
+> number of times the stripe_head must be found (and thus the number of
+> times the hash_lock is taken) should be reduced by a factor roughly equal
+> to the number of data disks.
+>
+> The remaining patches are just cleanup and prep patches for those two
+> patches.
+>
+> Doing apples to apples testing this series on a small VM with 5 ram
+> disks, I saw a bandwidth increase of roughly 14% and lock contentions
+> on the hash_lock (as reported by lock stat) reduced by more than a factor
+> of 5 (though it is still significantly contended).
+>
+> Testing on larger systems with NVMe drives saw similar small bandwidth
+> increases from 3% to 20% depending on the parameters. Oddly small arrays
+> had larger gains, likely due to them having lower starting bandwidths; I
+> would have expected larger gains with larger arrays (seeing there
+> should have been even fewer locks taken in raid5_make_request()).
+>
+> Logan
+>
+> [1] https://lkml.kernel.org/r/20220407164511.8472-1-logang@deltatee.com
+> [2] https://github.com/sbates130272/linux-p2pmem raid5_lock_cont_v2
+>
 
-I changed this to role < MD_DISK_ROLE_MAX.
+The set looks good to me overall. Thanks everyone for the review and feedback.
 
-Also made some minor style changes, and applied it to md-next.
+Logan, please incorporate feedback and send v3.
 
 Thanks,
 Song
-
->                         return true;
->         }
-
-[...]
