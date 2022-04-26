@@ -2,74 +2,98 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48258C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Apr 2022 14:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 282E8C433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Apr 2022 14:38:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351593AbiDZO23 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Apr 2022 10:28:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57552 "EHLO
+        id S245100AbiDZOlj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Apr 2022 10:41:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348555AbiDZO21 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 10:28:27 -0400
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75B411BEB4;
-        Tue, 26 Apr 2022 07:25:18 -0700 (PDT)
-Received: by mail-wr1-f51.google.com with SMTP id t6so22288428wra.4;
-        Tue, 26 Apr 2022 07:25:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=nWpDQmZNg8zKVk12QskQ7NNS05C4fI/JmZBKLdKyu8Q=;
-        b=N3rGspRTI08F0a6/PTNqrr9OkLopYK/vTV7LBZQ6ul7Qtw1M1ZjWuU4WBBN97fKbxi
-         2WP1+uMyHQlPFpVx+CN1fETiMi/nvjqsrT32ACuOA5CNtGaUlIG8dtrPhl2I9XeR9Tgt
-         sDblG/q9hb8uLlgWspF41wtpYjByPnVymUWTXdh26cHamCM+kgwcetw6syJ8W9HVSZfT
-         m2v9y8xT8V5CUCMNP8MalYoxz1XrcTL/poxEGKjnFuzBIzIOUQZcG60WTDfErsm1j6lR
-         XOUuVWioOdn6sjAYX0087d94RcBq3KjFumDdY4Lk90ONiqMJRXEyJn8uLitBtag6g+aV
-         VQYQ==
-X-Gm-Message-State: AOAM530ha+LLppiKCyV0ZYCMELB5w1UsJqxHiLTjOnfRxNRIbzSraSHA
-        3kSX9Vs2wg9DpqU6p5sam9E=
-X-Google-Smtp-Source: ABdhPJx+tGjrozc2v+hkDAQGkKaaKd6tvj25GGtU09S+2P3NV6/kZmjHHHaKsKLq0MduUfwGvhoEcw==
-X-Received: by 2002:a05:6000:1a8d:b0:20a:ab7c:efb1 with SMTP id f13-20020a0560001a8d00b0020aab7cefb1mr18901071wry.716.1650983116938;
-        Tue, 26 Apr 2022 07:25:16 -0700 (PDT)
-Received: from [192.168.64.180] (bzq-219-42-90.isdn.bezeqint.net. [62.219.42.90])
-        by smtp.gmail.com with ESMTPSA id j39-20020a05600c1c2700b00393ee3deaf1sm5525786wms.9.2022.04.26.07.25.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Apr 2022 07:25:16 -0700 (PDT)
-Message-ID: <c658f5cc-7b9a-84ee-ac22-cefc03e3dbf2@grimberg.me>
-Date:   Tue, 26 Apr 2022 17:25:12 +0300
+        with ESMTP id S241689AbiDZOlh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 10:41:37 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7BF817E237
+        for <linux-raid@vger.kernel.org>; Tue, 26 Apr 2022 07:38:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1650983909; x=1682519909;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=HxQNgPGpfG+GbdUuiuD8P8jC7Lv4pUXKPFcC1d9KUAw=;
+  b=dImFL6Y/FtGpi76DxZsHkCtuVFslkraPzZr04FaNCOp81htE9WBTm5Ya
+   v7m1X2KhGMyd5pYDTgVFXUrNI2c+8CYg5j0QPn6AnbCOsGi6jjTrBcKRq
+   zx30wz0e7zfzeGHjRKdKo4AAnGeYd9lJYjv8yqd6FmKgsON1bqPzAMfy1
+   skq8SGAI+KEy38kYD+V//omeIScvYgcXcoE3SN4DtJlsTJaY83Vz9GZfl
+   O+kRVepR4WaBCvNXNoj1zApCaNJUoCn9aR9s0ho76bmzqyJAm9Cdgbpkp
+   EHdphIjUR8pd6YlgVYabU/wJUBlT795e5ZK3JgUBQvhJbVa2T4J/70BaC
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10328"; a="265761033"
+X-IronPort-AV: E=Sophos;i="5.90,291,1643702400"; 
+   d="scan'208";a="265761033"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2022 07:38:29 -0700
+X-IronPort-AV: E=Sophos;i="5.90,291,1643702400"; 
+   d="scan'208";a="538816675"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.213.21.135])
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2022 07:38:28 -0700
+Date:   Tue, 26 Apr 2022 16:38:23 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Marius Kittler <mariuskittler@gmx.de>
+Cc:     linux-raid@vger.kernel.org
+Subject: Re: [PATCH] Print concrete error when creating mddev
+Message-ID: <20220426163823.000024dc@linux.intel.com>
+In-Reply-To: <20220425132745.7952-1-mariuskittler@gmx.de>
+References: <20220425132745.7952-1-mariuskittler@gmx.de>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 09/11] nvme: remove a spurious clear of discard_alignment
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Richard Weinberger <richard@nod.at>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Josef Bacik <josef@toxicpanda.com>,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Mike Snitzer <snitzer@kernel.org>, Song Liu <song@kernel.org>,
-        Stefan Haberland <sth@linux.ibm.com>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
-        nbd@other.debian.org, virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, linux-raid@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-        dm-devel@redhat.com
-References: <20220418045314.360785-1-hch@lst.de>
- <20220418045314.360785-10-hch@lst.de>
-From:   Sagi Grimberg <sagi@grimberg.me>
-In-Reply-To: <20220418045314.360785-10-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+On Mon, 25 Apr 2022 15:27:45 +0200
+Marius Kittler <mariuskittler@gmx.de> wrote:
+
+> Example from my testing:
+> ```
+> mdadm: unexpected failure opening /dev/md127: No such device or address
+> ```
+> 
+> Before it would just print:
+> ```
+> mdadm: unexpected failure opening /dev/md127
+
+Hi Marius,
+Thanks for the patch. Could you provide reproduction steps?
+
+> diff --git a/util.c b/util.c
+> index cc94f96e..7c8c0bb1 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -1088,8 +1088,9 @@ int open_dev_excl(char *devnm)
+>  	long delay = 1000;
+> 
+>  	sprintf(buf, "%d:%d", major(devid), minor(devid));
+> +	int fd = -1;
+>  	for (i = 0; i < 25; i++) {
+> -		int fd = dev_open(buf, flags|O_EXCL);
+> +		fd = dev_open(buf, flags|O_EXCL);
+>  		if (fd >= 0)
+>  			return fd;
+>  		if (errno == EACCES && flags == O_RDWR) {
+> @@ -1102,7 +1103,7 @@ int open_dev_excl(char *devnm)
+>  		if (delay < 200000)
+>  			delay *= 2;
+>  	}
+> -	return -1;
+> +	return fd;
+
+There is no change, it is just a refactor. If you really want to change that,
+then please follow kernel coding style guide. Please also run checkpatch script
+from kernel source.
+
+Could you add Jes and Coly to CC in v2?
+
+Thanks,
+Mariusz
