@@ -2,124 +2,107 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D707C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Apr 2022 21:31:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04741C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Apr 2022 01:29:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355496AbiDZVej (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Apr 2022 17:34:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42670 "EHLO
+        id S1356687AbiD0BcN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Apr 2022 21:32:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355465AbiDZVea (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 17:34:30 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5AB22559E
-        for <linux-raid@vger.kernel.org>; Tue, 26 Apr 2022 14:31:21 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id iq2-20020a17090afb4200b001d93cf33ae9so3290165pjb.5
-        for <linux-raid@vger.kernel.org>; Tue, 26 Apr 2022 14:31:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=dWxaD7L0u/h0y2dhkzttG4l+Tb/Huddvi0NADO8Lp2s=;
-        b=hdDvtXb8sW1W6Vb9Rl1EyT79gjqOgItMlyb6hUkULSIq7OBeaZAjDkb1GDFuCpTKwX
-         6amgRPyb8H6us1ZLwhP5WU3wpLB5m68cphTpxGKy7UfE1WavorSBcGyJnSyAn86RhwM2
-         rRm9wDZcuV4lvjKc/6RAtt7RcXFBuOMww+sFs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=dWxaD7L0u/h0y2dhkzttG4l+Tb/Huddvi0NADO8Lp2s=;
-        b=L/1lqWakq+lRhfCVHtcvcMkpDED3E9EA+BGjV1/zL6pEmCBTcRxQTwOmFZQa4ZussF
-         c180NirD4MRmn42GPiLen3A2UaQrRfhDTDqOUEUJVYuYRhoOF9mKgQ1lB4zr6lXkH2rb
-         H0qEjakUPCAMXJezM8QS0lY5j5w7392uzY5fBw05SXarRC7PqQsGlKtHBIs7GhgVucf8
-         R+rOZS84AfPCRN4EHzGW9tp5j71zjifIxG3vGUrXQb5ku/pV50wrTKpll/gVFVJ+jiru
-         ePZrffa0brsnLYAkNaBvj4AWfSWFZ3r55zz43fe9he726Cvq/vLNP0aCA1bcSeCcppDw
-         zZIg==
-X-Gm-Message-State: AOAM533/eLKRm78nJSXKtK/d6eEkbR9aeik775oRAd/FvTNkOGcUWKlU
-        UC9Qwt5HHPFvfCpUDwZPRd1iVg==
-X-Google-Smtp-Source: ABdhPJy4R5XtqAI2AVSwm6Ahikus8xa0rabLRQflKyRJPiBg1OerZzxzHWDe8RqGJ2mAUYofsSzeJw==
-X-Received: by 2002:a17:90b:2311:b0:1d9:277e:edad with SMTP id mt17-20020a17090b231100b001d9277eedadmr22722620pjb.190.1651008681490;
-        Tue, 26 Apr 2022 14:31:21 -0700 (PDT)
-Received: from localhost ([2620:15c:202:201:eb63:4211:eb5d:f6b])
-        by smtp.gmail.com with UTF8SMTPSA id z8-20020aa785c8000000b005060d2d7085sm16015202pfn.151.2022.04.26.14.31.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Apr 2022 14:31:21 -0700 (PDT)
-From:   Matthias Kaehlcke <mka@chromium.org>
-To:     Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        James Morris <jmorris@namei.org>,
-        "Serge E . Hallyn" <serge@hallyn.com>
-Cc:     linux-kernel@vger.kernel.org,
-        linux-security-module@vger.kernel.org, dm-devel@redhat.com,
-        linux-raid@vger.kernel.org,
-        Douglas Anderson <dianders@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH v2 3/3] dm: verity-loadpin: Use CONFIG_SECURITY_LOADPIN_VERITY for conditional compilation
-Date:   Tue, 26 Apr 2022 14:31:10 -0700
-Message-Id: <20220426143059.v2.3.I5aca2dcc3b06de4bf53696cd21329dce8272b8aa@changeid>
-X-Mailer: git-send-email 2.36.0.rc2.479.g8af0fa9b8e-goog
-In-Reply-To: <20220426213110.3572568-1-mka@chromium.org>
-References: <20220426213110.3572568-1-mka@chromium.org>
+        with ESMTP id S240661AbiD0BcM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 21:32:12 -0400
+Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CC3785669;
+        Tue, 26 Apr 2022 18:29:01 -0700 (PDT)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1651022939;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SIHaNF4527y5Q6cHf2f9Nqj4nsyw93HOagsxqabub9Y=;
+        b=ICUhEc2eK9UWupUv/x/Cuz1UaSthfDD5cy9YHCcnZk9Em8EEUaJ95qRC6ys6vlJDZTHhpi
+        pTh2qCCuYGjf1omC10b+Cm8VkStGFbFblZ2b4erj/VQLDnXVIyozPCd+qWwFfueqOEzpCr
+        Koc1uqN09+z2OQ8leadVYXzKLavPw/Q=
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Subject: Re: [PATCH v2 01/12] md/raid5: Factor out ahead_of_reshape() function
+To:     Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20220420195425.34911-1-logang@deltatee.com>
+ <20220420195425.34911-2-logang@deltatee.com>
+Message-ID: <2a6d5554-4f71-6476-6d14-031da52005f5@linux.dev>
+Date:   Wed, 27 Apr 2022 09:28:33 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220420195425.34911-2-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The verity glue for LoadPin is only needed when CONFIG_SECURITY_LOADPIN_VERITY
-is set, use this option for conditional compilation instead of the combo of
-CONFIG_DM_VERITY and CONFIG_SECURITY_LOADPIN.
 
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
----
 
-Changes in v2:
-- none
+On 4/21/22 3:54 AM, Logan Gunthorpe wrote:
+> There are a few uses of an ugly ternary operator in raid5_make_request()
+> to check if a sector is a head of a reshape sector.
+>
+> Factor this out into a simple helper called ahead_of_reshape().
+>
+> This appears to fix the first bio_wouldblock_error() check which appears
+> to have comparison operators that didn't match the check below which
+> causes a schedule. Besides this, no functional changes intended.
+>
+> Suggested-by: Christoph Hellwig<hch@lst.de>
+> Signed-off-by: Logan Gunthorpe<logang@deltatee.com>
+> ---
+>   drivers/md/raid5.c | 29 +++++++++++++++++------------
+>   1 file changed, 17 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 7f7d1546b9ba..97b23c18402b 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -5787,6 +5787,15 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+>   	bio_endio(bi);
+>   }
+>   
+> +static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
+> +			     sector_t reshape_sector)
+> +{
+> +	if (mddev->reshape_backwards)
+> +		return sector < reshape_sector;
+> +	else
+> +		return sector >= reshape_sector;
+> +}
 
- drivers/md/Makefile               | 7 +------
- include/linux/dm-verity-loadpin.h | 2 +-
- 2 files changed, 2 insertions(+), 7 deletions(-)
+I think it can be an inline function.
 
-diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index e12cd004d375..a96441752ec7 100644
---- a/drivers/md/Makefile
-+++ b/drivers/md/Makefile
-@@ -83,6 +83,7 @@ obj-$(CONFIG_DM_LOG_WRITES)	+= dm-log-writes.o
- obj-$(CONFIG_DM_INTEGRITY)	+= dm-integrity.o
- obj-$(CONFIG_DM_ZONED)		+= dm-zoned.o
- obj-$(CONFIG_DM_WRITECACHE)	+= dm-writecache.o
-+obj-$(CONFIG_SECURITY_LOADPIN_VERITY)	+= dm-verity-loadpin.o
- 
- ifeq ($(CONFIG_DM_INIT),y)
- dm-mod-objs			+= dm-init.o
-@@ -100,12 +101,6 @@ ifeq ($(CONFIG_IMA),y)
- dm-mod-objs			+= dm-ima.o
- endif
- 
--ifeq ($(CONFIG_DM_VERITY),y)
--ifeq ($(CONFIG_SECURITY_LOADPIN),y)
--dm-mod-objs			+= dm-verity-loadpin.o
--endif
--endif
--
- ifeq ($(CONFIG_DM_VERITY_FEC),y)
- dm-verity-objs			+= dm-verity-fec.o
- endif
-diff --git a/include/linux/dm-verity-loadpin.h b/include/linux/dm-verity-loadpin.h
-index 12a86911d05a..be63ac76f98d 100644
---- a/include/linux/dm-verity-loadpin.h
-+++ b/include/linux/dm-verity-loadpin.h
-@@ -13,7 +13,7 @@ struct trusted_root_digest {
- 	struct list_head node;
- };
- 
--#if IS_ENABLED(CONFIG_SECURITY_LOADPIN) && IS_BUILTIN(CONFIG_DM_VERITY)
-+#if IS_ENABLED(CONFIG_SECURITY_LOADPIN_VERITY)
- void dm_verity_loadpin_set_trusted_root_digests(struct list_head *digests);
- bool dm_verity_loadpin_is_md_trusted(struct mapped_device *md);
- #else
--- 
-2.36.0.rc2.479.g8af0fa9b8e-goog
+> +
+>   static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   {
+>   	struct r5conf *conf = mddev->private;
+> @@ -5843,9 +5852,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   	/* Bail out if conflicts with reshape and REQ_NOWAIT is set */
+>   	if ((bi->bi_opf & REQ_NOWAIT) &&
+>   	    (conf->reshape_progress != MaxSector) &&
+> -	    (mddev->reshape_backwards
+> -	    ? (logical_sector > conf->reshape_progress && logical_sector <= conf->reshape_safe)
+> -	    : (logical_sector >= conf->reshape_safe && logical_sector < conf->reshape_progress))) {
+> +	    !ahead_of_reshape(mddev, logical_sector, conf->reshape_progress) &&
+> +	    ahead_of_reshape(mddev, logical_sector, conf->reshape_safe)) {
 
+TBH, the previous code is more readable to me though I can live with the 
+change.
+
+Thanks,
+Guoqing
