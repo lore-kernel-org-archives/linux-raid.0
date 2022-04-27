@@ -2,44 +2,46 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE325C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Apr 2022 01:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F4BC433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Apr 2022 01:33:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356687AbiD0Bff (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Apr 2022 21:35:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54480 "EHLO
+        id S1356748AbiD0Bgc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Apr 2022 21:36:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354729AbiD0Bfd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 21:35:33 -0400
+        with ESMTP id S234942AbiD0Bgb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 21:36:31 -0400
 Received: from out0.migadu.com (out0.migadu.com [IPv6:2001:41d0:2:267::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 586C946B27;
-        Tue, 26 Apr 2022 18:32:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FA97A66F0;
+        Tue, 26 Apr 2022 18:33:22 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1651023142;
+        t=1651023200;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DNundTitWrjHN9Al1s781albF2X/onqhV3Sz2DqMeZ8=;
-        b=YRuf7WFtBwyQD9Ur4tUSqUSlzlK+bNkQoYqtV/wA8/auIQOmAgv4i+q8dni/impRbC/NPq
-        Rggz+YEbEShz745x3N5mFgfrEd54UBrXZ+2Df+S551AXmMXVnVWcBk0mSo6HRurKz3EMHO
-        kO2J1mik2kU9GoL2u5QFJC+U3kKpYJQ=
+        bh=zJ0BYmUwc/GyjdfAIE3jQLZkoojPVXvCARqqGbjwuhI=;
+        b=VekbOKndbBZSPe69eANEz0i4Jp5bu/OsmUNFMrj6PkwtL6feGlCe9MJDj4fKEg0EpRQ7gA
+        ViDP+77LDffjwNQiN+T8flEwt2+k06HFUlDohHmq132/EQ84r6kIm4Fqw0GqnZTAfapZgL
+        SnRbvB1uL+z5M56TCelPjnV5MN7k6f0=
 From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Subject: Re: [PATCH v2 02/12] md/raid5: Refactor raid5_make_request loop
+Subject: Re: [PATCH v2 03/12] md/raid5: Move stripe_add_to_batch_list() call
+ out of add_stripe_bio()
 To:     Logan Gunthorpe <logang@deltatee.com>,
         linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
         Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
+        David Sloan <David.Sloan@eideticom.com>,
+        Christoph Hellwig <hch@lst.de>
 References: <20220420195425.34911-1-logang@deltatee.com>
- <20220420195425.34911-3-logang@deltatee.com>
-Message-ID: <eb1d70f6-0cfc-20e9-8fb3-84e3076025f7@linux.dev>
-Date:   Wed, 27 Apr 2022 09:32:14 +0800
+ <20220420195425.34911-4-logang@deltatee.com>
+Message-ID: <fb442f7c-aa5c-96ed-05af-336f83f77da7@linux.dev>
+Date:   Wed, 27 Apr 2022 09:33:06 +0800
 MIME-Version: 1.0
-In-Reply-To: <20220420195425.34911-3-logang@deltatee.com>
+In-Reply-To: <20220420195425.34911-4-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
@@ -52,40 +54,48 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 On 4/21/22 3:54 AM, Logan Gunthorpe wrote:
-> Break immediately if raid5_get_active_stripe() returns NULL and deindent
-> the rest of the loop. Annotate this check with an unlikely().
+> stripe_add_to_batch_list() is better done in the loop in make_request
+> instead of inside add_stripe_bio(). This is clearer and allows for
+> storing the batch_head state outside the loop in a subsequent patch.
 >
-> This makes the code easier to read and reduces the indentation level.
+> The call to add_stripe_bio() in retry_aligned_read() is for read
+> and batching only applies to write. So it's impossible for batching
+> to happen at that call site.
 >
 > No functional changes intended.
 >
 > Signed-off-by: Logan Gunthorpe<logang@deltatee.com>
+> Reviewed-by: Christoph Hellwig<hch@lst.de>
 > ---
->   drivers/md/raid5.c | 109 +++++++++++++++++++++++----------------------
->   1 file changed, 55 insertions(+), 54 deletions(-)
+>   drivers/md/raid5.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 97b23c18402b..cda6857e6207 100644
+> index cda6857e6207..8e1ece5ce984 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -5906,68 +5906,69 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+> @@ -3534,8 +3534,6 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
+>   	}
+>   	spin_unlock_irq(&sh->stripe_lock);
+>   
+> -	if (stripe_can_batch(sh))
+> -		stripe_add_to_batch_list(conf, sh);
+>   	return 1;
+>   
+>    overlap:
+> @@ -5955,6 +5953,9 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   			goto retry;
+>   		}
+>   
+> +		if (stripe_can_batch(sh))
+> +			stripe_add_to_batch_list(conf, sh);
+> +
+>   		if (do_flush) {
+>   			set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
+>   			/* we only need flush for one stripe */
 
-...
 
-> +		if (unlikely(!sh)) {
-> +			/* cannot get stripe, just give-up */
-> +			bi->bi_status = BLK_STS_IOERR;
-> +			break;
-> +		}
-
-
-Nit, I would suggest to keep below original comment.
-
-> -			/* cannot get stripe for read-ahead, just give-up */
-> -			bi->bi_status = BLK_STS_IOERR;
-> -			break;
-
-Anyway. Reviewed-by: Guoqing Jiang <guoqing.jiang@linux.dev>
+Reviewed-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 
 Thanks,
 Guoqing
