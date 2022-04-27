@@ -2,30 +2,30 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C1CFC433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Apr 2022 02:11:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D2AC433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Apr 2022 02:13:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357086AbiD0COv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Apr 2022 22:14:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32804 "EHLO
+        id S1357112AbiD0CRC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Apr 2022 22:17:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245545AbiD0COu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 22:14:50 -0400
-Received: from out0.migadu.com (out0.migadu.com [IPv6:2001:41d0:2:267::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D996F39BA3;
-        Tue, 26 Apr 2022 19:11:40 -0700 (PDT)
-Subject: Re: [PATCH v2 06/12] md/raid5: Drop the do_prepare flag in
- raid5_make_request()
+        with ESMTP id S1357110AbiD0CRB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 22:17:01 -0400
+Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B910A473B7;
+        Tue, 26 Apr 2022 19:13:50 -0700 (PDT)
+Subject: Re: [PATCH v2 07/12] md/raid5: Move read_seqcount_begin() into
+ make_stripe_request()
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1651025499;
+        t=1651025629;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=4zcgcTHO2pu2dTvJsagOhXIB+wtZrPIwubiqxHKUeVs=;
-        b=FpipnnjmNRFjlnBuwceh8dhq7lNlykI8+CtJMr1A3IvianCXAY0Fe7vFCNw9s2VNCTv6br
-        tQHAVQ4GKDc/NFLlORBrCVNp6PVL3fW0JmIO+WE3e8NsCUXppDGDEbz7AJqITFxKVy8yDP
-        DJb4bXBa62Zmu9LRI1y8jygGCiNh1FM=
+        bh=+2xxD/UOrCwcfRcymrANttST8OfMS/lxc0RTJxuLv7U=;
+        b=q8rl6r5keh8Ll98PxBzf/J9kDfoWOpKZu/P1ao1Cj8QMtSR0KYZlLJlyeu6Uc5k+1Glm0h
+        ay5GUedLr1sUWQeMccoHDbRzFbL9U0SBpksbI5JwuMnjKxBbbGbrad2WkketH/pOx9IJJT
+        5ZTU2w2T/AlGL5LmdnR8buOz5XeEsN8=
 To:     Logan Gunthorpe <logang@deltatee.com>,
         linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -34,13 +34,13 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
 References: <20220420195425.34911-1-logang@deltatee.com>
- <20220420195425.34911-7-logang@deltatee.com>
+ <20220420195425.34911-8-logang@deltatee.com>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <9948c2c0-307b-aa99-c95c-f63a61e1f86b@linux.dev>
-Date:   Wed, 27 Apr 2022 10:11:36 +0800
+Message-ID: <3c8cc5d5-140e-3d9b-ea70-e1a3ce8513e4@linux.dev>
+Date:   Wed, 27 Apr 2022 10:13:43 +0800
 MIME-Version: 1.0
-In-Reply-To: <20220420195425.34911-7-logang@deltatee.com>
+In-Reply-To: <20220420195425.34911-8-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
@@ -53,54 +53,53 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 On 4/21/22 3:54 AM, Logan Gunthorpe wrote:
-> prepare_to_wait() can be reasonably called after schedule instead of
-> setting a flag and preparing in the next loop iteration.
+> Now that prepare_to_wait() isn't in the way, move read_sequcount_begin()
+> into make_stripe_request().
 >
-> This means that prepare_to_wait() will be called before
-> read_seqcount_begin(), but there shouldn't be any reason that
-> the order matters here. On the first iteration of the loop
-> prepare_to_wait() is already called first.
+> No functional changes intended.
 >
 > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > ---
->   drivers/md/raid5.c | 8 ++------
->   1 file changed, 2 insertions(+), 6 deletions(-)
+>   drivers/md/raid5.c | 12 +++++-------
+>   1 file changed, 5 insertions(+), 7 deletions(-)
 >
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 5a7334ba0997..b9f618356446 100644
+> index b9f618356446..1bce9075e165 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -5915,7 +5915,6 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+> @@ -5804,13 +5804,15 @@ struct stripe_request_ctx {
+>   
+>   static enum stripe_result make_stripe_request(struct mddev *mddev,
+>   		struct r5conf *conf, struct stripe_request_ctx *ctx,
+> -		sector_t logical_sector, struct bio *bi, int seq)
+> +		sector_t logical_sector, struct bio *bi)
+>   {
 >   	const int rw = bio_data_dir(bi);
->   	enum stripe_result res;
->   	DEFINE_WAIT(w);
-> -	bool do_prepare;
+>   	struct stripe_head *sh;
+>   	sector_t new_sector;
+>   	int previous = 0;
+> -	int dd_idx;
+> +	int seq, dd_idx;
+> +
+> +	seq = read_seqcount_begin(&conf->gen_lock);
 >   
->   	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
->   		int ret = log_handle_flush_request(conf, bi);
-> @@ -5973,12 +5972,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   	if (unlikely(conf->reshape_progress != MaxSector)) {
+>   		/* spinlock is needed as reshape_progress may be
+> @@ -5970,13 +5972,9 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   	md_account_bio(mddev, &bi);
+>   	prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
 >   	for (; logical_sector < last_sector; logical_sector += RAID5_STRIPE_SECTORS(conf)) {
->   		int seq;
->   
-> -		do_prepare = false;
+> -		int seq;
+> -
 >   	retry:
->   		seq = read_seqcount_begin(&conf->gen_lock);
-> -		if (do_prepare)
-> -			prepare_to_wait(&conf->wait_for_overlap, &w,
-> -				TASK_UNINTERRUPTIBLE);
->   
+> -		seq = read_seqcount_begin(&conf->gen_lock);
+> -
 >   		res = make_stripe_request(mddev, conf, &ctx, logical_sector,
->   					  bi, seq);
-> @@ -5988,7 +5983,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
->   			goto retry;
->   		} else if (res == STRIPE_SCHEDULE_AND_RETRY) {
->   			schedule();
-> -			do_prepare = true;
-> +			prepare_to_wait(&conf->wait_for_overlap, &w,
-> +					TASK_UNINTERRUPTIBLE);
->   			goto retry;
->   		}
->   	}
+> -					  bi, seq);
+> +					  bi);
+>   		if (res == STRIPE_FAIL) {
+>   			break;
+>   		} else if (res == STRIPE_RETRY) {
 
 Reviewed-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 
