@@ -2,32 +2,32 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 695B7C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Apr 2022 01:34:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 698DEC433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Apr 2022 01:37:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354955AbiD0BhP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Apr 2022 21:37:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60726 "EHLO
+        id S1356777AbiD0Bk2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Apr 2022 21:40:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237456AbiD0BhN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 21:37:13 -0400
-Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EF95EE4C0;
-        Tue, 26 Apr 2022 18:34:04 -0700 (PDT)
+        with ESMTP id S245420AbiD0Bk0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Apr 2022 21:40:26 -0400
+Received: from out1.migadu.com (out1.migadu.com [IPv6:2001:41d0:2:863f::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D67E3389B;
+        Tue, 26 Apr 2022 18:37:16 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1651023242;
+        t=1651023434;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2rZC5aVdSXkBLDwWCrl2fIbD+VenQYPFUKlleoOQy8k=;
-        b=QBuB6T6/vFlz5C+4+SqhzS1HYXbwJxcHaFTyobt4M2auFMBiyd6vq6lt+HoLKXxO7uCyH8
-        j268ij0pE/9fLUGt+ViAJ5g/bTFgQwTLIv/hRlM8K50XKrI7Kk/bpXNMECzH2ykBgYv33M
-        SaGR8MJbrkKp6bKmVp+48T7EksnfyF8=
+        bh=o5COhc69ni87t4Utb0njn2GZupM3M1z5y8iXfy2AtfM=;
+        b=fqiScsW8Q3L2UayIYd+DDD/vMUuNTwnD3vuhei+ybfK38V/caccV/177HVWH8c3dkpX/G2
+        6nLR4WvQRstLUBei1Uuh3WpNw8MSbnHcW2Re5p0lQz1DEedzxEx66blG13lHPgMcHnPTdP
+        FQ9lpanIIAdtELrDhc70hBXgIsSKLUc=
 From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Subject: Re: [PATCH v2 04/12] md/raid5: Move common stripe count increment
- code into __find_stripe()
+Subject: Re: [PATCH v2 09/12] md/raid5: Keep a reference to last stripe_head
+ for batch
 To:     Logan Gunthorpe <logang@deltatee.com>,
         linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -36,11 +36,11 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
 References: <20220420195425.34911-1-logang@deltatee.com>
- <20220420195425.34911-5-logang@deltatee.com>
-Message-ID: <8d44a290-cb46-cbbe-6289-14d2cca44c2c@linux.dev>
-Date:   Wed, 27 Apr 2022 09:33:52 +0800
+ <20220420195425.34911-10-logang@deltatee.com>
+Message-ID: <56208e2a-5035-eb8e-c468-70b4dae66d5c@linux.dev>
+Date:   Wed, 27 Apr 2022 09:36:59 +0800
 MIME-Version: 1.0
-In-Reply-To: <20220420195425.34911-5-logang@deltatee.com>
+In-Reply-To: <20220420195425.34911-10-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
@@ -53,41 +53,127 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 On 4/21/22 3:54 AM, Logan Gunthorpe wrote:
-> Both uses of find_stripe() require a fairly complicated dance to
-> increment the reference count. Move this into a common find_get_stripe()
-> helper.
+> When batching, every stripe head has to find the previous stripe head to
+> add to the batch list. This involves taking the hash lock which is
+> highly contended during IO.
 >
-> No functional changes intended.
+> Instead of finding the previous stripe_head each time, store a
+> reference to the previous stripe_head in a pointer so that it doesn't
+> require taking the contended lock another time.
+>
+> The reference to the previous stripe must be released before scheduling
+> and waiting for work to get done. Otherwise, it can hold up
+> raid5_activate_delayed() and deadlock.
 >
 > Signed-off-by: Logan Gunthorpe<logang@deltatee.com>
 > ---
->   drivers/md/raid5.c | 133 ++++++++++++++++++++++-----------------------
->   1 file changed, 65 insertions(+), 68 deletions(-)
+>   drivers/md/raid5.c | 51 +++++++++++++++++++++++++++++++++++-----------
+>   1 file changed, 39 insertions(+), 12 deletions(-)
 >
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 8e1ece5ce984..a0946af5b1ac 100644
+> index 0c250cc3bfff..28ea7b9b6ab6 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -612,7 +612,7 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
->   }
-
-...
-
->   @@ -624,6 +624,49 @@ static struct stripe_head *__find_stripe(struct r5conf *conf, sector_t sector,
->   	return NULL;
+> @@ -843,7 +843,8 @@ static bool stripe_can_batch(struct stripe_head *sh)
 >   }
 >   
-> +static struct stripe_head *find_get_stripe(struct r5conf *conf,
-> +		sector_t sector, short generation, int hash)
-> +{
+>   /* we only do back search */
+> -static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh)
+> +static void stripe_add_to_batch_list(struct r5conf *conf,
+> +		struct stripe_head *sh, struct stripe_head *last_sh)
 
-The subject doesn't match the change, maybe something about " md/raid5: 
-factor out common stripe count
-increment code into find_get_stripe()", just FYI. Otherwise, it 
-generally looks good.
+Nit, from stripe_add_to_batch_list's view, I think "head_sh" makes more 
+sense than
+"last_sh".
 
-Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
+>   {
+>   	struct stripe_head *head;
+>   	sector_t head_sector, tmp_sec;
+> @@ -856,15 +857,20 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+>   		return;
+>   	head_sector = sh->sector - RAID5_STRIPE_SECTORS(conf);
+>   
+> -	hash = stripe_hash_locks_hash(conf, head_sector);
+> -	spin_lock_irq(conf->hash_locks + hash);
+> -	head = find_get_stripe(conf, head_sector, conf->generation, hash);
+> -	spin_unlock_irq(conf->hash_locks + hash);
+> -
+> -	if (!head)
+> -		return;
+> -	if (!stripe_can_batch(head))
+> -		goto out;
+> +	if (last_sh && head_sector == last_sh->sector) {
+> +		head = last_sh;
+> +		atomic_inc(&head->count);
+> +	} else {
+> +		hash = stripe_hash_locks_hash(conf, head_sector);
+> +		spin_lock_irq(conf->hash_locks + hash);
+> +		head = find_get_stripe(conf, head_sector, conf->generation,
+> +				       hash);
+> +		spin_unlock_irq(conf->hash_locks + hash);
+> +		if (!head)
+> +			return;
+> +		if (!stripe_can_batch(head))
+> +			goto out;
+> +	}
+>   
+>   	lock_two_stripes(head, sh);
+>   	/* clear_batch_ready clear the flag */
+> @@ -5800,6 +5806,7 @@ enum stripe_result {
+>   
+>   struct stripe_request_ctx {
+>   	bool do_flush;
+> +	struct stripe_head *batch_last;
+>   };
+>   
+>   static enum stripe_result make_stripe_request(struct mddev *mddev,
+> @@ -5889,8 +5896,13 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+>   		return STRIPE_SCHEDULE_AND_RETRY;
+>   	}
+>   
+> -	if (stripe_can_batch(sh))
+> -		stripe_add_to_batch_list(conf, sh);
+> +	if (stripe_can_batch(sh)) {
+> +		stripe_add_to_batch_list(conf, sh, ctx->batch_last);
+> +		if (ctx->batch_last)
+> +			raid5_release_stripe(ctx->batch_last);
+> +		atomic_inc(&sh->count);
+> +		ctx->batch_last = sh;
+> +	}
+>   
+>   	if (ctx->do_flush) {
+>   		set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
+> @@ -5979,6 +5991,18 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   		} else if (res == STRIPE_RETRY) {
+>   			continue;
+>   		} else if (res == STRIPE_SCHEDULE_AND_RETRY) {
+> +			/*
+> +			 * Must release the reference to batch_last before
+> +			 * scheduling and waiting for work to be done,
+> +			 * otherwise the batch_last stripe head could prevent
+> +			 * raid5_activate_delayed() from making progress
+> +			 * and thus deadlocking.
+> +			 */
+> +			if (ctx.batch_last) {
+> +				raid5_release_stripe(ctx.batch_last);
+> +				ctx.batch_last = NULL;
+> +			}
+> +
+>   			schedule();
+>   			prepare_to_wait(&conf->wait_for_overlap, &w,
+>   					TASK_UNINTERRUPTIBLE);
+> @@ -5990,6 +6014,9 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>   
+>   	finish_wait(&conf->wait_for_overlap, &w);
+>   
+> +	if (ctx.batch_last)
+> +		raid5_release_stripe(ctx.batch_last);
+> +
+>   	if (rw == WRITE)
+>   		md_write_end(mddev);
+>   	bio_endio(bi);
 
+Otherwise looks good, Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 
 Thanks,
 Guoqing
