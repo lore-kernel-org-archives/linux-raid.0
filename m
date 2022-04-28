@@ -2,104 +2,131 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2362C433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Apr 2022 01:50:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3F99C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Apr 2022 02:00:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240885AbiD1BxU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 27 Apr 2022 21:53:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34100 "EHLO
+        id S241057AbiD1CDp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 27 Apr 2022 22:03:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232169AbiD1BxS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 27 Apr 2022 21:53:18 -0400
-Received: from out1.migadu.com (out1.migadu.com [IPv6:2001:41d0:2:863f::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2378299;
-        Wed, 27 Apr 2022 18:50:04 -0700 (PDT)
-Subject: Re: [PATCH v2 01/12] md/raid5: Factor out ahead_of_reshape() function
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1651110603;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=CbEtAZGkNZAuchq7NKoeV3cKOWr84klzGpqBcsQxcMs=;
-        b=Ip/L+IwlDHTIEdN3OQ3EUG0N8t0/OI25xdagAIH29JcrdPWX9JxzlXmDLlhiVaLWUOy/FU
-        UDjdyrUBaWkaz7D9MWPfnUc/SC/GBGUs9REjEYdwsP+iN3ogsSi7jrkoe5GS+CXFpnNzrS
-        Wrj9xFAOB75rr554/hsktaAeLILDEC4=
-To:     Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20220420195425.34911-1-logang@deltatee.com>
- <20220420195425.34911-2-logang@deltatee.com>
- <2a6d5554-4f71-6476-6d14-031da52005f5@linux.dev>
- <fe7f6d8a-8c66-3e90-1c52-140fe9d4cf1a@deltatee.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <19d88098-7e52-38de-ceb7-a68debfbbd10@linux.dev>
-Date:   Thu, 28 Apr 2022 09:49:56 +0800
+        with ESMTP id S241036AbiD1CDm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 27 Apr 2022 22:03:42 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B24A5F671;
+        Wed, 27 Apr 2022 19:00:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651111229; x=1682647229;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=lulCbLibblcfe+Y3OjIlB++pgig6LUiF7oMjIIEhKF4=;
+  b=FmpiIPBJoTVIG0xYRRNWBldZrGDec+XHZ8vlChWsBARfWagInldFghp8
+   wSopWg9ZymML1Fn2P8GYaHSAYex5S8UpY8XwZLRFqEY+Gxxpn3QRmUBL0
+   RkwLNmCJ4yKQheve+mR70eW9C8Cr/QLdGyCiWlZuxUVEgJPS6nWnPDptf
+   tbkAGUbD2KMpJjV0dLMbFCf3pPFRGb1j4NxOOa9UuNX3XKn0P97Cf46zM
+   ricpam942sSJgRwUdsA5OmRVJv2ooVy0Alr0bphU8giVZTgzy17vmMJXK
+   bTX/SIdumwHfhFzJ/QP9oR1cE9jq8IZ6S7fpDuWOGbi0F12MlB1+ldFoJ
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10330"; a="291287363"
+X-IronPort-AV: E=Sophos;i="5.90,294,1643702400"; 
+   d="scan'208";a="291287363"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2022 19:00:27 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,294,1643702400"; 
+   d="scan'208";a="617872486"
+Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
+  by fmsmga008.fm.intel.com with ESMTP; 27 Apr 2022 19:00:24 -0700
+Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1njtSB-0004xf-IA;
+        Thu, 28 Apr 2022 02:00:23 +0000
+Date:   Thu, 28 Apr 2022 09:59:41 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Matthias Kaehlcke <mka@chromium.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        James Morris <jmorris@namei.org>,
+        "Serge E . Hallyn" <serge@hallyn.com>
+Cc:     kbuild-all@lists.01.org, linux-kernel@vger.kernel.org,
+        linux-security-module@vger.kernel.org, dm-devel@redhat.com,
+        linux-raid@vger.kernel.org,
+        Douglas Anderson <dianders@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Matthias Kaehlcke <mka@chromium.org>
+Subject: Re: [PATCH v2 2/3] LoadPin: Enable loading from trusted dm-verity
+ devices
+Message-ID: <202204280323.OzDYYX55-lkp@intel.com>
+References: <20220426143059.v2.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
 MIME-Version: 1.0
-In-Reply-To: <fe7f6d8a-8c66-3e90-1c52-140fe9d4cf1a@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220426143059.v2.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi Matthias,
+
+Thank you for the patch! Yet something to improve:
+
+[auto build test ERROR on device-mapper-dm/for-next]
+[also build test ERROR on song-md/md-next kees/for-next/pstore v5.18-rc4 next-20220427]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220427-053314
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
+config: alpha-randconfig-r024-20220425 (https://download.01.org/0day-ci/archive/20220428/202204280323.OzDYYX55-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 11.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/f3a54909bcd78b9f7f006d7e78acd03987031fae
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220427-053314
+        git checkout f3a54909bcd78b9f7f006d7e78acd03987031fae
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=alpha SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   security/loadpin/loadpin.c: In function 'loadpin_init':
+   security/loadpin/loadpin.c:436:44: error: 'loadpin_sysctl_path' undeclared (first use in this function)
+     436 |                 if (!register_sysctl_paths(loadpin_sysctl_path,
+         |                                            ^~~~~~~~~~~~~~~~~~~
+   security/loadpin/loadpin.c:436:44: note: each undeclared identifier is reported only once for each function it appears in
+>> security/loadpin/loadpin.c:437:44: error: 'loadpin_sysctl_table_verity_digests' undeclared (first use in this function)
+     437 |                                            loadpin_sysctl_table_verity_digests))
+         |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-On 4/28/22 12:07 AM, Logan Gunthorpe wrote:
->
-> On 2022-04-26 19:28, Guoqing Jiang wrote:
->>>    +static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
->>> +                 sector_t reshape_sector)
->>> +{
->>> +    if (mddev->reshape_backwards)
->>> +        return sector < reshape_sector;
->>> +    else
->>> +        return sector >= reshape_sector;
->>> +}
->> I think it can be an inline function.
-> Marking static functions in C files as inline is not recommended. GCC
-> will inline it, if it is appropriate.
->
-> https://yarchive.net/comp/linux/inline.html
-> https://www.kernel.org/doc/local/inline.html
+vim +/loadpin_sysctl_table_verity_digests +437 security/loadpin/loadpin.c
 
-Thanks for the link, then I suppose those can be deleted
+   427	
+   428	static int __init loadpin_init(void)
+   429	{
+   430		pr_info("ready to pin (currently %senforcing)\n",
+   431			enforce ? "" : "not ");
+   432		parse_exclude();
+   433		security_add_hooks(loadpin_hooks, ARRAY_SIZE(loadpin_hooks), "loadpin");
+   434	
+   435		if (IS_ENABLED(CONFIG_SECURITY_LOADPIN_VERITY)) {
+   436			if (!register_sysctl_paths(loadpin_sysctl_path,
+ > 437						   loadpin_sysctl_table_verity_digests))
+   438				pr_notice("sysctl registration failed!\n");
+   439		}
+   440	
+   441		return 0;
+   442	}
+   443	
 
-linux> grep "static inline" drivers/md/md.h -r
-static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
-static inline int __must_check mddev_lock(struct mddev *mddev)
-static inline void mddev_lock_nointr(struct mddev *mddev)
-static inline int mddev_trylock(struct mddev *mddev)
-static inline int mddev_is_locked(struct mddev *mddev)
-static inline void md_sync_acct(struct block_device *bdev, unsigned long 
-nr_sectors)
-static inline void md_sync_acct_bio(struct bio *bio, unsigned long 
-nr_sectors)
-static inline struct kernfs_node *sysfs_get_dirent_safe(struct 
-kernfs_node *sd, char *name)
-static inline void sysfs_notify_dirent_safe(struct kernfs_node *sd)
-static inline char * mdname (struct mddev * mddev)
-static inline int sysfs_link_rdev(struct mddev *mddev, struct md_rdev *rdev)
-static inline void sysfs_unlink_rdev(struct mddev *mddev, struct md_rdev 
-*rdev)
-static inline void safe_put_page(struct page *p)
-static inline bool is_mddev_broken(struct md_rdev *rdev, const char 
-*md_type)
-static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev 
-*mddev)
-static inline int mddev_is_clustered(struct mddev *mddev)
-static inline void mddev_clear_unsupported_flags(struct mddev *mddev,
-static inline void mddev_check_write_zeroes(struct mddev *mddev, struct 
-bio *bio)
-
-Thanks,
-Guoqing
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
