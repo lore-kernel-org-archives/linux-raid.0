@@ -2,51 +2,52 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC576C433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 29 Apr 2022 00:24:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FF91C433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 29 Apr 2022 00:49:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237629AbiD2A2K (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Apr 2022 20:28:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45114 "EHLO
+        id S1352285AbiD2Awa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Apr 2022 20:52:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237176AbiD2A2I (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Apr 2022 20:28:08 -0400
-Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DA44BB081;
-        Thu, 28 Apr 2022 17:24:51 -0700 (PDT)
-Subject: Re: [PATCH v2 01/12] md/raid5: Factor out ahead_of_reshape() function
+        with ESMTP id S237189AbiD2Aw3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Apr 2022 20:52:29 -0400
+Received: from out2.migadu.com (out2.migadu.com [188.165.223.204])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9F37887AD;
+        Thu, 28 Apr 2022 17:49:12 -0700 (PDT)
+Subject: Re: [PATCH v2 00/12] Improve Raid5 Lock Contention
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1651191889;
+        t=1651193351;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=iSBOO50OR8+5K2ZkY0YlkbGrEvhyMneIB+LGNkRkwU4=;
-        b=WHdR1HcgICEpWz+lyrno+13G8LUYpkcqZs5jc/jWDY3B8imjX78V2+gQmyCdrKv2DOQt+S
-        IQt77bt2cWTHsONhpnlI4sB0bhy6bQLQvsbGtTnZ/i9elRWeFomgK+AeOeGxl/fKOmb5t/
-        pAC+k9jgTjWM8uoFMWw/jGjm696/cQo=
-To:     Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
+        bh=D9uNLyxy24U8cwCidXNlnBYk/A7+jJ6jFr9CcVcV/Es=;
+        b=U5r5GPhyzH8g2Kj75Xv/YHm+AjYWFh/NIdFTuupxFoYM4l5wRQ5LtF+LIBiqWiXUMrGVHW
+        NdkXX/W4RYAYLW3jNUi3yVRmUNRaU2p4YPavBAfD8tt6ufIfqcbgH3tW5rwAnNua7dFDCf
+        rWk09wsNSKfS3B+8okqOnlEGJlqyrYI=
+To:     Logan Gunthorpe <logang@deltatee.com>, Xiao Ni <xni@redhat.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Song Liu <song@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
         Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Christoph Hellwig <hch@lst.de>
+        David Sloan <David.Sloan@eideticom.com>
 References: <20220420195425.34911-1-logang@deltatee.com>
- <20220420195425.34911-2-logang@deltatee.com>
- <2a6d5554-4f71-6476-6d14-031da52005f5@linux.dev>
- <fe7f6d8a-8c66-3e90-1c52-140fe9d4cf1a@deltatee.com>
- <19d88098-7e52-38de-ceb7-a68debfbbd10@linux.dev>
- <78a6ffae-7701-e0dd-3130-a9a95473d16b@deltatee.com>
+ <CALTww28fwNpm0O_jc7-2Xr0JSX9i6F1kgoUQ8m_k6ZgPa1XxXw@mail.gmail.com>
+ <c14c0103-9cbd-7d0f-486b-344dd33725ab@deltatee.com>
+ <4094aed9-d22d-d14f-07a7-5abe599beeab@linux.dev>
+ <8d8fbf24-51b5-a076-b7ad-fcbb7d5c275e@deltatee.com>
+ <CALTww28SuvhzCL6p4L9y9ZH5Mmgss-tTm_QzbEo60hZOXAUS0A@mail.gmail.com>
+ <4f0b44aa-77a4-9896-b780-eb52241954ae@deltatee.com>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <7c2c8d8e-f13f-ac89-40c6-7d5c5c084970@linux.dev>
-Date:   Fri, 29 Apr 2022 08:24:44 +0800
+Message-ID: <cba5f13e-0481-9dc9-36a4-ed29bf34220f@linux.dev>
+Date:   Fri, 29 Apr 2022 08:49:03 +0800
 MIME-Version: 1.0
-In-Reply-To: <78a6ffae-7701-e0dd-3130-a9a95473d16b@deltatee.com>
+In-Reply-To: <4f0b44aa-77a4-9896-b780-eb52241954ae@deltatee.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Content-Language: en-US
 X-Migadu-Flow: FLOW_OUT
 X-Migadu-Auth-User: linux.dev
@@ -56,49 +57,62 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 4/28/22 11:44 PM, Logan Gunthorpe wrote:
+On 4/29/22 5:22 AM, Logan Gunthorpe wrote:
 >
->
-> On 2022-04-27 19:49, Guoqing Jiang wrote:
->>
->> On 4/28/22 12:07 AM, Logan Gunthorpe wrote:
->>> On 2022-04-26 19:28, Guoqing Jiang wrote:
->>>>>     +static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
->>>>> +                 sector_t reshape_sector)
->>>>> +{
->>>>> +    if (mddev->reshape_backwards)
->>>>> +        return sector < reshape_sector;
->>>>> +    else
->>>>> +        return sector >= reshape_sector;
->>>>> +}
->>>> I think it can be an inline function.
->>> Marking static functions in C files as inline is not recommended. GCC
->>> will inline it, if it is appropriate.
+> On 2022-04-25 10:12, Xiao Ni wrote:
+>>> I do know that lkp-tests has run it on this series as I did get an error
+>>> from it. But while I'm pretty sure that error has been resolved, I was
+>>> never able to figure out how to run them locally.
 >>>
->>> https://yarchive.net/comp/linux/inline.html
->>> https://www.kernel.org/doc/local/inline.html
->> Thanks for the link, then I suppose those can be deleted
->> linux> grep "static inline" drivers/md/md.h -r
-> It's standard practice to annotate small functions in headers with
-> "static inline". Without the inline annotation, any C file that includes
-> the header and doesn't use the function will emit a "defined but not
-> used warning".
+>> Hi Logan
+>>
+>> You can clone the mdadm repo at
+>> git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
+>> Then you can find there is a script test under the directory. It's not
+>> under the tests directory.
+>> The test cases are under tests directory.
+> So I've been fighting with this and it seems there are just a ton of
+> failures in these tests without my changes. Running on the latest master
+> (52c67fcdd6dad) with stock v5.17.5 I see major brokenness. About 17 out
+> of 44 tests that run failed. I had to run with --disable-integrity
+> because those tests seem to hang on an infinite loop waiting for the md
+> array to go into the U state (even though it appears idle).
 >
-> Functions in headers also should, by definition, be small and
-> specifically inline-able (ie they are used as a type-safe macro).
+> Even though I ran the tests with '--keep-going', the testing stopped
+> after the 07revert-grow reported errors in dmesg -- even though the only
+> errors printed to dmesg were that of mdadm segfaulting.
 >
-> static functions in C files (not headers) should not have the inline
-> keyword as GCC can optimize them and inline them as it sees fit and the
-> inline keyword doesn't actually do anything.
+> Running on md/md-next seems to get a bit further (to
+> 10ddf-create-fail-rebuild) and stops with the same segfaulting issue (or
+> perhaps the 07 test only randomly fails first -- I haven't run it that
+> many times). Though most of the tests between these points fail anyway.
+>
+> My upcoming v3 patches cause no failures that are different from the
+> md/md-next branch. But it seems these tests have rotted to the point
+> that they aren't all that useful; or maybe there are a ton of
+> regressions in the kernel already and nobody was paying much attention.
 
-I am happy to be taught, but still I can see lots of static function in 
-C files
-as well, at least
+I can't agree with you anymore. I would say some patches were submitted
+without run enough tests, then after one by one kernel release, the thing
+becomes worse.
 
-linux> grep "static inline" drivers/md/*.c -r|wc
-      98     661    8630
+This is also the reason that I recommend run mdadm tests since md raid
+is a complex subsystem, perhaps a simple change could cause regression.
+And considering there are really limited developers and reviewers in the
+community, the chance to cause regression get bigger.
 
-Anyway, I don't want to argue about it anymore.
+> I have also tried to test certain cases that appear broken in recent
+> kernels anyway (like reducing the number of disks in a raid5 array hangs
+> on the first stripe to reshape).
+>
+> In any case I have a very rough ad-hoc test suite I've been expanding
+> that is targeted at testing my specific changes. Testing these changes
+> has definitely been challenging. In any case, I've published my tests here:
+>
+> https://github.com/Eideticom/raid5-tests
+
+If I may, is it possible to submit your tests to mdadm as well? So we can
+have one common place to contain enough tests.
 
 Thanks,
 Guoqing
