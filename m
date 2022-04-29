@@ -2,102 +2,102 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D69A2C433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 29 Apr 2022 05:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBB8EC433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 29 Apr 2022 16:01:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238152AbiD2FM6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 29 Apr 2022 01:12:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60198 "EHLO
+        id S1359613AbiD2QE6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 29 Apr 2022 12:04:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238106AbiD2FM5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 29 Apr 2022 01:12:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 234BF220C4
-        for <linux-raid@vger.kernel.org>; Thu, 28 Apr 2022 22:09:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1651208976;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=7nUykxwIBhm1DKolZr77bIvB9wsQ2z+ZIOuL5mI5vuI=;
-        b=aVMGONrrRf9Yloy+I5AxC79ZrnVPHVUvlr172HULdyWsPr31cvS3chfzTpY+Lm2dabzdFM
-        tNPjwAT6r9Y/yj+ivAloXorhVdezzn02LWUC69TTkhyaXuq8P4JKHwafXAmgsa6j5GuBVP
-        X77EOw62K7LC4NAPOZ0cp0EQdtjt7MQ=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-664-Y8MsjQ8gPeK0yEcDouPHxg-1; Fri, 29 Apr 2022 01:09:33 -0400
-X-MC-Unique: Y8MsjQ8gPeK0yEcDouPHxg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C4B8885A5A8;
-        Fri, 29 Apr 2022 05:09:32 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-26.pek2.redhat.com [10.72.8.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F0FBA7AD5;
-        Fri, 29 Apr 2022 05:09:29 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, ncroxon@redhat.com, heinzm@redhat.com,
-        ffan@redhat.com
-Subject: [PATCH 1/1] Don't set mddev private to NULL in raid0 pers->free
-Date:   Fri, 29 Apr 2022 13:09:27 +0800
-Message-Id: <1651208967-4701-1-git-send-email-xni@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.11.54.5
+        with ESMTP id S1353800AbiD2QE4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 29 Apr 2022 12:04:56 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 794965521F;
+        Fri, 29 Apr 2022 09:01:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=esLsTjeFbAhjqEsGKQ/uoZ2kISCKtGjxsP23AmIceA8=; b=f+/sRa+D999SGzSah6vs1/IzWF
+        3nHHgiLgnFgqNa07JhCg7ofLXX9BJmNxqTqqPfXAwaO+bH2k4FvR7p5KTn1jxcHN5ZSBXZxnXJldW
+        Jezy3ymIxYt33vN9hm9o88qDjRmzoNo4zBQS4q/HGqwzIX8HougCQ8CSMpcNo6t2CuiKqgDKlQOfu
+        h6vU4NRae1w9EBWuXZvW0HBjeMU3M2M2Sqd9Tb+CnhXyparigF5ai5bfyXDgnqyh5MKpNwQ/HzUHM
+        yCpeyIwJWsRpJw/Yoqtfo24I7tfNWYLfcbrZfSg4Z9CwuQWkpcyGBerPNl14OxaV3EB903SU330ap
+        /XRzOeFw==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1nkT3h-001soD-GU; Fri, 29 Apr 2022 10:01:30 -0600
+Message-ID: <bc98075a-034c-d1fe-485f-2b7af85df91b@deltatee.com>
+Date:   Fri, 29 Apr 2022 10:01:27 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Content-Language: en-CA
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>, Xiao Ni <xni@redhat.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Song Liu <song@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+References: <20220420195425.34911-1-logang@deltatee.com>
+ <CALTww28fwNpm0O_jc7-2Xr0JSX9i6F1kgoUQ8m_k6ZgPa1XxXw@mail.gmail.com>
+ <c14c0103-9cbd-7d0f-486b-344dd33725ab@deltatee.com>
+ <4094aed9-d22d-d14f-07a7-5abe599beeab@linux.dev>
+ <8d8fbf24-51b5-a076-b7ad-fcbb7d5c275e@deltatee.com>
+ <CALTww28SuvhzCL6p4L9y9ZH5Mmgss-tTm_QzbEo60hZOXAUS0A@mail.gmail.com>
+ <4f0b44aa-77a4-9896-b780-eb52241954ae@deltatee.com>
+ <cba5f13e-0481-9dc9-36a4-ed29bf34220f@linux.dev>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <cba5f13e-0481-9dc9-36a4-ed29bf34220f@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: guoqing.jiang@linux.dev, xni@redhat.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v2 00/12] Improve Raid5 Lock Contention
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-It panics when reshaping from raid0 to other raid levels. raid0 sets
-mddev->private to NULL. It's the reason that causes the problem.
-Function level_store finds new pers and create new conf, then it
-calls oldpers->free. In oldpers->free, raid0 sets mddev->private
-to NULL again. And __md_stop is the right position to set
-mddev->private to NULL.
 
-And this patch also deletes double free memory codes. io_acct_set
-is free in pers->free.
 
-Fixes: 0c031fd37f69 (md: Move alloc/free acct bioset in to personality)
-Reported-by: Fine Fan <ffan@redhat.com>
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/md.c    | 4 ----
- drivers/md/raid0.c | 1 -
- 2 files changed, 5 deletions(-)
+On 2022-04-28 18:49, Guoqing Jiang wrote:
+> I can't agree with you anymore. I would say some patches were submitted
+> without run enough tests, then after one by one kernel release, the thing
+> becomes worse.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 707e802..55b6412e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5598,8 +5598,6 @@ static void md_free(struct kobject *ko)
- 
- 	bioset_exit(&mddev->bio_set);
- 	bioset_exit(&mddev->sync_set);
--	if (mddev->level != 1 && mddev->level != 10)
--		bioset_exit(&mddev->io_acct_set);
- 	kfree(mddev);
- }
- 
-@@ -6285,8 +6283,6 @@ void md_stop(struct mddev *mddev)
- 	__md_stop(mddev);
- 	bioset_exit(&mddev->bio_set);
- 	bioset_exit(&mddev->sync_set);
--	if (mddev->level != 1 && mddev->level != 10)
--		bioset_exit(&mddev->io_acct_set);
- }
- 
- EXPORT_SYMBOL_GPL(md_stop);
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index e11701e..5fa0d40 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -362,7 +362,6 @@ static void free_conf(struct mddev *mddev, struct r0conf *conf)
- 	kfree(conf->strip_zone);
- 	kfree(conf->devlist);
- 	kfree(conf);
--	mddev->private = NULL;
- }
- 
- static void raid0_free(struct mddev *mddev, void *priv)
--- 
-2.7.5
+I'm not sure where we disagree here. I certainly don't want to introduce
+regressions myself. I haven't submitted v3 yet because I've become less
+certain that there are no regressions in it. The point of my last email
+was try to explain that I am taking testing seriously.
 
+> This is also the reason that I recommend run mdadm tests since md raid
+> is a complex subsystem, perhaps a simple change could cause regression.
+> And considering there are really limited developers and reviewers in the
+> community, the chance to cause regression get bigger.
+
+While I'd certainly like to run mdadm tests, they appear to be very
+broken to me. Too broken for me to fix all of it -- I don't have time
+for fixing that many issues. Seems I'm not the only one to run into this
+problem recently:
+
+https://lore.kernel.org/linux-raid/20220111130635.00001478@linux.intel.com/T/#t
+
+And it's a shame nobody could even bother to remove the unsupported 0.9
+metadata tests from the repo as a result of this conversation.
+
+> If I may, is it possible to submit your tests to mdadm as well? So we can
+> have one common place to contain enough tests.
+
+I'd certainly consider that if I could run the test suite. Though one
+hitch is that I've found I need to run my tests repeatedly, for hours,
+before hitting some rare bugs. Running the tests only once is much
+easier to pass. It's hard to fully test things like this with so many
+rare retry paths in a simple regression test.
+
+Logan
