@@ -2,415 +2,154 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7951C4332F
-	for <linux-raid@archiver.kernel.org>; Wed,  4 May 2022 19:54:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E6A1C433F5
+	for <linux-raid@archiver.kernel.org>; Wed,  4 May 2022 22:27:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377745AbiEDT6M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 4 May 2022 15:58:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58612 "EHLO
+        id S1359242AbiEDWbX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 4 May 2022 18:31:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377736AbiEDT6G (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 4 May 2022 15:58:06 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27E1C4EA2C
-        for <linux-raid@vger.kernel.org>; Wed,  4 May 2022 12:54:28 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id iq10so2189111pjb.0
-        for <linux-raid@vger.kernel.org>; Wed, 04 May 2022 12:54:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Gp9xlLGWh8jE9LSf7azZ10DOrZcyf+qHkQB0hbwlc6c=;
-        b=Re8w0E71m1NuEGuoKe1+lP1K0mogJQPMQNwOvjgX8GgvdMmbzNvUUBh+uQTk019amF
-         TvDUGdy3yBqpR3CrPi7vZz2JuiApQ08NyIFnvgWplvbqwg4OLntXWKscqGy1zf8jg9Tl
-         X7yfbHlvVMNgs3QO+3sDsG6C8Gm9CJ+q9RwYM=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Gp9xlLGWh8jE9LSf7azZ10DOrZcyf+qHkQB0hbwlc6c=;
-        b=37Ihpn2TCB0tvufu8Qh3yKi6eY8TK1Y6s6d7LN6wuXgoN9K3r6UeB9F0dQHZfYBWcJ
-         Am53bCt0dnG9ie14RYj0aMT+apq6z3o4PevHw8MtiCF4iZ9QdALA9opIMXMQivPJCndU
-         b5vRMEF/+5onIzFix2fIPmENzfWBiIuceNjpsOaOOiPc4OYdtCDaxaeRnSpNbpJwh+e3
-         VLIS+Ty5CRJQxH5HleF4XHO5VFjuSBaif2JEnvMf9J9ef38oDSM1ybvz7TRw7JU97c/S
-         KyP8zhBPFhv2B5OsIkyULg8F7p4faGzUWxfD69BbCKmF0OoyvT/S8pnVxZWeweZCp+YY
-         z8RA==
-X-Gm-Message-State: AOAM531h0/OOCuJFZE4Ls8TnRVHftgp8Xb9/IC8QDY+GVVzc2rDIEVpl
-        gWmW567z/qS8/EFYDvGrTBeirg==
-X-Google-Smtp-Source: ABdhPJyBJFV2oTf0rlK//p4KZ3djT6dJ0kNaH/ylPKKm050V3L+WL306CMkubdaar/oyJwhAqtSE/w==
-X-Received: by 2002:a17:903:20f:b0:158:d86a:f473 with SMTP id r15-20020a170903020f00b00158d86af473mr23385549plh.92.1651694067352;
-        Wed, 04 May 2022 12:54:27 -0700 (PDT)
-Received: from localhost ([2620:15c:202:201:35b6:c77b:be04:3bd5])
-        by smtp.gmail.com with UTF8SMTPSA id s7-20020a62e707000000b0050dc76281cfsm8598643pfh.169.2022.05.04.12.54.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 May 2022 12:54:26 -0700 (PDT)
-From:   Matthias Kaehlcke <mka@chromium.org>
-To:     Alasdair Kergon <agk@redhat.com>,
+        with ESMTP id S1358817AbiEDWbW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 4 May 2022 18:31:22 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E7A71839F;
+        Wed,  4 May 2022 15:27:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651703264; x=1683239264;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Vj0dF0rneHeDuVaqq9G7vHZ4CjgqcvP5nCZmY9HAp6M=;
+  b=fxOL8T+yv9FhuHWniZDPEi4GkTv4kZFJdqhDj6oqxPehKrBLfVvR1BaX
+   LN3LsoaOmhyVPy6CLXMBj7oLPCCaWSx5+IlAtfhKBaCTh3+iLnDMZdu3M
+   9pCGF7Gcmd7EbLHarwbRl3U4Ulo1kQaPcgPcAwSmFoDmD80Sq/ZR2GaHX
+   FeDJq0OkGFViIXRGllR3hMcs2oR468xq++0/q8nZo1sh0/+XVW8WrQaF9
+   WcS3UpJt8HCUSpojovHus93N1Gyvd5QZ6O6G+04XDNwk4kbRBpIt0GcEK
+   DME5nEp8HyyiTifTo8lg3aLQ1oZ6JvSQuckDvM09SIoGjd2E2O73bOIYp
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10337"; a="354354275"
+X-IronPort-AV: E=Sophos;i="5.91,199,1647327600"; 
+   d="scan'208";a="354354275"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 May 2022 15:27:44 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,199,1647327600"; 
+   d="scan'208";a="568311611"
+Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
+  by fmsmga007.fm.intel.com with ESMTP; 04 May 2022 15:27:41 -0700
+Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nmNTA-000BqY-LW;
+        Wed, 04 May 2022 22:27:40 +0000
+Date:   Thu, 5 May 2022 06:26:58 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Matthias Kaehlcke <mka@chromium.org>,
+        Alasdair Kergon <agk@redhat.com>,
         Mike Snitzer <snitzer@kernel.org>,
         Kees Cook <keescook@chromium.org>,
         James Morris <jmorris@namei.org>,
         "Serge E . Hallyn" <serge@hallyn.com>
-Cc:     dm-devel@redhat.com, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
+Cc:     kbuild-all@lists.01.org, dm-devel@redhat.com,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>,
         Douglas Anderson <dianders@chromium.org>,
         linux-security-module@vger.kernel.org,
         Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH v3 2/3] LoadPin: Enable loading from trusted dm-verity devices
-Date:   Wed,  4 May 2022 12:54:18 -0700
-Message-Id: <20220504125404.v3.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
-X-Mailer: git-send-email 2.36.0.464.gb9c8b46e94-goog
-In-Reply-To: <20220504195419.1143099-1-mka@chromium.org>
-References: <20220504195419.1143099-1-mka@chromium.org>
+Subject: Re: [PATCH v3 2/3] LoadPin: Enable loading from trusted dm-verity
+ devices
+Message-ID: <202205050636.VNgSDFVz-lkp@intel.com>
+References: <20220504125404.v3.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220504125404.v3.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Extend LoadPin to allow loading of kernel files from trusted dm-verity [1]
-devices.
+Hi Matthias,
 
-This change adds the concept of trusted verity devices to LoadPin. LoadPin
-maintains a list of root digests of verity devices it considers trusted.
-Userspace can populate this list through an ioctl on the new LoadPin
-securityfs entry 'dm-verity'. The ioctl receives a file descriptor of
-a file with verity digests as parameter. Verity reads the digests from
-this file after confirming that the file is located on the pinned root.
-The list of trusted digests can only be set up once, which is typically
-done at boot time.
+Thank you for the patch! Perhaps something to improve:
 
-When a kernel file is read LoadPin first checks (as usual) whether the file
-is located on the pinned root, if so the file can be loaded. Otherwise, if
-the verity extension is enabled, LoadPin determines whether the file is
-located on a verity backed device and whether the root digest of that
-device is in the list of trusted digests. The file can be loaded if the
-verity device has a trusted root digest.
+[auto build test WARNING on device-mapper-dm/for-next]
+[also build test WARNING on song-md/md-next kees/for-next/pstore linus/master v5.18-rc5 next-20220504]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-Background:
+url:    https://github.com/intel-lab-lkp/linux/commits/Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220505-035620
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
+config: arc-allyesconfig (https://download.01.org/0day-ci/archive/20220505/202205050636.VNgSDFVz-lkp@intel.com/config)
+compiler: arceb-elf-gcc (GCC) 11.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/56f912dcbb302f9a7e6694493529abd4e3f337af
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220505-035620
+        git checkout 56f912dcbb302f9a7e6694493529abd4e3f337af
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=arc SHELL=/bin/bash security/loadpin/
 
-As of now LoadPin restricts loading of kernel files to a single pinned
-filesystem, typically the rootfs. This works for many systems, however it
-can result in a bloated rootfs (and OTA updates) on platforms where
-multiple boards with different hardware configurations use the same rootfs
-image. Especially when 'optional' files are large it may be preferable to
-download/install them only when they are actually needed by a given board.
-Chrome OS uses Downloadable Content (DLC) [2] to deploy certain 'packages'
-at runtime. As an example a DLC package could contain firmware for a
-peripheral that is not present on all boards. DLCs use dm-verity to verify
-the integrity of the DLC content.
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
 
-[1] https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/verity.html
-[2] https://chromium.googlesource.com/chromiumos/platform2/+/HEAD/dlcservice/docs/developer.md
+All warnings (new ones prefixed by >>):
 
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
----
+   In file included from include/linux/kernel.h:29,
+                    from include/linux/cpumask.h:10,
+                    from include/linux/mm_types_task.h:14,
+                    from include/linux/mm_types.h:5,
+                    from include/linux/buildid.h:5,
+                    from include/linux/module.h:14,
+                    from security/loadpin/loadpin.c:12:
+   security/loadpin/loadpin.c: In function 'init_loadpin_securityfs':
+>> include/linux/kern_levels.h:5:25: warning: format '%d' expects argument of type 'int', but argument 2 has type 'long int' [-Wformat=]
+       5 | #define KERN_SOH        "\001"          /* ASCII Start Of Header */
+         |                         ^~~~~~
+   include/linux/printk.h:418:25: note: in definition of macro 'printk_index_wrap'
+     418 |                 _p_func(_fmt, ##__VA_ARGS__);                           \
+         |                         ^~~~
+   include/linux/printk.h:489:9: note: in expansion of macro 'printk'
+     489 |         printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+         |         ^~~~~~
+   include/linux/kern_levels.h:11:25: note: in expansion of macro 'KERN_SOH'
+      11 | #define KERN_ERR        KERN_SOH "3"    /* error conditions */
+         |                         ^~~~~~~~
+   include/linux/printk.h:489:16: note: in expansion of macro 'KERN_ERR'
+     489 |         printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+         |                ^~~~~~~~
+   security/loadpin/loadpin.c:413:17: note: in expansion of macro 'pr_err'
+     413 |                 pr_err("LoadPin: could not create securityfs dir: %d\n",
+         |                 ^~~~~~
+>> include/linux/kern_levels.h:5:25: warning: format '%d' expects argument of type 'int', but argument 2 has type 'long int' [-Wformat=]
+       5 | #define KERN_SOH        "\001"          /* ASCII Start Of Header */
+         |                         ^~~~~~
+   include/linux/printk.h:418:25: note: in definition of macro 'printk_index_wrap'
+     418 |                 _p_func(_fmt, ##__VA_ARGS__);                           \
+         |                         ^~~~
+   include/linux/printk.h:489:9: note: in expansion of macro 'printk'
+     489 |         printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+         |         ^~~~~~
+   include/linux/kern_levels.h:11:25: note: in expansion of macro 'KERN_SOH'
+      11 | #define KERN_ERR        KERN_SOH "3"    /* error conditions */
+         |                         ^~~~~~~~
+   include/linux/printk.h:489:16: note: in expansion of macro 'KERN_ERR'
+     489 |         printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+         |                ^~~~~~~~
+   security/loadpin/loadpin.c:421:17: note: in expansion of macro 'pr_err'
+     421 |                 pr_err("LoadPin: could not create securityfs entry 'dm-verity': %d\n",
+         |                 ^~~~~~
 
-Changes in v3:
-- added securityfs for LoadPin (currently only populated when
-  CONFIG_SECURITY_LOADPIN_VERITY=y)
-- added uapi include for LoadPin
-- changed the interface for setting up the list of trusted
-  digests from sysctl to ioctl on securityfs entry
-- added stub for loadpin_is_fs_trusted() to be used
-  CONFIG_SECURITY_LOADPIN_VERITY is not select
-- depend on CONFIG_SECURITYFS instead of CONFIG_SYSTCL
-- updated Kconfig help
-- minor changes in read_trusted_verity_root_digests()
-- updated commit message
 
-Changes in v2:
-- userspace now passes the path of the file with the verity digests
-  via systcl, instead of the digests themselves
-- renamed sysctl file to 'trusted_verity_root_digests_path'
-- have CONFIG_SECURITY_LOADPIN_VERITY depend on CONFIG_SYSCTL
-- updated Kconfig doc
-- updated commit message
+vim +5 include/linux/kern_levels.h
 
- include/uapi/linux/loadpin.h |  19 ++++
- security/loadpin/Kconfig     |  16 +++
- security/loadpin/loadpin.c   | 184 ++++++++++++++++++++++++++++++++++-
- 3 files changed, 218 insertions(+), 1 deletion(-)
- create mode 100644 include/uapi/linux/loadpin.h
+314ba3520e513a Joe Perches 2012-07-30  4  
+04d2c8c83d0e3a Joe Perches 2012-07-30 @5  #define KERN_SOH	"\001"		/* ASCII Start Of Header */
+04d2c8c83d0e3a Joe Perches 2012-07-30  6  #define KERN_SOH_ASCII	'\001'
+04d2c8c83d0e3a Joe Perches 2012-07-30  7  
 
-diff --git a/include/uapi/linux/loadpin.h b/include/uapi/linux/loadpin.h
-new file mode 100644
-index 000000000000..d303a582209b
---- /dev/null
-+++ b/include/uapi/linux/loadpin.h
-@@ -0,0 +1,19 @@
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-+/*
-+ * Copyright (c) 2022, Google LLC
-+ */
-+
-+#ifndef _UAPI_LINUX_LOOP_LOADPIN_H
-+#define _UAPI_LINUX_LOOP_LOADPIN_H
-+
-+#define LOADPIN_IOC_MAGIC	'L'
-+
-+/**
-+ * LOADPIN_IOC_SET_TRUSTED_VERITY_DIGESTS - Set up the root digests of verity devices
-+ *                                          that loadpin should trust.
-+ *
-+ * Takes a file descriptor from which to read the root digests of trusted verity devices.
-+ */
-+#define LOADPIN_IOC_SET_TRUSTED_VERITY_DIGESTS _IOW(LOADPIN_IOC_MAGIC, 0x00, unsigned int)
-+
-+#endif /* _UAPI_LINUX_LOOP_LOADPIN_H */
-diff --git a/security/loadpin/Kconfig b/security/loadpin/Kconfig
-index 91be65dec2ab..e319ca8e3f3d 100644
---- a/security/loadpin/Kconfig
-+++ b/security/loadpin/Kconfig
-@@ -18,3 +18,19 @@ config SECURITY_LOADPIN_ENFORCE
- 	  If selected, LoadPin will enforce pinning at boot. If not
- 	  selected, it can be enabled at boot with the kernel parameter
- 	  "loadpin.enforce=1".
-+
-+config SECURITY_LOADPIN_VERITY
-+	bool "Allow reading files from certain other filesystems that use dm-verity"
-+	depends on DM_VERITY=y && SECURITYFS
-+	help
-+	  If selected LoadPin can allow reading files from filesystems
-+	  that use dm-verity. LoadPin maintains a list of verity root
-+	  digests it considers trusted. A verity backed filesystem is
-+	  considered trusted if its root digest is found in the list
-+	  of trusted digests.
-+
-+	  The list of trusted verity can be populated through an ioctl
-+	  on the LoadPin securityfs entry 'dm-verity'. The ioctl
-+	  expects a file descriptor of a file with verity digests as
-+	  parameter. The file must be located on the pinned root and
-+	  contain a comma separated list of digests.
-diff --git a/security/loadpin/loadpin.c b/security/loadpin/loadpin.c
-index b12f7d986b1e..c29ce562a366 100644
---- a/security/loadpin/loadpin.c
-+++ b/security/loadpin/loadpin.c
-@@ -18,6 +18,9 @@
- #include <linux/path.h>
- #include <linux/sched.h>	/* current */
- #include <linux/string_helpers.h>
-+#include <linux/device-mapper.h>
-+#include <linux/dm-verity-loadpin.h>
-+#include <uapi/linux/loadpin.h>
- 
- static void report_load(const char *origin, struct file *file, char *operation)
- {
-@@ -43,6 +46,9 @@ static char *exclude_read_files[READING_MAX_ID];
- static int ignore_read_file_id[READING_MAX_ID] __ro_after_init;
- static struct super_block *pinned_root;
- static DEFINE_SPINLOCK(pinned_root_spinlock);
-+#ifdef CONFIG_SECURITY_LOADPIN_VERITY
-+static LIST_HEAD(trusted_verity_root_digests);
-+#endif
- 
- #ifdef CONFIG_SYSCTL
- 
-@@ -118,6 +124,24 @@ static void loadpin_sb_free_security(struct super_block *mnt_sb)
- 	}
- }
- 
-+#ifdef CONFIG_SECURITY_LOADPIN_VERITY
-+static bool loadpin_is_fs_trusted(struct super_block *sb)
-+{
-+	struct mapped_device *md = dm_get_md(sb->s_bdev->bd_dev);
-+	bool trusted;
-+
-+	if (!md)
-+		return false;
-+
-+	trusted = dm_verity_loadpin_is_md_trusted(md);
-+	dm_put(md);
-+
-+	return trusted;
-+}
-+#else
-+static inline bool loadpin_is_fs_trusted(struct super_block *sb) { return false; };
-+#endif
-+
- static int loadpin_read_file(struct file *file, enum kernel_read_file_id id,
- 			     bool contents)
- {
-@@ -174,7 +198,8 @@ static int loadpin_read_file(struct file *file, enum kernel_read_file_id id,
- 		spin_unlock(&pinned_root_spinlock);
- 	}
- 
--	if (IS_ERR_OR_NULL(pinned_root) || load_root != pinned_root) {
-+	if (IS_ERR_OR_NULL(pinned_root) ||
-+	    ((load_root != pinned_root) && !loadpin_is_fs_trusted(load_root))) {
- 		if (unlikely(!enforce)) {
- 			report_load(origin, file, "pinning-ignored");
- 			return 0;
-@@ -240,6 +265,7 @@ static int __init loadpin_init(void)
- 		enforce ? "" : "not ");
- 	parse_exclude();
- 	security_add_hooks(loadpin_hooks, ARRAY_SIZE(loadpin_hooks), "loadpin");
-+
- 	return 0;
- }
- 
-@@ -248,6 +274,162 @@ DEFINE_LSM(loadpin) = {
- 	.init = loadpin_init,
- };
- 
-+#ifdef CONFIG_SECURITY_LOADPIN_VERITY
-+
-+enum loadpin_securityfs_interface_index {
-+	LOADPIN_DM_VERITY,
-+};
-+
-+static int read_trusted_verity_root_digests(unsigned int fd)
-+{
-+	struct fd f;
-+	void *data;
-+	int rc;
-+	char *p, *d;
-+
-+	/* The list of trusted root digests can only be set up once */
-+	if (!list_empty(&trusted_verity_root_digests))
-+		return -EPERM;
-+
-+	f = fdget(fd);
-+	if (!f.file)
-+		return -EINVAL;
-+
-+	data = kzalloc(SZ_4K, GFP_KERNEL);
-+	if (!data) {
-+		rc = -ENOMEM;
-+		goto err;
-+	}
-+
-+	rc = kernel_read_file(f.file, 0, &data, SZ_4K - 1, NULL, READING_POLICY);
-+	if (rc < 0)
-+		goto err;
-+
-+	((char *)data)[rc] = '\0';
-+
-+	p = strim(data);
-+	while ((d = strsep(&p, ",")) != NULL) {
-+		int len = strlen(d);
-+		struct trusted_root_digest *trd;
-+
-+		if (len % 2) {
-+			rc = -EPROTO;
-+			goto err;
-+		}
-+
-+		len /= 2;
-+
-+		trd = kzalloc(sizeof(*trd), GFP_KERNEL);
-+		if (!trd) {
-+			rc = -ENOMEM;
-+			goto err;
-+		}
-+
-+		trd->data = kzalloc(len, GFP_KERNEL);
-+		if (!trd->data) {
-+			kfree(trd);
-+			rc = -ENOMEM;
-+			goto err;
-+		}
-+
-+		if (hex2bin(trd->data, d, len)) {
-+			kfree(trd);
-+			kfree(trd->data);
-+			rc = -EPROTO;
-+			goto err;
-+		}
-+
-+		trd->len = len;
-+
-+		list_add_tail(&trd->node, &trusted_verity_root_digests);
-+	}
-+
-+	kfree(data);
-+	fdput(f);
-+
-+	if (!list_empty(&trusted_verity_root_digests))
-+		dm_verity_loadpin_set_trusted_root_digests(&trusted_verity_root_digests);
-+
-+	return 0;
-+
-+err:
-+	kfree(data);
-+
-+	{
-+		struct trusted_root_digest *trd, *tmp;
-+
-+		list_for_each_entry_safe(trd, tmp, &trusted_verity_root_digests, node) {
-+			kfree(trd->data);
-+			list_del(&trd->node);
-+			kfree(trd);
-+		}
-+	}
-+
-+	fdput(f);
-+
-+	return rc;
-+}
-+
-+/******************************** securityfs ********************************/
-+
-+static long dm_verity_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
-+{
-+	void __user *uarg = (void __user *)arg;
-+	unsigned int fd;
-+	int rc;
-+
-+	switch (cmd) {
-+	case LOADPIN_IOC_SET_TRUSTED_VERITY_DIGESTS:
-+		rc = copy_from_user(&fd, uarg, sizeof(fd));
-+		if (rc)
-+			return rc;
-+
-+		return read_trusted_verity_root_digests(fd);
-+
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+
-+static const struct file_operations loadpin_dm_verity_ops = {
-+	.unlocked_ioctl = dm_verity_ioctl,
-+	.compat_ioctl = compat_ptr_ioctl,
-+};
-+
-+/**
-+ * init_loadpin_securityfs - create the securityfs directory for LoadPin
-+ *
-+ * We can not put this method normally under the loadpin_init() code path since
-+ * the security subsystem gets initialized before the vfs caches.
-+ *
-+ * Returns 0 if the securityfs directory creation was successful.
-+ */
-+static int __init init_loadpin_securityfs(void)
-+{
-+	struct dentry *loadpin_dir, *dentry;
-+
-+	loadpin_dir = securityfs_create_dir("loadpin", NULL);
-+	if (IS_ERR(loadpin_dir)) {
-+		pr_err("LoadPin: could not create securityfs dir: %d\n",
-+		       PTR_ERR(loadpin_dir));
-+		return PTR_ERR(loadpin_dir);
-+	}
-+
-+	dentry = securityfs_create_file("dm-verity", 0600, loadpin_dir,
-+					(void *)LOADPIN_DM_VERITY, &loadpin_dm_verity_ops);
-+	if (IS_ERR(dentry)) {
-+		pr_err("LoadPin: could not create securityfs entry 'dm-verity': %d\n",
-+		       PTR_ERR(dentry));
-+		return PTR_ERR(dentry);
-+	}
-+
-+	return 0;
-+}
-+
-+fs_initcall(init_loadpin_securityfs);
-+
-+#endif /* CONFIG_SECURITY_LOADPIN_VERITY */
-+
- /* Should not be mutable after boot, so not listed in sysfs (perm == 0). */
- module_param(enforce, int, 0);
- MODULE_PARM_DESC(enforce, "Enforce module/firmware pinning");
 -- 
-2.36.0.464.gb9c8b46e94-goog
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
