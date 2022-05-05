@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57491C433F5
-	for <linux-raid@archiver.kernel.org>; Thu,  5 May 2022 14:02:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0892C433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  5 May 2022 18:05:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379360AbiEEOGM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 May 2022 10:06:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56540 "EHLO
+        id S1382754AbiEESIn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 5 May 2022 14:08:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380320AbiEEOGK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 May 2022 10:06:10 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB4F658E6A
-        for <linux-raid@vger.kernel.org>; Thu,  5 May 2022 07:02:30 -0700 (PDT)
+        with ESMTP id S243825AbiEESIm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 May 2022 14:08:42 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04D385373C
+        for <linux-raid@vger.kernel.org>; Thu,  5 May 2022 11:05:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651759350; x=1683295350;
+  t=1651773902; x=1683309902;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=eeRo2UlTEE+7zut8HBkd704mDVC9r8+C3ZdeZSIoWJQ=;
-  b=aqKGKrr0OMQU5hcvNRm/z9eFakonghXvU91TE/T+fiwmNDOD/f7+QsoD
-   wFWsMGDJD9hY+d/8/3mC2oiNRrlBNjzHEpLfBc26DGyptPEiR3iGyvy0Q
-   VlXAcTsfYwqi2u4U/6/RCxEXjMtYCZ779iZZEIW54+CNHNIjygPCnVTwu
-   8yh7mxFOAszMnJ4WBVqqsmlAGetvhy2hgJsvtrKIK5uUXsD/D2FqYIAym
-   0Pr5+DwKx1VC9LU/PkCvnuicXxUc2c+D3rKydYxeutDWmA9LAIQv+Aoh8
-   kf16nZ/Fepo5EoP9tVAmfkc91LZe+P2d2BpLtjdFME7+yGFtPhTffkQVc
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10338"; a="267714173"
-X-IronPort-AV: E=Sophos;i="5.91,201,1647327600"; 
-   d="scan'208";a="267714173"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 07:02:22 -0700
+  bh=xJVaziiJiO/giX8r3WzYf4FZE6x1ucwWfymWctZyaUg=;
+  b=OY4DXedzdk14yiquYMYExCG0RG++HekbwiSvVXFEUIQtXQ1GlqEACwva
+   mK3St78ZFcNePSjrcxlDhWeym6INQPDKy+ixYHXVU9NO0yXkHw7GaFAlf
+   YitYZ112suPWmmeqoLqK38myU0E3+ibvEJNkhNUEtaO+jRmHjENMOn+hh
+   oqxccYT0pbcRffZPPK1sK16VhskiqgqwJhNuBuugV203N5SHS0XskoZ5H
+   X3auN+29bHrtD9LM3Db3BczmrS1qEwcRE73DMI0xBmt4G18jCoDdOL+8E
+   9WtA25ZZnV7EewscyjFZ9x0t5PdDyKivFQS/lMY9JCmm4ZesBQNFTudw1
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10338"; a="268093391"
+X-IronPort-AV: E=Sophos;i="5.91,202,1647327600"; 
+   d="scan'208";a="268093391"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2022 11:05:01 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,201,1647327600"; 
-   d="scan'208";a="811627226"
+X-IronPort-AV: E=Sophos;i="5.91,202,1647327600"; 
+   d="scan'208";a="585473235"
 Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
-  by fmsmga006.fm.intel.com with ESMTP; 05 May 2022 07:02:20 -0700
+  by orsmga008.jf.intel.com with ESMTP; 05 May 2022 11:04:59 -0700
 Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
         (envelope-from <lkp@intel.com>)
-        id 1nmc3f-000CS4-GZ;
-        Thu, 05 May 2022 14:02:19 +0000
-Date:   Thu, 5 May 2022 22:02:09 +0800
+        id 1nmfqU-000Ce0-V5;
+        Thu, 05 May 2022 18:04:59 +0000
+Date:   Fri, 6 May 2022 02:04:28 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Guoqing Jiang <guoqing.jiang@linux.dev>, song@kernel.org
-Cc:     kbuild-all@lists.01.org, buczek@molgen.mpg.de,
-        linux-raid@vger.kernel.org,
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        buczek@molgen.mpg.de, linux-raid@vger.kernel.org,
         Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 Subject: Re: [PATCH V3 1/2] md: don't unregister sync_thread with
  reconfig_mutex held
-Message-ID: <202205052148.TTOFRBQx-lkp@intel.com>
+Message-ID: <202205060116.J42KgtCW-lkp@intel.com>
 References: <20220505081641.21500-2-guoqing.jiang@linux.dev>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -71,8 +71,8 @@ https://git-scm.com/docs/git-format-patch]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/Guoqing-Jiang/two-fixes-for-md/20220505-162202
 base:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-config: mips-allyesconfig (https://download.01.org/0day-ci/archive/20220505/202205052148.TTOFRBQx-lkp@intel.com/config)
-compiler: mips-linux-gcc (GCC) 11.3.0
+config: hexagon-randconfig-r045-20220505 (https://download.01.org/0day-ci/archive/20220506/202205060116.J42KgtCW-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 5e004fb787698440a387750db7f8028e7cb14cfc)
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
@@ -82,20 +82,20 @@ reproduce (this is a W=1 build):
         git checkout e8e9c97eb79c337a89a98a92106cfa6139a7c9e0
         # save the config file
         mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=mips SHELL=/bin/bash drivers/md/
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=hexagon SHELL=/bin/bash drivers/md/
 
 If you fix the issue, kindly add following tag as appropriate
 Reported-by: kernel test robot <lkp@intel.com>
 
 All warnings (new ones prefixed by >>):
 
-   drivers/md/md.c: In function 'md_reap_sync_thread':
->> drivers/md/md.c:9448:17: warning: ignoring return value of 'mddev_lock' declared with attribute 'warn_unused_result' [-Wunused-result]
-    9448 |                 mddev_lock(mddev);
-         |                 ^~~~~~~~~~~~~~~~~
+>> drivers/md/md.c:9448:3: warning: ignoring return value of function declared with 'warn_unused_result' attribute [-Wunused-result]
+                   mddev_lock(mddev);
+                   ^~~~~~~~~~ ~~~~~
+   1 warning generated.
 
 
-vim +9448 drivers/md/md.c
+vim +/warn_unused_result +9448 drivers/md/md.c
 
   9434	
   9435	void md_reap_sync_thread(struct mddev *mddev)
