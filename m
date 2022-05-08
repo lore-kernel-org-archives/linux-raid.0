@@ -2,78 +2,100 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF5DDC433EF
-	for <linux-raid@archiver.kernel.org>; Sun,  8 May 2022 23:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73B1FC433FE
+	for <linux-raid@archiver.kernel.org>; Sun,  8 May 2022 23:39:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233472AbiEHXGQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 8 May 2022 19:06:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47494 "EHLO
+        id S233374AbiEHXgd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 8 May 2022 19:36:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233391AbiEHXGP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 8 May 2022 19:06:15 -0400
+        with ESMTP id S229583AbiEHXgc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 8 May 2022 19:36:32 -0400
 Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id 3485810FD6
-        for <linux-raid@vger.kernel.org>; Sun,  8 May 2022 16:02:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id A3BB56590
+        for <linux-raid@vger.kernel.org>; Sun,  8 May 2022 16:32:40 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id 2F92E19F372;
-        Mon,  9 May 2022 09:02:22 +1000 (AEST)
+        by postoffice.wmawater.com.au (Postfix) with ESMTP id C674619F372;
+        Mon,  9 May 2022 09:32:38 +1000 (AEST)
 Authentication-Results: postoffice.wmawater.com.au (amavisd-new);
         dkim=pass (1024-bit key) header.d=wmawater.com.au
 Received: from postoffice.wmawater.com.au ([127.0.0.1])
         by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id U_SZAei-UCal; Mon,  9 May 2022 09:02:22 +1000 (AEST)
+        with ESMTP id mrrSiiNDmVTJ; Mon,  9 May 2022 09:32:38 +1000 (AEST)
 Received: from localhost (localhost [127.0.0.1])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id F30CC19F373;
-        Mon,  9 May 2022 09:02:21 +1000 (AEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 postoffice.wmawater.com.au F30CC19F373
+        by postoffice.wmawater.com.au (Postfix) with ESMTP id 9CE8019F373;
+        Mon,  9 May 2022 09:32:38 +1000 (AEST)
+DKIM-Filter: OpenDKIM Filter v2.10.3 postoffice.wmawater.com.au 9CE8019F373
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wmawater.com.au;
-        s=1D92CC64-C1F9-11E4-96FC-2C1EC0F5F97B; t=1652050942;
-        bh=Og3cHJXtPquqoCszHVcafPfPC83tpL3Rqmu9bYlh3GQ=;
+        s=1D92CC64-C1F9-11E4-96FC-2C1EC0F5F97B; t=1652052758;
+        bh=fxFJcv2sbMBgDwXnztQwVEu43lOcGyhB8xuPYDoCQvs=;
         h=From:To:Date:Message-ID:MIME-Version;
-        b=YhCIQgOT2yIiyxhSSVhWb0TYnZcOGr6xCzs+4j4UPjs7p1yusUSps1uwa8nbJ2Fcb
-         pFI7VGGDB+fdUUP75wEnXlgXye4pvokUxVZHU7anh4pasbF6VLs7C44qiYCXiW0Y6/
-         MtJiVjuezdxlNPnhvqtBtG0aWo6VCUMRA39jCF2k=
+        b=l9rHQmEWpjSUogeA6rj2mzKUQto2aZnCWXwv1imv1QNUAA7yaBLZf0/caMFeMBYRC
+         ijyFudTCwtSVGNFZwUxvEMMP93KYnVPR0PM9TwfTGL/aE771PQGrt47BIConZSqmTt
+         YGr6m6X/rIWzlf8idnB4yzZDPwICTNAQ9DzsIuQ8=
 X-Virus-Scanned: amavisd-new at wmawater.com.au
 Received: from postoffice.wmawater.com.au ([127.0.0.1])
         by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id TD8-7AxC1D6z; Mon,  9 May 2022 09:02:21 +1000 (AEST)
+        with ESMTP id cT2Vu4th8HaI; Mon,  9 May 2022 09:32:38 +1000 (AEST)
 Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id C572719F372;
-        Mon,  9 May 2022 09:02:21 +1000 (AEST)
+        by postoffice.wmawater.com.au (Postfix) with ESMTP id 7F27E19F372;
+        Mon,  9 May 2022 09:32:38 +1000 (AEST)
 Reply-To: "Bob Brand" <brand@wmawater.com.au>
 From:   Bob Brand <brand@wmawater.com.au>
 To:     "Bob Brand" <brand@wmawater.com.au>,
         "Wol" <antlists@youngman.org.uk>, <linux-raid@vger.kernel.org>
 Cc:     "Phil Turmel" <philip@turmel.org>
-References: <00ae01d862de$1d336980$579a3c80$@wmawater.com.au> <f4e9c9f8-590d-49a4-39da-e31d81258ff3@youngman.org.uk> <00cf01d86327$9c5dd8a0$d51989e0$@wmawater.com.au> <3f84648b-29db-0819-e3ba-af52435a2aab@youngman.org.uk> <00d101d86329$a2a57130$e7f05390$@wmawater.com.au>
-In-Reply-To: <00d101d86329$a2a57130$e7f05390$@wmawater.com.au>
+References: <00ae01d862de$1d336980$579a3c80$@wmawater.com.au> <f4e9c9f8-590d-49a4-39da-e31d81258ff3@youngman.org.uk> <00cf01d86327$9c5dd8a0$d51989e0$@wmawater.com.au> <3f84648b-29db-0819-e3ba-af52435a2aab@youngman.org.uk> <00d101d86329$a2a57130$e7f05390$@wmawater.com.au> <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au>
+In-Reply-To: <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au>
 Subject: RE: Failed adadm RAID array after aborted Grown operation
 Thread-Topic: Failed adadm RAID array after aborted Grown operation
-Date:   Mon, 9 May 2022 09:02:21 +1000 (AEST)
-Message-ID: <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au>
+Date:   Mon, 9 May 2022 09:32:38 +1000 (AEST)
+Message-ID: <00e401d86333$e75d8f60$b618ae20$@wmawater.com.au>
 MIME-Version: 1.0
 Content-Type: text/plain;
         charset="UTF-8"
 X-Mailer: Microsoft Outlook 16.0
-X-Mailer: Zimbra 8.8.15_GA_3894 (Zimbra-ZCO/9.0.0.1903 (10.0.19044  en-AU) P3210 T3bbc R3896)
+X-Mailer: Zimbra 8.8.15_GA_3894 (Zimbra-ZCO/9.0.0.1903 (10.0.19044  en-AU) P3210 T3bbc R4036)
 Content-Language: en-au
-Thread-Index: AQK0Ylmfkg1g1mZGz7yxBx3O0op7hADpZ3mFAYMzo9kBZlg9dAGZ0oLFqzIzgKA=
+Thread-Index: AQK0Ylmfkg1g1mZGz7yxBx3O0op7hADpZ3mFAYMzo9kBZlg9dAGZ0oLFAdWidsqrI46WMA==
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+I just tried it again with the --invalid_backup switch and it's now showi=
+ng=20
+the State as "clean, degraded".and it's showing all the disks except for =
+the=20
+suspect one that I removed.
+
+I'm unable to mount it and see the contents. I get the error "mount:=20
+/dev/md125: can't read superblock."
+
+Is there more that I need to do?
+
+Thanks
+
+
+-----Original Message-----
+From: Bob Brand <brand@wmawater.com.au>
+Sent: Monday, 9 May 2022 9:02 AM
+To: Bob Brand <brand@wmawater.com.au>; Wol <antlists@youngman.org.uk>;=20
+linux-raid@vger.kernel.org
+Cc: Phil Turmel <philip@turmel.org>
+Subject: RE: Failed adadm RAID array after aborted Grown operation
+
 Hi Wol,
 
 I've booted to the installation media and I've run the following command:
 
-mdadm=20
+mdadm
 /dev/md125 --assemble --update=3Drevert-reshape --backup-file=3D/mnt/sysi=
-mage/grow_md125.bak=20
- --verbose --uuid=3D f9b65f55:5f257add:1140ccc0:46ca6c19=20
+mage/grow_md125.bak
+ --verbose --uuid=3D f9b65f55:5f257add:1140ccc0:46ca6c19
 /dev/md125mdadm --assemble --update=3Drevert-reshape --backup-file=3D/gro=
 w_md125.bak=20
- --verbose --uuid=3Df9b65f55:5f257add:1140ccc0:46ca6c19
+  --verbose --uuid=3Df9b65f55:5f257add:1140ccc0:46ca6c19
 
 But I'm still getting the error:
 
@@ -99,7 +121,7 @@ Cc: Phil Turmel <philip@turmel.org>
 Subject: RE: Failed adadm RAID array after aborted Grown operation
 
 OK.  I've downloaded a Centos 7 - 2009 ISO from centos.org - that seems t=
-o=20
+o
 be the most recent they have.
 
 
