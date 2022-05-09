@@ -2,132 +2,119 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6FB7C433F5
-	for <linux-raid@archiver.kernel.org>; Mon,  9 May 2022 06:28:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 842F0C43219
+	for <linux-raid@archiver.kernel.org>; Mon,  9 May 2022 06:48:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233015AbiEIGb3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 9 May 2022 02:31:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42678 "EHLO
+        id S230501AbiEIGuf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 9 May 2022 02:50:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232789AbiEIG2m (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 May 2022 02:28:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B4211E1ED
-        for <linux-raid@vger.kernel.org>; Sun,  8 May 2022 23:24:29 -0700 (PDT)
+        with ESMTP id S233984AbiEIGnV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 May 2022 02:43:21 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23107190D39
+        for <linux-raid@vger.kernel.org>; Sun,  8 May 2022 23:39:28 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 97B9D611F1
-        for <linux-raid@vger.kernel.org>; Mon,  9 May 2022 06:24:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3956C385A8
-        for <linux-raid@vger.kernel.org>; Mon,  9 May 2022 06:24:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6A881B80ECB
+        for <linux-raid@vger.kernel.org>; Mon,  9 May 2022 06:39:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 225FBC385AE
+        for <linux-raid@vger.kernel.org>; Mon,  9 May 2022 06:39:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652077461;
-        bh=yxb9bztzaWyK394ZlGyuiEoTbzpn6ZxLHLAH2JlK1U0=;
+        s=k20201202; t=1652078358;
+        bh=cwX24avHeN2vNEm+oxOZ9bdMgpz2s62OXVsqa0MtqG8=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=FMKlBJAO2HirCfH/YAFRJnHdxoBHx6nUg4dikRy+iETKHJ3PD5pJGbM5ZYhnzz8LU
-         ksCurdWvrf6pMFN9yIaZsOIoE1v23zQNFEOi9hz26TLiRCihzS53e/N2cIWg/sh08b
-         3j8Ig/ESRPTuNVIUXwE8PFmLwy7YRZAy1PxmWkioNW9oiYvU0nG0gk5M0jQvBBDknJ
-         A+05HPC5GQuCIc5bXDMhmaai7KfVZgWJDkyoPrOq1z/0V0SXkjqMNIVYcXgCkJKACP
-         ZDp7yYVJH81W5wJE2VxGp/xfGRqUSGhh6zzONnHVetVjoK4I6Hl/HRXJgb4JQpBuW3
-         q3GcOGXGJWuNw==
-Received: by mail-yb1-f182.google.com with SMTP id y76so23116082ybe.1
-        for <linux-raid@vger.kernel.org>; Sun, 08 May 2022 23:24:20 -0700 (PDT)
-X-Gm-Message-State: AOAM531ayE5SkF8xvTqKSUn8oudW5CcHSjEGHs4QJbsH9g8KcJK1sSyS
-        lkXe4KS3sRwdHzUP9/mIRPtlqZeLSYW1A9Xp7UI=
-X-Google-Smtp-Source: ABdhPJwtTxv+A1yV15aJmQxwv2pEiwJrODCs69FlR+wIfttOs6rzacb2W7Dv4YiIydpxRPM76b1cMcQFob5jSbum5Xk=
-X-Received: by 2002:a25:54c6:0:b0:648:3e45:3f32 with SMTP id
- i189-20020a2554c6000000b006483e453f32mr11649948ybb.257.1652077460057; Sun, 08
- May 2022 23:24:20 -0700 (PDT)
+        b=HI/ZpSHRAgdd7Qg+pZgMf//PShKv94JYb1tJw8jCjK+BZDWrBJzYPk32nPVK5bRCj
+         fDJXMOyog1YdRbpkgM3JNQL/9Z2VphEjn1SzxbhudXEvbjq2OfT6OyotcO/uYPmzj7
+         3aNYvam+XTxr9nn2RfWjcMqqRZN1F61bhWHvtGrhmYookqzFFTW3ZRMb8BhhlI/Xqp
+         ZSRpHnqH+OxBQ47oBNjfaxogl9tcT3OFpjuQPvRrW3GNRms5l+xN1oZ14SYyFJ112A
+         x7AtfauSA5S86pri9/L0tn68gwS5vYBYhAVKGAyQOTAdWDBBnVeXpUoJ8QDV8IL7q4
+         0C4/DHi6V92fQ==
+Received: by mail-yb1-f180.google.com with SMTP id w187so23144225ybe.2
+        for <linux-raid@vger.kernel.org>; Sun, 08 May 2022 23:39:18 -0700 (PDT)
+X-Gm-Message-State: AOAM532U7fm2pM9bwHJREkzEsrdZPCBKvIDK7PDDFI4xUim5HzpoaGWr
+        ZfcK9i0ZslycxtGElHB56wcJ7CmzkPH8A9FS0L0=
+X-Google-Smtp-Source: ABdhPJyLkbgmzo9MvsqT3ZcyxbC+z0kMBL4CJkpjmxgfosELaVoiWwbQiL/OKZKMij2izsIZZqcxK6H6o9gihpPJsUg=
+X-Received: by 2002:a25:395:0:b0:645:8146:9a9e with SMTP id
+ 143-20020a250395000000b0064581469a9emr11439109ybd.389.1652078357203; Sun, 08
+ May 2022 23:39:17 -0700 (PDT)
 MIME-Version: 1.0
-References: <1651208967-4701-1-git-send-email-xni@redhat.com>
-In-Reply-To: <1651208967-4701-1-git-send-email-xni@redhat.com>
+References: <20220505081641.21500-1-guoqing.jiang@linux.dev> <20220505081641.21500-3-guoqing.jiang@linux.dev>
+In-Reply-To: <20220505081641.21500-3-guoqing.jiang@linux.dev>
 From:   Song Liu <song@kernel.org>
-Date:   Sun, 8 May 2022 23:24:08 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7J3EQde_XGdysjNGjHjEb+Zq2kXwXsj+4xpXBA_Bq2Eg@mail.gmail.com>
-Message-ID: <CAPhsuW7J3EQde_XGdysjNGjHjEb+Zq2kXwXsj+4xpXBA_Bq2Eg@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Don't set mddev private to NULL in raid0 pers->free
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Nigel Croxon <ncroxon@redhat.com>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Fine Fan <ffan@redhat.com>
+Date:   Sun, 8 May 2022 23:39:06 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4EhdQ6-t8hOyznn0XF2REWLXBCLKh1ru9NZHz9xF5raQ@mail.gmail.com>
+Message-ID: <CAPhsuW4EhdQ6-t8hOyznn0XF2REWLXBCLKh1ru9NZHz9xF5raQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] md: protect md_unregister_thread from reentrancy
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     Donald Buczek <buczek@molgen.mpg.de>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Xiao,
-
-Thanks for the patch!
-
-On Thu, Apr 28, 2022 at 10:09 PM Xiao Ni <xni@redhat.com> wrote:
+On Thu, May 5, 2022 at 1:18 AM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
 >
-
-prefix the subject with "md:", and provide more details.
-
-> It panics when reshaping from raid0 to other raid levels. raid0 sets
-> mddev->private to NULL. It's the reason that causes the problem.
-> Function level_store finds new pers and create new conf, then it
-> calls oldpers->free. In oldpers->free, raid0 sets mddev->private
-> to NULL again. And __md_stop is the right position to set
-> mddev->private to NULL.
-
-We need more details here: the panic backtrace, and why it panics.
-raid5_free also sets private to NULL. Does it has the same problem?
-
+> From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 >
-> And this patch also deletes double free memory codes. io_acct_set
-> is free in pers->free.
+> Generally, the md_unregister_thread is called with reconfig_mutex, but
+> raid_message in dm-raid doesn't hold reconfig_mutex to unregister thread,
+> so md_unregister_thread can be called simulitaneously from two call sites
+> in theory.
 
-Please put this part in a separate patch.
+Can we add lock/unlock into raid_message? Are there some constraints here?
 
 Thanks,
 Song
 
 >
-> Fixes: 0c031fd37f69 (md: Move alloc/free acct bioset in to personality)
-> Reported-by: Fine Fan <ffan@redhat.com>
-> Signed-off-by: Xiao Ni <xni@redhat.com>
+> Then after previous commit which remove the protection of reconfig_mutex
+> for md_unregister_thread completely, the potential issue could be worse
+> than before.
+>
+> Let's take pers_lock at the beginning of function to ensure reentrancy.
+>
+> Reported-by: Donald Buczek <buczek@molgen.mpg.de>
+> Signed-off-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 > ---
->  drivers/md/md.c    | 4 ----
->  drivers/md/raid0.c | 1 -
->  2 files changed, 5 deletions(-)
+>  drivers/md/md.c | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 707e802..55b6412e 100644
+> index a70e7f0f9268..c401e063bec8 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -5598,8 +5598,6 @@ static void md_free(struct kobject *ko)
+> @@ -7962,17 +7962,22 @@ EXPORT_SYMBOL(md_register_thread);
 >
->         bioset_exit(&mddev->bio_set);
->         bioset_exit(&mddev->sync_set);
-> -       if (mddev->level != 1 && mddev->level != 10)
-> -               bioset_exit(&mddev->io_acct_set);
->         kfree(mddev);
+>  void md_unregister_thread(struct md_thread **threadp)
+>  {
+> -       struct md_thread *thread = *threadp;
+> -       if (!thread)
+> -               return;
+> -       pr_debug("interrupting MD-thread pid %d\n", task_pid_nr(thread->tsk));
+> -       /* Locking ensures that mddev_unlock does not wake_up a
+> +       struct md_thread *thread;
+> +
+> +       /*
+> +        * Locking ensures that mddev_unlock does not wake_up a
+>          * non-existent thread
+>          */
+>         spin_lock(&pers_lock);
+> +       thread = *threadp;
+> +       if (!thread) {
+> +               spin_unlock(&pers_lock);
+> +               return;
+> +       }
+>         *threadp = NULL;
+>         spin_unlock(&pers_lock);
+>
+> +       pr_debug("interrupting MD-thread pid %d\n", task_pid_nr(thread->tsk));
+>         kthread_stop(thread->tsk);
+>         kfree(thread);
 >  }
->
-> @@ -6285,8 +6283,6 @@ void md_stop(struct mddev *mddev)
->         __md_stop(mddev);
->         bioset_exit(&mddev->bio_set);
->         bioset_exit(&mddev->sync_set);
-> -       if (mddev->level != 1 && mddev->level != 10)
-> -               bioset_exit(&mddev->io_acct_set);
->  }
->
->  EXPORT_SYMBOL_GPL(md_stop);
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index e11701e..5fa0d40 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -362,7 +362,6 @@ static void free_conf(struct mddev *mddev, struct r0conf *conf)
->         kfree(conf->strip_zone);
->         kfree(conf->devlist);
->         kfree(conf);
-> -       mddev->private = NULL;
->  }
->
->  static void raid0_free(struct mddev *mddev, void *priv)
 > --
-> 2.7.5
+> 2.31.1
 >
