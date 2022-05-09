@@ -2,223 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5567C43217
-	for <linux-raid@archiver.kernel.org>; Mon,  9 May 2022 07:12:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90516C43219
+	for <linux-raid@archiver.kernel.org>; Mon,  9 May 2022 08:44:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229618AbiEIHO6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 9 May 2022 03:14:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50362 "EHLO
+        id S237015AbiEIIq0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 9 May 2022 04:46:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235521AbiEIG43 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 May 2022 02:56:29 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0C5D158F84
-        for <linux-raid@vger.kernel.org>; Sun,  8 May 2022 23:52:35 -0700 (PDT)
-Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1nnxFm-000CTb-Cq;
-        Mon, 09 May 2022 07:52:23 +0100
-Message-ID: <5931f716-008d-399b-2ea8-acbbc9c8d239@youngman.org.uk>
-Date:   Mon, 9 May 2022 07:52:22 +0100
+        with ESMTP id S236053AbiEIIPn (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 May 2022 04:15:43 -0400
+Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 630FD12EA17
+        for <linux-raid@vger.kernel.org>; Mon,  9 May 2022 01:11:46 -0700 (PDT)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1652083769;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=VaPesRw1wCdHVXoelvRzZkv+LjOF7fMmR4ujza4rtec=;
+        b=dxNM4p7gAdmk2dwIhJeSMpJsgbH8ad7QDtQfYI8pmmDD0EqWngxqCUsI0yLxh34MyM+Af0
+        BIPivL4xcj4kwVHlxIkxF8lYKPuBp/ez015qOmw6rf0llVQSD01NQOKD0Lqdok2hFxiznm
+        6RdhoQKYpd8ZWCI6TrTC0M8hPQ6rRGI=
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
+ reconfig_mutex held
+To:     Song Liu <song@kernel.org>
+Cc:     Donald Buczek <buczek@molgen.mpg.de>,
+        linux-raid <linux-raid@vger.kernel.org>
+References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
+ <20220506113656.25010-1-guoqing.jiang@linux.dev>
+ <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
+Message-ID: <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev>
+Date:   Mon, 9 May 2022 16:09:24 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Subject: Re: Failed adadm RAID array after aborted Grown operation
-Content-Language: en-GB
-To:     Bob Brand <brand@wmawater.com.au>, linux-raid@vger.kernel.org
-Cc:     Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
-References: <00ae01d862de$1d336980$579a3c80$@wmawater.com.au>
- <f4e9c9f8-590d-49a4-39da-e31d81258ff3@youngman.org.uk>
- <00cf01d86327$9c5dd8a0$d51989e0$@wmawater.com.au>
- <3f84648b-29db-0819-e3ba-af52435a2aab@youngman.org.uk>
- <00d101d86329$a2a57130$e7f05390$@wmawater.com.au>
- <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au>
- <00e401d86333$e75d8f60$b618ae20$@wmawater.com.au>
- <00eb01d86339$18cc0860$4a641920$@wmawater.com.au>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <00eb01d86339$18cc0860$4a641920$@wmawater.com.au>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 09/05/2022 01:09, Bob Brand wrote:
-> Hi Wol,
-> 
-> My apologies for continually bothering you but I have a couple of questions:
 
-Did you read the links I sent you?
-> 
-> 1. How do I overcome the error message "mount: /dev/md125: can't read
-> superblock."  Do it use fsck?
-> 
-> 2. The removed disk is showing as "   -   0   0   30   removed". Is it safe
-> to use "mdadm /dev/md2 -r detached" or "mdadm /dev/md2 -r failed" to
-> overcome this?
 
-I don't know :-( This is getting a bit out of my depth. But I'm 
-SERIOUSLY concerned you're still futzing about with CentOS 7!!!
+On 5/9/22 2:37 PM, Song Liu wrote:
+> On Fri, May 6, 2022 at 4:37 AM Guoqing Jiang<guoqing.jiang@linux.dev>  wrote:
+>> From: Guoqing Jiang<guoqing.jiang@cloud.ionos.com>
+>>
+>> Unregister sync_thread doesn't need to hold reconfig_mutex since it
+>> doesn't reconfigure array.
+>>
+>> And it could cause deadlock problem for raid5 as follows:
+>>
+>> 1. process A tried to reap sync thread with reconfig_mutex held after echo
+>>     idle to sync_action.
+>> 2. raid5 sync thread was blocked if there were too many active stripes.
+>> 3. SB_CHANGE_PENDING was set (because of write IO comes from upper layer)
+>>     which causes the number of active stripes can't be decreased.
+>> 4. SB_CHANGE_PENDING can't be cleared since md_check_recovery was not able
+>>     to hold reconfig_mutex.
+>>
+>> More details in the link:
+>> https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t
+>>
+>> Let's call unregister thread between mddev_unlock and mddev_lock_nointr
+>> (thanks for the report from kernel test robot<lkp@intel.com>) if the
+>> reconfig_mutex is held, and mddev_is_locked is introduced accordingly.
+> mddev_is_locked() feels really hacky to me. It cannot tell whether
+> mddev is locked
+> by current thread. So technically, we can unlock reconfigure_mutex for
+> other thread
+> by accident, no?
 
-Why didn't you download CentOS 8.5? Why didn't you download RHEL 8.5, or 
-the latest Fedora? Why didn't you download SUSE SLES 15?
+I can switch back to V2 if you think that is the correct way to do though no
+one comment about the change in dm-raid.
 
-Any and all CentOS 7 will come with either an out-of-date mdadm, or a 
-Frankenkernel. NEITHER are a good idea.
-
-Go back to the links I gave you, download and run lsdrv, and post the 
-output here. Hopefully somebody will tell you the next steps. I will do 
-my best.
-> 
-> Thank you!
-> 
-Cheers,
-Wol
-> 
-> -----Original Message-----
-> From: Bob Brand <brand@wmawater.com.au>
-> Sent: Monday, 9 May 2022 9:33 AM
-> To: Bob Brand <brand@wmawater.com.au>; Wol <antlists@youngman.org.uk>;
-> linux-raid@vger.kernel.org
-> Cc: Phil Turmel <philip@turmel.org>
-> Subject: RE: Failed adadm RAID array after aborted Grown operation
-> 
-> I just tried it again with the --invalid_backup switch and it's now showing
-> the State as "clean, degraded".and it's showing all the disks except for the
-> suspect one that I removed.
-> 
-> I'm unable to mount it and see the contents. I get the error "mount:
-> /dev/md125: can't read superblock."
-> 
-> Is there more that I need to do?
-> 
-> Thanks
-> 
-> 
-> -----Original Message-----
-> From: Bob Brand <brand@wmawater.com.au>
-> Sent: Monday, 9 May 2022 9:02 AM
-> To: Bob Brand <brand@wmawater.com.au>; Wol <antlists@youngman.org.uk>;
-> linux-raid@vger.kernel.org
-> Cc: Phil Turmel <philip@turmel.org>
-> Subject: RE: Failed adadm RAID array after aborted Grown operation
-> 
-> Hi Wol,
-> 
-> I've booted to the installation media and I've run the following command:
-> 
-> mdadm
-> /dev/md125 --assemble --update=revert-reshape --backup-file=/mnt/sysimage/grow_md125.bak
->   --verbose --uuid= f9b65f55:5f257add:1140ccc0:46ca6c19
-> /dev/md125mdadm --assemble --update=revert-reshape --backup-file=/grow_md125.bak
->    --verbose --uuid=f9b65f55:5f257add:1140ccc0:46ca6c19
-> 
-> But I'm still getting the error:
-> 
-> mdadm: /dev/md125 has an active reshape - checking if critical section needs
-> to be restored
-> mdadm: No backup metadata on /mnt/sysimage/grow_md125.back
-> mdadm: Failed to find backup of critical section
-> mdadm: Failed to restore critical section for reshape, sorry.
-> 
-> 
-> Should I try the --invalid_backup switch or --force?
-> 
-> Thanks,
-> Bob
-> 
-> 
-> -----Original Message-----
-> From: Bob Brand <brand@wmawater.com.au>
-> Sent: Monday, 9 May 2022 8:19 AM
-> To: Wol <antlists@youngman.org.uk>; linux-raid@vger.kernel.org
-> Cc: Phil Turmel <philip@turmel.org>
-> Subject: RE: Failed adadm RAID array after aborted Grown operation
-> 
-> OK.  I've downloaded a Centos 7 - 2009 ISO from centos.org - that seems to
-> be the most recent they have.
-> 
-> 
-> -----Original Message-----
-> From: Wol <antlists@youngman.org.uk>
-> Sent: Monday, 9 May 2022 8:16 AM
-> To: Bob Brand <brand@wmawater.com.au>; linux-raid@vger.kernel.org
-> Cc: Phil Turmel <philip@turmel.org>
-> Subject: Re: Failed adadm RAID array after aborted Grown operation
-> 
-> How old is CentOS 7? With that kernel I guess it's quite old?
-> 
-> Try and get a CentOS 8.5 disk. At the end of the day, the version of linux
-> doesn't matter. What you need is an up-to-date rescue disk.
-> Distro/whatever is unimportant - what IS important is that you are using the
-> latest mdadm, and a kernel that matches.
-> 
-> The problem you have sounds like a long-standing but now-fixed bug. An
-> original CentOS disk might be okay (with matched kernel and mdadm), but
-> almost certainly has what I consider to be a "dodgy" version of mdadm.
-> 
-> If you can afford the downtime, after you've reverted the reshape, I'd try
-> starting it again with the rescue disk. It'll probably run fine. Let it
-> complete and then your old CentOS 7 will be fine with it.
-> 
-> Cheers,
-> Wol
-> 
-> On 08/05/2022 23:04, Bob Brand wrote:
->> Thank Wol.
->>
->> Should I use a CentOS 7 disk or a CentOS disk?
->>
->> Thanks
->>
->> -----Original Message-----
->> From: Wols Lists <antlists@youngman.org.uk>
->> Sent: Monday, 9 May 2022 1:32 AM
->> To: Bob Brand <brand@wmawater.com.au>; linux-raid@vger.kernel.org
->> Cc: Phil Turmel <philip@turmel.org>
->> Subject: Re: Failed adadm RAID array after aborted Grown operation
->>
->> On 08/05/2022 14:18, Bob Brand wrote:
->>> If you’ve stuck with me and read all this way, thank you and I hope
->>> you can help me.
->>
->> https://raid.wiki.kernel.org/index.php/Linux_Raid
->>
->> Especially
->> https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
->>
->> What you need to do is revert the reshape. I know what may have
->> happened, and what bothers me is your kernel version, 3.10.
->>
->> The first thing to try is to boot from up-to-date rescue media and see
->> if an mdadm --revert works from there. If it does, your Centos should
->> then bring everything back no problem.
->>
->> (You've currently got what I call a Frankensetup, a very old kernel, a
->> pretty new mdadm, and a whole bunch of patches that does who knows what.
->> You really need a matching kernel and mdadm, and your frankenkernel
->> won't match anything ...)
->>
->> Let us know how that goes ...
->>
->> Cheers,
->> Wol
->>
->>
->>
->> CAUTION!!! This E-mail originated from outside of WMA Water. Do not
->> click links or open attachments unless you recognize the sender and
->> know the content is safe.
->>
->>
-> 
-> 
-> 
-> CAUTION!!! This E-mail originated from outside of WMA Water. Do not click
-> links or open attachments unless you recognize the sender and know the
-> content is safe.
-> 
-> 
-> 
-
+Thanks,
+Guoqing
