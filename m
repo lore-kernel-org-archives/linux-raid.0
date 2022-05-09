@@ -2,320 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A98AC433FE
-	for <linux-raid@archiver.kernel.org>; Mon,  9 May 2022 13:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A951C433FE
+	for <linux-raid@archiver.kernel.org>; Mon,  9 May 2022 13:14:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235183AbiEINLd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 9 May 2022 09:11:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40606 "EHLO
+        id S235313AbiEINSP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 9 May 2022 09:18:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235169AbiEINLc (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 May 2022 09:11:32 -0400
-Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id B575323E353
-        for <linux-raid@vger.kernel.org>; Mon,  9 May 2022 06:07:33 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id 9ACE819F35E;
-        Mon,  9 May 2022 23:07:31 +1000 (AEST)
-Authentication-Results: postoffice.wmawater.com.au (amavisd-new);
-        dkim=pass (1024-bit key) header.d=wmawater.com.au
-Received: from postoffice.wmawater.com.au ([127.0.0.1])
-        by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id pGhkNv70L5T5; Mon,  9 May 2022 23:07:31 +1000 (AEST)
-Received: from localhost (localhost [127.0.0.1])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id 6127119F371;
-        Mon,  9 May 2022 23:07:31 +1000 (AEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 postoffice.wmawater.com.au 6127119F371
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wmawater.com.au;
-        s=1D92CC64-C1F9-11E4-96FC-2C1EC0F5F97B; t=1652101651;
-        bh=TiWZSACWwYbJmWBcd4EVZmA3jnXpPEYzrwtFjV4xMTM=;
-        h=From:To:Date:Message-ID:MIME-Version;
-        b=WnsLsReYy6kv8urOewIUNMOTOcTcPVDmU+9lg9MQIp5G2BcMIPQ0vHtA3YJZW0Sx9
-         JN0jUyLGQfnvi/ZXu7UKmt6T7rOnums5AW7vet2rJCHEp/ZawDdHhbCbOZMtZTlCW5
-         dCUCqQEcDXJt9Q4VECBaaAc5wdfo8yducxA4qWBg=
-X-Virus-Scanned: amavisd-new at wmawater.com.au
-Received: from postoffice.wmawater.com.au ([127.0.0.1])
-        by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id TZoDiiMQDirR; Mon,  9 May 2022 23:07:31 +1000 (AEST)
-Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id 29EDB19F35E;
-        Mon,  9 May 2022 23:07:31 +1000 (AEST)
-Reply-To: "Bob Brand" <brand@wmawater.com.au>
-From:   Bob Brand <brand@wmawater.com.au>
-To:     "Wols Lists" <antlists@youngman.org.uk>,
-        <linux-raid@vger.kernel.org>
-Cc:     "Phil Turmel" <philip@turmel.org>, "NeilBrown" <neilb@suse.com>
-References: <00ae01d862de$1d336980$579a3c80$@wmawater.com.au> <f4e9c9f8-590d-49a4-39da-e31d81258ff3@youngman.org.uk> <00cf01d86327$9c5dd8a0$d51989e0$@wmawater.com.au> <3f84648b-29db-0819-e3ba-af52435a2aab@youngman.org.uk> <00d101d86329$a2a57130$e7f05390$@wmawater.com.au> <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au> <00e401d86333$e75d8f60$b618ae20$@wmawater.com.au> <00eb01d86339$18cc0860$4a641920$@wmawater.com.au> <5931f716-008d-399b-2ea8-acbbc9c8d239@youngman.org.uk>
-In-Reply-To: <5931f716-008d-399b-2ea8-acbbc9c8d239@youngman.org.uk>
-Subject: RE: Failed adadm RAID array after aborted Grown operation
-Thread-Topic: Failed adadm RAID array after aborted Grown operation
-Date:   Mon, 9 May 2022 23:07:31 +1000 (AEST)
-Message-ID: <002601d863a5$bd9f5880$38de0980$@wmawater.com.au>
+        with ESMTP id S235383AbiEINSL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 May 2022 09:18:11 -0400
+X-Greylist: delayed 6908 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 09 May 2022 06:14:16 PDT
+Received: from mail-out-auth1.hosts.co.uk (mail-out-auth1.hosts.co.uk [195.7.255.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 663222A83EF
+        for <linux-raid@vger.kernel.org>; Mon,  9 May 2022 06:14:16 -0700 (PDT)
+Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1no1Pr-000584-Fr;
+        Mon, 09 May 2022 12:19:04 +0100
+Message-ID: <6f41c017-8102-cfe6-ad37-e07df3e23cc0@youngman.org.uk>
+Date:   Mon, 9 May 2022 12:19:03 +0100
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="UTF-8"
-X-Mailer: Microsoft Outlook 16.0
-X-Mailer: Zimbra 8.8.15_GA_3894 (Zimbra-ZCO/9.0.0.1903 (10.0.19044  en-AU) P4764 T66f8 R515)
-Thread-Index: AQK0Ylmfkg1g1mZGz7yxBx3O0op7hADpZ3mFAYMzo9kBZlg9dAGZ0oLFAdWidsoCQWnqlQI7z0N+AMQVcYqq+lu9gA==
-Content-Language: en-au
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
+ reconfig_mutex held
+Content-Language: en-GB
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>, Song Liu <song@kernel.org>
+Cc:     Donald Buczek <buczek@molgen.mpg.de>,
+        linux-raid <linux-raid@vger.kernel.org>
+References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
+ <20220506113656.25010-1-guoqing.jiang@linux.dev>
+ <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
+ <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev>
+ <c2917c23-c218-e600-7e10-31a504c844e2@youngman.org.uk>
+ <f3c2ea9a-2dd4-52be-cd3d-a8c994213fd4@linux.dev>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <f3c2ea9a-2dd4-52be-cd3d-a8c994213fd4@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Wol,
+On 09/05/2022 11:37, Guoqing Jiang wrote:
+> 
+> 
+> On 5/9/22 5:32 PM, Wols Lists wrote:
+>> On 09/05/2022 09:09, Guoqing Jiang wrote:
+>>> I can switch back to V2 if you think that is the correct way to do 
+>>> though no
+>>> one comment about the change in dm-raid.
+>>
+>> DON'T QUOTE ME ON THIS
+>>
+>> but it is very confusing, as I believe dm-raid is part of Device 
+>> Managment, which is actually nothing to do with md-raid
+> 
+> 
+> No, dm-raid (I mean dm-raid.c here) is a bridge between dm framwork and 
+> md raid, which
+> makes dm can reuse md raid code to avoid re-implementation raid logic 
+> inside dm itself.
 
-I did read the links you sent, actually I'd already trawled through them=20
-prior to subscribing to the mailing list. They're how I learned about the=
-=20
-mailing list.
+Hmm...
 
-It seems that the conventional version of CentOS 8.5 is no longer availab=
-le,=20
-there's just the CentOS 8 Streams version and I wasn't sure how it would =
-go=20
-with the old style of CentOS. To be honest it didn't occur to me to go wi=
-th=20
-another flavour of Linux, I just figured that I'd use CentOS to repair=20
-CentOS.
+Which backs up what I thought - if it's used by the dm people to call 
+md-raid, then asking for info/comments about it on the md list is likely 
+to get you no-where...
 
-Anyway, I did try using "mdadm /dev/md2 -r detached" and "mdadm /dev/md2 =
--r=20
-failed" to remove the removed disk to no avail.  I ended up using=20
-"mdadm --grow /dev/md125 --array-size=20
-218789036032 --backup-file=3D/mnt/sysimage/grow_md125_size_grow.bak --ver=
-bose"=20
-followed by "mdadm --grow=20
-/dev/md125 --raid-devices=3D30 --backup-file=3D/mnt/sysimage/grow_md125_g=
-row_disks.bak=20
- --verbose" and it seems to be working in that it is reshaping the array=20
-although it is apparently going to take around 16,000 minutes (would that=
- be=20
-because we've about 200TB of data?).
+>> (apart from, like many block layer drivers, md-raid uses dm to manage 
+>> the device beneath it.)
+> 
+> The above statement is very confusing.
+> 
+Yup. I've never understood it. But, from all my time on the list, it is 
+noticeable that nobody seems to know or care much about dm, and this is 
+simply one more data point that agrees with that impression. If you want 
+to know about dm-raid, you probably need to go where the dm people hang out.
 
-My concern now is whether or not I'll still have the mount issue once it=20
-finally completes the reshape.  If it does mount OK, does that mean I'm g=
-ood=20
-to reboot it?
-
-With regards to your comment about downloading lsdrv, I'll try and do tha=
-t=20
-although I'm having trouble configuring my DNS servers in the running res=
-cue=20
-disk OS. I could run lsblk but, from what I see of lsdrv, lsblk doesn't h=
-ave=20
-the detail that lsdrv has. I'll keep working on that and let you know wha=
-t I=20
-get - it looks like I have to edit it to use the older version of Python=20
-that this installation has.
-
-Cheers,
-Bob
-
-
-
------Original Message-----
-From: Wols Lists <antlists@youngman.org.uk>
-Sent: Monday, 9 May 2022 4:52 PM
-To: Bob Brand <brand@wmawater.com.au>; linux-raid@vger.kernel.org
-Cc: Phil Turmel <philip@turmel.org>; NeilBrown <neilb@suse.com>
-Subject: Re: Failed adadm RAID array after aborted Grown operation
-
-On 09/05/2022 01:09, Bob Brand wrote:
-> Hi Wol,
->
-> My apologies for continually bothering you but I have a couple of=20
-> questions:
-
-Did you read the links I sent you?
->
-> 1. How do I overcome the error message "mount: /dev/md125: can't read
-> superblock."  Do it use fsck?
->
-> 2. The removed disk is showing as "   -   0   0   30   removed". Is it=20
-> safe
-> to use "mdadm /dev/md2 -r detached" or "mdadm /dev/md2 -r failed" to
-> overcome this?
-
-I don't know :-( This is getting a bit out of my depth. But I'm SERIOUSLY=
-=20
-concerned you're still futzing about with CentOS 7!!!
-
-Why didn't you download CentOS 8.5? Why didn't you download RHEL 8.5, or =
-the=20
-latest Fedora? Why didn't you download SUSE SLES 15?
-
-Any and all CentOS 7 will come with either an out-of-date mdadm, or a=20
-Frankenkernel. NEITHER are a good idea.
-
-Go back to the links I gave you, download and run lsdrv, and post the out=
-put=20
-here. Hopefully somebody will tell you the next steps. I will do my best.
->
-> Thank you!
->
 Cheers,
 Wol
->
-> -----Original Message-----
-> From: Bob Brand <brand@wmawater.com.au>
-> Sent: Monday, 9 May 2022 9:33 AM
-> To: Bob Brand <brand@wmawater.com.au>; Wol <antlists@youngman.org.uk>;
-> linux-raid@vger.kernel.org
-> Cc: Phil Turmel <philip@turmel.org>
-> Subject: RE: Failed adadm RAID array after aborted Grown operation
->
-> I just tried it again with the --invalid_backup switch and it's now
-> showing the State as "clean, degraded".and it's showing all the disks
-> except for the suspect one that I removed.
->
-> I'm unable to mount it and see the contents. I get the error "mount:
-> /dev/md125: can't read superblock."
->
-> Is there more that I need to do?
->
-> Thanks
->
->
-> -----Original Message-----
-> From: Bob Brand <brand@wmawater.com.au>
-> Sent: Monday, 9 May 2022 9:02 AM
-> To: Bob Brand <brand@wmawater.com.au>; Wol <antlists@youngman.org.uk>;
-> linux-raid@vger.kernel.org
-> Cc: Phil Turmel <philip@turmel.org>
-> Subject: RE: Failed adadm RAID array after aborted Grown operation
->
-> Hi Wol,
->
-> I've booted to the installation media and I've run the following comman=
-d:
->
-> mdadm
-> /dev/md125 --assemble --update=3Drevert-reshape --backup-file=3D/mnt/sy=
-simage/grow_md125.bak
->   --verbose --uuid=3D f9b65f55:5f257add:1140ccc0:46ca6c19
-> /dev/md125mdadm --assemble --update=3Drevert-reshape --backup-file=3D/g=
-row_md125.bak
->    --verbose --uuid=3Df9b65f55:5f257add:1140ccc0:46ca6c19
->
-> But I'm still getting the error:
->
-> mdadm: /dev/md125 has an active reshape - checking if critical section
-> needs to be restored
-> mdadm: No backup metadata on /mnt/sysimage/grow_md125.back
-> mdadm: Failed to find backup of critical section
-> mdadm: Failed to restore critical section for reshape, sorry.
->
->
-> Should I try the --invalid_backup switch or --force?
->
-> Thanks,
-> Bob
->
->
-> -----Original Message-----
-> From: Bob Brand <brand@wmawater.com.au>
-> Sent: Monday, 9 May 2022 8:19 AM
-> To: Wol <antlists@youngman.org.uk>; linux-raid@vger.kernel.org
-> Cc: Phil Turmel <philip@turmel.org>
-> Subject: RE: Failed adadm RAID array after aborted Grown operation
->
-> OK.  I've downloaded a Centos 7 - 2009 ISO from centos.org - that
-> seems to be the most recent they have.
->
->
-> -----Original Message-----
-> From: Wol <antlists@youngman.org.uk>
-> Sent: Monday, 9 May 2022 8:16 AM
-> To: Bob Brand <brand@wmawater.com.au>; linux-raid@vger.kernel.org
-> Cc: Phil Turmel <philip@turmel.org>
-> Subject: Re: Failed adadm RAID array after aborted Grown operation
->
-> How old is CentOS 7? With that kernel I guess it's quite old?
->
-> Try and get a CentOS 8.5 disk. At the end of the day, the version of
-> linux doesn't matter. What you need is an up-to-date rescue disk.
-> Distro/whatever is unimportant - what IS important is that you are
-> using the latest mdadm, and a kernel that matches.
->
-> The problem you have sounds like a long-standing but now-fixed bug. An
-> original CentOS disk might be okay (with matched kernel and mdadm),
-> but almost certainly has what I consider to be a "dodgy" version of mda=
-dm.
->
-> If you can afford the downtime, after you've reverted the reshape, I'd
-> try starting it again with the rescue disk. It'll probably run fine.
-> Let it complete and then your old CentOS 7 will be fine with it.
->
-> Cheers,
-> Wol
->
-> On 08/05/2022 23:04, Bob Brand wrote:
->> Thank Wol.
->>
->> Should I use a CentOS 7 disk or a CentOS disk?
->>
->> Thanks
->>
->> -----Original Message-----
->> From: Wols Lists <antlists@youngman.org.uk>
->> Sent: Monday, 9 May 2022 1:32 AM
->> To: Bob Brand <brand@wmawater.com.au>; linux-raid@vger.kernel.org
->> Cc: Phil Turmel <philip@turmel.org>
->> Subject: Re: Failed adadm RAID array after aborted Grown operation
->>
->> On 08/05/2022 14:18, Bob Brand wrote:
->>> If you=E2=80=99ve stuck with me and read all this way, thank you and =
-I hope
->>> you can help me.
->>
->> https://raid.wiki.kernel.org/index.php/Linux_Raid
->>
->> Especially
->> https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrog
->> n
->>
->> What you need to do is revert the reshape. I know what may have
->> happened, and what bothers me is your kernel version, 3.10.
->>
->> The first thing to try is to boot from up-to-date rescue media and
->> see if an mdadm --revert works from there. If it does, your Centos
->> should then bring everything back no problem.
->>
->> (You've currently got what I call a Frankensetup, a very old kernel,
->> a pretty new mdadm, and a whole bunch of patches that does who knows=20
->> what.
->> You really need a matching kernel and mdadm, and your frankenkernel
->> won't match anything ...)
->>
->> Let us know how that goes ...
->>
->> Cheers,
->> Wol
->>
->>
->>
->> CAUTION!!! This E-mail originated from outside of WMA Water. Do not
->> click links or open attachments unless you recognize the sender and
->> know the content is safe.
->>
->>
->
->
->
-> CAUTION!!! This E-mail originated from outside of WMA Water. Do not
-> click links or open attachments unless you recognize the sender and
-> know the content is safe.
->
->
->
-
-
-
-
-CAUTION!!! This E-mail originated from outside of WMA Water. Do not click=
-=20
-links or open attachments unless you recognize the sender and know the=20
-content is safe.
-
-
