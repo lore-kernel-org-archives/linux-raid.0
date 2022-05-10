@@ -2,105 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DFB6C433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 10 May 2022 17:09:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD11AC433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 10 May 2022 18:02:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347816AbiEJRNe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 10 May 2022 13:13:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34132 "EHLO
+        id S244820AbiEJSGp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 10 May 2022 14:06:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347790AbiEJRNX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 10 May 2022 13:13:23 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 611D528ED3F
-        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 10:09:25 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24AEtXBk011683
-        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 17:09:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2021-07-09;
- bh=IdNcVy/AkWa/wZRpDZxUw1QyXwKG6Cp0zVAv9eMrzW8=;
- b=nI+QHpRBL40kQ2zTgl+rqfskmTOWStKg5Ldc62WQunmTx6iyKAfHVqFPpk9jEzuP/rbH
- I6csf+yxrsAdLBOHeTKpSI5n+Tc4yMX51C9WA5Y/QLZI8G3zo+kJBFJ/U7x24gi8m89F
- N2vpfaHLmewwJ9dMXSeVrZ9fe837lwm8j7PMpbPYSm1ncjtYpyzuxIL3Zyy+gSFtgoqE
- 2DQQE/XxcK0v512C8GWoE7CcMqhE1VHCGieqqiJdPLRfhEUVhVmC4OUqMTn70B66ifra
- ibWnsvdMmsjRPVQnDXO0xIq8jf607XsEX8xShiOi/wfS9eRjq33vwoDv0SsyiholU5Hi Zg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fwgcsqfyq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 17:09:24 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24AH5dqJ016348
-        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 17:09:23 GMT
-Received: from coruscant.us.oracle.com (dhcp-10-159-252-166.vpn.oracle.com [10.159.252.166])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3fwf739t3p-8
-        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 17:09:23 +0000
-From:   himanshu.madhani@oracle.com
-To:     linux-raid@vger.kernel.org
-Subject: [PATCH v3 7/7] tests: avoid passing chunk size to raid1
-Date:   Tue, 10 May 2022 10:09:20 -0700
-Message-Id: <20220510170920.18730-8-himanshu.madhani@oracle.com>
-X-Mailer: git-send-email 2.33.0.69.gc4203212e360
-In-Reply-To: <20220510170920.18730-1-himanshu.madhani@oracle.com>
-References: <20220510170920.18730-1-himanshu.madhani@oracle.com>
+        with ESMTP id S234017AbiEJSGo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 10 May 2022 14:06:44 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC662FF1
+        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 11:02:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6BE1C61978
+        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 18:02:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1372C385A6
+        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 18:02:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1652205765;
+        bh=RDG7D0Zi9JaVkgzx+fBs4sXLTVBn/P/6dPnUPY6E4F8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=PJb2q/Tj8Phr7ccKmwt5MlQJUstYztSzxf71nFVGrZZMzG6HvnZNR/P/e+MhEGnP7
+         ds/7Gpeq42VAW1cVid28HX70E+CVCehuKM6+jKa/BV5+fHEgQZPc8gPuYuV0wtVfbt
+         4e74oob+zy6kLFP6zfxKmjwHuGHbTr9iWPIPmLLjz/afTnpKyCmg5sBOPOyh+Upk4c
+         FCZ2SRSbzF2Q4aX6Vf3xOw8x/l03EZJ30sW+6FlOMQbmAefWa7tMuGAObhdIh/YGH5
+         N11BbZ2JORcN7ZFcxQm2dUkFH+XXfTOz8fa3hD/r92L+7TZAARDcE4tLeD0DAgBxXa
+         Aasj9hx+89CmA==
+Received: by mail-yb1-f181.google.com with SMTP id i11so10116679ybq.9
+        for <linux-raid@vger.kernel.org>; Tue, 10 May 2022 11:02:45 -0700 (PDT)
+X-Gm-Message-State: AOAM533E5wwMYGKczHSyS/Npzm0pVmPJ3BYKOmjdJngutGQTLtXPIxuU
+        Lpdh8HhxLU6E//fTwaekh8BxQDCOMiidAtwh/10=
+X-Google-Smtp-Source: ABdhPJx5Ad4IaPPCeC3sU18Twez91pb+nhumMS4RCbdvID7P1QRo5xLL9xlgl3+nMn4RLL8UgH3ReuBWwfcZw+ztcRc=
+X-Received: by 2002:a25:d9d5:0:b0:648:e2a8:c4f2 with SMTP id
+ q204-20020a25d9d5000000b00648e2a8c4f2mr19218701ybg.322.1652205764828; Tue, 10
+ May 2022 11:02:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
- definitions=2022-05-10_04:2022-05-09,2022-05-10 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- suspectscore=0 phishscore=0 spamscore=0 bulkscore=0 mlxscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2205100074
-X-Proofpoint-GUID: e8Am7OS0I8lU-eOiWbUlZbgW08b3_L-y
-X-Proofpoint-ORIG-GUID: e8Am7OS0I8lU-eOiWbUlZbgW08b3_L-y
+References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
+ <20220506113656.25010-1-guoqing.jiang@linux.dev> <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
+ <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev> <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
+ <fdabab9e-e0ce-330d-b4db-0a11fde82615@molgen.mpg.de> <e50fa5ee-156a-aa22-fc49-390cefa3875f@linux.dev>
+ <675626ff-f18b-78ab-f5a0-2ee44ab0d399@molgen.mpg.de>
+In-Reply-To: <675626ff-f18b-78ab-f5a0-2ee44ab0d399@molgen.mpg.de>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 10 May 2022 11:02:33 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4ZVkzQa=UKz=TR52ye23RAyubUOgdhT7=OGqTR8uWwVw@mail.gmail.com>
+Message-ID: <CAPhsuW4ZVkzQa=UKz=TR52ye23RAyubUOgdhT7=OGqTR8uWwVw@mail.gmail.com>
+Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
+ reconfig_mutex held
+To:     Donald Buczek <buczek@molgen.mpg.de>
+Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
+On Tue, May 10, 2022 at 5:35 AM Donald Buczek <buczek@molgen.mpg.de> wrote:
+>
+> On 5/10/22 2:09 PM, Guoqing Jiang wrote:
+> >
+> >
+> > On 5/10/22 8:01 PM, Donald Buczek wrote:
+> >>
+> >>> I guess v2 is the best at the moment. I pushed a slightly modified v2 to
+> >>> md-next.
+> >>
+> >> I think, this can be used to get a double-free from md_unregister_thread.
+> >>
+> >> Please review
+> >>
+> >> https://lore.kernel.org/linux-raid/8312a154-14fb-6f07-0cf1-8c970187cc49@molgen.mpg.de/
+> >
+> > That is supposed to be addressed by the second one, pls consider it too.
+>
+> Right, but this has not been pulled into md-next. I just wanted to note, that the current state of md-next has this problem.
+>
+> If the other patch is taken, too, and works as intended, that would be solved.
+>
+> > [PATCH 2/2] md: protect md_unregister_thread from reentrancy
 
-'04update-metadata' test fails with error, "specifying chunk size is
-forbidden for this level" added by commit, 5b30a34aa4b5e. Hence,
-correcting the test to ignore passing chunk size to raid1.
+Good catch!
 
-Signed-off-by: Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@oracle.com>
----
- tests/04update-metadata | 7 ++++++-
- tests/05r1-re-add       | 1 +
- 2 files changed, 7 insertions(+), 1 deletion(-)
+Guoqing, current 2/2 doesn't apply cleanly. Could you please resend it on top of
+md-next?
 
-diff --git a/tests/04update-metadata b/tests/04update-metadata
-index 08c14af7ed29..ef4c973198e0 100644
---- a/tests/04update-metadata
-+++ b/tests/04update-metadata
-@@ -11,7 +11,12 @@ dlist="$dev0 $dev1 $dev2 $dev3"
- for ls in linear/4 raid1/1 raid5/3 raid6/2
- do
-   s=${ls#*/} l=${ls%/*}
--  mdadm -CR --assume-clean -e 0.90 $md0 --level $l -n 4 -c 64 $dlist
-+  if [[ $l == 'raid1' ]]
-+  then
-+	mdadm -CR --assume-clean -e 0.90 $md0 --level $l -n 4 $dlist
-+  else
-+	mdadm -CR --assume-clean -e 0.90 $md0 --level $l -n 4 -c 64 $dlist
-+  fi
-   testdev $md0 $s 19904 64
-   mdadm -S $md0
-   mdadm -A $md0 --update=metadata $dlist
-diff --git a/tests/05r1-re-add b/tests/05r1-re-add
-index fa6bbcb421e5..12da5644dee5 100644
---- a/tests/05r1-re-add
-+++ b/tests/05r1-re-add
-@@ -14,6 +14,7 @@ sleep 4
- mdadm $md0 -f $dev2
- sleep 1
- mdadm $md0 -r $dev2
-+cat /proc/mdstat
- mdadm $md0 -a $dev2
- #cat /proc/mdstat
- check nosync
--- 
-2.27.0
-
+Thanks,
+Song
