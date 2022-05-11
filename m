@@ -2,108 +2,110 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9E14C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 11 May 2022 21:35:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C4C7C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 11 May 2022 21:45:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348207AbiEKVfM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 11 May 2022 17:35:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41148 "EHLO
+        id S1348266AbiEKVpe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 11 May 2022 17:45:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348178AbiEKVfM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 11 May 2022 17:35:12 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 211517222B
-        for <linux-raid@vger.kernel.org>; Wed, 11 May 2022 14:35:11 -0700 (PDT)
+        with ESMTP id S243914AbiEKVpc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 11 May 2022 17:45:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 126F3880F3
+        for <linux-raid@vger.kernel.org>; Wed, 11 May 2022 14:45:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D3FBFB82629
-        for <linux-raid@vger.kernel.org>; Wed, 11 May 2022 21:35:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 784F6C340EE
-        for <linux-raid@vger.kernel.org>; Wed, 11 May 2022 21:35:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9EBD461C5B
+        for <linux-raid@vger.kernel.org>; Wed, 11 May 2022 21:45:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 006F1C34115
+        for <linux-raid@vger.kernel.org>; Wed, 11 May 2022 21:45:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652304908;
-        bh=0bkh0aeiNTTiSvnw+vX7l56ASzkfGZHEiH9suH9ZP2U=;
+        s=k20201202; t=1652305531;
+        bh=IxWMzcgZioHCDdMVwHdSOLoZjnGiCKzb+kLARvCDQmU=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=IF9qcGpSLTLVbaRRAWwEq/xKIQoa04ZjLTBFVj++7UJWPhqIBA/2G2DcwcioNiliL
-         LuPCXG3vAKp3A6k1dkUtAxw3bx6yYFDb+MQfW3Z9puj5Fx72NpgPCbU2DHCs70qyG9
-         zjnCfyhicGImLKzNI6YP2xhmWLaCpGUqXy8wYD6C7JdMyxpaCgO9wV/Ef6ikVWgo09
-         bB/s0gGOhPlK1yTHM26385tmb9BG1K5VDKBxFbznr8+sPgeGvO+v6rNsLCbj76m7Xd
-         OZ/hafC6finMTjYwL8/nwhnbBuD5xW9v37Uhuk8V1Bk5QBxFXLUEDgkaCooLNouhb0
-         IxGfMlrreTTXQ==
-Received: by mail-yb1-f180.google.com with SMTP id r11so6398503ybg.6
-        for <linux-raid@vger.kernel.org>; Wed, 11 May 2022 14:35:08 -0700 (PDT)
-X-Gm-Message-State: AOAM5305x7RrDaSEOCydtvqH96Ft/Htet7Fq2kt7A9du4HRl6QzB2sZA
-        QP4su/4aXAYgn4GmBtAIfi/7fbUDJZ4VXs+sZrU=
-X-Google-Smtp-Source: ABdhPJxAZkDzUfkhb5ulJLDY6imMZveMz7tavT234p66Z237SXF5Ahj62x1LQo4c4Q/dowZiAsAGe39Rvum7NbanhLU=
-X-Received: by 2002:a05:6902:114c:b0:641:87a7:da90 with SMTP id
- p12-20020a056902114c00b0064187a7da90mr26093093ybu.561.1652304907508; Wed, 11
- May 2022 14:35:07 -0700 (PDT)
+        b=aqLFtI6/qH3CGxn8+dZHu9Q+aUdU3SGwsj/izvxAbkyaqeVWADpuR+sanDK4UZMQq
+         eoiJp5TYSXujx7SLRBNcQ03FIbhM4+izfNwgPS1gCmQInBHqWqjefWlYVIbn8tZQh1
+         aXnc4mmSlcihn2CcMRtgRjfRz4nI7TnDl+utZZeByJrxpHtCYAtaU/EJp5EktLi3uN
+         mNJqeiCvDQWatK467QaEeQutjGHIzXq3rdzkgcMA98MUqwE8jjKvYBLSSf2yHSeddD
+         GVZRu5P0LuWdHOq1YcxemIB2fWnOXiKRfsalhQ2a+Qy6xFNez1tUjsHTo9a7pdh/cI
+         eqausgOWOKW0Q==
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-2f16645872fso36578367b3.4
+        for <linux-raid@vger.kernel.org>; Wed, 11 May 2022 14:45:30 -0700 (PDT)
+X-Gm-Message-State: AOAM533oQGiNRWLQ6++9CuxQzAOJAmdrRt3NkmbTiNpViE+Gqzx4L1Qe
+        bnEbOLiERRdaWUgT5ClSoWGYyOuKgkSS9kN5AKE=
+X-Google-Smtp-Source: ABdhPJy6HpZCoHYZjcees1YT0ColuohVoeqAMlnr1IVMY8WRgWL/KJv6lAdJyD4mcvhm0/XToD6+BK9jo0ypFW7l5T8=
+X-Received: by 2002:a81:9b57:0:b0:2f1:49eb:1ad9 with SMTP id
+ s84-20020a819b57000000b002f149eb1ad9mr28165031ywg.130.1652305530008; Wed, 11
+ May 2022 14:45:30 -0700 (PDT)
 MIME-Version: 1.0
-References: <1651208967-4701-1-git-send-email-xni@redhat.com>
- <CAPhsuW7J3EQde_XGdysjNGjHjEb+Zq2kXwXsj+4xpXBA_Bq2Eg@mail.gmail.com> <CALTww2_hyAH+EJc=EymgcBwhTCQpddy500eqZf=qr_r4=H8Y6w@mail.gmail.com>
-In-Reply-To: <CALTww2_hyAH+EJc=EymgcBwhTCQpddy500eqZf=qr_r4=H8Y6w@mail.gmail.com>
+References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
+ <20220506113656.25010-1-guoqing.jiang@linux.dev> <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
+ <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev> <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
+ <fdabab9e-e0ce-330d-b4db-0a11fde82615@molgen.mpg.de> <e50fa5ee-156a-aa22-fc49-390cefa3875f@linux.dev>
+ <675626ff-f18b-78ab-f5a0-2ee44ab0d399@molgen.mpg.de> <CAPhsuW4ZVkzQa=UKz=TR52ye23RAyubUOgdhT7=OGqTR8uWwVw@mail.gmail.com>
+ <52e9aa65-581a-63fc-272a-0477f8c6e873@linux.dev>
+In-Reply-To: <52e9aa65-581a-63fc-272a-0477f8c6e873@linux.dev>
 From:   Song Liu <song@kernel.org>
-Date:   Wed, 11 May 2022 14:34:56 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6RXrxrRP_cK_m15v5C1A5CNmvW4Fz1KpePg=kA+PYh+A@mail.gmail.com>
-Message-ID: <CAPhsuW6RXrxrRP_cK_m15v5C1A5CNmvW4Fz1KpePg=kA+PYh+A@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Don't set mddev private to NULL in raid0 pers->free
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Nigel Croxon <ncroxon@redhat.com>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Fine Fan <ffan@redhat.com>
+Date:   Wed, 11 May 2022 14:45:18 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5mai7WfnzdKHv=eUaYwcR1QHFc=6zuVZ8=WVW8Xn2Miw@mail.gmail.com>
+Message-ID: <CAPhsuW5mai7WfnzdKHv=eUaYwcR1QHFc=6zuVZ8=WVW8Xn2Miw@mail.gmail.com>
+Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
+ reconfig_mutex held
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     Donald Buczek <buczek@molgen.mpg.de>,
+        linux-raid <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, May 11, 2022 at 9:14 AM Xiao Ni <xni@redhat.com> wrote:
+On Wed, May 11, 2022 at 1:10 AM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
 >
-> On Mon, May 9, 2022 at 2:24 PM Song Liu <song@kernel.org> wrote:
+>
+>
+> On 5/11/22 2:02 AM, Song Liu wrote:
+> > On Tue, May 10, 2022 at 5:35 AM Donald Buczek <buczek@molgen.mpg.de> wrote:
+> >> On 5/10/22 2:09 PM, Guoqing Jiang wrote:
+> >>>
+> >>> On 5/10/22 8:01 PM, Donald Buczek wrote:
+> >>>>> I guess v2 is the best at the moment. I pushed a slightly modified v2 to
+> >>>>> md-next.
+> >>>> I think, this can be used to get a double-free from md_unregister_thread.
+> >>>>
+> >>>> Please review
+> >>>>
+> >>>> https://lore.kernel.org/linux-raid/8312a154-14fb-6f07-0cf1-8c970187cc49@molgen.mpg.de/
+> >>> That is supposed to be addressed by the second one, pls consider it too.
+> >> Right, but this has not been pulled into md-next. I just wanted to note, that the current state of md-next has this problem.
+>
+> Thanks for reminder.
+>
+> >> If the other patch is taken, too, and works as intended, that would be solved.
+> >>
+> >>> [PATCH 2/2] md: protect md_unregister_thread from reentrancy
+> > Good catch!
 > >
-> > Hi Xiao,
-> >
-> > Thanks for the patch!
-> >
-> > On Thu, Apr 28, 2022 at 10:09 PM Xiao Ni <xni@redhat.com> wrote:
-> > >
-> >
-> > prefix the subject with "md:", and provide more details.
+> > Guoqing, current 2/2 doesn't apply cleanly. Could you please resend it on top of
+> > md-next?
 >
-> Hi Song
+> Hmm, no issue from my side.
 >
-> Thanks for pointing about this and I will add "md:" in v2.
-> >
-> > > It panics when reshaping from raid0 to other raid levels. raid0 sets
-> > > mddev->private to NULL. It's the reason that causes the problem.
-> > > Function level_store finds new pers and create new conf, then it
-> > > calls oldpers->free. In oldpers->free, raid0 sets mddev->private
-> > > to NULL again. And __md_stop is the right position to set
-> > > mddev->private to NULL.
-> >
-> > We need more details here: the panic backtrace, and why it panics.
-> > raid5_free also sets private to NULL. Does it has the same problem?
+> ~/source/md> git am
+> 0001-md-protect-md_unregister_thread-from-reentrancy.patch
+> Applying: md: protect md_unregister_thread from reentrancy
 >
-> The backtrace will be added in v2.
+> ~/source/md> git log --oneline |head -5
+> dc7147a88766 md: protect md_unregister_thread from reentrancy
+> 5a36c493dc82 md: don't unregister sync_thread with reconfig_mutex held
+> 49c3b9266a71 block: null_blk: Improve device creation with configfs
+> db060f54e0c5 block: null_blk: Cleanup messages
+> b3a0a73e8a79 block: null_blk: Cleanup device creation and deletion
 >
-> I don't find raid5_free sets mddev->private to NULL.
-> The normal process of stopping a raid should be like this:
->
-> do_md_stop
->        |
-> __md_stop  (pers->free(); mddev->private=NULL)
->        |
-> md_free (free biosets of mddev; free mddev)
->
-> personality raid doesn't set mddev->private to NULL. __md_stop does this job.
-> Reshaping from raid0 to raid other raid level doesn't stop the raid.
-> The new raid
-> will go on working. Now raid0_free->free_conf sets mddev->private to NULL during
-> reshape. The new raid can't work anymore. It will panic when dereference
-> mddev->private because of NULL pointer dereference.
+> Anyway, it is attached. I will rebase it to your latest tree if
+> something gets wrong.
 
-Got it. Thanks for the explanation.
+Applied to md-next. Thanks!
 
-Thanks,
 Song
