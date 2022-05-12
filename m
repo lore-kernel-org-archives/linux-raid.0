@@ -2,106 +2,68 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B96AC433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 12 May 2022 08:01:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A1A9C433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 12 May 2022 09:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351298AbiELIBS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 12 May 2022 04:01:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45766 "EHLO
+        id S1351908AbiELJVU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 12 May 2022 05:21:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351288AbiELIBR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 May 2022 04:01:17 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44A3156438;
-        Thu, 12 May 2022 01:01:13 -0700 (PDT)
-Received: from [192.168.0.2] (ip5f5aeace.dynamic.kabel-deutschland.de [95.90.234.206])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S1351906AbiELJVS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 May 2022 05:21:18 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DF80C4B852
+        for <linux-raid@vger.kernel.org>; Thu, 12 May 2022 02:21:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1652347276;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Y70sN459QGqWjKfYnQCeqOk4LmumDxe0b5cnMMklBjo=;
+        b=LH+LOonVBqtab5wL+V9ZtDA+kXzTUKA27iBEw6RJS2tGjDnoQu2A+w+cgJwWXROFIaBbPW
+        nZnN5ac65A7YZeuDEe1kVyG9Bdp9X4IqSSBGINwcA7pB9UbOIvOVehhJaF8AXjI6Mrk5xi
+        tdP6Ot1CRJZqmb6cYDHT8fKZon+ySvI=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-564-gJ3eB8hFPHaUmdlgHFaNlg-1; Thu, 12 May 2022 05:21:13 -0400
+X-MC-Unique: gJ3eB8hFPHaUmdlgHFaNlg-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id C0E6561EA1923;
-        Thu, 12 May 2022 10:01:11 +0200 (CEST)
-Message-ID: <c38cf859-4462-629e-1bc5-f3e300a8764c@molgen.mpg.de>
-Date:   Thu, 12 May 2022 10:01:11 +0200
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 97138801E80;
+        Thu, 12 May 2022 09:21:13 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-14-34.pek2.redhat.com [10.72.14.34])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 34D4156C141;
+        Thu, 12 May 2022 09:21:10 +0000 (UTC)
+From:   Xiao Ni <xni@redhat.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, ncroxon@redhat.com, heinzm@redhat.com,
+        ffan@redhat.com
+Subject: [PATCH 0/2] md: reshape from raid0 to raid10 panic
+Date:   Thu, 12 May 2022 17:21:07 +0800
+Message-Id: <20220512092109.41606-1-xni@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH] md: remove most calls to bdevname
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org,
-        linux-block@vger.kernel.org
-References: <20220512061913.1826735-1-hch@lst.de>
- <290eada6-226a-6570-1860-c4ca1d680993@molgen.mpg.de>
- <20220512062727.GA20557@lst.de>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220512062727.GA20557@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Christoph,
+It panic when reshaping from raid0 to other raid levels because of NULL
+pointer dereference. This problem is introduce by patch
+commit 0c031fd37f69 ("md: Move alloc/free acct bioset in to personality") 
 
+Patch2 fixes a doulbe free memory problem introduced by the above patch.
 
-Am 12.05.22 um 08:27 schrieb Christoph Hellwig:
-> On Thu, May 12, 2022 at 08:25:28AM +0200, Paul Menzel wrote:
+Xiao Ni (2):
+  md: Don't set mddev private to NULL in raid0 pers->free
+  md: Double free io_acct_set bioset
 
->> Am 12.05.22 um 08:19 schrieb Christoph Hellwig:
->>> Use the %pg format specifier to save on stack consuption and code size.
->>
->> consu*m*ption
->>
->> Did you do any measurements?
-> 
-> Each BDEVNAME_SIZE array consumes 32 bytes on the stack, and they are
-> gone now without any additional stack usage elsewhere.
+ drivers/md/md.c    | 4 ----
+ drivers/md/raid0.c | 1 -
+ 2 files changed, 5 deletions(-)
 
-Understood.
+-- 
+2.32.0 (Apple Git-132)
 
-For comparing the code size, out of curiosity, I built `drivers/md` from 
-md-next, commit 74fe94569da7 (md: protect md_unregister_thread from 
-reentrancy), without and with your patch with gcc 11.1.0, and got:
-
-```
-$ diff -u <(cd drivers/md-before/ && du -a | sort -k2) <(cd drivers/md/ 
-&& du -a | sort -k2)
---- /dev/fd/63  2022-05-12 09:51:23.354107016 +0200
-+++ /dev/fd/62  2022-05-12 09:51:23.355107064 +0200
-@@ -1,4 +1,4 @@
--11064  .
-+11052  .
-  4      ./.built-in.a.cmd
-  48     ./.dm-bio-prison-v1.o.cmd
-  20     ./.dm-bio-prison-v1.o.d
-@@ -287,7 +287,7 @@
-  24     ./md-multipath.o
-  260    ./md.c
-  28     ./md.h
--308    ./md.o
-+304    ./md.o
-  4      ./modules.order
-  1380   ./persistent-data
-  48     ./persistent-data/.dm-array.o.cmd
-@@ -356,7 +356,7 @@
-  148    ./raid10.c
-  8      ./raid10.h
-  4      ./raid10.mod
--108    ./raid10.o
-+104    ./raid10.o
-  88     ./raid5-cache.c
-  76     ./raid5-cache.o
-  8      ./raid5-log.h
-@@ -364,4 +364,4 @@
-  48     ./raid5-ppl.o
-  252    ./raid5.c
-  32     ./raid5.h
--212    ./raid5.o
-+208    ./raid5.o
-```
-
-
-Kind regards,
-
-Paul
