@@ -2,139 +2,167 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8893CC433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 13 May 2022 05:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BFDDC433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 13 May 2022 07:19:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377080AbiEMFco (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 13 May 2022 01:32:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37980 "EHLO
+        id S1377750AbiEMHTu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 May 2022 03:19:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344254AbiEMFcl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 May 2022 01:32:41 -0400
-Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id 8B0E277F00
-        for <linux-raid@vger.kernel.org>; Thu, 12 May 2022 22:32:38 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id F14A719F373;
-        Fri, 13 May 2022 15:32:36 +1000 (AEST)
-Authentication-Results: postoffice.wmawater.com.au (amavisd-new);
-        dkim=pass (1024-bit key) header.d=wmawater.com.au
-Received: from postoffice.wmawater.com.au ([127.0.0.1])
-        by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id kSs_FiJqg8bb; Fri, 13 May 2022 15:32:36 +1000 (AEST)
-Received: from localhost (localhost [127.0.0.1])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id C163219F375;
-        Fri, 13 May 2022 15:32:36 +1000 (AEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 postoffice.wmawater.com.au C163219F375
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wmawater.com.au;
-        s=1D92CC64-C1F9-11E4-96FC-2C1EC0F5F97B; t=1652419956;
-        bh=6iqyYYw8gnh6u+TL3bMchTLWGmbcLZQ/tWWHjmcB93g=;
-        h=From:To:Date:Message-ID:MIME-Version;
-        b=DzFdJE3ZA5Ba1yBdKeTu7GuKKVI6Ko+6B7rf4JzagsFBiYedmRLfeQxmdqZg7ZRha
-         hZImmhiQHb9zV/UbHpWv9NaE2C8QCUfrLpxAOnk0Zo6qMQWODtuEjXWYqHRaEuQYKo
-         F7BdgTuXTb05B6f3E+WVsTh8t8vIvy+5punoO/EE=
-X-Virus-Scanned: amavisd-new at wmawater.com.au
-Received: from postoffice.wmawater.com.au ([127.0.0.1])
-        by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id CtRv4XeP_PLr; Fri, 13 May 2022 15:32:36 +1000 (AEST)
-Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id 9505819F373;
-        Fri, 13 May 2022 15:32:36 +1000 (AEST)
-Reply-To: "Bob Brand" <brand@wmawater.com.au>
-From:   Bob Brand <brand@wmawater.com.au>
-To:     "Reindl Harald" <h.reindl@thelounge.net>,
-        "Roger Heflin" <rogerheflin@gmail.com>,
-        "Wols Lists" <antlists@youngman.org.uk>
-Cc:     "Linux RAID" <linux-raid@vger.kernel.org>,
-        "Phil Turmel" <philip@turmel.org>, "NeilBrown" <neilb@suse.com>
-References: <00ae01d862de$1d336980$579a3c80$@wmawater.com.au> <f4e9c9f8-590d-49a4-39da-e31d81258ff3@youngman.org.uk> <00cf01d86327$9c5dd8a0$d51989e0$@wmawater.com.au> <3f84648b-29db-0819-e3ba-af52435a2aab@youngman.org.uk> <00d101d86329$a2a57130$e7f05390$@wmawater.com.au> <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au> <00e401d86333$e75d8f60$b618ae20$@wmawater.com.au> <00eb01d86339$18cc0860$4a641920$@wmawater.com.au> <5931f716-008d-399b-2ea8-acbbc9c8d239@youngman.org.uk> <CAAMCDecTb69YY+jGzq9HVqx4xZmdVGiRa54BD55Amcz5yaZo1Q@mail.gmail.com> <019701d864f9$7c87ab90$759702b0$@wmawater.com.au> <4fc8c8b4-cfc2-81b2-40d6-13c9d8c940bb@thelounge.net> <01f501d8653a$1ccf8420$566e8c60$@wmawater.com.au> <84b97e58-9884-ca0f-8186-2e046e900334@thelounge.net> <b2a3c4ec-2f86-7775-c84f-2f360ab9cfd0@thelounge.net>
-In-Reply-To: <b2a3c4ec-2f86-7775-c84f-2f360ab9cfd0@thelounge.net>
-Subject: RE: Failed adadm RAID array after aborted Grown operation
-Thread-Topic: Failed adadm RAID array after aborted Grown operation
-Date:   Fri, 13 May 2022 15:32:36 +1000 (AEST)
-Message-ID: <00b801d8668a$da017c00$8e047400$@wmawater.com.au>
+        with ESMTP id S1356223AbiEMHTs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 May 2022 03:19:48 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9470B2AACC0
+        for <linux-raid@vger.kernel.org>; Fri, 13 May 2022 00:19:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1652426387; x=1683962387;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=tKs5jGD79BfrqS2TrkEMw7XbLYq7N8IzaNQQyctc7VI=;
+  b=OXHYRAjAyffSbb+Xv0dBqGMKLJskpeQ+vCaP5l09KxayHP62hM/Y7Qd1
+   3sxpZhR20kJKzgt6YA/Psht+P9pgmgYItgPFBrlYwO+q/O+zBx/oduyl8
+   qCcCg6R9eKuPjhMVUVIyLyKQG9TkxBjQKWojP8uPips9qnqj3ILqmdXbK
+   0z4UlHXnGFRY0TW6xyoZYs5cpZhrlMOeeP9oMDc/NshjO0nnXRCmzoQ3o
+   UjOMjmym7QkljXxHEMRgmmoG/9LSyGDyzP55UVgsBqq/OxoTfWw1HYWb7
+   OzyElSIXGDxJtOdbIl5rlhXFgeEmzV0lEqULRYvxwFPHFCv90tsaC02+T
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10345"; a="270174987"
+X-IronPort-AV: E=Sophos;i="5.91,221,1647327600"; 
+   d="scan'208";a="270174987"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2022 00:19:47 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,221,1647327600"; 
+   d="scan'208";a="698387116"
+Received: from unknown (HELO gklab-109-9.igk.intel.com) ([10.102.109.9])
+  by orsmga004.jf.intel.com with ESMTP; 13 May 2022 00:19:46 -0700
+From:   Lukasz Florczak <lukasz.florczak@linux.intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org, colyli@suse.de
+Subject: [PATCH] mdmon: Stop parsing duplicate options
+Date:   Fri, 13 May 2022 09:19:42 +0200
+Message-Id: <20220513071942.27850-1-lukasz.florczak@linux.intel.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-X-Mailer: Zimbra 8.8.15_GA_3894 (Zimbra-ZCO/9.0.0.1903 (10.0.19044  en-AU) P1de8 T376c R3438)
-Thread-Index: AQK0Ylmfkg1g1mZGz7yxBx3O0op7hADpZ3mFAYMzo9kBZlg9dAGZ0oLFAdWidsoCQWnqlQI7z0N+AMQVcYoBrcfnAQIP8nq4AeCBcYMB6qMbrQH6ufUdAeBnJDOqpREc8A==
-Content-Language: en-au
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This may not be the forum to ask this but what exactly is "compiling the 
-kernel". From what I've been reading, it sounds like a somewhat involved and 
-complex process - is it? Is compiling a new kernel the same as upgrading the 
-OS? I'm getting the impression that it sort of is but sort of isn't. Is it 
-possible to compile a kernel for a rescue CD (from the comments I've read, 
-it is possible)? If I were to compile a new kernel, would I expect the 
-version number for the kernel and mdadm to be the same? Sorry for all the 
-question but, as I said at the outset, a lot of this is all very new to me.
+Introduce new function is_duplicate_opt() to check if given option
+was already used and prevent setting it again along with an error
+message.
 
-Thank you,
-Bob
+Move parsing above in_initrd() check to be able to detect --offroot
+option duplicates.
 
------Original Message-----
-From: Reindl Harald <h.reindl@thelounge.net>
-Sent: Thursday, 12 May 2022 12:59 AM
-To: Bob Brand <brand@wmawater.com.au>; Roger Heflin <rogerheflin@gmail.com>; 
-Wols Lists <antlists@youngman.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>; Phil Turmel 
-<philip@turmel.org>; NeilBrown <neilb@suse.com>
-Subject: Re: Failed adadm RAID array after aborted Grown operation
+Now help option is executed after parsing to prevent executing commands
+like: 'mdmon --help --ndlksnlksajndfjksndafasj'.
 
+Signed-off-by: Lukasz Florczak <lukasz.florczak@linux.intel.com>
+---
+ mdmon.c | 44 +++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 35 insertions(+), 9 deletions(-)
 
-
-Am 11.05.22 um 16:56 schrieb Reindl Harald:
->
->
-> Am 11.05.22 um 15:22 schrieb Bob Brand:
->> Sorry Reindl.  I'm not sure I understand. Are you saying I did or
->> didn't do the right thing in booting from a CentOS rescue disk? At
->> the moment it's running from the rescue disk and, be it the best
->> distro to have used (or not), I would imagine that I need to keep
->> running from the rescue disk until the reshape is complete as
->> rebooting in the middle of a reshape is what got me in this mess.
-
-and nowhere did i say reboot now
-
-and i only responded to your "Do I understand that you would recommend 
-upgrading our installation of Linux once the repair is complete or are 
-advising downloading and compiling a new kernel as part of the repair?"
-
-nobody said that - the only point was use a as recent kernel as possible 
-with all rgow/reshape operations
-
-> and i don't understand what you did not understand in the clear
-> response below you got days ago!
->
-> due reshape you where advised use whatever rescue/live system with a
-> recent kernel and mdadm, not more and not less
->
-> just to avoid probaly long fixed bugs in your old kernel
->
-> ---------------------
->
-> Try and get a CentOS 8.5 disk. At the end of the day, the version of
-> linux doesn't matter. What you need is an up-to-date rescue disk.
-> Distro/whatever is unimportant - what IS important is that you are
-> using the latest mdadm, and a kernel that matches.
->
-> The problem you have sounds like a long-standing but now-fixed bug. An
-> original CentOS disk might be okay (with matched kernel and mdadm),
-> but almost certainly has what I consider to be a "dodgy" version of mdadm.
->
-> If you can afford the downtime, after you've reverted the reshape, I'd
-> try starting it again with the rescue disk. It'll probably run fine.
-> Let it complete and then your old CentOS 7 will be fine with it
-
-
-
-CAUTION!!! This E-mail originated from outside of WMA Water. Do not click 
-links or open attachments unless you recognize the sender and know the 
-content is safe.
-
+diff --git a/mdmon.c b/mdmon.c
+index c71e62c6..3da9043f 100644
+--- a/mdmon.c
++++ b/mdmon.c
+@@ -289,6 +289,15 @@ void usage(void)
+ 	exit(2);
+ }
+ 
++static bool is_duplicate_opt(const int opt, const int set_val, const char *long_name)
++{
++	if (opt == set_val) {
++		pr_err("--%s option duplicated!\n", long_name);
++		return true;
++	}
++	return false;
++}
++
+ static int mdmon(char *devnm, int must_fork, int takeover);
+ 
+ int main(int argc, char *argv[])
+@@ -300,6 +309,7 @@ int main(int argc, char *argv[])
+ 	int all = 0;
+ 	int takeover = 0;
+ 	int dofork = 1;
++	bool help = false;
+ 	static struct option options[] = {
+ 		{"all", 0, NULL, 'a'},
+ 		{"takeover", 0, NULL, 't'},
+@@ -309,37 +319,50 @@ int main(int argc, char *argv[])
+ 		{NULL, 0, NULL, 0}
+ 	};
+ 
+-	if (in_initrd()) {
+-		/*
+-		 * set first char of argv[0] to @. This is used by
+-		 * systemd to signal that the task was launched from
+-		 * initrd/initramfs and should be preserved during shutdown
+-		 */
+-		argv[0][0] = '@';
+-	}
+-
+ 	while ((opt = getopt_long(argc, argv, "thaF", options, NULL)) != -1) {
+ 		switch (opt) {
+ 		case 'a':
++			if (is_duplicate_opt(all, 1, "all"))
++				exit(1);
+ 			container_name = argv[optind-1];
+ 			all = 1;
+ 			break;
+ 		case 't':
++			if (is_duplicate_opt(takeover, 1, "takeover"))
++				exit(1);
+ 			takeover = 1;
+ 			break;
+ 		case 'F':
++			if (is_duplicate_opt(dofork, 0, "foreground"))
++				exit(1);
+ 			dofork = 0;
+ 			break;
+ 		case OffRootOpt:
++			if (is_duplicate_opt(argv[0][0], '@', "offroot"))
++				exit(1);
+ 			argv[0][0] = '@';
+ 			break;
+ 		case 'h':
++			if (is_duplicate_opt(help, true, "help"))
++				exit(1);
++			help = true;
++			break;
+ 		default:
+ 			usage();
+ 			break;
+ 		}
+ 	}
+ 
++
++	if (in_initrd()) {
++		/*
++		 * set first char of argv[0] to @. This is used by
++		 * systemd to signal that the task was launched from
++		 * initrd/initramfs and should be preserved during shutdown
++		 */
++		argv[0][0] = '@';
++	}
++
+ 	if (all == 0 && container_name == NULL) {
+ 		if (argv[optind])
+ 			container_name = argv[optind];
+@@ -354,6 +377,9 @@ int main(int argc, char *argv[])
+ 	if (strcmp(container_name, "/proc/mdstat") == 0)
+ 		all = 1;
+ 
++	if (help)
++		usage();
++
+ 	if (all) {
+ 		struct mdstat_ent *mdstat, *e;
+ 		int container_len = strlen(container_name);
+-- 
+2.27.0
 
