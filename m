@@ -2,135 +2,139 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F45BC433FE
-	for <linux-raid@archiver.kernel.org>; Thu, 12 May 2022 20:45:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8893CC433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 13 May 2022 05:32:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358421AbiELUpD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 12 May 2022 16:45:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45626 "EHLO
+        id S1377080AbiEMFco (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 May 2022 01:32:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358406AbiELUpC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 May 2022 16:45:02 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D249F22EA4C
-        for <linux-raid@vger.kernel.org>; Thu, 12 May 2022 13:45:00 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id o69so6268978pjo.3
-        for <linux-raid@vger.kernel.org>; Thu, 12 May 2022 13:45:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=mfDd2mUqrFJnPjYIAGb7iTHqp7/V/kqIzmO4Ik5ICtE=;
-        b=VSL2P1g6oKCepZ9gpAuZb3IJYGYlROev7evIcpI2bAO4ymJpGTpTPWg28w7aZ74nqu
-         +4hkrxBXxozmtUkznxUeB16mVvTNuWjlKl3GvgorQtDgqz1Nl+vcsah0mU6P4adNEl8I
-         hzSvp6YfypuLT0514UmzVGtZJ2H2UTxby3128=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=mfDd2mUqrFJnPjYIAGb7iTHqp7/V/kqIzmO4Ik5ICtE=;
-        b=E+qSr5WwVC+JWiDENKyFCKQRQnp+JFE0u3lAYejH8V72ic2RFLpWf85tMZ9Zy/E5wp
-         FrOdiQssKh80BBL1NdsGvLADNQRkVvxYoKXV/cK24Zrg3qH8ZZYf7vEWHuxpn8zAjICs
-         psQaEGRkwwf80DpouxM2xoBUA/iTwKpAHGlurTGGP/2Qtj5bgeyXsqSdoxzzHSXmA1lY
-         2W1cuWYsgKcn7TKhPBWknAp66oKzRjlVLLsU7lN2vUGy+fX141B4hb3fuCqBWmO8MFKM
-         an+T8/xr3tK7b+AQtNtgXSIe7JruZ8T5SazrpJu56aGxuH++eEnyTrjzJg/y8MueE76+
-         ULtA==
-X-Gm-Message-State: AOAM532PMZsJGiypcdTX4Ari/Ygsfx1oZEQC+xSCE/vvZ4hAofX5+Exh
-        itGXzfFwFbMWE99Ns/fcr8ABFQ==
-X-Google-Smtp-Source: ABdhPJweC1XGidiP3A3Cg1L4P+c7vLixuIQHOEhEEVMPX3OSorgSxCxtYRx8oqG/gfH5ctvhV02/CQ==
-X-Received: by 2002:a17:902:ed52:b0:15e:c71f:72c8 with SMTP id y18-20020a170902ed5200b0015ec71f72c8mr1599550plb.38.1652388299601;
-        Thu, 12 May 2022 13:44:59 -0700 (PDT)
-Received: from localhost ([2620:15c:11a:202:4060:29b:ac8a:c726])
-        by smtp.gmail.com with UTF8SMTPSA id i9-20020aa79089000000b0050dc76281e4sm223297pfa.190.2022.05.12.13.44.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 May 2022 13:44:59 -0700 (PDT)
-Date:   Thu, 12 May 2022 13:44:57 -0700
-From:   Matthias Kaehlcke <mka@chromium.org>
-To:     Mike Snitzer <snitzer@redhat.com>
-Cc:     Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        James Morris <jmorris@namei.org>,
-        "Serge E . Hallyn" <serge@hallyn.com>, dm-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] dm: Add verity helpers for LoadPin
-Message-ID: <Yn1xyVmPJGQz31lN@google.com>
-References: <20220504195419.1143099-1-mka@chromium.org>
- <20220504125404.v3.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
- <YnwioaRiVmYevo8i@google.com>
- <Yn1BkO4t+CXR0nzk@redhat.com>
+        with ESMTP id S1344254AbiEMFcl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 May 2022 01:32:41 -0400
+Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id 8B0E277F00
+        for <linux-raid@vger.kernel.org>; Thu, 12 May 2022 22:32:38 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by postoffice.wmawater.com.au (Postfix) with ESMTP id F14A719F373;
+        Fri, 13 May 2022 15:32:36 +1000 (AEST)
+Authentication-Results: postoffice.wmawater.com.au (amavisd-new);
+        dkim=pass (1024-bit key) header.d=wmawater.com.au
+Received: from postoffice.wmawater.com.au ([127.0.0.1])
+        by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id kSs_FiJqg8bb; Fri, 13 May 2022 15:32:36 +1000 (AEST)
+Received: from localhost (localhost [127.0.0.1])
+        by postoffice.wmawater.com.au (Postfix) with ESMTP id C163219F375;
+        Fri, 13 May 2022 15:32:36 +1000 (AEST)
+DKIM-Filter: OpenDKIM Filter v2.10.3 postoffice.wmawater.com.au C163219F375
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wmawater.com.au;
+        s=1D92CC64-C1F9-11E4-96FC-2C1EC0F5F97B; t=1652419956;
+        bh=6iqyYYw8gnh6u+TL3bMchTLWGmbcLZQ/tWWHjmcB93g=;
+        h=From:To:Date:Message-ID:MIME-Version;
+        b=DzFdJE3ZA5Ba1yBdKeTu7GuKKVI6Ko+6B7rf4JzagsFBiYedmRLfeQxmdqZg7ZRha
+         hZImmhiQHb9zV/UbHpWv9NaE2C8QCUfrLpxAOnk0Zo6qMQWODtuEjXWYqHRaEuQYKo
+         F7BdgTuXTb05B6f3E+WVsTh8t8vIvy+5punoO/EE=
+X-Virus-Scanned: amavisd-new at wmawater.com.au
+Received: from postoffice.wmawater.com.au ([127.0.0.1])
+        by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id CtRv4XeP_PLr; Fri, 13 May 2022 15:32:36 +1000 (AEST)
+Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
+        by postoffice.wmawater.com.au (Postfix) with ESMTP id 9505819F373;
+        Fri, 13 May 2022 15:32:36 +1000 (AEST)
+Reply-To: "Bob Brand" <brand@wmawater.com.au>
+From:   Bob Brand <brand@wmawater.com.au>
+To:     "Reindl Harald" <h.reindl@thelounge.net>,
+        "Roger Heflin" <rogerheflin@gmail.com>,
+        "Wols Lists" <antlists@youngman.org.uk>
+Cc:     "Linux RAID" <linux-raid@vger.kernel.org>,
+        "Phil Turmel" <philip@turmel.org>, "NeilBrown" <neilb@suse.com>
+References: <00ae01d862de$1d336980$579a3c80$@wmawater.com.au> <f4e9c9f8-590d-49a4-39da-e31d81258ff3@youngman.org.uk> <00cf01d86327$9c5dd8a0$d51989e0$@wmawater.com.au> <3f84648b-29db-0819-e3ba-af52435a2aab@youngman.org.uk> <00d101d86329$a2a57130$e7f05390$@wmawater.com.au> <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au> <00e401d86333$e75d8f60$b618ae20$@wmawater.com.au> <00eb01d86339$18cc0860$4a641920$@wmawater.com.au> <5931f716-008d-399b-2ea8-acbbc9c8d239@youngman.org.uk> <CAAMCDecTb69YY+jGzq9HVqx4xZmdVGiRa54BD55Amcz5yaZo1Q@mail.gmail.com> <019701d864f9$7c87ab90$759702b0$@wmawater.com.au> <4fc8c8b4-cfc2-81b2-40d6-13c9d8c940bb@thelounge.net> <01f501d8653a$1ccf8420$566e8c60$@wmawater.com.au> <84b97e58-9884-ca0f-8186-2e046e900334@thelounge.net> <b2a3c4ec-2f86-7775-c84f-2f360ab9cfd0@thelounge.net>
+In-Reply-To: <b2a3c4ec-2f86-7775-c84f-2f360ab9cfd0@thelounge.net>
+Subject: RE: Failed adadm RAID array after aborted Grown operation
+Thread-Topic: Failed adadm RAID array after aborted Grown operation
+Date:   Fri, 13 May 2022 15:32:36 +1000 (AEST)
+Message-ID: <00b801d8668a$da017c00$8e047400$@wmawater.com.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <Yn1BkO4t+CXR0nzk@redhat.com>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+X-Mailer: Zimbra 8.8.15_GA_3894 (Zimbra-ZCO/9.0.0.1903 (10.0.19044  en-AU) P1de8 T376c R3438)
+Thread-Index: AQK0Ylmfkg1g1mZGz7yxBx3O0op7hADpZ3mFAYMzo9kBZlg9dAGZ0oLFAdWidsoCQWnqlQI7z0N+AMQVcYoBrcfnAQIP8nq4AeCBcYMB6qMbrQH6ufUdAeBnJDOqpREc8A==
+Content-Language: en-au
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, May 12, 2022 at 01:19:12PM -0400, Mike Snitzer wrote:
-> On Wed, May 11 2022 at  4:54P -0400,
-> Matthias Kaehlcke <mka@chromium.org> wrote:
-> 
-> > Alasdar/Mike, I'd be interested in your take on adding these functions
-> > to verity/DM, to get an idea whether this series has a path forward to
-> > landing upstream.
-> 
-> I'll be reviewing your patchset now. Comments inlined below.
-> 
-> > On Wed, May 04, 2022 at 12:54:17PM -0700, Matthias Kaehlcke wrote:
-> > > LoadPin limits loading of kernel modules, firmware and certain
-> > > other files to a 'pinned' file system (typically a read-only
-> > > rootfs). To provide more flexibility LoadPin is being extended
-> > > to also allow loading these files from trusted dm-verity
-> > > devices. For that purpose LoadPin can be provided with a list
-> > > of verity root digests that it should consider as trusted.
-> > > 
-> > > Add a bunch of helpers to allow LoadPin to check whether a DM
-> > > device is a trusted verity device. The new functions broadly
-> > > fall in two categories: those that need access to verity
-> > > internals (like the root digest), and the 'glue' between
-> > > LoadPin and verity. The new file dm-verity-loadpin.c contains
-> > > the glue functions.
-> > > 
-> > > Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
-> > > ---
-> > > 
-> > > Changes in v3:
-> > > - none
-> > > 
-> > > Changes in v2:
-> > > - none
-> > > 
-> > >  drivers/md/Makefile               |  6 +++
-> > >  drivers/md/dm-verity-loadpin.c    | 80 +++++++++++++++++++++++++++++++
-> > >  drivers/md/dm-verity-target.c     | 33 +++++++++++++
-> > >  drivers/md/dm-verity.h            |  4 ++
-> > >  include/linux/dm-verity-loadpin.h | 27 +++++++++++
-> > >  5 files changed, 150 insertions(+)
-> > >  create mode 100644 drivers/md/dm-verity-loadpin.c
-> > >  create mode 100644 include/linux/dm-verity-loadpin.h
-> > > 
-> > > diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-> > > index 0454b0885b01..e12cd004d375 100644
-> > > --- a/drivers/md/Makefile
-> > > +++ b/drivers/md/Makefile
-> > > @@ -100,6 +100,12 @@ ifeq ($(CONFIG_IMA),y)
-> > >  dm-mod-objs			+= dm-ima.o
-> > >  endif
-> > >  
-> > > +ifeq ($(CONFIG_DM_VERITY),y)
-> > > +ifeq ($(CONFIG_SECURITY_LOADPIN),y)
-> > > +dm-mod-objs			+= dm-verity-loadpin.o
-> > > +endif
-> > > +endif
-> > > +
-> 
-> Why are you extending dm-mod-objs?  Why not dm-verity-objs?
+This may not be the forum to ask this but what exactly is "compiling the 
+kernel". From what I've been reading, it sounds like a somewhat involved and 
+complex process - is it? Is compiling a new kernel the same as upgrading the 
+OS? I'm getting the impression that it sort of is but sort of isn't. Is it 
+possible to compile a kernel for a rescue CD (from the comments I've read, 
+it is possible)? If I were to compile a new kernel, would I expect the 
+version number for the kernel and mdadm to be the same? Sorry for all the 
+question but, as I said at the outset, a lot of this is all very new to me.
 
-Sorry, I missed to address this comment in my earlier reply.
+Thank you,
+Bob
 
-I don't recall why I chose dm-mod-objs initially, agreed that
-dm-verity-objs seems a better fit.
+-----Original Message-----
+From: Reindl Harald <h.reindl@thelounge.net>
+Sent: Thursday, 12 May 2022 12:59 AM
+To: Bob Brand <brand@wmawater.com.au>; Roger Heflin <rogerheflin@gmail.com>; 
+Wols Lists <antlists@youngman.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>; Phil Turmel 
+<philip@turmel.org>; NeilBrown <neilb@suse.com>
+Subject: Re: Failed adadm RAID array after aborted Grown operation
+
+
+
+Am 11.05.22 um 16:56 schrieb Reindl Harald:
+>
+>
+> Am 11.05.22 um 15:22 schrieb Bob Brand:
+>> Sorry Reindl.  I'm not sure I understand. Are you saying I did or
+>> didn't do the right thing in booting from a CentOS rescue disk? At
+>> the moment it's running from the rescue disk and, be it the best
+>> distro to have used (or not), I would imagine that I need to keep
+>> running from the rescue disk until the reshape is complete as
+>> rebooting in the middle of a reshape is what got me in this mess.
+
+and nowhere did i say reboot now
+
+and i only responded to your "Do I understand that you would recommend 
+upgrading our installation of Linux once the repair is complete or are 
+advising downloading and compiling a new kernel as part of the repair?"
+
+nobody said that - the only point was use a as recent kernel as possible 
+with all rgow/reshape operations
+
+> and i don't understand what you did not understand in the clear
+> response below you got days ago!
+>
+> due reshape you where advised use whatever rescue/live system with a
+> recent kernel and mdadm, not more and not less
+>
+> just to avoid probaly long fixed bugs in your old kernel
+>
+> ---------------------
+>
+> Try and get a CentOS 8.5 disk. At the end of the day, the version of
+> linux doesn't matter. What you need is an up-to-date rescue disk.
+> Distro/whatever is unimportant - what IS important is that you are
+> using the latest mdadm, and a kernel that matches.
+>
+> The problem you have sounds like a long-standing but now-fixed bug. An
+> original CentOS disk might be okay (with matched kernel and mdadm),
+> but almost certainly has what I consider to be a "dodgy" version of mdadm.
+>
+> If you can afford the downtime, after you've reverted the reshape, I'd
+> try starting it again with the rescue disk. It'll probably run fine.
+> Let it complete and then your old CentOS 7 will be fine with it
+
+
+
+CAUTION!!! This E-mail originated from outside of WMA Water. Do not click 
+links or open attachments unless you recognize the sender and know the 
+content is safe.
+
+
