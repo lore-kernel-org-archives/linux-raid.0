@@ -2,167 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BFDDC433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 13 May 2022 07:19:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B18C433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 13 May 2022 07:37:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377750AbiEMHTu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 13 May 2022 03:19:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46276 "EHLO
+        id S1377839AbiEMHhc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 May 2022 03:37:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356223AbiEMHTs (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 May 2022 03:19:48 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9470B2AACC0
-        for <linux-raid@vger.kernel.org>; Fri, 13 May 2022 00:19:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652426387; x=1683962387;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=tKs5jGD79BfrqS2TrkEMw7XbLYq7N8IzaNQQyctc7VI=;
-  b=OXHYRAjAyffSbb+Xv0dBqGMKLJskpeQ+vCaP5l09KxayHP62hM/Y7Qd1
-   3sxpZhR20kJKzgt6YA/Psht+P9pgmgYItgPFBrlYwO+q/O+zBx/oduyl8
-   qCcCg6R9eKuPjhMVUVIyLyKQG9TkxBjQKWojP8uPips9qnqj3ILqmdXbK
-   0z4UlHXnGFRY0TW6xyoZYs5cpZhrlMOeeP9oMDc/NshjO0nnXRCmzoQ3o
-   UjOMjmym7QkljXxHEMRgmmoG/9LSyGDyzP55UVgsBqq/OxoTfWw1HYWb7
-   OzyElSIXGDxJtOdbIl5rlhXFgeEmzV0lEqULRYvxwFPHFCv90tsaC02+T
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10345"; a="270174987"
-X-IronPort-AV: E=Sophos;i="5.91,221,1647327600"; 
-   d="scan'208";a="270174987"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2022 00:19:47 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,221,1647327600"; 
-   d="scan'208";a="698387116"
-Received: from unknown (HELO gklab-109-9.igk.intel.com) ([10.102.109.9])
-  by orsmga004.jf.intel.com with ESMTP; 13 May 2022 00:19:46 -0700
-From:   Lukasz Florczak <lukasz.florczak@linux.intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH] mdmon: Stop parsing duplicate options
-Date:   Fri, 13 May 2022 09:19:42 +0200
-Message-Id: <20220513071942.27850-1-lukasz.florczak@linux.intel.com>
-X-Mailer: git-send-email 2.27.0
+        with ESMTP id S1377830AbiEMHh3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 May 2022 03:37:29 -0400
+Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9AC6C545
+        for <linux-raid@vger.kernel.org>; Fri, 13 May 2022 00:37:26 -0700 (PDT)
+Received: by mail-lf1-x12e.google.com with SMTP id f4so203382lfu.12
+        for <linux-raid@vger.kernel.org>; Fri, 13 May 2022 00:37:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=oGz8/wIzeLol5UifCP65ca+IUgetkxVvyp6QT0zxHq0=;
+        b=HamTBW9vPdTNuXMis2KhpXX5mSNSawssFLUGRhNVLEm0gkhES3XqwdB6KdahPfYGBz
+         +eOlCIOp8B8OHuqtw2QgVwZxj4JEJiyhM3YRD6H5ajblUrNR8xPOB+vSR9CWVp6snbI8
+         YwvNeCtyQVoPru2w4gyiNWsffAkyLhbv6hQzLLdUjOe9YFhi8MpIlNFJ74tI7e4YbxBK
+         vv2zLBgl5duYk5ebV5TtbCrz8zKuUpZD6ETl8rWJ8lFYYCQthFKzhCIZBDo8zd8ndQIy
+         SwsMj6LHRCu03xpelb26MSv7K3oj17RfHIjA37m9Bni5G0IYlDpHdsiAtAvSsPNLU31j
+         CSMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=oGz8/wIzeLol5UifCP65ca+IUgetkxVvyp6QT0zxHq0=;
+        b=d29U/4Ni52u4PiBKGdb7RFqaPE5LOovaBY4OufnVNh5EssHgwmTKCWOYWSYtIVLBNK
+         UPDYX/NLR4ErSOdpMG1OgsYw5DjAqJMQ31FX7VyP599uKH9hw2gMzCMDGy6sq6/85Z9Q
+         +JLJttCYYXpwvtJry+3qbHlP5/ApDwiVFivtROs6WpdiYqoNGOy3ntytkffsVSZb1wej
+         yGYixh4UztCCkMIbpVqd9Dea15hs2SLKteYCOpYmtkzlo6uO7YsmcW1BL6FnglpgyBsZ
+         iutqI0UncJYWWwMoUCwPWPjvGLLQBnwPVQKZqpN7qVtRbBGzWI6tLuD/xw75y/8RLfrs
+         Qolg==
+X-Gm-Message-State: AOAM530hDNIDYn+s11RtvJSYQoJ3+wQaINZ5OhsWnMDjVrqgLYODo+Pj
+        zZxicyJ/Xdj0lJ+deYhFVOZNZ5afmU6ujhd1NRSP9m71R+9YJg==
+X-Google-Smtp-Source: ABdhPJwhStxGQUH2xnGtVH4GIrQHIWCxIotdkuzA4BfEjyfXXNqMgvKUyWvrNuzr2jQ/8g+O+zrW8IkABZcMHcRPuu0=
+X-Received: by 2002:a05:6512:1694:b0:448:3fd4:c7a9 with SMTP id
+ bu20-20020a056512169400b004483fd4c7a9mr2577434lfb.29.1652427444288; Fri, 13
+ May 2022 00:37:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Date:   Fri, 13 May 2022 09:37:13 +0200
+Message-ID: <CAJH6TXh7cVHa+G1DaJwWSvgDaCOrYLP_Ppau8q6pk1V4dS3D_Q@mail.gmail.com>
+Subject: failed sector detected but disk still active ?
+To:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Introduce new function is_duplicate_opt() to check if given option
-was already used and prevent setting it again along with an error
-message.
+How this is possible ?
+seems that sdc has some failed sectors but disk is still active in the array
 
-Move parsing above in_initrd() check to be able to detect --offroot
-option duplicates.
+[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc] Unhandled sense code
+[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc]
+[Mon May  2 03:36:24 2022] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc]
+[Mon May  2 03:36:24 2022] Sense Key : Medium Error [current]
+[Mon May  2 03:36:24 2022] Info fld=0x10565570
+[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc]
+[Mon May  2 03:36:24 2022] Add. Sense: Unrecovered read error
+[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc] CDB:
+[Mon May  2 03:36:24 2022] Read(10): 28 00 10 56 51 80 00 04 00 00
+[Mon May  2 03:36:24 2022] end_request: critical medium error, dev
+sdc, sector 274093424
+[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc] Unhandled sense code
+[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc]
+[Mon May  2 03:36:25 2022] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc]
+[Mon May  2 03:36:25 2022] Sense Key : Medium Error [current]
+[Mon May  2 03:36:25 2022] Info fld=0x10565584
+[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc]
+[Mon May  2 03:36:25 2022] Add. Sense: Unrecovered read error
+[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc] CDB:
+[Mon May  2 03:36:25 2022] Read(10): 28 00 10 56 55 80 00 04 00 00
+[Mon May  2 03:36:25 2022] end_request: critical medium error, dev
+sdc, sector 274093444
+[Mon May  2 04:06:32 2022] md: md0: data-check done.
 
-Now help option is executed after parsing to prevent executing commands
-like: 'mdmon --help --ndlksnlksajndfjksndafasj'.
 
-Signed-off-by: Lukasz Florczak <lukasz.florczak@linux.intel.com>
----
- mdmon.c | 44 +++++++++++++++++++++++++++++++++++---------
- 1 file changed, 35 insertions(+), 9 deletions(-)
 
-diff --git a/mdmon.c b/mdmon.c
-index c71e62c6..3da9043f 100644
---- a/mdmon.c
-+++ b/mdmon.c
-@@ -289,6 +289,15 @@ void usage(void)
- 	exit(2);
- }
- 
-+static bool is_duplicate_opt(const int opt, const int set_val, const char *long_name)
-+{
-+	if (opt == set_val) {
-+		pr_err("--%s option duplicated!\n", long_name);
-+		return true;
-+	}
-+	return false;
-+}
-+
- static int mdmon(char *devnm, int must_fork, int takeover);
- 
- int main(int argc, char *argv[])
-@@ -300,6 +309,7 @@ int main(int argc, char *argv[])
- 	int all = 0;
- 	int takeover = 0;
- 	int dofork = 1;
-+	bool help = false;
- 	static struct option options[] = {
- 		{"all", 0, NULL, 'a'},
- 		{"takeover", 0, NULL, 't'},
-@@ -309,37 +319,50 @@ int main(int argc, char *argv[])
- 		{NULL, 0, NULL, 0}
- 	};
- 
--	if (in_initrd()) {
--		/*
--		 * set first char of argv[0] to @. This is used by
--		 * systemd to signal that the task was launched from
--		 * initrd/initramfs and should be preserved during shutdown
--		 */
--		argv[0][0] = '@';
--	}
--
- 	while ((opt = getopt_long(argc, argv, "thaF", options, NULL)) != -1) {
- 		switch (opt) {
- 		case 'a':
-+			if (is_duplicate_opt(all, 1, "all"))
-+				exit(1);
- 			container_name = argv[optind-1];
- 			all = 1;
- 			break;
- 		case 't':
-+			if (is_duplicate_opt(takeover, 1, "takeover"))
-+				exit(1);
- 			takeover = 1;
- 			break;
- 		case 'F':
-+			if (is_duplicate_opt(dofork, 0, "foreground"))
-+				exit(1);
- 			dofork = 0;
- 			break;
- 		case OffRootOpt:
-+			if (is_duplicate_opt(argv[0][0], '@', "offroot"))
-+				exit(1);
- 			argv[0][0] = '@';
- 			break;
- 		case 'h':
-+			if (is_duplicate_opt(help, true, "help"))
-+				exit(1);
-+			help = true;
-+			break;
- 		default:
- 			usage();
- 			break;
- 		}
- 	}
- 
-+
-+	if (in_initrd()) {
-+		/*
-+		 * set first char of argv[0] to @. This is used by
-+		 * systemd to signal that the task was launched from
-+		 * initrd/initramfs and should be preserved during shutdown
-+		 */
-+		argv[0][0] = '@';
-+	}
-+
- 	if (all == 0 && container_name == NULL) {
- 		if (argv[optind])
- 			container_name = argv[optind];
-@@ -354,6 +377,9 @@ int main(int argc, char *argv[])
- 	if (strcmp(container_name, "/proc/mdstat") == 0)
- 		all = 1;
- 
-+	if (help)
-+		usage();
-+
- 	if (all) {
- 		struct mdstat_ent *mdstat, *e;
- 		int container_len = strlen(container_name);
--- 
-2.27.0
+# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 sdc1[2] sda1[0] sdb1[1]
+      292836352 blocks super 1.2 [3/3] [UUU]
+      bitmap: 3/3 pages [12KB], 65536KB chunk
 
+unused devices: <none>
