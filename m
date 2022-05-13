@@ -2,92 +2,140 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B18C433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 13 May 2022 07:37:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82FA3C433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 13 May 2022 08:18:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377839AbiEMHhc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 13 May 2022 03:37:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49658 "EHLO
+        id S1347092AbiEMISk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 May 2022 04:18:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377830AbiEMHh3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 May 2022 03:37:29 -0400
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9AC6C545
-        for <linux-raid@vger.kernel.org>; Fri, 13 May 2022 00:37:26 -0700 (PDT)
-Received: by mail-lf1-x12e.google.com with SMTP id f4so203382lfu.12
-        for <linux-raid@vger.kernel.org>; Fri, 13 May 2022 00:37:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=oGz8/wIzeLol5UifCP65ca+IUgetkxVvyp6QT0zxHq0=;
-        b=HamTBW9vPdTNuXMis2KhpXX5mSNSawssFLUGRhNVLEm0gkhES3XqwdB6KdahPfYGBz
-         +eOlCIOp8B8OHuqtw2QgVwZxj4JEJiyhM3YRD6H5ajblUrNR8xPOB+vSR9CWVp6snbI8
-         YwvNeCtyQVoPru2w4gyiNWsffAkyLhbv6hQzLLdUjOe9YFhi8MpIlNFJ74tI7e4YbxBK
-         vv2zLBgl5duYk5ebV5TtbCrz8zKuUpZD6ETl8rWJ8lFYYCQthFKzhCIZBDo8zd8ndQIy
-         SwsMj6LHRCu03xpelb26MSv7K3oj17RfHIjA37m9Bni5G0IYlDpHdsiAtAvSsPNLU31j
-         CSMA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=oGz8/wIzeLol5UifCP65ca+IUgetkxVvyp6QT0zxHq0=;
-        b=d29U/4Ni52u4PiBKGdb7RFqaPE5LOovaBY4OufnVNh5EssHgwmTKCWOYWSYtIVLBNK
-         UPDYX/NLR4ErSOdpMG1OgsYw5DjAqJMQ31FX7VyP599uKH9hw2gMzCMDGy6sq6/85Z9Q
-         +JLJttCYYXpwvtJry+3qbHlP5/ApDwiVFivtROs6WpdiYqoNGOy3ntytkffsVSZb1wej
-         yGYixh4UztCCkMIbpVqd9Dea15hs2SLKteYCOpYmtkzlo6uO7YsmcW1BL6FnglpgyBsZ
-         iutqI0UncJYWWwMoUCwPWPjvGLLQBnwPVQKZqpN7qVtRbBGzWI6tLuD/xw75y/8RLfrs
-         Qolg==
-X-Gm-Message-State: AOAM530hDNIDYn+s11RtvJSYQoJ3+wQaINZ5OhsWnMDjVrqgLYODo+Pj
-        zZxicyJ/Xdj0lJ+deYhFVOZNZ5afmU6ujhd1NRSP9m71R+9YJg==
-X-Google-Smtp-Source: ABdhPJwhStxGQUH2xnGtVH4GIrQHIWCxIotdkuzA4BfEjyfXXNqMgvKUyWvrNuzr2jQ/8g+O+zrW8IkABZcMHcRPuu0=
-X-Received: by 2002:a05:6512:1694:b0:448:3fd4:c7a9 with SMTP id
- bu20-20020a056512169400b004483fd4c7a9mr2577434lfb.29.1652427444288; Fri, 13
- May 2022 00:37:24 -0700 (PDT)
+        with ESMTP id S236562AbiEMISj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 May 2022 04:18:39 -0400
+Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11A5A3AA51
+        for <linux-raid@vger.kernel.org>; Fri, 13 May 2022 01:18:36 -0700 (PDT)
+Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-256))
+        (No client certificate requested)
+        (Authenticated sender: h.reindl@thelounge.net)
+        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4L01kL10D5zXvM;
+        Fri, 13 May 2022 10:18:34 +0200 (CEST)
+Message-ID: <6c2f10d3-44be-f3f2-d329-2a0f267c5d58@thelounge.net>
+Date:   Fri, 13 May 2022 10:18:33 +0200
 MIME-Version: 1.0
-From:   Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Date:   Fri, 13 May 2022 09:37:13 +0200
-Message-ID: <CAJH6TXh7cVHa+G1DaJwWSvgDaCOrYLP_Ppau8q6pk1V4dS3D_Q@mail.gmail.com>
-Subject: failed sector detected but disk still active ?
-To:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: Failed adadm RAID array after aborted Grown operation
+Content-Language: en-US
+To:     Bob Brand <brand@wmawater.com.au>,
+        Roger Heflin <rogerheflin@gmail.com>,
+        Wols Lists <antlists@youngman.org.uk>
+Cc:     Linux RAID <linux-raid@vger.kernel.org>,
+        Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
+References: <00ae01d862de$1d336980$579a3c80$@wmawater.com.au>
+ <f4e9c9f8-590d-49a4-39da-e31d81258ff3@youngman.org.uk>
+ <00cf01d86327$9c5dd8a0$d51989e0$@wmawater.com.au>
+ <3f84648b-29db-0819-e3ba-af52435a2aab@youngman.org.uk>
+ <00d101d86329$a2a57130$e7f05390$@wmawater.com.au>
+ <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au>
+ <00e401d86333$e75d8f60$b618ae20$@wmawater.com.au>
+ <00eb01d86339$18cc0860$4a641920$@wmawater.com.au>
+ <5931f716-008d-399b-2ea8-acbbc9c8d239@youngman.org.uk>
+ <CAAMCDecTb69YY+jGzq9HVqx4xZmdVGiRa54BD55Amcz5yaZo1Q@mail.gmail.com>
+ <019701d864f9$7c87ab90$759702b0$@wmawater.com.au>
+ <4fc8c8b4-cfc2-81b2-40d6-13c9d8c940bb@thelounge.net>
+ <01f501d8653a$1ccf8420$566e8c60$@wmawater.com.au>
+ <84b97e58-9884-ca0f-8186-2e046e900334@thelounge.net>
+ <b2a3c4ec-2f86-7775-c84f-2f360ab9cfd0@thelounge.net>
+ <00b801d8668a$da017c00$8e047400$@wmawater.com.au>
+From:   Reindl Harald <h.reindl@thelounge.net>
+Organization: the lounge interactive design
+In-Reply-To: <00b801d8668a$da017c00$8e047400$@wmawater.com.au>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-How this is possible ?
-seems that sdc has some failed sectors but disk is still active in the array
-
-[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc] Unhandled sense code
-[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc]
-[Mon May  2 03:36:24 2022] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc]
-[Mon May  2 03:36:24 2022] Sense Key : Medium Error [current]
-[Mon May  2 03:36:24 2022] Info fld=0x10565570
-[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc]
-[Mon May  2 03:36:24 2022] Add. Sense: Unrecovered read error
-[Mon May  2 03:36:24 2022] sd 0:0:2:0: [sdc] CDB:
-[Mon May  2 03:36:24 2022] Read(10): 28 00 10 56 51 80 00 04 00 00
-[Mon May  2 03:36:24 2022] end_request: critical medium error, dev
-sdc, sector 274093424
-[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc] Unhandled sense code
-[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc]
-[Mon May  2 03:36:25 2022] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc]
-[Mon May  2 03:36:25 2022] Sense Key : Medium Error [current]
-[Mon May  2 03:36:25 2022] Info fld=0x10565584
-[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc]
-[Mon May  2 03:36:25 2022] Add. Sense: Unrecovered read error
-[Mon May  2 03:36:25 2022] sd 0:0:2:0: [sdc] CDB:
-[Mon May  2 03:36:25 2022] Read(10): 28 00 10 56 55 80 00 04 00 00
-[Mon May  2 03:36:25 2022] end_request: critical medium error, dev
-sdc, sector 274093444
-[Mon May  2 04:06:32 2022] md: md0: data-check done.
 
 
+Am 13.05.22 um 07:32 schrieb Bob Brand:
+> This may not be the forum to ask 
 
-# cat /proc/mdstat
-Personalities : [raid1]
-md0 : active raid1 sdc1[2] sda1[0] sdb1[1]
-      292836352 blocks super 1.2 [3/3] [UUU]
-      bitmap: 3/3 pages [12KB], 65536KB chunk
+it is because you can type that sort of questions also into google and 
+there isn't a good reason to build your own kernel in 2022 for most usecases
 
-unused devices: <none>
+> this but what exactly is "compiling the
+> kernel". From what I've been reading, it sounds like a somewhat involved and
+> complex process - is it? Is compiling a new kernel the same as upgrading the
+> OS? I'm getting the impression that it sort of is but sort of isn't. Is it
+> possible to compile a kernel for a rescue CD (from the comments I've read,
+> it is possible)? If I were to compile a new kernel, would I expect the
+> version number for the kernel and mdadm to be the same? Sorry for all the
+> question but, as I said at the outset, a lot of this is all very new to me.
+
+don't get me wrong but "Is compiling a new kernel the same as upgrading 
+the OS" and "what exactly is "compiling the kernel" implies just use a 
+binary distribution when it sounds that you even don't know what compile 
+software from source means
+
+> -----Original Message-----
+> From: Reindl Harald <h.reindl@thelounge.net>
+> Sent: Thursday, 12 May 2022 12:59 AM
+> To: Bob Brand <brand@wmawater.com.au>; Roger Heflin <rogerheflin@gmail.com>;
+> Wols Lists <antlists@youngman.org.uk>
+> Cc: Linux RAID <linux-raid@vger.kernel.org>; Phil Turmel
+> <philip@turmel.org>; NeilBrown <neilb@suse.com>
+> Subject: Re: Failed adadm RAID array after aborted Grown operation
+> 
+> 
+> 
+> Am 11.05.22 um 16:56 schrieb Reindl Harald:
+>>
+>>
+>> Am 11.05.22 um 15:22 schrieb Bob Brand:
+>>> Sorry Reindl.  I'm not sure I understand. Are you saying I did or
+>>> didn't do the right thing in booting from a CentOS rescue disk? At
+>>> the moment it's running from the rescue disk and, be it the best
+>>> distro to have used (or not), I would imagine that I need to keep
+>>> running from the rescue disk until the reshape is complete as
+>>> rebooting in the middle of a reshape is what got me in this mess.
+> 
+> and nowhere did i say reboot now
+> 
+> and i only responded to your "Do I understand that you would recommend
+> upgrading our installation of Linux once the repair is complete or are
+> advising downloading and compiling a new kernel as part of the repair?"
+> 
+> nobody said that - the only point was use a as recent kernel as possible
+> with all rgow/reshape operations
+> 
+>> and i don't understand what you did not understand in the clear
+>> response below you got days ago!
+>>
+>> due reshape you where advised use whatever rescue/live system with a
+>> recent kernel and mdadm, not more and not less
+>>
+>> just to avoid probaly long fixed bugs in your old kernel
+>>
+>> ---------------------
+>>
+>> Try and get a CentOS 8.5 disk. At the end of the day, the version of
+>> linux doesn't matter. What you need is an up-to-date rescue disk.
+>> Distro/whatever is unimportant - what IS important is that you are
+>> using the latest mdadm, and a kernel that matches.
+>>
+>> The problem you have sounds like a long-standing but now-fixed bug. An
+>> original CentOS disk might be okay (with matched kernel and mdadm),
+>> but almost certainly has what I consider to be a "dodgy" version of mdadm.
+>>
+>> If you can afford the downtime, after you've reverted the reshape, I'd
+>> try starting it again with the rescue disk. It'll probably run fine.
+>> Let it complete and then your old CentOS 7 will be fine with it
+> 
+> 
+> 
+> CAUTION!!! This E-mail originated from outside of WMA Water. Do not click
+> links or open attachments unless you recognize the sender and know the
+> content is safe.
