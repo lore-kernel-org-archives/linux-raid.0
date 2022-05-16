@@ -2,232 +2,182 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9BFCC433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 16 May 2022 18:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C768C433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 16 May 2022 18:58:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345152AbiEPSwE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 May 2022 14:52:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45952 "EHLO
+        id S1345230AbiEPS6n (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 May 2022 14:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345149AbiEPSv5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 May 2022 14:51:57 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D3393EA93
-        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 11:51:56 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id r71so14571157pgr.0
-        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 11:51:56 -0700 (PDT)
+        with ESMTP id S235473AbiEPS6m (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 May 2022 14:58:42 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CDA43EBB8
+        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 11:58:39 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24GHa02O017457;
+        Mon, 16 May 2022 18:58:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=GaMMZTYlUZnsYJILhnG81ibUxt5/SHMDDUY7fwCgUpE=;
+ b=EXyllU4gpWtUhu+qaIOdU/dmpGLys5Nmcq9R2jZNtc/EPOx1/zQdaryHr+JWAn3IKcoW
+ XSeLaEG2CBDR7tnnREPyJI08szwa0MGCL6f9v9TGM91bHbPpD5P9YiDu//AG9GTrpYkp
+ KORNVRAfjwbHaktHP3jskVbYlxptUpunOdkBwhei/Fi6kkx9qQkkucKhlqQ/mGgXUmy2
+ KU4wzqZJf+yI0huR3PfvnFUm8l2HaVbhdeDFE2u0in2Uholy1W4EIn1nDKfzHx74gsjY
+ 9nHgKQj/fT3wwWREcY6Sd0T3v7zU6RxFAA2RE8/x5O6uXQlvwkSoYj4F8yxLGv6T+Tym tQ== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g24aac6ay-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 May 2022 18:58:30 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24GIptV8005124;
+        Mon, 16 May 2022 18:58:29 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3g22v7rhn1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 May 2022 18:58:29 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=JnoOghy+T2AIyPBdVd4UPWmN2bv3wjqrr0F4+JtnhNSpAix9fmaNuCxnZeOJyIzhAWPwu/nlrFZiUFekvY9DSwgRqjJ+nBJtXk/Xl74L63k2/LQF6lCh85kSdTnWy87AM596M2vyOHV8D4IhBUuAhvWyRY6sQqdoQ3L1uWUfCJYeW+xU0DokBiSLKHoPb3T7bj6lGxLWHg7oibzzD0OPbWay2sb8usJdhq978X6b52DxnCw0R6pus0ItqSiscWU4bgl9PiJN5xuTnVOuJYkILqdqJ1wYmA3FgxycdSlkrwswHf4PZ5KOZ6I+XLJnruLHJ++3UskPpRaedgUJCfG/mw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=GaMMZTYlUZnsYJILhnG81ibUxt5/SHMDDUY7fwCgUpE=;
+ b=Y6Iw0cf7usofUaOrR88mjse/HBkYRfGLD6eq/G8l7Ouf5t74xbsq2oY9lB7B0LMzENYWIYHlVbVKY3l858vCsXhxUUGuEUNbNqWJnMvAfB8UQXTetZFYZo/Z8dPoECr9+jvxLvFkAPxyIxjrwbOV19le6LuRAvE0WPTAQNq1YxnMEsPOrak1gmfJPZdIrwgQk1nFkpY2meW4j+wKHDaxgwoFouX12LawYEUNVpkEow3NuKR8btuUfwmmjjKgwsHfJwlOq7/ILdaaMV1jRBcIQDcMp+99gMGgn+SHW93uVRo87O+NTsfOpou3DK5bsmxHiSXxN4TyZzXXd4l3ZUxfWw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=w/vXrhHYz4hayxXTpvluCRqtSLwMXWsi89GFr9tS/YQ=;
-        b=JRehcpW7+f4z4nnJVoYyyn8JTHfm9l7lwwg3/Zc+NghG/A9LUfElMU7tlAgI6zJnGo
-         LKCQmvcigbZB1ml+BnZ81ev55Yy/YSw6DMFKbYvOep7hxWh/H/lxwexytzZbDoi5s68a
-         gMMP2W5FrOB7qNl/5JgcTVgbYZxRV0HozsCvY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=w/vXrhHYz4hayxXTpvluCRqtSLwMXWsi89GFr9tS/YQ=;
-        b=hSgXM/Zc09J6LQaDj86FNAeyxl6gc8hK/yXy0M1A4oe21Z2//dj0os4QLa3Xnah8H3
-         E5Qi9P0TmrJsQDsA/A0gj8Uz8OZ0S1tY1Nj3vPKdsgTG9ZZHMvVwYNXW/7iedzRWApr+
-         nAw5d73kcjzd5fm8RzylyyaTNf97tlRXjIEpK55aHNmjctLliznJISYuKlE0psUTRPcI
-         M/2Dl8PMpHAhil+q4kYDsw9e2+bwvLdt9sE366ncvs1ZY2KD2Opeo7Q7ZiASBeMb0ch4
-         P6dTWTtqFAmjZX/gNWO6n2bGujWfO0itiPBaZKeP1uHTPMtPsRBkSR7BWRoVG/Po/Jgv
-         WR5w==
-X-Gm-Message-State: AOAM532mnEeAK/l5s0II/fAfIp9ks55hjrOFeZfn3fcq+Ipd9djvCXql
-        8yP2QCHd/A7heu/70+AZFdNFyQ==
-X-Google-Smtp-Source: ABdhPJymcURqRMGcWWF5SnA9wwUQk3JoOR0K/mUC0Yv15khQOmO0SNCL+Q4Njsx+FkSULBV01/EO0w==
-X-Received: by 2002:a63:4387:0:b0:3c6:9490:4e4b with SMTP id q129-20020a634387000000b003c694904e4bmr16157541pga.438.1652727116092;
-        Mon, 16 May 2022 11:51:56 -0700 (PDT)
-Received: from localhost ([2620:15c:11a:202:4ee0:ca4c:63fd:81d2])
-        by smtp.gmail.com with UTF8SMTPSA id b2-20020a170902650200b0015e8d4eb264sm7480975plk.174.2022.05.16.11.51.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 16 May 2022 11:51:55 -0700 (PDT)
-Date:   Mon, 16 May 2022 11:51:54 -0700
-From:   Matthias Kaehlcke <mka@chromium.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        James Morris <jmorris@namei.org>,
-        "Serge E . Hallyn" <serge@hallyn.com>, dm-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] dm: Add verity helpers for LoadPin
-Message-ID: <YoKdSrjVf/tHGoa5@google.com>
-References: <20220504195419.1143099-1-mka@chromium.org>
- <20220504125404.v3.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
- <02028CEA-5704-4A51-8CAD-BEE53CEF7CCA@chromium.org>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GaMMZTYlUZnsYJILhnG81ibUxt5/SHMDDUY7fwCgUpE=;
+ b=lc9kyAeIg9jaN+cjZQkURYUJM3Zb+7C2UuWa5PpSUnpra/luzhxEvS87bXjR+6sdDZ23XkM3CLnTo42f0WeYkO8FxoVFyqaZXq7KcTwq9LNYokeoBpeQ2wg64YGxADdIkD+ZMxy0ombza9P8ViQ0kGXrjBmXtqIpE4k1VIdxngk=
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
+ by PH0PR10MB5563.namprd10.prod.outlook.com (2603:10b6:510:f2::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.13; Mon, 16 May
+ 2022 18:58:27 +0000
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::ccc1:c080:5df4:f478]) by SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::ccc1:c080:5df4:f478%3]) with mapi id 15.20.5250.018; Mon, 16 May 2022
+ 18:58:27 +0000
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+CC:     Nigel Croxon <ncroxon@redhat.com>, Coly Li <colyli@suse.de>,
+        Xiao Ni <xni@redhat.com>,
+        Jes Sorensen <jes@trained-monkey.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: Re: mdadm test suite improvements
+Thread-Topic: mdadm test suite improvements
+Thread-Index: AQHYaS6gkZIr9hi5j0WjzG+1sgOF0K0h23yA
+Date:   Mon, 16 May 2022 18:58:27 +0000
+Message-ID: <009F4164-44B7-4688-9976-4E3AA0185445@oracle.com>
+References: <20220516160941.00004e83@linux.intel.com>
+In-Reply-To: <20220516160941.00004e83@linux.intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3696.80.82.1.1)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 4ab1b1f6-9d3a-4834-f37a-08da376e0fd6
+x-ms-traffictypediagnostic: PH0PR10MB5563:EE_
+x-microsoft-antispam-prvs: <PH0PR10MB55630F3D34832967B117B059E6CF9@PH0PR10MB5563.namprd10.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: JrHF2t0xB4dWu40xWkF+h2lcnqKuumTZSCqDERADyi9Diq600H3lVV7y5BHDbkYxyJSotcwo8hDhTnko1f3GQm9e8wDjpyjRh9CIo8gcfJKFOyjjRmr5FrSxve936+PnL3qtZ93GTboTWjNQPjh6NgZw47qKOIchDyGjSVGaYKc8aEdWojB8yrt20tFWwcbuwsqvKOb5Lop93Nuefg0PGO2HVrTiBJf81wSRblN4rQ+QBxiOAcLUwLZgcjo3hDUURDFVLpNdjhjXzj3LSs7g7u6hqRSnf6ulfArZYpV4wnSxJ8scE+RbWEsyS58biCQfJ8urNdcDNjWpPLU0qnfKUGjl+rN1t34gJ+17fiMHuFdf93v86caqJYWUFpeuid0q35RlRLS3YsOSRFY2vfajTWJBphUm+UO2/Ny/m8595uN82hscN1Yy5cARffNgsSqzXYXB2F9jfB7H32bX21VdNN8QaEKd+uBLQJym3ygOarnvlEriw84K/GjUt3M5gPOAbJ5q4uIhkiU4Q4+78eY78evIdWAmvGF+zBtPpj/0TPT00728bho6/Q6aARYRGW9hkGZJKdbXJFTGv/8odAPOlOUCDwkOUq5l1b1L7ihPZIPvctuDqIW6cOdu4E3YxRPr4lmYSKkLwgJ42fULkj1KYFDPNuHK0hnZoU7SKSwxnOu85sopqt3Or+rR+prq+DVh4jpVviyQ0bn0hAg9R78wCtM3Lj5KxPDwsahrLHhNF7NRq45DnjgNx7kztMDDPyxyAK7RRqt97pTV1zl6J+VdYMgcslDcWWwoYhMtOL1fWqrtWEA1fbxwLNxJaMqrmukp
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(66946007)(66556008)(76116006)(66446008)(66476007)(6506007)(83380400001)(186003)(91956017)(8676002)(4326008)(36756003)(71200400001)(3480700007)(44832011)(26005)(38100700002)(86362001)(6916009)(33656002)(2616005)(38070700005)(5660300002)(8936002)(508600001)(53546011)(54906003)(2906002)(316002)(122000001)(64756008)(6512007)(966005)(6486002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?r+qUM4K+YoMRuIj97BPA5yYKc2kznQ1ZYIJjGaaeWkGDfmbl2qmGjOF7aL5C?=
+ =?us-ascii?Q?BDnJz4QZbVggsbT7/GGIZwiaXwB2CPqXiGevK2/ahvqFFOcv6Ot4lSO62PhQ?=
+ =?us-ascii?Q?yQPU47Y2r/qMhrZTV5+TG2n/5a9zVnubFVYPJiJwgMGg/fLX/TXetjZ727zt?=
+ =?us-ascii?Q?w36P3IkLT0mFqX2IoFTqyLOllgdKBX/Us9jwHZmhU0JCNW+jvaks5N7Q/S7u?=
+ =?us-ascii?Q?AT/mLnF3E+5E8ozSwllsGxKa0dmpE38IEBn6zKOurfGXaFVpA8reNR5eHnA9?=
+ =?us-ascii?Q?GsB0/mbenMoTRYsss0gs6uEHhFXVJzIYKFU/GH5Em5ATtpaswR4OW4k9htZb?=
+ =?us-ascii?Q?39XdEMBumSAW3/Yq3GiCezdRZ0/LiBQMFzzzT3DkGtd05+uBd42C3Mhax07N?=
+ =?us-ascii?Q?RsllcuV/l5+8Wz/OLtMqk9nQIbr8z4NbHL5f0NZMVVoPZ+QzABOszcYzYXZ+?=
+ =?us-ascii?Q?f74R7Th97Otuk4a+Vc7axCykhqJGQlepMT//lakz7IefLx9DtzJPkCBbl1lU?=
+ =?us-ascii?Q?WLsIBlcHNDnLZ28A0qwShhmM2TRCK+VMPitMLzcSiB4U34sUXLV2rfVzxd9C?=
+ =?us-ascii?Q?AYakfqI36QwQgMpaBzj4yGB/gOuSwcOheqfVkPsCiEpmPq03TIMIpdnoNQYk?=
+ =?us-ascii?Q?Ka53gKUygDYH7u+FkZXASH0OlnkEQchc4vmqUN2L9qjYerpC9uDMw9IzSK90?=
+ =?us-ascii?Q?L3ApIoAcXC5TxzOz3Pug8frBT7mn6xtOmBdyLjnpL5g9YUyjflBnQGzjmdbm?=
+ =?us-ascii?Q?biDal117M0QP614oyZsX9V8biX7qfCnwu5XT/uuNz22gP4VnhIn6AUu3T6Wc?=
+ =?us-ascii?Q?EhMwDnlX0MxM5gTXdljAgw2hKacN7RFOrTW1rjo+0d3rFoMhDJVFk1kVGJis?=
+ =?us-ascii?Q?ubN+eG1scnj4mwu6h2JDWgTxCASbN9+GoS3bUZ86BKhZawLBsG/Bh5EcSqZp?=
+ =?us-ascii?Q?XdbXNsDBQZ5ZrJY+35yrW/1f0OTZ5fRV2lbbX0eO8Fmo63P0+ort8ZkcL3FW?=
+ =?us-ascii?Q?R8h2bAeznWw1Ci8TstadJLgO14WKjjHuH5tls91EVfeYfwdyX15dr8T/vUPl?=
+ =?us-ascii?Q?sKPIe1VpPRPzfkcskMcxixV4IFCRmwA7NdjouH7M46itgiwafBrLaOQ3SMQ0?=
+ =?us-ascii?Q?ENGlHDYdTLFcip5oN7HHfVlSR0TUPN3yZ9vhfwmSQr+lA3xC+luKtKrco3Dc?=
+ =?us-ascii?Q?OTvGt/4EOfBiz6ZrWePFOqenprMb3Hkn8Xbo1EfmJ1RHI80uJqdRqqmT9Fg4?=
+ =?us-ascii?Q?MvUpZ8OIhamt48K5cKYSIBajMdEEI57KwFQdURA/HmQzkaE2BjVk5EUUHP75?=
+ =?us-ascii?Q?Q9o2VZmlGAlwPBIVdOi3ShgSMWGlfBVv+zxMWalg/HMh5VcTA1ZJo4Kq+4uh?=
+ =?us-ascii?Q?+QiKWzT2ujS449jjMlRv/SckM9mFe3H6QXHM+EIj8W0i5cLHw6SjbtsqZTar?=
+ =?us-ascii?Q?GVSvObGIxtBj8QLMqmVqB8Ie3dbW6PbNU+YXjg/5DqkMX5a1gB4IZHIGTJRV?=
+ =?us-ascii?Q?PHXXpAg8G7QIzteE5f7vDUpNQL0vklQvgQ6V+7helRHvvjDrStGUh0+ccGOb?=
+ =?us-ascii?Q?zGtu2u4PKDcFeZz6dsYseD3t+svOy1h8pXaIYMExXZEMKqypfhxztbdnfqwC?=
+ =?us-ascii?Q?WvAXA19JIABLA5yk0Zw9O7a7J9V+P/m/caTaZWL+nIPj6fPt/eIm2NceDhIt?=
+ =?us-ascii?Q?DeOOQFP9ZTY8jYPIoQ6KlVwXmkdfF+J3F4+woL2/os8lEAskXo0Oj2ppjGx1?=
+ =?us-ascii?Q?xEKmR4n+RMTmQ9mX9sQIyzpx/SO6P24+4WEoNiN+muYYmPyr4pSf?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <AD605C239AA25C4AAB8C85702FEAF09E@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <02028CEA-5704-4A51-8CAD-BEE53CEF7CCA@chromium.org>
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4ab1b1f6-9d3a-4834-f37a-08da376e0fd6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 May 2022 18:58:27.7397
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: SL/kIRkTWMv6xxTsjhgiqJRxmCSU2zN4XWaiae59Mra7j83fYRaPznl0cKPCUWVEeLDUMMRn2HpmLzGLLvP/4tcEFF3AauK6zFCumYSxnsw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5563
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
+ definitions=2022-05-16_15:2022-05-16,2022-05-16 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 mlxscore=0
+ phishscore=0 suspectscore=0 mlxlogscore=970 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2205160103
+X-Proofpoint-ORIG-GUID: Q-Cu4WBgvvF41prUxJIFQlQgWGQRL8F4
+X-Proofpoint-GUID: Q-Cu4WBgvvF41prUxJIFQlQgWGQRL8F4
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, May 13, 2022 at 03:15:53PM -0700, Kees Cook wrote:
-> 
-> 
-> On May 4, 2022 12:54:17 PM PDT, Matthias Kaehlcke <mka@chromium.org> wrote:
-> >LoadPin limits loading of kernel modules, firmware and certain
-> >other files to a 'pinned' file system (typically a read-only
-> >rootfs). To provide more flexibility LoadPin is being extended
-> >to also allow loading these files from trusted dm-verity
-> >devices. For that purpose LoadPin can be provided with a list
-> >of verity root digests that it should consider as trusted.
-> >
-> >Add a bunch of helpers to allow LoadPin to check whether a DM
-> >device is a trusted verity device. The new functions broadly
-> >fall in two categories: those that need access to verity
-> >internals (like the root digest), and the 'glue' between
-> >LoadPin and verity. The new file dm-verity-loadpin.c contains
-> >the glue functions.
-> >
-> >Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
-> > [...]
-> >diff --git a/drivers/md/dm-verity-loadpin.c b/drivers/md/dm-verity-loadpin.c
-> >new file mode 100644
-> >index 000000000000..972ca93a2231
-> >--- /dev/null
-> >+++ b/drivers/md/dm-verity-loadpin.c
-> >@@ -0,0 +1,80 @@
-> >+// SPDX-License-Identifier: GPL-2.0-only
-> >+
-> >+#include <linux/list.h>
-> >+#include <linux/kernel.h>
-> >+#include <linux/dm-verity-loadpin.h>
-> >+
-> >+#include "dm.h"
-> >+#include "dm-verity.h"
-> >+
-> >+static struct list_head *trusted_root_digests;
-> 
-> Does this need to exist in two places? (i.e. why can't dm and loadpin share
-> this instead of needing dm_verity_loadpin_set_trusted_digests()?)
+Mariusz,=20
 
-We could share it. Probably it should then be defined here, since this is
-the first patch of the series, we could add an extern declaration to
-dm-verity-loadpin.h.
+> On May 16, 2022, at 7:09 AM, Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel=
+.com> wrote:
+>=20
+> Hello All,
+> I'm working on names handling in mdadm and I need to add some new test to
+> the mdadm scope - to verify that it is working as desired.
+> Bash is not best choice for testing and in current form, our tests are no=
+t
+> friendly for developers. I would like to introduce another python based t=
+est
+> scope and add it to repository. I will integrate it with current framewor=
+k.
+>=20
+> I can see that currently test are not well used and they aren't often upd=
+ated.
+> I want to bring new life to them. Adopting more modern approach seems to =
+be good
+> start point.
+> Any thoughts?
+>=20
+> Thanks in advance,
+> Mariusz
 
-> >+
-> >+/*
-> >+ * Sets the root digests of verity devices which LoadPin considers as trusted.
-> >+ *
-> >+ * This function must only be called once.
-> >+ */
-> >+void dm_verity_loadpin_set_trusted_root_digests(struct list_head *digests)
-> >+{
-> >+	if (!trusted_root_digests)
-> >+		trusted_root_digests = digests;
-> >+	else
-> >+		pr_warn("verity root digests trusted by LoadPin are already set!!!\n");
-> >+}
-> >+
-> >+static bool is_trusted_verity_target(struct dm_target *ti)
-> >+{
-> >+	u8 *root_digest;
-> >+	unsigned int digest_size;
-> >+	struct trusted_root_digest *trd;
-> >+	bool trusted = false;
-> >+
-> >+	if (!dm_is_verity_target(ti))
-> >+		return false;
-> >+
-> >+	if (dm_verity_get_root_digest(ti, &root_digest, &digest_size))
-> >+		return false;
-> >+
-> >+	list_for_each_entry(trd, trusted_root_digests, node) {
-> >+		if ((trd->len == digest_size) &&
-> >+		    !memcmp(trd->data, root_digest, digest_size)) {
-> >+			trusted = true;
-> >+			break;
-> >+		}
-> >+	}
-> >+
-> >+	kfree(root_digest);
-> >+
-> >+	return trusted;
-> >+}
-> >+
-> >+/*
-> >+ * Determines whether a mapped device is a verity device that is trusted
-> >+ * by LoadPin.
-> >+ */
-> >+bool dm_verity_loadpin_is_md_trusted(struct mapped_device *md)
-> >+{
-> >+	int srcu_idx;
-> >+	struct dm_table *table;
-> >+	unsigned int num_targets;
-> >+	bool trusted = false;
-> >+	int i;
-> >+
-> >+	if (!trusted_root_digests || list_empty(trusted_root_digests))
-> >+		return false;
-> >+
-> >+	table = dm_get_live_table(md, &srcu_idx);
-> >+	num_targets = dm_table_get_num_targets(table);
-> >+	for (i = 0; i < num_targets; i++) {
-> >+		struct dm_target *ti = dm_table_get_target(table, i);
-> >+
-> >+		if (is_trusted_verity_target(ti)) {
-> >+			trusted = true;
-> >+			break;
-> >+		}
-> >+	}
-> 
-> Pardon my lack of dm vocabulary, but what is "target" vs "table" here?
-> I was only thinking of "whole device", so I must not understand what this is
-> examining.
+FWIW, Python is the right choice to modernize the framework. I recently ran=
+ the test suite and sent out a series [1] addressing issues we found with t=
+he test cases. I would agree that python would be more helpful in the wider=
+ adoption of the test framework.
 
-'targets' are different types of DM mappings like 'linear' or 'verity'. A
-device mapper table contains has one or more targets that define the mapping
-of the blocks of the mapped device.
+[1] https://marc.info/?l=3Dlinux-raid&m=3D165220252031480&w=3D2
 
-Having spelled that out I realize that the above check is wrong. It would
-consider a device like this trusted:
+--
+Himanshu Madhani	Oracle Linux Engineering
 
-0 10000000 linear 8:1
-10000000 10001000 verity <params>
-
-In the above case only a small part of the DM device would be backed by verity.
-
-I think we want a table with a single entry that is a verity target.
-
-> > [...]
-> >diff --git a/include/linux/dm-verity-loadpin.h b/include/linux/dm-verity-loadpin.h
-> >new file mode 100644
-> >index 000000000000..12a86911d05a
-> >--- /dev/null
-> >+++ b/include/linux/dm-verity-loadpin.h
-> >@@ -0,0 +1,27 @@
-> >+/* SPDX-License-Identifier: GPL-2.0 */
-> >+
-> >+#ifndef __LINUX_DM_VERITY_LOADPIN_H
-> >+#define __LINUX_DM_VERITY_LOADPIN_H
-> >+
-> >+#include <linux/list.h>
-> >+
-> >+struct mapped_device;
-> >+
-> >+struct trusted_root_digest {
-> >+	u8 *data;
-> >+	unsigned int len;
-> >+	struct list_head node;
-> >+};
-> 
-> To avoid the double-alloc in patch 2 (and save 1 pointer size of memory), this could just be:
-> 
-> struct trusted_root_digest {
-> 	struct list_head node;
-> 	unsigned int len;
-> 	u8 data[];
-> };
-
-Looks good to me, will change
-
-> Otherwise, looks good to me!
-
-Excellent, thanks for the review!
