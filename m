@@ -2,99 +2,232 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C611C433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 16 May 2022 18:26:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9BFCC433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 16 May 2022 18:52:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234244AbiEPS00 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 May 2022 14:26:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41142 "EHLO
+        id S1345152AbiEPSwE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 May 2022 14:52:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229692AbiEPS0Y (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 May 2022 14:26:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B39EC2BB1B
-        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 11:26:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1652725582;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6ugq1y16zDrq4M9/5Mw29Z4ZsNQv0PeraFVSccu/y04=;
-        b=BoB+eyz/bUg+5aVBkCp3o2fkmMPyvT8nDZup9izh1BZD/UFVlgbnTFqeJKKpTz6Z/jkO7E
-        kdiSLjib7CjP4X8S0IEP4haBsbAHn9IpUyUV91HfKVNpvW4ybv40AkdPPSqwoY7A8FTWY7
-        k1AHpARUJGcbi9a8d8hOyoL49+m3el4=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-34-RF65-FL_MneGI65ZSj5mcQ-1; Mon, 16 May 2022 14:26:21 -0400
-X-MC-Unique: RF65-FL_MneGI65ZSj5mcQ-1
-Received: by mail-qt1-f197.google.com with SMTP id a18-20020ac85b92000000b002f3c5e0a098so12109736qta.7
-        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 11:26:21 -0700 (PDT)
+        with ESMTP id S1345149AbiEPSv5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 May 2022 14:51:57 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D3393EA93
+        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 11:51:56 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id r71so14571157pgr.0
+        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 11:51:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=w/vXrhHYz4hayxXTpvluCRqtSLwMXWsi89GFr9tS/YQ=;
+        b=JRehcpW7+f4z4nnJVoYyyn8JTHfm9l7lwwg3/Zc+NghG/A9LUfElMU7tlAgI6zJnGo
+         LKCQmvcigbZB1ml+BnZ81ev55Yy/YSw6DMFKbYvOep7hxWh/H/lxwexytzZbDoi5s68a
+         gMMP2W5FrOB7qNl/5JgcTVgbYZxRV0HozsCvY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=6ugq1y16zDrq4M9/5Mw29Z4ZsNQv0PeraFVSccu/y04=;
-        b=AMapUNj4EOCv9Yio3IQ/ZrifMMEQijruO9UhkksXnhPVpFIE+LCidvHHAb/fJLLS1f
-         0PlSg131NVlMUiu3FBNrazNy+wYVBLmd5CALIxkftC9QQaqWc0/8eYCm6nlZ8gt4JlCc
-         8xAQIH0H6k6ucO1fwBLrlQ8JT6r/IgjlfAV9HzVNwBNSrpAVp3i2Fv/vnlmNK1Tikn81
-         3tbvEPccxIOizcp+NJ8KE2iys0FY59LRGTHJG2my7/C261mIzJpajckyC7cHWRRy4Lnx
-         v5w35tXgWXtFOI1ZzV1WZ8f2u38dFvQPq0hvjQMjzaGsO2j+j88xrDnpMZoZyuVOsBdV
-         MR6w==
-X-Gm-Message-State: AOAM5304YNGB/iLjKwZs3KrVur8aHQf4mPlPpeX5xOevKj5sRIlElGFh
-        1ORt4eW0ra5Og+7kBmvv6qZpI94h0DkWmHN7Kr+rIreILgBNC+VBiutoudPxtYi5l5zQt205Vrl
-        zxunVUFbcF8IreTZ1NU3M9g==
-X-Received: by 2002:ad4:5ba3:0:b0:45a:fd2c:225f with SMTP id 3-20020ad45ba3000000b0045afd2c225fmr16441953qvq.31.1652725581146;
-        Mon, 16 May 2022 11:26:21 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJznFqgaidpbYZkFN1/DphZxGtyzeW45ev4Uy2j4oF3L8pVA97bFk1ArtJcEwvZrhHI6Y4222g==
-X-Received: by 2002:ad4:5ba3:0:b0:45a:fd2c:225f with SMTP id 3-20020ad45ba3000000b0045afd2c225fmr16441937qvq.31.1652725580977;
-        Mon, 16 May 2022 11:26:20 -0700 (PDT)
-Received: from [192.168.1.211] (d-137-103-110-215.nh.cpe.atlanticbb.net. [137.103.110.215])
-        by smtp.gmail.com with ESMTPSA id i10-20020a05620a074a00b006a059f1d8b8sm6107564qki.124.2022.05.16.11.26.20
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=w/vXrhHYz4hayxXTpvluCRqtSLwMXWsi89GFr9tS/YQ=;
+        b=hSgXM/Zc09J6LQaDj86FNAeyxl6gc8hK/yXy0M1A4oe21Z2//dj0os4QLa3Xnah8H3
+         E5Qi9P0TmrJsQDsA/A0gj8Uz8OZ0S1tY1Nj3vPKdsgTG9ZZHMvVwYNXW/7iedzRWApr+
+         nAw5d73kcjzd5fm8RzylyyaTNf97tlRXjIEpK55aHNmjctLliznJISYuKlE0psUTRPcI
+         M/2Dl8PMpHAhil+q4kYDsw9e2+bwvLdt9sE366ncvs1ZY2KD2Opeo7Q7ZiASBeMb0ch4
+         P6dTWTtqFAmjZX/gNWO6n2bGujWfO0itiPBaZKeP1uHTPMtPsRBkSR7BWRoVG/Po/Jgv
+         WR5w==
+X-Gm-Message-State: AOAM532mnEeAK/l5s0II/fAfIp9ks55hjrOFeZfn3fcq+Ipd9djvCXql
+        8yP2QCHd/A7heu/70+AZFdNFyQ==
+X-Google-Smtp-Source: ABdhPJymcURqRMGcWWF5SnA9wwUQk3JoOR0K/mUC0Yv15khQOmO0SNCL+Q4Njsx+FkSULBV01/EO0w==
+X-Received: by 2002:a63:4387:0:b0:3c6:9490:4e4b with SMTP id q129-20020a634387000000b003c694904e4bmr16157541pga.438.1652727116092;
+        Mon, 16 May 2022 11:51:56 -0700 (PDT)
+Received: from localhost ([2620:15c:11a:202:4ee0:ca4c:63fd:81d2])
+        by smtp.gmail.com with UTF8SMTPSA id b2-20020a170902650200b0015e8d4eb264sm7480975plk.174.2022.05.16.11.51.55
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 16 May 2022 11:26:20 -0700 (PDT)
-Message-ID: <d32acbc9-2383-609b-1c67-3f59f97066c0@redhat.com>
-Date:   Mon, 16 May 2022 14:26:19 -0400
+        Mon, 16 May 2022 11:51:55 -0700 (PDT)
+Date:   Mon, 16 May 2022 11:51:54 -0700
+From:   Matthias Kaehlcke <mka@chromium.org>
+To:     Kees Cook <keescook@chromium.org>
+Cc:     Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        James Morris <jmorris@namei.org>,
+        "Serge E . Hallyn" <serge@hallyn.com>, dm-devel@redhat.com,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        linux-security-module@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] dm: Add verity helpers for LoadPin
+Message-ID: <YoKdSrjVf/tHGoa5@google.com>
+References: <20220504195419.1143099-1-mka@chromium.org>
+ <20220504125404.v3.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
+ <02028CEA-5704-4A51-8CAD-BEE53CEF7CCA@chromium.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.9.0
-Subject: Re: mdadm test suite improvements
-Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>, Xiao Ni <xni@redhat.com>,
-        Jes Sorensen <jes@trained-monkey.org>,
-        linux-raid@vger.kernel.org
-References: <20220516160941.00004e83@linux.intel.com>
-From:   Nigel Croxon <ncroxon@redhat.com>
-In-Reply-To: <20220516160941.00004e83@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <02028CEA-5704-4A51-8CAD-BEE53CEF7CCA@chromium.org>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 5/16/22 10:09 AM, Mariusz Tkaczyk wrote:
-> Hello All,
-> I'm working on names handling in mdadm and I need to add some new test to
-> the mdadm scope - to verify that it is working as desired.
-> Bash is not best choice for testing and in current form, our tests are not
-> friendly for developers. I would like to introduce another python based test
-> scope and add it to repository. I will integrate it with current framework.
+On Fri, May 13, 2022 at 03:15:53PM -0700, Kees Cook wrote:
 > 
-> I can see that currently test are not well used and they aren't often updated.
-> I want to bring new life to them. Adopting more modern approach seems to be good
-> start point.
-> Any thoughts?
 > 
-> Thanks in advance,
-> Mariusz
+> On May 4, 2022 12:54:17 PM PDT, Matthias Kaehlcke <mka@chromium.org> wrote:
+> >LoadPin limits loading of kernel modules, firmware and certain
+> >other files to a 'pinned' file system (typically a read-only
+> >rootfs). To provide more flexibility LoadPin is being extended
+> >to also allow loading these files from trusted dm-verity
+> >devices. For that purpose LoadPin can be provided with a list
+> >of verity root digests that it should consider as trusted.
+> >
+> >Add a bunch of helpers to allow LoadPin to check whether a DM
+> >device is a trusted verity device. The new functions broadly
+> >fall in two categories: those that need access to verity
+> >internals (like the root digest), and the 'glue' between
+> >LoadPin and verity. The new file dm-verity-loadpin.c contains
+> >the glue functions.
+> >
+> >Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> > [...]
+> >diff --git a/drivers/md/dm-verity-loadpin.c b/drivers/md/dm-verity-loadpin.c
+> >new file mode 100644
+> >index 000000000000..972ca93a2231
+> >--- /dev/null
+> >+++ b/drivers/md/dm-verity-loadpin.c
+> >@@ -0,0 +1,80 @@
+> >+// SPDX-License-Identifier: GPL-2.0-only
+> >+
+> >+#include <linux/list.h>
+> >+#include <linux/kernel.h>
+> >+#include <linux/dm-verity-loadpin.h>
+> >+
+> >+#include "dm.h"
+> >+#include "dm-verity.h"
+> >+
+> >+static struct list_head *trusted_root_digests;
 > 
+> Does this need to exist in two places? (i.e. why can't dm and loadpin share
+> this instead of needing dm_verity_loadpin_set_trusted_digests()?)
 
-Hello Mariusz,
+We could share it. Probably it should then be defined here, since this is
+the first patch of the series, we could add an extern declaration to
+dm-verity-loadpin.h.
 
-Python is a great choice. Good with me.
+> >+
+> >+/*
+> >+ * Sets the root digests of verity devices which LoadPin considers as trusted.
+> >+ *
+> >+ * This function must only be called once.
+> >+ */
+> >+void dm_verity_loadpin_set_trusted_root_digests(struct list_head *digests)
+> >+{
+> >+	if (!trusted_root_digests)
+> >+		trusted_root_digests = digests;
+> >+	else
+> >+		pr_warn("verity root digests trusted by LoadPin are already set!!!\n");
+> >+}
+> >+
+> >+static bool is_trusted_verity_target(struct dm_target *ti)
+> >+{
+> >+	u8 *root_digest;
+> >+	unsigned int digest_size;
+> >+	struct trusted_root_digest *trd;
+> >+	bool trusted = false;
+> >+
+> >+	if (!dm_is_verity_target(ti))
+> >+		return false;
+> >+
+> >+	if (dm_verity_get_root_digest(ti, &root_digest, &digest_size))
+> >+		return false;
+> >+
+> >+	list_for_each_entry(trd, trusted_root_digests, node) {
+> >+		if ((trd->len == digest_size) &&
+> >+		    !memcmp(trd->data, root_digest, digest_size)) {
+> >+			trusted = true;
+> >+			break;
+> >+		}
+> >+	}
+> >+
+> >+	kfree(root_digest);
+> >+
+> >+	return trusted;
+> >+}
+> >+
+> >+/*
+> >+ * Determines whether a mapped device is a verity device that is trusted
+> >+ * by LoadPin.
+> >+ */
+> >+bool dm_verity_loadpin_is_md_trusted(struct mapped_device *md)
+> >+{
+> >+	int srcu_idx;
+> >+	struct dm_table *table;
+> >+	unsigned int num_targets;
+> >+	bool trusted = false;
+> >+	int i;
+> >+
+> >+	if (!trusted_root_digests || list_empty(trusted_root_digests))
+> >+		return false;
+> >+
+> >+	table = dm_get_live_table(md, &srcu_idx);
+> >+	num_targets = dm_table_get_num_targets(table);
+> >+	for (i = 0; i < num_targets; i++) {
+> >+		struct dm_target *ti = dm_table_get_target(table, i);
+> >+
+> >+		if (is_trusted_verity_target(ti)) {
+> >+			trusted = true;
+> >+			break;
+> >+		}
+> >+	}
+> 
+> Pardon my lack of dm vocabulary, but what is "target" vs "table" here?
+> I was only thinking of "whole device", so I must not understand what this is
+> examining.
 
--Nigel
+'targets' are different types of DM mappings like 'linear' or 'verity'. A
+device mapper table contains has one or more targets that define the mapping
+of the blocks of the mapped device.
 
+Having spelled that out I realize that the above check is wrong. It would
+consider a device like this trusted:
+
+0 10000000 linear 8:1
+10000000 10001000 verity <params>
+
+In the above case only a small part of the DM device would be backed by verity.
+
+I think we want a table with a single entry that is a verity target.
+
+> > [...]
+> >diff --git a/include/linux/dm-verity-loadpin.h b/include/linux/dm-verity-loadpin.h
+> >new file mode 100644
+> >index 000000000000..12a86911d05a
+> >--- /dev/null
+> >+++ b/include/linux/dm-verity-loadpin.h
+> >@@ -0,0 +1,27 @@
+> >+/* SPDX-License-Identifier: GPL-2.0 */
+> >+
+> >+#ifndef __LINUX_DM_VERITY_LOADPIN_H
+> >+#define __LINUX_DM_VERITY_LOADPIN_H
+> >+
+> >+#include <linux/list.h>
+> >+
+> >+struct mapped_device;
+> >+
+> >+struct trusted_root_digest {
+> >+	u8 *data;
+> >+	unsigned int len;
+> >+	struct list_head node;
+> >+};
+> 
+> To avoid the double-alloc in patch 2 (and save 1 pointer size of memory), this could just be:
+> 
+> struct trusted_root_digest {
+> 	struct list_head node;
+> 	unsigned int len;
+> 	u8 data[];
+> };
+
+Looks good to me, will change
+
+> Otherwise, looks good to me!
+
+Excellent, thanks for the review!
