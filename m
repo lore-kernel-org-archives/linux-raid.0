@@ -2,95 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB752C433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 17 May 2022 01:48:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA051C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 17 May 2022 03:38:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233935AbiEQBs3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 May 2022 21:48:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44378 "EHLO
+        id S232257AbiEQDiV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 May 2022 23:38:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230113AbiEQBs2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 May 2022 21:48:28 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C84427CFB
-        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 18:48:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1652752107;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=sHZr21NeuXoOlSzwNV5pmOc6utnRPjCxB6EXo3CueCE=;
-        b=P0LXSy3Z801y/8UowgbeV4LfjlivcbPZv8gPbLeqOWYyxfKOc8/DJ+KH/cigHGoDpjKZ7l
-        9shKrtVnDLz2jRvwTck3Z2J0YuM9LzoTMJl12t1S4NMjreLWi/KtoznureEX3swC4YYa63
-        TgXav+xTj6dhfJoee8jug6/VgWJ10W4=
-Received: from mail-oa1-f70.google.com (mail-oa1-f70.google.com
- [209.85.160.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-624-wk06ZTBMMLWAooP6fG2tIQ-1; Mon, 16 May 2022 21:48:25 -0400
-X-MC-Unique: wk06ZTBMMLWAooP6fG2tIQ-1
-Received: by mail-oa1-f70.google.com with SMTP id 586e51a60fabf-f11c3a4d85so9315179fac.23
-        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 18:48:25 -0700 (PDT)
+        with ESMTP id S235918AbiEQDiR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 May 2022 23:38:17 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DE6E46B1D
+        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 20:38:14 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id x52so15743633pfu.11
+        for <linux-raid@vger.kernel.org>; Mon, 16 May 2022 20:38:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=8rb5YAnT4q61r5OFUKyY8/kc8YnIY9p2tTz3G6h+GnI=;
+        b=K+NCG2NOY2YHCZGF9tR3CDFh6GmYnmapld8oChptia7I0fznmJTqFy4IMPDhzPzrpB
+         GSJnUjrCDj89eeru6nx+LJLj1uPP74dleWSLfQYcQtNKqITscv70QYhZXqFiLf4zCOwW
+         ACYO6Tlu5Tz6ik2Cp8qUhoVk8JI4piml8NDRg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=sHZr21NeuXoOlSzwNV5pmOc6utnRPjCxB6EXo3CueCE=;
-        b=OK0xyuIbFtrOuiEEXSwpbOzCPHVMivp8LUrDMhjK2n3FA6IrYWsR9DOQvRMimrXCgq
-         5KAjnNoa+Ia8N0jQa0M+9ltjCUsCqcOS6iAsran+6LDdJpobKtE2XdZeFRshkJ/XTwtl
-         HKZQHQHVnEtgT/zk5KHubyPWdoEITOujvru8NagxmhexIEA5Uvi0CrroQZExQlpqt4yq
-         QdZihAPl3OKhlSqhfIjMqe7sjRCzufTEFQnOqi7ZD9LFk8dJEq3CiOZMFGWuyDH3ISP4
-         pBT1YkDDiUbenekEAGrgeePIcL4u/hy+ohSxSrdUxJSMKPSOmdYN2DSQNHSOSDdY9jgS
-         65vQ==
-X-Gm-Message-State: AOAM530d5j5y9m4EKBtO3Dk6dA4hKklSjr7DD5ECFSl4/a7UiulXQ+Yb
-        bH/KMoFLMIEaGu/xKX1Vc/2CU+RneVmZUizzgkx72k5UQc61YBeSBChZOqyE1GyYhPDFukFHY9B
-        o2CUWt4EWgE0b00QXLgMRTSgtg+ITy9/Z/JWsHA==
-X-Received: by 2002:a05:6870:2425:b0:de:2fb0:1caa with SMTP id n37-20020a056870242500b000de2fb01caamr11243367oap.115.1652752105232;
-        Mon, 16 May 2022 18:48:25 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJz3lcT+3BOwHLaUylzKDqlyGAJ+Yy2eykLRQgORIw5M4KDObAs3vcquXWn5LC6PLAl1RuqtvRUtf+OnXzzc3I0=
-X-Received: by 2002:a05:6870:2425:b0:de:2fb0:1caa with SMTP id
- n37-20020a056870242500b000de2fb01caamr11243358oap.115.1652752105081; Mon, 16
- May 2022 18:48:25 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=8rb5YAnT4q61r5OFUKyY8/kc8YnIY9p2tTz3G6h+GnI=;
+        b=QK+mS/wgQlFN9zTVPrW3aFvmSBnbjZ6Z+wup4z0+zqCRfhdtYYG8hqC6AvQnVBgR95
+         AhQPnzGsNxV+yZX+CiORNpt+m7pDSsvVkWeW3ELnoHZs8OYzYvqWxxf6UMZq5vpB7rfp
+         YP4KMaUIUzL+jvMivwiJEHCHeW4egqjtIngsVU0AxPKC+Ot0J5NNBVVXd6TijC7gZg/b
+         zSUuWEbg2obpPLOsddEGwUtxg+fZT7Nslev1JEtaFEo9FUuXpHtkXzpZ6+r/QE/ruMC9
+         YMnvRRaZ3qejOMWdLg/tp3+Gd54yFsRVos02EIYdEYNUfb8vHydk/Fy4vHKY1K7TCNa4
+         dmkg==
+X-Gm-Message-State: AOAM5331OOJFJYQ5io7pbKtGw864Ys0BHragdMaLHC97JRgGEYaOR32c
+        q8iNwL2T+IOf6u7CDgIzzaMJLw==
+X-Google-Smtp-Source: ABdhPJyIsPDpWnvy/XwAKF70PpFSrTdafFUxvd2g6pCcfojmxhOeRGWOV4pPfIMZkiY5fzkbYDiRnA==
+X-Received: by 2002:a05:6a02:10d:b0:381:f4c8:ad26 with SMTP id bg13-20020a056a02010d00b00381f4c8ad26mr17570035pgb.135.1652758693846;
+        Mon, 16 May 2022 20:38:13 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id i7-20020a17090332c700b0015e8d4eb27esm7802065plr.200.2022.05.16.20.38.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 May 2022 20:38:13 -0700 (PDT)
+Date:   Mon, 16 May 2022 20:38:12 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Matthias Kaehlcke <mka@chromium.org>
+Cc:     Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        James Morris <jmorris@namei.org>,
+        "Serge E . Hallyn" <serge@hallyn.com>, dm-devel@redhat.com,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        linux-security-module@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] dm: Add verity helpers for LoadPin
+Message-ID: <202205162035.CABA5B2C6@keescook>
+References: <20220504195419.1143099-1-mka@chromium.org>
+ <20220504125404.v3.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
+ <02028CEA-5704-4A51-8CAD-BEE53CEF7CCA@chromium.org>
+ <YoKdSrjVf/tHGoa5@google.com>
 MIME-Version: 1.0
-References: <20220516160941.00004e83@linux.intel.com>
-In-Reply-To: <20220516160941.00004e83@linux.intel.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 17 May 2022 09:48:13 +0800
-Message-ID: <CALTww2-mbfZRcHu_95Q+WANXZ9ayRwjXvyvqP5Gseeb86dEy=w@mail.gmail.com>
-Subject: Re: mdadm test suite improvements
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     Nigel Croxon <ncroxon@redhat.com>, Coly Li <colyli@suse.de>,
-        Jes Sorensen <jes@trained-monkey.org>,
-        linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YoKdSrjVf/tHGoa5@google.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Mariusz
+On Mon, May 16, 2022 at 11:51:54AM -0700, Matthias Kaehlcke wrote:
+> 'targets' are different types of DM mappings like 'linear' or 'verity'. A
+> device mapper table contains has one or more targets that define the mapping
+> of the blocks of the mapped device.
+> 
+> Having spelled that out I realize that the above check is wrong. It would
+> consider a device like this trusted:
+> 
+> 0 10000000 linear 8:1
+> 10000000 10001000 verity <params>
+> 
+> In the above case only a small part of the DM device would be backed by verity.
+> 
+> I think we want a table with a single entry that is a verity target.
 
-Thanks for the effort. Have you init the git project to start this? If
-so, you can send it, so we can
-work together about this.
+Ah-ha! Okay, that's what I was worried about. Yes, a device made up
+of only trusted verity targets should be the only trusted device. (So,
+technically it could be more than 1 verity target, but each would need
+to be trusted. Supporting that arrangement, though, may be overkill --
+I would expect a 1:1 mapping as you suggest.
 
-Best Regards
-Xiao
-
-On Mon, May 16, 2022 at 10:09 PM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
->
-> Hello All,
-> I'm working on names handling in mdadm and I need to add some new test to
-> the mdadm scope - to verify that it is working as desired.
-> Bash is not best choice for testing and in current form, our tests are not
-> friendly for developers. I would like to introduce another python based test
-> scope and add it to repository. I will integrate it with current framework.
->
-> I can see that currently test are not well used and they aren't often updated.
-> I want to bring new life to them. Adopting more modern approach seems to be good
-> start point.
-> Any thoughts?
->
-> Thanks in advance,
-> Mariusz
->
-
+-- 
+Kees Cook
