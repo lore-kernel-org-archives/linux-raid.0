@@ -2,124 +2,147 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08528C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 14:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87D66C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 15:13:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238725AbiEROlO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 18 May 2022 10:41:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42424 "EHLO
+        id S239208AbiERPNk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 18 May 2022 11:13:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238718AbiEROk6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 10:40:58 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CD6E21815
-        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 07:40:55 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d17so2008317plg.0
-        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 07:40:55 -0700 (PDT)
+        with ESMTP id S229496AbiERPNj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 11:13:39 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEE671DFDBF
+        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 08:13:37 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id bo5so2434175pfb.4
+        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 08:13:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=whW5AxATJkNaPhkcMwvHXExGnVFe5uKOgct6URQZl5g=;
-        b=CbGIorEmQCxYGxxT6P12ptGJmuJUMeLiDaJNEaORfJsQL6JEGQY5zafgphutTeIxCI
-         Ut1es3HQMvL0AP1lrqqCY3V49+KjOuy9b/sBKb6syi+deqJ+Y+CFS9H7rnA8YxN862co
-         Rd4xQhbA3oj+hZuLb/a7FALGlOGaJm0M20ZKA=
+        bh=R6GKon/CB8AHTG2BVleTAVkCbJAIy+Ec31rGL7OpKrA=;
+        b=ZsuolC/u6gVSVbsjl80xIx9d92sVwUDm1BDTXCnzgAFODiEOkChMaPBr7zQUMfYsht
+         SSH+xklDOFhrdNLYvsq0Y8M9re/iu2wBG9DbpNQVk4p8RpbiOaJJNrkyRR4wSiJDPbPH
+         V7V19n7NzwXmmsj8U31P/+1xRFdHTgxMOiSlw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=whW5AxATJkNaPhkcMwvHXExGnVFe5uKOgct6URQZl5g=;
-        b=TfllKFZpULkCz/NaAx1nGV13JR3aeBWmygFcUZcAavXhENMzCp3YS7i/0r6c562Cc9
-         JwfnVM+to8zb2ghRaXxtBd8MRsrqEEwt6/WkCnJfu3yrcjEmwZCZO5hEU1e2WqjikXdM
-         EPWgQZAcYO+HpUwtfGZQ2J+kLP3ZMExAAFWiRqpLF05t18dr4z0QzeDJlbnyRa5o0iix
-         5eBj7zwWBew5VJZiBc6wKI+LS+IGnN1r+Q06UrO9H6tNKcftk9xemY2DEZbeU12nYNm+
-         gKKemAGJNlS5rDj2Y/pPYmErj6jS4j5d80FqSfivFg6s/3Q8Rbw089Fp5AcHWIJhlwMz
-         MBDA==
-X-Gm-Message-State: AOAM533ZVRsMKOE7xut18ekksZkPjB4Kc6hLPHQk04BUQPT4fKUmEhMB
-        XAfF4jYEvReqEOzMg+JaEEr1Qg==
-X-Google-Smtp-Source: ABdhPJxi6BpB2w+x5UbiM0DcD5h4zJd4JLNDZl6PoiWtNEvkeQJsQKjoUIcCxjgfHjR+3VH6nDKcpg==
-X-Received: by 2002:a17:903:31d1:b0:159:804:e852 with SMTP id v17-20020a17090331d100b001590804e852mr27301661ple.19.1652884855095;
-        Wed, 18 May 2022 07:40:55 -0700 (PDT)
+        bh=R6GKon/CB8AHTG2BVleTAVkCbJAIy+Ec31rGL7OpKrA=;
+        b=AltD3fDCYFY2T3oTvhuq3rGl3g+GhvhgYZNPDCDXILNcbPxED1qIryW+e6kx4LvBDi
+         t4FpM4UgEnneReRSJyKlF371eSDW7jL50YnfXD0ZNvptlpYMNuW1lldfz5uz8kXxxnsZ
+         5d0yiKJRjs4jUh0KPgzn0xp/E0yOCVFkwGna+MWCzbFT0l9vvnFFPpeZIZt0TEKTb9lK
+         9F/gxaPEe0GGGuUKczUUNaA7nb90iCxwgvxsnB7zlBmpxiiVm3W+wslo4m7ytI7nQpg/
+         nEqx1fYWqYklS97D7qwDhg7JiNmJGQYs7uE20KvN5t+D33xl50GI86Tlo3RrFLopx0Cw
+         /bEQ==
+X-Gm-Message-State: AOAM531mgwhZ1piwJYDLbFIZylPZ7uHR9Fh6aSBwNVzPSSEKvaARuMvs
+        132FuGdjV/u3nvs/s9Qrfqsieg==
+X-Google-Smtp-Source: ABdhPJyFOeC90y1HStFFR+BKQhegBQbMZrwLsSMlHpm5O9PYUeML8M3eBG6IOYh/5ylSnQ2jWSXYFw==
+X-Received: by 2002:a65:4bc5:0:b0:3da:ec0c:c5f2 with SMTP id p5-20020a654bc5000000b003daec0cc5f2mr23770774pgr.221.1652886817386;
+        Wed, 18 May 2022 08:13:37 -0700 (PDT)
 Received: from localhost ([2620:15c:11a:202:a14:3166:4b67:b688])
-        by smtp.gmail.com with UTF8SMTPSA id j11-20020a17090ae60b00b001d95c09f877sm1642073pjy.35.2022.05.18.07.40.53
+        by smtp.gmail.com with UTF8SMTPSA id j128-20020a62c586000000b005182e39038csm1629435pfg.38.2022.05.18.08.13.36
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 May 2022 07:40:54 -0700 (PDT)
-Date:   Wed, 18 May 2022 07:40:52 -0700
+        Wed, 18 May 2022 08:13:36 -0700 (PDT)
+Date:   Wed, 18 May 2022 08:13:35 -0700
 From:   Matthias Kaehlcke <mka@chromium.org>
-To:     kernel test robot <lkp@intel.com>
+To:     Milan Broz <gmazyland@gmail.com>
 Cc:     Alasdair Kergon <agk@redhat.com>,
         Mike Snitzer <snitzer@kernel.org>,
         Kees Cook <keescook@chromium.org>,
         James Morris <jmorris@namei.org>,
-        "Serge E . Hallyn" <serge@hallyn.com>, kbuild-all@lists.01.org,
-        linux-security-module@vger.kernel.org, dm-devel@redhat.com,
+        "Serge E . Hallyn" <serge@hallyn.com>, dm-devel@redhat.com,
+        Douglas Anderson <dianders@chromium.org>,
         linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>,
-        Douglas Anderson <dianders@chromium.org>
-Subject: Re: [PATCH v4 2/3] LoadPin: Enable loading from trusted dm-verity
- devices
-Message-ID: <YoUFdBbwAvq71fQW@google.com>
-References: <20220517163437.v4.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
- <202205181616.3eTP2DaC-lkp@intel.com>
+        linux-security-module@vger.kernel.org
+Subject: Re: [dm-devel] [PATCH v4 1/3] dm: Add verity helpers for LoadPin
+Message-ID: <YoUNH7MrfEb844ft@google.com>
+References: <20220517233457.1123309-1-mka@chromium.org>
+ <20220517163437.v4.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
+ <19149028-ec94-8f64-aed4-1e58f29942a8@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <202205181616.3eTP2DaC-lkp@intel.com>
+In-Reply-To: <19149028-ec94-8f64-aed4-1e58f29942a8@gmail.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, May 18, 2022 at 04:58:06PM +0800, kernel test robot wrote:
-> Hi Matthias,
-> 
-> Thank you for the patch! Perhaps something to improve:
-> 
-> [auto build test WARNING on device-mapper-dm/for-next]
-> [also build test WARNING on song-md/md-next kees/for-next/pstore linus/master v5.18-rc7 next-20220517]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch]
-> 
-> url:    https://github.com/intel-lab-lkp/linux/commits/Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220518-073635
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
-> config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20220518/202205181616.3eTP2DaC-lkp@intel.com/config)
-> compiler: m68k-linux-gcc (GCC) 11.3.0
-> reproduce (this is a W=1 build):
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # https://github.com/intel-lab-lkp/linux/commit/755e5d82e4d054b2b58a54c94681080cc8cb4582
->         git remote add linux-review https://github.com/intel-lab-lkp/linux
->         git fetch --no-tags linux-review Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220518-073635
->         git checkout 755e5d82e4d054b2b58a54c94681080cc8cb4582
->         # save the config file
->         mkdir build_dir && cp config build_dir/.config
->         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash security/loadpin/
-> 
-> If you fix the issue, kindly add following tag as appropriate
-> Reported-by: kernel test robot <lkp@intel.com>
-> 
-> All warnings (new ones prefixed by >>):
-> 
->    In file included from security/loadpin/loadpin.c:21:
->    include/linux/dm-verity-loadpin.h:22:1: error: expected identifier or '(' before '{' token
->       22 | {
->          | ^
-> >> include/linux/dm-verity-loadpin.h:21:20: warning: 'dm_verity_loadpin_is_sb_trusted' used but never defined
->       21 | static inline bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
->          |                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> 
-> vim +/dm_verity_loadpin_is_sb_trusted +21 include/linux/dm-verity-loadpin.h
-> 
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17  17  
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17  18  #if IS_ENABLED(CONFIG_SECURITY_LOADPIN) && IS_BUILTIN(CONFIG_DM_VERITY)
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17  19  bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17  20  #else
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17 @21  static inline bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17 @22  {
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17  23  	return false;
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17  24  }
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17  25  #endif
-> afd03270f57b8c Matthias Kaehlcke 2022-05-17  26  
+Hi Milan,
 
-Oops, will fix
+On Wed, May 18, 2022 at 09:57:43AM +0200, Milan Broz wrote:
+> On 18/05/2022 01:34, Matthias Kaehlcke wrote:
+> > LoadPin limits loading of kernel modules, firmware and certain
+> > other files to a 'pinned' file system (typically a read-only
+> > rootfs). To provide more flexibility LoadPin is being extended
+> > to also allow loading these files from trusted dm-verity
+> > devices. For that purpose LoadPin can be provided with a list
+> > of verity root digests that it should consider as trusted.
+> > 
+> > Add a bunch of helpers to allow LoadPin to check whether a DM
+> > device is a trusted verity device. The new functions broadly
+> > fall in two categories: those that need access to verity
+> > internals (like the root digest), and the 'glue' between
+> > LoadPin and verity. The new file dm-verity-loadpin.c contains
+> > the glue functions.
+> > 
+> > Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> 
+> ...
+> 
+> > +
+> > +	if (dm_verity_get_root_digest(ti, &root_digest, &digest_size))
+> > +		return false;
+> 
+> Almost unrelated note, but as there are more and more situations
+> that checks verity root digest, shouldn't we export this as read-only
+> sysfs attribute for DM verity devices?
+> 
+> Attacker can always calculate (but not change) Merkle tree, so this
+> is not something that need to be hidden.
+> 
+> It would allow userspace to easily enumerate trusted DM devices without
+> calling kernel ioctls...
+
+I guess that's an option if there are scenarios where it is useful. It
+should probably be a separate patch, since it isn't directly related with
+extending LoadPin support to trusted verity devices.
+
+> > +
+> > +	table = dm_get_live_table(md, &srcu_idx);
+> > +
+> > +	if (dm_table_get_num_targets(table) != 1)
+> > +		goto out;
+> > +
+> > +	ti = dm_table_get_target(table, 0);
+> > +
+> > +	if (is_trusted_verity_target(ti))
+> > +		trusted = true;
+> 
+> What happens is someone reloads verity table later with
+> a different content (or even different target type)?
+> Does LoadPin even care here?
+
+LoadPin cares, but only when new kernel files are loaded. It will then check
+against the new verity table, and only allow loading of the file if it comes
+from a verity target with a trusted digest.
+
+> >   static struct target_type verity_target = {
+> >   	.name		= "verity",
+> >   	.version	= {1, 8, 0},
+> 
+> Please increase the minor version, it is very useful to detect (in logs)
+> that the target driver has compatible extensions.
+
+I can do that, but would like to confirm that this is really needed/desired.
+This patch adds kernel-internal APIs which aren't accessible to userspace,
+that don't impact verity directly, so I'm not sure an increased minor version
+would be useful.
+
+> I guess this change does not affect userspace veristysetup
+> (as it is used handled by different tooling), right?
+
+Correct, from the verity side this is effectively a NOP, the new
+kernel-internal APIs only provide information to LoadPin, but don't
+change any verity specific behavior.
