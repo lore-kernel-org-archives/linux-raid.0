@@ -2,101 +2,122 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A5DFC433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 10:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E75D8C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 12:48:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235188AbiERKvq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 18 May 2022 06:51:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35288 "EHLO
+        id S238499AbiERMrR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 18 May 2022 08:47:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235305AbiERKvo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 06:51:44 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2773517E5
-        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 03:51:40 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id y32so2911899lfa.6
-        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 03:51:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ANawzlUCoSJEuK6DLlpl9q1LujzNi0TzK2AIexWjEIQ=;
-        b=PIL0wu72MF+Z34c8dKJ9AjxihQ9l0e6Jr08xK1irgX49gPsCYspYE0t9dohzG5+aWF
-         r2pIxcMLY4nL3ypsFsHomIz+vPMdlhmc5SzpWOwwCIhxs2BhX4LAOaOBPOj7rKHygCF0
-         QAeANYaHlBJR1gwzDbudsGiZgaVvSD82/eYJYC3VqZRNLnG7jR01ffU8N0zfvV/54kvh
-         2iHcyUgSqkjvUnjqm/RF+7TQFKbeU0Pd5oXy9SdicsYMqlBijDrvaALpfGT4f/hrE4mI
-         EMOIGat0Rwefhv99Zr6GnAOdqO5ct406bpd0wF1F6ZqFzIBKbvJU24rUirhVjsUZQ98N
-         gv7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ANawzlUCoSJEuK6DLlpl9q1LujzNi0TzK2AIexWjEIQ=;
-        b=pvS+4zbh1mUzqHH+NKT7LpVhPLI9CDEoR91kjTfY3IOCl/8KtWiReTlQuDfCMyhxqf
-         mTOzkn1VNQtnQkUxBB6aUIXVU02IGQIUO6YBs/LTE4JAmLkQVMUaVUOS+Se2r5MVuYgF
-         UoLEsNIMixmY96tsTuJXF3B+ATKflvFwbNtvzcrpTgOA63XVXTrq1uBKHP+Oflm5+i/G
-         UjzZ+RFeFcFKpHMoqIKLv7gzhPNDR4VdeBB+pzutSty+o6EcWi5h65BhNVtGV3Sewy8h
-         ObmVRyAsM/tHlVTXt+qjeaYvZSNf71aPLddfIA/YjKZs1Fs7iy0MnAyTcz5mgE+5pMwk
-         daxA==
-X-Gm-Message-State: AOAM530AYh24lQY/SczV02dltg3ivdekhuQiAEiQZohywXz6WF1ZUBDu
-        RtkOMvSAUrt9SdObhnm/l5aOpcBQKDY7FNCYzEZHYrXnLJU=
-X-Google-Smtp-Source: ABdhPJxogee5hOXVQQhyXGJH+5Nkh5OW7+OV26lWyT0L47EB5mfBOe1yTOhRgzOPkR57Xg99s6PRIlcp6GamS53Aofk=
-X-Received: by 2002:a05:6512:20cc:b0:471:f6fb:dac9 with SMTP id
- u12-20020a05651220cc00b00471f6fbdac9mr19926931lfr.475.1652871098836; Wed, 18
- May 2022 03:51:38 -0700 (PDT)
+        with ESMTP id S237191AbiERMpt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 08:45:49 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92065E02;
+        Wed, 18 May 2022 05:42:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1652877731; x=1684413731;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=g12NRS8alSxAMdjIZ7FyL80YifoKRkRmio1kwZZ1BfQ=;
+  b=BfbxW1gcSO24QVRvo6ssEedhk1lu9c77zNq8gfdaTQaftojY2dtHhTg5
+   IaqToqJnFaI/aQDUiEt8GqiWXx9zF8a86UN8P0+bY066Scx8rAAO11bIn
+   Ql0EngWZneimo9rfH5MwestFV48oHE6ZbXmJLP9PfVFCX6LKDPfuESc4Z
+   wNJnP3eaB9k5Qt5DQ6TlMmtccHFvztTs7ZLNAMgPzQwZKdzEIQcXTos2+
+   RHPIR8s7ElhyoNuoeVldnab9W7OFaI7XbeOnvrysotcqJ2LUVCz1lpkca
+   r5lkKcVsU4xgaNbr/UFj64e1RCQ6/aW93cLhu0iioE3hrC7BntSAaIe1D
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10350"; a="332270387"
+X-IronPort-AV: E=Sophos;i="5.91,234,1647327600"; 
+   d="scan'208";a="332270387"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2022 05:41:37 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,234,1647327600"; 
+   d="scan'208";a="639243416"
+Received: from lkp-server02.sh.intel.com (HELO 242b25809ac7) ([10.239.97.151])
+  by fmsmga004.fm.intel.com with ESMTP; 18 May 2022 05:41:33 -0700
+Received: from kbuild by 242b25809ac7 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nrIzd-0002BR-4H;
+        Wed, 18 May 2022 12:41:33 +0000
+Date:   Wed, 18 May 2022 20:40:33 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Matthias Kaehlcke <mka@chromium.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        James Morris <jmorris@namei.org>,
+        "Serge E . Hallyn" <serge@hallyn.com>
+Cc:     kbuild-all@lists.01.org, linux-security-module@vger.kernel.org,
+        dm-devel@redhat.com, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Matthias Kaehlcke <mka@chromium.org>
+Subject: Re: [PATCH v4 2/3] LoadPin: Enable loading from trusted dm-verity
+ devices
+Message-ID: <202205182059.6QY3zspw-lkp@intel.com>
+References: <20220517163437.v4.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
 MIME-Version: 1.0
-References: <CAJH6TXh7cVHa+G1DaJwWSvgDaCOrYLP_Ppau8q6pk1V4dS3D_Q@mail.gmail.com>
- <Yn6BEym8s0kVLhD0@lazy.lzy> <994cb384-3782-dac2-898b-ea02816a904f@youngman.org.uk>
-In-Reply-To: <994cb384-3782-dac2-898b-ea02816a904f@youngman.org.uk>
-From:   Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Date:   Wed, 18 May 2022 12:51:27 +0200
-Message-ID: <CAJH6TXgKFCs+OTeZP5zV9D_19ymYQ+Gg2OXVpXBj7hFVkmnFeA@mail.gmail.com>
-Subject: Re: failed sector detected but disk still active ?
-To:     Wols Lists <antlists@youngman.org.uk>
-Cc:     Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
-        Linux RAID Mailing List <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220517163437.v4.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Il giorno sab 14 mag 2022 alle ore 15:46 Wols Lists
-<antlists@youngman.org.uk> ha scritto:
-> Correct. If the underlying disk returns an error, raid recovery kicks
-> in. The missing block is calculated, returned to the caller and written
-> back to the disk.
+Hi Matthias,
 
-but in this case i would expect md to log something somewhere,
-not a total silence.
+Thank you for the patch! Yet something to improve:
 
-> The error message is "critical medium error" - we have a real problem
-> with the disk I suspect.
->
-> FIRST run SMART on the disk and see what that reports. If that's not
-> happy, REPLACE THE DRIVE PRONTO.
->
-> If SMART is happy, run a raid scrub.
+[auto build test ERROR on device-mapper-dm/for-next]
+[also build test ERROR on song-md/md-next kees/for-next/pstore linus/master v5.18-rc7 next-20220517]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-When this happens, i'll replace drives ASAP, it doesn't matter if it's
-a transient failure or similar.
-A working disk, for me, is a disk that NEVER returns any kind of
-issue. Usually I replace disks even
-when there is a single recovered sector.
+url:    https://github.com/intel-lab-lkp/linux/commits/Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220518-073635
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
+config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20220518/202205182059.6QY3zspw-lkp@intel.com/config)
+compiler: m68k-linux-gcc (GCC) 11.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/755e5d82e4d054b2b58a54c94681080cc8cb4582
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220518-073635
+        git checkout 755e5d82e4d054b2b58a54c94681080cc8cb4582
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash security/
 
-> And whatever, if you haven't replaced the drive, start monitoring SMART.
-> If disk errors start climbing, that's a cause for concern and replacing
-> the drive.
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
 
-All disks are under smart monitoring with both short and long tests
-(weekly) and also weekly (or monthly?  I don't remember) md
-consistency check
+All errors (new ones prefixed by >>):
 
-Anyway, as our new servers has some free slots (we keep free slots
-with intentions) out replacements doesn't
-mean to remove the old drive (loosing part of redundancy) and then
-adding a new one, but we always use a replace:
-mdadm /dev/md0 --add /dev/NEW --replace /dev/OLD --with /dev/NEW
-it's MUCH safer, but what happens in case of /dev/OLD failure during
-the replacement ? the rebuild will be done reading from other drivers
-transparently ?
-And normally, reads are done FROM old in this case or from the full array ?
+   In file included from security/loadpin/loadpin.c:21:
+>> include/linux/dm-verity-loadpin.h:22:1: error: expected identifier or '(' before '{' token
+      22 | {
+         | ^
+   include/linux/dm-verity-loadpin.h:21:20: warning: 'dm_verity_loadpin_is_sb_trusted' used but never defined
+      21 | static inline bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
+         |                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+vim +22 include/linux/dm-verity-loadpin.h
+
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  17  
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  18  #if IS_ENABLED(CONFIG_SECURITY_LOADPIN) && IS_BUILTIN(CONFIG_DM_VERITY)
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  19  bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  20  #else
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  21  static inline bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
+afd03270f57b8c Matthias Kaehlcke 2022-05-17 @22  {
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  23  	return false;
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  24  }
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  25  #endif
+afd03270f57b8c Matthias Kaehlcke 2022-05-17  26  
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
