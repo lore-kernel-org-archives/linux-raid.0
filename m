@@ -2,67 +2,141 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62405C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 03:46:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF9EC433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 07:57:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbiERDql (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 17 May 2022 23:46:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60984 "EHLO
+        id S232787AbiERH5t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 18 May 2022 03:57:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229871AbiERDqi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 17 May 2022 23:46:38 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D74416386
-        for <linux-raid@vger.kernel.org>; Tue, 17 May 2022 20:46:30 -0700 (PDT)
-Received: from host86-156-102-78.range86-156.btcentralplus.com ([86.156.102.78] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1nrAak-0009S9-3w;
-        Wed, 18 May 2022 04:43:18 +0100
-Message-ID: <45059b25-63e1-fa4d-f24b-e9ae70f9c47c@youngman.org.uk>
-Date:   Wed, 18 May 2022 04:43:17 +0100
+        with ESMTP id S232769AbiERH5s (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 03:57:48 -0400
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ACCC118007;
+        Wed, 18 May 2022 00:57:47 -0700 (PDT)
+Received: by mail-ej1-x636.google.com with SMTP id i19so2126166eja.11;
+        Wed, 18 May 2022 00:57:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=7ktjmA9lbYY+r3k7Xl4dUBOmRn/WA+0dOC0w53gvyVI=;
+        b=X0zcqKITNYv1TLoj7hswq47oFfYJ7vnsmf3gLIsQ7si/uX69O69xbpuznQyl96N2KR
+         6xl+3NoBa6wa9trbSHLKUdcI/doQHK8unsfCuQHXKvz9oYTQKR+RV31uM75p30dYaQu8
+         EAkBrThXrZJusSX8iicfNV1vRQQnBc81rGVtDvJdIa5EITWBcbnKBsEtPPJ1jV3MD8bU
+         XQEp3gdMeslcQY8gcRFIY5A+LH35hlhCVRdPv3WIF06Kyfyzazkti9tdidslDYjaxYva
+         2L1uTNvWeoRBrq3ohGmn4BKzSLH4n6Xc3T7NX1v1HrUjgoTAglis9mleel6rzIWqN5E+
+         4edg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=7ktjmA9lbYY+r3k7Xl4dUBOmRn/WA+0dOC0w53gvyVI=;
+        b=LfsSVB0MEIMk7pGtSiEbvhsgkYxGwxroA7nFtmNUTPCrUYZsAgspKAafMrtaZ/iP1K
+         6DxVcp8r5otFu4It6GkKS3bNcAYBnrydrM/umiWB5Ey+PMZlCCNwECZwZy2xyas7K3xd
+         l+EO9b29QV9nNFb/hphQN9fjrd5ELCH4uzgJSC2wGqlXJ2ykLGuL1Rlk/ZfZuf04WX9G
+         allNgTLLHDW+W9osh5Tb7uk2IOX+/6f+BKdOuPa4zhHYowYgM7mD4czvnwHtDCFT++j4
+         ybV/+9cndx/G7R90gki46SK6Ez5qLcLMq9RHVAq9MPICeiYX2+EFQn/mX5sVpCjBbENB
+         S/Sg==
+X-Gm-Message-State: AOAM533SqgPGR5jV8Pq9nTs5HqM+lsiSBMpehxeaS4aGAqhIBpjDspeR
+        ceyrYaFmFwVP3XINjDZRNec=
+X-Google-Smtp-Source: ABdhPJztZ+He6oZQpf5QYU8EpE4w74uBqb8gCz5K0anlddF2ScBUceeYay5gmr2N6k7sTt2XgAqIxw==
+X-Received: by 2002:a17:907:7216:b0:6f4:70d4:a3c4 with SMTP id dr22-20020a170907721600b006f470d4a3c4mr22754545ejc.529.1652860665411;
+        Wed, 18 May 2022 00:57:45 -0700 (PDT)
+Received: from [192.168.2.27] (85-70-151-113.rcd.o2.cz. [85.70.151.113])
+        by smtp.gmail.com with ESMTPSA id ee46-20020a056402292e00b0042617ba63aesm928060edb.56.2022.05.18.00.57.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 May 2022 00:57:44 -0700 (PDT)
+Message-ID: <19149028-ec94-8f64-aed4-1e58f29942a8@gmail.com>
+Date:   Wed, 18 May 2022 09:57:43 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Subject: Re: failed sector detected but disk still active ?
-Content-Language: en-GB
-To:     Pascal Hambourg <pascal@plouf.fr.eu.org>
-Cc:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
-References: <CAJH6TXh7cVHa+G1DaJwWSvgDaCOrYLP_Ppau8q6pk1V4dS3D_Q@mail.gmail.com>
- <Yn6BEym8s0kVLhD0@lazy.lzy>
- <994cb384-3782-dac2-898b-ea02816a904f@youngman.org.uk>
- <056cdd2b-e7c7-d9dc-8e33-cb0727e70d42@plouf.fr.eu.org>
- <169db918-cdc1-e461-f484-058f41cbab87@youngman.org.uk>
- <5e0aea05-0159-a184-d5ea-dee176939b1c@plouf.fr.eu.org>
- <a58016bf-5bc2-4272-7250-33ef9b11b6b2@youngman.org.uk>
- <26b37f8d-7f6b-dc43-c494-6d4370365b27@plouf.fr.eu.org>
- <d95061c0-8332-7e70-9c53-282ecddda226@youngman.org.uk>
- <352b69a4-55dd-6c53-ae61-2506e09388f7@plouf.fr.eu.org>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <352b69a4-55dd-6c53-ae61-2506e09388f7@plouf.fr.eu.org>
+ Thunderbird/91.8.1
+Subject: Re: [dm-devel] [PATCH v4 1/3] dm: Add verity helpers for LoadPin
+Content-Language: en-US
+To:     Matthias Kaehlcke <mka@chromium.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        James Morris <jmorris@namei.org>,
+        "Serge E . Hallyn" <serge@hallyn.com>
+Cc:     dm-devel@redhat.com, Douglas Anderson <dianders@chromium.org>,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>,
+        linux-security-module@vger.kernel.org
+References: <20220517233457.1123309-1-mka@chromium.org>
+ <20220517163437.v4.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
+From:   Milan Broz <gmazyland@gmail.com>
+In-Reply-To: <20220517163437.v4.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 17/05/2022 22:27, Pascal Hambourg wrote:
-> Le 17/05/2022 à 21:00, Wol a écrit :
->> On 17/05/2022 15:57, Pascal Hambourg wrote:
->>> On the other hand, I have seen faulty drives report success on write 
->>> to an unreadable block then failing immediate read at the same location.
->>
->> That's exactly what I'd expect from a write (as opposed to a 
->> write-and-verify, they're not the same thing ... :-(
+On 18/05/2022 01:34, Matthias Kaehlcke wrote:
+> LoadPin limits loading of kernel modules, firmware and certain
+> other files to a 'pinned' file system (typically a read-only
+> rootfs). To provide more flexibility LoadPin is being extended
+> to also allow loading these files from trusted dm-verity
+> devices. For that purpose LoadPin can be provided with a list
+> of verity root digests that it should consider as trusted.
 > 
-> Even when the drive knows that a read of this block previously failed ?
-> On the contrary I would expect from a decent drive to verify after the 
-> write and to reallocate the block if the read still fails.
+> Add a bunch of helpers to allow LoadPin to check whether a DM
+> device is a trusted verity device. The new functions broadly
+> fall in two categories: those that need access to verity
+> internals (like the root digest), and the 'glue' between
+> LoadPin and verity. The new file dm-verity-loadpin.c contains
+> the glue functions.
+> 
+> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
 
-The drive knows, or the OS knows? Cheap drives won't remember, 
-Enterprise drives maybe. Unless the OS explicitly asks for a "write and 
-verify", it's unlikely to happen, and cheap drives probably won't even 
-recognise such a request.
+...
 
-Cheers,
-Wol
+> +
+> +	if (dm_verity_get_root_digest(ti, &root_digest, &digest_size))
+> +		return false;
+
+Almost unrelated note, but as there are more and more situations
+that checks verity root digest, shouldn't we export this as read-only
+sysfs attribute for DM verity devices?
+
+Attacker can always calculate (but not change) Merkle tree, so this
+is not something that need to be hidden.
+
+It would allow userspace to easily enumerate trusted DM devices without
+calling kernel ioctls...
+
+...
+
+> +
+> +	table = dm_get_live_table(md, &srcu_idx);
+> +
+> +	if (dm_table_get_num_targets(table) != 1)
+> +		goto out;
+> +
+> +	ti = dm_table_get_target(table, 0);
+> +
+> +	if (is_trusted_verity_target(ti))
+> +		trusted = true;
+
+What happens is someone reloads verity table later with
+a different content (or even different target type)?
+Does LoadPin even care here?
+
+...
+
+>   static struct target_type verity_target = {
+>   	.name		= "verity",
+>   	.version	= {1, 8, 0},
+
+Please increase the minor version, it is very useful to detect (in logs)
+that the target driver has compatible extensions.
+
+
+I guess this change does not affect userspace veristysetup
+(as it is used handled by different tooling), right?
+
+Thanks,
+Milan
