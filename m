@@ -2,71 +2,101 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8B85C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 10:46:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A5DFC433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 10:51:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235145AbiERKqN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 18 May 2022 06:46:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44082 "EHLO
+        id S235188AbiERKvq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 18 May 2022 06:51:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235188AbiERKqG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 06:46:06 -0400
-Received: from mallaury.nerim.net (smtp-103-wednesday.noc.nerim.net [178.132.17.103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 982756BFC0
-        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 03:46:01 -0700 (PDT)
-Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
-        by mallaury.nerim.net (Postfix) with ESMTP id 2C78ADB17C;
-        Wed, 18 May 2022 12:57:56 +0200 (CEST)
-Message-ID: <2a0092f6-f594-bbc3-cf9f-74ab10205ca3@plouf.fr.eu.org>
-Date:   Wed, 18 May 2022 12:45:51 +0200
+        with ESMTP id S235305AbiERKvo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 06:51:44 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2773517E5
+        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 03:51:40 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id y32so2911899lfa.6
+        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 03:51:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ANawzlUCoSJEuK6DLlpl9q1LujzNi0TzK2AIexWjEIQ=;
+        b=PIL0wu72MF+Z34c8dKJ9AjxihQ9l0e6Jr08xK1irgX49gPsCYspYE0t9dohzG5+aWF
+         r2pIxcMLY4nL3ypsFsHomIz+vPMdlhmc5SzpWOwwCIhxs2BhX4LAOaOBPOj7rKHygCF0
+         QAeANYaHlBJR1gwzDbudsGiZgaVvSD82/eYJYC3VqZRNLnG7jR01ffU8N0zfvV/54kvh
+         2iHcyUgSqkjvUnjqm/RF+7TQFKbeU0Pd5oXy9SdicsYMqlBijDrvaALpfGT4f/hrE4mI
+         EMOIGat0Rwefhv99Zr6GnAOdqO5ct406bpd0wF1F6ZqFzIBKbvJU24rUirhVjsUZQ98N
+         gv7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ANawzlUCoSJEuK6DLlpl9q1LujzNi0TzK2AIexWjEIQ=;
+        b=pvS+4zbh1mUzqHH+NKT7LpVhPLI9CDEoR91kjTfY3IOCl/8KtWiReTlQuDfCMyhxqf
+         mTOzkn1VNQtnQkUxBB6aUIXVU02IGQIUO6YBs/LTE4JAmLkQVMUaVUOS+Se2r5MVuYgF
+         UoLEsNIMixmY96tsTuJXF3B+ATKflvFwbNtvzcrpTgOA63XVXTrq1uBKHP+Oflm5+i/G
+         UjzZ+RFeFcFKpHMoqIKLv7gzhPNDR4VdeBB+pzutSty+o6EcWi5h65BhNVtGV3Sewy8h
+         ObmVRyAsM/tHlVTXt+qjeaYvZSNf71aPLddfIA/YjKZs1Fs7iy0MnAyTcz5mgE+5pMwk
+         daxA==
+X-Gm-Message-State: AOAM530AYh24lQY/SczV02dltg3ivdekhuQiAEiQZohywXz6WF1ZUBDu
+        RtkOMvSAUrt9SdObhnm/l5aOpcBQKDY7FNCYzEZHYrXnLJU=
+X-Google-Smtp-Source: ABdhPJxogee5hOXVQQhyXGJH+5Nkh5OW7+OV26lWyT0L47EB5mfBOe1yTOhRgzOPkR57Xg99s6PRIlcp6GamS53Aofk=
+X-Received: by 2002:a05:6512:20cc:b0:471:f6fb:dac9 with SMTP id
+ u12-20020a05651220cc00b00471f6fbdac9mr19926931lfr.475.1652871098836; Wed, 18
+ May 2022 03:51:38 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: failed sector detected but disk still active ?
-Content-Language: en-US
-To:     Wols Lists <antlists@youngman.org.uk>
-Cc:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
 References: <CAJH6TXh7cVHa+G1DaJwWSvgDaCOrYLP_Ppau8q6pk1V4dS3D_Q@mail.gmail.com>
- <Yn6BEym8s0kVLhD0@lazy.lzy>
- <994cb384-3782-dac2-898b-ea02816a904f@youngman.org.uk>
- <056cdd2b-e7c7-d9dc-8e33-cb0727e70d42@plouf.fr.eu.org>
- <169db918-cdc1-e461-f484-058f41cbab87@youngman.org.uk>
- <5e0aea05-0159-a184-d5ea-dee176939b1c@plouf.fr.eu.org>
- <a58016bf-5bc2-4272-7250-33ef9b11b6b2@youngman.org.uk>
- <26b37f8d-7f6b-dc43-c494-6d4370365b27@plouf.fr.eu.org>
- <d95061c0-8332-7e70-9c53-282ecddda226@youngman.org.uk>
- <352b69a4-55dd-6c53-ae61-2506e09388f7@plouf.fr.eu.org>
- <45059b25-63e1-fa4d-f24b-e9ae70f9c47c@youngman.org.uk>
-From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
-Organization: Plouf !
-In-Reply-To: <45059b25-63e1-fa4d-f24b-e9ae70f9c47c@youngman.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <Yn6BEym8s0kVLhD0@lazy.lzy> <994cb384-3782-dac2-898b-ea02816a904f@youngman.org.uk>
+In-Reply-To: <994cb384-3782-dac2-898b-ea02816a904f@youngman.org.uk>
+From:   Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Date:   Wed, 18 May 2022 12:51:27 +0200
+Message-ID: <CAJH6TXgKFCs+OTeZP5zV9D_19ymYQ+Gg2OXVpXBj7hFVkmnFeA@mail.gmail.com>
+Subject: Re: failed sector detected but disk still active ?
+To:     Wols Lists <antlists@youngman.org.uk>
+Cc:     Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
+        Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Le 18/05/2022 à 05:43, Wols Lists a écrit :
-> On 17/05/2022 22:27, Pascal Hambourg wrote:
->> Le 17/05/2022 à 21:00, Wol a écrit :
->>> On 17/05/2022 15:57, Pascal Hambourg wrote:
->>>> On the other hand, I have seen faulty drives report success on write 
->>>> to an unreadable block then failing immediate read at the same 
->>>> location.
->>>
->>> That's exactly what I'd expect from a write (as opposed to a 
->>> write-and-verify, they're not the same thing ... :-(
->>
->> Even when the drive knows that a read of this block previously failed ?
->> On the contrary I would expect from a decent drive to verify after the 
->> write and to reallocate the block if the read still fails.
-> 
-> The drive knows, or the OS knows? Cheap drives won't remember, 
+Il giorno sab 14 mag 2022 alle ore 15:46 Wols Lists
+<antlists@youngman.org.uk> ha scritto:
+> Correct. If the underlying disk returns an error, raid recovery kicks
+> in. The missing block is calculated, returned to the caller and written
+> back to the disk.
 
-The drive should know. It was the one which reported read failure to the 
-host, ran failed offline self-tests and increased the bad block count in 
-SMART attributes (Current_Pending_Sector, Offline_Uncorrectable).
+but in this case i would expect md to log something somewhere,
+not a total silence.
 
-Else how would it be able to decrease the bad block count in SMART 
-attributes after a successful write into a bad block if it doesn't 
-remember that the block was bad ?
+> The error message is "critical medium error" - we have a real problem
+> with the disk I suspect.
+>
+> FIRST run SMART on the disk and see what that reports. If that's not
+> happy, REPLACE THE DRIVE PRONTO.
+>
+> If SMART is happy, run a raid scrub.
+
+When this happens, i'll replace drives ASAP, it doesn't matter if it's
+a transient failure or similar.
+A working disk, for me, is a disk that NEVER returns any kind of
+issue. Usually I replace disks even
+when there is a single recovered sector.
+
+> And whatever, if you haven't replaced the drive, start monitoring SMART.
+> If disk errors start climbing, that's a cause for concern and replacing
+> the drive.
+
+All disks are under smart monitoring with both short and long tests
+(weekly) and also weekly (or monthly?  I don't remember) md
+consistency check
+
+Anyway, as our new servers has some free slots (we keep free slots
+with intentions) out replacements doesn't
+mean to remove the old drive (loosing part of redundancy) and then
+adding a new one, but we always use a replace:
+mdadm /dev/md0 --add /dev/NEW --replace /dev/OLD --with /dev/NEW
+it's MUCH safer, but what happens in case of /dev/OLD failure during
+the replacement ? the rebuild will be done reading from other drivers
+transparently ?
+And normally, reads are done FROM old in this case or from the full array ?
