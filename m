@@ -2,122 +2,71 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BE3C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 08:58:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8B85C433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 18 May 2022 10:46:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233678AbiERI6y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 18 May 2022 04:58:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34542 "EHLO
+        id S235145AbiERKqN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 18 May 2022 06:46:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233688AbiERI6x (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 04:58:53 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9025D13CA3B;
-        Wed, 18 May 2022 01:58:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652864327; x=1684400327;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=xR5ju/m+J7LrQ2NG96ZPR+tRwF+afBBK3BjNI5wn7n4=;
-  b=keH05FyVsuyBYS/g6Lkp6aZWjz8B0/3do5lA8Ha86hH7s0YZIYyU9u0A
-   LyjXqRwwzsz6/NVxB9ftqmwzB8egsIXGGfKY2czvH3u7p7E/z7A9aRu5J
-   FSsr3SKX9Qj4lHscOnAidR+SrC+pu6Pe7Or0TEXTS4sDpjnjs9msXos2T
-   EabAnVZ8ppm2rvzZVcqwfBlY7Sf7Onejazh3bJloGh5vq9VPZEZKgVpHY
-   KMOkKjtXOc9BXJkadKOskHg7deWL6tHkF8luGlZ2wK2UqgJegoIFFrhDc
-   xFK7IYuch6ZnqBxpEeyOoCoXSW4PiMGx6B7vBknqxcQYC9w+PLtOvBIOE
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10350"; a="334615033"
-X-IronPort-AV: E=Sophos;i="5.91,234,1647327600"; 
-   d="scan'208";a="334615033"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2022 01:58:28 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,234,1647327600"; 
-   d="scan'208";a="605789798"
-Received: from lkp-server02.sh.intel.com (HELO 242b25809ac7) ([10.239.97.151])
-  by orsmga001.jf.intel.com with ESMTP; 18 May 2022 01:58:25 -0700
-Received: from kbuild by 242b25809ac7 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nrFVh-0001zV-1B;
-        Wed, 18 May 2022 08:58:25 +0000
-Date:   Wed, 18 May 2022 16:58:06 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Matthias Kaehlcke <mka@chromium.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        James Morris <jmorris@namei.org>,
-        "Serge E . Hallyn" <serge@hallyn.com>
-Cc:     kbuild-all@lists.01.org, linux-security-module@vger.kernel.org,
-        dm-devel@redhat.com, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Matthias Kaehlcke <mka@chromium.org>
-Subject: Re: [PATCH v4 2/3] LoadPin: Enable loading from trusted dm-verity
- devices
-Message-ID: <202205181616.3eTP2DaC-lkp@intel.com>
-References: <20220517163437.v4.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
+        with ESMTP id S235188AbiERKqG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 May 2022 06:46:06 -0400
+Received: from mallaury.nerim.net (smtp-103-wednesday.noc.nerim.net [178.132.17.103])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 982756BFC0
+        for <linux-raid@vger.kernel.org>; Wed, 18 May 2022 03:46:01 -0700 (PDT)
+Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
+        by mallaury.nerim.net (Postfix) with ESMTP id 2C78ADB17C;
+        Wed, 18 May 2022 12:57:56 +0200 (CEST)
+Message-ID: <2a0092f6-f594-bbc3-cf9f-74ab10205ca3@plouf.fr.eu.org>
+Date:   Wed, 18 May 2022 12:45:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220517163437.v4.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: failed sector detected but disk still active ?
+Content-Language: en-US
+To:     Wols Lists <antlists@youngman.org.uk>
+Cc:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
+References: <CAJH6TXh7cVHa+G1DaJwWSvgDaCOrYLP_Ppau8q6pk1V4dS3D_Q@mail.gmail.com>
+ <Yn6BEym8s0kVLhD0@lazy.lzy>
+ <994cb384-3782-dac2-898b-ea02816a904f@youngman.org.uk>
+ <056cdd2b-e7c7-d9dc-8e33-cb0727e70d42@plouf.fr.eu.org>
+ <169db918-cdc1-e461-f484-058f41cbab87@youngman.org.uk>
+ <5e0aea05-0159-a184-d5ea-dee176939b1c@plouf.fr.eu.org>
+ <a58016bf-5bc2-4272-7250-33ef9b11b6b2@youngman.org.uk>
+ <26b37f8d-7f6b-dc43-c494-6d4370365b27@plouf.fr.eu.org>
+ <d95061c0-8332-7e70-9c53-282ecddda226@youngman.org.uk>
+ <352b69a4-55dd-6c53-ae61-2506e09388f7@plouf.fr.eu.org>
+ <45059b25-63e1-fa4d-f24b-e9ae70f9c47c@youngman.org.uk>
+From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
+Organization: Plouf !
+In-Reply-To: <45059b25-63e1-fa4d-f24b-e9ae70f9c47c@youngman.org.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Matthias,
+Le 18/05/2022 à 05:43, Wols Lists a écrit :
+> On 17/05/2022 22:27, Pascal Hambourg wrote:
+>> Le 17/05/2022 à 21:00, Wol a écrit :
+>>> On 17/05/2022 15:57, Pascal Hambourg wrote:
+>>>> On the other hand, I have seen faulty drives report success on write 
+>>>> to an unreadable block then failing immediate read at the same 
+>>>> location.
+>>>
+>>> That's exactly what I'd expect from a write (as opposed to a 
+>>> write-and-verify, they're not the same thing ... :-(
+>>
+>> Even when the drive knows that a read of this block previously failed ?
+>> On the contrary I would expect from a decent drive to verify after the 
+>> write and to reallocate the block if the read still fails.
+> 
+> The drive knows, or the OS knows? Cheap drives won't remember, 
 
-Thank you for the patch! Perhaps something to improve:
+The drive should know. It was the one which reported read failure to the 
+host, ran failed offline self-tests and increased the bad block count in 
+SMART attributes (Current_Pending_Sector, Offline_Uncorrectable).
 
-[auto build test WARNING on device-mapper-dm/for-next]
-[also build test WARNING on song-md/md-next kees/for-next/pstore linus/master v5.18-rc7 next-20220517]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220518-073635
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
-config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20220518/202205181616.3eTP2DaC-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 11.3.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/755e5d82e4d054b2b58a54c94681080cc8cb4582
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220518-073635
-        git checkout 755e5d82e4d054b2b58a54c94681080cc8cb4582
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash security/loadpin/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
-   In file included from security/loadpin/loadpin.c:21:
-   include/linux/dm-verity-loadpin.h:22:1: error: expected identifier or '(' before '{' token
-      22 | {
-         | ^
->> include/linux/dm-verity-loadpin.h:21:20: warning: 'dm_verity_loadpin_is_sb_trusted' used but never defined
-      21 | static inline bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
-         |                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-vim +/dm_verity_loadpin_is_sb_trusted +21 include/linux/dm-verity-loadpin.h
-
-afd03270f57b8c Matthias Kaehlcke 2022-05-17  17  
-afd03270f57b8c Matthias Kaehlcke 2022-05-17  18  #if IS_ENABLED(CONFIG_SECURITY_LOADPIN) && IS_BUILTIN(CONFIG_DM_VERITY)
-afd03270f57b8c Matthias Kaehlcke 2022-05-17  19  bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
-afd03270f57b8c Matthias Kaehlcke 2022-05-17  20  #else
-afd03270f57b8c Matthias Kaehlcke 2022-05-17 @21  static inline bool dm_verity_loadpin_is_sb_trusted(struct super_block *sb);
-afd03270f57b8c Matthias Kaehlcke 2022-05-17 @22  {
-afd03270f57b8c Matthias Kaehlcke 2022-05-17  23  	return false;
-afd03270f57b8c Matthias Kaehlcke 2022-05-17  24  }
-afd03270f57b8c Matthias Kaehlcke 2022-05-17  25  #endif
-afd03270f57b8c Matthias Kaehlcke 2022-05-17  26  
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Else how would it be able to decrease the bad block count in SMART 
+attributes after a successful write into a bad block if it doesn't 
+remember that the block was bad ?
