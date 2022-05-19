@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13B4CC433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 19 May 2022 19:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F23EC433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 19 May 2022 19:13:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244341AbiESTN1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 May 2022 15:13:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50000 "EHLO
+        id S229541AbiESTNd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 19 May 2022 15:13:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243697AbiESTNU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 May 2022 15:13:20 -0400
+        with ESMTP id S243841AbiESTNZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 May 2022 15:13:25 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E17D1AF1CD;
-        Thu, 19 May 2022 12:13:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACB14AF303;
+        Thu, 19 May 2022 12:13:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
-        :references:content-disposition:in-reply-to;
-        bh=MZeXC7bp8nJCmM9SY95bVbKQFzLlTbsMUaxfluhzO2Y=; b=RPIvY7qK8UKUvD7bTulAKZiK0d
-        ce2ZThn9g9TLUzlbITS7c+JtcTuZtGtbrLJEbtHJF3UubBKNIzs4kYCx/S/tIWsu2euBSkUIfAIdK
-        cYHblTEf+wARPXXWLnBqttcp/KwEUbpwcWrBi3kmPSd0zD8aT4iI8gxh48q0uGt1Bs68pZK/Qz5IT
-        wFA57fEuHP08DSsmENaeXqjyHZxfHQvQxQM4uGa4G4iIpjKDyDLwIli1a8mqZiyRVEPGj6CxkpTvj
-        bPWZ7lcfg0YUtdWel1udUIKnUXU/QC3rtAvf4dj3qTkWw/znUFv1dEAQh/vZn+2/ZeOWe6caFAPFJ
-        BpQcg80A==;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Cc:To:From:content-disposition;
+        bh=5THCuTuhB9Pg9vg5D4m+VHayGZUEXqzPFCngvBnB6Js=; b=iCRYgfCvxgb35jDAzhb0ZKLeUp
+        eO9+zkTgEkWF90tHMsTZ3SBgCV66LRy5bKlFi1FvqFiAE7K1vlZE3qTtYq94VJ4ftf21eCXpSmKKy
+        UV/ouRtTN+HCKxP/SKOAHHorYMV0Wj1B0/OUmQ6LxOnsSPoUCDXQd99OwtErGF3aPWKx5la7208Qk
+        bTFK7l+5au4Vo30j3CpEqQ+DdmI8hS8LkOo9uBcvRpfpEAohN5/k8X8qLCV8cpB0TqtFas1D6zVjb
+        cyjzb/3Q7/FYcd7V2N0u+dl0iJwJU+/2qoU0q4EJUniD7djBU9diTmIFVklNjlOSDrE2qgCWGBJCH
+        OhaiEdsA==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nrlaF-002TqQ-7D; Thu, 19 May 2022 13:13:15 -0600
+        id 1nrlaI-002TqR-Vm; Thu, 19 May 2022 13:13:19 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nrlaD-0004T9-0S; Thu, 19 May 2022 13:13:13 -0600
+        id 1nrlaF-0004Tx-Td; Thu, 19 May 2022 13:13:16 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -40,88 +40,81 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 19 May 2022 13:12:56 -0600
-Message-Id: <20220519191311.17119-1-logang@deltatee.com>
+Date:   Thu, 19 May 2022 13:13:10 -0600
+Message-Id: <20220519191311.17119-15-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220519191311.17119-1-logang@deltatee.com>
+References: <20220519191311.17119-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 00/15] Bug fixes for mdadm tests
+Subject: [PATCH v1 14/15] md: Ensure resync is reported after it starts
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+The 07layouts test in mdadm fails on some systems. The failure
+presents itself as the backup file not being removed before the next
+layout is grown into:
 
-This series includes fixes to fix all the kernel panics in the mdadm
-tests and some, related, sparse issues. The first 10 patches
-clean refactor the raid5-cache code so that the RCU usage of conf->log
-can be cleaned up which is done in patches 11 and 12 -- fixing some
-actual kernel NULL pointer dereference crashes in the mdadm test.
+  mdadm: /dev/md0: cannot create backup file /tmp/md-test-backup:
+      File exists
 
-Patch 13 fixes some of the remaining sparse warnings that are just
-missing __rcu annotations.
+This is because the background mdadm process, which is responsible for
+cleaning up this backup file gets into an infinite loop waiting for
+the reshape to start. mdadm checks the mdstat file if a reshape is
+going and, if it is not, it waits for an event on the file or times
+out in 5 seconds. On faster machines, the reshape may complete before
+the 5 seconds times out, and thus the background mdadm process loops
+waiting for a reshape to start that has already occurred.
 
-Patches 14 and 15 fix a couple additional hangs in an mdadm test.
+mdadm reads the mdstat file to start, but mdstat does not report that the
+reshape has begun, even though it has indeed begun. So the mdstat_wait()
+call (in mdadm) which polls on the mdstat file won't ever return until
+timing out.
 
-This series also originally included a patch[1] to fix the
-mddev->private=NULL issue in raid0. That bug caused an mdadm tests to
-crash, but it seems Xiao beat me to the fix by a few days. Hopefully,
-this work to improve mdadm tests will mean these types of bugs will
-be caught much sooner, before merging.
+The reason mdstat reports the reshape has started is due to an issue
+in status_resync(). recovery_active is subtracted from curr_resync which
+will result in a value of zero for the first chunk of reshaped data, and
+the resulting read will report no reshape in progress.
 
-This series will be followed by another series for mdadm which fixes
-the segfaults and annotates some failing tests to make mdadm tests
-runnable fairly reliably, but I'll wait for a stable hash for this
-series to note the kernel version tested against. Following that,
-v3 of my lock contention series will be sent with more confidence
-of its correctness.
+To fix this, if "resync - recovery_active" is zero: force the value to
+be 4 so the code reports a resync in progress.
 
-This series is based on the current md/md-next branch as of today
-(6ad84d559b8c). A git branch is available here:
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/md/md.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-  https://github.com/sbates130272/linux-p2pmem md-bug
-
-Thanks,
-
-Logan
-
-[1] https://github.com/sbates130272/linux-p2pmem/commit/5a538f9f48d77cba111773759256bbc3ccaaa74a
-
---
-
-Logan Gunthorpe (15):
-  md/raid5-log: Drop extern decorators for function prototypes
-  md/raid5-cache: Refactor r5c_is_writeback() to take a struct r5conf
-  md/raid5-cache: Refactor r5l_start() to take a struct r5conf
-  md/raid5-cache: Refactor r5l_flush_stripe_to_raid() to take a struct
-    r5conf
-  md/raid5-cache: Refactor r5l_wake_reclaim() to take a struct r5conf
-  md/raid5-cache: Refactor remaining functions to take a r5conf
-  md/raid5-ppl: Drop unused argument from ppl_handle_flush_request()
-  md/raid5-cache: Pass the log through to r5c_finish_cache_stripe()
-  md/raid5-cache: Don't pass conf to r5c_calculate_new_cp()
-  md/raid5-cache: Take struct r5l_log in
-    r5c_log_required_to_flush_cache()
-  md/raid5: Ensure array is suspended for calls to log_exit()
-  md/raid5-cache: Add RCU protection to conf->log accesses
-  md/raid5-cache: Annotate pslot with __rcu notation
-  md: Ensure resync is reported after it starts
-  md: Notify sysfs sync_completed in md_reap_sync_thread()
-
- drivers/md/md.c          |  13 ++-
- drivers/md/raid5-cache.c | 240 ++++++++++++++++++++++++---------------
- drivers/md/raid5-log.h   | 103 ++++++++---------
- drivers/md/raid5-ppl.c   |   2 +-
- drivers/md/raid5.c       |  50 ++++----
- drivers/md/raid5.h       |   2 +-
- 6 files changed, 231 insertions(+), 179 deletions(-)
-
-
-base-commit: 6ad84d559b8cbce9ab27a3a2658c438de867c98e
---
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8273ac5eef06..dbac63c8e35c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8022,10 +8022,18 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
+ 		if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
+ 			/* Still cleaning up */
+ 			resync = max_sectors;
+-	} else if (resync > max_sectors)
++	} else if (resync > max_sectors) {
+ 		resync = max_sectors;
+-	else
++	} else {
+ 		resync -= atomic_read(&mddev->recovery_active);
++		if (!resync) {
++			/*
++			 * Resync has started, but if it's zero, ensure
++			 * it is still reported, by forcing it to be 4
++			 */
++			resync = 4;
++		}
++	}
+ 
+ 	if (resync == 0) {
+ 		if (test_bit(MD_RESYNCING_REMOTE, &mddev->recovery)) {
+-- 
 2.30.2
+
