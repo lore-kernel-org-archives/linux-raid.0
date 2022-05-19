@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 047ECC433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 19 May 2022 19:13:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61E26C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 19 May 2022 19:13:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244459AbiESTNw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 May 2022 15:13:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50180 "EHLO
+        id S244477AbiESTNz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 19 May 2022 15:13:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244356AbiESTNc (ORCPT
+        with ESMTP id S244361AbiESTNc (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 19 May 2022 15:13:32 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C36BEAFAE0;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2161AFAFF;
         Thu, 19 May 2022 12:13:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=2izbHAVLxjfIQ4nE7KtVx0G/LeLm4sP4jvs3tHEwwQg=; b=PucUE0jySTymemwY6c2oM8PZx1
-        10kjD92u46Ja4+evLsSLs1AqLuFsS13QtmhPjUF0u0i6ykVCtqpv4wILC6p9yngE9PbfJFcj9KNAd
-        BhekV83goq0zE9u+cZsM2DTgS1X9fScOJRWw9iHRGkkV38SDuyG/XS8zNe8awUUpH7Vwl9QuAH4Mk
-        Gam4tIumx0JXDk//8+z8xy4b8EMVPUX3h4pUwSJJTvw0pkneONHE6CNXq4TPRz2K43PmNMuwRhQgo
-        HO7X2JzjkQ3KTfLxBthZ1E+9+2Y68oUpfAiePGlg6tQzZGd7F4WlcDE0+8hrbk3kVhTdrVaTfWiDY
-        a/4iGuZw==;
+        bh=sNKnIXj1F99BWmAuKphO7iWl5/fjaKRJgwoKkBx/fsU=; b=s042EOGCpFhBjVHWWx2KCatEzu
+        JMnDribYZ0yf1UnS90S/uOABFusCf7Cuvv4puWqnLQes69nYjz7bRSExeZl6VxfMMj76xUycXhNng
+        15CdiHPnS6caOX4UENBfW6zB9E9RCjNa+v4W8WjQKfFWdgnco+OTL+fSIm4zlylxE81Nn06dn+/sj
+        LAqm7QMXFT774JNB91FMNXGV+14a7lblOwMUAmQQ12Ifd06gr3Zl20ZCLy48YZCg/nBVE4S+xkldZ
+        fSa8y+dMMwQByZfmRu7tiUPOcq4XyJzBpUEThJTYtfG0IZEtLlcQd84MjQsZVV8GEwwg1Fwxq57/q
+        djq09OAA==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nrlaK-002TqS-0O; Thu, 19 May 2022 13:13:22 -0600
+        id 1nrlaI-002TqT-9E; Thu, 19 May 2022 13:13:18 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nrlaE-0004TU-8x; Thu, 19 May 2022 13:13:14 -0600
+        id 1nrlaG-0004UD-76; Thu, 19 May 2022 13:13:16 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -40,8 +40,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 19 May 2022 13:13:03 -0600
-Message-Id: <20220519191311.17119-8-logang@deltatee.com>
+Date:   Thu, 19 May 2022 13:13:11 -0600
+Message-Id: <20220519191311.17119-16-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220519191311.17119-1-logang@deltatee.com>
 References: <20220519191311.17119-1-logang@deltatee.com>
@@ -50,61 +50,47 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 07/15] md/raid5-ppl: Drop unused argument from ppl_handle_flush_request()
+Subject: [PATCH v1 15/15] md: Notify sysfs sync_completed in md_reap_sync_thread()
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-ppl_handle_flush_request() takes an struct r5log argument but doesn't
-use it. It has no buisiness taking this argument as it is only used
-by raid5-cache and has no way to derference it anyway. Remove
-the argument.
+The mdadm test 07layouts randomly produces a kernel hung task deadlock.
+The deadlock is caused by the suspend_lo/suspend_hi files being set by
+the mdadm background process during reshape and not being cleared
+because the process hangs. (Leaving aside the issue of the fragility of
+freezing kernel tasks by buggy userspace processes...)
 
-No functional changes intended.
+When the background mdadm process hangs it, is waiting (without a
+timeout) on a change to the sync_completed file signalling that the
+reshape has completed. The process is woken up a couple times when
+the reshape finishes but it is woken up before MD_RECOVERY_RUNNING
+is cleared so sync_completed_show() reports 0 instead of "none.
+
+To fix this, notify the sysfs file in md_reap_sync_thread() after
+MD_RECOVERY_RUNNING has been cleared. This wakes up mdadm and causes
+it to continue and write to suspend_lo/suspend_hi to allow IO to
+continue.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/md/raid5-log.h | 4 ++--
- drivers/md/raid5-ppl.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/md/md.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-index ccfbf8814753..f26e6f4c7f9a 100644
---- a/drivers/md/raid5-log.h
-+++ b/drivers/md/raid5-log.h
-@@ -41,7 +41,7 @@ void ppl_write_stripe_run(struct r5conf *conf);
- void ppl_stripe_write_finished(struct stripe_head *sh);
- int ppl_modify_log(struct r5conf *conf, struct md_rdev *rdev, bool add);
- void ppl_quiesce(struct r5conf *conf, int quiesce);
--int ppl_handle_flush_request(struct r5l_log *log, struct bio *bio);
-+int ppl_handle_flush_request(struct bio *bio);
- extern struct md_sysfs_entry ppl_write_hint;
- 
- static inline bool raid5_has_log(struct r5conf *conf)
-@@ -108,7 +108,7 @@ static inline int log_handle_flush_request(struct r5conf *conf, struct bio *bio)
- 	if (conf->log)
- 		ret = r5l_handle_flush_request(conf, bio);
- 	else if (raid5_has_ppl(conf))
--		ret = ppl_handle_flush_request(conf->log, bio);
-+		ret = ppl_handle_flush_request(bio);
- 
- 	return ret;
- }
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index 973e2e06f19c..4f5bdb4cad2b 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -679,7 +679,7 @@ void ppl_quiesce(struct r5conf *conf, int quiesce)
- 	}
- }
- 
--int ppl_handle_flush_request(struct r5l_log *log, struct bio *bio)
-+int ppl_handle_flush_request(struct bio *bio)
- {
- 	if (bio->bi_iter.bi_size == 0) {
- 		bio_endio(bio);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index dbac63c8e35c..54108de46679 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9478,6 +9478,7 @@ void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held)
+ 	wake_up(&resync_wait);
+ 	/* flag recovery needed just to double check */
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	md_new_event();
+ 	if (mddev->event_work.func)
 -- 
 2.30.2
 
