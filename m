@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61602C433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 19 May 2022 19:13:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45A44C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 19 May 2022 19:13:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244373AbiESTNh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 May 2022 15:13:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50064 "EHLO
+        id S244386AbiESTNo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 19 May 2022 15:13:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243859AbiESTNZ (ORCPT
+        with ESMTP id S244328AbiESTNZ (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 19 May 2022 15:13:25 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9622AF1CD;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9C69AF1DF;
         Thu, 19 May 2022 12:13:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=XFZ9qtK6EIxz7zKswynAOMRF6eMeASTio7x7BlsXzf0=; b=ktMMl/fI83AHwrpwmEFpJSQUvD
-        qZnKgzfKCccgJbH2rJUCPGzSkpyFoe8ekA+4efdpAUkUgnwy0LFDlUlW1QL7sq54ap+lzMuctOFfr
-        1GVcM1ZOK45WQFdPC4m5V/utPR7hUrKs9N9jowpwHzKj41hCnuT+iiyX1LCUo1tpokQsYvR2rxMsk
-        n2g3HApQRi0rr9gk3HCaMsC7phMYrCMX6vJI0FPs6FUUgZFIdUyMoPih7uITyUwUxfPg7Fe+8ln3Z
-        GaWbKQS/QUJG4fMuVFLpGciGVDHi8FV7vt+wZzvR0gzFSo+7LOnJVbP/XyBq4KXW1kE42leknWd7I
-        HZQs2UVQ==;
+        bh=jpnVmJs1KfzZmF3zwWdAWzAxHHjPyHXS6ik10MBhG+A=; b=PIfym8rnKlEZJ4wOsJxYgvHPRj
+        Pw0ovd8XddoS/VUgjOQO9+2I06h0d8AvXWExgV+aWUyigrUt8Ot613BVCJUHFh50jT4guweXddWpR
+        JcGBwrphW9EmqMIOuHMZQ8qL6icNtP2gnDClzUmisVWHCaRP3NokuWbErY5Ppc34Z9NsWqRh7RRgF
+        V2+UQpYvkDSF4k7kf+gy7njuRodsGwY3cxPwpPpe9TdWiKEFb0qxW2aUY66vgw+PARSL/NZbtixgs
+        fG95PWOn1YcoFVXgrvBpmYisH8AZ2yE0vO0nR89GUvomhmVJAk3oSTczS+HBmT1EcaM3y1yV63H84
+        iLCRq8lg==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nrlaJ-002TqR-WF; Thu, 19 May 2022 13:13:21 -0600
+        id 1nrlaG-002TqU-58; Thu, 19 May 2022 13:13:18 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nrlaE-0004TR-3I; Thu, 19 May 2022 13:13:14 -0600
+        id 1nrlaF-0004Tl-5s; Thu, 19 May 2022 13:13:15 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -40,8 +40,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 19 May 2022 13:13:02 -0600
-Message-Id: <20220519191311.17119-7-logang@deltatee.com>
+Date:   Thu, 19 May 2022 13:13:07 -0600
+Message-Id: <20220519191311.17119-12-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220519191311.17119-1-logang@deltatee.com>
 References: <20220519191311.17119-1-logang@deltatee.com>
@@ -50,158 +50,72 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 06/15] md/raid5-cache: Refactor remaining functions to take a r5conf
+Subject: [PATCH v1 11/15] md/raid5: Ensure array is suspended for calls to log_exit()
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Many of the interface functions dereference conf->log in inline
-helpers in raid5-log.h. Refactor all off these to dereference
-conf->log inside the function instead. This will help to fix the
-rcu locking when accessing conf->log.
+The raid5-cache code relies on there being no IO in flight when
+log_exit() is called. There are two places where this is not
+guaranteed so add mddev_suspend() and mddev_resume() calls to these
+sites.
 
-No functional changes intended.
+The site in raid5_remove_disk() has a comment saying that it is
+called in raid5d and thus cannot wait for pending writes; however that
+does not appear to be correct anymore (if it ever was) as
+raid5_remove_disk() is called from hot_remove_disk() which only
+appears to be called in the md_ioctl(). Thus, the comment is removed,
+as well as the racy check and replaced with calls to suspend/resume.
+
+The site in raid5_change_consistency_policy() is in the error path,
+and another similar call site already has suspend/resume calls just
+below it; so it should be equally safe to make that change here.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/md/raid5-cache.c | 18 +++++++++++-------
- drivers/md/raid5-log.h   | 20 ++++++++++----------
- 2 files changed, 21 insertions(+), 17 deletions(-)
+ drivers/md/raid5.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 735666f9d793..cddc2c37d2c5 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1004,9 +1004,9 @@ static inline void r5l_add_no_space_stripe(struct r5l_log *log,
-  * running in raid5d, where reclaim could wait for raid5d too (when it flushes
-  * data from log to raid disks), so we shouldn't wait for reclaim here
-  */
--int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
-+int r5l_write_stripe(struct r5conf *conf, struct stripe_head *sh)
- {
--	struct r5conf *conf = sh->raid_conf;
-+	struct r5l_log *log = conf->log;
- 	int write_disks = 0;
- 	int data_pages, parity_pages;
- 	int reserve;
-@@ -1102,8 +1102,9 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- 	return 0;
- }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 09e768f2d32c..37fe2af77c93 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7938,18 +7938,9 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
  
--void r5l_write_stripe_run(struct r5l_log *log)
-+void r5l_write_stripe_run(struct r5conf *conf)
- {
-+	struct r5l_log *log = conf->log;
- 	if (!log)
- 		return;
- 	mutex_lock(&log->io_mutex);
-@@ -1111,8 +1112,10 @@ void r5l_write_stripe_run(struct r5l_log *log)
- 	mutex_unlock(&log->io_mutex);
- }
- 
--int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
-+int r5l_handle_flush_request(struct r5conf *conf, struct bio *bio)
- {
-+	struct r5l_log *log = conf->log;
-+
- 	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH) {
- 		/*
- 		 * in write through (journal only)
-@@ -1580,8 +1583,9 @@ void r5l_wake_reclaim(struct r5conf *conf, sector_t space)
- 	__r5l_wake_reclaim(conf->log, space);
- }
- 
--void r5l_quiesce(struct r5l_log *log, int quiesce)
-+void r5l_quiesce(struct r5conf *conf, int quiesce)
- {
-+	struct r5l_log *log = conf->log;
- 	struct mddev *mddev;
- 
- 	if (quiesce) {
-@@ -2890,9 +2894,9 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 		set_bit(STRIPE_HANDLE, &sh->state);
- }
- 
--int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh)
-+int r5c_cache_data(struct r5conf *conf, struct stripe_head *sh)
- {
--	struct r5conf *conf = sh->raid_conf;
-+	struct r5l_log *log = conf->log;
- 	int pages = 0;
- 	int reserve;
- 	int i;
-diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-index 3dd59dd4257f..ccfbf8814753 100644
---- a/drivers/md/raid5-log.h
-+++ b/drivers/md/raid5-log.h
-@@ -4,12 +4,12 @@
- 
- int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev);
- void r5l_exit_log(struct r5conf *conf);
--int r5l_write_stripe(struct r5l_log *log, struct stripe_head *head_sh);
--void r5l_write_stripe_run(struct r5l_log *log);
-+int r5l_write_stripe(struct r5conf *conf, struct stripe_head *head_sh);
-+void r5l_write_stripe_run(struct r5conf *conf);
- void r5l_flush_stripe_to_raid(struct r5conf *conf);
- void r5l_stripe_write_finished(struct stripe_head *sh);
--int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio);
--void r5l_quiesce(struct r5l_log *log, int quiesce);
-+int r5l_handle_flush_request(struct r5conf *conf, struct bio *bio);
-+void r5l_quiesce(struct r5conf *conf, int quiesce);
- bool r5l_log_disk_error(struct r5conf *conf);
- bool r5c_is_writeback(struct r5conf *conf);
- int r5c_try_caching_write(struct r5conf *conf, struct stripe_head *sh,
-@@ -21,7 +21,7 @@ void r5c_use_extra_page(struct stripe_head *sh);
- void r5l_wake_reclaim(struct r5conf *conf, sector_t space);
- void r5c_handle_cached_data_endio(struct r5conf *conf,
- 				  struct stripe_head *sh, int disks);
--int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh);
-+int r5c_cache_data(struct r5conf *conf, struct stripe_head *sh);
- void r5c_make_stripe_write_out(struct stripe_head *sh);
- void r5c_flush_cache(struct r5conf *conf, int num);
- void r5c_check_stripe_cache_usage(struct r5conf *conf);
-@@ -63,10 +63,10 @@ static inline int log_stripe(struct stripe_head *sh, struct stripe_head_state *s
- 			/* writing out phase */
- 			if (s->waiting_extra_page)
- 				return 0;
--			return r5l_write_stripe(conf->log, sh);
-+			return r5l_write_stripe(conf, sh);
- 		} else if (test_bit(STRIPE_LOG_TRAPPED, &sh->state)) {
- 			/* caching phase */
--			return r5c_cache_data(conf->log, sh);
-+			return r5c_cache_data(conf, sh);
- 		}
- 	} else if (raid5_has_ppl(conf)) {
- 		return ppl_write_stripe(conf, sh);
-@@ -88,7 +88,7 @@ static inline void log_stripe_write_finished(struct stripe_head *sh)
- static inline void log_write_stripe_run(struct r5conf *conf)
- {
- 	if (conf->log)
--		r5l_write_stripe_run(conf->log);
-+		r5l_write_stripe_run(conf);
- 	else if (raid5_has_ppl(conf))
- 		ppl_write_stripe_run(conf);
- }
-@@ -106,7 +106,7 @@ static inline int log_handle_flush_request(struct r5conf *conf, struct bio *bio)
- 	int ret = -ENODEV;
- 
- 	if (conf->log)
--		ret = r5l_handle_flush_request(conf->log, bio);
-+		ret = r5l_handle_flush_request(conf, bio);
- 	else if (raid5_has_ppl(conf))
- 		ret = ppl_handle_flush_request(conf->log, bio);
- 
-@@ -116,7 +116,7 @@ static inline int log_handle_flush_request(struct r5conf *conf, struct bio *bio)
- static inline void log_quiesce(struct r5conf *conf, int quiesce)
- {
- 	if (conf->log)
--		r5l_quiesce(conf->log, quiesce);
-+		r5l_quiesce(conf, quiesce);
- 	else if (raid5_has_ppl(conf))
- 		ppl_quiesce(conf, quiesce);
- }
+ 	print_raid5_conf(conf);
+ 	if (test_bit(Journal, &rdev->flags) && conf->log) {
+-		/*
+-		 * we can't wait pending write here, as this is called in
+-		 * raid5d, wait will deadlock.
+-		 * neilb: there is no locking about new writes here,
+-		 * so this cannot be safe.
+-		 */
+-		if (atomic_read(&conf->active_stripes) ||
+-		    atomic_read(&conf->r5c_cached_full_stripes) ||
+-		    atomic_read(&conf->r5c_cached_partial_stripes)) {
+-			return -EBUSY;
+-		}
++		mddev_suspend(mddev);
+ 		log_exit(conf);
++		mddev_resume(mddev);
+ 		return 0;
+ 	}
+ 	if (rdev == rcu_access_pointer(p->rdev))
+@@ -8697,8 +8688,11 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
+ 			err = log_init(conf, NULL, true);
+ 			if (!err) {
+ 				err = resize_stripes(conf, conf->pool_size);
+-				if (err)
++				if (err) {
++					mddev_suspend(mddev);
+ 					log_exit(conf);
++					mddev_resume(mddev);
++				}
+ 			}
+ 		} else
+ 			err = -EINVAL;
 -- 
 2.30.2
 
