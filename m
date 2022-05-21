@@ -2,31 +2,31 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10659C433EF
-	for <linux-raid@archiver.kernel.org>; Sat, 21 May 2022 11:44:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F36A4C433F5
+	for <linux-raid@archiver.kernel.org>; Sat, 21 May 2022 11:50:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350067AbiEULoF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 21 May 2022 07:44:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60736 "EHLO
+        id S241868AbiEULuv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 21 May 2022 07:50:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349960AbiEULoE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 21 May 2022 07:44:04 -0400
+        with ESMTP id S231287AbiEULuu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 21 May 2022 07:50:50 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28CE75717D;
-        Sat, 21 May 2022 04:44:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57B742623;
+        Sat, 21 May 2022 04:50:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=ZXTWu5ySCQTyau6WRyQYBo6gOg
-        197NfPsQGq5285W+0zZdI+Vos8S3ig1Jdok+QF3Tjvg+ltfU6fTZpIHM2n7MMxeRQCLze/5pFfa+T
-        ggU0sgfAcUDHGJdsHAW0GheARy800Gb+NUqCPuWd3rVlTt+VDGT+qGF05HVh+5XXXau/Z0arNGdqu
-        z72Hz1UywP1WwpUuaiUOlo5DWS2kWGmid+51hTAQqgP/m7IxxE0DzZ1tV3lzid6C2jum3Ny8pBU5g
-        XaZnLV3tiYJ4iLCW3WkXIucus4/F5LfmMDvNMpu4US/u7kzG7wCkxCP82UJoIbP4SA6Ne9Kha86NA
-        iVSwrFgA==;
+        bh=tBqF11f/Pfve6vYK0C0UtDJ8LKpLRNRFFTC1tti/yvg=; b=SIqzWV1jH6xPkrVylOZRnT+8Qo
+        DS+qxc+ERhJafqUYNtPfZIxjhyCWjNNdT90BA84b6dkL2QADh5RaV1o/B3jeRjoTV4QXyAK1+9I5B
+        8rnUWXqAMLATy4VGC8HC0nrpyJ7zcBCDBdLUt4ElDjm9rlc1XRgnoE5OVgkBYi1WRNyKGXsMQj+3k
+        gzD7V72w76BQt/0tpC+QKrtCKyl5i+4qzBcqgX/ttUE1894rUDBGxfBE3ds5yAT2g8+yXHDcTJ2De
+        MdXy/wu0c0GjuwQ5zT8YC195j1gGwJPxNzqxlDzSAoMS/NLnUNlhvL8RYiGnHrAjeQDhv5EHzNDRZ
+        IhMo51KA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nsNWd-00GQGw-IW; Sat, 21 May 2022 11:44:03 +0000
-Date:   Sat, 21 May 2022 04:44:03 -0700
+        id 1nsNd9-00GQpP-5S; Sat, 21 May 2022 11:50:47 +0000
+Date:   Sat, 21 May 2022 04:50:47 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
@@ -36,20 +36,88 @@ Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH v1 11/15] md/raid5: Ensure array is suspended for calls
- to log_exit()
-Message-ID: <YojQg66T2oKHDV9m@infradead.org>
+Subject: Re: [PATCH v1 12/15] md/raid5-cache: Add RCU protection to conf->log
+ accesses
+Message-ID: <YojSF1CYN4Irv8XD@infradead.org>
 References: <20220519191311.17119-1-logang@deltatee.com>
- <20220519191311.17119-12-logang@deltatee.com>
+ <20220519191311.17119-13-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220519191311.17119-12-logang@deltatee.com>
+In-Reply-To: <20220519191311.17119-13-logang@deltatee.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Looks good:
+On Thu, May 19, 2022 at 01:13:08PM -0600, Logan Gunthorpe wrote:
+> The mdadm test 21raid5cache randomly fails with NULL pointer accesses
+> conf->log when run repeatedly. conf->log was sort of protected with
+> a RCU, but most dereferences were not done with the correct functions.
+> 
+> Add rcu_read_locks() and rcu_access_pointers() to the appropriate
+> places.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
+>  drivers/md/raid5-cache.c | 135 +++++++++++++++++++++++++++------------
+>  drivers/md/raid5-log.h   |  14 ++--
+>  drivers/md/raid5.c       |   4 +-
+>  drivers/md/raid5.h       |   2 +-
+>  4 files changed, 104 insertions(+), 51 deletions(-)
+> 
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index f7b402138d16..1dbc7c4b9a15 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -254,7 +254,14 @@ static bool __r5c_is_writeback(struct r5l_log *log)
+>  
+>  bool r5c_is_writeback(struct r5conf *conf)
+>  {
+> -	return __r5c_is_writeback(conf->log);
+> +	struct r5l_log *log;
+> +	bool ret;
+> +
+> +	rcu_read_lock();
+> +	log = rcu_dereference(conf->log);
+> +	ret = __r5c_is_writeback(log);
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Nit: I'd do away with the local variable
+
+	ret = __r5c_is_writeback(rcu_dereference(conf->log));
+
+> +static struct r5l_log *get_log_for_io(struct r5conf *conf)
+> +{
+> +	/*
+> +	 * rcu_dereference_protected is safe because the array will be
+> +	 * quiesced before log_exit() so it can't be called while
+> +	 * an IO is in progress.
+> +	 */
+> +	return rcu_dereference_protected(conf->log, 1);
+> +}
+
+The hardcoded one (shouldn't that be a true, btw?) kinda defeats the
+purpose of rcu_dereference_protected.  But I can't really think of any
+good runtime assert that we could use here.
+
+>  void r5c_check_stripe_cache_usage(struct r5conf *conf)
+>  {
+> +	struct r5l_log *log = get_log_for_io(conf);
+>  	int total_cached;
+>  
+> -	if (!r5c_is_writeback(conf))
+> +	if (!__r5c_is_writeback(log))
+
+This mostly just undoes earlier chanes.  Maybe we should have just let
+r5c_is_writeback as-is and have a r5c_conf_is_writeback helper on top and
+avoid this churn?  In general it would also be nice to have all these
+newly added or removal local variables in place before the big fixup.
+
+>  void r5c_check_cached_full_stripe(struct r5conf *conf)
+>  {
+> -	if (!r5c_is_writeback(conf))
+> -		return;
+> +	struct r5l_log *log = get_log_for_io(conf);
+
+This looks odd.
+
