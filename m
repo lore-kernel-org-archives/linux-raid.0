@@ -2,155 +2,90 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C1CC433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 23 May 2022 18:37:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5FADC433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 23 May 2022 18:38:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240870AbiEWShg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 23 May 2022 14:37:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60480 "EHLO
+        id S241977AbiEWSi5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 23 May 2022 14:38:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241100AbiEWShV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 23 May 2022 14:37:21 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DB5C132A1B;
-        Mon, 23 May 2022 11:17:00 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9E4CFB81200;
-        Mon, 23 May 2022 18:15:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 548A0C3411F;
-        Mon, 23 May 2022 18:15:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653329741;
-        bh=ogr4VAdQS3A7DDk0vo1e70sbPah4iSytiHNoT4xX2UI=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=QzOh9WbYbDO5tPJqGabgX1gZbWAPOnCpvIze6LeXOPoIqyxihEG3x67zLTOAxWtSd
-         Gm01Gohdz0WEtjQkcrafyhSBwKODgM96cXE8HJ+KMgIuLLdJbadj9oabuO0AG22mA8
-         jvDFOT9eJmgPlm1Db7ktaM9V2rxr7PHzgy1Ae0k2Il6W6rmp4oMvNcihWsFOpboCjn
-         hagn7SEeNTwTiDVG6gPCXYe9DjaN9BlZm6LOd+gpq7qPBJe7CDgzECF8wcx7XOPxeP
-         lX2GZNxpVwzKKT16ODDgFFGcEebCOJJPOSJ+Iz3FwoP85fS+CWCgfTdpj9Ymko2Lqr
-         +7xz1BGdIVSGQ==
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-2f83983782fso157464317b3.6;
-        Mon, 23 May 2022 11:15:41 -0700 (PDT)
-X-Gm-Message-State: AOAM5332aiS1jd/9uk+HERSHwQz0K+IBCjvdK88Z+u58k4aPE/aRaUUJ
-        vGKTtngk2/Rm5fmk2TJFOX8vXK3vJ52SBTyfm7k=
-X-Google-Smtp-Source: ABdhPJzAj+sfXKzSztm97CqjlzJ5TNkbJvqrGOriDDp+JyvNhuswblXzKSfgKAH9vzrs2C0MOEO+4oyWdDVifw2v7eo=
-X-Received: by 2002:a81:5a87:0:b0:2ec:239:d1e with SMTP id o129-20020a815a87000000b002ec02390d1emr24470794ywb.211.1653329740302;
- Mon, 23 May 2022 11:15:40 -0700 (PDT)
+        with ESMTP id S242961AbiEWSiu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 23 May 2022 14:38:50 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00BC234670
+        for <linux-raid@vger.kernel.org>; Mon, 23 May 2022 11:18:24 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id q4so13812360plr.11
+        for <linux-raid@vger.kernel.org>; Mon, 23 May 2022 11:18:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=KbNCTEB3bVHoGK/29gDr/2Aw9DkpggimAQw8175RAGo=;
+        b=ta4ij6Lslx2MuHcwK8qnUBmcKGa6VJNRIRmZwMJIS1KSjLWYneqH9hUkceyllla1Fg
+         GwnJZvijbWcsyMoN/wvUmud9cUewH8X//aTztck7IgqL3BI9tlp2O07lALsRheBeWKXa
+         j6HVKBJxIq8A0QO7xcV/w/eBqP905kY8EBKnVZjFM740WwD2E1GeTLLOVCpRJgk/tA/i
+         n19zmvuoT3wekWEbT9qCuc1O7o7s1VrefAiNPino6W6v7YzZcjCqJa6Do3A8lqxIFAW4
+         pZ8xLbWQ214sDSFthjQxBgINc2c2lAepZlCHgT1yFhEDZM41CUMVnoS55skdwZj1298y
+         lt6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=KbNCTEB3bVHoGK/29gDr/2Aw9DkpggimAQw8175RAGo=;
+        b=emHLguv+hOms27gZoE0mrXmig+gffDaFQrxp8IvrdJ2COpvaDgID7zoeybH4r7cZwm
+         S/WxnEHULBSfTOvytcl4KsGBvs39w9uBsSyR5PNG06029lRbvFwJSsRhUdE0xKDL7v9s
+         AI+t5PqtZZ7kNrxCuUgzMp24p9Z5HVRds9bM5qT2wdwijkRtaUvyRDHZP9sfd2GIF56K
+         /jfwnvZDaX0meNm1YSKNR5cnLFLzi/stltA38KL/joW4JDwbvPiLMAMpZwuB7+xKHpmi
+         6VR/tq98+k4ezy+2pRwBB+Jo+nVx7uL05iCmrPi97+3yTnlc5BHndthL+DDkflcI+0xT
+         ZX3Q==
+X-Gm-Message-State: AOAM533GqteG5oyh5QEMuCz6Rlos7oY5M6l0SPWiemsv+L1PYUrNiGph
+        7NS0FuxuwKqyLuJnyAPSRVTdZg==
+X-Google-Smtp-Source: ABdhPJxT8hUmFmBpwmJqWo/tJe/fqqRPFLL7cYkiO/RK8Ac9oq3ggZIeekznz268paScDiKUnnmOvw==
+X-Received: by 2002:a17:90b:1a8b:b0:1e0:4bbb:33bd with SMTP id ng11-20020a17090b1a8b00b001e04bbb33bdmr284979pjb.144.1653329895280;
+        Mon, 23 May 2022 11:18:15 -0700 (PDT)
+Received: from [192.168.1.100] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id p29-20020a63951d000000b003c265b7d4f6sm5113218pgd.44.2022.05.23.11.18.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 23 May 2022 11:18:14 -0700 (PDT)
+Message-ID: <3b5599cc-2d04-c2f0-b456-3db77fb44e91@kernel.dk>
+Date:   Mon, 23 May 2022 12:18:13 -0600
 MIME-Version: 1.0
-References: <20220519191311.17119-1-logang@deltatee.com> <20220519191311.17119-13-logang@deltatee.com>
- <62b09487-9223-db3d-2165-789a51230060@molgen.mpg.de> <CAPhsuW5FKh7VKgU+=eU4_ad4btFMwU7ymMNMZ5TZVQbv82MaHg@mail.gmail.com>
-In-Reply-To: <CAPhsuW5FKh7VKgU+=eU4_ad4btFMwU7ymMNMZ5TZVQbv82MaHg@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 23 May 2022 11:15:28 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5DUT6gg4eP7ozAwWdEiqen1eZwWeYAM5Jo7yY0h+LGcQ@mail.gmail.com>
-Message-ID: <CAPhsuW5DUT6gg4eP7ozAwWdEiqen1eZwWeYAM5Jo7yY0h+LGcQ@mail.gmail.com>
-Subject: Re: [PATCH v1 12/15] md/raid5-cache: Add RCU protection to conf->log accesses
-To:     Donald Buczek <buczek@molgen.mpg.de>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [GIT PULL] md-next 20220523
+Content-Language: en-US
+To:     Song Liu <songliubraving@fb.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
         Christoph Hellwig <hch@infradead.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Christoph Hellwig <hch@lst.de>,
+        Guoqing Jiang <jgq516@gmail.com>, Xiao Ni <xni@redhat.com>
+References: <1711B04D-64AF-4398-8852-57AF79260EE3@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <1711B04D-64AF-4398-8852-57AF79260EE3@fb.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sun, May 22, 2022 at 11:47 PM Song Liu <song@kernel.org> wrote:
->
-> On Sun, May 22, 2022 at 12:32 AM Donald Buczek <buczek@molgen.mpg.de> wro=
-te:
-> >
-> > On 19.05.22 21:13, Logan Gunthorpe wrote:
-> > > The mdadm test 21raid5cache randomly fails with NULL pointer accesses
-> > > conf->log when run repeatedly. conf->log was sort of protected with
-> > > a RCU, but most dereferences were not done with the correct functions=
-.
-> > >
-> > > Add rcu_read_locks() and rcu_access_pointers() to the appropriate
-> > > places.
-> > >
-> > > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
->
-> [...]
->
-> > > diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-> > > index f26e6f4c7f9a..24b4dbd5b25c 100644
-> > > --- a/drivers/md/raid5-log.h
-> > > +++ b/drivers/md/raid5-log.h
-> > > @@ -58,7 +58,7 @@ static inline int log_stripe(struct stripe_head *sh=
-, struct stripe_head_state *s
-> > >   {
-> > >       struct r5conf *conf =3D sh->raid_conf;
-> > >
-> > > -     if (conf->log) {
-> > > +     if (rcu_access_pointer(conf->log)) {
-> >
-> >
-> > A problem here is that `struct r5l_log` of `conf->log` is private to ra=
-id5-cache.c and gcc below version 10 (wrongly) regards the `typeof(*p) *loc=
-al` declaration of __rcu_access_pointer as a dereference:
-> >
-> >    CC      drivers/md/raid5.o
-> >
-> > In file included from ./include/linux/rculist.h:11:0,
-> >
-> >                   from ./include/linux/dcache.h:8,
-> >
-> >                   from ./include/linux/fs.h:8,
-> >
-> >                   from ./include/linux/highmem.h:5,
-> >
-> >                   from ./include/linux/bvec.h:10,
-> >
-> >                   from ./include/linux/blk_types.h:10,
-> >
-> >                   from ./include/linux/blkdev.h:9,
-> >
-> >                   from drivers/md/raid5.c:38:
-> >
-> > drivers/md/raid5-log.h: In function =E2=80=98log_stripe=E2=80=99:
-> >
-> > ./include/linux/rcupdate.h:384:9: error: dereferencing pointer to incom=
-plete type =E2=80=98struct r5l_log=E2=80=99
-> >
-> >    typeof(*p) *local =3D (typeof(*p) *__force)READ_ONCE(p); \
-> >
-> >           ^
-> >
-> > ./include/linux/rcupdate.h:495:31: note: in expansion of macro =E2=80=
-=98__rcu_access_pointer=E2=80=99
-> >
-> >   #define rcu_access_pointer(p) __rcu_access_pointer((p), __UNIQUE_ID(r=
-cu), __rcu)
-> >
-> >                                 ^~~~~~~~~~~~~~~~~~~~
-> >
-> > drivers/md/raid5-log.h:61:6: note: in expansion of macro =E2=80=98rcu_a=
-ccess_pointer=E2=80=99
-> >
-> >    if (rcu_access_pointer(conf->log)) {
-> >
-> >        ^~~~~~~~~~~~~~~~~~
-> >
-> > make[2]: *** [scripts/Makefile.build:288: drivers/md/raid5.o] Error 1
-> >
-> > make[1]: *** [scripts/Makefile.build:550: drivers/md] Error 2
-> >
-> > make: *** [Makefile:1834: drivers] Error 2
->
-> This is annoying.. And there are a few other cases in raid5-log.h and
-> raid5.c.
->
-> Maybe we should move the definition of r5l_log to raid5-log.h?
+On 5/23/22 12:11 PM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following changes for md-next on top of your 
+> for-5.19/drivers branch. The major changes are:
+> 
+>   - Remove uses of bdevname, by Christoph Hellwig;
+>   - Bug fixes by Guoqing Jiang, and Xiao Ni. 
 
-Or we can use READ_ONCE(conf->log) for most cases.
+Grmbl, why are these sent in so late?? I spot checked a few and they are
+~11 days old since you said you applied them. It seems like I have to
+bring this up every merge window, but changes should be sent in AT LEAST
+a week in advance so they can get some linux-next soak at least.
 
-Thought?
-Song
+I'll pull them and then do _another_ pull request in this merge window,
+but they will sit for a week or so before going any further.
+
+-- 
+Jens Axboe
+
