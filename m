@@ -2,157 +2,160 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9245AC433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 23 May 2022 09:52:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FFE8C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 23 May 2022 15:43:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233446AbiEWJv7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 23 May 2022 05:51:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56612 "EHLO
+        id S238114AbiEWPnM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 23 May 2022 11:43:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233628AbiEWJvf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 23 May 2022 05:51:35 -0400
-Received: from out0.migadu.com (out0.migadu.com [IPv6:2001:41d0:2:267::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E0CA2AC5
-        for <linux-raid@vger.kernel.org>; Mon, 23 May 2022 02:51:25 -0700 (PDT)
-Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
- reconfig_mutex held
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1653299483;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        with ESMTP id S238094AbiEWPnL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 23 May 2022 11:43:11 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17DFA205F2
+        for <linux-raid@vger.kernel.org>; Mon, 23 May 2022 08:43:10 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id C5B5D1F8D6;
+        Mon, 23 May 2022 15:43:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1653320588; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=4X2BoeuRb6BTNtiAEbHzTQcs/z+aFKPk04I1SidY9/k=;
-        b=Z8VfEMqFa+hUruuzcz0EiN7LT4A2dBDkvh4yFLfOdnxb0l7i0rpb5M7ncmuLP9EGMlV1Ey
-        AqVz7z9H7a+5m39GAibC2Q1fSrgmt1P53pZaGsUsNR6CuQAaXuK4u9mSIKrUFonVvF83Wn
-        7hnma2D38HrkEFeaxhqkDX9QJ7/QgDI=
-To:     Donald Buczek <buczek@molgen.mpg.de>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
- <20220506113656.25010-1-guoqing.jiang@linux.dev>
- <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
- <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev>
- <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
- <b4244eab-d9e2-20a0-ebce-1a96e8fadb91@deltatee.com>
- <836b2a93-65be-8d6c-8610-18373b88f86d@molgen.mpg.de>
- <5b0584a3-c128-cb53-7c8a-63744c60c667@linux.dev>
- <4edc9468-d195-6937-f550-211bccbd6756@molgen.mpg.de>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <954f9c33-7801-b6d2-65e3-9e5237905886@linux.dev>
-Date:   Mon, 23 May 2022 17:51:18 +0800
+        bh=blSK0wmB7ThD2UxIFkBPnjy4k93PMQtDGcmqVbjbyGg=;
+        b=lYoXtrgpLoxilf3v7FKtw5wRa5uW2J3O+3bebLlWhCTQx/SvT0jdbYPMDe3OzaSH1aZZD/
+        dpDUfnmVscrBzBCNJd8y7SJsbVgiGbX7SwV6GkDRCIFfQ5u8p7wtlgDxyc9FM/A/z7RFmi
+        Z138kMPPLuBp0n422Jjp9Qpg8P9TPgg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1653320588;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=blSK0wmB7ThD2UxIFkBPnjy4k93PMQtDGcmqVbjbyGg=;
+        b=TlsXTH29oZjWZ8lCMBLSRxeeACesB5gnuHY9nYvoOMcu1E9481BVblJs6oTbr8dki0d28k
+        0uQO2yWT0lio3sDA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6C064139F5;
+        Mon, 23 May 2022 15:43:07 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 7kuPDouri2LhHQAAMHmgww
+        (envelope-from <colyli@suse.de>); Mon, 23 May 2022 15:43:07 +0000
+Message-ID: <be4e3857-5577-b896-aec2-48fe6a915d81@suse.de>
+Date:   Mon, 23 May 2022 23:43:05 +0800
 MIME-Version: 1.0
-In-Reply-To: <4edc9468-d195-6937-f550-211bccbd6756@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.9.1
+Subject: Re: [PATCH] Revert "mdadm: fix coredump of mdadm --monitor -r"
 Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+To:     Nigel Croxon <ncroxon@redhat.com>
+References: <20220418174423.846026-1-ncroxon@redhat.com>
+Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org,
+        wuguanghao3@huawei.com, mariusz.tkaczyk@linux.intel.com
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20220418174423.846026-1-ncroxon@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
->>>> I noticed a clear regression with mdadm tests with this patch in 
->>>> md-next
->>>> (7e6ba434cc6080).
->>>>
->>>> Before the patch, tests 07reshape5intr and 07revert-grow would fail
->>>> fairly infrequently (about 1 in 4 runs for the former and 1 in 30 runs
->>>> for the latter).
->>>>
->>>> After this patch, both tests always fail.
->>>>
->>>> I don't have time to dig into why this is, but it would be nice if
->>>> someone can at least fix the regression. It is hard to make any 
->>>> progress
->>>> on these tests if we are continuing to further break them.
-
-I have tried with both ubuntu 22.04 kernel which is 5.15 and vanilla 
-5.12, none of them
-can pass your mentioned tests.
-
-[root@localhost mdadm]# lsblk|grep vd
-vda          252:0    0    1G  0 disk
-vdb          252:16   0    1G  0 disk
-vdc          252:32   0    1G  0 disk
-vdd          252:48   0    1G  0 disk
-[root@localhost mdadm]# ./test --dev=disk --disks=/dev/vd{a..d} 
---tests=05r1-add-internalbitmap
-Testing on linux-5.12.0-default kernel
-/root/mdadm/tests/05r1-add-internalbitmap... succeeded
-[root@localhost mdadm]# ./test --dev=disk --disks=/dev/vd{a..d} 
---tests=07reshape5intr
-Testing on linux-5.12.0-default kernel
-/root/mdadm/tests/07reshape5intr... FAILED - see 
-/var/tmp/07reshape5intr.log and /var/tmp/fail07reshape5intr.log for details
-[root@localhost mdadm]# ./test --dev=disk --disks=/dev/vd{a..d} 
---tests=07revert-grow
-Testing on linux-5.12.0-default kernel
-/root/mdadm/tests/07revert-grow... FAILED - see 
-/var/tmp/07revert-grow.log and /var/tmp/fail07revert-grow.log for details
-[root@localhost mdadm]# head -10  /var/tmp/07revert-grow.log | grep mdadm
-+ . /root/mdadm/tests/07revert-grow
-*++ mdadm -CR --assume-clean /dev/md0 -l5 -n4 -x1 /dev/vda /dev/vdb 
-/dev/vdc /dev/vdd /dev/vda /dev/vdb /dev/vdc /dev/vdd --metadata=0.9**
-*
-The above line is clearly wrong from my understanding.
-
-And let's check ubuntu 22.04.
-
-root@vm:/home/gjiang/mdadm# lsblk|grep vd
-vda    252:0    0     1G  0 disk
-vdb    252:16   0     1G  0 disk
-vdc    252:32   0     1G  0 disk
-root@vm:/home/gjiang/mdadm# ./test --dev=disk --disks=/dev/vd{a..d} 
---tests=05r1-failfast
-Testing on linux-5.15.0-30-generic kernel
-/home/gjiang/mdadm/tests/05r1-failfast... succeeded
-root@vm:/home/gjiang/mdadm# ./test --dev=disk --disks=/dev/vd{a..c}   
---tests=07reshape5intr
-Testing on linux-5.15.0-30-generic kernel
-/home/gjiang/mdadm/tests/07reshape5intr... FAILED - see 
-/var/tmp/07reshape5intr.log and /var/tmp/fail07reshape5intr.log for details
-root@vm:/home/gjiang/mdadm# ./test --dev=disk --disks=/dev/vd{a..c} 
---tests=07revert-grow
-Testing on linux-5.15.0-30-generic kernel
-/home/gjiang/mdadm/tests/07revert-grow... FAILED - see 
-/var/tmp/07revert-grow.log and /var/tmp/fail07revert-grow.log for details
-
-So I would not consider it is regression.
-
-[ ... ]
-
-> FYI: I've used loop devices on a virtio disk.
+On 4/19/22 1:44 AM, Nigel Croxon wrote:
+> This reverts commit 546047688e1c64638f462147c755b58119cabdc8.
 >
-> I later discovered Logans patches [1], which I were not aware of, as 
-> I'm not subscribed to the lists.
+> The change from commit mdadm: fix coredump of mdadm
+> --monitor -r broke the printing of the return message when
+> passing -r to mdadm --manage, the removal of a device from
+> an array.
 >
-> [1]: 
-> https://lore.kernel.org/linux-raid/20220519191311.17119-6-logang@deltatee.com/T/#u
+> If the current code reverts this commit, both issues are
+> still fixed.
 >
-> The series seems to acknowledge that there are open problems and tries 
-> to fix them.
-> So I've used his md-bug branch from 
-> https://github.com/sbates130272/linux-p2pmem but it didn't look better.
+> The original problem reported that the fix tried to address
+> was:  The --monitor -r option requires a parameter,
+> otherwise a null pointer will be manipulated when
+> converting to integer data, and a core dump will appear.
+>
+> The original problem was really fixed with:
+> 60815698c0a Refactor parse_num and use it to parse optarg.
+> Which added a check for NULL in 'optarg' before moving it
+> to the 'increments' variable.
+>
+> New issue: When trying to remove a device using the short
+> argument -r, instead of the long argument --remove, the
+> output is empty. The problem started when commit
+> 546047688e1c was added.
+>
+> Steps to Reproduce:
+> 1. create/assemble /dev/md0 device
+> 2. mdadm --manage /dev/md0 -r /dev/vdxx
+>
+> Actual results:
+> Nothing, empty output, nothing happens, the device is still
+> connected to the array.
+>
+> The output should have stated "mdadm: hot remove failed
+> for /dev/vdxx: Device or resource busy", if the device was
+> still active. Or it should remove the device and print
+> a message:
+>
+> mdadm: set /dev/vdd faulty in /dev/md0
+> mdadm: hot removed /dev/vdd from /dev/md0
+>
+> The following commit should be reverted as it breaks
+> mdadm --manage -r.
+>
+> commit 546047688e1c64638f462147c755b58119cabdc8
+> Author: Wu Guanghao <wuguanghao3@huawei.com>
+> Date:   Mon Aug 16 15:24:51 2021 +0800
+> mdadm: fix coredump of mdadm --monitor -r
+>
+> -Nigel
 
-Thanks for your effort.
+Maybe it could be better to remove the above signature?
 
-> So I understand, the mdadm tests *are* supposed to work and every bug 
-> I see here is worth analyzing? Or is Logan hunting down everything 
-> anyway?
 
-Yes, it was supposed to be. But unfortunately, it was kind of broken, 
-good news is people are aware
-of it and try to make it works/better, pls see other links.
+>
+> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
 
-[1] 
-https://lore.kernel.org/linux-raid/EA6887B4-2A44-49D0-ACF9-C04CC92AFD87@oracle.com/T/#t
-[2] 
-https://lore.kernel.org/linux-raid/CALTww2-mbfZRcHu_95Q+WANXZ9ayRwjXvyvqP5Gseeb86dEy=w@mail.gmail.com/T/#t
+Acked-by: Coly Li <colyli@suse.de>
 
-Thanks,
-Guoqing
+
+Thanks.
+
+
+Coly Li
+
+
+> ---
+>   ReadMe.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/ReadMe.c b/ReadMe.c
+> index 8f873c48..bec1be9a 100644
+> --- a/ReadMe.c
+> +++ b/ReadMe.c
+> @@ -81,11 +81,11 @@ char Version[] = "mdadm - v" VERSION " - " VERS_DATE EXTRAVERSION "\n";
+>    *     found, it is started.
+>    */
+>   
+> -char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
+> +char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+>   char short_bitmap_options[]=
+> -		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+> +		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+>   char short_bitmap_auto_options[]=
+> -		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
+> +		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
+>   
+>   struct option long_options[] = {
+>       {"manage",    0, 0, ManageOpt},
+
+
