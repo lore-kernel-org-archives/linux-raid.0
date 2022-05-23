@@ -2,137 +2,361 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF88C433F5
-	for <linux-raid@archiver.kernel.org>; Sun, 22 May 2022 22:54:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44613C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 23 May 2022 01:08:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231315AbiEVWy2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 22 May 2022 18:54:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33324 "EHLO
+        id S232824AbiEWBIj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 22 May 2022 21:08:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbiEVWy0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 22 May 2022 18:54:26 -0400
-Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id 183DD37ABC
-        for <linux-raid@vger.kernel.org>; Sun, 22 May 2022 15:54:24 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id 4A36819F373;
-        Mon, 23 May 2022 08:54:23 +1000 (AEST)
-Authentication-Results: postoffice.wmawater.com.au (amavisd-new);
-        dkim=pass (1024-bit key) header.d=wmawater.com.au
-Received: from postoffice.wmawater.com.au ([127.0.0.1])
-        by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id zwgreKbiTEZ3; Mon, 23 May 2022 08:54:23 +1000 (AEST)
-Received: from localhost (localhost [127.0.0.1])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id 17C7419F375;
-        Mon, 23 May 2022 08:54:23 +1000 (AEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 postoffice.wmawater.com.au 17C7419F375
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wmawater.com.au;
-        s=1D92CC64-C1F9-11E4-96FC-2C1EC0F5F97B; t=1653260063;
-        bh=jLQtwE77z05ux+N8knkVuJeBlUf/qfGnwLBBX5xheXs=;
-        h=From:To:Date:Message-ID:MIME-Version;
-        b=PFDZArssk7aqShCedFAa5RiibCxBCOQRmD/VHuI/R9lmHuCa5H3B+cq8tCFwJ9GfJ
-         BWtOz7wqdJSzFT3LFHUCb6akQmA2bBQbrHU14f/vNoW+XeYpTesfbXaHccQtXcLbRF
-         0yK3zvVOT9HyAZwZrEhIKhDotaqwdlAZkSGVKmHc=
-X-Virus-Scanned: amavisd-new at wmawater.com.au
-Received: from postoffice.wmawater.com.au ([127.0.0.1])
-        by localhost (postoffice.wmawater.com.au [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id plPMiDqv2STq; Mon, 23 May 2022 08:54:22 +1000 (AEST)
-Received: from postoffice.wmawater.com.au (postoffice.wmawater.com.au [61.69.178.123])
-        by postoffice.wmawater.com.au (Postfix) with ESMTP id D6AB619F373;
-        Mon, 23 May 2022 08:54:22 +1000 (AEST)
-Reply-To: "Bob Brand" <brand@wmawater.com.au>
-From:   Bob Brand <brand@wmawater.com.au>
-To:     "Wols Lists" <antlists@youngman.org.uk>,
-        "Reindl Harald" <h.reindl@thelounge.net>,
-        "Roger Heflin" <rogerheflin@gmail.com>
-Cc:     "Linux RAID" <linux-raid@vger.kernel.org>,
-        "Phil Turmel" <philip@turmel.org>, "NeilBrown" <neilb@suse.com>
-References: <00ae01d862de$1d336980$579a3c80$@wmawater.com.au> <f4e9c9f8-590d-49a4-39da-e31d81258ff3@youngman.org.uk> <00cf01d86327$9c5dd8a0$d51989e0$@wmawater.com.au> <3f84648b-29db-0819-e3ba-af52435a2aab@youngman.org.uk> <00d101d86329$a2a57130$e7f05390$@wmawater.com.au> <00d601d8632f$ac1f1300$045d3900$@wmawater.com.au> <00e401d86333$e75d8f60$b618ae20$@wmawater.com.au> <00eb01d86339$18cc0860$4a641920$@wmawater.com.au> <5931f716-008d-399b-2ea8-acbbc9c8d239@youngman.org.uk> <CAAMCDecTb69YY+jGzq9HVqx4xZmdVGiRa54BD55Amcz5yaZo1Q@mail.gmail.com> <04ed01d86c5c$2f632f50$8e298df0$@wmawater.com.au> <06995c9b-2dc5-3c0b-9ba1-59be171a7de8@thelounge.net> <054401d86d92$3c59cac0$b50d6040$@wmawater.com.au> <1c65063e-f9e3-444e-649a-5fa6d1606ae6@youngman.org.uk>
-In-Reply-To: <1c65063e-f9e3-444e-649a-5fa6d1606ae6@youngman.org.uk>
-Subject: RE: Failed adadm RAID array after aborted Grown operation
-Thread-Topic: Failed adadm RAID array after aborted Grown operation
-Date:   Mon, 23 May 2022 08:54:22 +1000 (AEST)
-Message-ID: <057301d86e2e$e0bb1e60$a2315b20$@wmawater.com.au>
+        with ESMTP id S231186AbiEWBIh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 22 May 2022 21:08:37 -0400
+Received: from out1.migadu.com (out1.migadu.com [IPv6:2001:41d0:2:863f::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 830D2377C6
+        for <linux-raid@vger.kernel.org>; Sun, 22 May 2022 18:08:34 -0700 (PDT)
+Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
+ reconfig_mutex held
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1653268112;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WyQ5QrLS+6n2j3bDn+lR1dY6vfhTywA4dNo4S8ZsmoU=;
+        b=utFlExLybv/z5PO4UVpfbo9hoeZ+3BJhdmgeuqrd03VRxRPtV9XWse82h1WSDlzndkMqdR
+        UI8iDN1FL4GlYJCiLFXFYI+AKCcEqh1Zp81F5EIZWI076tY3i1jBtXZ2gkm5kHgG2FvKgP
+        mboDMVMSoDoz5HR7V92kyEAEvXF6VDU=
+To:     Donald Buczek <buczek@molgen.mpg.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Song Liu <song@kernel.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
+ <20220506113656.25010-1-guoqing.jiang@linux.dev>
+ <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
+ <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev>
+ <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
+ <b4244eab-d9e2-20a0-ebce-1a96e8fadb91@deltatee.com>
+ <836b2a93-65be-8d6c-8610-18373b88f86d@molgen.mpg.de>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <5b0584a3-c128-cb53-7c8a-63744c60c667@linux.dev>
+Date:   Mon, 23 May 2022 09:08:22 +0800
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-X-Mailer: Zimbra 8.8.15_GA_3894 (Zimbra-ZCO/9.0.0.1903 (10.0.19044  en-AU) P1de8 T376c R35192)
-Thread-Index: AQK0Ylmfkg1g1mZGz7yxBx3O0op7hADpZ3mFAYMzo9kBZlg9dAGZ0oLFAdWidsoCQWnqlQI7z0N+AMQVcYoBrcfnAQHzgz42AmhhXhgCKCXVgAHcFtH1qr8LCvA=
-Content-Language: en-au
+In-Reply-To: <836b2a93-65be-8d6c-8610-18373b88f86d@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Thanks Wol.
-
-I can't really disagree with anything you've said except to mention that I 
-do have a fair bit of experience (20+ years) but it's all been pretty much 
-Microsoft/Windows and hardware RAID.
-
-Like I said this device was never meant to be used for critical data - if 
-nothing else this has been something of a wake-up call for us.
 
 
-
------Original Message-----
-From: Wols Lists <antlists@youngman.org.uk>
-Sent: Sunday, 22 May 2022 11:31 PM
-To: Bob Brand <brand@wmawater.com.au>; Reindl Harald 
-<h.reindl@thelounge.net>; Roger Heflin <rogerheflin@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>; Phil Turmel 
-<philip@turmel.org>; NeilBrown <neilb@suse.com>
-Subject: Re: Failed adadm RAID array after aborted Grown operation
-
-On 22/05/2022 05:13, Bob Brand wrote:
-> Unfortunately, restore from back up isn't an option - after all to
-> where do you back up 200TB of data? This storage was originally set up
-> with the understanding that it wasn't backed up and so no valuable
-> data was supposed to have been stored on it. Unfortunately, people
-> being what they are, valuable data has been stored there and I'm the
-> mug now trying to get it back - it's a system that I've inherited.
+On 5/22/22 2:23 AM, Donald Buczek wrote:
+> On 20.05.22 20:27, Logan Gunthorpe wrote:
+>>
+>> Hi,
+>>
+>> On 2022-05-10 00:44, Song Liu wrote:
+>>> On Mon, May 9, 2022 at 1:09 AM Guoqing Jiang 
+>>> <guoqing.jiang@linux.dev> wrote:
+>>>> On 5/9/22 2:37 PM, Song Liu wrote:
+>>>>> On Fri, May 6, 2022 at 4:37 AM Guoqing 
+>>>>> Jiang<guoqing.jiang@linux.dev>  wrote:
+>>>>>> From: Guoqing Jiang<guoqing.jiang@cloud.ionos.com>
+>>>>>>
+>>>>>> Unregister sync_thread doesn't need to hold reconfig_mutex since it
+>>>>>> doesn't reconfigure array.
+>>>>>>
+>>>>>> And it could cause deadlock problem for raid5 as follows:
+>>>>>>
+>>>>>> 1. process A tried to reap sync thread with reconfig_mutex held 
+>>>>>> after echo
+>>>>>>      idle to sync_action.
+>>>>>> 2. raid5 sync thread was blocked if there were too many active 
+>>>>>> stripes.
+>>>>>> 3. SB_CHANGE_PENDING was set (because of write IO comes from 
+>>>>>> upper layer)
+>>>>>>      which causes the number of active stripes can't be decreased.
+>>>>>> 4. SB_CHANGE_PENDING can't be cleared since md_check_recovery was 
+>>>>>> not able
+>>>>>>      to hold reconfig_mutex.
+>>>>>>
+>>>>>> More details in the link:
+>>>>>> https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t 
+>>>>>>
+>>>>>>
+>>>>>> Let's call unregister thread between mddev_unlock and 
+>>>>>> mddev_lock_nointr
+>>>>>> (thanks for the report from kernel test robot<lkp@intel.com>) if the
+>>>>>> reconfig_mutex is held, and mddev_is_locked is introduced 
+>>>>>> accordingly.
+>>>>> mddev_is_locked() feels really hacky to me. It cannot tell whether
+>>>>> mddev is locked
+>>>>> by current thread. So technically, we can unlock reconfigure_mutex 
+>>>>> for
+>>>>> other thread
+>>>>> by accident, no?
+>>>>
+>>>> I can switch back to V2 if you think that is the correct way to do 
+>>>> though no
+>>>> one comment about the change in dm-raid.
+>>>
+>>> I guess v2 is the best at the moment. I pushed a slightly modified 
+>>> v2 to
+>>> md-next.
+>>>
+>>
+>> I noticed a clear regression with mdadm tests with this patch in md-next
+>> (7e6ba434cc6080).
+>>
+>> Before the patch, tests 07reshape5intr and 07revert-grow would fail
+>> fairly infrequently (about 1 in 4 runs for the former and 1 in 30 runs
+>> for the latter).
+>>
+>> After this patch, both tests always fail.
+>>
+>> I don't have time to dig into why this is, but it would be nice if
+>> someone can at least fix the regression. It is hard to make any progress
+>> on these tests if we are continuing to further break them.
 >
-> So, any help or constructive advice would be appreciated.
+> Hmmm. I wanted to try to help a bit by reproducing and digging into this.
+>
+> But it seems that more or less ALL tests hang my system one way or 
+> another.
+>
+> I've used a qemu/kvm machine with md-next and mdraid master.
+>
+> Is this supposed to work?
+>
+> I can investigate the bugs I see, but probably that is a waste of time 
+> because I'm doing something wrong fundamentally?
+>
+> This is an example from 00raid0:
+>
+> [   57.434064] md: md0 stopped.
+> [   57.586951] md0: detected capacity change from 0 to 107520
+> [   57.618454] BUG: kernel NULL pointer dereference, address: 
+> 0000000000000094
+> [   57.620830] #PF: supervisor read access in kernel mode
+> [   57.622554] #PF: error_code(0x0000) - not-present page
+> [   57.624273] PGD 800000010d5ee067 P4D 800000010d5ee067 PUD 10df28067 
+> PMD 0
+> [   57.626548] Oops: 0000 [#1] PREEMPT SMP PTI
+> [   57.627942] CPU: 3 PID: 1064 Comm: mkfs.ext3 Not tainted 
+> 5.18.0-rc3.mx64.425-00108-g6ad84d559b8c #77
+> [   57.630952] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), 
+> BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
+> [   57.635927] RIP: 0010:bfq_bio_bfqg+0x26/0x80
+> [   57.638027] Code: 00 0f 1f 00 0f 1f 44 00 00 55 53 48 89 fd 48 8b 
+> 56 48 48 89 f7 48 85 d2 74 32 48 63 05 53 54 1c 01 48 83 c0 16 48 8b 
+> 5c c2 08 <80> bb 94 00 00 00 00 70
+> [   57.645295] RSP: 0018:ffffc90001c27b38 EFLAGS: 00010006
+> [   57.647414] RAX: 0000000000000018 RBX: 0000000000000000 RCX: 
+> 0000000000000001
+> [   57.650039] RDX: ffff888109297800 RSI: ffff8881032ba180 RDI: 
+> ffff8881032ba180
+> [   57.652541] RBP: ffff888102177800 R08: ffff88810c9004c8 R09: 
+> ffff88810318cb00
+> [   57.654852] R10: 0000000000000000 R11: ffff8881032ba180 R12: 
+> ffff88810318cae0
+> [   57.657128] R13: ffff888102177800 R14: ffffc90001c27ca8 R15: 
+> ffffc90001c27c00
+> [   57.659316] FS:  00007fdfce47d440(0000) GS:ffff8882b5ac0000(0000) 
+> knlGS:0000000000000000
+> [   57.661700] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   57.663461] CR2: 0000000000000094 CR3: 000000010d438002 CR4: 
+> 0000000000170ee0
+> [   57.665453] Call Trace:
+> [   57.666479]  <TASK>
+> [   57.667382]  bfq_bic_update_cgroup+0x28/0x1b0
+> [   57.668724]  bfq_insert_requests+0x233/0x2340
+> [   57.670049]  ? ioc_find_get_icq+0x21c/0x2a0
+> [   57.671315]  ? bfq_prepare_request+0x11/0x30
+> [   57.672565]  blk_mq_sched_insert_requests+0x5c/0x150
+> [   57.673891]  blk_mq_flush_plug_list+0xe1/0x2a0
+> [   57.675140]  __blk_flush_plug+0xdf/0x120
+> [   57.676259]  io_schedule_prepare+0x3d/0x50
+> [   57.677373]  io_schedule_timeout+0xf/0x40
+> [   57.678465]  wait_for_completion_io+0x78/0x140
+> [   57.679578]  submit_bio_wait+0x5b/0x80
+> [   57.680575]  blkdev_issue_discard+0x65/0xb0
+> [   57.681640]  blkdev_common_ioctl+0x391/0x8f0
+> [   57.682712]  blkdev_ioctl+0x216/0x2a0
+> [   57.683648]  __x64_sys_ioctl+0x76/0xb0
+> [   57.684607]  do_syscall_64+0x42/0x90
+> [   57.685527]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [   57.686645] RIP: 0033:0x7fdfce56dc17
+> [   57.687535] Code: 48 c7 c3 ff ff ff ff 48 89 d8 5b 5d 41 5c c3 0f 
+> 1f 40 00 48 89 e8 48 f7 d8 48 39 c3 0f 92 c0 eb 93 66 90 b8 10 00 00 
+> 00 0f 05 <48> 3d 01 f0 ff ff 73 08
+> [   57.691055] RSP: 002b:00007ffe24319828 EFLAGS: 00000246 ORIG_RAX: 
+> 0000000000000010
+> [   57.692537] RAX: ffffffffffffffda RBX: 00000000004645a0 RCX: 
+> 00007fdfce56dc17
+> [   57.693905] RDX: 00007ffe24319830 RSI: 0000000000001277 RDI: 
+> 0000000000000003
+> [   57.695288] RBP: 0000000000460960 R08: 0000000000000400 R09: 
+> 0000000000000000
+> [   57.696645] R10: 0000000000000000 R11: 0000000000000246 R12: 
+> 0000000000000000
+> [   57.697954] R13: 000000000000d200 R14: 0000000000000000 R15: 
+> 0000000000000000
+> [   57.699281]  </TASK>
+> [   57.699901] Modules linked in: rpcsec_gss_krb5 nfsv4 nfs 8021q garp 
+> stp mrp llc bochs drm_vram_helper drm_ttm_helper kvm_intel ttm 
+> drm_kms_helper kvm drm fb_sys_fops vi4
+> [   57.705955] CR2: 0000000000000094
+> [   57.706710] ---[ end trace 0000000000000000 ]---
+> [   57.707599] RIP: 0010:bfq_bio_bfqg+0x26/0x80
+> [   57.708434] Code: 00 0f 1f 00 0f 1f 44 00 00 55 53 48 89 fd 48 8b 
+> 56 48 48 89 f7 48 85 d2 74 32 48 63 05 53 54 1c 01 48 83 c0 16 48 8b 
+> 5c c2 08 <80> bb 94 00 00 00 00 70
+> [   57.711426] RSP: 0018:ffffc90001c27b38 EFLAGS: 00010006
+> [   57.712391] RAX: 0000000000000018 RBX: 0000000000000000 RCX: 
+> 0000000000000001
+> [   57.713605] RDX: ffff888109297800 RSI: ffff8881032ba180 RDI: 
+> ffff8881032ba180
+> [   57.714811] RBP: ffff888102177800 R08: ffff88810c9004c8 R09: 
+> ffff88810318cb00
+> [   57.716018] R10: 0000000000000000 R11: ffff8881032ba180 R12: 
+> ffff88810318cae0
+> [   57.717236] R13: ffff888102177800 R14: ffffc90001c27ca8 R15: 
+> ffffc90001c27c00
+> [   57.718438] FS:  00007fdfce47d440(0000) GS:ffff8882b5ac0000(0000) 
+> knlGS:0000000000000000
+> [   57.719778] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   57.720808] CR2: 0000000000000094 CR3: 000000010d438002 CR4: 
+> 0000000000170ee0
+> [   57.722019] note: mkfs.ext3[1064] exited with preempt_count 1
+> [   57.723067] ------------[ cut here ]------------
+> [   57.723960] WARNING: CPU: 3 PID: 1064 at kernel/exit.c:741 
+> do_exit+0x8cb/0xbc0
+> [   57.725196] Modules linked in: rpcsec_gss_krb5 nfsv4 nfs 8021q garp 
+> stp mrp llc bochs drm_vram_helper drm_ttm_helper kvm_intel ttm 
+> drm_kms_helper kvm drm fb_sys_fops vi4
+> [   57.731011] CPU: 3 PID: 1064 Comm: mkfs.ext3 Tainted: G D           
+> 5.18.0-rc3.mx64.425-00108-g6ad84d559b8c #77
+> [   57.732704] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), 
+> BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
+> [   57.734853] RIP: 0010:do_exit+0x8cb/0xbc0
+> [   57.735711] Code: e9 13 ff ff ff 48 8b bb e0 04 00 00 31 f6 e8 4c 
+> db ff ff e9 98 fd ff ff 4c 89 e6 bf 05 06 00 00 e8 8a c8 00 00 e9 41 
+> f8 ff ff <0f> 0b e9 6b f7 ff ff 4b
+> [   57.738851] RSP: 0018:ffffc90001c27ee8 EFLAGS: 00010082
+> [   57.739899] RAX: 0000000000000000 RBX: ffff888101e48000 RCX: 
+> 0000000000000000
+> [   57.741196] RDX: 0000000000000001 RSI: ffffffff8220a969 RDI: 
+> 0000000000000009
+> [   57.742485] RBP: 0000000000000009 R08: 0000000000000000 R09: 
+> c0000000ffffbfff
+> [   57.743777] R10: 00007fdfce47d440 R11: ffffc90001c27d60 R12: 
+> 0000000000000009
+> [   57.745081] R13: 0000000000000046 R14: 0000000000000000 R15: 
+> 0000000000000000
+> [   57.746388] FS:  00007fdfce47d440(0000) GS:ffff8882b5ac0000(0000) 
+> knlGS:0000000000000000
+> [   57.747806] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   57.748931] CR2: 0000000000000094 CR3: 000000010d438002 CR4: 
+> 0000000000170ee0
+> [   57.750225] Call Trace:
+> [   57.750894]  <TASK>
+> [   57.751535]  make_task_dead+0x41/0xf0
+> [   57.752369]  rewind_stack_and_make_dead+0x17/0x17
+> [   57.753336] RIP: 0033:0x7fdfce56dc17
+> [   57.754155] Code: 48 c7 c3 ff ff ff ff 48 89 d8 5b 5d 41 5c c3 0f 
+> 1f 40 00 48 89 e8 48 f7 d8 48 39 c3 0f 92 c0 eb 93 66 90 b8 10 00 00 
+> 00 0f 05 <48> 3d 01 f0 ff ff 73 08
+> [   57.757318] RSP: 002b:00007ffe24319828 EFLAGS: 00000246 ORIG_RAX: 
+> 0000000000000010
+> [   57.758669] RAX: ffffffffffffffda RBX: 00000000004645a0 RCX: 
+> 00007fdfce56dc17
+> [   57.759956] RDX: 00007ffe24319830 RSI: 0000000000001277 RDI: 
+> 0000000000000003
+> [   57.761256] RBP: 0000000000460960 R08: 0000000000000400 R09: 
+> 0000000000000000
+> [   57.762531] R10: 0000000000000000 R11: 0000000000000246 R12: 
+> 0000000000000000
+> [   57.763806] R13: 000000000000d200 R14: 0000000000000000 R15: 
+> 0000000000000000
+> [   57.765177]  </TASK>
+> [   57.765813] ---[ end trace 0000000000000000 ]---
+> [   57.790046] md0: detected capacity change from 107520 to 0
+> [   57.792834] md: md0 stopped.
+> [   78.843853] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
+> [   78.845334] rcu:     10-...0: (0 ticks this GP) 
+> idle=07b/1/0x4000000000000000 softirq=1140/1140 fqs=4805
+> [   78.847246]     (detected by 13, t=21005 jiffies, g=9013, q=1419)
+> [   78.848619] Sending NMI from CPU 13 to CPUs 10:
+> [   78.849810] NMI backtrace for cpu 10
+> [   78.849813] CPU: 10 PID: 1081 Comm: mdadm Tainted: G      D 
+> W         5.18.0-rc3.mx64.425-00108-g6ad84d559b8c #77
+> [   78.849816] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), 
+> BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
+> [   78.849817] RIP: 0010:queued_spin_lock_slowpath+0x4c/0x1d0
+> [   78.849832] Code: 92 c0 0f b6 c0 c1 e0 08 89 c2 8b 07 30 e4 09 d0 
+> a9 00 01 ff ff 75 1b 85 c0 75 0f b8 01 00 00 00 66 89 07 5b 5d 41 5c 
+> c3 f3 90 <8b> 07 84 c0 75 f8 eb e7
+> [   78.849834] RSP: 0018:ffffc90001c9f9e0 EFLAGS: 00000002
+> [   78.849837] RAX: 0000000000040101 RBX: ffff88810c914fc8 RCX: 
+> 0000000000000000
+> [   78.849838] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 
+> ffff888102177c30
+> [   78.849840] RBP: 0000000000000000 R08: ffff88810c914fc8 R09: 
+> ffff888106a4ed10
+> [   78.849841] R10: ffffc90001c9fae8 R11: ffff888101b048d8 R12: 
+> ffff888103833000
+> [   78.849842] R13: ffff888102177800 R14: ffffc90001c9fb20 R15: 
+> ffffc90001c9fa78
+> [   78.849844] FS:  00007fd3d66c4340(0000) GS:ffff8882b5c80000(0000) 
+> knlGS:0000000000000000
+> [   78.849847] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   78.849848] CR2: 00000000004a5b58 CR3: 000000010d438001 CR4: 
+> 0000000000170ee0
+> [   78.849850] Call Trace:
+> [   78.849853]  <TASK>
+> [   78.849855]  bfq_insert_requests+0xae/0x2340
+> [   78.849862]  ? submit_bio_noacct_nocheck+0x225/0x2b0
+> [   78.849868]  blk_mq_sched_insert_requests+0x5c/0x150
+> [   78.849872]  blk_mq_flush_plug_list+0xe1/0x2a0
+> [   78.849876]  __blk_flush_plug+0xdf/0x120
+> [   78.849879]  blk_finish_plug+0x27/0x40
+> [   78.849882]  read_pages+0x15b/0x360
+> [   78.849891]  page_cache_ra_unbounded+0x120/0x170
+> [   78.849894]  filemap_get_pages+0xdd/0x5f0
+> [   78.849899]  filemap_read+0xbf/0x350
+> [   78.849902]  ? __mod_memcg_lruvec_state+0x72/0xc0
+> [   78.849907]  ? __mod_lruvec_page_state+0xb4/0x160
+> [   78.849909]  ? folio_add_lru+0x51/0x80
+> [   78.849912]  ? _raw_spin_unlock+0x12/0x30
+> [   78.849916]  ? __handle_mm_fault+0xdee/0x14d0
+> [   78.849921]  blkdev_read_iter+0xa9/0x180
+> [   78.849924]  new_sync_read+0x109/0x180
+> [   78.849929]  vfs_read+0x187/0x1b0
+> [   78.849932]  ksys_read+0xa1/0xe0
+> [   78.849935]  do_syscall_64+0x42/0x90
+> [   78.849938]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [   78.849941] RIP: 0033:0x7fd3d6322f8e
+> [   78.849944] Code: c0 e9 c6 fe ff ff 48 8d 3d a7 07 0a 00 48 83 ec 
+> 08 e8 b6 e1 01 00 66 0f 1f 44 00 00 64 8b 04 25 18 00 00 00 85 c0 75 
+> 14 0f 05 <48> 3d 00 f0 ff ff 77 59
+> [   78.849945] RSP: 002b:00007ffe92d46ea8 EFLAGS: 00000246 ORIG_RAX: 
+> 0000000000000000
+> [   78.849948] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 
+> 00007fd3d6322f8e
+> [   78.849949] RDX: 0000000000001000 RSI: 00000000004a3000 RDI: 
+> 0000000000000003
+> [   78.849950] RBP: 0000000000000003 R08: 00000000004a3000 R09: 
+> 0000000000000003
+> [   78.849951] R10: 00007fd3d623d0a8 R11: 0000000000000246 R12: 
+> 00000000004a2a60
+> [   78.849952] R13: 0000000000000000 R14: 00000000004a3000 R15: 
+> 000000000048a4a0
+> [   78.849954]  </TASK>
 
-Unfortunately, about the only constructive advice I can give you is "live 
-and learn". I made a similar massive cock-up at the start of my career, and 
-I've always been excessively cautious about disks and data ever since.
+Looks like bfq or block issue, will try it from my side.
 
-What your employer needs to take away from this - and no disrespect to 
-yourself - is that if they run a system that was probably supported for 
-about five years, then has been running on duck tape and baling wire for a 
-further ten years, DON'T give it to someone with pretty much NO sysadmin or 
-computer ops experience to carry out a potentially disastrous operation like 
-messing about with a raid array!
-
-This is NOT a simple setup, and it seems clear to me that you have little 
-familiarity with the basic concepts. Unfortunately, your employer was 
-playing Russian Roulette, and the gun went off.
-
-On a *personal* level, and especially if your employer wants you to continue 
-looking after their systems, they need to give you an (old?) box with a 
-bunch of disk drives. Go back to the raid website and look at the article 
-about building a new system. Take that system they've given you, and use 
-that article as a guide to build it from scratch. It's actually about the 
-computer being used right now to type this message.
-
-I use(d) gentoo as my distro. It's a great distro, but for a newbie I think 
-it takes "throw them in at the deep end" to extremes. Go find Slackware and 
-start with that. It's not a "hold their hands and do everything for them" 
-distro, but nor is it a "here's the instructions, if they don't work for you 
-then you're on your own" distro. Once you've got to grips with Slack, have a 
-go at gentoo. And once you've managed to get gentoo working, you should have 
-a pretty decent grasp of what's going "under the bonnet". CentOS/RedHat/SLES 
-should be a breeze after that.
-
-Cheers,
-Wol
-
-
-
-CAUTION!!! This E-mail originated from outside of WMA Water. Do not click 
-links or open attachments unless you recognize the sender and know the 
-content is safe.
-
-
+Thanks,
+Guoqing
