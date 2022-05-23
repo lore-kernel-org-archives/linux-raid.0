@@ -2,53 +2,55 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BCC5C433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 23 May 2022 07:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5691DC433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 23 May 2022 07:28:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230509AbiEWH1t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 23 May 2022 03:27:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50528 "EHLO
+        id S230336AbiEWH2z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 23 May 2022 03:28:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231147AbiEWH1L (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 23 May 2022 03:27:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AD7E72E3D;
-        Mon, 23 May 2022 00:23:29 -0700 (PDT)
+        with ESMTP id S231190AbiEWH2E (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 23 May 2022 03:28:04 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CC4E12D1F;
+        Mon, 23 May 2022 00:25:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E344460F4E;
-        Mon, 23 May 2022 06:28:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F074C34119;
-        Mon, 23 May 2022 06:28:19 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6E362B80EF2;
+        Mon, 23 May 2022 06:47:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22CADC3411C;
+        Mon, 23 May 2022 06:47:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653287299;
-        bh=+G6QN37JBeeDecpF0Mn6rMG3fkWXm5EFAcnK5EHnUos=;
+        s=k20201202; t=1653288473;
+        bh=jhjfFqnEMxEjSu1Cq7Zj95I16yZf6Dx6j3YB8xQ8+Co=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=lORFfpXzkhH/bu/UwmD76CQVKYdEetkF8PMqoh8KdzXC0VMmc62qZl5bz0pGOBtMk
-         OlWoGM+rHfYdDDQrlrqP/ZCIzgZ2/OP6k4/nZ3skYErVnarM3fFMJlnCX8m8EzICZA
-         YKeppLZ4UIAxpT7R1p8RU5w4qwyoCMe1jEPX4nX34te+xaHDPv3a1pu0xaicPobghX
-         P212NapsDkC0mqRMplaW4HDz3cHt8uD6QFlROAUg+OEJBqxVtO7RnDl0x47deY7xDr
-         PTTyOh0E5Mpew3udOnESmT9kHNDJgPm9nqFDA8eVM3pNzkP9Tx+rfUxyHVhFOvi9qI
-         3oEZUaJMLEyNA==
-Received: by mail-yb1-f176.google.com with SMTP id q135so23643634ybg.10;
-        Sun, 22 May 2022 23:28:19 -0700 (PDT)
-X-Gm-Message-State: AOAM532G+rQojoR0syFUuWPDQqemENa3jc/pTAZ7BTIw4SDWiA5UvJn4
-        kVbBppkSAIqvvqFNTqJIRgSTGX2oQO7M31BLal8=
-X-Google-Smtp-Source: ABdhPJwtNsXeDoCOnv7u39/J737486gnlczLh5EYBIMuDgvFwyVZDTBioltB3E1L75tfs0MX3rEvRGubB3Z9OQf6P5s=
-X-Received: by 2002:a25:1e56:0:b0:64e:a226:6f6b with SMTP id
- e83-20020a251e56000000b0064ea2266f6bmr20102847ybe.322.1653287298271; Sun, 22
- May 2022 23:28:18 -0700 (PDT)
+        b=T0ADDADR1Z+32PmnBb6Mk1tV+32z0qNZm0wWqcHU83WTjjEN6ab/skKaos4zNHsay
+         M4c7xv5tIjBjw1QkiLo3Y1qUy19R3mTV+Hy30Qp45444KFpD51xd4tK//U7B9a0TLx
+         goJBkFzDLY+efp1mcqie14abZ9Zn68FqHMb7nTCVlN3icqDMWUrkOoSgs8w2o0avJW
+         oJmravJ7p9WjQarMHyg7NFmodbxPAmBA3816sIbtJg9MJi9MvLegr/jx4O9C5Jp8td
+         3syeL7v8/wUCGrqUXDPDBcJ5GBcgKOA7/M5cJn0Q6ijSJrTQkbwZAQNmWEU6hVI2Rk
+         k4whVShMcWJgQ==
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-2fee9fe48c2so137286847b3.3;
+        Sun, 22 May 2022 23:47:53 -0700 (PDT)
+X-Gm-Message-State: AOAM532TTUgq1ZXk7SwmC3wTgyGrSwC0KzMUYvkNcdCdA29Mj74D9sFx
+        xDiaYXy2l83qE6O6vjTkxRhyb6ao/N/xE7HE4AE=
+X-Google-Smtp-Source: ABdhPJx+Z9UCe1Is3tLZ85Z0H/Ij71nJfozYcpsX1D1AT9IGbP4aNw9zRZgn1CeknwllG+Y5YglbFDynD2+gfbQYwDU=
+X-Received: by 2002:a0d:f007:0:b0:2f4:ce96:514b with SMTP id
+ z7-20020a0df007000000b002f4ce96514bmr21967836ywe.148.1653288472058; Sun, 22
+ May 2022 23:47:52 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220519191311.17119-1-logang@deltatee.com>
-In-Reply-To: <20220519191311.17119-1-logang@deltatee.com>
+References: <20220519191311.17119-1-logang@deltatee.com> <20220519191311.17119-13-logang@deltatee.com>
+ <62b09487-9223-db3d-2165-789a51230060@molgen.mpg.de>
+In-Reply-To: <62b09487-9223-db3d-2165-789a51230060@molgen.mpg.de>
 From:   Song Liu <song@kernel.org>
-Date:   Sun, 22 May 2022 23:28:07 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5NPE-kkLdJ74LXa7-udOEf=KwDyep1QeANhTxNoWKZOg@mail.gmail.com>
-Message-ID: <CAPhsuW5NPE-kkLdJ74LXa7-udOEf=KwDyep1QeANhTxNoWKZOg@mail.gmail.com>
-Subject: Re: [PATCH v1 00/15] Bug fixes for mdadm tests
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     open list <linux-kernel@vger.kernel.org>,
+Date:   Sun, 22 May 2022 23:47:41 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5FKh7VKgU+=eU4_ad4btFMwU7ymMNMZ5TZVQbv82MaHg@mail.gmail.com>
+Message-ID: <CAPhsuW5FKh7VKgU+=eU4_ad4btFMwU7ymMNMZ5TZVQbv82MaHg@mail.gmail.com>
+Subject: Re: [PATCH v1 12/15] md/raid5-cache: Add RCU protection to conf->log accesses
+To:     Donald Buczek <buczek@molgen.mpg.de>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        open list <linux-kernel@vger.kernel.org>,
         linux-raid <linux-raid@vger.kernel.org>,
         Christoph Hellwig <hch@infradead.org>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
@@ -56,86 +58,173 @@ Cc:     open list <linux-kernel@vger.kernel.org>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, May 19, 2022 at 12:13 PM Logan Gunthorpe <logang@deltatee.com> wrote:
+On Sun, May 22, 2022 at 12:32 AM Donald Buczek <buczek@molgen.mpg.de> wrote=
+:
 >
-> Hi,
->
-> This series includes fixes to fix all the kernel panics in the mdadm
-> tests and some, related, sparse issues. The first 10 patches
-> clean refactor the raid5-cache code so that the RCU usage of conf->log
-> can be cleaned up which is done in patches 11 and 12 -- fixing some
-> actual kernel NULL pointer dereference crashes in the mdadm test.
->
-> Patch 13 fixes some of the remaining sparse warnings that are just
-> missing __rcu annotations.
->
-> Patches 14 and 15 fix a couple additional hangs in an mdadm test.
->
-> This series also originally included a patch[1] to fix the
-> mddev->private=NULL issue in raid0. That bug caused an mdadm tests to
-> crash, but it seems Xiao beat me to the fix by a few days. Hopefully,
-> this work to improve mdadm tests will mean these types of bugs will
-> be caught much sooner, before merging.
+> On 19.05.22 21:13, Logan Gunthorpe wrote:
+> > The mdadm test 21raid5cache randomly fails with NULL pointer accesses
+> > conf->log when run repeatedly. conf->log was sort of protected with
+> > a RCU, but most dereferences were not done with the correct functions.
+> >
+> > Add rcu_read_locks() and rcu_access_pointers() to the appropriate
+> > places.
+> >
+> > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-Thanks for the fix! The set looks good overall. Please address feedback
-from Christoph and Donald. We should be able to ship it soon.
+[...]
+
+> > diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
+> > index f26e6f4c7f9a..24b4dbd5b25c 100644
+> > --- a/drivers/md/raid5-log.h
+> > +++ b/drivers/md/raid5-log.h
+> > @@ -58,7 +58,7 @@ static inline int log_stripe(struct stripe_head *sh, =
+struct stripe_head_state *s
+> >   {
+> >       struct r5conf *conf =3D sh->raid_conf;
+> >
+> > -     if (conf->log) {
+> > +     if (rcu_access_pointer(conf->log)) {
+>
+>
+> A problem here is that `struct r5l_log` of `conf->log` is private to raid=
+5-cache.c and gcc below version 10 (wrongly) regards the `typeof(*p) *local=
+` declaration of __rcu_access_pointer as a dereference:
+>
+>    CC      drivers/md/raid5.o
+>
+> In file included from ./include/linux/rculist.h:11:0,
+>
+>                   from ./include/linux/dcache.h:8,
+>
+>                   from ./include/linux/fs.h:8,
+>
+>                   from ./include/linux/highmem.h:5,
+>
+>                   from ./include/linux/bvec.h:10,
+>
+>                   from ./include/linux/blk_types.h:10,
+>
+>                   from ./include/linux/blkdev.h:9,
+>
+>                   from drivers/md/raid5.c:38:
+>
+> drivers/md/raid5-log.h: In function =E2=80=98log_stripe=E2=80=99:
+>
+> ./include/linux/rcupdate.h:384:9: error: dereferencing pointer to incompl=
+ete type =E2=80=98struct r5l_log=E2=80=99
+>
+>    typeof(*p) *local =3D (typeof(*p) *__force)READ_ONCE(p); \
+>
+>           ^
+>
+> ./include/linux/rcupdate.h:495:31: note: in expansion of macro =E2=80=98_=
+_rcu_access_pointer=E2=80=99
+>
+>   #define rcu_access_pointer(p) __rcu_access_pointer((p), __UNIQUE_ID(rcu=
+), __rcu)
+>
+>                                 ^~~~~~~~~~~~~~~~~~~~
+>
+> drivers/md/raid5-log.h:61:6: note: in expansion of macro =E2=80=98rcu_acc=
+ess_pointer=E2=80=99
+>
+>    if (rcu_access_pointer(conf->log)) {
+>
+>        ^~~~~~~~~~~~~~~~~~
+>
+> make[2]: *** [scripts/Makefile.build:288: drivers/md/raid5.o] Error 1
+>
+> make[1]: *** [scripts/Makefile.build:550: drivers/md] Error 2
+>
+> make: *** [Makefile:1834: drivers] Error 2
+
+This is annoying.. And there are a few other cases in raid5-log.h and
+raid5.c.
+
+Maybe we should move the definition of r5l_log to raid5-log.h?
 
 Thanks,
 Song
 
->
-> This series will be followed by another series for mdadm which fixes
-> the segfaults and annotates some failing tests to make mdadm tests
-> runnable fairly reliably, but I'll wait for a stable hash for this
-> series to note the kernel version tested against. Following that,
-> v3 of my lock contention series will be sent with more confidence
-> of its correctness.
->
-> This series is based on the current md/md-next branch as of today
-> (6ad84d559b8c). A git branch is available here:
->
->   https://github.com/sbates130272/linux-p2pmem md-bug
->
-> Thanks,
->
-> Logan
->
-> [1] https://github.com/sbates130272/linux-p2pmem/commit/5a538f9f48d77cba111773759256bbc3ccaaa74a
->
-> --
->
-> Logan Gunthorpe (15):
->   md/raid5-log: Drop extern decorators for function prototypes
->   md/raid5-cache: Refactor r5c_is_writeback() to take a struct r5conf
->   md/raid5-cache: Refactor r5l_start() to take a struct r5conf
->   md/raid5-cache: Refactor r5l_flush_stripe_to_raid() to take a struct
->     r5conf
->   md/raid5-cache: Refactor r5l_wake_reclaim() to take a struct r5conf
->   md/raid5-cache: Refactor remaining functions to take a r5conf
->   md/raid5-ppl: Drop unused argument from ppl_handle_flush_request()
->   md/raid5-cache: Pass the log through to r5c_finish_cache_stripe()
->   md/raid5-cache: Don't pass conf to r5c_calculate_new_cp()
->   md/raid5-cache: Take struct r5l_log in
->     r5c_log_required_to_flush_cache()
->   md/raid5: Ensure array is suspended for calls to log_exit()
->   md/raid5-cache: Add RCU protection to conf->log accesses
->   md/raid5-cache: Annotate pslot with __rcu notation
->   md: Ensure resync is reported after it starts
->   md: Notify sysfs sync_completed in md_reap_sync_thread()
->
->  drivers/md/md.c          |  13 ++-
->  drivers/md/raid5-cache.c | 240 ++++++++++++++++++++++++---------------
->  drivers/md/raid5-log.h   | 103 ++++++++---------
->  drivers/md/raid5-ppl.c   |   2 +-
->  drivers/md/raid5.c       |  50 ++++----
->  drivers/md/raid5.h       |   2 +-
->  6 files changed, 231 insertions(+), 179 deletions(-)
+
 >
 >
-> base-commit: 6ad84d559b8cbce9ab27a3a2658c438de867c98e
-> --
-> 2.30.2
+> See https://godbolt.org/z/TPP8MdKbc to test compiler versions with this c=
+onstruct.
+>
+> Best
+>
+>    Donald
+>
+>
+> >               if (!test_bit(STRIPE_R5C_CACHING, &sh->state)) {
+> >                       /* writing out phase */
+> >                       if (s->waiting_extra_page)
+> > @@ -79,7 +79,7 @@ static inline void log_stripe_write_finished(struct s=
+tripe_head *sh)
+> >   {
+> >       struct r5conf *conf =3D sh->raid_conf;
+> >
+> > -     if (conf->log)
+> > +     if (rcu_access_pointer(conf->log))
+> >               r5l_stripe_write_finished(sh);
+> >       else if (raid5_has_ppl(conf))
+> >               ppl_stripe_write_finished(sh);
+> > @@ -87,7 +87,7 @@ static inline void log_stripe_write_finished(struct s=
+tripe_head *sh)
+> >
+> >   static inline void log_write_stripe_run(struct r5conf *conf)
+> >   {
+> > -     if (conf->log)
+> > +     if (rcu_access_pointer(conf->log))
+> >               r5l_write_stripe_run(conf);
+> >       else if (raid5_has_ppl(conf))
+> >               ppl_write_stripe_run(conf);
+> > @@ -95,7 +95,7 @@ static inline void log_write_stripe_run(struct r5conf=
+ *conf)
+> >
+> >   static inline void log_flush_stripe_to_raid(struct r5conf *conf)
+> >   {
+> > -     if (conf->log)
+> > +     if (rcu_access_pointer(conf->log))
+> >               r5l_flush_stripe_to_raid(conf);
+> >       else if (raid5_has_ppl(conf))
+> >               ppl_write_stripe_run(conf);
+> > @@ -105,7 +105,7 @@ static inline int log_handle_flush_request(struct r=
+5conf *conf, struct bio *bio)
+> >   {
+> >       int ret =3D -ENODEV;
+> >
+> > -     if (conf->log)
+> > +     if (rcu_access_pointer(conf->log))
+> >               ret =3D r5l_handle_flush_request(conf, bio);
+> >       else if (raid5_has_ppl(conf))
+> >               ret =3D ppl_handle_flush_request(bio);
+> > @@ -115,7 +115,7 @@ static inline int log_handle_flush_request(struct r=
+5conf *conf, struct bio *bio)
+> >
+> >   static inline void log_quiesce(struct r5conf *conf, int quiesce)
+> >   {
+> > -     if (conf->log)
+> > +     if (rcu_access_pointer(conf->log))
+> >               r5l_quiesce(conf, quiesce);
+> >       else if (raid5_has_ppl(conf))
+> >               ppl_quiesce(conf, quiesce);
+> > @@ -123,7 +123,7 @@ static inline void log_quiesce(struct r5conf *conf,=
+ int quiesce)
+> >
+> >   static inline void log_exit(struct r5conf *conf)
+> >   {
+> > -     if (conf->log)
+> > +     if (rcu_access_pointer(conf->log))
+> >               r5l_exit_log(conf);
+> >       else if (raid5_has_ppl(conf))
+> >               ppl_exit_log(conf);
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+
+[...]
