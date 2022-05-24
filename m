@@ -2,135 +2,91 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E64DC433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 24 May 2022 18:13:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DBB3C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 24 May 2022 18:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237570AbiEXSNz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 24 May 2022 14:13:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33414 "EHLO
+        id S235070AbiEXSQe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 24 May 2022 14:16:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235751AbiEXSNx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 24 May 2022 14:13:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AD3866205;
-        Tue, 24 May 2022 11:13:52 -0700 (PDT)
+        with ESMTP id S229726AbiEXSQa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 24 May 2022 14:16:30 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 951B26D95D
+        for <linux-raid@vger.kernel.org>; Tue, 24 May 2022 11:16:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B8ECB61598;
-        Tue, 24 May 2022 18:13:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20E3CC34118;
-        Tue, 24 May 2022 18:13:51 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5225EB817F2
+        for <linux-raid@vger.kernel.org>; Tue, 24 May 2022 18:16:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F074DC34100
+        for <linux-raid@vger.kernel.org>; Tue, 24 May 2022 18:16:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653416031;
-        bh=NLwWw13wDQis8mxaX7ejWZaJmJcrDSXKwOkmB9wEu1Q=;
+        s=k20201202; t=1653416187;
+        bh=9IWysHPrTdHs8vKQyppxNu+LrDbMAVgBHpj/47RCLP4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=rSdk+7WTA0VS0NHfyaStjII8w6DD+bJpI1mm1xWuF/TuqANkvVdRTaTRwxaEoABQw
-         LLBBKRltNlLK1F3gt0TYUM9uYFPZ4khArccswUMRvYufTcFblzPCi+burDW9L3fJhK
-         siWcCWc0OcAbtDlG5Gt1tpZKDQvn5R5yz2jNb0btB7niWISuZngBtKEktbAS1sewM2
-         panF3qzhCHhG8dSKJf7TG2km4lnpdHAzB8eHIQXsWLWwyjYmKAEr/ZTO+aSqYDQoyA
-         DaL8GN4ofsbJuKC71l8v3JpP/yosWos9qll8/Zmv1r1r0owouBzvSKDl3lnj+aLk4c
-         lFMhqSMc5euYw==
-Received: by mail-yb1-f176.google.com with SMTP id q184so3433591ybg.11;
-        Tue, 24 May 2022 11:13:51 -0700 (PDT)
-X-Gm-Message-State: AOAM533feHmoQLmOpoVFHTOiKidPqeQS5ybzrg9oIgVner0CrZmzzw8g
-        rfOp0rLx7bfQO5q6aCaP2RABRZuZxYMFwqd3Ay4=
-X-Google-Smtp-Source: ABdhPJwA4LkeB8g8FYU7aoFUFJXoNMzry/iIe9pPlGF5v622Qj+FvE4j7gAfkuv8N8q8LuBcbNxQNpK8U0AjKTZKB3s=
-X-Received: by 2002:a05:6902:114c:b0:641:87a7:da90 with SMTP id
- p12-20020a056902114c00b0064187a7da90mr28961716ybu.561.1653416030213; Tue, 24
- May 2022 11:13:50 -0700 (PDT)
+        b=fKEK4wUVk+D9gRbI7ZRxnuFtDcVKMMXYpqUBLlFLnbpIHzRAbiOmoE2N/vqsAI5cS
+         8dVsRE22HezqQnuUdhEnBpa+GUgdlLww4KQTrvTkDQr71Ii8AhJyYXvd8EEaLlu5D5
+         t1tqJjckmgKYHZHRW9SH4BTPECsRPg025yeidvzDLnB1iORa8OLo4lviRY5m3NvJWe
+         IRc8/8ui/vv0+QqCaezYLpVkVfHExodhooPWK9pfBxczUBVJReWQ+gq0G+2q26oTB9
+         DkmW2duIQYIIJPS4k8EtkMiyxfWoev8sGcJPJQMH40szixcrrs+Dp057dgN3+iDi/q
+         iIWy7xnVNU3PA==
+Received: by mail-yb1-f182.google.com with SMTP id i187so30084706ybg.6
+        for <linux-raid@vger.kernel.org>; Tue, 24 May 2022 11:16:26 -0700 (PDT)
+X-Gm-Message-State: AOAM531WB9emSqwprw6l0ZzQMm/9HRtemmwCiHtwM2jUOAqTrGuzpHwl
+        5XYLivvt14q2V30ZfbuFSt+FRd0hJco/dEZ7S/Q=
+X-Google-Smtp-Source: ABdhPJwWmrTnR22CK2K3XOz/YGhFrWJYvkCXp0BGwzhsNkO4ek5jdfvWRPgCaWDJhQkjH2GSNlqTuCF1YVkEn2XZ1UA=
+X-Received: by 2002:a25:d04c:0:b0:655:599e:ee13 with SMTP id
+ h73-20020a25d04c000000b00655599eee13mr2351081ybg.449.1653416186055; Tue, 24
+ May 2022 11:16:26 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220519191311.17119-1-logang@deltatee.com> <20220519191311.17119-13-logang@deltatee.com>
- <62b09487-9223-db3d-2165-789a51230060@molgen.mpg.de> <CAPhsuW5FKh7VKgU+=eU4_ad4btFMwU7ymMNMZ5TZVQbv82MaHg@mail.gmail.com>
- <f270d92d-7c34-2f58-89c5-ccb7a8a37872@deltatee.com>
-In-Reply-To: <f270d92d-7c34-2f58-89c5-ccb7a8a37872@deltatee.com>
+References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
+ <20220506113656.25010-1-guoqing.jiang@linux.dev> <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
+ <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev> <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
+ <b4244eab-d9e2-20a0-ebce-1a96e8fadb91@deltatee.com> <836b2a93-65be-8d6c-8610-18373b88f86d@molgen.mpg.de>
+ <5b0584a3-c128-cb53-7c8a-63744c60c667@linux.dev> <4edc9468-d195-6937-f550-211bccbd6756@molgen.mpg.de>
+ <7fd20544-40e4-e180-861d-0e9ce27c9e69@deltatee.com>
+In-Reply-To: <7fd20544-40e4-e180-861d-0e9ce27c9e69@deltatee.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 24 May 2022 11:13:39 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW48iTJyNVip0jYeNFUaFT-XGt297h+ueHfEt=YTfWobsA@mail.gmail.com>
-Message-ID: <CAPhsuW48iTJyNVip0jYeNFUaFT-XGt297h+ueHfEt=YTfWobsA@mail.gmail.com>
-Subject: Re: [PATCH v1 12/15] md/raid5-cache: Add RCU protection to conf->log accesses
+Date:   Tue, 24 May 2022 11:16:15 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5AQ017yFyCcPk5uOxYvZf5qF3f5XGb8DJn_NfC8U0oig@mail.gmail.com>
+Message-ID: <CAPhsuW5AQ017yFyCcPk5uOxYvZf5qF3f5XGb8DJn_NfC8U0oig@mail.gmail.com>
+Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
+ reconfig_mutex held
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     Donald Buczek <buczek@molgen.mpg.de>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
+        linux-raid <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, May 24, 2022 at 8:59 AM Logan Gunthorpe <logang@deltatee.com> wrote=
-:
+On Tue, May 24, 2022 at 8:58 AM Logan Gunthorpe <logang@deltatee.com> wrote:
 >
 >
 >
-> On 2022-05-23 00:47, Song Liu wrote:
-> >> A problem here is that `struct r5l_log` of `conf->log` is private to r=
-aid5-cache.c and gcc below version 10 (wrongly) regards the `typeof(*p) *lo=
-cal` declaration of __rcu_access_pointer as a dereference:
-> >>
-> >>    CC      drivers/md/raid5.o
-> >>
-> >> In file included from ./include/linux/rculist.h:11:0,
-> >>
-> >>                   from ./include/linux/dcache.h:8,
-> >>
-> >>                   from ./include/linux/fs.h:8,
-> >>
-> >>                   from ./include/linux/highmem.h:5,
-> >>
-> >>                   from ./include/linux/bvec.h:10,
-> >>
-> >>                   from ./include/linux/blk_types.h:10,
-> >>
-> >>                   from ./include/linux/blkdev.h:9,
-> >>
-> >>                   from drivers/md/raid5.c:38:
-> >>
-> >> drivers/md/raid5-log.h: In function =E2=80=98log_stripe=E2=80=99:
-> >>
-> >> ./include/linux/rcupdate.h:384:9: error: dereferencing pointer to inco=
-mplete type =E2=80=98struct r5l_log=E2=80=99
-> >>
-> >>    typeof(*p) *local =3D (typeof(*p) *__force)READ_ONCE(p); \
-> >>
-> >>           ^
-> >>
-> >> ./include/linux/rcupdate.h:495:31: note: in expansion of macro =E2=80=
-=98__rcu_access_pointer=E2=80=99
-> >>
-> >>   #define rcu_access_pointer(p) __rcu_access_pointer((p), __UNIQUE_ID(=
-rcu), __rcu)
-> >>
-> >>                                 ^~~~~~~~~~~~~~~~~~~~
-> >>
-> >> drivers/md/raid5-log.h:61:6: note: in expansion of macro =E2=80=98rcu_=
-access_pointer=E2=80=99
-> >>
-> >>    if (rcu_access_pointer(conf->log)) {
-> >>
-> >>        ^~~~~~~~~~~~~~~~~~
-> >>
-> >> make[2]: *** [scripts/Makefile.build:288: drivers/md/raid5.o] Error 1
-> >>
-> >> make[1]: *** [scripts/Makefile.build:550: drivers/md] Error 2
-> >>
-> >> make: *** [Makefile:1834: drivers] Error 2
+> On 2022-05-22 23:41, Donald Buczek wrote:
+> >> Looks like bfq or block issue, will try it from my side.
 > >
-> > This is annoying.. And there are a few other cases in raid5-log.h and
-> > raid5.c.
+> > FYI: I've used loop devices on a virtio disk.
 > >
-> > Maybe we should move the definition of r5l_log to raid5-log.h?
+> > I later discovered Logans patches [1], which I were not aware of, as I'm not subscribed to the lists.
+> >
+> > [1]: https://lore.kernel.org/linux-raid/20220519191311.17119-6-logang@deltatee.com/T/#u
+> >
+> > The series seems to acknowledge that there are open problems and tries to fix them.
+> > So I've used his md-bug branch from https://github.com/sbates130272/linux-p2pmem but it didn't look better.
+> >
+> > So I understand, the mdadm tests *are* supposed to work and every bug I see here is worth analyzing? Or is Logan hunting down everything anyway?
 >
-> That's the only solution I can think of, and what I'll likely do for v2.
-> If anyone has a better solution I'm open to it.
+> I'm not hunting down everything. There's too much brokenness. I've done
+> a bunch of work: there's that series plus an mdadm branch I'll send to
+> the list later (just linked it on my previous email). But even after all
+> that, I still have ~25 broken tests, but I've marked those tests and
+> they shouldn't stop the test script from running everything.
 
-Let's move the definition.
+Thanks for your fixes so far. I will work with Jes to look into the remaining
+failures and develop plan to fix them.
 
-Thanks,
 Song
