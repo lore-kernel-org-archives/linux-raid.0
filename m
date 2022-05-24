@@ -2,60 +2,59 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2BF0C433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 24 May 2022 15:58:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 200C3C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 24 May 2022 15:59:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239133AbiEXP6b (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 24 May 2022 11:58:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45042 "EHLO
+        id S239154AbiEXP7l (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 24 May 2022 11:59:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236688AbiEXP6a (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 24 May 2022 11:58:30 -0400
+        with ESMTP id S239163AbiEXP7j (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 24 May 2022 11:59:39 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 741BE986DA
-        for <linux-raid@vger.kernel.org>; Tue, 24 May 2022 08:58:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48845986DA;
+        Tue, 24 May 2022 08:59:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
         MIME-Version:Date:Message-ID:content-disposition;
-        bh=E1uFF9aj084RYtJXelJvV22dz7rDNxnN2SYl98ONQ/w=; b=UR6KqX+1AGu3azc274LcP1RPb1
-        iC9rcTG8+marQ0QIfSNms3Tj1aJMdsI3v0VuM31vRzHAI4o4PhiP6+8M3GWEP5H7Q1ih7SpWLSABP
-        5zPNPaPBjOz5WRSnQpwWgJ4312HhrdQfx9cFeJTPjwzQrM4NbViOd7C3hFk1V8ZDYHfxAZVmCrsxO
-        HNXf+YcI7sTmCmA8vjzdVu7OxGj2pLkoIjGLpK+u/naIMIBvmmv2JZkJRzpA0GWOKuQGMwhSTSnZS
-        1SAlb3399N1f7w48pyqONBwOF2uy+e5ppUiWVCIpi4oq1pQVGWZdyDMwdiicsYUjiCVUsL641/n+I
-        mkfJPHtA==;
+        bh=IlWWOeHUyxI87/ZUi6NS9TFLsUJi3lbfeazdE29uhPk=; b=imemdAQIiSRD+gdiClRe4DzWb/
+        YiHPsg+seb3ku5EAdgvOL0M0uJXCBJMn0HD6abbC/k2c3FzHpAWoJruiwsP1lumXw2uAh0yzmvD2M
+        OSij1AM/47VXlq9dxn/9kN63aufFLnEVFLFBmrleegqL9RotRZ0cT3VQIj0aWyAtyd4ScIEL5Rjms
+        p6626v6FHEzo9lXf9Uy5zwo5ubha/PFBevop7luQPA0eY1MOLnwKX8N5JWfuu4w86T2fiGk3UuAPR
+        VuvtbU+XESWfe2k3axgOH3BtOIqkaC3YWY7yWAcdmN7eFSwrgTGgeo5CRuaB1vgySJQQxS/RH2ROr
+        YyiNEW4w==;
 Received: from guinness.priv.deltatee.com ([172.16.1.162])
         by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
         (Exim 4.94.2)
         (envelope-from <logang@deltatee.com>)
-        id 1ntWvR-006R8z-9X; Tue, 24 May 2022 09:58:26 -0600
-Message-ID: <7fd20544-40e4-e180-861d-0e9ce27c9e69@deltatee.com>
-Date:   Tue, 24 May 2022 09:58:24 -0600
+        id 1ntWwV-006RAB-Da; Tue, 24 May 2022 09:59:32 -0600
+Message-ID: <f270d92d-7c34-2f58-89c5-ccb7a8a37872@deltatee.com>
+Date:   Tue, 24 May 2022 09:59:30 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.8.0
 Content-Language: en-CA
-To:     Donald Buczek <buczek@molgen.mpg.de>,
+To:     Song Liu <song@kernel.org>, Donald Buczek <buczek@molgen.mpg.de>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
- <20220506113656.25010-1-guoqing.jiang@linux.dev>
- <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
- <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev>
- <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
- <b4244eab-d9e2-20a0-ebce-1a96e8fadb91@deltatee.com>
- <836b2a93-65be-8d6c-8610-18373b88f86d@molgen.mpg.de>
- <5b0584a3-c128-cb53-7c8a-63744c60c667@linux.dev>
- <4edc9468-d195-6937-f550-211bccbd6756@molgen.mpg.de>
+        Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+References: <20220519191311.17119-1-logang@deltatee.com>
+ <20220519191311.17119-13-logang@deltatee.com>
+ <62b09487-9223-db3d-2165-789a51230060@molgen.mpg.de>
+ <CAPhsuW5FKh7VKgU+=eU4_ad4btFMwU7ymMNMZ5TZVQbv82MaHg@mail.gmail.com>
 From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <4edc9468-d195-6937-f550-211bccbd6756@molgen.mpg.de>
+In-Reply-To: <CAPhsuW5FKh7VKgU+=eU4_ad4btFMwU7ymMNMZ5TZVQbv82MaHg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: buczek@molgen.mpg.de, guoqing.jiang@linux.dev, song@kernel.org, linux-raid@vger.kernel.org
+X-SA-Exim-Rcpt-To: song@kernel.org, buczek@molgen.mpg.de, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
 X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
- reconfig_mutex held
+Subject: Re: [PATCH v1 12/15] md/raid5-cache: Add RCU protection to conf->log
+ accesses
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
@@ -64,24 +63,59 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 2022-05-22 23:41, Donald Buczek wrote:
->> Looks like bfq or block issue, will try it from my side.
+On 2022-05-23 00:47, Song Liu wrote:
+>> A problem here is that `struct r5l_log` of `conf->log` is private to raid5-cache.c and gcc below version 10 (wrongly) regards the `typeof(*p) *local` declaration of __rcu_access_pointer as a dereference:
+>>
+>>    CC      drivers/md/raid5.o
+>>
+>> In file included from ./include/linux/rculist.h:11:0,
+>>
+>>                   from ./include/linux/dcache.h:8,
+>>
+>>                   from ./include/linux/fs.h:8,
+>>
+>>                   from ./include/linux/highmem.h:5,
+>>
+>>                   from ./include/linux/bvec.h:10,
+>>
+>>                   from ./include/linux/blk_types.h:10,
+>>
+>>                   from ./include/linux/blkdev.h:9,
+>>
+>>                   from drivers/md/raid5.c:38:
+>>
+>> drivers/md/raid5-log.h: In function ‘log_stripe’:
+>>
+>> ./include/linux/rcupdate.h:384:9: error: dereferencing pointer to incomplete type ‘struct r5l_log’
+>>
+>>    typeof(*p) *local = (typeof(*p) *__force)READ_ONCE(p); \
+>>
+>>           ^
+>>
+>> ./include/linux/rcupdate.h:495:31: note: in expansion of macro ‘__rcu_access_pointer’
+>>
+>>   #define rcu_access_pointer(p) __rcu_access_pointer((p), __UNIQUE_ID(rcu), __rcu)
+>>
+>>                                 ^~~~~~~~~~~~~~~~~~~~
+>>
+>> drivers/md/raid5-log.h:61:6: note: in expansion of macro ‘rcu_access_pointer’
+>>
+>>    if (rcu_access_pointer(conf->log)) {
+>>
+>>        ^~~~~~~~~~~~~~~~~~
+>>
+>> make[2]: *** [scripts/Makefile.build:288: drivers/md/raid5.o] Error 1
+>>
+>> make[1]: *** [scripts/Makefile.build:550: drivers/md] Error 2
+>>
+>> make: *** [Makefile:1834: drivers] Error 2
 > 
-> FYI: I've used loop devices on a virtio disk.
+> This is annoying.. And there are a few other cases in raid5-log.h and
+> raid5.c.
 > 
-> I later discovered Logans patches [1], which I were not aware of, as I'm not subscribed to the lists.
-> 
-> [1]: https://lore.kernel.org/linux-raid/20220519191311.17119-6-logang@deltatee.com/T/#u
-> 
-> The series seems to acknowledge that there are open problems and tries to fix them.
-> So I've used his md-bug branch from https://github.com/sbates130272/linux-p2pmem but it didn't look better.
-> 
-> So I understand, the mdadm tests *are* supposed to work and every bug I see here is worth analyzing? Or is Logan hunting down everything anyway?
+> Maybe we should move the definition of r5l_log to raid5-log.h?
 
-I'm not hunting down everything. There's too much brokenness. I've done
-a bunch of work: there's that series plus an mdadm branch I'll send to
-the list later (just linked it on my previous email). But even after all
-that, I still have ~25 broken tests, but I've marked those tests and
-they shouldn't stop the test script from running everything.
+That's the only solution I can think of, and what I'll likely do for v2.
+If anyone has a better solution I'm open to it.
 
 Logan
