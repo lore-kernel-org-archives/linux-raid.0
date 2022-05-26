@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 020BEC433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 26 May 2022 16:36:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06C98C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 26 May 2022 16:36:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348252AbiEZQgy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 26 May 2022 12:36:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42350 "EHLO
+        id S1348255AbiEZQg4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 26 May 2022 12:36:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348175AbiEZQgd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 May 2022 12:36:33 -0400
+        with ESMTP id S1348154AbiEZQgY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 May 2022 12:36:24 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 938763DA53;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FC1E3B3C0;
         Thu, 26 May 2022 09:36:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=+Dyt/77+mWlqTxiTO6FVET0axWZRroBByVkNU8RIwCQ=; b=fXeq9jvSJ9kFbrzaqV1w8Lksmt
-        dA89QGcjrCaHzPYQj+8TTmlLALxSmi5ZM/4QYuEFSQwNvy2xn/dtBE9w2MJysnfUhZZBGedJuQI51
-        I6dV7qAqXwHhHXOQL6PHlgGe1KijeTGp0n9/NCUtM+CaJ45C+pPM3ahFsf9pbhC2OWW46gsNxctZe
-        RrM0B4k+CpDrw0UoGTY5VBAZ3Y8vD7xtouwRXGKAZos3ZCMsIAMTdqP6sBbh/B+QsWOZ+QV0a2mbE
-        0+GWU4tIvTIsT9JtdguINhAFq+vwN3e3ruQOLZZTq19C3Y1NjhX8Ng/Il1/9WkYlw8LrNKN1h9leV
-        kG/ixbow==;
+        bh=QyHrnH5ZuXktkhsga6G9I5lk9psWpw8ft+8WQu8yre4=; b=SGF2gA9OrU3pLiVsW/FZQRJago
+        JPn8NFyCFlLAhhLSKCOPdFrg+2ZaD62MRS8+Mf9euTicQJDdWT9fumN5CZKBSF8RLATO+lO2E6J/V
+        V5cTyn7QfpB4D7WjTB6N0oqR6POltT3STWuv6HzCW9EULMGkw+d2pyTiWrH3bKl0ENN9qtykN0NM8
+        QRab/EX5hzeTDzY8NKGBzzEalOOVBOjjXjLUbxt78ClUplEnU6Hyshrzi29hdd0uI74ibJID2iy2p
+        eyj7CRN9xEXhznyhD/oYRd92gXQ4pfXUKk9dGKab4aCPp8RXp1ZD2pAl9kQeFSeHglqx8fonrU94h
+        AduRxbpA==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nuGTF-008A7W-Vh; Thu, 26 May 2022 10:36:22 -0600
+        id 1nuGTF-008A7R-Rs; Thu, 26 May 2022 10:36:22 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nuGT9-0008XX-GJ; Thu, 26 May 2022 10:36:15 -0600
+        id 1nuGT9-0008Xf-VQ; Thu, 26 May 2022 10:36:16 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -42,8 +42,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>,
         Christoph Hellwig <hch@lst.de>
-Date:   Thu, 26 May 2022 10:35:56 -0600
-Message-Id: <20220526163604.32736-10-logang@deltatee.com>
+Date:   Thu, 26 May 2022 10:35:58 -0600
+Message-Id: <20220526163604.32736-12-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220526163604.32736-1-logang@deltatee.com>
 References: <20220526163604.32736-1-logang@deltatee.com>
@@ -52,85 +52,73 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, hch@lst.de
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 09/17] md/raid5-cache: Don't pass conf to r5c_calculate_new_cp()
+Subject: [PATCH v2 11/17] md/raid5: Ensure array is suspended for calls to log_exit()
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-r5c_calculate_new_cp() only uses conf to dereference the log which
-both callers already have a pointer to and no longer need to
-obtain a conf through a complicated dereference chain for this use.
+The raid5-cache code relies on there being no IO in flight when
+log_exit() is called. There are two places where this is not
+guaranteed so add mddev_suspend() and mddev_resume() calls to these
+sites.
 
-No functional changes intended.
+The site in raid5_remove_disk() has a comment saying that it is
+called in raid5d and thus cannot wait for pending writes; however that
+does not appear to be correct anymore (if it ever was) as
+raid5_remove_disk() is called from hot_remove_disk() which only
+appears to be called in the md_ioctl(). Thus, the comment is removed,
+as well as the racy check and replaced with calls to suspend/resume.
+
+The site in raid5_change_consistency_policy() is in the error path,
+and another similar call site already has suspend/resume calls just
+below it; so it should be equally safe to make that change here.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5-cache.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/md/raid5.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 8284ce3e5cf6..9a8f2a988b03 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1168,10 +1168,9 @@ static void r5l_run_no_space_stripes(struct r5l_log *log)
-  * for write through mode, returns log->next_checkpoint
-  * for write back, returns log_start of first sh in stripe_in_journal_list
-  */
--static sector_t r5c_calculate_new_cp(struct r5conf *conf)
-+static sector_t r5c_calculate_new_cp(struct r5l_log *log)
- {
- 	struct stripe_head *sh;
--	struct r5l_log *log = conf->log;
- 	sector_t new_cp;
- 	unsigned long flags;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 0d486f8aaf87..4b25a0262cb5 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7938,18 +7938,9 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
  
-@@ -1179,12 +1178,12 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- 		return log->next_checkpoint;
- 
- 	spin_lock_irqsave(&log->stripe_in_journal_lock, flags);
--	if (list_empty(&conf->log->stripe_in_journal_list)) {
-+	if (list_empty(&log->stripe_in_journal_list)) {
- 		/* all stripes flushed */
- 		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
- 		return log->next_checkpoint;
+ 	print_raid5_conf(conf);
+ 	if (test_bit(Journal, &rdev->flags) && conf->log) {
+-		/*
+-		 * we can't wait pending write here, as this is called in
+-		 * raid5d, wait will deadlock.
+-		 * neilb: there is no locking about new writes here,
+-		 * so this cannot be safe.
+-		 */
+-		if (atomic_read(&conf->active_stripes) ||
+-		    atomic_read(&conf->r5c_cached_full_stripes) ||
+-		    atomic_read(&conf->r5c_cached_partial_stripes)) {
+-			return -EBUSY;
+-		}
++		mddev_suspend(mddev);
+ 		log_exit(conf);
++		mddev_resume(mddev);
+ 		return 0;
  	}
--	sh = list_first_entry(&conf->log->stripe_in_journal_list,
-+	sh = list_first_entry(&log->stripe_in_journal_list,
- 			      struct stripe_head, r5c);
- 	new_cp = sh->log_start;
- 	spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
-@@ -1193,10 +1192,8 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- 
- static sector_t r5l_reclaimable_space(struct r5l_log *log)
- {
--	struct r5conf *conf = log->rdev->mddev->private;
--
- 	return r5l_ring_distance(log, log->last_checkpoint,
--				 r5c_calculate_new_cp(conf));
-+				 r5c_calculate_new_cp(log));
- }
- 
- static void r5l_run_no_mem_stripe(struct r5l_log *log)
-@@ -1517,7 +1514,6 @@ static void r5c_do_reclaim(struct r5conf *conf)
- 
- static void r5l_do_reclaim(struct r5l_log *log)
- {
--	struct r5conf *conf = log->rdev->mddev->private;
- 	sector_t reclaim_target = xchg(&log->reclaim_target, 0);
- 	sector_t reclaimable;
- 	sector_t next_checkpoint;
-@@ -1546,7 +1542,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
- 				    log->io_list_lock);
- 	}
- 
--	next_checkpoint = r5c_calculate_new_cp(conf);
-+	next_checkpoint = r5c_calculate_new_cp(log);
- 	spin_unlock_irq(&log->io_list_lock);
- 
- 	if (reclaimable == 0 || !write_super)
+ 	if (rdev == rcu_access_pointer(p->rdev))
+@@ -8697,8 +8688,11 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
+ 			err = log_init(conf, NULL, true);
+ 			if (!err) {
+ 				err = resize_stripes(conf, conf->pool_size);
+-				if (err)
++				if (err) {
++					mddev_suspend(mddev);
+ 					log_exit(conf);
++					mddev_resume(mddev);
++				}
+ 			}
+ 		} else
+ 			err = -EINVAL;
 -- 
 2.30.2
 
