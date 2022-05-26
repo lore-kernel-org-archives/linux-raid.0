@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39420C433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 26 May 2022 16:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A17C433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 26 May 2022 16:36:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348228AbiEZQgj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 26 May 2022 12:36:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42126 "EHLO
+        id S1345155AbiEZQgn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 26 May 2022 12:36:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348147AbiEZQgX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 May 2022 12:36:23 -0400
+        with ESMTP id S1348185AbiEZQgh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 May 2022 12:36:37 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE8D34C7AA;
-        Thu, 26 May 2022 09:36:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3E344F471;
+        Thu, 26 May 2022 09:36:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=/WD2ehsnnbCNIuVIODA1HdN2V1ZCmC9syKI4aXJHfpQ=; b=KapnB+8SWlmnlWl89nEjcyvn7M
-        VI5+n1DSCnhWLcUSdtGIvXIBi6A72nhIXHMV/WkKTM5w00AvPxuY+TMaydl737990T4R/Eg0QFF6X
-        K5Z5bHpIwqzcEq5eaZg/D1YOaElz8K+zyo0HoLqfZCtZY/9ngzjn6w4o6Cy2e9g1sApnPjcq5l0Ip
-        fE1eNHwBEbrnnvEFM89tYIjw7y/knRzJphEo/q4bxjCHg22qCgeFBpxrdRLHdD5xiZrXOMmv1po9n
-        mr4M+3F1CPd0Q9z2H3U3DB+VdF3J8Hww31B2/or5RfcHu3R1DDlNLRg8fYqcEz5WOFVNaocygwNe9
-        IWPq+hZA==;
+        bh=Vtrw1h6V0YuxVxDvHliU2zCW8YmoFTF3FBe7fyBj6JM=; b=NTsJ0mYQB0JcH8HNTkanYMfwYP
+        hJyPSo4rfmQQUN+DBDPoBysTmJiMT5LvYJaUYl3GzUS3bVDyRRb9IcloHOe9G+6xFONsxMQb66cRB
+        LWJRB8oKr1/o7rUWEAUIZpAfZW2KIpiCi05dGjSa5qE4BOksd9LGInH1liVaGWZf+toVdblV6YEDU
+        Tuk8HAhYeNM6utTM81CW2/2mIsgas5vXyuIUjosm3ahdY6zvPzXXD9A0uluFXZMA47U/cqNTtP6zJ
+        uKsENqw6ZeDlxr78mJlsijdZnSrk6ybq5xKuFFrP64xmdCIj2nU2+pN5PbyDlDigSSlDMI2baqEUT
+        QFnOsdQA==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nuGTF-008A7R-1W; Thu, 26 May 2022 10:36:21 -0600
+        id 1nuGTG-008A7W-T5; Thu, 26 May 2022 10:36:23 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nuGTA-0008Xr-Lo; Thu, 26 May 2022 10:36:16 -0600
+        id 1nuGT8-0008XO-Ul; Thu, 26 May 2022 10:36:15 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -42,8 +42,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>,
         Christoph Hellwig <hch@lst.de>
-Date:   Thu, 26 May 2022 10:36:01 -0600
-Message-Id: <20220526163604.32736-15-logang@deltatee.com>
+Date:   Thu, 26 May 2022 10:35:54 -0600
+Message-Id: <20220526163604.32736-8-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220526163604.32736-1-logang@deltatee.com>
 References: <20220526163604.32736-1-logang@deltatee.com>
@@ -52,50 +52,62 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, hch@lst.de
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 14/17] md/raid5-cache: Annotate pslot with __rcu notation
+Subject: [PATCH v2 07/17] md/raid5-ppl: Drop unused argument from ppl_handle_flush_request()
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-radix_tree_lookup_slot() and radix_tree_replace_slot() API expect the
-slot returned and looked up to be marked with __rcu. Otherwise
-sparse warnings are generated:
+ppl_handle_flush_request() takes an struct r5log argument but doesn't
+use it. It has no buisiness taking this argument as it is only used
+by raid5-cache and has no way to derference it anyway. Remove
+the argument.
 
-  drivers/md/raid5-cache.c:2939:23: warning: incorrect type in
-			assignment (different address spaces)
-  drivers/md/raid5-cache.c:2939:23:    expected void **pslot
-  drivers/md/raid5-cache.c:2939:23:    got void [noderef] __rcu **
+No functional changes intended.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5-cache.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/raid5-log.h | 4 ++--
+ drivers/md/raid5-ppl.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 7c56ee977c3a..5ddfe29bc26a 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2609,7 +2609,7 @@ int r5c_try_caching_write(struct r5conf *conf,
- 	int i;
- 	struct r5dev *dev;
- 	int to_cache = 0;
--	void **pslot;
-+	void __rcu **pslot;
- 	sector_t tree_index;
- 	int ret;
- 	uintptr_t refcount;
-@@ -2776,7 +2776,7 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 	int i;
- 	int do_wakeup = 0;
- 	sector_t tree_index;
--	void **pslot;
-+	void __rcu **pslot;
- 	uintptr_t refcount;
+diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
+index e39db84c5de0..1c184fe20939 100644
+--- a/drivers/md/raid5-log.h
++++ b/drivers/md/raid5-log.h
+@@ -41,7 +41,7 @@ void ppl_write_stripe_run(struct r5conf *conf);
+ void ppl_stripe_write_finished(struct stripe_head *sh);
+ int ppl_modify_log(struct r5conf *conf, struct md_rdev *rdev, bool add);
+ void ppl_quiesce(struct r5conf *conf, int quiesce);
+-int ppl_handle_flush_request(struct r5l_log *log, struct bio *bio);
++int ppl_handle_flush_request(struct bio *bio);
+ extern struct md_sysfs_entry ppl_write_hint;
  
- 	if (!log || !test_bit(R5_InJournal, &sh->dev[sh->pd_idx].flags))
+ static inline bool raid5_has_log(struct r5conf *conf)
+@@ -108,7 +108,7 @@ static inline int log_handle_flush_request(struct r5conf *conf, struct bio *bio)
+ 	if (conf->log)
+ 		ret = r5l_handle_flush_request(conf, bio);
+ 	else if (raid5_has_ppl(conf))
+-		ret = ppl_handle_flush_request(conf->log, bio);
++		ret = ppl_handle_flush_request(bio);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index 973e2e06f19c..4f5bdb4cad2b 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -679,7 +679,7 @@ void ppl_quiesce(struct r5conf *conf, int quiesce)
+ 	}
+ }
+ 
+-int ppl_handle_flush_request(struct r5l_log *log, struct bio *bio)
++int ppl_handle_flush_request(struct bio *bio)
+ {
+ 	if (bio->bi_iter.bi_size == 0) {
+ 		bio_endio(bio);
 -- 
 2.30.2
 
