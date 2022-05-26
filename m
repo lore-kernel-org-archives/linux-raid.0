@@ -2,143 +2,183 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D32E4C433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 26 May 2022 11:53:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CBEEC433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 26 May 2022 16:36:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232629AbiEZLxn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 26 May 2022 07:53:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35794 "EHLO
+        id S242520AbiEZQgW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 26 May 2022 12:36:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbiEZLxm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 May 2022 07:53:42 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8EDD0280;
-        Thu, 26 May 2022 04:53:41 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 3AF6521A18;
-        Thu, 26 May 2022 11:53:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1653566020; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=auqJ6PaB+ZD9Fx16q8TjHflpK31Qk9mptp15/0/O1xk=;
-        b=ltuVrpu4i/EO+evjI7NGg8RZJcyxhhyKcJ4WNjS4eqOV15HATtONiRdNK7dD18pNZilQzM
-        KL4Asz3/Ei0uxlvybIaaBoQU2lUtV0K88JAU7HgFwKS41ESj/wQK4vpGONYOszHZ205pxQ
-        UAXcvo23EWTBVQJSZH/OP6gU3B2z/Kk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1653566020;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=auqJ6PaB+ZD9Fx16q8TjHflpK31Qk9mptp15/0/O1xk=;
-        b=IuXzplGM7Pl6/SWMHnLdpvd2WznZVWFe8TnGfxlQxClw91KFgrIbA3znaMfcv/lXe0067k
-        f9xfLdWH9tjISFAg==
-Received: from quack3.suse.cz (unknown [10.100.224.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 1AE0A2C141;
-        Thu, 26 May 2022 11:53:40 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id AD1ECA0632; Thu, 26 May 2022 13:53:36 +0200 (CEST)
-Date:   Thu, 26 May 2022 13:53:36 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+        with ESMTP id S230417AbiEZQgW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 May 2022 12:36:22 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75C3936170;
+        Thu, 26 May 2022 09:36:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Cc:To:From:content-disposition;
+        bh=EBCha7Kz5pRLaLgWVut+C7W0HPOknhHzDfjqwmF0hVg=; b=nWOvRUfpgZWzzr6O2i6z5jk6J3
+        OIpWkl8Owfysr2pq2UEzbJbuKCE9ZRImgb58ZbRSu62NZ2ehLIEJ4tco4VyuecJt1fxFe4r6vOSbS
+        heYyKGzpqznuXi2UaDUAkUCk9C78+5dgNIE7/OPCST1cLyZF2gTZ88P4shJu6Nm7cHvHp8/jusVeQ
+        wRLEtAQPqqqQMh3AgD6qihhvVj+5PjBDy8HrHwSpafVUvuLFuX1PlRpcC6h3E9v2x+A0k8D7txyuF
+        GN4bDQvMfZYeU/LzJH7X/n2P/6K5ZX8rWiZcdGojiaiMLXlxBpaINDpFmRyPJ3GVXdMsR1P1IDxLY
+        AUb5GfMQ==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1nuGTC-008A7T-NE; Thu, 26 May 2022 10:36:19 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1nuGT8-0008X9-4G; Thu, 26 May 2022 10:36:14 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
         Donald Buczek <buczek@molgen.mpg.de>,
-        Song Liu <song@kernel.org>, Jan Kara <jack@suse.cz>,
-        Jens Axboe <axboe@kernel.dk>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Tejun Heo <tj@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-block@vger.kernel.org
-Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
- reconfig_mutex held
-Message-ID: <20220526115336.2whsfdcuqwfzk5fk@quack3.lan>
-References: <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev>
- <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
- <b4244eab-d9e2-20a0-ebce-1a96e8fadb91@deltatee.com>
- <836b2a93-65be-8d6c-8610-18373b88f86d@molgen.mpg.de>
- <5b0584a3-c128-cb53-7c8a-63744c60c667@linux.dev>
- <4edc9468-d195-6937-f550-211bccbd6756@molgen.mpg.de>
- <954f9c33-7801-b6d2-65e3-9e5237905886@linux.dev>
- <82a08e9c-e3f4-4eb6-cb06-58b96c0f01a8@deltatee.com>
- <775d6734-2b08-21a8-a093-f750d31ce6ce@linux.dev>
- <ae6d294a-e9ec-a81d-6085-a9341ed8a470@deltatee.com>
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Thu, 26 May 2022 10:35:49 -0600
+Message-Id: <20220526163604.32736-3-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220526163604.32736-1-logang@deltatee.com>
+References: <20220526163604.32736-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ae6d294a-e9ec-a81d-6085-a9341ed8a470@deltatee.com>
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH v2 02/17] md/raid5-cache: Add r5c_conf_is_writeback() helper
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-[Added couple of CCs since this seems to be an issue in the generic block
-layer]
+Most calls to r5c_is_writeback() have to dereference conf to get the
+log. The log pointer should be protected by RCU, but isn't. Push
+the dereference of conf->log into a new r5c_conf_is_writeback() helper
+to reduce the number of sites that dereference conf->log so this can be
+improved.
 
-On Wed 25-05-22 12:22:06, Logan Gunthorpe wrote:
-> On 2022-05-25 03:04, Guoqing Jiang wrote:
-> > I would prefer to focus on block tree or md tree. With latest block tree
-> > (commit 44d8538d7e7dbee7246acda3b706c8134d15b9cb), I get below
-> > similar issue as Donald reported, it happened with the cmd (which did
-> > work with 5.12 kernel).
-> > 
-> > vm79:~/mdadm> sudo ./test --dev=loop --tests=05r1-add-internalbitmap
-> 
-> Ok, so this test passes for me, but my VM was not running with bfq. It
-> also seems we have layers upon layers of different bugs to untangle.
-> Perhaps you can try the tests with bfq disabled to make progress on the
-> other regression I reported.
-> 
-> If I enable bfq and set the loop devices to the bfq scheduler, then I
-> hit the same bug as you and Donald. It's clearly a NULL pointer
-> de-reference in the bfq code, which seems to be triggered on the
-> partition read after mdadm opens a block device (not sure if it's the md
-> device or the loop device but I suspect the latter seeing it's not going
-> through any md code).
-> 
-> Simplifying things down a bit, the null pointer dereference can be
-> triggered by creating an md device with loop devices that have bfq
-> scheduler set:
-> 
->   mdadm --create --run /dev/md0 --level=1 -n2 /dev/loop0 /dev/loop1
-> 
-> The crash occurs in bfq_bio_bfqg() with blkg_to_bfqg() returning NULL.
-> It's hard to trace where the NULL comes from in there -- the code is a
-> bit complex.
-> 
-> I've found that the bfq bug exists in current md-next (42b805af102) but
-> did not trigger in the base tag of v5.18-rc3. Bisecting revealed the bug
-> was introduced by:
-> 
->   4e54a2493e58 ("bfq: Get rid of __bio_blkcg() usage")
-> 
-> Reverting that commit and the next commit (075a53b7) on top of md-next
-> was confirmed to fix the bug.
-> 
-> I've copied Jan, Jens and Paolo who can hopefully help with this. A
-> cleaned up stack trace follows this email for their benefit.
+No functional changes intended.
 
-So I've debugged this. The crash happens on the very first bio submitted to
-the md0 device. The problem is that this bio gets remapped to loop0 - this
-happens through bio_alloc_clone() -> __bio_clone() which ends up calling
-bio_clone_blkg_association(). Now the resulting bio is inconsistent - it's
-dst_bio->bi_bdev is pointing to loop0 while dst_bio->bi_blkg is pointing to
-blkcg_gq associated with md0 request queue. And this breaks BFQ because
-when this bio is inserted to loop0 request queue, BFQ looks at
-bio->bi_blkg->q (it is a bit more complex than that but this is the gist
-of the problem), expects its data there but BFQ is not initialized for md0
-request_queue.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/md/raid5-cache.c |  7 ++++++-
+ drivers/md/raid5-log.h   |  2 +-
+ drivers/md/raid5.c       | 16 ++++++++--------
+ 3 files changed, 15 insertions(+), 10 deletions(-)
 
-Now I think this is a bug in __bio_clone() but the inconsistency in the bio
-is very much what we asked bio_clone_blkg_association() to do so maybe I'm
-missing something and bios that are associated with one bdev but pointing
-to blkg of another bdev are fine and controllers are supposed to handle
-that (although I'm not sure how should they do that). So I'm asking here
-before I just go and delete bio_clone_blkg_association() from
-__bio_clone()...
-
-								Honza
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 83c184eddbda..96f51ce9b6c1 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -247,12 +247,17 @@ enum r5l_io_unit_state {
+ 	IO_UNIT_STRIPE_END = 3,	/* stripes data finished writing to raid */
+ };
+ 
+-bool r5c_is_writeback(struct r5l_log *log)
++static bool r5c_is_writeback(struct r5l_log *log)
+ {
+ 	return (log != NULL &&
+ 		log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK);
+ }
+ 
++bool r5c_conf_is_writeback(struct r5conf *conf)
++{
++	return r5c_is_writeback(conf->log);
++}
++
+ static sector_t r5l_ring_add(struct r5l_log *log, sector_t start, sector_t inc)
+ {
+ 	start += inc;
+diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
+index 270ced4f770f..720e164e4d4d 100644
+--- a/drivers/md/raid5-log.h
++++ b/drivers/md/raid5-log.h
+@@ -11,7 +11,7 @@ void r5l_stripe_write_finished(struct stripe_head *sh);
+ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio);
+ void r5l_quiesce(struct r5l_log *log, int quiesce);
+ bool r5l_log_disk_error(struct r5conf *conf);
+-bool r5c_is_writeback(struct r5l_log *log);
++bool r5c_conf_is_writeback(struct r5conf *conf);
+ int r5c_try_caching_write(struct r5conf *conf, struct stripe_head *sh,
+ 			  struct stripe_head_state *s, int disks);
+ void r5c_finish_stripe_write_out(struct r5conf *conf, struct stripe_head *sh,
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5d09256d7f81..458d88faf2e9 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -224,7 +224,7 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 	BUG_ON(!list_empty(&sh->lru));
+ 	BUG_ON(atomic_read(&conf->active_stripes)==0);
+ 
+-	if (r5c_is_writeback(conf->log))
++	if (r5c_conf_is_writeback(conf))
+ 		for (i = sh->disks; i--; )
+ 			if (test_bit(R5_InJournal, &sh->dev[i].flags))
+ 				injournal++;
+@@ -236,7 +236,7 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 	 *   2. when resync is requested fot the stripe.
+ 	 */
+ 	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state) ||
+-	    (conf->quiesce && r5c_is_writeback(conf->log) &&
++	    (conf->quiesce && r5c_conf_is_writeback(conf) &&
+ 	     !test_bit(STRIPE_HANDLE, &sh->state) && injournal != 0)) {
+ 		if (test_bit(STRIPE_R5C_CACHING, &sh->state))
+ 			r5c_make_stripe_write_out(sh);
+@@ -274,7 +274,7 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 				md_wakeup_thread(conf->mddev->thread);
+ 		atomic_dec(&conf->active_stripes);
+ 		if (!test_bit(STRIPE_EXPANDING, &sh->state)) {
+-			if (!r5c_is_writeback(conf->log))
++			if (!r5c_conf_is_writeback(conf))
+ 				list_add_tail(&sh->lru, temp_inactive_list);
+ 			else {
+ 				WARN_ON(test_bit(R5_InJournal, &sh->dev[sh->pd_idx].flags));
+@@ -1786,7 +1786,7 @@ static void ops_complete_prexor(void *stripe_head_ref)
+ 	pr_debug("%s: stripe %llu\n", __func__,
+ 		(unsigned long long)sh->sector);
+ 
+-	if (r5c_is_writeback(sh->raid_conf->log))
++	if (r5c_conf_is_writeback(sh->raid_conf))
+ 		/*
+ 		 * raid5-cache write back uses orig_page during prexor.
+ 		 * After prexor, it is time to free orig_page
+@@ -1905,9 +1905,9 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+ 					tx = async_copy_data(1, wbi, &dev->page,
+ 							     dev->offset,
+ 							     dev->sector, tx, sh,
+-							     r5c_is_writeback(conf->log));
++							     r5c_conf_is_writeback(conf));
+ 					if (dev->page != dev->orig_page &&
+-					    !r5c_is_writeback(conf->log)) {
++					    !r5c_conf_is_writeback(conf)) {
+ 						set_bit(R5_SkipCopy, &dev->flags);
+ 						clear_bit(R5_UPTODATE, &dev->flags);
+ 						clear_bit(R5_OVERWRITE, &dev->flags);
+@@ -5085,7 +5085,7 @@ static void handle_stripe(struct stripe_head *sh)
+ 	 */
+ 
+ 	if (!sh->reconstruct_state && !sh->check_state && !sh->log_io) {
+-		if (!r5c_is_writeback(conf->log)) {
++		if (!r5c_conf_is_writeback(conf)) {
+ 			if (s.to_write)
+ 				handle_stripe_dirtying(conf, sh, &s, disks);
+ 		} else { /* write back cache */
+@@ -5533,7 +5533,7 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
+ 	struct stripe_head *sh, *tmp;
+ 	struct list_head *handle_list = NULL;
+ 	struct r5worker_group *wg;
+-	bool second_try = !r5c_is_writeback(conf->log) &&
++	bool second_try = !r5c_conf_is_writeback(conf) &&
+ 		!r5l_log_disk_error(conf);
+ 	bool try_loprio = test_bit(R5C_LOG_TIGHT, &conf->cache_state) ||
+ 		r5l_log_disk_error(conf);
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.30.2
+
