@@ -2,45 +2,45 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBF12C433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 26 May 2022 09:46:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D32E4C433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 26 May 2022 11:53:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236225AbiEZJq0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 26 May 2022 05:46:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54970 "EHLO
+        id S232629AbiEZLxn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 26 May 2022 07:53:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343511AbiEZJqZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 May 2022 05:46:25 -0400
+        with ESMTP id S229478AbiEZLxm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 May 2022 07:53:42 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85E5DC9660
-        for <linux-raid@vger.kernel.org>; Thu, 26 May 2022 02:46:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8EDD0280;
+        Thu, 26 May 2022 04:53:41 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 05C04219B0;
-        Thu, 26 May 2022 09:46:22 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTP id 3AF6521A18;
+        Thu, 26 May 2022 11:53:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1653558382; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1653566020; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=xAzbDtKzD4j7WOo/trxcSaIx35b+dBXJ2jcwyhV/gKQ=;
-        b=SXV6jkWmQsyI3/1uuzjpf2l3XDsS4ylcmFpC/RUuT3SBXnPVUegmL1/pufTmVlp9g6c2Ek
-        Jc7ucx3BpGUTEb6/mt9TS6OxnelepCVGMMx7Q/O/MAFIo43pmjvwm/keBkHr0EJk7Sx6MM
-        RspV1nG/Utem6ogBIXtF15r88ryuffA=
+        bh=auqJ6PaB+ZD9Fx16q8TjHflpK31Qk9mptp15/0/O1xk=;
+        b=ltuVrpu4i/EO+evjI7NGg8RZJcyxhhyKcJ4WNjS4eqOV15HATtONiRdNK7dD18pNZilQzM
+        KL4Asz3/Ei0uxlvybIaaBoQU2lUtV0K88JAU7HgFwKS41ESj/wQK4vpGONYOszHZ205pxQ
+        UAXcvo23EWTBVQJSZH/OP6gU3B2z/Kk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1653558382;
+        s=susede2_ed25519; t=1653566020;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=xAzbDtKzD4j7WOo/trxcSaIx35b+dBXJ2jcwyhV/gKQ=;
-        b=VNrE7zY5GIAyhF184Io3FFoYADvZQkPKWaHm7OFpF58xB/EGjl6JH47vXJnlhrbrtOSHaD
-        Ryv02cjd9PlVrsDQ==
+        bh=auqJ6PaB+ZD9Fx16q8TjHflpK31Qk9mptp15/0/O1xk=;
+        b=IuXzplGM7Pl6/SWMHnLdpvd2WznZVWFe8TnGfxlQxClw91KFgrIbA3znaMfcv/lXe0067k
+        f9xfLdWH9tjISFAg==
 Received: from quack3.suse.cz (unknown [10.100.224.230])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id BE3B22C141;
-        Thu, 26 May 2022 09:46:21 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTPS id 1AE0A2C141;
+        Thu, 26 May 2022 11:53:40 +0000 (UTC)
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 381B9A0632; Thu, 26 May 2022 11:46:21 +0200 (CEST)
-Date:   Thu, 26 May 2022 11:46:21 +0200
+        id AD1ECA0632; Thu, 26 May 2022 13:53:36 +0200 (CEST)
+Date:   Thu, 26 May 2022 13:53:36 +0200
 From:   Jan Kara <jack@suse.cz>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
@@ -48,10 +48,13 @@ Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
         Song Liu <song@kernel.org>, Jan Kara <jack@suse.cz>,
         Jens Axboe <axboe@kernel.dk>,
         Paolo Valente <paolo.valente@linaro.org>,
-        linux-raid <linux-raid@vger.kernel.org>
+        linux-raid <linux-raid@vger.kernel.org>,
+        Tejun Heo <tj@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-block@vger.kernel.org
 Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
  reconfig_mutex held
-Message-ID: <20220526094621.gzfm2zws325sb7wn@quack3.lan>
+Message-ID: <20220526115336.2whsfdcuqwfzk5fk@quack3.lan>
 References: <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev>
  <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
  <b4244eab-d9e2-20a0-ebce-1a96e8fadb91@deltatee.com>
@@ -70,9 +73,10 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+[Added couple of CCs since this seems to be an issue in the generic block
+layer]
+
 On Wed 25-05-22 12:22:06, Logan Gunthorpe wrote:
-> 
-> 
 > On 2022-05-25 03:04, Guoqing Jiang wrote:
 > > I would prefer to focus on block tree or md tree. With latest block tree
 > > (commit 44d8538d7e7dbee7246acda3b706c8134d15b9cb), I get below
@@ -115,12 +119,26 @@ On Wed 25-05-22 12:22:06, Logan Gunthorpe wrote:
 > I've copied Jan, Jens and Paolo who can hopefully help with this. A
 > cleaned up stack trace follows this email for their benefit.
 
-Indeed. Thanks for easy reproduction steps. I've reproduced the issue
-locally and I'm looking into it because from a quick look into the code
-this shouldn't be possible which means I'm missing something obvious :).
+So I've debugged this. The crash happens on the very first bio submitted to
+the md0 device. The problem is that this bio gets remapped to loop0 - this
+happens through bio_alloc_clone() -> __bio_clone() which ends up calling
+bio_clone_blkg_association(). Now the resulting bio is inconsistent - it's
+dst_bio->bi_bdev is pointing to loop0 while dst_bio->bi_blkg is pointing to
+blkcg_gq associated with md0 request queue. And this breaks BFQ because
+when this bio is inserted to loop0 request queue, BFQ looks at
+bio->bi_blkg->q (it is a bit more complex than that but this is the gist
+of the problem), expects its data there but BFQ is not initialized for md0
+request_queue.
+
+Now I think this is a bug in __bio_clone() but the inconsistency in the bio
+is very much what we asked bio_clone_blkg_association() to do so maybe I'm
+missing something and bios that are associated with one bdev but pointing
+to blkg of another bdev are fine and controllers are supposed to handle
+that (although I'm not sure how should they do that). So I'm asking here
+before I just go and delete bio_clone_blkg_association() from
+__bio_clone()...
 
 								Honza
-
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
