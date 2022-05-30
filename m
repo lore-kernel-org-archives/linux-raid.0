@@ -2,34 +2,34 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88835C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 15:58:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE94C433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 16:01:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241883AbiE3P6R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 May 2022 11:58:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49488 "EHLO
+        id S240574AbiE3QBK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 May 2022 12:01:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231980AbiE3P6G (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 11:58:06 -0400
+        with ESMTP id S243183AbiE3QAo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 12:00:44 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93CAA99822;
-        Mon, 30 May 2022 08:48:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3789B4EDD8;
+        Mon, 30 May 2022 08:57:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
         MIME-Version:Date:Message-ID:content-disposition;
-        bh=nStA9lqh6i5uOfeF+xwtlFCvRjzsWn5OqHELFm3vFb4=; b=qbYhFDmDAJvgqI4LQL2tYR1y/k
-        MYRLNo9sNH7/EiAVHFxRRz5EseRqS0pmDphXDMkflWot8X5kYg7hN5N3PiPbsrJVPcW/C2F5KF4w7
-        hSD+ETefUAmP6Ri8JloTk2rVxcrKW4QbrX4rMx+qSu/g7jWEaTGVXlQZqH8Xx4mJZZCgciX+s60Cw
-        wrpvuPD2F9oyhQu9DWE7FfUETYhhFVEAP8+08Nm8hNW4bmyOISIN1E00TK2CQtrr2WUFlSNVNcwZX
-        TTpKyQTIPBklBk34bdrFzkXkLTFMx3dT6Hx7qa4ajU/DR2yWCKAUZwASonrAodZNWztqbyL9baqJt
-        r8t9tJbA==;
+        bh=WyabVAhDYiZqjSLa5iju0Bgbs3O1v4mXmm6tJlHV12k=; b=JSmX09cFPFxA27bTAP0p93a5XR
+        74XlYlnwPcnsFnhr83bhqymLFY9AmJW69rfr6PiYF+iBN1xU3LHacKJPhgEWZEZw3uQZQhOMCqX3C
+        9Up1ynMSnkL5dXkaGj2AtN24Wwet9BHY26OKlwlpgr6E/ZfuTBzvCEeSTZ26pSY8amVRxEAytZihy
+        pEEnoFP6kxfBPnsdtQ54wfgsRnU+G6nv4+Os8SyEcB1uGmxJVyn9JTL1S6VrauaJjQtmvUTqd4p5h
+        NX0+GBnRHZd9CZwLBN4VvIxi/D6ViyN+w+jv5Ika3/ZRu4MiJInRTq2q/85F0r/Go17sFgbbqJHoJ
+        BWYzJOOA==;
 Received: from guinness.priv.deltatee.com ([172.16.1.162])
         by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
         (Exim 4.94.2)
         (envelope-from <logang@deltatee.com>)
-        id 1nvhd9-00Bjxp-0q; Mon, 30 May 2022 09:48:31 -0600
-Message-ID: <c59d233a-c0d1-a3cc-3dad-0a5af449ff83@deltatee.com>
-Date:   Mon, 30 May 2022 09:48:30 -0600
+        id 1nvhlP-00Bk5v-OU; Mon, 30 May 2022 09:57:04 -0600
+Message-ID: <7d6e6699-348a-af5a-0ab4-a7c4bd917ed1@deltatee.com>
+Date:   Mon, 30 May 2022 09:57:02 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.9.0
@@ -43,17 +43,17 @@ Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
 References: <20220526163604.32736-1-logang@deltatee.com>
- <20220526163604.32736-13-logang@deltatee.com>
- <YpRdL+2e7gngOYPa@infradead.org>
+ <20220526163604.32736-14-logang@deltatee.com>
+ <YpRdrytEQkw/0vMH@infradead.org>
 From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <YpRdL+2e7gngOYPa@infradead.org>
+In-Reply-To: <YpRdrytEQkw/0vMH@infradead.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-SA-Exim-Connect-IP: 172.16.1.162
 X-SA-Exim-Rcpt-To: hch@infradead.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
 X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH v2 12/17] md/raid5-cache: Move struct r5l_log definition
- to raid5-log.h
+Subject: Re: [PATCH v2 13/17] md/raid5-cache: Add RCU protection to conf->log
+ accesses
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
@@ -62,40 +62,25 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 2022-05-29 23:59, Christoph Hellwig wrote:
-> On Thu, May 26, 2022 at 10:35:59AM -0600, Logan Gunthorpe wrote:
->> Move struct r5l_log definition to raid5-log.h. While this reduces
->> encapsulation, it is necessary for the definition of r5l_log to be
->> public so that rcu_access_pointer() can be used on conf-log in the
->> next patch.
+On 2022-05-30 00:01, Christoph Hellwig wrote:
+> On Thu, May 26, 2022 at 10:36:00AM -0600, Logan Gunthorpe wrote:
+>> The mdadm test 21raid5cache randomly fails with NULL pointer accesses
+>> of conf->log when run repeatedly. conf->log was sort of protected with
+>> RCU, but most dereferences were not done with the correct functions.
 >>
->> rcu_access_pointer(p) doesn't technically dereference the log pointer
->> however, it does use typeof(*p) and some older GCC versions (anything
->> earlier than gcc-10) will wrongly try to dereference the structure:
->>
->>     include/linux/rcupdate.h:384:9: error: dereferencing pointer to
->>                  incomplete type ‘struct r5l_log’
->>
->>       typeof(*p) *local = (typeof(*p) *__force)READ_ONCE(p); \
->>            ^
->>
->>     include/linux/rcupdate.h:495:31: note: in expansion of
->>                   macro ‘__rcu_access_pointer’
->>
->>        #define rcu_access_pointer(p) __rcu_access_pointer((p),
->>        __UNIQUE_ID(rcu), __rcu)
->>
->> To prevent this, simply provide the definition where
->> rcu_access_pointer() may be used.
+>> Add rcu_read_locks(), rcu_dereference_protected() and rcu_access_pointers()
+>> calls to the appropriate places and mark the pointer with __rcu.
 > 
-> What about just moving any code that does the rcu_access_pointer on
-> conf->log to raid5-cache.c and doing an out of line call for it
-> instead?
+> Looking at the code a bit more, is this really enough?  Calls to
+> r5c_is_writeback / r5c_confi_is_writeback are sprinkled all over the
+> code, and my gut feeling is the value is not expected to change over
+> way longer critical sections than this.  So maybe the answer here is to
+> fix up the release to be properly locked as it only affects the non-I/O
+> slow path anyway.
 
-I guess we could do that. All the inline functions in raid5-log.h are
-there to choose between the r5l or the ppl implementaiton. So it that
-would mean the r5l implementation would probably be inlined and ppl
-would be doing a second out of line call. Not sure if that matters, but
-it seems a little odd.
+Yeah, I think your gut feeling is correct. It looks like all the
+is_writeback calls are in the IO path as well. I'll review this again
+and see if we can just replace the RCU stuff and the paths that were
+hitting NULL pointer deference with the taking of a lock.
 
 Logan
