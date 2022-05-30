@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 054DEC433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 13:48:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88E5CC4743E
+	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 14:12:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236929AbiE3Nsf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 May 2022 09:48:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40278 "EHLO
+        id S238898AbiE3OMd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 May 2022 10:12:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238994AbiE3NqK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 09:46:10 -0400
+        with ESMTP id S238801AbiE3OEv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 10:04:51 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABB20A26EF;
-        Mon, 30 May 2022 06:34:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35AFCCE5C3;
+        Mon, 30 May 2022 06:40:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B4581B80DBB;
-        Mon, 30 May 2022 13:33:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65E88C36AE9;
-        Mon, 30 May 2022 13:33:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B0EA5B80D86;
+        Mon, 30 May 2022 13:40:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48EDFC385B8;
+        Mon, 30 May 2022 13:40:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917622;
-        bh=PH+cowAQ+wr2TocWy9i17v14NXwGOM4fF5selByEHAY=;
+        s=k20201202; t=1653918023;
+        bh=M+1Niq93x609TavdpJSOnduu6BVE39dvKni/QPpS1NU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XCVVsUx9KWwzL5qkRAqblqHiluocsJeF8uVI52hJ/I1BMpBIBzGGKF0fDsTauwNri
-         TCzuASaEy2LLkqGkJ4La0y868+kUOCUVcnRZG1GA+hoGKyk5rWTrGNBhgWxi3Aqu06
-         dOCgdPbUFMCLtfcwV3NzktUZkcQVNBlTgmsozPWf9WpaMBFCWalBEjTXlLMzGFPZgQ
-         4frj6vO2nm9GxYQtmhypgZYHAtYbOHgc7zfKds4Wu1/PQIAnEnZUEKODX7jL0uqLu/
-         lt50wKsMVpKcw6TOAWIydJM+8vAtUMK0tbq5a9guqNOM6T9vYcE5tV00FSlrkUDRMh
-         szJKxSBfdy/iQ==
+        b=ctftjNlrMIFLuGg81inCFkqBg/mvv5fPoFnfL5k9kZlGVw/vv/AIoNg+RBjsmhWVJ
+         510kQiGKfjnfV2B8d5lcsP2I+5G67jkQi89KRrY5ByViUH5p7JvIzzttXsOlv/OrP6
+         TUv3ipECWui7UEwa6zZdmuahfp7AFRsvMCGeZdcKf881e106mOKDBbnIDdk868hQig
+         t4K/UXBnS8HgnJRq/jrkIrx8vQ83Q+ge4vdWjx4AWzciJchjO0lXRJc+860pNZV3B1
+         xQrBxqREmPe/AKKLbJNo+xgybl9HeIIcFoxcxHhf3q7IbX0kZFLDciNWf/QAjLy9G0
+         IyykGL2IlWaaw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Heming Zhao <heming.zhao@suse.com>,
@@ -39,12 +39,12 @@ Cc:     Heming Zhao <heming.zhao@suse.com>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
         Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 044/135] md/bitmap: don't set sb values if can't pass sanity check
-Date:   Mon, 30 May 2022 09:30:02 -0400
-Message-Id: <20220530133133.1931716-44-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 035/109] md/bitmap: don't set sb values if can't pass sanity check
+Date:   Mon, 30 May 2022 09:37:11 -0400
+Message-Id: <20220530133825.1933431-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530133133.1931716-1-sashal@kernel.org>
-References: <20220530133133.1931716-1-sashal@kernel.org>
+In-Reply-To: <20220530133825.1933431-1-sashal@kernel.org>
+References: <20220530133825.1933431-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -131,7 +131,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 23 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index bfd6026d7809..612460d2bdaf 100644
+index e29c6298ef5c..8cc11b1987ec 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
 @@ -639,14 +639,6 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
