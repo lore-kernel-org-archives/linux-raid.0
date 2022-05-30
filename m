@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33D8DC433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 14:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B51DFC433FE
+	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 14:23:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237276AbiE3OXZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 May 2022 10:23:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40298 "EHLO
+        id S237766AbiE3OX3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 May 2022 10:23:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241633AbiE3ORv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 10:17:51 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB4C35714F;
-        Mon, 30 May 2022 06:47:51 -0700 (PDT)
+        with ESMTP id S241267AbiE3ORZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 10:17:25 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CA799B1B2;
+        Mon, 30 May 2022 06:45:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id DCF19B80DE8;
-        Mon, 30 May 2022 13:47:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89C93C36AE5;
-        Mon, 30 May 2022 13:47:47 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 57D81B80D83;
+        Mon, 30 May 2022 13:45:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2947EC341C8;
+        Mon, 30 May 2022 13:45:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918468;
-        bh=k3iFHM/oT9Nh5ayki4EpnafQ7zMF7rqJIXHD2vySli0=;
+        s=k20201202; t=1653918301;
+        bh=OiI0PmsJtqps+PkFB0TqTuCxhpCe5p17/wJXmiP1MZI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E/Ccr4y5u56n+lmthZZ5ecwQqwdL+r15XyPbL8DP4R6oIo/LL9QTvBRqIYE64qhvY
-         QWjmKg837RQ8GPTvicqPwqxz7ZwAYZCy7OYiq1nK3XbN6+lpFO7CQT5PFEyRSgmdfV
-         GR0kVVARNBNL8/x2LyCdHgJ/YgninXoUnbQej6xufNkrjEnZGZNmY4zkRVW4bsR3SK
-         khCpJBY6YJPkEZ1BiqrdWs37qOQVBUkFtTY/IdY15R2l237h/Jhmevydlh/dehNojY
-         l2nNT7UCHc1Ho40RJVUH+LRsjVxQoyRWchsL7iYH2F4+YzjmDGgTaSsJGUAgMnBcjo
-         W0oSmf54j1J6g==
+        b=N9Qnd7aAiCmcAb2lIaz9UZQhgIWVYZS/ZotovuFtyBDDI+nrIHnJfNiww4b6Vl8dH
+         Yvoh8nT502/qNm7fxriRNKM/VQvbGIZb/wN49qoRAaQabGinTaKiAS4Pl2Wc8zQ11p
+         fTAdLCgtCFB8MK4M/sAINOSoB0RdPGoTlx84hIjOWD+2aVR/tBuacFtK8fbrfx8H9u
+         lrNyU3IiZozVKfjwuUc1cHGY6qdKC4IuIwwlq1akyBSnH/Ll+/yROQJOcO/e27XKI7
+         oVRm+PG2WzPfBFz8WNGnbwEVoXagAUmG4a7yu58RRhyUM29yQqkjSQCw76Fr18S5AT
+         GrkIJil4NNyGA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Heming Zhao <heming.zhao@suse.com>,
@@ -39,12 +39,12 @@ Cc:     Heming Zhao <heming.zhao@suse.com>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
         Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 18/55] md/bitmap: don't set sb values if can't pass sanity check
-Date:   Mon, 30 May 2022 09:46:24 -0400
-Message-Id: <20220530134701.1935933-18-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 24/76] md/bitmap: don't set sb values if can't pass sanity check
+Date:   Mon, 30 May 2022 09:43:14 -0400
+Message-Id: <20220530134406.1934928-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530134701.1935933-1-sashal@kernel.org>
-References: <20220530134701.1935933-1-sashal@kernel.org>
+In-Reply-To: <20220530134406.1934928-1-sashal@kernel.org>
+References: <20220530134406.1934928-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -131,10 +131,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 23 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index d7eef5292ae2..a95e20c3d0d4 100644
+index ea3130e11680..d377ea060925 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -642,14 +642,6 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+@@ -639,14 +639,6 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
  	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
  	write_behind = le32_to_cpu(sb->write_behind);
  	sectors_reserved = le32_to_cpu(sb->sectors_reserved);
@@ -149,7 +149,7 @@ index d7eef5292ae2..a95e20c3d0d4 100644
  
  	/* verify that the bitmap-specific fields are valid */
  	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
-@@ -671,6 +663,16 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+@@ -668,6 +660,16 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
  		goto out;
  	}
  
@@ -166,7 +166,7 @@ index d7eef5292ae2..a95e20c3d0d4 100644
  	/* keep the array size field of the bitmap superblock up to date */
  	sb->sync_size = cpu_to_le64(bitmap->mddev->resync_max_sectors);
  
-@@ -703,9 +705,9 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+@@ -700,9 +702,9 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
  
  out:
  	kunmap_atomic(sb);
@@ -178,7 +178,7 @@ index d7eef5292ae2..a95e20c3d0d4 100644
  		err = md_setup_cluster(bitmap->mddev, nodes);
  		if (err) {
  			pr_warn("%s: Could not setup cluster service (%d)\n",
-@@ -716,18 +718,18 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+@@ -713,18 +715,18 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
  		goto re_read;
  	}
  
