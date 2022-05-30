@@ -2,336 +2,323 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 118EDC433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 06:30:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 906ABC433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 09:56:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232842AbiE3Gao (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 May 2022 02:30:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38932 "EHLO
+        id S234433AbiE3J4O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 May 2022 05:56:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232840AbiE3Gan (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 02:30:43 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EC8B22506
-        for <linux-raid@vger.kernel.org>; Sun, 29 May 2022 23:30:42 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id B43B921BD7;
-        Mon, 30 May 2022 06:30:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1653892240; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S232713AbiE3J4N (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 05:56:13 -0400
+Received: from out0.migadu.com (out0.migadu.com [IPv6:2001:41d0:2:267::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E49594C7A2
+        for <linux-raid@vger.kernel.org>; Mon, 30 May 2022 02:56:11 -0700 (PDT)
+Subject: Re: [Update PATCH V3] md: don't unregister sync_thread with
+ reconfig_mutex held
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1653904570;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=0A6r6pKqNGE6e4zFrP10OTnkuJQ6HIGhCgIkwGQPXHQ=;
-        b=RIRMVXIqqC//W0rxQO20PWt2JTrIqi6oP/ghefbBAzBHsxlMsZ/ETaBIOQaVT2Ps072PyP
-        VWUtbMEMMJ59SmC29DO6a858dgNdpArz1nIfr/L/st3S5KXvuAO3I1ThKtUEE7EMoEh61L
-        ARvqDDiEfN1C3/8k7RRkdzlrt+5kV5g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1653892240;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0A6r6pKqNGE6e4zFrP10OTnkuJQ6HIGhCgIkwGQPXHQ=;
-        b=2YCRl6uqAGXDPl93cQbGV0ak8UpUMFufvE97JPoxnEohwcQl3E4cBNNhdg7gLnIOFhJ/1f
-        DpZxlWNvwa8pUABg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8B7A113AFD;
-        Mon, 30 May 2022 06:30:39 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id sIiPFY9klGJlWwAAMHmgww
-        (envelope-from <colyli@suse.de>); Mon, 30 May 2022 06:30:39 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
-Subject: Re: [PATCH] Grow: Split Grow_reshape into helper function.
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220404071720.8642-1-mateusz.kusiak@intel.com>
-Date:   Mon, 30 May 2022 14:30:36 +0800
-Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <C2E28E34-B32F-4E42-9BC3-56B5B69B5C00@suse.de>
-References: <20220404071720.8642-1-mateusz.kusiak@intel.com>
-To:     Mateusz Kusiak <mateusz.kusiak@intel.com>
-X-Mailer: Apple Mail (2.3696.100.31)
+        bh=ZoMpYzh34zzB5ARo9PPQnq+/eblJ/Z2YLXYPvv2jr5I=;
+        b=eS0Z43PNZVD10WHTgEWOFFZmi2r8aBZ+yvVXNLJNkV3oZx9gRaGyHszmYvWxZa/Kqd5ss3
+        MdFnhVQVVuFa9fIPZhfYdRYjtXun+mWeAF0OPpi1dTqHcYs2g90ibUyTSSK+hFgl/w+KI+
+        u0ipenVUsFRGZxM5LHYfKhbwpzQKwyI=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+To:     Donald Buczek <buczek@molgen.mpg.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Song Liu <song@kernel.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <20220505081641.21500-1-guoqing.jiang@linux.dev>
+ <20220506113656.25010-1-guoqing.jiang@linux.dev>
+ <CAPhsuW6mGnkg4x5xm6x5n06JXxF-7PNubpQiZNmX0BH9Zo1ncA@mail.gmail.com>
+ <141b4110-767e-7670-21d5-6a5f636d1207@linux.dev>
+ <CAPhsuW6U3g-Xikbw4mAJOH1-kN42rYHLiq_ocv==436azhm33g@mail.gmail.com>
+ <b4244eab-d9e2-20a0-ebce-1a96e8fadb91@deltatee.com>
+ <836b2a93-65be-8d6c-8610-18373b88f86d@molgen.mpg.de>
+ <5b0584a3-c128-cb53-7c8a-63744c60c667@linux.dev>
+ <4edc9468-d195-6937-f550-211bccbd6756@molgen.mpg.de>
+ <954f9c33-7801-b6d2-65e3-9e5237905886@linux.dev>
+Message-ID: <31a9aed2-16cf-663a-5da3-0f9543ceb8c9@linux.dev>
+Date:   Mon, 30 May 2022 17:55:58 +0800
+MIME-Version: 1.0
+In-Reply-To: <954f9c33-7801-b6d2-65e3-9e5237905886@linux.dev>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Mateusz,
-
-I reply my comments in line.
 
 
-> 2022=E5=B9=B44=E6=9C=884=E6=97=A5 15:17=EF=BC=8CMateusz Kusiak =
-<mateusz.kusiak@intel.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Grow_reshape should be splitted into helper functions given it's size.
-> Add helper function for preparing reshape on external metadata.
-> Close cfd file descriptor.
->=20
-> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
-> ---
-> Grow.c  | 124 ++++++++++++++++++++++++++++++--------------------------
-> mdadm.h |   1 +
-> util.c  |  14 +++++++
-> 3 files changed, 81 insertions(+), 58 deletions(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 9c6fc95e..6bb3d388 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1774,6 +1774,65 @@ static int reshape_container(char *container, =
-char *devname,
-> 			     char *backup_file, int verbose,
-> 			     int forked, int restart, int =
-freeze_reshape);
->=20
-> +/**
-> + * prepare_external_reshape() - prepares update on external metadata =
-if supported.
-> + * @devname: Device name.
-> + * @subarray: Subarray.
-> + * @st: Supertype.
-> + * @container: Container.
-> + * @cfd: Container file descriptor.
-> + *
-> + * Function checks that the requested reshape is supported on =
-external metadata,
-> + * and performs an initial check that the container holds the =
-pre-requisite
-> + * spare devices (mdmon owns final validation).
-> + *
-> + * Return: 0 on success, else error code
-> + */
-> +static int prepare_external_reshape(char *devname, char *subarray,
-> +				    struct supertype *st, char =
-*container,
-> +				    const int cfd)
-> +{
-> +	struct mdinfo *cc =3D NULL;
-> +	struct mdinfo *content =3D NULL;
-> +
-> +	if (st->ss->load_container(st, cfd, NULL)) {
-> +		pr_err("Cannot read superblock for %s\n", devname);
-> +		return 1;
-> +	}
-> +
-> +	if (!st->ss->container_content)
-> +		return -1;
-> +
-> +	cc =3D st->ss->container_content(st, subarray);
-> +	for (content =3D cc; content ; content =3D content->next) {
-> +		/*
-> +		 * check if reshape is allowed based on metadata
-> +		 * indications stored in content.array.status
-> +		 */
-> +		if (is_bit_set(content->array_state, MD_SB_BLOCK_VOLUME) =
-||
-> +		    is_bit_set(content->array_state, =
-MD_SB_BLOCK_CONTAINER_RESHAPE)) {
+On 5/23/22 5:51 PM, Guoqing Jiang wrote:
+>
+>
+>>>>> I noticed a clear regression with mdadm tests with this patch in 
+>>>>> md-next
+>>>>> (7e6ba434cc6080).
+>>>>>
+>>>>> Before the patch, tests 07reshape5intr and 07revert-grow would fail
+>>>>> fairly infrequently (about 1 in 4 runs for the former and 1 in 30 
+>>>>> runs
+>>>>> for the latter).
+>>>>>
+>>>>> After this patch, both tests always fail.
+>>>>>
+>>>>> I don't have time to dig into why this is, but it would be nice if
+>>>>> someone can at least fix the regression. It is hard to make any 
+>>>>> progress
+>>>>> on these tests if we are continuing to further break them.
+>
+> I have tried with both ubuntu 22.04 kernel which is 5.15 and vanilla 
+> 5.12, none of them
+> can pass your mentioned tests.
+>
+> [root@localhost mdadm]# lsblk|grep vd
+> vda          252:0    0    1G  0 disk
+> vdb          252:16   0    1G  0 disk
+> vdc          252:32   0    1G  0 disk
+> vdd          252:48   0    1G  0 disk
+> [root@localhost mdadm]# ./test --dev=disk --disks=/dev/vd{a..d} 
+> --tests=05r1-add-internalbitmap
+> Testing on linux-5.12.0-default kernel
+> /root/mdadm/tests/05r1-add-internalbitmap... succeeded
+> [root@localhost mdadm]# ./test --dev=disk --disks=/dev/vd{a..d} 
+> --tests=07reshape5intr
+> Testing on linux-5.12.0-default kernel
+> /root/mdadm/tests/07reshape5intr... FAILED - see 
+> /var/tmp/07reshape5intr.log and /var/tmp/fail07reshape5intr.log for 
+> details
+> [root@localhost mdadm]# ./test --dev=disk --disks=/dev/vd{a..d} 
+> --tests=07revert-grow
+> Testing on linux-5.12.0-default kernel
+> /root/mdadm/tests/07revert-grow... FAILED - see 
+> /var/tmp/07revert-grow.log and /var/tmp/fail07revert-grow.log for details
+> [root@localhost mdadm]# head -10  /var/tmp/07revert-grow.log | grep mdadm
+> + . /root/mdadm/tests/07revert-grow
+> *++ mdadm -CR --assume-clean /dev/md0 -l5 -n4 -x1 /dev/vda /dev/vdb 
+> /dev/vdc /dev/vdd /dev/vda /dev/vdb /dev/vdc /dev/vdd --metadata=0.9**
+> *
+> The above line is clearly wrong from my understanding.
+>
+> And let's check ubuntu 22.04.
+>
+> root@vm:/home/gjiang/mdadm# lsblk|grep vd
+> vda    252:0    0     1G  0 disk
+> vdb    252:16   0     1G  0 disk
+> vdc    252:32   0     1G  0 disk
+> root@vm:/home/gjiang/mdadm# ./test --dev=disk --disks=/dev/vd{a..d} 
+> --tests=05r1-failfast
+> Testing on linux-5.15.0-30-generic kernel
+> /home/gjiang/mdadm/tests/05r1-failfast... succeeded
+> root@vm:/home/gjiang/mdadm# ./test --dev=disk --disks=/dev/vd{a..c}   
+> --tests=07reshape5intr
+> Testing on linux-5.15.0-30-generic kernel
+> /home/gjiang/mdadm/tests/07reshape5intr... FAILED - see 
+> /var/tmp/07reshape5intr.log and /var/tmp/fail07reshape5intr.log for 
+> details
+> root@vm:/home/gjiang/mdadm# ./test --dev=disk --disks=/dev/vd{a..c} 
+> --tests=07revert-grow
+> Testing on linux-5.15.0-30-generic kernel
+> /home/gjiang/mdadm/tests/07revert-grow... FAILED - see 
+> /var/tmp/07revert-grow.log and /var/tmp/fail07revert-grow.log for details
+>
+> So I would not consider it is regression.
 
-Content->array_state should be content->array.state, or =
-&content->array.stat if the first parameter in is_bit_set() defined as =
-int *val.
+I tried with 5.18.0-rc3, no problem for 07reshape5intr (will investigate 
+why it failed with this patch), but 07revert-grow still failed without
+apply this one.
 
+ From fail07revert-grow.log, it shows below issues.
 
-> +			pr_err("Cannot reshape arrays in container with =
-unsupported metadata: %s(%s)\n",
-> +			       devname, container);
-> +			goto error;
-> +		}
-> +		if (content->consistency_policy =3D=3D =
-CONSISTENCY_POLICY_PPL) {
-> +			pr_err("Operation not supported when ppl =
-consistency policy is enabled\n");
-> +			goto error;
-> +		}
-> +		if (content->consistency_policy =3D=3D =
-CONSISTENCY_POLICY_BITMAP) {
-> +			pr_err("Operation not supported when =
-write-intent bitmap consistency policy is enabled\n");
-> +			goto error;
-> +		}
-> +	}
-> +	sysfs_free(cc);
-> +	if (mdmon_running(container))
-> +		st->update_tail =3D &st->updates;
-> +	return 0;
-> +error:
-> +	sysfs_free(cc);
-> +	return 1;
-> +}
-> +
-> int Grow_reshape(char *devname, int fd,
-> 		 struct mddev_dev *devlist,
-> 		 unsigned long long data_offset,
-> @@ -1801,7 +1860,7 @@ int Grow_reshape(char *devname, int fd,
-> 	struct supertype *st;
-> 	char *subarray =3D NULL;
->=20
-> -	int frozen;
-> +	int frozen =3D 0;
-> 	int changed =3D 0;
-> 	char *container =3D NULL;
-> 	int cfd =3D -1;
-> @@ -1810,7 +1869,7 @@ int Grow_reshape(char *devname, int fd,
-> 	int added_disks;
->=20
-> 	struct mdinfo info;
-> -	struct mdinfo *sra;
-> +	struct mdinfo *sra =3D NULL;
->=20
-> 	if (md_get_array_info(fd, &array) < 0) {
-> 		pr_err("%s is not an active md array - aborting\n",
-> @@ -1867,13 +1926,7 @@ int Grow_reshape(char *devname, int fd,
-> 		}
-> 	}
->=20
-> -	/* in the external case we need to check that the requested =
-reshape is
-> -	 * supported, and perform an initial check that the container =
-holds the
-> -	 * pre-requisite spare devices (mdmon owns final validation)
-> -	 */
-> 	if (st->ss->external) {
-> -		int retval;
-> -
-> 		if (subarray) {
-> 			container =3D st->container_devnm;
-> 			cfd =3D open_dev_excl(st->container_devnm);
-> @@ -1889,58 +1942,13 @@ int Grow_reshape(char *devname, int fd,
-> 			return 1;
-> 		}
->=20
-> -		retval =3D st->ss->load_container(st, cfd, NULL);
-> -
-> -		if (retval) {
-> -			pr_err("Cannot read superblock for %s\n", =
-devname);
-> +		rv =3D prepare_external_reshape(devname, subarray, st,
-> +					      container, cfd);
-> +		if (rv > 0) {
-> 			free(subarray);
-> -			return 1;
-> -		}
-> -
-> -		/* check if operation is supported for metadata handler =
-*/
-> -		if (st->ss->container_content) {
-> -			struct mdinfo *cc =3D NULL;
-> -			struct mdinfo *content =3D NULL;
-> -
-> -			cc =3D st->ss->container_content(st, subarray);
-> -			for (content =3D cc; content ; content =3D =
-content->next) {
-> -				int allow_reshape =3D 1;
-> -
-> -				/* check if reshape is allowed based on =
-metadata
-> -				 * indications stored in =
-content.array.status
-> -				 */
-> -				if (content->array.state &
-> -				    (1 << MD_SB_BLOCK_VOLUME))
-> -					allow_reshape =3D 0;
-> -				if (content->array.state &
-> -				    (1 << =
-MD_SB_BLOCK_CONTAINER_RESHAPE))
-> -					allow_reshape =3D 0;
-> -				if (!allow_reshape) {
-> -					pr_err("cannot reshape arrays in =
-container with unsupported metadata: %s(%s)\n",
-> -					       devname, container);
-> -					sysfs_free(cc);
-> -					free(subarray);
-> -					return 1;
-> -				}
-> -				if (content->consistency_policy =3D=3D
-> -				    CONSISTENCY_POLICY_PPL) {
-> -					pr_err("Operation not supported =
-when ppl consistency policy is enabled\n");
-> -					sysfs_free(cc);
-> -					free(subarray);
-> -					return 1;
-> -				}
-> -				if (content->consistency_policy =3D=3D
-> -				    CONSISTENCY_POLICY_BITMAP) {
-> -					pr_err("Operation not supported =
-when write-intent bitmap is enabled\n");
-> -					sysfs_free(cc);
-> -					free(subarray);
-> -					return 1;
-> -				}
-> -			}
-> -			sysfs_free(cc);
-> +			close(cfd);
-> +			goto release;
-> 		}
-> -		if (mdmon_running(container))
-> -			st->update_tail =3D &st->updates;
-> 	}
->=20
-> 	added_disks =3D 0;
-> diff --git a/mdadm.h b/mdadm.h
-> index c7268a71..6478a399 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1528,6 +1528,7 @@ extern int stat_is_blkdev(char *devname, dev_t =
-*rdev);
-> extern bool is_dev_alive(char *path);
-> extern int get_mdp_major(void);
-> extern int get_maj_min(char *dev, int *major, int *minor);
-> +extern bool is_bit_set(int val, int index);
-> extern int dev_open(char *dev, int flags);
-> extern int open_dev(char *devnm);
-> extern void reopen_mddev(int mdfd);
-> diff --git a/util.c b/util.c
-> index 3d05d074..3ebb48a1 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1028,6 +1028,20 @@ int get_maj_min(char *dev, int *major, int =
-*minor)
-> 		*e =3D=3D 0);
-> }
->=20
-> +/**
-> + * is_bit_set() - get bit value by index.
-> + * @val: value.
-> + * @index: index of the bit (LSB numering).
-> + *
-> + * Return: bit value.
-> + */
-> +bool is_bit_set(int val, int index)
-> +{
-> +	if (val & (1 << index))
-> +		return true;
-> +	return false;
-> +}
+[ 7856.233515] mdadm[25246]: segfault at 0 ip 000000000040fe56 sp 
+00007ffdcf252800 error 4 in mdadm[400000+81000]
+[ 7856.233544] Code: 00 48 8d 7c 24 30 e8 79 30 ff ff 48 8d 7c 24 30 31 
+f6 31 c0 e8 db 34 ff ff 85 c0 79 77 bf 26 50 46 00 b9 04 00 00 00 48 89 
+de <f3> a6 0f 97 c0 1c 00 84 c0 75 18 e8 fa 36 ff ff 48 0f be 53 04 48
 
-I suggest to define the first parameter to int *val, to avoid =
-unnecessary memory copy. And for the index parameter, 32bit value for =
-bit position index might be too large, unsigned char should be enough =
-already (which indicates 255 bits offset).
+[ 7866.871747] mdadm[25463]: segfault at 0 ip 000000000040fe56 sp 
+00007ffe91e39800 error 4 in mdadm[400000+81000]
+[ 7866.871760] Code: 00 48 8d 7c 24 30 e8 79 30 ff ff 48 8d 7c 24 30 31 
+f6 31 c0 e8 db 34 ff ff 85 c0 79 77 bf 26 50 46 00 b9 04 00 00 00 48 89 
+de <f3> a6 0f 97 c0 1c 00 84 c0 75 18 e8 fa 36 ff ff 48 0f be 53 04 48
 
-For the rested part, they look fine with me.
+[ 7876.779855] ======================================================
+[ 7876.779858] WARNING: possible circular locking dependency detected
+[ 7876.779861] 5.18.0-rc3-57-default #28 Tainted: G            E
+[ 7876.779864] ------------------------------------------------------
+[ 7876.779867] mdadm/25444 is trying to acquire lock:
+[ 7876.779870] ffff991817749938 ((wq_completion)md_misc){+.+.}-{0:0}, 
+at: flush_workqueue+0x87/0x470
+[ 7876.779879]
+                but task is already holding lock:
+[ 7876.779882] ffff9917c5c1c2c0 (&mddev->reconfig_mutex){+.+.}-{3:3}, 
+at: action_store+0x11a/0x2c0 [md_mod]
+[ 7876.779892]
+                which lock already depends on the new lock.
 
-Thanks.
+[ 7876.779896]
+                the existing dependency chain (in reverse order) is:
+[ 7876.779899]
+                -> #3 (&mddev->reconfig_mutex){+.+.}-{3:3}:
+[ 7876.779904]        __mutex_lock+0x8f/0x920
+[ 7876.779909]        layout_store+0x47/0x120 [md_mod]
+[ 7876.779914]        md_attr_store+0x7a/0xc0 [md_mod]
+[ 7876.779919]        kernfs_fop_write_iter+0x135/0x1b0
+[ 7876.779924]        new_sync_write+0x10c/0x190
+[ 7876.779927]        vfs_write+0x30e/0x370
+[ 7876.779930]        ksys_write+0xa4/0xe0
+[ 7876.779933]        do_syscall_64+0x3a/0x80
+[ 7876.779936]        entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 7876.779940]
+                -> #2 (kn->active#359){++++}-{0:0}:
+[ 7876.779945]        __kernfs_remove+0x28c/0x2e0
+[ 7876.779948]        kernfs_remove_by_name_ns+0x52/0x90
+[ 7876.779952]        remove_files.isra.1+0x30/0x70
+[ 7876.779955]        sysfs_remove_group+0x3d/0x80
+[ 7876.779958]        sysfs_remove_groups+0x29/0x40
+[ 7876.779962]        __kobject_del+0x1b/0x80
+[ 7876.779965]        kobject_del+0xf/0x20
+[ 7876.779968]        mddev_delayed_delete+0x15/0x20 [md_mod]
+[ 7876.779973]        process_one_work+0x2d8/0x650
+[ 7876.779976]        worker_thread+0x2a/0x3b0
+[ 7876.779979]        kthread+0xe8/0x110
+[ 7876.779981]        ret_from_fork+0x22/0x30
+[ 7876.779985]
+                -> #1 ((work_completion)(&mddev->del_work)#2){+.+.}-{0:0}:
+[ 7876.779990]        process_one_work+0x2af/0x650
+[ 7876.779993]        worker_thread+0x2a/0x3b0
+[ 7876.779996]        kthread+0xe8/0x110
+[ 7876.779998]        ret_from_fork+0x22/0x30
+[ 7876.780001]
+                -> #0 ((wq_completion)md_misc){+.+.}-{0:0}:
+[ 7876.780005]        __lock_acquire+0x12a0/0x1770
+[ 7876.780009]        lock_acquire+0x277/0x310
+[ 7876.780011]        flush_workqueue+0xae/0x470
+[ 7876.780014]        action_store+0x188/0x2c0 [md_mod]
+[ 7876.780019]        md_attr_store+0x7a/0xc0 [md_mod]
+[ 7876.780024]        kernfs_fop_write_iter+0x135/0x1b0
+[ 7876.780027]        new_sync_write+0x10c/0x190
+[ 7876.780030]        vfs_write+0x30e/0x370
+[ 7876.780033]        ksys_write+0xa4/0xe0
+[ 7876.780036]        do_syscall_64+0x3a/0x80
+[ 7876.780038]        entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 7876.780042]
+                other info that might help us debug this:
 
-Coly Li
+[ 7876.780045] Chain exists of:
+                  (wq_completion)md_misc --> kn->active#359 --> 
+&mddev->reconfig_mutex
 
-> +
-> int dev_open(char *dev, int flags)
-> {
-> 	/* like 'open', but if 'dev' matches %d:%d, create a temp
-> --=20
-> 2.26.2
->=20
+[ 7876.780052]  Possible unsafe locking scenario:
 
+[ 7876.780054]        CPU0                    CPU1
+[ 7876.780056]        ----                    ----
+[ 7876.780059]   lock(&mddev->reconfig_mutex);
+[ 7876.780061] lock(kn->active#359);
+[ 7876.780064] lock(&mddev->reconfig_mutex);
+[ 7876.780068]   lock((wq_completion)md_misc);
+[ 7876.780070]
+                 *** DEADLOCK ***
+
+[ 7876.780073] 5 locks held by mdadm/25444:
+[ 7876.780075]  #0: ffff9917c769a458 (sb_writers#3){.+.+}-{0:0}, at: 
+ksys_write+0xa4/0xe0
+[ 7876.780082]  #1: ffff9917de1a6518 (&of->prealloc_mutex){+.+.}-{3:3}, 
+at: kernfs_fop_write_iter+0x5c/0x1b0
+[ 7876.780088]  #2: ffff9917de1a6488 (&of->mutex){+.+.}-{3:3}, at: 
+kernfs_fop_write_iter+0x103/0x1b0
+[ 7876.780094]  #3: ffff99181b0d2158 (kn->active#287){++++}-{0:0}, at: 
+kernfs_fop_write_iter+0x10c/0x1b0
+[ 7876.780100]  #4: ffff9917c5c1c2c0 
+(&mddev->reconfig_mutex){+.+.}-{3:3}, at: action_store+0x11a/0x2c0 [md_mod]
+[ 7876.780108]
+                stack backtrace:
+[ 7876.780111] CPU: 1 PID: 25444 Comm: mdadm Tainted: G E     
+5.18.0-rc3-57-default #28
+[ 7876.780115] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 
+rel-1.14.0-0-g155821a-rebuilt.opensuse.org 04/01/2014
+[ 7876.780120] Call Trace:
+[ 7876.780122]  <TASK>
+[ 7876.780124]  dump_stack_lvl+0x55/0x6d
+[ 7876.780128]  check_noncircular+0x105/0x120
+[ 7876.780133]  ? __lock_acquire+0x12a0/0x1770
+[ 7876.780136]  ? lockdep_lock+0x21/0x90
+[ 7876.780139]  __lock_acquire+0x12a0/0x1770
+[ 7876.780143]  lock_acquire+0x277/0x310
+[ 7876.780146]  ? flush_workqueue+0x87/0x470
+[ 7876.780149]  ? __raw_spin_lock_init+0x3b/0x60
+[ 7876.780152]  ? lockdep_init_map_type+0x58/0x250
+[ 7876.780156]  flush_workqueue+0xae/0x470
+[ 7876.780158]  ? flush_workqueue+0x87/0x470
+[ 7876.780161]  ? _raw_spin_unlock+0x29/0x40
+[ 7876.780166]  ? action_store+0x188/0x2c0 [md_mod]
+[ 7876.780171]  action_store+0x188/0x2c0 [md_mod]
+[ 7876.780176]  md_attr_store+0x7a/0xc0 [md_mod]
+[ 7876.780182]  kernfs_fop_write_iter+0x135/0x1b0
+[ 7876.780186]  new_sync_write+0x10c/0x190
+[ 7876.780190]  vfs_write+0x30e/0x370
+[ 7876.780193]  ksys_write+0xa4/0xe0
+[ 7876.780197]  do_syscall_64+0x3a/0x80
+[ 7876.780200]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 7876.780203] RIP: 0033:0x7f7cd43f9c03
+[ 7876.780206] Code: 2d 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b3 0f 
+1f 80 00 00 00 00 64 8b 04 25 18 00 00 00 85 c0 75 14 b8 01 00 00 00 0f 
+05 <48> 3d 00 f0 ff ff 77 55 f3 c3 0f 1f 00 41 54 55 49 89 d4 53 48 89
+[ 7876.780213] RSP: 002b:00007fff35b600b8 EFLAGS: 00000246 ORIG_RAX: 
+0000000000000001
+[ 7876.780218] RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 
+00007f7cd43f9c03
+[ 7876.780221] RDX: 0000000000000004 RSI: 00000000004669a7 RDI: 
+0000000000000003
+[ 7876.780224] RBP: 00000000004669a7 R08: 000000000000000b R09: 
+00000000ffffffff
+[ 7876.780227] R10: 0000000000000000 R11: 0000000000000246 R12: 
+000000000183d730
+[ 7876.780231] R13: 00000000ffffffff R14: 0000000000001800 R15: 
+0000000000000000
+[ 7876.780236]  </TASK>
+[ 7876.781007] md: reshape of RAID array md0
+[ 7876.785949] md: md0: reshape interrupted.
+[ 7877.193686] md0: detected capacity change from 107520 to 0
+[ 7877.193694] md: md0 stopped.
+[ 7877.314438] debugfs: Directory 'md0' with parent 'block' already present!
+[ 7877.649549] md: array md0 already has disks!
+[ 7877.665188] md/raid:md0: device loop0 operational as raid disk 0
+[ 7877.665193] md/raid:md0: device loop3 operational as raid disk 3
+[ 7877.665197] md/raid:md0: device loop2 operational as raid disk 2
+[ 7877.665199] md/raid:md0: device loop1 operational as raid disk 1
+[ 7877.665202] md/raid:md0: device loop4 operational as raid disk 4
+[ 7877.665205] md/raid:md0: force stripe size 512 for reshape
+[ 7877.667172] md/raid:md0: raid level 5 active with 4 out of 4 devices, 
+algorithm 2
+[ 7877.667360] md0: detected capacity change from 0 to 107520
+[ 7878.107865] mdadm[25693]: segfault at 0 ip 000000000040fe56 sp 
+00007fff7a845d50 error 4 in mdadm[400000+81000]
+[ 7878.107878] Code: 00 48 8d 7c 24 30 e8 79 30 ff ff 48 8d 7c 24 30 31 
+f6 31 c0 e8 db 34 ff ff 85 c0 79 77 bf 26 50 46 00 b9 04 00 00 00 48 89 
+de <f3> a6 0f 97 c0 1c 00 84 c0 75 18 e8 fa 36 ff ff 48 0f be 53 04 48
+[ 7878.428298] md: reshape of RAID array md0
+[ 7880.552543] md: md0: reshape done.
+[ 7882.053117] md0: detected capacity change from 107520 to 0
+[ 7882.053124] md: md0 stopped.
+[ ... ]
+[ 7904.978417] md0: detected capacity change from 0 to 107520
+[ 7905.346749] mdadm[26328]: segfault at 0 ip 000000000040fe56 sp 
+00007ffc28540c20 error 4 in mdadm[400000+81000]
+[ 7905.346764] Code: 00 48 8d 7c 24 30 e8 79 30 ff ff 48 8d 7c 24 30 31 
+f6 31 c0 e8 db 34 ff ff 85 c0 79 77 bf 26 50 46 00 b9 04 00 00 00 48 89 
+de <f3> a6 0f 97 c0 1c 00 84 c0 75 18 e8 fa 36 ff ff 48 0f be 53 04 48
+[ 7905.476488] md: reshape of RAID array md0
+[ 7907.530152] md: md0: reshape done.
+[ 7909.149524] md0: detected capacity change from 107520 to 0
+[ 7909.149533] md: md0 stopped.
+
+Thanks,
+Guoqing
