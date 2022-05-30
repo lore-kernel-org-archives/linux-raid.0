@@ -2,31 +2,31 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD7A6C433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 05:56:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8FEC433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 05:59:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232604AbiE3F4V (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 May 2022 01:56:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36816 "EHLO
+        id S232638AbiE3F7O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 May 2022 01:59:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232583AbiE3F4U (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 01:56:20 -0400
+        with ESMTP id S229899AbiE3F7N (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 01:59:13 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45D3C66F9E;
-        Sun, 29 May 2022 22:56:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D1726D858;
+        Sun, 29 May 2022 22:59:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=s0zhtSdZDf+E4ShiSmCTSdP5gh
-        vvO5ObOpQpLqm07DqDiKWJiU3YtubIafN2ykZ7WSMWTuaGNZ8VOpS+CdW8G1/xLPpZ5nHYbXEnQvp
-        Uev0ZlpGbpijQP+5q864okDXjMWLpgg7bONvnfu+FcluCoOORL8P6SqNopDSrbEfSpbKOvkqtJVDX
-        7GEQ1HxX+RDxzO81eYmKh7SwDMiPIiebz5ffd3aBvzE57BNcmBB71NiJc2b+ukCwStHlzdXwqWGu4
-        IdkXCLKsV/h85+GIC5OgsXX1WRTLptCYL33gys3Mg4eBHlLK5qTFZRasQw6geP2JaDYEi5gTm+SSD
-        0PaWOXjg==;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=FV6ixAgxONc97M+SI7U62WEMY00WEGgbcBEcX4KiHVQ=; b=4wohNBWacToPDLeDkf4XlTX1IE
+        TXygurGB/B02n3EPQE3XWySSgIxr9iB/ux9RnN6rt3Qj874QlM1HRTDvdbUUlZ+pWGcDE98Ln8zMY
+        GKOMGJG7QJxbQXdMSYoPUeDgA5waiScQCX5KbdDnpLc7u8qYXKxVTsnSnxCy+8RsjpafBZseLJfdS
+        JkZGSnll1MYz6PQP87Crb898/AuJ5zDtykIZRX7t7EG6Qv57dqNHCOgCbzEt/abFujge2edN+AVSR
+        cp6T58S2dRdLKc6X4x+ImbS3GX5l0Mlg7z7KU50Q8FlYi6s7BPvk7vGGCurhFp/NjilCP7AyXsddR
+        1zfiU1Pg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nvYNy-005Tm6-Cl; Mon, 30 May 2022 05:56:14 +0000
-Date:   Sun, 29 May 2022 22:56:14 -0700
+        id 1nvYQp-005U5K-Aq; Mon, 30 May 2022 05:59:11 +0000
+Date:   Sun, 29 May 2022 22:59:11 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
@@ -37,20 +37,46 @@ Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH v2 02/17] md/raid5-cache: Add r5c_conf_is_writeback()
- helper
-Message-ID: <YpRcfjcFgDcPBqYw@infradead.org>
+Subject: Re: [PATCH v2 12/17] md/raid5-cache: Move struct r5l_log definition
+ to raid5-log.h
+Message-ID: <YpRdL+2e7gngOYPa@infradead.org>
 References: <20220526163604.32736-1-logang@deltatee.com>
- <20220526163604.32736-3-logang@deltatee.com>
+ <20220526163604.32736-13-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20220526163604.32736-3-logang@deltatee.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220526163604.32736-13-logang@deltatee.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Looks good:
+On Thu, May 26, 2022 at 10:35:59AM -0600, Logan Gunthorpe wrote:
+> Move struct r5l_log definition to raid5-log.h. While this reduces
+> encapsulation, it is necessary for the definition of r5l_log to be
+> public so that rcu_access_pointer() can be used on conf-log in the
+> next patch.
+> 
+> rcu_access_pointer(p) doesn't technically dereference the log pointer
+> however, it does use typeof(*p) and some older GCC versions (anything
+> earlier than gcc-10) will wrongly try to dereference the structure:
+> 
+>     include/linux/rcupdate.h:384:9: error: dereferencing pointer to
+>                  incomplete type ‘struct r5l_log’
+> 
+>       typeof(*p) *local = (typeof(*p) *__force)READ_ONCE(p); \
+>            ^
+> 
+>     include/linux/rcupdate.h:495:31: note: in expansion of
+>                   macro ‘__rcu_access_pointer’
+> 
+>        #define rcu_access_pointer(p) __rcu_access_pointer((p),
+>        __UNIQUE_ID(rcu), __rcu)
+> 
+> To prevent this, simply provide the definition where
+> rcu_access_pointer() may be used.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+What about just moving any code that does the rcu_access_pointer on
+conf->log to raid5-cache.c and doing an out of line call for it
+instead?
