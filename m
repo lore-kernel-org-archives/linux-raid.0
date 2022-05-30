@@ -2,212 +2,379 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B51DFC433FE
-	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 14:23:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FCA5C433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 30 May 2022 15:03:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237766AbiE3OX3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 May 2022 10:23:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42814 "EHLO
+        id S231436AbiE3PDo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 May 2022 11:03:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241267AbiE3ORZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 10:17:25 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CA799B1B2;
-        Mon, 30 May 2022 06:45:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S243275AbiE3PBu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 May 2022 11:01:50 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFE20C5D9D
+        for <linux-raid@vger.kernel.org>; Mon, 30 May 2022 07:03:23 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 57D81B80D83;
-        Mon, 30 May 2022 13:45:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2947EC341C8;
-        Mon, 30 May 2022 13:45:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918301;
-        bh=OiI0PmsJtqps+PkFB0TqTuCxhpCe5p17/wJXmiP1MZI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N9Qnd7aAiCmcAb2lIaz9UZQhgIWVYZS/ZotovuFtyBDDI+nrIHnJfNiww4b6Vl8dH
-         Yvoh8nT502/qNm7fxriRNKM/VQvbGIZb/wN49qoRAaQabGinTaKiAS4Pl2Wc8zQ11p
-         fTAdLCgtCFB8MK4M/sAINOSoB0RdPGoTlx84hIjOWD+2aVR/tBuacFtK8fbrfx8H9u
-         lrNyU3IiZozVKfjwuUc1cHGY6qdKC4IuIwwlq1akyBSnH/Ll+/yROQJOcO/e27XKI7
-         oVRm+PG2WzPfBFz8WNGnbwEVoXagAUmG4a7yu58RRhyUM29yQqkjSQCw76Fr18S5AT
-         GrkIJil4NNyGA==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Heming Zhao <heming.zhao@suse.com>,
-        kernel test robot <lkp@intel.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 24/76] md/bitmap: don't set sb values if can't pass sanity check
-Date:   Mon, 30 May 2022 09:43:14 -0400
-Message-Id: <20220530134406.1934928-24-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530134406.1934928-1-sashal@kernel.org>
-References: <20220530134406.1934928-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 6A2741F943;
+        Mon, 30 May 2022 14:03:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1653919401; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7qT03ks3hGIwO/I2NLkUqKh7YuhTeiEf698KRzncisY=;
+        b=uj740ZCHm4IAwF4Dk+lu2aWL98Odgo/qYy1COFHRe2ftuDcl3PBpThrExbSNnFB1YxUYiz
+        R/LtsJTRpwCdNcAZHCwZrIRm8vc8uvDxjdEC8RKIerfTsViKZq0S3He1FS6djRoWi/8Bzt
+        eGlU5vQg+D/kniRmx5FjjlM7985PMvg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1653919401;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7qT03ks3hGIwO/I2NLkUqKh7YuhTeiEf698KRzncisY=;
+        b=0phYI90YoelJcI/BIn/mMU3g6Ks0JTK6NJFPQ8VFZ7sdfeUc8c+sONw3ZUqgTdobg+NTqq
+        pp93cYxzl3mPgsDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 004A113A84;
+        Mon, 30 May 2022 14:03:19 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id onGhLKfOlGI9SQAAMHmgww
+        (envelope-from <colyli@suse.de>); Mon, 30 May 2022 14:03:19 +0000
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
+Subject: Re: [PATCH 2/3] imsm: use same slot across container
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20220419143714.16942-3-mariusz.tkaczyk@linux.intel.com>
+Date:   Mon, 30 May 2022 22:03:17 +0800
+Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <C0C53E0F-A27E-45DE-A834-BDFBD13A1B26@suse.de>
+References: <20220419143714.16942-1-mariusz.tkaczyk@linux.intel.com>
+ <20220419143714.16942-3-mariusz.tkaczyk@linux.intel.com>
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+X-Mailer: Apple Mail (2.3696.100.31)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Heming Zhao <heming.zhao@suse.com>
 
-[ Upstream commit e68cb83a57a458b01c9739e2ad9cb70b04d1e6d2 ]
 
-If bitmap area contains invalid data, kernel will crash then mdadm
-triggers "Segmentation fault".
-This is cluster-md speical bug. In non-clustered env, mdadm will
-handle broken metadata case. In clustered array, only kernel space
-handles bitmap slot info. But even this bug only happened in clustered
-env, current sanity check is wrong, the code should be changed.
+> 2022=E5=B9=B44=E6=9C=8819=E6=97=A5 22:37=EF=BC=8CMariusz Tkaczyk =
+<mariusz.tkaczyk@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> Autolayout relies on drives order on super->disks list, but
+> it is not quaranted by readdir() in sysfs_read(). As a result
+> drive could be put in different slot in second volume.
+>=20
+> Make it consistent by referring to first volume, if exists.
+>=20
+> Enum imsm_status is typedefed and propagated in modified routines, to
+> unify error handling.
+>=20
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
-How to trigger: (faulty injection)
+I don=E2=80=99t see obvious issue in this patch currently.
 
-dd if=/dev/zero bs=1M count=1 oflag=direct of=/dev/sda
-dd if=/dev/zero bs=1M count=1 oflag=direct of=/dev/sdb
-mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda /dev/sdb
-mdadm -Ss
-echo aaa > magic.txt
- == below modifying slot 2 bitmap data ==
-dd if=magic.txt of=/dev/sda seek=16384 bs=1 count=3 <== destroy magic
-dd if=/dev/zero of=/dev/sda seek=16436 bs=1 count=4 <== ZERO chunksize
-mdadm -A /dev/md0 /dev/sda /dev/sdb
- == kernel crashes. mdadm outputs "Segmentation fault" ==
+Acked-by: Coly Li <colyli@suse.de>
 
-Reason of kernel crash:
 
-In md_bitmap_read_sb (called by md_bitmap_create), bad bitmap magic didn't
-block chunksize assignment, and zero value made DIV_ROUND_UP_SECTOR_T()
-trigger "divide error".
+Coly Li
 
-Crash log:
 
-kernel: md: md0 stopped.
-kernel: md/raid1:md0: not clean -- starting background reconstruction
-kernel: md/raid1:md0: active with 2 out of 2 mirrors
-kernel: dlm: ... ...
-kernel: md-cluster: Joined cluster 44810aba-38bb-e6b8-daca-bc97a0b254aa slot 1
-kernel: md0: invalid bitmap file superblock: bad magic
-kernel: md_bitmap_copy_from_slot can't get bitmap from slot 2
-kernel: md-cluster: Could not gather bitmaps from slot 2
-kernel: divide error: 0000 [#1] SMP NOPTI
-kernel: CPU: 0 PID: 1603 Comm: mdadm Not tainted 5.14.6-1-default
-kernel: Hardware name: QEMU Standard PC (i440FX + PIIX, 1996)
-kernel: RIP: 0010:md_bitmap_create+0x1d1/0x850 [md_mod]
-kernel: RSP: 0018:ffffc22ac0843ba0 EFLAGS: 00010246
-kernel: ... ...
-kernel: Call Trace:
-kernel:  ? dlm_lock_sync+0xd0/0xd0 [md_cluster 77fe..7a0]
-kernel:  md_bitmap_copy_from_slot+0x2c/0x290 [md_mod 24ea..d3a]
-kernel:  load_bitmaps+0xec/0x210 [md_cluster 77fe..7a0]
-kernel:  md_bitmap_load+0x81/0x1e0 [md_mod 24ea..d3a]
-kernel:  do_md_run+0x30/0x100 [md_mod 24ea..d3a]
-kernel:  md_ioctl+0x1290/0x15a0 [md_mod 24ea....d3a]
-kernel:  ? mddev_unlock+0xaa/0x130 [md_mod 24ea..d3a]
-kernel:  ? blkdev_ioctl+0xb1/0x2b0
-kernel:  block_ioctl+0x3b/0x40
-kernel:  __x64_sys_ioctl+0x7f/0xb0
-kernel:  do_syscall_64+0x59/0x80
-kernel:  ? exit_to_user_mode_prepare+0x1ab/0x230
-kernel:  ? syscall_exit_to_user_mode+0x18/0x40
-kernel:  ? do_syscall_64+0x69/0x80
-kernel:  entry_SYSCALL_64_after_hwframe+0x44/0xae
-kernel: RIP: 0033:0x7f4a15fa722b
-kernel: ... ...
-kernel: ---[ end trace 8afa7612f559c868 ]---
-kernel: RIP: 0010:md_bitmap_create+0x1d1/0x850 [md_mod]
 
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
-Signed-off-by: Heming Zhao <heming.zhao@suse.com>
-Signed-off-by: Song Liu <song@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/md/md-bitmap.c | 44 ++++++++++++++++++++++--------------------
- 1 file changed, 23 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index ea3130e11680..d377ea060925 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -639,14 +639,6 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
- 	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
- 	write_behind = le32_to_cpu(sb->write_behind);
- 	sectors_reserved = le32_to_cpu(sb->sectors_reserved);
--	/* Setup nodes/clustername only if bitmap version is
--	 * cluster-compatible
--	 */
--	if (sb->version == cpu_to_le32(BITMAP_MAJOR_CLUSTERED)) {
--		nodes = le32_to_cpu(sb->nodes);
--		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
--				sb->cluster_name, 64);
--	}
- 
- 	/* verify that the bitmap-specific fields are valid */
- 	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
-@@ -668,6 +660,16 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
- 		goto out;
- 	}
- 
-+	/*
-+	 * Setup nodes/clustername only if bitmap version is
-+	 * cluster-compatible
-+	 */
-+	if (sb->version == cpu_to_le32(BITMAP_MAJOR_CLUSTERED)) {
-+		nodes = le32_to_cpu(sb->nodes);
-+		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
-+				sb->cluster_name, 64);
-+	}
-+
- 	/* keep the array size field of the bitmap superblock up to date */
- 	sb->sync_size = cpu_to_le64(bitmap->mddev->resync_max_sectors);
- 
-@@ -700,9 +702,9 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
- 
- out:
- 	kunmap_atomic(sb);
--	/* Assigning chunksize is required for "re_read" */
--	bitmap->mddev->bitmap_info.chunksize = chunksize;
- 	if (err == 0 && nodes && (bitmap->cluster_slot < 0)) {
-+		/* Assigning chunksize is required for "re_read" */
-+		bitmap->mddev->bitmap_info.chunksize = chunksize;
- 		err = md_setup_cluster(bitmap->mddev, nodes);
- 		if (err) {
- 			pr_warn("%s: Could not setup cluster service (%d)\n",
-@@ -713,18 +715,18 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
- 		goto re_read;
- 	}
- 
--
- out_no_sb:
--	if (test_bit(BITMAP_STALE, &bitmap->flags))
--		bitmap->events_cleared = bitmap->mddev->events;
--	bitmap->mddev->bitmap_info.chunksize = chunksize;
--	bitmap->mddev->bitmap_info.daemon_sleep = daemon_sleep;
--	bitmap->mddev->bitmap_info.max_write_behind = write_behind;
--	bitmap->mddev->bitmap_info.nodes = nodes;
--	if (bitmap->mddev->bitmap_info.space == 0 ||
--	    bitmap->mddev->bitmap_info.space > sectors_reserved)
--		bitmap->mddev->bitmap_info.space = sectors_reserved;
--	if (err) {
-+	if (err == 0) {
-+		if (test_bit(BITMAP_STALE, &bitmap->flags))
-+			bitmap->events_cleared = bitmap->mddev->events;
-+		bitmap->mddev->bitmap_info.chunksize = chunksize;
-+		bitmap->mddev->bitmap_info.daemon_sleep = daemon_sleep;
-+		bitmap->mddev->bitmap_info.max_write_behind = write_behind;
-+		bitmap->mddev->bitmap_info.nodes = nodes;
-+		if (bitmap->mddev->bitmap_info.space == 0 ||
-+			bitmap->mddev->bitmap_info.space > sectors_reserved)
-+			bitmap->mddev->bitmap_info.space = sectors_reserved;
-+	} else {
- 		md_bitmap_print_sb(bitmap);
- 		if (bitmap->cluster_slot < 0)
- 			md_cluster_stop(bitmap->mddev);
--- 
-2.35.1
+> ---
+> super-intel.c | 175 ++++++++++++++++++++++++++++++++------------------
+> 1 file changed, 112 insertions(+), 63 deletions(-)
+>=20
+> diff --git a/super-intel.c b/super-intel.c
+> index c16251c8..f3cd7515 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -370,12 +370,14 @@ ASSERT_SIZE(migr_record, 128)
+>  * enum imsm_status - internal IMSM return values representation.
+>  * @STATUS_OK: function succeeded.
+>  * @STATUS_ERROR: General error ocurred (not specified).
+> + *
+> + * Typedefed to imsm_status_t.
+>  */
+> -enum {
+> +typedef enum imsm_status {
+> 	IMSM_STATUS_OK =3D 0,
+> 	IMSM_STATUS_ERROR =3D -1,
+>=20
+> -} imsm_status;
+> +} imsm_status_t;
+>=20
+> struct md_list {
+> 	/* usage marker:
+> @@ -7492,11 +7494,27 @@ static int =
+validate_geometry_imsm_volume(struct supertype *st, int level,
+> 	return 1;
+> }
+>=20
+> -static int imsm_get_free_size(struct supertype *st, int raiddisks,
+> -			 unsigned long long size, int chunk,
+> -			 unsigned long long *freesize)
+> +/**
+> + * imsm_get_free_size() - get the biggest, common free space from =
+members.
+> + * @super: &intel_super pointer, not NULL.
+> + * @raiddisks: number of raid disks.
+> + * @size: requested size, could be 0 (means max size).
+> + * @chunk: requested chunk.
+> + * @freesize: pointer for returned size value.
+> + *
+> + * Return: &IMSM_STATUS_OK or &IMSM_STATUS_ERROR.
+> + *
+> + * @freesize is set to meaningful value, this can be @size, or =
+calculated
+> + * max free size.
+> + * super->create_offset value is modified and set appropriately in
+> + * merge_extends() for further creation.
+> + */
+> +static imsm_status_t imsm_get_free_size(struct intel_super *super,
+> +					const int raiddisks,
+> +					unsigned long long size,
+> +					const int chunk,
+> +					unsigned long long *freesize)
+> {
+> -	struct intel_super *super =3D st->sb;
+> 	struct imsm_super *mpb =3D super->anchor;
+> 	struct dl *dl;
+> 	int i;
+> @@ -7540,12 +7558,10 @@ static int imsm_get_free_size(struct supertype =
+*st, int raiddisks,
+> 		/* chunk is in K */
+> 		minsize =3D chunk * 2;
+>=20
+> -	if (cnt < raiddisks ||
+> -	    (super->orom && used && used !=3D raiddisks) ||
+> -	    maxsize < minsize ||
+> -	    maxsize =3D=3D 0) {
+> +	if (cnt < raiddisks || (super->orom && used && used !=3D =
+raiddisks) ||
+> +	    maxsize < minsize || maxsize =3D=3D 0) {
+> 		pr_err("not enough devices with space to create =
+array.\n");
+> -		return 0; /* No enough free spaces large enough */
+> +		return IMSM_STATUS_ERROR;
+> 	}
+>=20
+> 	if (size =3D=3D 0) {
+> @@ -7558,37 +7574,69 @@ static int imsm_get_free_size(struct supertype =
+*st, int raiddisks,
+> 	}
+> 	if (mpb->num_raid_devs > 0 && size && size !=3D maxsize)
+> 		pr_err("attempting to create a second volume with size =
+less then remaining space.\n");
+> -	cnt =3D 0;
+> -	for (dl =3D super->disks; dl; dl =3D dl->next)
+> -		if (dl->e)
+> -			dl->raiddisk =3D cnt++;
+> -
+> 	*freesize =3D size;
+>=20
+> 	dprintf("imsm: imsm_get_free_size() returns : %llu\n", size);
+>=20
+> -	return 1;
+> +	return IMSM_STATUS_OK;
+> }
+>=20
+> -static int reserve_space(struct supertype *st, int raiddisks,
+> -			 unsigned long long size, int chunk,
+> -			 unsigned long long *freesize)
+> +/**
+> + * autolayout_imsm() - automatically layout a new volume.
+> + * @super: &intel_super pointer, not NULL.
+> + * @raiddisks: number of raid disks.
+> + * @size: requested size, could be 0 (means max size).
+> + * @chunk: requested chunk.
+> + * @freesize: pointer for returned size value.
+> + *
+> + * We are being asked to automatically layout a new volume based on =
+the current
+> + * contents of the container. If the parameters can be satisfied =
+autolayout_imsm
+> + * will record the disks, start offset, and will return size of the =
+volume to
+> + * be created. See imsm_get_free_size() for details.
+> + * add_to_super() and getinfo_super() detect when autolayout is in =
+progress.
+> + * If first volume exists, slots are set consistently to it.
+> + *
+> + * Return: &IMSM_STATUS_OK on success, &IMSM_STATUS_ERROR otherwise.
+> + *
+> + * Disks are marked for creation via dl->raiddisk.
+> + */
+> +static imsm_status_t autolayout_imsm(struct intel_super *super,
+> +				     const int raiddisks,
+> +				     unsigned long long size, const int =
+chunk,
+> +				     unsigned long long *freesize)
+> {
+> -	struct intel_super *super =3D st->sb;
+> -	struct dl *dl;
+> -	int cnt;
+> -	int rv =3D 0;
+> +	int curr_slot =3D 0;
+> +	struct dl *disk;
+> +	int vol_cnt =3D super->anchor->num_raid_devs;
+> +	imsm_status_t rv;
+>=20
+> -	rv =3D imsm_get_free_size(st, raiddisks, size, chunk, freesize);
+> -	if (rv) {
+> -		cnt =3D 0;
+> -		for (dl =3D super->disks; dl; dl =3D dl->next)
+> -			if (dl->e)
+> -				dl->raiddisk =3D cnt++;
+> -		rv =3D 1;
+> +	rv =3D imsm_get_free_size(super, raiddisks, size, chunk, =
+freesize);
+> +	if (rv !=3D IMSM_STATUS_OK)
+> +		return IMSM_STATUS_ERROR;
+> +
+> +	for (disk =3D super->disks; disk; disk =3D disk->next) {
+> +		if (!disk->e)
+> +			continue;
+> +
+> +		if (curr_slot =3D=3D raiddisks)
+> +			break;
+> +
+> +		if (vol_cnt =3D=3D 0) {
+> +			disk->raiddisk =3D curr_slot;
+> +		} else {
+> +			int _slot =3D get_disk_slot_in_dev(super, 0, =
+disk->index);
+> +
+> +			if (_slot =3D=3D -1) {
+> +				pr_err("Disk %s is not used in first =
+volume, aborting\n",
+> +				       disk->devname);
+> +				return IMSM_STATUS_ERROR;
+> +			}
+> +			disk->raiddisk =3D _slot;
+> +		}
+> +		curr_slot++;
+> 	}
+>=20
+> -	return rv;
+> +	return IMSM_STATUS_OK;
+> }
+>=20
+> static int validate_geometry_imsm(struct supertype *st, int level, int =
+layout,
+> @@ -7624,35 +7672,35 @@ static int validate_geometry_imsm(struct =
+supertype *st, int level, int layout,
+> 	}
+>=20
+> 	if (!dev) {
+> -		if (st->sb) {
+> -			struct intel_super *super =3D st->sb;
+> -			if (!validate_geometry_imsm_orom(st->sb, level, =
+layout,
+> -							 raiddisks, =
+chunk, size,
+> -							 verbose))
+> +		struct intel_super *super =3D st->sb;
+> +
+> +		/*
+> +		 * Autolayout mode, st->sb and freesize must be set.
+> +		 */
+> +		if (!super || !freesize) {
+> +			pr_vrb("freesize and superblock must be set for =
+autolayout, aborting\n");
+> +			return 1;
+> +		}
+> +
+> +		if (!validate_geometry_imsm_orom(st->sb, level, layout,
+> +						 raiddisks, chunk, size,
+> +						 verbose))
+> +			return 0;
+> +
+> +		if (super->orom) {
+> +			imsm_status_t rv;
+> +			int count =3D count_volumes(super->hba, =
+super->orom->dpa,
+> +					      verbose);
+> +			if (super->orom->vphba <=3D count) {
+> +				pr_vrb("platform does not support more =
+than %d raid volumes.\n",
+> +				       super->orom->vphba);
+> 				return 0;
+> -			/* we are being asked to automatically layout a
+> -			 * new volume based on the current contents of
+> -			 * the container.  If the the parameters can be
+> -			 * satisfied reserve_space will record the =
+disks,
+> -			 * start offset, and size of the volume to be
+> -			 * created.  add_to_super and getinfo_super
+> -			 * detect when autolayout is in progress.
+> -			 */
+> -			/* assuming that freesize is always given when =
+array is
+> -			   created */
+> -			if (super->orom && freesize) {
+> -				int count;
+> -				count =3D count_volumes(super->hba,
+> -						      super->orom->dpa, =
+verbose);
+> -				if (super->orom->vphba <=3D count) {
+> -					pr_vrb("platform does not =
+support more than %d raid volumes.\n",
+> -					       super->orom->vphba);
+> -					return 0;
+> -				}
+> 			}
+> -			if (freesize)
+> -				return reserve_space(st, raiddisks, =
+size,
+> -						     *chunk, freesize);
+> +
+> +			rv =3D autolayout_imsm(super, raiddisks, size, =
+*chunk,
+> +					     freesize);
+> +			if (rv !=3D IMSM_STATUS_OK)
+> +				return 0;
+> 		}
+> 		return 1;
+> 	}
+> @@ -11523,7 +11571,7 @@ enum imsm_reshape_type =
+imsm_analyze_change(struct supertype *st,
+> 	unsigned long long current_size;
+> 	unsigned long long free_size;
+> 	unsigned long long max_size;
+> -	int rv;
+> +	imsm_status_t rv;
+>=20
+> 	getinfo_super_imsm_volume(st, &info, NULL);
+> 	if (geo->level !=3D info.array.level && geo->level >=3D 0 &&
+> @@ -11642,9 +11690,10 @@ enum imsm_reshape_type =
+imsm_analyze_change(struct supertype *st,
+> 		}
+> 		/* check the maximum available size
+> 		 */
+> -		rv =3D  imsm_get_free_size(st, =
+dev->vol.map->num_members,
+> -					 0, chunk, &free_size);
+> -		if (rv =3D=3D 0)
+> +		rv =3D imsm_get_free_size(super, =
+dev->vol.map->num_members,
+> +					0, chunk, &free_size);
+> +
+> +		if (rv !=3D IMSM_STATUS_OK)
+> 			/* Cannot find maximum available space
+> 			 */
+> 			max_size =3D 0;
+> --=20
+> 2.26.2
+>=20
 
