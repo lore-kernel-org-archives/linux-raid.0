@@ -2,83 +2,51 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29330C433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 31 May 2022 11:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E484C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 31 May 2022 15:26:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244301AbiEaLOp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 31 May 2022 07:14:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34596 "EHLO
+        id S1345597AbiEaP0F (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 31 May 2022 11:26:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233540AbiEaLOp (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 31 May 2022 07:14:45 -0400
-X-Greylist: delayed 1473 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 31 May 2022 04:14:43 PDT
-Received: from cdw.me.uk (cdw.me.uk [91.203.57.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 39A248E190
-        for <linux-raid@vger.kernel.org>; Tue, 31 May 2022 04:14:43 -0700 (PDT)
-Received: from chris by delta.arachsys.com with local (Exim 4.80)
-        (envelope-from <chris@arachsys.com>)
-        id 1nvzRw-0008Ni-NL; Tue, 31 May 2022 11:50:08 +0100
-Date:   Tue, 31 May 2022 11:50:08 +0100
-From:   Chris Webb <chris@arachsys.com>
-To:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH] md: Explicitly create command-line configured devices
-Message-ID: <YpXy4CLSwLf7arGp@arachsys.com>
+        with ESMTP id S1343903AbiEaP0E (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 31 May 2022 11:26:04 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A3DB3A703
+        for <linux-raid@vger.kernel.org>; Tue, 31 May 2022 08:26:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=qBqw4TW4izvaVHzCbo/wr6p2DUvbEvqYSBh40t35LQU=; b=0joYlOW3fyVrwPkjcLg9fHHrIn
+        UDgZ5cb/dauupFSlExcaptwCeyg69Ee8CPQ7Y2AUTjW2jDXe4+xJo0NChPCCS/yJHK+5DPBzLV0Yu
+        NZNrpWslrXLn/0Lti3D3S71p+v9nyLovA/hrpkoGoHIDWTevKJZ+tGxOCuBlZSxtyaNT9Ihnyz1Kg
+        HD107N1bnLX9TVTctNNhaq0E6YnrHJOc97fqioNjwCp9IqUkaf0YXelI6n3oxWEv5hftSGHhrBBVI
+        GC1lspImQ38zTUAvWlJ1LwoTw4Y0LRCIqKYAkj7HcTQCBTsImtgiNBOrs5webdL8lUNfV86mFggzP
+        htQqN05g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nw3ks-00BXwN-QC; Tue, 31 May 2022 15:25:58 +0000
+Date:   Tue, 31 May 2022 08:25:58 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Chris Webb <chris@arachsys.com>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH] md: Explicitly create command-line configured devices
+Message-ID: <YpYzhpZZwc1jY4D0@infradead.org>
+References: <YpXy4CLSwLf7arGp@arachsys.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <YpXy4CLSwLf7arGp@arachsys.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Boot-time assembly of arrays with md= command-line arguments breaks when
-CONFIG_BLOCK_LEGACY_AUTOLOAD is unset. md_setup_drive() in md-autodetect.c
-calls blkdev_get_by_dev(), assuming this implicitly creates the block
-device.
+On Tue, May 31, 2022 at 11:50:08AM +0100, Chris Webb wrote:
+> +extern int md_alloc(dev_t dev, char *name);
 
-Fix this by attempting to md_alloc() the array first. As in the probe path,
-ignore any error as failure is caught by blkdev_get_by_dev() anyway.
+No need for the extern here.
 
-Signed-off-by: Chris Webb <chris@arachsys.com>
----
- drivers/md/md-autodetect.c | 1 +
- drivers/md/md.c            | 2 +-
- drivers/md/md.h            | 1 +
- 3 files changed, 3 insertions(+), 1 deletion(-)
+Otherwise looks good:
 
-diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
-index 2cf973722f59..344910ba435c 100644
---- a/drivers/md/md-autodetect.c
-+++ b/drivers/md/md-autodetect.c
-@@ -169,6 +169,7 @@ static void __init md_setup_drive(struct md_setup_args *args)
- 
- 	pr_info("md: Loading %s: %s\n", name, args->device_names);
- 
-+	md_alloc(mdev, name);
- 	bdev = blkdev_get_by_dev(mdev, FMODE_READ, NULL);
- 	if (IS_ERR(bdev)) {
- 		pr_err("md: open failed - cannot start array %s\n", name);
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 707e802d0082..5a4bca886572 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5638,7 +5638,7 @@ int mddev_init_writes_pending(struct mddev *mddev)
- }
- EXPORT_SYMBOL_GPL(mddev_init_writes_pending);
- 
--static int md_alloc(dev_t dev, char *name)
-+int md_alloc(dev_t dev, char *name)
- {
- 	/*
- 	 * If dev is zero, name is the name of a device to allocate with
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index cf2cbb17acbd..8da7ec314bbf 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -751,6 +751,7 @@ extern int md_integrity_add_rdev(struct md_rdev *rdev, struct mddev *mddev);
- extern int strict_strtoul_scaled(const char *cp, unsigned long *res, int scale);
- 
- extern void mddev_init(struct mddev *mddev);
-+extern int md_alloc(dev_t dev, char *name);
- extern int md_run(struct mddev *mddev);
- extern int md_start(struct mddev *mddev);
- extern void md_stop(struct mddev *mddev);
+Reviewed-by: Christoph Hellwig <hch@lst.de>
