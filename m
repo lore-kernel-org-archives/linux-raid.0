@@ -2,64 +2,64 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7441C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 31 May 2022 17:50:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B20AC433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 31 May 2022 17:51:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244911AbiEaRum (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 31 May 2022 13:50:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50238 "EHLO
+        id S1344197AbiEaRvK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 31 May 2022 13:51:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241081AbiEaRul (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 31 May 2022 13:50:41 -0400
+        with ESMTP id S1343782AbiEaRvJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 31 May 2022 13:51:09 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5595D9A9B2
-        for <linux-raid@vger.kernel.org>; Tue, 31 May 2022 10:50:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CD419AE55
+        for <linux-raid@vger.kernel.org>; Tue, 31 May 2022 10:51:08 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 0CC1B1FD3E;
-        Tue, 31 May 2022 17:50:39 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 5D91E1FAB6;
+        Tue, 31 May 2022 17:51:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1654019439; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1654019467; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vLiKbcGRfjTuQHnG7HcGndgas5ESSIf4IdYZElh6oI8=;
-        b=KjZmoJMFB4Hg6QuWsPCO02F8OARbUtRDSH6NNuEP2NMlGqL7dUooCXpvyRLYcrzZdVUAQ7
-        9QYQRgpcS59/wqEfFSky8R7tQjf/88dqceVBc4mB5fqqiqBbTO7z5wBaC6CEoHqkQ3DCth
-        st7pgpzvCGWc5N6BydWg+FIVcLNuEqo=
+        bh=Guu45NQegF0LfU0jmVMl/y9C+XhABoDUzSr3vGiaipc=;
+        b=aH0jq/TopVY3LOTjq30MTY0zDaWHNbxnGtiy2R8smx0Iif61xR+TozZCA4hA3kcPoEUcdt
+        4n8etdljAHvasMSVmJv+7OZVuQSyybpxMpdbteu+Y1fr5C87Gv+rmtRoK4c/3/GFeHOCFH
+        ZCl8DguyU2dGbFH4RMn86y8Ce+oHI2s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1654019439;
+        s=susede2_ed25519; t=1654019467;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vLiKbcGRfjTuQHnG7HcGndgas5ESSIf4IdYZElh6oI8=;
-        b=csnbJGZ7yGxEr+B8tksHCepTChLIWyOsmOCQ6K6s8ArDG2qTlfm/Sv51C0r7tkjBLyuMxH
-        ls5b/KEyRoL57GAQ==
+        bh=Guu45NQegF0LfU0jmVMl/y9C+XhABoDUzSr3vGiaipc=;
+        b=0RJ/+Rv7msLROFGiHMuhb1uHmqLzwiUOoWHMLNSqcb5uvUzJX1iQDj38ivjw/67wTTWuc8
+        wrVeHasp647HtDBQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 04AEE13AA2;
-        Tue, 31 May 2022 17:50:37 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 88BEF13AA2;
+        Tue, 31 May 2022 17:51:06 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 82O2MG1VlmJVFwAAMHmgww
-        (envelope-from <colyli@suse.de>); Tue, 31 May 2022 17:50:37 +0000
+        id mM6NFYpVlmJVFwAAMHmgww
+        (envelope-from <colyli@suse.de>); Tue, 31 May 2022 17:51:06 +0000
 Content-Type: text/plain;
         charset=utf-8
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
-Subject: Re: [PATCH 2/3 v2] imsm: use same slot across container
+Subject: Re: [PATCH 3/3 v2] imsm: block changing slots during creation
 From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220531102727.9315-3-mariusz.tkaczyk@linux.intel.com>
-Date:   Wed, 1 Jun 2022 01:50:35 +0800
+In-Reply-To: <20220531102727.9315-4-mariusz.tkaczyk@linux.intel.com>
+Date:   Wed, 1 Jun 2022 01:51:05 +0800
 Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <E7F52F8C-52F7-4944-9CE9-172B935E24AA@suse.de>
+Message-Id: <4A14219C-5592-4AA5-9B34-6BB716782238@suse.de>
 References: <20220531102727.9315-1-mariusz.tkaczyk@linux.intel.com>
- <20220531102727.9315-3-mariusz.tkaczyk@linux.intel.com>
+ <20220531102727.9315-4-mariusz.tkaczyk@linux.intel.com>
 To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 X-Mailer: Apple Mail (2.3696.100.31)
 Precedence: bulk
@@ -71,13 +71,17 @@ X-Mailing-List: linux-raid@vger.kernel.org
 > 2022=E5=B9=B45=E6=9C=8831=E6=97=A5 18:27=EF=BC=8CMariusz Tkaczyk =
 <mariusz.tkaczyk@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
 >=20
-> Autolayout relies on drives order on super->disks list, but
-> it is not quaranted by readdir() in sysfs_read(). As a result
-> drive could be put in different slot in second volume.
->=20
-> Make it consistent by reffering to first volume, if exists.
->=20
-> Use enum imsm_status to unify error handling.
+> If user specifies drives for array creation, then slot order across
+> volumes is not preserved.
+> Ideally, it should be checked in validate_geometry() but it is not
+> possible in current implementation (order is determined later).
+> Add verification in add_to_super_imsm_volume() and throw error if
+> mismatch is detected.
+> IMSM allows to use only same members within container.
+> This is not hardware dependency but metadata limitation.
+> Therefore, 09-imsm-overlap test is removed. Testing it is pointless.
+> After this patch, creation in this scenario is blocked. Offset
+> verification is covered in other tests.
 >=20
 > Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
@@ -88,271 +92,111 @@ Coly Li
 
 
 > ---
-> super-intel.c | 169 ++++++++++++++++++++++++++++++++------------------
-> 1 file changed, 108 insertions(+), 61 deletions(-)
+> super-intel.c        | 33 ++++++++++++++++++++++-----------
+> tests/09imsm-overlap | 28 ----------------------------
+> 2 files changed, 22 insertions(+), 39 deletions(-)
+> delete mode 100644 tests/09imsm-overlap
 >=20
 > diff --git a/super-intel.c b/super-intel.c
-> index f0196948..3c02d2f6 100644
+> index 3c02d2f6..053f7e7e 100644
 > --- a/super-intel.c
 > +++ b/super-intel.c
-> @@ -7493,11 +7493,27 @@ static int =
-validate_geometry_imsm_volume(struct supertype *st, int level,
-> 	return 1;
-> }
->=20
-> -static int imsm_get_free_size(struct supertype *st, int raiddisks,
-> -			 unsigned long long size, int chunk,
-> -			 unsigned long long *freesize)
-> +/**
-> + * imsm_get_free_size() - get the biggest, common free space from =
-members.
-> + * @super: &intel_super pointer, not NULL.
-> + * @raiddisks: number of raid disks.
-> + * @size: requested size, could be 0 (means max size).
-> + * @chunk: requested chunk.
-> + * @freesize: pointer for returned size value.
-> + *
-> + * Return: &IMSM_STATUS_OK or &IMSM_STATUS_ERROR.
-> + *
-> + * @freesize is set to meaningful value, this can be @size, or =
-calculated
-> + * max free size.
-> + * super->create_offset value is modified and set appropriately in
-> + * merge_extends() for further creation.
-> + */
-> +static imsm_status_t imsm_get_free_size(struct intel_super *super,
-> +					const int raiddisks,
-> +					unsigned long long size,
-> +					const int chunk,
-> +					unsigned long long *freesize)
-> {
-> -	struct intel_super *super =3D st->sb;
-> 	struct imsm_super *mpb =3D super->anchor;
-> 	struct dl *dl;
-> 	int i;
-> @@ -7541,12 +7557,10 @@ static int imsm_get_free_size(struct supertype =
-*st, int raiddisks,
-> 		/* chunk is in K */
-> 		minsize =3D chunk * 2;
->=20
-> -	if (cnt < raiddisks ||
-> -	    (super->orom && used && used !=3D raiddisks) ||
-> -	    maxsize < minsize ||
-> -	    maxsize =3D=3D 0) {
-> +	if (cnt < raiddisks || (super->orom && used && used !=3D =
-raiddisks) ||
-> +	    maxsize < minsize || maxsize =3D=3D 0) {
-> 		pr_err("not enough devices with space to create =
-array.\n");
-> -		return 0; /* No enough free spaces large enough */
-> +		return IMSM_STATUS_ERROR;
-> 	}
->=20
-> 	if (size =3D=3D 0) {
-> @@ -7559,37 +7573,69 @@ static int imsm_get_free_size(struct supertype =
-*st, int raiddisks,
-> 	}
-> 	if (mpb->num_raid_devs > 0 && size && size !=3D maxsize)
-> 		pr_err("attempting to create a second volume with size =
-less then remaining space.\n");
-> -	cnt =3D 0;
-> -	for (dl =3D super->disks; dl; dl =3D dl->next)
-> -		if (dl->e)
-> -			dl->raiddisk =3D cnt++;
-> -
-> 	*freesize =3D size;
->=20
-> 	dprintf("imsm: imsm_get_free_size() returns : %llu\n", size);
->=20
-> -	return 1;
-> +	return IMSM_STATUS_OK;
-> }
->=20
-> -static int reserve_space(struct supertype *st, int raiddisks,
-> -			 unsigned long long size, int chunk,
-> -			 unsigned long long *freesize)
-> +/**
-> + * autolayout_imsm() - automatically layout a new volume.
-> + * @super: &intel_super pointer, not NULL.
-> + * @raiddisks: number of raid disks.
-> + * @size: requested size, could be 0 (means max size).
-> + * @chunk: requested chunk.
-> + * @freesize: pointer for returned size value.
-> + *
-> + * We are being asked to automatically layout a new volume based on =
-the current
-> + * contents of the container. If the parameters can be satisfied =
-autolayout_imsm
-> + * will record the disks, start offset, and will return size of the =
-volume to
-> + * be created. See imsm_get_free_size() for details.
-> + * add_to_super() and getinfo_super() detect when autolayout is in =
-progress.
-> + * If first volume exists, slots are set consistently to it.
-> + *
-> + * Return: &IMSM_STATUS_OK on success, &IMSM_STATUS_ERROR otherwise.
-> + *
-> + * Disks are marked for creation via dl->raiddisk.
-> + */
-> +static imsm_status_t autolayout_imsm(struct intel_super *super,
-> +				     const int raiddisks,
-> +				     unsigned long long size, const int =
-chunk,
-> +				     unsigned long long *freesize)
-> {
-> -	struct intel_super *super =3D st->sb;
-> -	struct dl *dl;
-> -	int cnt;
-> -	int rv =3D 0;
-> +	int curr_slot =3D 0;
-> +	struct dl *disk;
-> +	int vol_cnt =3D super->anchor->num_raid_devs;
-> +	imsm_status_t rv;
->=20
-> -	rv =3D imsm_get_free_size(st, raiddisks, size, chunk, freesize);
-> -	if (rv) {
-> -		cnt =3D 0;
-> -		for (dl =3D super->disks; dl; dl =3D dl->next)
-> -			if (dl->e)
-> -				dl->raiddisk =3D cnt++;
-> -		rv =3D 1;
-> +	rv =3D imsm_get_free_size(super, raiddisks, size, chunk, =
-freesize);
-> +	if (rv !=3D IMSM_STATUS_OK)
-> +		return IMSM_STATUS_ERROR;
+> @@ -5760,6 +5760,10 @@ static int add_to_super_imsm_volume(struct =
+supertype *st, mdu_disk_info_t *dk,
+> 	struct imsm_map *map;
+> 	struct dl *dl, *df;
+> 	int slot;
+> +	int autolayout =3D 0;
 > +
-> +	for (disk =3D super->disks; disk; disk =3D disk->next) {
-> +		if (!disk->e)
-> +			continue;
-> +
-> +		if (curr_slot =3D=3D raiddisks)
-> +			break;
-> +
-> +		if (vol_cnt =3D=3D 0) {
-> +			disk->raiddisk =3D curr_slot;
-> +		} else {
-> +			int _slot =3D get_disk_slot_in_dev(super, 0, =
-disk->index);
-> +
-> +			if (_slot =3D=3D -1) {
-> +				pr_err("Disk %s is not used in first =
-volume, aborting\n",
-> +				       disk->devname);
-> +				return IMSM_STATUS_ERROR;
-> +			}
-> +			disk->raiddisk =3D _slot;
-> +		}
-> +		curr_slot++;
-> 	}
+> +	if (!is_fd_valid(fd))
+> +		autolayout =3D 1;
 >=20
-> -	return rv;
-> +	return IMSM_STATUS_OK;
-> }
->=20
-> static int validate_geometry_imsm(struct supertype *st, int level, int =
-layout,
-> @@ -7625,35 +7671,35 @@ static int validate_geometry_imsm(struct =
-supertype *st, int level, int layout,
-> 	}
->=20
-> 	if (!dev) {
-> -		if (st->sb) {
-> -			struct intel_super *super =3D st->sb;
-> -			if (!validate_geometry_imsm_orom(st->sb, level, =
-layout,
-> -							 raiddisks, =
-chunk, size,
-> -							 verbose))
-> +		struct intel_super *super =3D st->sb;
-> +
-> +		/*
-> +		 * Autolayout mode, st->sb and freesize must be set.
-> +		 */
-> +		if (!super || !freesize) {
-> +			pr_vrb("freesize and superblock must be set for =
-autolayout, aborting\n");
-> +			return 1;
-> +		}
-> +
-> +		if (!validate_geometry_imsm_orom(st->sb, level, layout,
-> +						 raiddisks, chunk, size,
-> +						 verbose))
-> +			return 0;
-> +
-> +		if (super->orom) {
-> +			imsm_status_t rv;
-> +			int count =3D count_volumes(super->hba, =
-super->orom->dpa,
-> +					      verbose);
-> +			if (super->orom->vphba <=3D count) {
-> +				pr_vrb("platform does not support more =
-than %d raid volumes.\n",
-> +				       super->orom->vphba);
-> 				return 0;
-> -			/* we are being asked to automatically layout a
-> -			 * new volume based on the current contents of
-> -			 * the container.  If the the parameters can be
-> -			 * satisfied reserve_space will record the =
-disks,
-> -			 * start offset, and size of the volume to be
-> -			 * created.  add_to_super and getinfo_super
-> -			 * detect when autolayout is in progress.
-> -			 */
-> -			/* assuming that freesize is always given when =
-array is
-> -			   created */
-> -			if (super->orom && freesize) {
-> -				int count;
-> -				count =3D count_volumes(super->hba,
-> -						      super->orom->dpa, =
-verbose);
-> -				if (super->orom->vphba <=3D count) {
-> -					pr_vrb("platform does not =
-support more than %d raid volumes.\n",
-> -					       super->orom->vphba);
-> -					return 0;
-> -				}
-> 			}
-> -			if (freesize)
-> -				return reserve_space(st, raiddisks, =
-size,
-> -						     *chunk, freesize);
-> +
-> +			rv =3D autolayout_imsm(super, raiddisks, size, =
-*chunk,
-> +					     freesize);
-> +			if (rv !=3D IMSM_STATUS_OK)
-> +				return 0;
-> 		}
+> 	dev =3D get_imsm_dev(super, super->current_vol);
+> 	map =3D get_imsm_map(dev, MAP_0);
+> @@ -5770,25 +5774,32 @@ static int add_to_super_imsm_volume(struct =
+supertype *st, mdu_disk_info_t *dk,
 > 		return 1;
 > 	}
-> @@ -11524,7 +11570,7 @@ enum imsm_reshape_type =
-imsm_analyze_change(struct supertype *st,
-> 	unsigned long long current_size;
-> 	unsigned long long free_size;
-> 	unsigned long long max_size;
-> -	int rv;
-> +	imsm_status_t rv;
 >=20
-> 	getinfo_super_imsm_volume(st, &info, NULL);
-> 	if (geo->level !=3D info.array.level && geo->level >=3D 0 &&
-> @@ -11643,9 +11689,10 @@ enum imsm_reshape_type =
-imsm_analyze_change(struct supertype *st,
-> 		}
-> 		/* check the maximum available size
-> 		 */
-> -		rv =3D  imsm_get_free_size(st, =
-dev->vol.map->num_members,
-> -					 0, chunk, &free_size);
-> -		if (rv =3D=3D 0)
-> +		rv =3D imsm_get_free_size(super, =
-dev->vol.map->num_members,
-> +					0, chunk, &free_size);
+> -	if (!is_fd_valid(fd)) {
+> -		/* we're doing autolayout so grab the pre-marked (in
+> -		 * validate_geometry) raid_disk
+> -		 */
+> -		for (dl =3D super->disks; dl; dl =3D dl->next)
+> +	for (dl =3D super->disks; dl ; dl =3D dl->next) {
+> +		if (autolayout) {
+> 			if (dl->raiddisk =3D=3D dk->raid_disk)
+> 				break;
+> -	} else {
+> -		for (dl =3D super->disks; dl ; dl =3D dl->next)
+> -			if (dl->major =3D=3D dk->major &&
+> -			    dl->minor =3D=3D dk->minor)
+> -				break;
+> +		} else if (dl->major =3D=3D dk->major && dl->minor =3D=3D =
+dk->minor)
+> +			break;
+> 	}
+>=20
+> 	if (!dl) {
+> -		pr_err("%s is not a member of the same container\n", =
+devname);
+> +		if (!autolayout)
+> +			pr_err("%s is not a member of the same =
+container.\n",
+> +			       devname);
+> 		return 1;
+> 	}
+>=20
+> +	if (!autolayout && super->current_vol > 0) {
+> +		int _slot =3D get_disk_slot_in_dev(super, 0, dl->index);
 > +
-> +		if (rv !=3D IMSM_STATUS_OK)
-> 			/* Cannot find maximum available space
-> 			 */
-> 			max_size =3D 0;
+> +		if (_slot !=3D dk->raid_disk) {
+> +			pr_err("Member %s is in %d slot for the first =
+volume, but is in %d slot for a new volume.\n",
+> +			       dl->devname, _slot, dk->raid_disk);
+> +			pr_err("Raid members are in different order than =
+for the first volume, aborting.\n");
+> +			return 1;
+> +		}
+> +	}
+> +
+> 	if (mpb->num_disks =3D=3D 0)
+> 		if (!get_dev_sector_size(dl->fd, dl->devname,
+> 					 &super->sector_size))
+> diff --git a/tests/09imsm-overlap b/tests/09imsm-overlap
+> deleted file mode 100644
+> index ff5d2093..00000000
+> --- a/tests/09imsm-overlap
+> +++ /dev/null
+> @@ -1,28 +0,0 @@
+> -
+> -. tests/env-imsm-template
+> -
+> -# create raid arrays with varying degress of overlap
+> -mdadm -CR $container -e imsm -n 6 $dev0 $dev1 $dev2 $dev3 $dev4 $dev5
+> -imsm_check container 6
+> -
+> -size=3D1024
+> -level=3D1
+> -num_disks=3D2
+> -mdadm -CR $member0 $dev0 $dev1 -n $num_disks -l $level -z $size
+> -mdadm -CR $member1 $dev1 $dev2 -n $num_disks -l $level -z $size
+> -mdadm -CR $member2 $dev2 $dev3 -n $num_disks -l $level -z $size
+> -mdadm -CR $member3 $dev3 $dev4 -n $num_disks -l $level -z $size
+> -mdadm -CR $member4 $dev4 $dev5 -n $num_disks -l $level -z $size
+> -
+> -udevadm settle
+> -
+> -offset=3D0
+> -imsm_check member $member0 $num_disks $level $size 1024 $offset
+> -offset=3D$((offset+size+4096))
+> -imsm_check member $member1 $num_disks $level $size 1024 $offset
+> -offset=3D$((offset+size+4096))
+> -imsm_check member $member2 $num_disks $level $size 1024 $offset
+> -offset=3D$((offset+size+4096))
+> -imsm_check member $member3 $num_disks $level $size 1024 $offset
+> -offset=3D$((offset+size+4096))
+> -imsm_check member $member4 $num_disks $level $size 1024 $offset
 > --=20
 > 2.26.2
 >=20
