@@ -2,96 +2,74 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B5F9C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 31 May 2022 08:25:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B82B3C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 31 May 2022 10:27:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238362AbiEaIZg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 31 May 2022 04:25:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57318 "EHLO
+        id S245683AbiEaK1r (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 31 May 2022 06:27:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234747AbiEaIZf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 31 May 2022 04:25:35 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E39C591572
-        for <linux-raid@vger.kernel.org>; Tue, 31 May 2022 01:25:33 -0700 (PDT)
-Received: from [192.168.0.4] (ip5f5aeb8b.dynamic.kabel-deutschland.de [95.90.235.139])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 3FE8861EA192C;
-        Tue, 31 May 2022 10:25:32 +0200 (CEST)
-Message-ID: <1cbeaaa7-4b49-478a-9333-1885e8047a3f@molgen.mpg.de>
-Date:   Tue, 31 May 2022 10:25:31 +0200
+        with ESMTP id S245671AbiEaK1p (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 31 May 2022 06:27:45 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 247B8996AF
+        for <linux-raid@vger.kernel.org>; Tue, 31 May 2022 03:27:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1653992865; x=1685528865;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=tIF538NzYipt7ipeMUxZjjFN4vmoIIy/j8YGq/LCu6c=;
+  b=deKGu47J0GiNiIgKkIODgPIs8dFy+CVhxbm7l+YIQONdYnWFDfw1mT9r
+   pO1lSQvlSFRe3jBZTy357e/bPNpMWuOxK7vIw73JE4IfASVjkHmvkOVyV
+   2XdyNlEoZyqm592LxMskDgyMw4CeHGNUuTxFv8omGozMXXhfvzdey+ggK
+   ZBYez8mIPwMqcw21SXC9o8XpAAhGZ/CMtCksuzUdyk9KfIMkAU3vip07i
+   epkGNMs4u//ztuNcsNTRHwsHbnSquKtJ2d9+AVpo8GhpGGo3pp4jJKc1P
+   So79aIu2w4A+ZiOaKq9gLMXhjrsu9PbbV41Y+8gSmeepTZ8+DsSxUnKKw
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10363"; a="300562480"
+X-IronPort-AV: E=Sophos;i="5.91,264,1647327600"; 
+   d="scan'208";a="300562480"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 03:27:44 -0700
+X-IronPort-AV: E=Sophos;i="5.91,264,1647327600"; 
+   d="scan'208";a="576342786"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 03:27:43 -0700
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     jes@trained-monkey.org, colyli@suse.de
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH 0/3 v2] IMSM autolayout improvements
+Date:   Tue, 31 May 2022 12:27:24 +0200
+Message-Id: <20220531102727.9315-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Subject: Re: [PATCH 5/5] get_vd_num_of_subarray: fix memleak
-Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     Wu Guanghao <wuguanghao3@huawei.com>, jes@trained-monkey.org,
-        linux-raid@vger.kernel.org, linfeilong@huawei.com,
-        lixiaokeng@huawei.com
-References: <00992179-9572-ceb4-eb49-492c42e67695@huawei.com>
- <f1bee99f-a9b0-0e58-36fb-e5eee110dcc9@huawei.com>
- <20220531101132.00002141@linux.intel.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220531101132.00002141@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Mariusz,
+Following patchset modifies some parts of IMSM creation to ensure that
+member's order is always same. It is ISM metadata requirement.
 
+Additionally, as discussed with Jes I've started to implement more modern error
+handling, by adding special enum for IMSM. Will be great to hear any comments
+and opinion.
 
-Am 31.05.22 um 10:11 schrieb Mariusz Tkaczyk:
-> On Tue, 31 May 2022 14:51:13 +0800 Wu Guanghao wrote:
-> 
->> sra = sysfs_read() should be free before return in
->> get_vd_num_of_subarray()
->>
->> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
->> ---
->>   super-ddf.c | 9 +++++++--
->>   1 file changed, 7 insertions(+), 2 deletions(-)
->>
->> diff --git a/super-ddf.c b/super-ddf.c
->> index 8cda23a7..827e4ae7 100644
->> --- a/super-ddf.c
->> +++ b/super-ddf.c
->> @@ -1599,15 +1599,20 @@ static unsigned int get_vd_num_of_subarray(struct
->> supertype *st) sra = sysfs_read(-1, st->devnm, GET_VERSION);
->>   	if (!sra || sra->array.major_version != -1 ||
->>   	    sra->array.minor_version != -2 ||
->> -	    !is_subarray(sra->text_version))
->> +	    !is_subarray(sra->text_version)) {
->> +		if (sra)
->> +			sysfs_free(sra);
->>   		return DDF_NOTFOUND;
->> +	}
->>
->>   	sub = strchr(sra->text_version + 1, '/');
->>   	if (sub != NULL)
->>   		vcnum = strtoul(sub + 1, &end, 10);
->>   	if (sub == NULL || *sub == '\0' || *end != '\0' ||
->> -	    vcnum >= be16_to_cpu(ddf->active->max_vd_entries))
->> +	    vcnum >= be16_to_cpu(ddf->active->max_vd_entries)) {
->> +		sysfs_free(sra);
->>   		return DDF_NOTFOUND;
->> +	}
->>
->>   	return vcnum;
->>   }
-> 
-> Acked-by:mariusz.tkaczyk@linux.intel.com
+V2 improvements:
+- typedef added in first patch
+- changed order in enum
 
-Thank you for your review. The common format is:
+Mariusz Tkaczyk (3):
+  imsm: introduce get_disk_slot_in_dev()
+  imsm: use same slot across container
+  imsm: block changing slots during creation
 
-Acked-by: Name <address>
+ super-intel.c        | 249 ++++++++++++++++++++++++++++---------------
+ tests/09imsm-overlap |  28 -----
+ 2 files changed, 166 insertions(+), 111 deletions(-)
+ delete mode 100644 tests/09imsm-overlap
 
+-- 
+2.26.2
 
-Kind regards,
-
-Paul
