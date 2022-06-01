@@ -2,101 +2,210 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8326C433EF
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Jun 2022 11:29:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5738CCA473
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Jun 2022 21:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352690AbiFAL3Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Jun 2022 07:29:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60716 "EHLO
+        id S231956AbiFAVyS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Jun 2022 17:54:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352625AbiFAL3Y (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Jun 2022 07:29:24 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 627F36EB2A
-        for <linux-raid@vger.kernel.org>; Wed,  1 Jun 2022 04:29:22 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S231932AbiFAVyQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Jun 2022 17:54:16 -0400
+X-Greylist: delayed 599 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 01 Jun 2022 14:54:15 PDT
+Received: from mail.stoffel.org (li1843-175.members.linode.com [172.104.24.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AED10CC;
+        Wed,  1 Jun 2022 14:54:15 -0700 (PDT)
+Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 1CCA11F8CE;
-        Wed,  1 Jun 2022 11:29:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1654082961; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=lBej9tn5rv7LRcg0CN6wPuuL5fh3IQqnMreRPm7laTg=;
-        b=cWO4HZTlWetNstBZp19uPt5MLV5XqJtf2C2BkG6wMadlz+9TVj+bHnMdhdLm9xz9fi8fod
-        G9nFGRuTcu9FBxUVAiapwgFalXf1KyzynnMieS5pWU+C0dHKOmn9hY1IztT+9XSn07QW4c
-        c4SgZ59wtmRft2LYWJRbicgcHNqnpBM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1654082961;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=lBej9tn5rv7LRcg0CN6wPuuL5fh3IQqnMreRPm7laTg=;
-        b=Okt3cNRIEoC2JcDsyeCos3pxbRrE8UUr2i4b8hwMAehcP+kd5MsMZW0371q4JyQjJlQa6u
-        MvClm2UtLavNIEAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1178F13A8F;
-        Wed,  1 Jun 2022 11:29:19 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id E7IGNI9Nl2JaMwAAMHmgww
-        (envelope-from <colyli@suse.de>); Wed, 01 Jun 2022 11:29:19 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
-Subject: Re: [PATCH v2] Grow: Split Grow_reshape into helper function.
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <21a8b838-fc20-3657-6ee9-45b5aed10b62@molgen.mpg.de>
-Date:   Wed, 1 Jun 2022 19:29:17 +0800
-Cc:     Mateusz Kusiak <mateusz.kusiak@intel.com>, jes@trained-monkey.org,
-        linux-raid@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <BC62A57E-71ED-42A8-A156-9875A6578E92@suse.de>
-References: <20220601092840.19986-1-mateusz.kusiak@intel.com>
- <21a8b838-fc20-3657-6ee9-45b5aed10b62@molgen.mpg.de>
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-X-Mailer: Apple Mail (2.3696.100.31)
+        by mail.stoffel.org (Postfix) with ESMTPSA id 98DD7270B6;
+        Wed,  1 Jun 2022 17:36:16 -0400 (EDT)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+        id E147DA7C46; Wed,  1 Jun 2022 17:36:15 -0400 (EDT)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <25239.56271.848372.965726@quad.stoffel.home>
+Date:   Wed, 1 Jun 2022 17:36:15 -0400
+From:   "John Stoffel" <john@stoffel.org>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Heming Zhao <heming.zhao@suse.com>,
+        kernel test robot <lkp@intel.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 5.4 18/55] md/bitmap: don't set sb values if can't pass sanity check
+In-Reply-To: <20220530134701.1935933-18-sashal@kernel.org>
+References: <20220530134701.1935933-1-sashal@kernel.org>
+        <20220530134701.1935933-18-sashal@kernel.org>
+X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+>>>>> "Sasha" == Sasha Levin <sashal@kernel.org> writes:
 
+Sasha> From: Heming Zhao <heming.zhao@suse.com>
+Sasha> [ Upstream commit e68cb83a57a458b01c9739e2ad9cb70b04d1e6d2 ]
 
-> 2022=E5=B9=B46=E6=9C=881=E6=97=A5 19:22=EF=BC=8CPaul Menzel =
-<pmenzel@molgen.mpg.de> =E5=86=99=E9=81=93=EF=BC=9A
->>=20
+Sasha> If bitmap area contains invalid data, kernel will crash then mdadm
+Sasha> triggers "Segmentation fault".
+Sasha> This is cluster-md speical bug. In non-clustered env, mdadm will
 
-[snipped]
->>  +/**
->> + * is_bit_set() - get bit value by index.
->> + * @val: value.
->> + * @index: index of the bit (LSB numbering).
->> + *
->> + * Return: bit value.
->> + */
->> +bool is_bit_set(int *val, unsigned char index)
->> +{
->> +	if ((*val) & (1 << index))
->> +		return true;
->> +	return false;
->=20
-> Maybe:
->=20
->    return (*val) & (1 << index)
+special
 
-The above line doesn=E2=80=99t return bool value range, otherwise it =
-returns !!((*val) & (1 << index). I am OK with either of them, what the =
-patch does is fine to me.
+All the commit messages need to be fixed from what I see.
 
-Coly Li
+Sasha> handle broken metadata case. In clustered array, only kernel space
+Sasha> handles bitmap slot info. But even this bug only happened in clustered
+Sasha> env, current sanity check is wrong, the code should be changed.
 
+Sasha> How to trigger: (faulty injection)
 
-[snipped]
+Sasha> dd if=/dev/zero bs=1M count=1 oflag=direct of=/dev/sda
+Sasha> dd if=/dev/zero bs=1M count=1 oflag=direct of=/dev/sdb
+Sasha> mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda /dev/sdb
+Sasha> mdadm -Ss
+Sasha> echo aaa > magic.txt
+Sasha>  == below modifying slot 2 bitmap data ==
+Sasha> dd if=magic.txt of=/dev/sda seek=16384 bs=1 count=3 <== destroy magic
+Sasha> dd if=/dev/zero of=/dev/sda seek=16436 bs=1 count=4 <== ZERO chunksize
+Sasha> mdadm -A /dev/md0 /dev/sda /dev/sdb
+Sasha>  == kernel crashes. mdadm outputs "Segmentation fault" ==
+
+Sasha> Reason of kernel crash:
+
+Sasha> In md_bitmap_read_sb (called by md_bitmap_create), bad bitmap magic didn't
+Sasha> block chunksize assignment, and zero value made DIV_ROUND_UP_SECTOR_T()
+Sasha> trigger "divide error".
+
+Sasha> Crash log:
+
+Sasha> kernel: md: md0 stopped.
+Sasha> kernel: md/raid1:md0: not clean -- starting background reconstruction
+Sasha> kernel: md/raid1:md0: active with 2 out of 2 mirrors
+Sasha> kernel: dlm: ... ...
+Sasha> kernel: md-cluster: Joined cluster 44810aba-38bb-e6b8-daca-bc97a0b254aa slot 1
+Sasha> kernel: md0: invalid bitmap file superblock: bad magic
+Sasha> kernel: md_bitmap_copy_from_slot can't get bitmap from slot 2
+Sasha> kernel: md-cluster: Could not gather bitmaps from slot 2
+Sasha> kernel: divide error: 0000 [#1] SMP NOPTI
+Sasha> kernel: CPU: 0 PID: 1603 Comm: mdadm Not tainted 5.14.6-1-default
+Sasha> kernel: Hardware name: QEMU Standard PC (i440FX + PIIX, 1996)
+Sasha> kernel: RIP: 0010:md_bitmap_create+0x1d1/0x850 [md_mod]
+Sasha> kernel: RSP: 0018:ffffc22ac0843ba0 EFLAGS: 00010246
+Sasha> kernel: ... ...
+Sasha> kernel: Call Trace:
+Sasha> kernel:  ? dlm_lock_sync+0xd0/0xd0 [md_cluster 77fe..7a0]
+Sasha> kernel:  md_bitmap_copy_from_slot+0x2c/0x290 [md_mod 24ea..d3a]
+Sasha> kernel:  load_bitmaps+0xec/0x210 [md_cluster 77fe..7a0]
+Sasha> kernel:  md_bitmap_load+0x81/0x1e0 [md_mod 24ea..d3a]
+Sasha> kernel:  do_md_run+0x30/0x100 [md_mod 24ea..d3a]
+Sasha> kernel:  md_ioctl+0x1290/0x15a0 [md_mod 24ea....d3a]
+Sasha> kernel:  ? mddev_unlock+0xaa/0x130 [md_mod 24ea..d3a]
+Sasha> kernel:  ? blkdev_ioctl+0xb1/0x2b0
+Sasha> kernel:  block_ioctl+0x3b/0x40
+Sasha> kernel:  __x64_sys_ioctl+0x7f/0xb0
+Sasha> kernel:  do_syscall_64+0x59/0x80
+Sasha> kernel:  ? exit_to_user_mode_prepare+0x1ab/0x230
+Sasha> kernel:  ? syscall_exit_to_user_mode+0x18/0x40
+Sasha> kernel:  ? do_syscall_64+0x69/0x80
+Sasha> kernel:  entry_SYSCALL_64_after_hwframe+0x44/0xae
+Sasha> kernel: RIP: 0033:0x7f4a15fa722b
+Sasha> kernel: ... ...
+Sasha> kernel: ---[ end trace 8afa7612f559c868 ]---
+Sasha> kernel: RIP: 0010:md_bitmap_create+0x1d1/0x850 [md_mod]
+
+Sasha> Reported-by: kernel test robot <lkp@intel.com>
+Sasha> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Sasha> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
+Sasha> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
+Sasha> Signed-off-by: Song Liu <song@kernel.org>
+Sasha> Signed-off-by: Sasha Levin <sashal@kernel.org>
+Sasha> ---
+Sasha>  drivers/md/md-bitmap.c | 44 ++++++++++++++++++++++--------------------
+Sasha>  1 file changed, 23 insertions(+), 21 deletions(-)
+
+Sasha> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+Sasha> index d7eef5292ae2..a95e20c3d0d4 100644
+Sasha> --- a/drivers/md/md-bitmap.c
+Sasha> +++ b/drivers/md/md-bitmap.c
+Sasha> @@ -642,14 +642,6 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+Sasha>  	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
+Sasha>  	write_behind = le32_to_cpu(sb->write_behind);
+Sasha>  	sectors_reserved = le32_to_cpu(sb->sectors_reserved);
+Sasha> -	/* Setup nodes/clustername only if bitmap version is
+Sasha> -	 * cluster-compatible
+Sasha> -	 */
+Sasha> -	if (sb->version == cpu_to_le32(BITMAP_MAJOR_CLUSTERED)) {
+Sasha> -		nodes = le32_to_cpu(sb->nodes);
+Sasha> -		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
+Sasha> -				sb->cluster_name, 64);
+Sasha> -	}
+ 
+Sasha>  	/* verify that the bitmap-specific fields are valid */
+Sasha>  	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
+Sasha> @@ -671,6 +663,16 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+Sasha>  		goto out;
+Sasha>  	}
+ 
+Sasha> +	/*
+Sasha> +	 * Setup nodes/clustername only if bitmap version is
+Sasha> +	 * cluster-compatible
+Sasha> +	 */
+Sasha> +	if (sb->version == cpu_to_le32(BITMAP_MAJOR_CLUSTERED)) {
+Sasha> +		nodes = le32_to_cpu(sb->nodes);
+Sasha> +		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
+Sasha> +				sb->cluster_name, 64);
+Sasha> +	}
+Sasha> +
+Sasha>  	/* keep the array size field of the bitmap superblock up to date */
+sb-> sync_size = cpu_to_le64(bitmap->mddev->resync_max_sectors);
+ 
+Sasha> @@ -703,9 +705,9 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+ 
+Sasha>  out:
+Sasha>  	kunmap_atomic(sb);
+Sasha> -	/* Assigning chunksize is required for "re_read" */
+Sasha> -	bitmap->mddev->bitmap_info.chunksize = chunksize;
+Sasha>  	if (err == 0 && nodes && (bitmap->cluster_slot < 0)) {
+Sasha> +		/* Assigning chunksize is required for "re_read" */
+Sasha> +		bitmap->mddev->bitmap_info.chunksize = chunksize;
+Sasha>  		err = md_setup_cluster(bitmap->mddev, nodes);
+Sasha>  		if (err) {
+Sasha>  			pr_warn("%s: Could not setup cluster service (%d)\n",
+Sasha> @@ -716,18 +718,18 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+Sasha>  		goto re_read;
+Sasha>  	}
+ 
+Sasha> -
+Sasha>  out_no_sb:
+Sasha> -	if (test_bit(BITMAP_STALE, &bitmap->flags))
+Sasha> -		bitmap->events_cleared = bitmap->mddev->events;
+Sasha> -	bitmap->mddev->bitmap_info.chunksize = chunksize;
+Sasha> -	bitmap->mddev->bitmap_info.daemon_sleep = daemon_sleep;
+Sasha> -	bitmap->mddev->bitmap_info.max_write_behind = write_behind;
+Sasha> -	bitmap->mddev->bitmap_info.nodes = nodes;
+Sasha> -	if (bitmap->mddev->bitmap_info.space == 0 ||
+Sasha> -	    bitmap->mddev->bitmap_info.space > sectors_reserved)
+Sasha> -		bitmap->mddev->bitmap_info.space = sectors_reserved;
+Sasha> -	if (err) {
+Sasha> +	if (err == 0) {
+Sasha> +		if (test_bit(BITMAP_STALE, &bitmap->flags))
+Sasha> +			bitmap->events_cleared = bitmap->mddev->events;
+Sasha> +		bitmap->mddev->bitmap_info.chunksize = chunksize;
+Sasha> +		bitmap->mddev->bitmap_info.daemon_sleep = daemon_sleep;
+Sasha> +		bitmap->mddev->bitmap_info.max_write_behind = write_behind;
+Sasha> +		bitmap->mddev->bitmap_info.nodes = nodes;
+Sasha> +		if (bitmap->mddev->bitmap_info.space == 0 ||
+Sasha> +			bitmap->mddev->bitmap_info.space > sectors_reserved)
+Sasha> +			bitmap->mddev->bitmap_info.space = sectors_reserved;
+Sasha> +	} else {
+Sasha>  		md_bitmap_print_sb(bitmap);
+Sasha>  		if (bitmap->cluster_slot < 0)
+Sasha>  			md_cluster_stop(bitmap->mddev);
+Sasha> -- 
+Sasha> 2.35.1
 
