@@ -2,162 +2,147 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F08BC43334
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Jun 2022 18:04:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19F12C43334
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Jun 2022 18:18:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237817AbiFBSEB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 2 Jun 2022 14:04:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50512 "EHLO
+        id S237930AbiFBSSZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 2 Jun 2022 14:18:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237621AbiFBSEB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Jun 2022 14:04:01 -0400
+        with ESMTP id S237919AbiFBSSX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Jun 2022 14:18:23 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B63E0274B58
-        for <linux-raid@vger.kernel.org>; Thu,  2 Jun 2022 11:03:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FC704D26B;
+        Thu,  2 Jun 2022 11:18:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=Ek7Bg/YG3Kgx4qcE8fWjDKac4QfqMOLrPnZJJqYj8kk=; b=NnVGxfUJ+WAb90gaVtT8GKkNzI
-        /EZ6elzHev5qEFqo7C3vnj001O7IGQ7RG4vxD7JSjKdOQ2bZD63LriB+vAmdMmRPipqLyS5yCGqcW
-        rv7Y/QNFY/BIAqrxv+I4Gon1XIxMmRQxkhms7GZWj1+s4DGYQcgNc4+1sw4zhC95biLmMOsepT6IZ
-        53pEPzgtMR6aEG3MSCAWRBxTl97kNnNIWPOnvfmjvD5nYm+tWSdt7lXMUbCYt0Oz6vrWzEScwQ2qm
-        YLK3OnzFbZ0+cX7guPt7Nz+XRrpuLoK4PfEd9Z3cuzhMpYjhtnz+4F3TMs8rWmJptvqNYlgwIphNb
-        0o+Xt5wA==;
-Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
+        :references:content-disposition:in-reply-to;
+        bh=157u6PWKooSuu4KOF7rMgNHIpCSulick1bTC+P/d8hM=; b=P9xP28hD4TKNdYGjPol8Nm765i
+        kaaXtDFXkJxC1t/dqOF3m5nfCevjfXT1CJgBAPFLiVsJrxMyF09Vq7ho6dVAGXT9f1E0Pun6jfXe1
+        /cqkV1EOrd9NSa2NXK2Dn5ONp+ufqxsV6O4dvcc6yaCxPgo/aV7sjubNEHbNmwVH1aJrd7bOFIXHH
+        VcCdfJ+ON92LpCFIO2LgyzCVDrEvp8oWEVfw1nvXVC2qF9c/PwvaVtbJM+W9kov1J2FU+3cJcTFXg
+        +CqIEVjnh6ChZ5YXO02EspfW6oz4b6ZS0NfvN+t2BEE7GMBxD0zjRtW9kIos2BzIMETQ0loAAmI5Y
+        WomT/fxA==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1nwpAq-00EPXy-Bi; Thu, 02 Jun 2022 12:03:57 -0600
-Message-ID: <a6a1183b-35ca-b321-cbd5-08e2a9e29ca3@deltatee.com>
-Date:   Thu, 2 Jun 2022 12:03:54 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Content-Language: en-CA
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, buczek@molgen.mpg.de
-References: <20220602134509.16662-1-guoqing.jiang@linux.dev>
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1nwpOm-00EPmV-Pu; Thu, 02 Jun 2022 12:18:21 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1nwpOl-000DDB-AR; Thu, 02 Jun 2022 12:18:19 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20220602134509.16662-1-guoqing.jiang@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 24.64.144.200
-X-SA-Exim-Rcpt-To: guoqing.jiang@linux.dev, song@kernel.org, linux-raid@vger.kernel.org, buczek@molgen.mpg.de
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH] md: only unlock mddev from action_store
+To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Donald Buczek <buczek@molgen.mpg.de>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Thu,  2 Jun 2022 12:18:06 -0600
+Message-Id: <20220602181818.50729-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH v3 00/11] Bug fixes for mdadm tests
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi,
 
+This is the updated series with the feedback received in v2[1].
 
+This series includes fixes to fix all the kernel panics in the mdadm
+tests and some, related, sparse issues, plus some cleanup.
 
-On 2022-06-02 07:45, Guoqing Jiang wrote:
-> The 07reshape5intr test is broke because of below path.
-> 
->     md_reap_sync_thread
->             -> mddev_unlock
->             -> md_unregister_thread(&mddev->sync_thread)
-> 
-> And md_check_recovery is triggered by,
-> 
-> mddev_unlock -> md_wakeup_thread(mddev->thread)
-> 
-> then mddev->reshape_position is set to MaxSector in raid5_finish_reshape
-> since MD_RECOVERY_INTR is cleared in md_check_recovery, which means
-> feature_map is not set with MD_FEATURE_RESHAPE_ACTIVE and superblock's
-> reshape_position can't be updated accordingly.
-> 
-> Since the bug which commit 8b48ec23cc51a ("md: don't unregister sync_thread
-> with reconfig_mutex held") fixed is related with action_store path, other
-> callers which reap sync_thread didn't need to be changed, let's
-> 
-> 1. only unlock mddev in md_reap_sync_thread if caller is action_store,
->    so the parameter is renamed to reflect the change.
-> 2. save some contexts (MD_RECOVERY_INTR and reshape_position) since they
->    could be changed by other processes, then restore them after get lock
->    again.
-> 
-> Fixes: 8b48ec23cc51a ("md: don't unregister sync_thread with reconfig_mutex held")
-> Reported-by: Logan Gunthorpe <logang@deltatee.com>
-> Signed-off-by: Guoqing Jiang <guoqing.jiang@linux.dev>
-> ---
-> I suppose the previous bug still can be fixed with the change, but it is
-> better to verify it. Donald, could you help to test the new code?
-> 
-> Thanks,
-> Guoqing
-> 
->  drivers/md/md.c | 24 ++++++++++++++++++------
->  drivers/md/md.h |  2 +-
->  2 files changed, 19 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 5c8efef13881..3387260dd55b 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6197,7 +6197,7 @@ static void __md_stop_writes(struct mddev *mddev)
->  		flush_workqueue(md_misc_wq);
->  	if (mddev->sync_thread) {
->  		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> -		md_reap_sync_thread(mddev, true);
-> +		md_reap_sync_thread(mddev, false);
->  	}
->  
->  	del_timer_sync(&mddev->safemode_timer);
-> @@ -9303,7 +9303,7 @@ void md_check_recovery(struct mddev *mddev)
->  			 * ->spare_active and clear saved_raid_disk
->  			 */
->  			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> -			md_reap_sync_thread(mddev, true);
-> +			md_reap_sync_thread(mddev, false);
->  			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->  			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->  			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
-> @@ -9338,7 +9338,7 @@ void md_check_recovery(struct mddev *mddev)
->  			goto unlock;
->  		}
->  		if (mddev->sync_thread) {
-> -			md_reap_sync_thread(mddev, true);
-> +			md_reap_sync_thread(mddev, false);
->  			goto unlock;
->  		}
->  		/* Set RUNNING before clearing NEEDED to avoid
-> @@ -9411,18 +9411,30 @@ void md_check_recovery(struct mddev *mddev)
->  }
->  EXPORT_SYMBOL(md_check_recovery);
->  
-> -void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held)
-> +void md_reap_sync_thread(struct mddev *mddev, bool unlock_mddev)
->  {
->  	struct md_rdev *rdev;
->  	sector_t old_dev_sectors = mddev->dev_sectors;
-> +	sector_t old_reshape_position;
->  	bool is_reshaped = false;
-> +	bool is_interrupted = false;
->  
-> -	if (reconfig_mutex_held)
-> +	if (unlock_mddev) {
-> +		old_reshape_position = mddev->reshape_position;
-> +		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
-> +			is_interrupted = true;
->  		mddev_unlock(mddev);
-> +	}
->  	/* resync has finished, collect result */
->  	md_unregister_thread(&mddev->sync_thread);
-> -	if (reconfig_mutex_held)
-> +	if (unlock_mddev) {
->  		mddev_lock_nointr(mddev);
-> +		/* restore the previous flag and position */
-> +		mddev->reshape_position = old_reshape_position;
-> +		if (is_interrupted)
-> +			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> +	}
+The first two patches are cleanup from the original series that aren't
+related now but I thought are worth including.
 
-Maybe instead of the ugly boolean argument we could pull
-md_unregister_thread() into all the callers and explicitly unlock in the
-single call site that needs it?
+Patches 3 through 6 fix bugs with conf->log and remove the single,
+unecessary, RCU access. This cleans up some sparse errors.
+
+Patch 7 cleans up some sparse warnings with pslot usage.
+
+Patch 8 is a cleanup which adds an enum so that patch 9 can
+fix an mdadm hang. Patch 10 also fixes an mdadm hang.
+
+I've also included Patch 11 in this series which fixes a recent
+mistake in raid5-ppl that was reported by 0day which I don't think
+has been fixed yet.
+
+This series will be followed by another series for mdadm which fixes
+the segfaults and annotates some failing tests to make mdadm tests
+runnable fairly reliably, but I'll wait for a stable hash for this
+series to note the kernel version tested against. Following that,
+v3 of my lock contention series will be sent with more confidence
+of its correctness.
+
+This series is based on the current md/md-next branch as of yesterday
+(42b805af10). A git branch is available here:
+
+  https://github.com/sbates130272/linux-p2pmem md-bug_v3
+
+Thanks,
 
 Logan
+
+--
+
+Changes since v2:
+  * Rework the RCU changes to remove the RCU usage instead of using
+    it every. This makes more sense seeing most accesses do not need
+    RCU due to them being on the IO path, or with mddev_lock() held
+    and the remaining ones are on the slow path and may use
+    mddev_lock(). (Per Christoph)
+  * Collect a couple more Reviewed-by tags from Christoph
+
+Changes since v1:
+  * Add a patch to move the struct r5l_log to raid5-log.h in order
+    to fix a compiler error with rcu_access_pointer() in versions
+    prior to gcc-10
+  * Rework r5c_is_writeback() changes to make less churn (per Christoph)
+  * Change some 1s to trues in rcu_dereference_protected calls (per
+    Christoph)
+  * Fix an odd hunk mistake in the RCU protection patch (per Christoph)
+  * Fix an inverted conditional (noticed by Donald)
+  * Add a patch to add an enum for the overloaded values used by
+    mddev->curr_resync to make the status_resync() fixes clearer
+    (per Christoph)
+
+--
+
+[1] https://lore.kernel.org/all/20220526163604.32736-1-logang@deltatee.com
+
+Logan Gunthorpe (11):
+  md/raid5-log: Drop extern decorators for function prototypes
+  md/raid5-ppl: Drop unused argument from ppl_handle_flush_request()
+  md/raid5: Ensure array is suspended for calls to log_exit()
+  md/raid5-cache: Take mddev_lock in r5c_journal_mode_show()
+  md/raid5-cache: Drop RCU usage of conf->log
+  md/raid5-cache: Clear conf->log after finishing work
+  md/raid5-cache: Annotate pslot with __rcu notation
+  md: Use enum for overloaded magic numbers used by mddev->curr_resync
+  md: Ensure resync is reported after it starts
+  md: Notify sysfs sync_completed in md_reap_sync_thread()
+  md/raid5-ppl: Fix argument order in bio_alloc_bioset()
+
+ drivers/md/md.c          | 55 +++++++++++++++-------------
+ drivers/md/md.h          | 15 ++++++++
+ drivers/md/raid5-cache.c | 34 +++++++++---------
+ drivers/md/raid5-log.h   | 77 +++++++++++++++++++---------------------
+ drivers/md/raid5-ppl.c   |  6 ++--
+ drivers/md/raid5.c       | 18 ++++------
+ 6 files changed, 109 insertions(+), 96 deletions(-)
+
+
+base-commit: 42b805af102471f53e3c7867b8c2b502ea4eef7e
+--
+2.30.2
