@@ -2,80 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52429C433EF
-	for <linux-raid@archiver.kernel.org>; Fri,  3 Jun 2022 06:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4E34C433EF
+	for <linux-raid@archiver.kernel.org>; Fri,  3 Jun 2022 21:47:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241696AbiFCGpP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 3 Jun 2022 02:45:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33202 "EHLO
+        id S245510AbiFCVrz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 3 Jun 2022 17:47:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239490AbiFCGpO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Jun 2022 02:45:14 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB93338BE8;
-        Thu,  2 Jun 2022 23:45:13 -0700 (PDT)
+        with ESMTP id S230027AbiFCVry (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Jun 2022 17:47:54 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BFFB19038;
+        Fri,  3 Jun 2022 14:47:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=SeFpdnprEi9iCGjGlU63nj2qTA0drgWmyD7FmCG4OE4=; b=3zTgnYuPWnNPExNCabm33MY4J6
-        ihpZPheAQy1pCerzKhlX6oLi8qxj3RnRYU9EoghYXmcyHKQ+hWqmgimsFi56e44oedMs/oNVMUGeq
-        MaIvr2e58qRnWhXUGK9uX7JHzeaplv1MBZXOAiiAyh+PhA0BpLCEUvgfzpJHU++hqa9N9DHpVTO+n
-        5fToyXyXnF8oHJj8QCwiGHFCe0Y+7NsTUohVAh6RkJzbuKQoKLBuZiSzpMkIrmrAHeZFSExYm8avt
-        vMv7LOnw10WIOtjRRT+CfdTL98Pp8JvbLYoh3QhlYz4KY2EZ8yp4ZRnxPoo1FNADmlkIay1MpivTc
-        UrGtEQRA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nx13Y-00653h-Ol; Fri, 03 Jun 2022 06:45:12 +0000
-Date:   Thu, 2 Jun 2022 23:45:12 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Logan Gunthorpe <logang@deltatee.com>
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=R8GTnEyemwPNA1+GV3RwGnFz7Pddor0BUU7Pj8Qp2lY=; b=URKgjPXDb1JIW7ndonnv7EZbQy
+        Ecb089wAMy9eKRbsEjn6uUCU/uBkCkBwDHnbtTcp0DFsG99qKp8XZwSTIIFmSHuIE7QY1lLn9l971
+        oCtf3+OMzFDpjzoVz0r21h1iVTstIy5wx2weK242c9qC0E53RhJb5wmTceciwlnGP+3DWCKR8ztOC
+        Cf9jQNO5Oqod7Mze4nIFGXVWvVi3APdAV3C68AjOnPlgf7WYC2RAVMagvHbtQiIeM3u1MKTrFGtFx
+        u0ePU8nipoNPRqCvwa/a3tn15m9Tkh8wJNDiMBVieFJwUFfaRTUrsS5tZGxD4mPDnknaUUn0DiCym
+        MLD+fIGA==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1nxF93-00FOus-JV; Fri, 03 Jun 2022 15:47:50 -0600
+Message-ID: <ff778bf2-9f99-db8b-90d4-d04e1c679e89@deltatee.com>
+Date:   Fri, 3 Jun 2022 15:47:44 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Content-Language: en-CA
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
         Donald Buczek <buczek@molgen.mpg.de>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
         Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH v3 11/11] md/raid5-ppl: Fix argument order in
- bio_alloc_bioset()
-Message-ID: <Ypmt+AGg76+lTeko@infradead.org>
 References: <20220602181818.50729-1-logang@deltatee.com>
- <20220602181818.50729-12-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220602181818.50729-12-logang@deltatee.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+ <20220602181818.50729-5-logang@deltatee.com> <YpmsuIQhk+i8LShF@infradead.org>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <YpmsuIQhk+i8LShF@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: hch@infradead.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v3 04/11] md/raid5-cache: Take mddev_lock in
+ r5c_journal_mode_show()
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jun 02, 2022 at 12:18:17PM -0600, Logan Gunthorpe wrote:
-> bio_alloc_bioset() takes a block device, number of vectors, the
-> OP flags, the GFP mask and the bio set. However when the prototype
-> was changed, the callisite in ppl_do_flush() had the OP flags and
-> the GFP flags reversed. This introduced some sparse error:
-> 
->   drivers/md/raid5-ppl.c:632:57: warning: incorrect type in argument 3
-> 				    (different base types)
->   drivers/md/raid5-ppl.c:632:57:    expected unsigned int opf
->   drivers/md/raid5-ppl.c:632:57:    got restricted gfp_t [usertype]
->   drivers/md/raid5-ppl.c:633:61: warning: incorrect type in argument 4
->   				    (different base types)
->   drivers/md/raid5-ppl.c:633:61:    expected restricted gfp_t [usertype]
-> 				    gfp_mask
->   drivers/md/raid5-ppl.c:633:61:    got unsigned long long
-> 
-> The sparse error introduction may not have been reported correctly by
-> 0day due to other work that was cleaning up other sparse errors in this
-> area.
-> 
-> Fixes: 609be1066731 ("block: pass a block_device and opf to bio_alloc_bioset")
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-Ooops.  Looks good:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On 2022-06-03 00:39, Christoph Hellwig wrote:
+> On Thu, Jun 02, 2022 at 12:18:10PM -0600, Logan Gunthorpe wrote:
+>>  	conf = mddev->private;
+>>  	if (!conf || !conf->log) {
+>> -		spin_unlock(&mddev->lock);
+>> +		mddev_unlock(mddev);
+>>  		return 0;
+>>  	}
+>>  
+>> @@ -2557,7 +2560,7 @@ static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
+>>  	default:
+>>  		ret = 0;
+>>  	}
+>> -	spin_unlock(&mddev->lock);
+>> +	mddev_unlock(mddev);
+>>  	return ret;
+> 
+> Using a goto out_unlock would be nice here to keep the critical
+> sections simple.  But even as-is this looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+>> +	lockdep_assert_held(&conf->mddev->reconfig_mutex);
+>> +
+> 
+> .. but this looks unrelated and misplaced in this patch.
+> 
 
-(and should probably be first in the series)
+Ok, yup, I'll fix these issues up and send an updated series next week.
+
+Logan
