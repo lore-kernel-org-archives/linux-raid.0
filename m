@@ -2,31 +2,31 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97539C433EF
-	for <linux-raid@archiver.kernel.org>; Fri,  3 Jun 2022 06:40:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2004AC433EF
+	for <linux-raid@archiver.kernel.org>; Fri,  3 Jun 2022 06:43:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241641AbiFCGkP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 3 Jun 2022 02:40:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50324 "EHLO
+        id S233548AbiFCGnL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 3 Jun 2022 02:43:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241628AbiFCGj6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Jun 2022 02:39:58 -0400
+        with ESMTP id S229535AbiFCGnJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Jun 2022 02:43:09 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7999538787;
-        Thu,  2 Jun 2022 23:39:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3112C38BD7;
+        Thu,  2 Jun 2022 23:43:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=/qB9gxrKGTNOzMJzvvVbgCLr/R5FGBh4VoOWfCq44ZQ=; b=KRj+Ey/Rr2SB20Q1D3iuLZQ1Hy
-        IAK3MTi6/6h4lRiBTkT2Thew6/Qcuen9go+KyDHYEi3H4bUQbnZLvkvoPNoj374nfMu5b0iTxJX2o
-        YxVAicmeaTegJg8GB7ovR3749ztwgYXnxNhsegHrStiYUaAp1+bIHLuBwAGL7tpuJkWiepuizANCh
-        Z3b/WtbCv8Kx1mESKwIkG09wIvEeTXyYahyF62A/0+arRwhbd90u+YwXebhS30M0KQsPE8EAYd7Yd
-        12YWe8dyZqrZg7UnPnq9XEslJkaSoq07sRx9v2whhK/RWO4mZ3vEHLYfIElplYV6L5MS7ZyaJ6HB4
-        FQ2ZayNQ==;
+        bh=IUcPna+EySde5FQ/pymtri4xChWHHQ7giF64IAhaMA4=; b=a0RFnlADOnApturORJiYza6QIz
+        OiQt3VI6t03MrRHa1xapufXjkKvAhWl8hzb1Nenk6eENKn13o7pCz2dOjrDR2MadA02MjoI8xpUTs
+        7tcFejKRczPR3PInUIRRUz1gaGBUamgfDgge9i6sk8w8MC+2KvoGKE8gliBqpB7fVZk9gKCphUWD2
+        RLPu2Y7qZEFqDHK5hdjxIwObUO799HGRwMYxpjuKlar6r8KV6hGSw906cHvQlWysigfjHD6QLMuwF
+        tZAmltZCY02wyA3wemdMwaIAGObWHYsra29xeLVsgAMF7XrcCT8TT9rZH3vaVzMieNFgwFk7gxtdZ
+        3jU6WW3Q==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nx0yO-0063An-Gv; Fri, 03 Jun 2022 06:39:52 +0000
-Date:   Thu, 2 Jun 2022 23:39:52 -0700
+        id 1nx11V-0064Pz-Hz; Fri, 03 Jun 2022 06:43:05 +0000
+Date:   Thu, 2 Jun 2022 23:43:05 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
@@ -37,43 +37,32 @@ Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH v3 04/11] md/raid5-cache: Take mddev_lock in
- r5c_journal_mode_show()
-Message-ID: <YpmsuIQhk+i8LShF@infradead.org>
+Subject: Re: [PATCH v3 05/11] md/raid5-cache: Drop RCU usage of conf->log
+Message-ID: <YpmteYBT71dYY7t0@infradead.org>
 References: <20220602181818.50729-1-logang@deltatee.com>
- <20220602181818.50729-5-logang@deltatee.com>
+ <20220602181818.50729-6-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220602181818.50729-5-logang@deltatee.com>
+In-Reply-To: <20220602181818.50729-6-logang@deltatee.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jun 02, 2022 at 12:18:10PM -0600, Logan Gunthorpe wrote:
->  	conf = mddev->private;
->  	if (!conf || !conf->log) {
-> -		spin_unlock(&mddev->lock);
-> +		mddev_unlock(mddev);
->  		return 0;
->  	}
->  
-> @@ -2557,7 +2560,7 @@ static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
->  	default:
->  		ret = 0;
->  	}
-> -	spin_unlock(&mddev->lock);
-> +	mddev_unlock(mddev);
->  	return ret;
+On Thu, Jun 02, 2022 at 12:18:11PM -0600, Logan Gunthorpe wrote:
+> The only place that uses RCU to access conf->log is in
+> r5l_log_disk_error(). This function is mostly used in the IO path
+> and once with mddev_lock() held in raid5_change_consistency_policy().
+> 
+> It is known that the IO will be suspended before the log is freed and
+> r5l_log_exit() is called with the mddev_lock() held.
+> 
+> This should mean that conf->log can not be freed while the function is
+> being called, so the RCU protection is not necessary. Drop the
+> rcu_read_lock() as well as the synchronize_rcu() and
+> rcu_assign_pointer() usage.
 
-Using a goto out_unlock would be nice here to keep the critical
-sections simple.  But even as-is this looks good:
+Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-> +	lockdep_assert_held(&conf->mddev->reconfig_mutex);
-> +
-
-.. but this looks unrelated and misplaced in this patch.
-
