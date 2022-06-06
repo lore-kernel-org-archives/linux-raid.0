@@ -2,116 +2,73 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2270EC43334
-	for <linux-raid@archiver.kernel.org>; Mon,  6 Jun 2022 11:55:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA3DC433EF
+	for <linux-raid@archiver.kernel.org>; Mon,  6 Jun 2022 15:15:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235842AbiFFLzF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 6 Jun 2022 07:55:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46268 "EHLO
+        id S240372AbiFFPPt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 6 Jun 2022 11:15:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235829AbiFFLzD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Jun 2022 07:55:03 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 75B9A6FD1E
-        for <linux-raid@vger.kernel.org>; Mon,  6 Jun 2022 04:55:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1654516501;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=WZUFPcQC7IxFrWfBOIck+f16i6k6e8qELtgw/otWqss=;
-        b=bh2UkF3u59PAM59Wm21p/UnRRQpx+d+795WXaU17dfATOKgfxfnfmwZBvQTCouk5+rd5PM
-        YSuUDd8X6Kj3fc3sF5eDCZdj9GF4i1FNC0CEvE/n951LazDqHgBgQ8GxWH2HoAs0mW0aTZ
-        H2lcTG8MORKecN18QPrIdxDzecA9Mag=
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com
- [209.85.210.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-363-yYScj-K7NPS7WTg8PRw6DQ-1; Mon, 06 Jun 2022 07:55:00 -0400
-X-MC-Unique: yYScj-K7NPS7WTg8PRw6DQ-1
-Received: by mail-ot1-f70.google.com with SMTP id a5-20020a9d4705000000b0060b9c5da2e0so4731974otf.2
-        for <linux-raid@vger.kernel.org>; Mon, 06 Jun 2022 04:55:00 -0700 (PDT)
+        with ESMTP id S240430AbiFFPPp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Jun 2022 11:15:45 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A30913C09F
+        for <linux-raid@vger.kernel.org>; Mon,  6 Jun 2022 08:15:15 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id q21so29616471ejm.1
+        for <linux-raid@vger.kernel.org>; Mon, 06 Jun 2022 08:15:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:reply-to:from:date:message-id:subject:to;
+        bh=MhwsgjFN/b+Bq7I8URcr4K2rzK+3ccDCxc8rqKwPKVE=;
+        b=DMJn2xsLbUgN2cs2RvhSdcue7cOntSiwJIVFwQbf+7TW1FynxJqwoALm/QczfxxYB/
+         H683x1zwdoKrh2bVSkj2zVHgHYD4tGyVuIB2zfcIHUvQEwAU+/5L9oe4i4rk09GqAclL
+         MFw8+37xV3l8u6DFtY9Yj9EwaC+l0zG3U+5IWfsifHl+9fhHx0QJa1xNfW9YZryt4pkC
+         VebBlDS9NoDdarARV/VgMMIcd6MSsQEgE72FkDEtA3kDFwJcBWWN+mp3zQAjT8rnBSRw
+         kbDChgOnID1CWAlV7TZeqztAI3uRLoPRB3UwQ/zcmE/H7M3wgPDKve1pfqWsJTFFZ6Ry
+         jJzQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=WZUFPcQC7IxFrWfBOIck+f16i6k6e8qELtgw/otWqss=;
-        b=ubUCD1+jRY7XrYNGIncqNvV1wF4cX2B1j1LrLNlySmAi2EvtUyXD2CQFRK1oNLCSp/
-         c0c/CEMwrRtrtZklNVKSbn8+l9Mloi4BH+4WcfZCyxlcKk/6Gi4v4Xjq5D1OHdPgvNk0
-         pWbwHk0bQvS2yz2H2eFA1FTdPq6Qd+8hJYQaowuQNaUWjISbvqeTBAz418n3DYMsAuX2
-         0agu1UitwSFtzRrB95vaz9t5zbKJMrInJyNiaiAQCcyVJg1A9Ololkuf8I8Sf56jwykc
-         Y/UcD/xYzk9NhqM6O5RSxETPEl849sQsaGSPqvthO/I5WF9p81wWaAI9Id/kphyI/zMM
-         FDqw==
-X-Gm-Message-State: AOAM533OBzuAcfCSuQmFVqtNkbbTmfQO/JOVGRVuanjXzxzNqbIgGizr
-        otk/Ob1neD3cmVwvW5vc/SdEyLFu0K/UWGtiMijYsHvCU4L+E6ydW1SzT0AFpTtXoVYtmJxGP7B
-        +fmh+fJQ9YXA7y/ehs+3biHCNY3SkTDwl5kom5g==
-X-Received: by 2002:a05:6870:2425:b0:de:2fb0:1caa with SMTP id n37-20020a056870242500b000de2fb01caamr13490800oap.115.1654516499349;
-        Mon, 06 Jun 2022 04:54:59 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJy6Rqcj89RcU8+8X9dml0JkCktA2q0aSV0l7Iw55fGsdh/fy7JI7hTBciBqhErB+xsCWESQigBNAXWAEQeDqwU=
-X-Received: by 2002:a05:6870:2425:b0:de:2fb0:1caa with SMTP id
- n37-20020a056870242500b000de2fb01caamr13490790oap.115.1654516499092; Mon, 06
- Jun 2022 04:54:59 -0700 (PDT)
+        h=x-gm-message-state:mime-version:reply-to:from:date:message-id
+         :subject:to;
+        bh=MhwsgjFN/b+Bq7I8URcr4K2rzK+3ccDCxc8rqKwPKVE=;
+        b=h++CpL3pHX4OnYIEnCDgHkmVWVsTG8b1slRs74VMGjR9ER9Q0clJeTxZ2u66LKRsxs
+         YEZ3xZE+PwfVAtkzdV7fr3wSUGep1sGr4LtOk6VA3DTQZbioLckSHwJzKfEnhYaWAdAb
+         ELMLvYDpI1OQKJnfVQSvcDgJjFfATzADRjv4swNHHkEpBcgERWABsE8UwoTjqrTI0A7G
+         qwZYFpI/utKZN5IsqjclQdkNDrxIZRY+QKDV6jITTrNttWLbRM+8n6LJImfcQhx59Ljk
+         K6DUauvW3LJHNDiX+VOR7L0+Cc0UNtvOOeuut2j8+0kpdPitrQ6S+Q6wD9ze8QW5iQYs
+         HB6A==
+X-Gm-Message-State: AOAM533htN9mTQtMVKJWrVunKaT0YvXvk+J11ilVqU5pwZCbqBb/LPXk
+        afdmjpfTC4SsYiNtcsnzmyTUzur1mWzvqQ3T2zyWXWNQxPo=
+X-Google-Smtp-Source: ABdhPJw4shqLEUF0NQ8UHd9nYp/hvdVhfon4EtK+dHGrcVQdaGUQIPqziFI/DLwqcC9JrH6eDeX2VQHYdkokk9El96k=
+X-Received: by 2002:a17:907:1b05:b0:6f0:18d8:7be0 with SMTP id
+ mp5-20020a1709071b0500b006f018d87be0mr21635967ejc.561.1654528513690; Mon, 06
+ Jun 2022 08:15:13 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220602134509.16662-1-guoqing.jiang@linux.dev>
- <a6a1183b-35ca-b321-cbd5-08e2a9e29ca3@deltatee.com> <04d66d44-dc18-55f7-b044-defcbcf88fe0@linux.dev>
- <CALTww2_f5727NmOQw2=jiqg7DKSyYvEEMqvW_d_9UU0XT6n=4Q@mail.gmail.com>
- <f2e7af8c-074a-fc07-58a8-616616c59b64@linux.dev> <CALTww2-GtH7g5Z1-e73TOE_xDGvDF___LcUq-FO53yeHqoGYUQ@mail.gmail.com>
- <a709dffa-84b4-281f-45c5-a52634c632a6@linux.dev>
-In-Reply-To: <a709dffa-84b4-281f-45c5-a52634c632a6@linux.dev>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Mon, 6 Jun 2022 19:54:48 +0800
-Message-ID: <CALTww29z-NRNmDyzKmRk6iMW6pGg9AGQ3Krh2nyZzBOyDKZjYg@mail.gmail.com>
-Subject: Re: [PATCH] md: only unlock mddev from action_store
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     Logan Gunthorpe <logang@deltatee.com>, Song Liu <song@kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Donald Buczek <buczek@molgen.mpg.de>
+Reply-To: shaba@altlinux.org
+From:   Alexey Shabalin <a.shabalin@gmail.com>
+Date:   Mon, 6 Jun 2022 18:14:48 +0300
+Message-ID: <CAEdvWkS6zy0s45+OoTozHim4jEEqbFyypd9S-n0nrHAPL8t0ag@mail.gmail.com>
+Subject: error build mdadm with gcc12
+To:     linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jun 6, 2022 at 5:55 PM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
->
->
->
-> On 6/6/22 5:36 PM, Xiao Ni wrote:
-> >>> @@ -4827,12 +4827,14 @@ action_store(struct mddev *mddev, const char
-> >>> *page, size_t len)
-> >>>                           clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> >>>                   if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-> >>>                       mddev_lock(mddev) == 0) {
-> >>> +                       mddev_suspend(mddev);
-> >>>                           if (work_pending(&mddev->del_work))
-> >>>                                   flush_workqueue(md_misc_wq);
-> >>>                           if (mddev->sync_thread) {
-> >>>                                   set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> >>>                                   md_reap_sync_thread(mddev);
-> >>>                           }
-> >>> +                       mddev_resume(mddev);
-> >>>                           mddev_unlock(mddev);
-> >>>                   }
-> >>>           } else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-> >> The action actually means sync action which are for internal IO instead
-> >> of external IO, I suppose the semantic is different with above change.
-> > The original problem should be i/o happen when interrupting the sync thread?
-> > So the external i/o calls md_write_start and sets MD_SB_CHANGE_PENDING.
-> > Then raid5d->md_check_recovery can't update superblock and handle internal
-> > stripes. So the `echo idle` action is stuck.
->
-> My point is action_store shouldn't disturb external IO, it should only
-> deal with
-> sync IO and relevant stuffs as the function is for sync_action node, no?
+Hi.
+Can not build mdadm with gcc12 and -Werror
 
-Yes, it's a change that was mentioned above. It depends on which way
-we want to go.
-In some sysfs file store functions, it also calls mddev_suspend. For
-some situations,
-it needs to choose if we need to stop the i/o temporarily.
+mdadm.c: In function 'scan_assemble':
+mdadm.c:1815:47: error: the comparison will always evaluate as 'true'
+for the address of 'devnm' will never be NULL [-Werror=address]
+ 1815 |                                 if (e->active && e->devnm &&
+      |                                               ^~
+In file included from mdadm.c:28:
+mdadm.h:622:25: note: 'devnm' declared here
+  622 |         char            devnm[32];
+      |                         ^~~~~
+cc1: all warnings being treated as errors
+make: *** [Makefile:193: mdadm.o] Error 1
 
-Anyway, it's only a possible method I want to discuss. It's very good
-for me to dig into this problem.
-Now I have a better understanding of those codes :)
-
-Best Regards
-Xiao
-
+-- 
+Alexey Shabalin
