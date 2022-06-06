@@ -2,37 +2,37 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DF9C43334
-	for <linux-raid@archiver.kernel.org>; Mon,  6 Jun 2022 03:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB17DC43334
+	for <linux-raid@archiver.kernel.org>; Mon,  6 Jun 2022 03:29:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349220AbiFFDIc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 5 Jun 2022 23:08:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51904 "EHLO
+        id S233588AbiFFD3O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 5 Jun 2022 23:29:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348609AbiFFDIb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 5 Jun 2022 23:08:31 -0400
+        with ESMTP id S232586AbiFFD3N (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 5 Jun 2022 23:29:13 -0400
 Received: from out1.migadu.com (out1.migadu.com [91.121.223.63])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6086026AE6
-        for <linux-raid@vger.kernel.org>; Sun,  5 Jun 2022 20:08:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFCA113DD8
+        for <linux-raid@vger.kernel.org>; Sun,  5 Jun 2022 20:29:11 -0700 (PDT)
 Subject: Re: [PATCH] md: only unlock mddev from action_store
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1654484906;
+        t=1654486146;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xZ+QY7EW0KfGXjzX3zFSwS5hkFzffrklJBhhQL0LMU0=;
-        b=FINybx7JujK+mVmYwBNjZ9U90C7q7R/1cyfD+Daj3G44jNVf2qcaSSyXrKaB/KW+eSqh6l
-        yLWxitb7lTMdPK1+3dY8ev+Bb0A4K7WbGZalNCMfZOCyZnzkKhUvi0cTEYhHZfmxyIidOl
-        7k8EWZPXFWdlc4rO+HrJG1lZ1cJt+rs=
+        bh=3CdaM2HbAKrvUdWE5fvammJ4ALbJYroKhY/3VJLbNgc=;
+        b=Shw+zWFUBxDkGrTXvzj0yUe5lLeBEWHaN+KxyvSWZ6PF7qj2yY9Lwb0gNSdDUGdmgzzGvs
+        TV+LqEZ6sPLzEJjzZ+0tnMNkidCDAY5MDy1TpjkPHU7lSQioZdGgPbdy/VCHfUvhT/6Fx3
+        j+WUZtebSS/QCKrIeb4/GSnUvEheBxg=
 To:     Logan Gunthorpe <logang@deltatee.com>, song@kernel.org
 Cc:     linux-raid@vger.kernel.org, buczek@molgen.mpg.de
 References: <20220602134509.16662-1-guoqing.jiang@linux.dev>
  <a6a1183b-35ca-b321-cbd5-08e2a9e29ca3@deltatee.com>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <04d66d44-dc18-55f7-b044-defcbcf88fe0@linux.dev>
-Date:   Mon, 6 Jun 2022 11:08:20 +0800
+Message-ID: <9b25a8d4-bedf-35bb-6928-3cd49a025460@linux.dev>
+Date:   Mon, 6 Jun 2022 11:29:03 +0800
 MIME-Version: 1.0
 In-Reply-To: <a6a1183b-35ca-b321-cbd5-08e2a9e29ca3@deltatee.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
@@ -138,9 +138,6 @@ On 6/3/22 2:03 AM, Logan Gunthorpe wrote:
 >> +		old_reshape_position = mddev->reshape_position;
 >> +		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
 >> +			is_interrupted = true;
-
-Hmm, this checking is not needed as it is always true from action_store.
-
 >>   		mddev_unlock(mddev);
 >> +	}
 >>   	/* resync has finished, collect result */
@@ -152,16 +149,17 @@ Hmm, this checking is not needed as it is always true from action_store.
 >> +		mddev->reshape_position = old_reshape_position;
 >> +		if (is_interrupted)
 >> +			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-
-So is this one.
-
 >> +	}
 > Maybe instead of the ugly boolean argument we could pull
 > md_unregister_thread() into all the callers and explicitly unlock in the
 > single call site that needs it?
 
-Sounds good, let me revert previous commit then pull it.
+After move "md_unregister_thread(&mddev->sync_thread)", then we need to
+rename md_reap_sync_thread given it doesn't unregister sync_thread, any
+suggestion about the new name? md_behind_reap_sync_thread?
 
 Thanks,
 Guoqing
+
+
 
