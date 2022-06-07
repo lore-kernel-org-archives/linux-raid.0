@@ -2,114 +2,87 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BFACC43334
-	for <linux-raid@archiver.kernel.org>; Tue,  7 Jun 2022 06:32:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3268CCA47E
+	for <linux-raid@archiver.kernel.org>; Tue,  7 Jun 2022 07:24:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230465AbiFGGcg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 7 Jun 2022 02:32:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45068 "EHLO
+        id S237631AbiFGHYv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 7 Jun 2022 03:24:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230118AbiFGGce (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Jun 2022 02:32:34 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA739BE3F
-        for <linux-raid@vger.kernel.org>; Mon,  6 Jun 2022 23:32:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654583552; x=1686119552;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Pa5e/igRmbF6Qn1o3ytDVmE4aveVPpQBmjMthvH5QHw=;
-  b=HvGdf1c52a5rOM+o2buOV1xtOl2K//c8qU6vumDO0ELahVj/68qvL8X8
-   Hi68krLakaL6L0FBDMfY70RCsaoU5pylzJ0aS+6pl+eOvHa9ot/EcqQ7M
-   U8XAXxfhRLYvAOPMx6D8x/NU1FqpyeqYvwuiLRuiIuO64VvRziWG8Icy8
-   vIahZIJJEfdFTFBVy5c+Isbg0BMZ4erUERsVVs37qX8qel0AbhyWgDqHP
-   H0yzhTaypgbkQjNZkFLQMG0WmNT7b5atmeF73ifJf5hoEZPrGyxIlDBlj
-   4sbhRq3Zz89geGLMiC1W0AG7MIRX4ZawdOmgI5fwuIxObNC9TL+GBQwot
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10370"; a="337958719"
-X-IronPort-AV: E=Sophos;i="5.91,283,1647327600"; 
-   d="scan'208";a="337958719"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2022 23:32:32 -0700
-X-IronPort-AV: E=Sophos;i="5.91,283,1647327600"; 
-   d="scan'208";a="635972578"
-Received: from paarayac-mobl.amr.corp.intel.com (HELO localhost) ([10.252.44.134])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2022 23:32:30 -0700
-Date:   Tue, 7 Jun 2022 08:32:25 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     Wu Guanghao <wuguanghao3@huawei.com>, jes@trained-monkey.org,
-        linux-raid@vger.kernel.org, linfeilong@huawei.com,
-        lixiaokeng@huawei.com
-Subject: Re: [PATCH 5/5] get_vd_num_of_subarray: fix memleak
-Message-ID: <20220607083225.00006c76@linux.intel.com>
-In-Reply-To: <1cbeaaa7-4b49-478a-9333-1885e8047a3f@molgen.mpg.de>
-References: <00992179-9572-ceb4-eb49-492c42e67695@huawei.com>
-        <f1bee99f-a9b0-0e58-36fb-e5eee110dcc9@huawei.com>
-        <20220531101132.00002141@linux.intel.com>
-        <1cbeaaa7-4b49-478a-9333-1885e8047a3f@molgen.mpg.de>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S237622AbiFGHYu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Jun 2022 03:24:50 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 572D5C03AB
+        for <linux-raid@vger.kernel.org>; Tue,  7 Jun 2022 00:24:48 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4LHMLL1YXkzpXQM;
+        Tue,  7 Jun 2022 15:24:26 +0800 (CST)
+Received: from dggpemm500014.china.huawei.com (7.185.36.153) by
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 7 Jun 2022 15:24:43 +0800
+Received: from [10.174.177.211] (10.174.177.211) by
+ dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 7 Jun 2022 15:24:43 +0800
+Message-ID: <43b38b5c-f996-30e6-f120-a7bccee89d39@huawei.com>
+Date:   Tue, 7 Jun 2022 15:24:42 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.3
+Subject: Re: [PATCH 1/5] parse_layout_faulty: fix memleak
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+CC:     <jes@trained-monkey.org>, <linux-raid@vger.kernel.org>,
+        <linfeilong@huawei.com>, <lixiaokeng@huawei.com>
+References: <00992179-9572-ceb4-eb49-492c42e67695@huawei.com>
+ <bd8d7da6-83e7-da9b-1647-d95220a535e7@huawei.com>
+ <20220531093620.000058b4@linux.intel.com>
+From:   Wu Guanghao <wuguanghao3@huawei.com>
+In-Reply-To: <20220531093620.000058b4@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.177.211]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemm500014.china.huawei.com (7.185.36.153)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 31 May 2022 10:25:31 +0200
-Paul Menzel <pmenzel@molgen.mpg.de> wrote:
+在 2022/5/31 15:36, Mariusz Tkaczyk 写道:
+> On Tue, 31 May 2022 14:49:17 +0800
+> Wu Guanghao <wuguanghao3@huawei.com> wrote:
+> 
+>> char *m is allocated by xstrdup but not free() before return, will cause
+>> a memory leak
+>>
+>> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+>> ---
+>>  util.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/util.c b/util.c
+>> index cc94f96e..da18a68d 100644
+>> --- a/util.c
+>> +++ b/util.c
+>> @@ -429,6 +429,7 @@ int parse_layout_faulty(char *layout)
+>>  	int mode;
+>>  	m[ln] = 0;
+>>  	mode = map_name(faultylayout, m);
+>> +	free(m);
+>>  	if (mode == UnSet)
+>>  		return -1;
+>>
+> 
+> Hi,
+> Please add empty lines to separate declarations and not related code
+> sections.
+> 
 
-> Dear Mariusz,
-> 
-> 
-> Am 31.05.22 um 10:11 schrieb Mariusz Tkaczyk:
-> > On Tue, 31 May 2022 14:51:13 +0800 Wu Guanghao wrote:
-> >   
-> >> sra = sysfs_read() should be free before return in
-> >> get_vd_num_of_subarray()
-> >>
-> >> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
-> >> ---
-> >>   super-ddf.c | 9 +++++++--
-> >>   1 file changed, 7 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/super-ddf.c b/super-ddf.c
-> >> index 8cda23a7..827e4ae7 100644
-> >> --- a/super-ddf.c
-> >> +++ b/super-ddf.c
-> >> @@ -1599,15 +1599,20 @@ static unsigned int get_vd_num_of_subarray(struct
-> >> supertype *st) sra = sysfs_read(-1, st->devnm, GET_VERSION);
-> >>   	if (!sra || sra->array.major_version != -1 ||
-> >>   	    sra->array.minor_version != -2 ||
-> >> -	    !is_subarray(sra->text_version))
-> >> +	    !is_subarray(sra->text_version)) {
-> >> +		if (sra)
-> >> +			sysfs_free(sra);
-> >>   		return DDF_NOTFOUND;
-> >> +	}
-> >>
-> >>   	sub = strchr(sra->text_version + 1, '/');
-> >>   	if (sub != NULL)
-> >>   		vcnum = strtoul(sub + 1, &end, 10);
-> >>   	if (sub == NULL || *sub == '\0' || *end != '\0' ||
-> >> -	    vcnum >= be16_to_cpu(ddf->active->max_vd_entries))
-> >> +	    vcnum >= be16_to_cpu(ddf->active->max_vd_entries)) {
-> >> +		sysfs_free(sra);
-> >>   		return DDF_NOTFOUND;
-> >> +	}
-> >>
-> >>   	return vcnum;
-> >>   }  
-> > 
-> > Acked-by:mariusz.tkaczyk@linux.intel.com  
-> 
-> Thank you for your review. The common format is:
-> 
-> Acked-by: Name <address>
-> 
-> 
-Hi Paul,
-Thanks, fixed.
+Thanks for your reply. I will be modified in PATCH v2.
 
-Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> Thanks,
+> Mariusz
+> 
+> .
+> 
