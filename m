@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9DCCCCA488
-	for <linux-raid@archiver.kernel.org>; Tue,  7 Jun 2022 18:27:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E48E8CCA47C
+	for <linux-raid@archiver.kernel.org>; Tue,  7 Jun 2022 18:34:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350224AbiFGS1m (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 7 Jun 2022 14:27:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35496 "EHLO
+        id S1350994AbiFGSet (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 7 Jun 2022 14:34:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352193AbiFGSZh (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Jun 2022 14:25:37 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F044AF45E7;
-        Tue,  7 Jun 2022 10:54:44 -0700 (PDT)
+        with ESMTP id S1349645AbiFGSd3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Jun 2022 14:33:29 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C424517EF69;
+        Tue,  7 Jun 2022 10:57:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CE5A0B82370;
-        Tue,  7 Jun 2022 17:54:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1DF3C341C5;
-        Tue,  7 Jun 2022 17:54:25 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5068D618A8;
+        Tue,  7 Jun 2022 17:57:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACE69C341C4;
+        Tue,  7 Jun 2022 17:57:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654624466;
-        bh=GmTmEoKMELgeb+7KwRtxj81u5wokKuWO8GhID1OMUk8=;
+        s=k20201202; t=1654624650;
+        bh=0nJFzgcaJaJjHa1EQMZdGiu4tL4BUXk5ZBpuvTlFthw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=H0PpgQlXmAHEL17/hkFKIc8E4oGGNRRp6CO5JeoXPsPHLXNIt7QwpD2UWegfLeYFb
-         dn/ILgL9u6WDlo7HV3B3GXWOWGWOM1d3XxzePdlQ19J3bSjckP2OkNVR1tq30qaeS+
-         aF1ZnEiNIBOwfRiCd1lvP2eY/Apt+3bWLuMpTLmyCK3ZCEThWTRsS/xOYBnXCEX46p
-         Kjcj02/6whilAAw8fAW/w/4NCEdKDbbRKY/Ns7YkiiE6BcEV2tugyxw93m7hExjhhc
-         0qMimINFuWhKMvh/YMjqVQDXrX0sR/YdxGcsIG7qitrXzXsj21A2Jz1WNZ73JF43Da
-         FIJlSWG4ujUeQ==
+        b=NCfKvFaDhOS10hez+4Po1axVvjsdmMzS8tBWPpJx5OFG96TPCAsC12uXogngGHr7v
+         iL4O0yPzOrDSvTXWO+u6vIGgnzOJ6EHbp2Mmq2S2AKkk6QjCr1OBY0eaW6oE0bQt1J
+         K8YGICjpPvrPoO74jznVhXZt/Yum8Hn9iMUSKhRbwmj5aSO0c0wexXIi12c/ZxTWnM
+         RK+XyKBHAy8tuHVV2B7GrnzWXhE/VArZGuWR5a6Uyw8+hNihR6X/5BWpLnQxqa29G6
+         CD+RJAPBiuXN2tCYv6Bwa44zCo1YId1hOkI8r3tn+5zEPfR81jzfF4FCwpz0Zo7TCe
+         OlQaY4DstN0mQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
@@ -38,12 +38,12 @@ Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
         Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 34/60] md: protect md_unregister_thread from reentrancy
-Date:   Tue,  7 Jun 2022 13:52:31 -0400
-Message-Id: <20220607175259.478835-34-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 32/51] md: protect md_unregister_thread from reentrancy
+Date:   Tue,  7 Jun 2022 13:55:31 -0400
+Message-Id: <20220607175552.479948-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220607175259.478835-1-sashal@kernel.org>
-References: <20220607175259.478835-1-sashal@kernel.org>
+In-Reply-To: <20220607175552.479948-1-sashal@kernel.org>
+References: <20220607175552.479948-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -76,10 +76,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8efe9c8ff937..7cfd4aaa6428 100644
+index 8d569db21b1a..96c688b8a0fc 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7964,17 +7964,22 @@ EXPORT_SYMBOL(md_register_thread);
+@@ -7944,17 +7944,22 @@ EXPORT_SYMBOL(md_register_thread);
  
  void md_unregister_thread(struct md_thread **threadp)
  {
