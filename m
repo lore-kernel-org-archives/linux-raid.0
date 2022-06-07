@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C20D1CCA483
-	for <linux-raid@archiver.kernel.org>; Tue,  7 Jun 2022 18:34:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3A02CCA47E
+	for <linux-raid@archiver.kernel.org>; Tue,  7 Jun 2022 18:48:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352564AbiFGSev (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 7 Jun 2022 14:34:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42082 "EHLO
+        id S1353777AbiFGSsa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 7 Jun 2022 14:48:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352290AbiFGSdh (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Jun 2022 14:33:37 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0130F17F800;
-        Tue,  7 Jun 2022 10:57:31 -0700 (PDT)
+        with ESMTP id S1354567AbiFGSrJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Jun 2022 14:47:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43E61106357;
+        Tue,  7 Jun 2022 11:02:14 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 58094B82239;
-        Tue,  7 Jun 2022 17:57:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D721FC385A5;
-        Tue,  7 Jun 2022 17:57:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D342A61883;
+        Tue,  7 Jun 2022 18:02:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34F01C34119;
+        Tue,  7 Jun 2022 18:02:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654624649;
-        bh=djfkJGyl9Urrz2t1OhokRNIKnl9BVSRu5D6W8hRQ91M=;
+        s=k20201202; t=1654624933;
+        bh=SoOs0xFu8dYzYt4VC6dwXPDq9LiTWWp69Fkb5wXgRAs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mMpskNmouCJ8GdR5o8pmpIPP3NDjci51pOZiZ9bR1u56wxDauIbKA6zLPViGOh1/r
-         VwingW3JCUky2caRohyi56NIjtyqzU1xKkIAQfn/wdmo0LzWpiGpVnCpfV09K2MJxq
-         DaOsECyuepO5sjjKI1cTgriNSfVNCHNe4PGEAF+kVhb4Q9Y5eCAha1TsHNtQ5S3+Fv
-         hDP9Pf2kuH7lVCf13dTWQMnt7QJzVzDyoeW09u+mB0c+kBLw5GNodJyA7uP7e7QDOf
-         /Uwq+jprnaatOPkWfHbBsRVtFHIFmm6tkPFLR4QQTsyeo7L6yQYH70wm8kqE+riq7K
-         82NiCWXoMRNdw==
+        b=SKIFFiBBy14IoQCwqGppsZGsgtQf7hEm5cuAKHM8luvHCPtj3q2/yQeyD+u1qUQia
+         G3JVgriy8ES4viiEJmYAdpQSsgWexxc8nvxPn/pg1Ep36K443n4CD/6SBAyG2thzUV
+         hmdPO8OiWsljZp0mndZa8QAZ4Y5Qxx83NbwNHxzMTfVwHBe3M3NXYQ7syWC83nUul/
+         T41iFWbr7Bi8HcgJVj2uQrBVR4TdcFh4Sh/6Kb3PR+GvHfNDjpmUo1ZFtYCEcvSsdH
+         jjCQVI1d4ynF9fG0dnQt92XvTK6cnKkkvKlB6YYWl95zDD8grmAYpV1PdU5LKXL2fT
+         o1glbtOFYQATQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
@@ -38,12 +38,12 @@ Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
         Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
         agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 31/51] md: don't unregister sync_thread with reconfig_mutex held
-Date:   Tue,  7 Jun 2022 13:55:30 -0400
-Message-Id: <20220607175552.479948-31-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 18/27] md: don't unregister sync_thread with reconfig_mutex held
+Date:   Tue,  7 Jun 2022 14:01:22 -0400
+Message-Id: <20220607180133.481701-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220607175552.479948-1-sashal@kernel.org>
-References: <20220607175552.479948-1-sashal@kernel.org>
+In-Reply-To: <20220607180133.481701-1-sashal@kernel.org>
+References: <20220607180133.481701-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -86,10 +86,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  3 files changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index d9ef52159a22..dbfdc13988dc 100644
+index b16332917220..0be03123d6a2 100644
 --- a/drivers/md/dm-raid.c
 +++ b/drivers/md/dm-raid.c
-@@ -3730,7 +3730,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+@@ -3710,7 +3710,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
  	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
  		if (mddev->sync_thread) {
  			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
@@ -99,11 +99,11 @@ index d9ef52159a22..dbfdc13988dc 100644
  	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
  		return -EBUSY;
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5ce2648cbe5b..8d569db21b1a 100644
+index 7e0477e883c7..da7954eff4d7 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4842,7 +4842,7 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 				flush_workqueue(md_misc_wq);
+@@ -4611,7 +4611,7 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 			flush_workqueue(md_misc_wq);
  			if (mddev->sync_thread) {
  				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
 -				md_reap_sync_thread(mddev);
@@ -111,8 +111,8 @@ index 5ce2648cbe5b..8d569db21b1a 100644
  			}
  			mddev_unlock(mddev);
  		}
-@@ -6204,7 +6204,7 @@ static void __md_stop_writes(struct mddev *mddev)
- 		flush_workqueue(md_misc_wq);
+@@ -5871,7 +5871,7 @@ static void __md_stop_writes(struct mddev *mddev)
+ 	flush_workqueue(md_misc_wq);
  	if (mddev->sync_thread) {
  		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
 -		md_reap_sync_thread(mddev);
@@ -120,7 +120,7 @@ index 5ce2648cbe5b..8d569db21b1a 100644
  	}
  
  	del_timer_sync(&mddev->safemode_timer);
-@@ -9301,7 +9301,7 @@ void md_check_recovery(struct mddev *mddev)
+@@ -8893,7 +8893,7 @@ void md_check_recovery(struct mddev *mddev)
  			 * ->spare_active and clear saved_raid_disk
  			 */
  			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
@@ -129,7 +129,7 @@ index 5ce2648cbe5b..8d569db21b1a 100644
  			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
  			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
  			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
-@@ -9336,7 +9336,7 @@ void md_check_recovery(struct mddev *mddev)
+@@ -8928,7 +8928,7 @@ void md_check_recovery(struct mddev *mddev)
  			goto unlock;
  		}
  		if (mddev->sync_thread) {
@@ -138,7 +138,7 @@ index 5ce2648cbe5b..8d569db21b1a 100644
  			goto unlock;
  		}
  		/* Set RUNNING before clearing NEEDED to avoid
-@@ -9409,14 +9409,18 @@ void md_check_recovery(struct mddev *mddev)
+@@ -9001,12 +9001,16 @@ void md_check_recovery(struct mddev *mddev)
  }
  EXPORT_SYMBOL(md_check_recovery);
  
@@ -146,8 +146,6 @@ index 5ce2648cbe5b..8d569db21b1a 100644
 +void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held)
  {
  	struct md_rdev *rdev;
- 	sector_t old_dev_sectors = mddev->dev_sectors;
- 	bool is_reshaped = false;
  
 +	if (reconfig_mutex_held)
 +		mddev_unlock(mddev);
@@ -159,10 +157,10 @@ index 5ce2648cbe5b..8d569db21b1a 100644
  	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
  	    mddev->degraded != mddev->raid_disks) {
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 62852d701145..3aa09e0d9f89 100644
+index cce62bbc2bcb..027b220dec14 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -711,7 +711,7 @@ extern struct md_thread *md_register_thread(
+@@ -674,7 +674,7 @@ extern struct md_thread *md_register_thread(
  extern void md_unregister_thread(struct md_thread **threadp);
  extern void md_wakeup_thread(struct md_thread *thread);
  extern void md_check_recovery(struct mddev *mddev);
