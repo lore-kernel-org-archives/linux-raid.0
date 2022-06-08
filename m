@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BE3C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 821FBCCA481
 	for <linux-raid@archiver.kernel.org>; Wed,  8 Jun 2022 16:29:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245497AbiFHQ2T (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 8 Jun 2022 12:28:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58900 "EHLO
+        id S245514AbiFHQ2V (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 8 Jun 2022 12:28:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245168AbiFHQ2H (ORCPT
+        with ESMTP id S245167AbiFHQ2H (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Jun 2022 12:28:07 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6659C1FE3A7;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF2521FE4E8;
         Wed,  8 Jun 2022 09:28:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=bUpZA46sZ11cw7jxGZ4w7Z7/qydqr8hAOH9KDD+fmoQ=; b=MBeHV/M5l/YxQx4I1r41O7dup1
-        fRpplw19z4K5TvfpcMv0UTdkpg07qzMCc+/hxBz5Q/nBYLsoPiYDZwjtYazefqKm+WeJPE/1BvrfG
-        HZd/hR25qGA6dQ6INYaWuSwEj89aoSosE/bY87pCn82Ikk/BvhFjcjaOq6+PhpsMMj/V+uvEKiPIs
-        l/CA5La7RKgdHqmpMohIxO/uep0lhWDU7bc46eYZyRug8XCHrJEqZhlEXv5lzGEgO9OxuDwHBEJqM
-        ReAXTGHVLotloIJ1Ws2TyWiD1wGE46ZBcdA99eqedtvHst0KNmBvx509cCOU+ZjP7yfM7sA2pNN0K
-        ScvV6uwg==;
+        bh=L1YSyIwmt/8wrOpuPigujjiYrhfSTXHie0bjSBKX4FM=; b=WU51Y3yyNVIN9vWBu2qJuimVTC
+        HHLz9k1olcviSeNoQtowcHRIcGQxs8wrOSC+ryZTU2GJs/bpOe1gZCo9/9S/ILYm2+GyULFBv9OHE
+        ecL5rAHtHXcHOYd8n9vUZbNGFGkpsyikDLluA3EB8JJXeTRcGXf6GN6u8HDO5i5qGdSlUxFkXY3jN
+        Sk2bMBsn1bzrbKM2tY+52kz8yXRZJSQqwA7kM3tp+cDUFXuQ1Tpdi7X9tDAED3hHoCqJjWaC5pFXu
+        FkT8AkQvwAzzC0fpP5NpJn1yw0WiTbm2rhSh8VVhsd0O3mZKM6FmzUwNulDYCz2i4yRTFjJH2+eYR
+        BWrnsUZw==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nyyXL-0026n5-Ca; Wed, 08 Jun 2022 10:28:05 -0600
+        id 1nyyXM-0026n7-P3; Wed, 08 Jun 2022 10:28:05 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nyyXH-000bdl-VA; Wed, 08 Jun 2022 10:28:00 -0600
+        id 1nyyXH-000bdc-DL; Wed, 08 Jun 2022 10:27:59 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -42,8 +42,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>,
         Christoph Hellwig <hch@lst.de>
-Date:   Wed,  8 Jun 2022 10:27:55 -0600
-Message-Id: <20220608162756.144600-11-logang@deltatee.com>
+Date:   Wed,  8 Jun 2022 10:27:53 -0600
+Message-Id: <20220608162756.144600-9-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220608162756.144600-1-logang@deltatee.com>
 References: <20220608162756.144600-1-logang@deltatee.com>
@@ -52,74 +52,50 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, hch@lst.de
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v4 10/11] md: Ensure resync is reported after it starts
+Subject: [PATCH v4 08/11] md/raid5-cache: Annotate pslot with __rcu notation
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The 07layouts test in mdadm fails on some systems. The failure
-presents itself as the backup file not being removed before the next
-layout is grown into:
+radix_tree_lookup_slot() and radix_tree_replace_slot() API expect the
+slot returned and looked up to be marked with __rcu. Otherwise
+sparse warnings are generated:
 
-  mdadm: /dev/md0: cannot create backup file /tmp/md-test-backup:
-      File exists
-
-This is because the background mdadm process, which is responsible for
-cleaning up this backup file gets into an infinite loop waiting for
-the reshape to start. mdadm checks the mdstat file if a reshape is
-going and, if it is not, it waits for an event on the file or times
-out in 5 seconds. On faster machines, the reshape may complete before
-the 5 seconds times out, and thus the background mdadm process loops
-waiting for a reshape to start that has already occurred.
-
-mdadm reads the mdstat file to start, but mdstat does not report that the
-reshape has begun, even though it has indeed begun. So the mdstat_wait()
-call (in mdadm) which polls on the mdstat file won't ever return until
-timing out.
-
-The reason mdstat reports the reshape has started is due to an issue
-in status_resync(). recovery_active is subtracted from curr_resync which
-will result in a value of zero for the first chunk of reshaped data, and
-the resulting read will report no reshape in progress.
-
-To fix this, if "resync - recovery_active" is an overloaded value, force
-the value to be MD_RESYNC_ACTIVE so the code reports a resync in progress.
+  drivers/md/raid5-cache.c:2939:23: warning: incorrect type in
+			assignment (different address spaces)
+  drivers/md/raid5-cache.c:2939:23:    expected void **pslot
+  drivers/md/raid5-cache.c:2939:23:    got void [noderef] __rcu **
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/md.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/md/raid5-cache.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 42923832c077..ec46b83adf29 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8022,10 +8022,20 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
- 		if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
- 			/* Still cleaning up */
- 			resync = max_sectors;
--	} else if (resync > max_sectors)
-+	} else if (resync > max_sectors) {
- 		resync = max_sectors;
--	else
-+	} else {
- 		resync -= atomic_read(&mddev->recovery_active);
-+		if (resync < MD_RESYNC_ACTIVE) {
-+			/*
-+			 * Resync has started, but the subtraction has
-+			 * yielded one of the special values. Force it
-+			 * to active to ensure the status reports an
-+			 * active resync.
-+			 */
-+			resync = MD_RESYNC_ACTIVE;
-+		}
-+	}
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index ca57b5fac599..b2e6016934ee 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -2637,7 +2637,7 @@ int r5c_try_caching_write(struct r5conf *conf,
+ 	int i;
+ 	struct r5dev *dev;
+ 	int to_cache = 0;
+-	void **pslot;
++	void __rcu **pslot;
+ 	sector_t tree_index;
+ 	int ret;
+ 	uintptr_t refcount;
+@@ -2804,7 +2804,7 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
+ 	int i;
+ 	int do_wakeup = 0;
+ 	sector_t tree_index;
+-	void **pslot;
++	void __rcu **pslot;
+ 	uintptr_t refcount;
  
- 	if (resync == MD_RESYNC_NONE) {
- 		if (test_bit(MD_RESYNCING_REMOTE, &mddev->recovery)) {
+ 	if (!log || !test_bit(R5_InJournal, &sh->dev[sh->pd_idx].flags))
 -- 
 2.30.2
 
