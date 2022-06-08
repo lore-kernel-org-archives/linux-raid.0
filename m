@@ -2,155 +2,97 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41706C43334
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Jun 2022 18:00:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52A6FC43334
+	for <linux-raid@archiver.kernel.org>; Wed,  8 Jun 2022 18:19:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233446AbiFHSAH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 8 Jun 2022 14:00:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51146 "EHLO
+        id S234323AbiFHSTE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 8 Jun 2022 14:19:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233412AbiFHSAE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Jun 2022 14:00:04 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F4551952D3;
-        Wed,  8 Jun 2022 11:00:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S235581AbiFHSQO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Jun 2022 14:16:14 -0400
+Received: from mail.areainter.net (wetnet.areainter.net [31.211.71.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B36D556752
+        for <linux-raid@vger.kernel.org>; Wed,  8 Jun 2022 11:16:10 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mail.areainter.net (Postfix) with ESMTP id 17AEC5A184;
+        Thu,  9 Jun 2022 01:16:08 +0700 (+07)
+X-Virus-Scanned: Debian amavisd-new at areainter.net
+Received: from mail.areainter.net ([127.0.0.1])
+        by localhost (mail.areainter.net [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id fdqMR9j3mS9K; Thu,  9 Jun 2022 01:16:07 +0700 (+07)
+Received: from [10.60.10.197] (unknown [10.60.10.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 43A09CE2AA9;
-        Wed,  8 Jun 2022 18:00:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F6B5C34116;
-        Wed,  8 Jun 2022 17:59:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654711199;
-        bh=ZHS7rXNbty/74eNWl54KvwVchQ2FSINAh3ZDHQ8PpeY=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=bPKhCAXnNftOckdc0fUPP+NVPbYL4VDkNoCLy+E0kyWjhDmJutOWhKvQfmSUjSr5F
-         FGXeRbHVLamNmqkJTA8hEfJNMT5wIuLw28EzxSUh2iVFiS0pr11udAVHt0ccyQ6Rju
-         kuitNimO1WGSrCvMhWh+hQGgnIkxv18fmM24kX/KQK/J2NzV+8nQq3Du3UmvjoOHoO
-         tSDxYAHC05LeXLo0OI0mGGcx62udb/aUOE6422x5WicPzSL59aZV97u1f7x6zaTe3n
-         qUCqFoEo6PHDi8cZt+wRlkD0hypW/41/zi+IvQo5Cd+7A83aMJna/OWtlH8/kBrS1C
-         WeYPJFrkQuG0g==
-Received: by mail-yb1-f178.google.com with SMTP id p13so37806274ybm.1;
-        Wed, 08 Jun 2022 10:59:59 -0700 (PDT)
-X-Gm-Message-State: AOAM532imy5lNAnP6QyO6njh5qz+rU5X9Ny+XzkndVvF1h5v3gauaLQZ
-        sF7H58U5yux7+FoZR8oifchqU/vbsA/nVFb/bGE=
-X-Google-Smtp-Source: ABdhPJzgzC7sV/bMN0wIKyu0cqIGCvcMasRU+c/KTI2aKDVzNMSyO1zwCMB3woZ/fcEO67m3BALRNiWuKFLMYOvpdWs=
-X-Received: by 2002:a25:7e84:0:b0:650:10e0:87bd with SMTP id
- z126-20020a257e84000000b0065010e087bdmr35567251ybc.257.1654711198713; Wed, 08
- Jun 2022 10:59:58 -0700 (PDT)
+        (Authenticated sender: pavel2000@areainter.net)
+        by mail.areainter.net (Postfix) with ESMTPSA id 5E73B5A0DB;
+        Thu,  9 Jun 2022 01:16:07 +0700 (+07)
+Message-ID: <deacdcb9-d100-877a-40b4-42952731806c@areainter.net>
+Date:   Thu, 9 Jun 2022 01:16:06 +0700
 MIME-Version: 1.0
-References: <20220608162756.144600-1-logang@deltatee.com> <20220608162756.144600-5-logang@deltatee.com>
-In-Reply-To: <20220608162756.144600-5-logang@deltatee.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 8 Jun 2022 10:59:47 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6-kt+MvmaT_5aii7bnJ8N352S30Gr6wVoP4xjP20-GiQ@mail.gmail.com>
-Message-ID: <CAPhsuW6-kt+MvmaT_5aii7bnJ8N352S30Gr6wVoP4xjP20-GiQ@mail.gmail.com>
-Subject: Re: [PATCH v4 04/11] md/raid5: Ensure array is suspended for calls to log_exit()
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     open list <linux-kernel@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Donald Buczek <buczek@molgen.mpg.de>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: Misbehavior of md-raid RAID on failed NVMe.
+Content-Language: ru
+To:     Wol <antlists@youngman.org.uk>
+References: <984f2ca5-2565-025d-62a2-2425b518a01f@ngs.ru>
+ <b14b62c9-1494-935f-f9f0-43f8083e8547@youngman.org.uk>
+From:   Pavel <pavel2000@areainter.net>
+Cc:     linux-raid@vger.kernel.org
+In-Reply-To: <b14b62c9-1494-935f-f9f0-43f8083e8547@youngman.org.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jun 8, 2022 at 9:28 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+08.06.2022 23:52, Wol пишет:
+> On 08/06/2022 04:48, Pavel wrote:
 >
-> The raid5-cache code relies on there being no IO in flight when
-> log_exit() is called. There are two places where this is not
-> guaranteed so add mddev_suspend() and mddev_resume() calls to these
-> sites.
->
-> The site in raid5_remove_disk() has a comment saying that it is
-> called in raid5d and thus cannot wait for pending writes; however that
-> does not appear to be correct anymore (if it ever was) as
-> raid5_remove_disk() is called from hot_remove_disk() which only
-> appears to be called in the md_ioctl(). Thus, the comment is removed,
-> as well as the racy check and replaced with calls to suspend/resume.
->
-> The site in raid5_change_consistency_policy() is in the error path,
-> and another similar call site already has suspend/resume calls just
-> below it; so it should be equally safe to make that change here.
->
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/md/raid5.c | 18 ++++++------------
->  1 file changed, 6 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 5d09256d7f81..3ad37dd4c5cd 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7938,18 +7938,9 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
->
->         print_raid5_conf(conf);
->         if (test_bit(Journal, &rdev->flags) && conf->log) {
-> -               /*
-> -                * we can't wait pending write here, as this is called in
-> -                * raid5d, wait will deadlock.
-> -                * neilb: there is no locking about new writes here,
-> -                * so this cannot be safe.
-> -                */
-> -               if (atomic_read(&conf->active_stripes) ||
-> -                   atomic_read(&conf->r5c_cached_full_stripes) ||
-> -                   atomic_read(&conf->r5c_cached_partial_stripes)) {
-> -                       return -EBUSY;
-> -               }
-> +               mddev_suspend(mddev);
+> Did you dd the raid device (/dev/md0 for example), or the individual 
+> nvme devices?
 
-Unfortunately, the comment about deadlock is still true, and we cannot call
-mddev_suspend here. To trigger it:
+There was LVM over /dev/md0, and dd transferred LVM volumes data.
 
-   # create raid5 with journal:
-   mdadm --create /dev/md0  -l 5 -n 3 /dev/nvme[0-2]n1 --write-journal
-/dev/nvme3n1
-   # start some writes
-   fio ...
-   # fail the journal
-   mdadm --fail /dev/md0 /dev/nvme3n1
-
-This will cause deadlock of the thread:
-[<0>] raid5_quiesce+0x2a8/0x5f0
-[<0>] mddev_suspend+0x26b/0x530
-[<0>] raid5_remove_disk+0x12e/0x6f3
-[<0>] remove_and_add_spares+0x5b2/0xef0
-[<0>] md_check_recovery+0xe68/0x12b0
-[<0>] raid5d+0xf4/0xf30
-[<0>] md_thread+0x299/0x350
-[<0>] kthread+0x29d/0x340
-[<0>] ret_from_fork+0x22/0x30
-
-Thanks,
-Song
-
-
->                 log_exit(conf);
-> +               mddev_resume(mddev);
->                 return 0;
->         }
->         if (rdev == rcu_access_pointer(p->rdev))
-> @@ -8697,8 +8688,11 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
->                         err = log_init(conf, NULL, true);
->                         if (!err) {
->                                 err = resize_stripes(conf, conf->pool_size);
-> -                               if (err)
-> +                               if (err) {
-> +                                       mddev_suspend(mddev);
->                                         log_exit(conf);
-> +                                       mddev_resume(mddev);
-> +                               }
->                         }
->                 } else
->                         err = -EINVAL;
-> --
-> 2.30.2
+>> While data in transfer, kernel started IO errors reporting on one of 
+>> NVMe devices. (dmesg output below)
+>> But md-raid not reacted on them in any way. RAID array not went into 
+>> any failed state, and "clean" state reported all the time.
 >
+> This is actually normal, correct and expected behaviour. If the raid 
+> layer does not report a problem to dd, the data should have copied 
+> correctly. And raid really only reports problems if it gets write 
+> failures.
+
+Yes, but data was not copied correctly.
+
+> Unfortunately, you're missing a lot of detail to help us diagnose the 
+> problem. What raid level are you using, for starters. It sounds like 
+> there is a problem, but as Mariusz implies, it looks like a faulty 
+> nVME device. And if that device is lying to linux, as appears likely 
+> (my guess is that raid is trying to fix the data, and the drive is 
+> just losing the writes),
+
+Feel free to ask. Raid level: RAID 1, built over partitions on two NVMe 
+devices.
+
+Yes, drive is "just" losing the writes. But there is nothing "to fix" on 
+RAID level.
+ From my user POV, RAID should detect the loss and take appropriate 
+actions (mark device as failed).
+
+I don't know, if NVMe layer lies to kernel or not, but I clearly see
+"I/O error, dev nvme0n1, sector 1297536456 op 0x1:(WRITE) flags 0x0 
+phys_seg 1 prio class 0"
+messages, and I expect they clearly mean write failure.
+
+> then there is precious little we can do about it.
+
+As a kernel user, I did all I might to do - posted an report here.
+As a kernel developers, you can do a bit more, than users.
+
+Thanks for your answers.
+
+Regards,
+Pavel.
+
