@@ -2,97 +2,121 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52A6FC43334
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Jun 2022 18:19:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BC0CCCA477
+	for <linux-raid@archiver.kernel.org>; Wed,  8 Jun 2022 18:21:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234323AbiFHSTE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 8 Jun 2022 14:19:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40276 "EHLO
+        id S234121AbiFHSVz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 8 Jun 2022 14:21:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235581AbiFHSQO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Jun 2022 14:16:14 -0400
-Received: from mail.areainter.net (wetnet.areainter.net [31.211.71.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B36D556752
-        for <linux-raid@vger.kernel.org>; Wed,  8 Jun 2022 11:16:10 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by mail.areainter.net (Postfix) with ESMTP id 17AEC5A184;
-        Thu,  9 Jun 2022 01:16:08 +0700 (+07)
-X-Virus-Scanned: Debian amavisd-new at areainter.net
-Received: from mail.areainter.net ([127.0.0.1])
-        by localhost (mail.areainter.net [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id fdqMR9j3mS9K; Thu,  9 Jun 2022 01:16:07 +0700 (+07)
-Received: from [10.60.10.197] (unknown [10.60.10.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pavel2000@areainter.net)
-        by mail.areainter.net (Postfix) with ESMTPSA id 5E73B5A0DB;
-        Thu,  9 Jun 2022 01:16:07 +0700 (+07)
-Message-ID: <deacdcb9-d100-877a-40b4-42952731806c@areainter.net>
-Date:   Thu, 9 Jun 2022 01:16:06 +0700
+        with ESMTP id S234109AbiFHSVy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Jun 2022 14:21:54 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D2EF1C116;
+        Wed,  8 Jun 2022 11:21:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=XkHYb+oSLXpBEo6cMCxhRVOvyJgyvCtSljAnI7lNXXs=; b=dMHipBDXa0Xk7SK9ngGdmavKtu
+        1iGj6Wpj4Oup+A1YqQ38iNCwOd6Z0Dp9AYpaGR6Wodq86/c2sw2fPweXbUW8qf8WUF0p/OjEJpVI0
+        DmYiI7SVKaCkBEebjgJ4fsaBCakf+w/0HzcENdOY6m5WXlRn5IsJYdsFag/mhpg9AJJTUwSoBEDkZ
+        GNP8av8fYRVGWzCXSeldXEmIW9QkY1BKk5SPjgcR2mHVggTjPLK+D67BEhPT9eVpf4doOsGSSsNec
+        ogK9HDp1Atv+v2LQpzqUGm8EHynoNyyzqyqSTNAHHYiOTgA8dXxqsIAejkeK7DgHIQ6031aM5/tOd
+        u1Y7TwGg==;
+Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([70.73.163.230] helo=[192.168.11.155])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1nz0JP-0028yT-Ow; Wed, 08 Jun 2022 12:21:48 -0600
+Message-ID: <08b80caa-d726-b9f3-7ce0-f486b8080ec5@deltatee.com>
+Date:   Wed, 8 Jun 2022 12:21:46 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: Misbehavior of md-raid RAID on failed NVMe.
-Content-Language: ru
-To:     Wol <antlists@youngman.org.uk>
-References: <984f2ca5-2565-025d-62a2-2425b518a01f@ngs.ru>
- <b14b62c9-1494-935f-f9f0-43f8083e8547@youngman.org.uk>
-From:   Pavel <pavel2000@areainter.net>
-Cc:     linux-raid@vger.kernel.org
-In-Reply-To: <b14b62c9-1494-935f-f9f0-43f8083e8547@youngman.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Content-Language: en-US
+To:     Song Liu <song@kernel.org>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Donald Buczek <buczek@molgen.mpg.de>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20220608162756.144600-1-logang@deltatee.com>
+ <20220608162756.144600-5-logang@deltatee.com>
+ <CAPhsuW6-kt+MvmaT_5aii7bnJ8N352S30Gr6wVoP4xjP20-GiQ@mail.gmail.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <CAPhsuW6-kt+MvmaT_5aii7bnJ8N352S30Gr6wVoP4xjP20-GiQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 70.73.163.230
+X-SA-Exim-Rcpt-To: song@kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@infradead.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, hch@lst.de
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v4 04/11] md/raid5: Ensure array is suspended for calls to
+ log_exit()
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-08.06.2022 23:52, Wol пишет:
-> On 08/06/2022 04:48, Pavel wrote:
->
-> Did you dd the raid device (/dev/md0 for example), or the individual 
-> nvme devices?
 
-There was LVM over /dev/md0, and dd transferred LVM volumes data.
 
->> While data in transfer, kernel started IO errors reporting on one of 
->> NVMe devices. (dmesg output below)
->> But md-raid not reacted on them in any way. RAID array not went into 
->> any failed state, and "clean" state reported all the time.
->
-> This is actually normal, correct and expected behaviour. If the raid 
-> layer does not report a problem to dd, the data should have copied 
-> correctly. And raid really only reports problems if it gets write 
-> failures.
+On 2022-06-08 11:59, Song Liu wrote:
+> On Wed, Jun 8, 2022 at 9:28 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+>>
+>> The raid5-cache code relies on there being no IO in flight when
+>> log_exit() is called. There are two places where this is not
+>> guaranteed so add mddev_suspend() and mddev_resume() calls to these
+>> sites.
+>>
+>> The site in raid5_remove_disk() has a comment saying that it is
+>> called in raid5d and thus cannot wait for pending writes; however that
+>> does not appear to be correct anymore (if it ever was) as
+>> raid5_remove_disk() is called from hot_remove_disk() which only
+>> appears to be called in the md_ioctl(). Thus, the comment is removed,
+>> as well as the racy check and replaced with calls to suspend/resume.
+>>
+>> The site in raid5_change_consistency_policy() is in the error path,
+>> and another similar call site already has suspend/resume calls just
+>> below it; so it should be equally safe to make that change here.
+>>
+>> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> ---
+>>  drivers/md/raid5.c | 18 ++++++------------
+>>  1 file changed, 6 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 5d09256d7f81..3ad37dd4c5cd 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -7938,18 +7938,9 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+>>
+>>         print_raid5_conf(conf);
+>>         if (test_bit(Journal, &rdev->flags) && conf->log) {
+>> -               /*
+>> -                * we can't wait pending write here, as this is called in
+>> -                * raid5d, wait will deadlock.
+>> -                * neilb: there is no locking about new writes here,
+>> -                * so this cannot be safe.
+>> -                */
+>> -               if (atomic_read(&conf->active_stripes) ||
+>> -                   atomic_read(&conf->r5c_cached_full_stripes) ||
+>> -                   atomic_read(&conf->r5c_cached_partial_stripes)) {
+>> -                       return -EBUSY;
+>> -               }
+>> +               mddev_suspend(mddev);
+> 
+> Unfortunately, the comment about deadlock is still true, and we cannot call
+> mddev_suspend here. To trigger it:
 
-Yes, but data was not copied correctly.
+Ah, yes. What a tangle. I think we can just drop this patch. Now that we
+are removing RCU it isn't actually necessary to fix the bug I was
+seeing. It's still probably broken as the comment notes though.
 
-> Unfortunately, you're missing a lot of detail to help us diagnose the 
-> problem. What raid level are you using, for starters. It sounds like 
-> there is a problem, but as Mariusz implies, it looks like a faulty 
-> nVME device. And if that device is lying to linux, as appears likely 
-> (my guess is that raid is trying to fix the data, and the drive is 
-> just losing the writes),
+Thanks,
 
-Feel free to ask. Raid level: RAID 1, built over partitions on two NVMe 
-devices.
-
-Yes, drive is "just" losing the writes. But there is nothing "to fix" on 
-RAID level.
- From my user POV, RAID should detect the loss and take appropriate 
-actions (mark device as failed).
-
-I don't know, if NVMe layer lies to kernel or not, but I clearly see
-"I/O error, dev nvme0n1, sector 1297536456 op 0x1:(WRITE) flags 0x0 
-phys_seg 1 prio class 0"
-messages, and I expect they clearly mean write failure.
-
-> then there is precious little we can do about it.
-
-As a kernel user, I did all I might to do - posted an report here.
-As a kernel developers, you can do a bit more, than users.
-
-Thanks for your answers.
-
-Regards,
-Pavel.
-
+Logan
