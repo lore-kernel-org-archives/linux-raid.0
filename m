@@ -2,116 +2,176 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A8CC43334
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Jun 2022 15:11:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40EE7C433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Jun 2022 21:11:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243004AbiFIPLq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Jun 2022 11:11:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46874 "EHLO
+        id S244861AbiFIVLo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Jun 2022 17:11:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235178AbiFIPLp (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Jun 2022 11:11:45 -0400
-Received: from wout1-smtp.messagingengine.com (wout1-smtp.messagingengine.com [64.147.123.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AA0528D68C
-        for <linux-raid@vger.kernel.org>; Thu,  9 Jun 2022 08:11:44 -0700 (PDT)
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.west.internal (Postfix) with ESMTP id B27A1320097C;
-        Thu,  9 Jun 2022 11:11:41 -0400 (EDT)
-Received: from imap49 ([10.202.2.99])
-  by compute4.internal (MEProxy); Thu, 09 Jun 2022 11:11:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=braithwaite.dev;
-         h=cc:cc:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1654787501; x=1654873901; bh=GM
-        FMFQAgZAlWntoKFynYOAaMzu/etYvSctBNWU4W6iM=; b=KTSoW4vRmL0f5DyvLx
-        2/61VpU7qR9MFqrDTWgeosv+G6h3MvI8njgp47x5xQ0ImlYheWmZIG2adp1gHA3K
-        bnRKZ6Ra1eVNg1hmXvxzXO1Vb13wnsnMFcp9G/BlTyLTZatvE9XiaxaHMtyzj976
-        NnwFXn1FJIzgT5IhA6GhQe/6lq94XxrKBWdXVxzmX0Fm5C1Ix5R7JNHMMOR6IZYK
-        oIRNmFnHeC5FNh+pBeTaJDyEL1UwVmS6JztQXWg3APrwzk27/8LKvgIQa1semaaw
-        0wqBlGr3HKgZDRNJ3Z5y3CX6o4drycuWsu6VTUTr8zbv9dDyyOpVM/7KUJOfxplw
-        deOw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm2; t=1654787501; x=1654873901; bh=GMFMFQAgZAlWntoKFynYOAaMzu/e
-        tYvSctBNWU4W6iM=; b=AsAMdrhL3jjyBYHHaB/EjxGvM91C0PCFmDkGbTNEij6E
-        8UE5vTNFveLirA3J+PdK+bkFpyaSMbAwPKmqoEc7ZChxA6qgJo+Z7bfVKRHKiFP1
-        bKUJNoKzalXwd/9UGDDVbY30q2HSP1NWjYUmMNFPFuVMuX6S7mh712Qbzyk1goKA
-        g8mnhu7O0aPTSaUyfPAsuyhd2xkLt5H8kVtQuc+e05weXkjkdlX+eBUPJlBcHxIs
-        YsiqKiJ7zKNY7BX9HrnCEvoEjSS+IENEGr9T4TdvMZGiLW3eu9MqUZbFaprNcrA5
-        n3v8b0XRwFPJdupTAn7K4D/ksfGEGY8kp3Sz1zV4IA==
-X-ME-Sender: <xms:rA2iYlI5whfike9yPVOqjtwzzR6UbHx88n_uJIhAPU_gjuLpNf259w>
-    <xme:rA2iYhIwwNhTe0RmHeaxOWZEtvVSOGKH6B_vZ3gFGjlT8ryOtI22a7F5X8ThFmHT9
-    IkZMlkRwu-0tmIX-gM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedruddtledgkedtucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehl
-    rghnuceurhgrihhthhifrghithgvfdcuoegrlhgrnhessghrrghithhhfigrihhtvgdrug
-    gvvheqnecuggftrfgrthhtvghrnhepueeujeffuddugffgieetteeijeekueevieekhfeu
-    ffettdeuieevhedtvdeghfeknecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlh
-    hushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlhgrnhessghr
-    rghithhhfigrihhtvgdruggvvh
-X-ME-Proxy: <xmx:rQ2iYtv7_NhOB3zH0UdBjuQshPXyLxaAZucyFC1Reh1EU6zlYsaWkQ>
-    <xmx:rQ2iYmZqxQq2M_rWu-Ob1XcqRH6S54kbCIS_w415ZLq6gaf8N4P5cw>
-    <xmx:rQ2iYsa18bmG_ZGK7jnLtwpHeF-v-Q6X4IYtARQ14FuNOMqIlCbPVg>
-    <xmx:rQ2iYlCZ_awtx4J_mH-82GzHHIYjhREDQ4QDSoSEjKXdVgYKjyyHMg>
-Feedback-ID: i1a914699:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id E552515A0080; Thu,  9 Jun 2022 11:11:40 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.7.0-alpha0-692-gb287c361f5-fm-20220603.003-gb287c361
-Mime-Version: 1.0
-Message-Id: <88ffaeae-4f1e-4195-b927-182f21249cf5@www.fastmail.com>
-In-Reply-To: <ba0d6708-1275-6fac-b387-40d5673d6002@youngman.org.uk>
-References: <0fa973c1-2961-4f8f-99fa-b427a5c694fd@www.fastmail.com>
- <CAPpdf5-wEfpHnteLAG-EHD-we+b+0=KB7RcD=U9dw6K-_3f48w@mail.gmail.com>
- <b80c6d10-760e-40a2-b9ca-86aabf3267d0@www.fastmail.com>
- <ba0d6708-1275-6fac-b387-40d5673d6002@youngman.org.uk>
-Date:   Thu, 09 Jun 2022 08:10:36 -0700
-From:   "Alan Braithwaite" <alan@braithwaite.dev>
-To:     "Wols Lists" <antlists@youngman.org.uk>,
-        o1bigtenor <o1bigtenor@gmail.com>
-Cc:     Linux-RAID <linux-raid@vger.kernel.org>
-Subject: Re: MD Array Unexpected Kernel Hang
-Content-Type: text/plain
+        with ESMTP id S235284AbiFIVLn (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Jun 2022 17:11:43 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCD9A26D900
+        for <linux-raid@vger.kernel.org>; Thu,  9 Jun 2022 14:11:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Cc:To:From:content-disposition;
+        bh=Izv7CasWdRxZdbqaq8iettcLBBTlXt66MwXBRskp2P0=; b=NiI29QKEYM5oZC23Gqb86KMAlI
+        sCQJlM+i9a147xre/oOVZqBTACaCyhsQ3akWTmXERY7yiMk9BwRaPtNdSe63faZc+e+0RkjtSrjJ5
+        BZ9vgs89WJietnI+iwoTdniUlhTWQ4nbjXtNYZ7O7zVe6Heremt8o6akqiAkK/zu8CgFaoFMkPNol
+        tA6E0+js0WtBHCAZziLDR2rnlqGAN0ralAi2I1rS3HhKvqNcng2HSkv+tF1XsvnKLBgsEWwWDAd0C
+        f7qivPck8KrASVW4bxWTCp/wsk+MGXFwxFqRVJAGfIQz9YmUyXr0n5GKuJJkokv6vN86i5XnNMen/
+        uM8ZvFZw==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1nzPRL-0037Xk-1x; Thu, 09 Jun 2022 15:11:39 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1nzPRF-0001M8-V8; Thu, 09 Jun 2022 15:11:34 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>
+Cc:     Song Liu <song@kernel.org>, Christoph Hellwig <hch@infradead.org>,
+        Donald Buczek <buczek@molgen.mpg.de>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Coly Li <colyli@suse.de>, Bruce Dubbs <bruce.dubbs@gmail.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Thu,  9 Jun 2022 15:11:29 -0600
+Message-Id: <20220609211130.5108-14-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220609211130.5108-1-logang@deltatee.com>
+References: <20220609211130.5108-1-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-raid@vger.kernel.org, jsorensen@fb.com, song@kernel.org, hch@infradead.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, himanshu.madhani@oracle.com, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, bruce.dubbs@gmail.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH mdadm v1 13/14] mdadm/test: Mark and ignore broken test failures
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hey all,
+Add functionality to continue if a test marked as broken fails.
 
-Thanks for the responses!
+To mark a test as broken, a file with the same name but with the suffix
+'.broken' should exist. The first line in the file will be printed with
+a KNOWN BROKEN message; the rest of the file can describe the how the
+test is broken.
 
-> A quick google also says these are old drives, which may or not be a 
-> concern. That also possibly explains the lack of sct/erc.
+Also adds --skip-broken and --skip-always-broken to skip all the tests
+that have a .broken file or to skip all tests whose .broken file's first
+line contains the keyword always.
 
-These are old SAS drives, correct.  They're in an external JBOD chassis with an HBA expander to the host machine.  I acquired them used with the hopes of extending their life in a raid array.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ test | 37 +++++++++++++++++++++++++++++++++++--
+ 1 file changed, 35 insertions(+), 2 deletions(-)
 
-> Given that you say three drives all failed in the first slot? My money 
-> would actually be on nothing to do with raid, but a dodgy cable or 
-> motherboard connector. I don't think they're rated at being swapped over 
-> that many times ...
+diff --git a/test b/test
+index da6db5e0f631..61d9ee83226e 100755
+--- a/test
++++ b/test
+@@ -10,6 +10,8 @@ devlist=
+ 
+ savelogs=0
+ exitonerror=1
++ctrl_c_error=0
++skipbroken=0
+ loop=1
+ prefix='[0-9][0-9]'
+ 
+@@ -36,6 +38,7 @@ die() {
+ 
+ ctrl_c() {
+ 	exitonerror=1
++	ctrl_c_error=1
+ }
+ 
+ # mdadm always adds --quiet, and we want to see any unexpected messages
+@@ -80,8 +83,21 @@ mdadm() {
+ do_test() {
+ 	_script=$1
+ 	_basename=`basename $_script`
++	_broken=0
++
+ 	if [ -f "$_script" ]
+ 	then
++		if [ -f "${_script}.broken" ]; then
++			_broken=1
++			_broken_msg=$(head -n1 "${_script}.broken" | tr -d '\n')
++			if [ "$skipbroken" == "all" ]; then
++				return
++			elif [ "$skipbroken" == "always" ] &&
++			     [[ "$_broken_msg" == *always* ]]; then
++				return
++			fi
++		fi
++
+ 		rm -f $targetdir/stderr
+ 		# this might have been reset: restore the default.
+ 		echo 2000 > /proc/sys/dev/raid/speed_limit_max
+@@ -98,10 +114,15 @@ do_test() {
+ 		else
+ 			save_log fail
+ 			_fail=1
++			if [ "$_broken" == "1" ]; then
++				echo "  (KNOWN BROKEN TEST: $_broken_msg)"
++			fi
+ 		fi
+ 		[ "$savelogs" == "1" ] &&
+ 			mv -f $targetdir/log $logdir/$_basename.log
+-		[ "$_fail" == "1" -a "$exitonerror" == "1" ] && exit 1
++		[ "$ctrl_c_error" == "1" ] && exit 1
++		[ "$_fail" == "1" -a "$exitonerror" == "1" \
++		  -a "$_broken" == "0" ] && exit 1
+ 	fi
+ }
+ 
+@@ -119,6 +140,8 @@ do_help() {
+ 		--save-logs                 Usually use with --logdir together
+ 		--keep-going | --no-error   Don't stop on error, ie. run all tests
+ 		--loop=N                    Run tests N times (0 to run forever)
++		--skip-broken               Skip tests that are known to be broken
++		--skip-always-broken        Skip tests that are known to always fail
+ 		--dev=loop|lvm|ram|disk     Use loop devices (default), LVM, RAM or disk
+ 		--disks=                    Provide a bunch of physical devices for test
+ 		--volgroup=name             LVM volume group for LVM test
+@@ -216,6 +239,12 @@ parse_args() {
+ 		--loop=* )
+ 			loop="${i##*=}"
+ 			;;
++		--skip-broken )
++			skipbroken=all
++			;;
++		--skip-always-broken )
++			skipbroken=always
++			;;
+ 		--disable-multipath )
+ 			unset MULTIPATH
+ 			;;
+@@ -279,7 +308,11 @@ main() {
+ 		else
+ 			for script in $testdir/$prefix $testdir/$prefix*[^~]
+ 			do
+-				do_test $script
++				case $script in
++				 *.broken) ;;
++				 *)
++				     do_test $script
++				 esac
+ 			done
+ 		fi
+ 
+-- 
+2.30.2
 
-First position in the virtual array, not physical.  The actual drives are plugged into different drive bays and I'm swapping them into the VM by updating the disk's libvirt XML configuration.
-
-> I don't know how much help this website will be for you, but take a look...
->
-> https://raid.wiki.kernel.org/index.php/Linux_Raid
-
-Thanks!  I've spent a lot of time on that wiki, it's very helpful!  It's also why I've come to the mailing list for help, since I've been using md arrays since 2015 and haven't encountered an issue like this before.
-
-> I would question why he is passing the disks in via virtio, rather than doing the raid outside the VM and passing in the raid6 block device.
-
-I do it for the convenience of managing VMs.  It's for a homelab, so I won't always have remote hands to replace a disk and I like to have the spares free to use for other projects instead of tying them up as a hot-spare full-time.
-
-> I don't believe that using MD-raid with devices virtualized and passed through via a virtio device is going to be valid/supportable.
-
-I realize it's a bit wonky, but I'm surprised that this would be the case.  I wouldn't expect it to be that uncommon these days.  I guess I can always go back to zfs if you all feel like this is too crazy. :-P
-
-If anybody has any other tips for debugging, it would be much appreciated.  I feel that ebpf might be helpful here, but haven't yet been able to quite figure out the right way to inspect the situation with BCC-tools.
-
-Thanks everyone,
-- Alan
