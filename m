@@ -2,276 +2,116 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1092C433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Jun 2022 07:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A8CC43334
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Jun 2022 15:11:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240202AbiFIHnP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Jun 2022 03:43:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58412 "EHLO
+        id S243004AbiFIPLq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Jun 2022 11:11:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238567AbiFIHnO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Jun 2022 03:43:14 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3D331E3EE
-        for <linux-raid@vger.kernel.org>; Thu,  9 Jun 2022 00:43:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654760592; x=1686296592;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=mmFPmUAjaFJQnny8Ijof5z2rwIQelDihpCumxAfqsW8=;
-  b=XnaIjjwLX3bHxuRcnMtU4ZZfU4HxtvfB2OQPgspUEa3SkcLmfCNqajC2
-   BzeSSMAUOPhRRuPH7EwSsocpaYZRtngCg2NFBLMcjmEQHwvrE7OP0XwtP
-   727kXFmGlGP1Ifl7bZwwpoMuuyuPYmqvKgdYIqM1m7aIxLebziEiwoYUK
-   NMLlFV8t1tVvw8zL2Jbt/DhF/bY5w3c+iTC/Uf8DuqGLRUmY7tzz2ybYi
-   9RnGJXlzRME+7HmHjawXGbx32GBAYORswwCTrW+5/l9Wxl2m3rg+66Fam
-   gLXmT/fgbxjacc3Fl2RjqoUoR+9VDDYvBHAejvyFOzxW+Ml6BTpQ7knzY
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10372"; a="338954600"
-X-IronPort-AV: E=Sophos;i="5.91,287,1647327600"; 
-   d="scan'208";a="338954600"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2022 00:43:12 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,287,1647327600"; 
-   d="scan'208";a="671024767"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.52])
-  by FMSMGA003.fm.intel.com with ESMTP; 09 Jun 2022 00:43:11 -0700
-From:   Mateusz Kusiak <mateusz.kusiak@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH v3] Grow: Split Grow_reshape into helper function
-Date:   Thu,  9 Jun 2022 09:41:01 +0200
-Message-Id: <20220609074101.14132-1-mateusz.kusiak@intel.com>
-X-Mailer: git-send-email 2.26.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S235178AbiFIPLp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Jun 2022 11:11:45 -0400
+Received: from wout1-smtp.messagingengine.com (wout1-smtp.messagingengine.com [64.147.123.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AA0528D68C
+        for <linux-raid@vger.kernel.org>; Thu,  9 Jun 2022 08:11:44 -0700 (PDT)
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.west.internal (Postfix) with ESMTP id B27A1320097C;
+        Thu,  9 Jun 2022 11:11:41 -0400 (EDT)
+Received: from imap49 ([10.202.2.99])
+  by compute4.internal (MEProxy); Thu, 09 Jun 2022 11:11:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=braithwaite.dev;
+         h=cc:cc:content-type:date:date:from:from:in-reply-to
+        :in-reply-to:message-id:mime-version:references:reply-to:sender
+        :subject:subject:to:to; s=fm3; t=1654787501; x=1654873901; bh=GM
+        FMFQAgZAlWntoKFynYOAaMzu/etYvSctBNWU4W6iM=; b=KTSoW4vRmL0f5DyvLx
+        2/61VpU7qR9MFqrDTWgeosv+G6h3MvI8njgp47x5xQ0ImlYheWmZIG2adp1gHA3K
+        bnRKZ6Ra1eVNg1hmXvxzXO1Vb13wnsnMFcp9G/BlTyLTZatvE9XiaxaHMtyzj976
+        NnwFXn1FJIzgT5IhA6GhQe/6lq94XxrKBWdXVxzmX0Fm5C1Ix5R7JNHMMOR6IZYK
+        oIRNmFnHeC5FNh+pBeTaJDyEL1UwVmS6JztQXWg3APrwzk27/8LKvgIQa1semaaw
+        0wqBlGr3HKgZDRNJ3Z5y3CX6o4drycuWsu6VTUTr8zbv9dDyyOpVM/7KUJOfxplw
+        deOw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
+        :mime-version:references:reply-to:sender:subject:subject:to:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm2; t=1654787501; x=1654873901; bh=GMFMFQAgZAlWntoKFynYOAaMzu/e
+        tYvSctBNWU4W6iM=; b=AsAMdrhL3jjyBYHHaB/EjxGvM91C0PCFmDkGbTNEij6E
+        8UE5vTNFveLirA3J+PdK+bkFpyaSMbAwPKmqoEc7ZChxA6qgJo+Z7bfVKRHKiFP1
+        bKUJNoKzalXwd/9UGDDVbY30q2HSP1NWjYUmMNFPFuVMuX6S7mh712Qbzyk1goKA
+        g8mnhu7O0aPTSaUyfPAsuyhd2xkLt5H8kVtQuc+e05weXkjkdlX+eBUPJlBcHxIs
+        YsiqKiJ7zKNY7BX9HrnCEvoEjSS+IENEGr9T4TdvMZGiLW3eu9MqUZbFaprNcrA5
+        n3v8b0XRwFPJdupTAn7K4D/ksfGEGY8kp3Sz1zV4IA==
+X-ME-Sender: <xms:rA2iYlI5whfike9yPVOqjtwzzR6UbHx88n_uJIhAPU_gjuLpNf259w>
+    <xme:rA2iYhIwwNhTe0RmHeaxOWZEtvVSOGKH6B_vZ3gFGjlT8ryOtI22a7F5X8ThFmHT9
+    IkZMlkRwu-0tmIX-gM>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedruddtledgkedtucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehl
+    rghnuceurhgrihhthhifrghithgvfdcuoegrlhgrnhessghrrghithhhfigrihhtvgdrug
+    gvvheqnecuggftrfgrthhtvghrnhepueeujeffuddugffgieetteeijeekueevieekhfeu
+    ffettdeuieevhedtvdeghfeknecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlh
+    hushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlhgrnhessghr
+    rghithhhfigrihhtvgdruggvvh
+X-ME-Proxy: <xmx:rQ2iYtv7_NhOB3zH0UdBjuQshPXyLxaAZucyFC1Reh1EU6zlYsaWkQ>
+    <xmx:rQ2iYmZqxQq2M_rWu-Ob1XcqRH6S54kbCIS_w415ZLq6gaf8N4P5cw>
+    <xmx:rQ2iYsa18bmG_ZGK7jnLtwpHeF-v-Q6X4IYtARQ14FuNOMqIlCbPVg>
+    <xmx:rQ2iYlCZ_awtx4J_mH-82GzHHIYjhREDQ4QDSoSEjKXdVgYKjyyHMg>
+Feedback-ID: i1a914699:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id E552515A0080; Thu,  9 Jun 2022 11:11:40 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-692-gb287c361f5-fm-20220603.003-gb287c361
+Mime-Version: 1.0
+Message-Id: <88ffaeae-4f1e-4195-b927-182f21249cf5@www.fastmail.com>
+In-Reply-To: <ba0d6708-1275-6fac-b387-40d5673d6002@youngman.org.uk>
+References: <0fa973c1-2961-4f8f-99fa-b427a5c694fd@www.fastmail.com>
+ <CAPpdf5-wEfpHnteLAG-EHD-we+b+0=KB7RcD=U9dw6K-_3f48w@mail.gmail.com>
+ <b80c6d10-760e-40a2-b9ca-86aabf3267d0@www.fastmail.com>
+ <ba0d6708-1275-6fac-b387-40d5673d6002@youngman.org.uk>
+Date:   Thu, 09 Jun 2022 08:10:36 -0700
+From:   "Alan Braithwaite" <alan@braithwaite.dev>
+To:     "Wols Lists" <antlists@youngman.org.uk>,
+        o1bigtenor <o1bigtenor@gmail.com>
+Cc:     Linux-RAID <linux-raid@vger.kernel.org>
+Subject: Re: MD Array Unexpected Kernel Hang
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Grow_reshape should be split into helper functions given its size.
-- Add helper function for preparing reshape on external metadata.
-- Close cfd file descriptor.
+Hey all,
 
-Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
----
+Thanks for the responses!
 
-Changes since v2:
-- removed dot from commit message
-- formatted commit description as a list
-- got rid of returning -1 in prepare_external_reshape()
-- changed "return" section in prepare_external_reshape() description
+> A quick google also says these are old drives, which may or not be a 
+> concern. That also possibly explains the lack of sct/erc.
 
----
- Grow.c  | 124 ++++++++++++++++++++++++++++++--------------------------
- mdadm.h |   1 +
- util.c  |  14 +++++++
- 3 files changed, 81 insertions(+), 58 deletions(-)
+These are old SAS drives, correct.  They're in an external JBOD chassis with an HBA expander to the host machine.  I acquired them used with the hopes of extending their life in a raid array.
 
-diff --git a/Grow.c b/Grow.c
-index 9c6fc95e..c247e11b 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1774,6 +1774,65 @@ static int reshape_container(char *container, char *devname,
- 			     char *backup_file, int verbose,
- 			     int forked, int restart, int freeze_reshape);
- 
-+/**
-+ * prepare_external_reshape() - prepares update on external metadata if supported.
-+ * @devname: Device name.
-+ * @subarray: Subarray.
-+ * @st: Supertype.
-+ * @container: Container.
-+ * @cfd: Container file descriptor.
-+ *
-+ * Function checks that the requested reshape is supported on external metadata,
-+ * and performs an initial check that the container holds the pre-requisite
-+ * spare devices (mdmon owns final validation).
-+ *
-+ * Return: 0 on success, else 1
-+ */
-+static int prepare_external_reshape(char *devname, char *subarray,
-+				    struct supertype *st, char *container,
-+				    const int cfd)
-+{
-+	struct mdinfo *cc = NULL;
-+	struct mdinfo *content = NULL;
-+
-+	if (st->ss->load_container(st, cfd, NULL)) {
-+		pr_err("Cannot read superblock for %s\n", devname);
-+		return 1;
-+	}
-+
-+	if (!st->ss->container_content)
-+		return 1;
-+
-+	cc = st->ss->container_content(st, subarray);
-+	for (content = cc; content ; content = content->next) {
-+		/*
-+		 * check if reshape is allowed based on metadata
-+		 * indications stored in content.array.status
-+		 */
-+		if (is_bit_set(&content->array.state, MD_SB_BLOCK_VOLUME) ||
-+		    is_bit_set(&content->array.state, MD_SB_BLOCK_CONTAINER_RESHAPE)) {
-+			pr_err("Cannot reshape arrays in container with unsupported metadata: %s(%s)\n",
-+			       devname, container);
-+			goto error;
-+		}
-+		if (content->consistency_policy == CONSISTENCY_POLICY_PPL) {
-+			pr_err("Operation not supported when ppl consistency policy is enabled\n");
-+			goto error;
-+		}
-+		if (content->consistency_policy == CONSISTENCY_POLICY_BITMAP) {
-+			pr_err("Operation not supported when write-intent bitmap consistency policy is enabled\n");
-+			goto error;
-+		}
-+	}
-+	sysfs_free(cc);
-+	if (mdmon_running(container))
-+		st->update_tail = &st->updates;
-+	return 0;
-+error:
-+	sysfs_free(cc);
-+	return 1;
-+}
-+
- int Grow_reshape(char *devname, int fd,
- 		 struct mddev_dev *devlist,
- 		 unsigned long long data_offset,
-@@ -1801,7 +1860,7 @@ int Grow_reshape(char *devname, int fd,
- 	struct supertype *st;
- 	char *subarray = NULL;
- 
--	int frozen;
-+	int frozen = 0;
- 	int changed = 0;
- 	char *container = NULL;
- 	int cfd = -1;
-@@ -1810,7 +1869,7 @@ int Grow_reshape(char *devname, int fd,
- 	int added_disks;
- 
- 	struct mdinfo info;
--	struct mdinfo *sra;
-+	struct mdinfo *sra = NULL;
- 
- 	if (md_get_array_info(fd, &array) < 0) {
- 		pr_err("%s is not an active md array - aborting\n",
-@@ -1867,13 +1926,7 @@ int Grow_reshape(char *devname, int fd,
- 		}
- 	}
- 
--	/* in the external case we need to check that the requested reshape is
--	 * supported, and perform an initial check that the container holds the
--	 * pre-requisite spare devices (mdmon owns final validation)
--	 */
- 	if (st->ss->external) {
--		int retval;
--
- 		if (subarray) {
- 			container = st->container_devnm;
- 			cfd = open_dev_excl(st->container_devnm);
-@@ -1889,58 +1942,13 @@ int Grow_reshape(char *devname, int fd,
- 			return 1;
- 		}
- 
--		retval = st->ss->load_container(st, cfd, NULL);
--
--		if (retval) {
--			pr_err("Cannot read superblock for %s\n", devname);
-+		rv = prepare_external_reshape(devname, subarray, st,
-+					      container, cfd);
-+		if (rv > 0) {
- 			free(subarray);
--			return 1;
--		}
--
--		/* check if operation is supported for metadata handler */
--		if (st->ss->container_content) {
--			struct mdinfo *cc = NULL;
--			struct mdinfo *content = NULL;
--
--			cc = st->ss->container_content(st, subarray);
--			for (content = cc; content ; content = content->next) {
--				int allow_reshape = 1;
--
--				/* check if reshape is allowed based on metadata
--				 * indications stored in content.array.status
--				 */
--				if (content->array.state &
--				    (1 << MD_SB_BLOCK_VOLUME))
--					allow_reshape = 0;
--				if (content->array.state &
--				    (1 << MD_SB_BLOCK_CONTAINER_RESHAPE))
--					allow_reshape = 0;
--				if (!allow_reshape) {
--					pr_err("cannot reshape arrays in container with unsupported metadata: %s(%s)\n",
--					       devname, container);
--					sysfs_free(cc);
--					free(subarray);
--					return 1;
--				}
--				if (content->consistency_policy ==
--				    CONSISTENCY_POLICY_PPL) {
--					pr_err("Operation not supported when ppl consistency policy is enabled\n");
--					sysfs_free(cc);
--					free(subarray);
--					return 1;
--				}
--				if (content->consistency_policy ==
--				    CONSISTENCY_POLICY_BITMAP) {
--					pr_err("Operation not supported when write-intent bitmap is enabled\n");
--					sysfs_free(cc);
--					free(subarray);
--					return 1;
--				}
--			}
--			sysfs_free(cc);
-+			close(cfd);
-+			goto release;
- 		}
--		if (mdmon_running(container))
--			st->update_tail = &st->updates;
- 	}
- 
- 	added_disks = 0;
-diff --git a/mdadm.h b/mdadm.h
-index c7268a71..7bf9147d 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1528,6 +1528,7 @@ extern int stat_is_blkdev(char *devname, dev_t *rdev);
- extern bool is_dev_alive(char *path);
- extern int get_mdp_major(void);
- extern int get_maj_min(char *dev, int *major, int *minor);
-+extern bool is_bit_set(int *val, unsigned char index);
- extern int dev_open(char *dev, int flags);
- extern int open_dev(char *devnm);
- extern void reopen_mddev(int mdfd);
-diff --git a/util.c b/util.c
-index 3d05d074..c13c81d7 100644
---- a/util.c
-+++ b/util.c
-@@ -1028,6 +1028,20 @@ int get_maj_min(char *dev, int *major, int *minor)
- 		*e == 0);
- }
- 
-+/**
-+ * is_bit_set() - get bit value by index.
-+ * @val: value.
-+ * @index: index of the bit (LSB numbering).
-+ *
-+ * Return: bit value.
-+ */
-+bool is_bit_set(int *val, unsigned char index)
-+{
-+	if ((*val) & (1 << index))
-+		return true;
-+	return false;
-+}
-+
- int dev_open(char *dev, int flags)
- {
- 	/* like 'open', but if 'dev' matches %d:%d, create a temp
--- 
-2.26.2
+> Given that you say three drives all failed in the first slot? My money 
+> would actually be on nothing to do with raid, but a dodgy cable or 
+> motherboard connector. I don't think they're rated at being swapped over 
+> that many times ...
 
+First position in the virtual array, not physical.  The actual drives are plugged into different drive bays and I'm swapping them into the VM by updating the disk's libvirt XML configuration.
+
+> I don't know how much help this website will be for you, but take a look...
+>
+> https://raid.wiki.kernel.org/index.php/Linux_Raid
+
+Thanks!  I've spent a lot of time on that wiki, it's very helpful!  It's also why I've come to the mailing list for help, since I've been using md arrays since 2015 and haven't encountered an issue like this before.
+
+> I would question why he is passing the disks in via virtio, rather than doing the raid outside the VM and passing in the raid6 block device.
+
+I do it for the convenience of managing VMs.  It's for a homelab, so I won't always have remote hands to replace a disk and I like to have the spares free to use for other projects instead of tying them up as a hot-spare full-time.
+
+> I don't believe that using MD-raid with devices virtualized and passed through via a virtio device is going to be valid/supportable.
+
+I realize it's a bit wonky, but I'm surprised that this would be the case.  I wouldn't expect it to be that uncommon these days.  I guess I can always go back to zfs if you all feel like this is too crazy. :-P
+
+If anybody has any other tips for debugging, it would be much appreciated.  I feel that ebpf might be helpful here, but haven't yet been able to quite figure out the right way to inspect the situation with BCC-tools.
+
+Thanks everyone,
+- Alan
