@@ -2,179 +2,276 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FF29C433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Jun 2022 07:21:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1092C433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Jun 2022 07:43:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238653AbiFIHVA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Jun 2022 03:21:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41444 "EHLO
+        id S240202AbiFIHnP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Jun 2022 03:43:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239865AbiFIHU6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Jun 2022 03:20:58 -0400
-Received: from out2.migadu.com (out2.migadu.com [188.165.223.204])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B616C244164
-        for <linux-raid@vger.kernel.org>; Thu,  9 Jun 2022 00:20:54 -0700 (PDT)
-Subject: Re: [PATCH 2/2] md: unlock mddev before reap sync_thread in
- action_store
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1654759252;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Mi3wzeThjHWe6DZx2CmJbNAOASyKgQPFCmCv00jW84k=;
-        b=Mm/YMBnfEAtbSU5xYKWy//AZNVn/xSp8syLUNk1z8QqfScHzICFFaetfcld1r/OuqqqTum
-        h04eRXriYoN/F7MtwjhUCJBUDP9MtULCsBnBxOKsvvTJarU815w+0ApeUbRzaHq/gFXqCH
-        jiZobAcWN+kNSb+02wgA08NQ8rKN+Rc=
-To:     Logan Gunthorpe <logang@deltatee.com>, song@kernel.org
-Cc:     buczek@molgen.mpg.de, linux-raid@vger.kernel.org
-References: <20220607020357.14831-1-guoqing.jiang@linux.dev>
- <20220607020357.14831-3-guoqing.jiang@linux.dev>
- <798f131b-fe4f-dcec-4903-22ab3a54d0ce@deltatee.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <28b5f07e-aabc-d68f-ba0f-1d357e1b30e3@linux.dev>
-Date:   Thu, 9 Jun 2022 15:20:45 +0800
+        with ESMTP id S238567AbiFIHnO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Jun 2022 03:43:14 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3D331E3EE
+        for <linux-raid@vger.kernel.org>; Thu,  9 Jun 2022 00:43:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654760592; x=1686296592;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=mmFPmUAjaFJQnny8Ijof5z2rwIQelDihpCumxAfqsW8=;
+  b=XnaIjjwLX3bHxuRcnMtU4ZZfU4HxtvfB2OQPgspUEa3SkcLmfCNqajC2
+   BzeSSMAUOPhRRuPH7EwSsocpaYZRtngCg2NFBLMcjmEQHwvrE7OP0XwtP
+   727kXFmGlGP1Ifl7bZwwpoMuuyuPYmqvKgdYIqM1m7aIxLebziEiwoYUK
+   NMLlFV8t1tVvw8zL2Jbt/DhF/bY5w3c+iTC/Uf8DuqGLRUmY7tzz2ybYi
+   9RnGJXlzRME+7HmHjawXGbx32GBAYORswwCTrW+5/l9Wxl2m3rg+66Fam
+   gLXmT/fgbxjacc3Fl2RjqoUoR+9VDDYvBHAejvyFOzxW+Ml6BTpQ7knzY
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10372"; a="338954600"
+X-IronPort-AV: E=Sophos;i="5.91,287,1647327600"; 
+   d="scan'208";a="338954600"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2022 00:43:12 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,287,1647327600"; 
+   d="scan'208";a="671024767"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.52])
+  by FMSMGA003.fm.intel.com with ESMTP; 09 Jun 2022 00:43:11 -0700
+From:   Mateusz Kusiak <mateusz.kusiak@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org, colyli@suse.de
+Subject: [PATCH v3] Grow: Split Grow_reshape into helper function
+Date:   Thu,  9 Jun 2022 09:41:01 +0200
+Message-Id: <20220609074101.14132-1-mateusz.kusiak@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <798f131b-fe4f-dcec-4903-22ab3a54d0ce@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Grow_reshape should be split into helper functions given its size.
+- Add helper function for preparing reshape on external metadata.
+- Close cfd file descriptor.
 
+Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
+---
 
-On 6/9/22 1:23 AM, Logan Gunthorpe wrote:
-> Hey,
->
-> On 2022-06-06 20:03, Guoqing Jiang wrote:
->> Since the bug which commit 8b48ec23cc51a ("md: don't unregister sync_thread
->> with reconfig_mutex held") fixed is related with action_store path, other
->> callers which reap sync_thread didn't need to be changed.
->>
->> Let's pull md_unregister_thread from md_reap_sync_thread, then fix previous
->> bug with belows.
->>
->> 1. unlock mddev before md_reap_sync_thread in action_store.
->> 2. save reshape_position before unlock, then restore it to ensure position
->>     not changed accidentally by others.
->>
->> Signed-off-by: Guoqing Jiang <guoqing.jiang@linux.dev>
->> ---
->>   drivers/md/dm-raid.c |  1 +
->>   drivers/md/md.c      | 12 ++++++++++--
->>   2 files changed, 11 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
->> index 9526ccbedafb..d43b8075c055 100644
->> --- a/drivers/md/dm-raid.c
->> +++ b/drivers/md/dm-raid.c
->> @@ -3725,6 +3725,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
->>   	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
->>   		if (mddev->sync_thread) {
->>   			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->> +			md_unregister_thread(&mddev->sync_thread);
->>   			md_reap_sync_thread(mddev);
->>   		}
->>   	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 2e83a19e3aba..4d70672f8ea8 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -4830,6 +4830,12 @@ action_store(struct mddev *mddev, const char *page, size_t len)
->>   			if (work_pending(&mddev->del_work))
->>   				flush_workqueue(md_misc_wq);
->>   			if (mddev->sync_thread) {
->> +				sector_t save_rp = mddev->reshape_position;
->> +
->> +				mddev_unlock(mddev);
->> +				md_unregister_thread(&mddev->sync_thread);
->> +				mddev_lock_nointr(mddev);
->> +				mddev->reshape_position = save_rp;
->>   				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->>   				md_reap_sync_thread(mddev);
->>   			}
-> So with this patch, with 07revert-grow: I see the warning at the end of
-> this email. Seems there's a new bug in the hunk above: MD_RECOVERY_INTR
-> should be set before md_unregsiter_thread().
+Changes since v2:
+- removed dot from commit message
+- formatted commit description as a list
+- got rid of returning -1 in prepare_external_reshape()
+- changed "return" section in prepare_external_reshape() description
 
-Yes, it was missed by mistake, the below incremental change is needed.
+---
+ Grow.c  | 124 ++++++++++++++++++++++++++++++--------------------------
+ mdadm.h |   1 +
+ util.c  |  14 +++++++
+ 3 files changed, 81 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e4d9a8b0efac..c29ef9505e03 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4833,6 +4833,7 @@ action_store(struct mddev *mddev, const char 
-*page, size_t len)
-                                 sector_t save_rp = mddev->reshape_position;
-
-                                 mddev_unlock(mddev);
-+                               set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-md_unregister_thread(&mddev->sync_thread);
-                                 mddev_lock_nointr(mddev);
-                                 mddev->reshape_position = save_rp;
-
-And we may not save/restore reshape_position, I will run more tests
-before send new version. And Xiao's suggestion might be safer if it
-fixes the original issue.
-
-> When I make that change, 07revert-grow fails in the same way it did with
-> the previous patch.
->
-> Logan
->
-> --
->
->
->
->    177.804352] ------------[ cut here ]------------
-> [  177.805200] WARNING: CPU: 2 PID: 1382 at drivers/md/md.c:490
-> mddev_suspend+0x26c/0x330
-> [  177.806541] Modules linked in:
-> [  177.807078] CPU: 2 PID: 1382 Comm: md0_raid5 Not tainted
-> 5.18.0-rc3-eid-vmlocalyes-dbg-00035-gd1d91cae9ac1 #2237
-> [  177.809122] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS
-> 1.14.0-2 04/01/2014
-> [  177.810649] RIP: 0010:mddev_suspend+0x26c/0x330
-> [  177.811654] Code: ab 5c 13 00 00 e9 a3 fe ff ff 48 8d bb d8 02 00 00
-> be ff ff ff ff e8 d3 97 5f 00 85 c0 0f 85 74 fe ff ff 0f 0b e9 6d fe ff
-> ff <0f> 0b e9 4c fe ff ff 4c 8d bd 68 ff ff ff 31 f6 4c 89 ff e8 1c f7
-> [  177.815028] RSP: 0018:ffff88828656faa8 EFLAGS: 00010246
-> [  177.815995] RAX: 0000000000000000 RBX: ffff8881765e8000 RCX:
-> ffffffff9b3b1ed4
-> [  177.817306] RDX: dffffc0000000000 RSI: ffff88817333e478 RDI:
-> ffff88816e861670
-> [  177.818555] RBP: ffff88828656fb78 R08: ffffffff9b38e442 R09:
-> ffffffff9e94db07
-> [  177.819757] R10: fffffbfff3d29b60 R11: 0000000000000001 R12:
-> ffff88816e861600
-> [  177.821043] R13: ffff88829c34cf00 R14: ffff8881765e8000 R15:
-> ffff88817333e248
-> [  177.822307] FS:  0000000000000000(0000) GS:ffff888472e00000(0000)
-> knlGS:0000000000000000
-> [  177.823699] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  177.824701] CR2: 00007faa60ada843 CR3: 000000028e9ca002 CR4:
-> 0000000000370ee0
-> [  177.825889] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> 0000000000000000
-> [  177.827111] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
-> 0000000000000400
-> [  177.828346] Call Trace:
-> [  177.828785]  <TASK>
-> [  177.829275]  ? rdev_read_only+0x150/0x150
-> [  177.830180]  ? lock_is_held_type+0xf3/0x150
-> [  177.830888]  ? raid5_calc_degraded+0x1f9/0x650
-> [  177.831665]  check_reshape+0x289/0x500
-> [  177.832360]  raid5_check_reshape+0x93/0x150
-> [  177.833060]  md_check_recovery+0x864/0xa80
-> [  177.833757]  raid5d+0xc6/0x930
-
-I saw exactly the same trace when I replied with "held on" 😁.
-
-Thanks,
-Guoqing
+diff --git a/Grow.c b/Grow.c
+index 9c6fc95e..c247e11b 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1774,6 +1774,65 @@ static int reshape_container(char *container, char *devname,
+ 			     char *backup_file, int verbose,
+ 			     int forked, int restart, int freeze_reshape);
+ 
++/**
++ * prepare_external_reshape() - prepares update on external metadata if supported.
++ * @devname: Device name.
++ * @subarray: Subarray.
++ * @st: Supertype.
++ * @container: Container.
++ * @cfd: Container file descriptor.
++ *
++ * Function checks that the requested reshape is supported on external metadata,
++ * and performs an initial check that the container holds the pre-requisite
++ * spare devices (mdmon owns final validation).
++ *
++ * Return: 0 on success, else 1
++ */
++static int prepare_external_reshape(char *devname, char *subarray,
++				    struct supertype *st, char *container,
++				    const int cfd)
++{
++	struct mdinfo *cc = NULL;
++	struct mdinfo *content = NULL;
++
++	if (st->ss->load_container(st, cfd, NULL)) {
++		pr_err("Cannot read superblock for %s\n", devname);
++		return 1;
++	}
++
++	if (!st->ss->container_content)
++		return 1;
++
++	cc = st->ss->container_content(st, subarray);
++	for (content = cc; content ; content = content->next) {
++		/*
++		 * check if reshape is allowed based on metadata
++		 * indications stored in content.array.status
++		 */
++		if (is_bit_set(&content->array.state, MD_SB_BLOCK_VOLUME) ||
++		    is_bit_set(&content->array.state, MD_SB_BLOCK_CONTAINER_RESHAPE)) {
++			pr_err("Cannot reshape arrays in container with unsupported metadata: %s(%s)\n",
++			       devname, container);
++			goto error;
++		}
++		if (content->consistency_policy == CONSISTENCY_POLICY_PPL) {
++			pr_err("Operation not supported when ppl consistency policy is enabled\n");
++			goto error;
++		}
++		if (content->consistency_policy == CONSISTENCY_POLICY_BITMAP) {
++			pr_err("Operation not supported when write-intent bitmap consistency policy is enabled\n");
++			goto error;
++		}
++	}
++	sysfs_free(cc);
++	if (mdmon_running(container))
++		st->update_tail = &st->updates;
++	return 0;
++error:
++	sysfs_free(cc);
++	return 1;
++}
++
+ int Grow_reshape(char *devname, int fd,
+ 		 struct mddev_dev *devlist,
+ 		 unsigned long long data_offset,
+@@ -1801,7 +1860,7 @@ int Grow_reshape(char *devname, int fd,
+ 	struct supertype *st;
+ 	char *subarray = NULL;
+ 
+-	int frozen;
++	int frozen = 0;
+ 	int changed = 0;
+ 	char *container = NULL;
+ 	int cfd = -1;
+@@ -1810,7 +1869,7 @@ int Grow_reshape(char *devname, int fd,
+ 	int added_disks;
+ 
+ 	struct mdinfo info;
+-	struct mdinfo *sra;
++	struct mdinfo *sra = NULL;
+ 
+ 	if (md_get_array_info(fd, &array) < 0) {
+ 		pr_err("%s is not an active md array - aborting\n",
+@@ -1867,13 +1926,7 @@ int Grow_reshape(char *devname, int fd,
+ 		}
+ 	}
+ 
+-	/* in the external case we need to check that the requested reshape is
+-	 * supported, and perform an initial check that the container holds the
+-	 * pre-requisite spare devices (mdmon owns final validation)
+-	 */
+ 	if (st->ss->external) {
+-		int retval;
+-
+ 		if (subarray) {
+ 			container = st->container_devnm;
+ 			cfd = open_dev_excl(st->container_devnm);
+@@ -1889,58 +1942,13 @@ int Grow_reshape(char *devname, int fd,
+ 			return 1;
+ 		}
+ 
+-		retval = st->ss->load_container(st, cfd, NULL);
+-
+-		if (retval) {
+-			pr_err("Cannot read superblock for %s\n", devname);
++		rv = prepare_external_reshape(devname, subarray, st,
++					      container, cfd);
++		if (rv > 0) {
+ 			free(subarray);
+-			return 1;
+-		}
+-
+-		/* check if operation is supported for metadata handler */
+-		if (st->ss->container_content) {
+-			struct mdinfo *cc = NULL;
+-			struct mdinfo *content = NULL;
+-
+-			cc = st->ss->container_content(st, subarray);
+-			for (content = cc; content ; content = content->next) {
+-				int allow_reshape = 1;
+-
+-				/* check if reshape is allowed based on metadata
+-				 * indications stored in content.array.status
+-				 */
+-				if (content->array.state &
+-				    (1 << MD_SB_BLOCK_VOLUME))
+-					allow_reshape = 0;
+-				if (content->array.state &
+-				    (1 << MD_SB_BLOCK_CONTAINER_RESHAPE))
+-					allow_reshape = 0;
+-				if (!allow_reshape) {
+-					pr_err("cannot reshape arrays in container with unsupported metadata: %s(%s)\n",
+-					       devname, container);
+-					sysfs_free(cc);
+-					free(subarray);
+-					return 1;
+-				}
+-				if (content->consistency_policy ==
+-				    CONSISTENCY_POLICY_PPL) {
+-					pr_err("Operation not supported when ppl consistency policy is enabled\n");
+-					sysfs_free(cc);
+-					free(subarray);
+-					return 1;
+-				}
+-				if (content->consistency_policy ==
+-				    CONSISTENCY_POLICY_BITMAP) {
+-					pr_err("Operation not supported when write-intent bitmap is enabled\n");
+-					sysfs_free(cc);
+-					free(subarray);
+-					return 1;
+-				}
+-			}
+-			sysfs_free(cc);
++			close(cfd);
++			goto release;
+ 		}
+-		if (mdmon_running(container))
+-			st->update_tail = &st->updates;
+ 	}
+ 
+ 	added_disks = 0;
+diff --git a/mdadm.h b/mdadm.h
+index c7268a71..7bf9147d 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1528,6 +1528,7 @@ extern int stat_is_blkdev(char *devname, dev_t *rdev);
+ extern bool is_dev_alive(char *path);
+ extern int get_mdp_major(void);
+ extern int get_maj_min(char *dev, int *major, int *minor);
++extern bool is_bit_set(int *val, unsigned char index);
+ extern int dev_open(char *dev, int flags);
+ extern int open_dev(char *devnm);
+ extern void reopen_mddev(int mdfd);
+diff --git a/util.c b/util.c
+index 3d05d074..c13c81d7 100644
+--- a/util.c
++++ b/util.c
+@@ -1028,6 +1028,20 @@ int get_maj_min(char *dev, int *major, int *minor)
+ 		*e == 0);
+ }
+ 
++/**
++ * is_bit_set() - get bit value by index.
++ * @val: value.
++ * @index: index of the bit (LSB numbering).
++ *
++ * Return: bit value.
++ */
++bool is_bit_set(int *val, unsigned char index)
++{
++	if ((*val) & (1 << index))
++		return true;
++	return false;
++}
++
+ int dev_open(char *dev, int flags)
+ {
+ 	/* like 'open', but if 'dev' matches %d:%d, create a temp
+-- 
+2.26.2
 
