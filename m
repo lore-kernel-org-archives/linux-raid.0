@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18723C433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Jun 2022 09:15:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7798CCA47B
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Jun 2022 09:19:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348680AbiFJJPQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Jun 2022 05:15:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39484 "EHLO
+        id S1348750AbiFJJTA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Jun 2022 05:19:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347897AbiFJJOx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Jun 2022 05:14:53 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3333C1E0AC2
-        for <linux-raid@vger.kernel.org>; Fri, 10 Jun 2022 02:14:32 -0700 (PDT)
+        with ESMTP id S1348984AbiFJJSd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Jun 2022 05:18:33 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 110471F129B
+        for <linux-raid@vger.kernel.org>; Fri, 10 Jun 2022 02:16:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654852472; x=1686388472;
+  t=1654852589; x=1686388589;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=8nzpVLCOBlMPu1xfUyEVkZV42YfaB1nG7Fy1NXBlM1o=;
-  b=dNDVqe4ELB8r4FtwHwCeOUsJTQaBoen0w5VQ+YzObS0Ay1mhRC5Q4BfF
-   VzcI/UBy+ieWI42nRNOSDn69lhA/XaIZDeg9W/e5GN1LhZy7DRIAgYmZo
-   grzgrUfjSCPfXFx9CG9S79R1thPjSqu/KmMmVa55PfaPk17yQlElbGLNU
-   r9/gpiyf4WqWOvqw4lDHyGqNLGHaCrCA6kZAipHfL5FpJD5NDWUD+8C+7
-   hyn+H2szEJlGL9P0I2QX1FKdTU2e3fpNuyfKcxMMdo9cAox4LBQPWytiy
-   e8UtmaYOonKIwuFkXPJ0eeL4KThqQO2zrscN+k1LL06gkrOx/kuHQsimK
+  bh=G1sHpFuLe5A7gd+8UZ3A+/CD3n1Zr3x5QX9ntDsKgIU=;
+  b=ckHW7rdNyL/vMedkvbBjQlS50+2DNs+JuF1P55iXSfsc7lRFSJG2b89L
+   eVhnTzJtrFTgVY4nv8Fz0Cm7+bN4hbKs3u6TsjFUOKwzQmcZSR0V4q8AU
+   8KgqWsNnuaNe0WMlIbXAGNWI9XHQk1SvblcriqLOXgPwoY3j9fYlR4IwY
+   s9VOZtIds55lL7vnkbXvCEy4ePW+twQb/dN3NZ4hUbCc5LeKSMNz0Vfr/
+   pwD96LRqPdYoSkkTJFCu/t1q4RMuv+LKhV9fxjBUncFaLCniSckYebPUR
+   vDIfw39uHdLRBw0YtGEQ/h2tI7n+XeydTGum6vLfOIrI0ewqZUemZJljs
    w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10373"; a="257402654"
+X-IronPort-AV: E=McAfee;i="6400,9594,10373"; a="278709991"
 X-IronPort-AV: E=Sophos;i="5.91,288,1647327600"; 
-   d="scan'208";a="257402654"
+   d="scan'208";a="278709991"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2022 02:14:31 -0700
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2022 02:16:28 -0700
 X-IronPort-AV: E=Sophos;i="5.91,288,1647327600"; 
-   d="scan'208";a="638035017"
+   d="scan'208";a="638035941"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.57.21])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2022 02:14:29 -0700
-Date:   Fri, 10 Jun 2022 11:14:26 +0200
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2022 02:16:26 -0700
+Date:   Fri, 10 Jun 2022 11:16:22 +0200
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To:     Wu Guanghao <wuguanghao3@huawei.com>
 Cc:     <jes@trained-monkey.org>, <linux-raid@vger.kernel.org>,
         Paul Menzel <pmenzel@molgen.mpg.de>, <linfeilong@huawei.com>,
         <lixiaokeng@huawei.com>
-Subject: Re: [PATCH 3/5 v2] load_imsm_mpb: fix double free
-Message-ID: <20220610111426.00003a45@linux.intel.com>
-In-Reply-To: <3a17cad1-928b-2f44-88e6-df457102cfb2@huawei.com>
+Subject: Re: [PATCH 4/5 v2] find_disk_attached_hba: fix memleak
+Message-ID: <20220610111622.00007807@linux.intel.com>
+In-Reply-To: <b54a5d8f-f6f4-af57-b54a-74e56f43dbb1@huawei.com>
 References: <fd86d427-2d3e-b337-6de8-d70dcbbd6ce1@huawei.com>
-        <3a17cad1-928b-2f44-88e6-df457102cfb2@huawei.com>
+        <b54a5d8f-f6f4-af57-b54a-74e56f43dbb1@huawei.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -55,43 +55,38 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 9 Jun 2022 11:07:56 +0800
+On Thu, 9 Jun 2022 11:08:39 +0800
 Wu Guanghao <wuguanghao3@huawei.com> wrote:
 
-> When free(super->buf) but not set super->buf = NULL, will be double free.
+> If disk_path = diskfd_to_devpath(), we need free(disk_path) before
+> return, otherwise there will be a memory leak
 > 
-> get_super_block
-> 	err = load_and_parse_mpb
-> 		load_imsm_mpb(.., s, ..)
-> 			if (posix_memalign(&super->buf, MAX_SECTOR_SIZE,
-> super->len) != 0) // true, super->buf != NULL if
-> (posix_memalign(&super->migr_rec_buf, MAX_SECTOR_SIZE,); // false
-> free(super->buf); //but super->buf not set NULL return 2;
-> 
-> 	if err ! = 0
-> 		if (s)
-> 			free_imsm(s)
-> 				 __free_imsm(s)
-> 					if (s)
-> 						free(s->buf); //double free
-> 
+> Reported-by: Coverity
 > Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
 > ---
->  super-intel.c | 1 +
->  1 file changed, 1 insertion(+)
+>  super-intel.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/super-intel.c b/super-intel.c
-> index ba3bd41f..ee9e112e 100644
+> index ee9e112e..e94f3f65 100644
 > --- a/super-intel.c
 > +++ b/super-intel.c
-> @@ -4453,6 +4453,7 @@ static int load_imsm_mpb(int fd, struct intel_super
-> *super, char *devname) MIGR_REC_BUF_SECTORS*MAX_SECTOR_SIZE) != 0) {
->                 pr_err("could not allocate migr_rec buffer\n");
->                 free(super->buf);
-> +               super->buf = NULL;
->                 return 2;
->         }
->         super->clean_migration_record_by_mdmon = 0;
+> @@ -701,12 +701,12 @@ static struct sys_dev* find_disk_attached_hba(int fd,
+> const char *devname)
+> 
+>         for (elem = list; elem; elem = elem->next)
+>                 if (path_attached_to_hba(disk_path, elem->path))
+> -                       return elem;
+> +                       break;
+> 
+>         if (disk_path != devname)
+>                 free(disk_path);
+> 
+> -       return NULL;
+> +       return elem;
+>  }
+> 
+>  static int find_intel_hba_capability(int fd, struct intel_super *super,
 > --
 > 2.27.0
 
