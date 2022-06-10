@@ -2,92 +2,175 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7798CCA47B
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Jun 2022 09:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 149D6C43334
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Jun 2022 09:49:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348750AbiFJJTA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Jun 2022 05:19:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38762 "EHLO
+        id S243773AbiFJJtY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Jun 2022 05:49:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348984AbiFJJSd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Jun 2022 05:18:33 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 110471F129B
-        for <linux-raid@vger.kernel.org>; Fri, 10 Jun 2022 02:16:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654852589; x=1686388589;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=G1sHpFuLe5A7gd+8UZ3A+/CD3n1Zr3x5QX9ntDsKgIU=;
-  b=ckHW7rdNyL/vMedkvbBjQlS50+2DNs+JuF1P55iXSfsc7lRFSJG2b89L
-   eVhnTzJtrFTgVY4nv8Fz0Cm7+bN4hbKs3u6TsjFUOKwzQmcZSR0V4q8AU
-   8KgqWsNnuaNe0WMlIbXAGNWI9XHQk1SvblcriqLOXgPwoY3j9fYlR4IwY
-   s9VOZtIds55lL7vnkbXvCEy4ePW+twQb/dN3NZ4hUbCc5LeKSMNz0Vfr/
-   pwD96LRqPdYoSkkTJFCu/t1q4RMuv+LKhV9fxjBUncFaLCniSckYebPUR
-   vDIfw39uHdLRBw0YtGEQ/h2tI7n+XeydTGum6vLfOIrI0ewqZUemZJljs
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10373"; a="278709991"
-X-IronPort-AV: E=Sophos;i="5.91,288,1647327600"; 
-   d="scan'208";a="278709991"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2022 02:16:28 -0700
-X-IronPort-AV: E=Sophos;i="5.91,288,1647327600"; 
-   d="scan'208";a="638035941"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.57.21])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2022 02:16:26 -0700
-Date:   Fri, 10 Jun 2022 11:16:22 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Wu Guanghao <wuguanghao3@huawei.com>
-Cc:     <jes@trained-monkey.org>, <linux-raid@vger.kernel.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>, <linfeilong@huawei.com>,
-        <lixiaokeng@huawei.com>
-Subject: Re: [PATCH 4/5 v2] find_disk_attached_hba: fix memleak
-Message-ID: <20220610111622.00007807@linux.intel.com>
-In-Reply-To: <b54a5d8f-f6f4-af57-b54a-74e56f43dbb1@huawei.com>
-References: <fd86d427-2d3e-b337-6de8-d70dcbbd6ce1@huawei.com>
-        <b54a5d8f-f6f4-af57-b54a-74e56f43dbb1@huawei.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S244063AbiFJJtW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Jun 2022 05:49:22 -0400
+Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68BC73632F
+        for <linux-raid@vger.kernel.org>; Fri, 10 Jun 2022 02:49:20 -0700 (PDT)
+Subject: Re: [PATCH mdadm v1 14/14] tests: Add broken files for all broken
+ tests
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1654854558;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ijdeAlHPh+IbiAwnb5BykY+VIG9/rtjUiSgFrIT5f0c=;
+        b=sreqzit43wjy9D69g54ECS9BtQ0WYzZYH2SRH8kiSZgtc0vEfOnQFXt/ejMRRNHw6w6tmj
+        iQvaQiqQWl90NmXMDta2p22I3dP3ZtAeNug3MgyZV2cUUnyEiEJQ7NUkpyigdS7fw3yqG0
+        8gaPFQn9V3P0yzzZ4U0Ep7X+PW7qjzA=
+To:     Logan Gunthorpe <logang@deltatee.com>, linux-raid@vger.kernel.org,
+        Jes Sorensen <jsorensen@fb.com>
+Cc:     Song Liu <song@kernel.org>, Christoph Hellwig <hch@infradead.org>,
+        Donald Buczek <buczek@molgen.mpg.de>, Xiao Ni <xni@redhat.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Coly Li <colyli@suse.de>, Bruce Dubbs <bruce.dubbs@gmail.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+References: <20220609211130.5108-1-logang@deltatee.com>
+ <20220609211130.5108-15-logang@deltatee.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <3b32656b-6d87-39df-625e-93bed6871022@linux.dev>
+Date:   Fri, 10 Jun 2022 17:49:09 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20220609211130.5108-15-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 9 Jun 2022 11:08:39 +0800
-Wu Guanghao <wuguanghao3@huawei.com> wrote:
 
-> If disk_path = diskfd_to_devpath(), we need free(disk_path) before
-> return, otherwise there will be a memory leak
-> 
-> Reported-by: Coverity
-> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+
+On 6/10/22 5:11 AM, Logan Gunthorpe wrote:
+> Each broken file contains the rough frequency of brokeness as well
+> as a brief explanation of what happens when it breaks. Estimates
+> of failure rates are not statistically significant and can vary
+> run to run.
+>
+> This is really just a view from my window. Tests were done on a
+> small VM with the default loop devices, not real hardware. We've
+> seen different kernel configurations can cause bugs to appear as well
+> (ie. different block schedulers). It may also be that different race
+> conditions will be seen on machines with different performance
+> characteristics.
+>
+> These annotations were done with the kernel currently in md/md-next:
+>
+>   facef3b96c5b ("md: Notify sysfs sync_completed in md_reap_sync_thread()")
+>
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > ---
->  super-intel.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index ee9e112e..e94f3f65 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -701,12 +701,12 @@ static struct sys_dev* find_disk_attached_hba(int fd,
-> const char *devname)
-> 
->         for (elem = list; elem; elem = elem->next)
->                 if (path_attached_to_hba(disk_path, elem->path))
-> -                       return elem;
-> +                       break;
-> 
->         if (disk_path != devname)
->                 free(disk_path);
-> 
-> -       return NULL;
-> +       return elem;
->  }
-> 
->  static int find_intel_hba_capability(int fd, struct intel_super *super,
-> --
-> 2.27.0
+>   tests/01r5integ.broken                     |  7 ++++
+>   tests/01raid6integ.broken                  |  7 ++++
+>   tests/04r5swap.broken                      |  7 ++++
+>   tests/07autoassemble.broken                |  8 ++++
+>   tests/07autodetect.broken                  |  5 +++
+>   tests/07changelevelintr.broken             |  9 +++++
+>   tests/07changelevels.broken                |  9 +++++
+>   tests/07reshape5intr.broken                | 45 ++++++++++++++++++++++
+>   tests/07revert-grow.broken                 | 31 +++++++++++++++
+>   tests/07revert-shrink.broken               |  9 +++++
+>   tests/07testreshape5.broken                | 12 ++++++
+>   tests/09imsm-assemble.broken               |  6 +++
+>   tests/09imsm-create-fail-rebuild.broken    |  5 +++
+>   tests/09imsm-overlap.broken                |  7 ++++
+>   tests/10ddf-assemble-missing.broken        |  6 +++
+>   tests/10ddf-fail-create-race.broken        |  7 ++++
+>   tests/10ddf-fail-two-spares.broken         |  5 +++
+>   tests/10ddf-incremental-wrong-order.broken |  9 +++++
+>   tests/14imsm-r1_2d-grow-r1_3d.broken       |  5 +++
+>   tests/14imsm-r1_2d-takeover-r0_2d.broken   |  6 +++
+>   tests/18imsm-r10_4d-takeover-r0_2d.broken  |  5 +++
+>   tests/18imsm-r1_2d-takeover-r0_1d.broken   |  6 +++
+>   tests/19raid6auto-repair.broken            |  5 +++
+>   tests/19raid6repair.broken                 |  5 +++
+>   24 files changed, 226 insertions(+)
+>   create mode 100644 tests/01r5integ.broken
+>   create mode 100644 tests/01raid6integ.broken
+>   create mode 100644 tests/04r5swap.broken
+>   create mode 100644 tests/07autoassemble.broken
+>   create mode 100644 tests/07autodetect.broken
+>   create mode 100644 tests/07changelevelintr.broken
+>   create mode 100644 tests/07changelevels.broken
+>   create mode 100644 tests/07reshape5intr.broken
+>   create mode 100644 tests/07revert-grow.broken
+>   create mode 100644 tests/07revert-shrink.broken
+>   create mode 100644 tests/07testreshape5.broken
+>   create mode 100644 tests/09imsm-assemble.broken
+>   create mode 100644 tests/09imsm-create-fail-rebuild.broken
+>   create mode 100644 tests/09imsm-overlap.broken
+>   create mode 100644 tests/10ddf-assemble-missing.broken
+>   create mode 100644 tests/10ddf-fail-create-race.broken
+>   create mode 100644 tests/10ddf-fail-two-spares.broken
+>   create mode 100644 tests/10ddf-incremental-wrong-order.broken
+>   create mode 100644 tests/14imsm-r1_2d-grow-r1_3d.broken
+>   create mode 100644 tests/14imsm-r1_2d-takeover-r0_2d.broken
+>   create mode 100644 tests/18imsm-r10_4d-takeover-r0_2d.broken
+>   create mode 100644 tests/18imsm-r1_2d-takeover-r0_1d.broken
+>   create mode 100644 tests/19raid6auto-repair.broken
+>   create mode 100644 tests/19raid6repair.broken
 
-Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Just to share some results from my  side, with 5.19-rc1 (revert my
+problematic patch of course), below tests failed.
+
+/root/mdadm/tests/00raid0...
+/root/mdadm/tests/00readonly...
+/root/mdadm/tests/02lineargrow...
+/root/mdadm/tests/03r0assem...
+/root/mdadm/tests/03r5assem-failed...
+/root/mdadm/tests/04r0update...
+/root/mdadm/tests/04r5swap...
+/root/mdadm/tests/04update-metadata...
+/root/mdadm/tests/04update-uuid...
+/root/mdadm/tests/05r1-bitmapfile...
+/root/mdadm/tests/05r1-grow-external...
+/root/mdadm/tests/05r1-n3-bitmapfile...
+/root/mdadm/tests/05r1-re-add...
+/root/mdadm/tests/05r1-re-add-nosuper...
+/root/mdadm/tests/05r5-bitmapfile...
+/root/mdadm/tests/05r6-bitmapfile...
+/root/mdadm/tests/06wrmostly...
+/root/mdadm/tests/07autoassemble...
+/root/mdadm/tests/07changelevelintr...
+/root/mdadm/tests/07changelevels...
+/root/mdadm/tests/07layouts...
+/root/mdadm/tests/07revert-grow...
+/root/mdadm/tests/07revert-shrink...
+/root/mdadm/tests/07testreshape5...
+/root/mdadm/tests/09imsm-create-fail-rebuild...
+/root/mdadm/tests/09imsm-overlap...
+/root/mdadm/tests/10ddf-assemble-missing...
+/root/mdadm/tests/10ddf-create...
+/root/mdadm/tests/10ddf-fail-readd...
+/root/mdadm/tests/10ddf-fail-spare...
+/root/mdadm/tests/10ddf-fail-stop-readd...
+/root/mdadm/tests/10ddf-fail-twice...
+/root/mdadm/tests/10ddf-fail-two-spares...
+/root/mdadm/tests/10ddf-incremental-wrong-order...
+/root/mdadm/tests/19raid6auto-repair...
+/root/mdadm/tests/19raid6repair...
+
+05r1-bitmapfile failed which is probably because external bitmaps are only
+work on ext2 and ext3, I guess other 05*-bitmapfile failed due to the same
+reason.
+
+01r5integ /01raid6integ  can't finish due to some reason.
+
+BTW, thank you for the effort to make md/mdadm better!
+
+Thanks,
+Guoqing
