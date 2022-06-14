@@ -2,176 +2,409 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9C1C43334
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Jun 2022 15:23:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A836CCA47E
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Jun 2022 15:59:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234230AbiFNPW4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Jun 2022 11:22:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54916 "EHLO
+        id S243182AbiFNP7B (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Jun 2022 11:59:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231560AbiFNPWx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Jun 2022 11:22:53 -0400
-X-Greylist: delayed 68 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 14 Jun 2022 08:22:24 PDT
-Received: from UPDC19PA19.eemsg.mail.mil (UPDC19PA19.eemsg.mail.mil [214.24.27.194])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BCE9114B
-        for <linux-raid@vger.kernel.org>; Tue, 14 Jun 2022 08:22:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
-  t=1655220144; x=1686756144;
-  h=from:to:cc:subject:date:message-id:
-   content-transfer-encoding:mime-version;
-  bh=wr3sRPS4fhiJBUcPAiv+hbT4S2trwctKd8vRtMWE/j8=;
-  b=IHvEl4Tar5cXHunSHx2wztBUGS9DoGLngRSF5A/qnQM7a2JV4ZdRonsO
-   OLTe6fbrmPYoZjsrqv4zbeuB0Kdsttsf7gpKRz6Gj+eLJEFXTY/iPeayu
-   Hqu4wvoLlL2htXf0qHsvT7q2AhDDCJcg7LBkyAXwrPWutKoMsOS/chr5R
-   efaCLU9gUSMp5dGST4Z551Y82adc0bhQ+euwn4Wv8itneULEA5d/3Zy2K
-   ta1Ns8cvZn6FFV18wGqMc+WEKKJWC5vb1P3WEHqR6ulbd+KpZXz3Xc8Ar
-   LYFGXhNqhuboybmu54EgwSYA2Y7cMHe3873rLDBdVbDhPs/2zqifcEzZB
-   Q==;
-X-EEMSG-check-017: 359127731|UPDC19PA19_ESA_OUT01.csd.disa.mil
-X-IronPort-AV: E=Sophos;i="5.91,300,1647302400"; 
-   d="scan'208";a="359127731"
-Received: from edge-mech01.mail.mil ([214.21.130.103])
-  by UPDC19PA19.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 14 Jun 2022 15:20:57 +0000
-Received: from UMECHPAOM.easf.csd.disa.mil (214.21.130.40) by
- edge-mech01.mail.mil (214.21.130.103) with Microsoft SMTP Server (TLS) id
- 14.3.498.0; Tue, 14 Jun 2022 15:20:31 +0000
-Received: from UMECHPA68.easf.csd.disa.mil ([169.254.4.207]) by
- umechpaom.easf.csd.disa.mil ([214.21.130.40]) with mapi id 14.03.0513.000;
- Tue, 14 Jun 2022 15:20:30 +0000
-From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
-To:     "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
-CC:     "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
-Subject: Mdraid resync
-Thread-Topic: Mdraid resync
-Thread-Index: Adh/+uu/lGZ7jHypSPWSPJrprm7RaA==
-Date:   Tue, 14 Jun 2022 15:20:30 +0000
-Message-ID: <5EAED86C53DED2479E3E145969315A2389D45F51@UMECHPA68.easf.csd.disa.mil>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [214.21.44.12]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S1355421AbiFNP6k (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Jun 2022 11:58:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E8781CFE2
+        for <linux-raid@vger.kernel.org>; Tue, 14 Jun 2022 08:58:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 918136146E
+        for <linux-raid@vger.kernel.org>; Tue, 14 Jun 2022 15:58:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC8BAC3411B
+        for <linux-raid@vger.kernel.org>; Tue, 14 Jun 2022 15:58:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655222318;
+        bh=zqRZlGjmdhUGOGhc6YLFlBM4LNLArjoQtTWaHs/9ZhY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=tdS0wNtEUcscfDOmJQrrbyiFN+JDuot7EV7HpM+xzf+KyF2rXr3hDpX6k9fNRoTv/
+         danRfopdaFOsdKcbnxlM/L7h3ZczpHCFQN3du+Z9CehLuvgWjGwAlVOCH8csd3L+EB
+         HLg4hMwqSco2VVqAlYAT6icUQtjBUNiRIdvz9fPl4FkYX/uOgAVnP2D6xEt4aFdMk1
+         zqkX+EAJZh8a6KbaVLcrg3TmphUn3D3I31VM62KWPMkA2LFNHeUCtK6pMlKguEQ6Ts
+         nEdKNuhS9ucxp8RxwAEHHPqYEiVDdDMfohYZro13Bo8Cv7LzfeFfwWpzLMsFfzkCNU
+         YKWbAZOjJ0+Cg==
+Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-3137eb64b67so34049147b3.12
+        for <linux-raid@vger.kernel.org>; Tue, 14 Jun 2022 08:58:37 -0700 (PDT)
+X-Gm-Message-State: AJIora8BM2EssMepjlaqlvjrzWE3lFO7KnAZVkhx8MkEVpErnmiUF/fm
+        kJ/bQgDa076rhYLHns9YXMw+Als2f00/82Jk2xM=
+X-Google-Smtp-Source: AGRyM1vkBxDgVXC3hMxdYOlcEDIJo+rUJalXZ584WQGihcyj5M2tFSG2rbXlxtRU1vXrLSB3jWyap4DkMhDbKdQ5BvA=
+X-Received: by 2002:a0d:fdc6:0:b0:313:b5db:a365 with SMTP id
+ n189-20020a0dfdc6000000b00313b5dba365mr6258469ywf.211.1655222316855; Tue, 14
+ Jun 2022 08:58:36 -0700 (PDT)
 MIME-Version: 1.0
+References: <CABcz2k7F7XVvg_hD7CBs3oANbyZndMYOfso2wNQmNb1MqD6ikA@mail.gmail.com>
+In-Reply-To: <CABcz2k7F7XVvg_hD7CBs3oANbyZndMYOfso2wNQmNb1MqD6ikA@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 14 Jun 2022 08:58:26 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4KMP+rdx51od4RTH-UbjDhSJdgqQa=LTz7EzF3uOhc-A@mail.gmail.com>
+Message-ID: <CAPhsuW4KMP+rdx51od4RTH-UbjDhSJdgqQa=LTz7EzF3uOhc-A@mail.gmail.com>
+Subject: Re: md0_raid5 Hangs Linux 5.18.3
+To:     Curtis Lee Bolin <CurtisLeeBolin@gmail.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-All,
-I had an active resync going on and I was peeking at the average request si=
-ze and the queue size........I can understand  seeing the queue size multip=
-lied by  the 4K IO size getting relatively close to the 512k chunk size of =
-the array.   Might it be more efficient to have the resync process do resyn=
-c I/Os  in "chunk size" increments?   =20
+On Tue, Jun 14, 2022 at 8:08 AM Curtis Lee Bolin
+<CurtisLeeBolin@gmail.com> wrote:
+>
+> Newly created arrays on 2 servers are hanging soon after I start using
+> them.  I recreated the arrays on both servers after zeroing the
+> superblocks, and again they hang when using the array after resync had
+> completed.  This last time it hung before btrfs was even able to
+> finish creating the filesystem.  The drives are new.  SMART data shows
+> no problem with the drives.
+
+Thanks for the report.
+
+Could you please try whether this commit fixes the issue?
+
+https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?h=md-next&id=2f37ac322c33e314b9af12de5c8183cbcb7df250
+
+Thanks,
+Song
 
 
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0.02    0.00   12.00    0.00    0.00   87.97
-
-Device            r/s     w/s     rkB/s     wkB/s   rrqm/s   wrqm/s  %rrqm =
- %wrqm r_await w_await aqu-sz rareq-sz wareq-sz  svctm  %util
-nvme7n1       277262.00    0.00 1109048.00      0.00     0.00     0.00   0.=
-00   0.00    0.29    0.00  80.72     4.00     0.00   0.00  99.90
-nvme2n1       277279.00    0.00 1109116.00      0.00     0.00     0.00   0.=
-00   0.00    0.27    0.00  75.18     4.00     0.00   0.00  99.90
-nvme0n1       277232.00    0.00 1108928.00      0.00     0.00     0.00   0.=
-00   0.00    0.28    0.00  76.91     4.00     0.00   0.00  99.90
-nvme4n1       277219.00    0.00 1108876.00      0.00     0.00     0.00   0.=
-00   0.00    0.30    0.00  81.83     4.00     0.00   0.00 100.00
-nvme1n1       277203.00    0.00 1108812.00      0.00     0.00     0.00   0.=
-00   0.00    0.27    0.00  75.25     4.00     0.00   0.00 100.00
-nvme5n1       277164.00    0.00 1108656.00      0.00     0.00     0.00   0.=
-00   0.00    0.30    0.00  82.90     4.00     0.00   0.00  99.90
-nvme6n1       277168.00    0.00 1108672.00      0.00     0.00     0.00   0.=
-00   0.00    0.30    0.00  84.18     4.00     0.00   0.00  99.90
-nvme3n1       277193.00    0.00 1108772.00      0.00     0.00     0.00   0.=
-00   0.00    0.28    0.00  78.73     4.00     0.00   0.00  99.90
-nvme8n1       277161.00    0.00 1108644.00      0.00     0.00     0.00   0.=
-00   0.00    0.30    0.00  83.49     4.00     0.00   0.00  99.90
-nvme9n1       277126.00    0.00 1108504.00      0.00     0.00     0.00   0.=
-00   0.00    0.31    0.00  84.64     4.00     0.00   0.00  99.90
-nvme10n1      277143.00    0.00 1108572.00      0.00     0.00     0.00   0.=
-00   0.00    0.31    0.00  85.67     4.00     0.00   0.00  99.90
-nvme11n1      277131.00    0.00 1108524.00      0.00     0.00     0.00   0.=
-00   0.00    0.32    0.00  87.46     4.00     0.00   0.00  99.90
-
-^C
-[root@rebel00 rules.d]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]=20
-md1 : active raid6 nvme12n1p1[0] nvme23n1p1[11] nvme22n1p1[10] nvme21n1p1[9=
-] nvme20n1p1[8] nvme19n1p1[7] nvme18n1p1[6] nvme17n1p1[5] nvme16n1p1[4] nvm=
-e15n1p1[3] nvme14n1p1[2] nvme13n1p1[1]
-      37506037760 blocks super 1.2 level 6, 512k chunk, algorithm 2 [12/12]=
- [UUUUUUUUUUUU]
-      bitmap: 0/28 pages [0KB], 65536KB chunk
-
-md0 : active raid6 nvme0n1p1[0] nvme11n1p1[11] nvme10n1p1[10] nvme9n1p1[9] =
-nvme8n1p1[8] nvme7n1p1[7] nvme6n1p1[6] nvme5n1p1[5] nvme4n1p1[4] nvme3n1p1[=
-3] nvme2n1p1[2] nvme1n1p1[1]
-      150027868160 blocks super 1.2 level 6, 512k chunk, algorithm 2 [12/12=
-] [UUUUUUUUUUUU]
-      [=3D=3D=3D=3D=3D=3D=3D=3D>............]  resync =3D 43.5% (6530712732=
-/15002786816) finish=3D124.6min speed=3D1132744K/sec
-      bitmap: 0/112 pages [0KB], 65536KB chunk
-
-unused devices: <none>
-
-
-I see resyncs running at 1.1GB/s and initial raid creations at around the s=
-ame (maybe a bit less - in the 900MB/s range IIRC), should I be able to get=
- these number ultimately to the streaming read and random write abilities o=
-f an SSD?   While looking at the benchmarks below, we don't seem to be limi=
-ted by the processor:
-model name	: AMD EPYC 7763 64-Core Processor
-cpu MHz		: 3243.827
-cache size	: 512 KB
-
-localhost.localdomain kernel: raid6: avx2x4   gen() 36354 MB/s
-localhost.localdomain kernel: raid6: avx2x4   xor()  5159 MB/s
-localhost.localdomain kernel: raid6: avx2x2   gen() 34979 MB/s
-localhost.localdomain kernel: raid6: avx2x2   xor() 31157 MB/s
-localhost.localdomain kernel: raid6: avx2x1   gen() 24533 MB/s
-localhost.localdomain kernel: raid6: avx2x1   xor() 25809 MB/s
-localhost.localdomain kernel: raid6: sse2x4   gen() 20491 MB/s
-localhost.localdomain kernel: raid6: sse2x4   xor()  2997 MB/s
-localhost.localdomain kernel: raid6: sse2x2   gen() 17399 MB/s
-localhost.localdomain kernel: raid6: sse2x2   xor() 16011 MB/s
-localhost.localdomain kernel: raid6: sse2x1   gen()  1340 MB/s
-localhost.localdomain kernel: raid6: sse2x1   xor() 13975 MB/s
-localhost.localdomain kernel: raid6: using algorithm avx2x4 gen() 36354 MB/=
-s
-localhost.localdomain kernel: raid6: .... xor() 5159 MB/s, rmw enabled
-localhost.localdomain kernel: raid6: using avx2x2 recovery algorithm
-
-
-Am I doing anything silly with some base settings?   I can obviously crank =
-up sync_speed_max, but I assume there is something else that limits me prio=
-r to the 2GB/s I have it set to.....
-SUBSYSTEM=3D=3D"block",ACTION=3D=3D"add|change",KERNEL=3D=3D"md*",\
-	ATTR{md/sync_speed_max}=3D"2000000",\
-	ATTR{md/group_thread_cnt}=3D"64",\
-	ATTR{md/stripe_cache_size}=3D"8192",\
-	ATTR{queue/nomerges}=3D"2",\
-	ATTR{queue/nr_requests}=3D"1023",\
-	ATTR{queue/rotational}=3D"0",\
-	ATTR{queue/rq_affinity}=3D"2",\
-	ATTR{queue/scheduler}=3D"none",\
-	ATTR{queue/add_random}=3D"0",\
-	ATTR{queue/max_sectors_kb}=3D"4096"
-
-[root@rebel00 md]# cat chunk_size=20
-524288
-[root@rebel00 md]# cat sync_speed_max
-2000000 (local)
-[root@rebel00 md]# cat sync_max
-max
-[root@rebel00 md]# cat group_thread_cnt=20
-64
-[root@rebel00 md]# cat stripe_cache_size
-8192
-
-Regards,
-Jim Finlayson
-US Department of Defense
+>
+> Linux sv 5.18.3-arch1-1 #1 SMP PREEMPT_DYNAMIC Thu, 09 Jun 2022
+> 16:14:10 +0000 x86_64 GNU/Linux
+>
+> $ sudo mdadm --create --verbose --level=5 --raid-devices=6
+> --consistency-policy=ppl /dev/md0 /dev/sde1 /dev/sdf1 /dev/sdg1
+> /dev/sdi1 /dev/sdk1 /dev/sdl1
+>
+> $ sudo mdadm --misc --detail /dev/md0
+> /dev/md0:
+>            Version : 1.2
+>      Creation Time : Tue Jun 14 01:13:09 2022
+>         Raid Level : raid5
+>         Array Size : 19534417920 (18.19 TiB 20.00 TB)
+>      Used Dev Size : 3906883584 (3.64 TiB 4.00 TB)
+>       Raid Devices : 6
+>      Total Devices : 6
+>        Persistence : Superblock is persistent
+>
+>        Update Time : Tue Jun 14 09:21:17 2022
+>              State : clean
+>     Active Devices : 6
+>    Working Devices : 6
+>     Failed Devices : 0
+>      Spare Devices : 0
+>
+>             Layout : left-symmetric
+>         Chunk Size : 512K
+>
+> Consistency Policy : ppl
+>
+>               Name : sv:0  (local to host sv)
+>               UUID : b55ceb54:07883743:d17585ac:bbd37b65
+>             Events : 100
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8       65        0      active sync   /dev/sde1
+>        1       8       81        1      active sync   /dev/sdf1
+>        2       8       97        2      active sync   /dev/sdg1
+>        3       8      129        3      active sync   /dev/sdi1
+>        4       8      161        4      active sync   /dev/sdk1
+>        6       8      177        5      active sync   /dev/sdl1
+>
+> $ sudo mkfs.btrfs /dev/md0
+> btrfs-progs v5.18.1
+> See http://btrfs.wiki.kernel.org for more information.
+>
+> Performing full device TRIM /dev/md0 (18.19TiB) ...
+> NOTE: several default settings have changed in version 5.15, please make sure
+>       this does not affect your deployments:
+>       - DUP for metadata (-m dup)
+>       - enabled no-holes (-O no-holes)
+>       - enabled free-space-tree (-R free-space-tree)
+>
+> It hung at this point.
+>
+> un 14 09:25:35 sv kernel: ------------[ cut here ]------------
+> Jun 14 09:25:35 sv kernel: WARNING: CPU: 22 PID: 727 at
+> drivers/scsi/scsi_lib.c:1024 scsi_alloc_sgtables+0x2b8/0x3e0
+> Jun 14 09:25:35 sv kernel: Modules linked in: xt_nat xt_tcpudp veth
+> xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt>
+> Jun 14 09:25:35 sv kernel:  btrfs blake2b_generic libcrc32c
+> crc32c_generic xor raid6_pq mpt3sas isci raid_class libsas>
+> Jun 14 09:25:35 sv kernel: CPU: 22 PID: 727 Comm: md0_raid5 Not
+> tainted 5.18.3-arch1-1 #1 2090c6f1d9d20f39bd14c0acb6fa>
+> Jun 14 09:25:35 sv kernel: Hardware name: Supermicro
+> X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.4 11/20/2019
+> Jun 14 09:25:35 sv kernel: RIP: 0010:scsi_alloc_sgtables+0x2b8/0x3e0
+> Jun 14 09:25:35 sv kernel: Code: f7 48 8b 80 a8 00 00 00 48 8b 80 c8
+> 00 00 00 ff d0 0f 1f 00 84 c0 0f 84 b4 fd ff ff 4>
+> Jun 14 09:25:35 sv kernel: RSP: 0018:ffffa6bc87d7fa10 EFLAGS: 00010246
+> Jun 14 09:25:35 sv kernel: RAX: 0000000000000000 RBX: ffff8de28cd8f720
+> RCX: 0000000000000000
+> Jun 14 09:25:35 sv kernel: RDX: ffff8de28cd8f8e0 RSI: 0000000000000000
+> RDI: ffff8de28cd8f720
+> Jun 14 09:25:35 sv kernel: RBP: ffff8dea03aae000 R08: 0000000000000007
+> R09: 0000000000000000
+> Jun 14 09:25:35 sv kernel: R10: 0000000000000000 R11: ffff8de28cd8f7e8
+> R12: 0000000000000000
+> Jun 14 09:25:35 sv kernel: R13: 0000000000000000 R14: ffff8de28cd8f600
+> R15: ffff8dea0673d400
+> Jun 14 09:25:35 sv kernel: FS:  0000000000000000(0000)
+> GS:ffff8de9dfd80000(0000) knlGS:0000000000000000
+> Jun 14 09:25:35 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> Jun 14 09:25:35 sv kernel: CR2: 00007f4e94000020 CR3: 0000000db9a10006
+> CR4: 00000000000606e0
+> Jun 14 09:25:35 sv kernel: Call Trace:
+> Jun 14 09:25:35 sv kernel:  <TASK>
+> Jun 14 09:25:35 sv kernel:  sd_init_command+0x14c/0xaa0
+> Jun 14 09:25:35 sv kernel:  scsi_queue_rq+0x768/0xba0
+> Jun 14 09:25:35 sv kernel:  blk_mq_dispatch_rq_list+0x205/0x8c0
+> Jun 14 09:25:35 sv kernel:  ? sbitmap_get+0x94/0x1b0
+> Jun 14 09:25:35 sv kernel:  blk_mq_do_dispatch_sched+0x321/0x3b0
+> Jun 14 09:25:35 sv kernel:  __blk_mq_sched_dispatch_requests+0xee/0x140
+> Jun 14 09:25:35 sv kernel:  blk_mq_sched_dispatch_requests+0x34/0x60
+> Jun 14 09:25:35 sv kernel:  __blk_mq_run_hw_queue+0x34/0x90
+> Jun 14 09:25:35 sv kernel:  __blk_mq_delay_run_hw_queue+0x13b/0x170
+> Jun 14 09:25:35 sv kernel:  blk_mq_sched_insert_requests+0x6f/0x150
+> Jun 14 09:25:35 sv kernel:  blk_mq_flush_plug_list+0x120/0x2e0
+> Jun 14 09:25:35 sv kernel:  __blk_flush_plug+0x106/0x160
+> Jun 14 09:25:35 sv kernel:  blk_finish_plug+0x26/0x40
+> Jun 14 09:25:35 sv kernel:  raid5d+0x5c1/0x680 [raid456
+> 0e5f2411b60f493a1f46983f29bb4c58c62a1560]
+> Jun 14 09:25:35 sv kernel:  ? schedule+0x4f/0xb0
+> Jun 14 09:25:35 sv kernel:  ? md_set_read_only+0x90/0x90 [md_mod
+> bcf96979787e4ea4bd2fa4be3b38a9bf6b5bf539]
+> Jun 14 09:25:35 sv kernel:  md_thread+0xaa/0x190 [md_mod
+> bcf96979787e4ea4bd2fa4be3b38a9bf6b5bf539]
+> Jun 14 09:25:35 sv kernel:  ? cpuacct_percpu_seq_show+0x20/0x20
+> Jun 14 09:25:35 sv kernel:  kthread+0xdb/0x110
+> Jun 14 09:25:35 sv kernel:  ? kthread_complete_and_exit+0x20/0x20
+> Jun 14 09:25:35 sv kernel:  ret_from_fork+0x1f/0x30
+> Jun 14 09:25:35 sv kernel:  </TASK>
+> Jun 14 09:25:35 sv kernel: ---[ end trace 0000000000000000 ]---
+> Jun 14 09:25:35 sv kernel: I/O error, dev sdl, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:35 sv kernel: I/O error, dev sde, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:35 sv kernel: audit: type=1106 audit(1655216735.305:259):
+> pid=1443 uid=1000 auid=1000 ses=1 msg='op=PAM:s>
+> Jun 14 09:25:35 sv kernel: audit: type=1104 audit(1655216735.305:260):
+> pid=1443 uid=1000 auid=1000 ses=1 msg='op=PAM:s>
+> Jun 14 09:25:39 sv kernel: audit: type=1100 audit(1655216739.728:261):
+> pid=1447 uid=0 auid=4294967295 ses=4294967295 m>
+> Jun 14 09:25:43 sv kernel: audit: type=1101 audit(1655216743.248:262):
+> pid=1449 uid=1000 auid=1000 ses=1 msg='op=PAM:a>
+> Jun 14 09:25:43 sv kernel: audit: type=1110 audit(1655216743.248:263):
+> pid=1449 uid=1000 auid=1000 ses=1 msg='op=PAM:s>
+> Jun 14 09:25:43 sv kernel: audit: type=1105 audit(1655216743.248:264):
+> pid=1449 uid=1000 auid=1000 ses=1 msg='op=PAM:s>
+> Jun 14 09:25:43 sv kernel: I/O error, dev sde, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sdl, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sdk, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sdg, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sdk, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sde, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sdl, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sdf, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sdi, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: I/O error, dev sdg, sector 0 op 0x0:(READ)
+> flags 0xc00 phys_seg 0 prio class 0
+> Jun 14 09:25:43 sv kernel: ------------[ cut here ]------------
+> Jun 14 09:25:43 sv kernel: kernel BUG at block/blk-mq.c:942!
+> Jun 14 09:25:43 sv kernel: invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+> Jun 14 09:25:44 sv kernel: CPU: 0 PID: 727 Comm: md0_raid5 Tainted: G
+>       W         5.18.3-arch1-1 #1 2090c6f1d9d20>
+> Jun 14 09:25:44 sv kernel: Hardware name: Supermicro
+> X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.4 11/20/2019
+> Jun 14 09:25:44 sv kernel: RIP: 0010:blk_mq_end_request+0x130/0x140
+> Jun 14 09:25:44 sv kernel: Code: 13 4c 89 e6 48 89 df e8 4e 60 00 00
+> 8b 43 1c e9 61 ff ff ff 48 8b 35 8f 42 72 01 48 8>
+> Jun 14 09:25:44 sv kernel: RSP: 0018:ffffa6bc87d7fae8 EFLAGS: 00010202
+> Jun 14 09:25:44 sv kernel: RAX: 0000000000000001 RBX: ffff8de28cfd4800
+> RCX: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RDX: 0000000000000000 RSI: ffff8de28bcf0180
+> RDI: ffff8de28cfd4800
+> Jun 14 09:25:44 sv kernel: RBP: 000000000000000a R08: ffff8de28cb97c60
+> R09: ffffa6bc87d7fa28
+> Jun 14 09:25:44 sv kernel: R10: 0000000000000003 R11: ffff8df1fffaf3e8
+> R12: 0000000000000000
+> Jun 14 09:25:44 sv kernel: R13: ffff8de28cfd4800 R14: ffffa6bc87d7fbf8
+> R15: ffff8dea06cbb5c0
+> Jun 14 09:25:44 sv kernel: FS:  0000000000000000(0000)
+> GS:ffff8de9dfa00000(0000) knlGS:0000000000000000
+> Jun 14 09:25:44 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> Jun 14 09:25:44 sv kernel: CR2: 00007f4f342b7ca8 CR3: 0000000db9a10003
+> CR4: 00000000000606f0
+> Jun 14 09:25:44 sv kernel: Call Trace:
+> Jun 14 09:25:44 sv kernel:  <TASK>
+> Jun 14 09:25:44 sv kernel:  blk_mq_dispatch_rq_list+0x4d2/0x8c0
+> Jun 14 09:25:44 sv kernel:  ? sbitmap_get+0x94/0x1b0
+> Jun 14 09:25:44 sv kernel:  blk_mq_do_dispatch_sched+0x321/0x3b0
+> Jun 14 09:25:44 sv kernel:  __blk_mq_sched_dispatch_requests+0xee/0x140
+> Jun 14 09:25:44 sv kernel:  blk_mq_sched_dispatch_requests+0x34/0x60
+> Jun 14 09:25:44 sv kernel:  __blk_mq_run_hw_queue+0x34/0x90
+> Jun 14 09:25:44 sv kernel:  __blk_mq_delay_run_hw_queue+0x13b/0x170
+> Jun 14 09:25:44 sv kernel:  blk_mq_sched_insert_requests+0x6f/0x150
+> Jun 14 09:25:44 sv kernel:  blk_mq_flush_plug_list+0x120/0x2e0
+> Jun 14 09:25:44 sv kernel:  __blk_flush_plug+0x106/0x160
+> Jun 14 09:25:44 sv kernel:  blk_finish_plug+0x26/0x40
+> Jun 14 09:25:44 sv kernel:  raid5d+0x5c1/0x680 [raid456
+> 0e5f2411b60f493a1f46983f29bb4c58c62a1560]
+> Jun 14 09:25:44 sv kernel:  ? schedule+0x4f/0xb0
+> Jun 14 09:25:44 sv kernel:  ? md_set_read_only+0x90/0x90 [md_mod
+> bcf96979787e4ea4bd2fa4be3b38a9bf6b5bf539]
+> Jun 14 09:25:44 sv kernel:  md_thread+0xaa/0x190 [md_mod
+> bcf96979787e4ea4bd2fa4be3b38a9bf6b5bf539]
+> Jun 14 09:25:44 sv kernel:  ? cpuacct_percpu_seq_show+0x20/0x20
+> Jun 14 09:25:44 sv kernel:  kthread+0xdb/0x110
+> Jun 14 09:25:44 sv kernel:  ? kthread_complete_and_exit+0x20/0x20
+> Jun 14 09:25:44 sv kernel:  ret_from_fork+0x1f/0x30
+> Jun 14 09:25:44 sv kernel:  </TASK>
+> Jun 14 09:25:44 sv kernel: Modules linked in: xt_nat xt_tcpudp veth
+> xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt>
+> Jun 14 09:25:44 sv kernel:  btrfs blake2b_generic libcrc32c
+> crc32c_generic xor raid6_pq mpt3sas isci raid_class libsas>
+> Jun 14 09:25:44 sv kernel: ---[ end trace 0000000000000000 ]---
+> Jun 14 09:25:44 sv kernel: RIP: 0010:blk_mq_end_request+0x130/0x140
+> Jun 14 09:25:44 sv kernel: Code: 13 4c 89 e6 48 89 df e8 4e 60 00 00
+> 8b 43 1c e9 61 ff ff ff 48 8b 35 8f 42 72 01 48 8>
+> Jun 14 09:25:44 sv kernel: RSP: 0018:ffffa6bc87d7fae8 EFLAGS: 00010202
+> Jun 14 09:25:44 sv kernel: RAX: 0000000000000001 RBX: ffff8de28cfd4800
+> RCX: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RDX: 0000000000000000 RSI: ffff8de28bcf0180
+> RDI: ffff8de28cfd4800
+> Jun 14 09:25:44 sv kernel: RBP: 000000000000000a R08: ffff8de28cb97c60
+> R09: ffffa6bc87d7fa28
+> Jun 14 09:25:44 sv kernel: R10: 0000000000000003 R11: ffff8df1fffaf3e8
+> R12: 0000000000000000
+> Jun 14 09:25:44 sv kernel: R13: ffff8de28cfd4800 R14: ffffa6bc87d7fbf8
+> R15: ffff8dea06cbb5c0
+> Jun 14 09:25:44 sv kernel: FS:  0000000000000000(0000)
+> GS:ffff8de9dfa00000(0000) knlGS:0000000000000000
+> Jun 14 09:25:44 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> Jun 14 09:25:44 sv kernel: CR2: 00007f4f342b7ca8 CR3: 0000000db9a10003
+> CR4: 00000000000606f0
+> Jun 14 09:25:44 sv kernel: note: md0_raid5[727] exited with preempt_count 1
+> Jun 14 09:25:44 sv kernel: ------------[ cut here ]------------
+> Jun 14 09:25:44 sv kernel: WARNING: CPU: 0 PID: 727 at
+> kernel/exit.c:741 do_exit+0x8af/0xac0
+> Jun 14 09:25:44 sv kernel: Modules linked in: xt_nat xt_tcpudp veth
+> xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt>
+> Jun 14 09:25:44 sv kernel:  btrfs blake2b_generic libcrc32c
+> crc32c_generic xor raid6_pq mpt3sas isci raid_class libsas>
+> Jun 14 09:25:44 sv kernel: CPU: 0 PID: 727 Comm: md0_raid5 Tainted: G
+>     D W         5.18.3-arch1-1 #1 2090c6f1d9d20>
+> Jun 14 09:25:44 sv kernel: Hardware name: Supermicro
+> X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.4 11/20/2019
+> Jun 14 09:25:44 sv kernel: RIP: 0010:do_exit+0x8af/0xac0
+> Jun 14 09:25:44 sv kernel: Code: 89 ab 40 06 00 00 4c 89 a3 48 06 00
+> 00 48 89 6c 24 10 e9 78 fd ff ff 48 8b bb 28 06 0>
+> Jun 14 09:25:44 sv kernel: RSP: 0018:ffffa6bc87d7fee0 EFLAGS: 00010282
+> Jun 14 09:25:44 sv kernel: RAX: 0000000000000000 RBX: ffff8dea0dde2040
+> RCX: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RDX: 0000000000000001 RSI: 0000000000000001
+> RDI: 000000000000000b
+> Jun 14 09:25:44 sv kernel: RBP: ffff8dea0dde2040 R08: 0000000000000000
+> R09: ffffa6bc87d7fd60
+> Jun 14 09:25:44 sv kernel: R10: 0000000000000003 R11: ffff8df1fffaf3e8
+> R12: 000000000000000b
+> Jun 14 09:25:44 sv kernel: R13: 0000000000000004 R14: ffff8dea0dde2040
+> R15: ffffa6bc87d7fa38
+> Jun 14 09:25:44 sv kernel: FS:  0000000000000000(0000)
+> GS:ffff8de9dfa00000(0000) knlGS:0000000000000000
+> Jun 14 09:25:44 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> Jun 14 09:25:44 sv kernel: CR2: 00007f4f342b7ca8 CR3: 0000000db9a10003
+> CR4: 00000000000606f0
+> Jun 14 09:25:44 sv kernel: Call Trace:
+> Jun 14 09:25:44 sv kernel:  <TASK>
+> Jun 14 09:25:44 sv kernel:  make_task_dead+0x55/0x60
+> Jun 14 09:25:44 sv kernel:  rewind_stack_and_make_dead+0x17/0x17
+> Jun 14 09:25:44 sv kernel: RIP: 0000:0x0
+> Jun 14 09:25:44 sv kernel: Code: Unable to access opcode bytes at RIP
+> 0xffffffffffffffd6.
+> Jun 14 09:25:44 sv kernel: RSP: 0000:0000000000000000 EFLAGS: 00000000
+> ORIG_RAX: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RAX: 0000000000000000 RBX: 0000000000000000
+> RCX: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RDX: 0000000000000000 RSI: 0000000000000000
+> RDI: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RBP: 0000000000000000 R08: 0000000000000000
+> R09: 0000000000000000
+> Jun 14 09:25:44 sv kernel: R10: 0000000000000000 R11: 0000000000000000
+> R12: 0000000000000000
+> Jun 14 09:25:44 sv kernel: R13: 0000000000000000 R14: 0000000000000000
+> R15: 0000000000000000
+> Jun 14 09:25:44 sv kernel:  </TASK>
+> Jun 14 09:25:44 sv kernel: ---[ end trace 0000000000000000 ]---
+>
+>
+> Jun 14 09:25:44 sv kernel: ------------[ cut here ]------------
+> Jun 14 09:25:44 sv kernel: WARNING: CPU: 0 PID: 727 at
+> kernel/exit.c:741 do_exit+0x8af/0xac0
+> Jun 14 09:25:44 sv kernel: Modules linked in: xt_nat xt_tcpudp veth
+> xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt>
+> Jun 14 09:25:44 sv kernel:  btrfs blake2b_generic libcrc32c
+> crc32c_generic xor raid6_pq mpt3sas isci raid_class libsas>
+> Jun 14 09:25:44 sv kernel: CPU: 0 PID: 727 Comm: md0_raid5 Tainted: G
+>     D W         5.18.3-arch1-1 #1 2090c6f1d9d20>
+> Jun 14 09:25:44 sv kernel: Hardware name: Supermicro
+> X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.4 11/20/2019
+> Jun 14 09:25:44 sv kernel: RIP: 0010:do_exit+0x8af/0xac0
+> Jun 14 09:25:44 sv kernel: Code: 89 ab 40 06 00 00 4c 89 a3 48 06 00
+> 00 48 89 6c 24 10 e9 78 fd ff ff 48 8b bb 28 06 0>
+> Jun 14 09:25:44 sv kernel: RSP: 0018:ffffa6bc87d7fee0 EFLAGS: 00010282
+> Jun 14 09:25:44 sv kernel: RAX: 0000000000000000 RBX: ffff8dea0dde2040
+> RCX: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RDX: 0000000000000001 RSI: 0000000000000001
+> RDI: 000000000000000b
+> Jun 14 09:25:44 sv kernel: RBP: ffff8dea0dde2040 R08: 0000000000000000
+> R09: ffffa6bc87d7fd60
+> Jun 14 09:25:44 sv kernel: R10: 0000000000000003 R11: ffff8df1fffaf3e8
+> R12: 000000000000000b
+> Jun 14 09:25:44 sv kernel: R13: 0000000000000004 R14: ffff8dea0dde2040
+> R15: ffffa6bc87d7fa38
+> Jun 14 09:25:44 sv kernel: FS:  0000000000000000(0000)
+> GS:ffff8de9dfa00000(0000) knlGS:0000000000000000
+> Jun 14 09:25:44 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> Jun 14 09:25:44 sv kernel: CR2: 00007f4f342b7ca8 CR3: 0000000db9a10003
+> CR4: 00000000000606f0
+> Jun 14 09:25:44 sv kernel: Call Trace:
+> Jun 14 09:25:44 sv kernel:  <TASK>
+> Jun 14 09:25:44 sv kernel:  make_task_dead+0x55/0x60
+> Jun 14 09:25:44 sv kernel:  rewind_stack_and_make_dead+0x17/0x17
+> Jun 14 09:25:44 sv kernel: RIP: 0000:0x0
+> Jun 14 09:25:44 sv kernel: Code: Unable to access opcode bytes at RIP
+> 0xffffffffffffffd6.
+> Jun 14 09:25:44 sv kernel: RSP: 0000:0000000000000000 EFLAGS: 00000000
+> ORIG_RAX: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RAX: 0000000000000000 RBX: 0000000000000000
+> RCX: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RDX: 0000000000000000 RSI: 0000000000000000
+> RDI: 0000000000000000
+> Jun 14 09:25:44 sv kernel: RBP: 0000000000000000 R08: 0000000000000000
+> R09: 0000000000000000
+> Jun 14 09:25:44 sv kernel: R10: 0000000000000000 R11: 0000000000000000
+> R12: 0000000000000000
+> Jun 14 09:25:44 sv kernel: R13: 0000000000000000 R14: 0000000000000000
+> R15: 0000000000000000
+> Jun 14 09:25:44 sv kernel:  </TASK>
+> Jun 14 09:25:44 sv kernel: ---[ end trace 0000000000000000 ]---
+>
+>
+> Thank You For Your Time,
+> -Curtis Lee Bolin
