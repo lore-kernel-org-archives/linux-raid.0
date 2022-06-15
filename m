@@ -2,427 +2,159 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C4AC43334
-	for <linux-raid@archiver.kernel.org>; Wed, 15 Jun 2022 15:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13B6EC433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 15 Jun 2022 17:48:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242061AbiFOPZ7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 15 Jun 2022 11:25:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47548 "EHLO
+        id S1357676AbiFORsU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 15 Jun 2022 13:48:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349574AbiFOPZ6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Jun 2022 11:25:58 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDBD23190B
-        for <linux-raid@vger.kernel.org>; Wed, 15 Jun 2022 08:25:55 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 65ABDB81F0B
-        for <linux-raid@vger.kernel.org>; Wed, 15 Jun 2022 15:25:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04333C34115
-        for <linux-raid@vger.kernel.org>; Wed, 15 Jun 2022 15:25:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655306753;
-        bh=ryIBE8OFg+n8PEwHSkCC04O9xBPqSfYi2PINbitXf+E=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Wp2Dhoc8oLnyic0BgBIY0YdCmtpGdTMOlT4R4YeCV0pOZrVk89Ngqr10nqb6b+fWu
-         8ofvzBh5qmn/tjb6IzhsbKZBbGISKr1850y7bnTkqULVrfUjnPPCPpTRqGSl4lwQTL
-         1D1s1dL3J58gwTkqj4+xafVsBVazOHQSrizxylsW0CCcDfshKgDxITP7Uhf+EUz5tI
-         9mxYniHrKSfyG7nbmT35unwXyNIrXoTOJJaaxOKeoeVPjP4i3zG+KsvFF11WNnBL3Z
-         ZPk8DA/Dhnn2BVV+BJPf4VwFO8yH9Hlh5uPBek9EP6QN66jenWHvMWNwjw8HPrXhV8
-         FGShvb0s47KAg==
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-2ef5380669cso64615957b3.9
-        for <linux-raid@vger.kernel.org>; Wed, 15 Jun 2022 08:25:52 -0700 (PDT)
-X-Gm-Message-State: AJIora+gPM8/TQyaBOh8heSvw1mfXiTUftRXR7dSWWJRIYcKlthBEhjj
-        viVCIHxxILj5KKIbjRjKwkA7ku43bgqSw3BRvnM=
-X-Google-Smtp-Source: AGRyM1suETWC9lotTRUGQ82PvwwT9Hsy/DDCTbNYOFrisNoYeb3qL8y2Rwk2kRN+OEdZbLpwnARUcMknM+I3l2NlIik=
-X-Received: by 2002:a81:5c89:0:b0:314:65f9:c775 with SMTP id
- q131-20020a815c89000000b0031465f9c775mr234707ywb.130.1655306751839; Wed, 15
- Jun 2022 08:25:51 -0700 (PDT)
+        with ESMTP id S1349899AbiFORsS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Jun 2022 13:48:18 -0400
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1658E46CB0
+        for <linux-raid@vger.kernel.org>; Wed, 15 Jun 2022 10:48:18 -0700 (PDT)
+Received: from pps.filterd (m0148461.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25FHGSx6016718
+        for <linux-raid@vger.kernel.org>; Wed, 15 Jun 2022 10:48:14 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : content-type : content-id : mime-version;
+ s=facebook; bh=g5jevHXScTQhk9RuIBlQYmSVbP/zw9FxmN7oA8K5Fs8=;
+ b=p1mwbwJZ//HigiptO9JBY87F90wsnIdlTT96MNtyN6slWRQ60lN5w2kLtZD57PUK3KW1
+ 7dx8T36RfTJbsY+rs/TGysjKH5G8j3S5qsPmjiFuwcJ/4TJF8stSzmr8iYawkACOnOBV
+ Vrsrb78qYhoAbeg5AUc5QLgaymAwrmROxno= 
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2169.outbound.protection.outlook.com [104.47.56.169])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3gpuwy8us7-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-raid@vger.kernel.org>; Wed, 15 Jun 2022 10:48:14 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=VFnxre/AbFtVx8bwTt03N2kmUyy3LBvsnc2inAXC6sZwEAcLnDpALjZPQVfYEd6lByQ/1j1IkrLgkt39k2OZ/WxU1bAxD2jz14EYJx/GuNEjAvx2kY5yfks6BMEhYk0r+DEPszk8oQX3aoUXmwHCYIJ6SBDWHX7VOs8+/PwoJd6wSpsPmv7c5e/rvTJpwZspHCd3XcllGR31JBaP/GS82UBpykF7i99dMMQMUBIgopEweXwloDB4LyNKAlk3Riq4VPfO9c8zfrjGOGNTStlYXiTbYseZZ20k1YS1ktO0BAi1V4Wntw0qLiXtSbNa+yeXbqoTI403fh45DUyYlwAbNA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=g5jevHXScTQhk9RuIBlQYmSVbP/zw9FxmN7oA8K5Fs8=;
+ b=StGLZyTPobLTQMFtLR/b0qLUWLt91euQ+Y+PudDPPvI8DL0UC/Gc+AtPkNtVv+G2OkZ4+EQztUEl8J3N1WPDBwQKQRcK9y7Ehtrjvmx+zpJYNAGuLvTkLNyu1f6gbEbrXT9mu04SpjOAh1G8NyAnOfMSjOTt8IsciPHGw3gQinKaU2r8K8nufNxZooLYtTUeeXgvcurCuILtrv1W82iTPmNmh8FbYoTNn+8Xk5kQnfYsPgU+ToRDOxq+q9+G+/dyC/Y3+w5QBPmX/pfiVSFrvHp/YSPXUWuaY3n+Qtgv+rDQypTUWFuyuGBFM9mhnCWfeMr48wiIDan0rD2gKisvIg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
+ header.d=fb.com; arc=none
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
+ by CO6PR15MB4180.namprd15.prod.outlook.com (2603:10b6:5:34a::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5353.14; Wed, 15 Jun
+ 2022 17:48:12 +0000
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::b9ad:f353:17ee:7be3]) by SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::b9ad:f353:17ee:7be3%6]) with mapi id 15.20.5332.023; Wed, 15 Jun 2022
+ 17:48:12 +0000
+From:   Song Liu <songliubraving@fb.com>
+To:     Jens Axboe <axboe@kernel.dk>,
+        linux-raid <linux-raid@vger.kernel.org>
+CC:     Guoqing Jiang <jgq516@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Subject: [GIT PULL] md-fixes 20220615
+Thread-Topic: [GIT PULL] md-fixes 20220615
+Thread-Index: AQHYgOAV+QxPoC2VoEOkP5LdSg38pw==
+Date:   Wed, 15 Jun 2022 17:48:12 +0000
+Message-ID: <91D222B9-E849-4518-86FA-5D7D3A3DA773@fb.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3696.80.82.1.1)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 838567ff-76ba-4bf8-c0c3-08da4ef7378b
+x-ms-traffictypediagnostic: CO6PR15MB4180:EE_
+x-microsoft-antispam-prvs: <CO6PR15MB4180EBDBC79FEA3E43372E6EB3AD9@CO6PR15MB4180.namprd15.prod.outlook.com>
+x-fb-source: Internal
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: Z5MsJS1DBTTeE6lFDUuMUCgU1Ez1mwbRS12TUdgGzNsGmmBwhxwv06y4wPdl28+fEUdM1Pidi42NGsbKLoSW6/L8eXmgR4su7lIvPbEBBJlRMj+LOh5a8LJmUlLcxUCbuctA43q8J6JDk7kIj327rDxhWU8KGh5bvr4LmHa4XBF1bwKbDONP4MkLLLEy8hsIhKk7oPtz1ITRFta8Ix+VNoAQafwMmHgpBHaym752x7okEnhB9/eX4MNn8cv38xOG2RN7lMjpshhiBhHSoqpp8nwga/yOOb6H8yAR6hN7UolJwIEBasncpBHcUE/PccFGeS+9A1YckX/f2J9VlcYdWlew7nddqHKmqFYuoGs1/UsttlGPyubfv09Oj3I7DAOK2ia6Vjo7zlqYFNin//IRga8K4wTo9px0ytpOjT3tJ29N5LBbKuB5CemXsVg1yLjjMJFLFzl1kDyiMAgo1+4eRycTm82tjLAEGmtnJ9B1s5tb41hOE1njh96QTh6XKvxDWpeeFeZuqohiMxzszYTBupKdWR596My/lF9dVm7ETy7oDoJqoydjrRheAv06Kj2lhyS92rIz2UtqGw6/jSYEdFFW2VB/xrCPPtmt0eJoaLDb2iIWxxGsqni9OkUFPkiRMH+TGk1kowZhQQyKRXJDbD9XZd8k101D0dBh3EepPa6YFs5xjNFzMsC2vWgS1PFMxu2ZBcds9ppr5DSFyeAWhtWdMyKwPf1fCdeaOlLhnH5Mx+4Xbe2NscoNtQ6jzFedaGilm8vaNa9SVUZxN+e7s54N4Q2R+lmbGe9KgErDNe7DVTyGPyV2C5FhzElu6jPt
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(186003)(38100700002)(4326008)(86362001)(2616005)(76116006)(66476007)(66946007)(6506007)(64756008)(66556008)(66446008)(36756003)(38070700005)(316002)(110136005)(54906003)(8676002)(71200400001)(91956017)(8936002)(5660300002)(508600001)(6486002)(966005)(33656002)(6512007)(122000001)(83380400001)(4744005)(2906002)(45980500001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Gdy59sVvOyTeTrY/LG9xGU6s7WTDA2GAefU1JMN/S8VvH5hQxXGPcwEP4GfV?=
+ =?us-ascii?Q?qrI4B96gN3fq66qtzQ3bvhGlNj7rXkM6lLBPC8qEpbqbxPFhZyFNSxxBVjoX?=
+ =?us-ascii?Q?szxmKDievwcxiwiuHZIcj1XnJOrOtT+x+rtGSV8PJc+W9LGQalJ8lds1VMcn?=
+ =?us-ascii?Q?bB+1PDyaa+hcDgUq8JhR9onp645kqory6r8A2tWyW+g1SDyQA+AqBLO1Cd/U?=
+ =?us-ascii?Q?RChTJ8F+3lOyMsYvTfif36tGvsjJHYdadDZteU4JCjy3+wGrz5zoboS5Mdu7?=
+ =?us-ascii?Q?/OMLrbQh/ZSpNht/8ACenzaNyNiZxX8gDL3pGLi2nBrdV3b+VFmB7RhW69L5?=
+ =?us-ascii?Q?9911WBbpP4jX13zHKH2bT129Rcte9nvsxOElCLfUBKVnAhzm3h7e+ArN7mtv?=
+ =?us-ascii?Q?l8bBtiVdwu0rtcRPnEJ6kvG09EEI8MHfWa9OMcd1dhf8TPOYe8IYckWQZCtZ?=
+ =?us-ascii?Q?50WjrJmCRmbPV6qsgZwEKShoIy1wMD+jKVJ13SbfOZcRUoqchXVtZ75ZiL8I?=
+ =?us-ascii?Q?GahVE8bIN1YYV3ELNWvOZNsURY0BqWc6mJtHZ9gfIjRiCqAkVKP3jSi35wIL?=
+ =?us-ascii?Q?lIu0zWf6h8m04bf4g9nXchH5vGxkkKU6CKxcJFh9KIgYZJzAoTrdtCrDx5L9?=
+ =?us-ascii?Q?pBQAlKTIRcrtwG3KS0TEIuPY2XvHgYXJqVBwpNDkoCnHApEW9NZpP9m4BWcV?=
+ =?us-ascii?Q?tU2kb2ybfQ2W/VI8TuIxjUwN5dEOCKiyU9spv+baO554G4oWLHp7LnIfiPab?=
+ =?us-ascii?Q?vbEN7nxOdvPJ4iLF/44id8HCU72dBp6YzpJnX8MMYrsqzaDL1KLD1uBIyaFs?=
+ =?us-ascii?Q?O6W51W1Y72zgl8lYoh0/aqcmvTK4ucEQD8e2SNFpgy3cTX+E3Qrodp6JGQEj?=
+ =?us-ascii?Q?4sfQoXt0gHVpuIG1B+kKVH2oiVwYjubOrlT3XH+hTJ8pFFEDGa3sKliEjSwi?=
+ =?us-ascii?Q?7s2R/KhEOH5LXFRNKq1oTSr2UPsjqUYN9dSm51JzHYsAgf8TwuDfiJoLSyiv?=
+ =?us-ascii?Q?gKgEvDapWLdSHRJOFLGUDSZSvzgVmyX51VmQBu4zRKwv4hwn91TVxHtCTQnV?=
+ =?us-ascii?Q?NSXuqbKgxpHFI5dfCBvUmSOKaHHwK8A1OxvE9Ilt7nxPUUmu/+kZbrCehLwR?=
+ =?us-ascii?Q?DMbz4wQfe58YL/lbZmOXStpmuPZVYv6+7cJErpNu4xYHIHLrbm2KmsIpEJLG?=
+ =?us-ascii?Q?XKiDlbXjtiWBJn2/w/wyxDeVwT9kDZ8gO19mT6/gt66HIgl+6q3dxrkrqe8L?=
+ =?us-ascii?Q?YqopnPAG7kltacBAmfZ5T79kBp1ISyXs2jyubSVA9rw6Nw2ifkQ+JYrBxS1L?=
+ =?us-ascii?Q?xJV2IQ3oJnbw6aAhv3er7qq7VjsLM/H82hMhf53tb9ss3ZSzXWKIB6N0C11A?=
+ =?us-ascii?Q?n5ZsYEdnVaphzFtt0DBQSh3q8XTX6qJ3ryTkMMGoWa3p0FTNrIy3w9YN38OR?=
+ =?us-ascii?Q?+NRUK/LEaXJu9dFwuvei3wigYRpAkBGs/Gfz2a3xVl2nRe0bsuROa49DAPYd?=
+ =?us-ascii?Q?BM5DwYQ5WUTm+Igi/KUFZArSKx5dZ2Y03sIvbEGtF4OrslrG8jLmhZJdGvSq?=
+ =?us-ascii?Q?AS57d+bcfMBEkb7v/AZlHWdfgw35msgtf+vZd6hnbhfIpTykjcBxIsl4tENZ?=
+ =?us-ascii?Q?enA6Qn2CMoUPRF71Qyp/8n8sk4C2FkO4jeUYiWmuGWUpaqU+4yI90jlOJHFb?=
+ =?us-ascii?Q?2vDli4ijGthqP9hc4sCVZ4jLFCfDdVYFUlVTEQDT08kwIgaQe6cqP4/9duKe?=
+ =?us-ascii?Q?1hvpJVyRhVKYytzpTThpfK8SWRdLrXwltiqy3GVfpPgaf2TGDgWt?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <E5681FBEB755F349A8043D681EDF0406@namprd15.prod.outlook.com>
+X-OriginatorOrg: fb.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 838567ff-76ba-4bf8-c0c3-08da4ef7378b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Jun 2022 17:48:12.1515
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: X90LDJdX4zYRGKPPpZmIeVOBLoqOGfo/DfcmqLLl3zQbHfLR7E6xX6EqoHgVbAHfDfaPfh4GGc6DwaGJHFAxPQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR15MB4180
+X-Proofpoint-ORIG-GUID: odb7tslWMiZ2xOnt94mCDrHKV9WktrTh
+X-Proofpoint-GUID: odb7tslWMiZ2xOnt94mCDrHKV9WktrTh
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-References: <CABcz2k7F7XVvg_hD7CBs3oANbyZndMYOfso2wNQmNb1MqD6ikA@mail.gmail.com>
- <CAPhsuW4KMP+rdx51od4RTH-UbjDhSJdgqQa=LTz7EzF3uOhc-A@mail.gmail.com> <CABcz2k6hzzmTc-zzAPXe_W6S-hbvBFakd3W0bEBZzK-AYD7Kzw@mail.gmail.com>
-In-Reply-To: <CABcz2k6hzzmTc-zzAPXe_W6S-hbvBFakd3W0bEBZzK-AYD7Kzw@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 15 Jun 2022 08:25:40 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7ckiBmxC0bCCbktKq1kcDadWAZHMRF=3v1pKpse5Na1g@mail.gmail.com>
-Message-ID: <CAPhsuW7ckiBmxC0bCCbktKq1kcDadWAZHMRF=3v1pKpse5Na1g@mail.gmail.com>
-Subject: Re: md0_raid5 Hangs Linux 5.18.3
-To:     Curtis Lee Bolin <CurtisLeeBolin@gmail.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
+ definitions=2022-06-15_14,2022-06-15_01,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Jun 14, 2022 at 11:25 PM Curtis Lee Bolin
-<CurtisLeeBolin@gmail.com> wrote:
->
-> That small function parameter swap seems to be the issue.  I have had
-> no problem since rebuilding the kernel patched with that commit.  I
-> have been writing to the array for hours with no issue.
+Hi Jens, 
 
-That's great. Thanks for the tests!
+Please consider pulling the following fixes on top of your block-5.19 branch.
 
+Thanks,
 Song
 
->
-> Thank You For Your Time,
-> -Curtis Lee Bolin
->
-> On Tue, Jun 14, 2022 at 10:58 AM Song Liu <song@kernel.org> wrote:
-> >
-> > On Tue, Jun 14, 2022 at 8:08 AM Curtis Lee Bolin
-> > <CurtisLeeBolin@gmail.com> wrote:
-> > >
-> > > Newly created arrays on 2 servers are hanging soon after I start using
-> > > them.  I recreated the arrays on both servers after zeroing the
-> > > superblocks, and again they hang when using the array after resync had
-> > > completed.  This last time it hung before btrfs was even able to
-> > > finish creating the filesystem.  The drives are new.  SMART data shows
-> > > no problem with the drives.
-> >
-> > Thanks for the report.
-> >
-> > Could you please try whether this commit fixes the issue?
-> >
-> > https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?h=md-next&id=2f37ac322c33e314b9af12de5c8183cbcb7df250
-> >
-> > Thanks,
-> > Song
-> >
-> >
-> > >
-> > > Linux sv 5.18.3-arch1-1 #1 SMP PREEMPT_DYNAMIC Thu, 09 Jun 2022
-> > > 16:14:10 +0000 x86_64 GNU/Linux
-> > >
-> > > $ sudo mdadm --create --verbose --level=5 --raid-devices=6
-> > > --consistency-policy=ppl /dev/md0 /dev/sde1 /dev/sdf1 /dev/sdg1
-> > > /dev/sdi1 /dev/sdk1 /dev/sdl1
-> > >
-> > > $ sudo mdadm --misc --detail /dev/md0
-> > > /dev/md0:
-> > >            Version : 1.2
-> > >      Creation Time : Tue Jun 14 01:13:09 2022
-> > >         Raid Level : raid5
-> > >         Array Size : 19534417920 (18.19 TiB 20.00 TB)
-> > >      Used Dev Size : 3906883584 (3.64 TiB 4.00 TB)
-> > >       Raid Devices : 6
-> > >      Total Devices : 6
-> > >        Persistence : Superblock is persistent
-> > >
-> > >        Update Time : Tue Jun 14 09:21:17 2022
-> > >              State : clean
-> > >     Active Devices : 6
-> > >    Working Devices : 6
-> > >     Failed Devices : 0
-> > >      Spare Devices : 0
-> > >
-> > >             Layout : left-symmetric
-> > >         Chunk Size : 512K
-> > >
-> > > Consistency Policy : ppl
-> > >
-> > >               Name : sv:0  (local to host sv)
-> > >               UUID : b55ceb54:07883743:d17585ac:bbd37b65
-> > >             Events : 100
-> > >
-> > >     Number   Major   Minor   RaidDevice State
-> > >        0       8       65        0      active sync   /dev/sde1
-> > >        1       8       81        1      active sync   /dev/sdf1
-> > >        2       8       97        2      active sync   /dev/sdg1
-> > >        3       8      129        3      active sync   /dev/sdi1
-> > >        4       8      161        4      active sync   /dev/sdk1
-> > >        6       8      177        5      active sync   /dev/sdl1
-> > >
-> > > $ sudo mkfs.btrfs /dev/md0
-> > > btrfs-progs v5.18.1
-> > > See http://btrfs.wiki.kernel.org for more information.
-> > >
-> > > Performing full device TRIM /dev/md0 (18.19TiB) ...
-> > > NOTE: several default settings have changed in version 5.15, please make sure
-> > >       this does not affect your deployments:
-> > >       - DUP for metadata (-m dup)
-> > >       - enabled no-holes (-O no-holes)
-> > >       - enabled free-space-tree (-R free-space-tree)
-> > >
-> > > It hung at this point.
-> > >
-> > > un 14 09:25:35 sv kernel: ------------[ cut here ]------------
-> > > Jun 14 09:25:35 sv kernel: WARNING: CPU: 22 PID: 727 at
-> > > drivers/scsi/scsi_lib.c:1024 scsi_alloc_sgtables+0x2b8/0x3e0
-> > > Jun 14 09:25:35 sv kernel: Modules linked in: xt_nat xt_tcpudp veth
-> > > xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt>
-> > > Jun 14 09:25:35 sv kernel:  btrfs blake2b_generic libcrc32c
-> > > crc32c_generic xor raid6_pq mpt3sas isci raid_class libsas>
-> > > Jun 14 09:25:35 sv kernel: CPU: 22 PID: 727 Comm: md0_raid5 Not
-> > > tainted 5.18.3-arch1-1 #1 2090c6f1d9d20f39bd14c0acb6fa>
-> > > Jun 14 09:25:35 sv kernel: Hardware name: Supermicro
-> > > X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.4 11/20/2019
-> > > Jun 14 09:25:35 sv kernel: RIP: 0010:scsi_alloc_sgtables+0x2b8/0x3e0
-> > > Jun 14 09:25:35 sv kernel: Code: f7 48 8b 80 a8 00 00 00 48 8b 80 c8
-> > > 00 00 00 ff d0 0f 1f 00 84 c0 0f 84 b4 fd ff ff 4>
-> > > Jun 14 09:25:35 sv kernel: RSP: 0018:ffffa6bc87d7fa10 EFLAGS: 00010246
-> > > Jun 14 09:25:35 sv kernel: RAX: 0000000000000000 RBX: ffff8de28cd8f720
-> > > RCX: 0000000000000000
-> > > Jun 14 09:25:35 sv kernel: RDX: ffff8de28cd8f8e0 RSI: 0000000000000000
-> > > RDI: ffff8de28cd8f720
-> > > Jun 14 09:25:35 sv kernel: RBP: ffff8dea03aae000 R08: 0000000000000007
-> > > R09: 0000000000000000
-> > > Jun 14 09:25:35 sv kernel: R10: 0000000000000000 R11: ffff8de28cd8f7e8
-> > > R12: 0000000000000000
-> > > Jun 14 09:25:35 sv kernel: R13: 0000000000000000 R14: ffff8de28cd8f600
-> > > R15: ffff8dea0673d400
-> > > Jun 14 09:25:35 sv kernel: FS:  0000000000000000(0000)
-> > > GS:ffff8de9dfd80000(0000) knlGS:0000000000000000
-> > > Jun 14 09:25:35 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > Jun 14 09:25:35 sv kernel: CR2: 00007f4e94000020 CR3: 0000000db9a10006
-> > > CR4: 00000000000606e0
-> > > Jun 14 09:25:35 sv kernel: Call Trace:
-> > > Jun 14 09:25:35 sv kernel:  <TASK>
-> > > Jun 14 09:25:35 sv kernel:  sd_init_command+0x14c/0xaa0
-> > > Jun 14 09:25:35 sv kernel:  scsi_queue_rq+0x768/0xba0
-> > > Jun 14 09:25:35 sv kernel:  blk_mq_dispatch_rq_list+0x205/0x8c0
-> > > Jun 14 09:25:35 sv kernel:  ? sbitmap_get+0x94/0x1b0
-> > > Jun 14 09:25:35 sv kernel:  blk_mq_do_dispatch_sched+0x321/0x3b0
-> > > Jun 14 09:25:35 sv kernel:  __blk_mq_sched_dispatch_requests+0xee/0x140
-> > > Jun 14 09:25:35 sv kernel:  blk_mq_sched_dispatch_requests+0x34/0x60
-> > > Jun 14 09:25:35 sv kernel:  __blk_mq_run_hw_queue+0x34/0x90
-> > > Jun 14 09:25:35 sv kernel:  __blk_mq_delay_run_hw_queue+0x13b/0x170
-> > > Jun 14 09:25:35 sv kernel:  blk_mq_sched_insert_requests+0x6f/0x150
-> > > Jun 14 09:25:35 sv kernel:  blk_mq_flush_plug_list+0x120/0x2e0
-> > > Jun 14 09:25:35 sv kernel:  __blk_flush_plug+0x106/0x160
-> > > Jun 14 09:25:35 sv kernel:  blk_finish_plug+0x26/0x40
-> > > Jun 14 09:25:35 sv kernel:  raid5d+0x5c1/0x680 [raid456
-> > > 0e5f2411b60f493a1f46983f29bb4c58c62a1560]
-> > > Jun 14 09:25:35 sv kernel:  ? schedule+0x4f/0xb0
-> > > Jun 14 09:25:35 sv kernel:  ? md_set_read_only+0x90/0x90 [md_mod
-> > > bcf96979787e4ea4bd2fa4be3b38a9bf6b5bf539]
-> > > Jun 14 09:25:35 sv kernel:  md_thread+0xaa/0x190 [md_mod
-> > > bcf96979787e4ea4bd2fa4be3b38a9bf6b5bf539]
-> > > Jun 14 09:25:35 sv kernel:  ? cpuacct_percpu_seq_show+0x20/0x20
-> > > Jun 14 09:25:35 sv kernel:  kthread+0xdb/0x110
-> > > Jun 14 09:25:35 sv kernel:  ? kthread_complete_and_exit+0x20/0x20
-> > > Jun 14 09:25:35 sv kernel:  ret_from_fork+0x1f/0x30
-> > > Jun 14 09:25:35 sv kernel:  </TASK>
-> > > Jun 14 09:25:35 sv kernel: ---[ end trace 0000000000000000 ]---
-> > > Jun 14 09:25:35 sv kernel: I/O error, dev sdl, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:35 sv kernel: I/O error, dev sde, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:35 sv kernel: audit: type=1106 audit(1655216735.305:259):
-> > > pid=1443 uid=1000 auid=1000 ses=1 msg='op=PAM:s>
-> > > Jun 14 09:25:35 sv kernel: audit: type=1104 audit(1655216735.305:260):
-> > > pid=1443 uid=1000 auid=1000 ses=1 msg='op=PAM:s>
-> > > Jun 14 09:25:39 sv kernel: audit: type=1100 audit(1655216739.728:261):
-> > > pid=1447 uid=0 auid=4294967295 ses=4294967295 m>
-> > > Jun 14 09:25:43 sv kernel: audit: type=1101 audit(1655216743.248:262):
-> > > pid=1449 uid=1000 auid=1000 ses=1 msg='op=PAM:a>
-> > > Jun 14 09:25:43 sv kernel: audit: type=1110 audit(1655216743.248:263):
-> > > pid=1449 uid=1000 auid=1000 ses=1 msg='op=PAM:s>
-> > > Jun 14 09:25:43 sv kernel: audit: type=1105 audit(1655216743.248:264):
-> > > pid=1449 uid=1000 auid=1000 ses=1 msg='op=PAM:s>
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sde, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sdl, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sdk, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sdg, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sdk, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sde, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sdl, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sdf, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sdi, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: I/O error, dev sdg, sector 0 op 0x0:(READ)
-> > > flags 0xc00 phys_seg 0 prio class 0
-> > > Jun 14 09:25:43 sv kernel: ------------[ cut here ]------------
-> > > Jun 14 09:25:43 sv kernel: kernel BUG at block/blk-mq.c:942!
-> > > Jun 14 09:25:43 sv kernel: invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
-> > > Jun 14 09:25:44 sv kernel: CPU: 0 PID: 727 Comm: md0_raid5 Tainted: G
-> > >       W         5.18.3-arch1-1 #1 2090c6f1d9d20>
-> > > Jun 14 09:25:44 sv kernel: Hardware name: Supermicro
-> > > X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.4 11/20/2019
-> > > Jun 14 09:25:44 sv kernel: RIP: 0010:blk_mq_end_request+0x130/0x140
-> > > Jun 14 09:25:44 sv kernel: Code: 13 4c 89 e6 48 89 df e8 4e 60 00 00
-> > > 8b 43 1c e9 61 ff ff ff 48 8b 35 8f 42 72 01 48 8>
-> > > Jun 14 09:25:44 sv kernel: RSP: 0018:ffffa6bc87d7fae8 EFLAGS: 00010202
-> > > Jun 14 09:25:44 sv kernel: RAX: 0000000000000001 RBX: ffff8de28cfd4800
-> > > RCX: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RDX: 0000000000000000 RSI: ffff8de28bcf0180
-> > > RDI: ffff8de28cfd4800
-> > > Jun 14 09:25:44 sv kernel: RBP: 000000000000000a R08: ffff8de28cb97c60
-> > > R09: ffffa6bc87d7fa28
-> > > Jun 14 09:25:44 sv kernel: R10: 0000000000000003 R11: ffff8df1fffaf3e8
-> > > R12: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: R13: ffff8de28cfd4800 R14: ffffa6bc87d7fbf8
-> > > R15: ffff8dea06cbb5c0
-> > > Jun 14 09:25:44 sv kernel: FS:  0000000000000000(0000)
-> > > GS:ffff8de9dfa00000(0000) knlGS:0000000000000000
-> > > Jun 14 09:25:44 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > Jun 14 09:25:44 sv kernel: CR2: 00007f4f342b7ca8 CR3: 0000000db9a10003
-> > > CR4: 00000000000606f0
-> > > Jun 14 09:25:44 sv kernel: Call Trace:
-> > > Jun 14 09:25:44 sv kernel:  <TASK>
-> > > Jun 14 09:25:44 sv kernel:  blk_mq_dispatch_rq_list+0x4d2/0x8c0
-> > > Jun 14 09:25:44 sv kernel:  ? sbitmap_get+0x94/0x1b0
-> > > Jun 14 09:25:44 sv kernel:  blk_mq_do_dispatch_sched+0x321/0x3b0
-> > > Jun 14 09:25:44 sv kernel:  __blk_mq_sched_dispatch_requests+0xee/0x140
-> > > Jun 14 09:25:44 sv kernel:  blk_mq_sched_dispatch_requests+0x34/0x60
-> > > Jun 14 09:25:44 sv kernel:  __blk_mq_run_hw_queue+0x34/0x90
-> > > Jun 14 09:25:44 sv kernel:  __blk_mq_delay_run_hw_queue+0x13b/0x170
-> > > Jun 14 09:25:44 sv kernel:  blk_mq_sched_insert_requests+0x6f/0x150
-> > > Jun 14 09:25:44 sv kernel:  blk_mq_flush_plug_list+0x120/0x2e0
-> > > Jun 14 09:25:44 sv kernel:  __blk_flush_plug+0x106/0x160
-> > > Jun 14 09:25:44 sv kernel:  blk_finish_plug+0x26/0x40
-> > > Jun 14 09:25:44 sv kernel:  raid5d+0x5c1/0x680 [raid456
-> > > 0e5f2411b60f493a1f46983f29bb4c58c62a1560]
-> > > Jun 14 09:25:44 sv kernel:  ? schedule+0x4f/0xb0
-> > > Jun 14 09:25:44 sv kernel:  ? md_set_read_only+0x90/0x90 [md_mod
-> > > bcf96979787e4ea4bd2fa4be3b38a9bf6b5bf539]
-> > > Jun 14 09:25:44 sv kernel:  md_thread+0xaa/0x190 [md_mod
-> > > bcf96979787e4ea4bd2fa4be3b38a9bf6b5bf539]
-> > > Jun 14 09:25:44 sv kernel:  ? cpuacct_percpu_seq_show+0x20/0x20
-> > > Jun 14 09:25:44 sv kernel:  kthread+0xdb/0x110
-> > > Jun 14 09:25:44 sv kernel:  ? kthread_complete_and_exit+0x20/0x20
-> > > Jun 14 09:25:44 sv kernel:  ret_from_fork+0x1f/0x30
-> > > Jun 14 09:25:44 sv kernel:  </TASK>
-> > > Jun 14 09:25:44 sv kernel: Modules linked in: xt_nat xt_tcpudp veth
-> > > xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt>
-> > > Jun 14 09:25:44 sv kernel:  btrfs blake2b_generic libcrc32c
-> > > crc32c_generic xor raid6_pq mpt3sas isci raid_class libsas>
-> > > Jun 14 09:25:44 sv kernel: ---[ end trace 0000000000000000 ]---
-> > > Jun 14 09:25:44 sv kernel: RIP: 0010:blk_mq_end_request+0x130/0x140
-> > > Jun 14 09:25:44 sv kernel: Code: 13 4c 89 e6 48 89 df e8 4e 60 00 00
-> > > 8b 43 1c e9 61 ff ff ff 48 8b 35 8f 42 72 01 48 8>
-> > > Jun 14 09:25:44 sv kernel: RSP: 0018:ffffa6bc87d7fae8 EFLAGS: 00010202
-> > > Jun 14 09:25:44 sv kernel: RAX: 0000000000000001 RBX: ffff8de28cfd4800
-> > > RCX: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RDX: 0000000000000000 RSI: ffff8de28bcf0180
-> > > RDI: ffff8de28cfd4800
-> > > Jun 14 09:25:44 sv kernel: RBP: 000000000000000a R08: ffff8de28cb97c60
-> > > R09: ffffa6bc87d7fa28
-> > > Jun 14 09:25:44 sv kernel: R10: 0000000000000003 R11: ffff8df1fffaf3e8
-> > > R12: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: R13: ffff8de28cfd4800 R14: ffffa6bc87d7fbf8
-> > > R15: ffff8dea06cbb5c0
-> > > Jun 14 09:25:44 sv kernel: FS:  0000000000000000(0000)
-> > > GS:ffff8de9dfa00000(0000) knlGS:0000000000000000
-> > > Jun 14 09:25:44 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > Jun 14 09:25:44 sv kernel: CR2: 00007f4f342b7ca8 CR3: 0000000db9a10003
-> > > CR4: 00000000000606f0
-> > > Jun 14 09:25:44 sv kernel: note: md0_raid5[727] exited with preempt_count 1
-> > > Jun 14 09:25:44 sv kernel: ------------[ cut here ]------------
-> > > Jun 14 09:25:44 sv kernel: WARNING: CPU: 0 PID: 727 at
-> > > kernel/exit.c:741 do_exit+0x8af/0xac0
-> > > Jun 14 09:25:44 sv kernel: Modules linked in: xt_nat xt_tcpudp veth
-> > > xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt>
-> > > Jun 14 09:25:44 sv kernel:  btrfs blake2b_generic libcrc32c
-> > > crc32c_generic xor raid6_pq mpt3sas isci raid_class libsas>
-> > > Jun 14 09:25:44 sv kernel: CPU: 0 PID: 727 Comm: md0_raid5 Tainted: G
-> > >     D W         5.18.3-arch1-1 #1 2090c6f1d9d20>
-> > > Jun 14 09:25:44 sv kernel: Hardware name: Supermicro
-> > > X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.4 11/20/2019
-> > > Jun 14 09:25:44 sv kernel: RIP: 0010:do_exit+0x8af/0xac0
-> > > Jun 14 09:25:44 sv kernel: Code: 89 ab 40 06 00 00 4c 89 a3 48 06 00
-> > > 00 48 89 6c 24 10 e9 78 fd ff ff 48 8b bb 28 06 0>
-> > > Jun 14 09:25:44 sv kernel: RSP: 0018:ffffa6bc87d7fee0 EFLAGS: 00010282
-> > > Jun 14 09:25:44 sv kernel: RAX: 0000000000000000 RBX: ffff8dea0dde2040
-> > > RCX: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RDX: 0000000000000001 RSI: 0000000000000001
-> > > RDI: 000000000000000b
-> > > Jun 14 09:25:44 sv kernel: RBP: ffff8dea0dde2040 R08: 0000000000000000
-> > > R09: ffffa6bc87d7fd60
-> > > Jun 14 09:25:44 sv kernel: R10: 0000000000000003 R11: ffff8df1fffaf3e8
-> > > R12: 000000000000000b
-> > > Jun 14 09:25:44 sv kernel: R13: 0000000000000004 R14: ffff8dea0dde2040
-> > > R15: ffffa6bc87d7fa38
-> > > Jun 14 09:25:44 sv kernel: FS:  0000000000000000(0000)
-> > > GS:ffff8de9dfa00000(0000) knlGS:0000000000000000
-> > > Jun 14 09:25:44 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > Jun 14 09:25:44 sv kernel: CR2: 00007f4f342b7ca8 CR3: 0000000db9a10003
-> > > CR4: 00000000000606f0
-> > > Jun 14 09:25:44 sv kernel: Call Trace:
-> > > Jun 14 09:25:44 sv kernel:  <TASK>
-> > > Jun 14 09:25:44 sv kernel:  make_task_dead+0x55/0x60
-> > > Jun 14 09:25:44 sv kernel:  rewind_stack_and_make_dead+0x17/0x17
-> > > Jun 14 09:25:44 sv kernel: RIP: 0000:0x0
-> > > Jun 14 09:25:44 sv kernel: Code: Unable to access opcode bytes at RIP
-> > > 0xffffffffffffffd6.
-> > > Jun 14 09:25:44 sv kernel: RSP: 0000:0000000000000000 EFLAGS: 00000000
-> > > ORIG_RAX: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RAX: 0000000000000000 RBX: 0000000000000000
-> > > RCX: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RDX: 0000000000000000 RSI: 0000000000000000
-> > > RDI: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RBP: 0000000000000000 R08: 0000000000000000
-> > > R09: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: R10: 0000000000000000 R11: 0000000000000000
-> > > R12: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: R13: 0000000000000000 R14: 0000000000000000
-> > > R15: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel:  </TASK>
-> > > Jun 14 09:25:44 sv kernel: ---[ end trace 0000000000000000 ]---
-> > >
-> > >
-> > > Jun 14 09:25:44 sv kernel: ------------[ cut here ]------------
-> > > Jun 14 09:25:44 sv kernel: WARNING: CPU: 0 PID: 727 at
-> > > kernel/exit.c:741 do_exit+0x8af/0xac0
-> > > Jun 14 09:25:44 sv kernel: Modules linked in: xt_nat xt_tcpudp veth
-> > > xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt>
-> > > Jun 14 09:25:44 sv kernel:  btrfs blake2b_generic libcrc32c
-> > > crc32c_generic xor raid6_pq mpt3sas isci raid_class libsas>
-> > > Jun 14 09:25:44 sv kernel: CPU: 0 PID: 727 Comm: md0_raid5 Tainted: G
-> > >     D W         5.18.3-arch1-1 #1 2090c6f1d9d20>
-> > > Jun 14 09:25:44 sv kernel: Hardware name: Supermicro
-> > > X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.4 11/20/2019
-> > > Jun 14 09:25:44 sv kernel: RIP: 0010:do_exit+0x8af/0xac0
-> > > Jun 14 09:25:44 sv kernel: Code: 89 ab 40 06 00 00 4c 89 a3 48 06 00
-> > > 00 48 89 6c 24 10 e9 78 fd ff ff 48 8b bb 28 06 0>
-> > > Jun 14 09:25:44 sv kernel: RSP: 0018:ffffa6bc87d7fee0 EFLAGS: 00010282
-> > > Jun 14 09:25:44 sv kernel: RAX: 0000000000000000 RBX: ffff8dea0dde2040
-> > > RCX: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RDX: 0000000000000001 RSI: 0000000000000001
-> > > RDI: 000000000000000b
-> > > Jun 14 09:25:44 sv kernel: RBP: ffff8dea0dde2040 R08: 0000000000000000
-> > > R09: ffffa6bc87d7fd60
-> > > Jun 14 09:25:44 sv kernel: R10: 0000000000000003 R11: ffff8df1fffaf3e8
-> > > R12: 000000000000000b
-> > > Jun 14 09:25:44 sv kernel: R13: 0000000000000004 R14: ffff8dea0dde2040
-> > > R15: ffffa6bc87d7fa38
-> > > Jun 14 09:25:44 sv kernel: FS:  0000000000000000(0000)
-> > > GS:ffff8de9dfa00000(0000) knlGS:0000000000000000
-> > > Jun 14 09:25:44 sv kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > Jun 14 09:25:44 sv kernel: CR2: 00007f4f342b7ca8 CR3: 0000000db9a10003
-> > > CR4: 00000000000606f0
-> > > Jun 14 09:25:44 sv kernel: Call Trace:
-> > > Jun 14 09:25:44 sv kernel:  <TASK>
-> > > Jun 14 09:25:44 sv kernel:  make_task_dead+0x55/0x60
-> > > Jun 14 09:25:44 sv kernel:  rewind_stack_and_make_dead+0x17/0x17
-> > > Jun 14 09:25:44 sv kernel: RIP: 0000:0x0
-> > > Jun 14 09:25:44 sv kernel: Code: Unable to access opcode bytes at RIP
-> > > 0xffffffffffffffd6.
-> > > Jun 14 09:25:44 sv kernel: RSP: 0000:0000000000000000 EFLAGS: 00000000
-> > > ORIG_RAX: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RAX: 0000000000000000 RBX: 0000000000000000
-> > > RCX: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RDX: 0000000000000000 RSI: 0000000000000000
-> > > RDI: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: RBP: 0000000000000000 R08: 0000000000000000
-> > > R09: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: R10: 0000000000000000 R11: 0000000000000000
-> > > R12: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel: R13: 0000000000000000 R14: 0000000000000000
-> > > R15: 0000000000000000
-> > > Jun 14 09:25:44 sv kernel:  </TASK>
-> > > Jun 14 09:25:44 sv kernel: ---[ end trace 0000000000000000 ]---
-> > >
-> > >
-> > > Thank You For Your Time,
-> > > -Curtis Lee Bolin
+
+The following changes since commit 2396e958c816960d445ecbbadd064abc929402d3:
+
+  Merge tag 'nvme-5.19-2022-06-15' of git://git.infradead.org/nvme into block-5.19 (2022-06-15 09:39:05 -0600)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+
+for you to fetch changes up to f34fdcd4a0e7a0b92340ad7e48e7bcff9393fab5:
+
+  md/raid5-ppl: Fix argument order in bio_alloc_bioset() (2022-06-15 10:32:48 -0700)
+
+----------------------------------------------------------------
+Guoqing Jiang (1):
+      Revert "md: don't unregister sync_thread with reconfig_mutex held"
+
+Logan Gunthorpe (1):
+      md/raid5-ppl: Fix argument order in bio_alloc_bioset()
+
+ drivers/md/dm-raid.c   |  2 +-
+ drivers/md/md.c        | 14 +++++---------
+ drivers/md/md.h        |  2 +-
+ drivers/md/raid5-ppl.c |  4 ++--
+ 4 files changed, 9 insertions(+), 13 deletions(-)
