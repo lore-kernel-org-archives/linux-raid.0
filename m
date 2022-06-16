@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14DB9C433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 16 Jun 2022 19:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91A3AC43334
+	for <linux-raid@archiver.kernel.org>; Thu, 16 Jun 2022 19:20:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378267AbiFPTUS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 16 Jun 2022 15:20:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40940 "EHLO
+        id S1378285AbiFPTUU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 16 Jun 2022 15:20:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377934AbiFPTT5 (ORCPT
+        with ESMTP id S1377972AbiFPTT5 (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 16 Jun 2022 15:19:57 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFC3956414;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 978C756380;
         Thu, 16 Jun 2022 12:19:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=2kM9OhtMeK3+AUYfV6JzJmyz2Q8SE9IesWpL15reZBk=; b=H0wyD1biHpxXf4h6aSGqICapAV
-        t3aiECR2E0lx7h7f6tCG2nx0LobskvQu0XuN1MJNXY+hriDzUTN1OsCEPchmobyDQDypOe28jGY86
-        t4APkMuWNPZncaFIc4X1djPWGo3EAsh3BykHvjQd6OAmY/soUzjYDb0gNT9fsxZUauk70nJcWV9iq
-        KwD6BobwI+9urJiuOx/aHL19ipskVIRq4KbntcPVC+ohMB4iAjEivHlRTXoYgr3sNIRqFu8zmOING
-        r5TODyqs8/3RZ4E3qMf10yrDjeBs1amEkU3yYwZo0LGMT0DphIftSAT6rmhVt4ZVHXmmRNeQXtrA+
-        ZVLpjS6w==;
+        bh=HjuLlnYUox4U67JGg6P48vjgRva2IywSj89prt0c6Ag=; b=gt26t8i2QN6xx2/zXveKjCTbI0
+        nj06bydHWcXEr5F9HZgJ/QMYN/0KXuWlIbmlg4ioXNH2kWiDgbJOiYjeV6XhchRfwKH0F2YChaN2L
+        8Hwz/GT1OEdngBIELvkdoqVMJNQEvfdcn6XHP9uWgIk4bQVvQrbP6xPX7fdhppwvOkS8lU6nq4Zxx
+        aQen8YaSUMVE+yVaaLLY/H87lJOp64dob0TqOTtC+i9e57PBvM1CMWyjlW0dTK6uTLOQhDJ4EeqO8
+        v6QkFugFh2J4Px1YApFTCXSX8uZEDyd0dpadRcAPTWC4cTUPkWhj0Nw7cOBJ8KKpQWvDMIhbnrHI0
+        o1/egDbg==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1o1v21-0092ij-90; Thu, 16 Jun 2022 13:19:54 -0600
+        id 1o1v1z-0092ik-RT; Thu, 16 Jun 2022 13:19:54 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1o1v1v-0006FJ-Bp; Thu, 16 Jun 2022 13:19:47 -0600
+        id 1o1v1w-0006Fk-He; Thu, 16 Jun 2022 13:19:48 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -41,8 +41,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>,
         Christoph Hellwig <hch@lst.de>
-Date:   Thu, 16 Jun 2022 13:19:35 -0600
-Message-Id: <20220616191945.23935-6-logang@deltatee.com>
+Date:   Thu, 16 Jun 2022 13:19:42 -0600
+Message-Id: <20220616191945.23935-13-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220616191945.23935-1-logang@deltatee.com>
 References: <20220616191945.23935-1-logang@deltatee.com>
@@ -51,204 +51,105 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, hch@lst.de
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v3 05/15] md/raid5: Move common stripe get code into new find_get_stripe() helper
+Subject: [PATCH v3 12/15] md/raid5: Check all disks in a stripe_head for reshape progress
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Both uses of find_stripe() require a fairly complicated dance to
-increment the reference count. Move this into a common find_get_stripe()
-helper.
+When testing if a previous stripe has had reshape expand past it, use
+the earliest or latest logical sector in all the disks for that stripe
+head. This will allow adding multiple disks at a time in a subesquent
+patch.
 
-No functional changes intended.
+To do this cleaner, refactor the check into a helper function called
+stripe_ahead_of_reshape().
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 ---
- drivers/md/raid5.c | 131 ++++++++++++++++++++++-----------------------
- 1 file changed, 64 insertions(+), 67 deletions(-)
+ drivers/md/raid5.c | 53 ++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 39 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 969609b7114b..1bbf87d15bc8 100644
+index f12773c2387a..b27b754ee18c 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -624,6 +624,49 @@ static struct stripe_head *__find_stripe(struct r5conf *conf, sector_t sector,
- 	return NULL;
+@@ -5818,6 +5818,40 @@ static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
+ 					  sector >= reshape_sector;
  }
  
-+static struct stripe_head *find_get_stripe(struct r5conf *conf,
-+		sector_t sector, short generation, int hash)
++static bool range_ahead_of_reshape(struct mddev *mddev, sector_t min,
++				   sector_t max, sector_t reshape_sector)
 +{
-+	int inc_empty_inactive_list_flag;
-+	struct stripe_head *sh;
-+
-+	sh = __find_stripe(conf, sector, generation);
-+	if (!sh)
-+		return NULL;
-+
-+	if (atomic_inc_not_zero(&sh->count))
-+		return sh;
-+
-+	/*
-+	 * Slow path. The reference count is zero which means the stripe must
-+	 * be on a list (sh->lru). Must remove the stripe from the list that
-+	 * references it with the device_lock held.
-+	 */
-+
-+	spin_lock(&conf->device_lock);
-+	if (!atomic_read(&sh->count)) {
-+		if (!test_bit(STRIPE_HANDLE, &sh->state))
-+			atomic_inc(&conf->active_stripes);
-+		BUG_ON(list_empty(&sh->lru) &&
-+		       !test_bit(STRIPE_EXPANDING, &sh->state));
-+		inc_empty_inactive_list_flag = 0;
-+		if (!list_empty(conf->inactive_list + hash))
-+			inc_empty_inactive_list_flag = 1;
-+		list_del_init(&sh->lru);
-+		if (list_empty(conf->inactive_list + hash) &&
-+		    inc_empty_inactive_list_flag)
-+			atomic_inc(&conf->empty_inactive_list_nr);
-+		if (sh->group) {
-+			sh->group->stripes_cnt--;
-+			sh->group = NULL;
-+		}
-+	}
-+	atomic_inc(&sh->count);
-+	spin_unlock(&conf->device_lock);
-+
-+	return sh;
++	return mddev->reshape_backwards ? max < reshape_sector :
++					  min >= reshape_sector;
 +}
 +
- /*
-  * Need to check if array has failed when deciding whether to:
-  *  - start an array
-@@ -716,7 +759,6 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- {
- 	struct stripe_head *sh;
- 	int hash = stripe_hash_locks_hash(conf, sector);
--	int inc_empty_inactive_list_flag;
- 
- 	pr_debug("get_stripe, sector %llu\n", (unsigned long long)sector);
- 
-@@ -726,57 +768,34 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
- 		wait_event_lock_irq(conf->wait_for_quiescent,
- 				    conf->quiesce == 0 || noquiesce,
- 				    *(conf->hash_locks + hash));
--		sh = __find_stripe(conf, sector, conf->generation - previous);
--		if (!sh) {
--			if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
--				sh = get_free_stripe(conf, hash);
--				if (!sh && !test_bit(R5_DID_ALLOC,
--						     &conf->cache_state))
--					set_bit(R5_ALLOC_MORE,
--						&conf->cache_state);
--			}
--			if (noblock && sh == NULL)
--				break;
-+		sh = find_get_stripe(conf, sector, conf->generation - previous,
-+				     hash);
-+		if (sh)
-+			break;
- 
--			r5c_check_stripe_cache_usage(conf);
--			if (!sh) {
--				set_bit(R5_INACTIVE_BLOCKED,
--					&conf->cache_state);
--				r5l_wake_reclaim(conf->log, 0);
--				wait_event_lock_irq(
--					conf->wait_for_stripe,
-+		if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
-+			sh = get_free_stripe(conf, hash);
-+			if (!sh && !test_bit(R5_DID_ALLOC, &conf->cache_state))
-+				set_bit(R5_ALLOC_MORE, &conf->cache_state);
-+		}
-+		if (noblock && !sh)
-+			break;
++static bool stripe_ahead_of_reshape(struct mddev *mddev, struct r5conf *conf,
++				    struct stripe_head *sh)
++{
++	sector_t max_sector = 0, min_sector = MaxSector;
++	bool ret = false;
++	int dd_idx;
 +
-+		r5c_check_stripe_cache_usage(conf);
-+		if (!sh) {
-+			set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
-+			r5l_wake_reclaim(conf->log, 0);
-+			wait_event_lock_irq(conf->wait_for_stripe,
- 					!list_empty(conf->inactive_list + hash) &&
- 					(atomic_read(&conf->active_stripes)
- 					 < (conf->max_nr_stripes * 3 / 4)
- 					 || !test_bit(R5_INACTIVE_BLOCKED,
- 						      &conf->cache_state)),
- 					*(conf->hash_locks + hash));
--				clear_bit(R5_INACTIVE_BLOCKED,
--					  &conf->cache_state);
--			} else {
--				init_stripe(sh, sector, previous);
--				atomic_inc(&sh->count);
--			}
--		} else if (!atomic_inc_not_zero(&sh->count)) {
--			spin_lock(&conf->device_lock);
--			if (!atomic_read(&sh->count)) {
--				if (!test_bit(STRIPE_HANDLE, &sh->state))
--					atomic_inc(&conf->active_stripes);
--				BUG_ON(list_empty(&sh->lru) &&
--				       !test_bit(STRIPE_EXPANDING, &sh->state));
--				inc_empty_inactive_list_flag = 0;
--				if (!list_empty(conf->inactive_list + hash))
--					inc_empty_inactive_list_flag = 1;
--				list_del_init(&sh->lru);
--				if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
--					atomic_inc(&conf->empty_inactive_list_nr);
--				if (sh->group) {
--					sh->group->stripes_cnt--;
--					sh->group = NULL;
--				}
--			}
-+			clear_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
-+		} else {
-+			init_stripe(sh, sector, previous);
- 			atomic_inc(&sh->count);
--			spin_unlock(&conf->device_lock);
- 		}
- 	} while (sh == NULL);
++	for (dd_idx = 0; dd_idx < sh->disks; dd_idx++) {
++		if (dd_idx == sh->pd_idx)
++			continue;
++
++		min_sector = min(min_sector, sh->dev[dd_idx].sector);
++		max_sector = min(max_sector, sh->dev[dd_idx].sector);
++	}
++
++	spin_lock_irq(&conf->device_lock);
++
++	if (!range_ahead_of_reshape(mddev, min_sector, max_sector,
++				     conf->reshape_progress))
++		/* mismatch, need to try again */
++		ret = true;
++
++	spin_unlock_irq(&conf->device_lock);
++
++	return ret;
++}
++
+ enum stripe_result {
+ 	STRIPE_SUCCESS = 0,
+ 	STRIPE_RETRY,
+@@ -5882,27 +5916,18 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+ 		return STRIPE_FAIL;
+ 	}
  
-@@ -830,7 +849,6 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
- 	sector_t head_sector, tmp_sec;
- 	int hash;
- 	int dd_idx;
--	int inc_empty_inactive_list_flag;
- 
- 	/* Don't cross chunks, so stripe pd_idx/qd_idx is the same */
- 	tmp_sec = sh->sector;
-@@ -840,28 +858,7 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
- 
- 	hash = stripe_hash_locks_hash(conf, head_sector);
- 	spin_lock_irq(conf->hash_locks + hash);
--	head = __find_stripe(conf, head_sector, conf->generation);
--	if (head && !atomic_inc_not_zero(&head->count)) {
--		spin_lock(&conf->device_lock);
--		if (!atomic_read(&head->count)) {
--			if (!test_bit(STRIPE_HANDLE, &head->state))
--				atomic_inc(&conf->active_stripes);
--			BUG_ON(list_empty(&head->lru) &&
--			       !test_bit(STRIPE_EXPANDING, &head->state));
--			inc_empty_inactive_list_flag = 0;
--			if (!list_empty(conf->inactive_list + hash))
--				inc_empty_inactive_list_flag = 1;
--			list_del_init(&head->lru);
--			if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
--				atomic_inc(&conf->empty_inactive_list_nr);
--			if (head->group) {
--				head->group->stripes_cnt--;
--				head->group = NULL;
--			}
+-	if (unlikely(previous)) {
++	if (unlikely(previous) &&
++	    stripe_ahead_of_reshape(mddev, conf, sh)) {
+ 		/*
+-		 * Expansion might have moved on while waiting for a
+-		 * stripe, so we must do the range check again.
++		 * Expansion moved on while waiting for a stripe.
+ 		 * Expansion could still move past after this
+ 		 * test, but as we are holding a reference to
+ 		 * 'sh', we know that if that happens,
+ 		 *  STRIPE_EXPANDING will get set and the expansion
+ 		 * won't proceed until we finish with the stripe.
+ 		 */
+-		int must_retry = 0;
+-		spin_lock_irq(&conf->device_lock);
+-		if (!ahead_of_reshape(mddev, logical_sector,
+-				      conf->reshape_progress))
+-			/* mismatch, need to try again */
+-			must_retry = 1;
+-		spin_unlock_irq(&conf->device_lock);
+-		if (must_retry) {
+-			ret = STRIPE_SCHEDULE_AND_RETRY;
+-			goto out_release;
 -		}
--		atomic_inc(&head->count);
--		spin_unlock(&conf->device_lock);
--	}
-+	head = find_get_stripe(conf, head_sector, conf->generation, hash);
- 	spin_unlock_irq(conf->hash_locks + hash);
++		ret = STRIPE_SCHEDULE_AND_RETRY;
++		goto out_release;
+ 	}
  
- 	if (!head)
+ 	if (read_seqcount_retry(&conf->gen_lock, seq)) {
 -- 
 2.30.2
 
