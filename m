@@ -2,112 +2,138 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1F8FC43334
-	for <linux-raid@archiver.kernel.org>; Thu, 16 Jun 2022 19:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ABF0C43334
+	for <linux-raid@archiver.kernel.org>; Thu, 16 Jun 2022 21:33:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378295AbiFPTUZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 16 Jun 2022 15:20:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40958 "EHLO
+        id S1379157AbiFPVdh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 16 Jun 2022 17:33:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377820AbiFPTT5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 16 Jun 2022 15:19:57 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C1AF554A4;
-        Thu, 16 Jun 2022 12:19:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=8KJ0fqDYJYgEK4f4muGiFRawXBYi4QX35dDzYRE9OKw=; b=Lnzd5/B83bcowLXlyx5PN4atmJ
-        6MMyU4m01OncYKsoopcqhAwnIXUuKVdh5uGLFEuunozx9qgW5saPxRPgFDPtqiuBgdZsOcV7HnKfj
-        2BhkePA+wvkAbP27x/EyYdqFjuA3E21Q5qY3wvcIxaRfVC5KacZ/AkO2te9Z761rY85NtE24xEPLL
-        xI1SQf+tgA8A7kL5ARLBjV6PsBibLAGXkH+YKc/QAfQh9nqLbuuRzViOdSH6oSf2OfQ2HpBIRnjrB
-        eUyzvpL+jd2y1gYtu8c/It8ahD+L3Jh0/0fMqjMfwxDcyS7yUVTilT16N90X0hPADZBJ2ovL3zJMW
-        LrIaT7Zw==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1o1v20-0092im-LQ; Thu, 16 Jun 2022 13:19:53 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1o1v1v-0006FS-NA; Thu, 16 Jun 2022 13:19:47 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        with ESMTP id S1379218AbiFPVdc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 16 Jun 2022 17:33:32 -0400
+X-Greylist: delayed 64 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 16 Jun 2022 14:33:31 PDT
+Received: from USAT19PA22.eemsg.mail.mil (USAT19PA22.eemsg.mail.mil [214.24.22.196])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FCFF612AB;
+        Thu, 16 Jun 2022 14:33:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
+  t=1655415211; x=1686951211;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=DEo/Kl2hiWvMzst9BA79rVasOcb1cnduGVjmoVeD4zY=;
+  b=bWnmy2cADLMUBeQ3hEhi6mcF66jPeCrqeANKkFAHzITSNlDXKuAld/MB
+   3qxRNgsKUFS6HqYlyyMDmXwPtJJxbs3L2D4W7xKj+gH3wkpHX50mraS5W
+   PVgHQbdwBFYu9LiQHeInxSHVGZSKjmj16lY31/yU+g4KhH2ZNvG73NjR4
+   SuahQ0CRgVx6Wn2DXqIpoxmqY8LRU8ZlsPqUrU+h5h65X+SlVhUDeLwqU
+   /SnbcfU77FdMYTlsqu7P2waIWvtKenWdRdhuVot0ib0GXHPb/ITWoabGo
+   zw+OHYsy3ihQvakp9rY623/Y3iMNHZ/SyreMySDY4fE8/nAMQ/ceRTQdp
+   g==;
+X-EEMSG-check-017: 339600149|USAT19PA22_ESA_OUT03.csd.disa.mil
+X-IronPort-AV: E=Sophos;i="5.92,306,1650931200"; 
+   d="scan'208";a="339600149"
+IronPort-Data: A9a23:75snCawWmrgNjHjGu9V6t+fqxyrEfRIJ4+MujC+fZmUNrF6WrkUHz
+ GMdDDyBP/beYGGhKYgiaIizoUMAvpOBnNdjHQZsrS00HyNBpPSeCIXCJC8cHc8zwu4v7q5Dx
+ 59DAjUVBJlsFhcwnj/0bv656yMUOZigHtIQMsacUsxKbVIiGX1JZS5LwbZj2NY22IbhX2thh
+ PuqyyHhEA79s9JLGj9Mg06zgEsHUCPa5Vv0FnRnDRx6lAe2e0s9VfrzFonoR5fMebS4K8bhL
+ wr1IBFVyUuCl/slIovNfr8W6STmSJaKVeSFoiI+t6RPHnGuqwRqupvXOsbwZm9QpByFssw2+
+ e99uLOCFBcOY4Pjp8gCBkww/yFWZcWq+ZfKLXey9MmexE2eKj3pyvRqSkQ3OeX0+M4tWD0Ir
+ 6VecWtVKEnb3Ipaw5riIgVorsYqKcTweoZZtHBmyTjIFvEgHdbIQrvi4NZZ2HE1h8Qm8fP2P
+ JFIN2I3NUiRC/FJEhAJLag7pcv2vVnYch1b9XKFgoA2umeGmWSd15CoarI5YOeiXs9cgkuDj
+ njP/nj5BhAccteYzFKt/W+rn+7JkmX5WYsUG5W89/h3kBufy3J7IDEfS1q358K9jUe4c99eJ
+ 0EI+yEpqO4580nDZvz0RQG5pjijuh8CVttKGsU36Q2A1qvf5APfDW8BJhZBY9wOtck4XzUm2
+ 1aF2dTzClRHtLyTVGLY9bqOqz62ETYaIHVEZiIeSwYBpd75r+kbihXAR9BsOKK4isH8BTz9h
+ TuNqUAWnLIVguYI2r+98FSBhCijzrDNTwgo9kDNV2Opxh12aZTjZIGy71Xfq/FaI+6kokKps
+ XQLlo2b4esOVcjLkSWMRKMIHbXBC+u5DQAwSGVHR/EJnwlBMVb6FWyMyFmS/HtUD/s=
+IronPort-HdrOrdr: A9a23:dTaBDK+llUsixd1tFPVuk+ACI+orL9Y04lQ7vn2ZESYlFfBxl6
+ iV88jzpiWE7gr5P0tQ5OxoWZPwO080mqQFgrX5UY3OYOCighrNEGgA1/qf/9SDIVydygc178
+ 4JGMJD4Z/LfD1HZK7BkXaF+r0bruVvhZrJuQ6o9RZQpG9RB52IpD0JczpzWncGPDWuK6BJb6
+ ah2g==
+Received: from edge-mech01.mail.mil ([214.21.130.103])
+  by USAT19PA22.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 16 Jun 2022 21:32:22 +0000
+Received: from UMECHPAOE.easf.csd.disa.mil (214.21.130.32) by
+ edge-mech01.mail.mil (214.21.130.103) with Microsoft SMTP Server (TLS) id
+ 14.3.498.0; Thu, 16 Jun 2022 21:32:22 +0000
+Received: from UMECHPA68.easf.csd.disa.mil ([169.254.4.207]) by
+ UMECHPAOE.easf.csd.disa.mil ([214.21.130.32]) with mapi id 14.03.0513.000;
+ Thu, 16 Jun 2022 21:32:22 +0000
+From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
+To:     'Logan Gunthorpe' <logang@deltatee.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
         Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
+CC:     Christoph Hellwig <hch@infradead.org>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
         Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        "Martin Oliveira" <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>
-Date:   Thu, 16 Jun 2022 13:19:38 -0600
-Message-Id: <20220616191945.23935-9-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220616191945.23935-1-logang@deltatee.com>
+        "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
+Subject: RE: [Non-DoD Source] [PATCH v3 15/15] md/raid5: Increase
+ restriction on max segments per request
+Thread-Topic: [Non-DoD Source] [PATCH v3 15/15] md/raid5: Increase
+ restriction on max segments per request
+Thread-Index: AQHYgbYZzZIsZ5fz0kGRNXRewB/NQK1SjPhQ
+Date:   Thu, 16 Jun 2022 21:32:21 +0000
+Message-ID: <5EAED86C53DED2479E3E145969315A2389D4672D@UMECHPA68.easf.csd.disa.mil>
 References: <20220616191945.23935-1-logang@deltatee.com>
+ <20220616191945.23935-16-logang@deltatee.com>
+In-Reply-To: <20220616191945.23935-16-logang@deltatee.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [214.21.44.13]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, hch@lst.de
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v3 08/15] md/raid5: Move read_seqcount_begin() into make_stripe_request()
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Now that prepare_to_wait() isn't in the way, move read_sequcount_begin()
-into make_stripe_request().
+Innocent question from position of ignorance....I see these last 15 check-i=
+ns all as performance improvements.   I tend to push hard on mdraid perform=
+ance, but have RAID6 needs....are these some optimizations available for RA=
+ID6 and are they in process or did I just ask a silly question?
 
-No functional changes intended.
+Regards,
+Jim Finlayson
+US Department of Defense
+
+-----Original Message-----
+From: Logan Gunthorpe <logang@deltatee.com>=20
+Sent: Thursday, June 16, 2022 3:20 PM
+To: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org; Song Liu <son=
+g@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>; Guoqing Jiang <guoqing.jiang@lin=
+ux.dev>; Stephen Bates <sbates@raithlin.com>; Martin Oliveira <Martin.Olive=
+ira@eideticom.com>; David Sloan <David.Sloan@eideticom.com>; Logan Gunthorp=
+e <logang@deltatee.com>
+Subject: [Non-DoD Source] [PATCH v3 15/15] md/raid5: Increase restriction o=
+n max segments per request
+
+The block layer defaults the maximum segments to 128, which means requests =
+tend to get split around the 512KB depending on how many pages can be merge=
+d. There's no such restriction in the raid5 code so increase the limit to U=
+SHRT_MAX so that larger requests can be sent as one.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 ---
- drivers/md/raid5.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/md/raid5.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c58e70db204a..345350d34623 100644
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c index e48c16bfe657..57=
+23a497108a 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -5800,14 +5800,16 @@ struct stripe_request_ctx {
- 
- static enum stripe_result make_stripe_request(struct mddev *mddev,
- 		struct r5conf *conf, struct stripe_request_ctx *ctx,
--		sector_t logical_sector, struct bio *bi, int seq)
-+		sector_t logical_sector, struct bio *bi)
- {
- 	const int rw = bio_data_dir(bi);
- 	enum stripe_result ret;
- 	struct stripe_head *sh;
- 	sector_t new_sector;
- 	int previous = 0;
--	int dd_idx;
-+	int seq, dd_idx;
+@@ -8005,6 +8005,9 @@ static int raid5_run(struct mddev *mddev)
+ 		 */
+ 		blk_queue_max_hw_sectors(mddev->queue,
+ 			RAID5_MAX_REQ_STRIPES << RAID5_STRIPE_SHIFT(conf));
 +
-+	seq = read_seqcount_begin(&conf->gen_lock);
- 
- 	if (unlikely(conf->reshape_progress != MaxSector)) {
- 		/*
-@@ -5973,13 +5975,9 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	md_account_bio(mddev, &bi);
- 	prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
- 	for (; logical_sector < last_sector; logical_sector += RAID5_STRIPE_SECTORS(conf)) {
--		int seq;
--
- 	retry:
--		seq = read_seqcount_begin(&conf->gen_lock);
--
- 		res = make_stripe_request(mddev, conf, &ctx, logical_sector,
--					  bi, seq);
-+					  bi);
- 		if (res == STRIPE_FAIL)
- 			break;
- 
--- 
++		/* No restrictions on the number of segments in the request */
++		blk_queue_max_segments(mddev->queue, USHRT_MAX);
+ 	}
+=20
+ 	if (log_init(conf, journal_dev, raid5_has_ppl(conf)))
+--
 2.30.2
 
