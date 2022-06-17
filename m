@@ -2,74 +2,55 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BCFBC43334
-	for <linux-raid@archiver.kernel.org>; Thu, 16 Jun 2022 21:35:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B3BCC433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Jun 2022 06:28:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229594AbiFPVfy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 16 Jun 2022 17:35:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55400 "EHLO
+        id S1380105AbiFQG2A (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Jun 2022 02:28:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230194AbiFPVfx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 16 Jun 2022 17:35:53 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EDE5612B5;
-        Thu, 16 Jun 2022 14:35:52 -0700 (PDT)
+        with ESMTP id S230307AbiFQG17 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Jun 2022 02:27:59 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37304E0A5;
+        Thu, 16 Jun 2022 23:27:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=p55bws0dU16nNumHDUzsNgqJ+T30XftRBXPNFeHgwLo=; b=ryNEp85fiQFsYaODlvZR2E9ARu
-        YA6O8YQVwYU+5+oG8Ijf8t6zBFJWVyTOm3wR5gnQZ3rMXG1sYdw2sN1grVRTP3MmZ0i7S5B1zm8on
-        vpeXn1k36lzlInB2NUGmJJ19OrpSM6LQmv2TTK1gTaVBDyZ968gpW2MvT534wS3OH/Ylyg05okuJW
-        j5fD0TYn5t10Kr2cuujG0epmkOaGeez5MDzmWX2awdbWRz40MGjwpQplFuzn1i99ENimz53UjFuA8
-        09/ag/JZMRqDF6U+O0dMtuCOjjTwA6LNidJXJGmjH+kbaecZL6prqBDVmWRKSgRhKC42W2c7HWuLw
-        sqBu6/jA==;
-Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1o1x9b-009530-77; Thu, 16 Jun 2022 15:35:51 -0600
-Message-ID: <68536888-54fc-adde-a69d-321a5004e566@deltatee.com>
-Date:   Thu, 16 Jun 2022 15:35:47 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Content-Language: en-CA
-To:     "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=sLPXcyRRmleh61O7Zeku+xyyWKO3/zEOGCYBg9pcfuo=; b=RGLvb0tbAp71EMnijOBRCXGWq/
+        PBSmJYrYoue854tCDVOhiR3Sqf2GrAJ4LAPPsnyrnEwW2XI1SbzpUOBJN6Wl7PINcbdGIoq27AV7/
+        KXVK4B+zGzLq1GBSSIuvhTpyneuj2hd1kb3r0e5S2v80NzWylq3sX8z5PuSnKhKITJ0MARi9nue6a
+        L+nHo+g51L0v4/eofsTk4oh4IUVRgiyS+TddxZQa8rEXIZ/a2xWxf4h/8xRpBM7JjX05aGKC0etNm
+        07V+zBml48P9I2+opEhcdU3PGXikW599AmvuUSZt3ZSqtfWvprXc/QmdDeNu1PVXrGQNZp6CKANjG
+        7F06uE4Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o25SS-005jF0-1Y; Fri, 17 Jun 2022 06:27:52 +0000
+Date:   Thu, 16 Jun 2022 23:27:52 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Donald Buczek <buczek@molgen.mpg.de>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Stephen Bates <sbates@raithlin.com>,
+        Xiao Ni <xni@redhat.com>, Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-References: <20220616191945.23935-1-logang@deltatee.com>
- <20220616191945.23935-16-logang@deltatee.com>
- <5EAED86C53DED2479E3E145969315A2389D4672D@UMECHPA68.easf.csd.disa.mil>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <5EAED86C53DED2479E3E145969315A2389D4672D@UMECHPA68.easf.csd.disa.mil>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 24.64.144.200
-X-SA-Exim-Rcpt-To: james.m.finlayson4.civ@mail.mil, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [Non-DoD Source] [PATCH v3 15/15] md/raid5: Increase restriction
- on max segments per request
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+        David Sloan <David.Sloan@eideticom.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v4 01/11] md/raid5-ppl: Fix argument order in
+ bio_alloc_bioset()
+Message-ID: <Yqwe6NXL9sedvx7v@infradead.org>
+References: <20220608162756.144600-1-logang@deltatee.com>
+ <20220608162756.144600-2-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220608162756.144600-2-logang@deltatee.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 2022-06-16 15:32, Finlayson, James M CIV (USA) wrote:
-> Innocent question from position of ignorance....I see these last 15 check-ins all as performance improvements.   I tend to push hard on mdraid performance, but have RAID6 needs....are these some optimizations available for RAID6 and are they in process or did I just ask a silly question?
-
-Yes, the optimizations in this series should improve raid6 performance
-in the exact same way.
-
-Raid6 and Raid5 share the same implementation. They are both
-(confusingly) in the raid5.c file.
-
-Logan
+While I think this whole series needs to get in of course, this one
+seems even morge urgent.  Song, can you send it to Jens ASAP, please?
