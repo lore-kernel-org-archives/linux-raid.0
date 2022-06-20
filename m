@@ -2,97 +2,109 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C1B5C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 17:14:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62324C43334
+	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 17:21:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241213AbiFTRON convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 20 Jun 2022 13:14:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46776 "EHLO
+        id S235484AbiFTRVt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 20 Jun 2022 13:21:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241046AbiFTROK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 13:14:10 -0400
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E4CD1EACB
-        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 10:14:02 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1655745216; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=gC9VndFMJVhFiKFmjBXfQiPY3aq1O45URdwQ7AhbiVWMAM1qHyc26fKgO4kFpEjP1UXgapW+l9FqPWNFzvQ4YZNoDuOQomhe68AUxOQiPKhP/eAg5ybQnaO35wgjhgbGVer7OsvHmcmTVp6Nch5AtB4RLFEWJJXlpN4jmf2LjMg=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1655745216; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=7DF+GMpL7D8eP2maCUC3ABi75PfMf9MsHg50c93Guuk=; 
-        b=L0440QZrGSPAdXsQH9AsP52LhomT2JflETyeT50gS1dCtWvZ+skqzaxOVDW6/GnAeUjq1NLfnqL3BfA2BpaEeHmNhSXydF6Ddi7QHXb9nyYUgHSb4/D4EtWmWd1FZjok/lw7JZxBKHFuGBoPjZoK4tWOY+u5ZDIqfYg8jG3fFNA=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.80] (pool-72-69-213-125.nycmny.fios.verizon.net [72.69.213.125]) by mx.zoho.eu
-        with SMTPS id 165574521564125.010775211995906; Mon, 20 Jun 2022 19:13:35 +0200 (CEST)
-Date:   Mon, 20 Jun 2022 13:13:34 -0400
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] Revert "mdadm: fix coredump of mdadm --monitor -r"
-Content-Language: en-US
-To:     Coly Li <colyli@suse.de>
-Cc:     Nigel Croxon <ncroxon@redhat.com>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        wuguanghao3@huawei.com
-References: <20220418174423.846026-1-ncroxon@redhat.com>
- <54144438-5b6a-60dd-6f62-e90e052772ee@redhat.com>
- <62ec6c6e-76b7-e705-7326-a82b59f337b8@redhat.com>
- <5f9a4417-d044-a87e-3945-2c6b29278d8c@trained-monkey.org>
- <94FEEB40-1A39-4590-88CC-A3352366A541@suse.de>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <c4413e5d-b676-d7b1-8846-4fc253b536c3@trained-monkey.org>
-In-Reply-To: <94FEEB40-1A39-4590-88CC-A3352366A541@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-X-ZohoMailClient: External
+        with ESMTP id S232815AbiFTRVs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 13:21:48 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07D321EADD
+        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 10:21:48 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id BCC1C1FDE9;
+        Mon, 20 Jun 2022 17:21:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1655745706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=zXmtPc51ax6QTonTxcdF2fFF18Om1BAvfpF6mb4Rmxo=;
+        b=egxTQ+y0az3XQl8X+ylO+ZUDHErrgEtbVRYALb+yuitmpdB5erU/8siXvw6POYEkokdGMO
+        hT6VOUsQneyJv3wTMDHFkjgjnUFvDJLE8fulP37YqkSSXHh+Lg0FE+HuzN8/U/GHvteQeM
+        u068H/VCwORFVXV5+H3oRBSUhFhBaNM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1655745706;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=zXmtPc51ax6QTonTxcdF2fFF18Om1BAvfpF6mb4Rmxo=;
+        b=yOJZpszGO+aKOPUs/rDTbhD5HN9C0n4STuIIXYIgSUaGV3B7HJu4rA0RvshFr6NOLp35/z
+        86ZWSb/PdmrZRWCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1055213638;
+        Mon, 20 Jun 2022 17:21:45 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id tJnsNamssGLILwAAMHmgww
+        (envelope-from <colyli@suse.de>); Mon, 20 Jun 2022 17:21:45 +0000
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
+Subject: Re: [PATCH v3] Grow: Split Grow_reshape into helper function
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20220609074101.14132-1-mateusz.kusiak@intel.com>
+Date:   Tue, 21 Jun 2022 01:21:43 +0800
+Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <A520DF12-AC0A-4E2E-9E96-0FEEA001C4DC@suse.de>
+References: <20220609074101.14132-1-mateusz.kusiak@intel.com>
+To:     Mateusz Kusiak <mateusz.kusiak@intel.com>
+X-Mailer: Apple Mail (2.3696.100.31)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 6/20/22 12:13, Coly Li wrote:
-> 
-> 
->> 2022年6月18日 03:35，Jes Sorensen <jes@trained-monkey.org> 写道：
->>
->> On 6/17/22 13:09, Nigel Croxon wrote:
->>> On 6/14/22 10:11 AM, Nigel Croxon wrote:
->>>> On 4/18/22 1:44 PM, Nigel Croxon wrote:
->>>>> This reverts commit 546047688e1c64638f462147c755b58119cabdc8.
->>>>>
->>>>> The change from commit mdadm: fix coredump of mdadm
->>>>> --monitor -r broke the printing of the return message when
->>>>> passing -r to mdadm --manage, the removal of a device from
->>>>> an array.
->>>>>
-> [snipped]
-> 
->>>>
->>>> Jes, That is the status of this patch?
->>>>
->>>> Thanks, Nigel
->>>
->>>
->>> Jes, Is there an issue with reverting this patch?
->>
->> The fact that I am swamped with my regular work and it hadn't made it
->> into patchworks. It's applied now.
-> 
-> Hi Jes,
-> 
-> Since I don’t see this patch applied, so I send it again in my “mdadm-CI for-jes/20220620: patches for merge” series with my Acked-by.
-> 
-> Just for your information. Thank you in advance for taking care of them.
 
-Hi Coly,
 
-Thanks, I just forgot to push it on Friday. I'll need to look through
-the rest soon.
+> 2022=E5=B9=B46=E6=9C=889=E6=97=A5 15:41=EF=BC=8CMateusz Kusiak =
+<mateusz.kusiak@intel.com> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> Grow_reshape should be split into helper functions given its size.
+> - Add helper function for preparing reshape on external metadata.
+> - Close cfd file descriptor.
+>=20
+> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 
-Cheers,
-Jes
+Hi Mateusz,
 
+Overall I am fine with this patch. Currently it dose apply on branch =
+20220621-testing of the mdadm-CI tree. This branch is based on mdadm =
+upstream commit 756a15f32338 (=E2=80=9Cimsm: Remove possibility for =
+get_imsm_dev to return NULL=E2=80=9D) and stacked with other asked patch =
+from for-jes/20220620.
+
+I will response this patch after other queuing patches are handled by =
+Jes. If the change is minor, I will do the patch rebase and inform you.
+
+Thanks.
+
+Coly Li
+
+> ---
+>=20
+> Changes since v2:
+> - removed dot from commit message
+> - formatted commit description as a list
+> - got rid of returning -1 in prepare_external_reshape()
+> - changed "return" section in prepare_external_reshape() description
+>=20
+> ---
+> Grow.c  | 124 ++++++++++++++++++++++++++++++--------------------------
+> mdadm.h |   1 +
+> util.c  |  14 +++++++
+> 3 files changed, 81 insertions(+), 58 deletions(-)
+>=20
+
+[snipped]
 
