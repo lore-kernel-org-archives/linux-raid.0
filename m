@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E734C43334
-	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 14:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6583C43334
+	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 14:55:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242623AbiFTOuQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 20 Jun 2022 10:50:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50938 "EHLO
+        id S242197AbiFTOzn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 20 Jun 2022 10:55:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241673AbiFTOuB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 10:50:01 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 866B03C70F
-        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 07:09:05 -0700 (PDT)
+        with ESMTP id S233752AbiFTOza (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 10:55:30 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E44D583A9
+        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 07:13:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1655734145; x=1687270145;
+  t=1655734420; x=1687270420;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=2E1jFShTPElRyqt5lnNz1+Wcgmkaa7FKjKCGKO16aL8=;
-  b=bw2ND4yZh2a+EXI+7fy8ZDAoXjfQPosjlhBZMBu4JAZUsrXoy+Iallpe
-   NOahbup8bt/1TTpCW6eP4i1hV1LBObYQeFWuHhBwQVxu82oyU0yDhVaaY
-   bHxKXiiUDsemIVxCZSsS1YP8ed9Ia/tI7O1zN/tUm3vd183cpdNFd95u0
-   3ExUKnEEGw/HT1WnYFcxYBkG3maRKgcKWqCogduaLTFQEN0lLxuvd8zuS
-   WvVoF0DsD06SKsMuME/DlvA6QnLBPjPodDtW2sLCBYRZHXkYbbhpJQtzE
-   7ZeX4FU2Xn6CLu1trbvEw5KUrzxhzrtECcVaqdZdnUU3o/Uk9IvG5XSAJ
+  bh=QMK/AIkKwQhaAI/xL7VnemxcUJPAohjNPaVvp1ZTSec=;
+  b=A7VyKPdy/lEupj40TGGn6yrQnOZC3JfpQ1DxgjeuwBqVtc588YEdDDUh
+   sQMa55ToY/qxEwz9iMjyPbmr0nDBHA8OzDKVizDUtCgjypxWsW67bgPLF
+   NZWdKuFTMx1+xC46XcODdLHKUGDsCBkf+ArF2jDk6m/Gpysy+YU8xLUOY
+   h7dnP6gkTuKJ1fs6rm1eyL0jbjcjp6uhN8k3J/+CM3DW7ILUl1ofwbkL2
+   H/JhWtyzHEUpbxySTX1mV0XvaQYsTIkwNQ6z8VZcQlJ56za9Y8WlCRRw5
+   bjjTNzzHGMjzBak2bpCXGn5zuSs0+66AJWgvFqzY0/RoQhM1rFQvuDZKI
    Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10380"; a="262938894"
+X-IronPort-AV: E=McAfee;i="6400,9594,10380"; a="305342306"
 X-IronPort-AV: E=Sophos;i="5.92,306,1650956400"; 
-   d="scan'208";a="262938894"
+   d="scan'208";a="305342306"
 Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2022 07:08:46 -0700
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2022 07:13:39 -0700
 X-IronPort-AV: E=Sophos;i="5.92,306,1650956400"; 
-   d="scan'208";a="591194890"
+   d="scan'208";a="591196630"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.65])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2022 07:08:42 -0700
-Date:   Mon, 20 Jun 2022 16:08:38 +0200
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2022 07:13:36 -0700
+Date:   Mon, 20 Jun 2022 16:13:33 +0200
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
@@ -50,12 +50,12 @@ Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
         Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH mdadm v1 01/14] Makefile: Don't build static build with
- everything
-Message-ID: <20220620160838.00000d73@linux.intel.com>
-In-Reply-To: <20220609211130.5108-2-logang@deltatee.com>
+Subject: Re: [PATCH mdadm v1 03/14] DDF: Fix NULL pointer dereference in
+ validate_geometry_ddf()
+Message-ID: <20220620161333.00007160@linux.intel.com>
+In-Reply-To: <20220609211130.5108-4-logang@deltatee.com>
 References: <20220609211130.5108-1-logang@deltatee.com>
-        <20220609211130.5108-2-logang@deltatee.com>
+        <20220609211130.5108-4-logang@deltatee.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -64,51 +64,47 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Logan,
-Thanks for this patchset. I really appreciate effort you did here.
-
-On Thu,  9 Jun 2022 15:11:17 -0600
+On Thu,  9 Jun 2022 15:11:19 -0600
 Logan Gunthorpe <logang@deltatee.com> wrote:
 
-> Running the test require building everything, but it seems to be
-> difficult to build the static version of mdadm now seeing there
-> is no readily available static udev library.
+> A relatively recent patch added a call to validate_geometry() in
+> Manage_add() that has level=LEVEL_CONTAINER and chunk=NULL.
 > 
-> There's no need to build it, so just remove it.
-
-I think that you want to remove it totally, right?
-
-What with following targets:
-everything-test
-install-static
-mdadm.static
-clear
-
-BTW. mdadm can be compiled without libudev dependency by setting DNO_LIBUDEV
-
-I'm fine with removing it but please did it globally. Please also remove
-mkinitramfs file.
-
-Thanks,
-Mariusz
-
+> This causes some ddf tests to segfault which aborts the test suite.
 > 
+> To fix this, avoid dereferencing chunk when the level is
+> LEVEL_CONTAINER or LEVEL_NONE.
+> 
+> Fixes: 1f5d54a06df0 ("Manage: Call validate_geometry when adding drive to
+> external container") Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > ---
->  Makefile | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  super-ddf.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/Makefile b/Makefile
-> index bf126033b841..f2f671cefe66 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -182,7 +182,7 @@ check_rundir:
->  		echo "***** or set CHECK_RUN_DIR=0"; exit 1; \
->  	fi
+> diff --git a/super-ddf.c b/super-ddf.c
+> index d3c7a4082046..6bd357cf9b82 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -3369,9 +3369,6 @@ static int validate_geometry_ddf(struct supertype *st,
+>  	 * If given BVDs, we make an SVD, changing all the GUIDs in the
+> process. */
 >  
-> -everything: all mdadm.static swap_super test_stripe raid6check \
-> +everything: all swap_super test_stripe raid6check \
->  	mdadm.Os mdadm.O2 man
->  everything-test: all mdadm.static swap_super test_stripe \
->  	mdadm.Os mdadm.O2 man
+> -	if (*chunk == UnSet)
+> -		*chunk = DEFAULT_CHUNK;
+> -
+>  	if (level == LEVEL_NONE)
+>  		level = LEVEL_CONTAINER;
+>  	if (level == LEVEL_CONTAINER) {
+> @@ -3381,6 +3378,9 @@ static int validate_geometry_ddf(struct supertype *st,
+>  						       freesize, verbose);
+>  	}
+>  
+> +	if (*chunk == UnSet)
+> +		*chunk = DEFAULT_CHUNK;
+> +
+>  	if (!dev) {
+>  		mdu_array_info_t array = {
+>  			.level = level,
 
+Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
