@@ -2,133 +2,97 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76384C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 17:04:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C1B5C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 17:14:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235822AbiFTREe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 20 Jun 2022 13:04:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41468 "EHLO
+        id S241213AbiFTRON convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 20 Jun 2022 13:14:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231484AbiFTREd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 13:04:33 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE0201AF1F
-        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 10:04:31 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 8880E1F969;
-        Mon, 20 Jun 2022 17:04:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1655744670; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dV8nHJC3fWZBtQl6QyxXonosDRdFiDabVfOBLHnOQ14=;
-        b=O9sQXYepxn/Q+0xr3u6SKoz//zp2Ib3bgYSZ85rPMJA7ibufoNVQN22L7VuLFSTU5SE+0F
-        LseLIY7oGnyh8i9LrntzAhtUfr9KeICw7gkoej9qtcjFKzZb8ySqtYEd7dQOemPk95rqcb
-        UxOUZk6ggolAmjRWhAZBm28L2VFJLr8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1655744670;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dV8nHJC3fWZBtQl6QyxXonosDRdFiDabVfOBLHnOQ14=;
-        b=9exun/lcvM1ASvbOjffveGYjd5eIUh1e6m4HLsoOu6L9vRC4PozlznruO7mWvOCOrH2+aP
-        VDSqT74RrMpVi6BQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D9A0B13638;
-        Mon, 20 Jun 2022 17:04:28 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id VhIdKZyosGLiKAAAMHmgww
-        (envelope-from <colyli@suse.de>); Mon, 20 Jun 2022 17:04:28 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
-Subject: Re: [PATCH 2/5 v2] Detail: fix memleak
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <35fd23fc-4f3d-a6fe-c4b1-79a7b09acead@huawei.com>
-Date:   Tue, 21 Jun 2022 01:04:26 +0800
-Cc:     Jes Sorensen <jes@trained-monkey.org>,
+        with ESMTP id S241046AbiFTROK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 13:14:10 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E4CD1EACB
+        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 10:14:02 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1655745216; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=gC9VndFMJVhFiKFmjBXfQiPY3aq1O45URdwQ7AhbiVWMAM1qHyc26fKgO4kFpEjP1UXgapW+l9FqPWNFzvQ4YZNoDuOQomhe68AUxOQiPKhP/eAg5ybQnaO35wgjhgbGVer7OsvHmcmTVp6Nch5AtB4RLFEWJJXlpN4jmf2LjMg=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1655745216; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=7DF+GMpL7D8eP2maCUC3ABi75PfMf9MsHg50c93Guuk=; 
+        b=L0440QZrGSPAdXsQH9AsP52LhomT2JflETyeT50gS1dCtWvZ+skqzaxOVDW6/GnAeUjq1NLfnqL3BfA2BpaEeHmNhSXydF6Ddi7QHXb9nyYUgHSb4/D4EtWmWd1FZjok/lw7JZxBKHFuGBoPjZoK4tWOY+u5ZDIqfYg8jG3fFNA=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.80] (pool-72-69-213-125.nycmny.fios.verizon.net [72.69.213.125]) by mx.zoho.eu
+        with SMTPS id 165574521564125.010775211995906; Mon, 20 Jun 2022 19:13:35 +0200 (CEST)
+Date:   Mon, 20 Jun 2022 13:13:34 -0400
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] Revert "mdadm: fix coredump of mdadm --monitor -r"
+Content-Language: en-US
+To:     Coly Li <colyli@suse.de>
+Cc:     Nigel Croxon <ncroxon@redhat.com>,
         linux-raid <linux-raid@vger.kernel.org>,
         Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>, linfeilong@huawei.com,
-        lixiaokeng@huawei.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <90355833-EC43-4DE0-B925-8F3F8E887707@suse.de>
-References: <fd86d427-2d3e-b337-6de8-d70dcbbd6ce1@huawei.com>
- <35fd23fc-4f3d-a6fe-c4b1-79a7b09acead@huawei.com>
-To:     Wu Guanghao <wuguanghao3@huawei.com>
-X-Mailer: Apple Mail (2.3696.100.31)
+        wuguanghao3@huawei.com
+References: <20220418174423.846026-1-ncroxon@redhat.com>
+ <54144438-5b6a-60dd-6f62-e90e052772ee@redhat.com>
+ <62ec6c6e-76b7-e705-7326-a82b59f337b8@redhat.com>
+ <5f9a4417-d044-a87e-3945-2c6b29278d8c@trained-monkey.org>
+ <94FEEB40-1A39-4590-88CC-A3352366A541@suse.de>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <c4413e5d-b676-d7b1-8846-4fc253b536c3@trained-monkey.org>
+In-Reply-To: <94FEEB40-1A39-4590-88CC-A3352366A541@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Guanghao,
+On 6/20/22 12:13, Coly Li wrote:
+> 
+> 
+>> 2022年6月18日 03:35，Jes Sorensen <jes@trained-monkey.org> 写道：
+>>
+>> On 6/17/22 13:09, Nigel Croxon wrote:
+>>> On 6/14/22 10:11 AM, Nigel Croxon wrote:
+>>>> On 4/18/22 1:44 PM, Nigel Croxon wrote:
+>>>>> This reverts commit 546047688e1c64638f462147c755b58119cabdc8.
+>>>>>
+>>>>> The change from commit mdadm: fix coredump of mdadm
+>>>>> --monitor -r broke the printing of the return message when
+>>>>> passing -r to mdadm --manage, the removal of a device from
+>>>>> an array.
+>>>>>
+> [snipped]
+> 
+>>>>
+>>>> Jes, That is the status of this patch?
+>>>>
+>>>> Thanks, Nigel
+>>>
+>>>
+>>> Jes, Is there an issue with reverting this patch?
+>>
+>> The fact that I am swamped with my regular work and it hadn't made it
+>> into patchworks. It's applied now.
+> 
+> Hi Jes,
+> 
+> Since I don’t see this patch applied, so I send it again in my “mdadm-CI for-jes/20220620: patches for merge” series with my Acked-by.
+> 
+> Just for your information. Thank you in advance for taking care of them.
 
+Hi Coly,
 
-> 2022=E5=B9=B46=E6=9C=889=E6=97=A5 11:06=EF=BC=8CWu Guanghao =
-<wuguanghao3@huawei.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> char *sysdev =3D xstrdup() but not free() in for loop, will cause =
-memory
-> leak.
->=20
-> Reported-by: Coverity
+Thanks, I just forgot to push it on Friday. I'll need to look through
+the rest soon.
 
+Cheers,
+Jes
 
-The Reported-by tag might be incorrect. Maybe I am wrong but this is the =
-first time I see a non-email reporter here.
-Here I copy and past the Reported-by: tag explanation from Linux kernel =
-document, I guess the meaning should be similar,
-
-The Reported-by tag gives credit to people who find bugs and report them =
-and it
-hopefully inspires them to help us again in the future.  Please note =
-that if
-the bug was reported in private, then ask for permission first before =
-using the
-Reported-by tag. The tag is intended for bugs; please do not use it to =
-credit
-feature requests.
-
-So you may have an email address for the Reported-by tag, for example =
-the Hulk robot in Linux kernel patches from Huawei,
-    Reported-by: Hulk Robot <hulkci@huawei.com>
-
-Could you please to update all the Reported-by tags for the series? Then =
-I will start to review the patches.
-
-Thanks.
-
-Coly Li
-
-
-> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
-> Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> ---
-> Detail.c | 1 +
-> 1 file changed, 1 insertion(+)
->=20
-> diff --git a/Detail.c b/Detail.c
-> index ce7a8445..4ef26460 100644
-> --- a/Detail.c
-> +++ b/Detail.c
-> @@ -303,6 +303,7 @@ int Detail(char *dev, struct context *c)
->                                if (path)
->                                        printf("MD_DEVICE_%s_DEV=3D%s\n",=
-
->                                               sysdev, path);
-> +                               free(sysdev);
->                        }
->                }
->                goto out;
-> --
-> 2.27.0
 
