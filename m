@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84745C43334
-	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 15:02:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42FB1C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 15:04:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241698AbiFTPCH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 20 Jun 2022 11:02:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57484 "EHLO
+        id S232831AbiFTPES (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 20 Jun 2022 11:04:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240896AbiFTPBl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 11:01:41 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C25A120181
-        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 07:29:40 -0700 (PDT)
+        with ESMTP id S243531AbiFTPD6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 11:03:58 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E8C92C100
+        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 07:37:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1655735380; x=1687271380;
+  t=1655735852; x=1687271852;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Wy0kvrcQ6paTAOwBBylUwVwY8Qfdwyd2TRr/y2phzCw=;
-  b=nnIHgBBraxoIN4dI5M3X86CrfiVNWUOKCLK9uF27OOwhh8rsAGHclDOZ
-   39Yl/ybu2HvWS5OaHJSZF21olrBqPlg1bXi7aiOu27A3B9dEuNt3HAKWs
-   vZzOvE5Tz2Toxfpwn7Q2wMXDyfpqBSaoj0NmCyRL2sshKhsmnYKR9z4ED
-   WA3Yp3yaPLYELTLw7/CIMEz3np4OpAezdnXbXZD3QoO6yPb2Fu2mFIsgr
-   b++7HLPoAVFz6/jaf78XkJRj1a3IYzP+nWt78HO8O1Xxct/5vTs8Ttqwk
-   PrXnVCeMDCOb57H6rchZ/Wmnyn+09MmKu30w3WBpnUNnw7CW0q6wSq6tM
+  bh=e1CsuGLTl9o7ol4nSfB/4eR7ixLFaRubWtai0Hp3DMg=;
+  b=hhpocETMs7ksqS3VxuVerJbHKxOKhFIBwrXu2Zr4oh9yoLh0jP6TApFV
+   Mf6/Xc+Gi+WDxWUqB0xH+wIdvaZSKe6w3HSl86wkSrZ6ErK6lFj2fAmmK
+   iasd5X5HzlnTTDXTfuMf+DRDiQOZ1DneNxkPJiHJS/3vMZcYvooIDSzPA
+   kRbBiZ58WairTf5rzcuE3yIQRUL81/2WT5aHnZyUaJIbPtHb/xTCd9Ff6
+   Z3457BYRx/0aiB/RQQZRfMwJFKErbhNfMHGopFJGKcVYR8+2UVb0iwri6
+   YHNaiAV2A+0EmR/mBYxTmm9FciJLFd3lsofPJk3FhWpbx980xVsh0PEE1
    g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10380"; a="341591061"
+X-IronPort-AV: E=McAfee;i="6400,9594,10384"; a="279960572"
 X-IronPort-AV: E=Sophos;i="5.92,306,1650956400"; 
-   d="scan'208";a="341591061"
+   d="scan'208";a="279960572"
 Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2022 07:29:40 -0700
-X-IronPort-AV: E=Sophos;i="5.92,306,1650956400"; 
-   d="scan'208";a="591201227"
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2022 07:37:32 -0700
+X-IronPort-AV: E=Sophos;i="5.92,207,1650956400"; 
+   d="scan'208";a="591204030"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.65])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2022 07:29:36 -0700
-Date:   Mon, 20 Jun 2022 16:29:33 +0200
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2022 07:37:28 -0700
+Date:   Mon, 20 Jun 2022 16:37:25 +0200
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
@@ -49,13 +49,14 @@ Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
         Coly Li <colyli@suse.de>, Bruce Dubbs <bruce.dubbs@gmail.com>,
         Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH mdadm v1 05/14] monitor: Avoid segfault when calling
- NULL get_bad_blocks
-Message-ID: <20220620162933.000047f0@linux.intel.com>
-In-Reply-To: <20220609211130.5108-6-logang@deltatee.com>
+        David Sloan <David.Sloan@eideticom.com>,
+        Mateusz Grzonka <mateusz.grzonka@intel.com>
+Subject: Re: [PATCH mdadm v1 07/14] mdadm: Fix optional --write-behind
+ parameter
+Message-ID: <20220620163725.00001690@linux.intel.com>
+In-Reply-To: <20220609211130.5108-8-logang@deltatee.com>
 References: <20220609211130.5108-1-logang@deltatee.com>
-        <20220609211130.5108-6-logang@deltatee.com>
+        <20220609211130.5108-8-logang@deltatee.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -64,15 +65,20 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu,  9 Jun 2022 15:11:21 -0600
+On Thu,  9 Jun 2022 15:11:23 -0600
 Logan Gunthorpe <logang@deltatee.com> wrote:
 
-> Not all struct superswitch implement a get_bad_blocks() function,
-> yet mdmon seems to call it without checking for NULL and thus
-> occasionally segfaults in the test 10ddf-geometry.
+> The commit noted below changed the behaviour of --write-behind to
+> require an argument. This broke the 06wrmostly test with the error:
 > 
-> Fix this by checking for NULL before calling it.
+>   mdadm: Invalid value for maximum outstanding write-behind writes: (null).
+>          Must be between 0 and 16383.
 > 
+> To fix this, check if optarg is NULL before parising it, as the origial
+> code did.
+> 
+> Fixes: 60815698c0ac ("Refactor parse_num and use it to parse optarg.")
+> Cc: Mateusz Grzonka <mateusz.grzonka@intel.com>
 > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > ---
 
