@@ -2,64 +2,88 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D506CCA47C
-	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 15:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04632C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 20 Jun 2022 16:11:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241213AbiFTP1L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 20 Jun 2022 11:27:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57592 "EHLO
+        id S239169AbiFTQLW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 20 Jun 2022 12:11:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244275AbiFTP07 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 11:26:59 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A133F1E3
-        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 08:26:20 -0700 (PDT)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 3720B61EA1923;
-        Mon, 20 Jun 2022 17:26:17 +0200 (CEST)
-Message-ID: <1828d438-8584-d67b-f35b-631091dad39f@molgen.mpg.de>
-Date:   Mon, 20 Jun 2022 17:26:16 +0200
+        with ESMTP id S229519AbiFTQLV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Jun 2022 12:11:21 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 366EE205D6
+        for <linux-raid@vger.kernel.org>; Mon, 20 Jun 2022 09:11:21 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id DCCF71F74D;
+        Mon, 20 Jun 2022 16:11:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1655741479; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=mrcE5xGna+WC7f3ZNxxmDTuk4A+Bl7I28JZMYCyJmDs=;
+        b=Ceh7Vc8gQrWc1IrLsbA6AiQkcn2xu62H3X9C3lZFzXmMP2yYWOyrEz8AMh2ZDb8FfTyct+
+        34uSL7wqgENehEX8vdqo0aZ+25reb1rDtRvQ2sJIq3uCFzgNChIu6MSGpDkGNKyVSYbuFA
+        U4uOPm7BE1o+puOlQ6Hsq+pkSF/XBd8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1655741479;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=mrcE5xGna+WC7f3ZNxxmDTuk4A+Bl7I28JZMYCyJmDs=;
+        b=h6BCogXSnxlCg/ElhjMcq8MjZf74XH6JWXjtvkX4kd61nIVnHJgjEia6sFzXEfc7aeEFZ3
+        cooho4D+MncM1TCw==
+Received: from localhost.localdomain (unknown [10.163.16.22])
+        by relay2.suse.de (Postfix) with ESMTP id 67A642C141;
+        Mon, 20 Jun 2022 16:11:16 +0000 (UTC)
+From:   Coly Li <colyli@suse.de>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org, Coly Li <colyli@suse.de>
+Subject: [PATCH 0/6] mdadm-CI for-jes/20220620: patches for merge
+Date:   Tue, 21 Jun 2022 00:10:37 +0800
+Message-Id: <20220620161043.3661-1-colyli@suse.de>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH mdadm v1 06/14] mdadm: Fix mdadm -r remove option
- regresision
-Content-Language: en-US
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Song Liu <song@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Donald Buczek <buczek@molgen.mpg.de>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>, Bruce Dubbs <bruce.dubbs@gmail.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Wu Guanghao <wuguanghao3@huawei.com>
-References: <20220609211130.5108-1-logang@deltatee.com>
- <20220609211130.5108-7-logang@deltatee.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220609211130.5108-7-logang@deltatee.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Logan,
+Hi Jes,
 
+The following patches are reviewed by me, and pass roughly testing by
+imsm array creation/stop/failure.
 
-Thank you for the patch. There is a small typo in *regression* in the 
-commit message summary.
+I post all the patches to mailing list, so that they may appear on
+patchwork list.
 
+Please consider to take them to mdadm upstream.
 
-Kind regards,
+Thanks.
 
-Paul
+Coly Li
+---
+
+Heming Zhao (1):
+  mdadm/super1: restore commit 45a87c2f31335 to fix clustered slot issue
+
+Kinga Tanska (1):
+  util: replace ioctl use with function
+
+Mariusz Tkaczyk (3):
+  imsm: introduce get_disk_slot_in_dev()
+  imsm: use same slot across container
+  imsm: block changing slots during creation
+
+Nigel Croxon (1):
+  Revert "mdadm: fix coredump of mdadm --monitor -r"
+
+ ReadMe.c             |   6 +-
+ super-intel.c        | 249 ++++++++++++++++++++++++++++---------------
+ super1.c             |  12 ++-
+ tests/09imsm-overlap |  28 -----
+ util.c               |   2 +-
+ 5 files changed, 181 insertions(+), 116 deletions(-)
+ delete mode 100644 tests/09imsm-overlap
+
+-- 
+2.35.3
+
