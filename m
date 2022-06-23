@@ -2,59 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31B99C43334
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Jun 2022 14:46:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C31EC43334
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Jun 2022 17:09:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231834AbiFWOql (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Jun 2022 10:46:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40170 "EHLO
+        id S229617AbiFWRI6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Jun 2022 13:08:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230330AbiFWOql (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Jun 2022 10:46:41 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE3F64505F
-        for <linux-raid@vger.kernel.org>; Thu, 23 Jun 2022 07:46:39 -0700 (PDT)
-Received: from [192.168.0.2] (ip5f5aedb8.dynamic.kabel-deutschland.de [95.90.237.184])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id BC90061EA1928;
-        Thu, 23 Jun 2022 16:46:36 +0200 (CEST)
-Message-ID: <89467d26-f653-8347-bbcf-6b4d4cd824b7@molgen.mpg.de>
-Date:   Thu, 23 Jun 2022 16:46:36 +0200
+        with ESMTP id S233348AbiFWRHm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Jun 2022 13:07:42 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10ED052E52;
+        Thu, 23 Jun 2022 09:56:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
+        :references:content-disposition:in-reply-to;
+        bh=152u4q3NMpIj2Wsm3Qk7KzVbZsgV3dVUGwLtauzK8mM=; b=t7C5LRUUSlY4aK5FineuqobWBj
+        IscnzFGg2xYa1BZrzHneaS8OtYzwbLzbmshMP6Q0nLbTnBFkxim26Vzy+6yYBGhIBi14T9ghnJxMA
+        /Unqw+e74DS3OzM2WuIH6jfWswM4hY6gLHeiM5uKBGRv+3b28iMA8TMao8ZNlYHNOGYcHP+iP+uWJ
+        OtuMQ3SpBUqBFlLpe5UC6VhTRANO2bmKoTjnR+GXmtNXKZfv3PxKoolErxspVOCczo0J+PQb+Andj
+        FxQE6yNlqL20JxK50aEi3CTFwi35r2P0qh1aiK9idxmGimFlWJe35tdeOWCU8OTg7UXOCpG99mfPK
+        wjEK/D/w==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1o4Q7d-00F4y1-05; Thu, 23 Jun 2022 10:56:01 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1o4Q7b-000A46-5V; Thu, 23 Jun 2022 10:55:59 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        kernel test robot <lkp@intel.com>
+Date:   Thu, 23 Jun 2022 10:55:52 -0600
+Message-Id: <20220623165552.38645-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: ESP and its file system (Re: a new install - - - putting the system
- on raid)
-Content-Language: en-US
-To:     Wols Lists <antlists@youngman.org.uk>
-References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
- <81c50899-7edb-e629-3bbc-16cfa8f17e34@youngman.org.uk>
-Cc:     o1bigtenor@gmail.com, linux-raid@vger.kernel.org
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <81c50899-7edb-e629-3bbc-16cfa8f17e34@youngman.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, logang@deltatee.com, lkp@intel.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH] md/raid5: Fix divide type in raid5_make_request()
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Wol,
+0day reports a build failure on the hexagon architecture:
 
+  ld.lld: error: undefined symbol: __hexagon_udivdi3
+     referenced by raid5.c
+        md/raid5.o:(raid5_make_request) in archive drivers/built-in.a
+     referenced by raid5.c
+        md/raid5.o:(raid5_make_request) in archive drivers/built-in.a
+     did you mean: __hexagon_udivsi3
+        defined in: arch/hexagon/built-in.a(lib/udivsi3.o)
 
-Am 23.06.22 um 14:56 schrieb Wols Lists:
+This is caused by using DIV_ROUND_UP on a sector_t type.
 
-[…]
+The actual value is known to be less than 256 so a wide 64bit divide
+here is not desirable. Thus cast the argument to an int to ensure it
+uses a 32bit divide.
 
-> /efi/boot (a) must be fat32,
-Just a minor (theoretical) correction. To my knowledge the UEFI 
-specification requires the UEFI firmware to be able to read a (UEFI) FAT 
-partition, but if you are lucky or control the firmware stack, the ESP 
-can be formatted with any filesystem.
+Fixes: 681fb14a7100 ("md/raid5: Pivot raid5_make_request()")
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/md/raid5.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5723a497108a..9d25696b793d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6091,7 +6091,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 	bi->bi_next = NULL;
+ 
+ 	bitmap_set(ctx.sectors_to_do, 0,
+-		   DIV_ROUND_UP(ctx.last_sector - logical_sector,
++		   DIV_ROUND_UP((int)(ctx.last_sector - logical_sector),
+ 				RAID5_STRIPE_SECTORS(conf)));
+ 
+ 	pr_debug("raid456: %s, logical %llu to %llu\n", __func__,
 
-Kind regards,
+base-commit: 57c19f921f8081c1a9444dc7f3f6b3ea43fe612e
+-- 
+2.30.2
 
-Paul
