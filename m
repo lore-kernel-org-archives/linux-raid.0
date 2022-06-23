@@ -2,93 +2,107 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C31EC43334
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Jun 2022 17:09:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 713C7C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Jun 2022 17:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229617AbiFWRI6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Jun 2022 13:08:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33720 "EHLO
+        id S232160AbiFWR72 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Jun 2022 13:59:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233348AbiFWRHm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Jun 2022 13:07:42 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10ED052E52;
-        Thu, 23 Jun 2022 09:56:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
-        :references:content-disposition:in-reply-to;
-        bh=152u4q3NMpIj2Wsm3Qk7KzVbZsgV3dVUGwLtauzK8mM=; b=t7C5LRUUSlY4aK5FineuqobWBj
-        IscnzFGg2xYa1BZrzHneaS8OtYzwbLzbmshMP6Q0nLbTnBFkxim26Vzy+6yYBGhIBi14T9ghnJxMA
-        /Unqw+e74DS3OzM2WuIH6jfWswM4hY6gLHeiM5uKBGRv+3b28iMA8TMao8ZNlYHNOGYcHP+iP+uWJ
-        OtuMQ3SpBUqBFlLpe5UC6VhTRANO2bmKoTjnR+GXmtNXKZfv3PxKoolErxspVOCczo0J+PQb+Andj
-        FxQE6yNlqL20JxK50aEi3CTFwi35r2P0qh1aiK9idxmGimFlWJe35tdeOWCU8OTg7UXOCpG99mfPK
-        wjEK/D/w==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1o4Q7d-00F4y1-05; Thu, 23 Jun 2022 10:56:01 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1o4Q7b-000A46-5V; Thu, 23 Jun 2022 10:55:59 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        kernel test robot <lkp@intel.com>
-Date:   Thu, 23 Jun 2022 10:55:52 -0600
-Message-Id: <20220623165552.38645-1-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
+        with ESMTP id S235891AbiFWR5s (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Jun 2022 13:57:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5E836F4B5;
+        Thu, 23 Jun 2022 10:15:51 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B63861E1D;
+        Thu, 23 Jun 2022 17:15:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 672EEC341C6;
+        Thu, 23 Jun 2022 17:15:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656004550;
+        bh=8R+RW0DB9EQ2uVvtR45zq4/JAUy2m7hPxnil1cTbtlk=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=mtxeAVFNaaUOJEFUJk7ElG9DH1UpHpB/WNY7S4GrmCBJ31fzAmELxc5zbtlTNydIx
+         FYkxzZ/oqMyAIiOJB9C42FooAnuW7HA2I2atqBgZ59duf9XuPRV+Zwny2acXTiTueu
+         HG/G5bsTK5vZPQmSthSNalyuORED+RwbABSp254wcTd2GoZtGtYlBQHlnPOmCWzLtt
+         vZIRaRd4RzSZaL7plFY0pX3htWj8+YcJJpTQvDKkDCYF7D5I6VdCUs8SES1J27w1cW
+         IRESsHWyRF/hVr21wXjpueLL8Q05Xy9iHqA5UcGqf400nTnWxSqsXbmlmxsgulGt/+
+         vYpp/sE/CXecw==
+Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-3178acf2a92so870667b3.6;
+        Thu, 23 Jun 2022 10:15:50 -0700 (PDT)
+X-Gm-Message-State: AJIora/hmev4rmtUmLQWZ7oc9DYvh68wHJvaN5cYi6PwC80TqEUfKR7W
+        SvZCDPGwdvky0zSxG6UT4mx4iPyIZWn6sO2ibZo=
+X-Google-Smtp-Source: AGRyM1t1olztSDrteGXYMB7kj+MmjwKdDzfi/VVXgAWzrN71mL+qoji3GFIBqR9bTs5XYPv9Msej5AWqsmKYH2U9il8=
+X-Received: by 2002:a81:2f45:0:b0:317:71c7:fcdc with SMTP id
+ v66-20020a812f45000000b0031771c7fcdcmr11702449ywv.73.1656004549455; Thu, 23
+ Jun 2022 10:15:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, logang@deltatee.com, lkp@intel.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH] md/raid5: Fix divide type in raid5_make_request()
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+References: <20220623165552.38645-1-logang@deltatee.com>
+In-Reply-To: <20220623165552.38645-1-logang@deltatee.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 23 Jun 2022 10:15:38 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW50vG=M6JhBEe3qwef10GQt84cg9p_ji5tqyRnMA1-xRQ@mail.gmail.com>
+Message-ID: <CAPhsuW50vG=M6JhBEe3qwef10GQt84cg9p_ji5tqyRnMA1-xRQ@mail.gmail.com>
+Subject: Re: [PATCH] md/raid5: Fix divide type in raid5_make_request()
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        kernel test robot <lkp@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-0day reports a build failure on the hexagon architecture:
+On Thu, Jun 23, 2022 at 9:56 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> 0day reports a build failure on the hexagon architecture:
+>
+>   ld.lld: error: undefined symbol: __hexagon_udivdi3
+>      referenced by raid5.c
+>         md/raid5.o:(raid5_make_request) in archive drivers/built-in.a
+>      referenced by raid5.c
+>         md/raid5.o:(raid5_make_request) in archive drivers/built-in.a
+>      did you mean: __hexagon_udivsi3
+>         defined in: arch/hexagon/built-in.a(lib/udivsi3.o)
+>
+> This is caused by using DIV_ROUND_UP on a sector_t type.
+>
+> The actual value is known to be less than 256 so a wide 64bit divide
+> here is not desirable. Thus cast the argument to an int to ensure it
+> uses a 32bit divide.
 
-  ld.lld: error: undefined symbol: __hexagon_udivdi3
-     referenced by raid5.c
-        md/raid5.o:(raid5_make_request) in archive drivers/built-in.a
-     referenced by raid5.c
-        md/raid5.o:(raid5_make_request) in archive drivers/built-in.a
-     did you mean: __hexagon_udivsi3
-        defined in: arch/hexagon/built-in.a(lib/udivsi3.o)
+I force pushed an update that uses DIV_ROUND_UP_SECTOR_T instead.
+I guess that should also work?
 
-This is caused by using DIV_ROUND_UP on a sector_t type.
+Thanks,
+Song
 
-The actual value is known to be less than 256 so a wide 64bit divide
-here is not desirable. Thus cast the argument to an int to ensure it
-uses a 32bit divide.
-
-Fixes: 681fb14a7100 ("md/raid5: Pivot raid5_make_request()")
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/md/raid5.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 5723a497108a..9d25696b793d 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6091,7 +6091,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	bi->bi_next = NULL;
- 
- 	bitmap_set(ctx.sectors_to_do, 0,
--		   DIV_ROUND_UP(ctx.last_sector - logical_sector,
-+		   DIV_ROUND_UP((int)(ctx.last_sector - logical_sector),
- 				RAID5_STRIPE_SECTORS(conf)));
- 
- 	pr_debug("raid456: %s, logical %llu to %llu\n", __func__,
-
-base-commit: 57c19f921f8081c1a9444dc7f3f6b3ea43fe612e
--- 
-2.30.2
-
+>
+> Fixes: 681fb14a7100 ("md/raid5: Pivot raid5_make_request()")
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
+>  drivers/md/raid5.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 5723a497108a..9d25696b793d 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6091,7 +6091,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>         bi->bi_next = NULL;
+>
+>         bitmap_set(ctx.sectors_to_do, 0,
+> -                  DIV_ROUND_UP(ctx.last_sector - logical_sector,
+> +                  DIV_ROUND_UP((int)(ctx.last_sector - logical_sector),
+>                                 RAID5_STRIPE_SECTORS(conf)));
+>
+>         pr_debug("raid456: %s, logical %llu to %llu\n", __func__,
+>
+> base-commit: 57c19f921f8081c1a9444dc7f3f6b3ea43fe612e
+> --
+> 2.30.2
+>
