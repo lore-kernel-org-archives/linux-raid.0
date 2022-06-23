@@ -2,275 +2,121 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16B9DC433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Jun 2022 00:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78753C43334
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Jun 2022 01:30:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344256AbiFWAxX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Jun 2022 20:53:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60670 "EHLO
+        id S237496AbiFWBaA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Jun 2022 21:30:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233875AbiFWAxW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Jun 2022 20:53:22 -0400
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1A4A2F033;
-        Wed, 22 Jun 2022 17:53:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1655945588;
-        bh=zmE7G8BXzie53fcxIfqxCu5irX3rAOOSehdjd779CEw=;
-        h=X-UI-Sender-Class:Date:To:Cc:References:From:Subject:In-Reply-To;
-        b=lQIzqMMovAM/Vhto8Zy3Wxh79WCexpmFMrsMXjrmiUedFlZohIQKdyld1GNN/JsBs
-         zAjifQAz0rRm5Zr20UWIqAPYfsmIlbtlbTGeAAWpTraMj9DWQl2KN1eh2mWu3F9dV4
-         z4TDei6W5J5cjsNWU0X8qvK0CUdCV9l/Ed4rhWnc=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [0.0.0.0] ([149.28.201.231]) by mail.gmx.net (mrgmx105
- [212.227.17.174]) with ESMTPSA (Nemesis) id 1MNt0C-1oJcTb2PbE-00OJxq; Thu, 23
- Jun 2022 02:53:08 +0200
-Message-ID: <bb4245e0-9cbc-f372-f027-4e86cd9a362f@gmx.com>
-Date:   Thu, 23 Jun 2022 08:53:02 +0800
+        with ESMTP id S233608AbiFWB37 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Jun 2022 21:29:59 -0400
+Received: from out0.migadu.com (out0.migadu.com [94.23.1.103])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C73A44339C
+        for <linux-raid@vger.kernel.org>; Wed, 22 Jun 2022 18:29:57 -0700 (PDT)
+Subject: Re: [PATCH V2] md: unlock mddev before reap sync_thread in
+ action_store
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1655947795;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=9OV3tIIEv6Kh+BNDKZbOPTM/GteKj59hTaGqFl13npM=;
+        b=V8vJLCfWrwkonXAxoXg40LdR3HxXWiXVyr55IlxtbWPNvJhZc1qi2jFepNop7zaWbthtlV
+        f72zgM9gJcWhtoYi+rvs3pl3o3rHcloFUm/c3J0MZAhE0+VW0xZuoZUZm2x7FcnnlKUC+p
+        f+R4ykX6fPIGKo58nT3dfFHLH5yXVBY=
+To:     Song Liu <song@kernel.org>
+Cc:     Donald Buczek <buczek@molgen.mpg.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+References: <20220621031129.24778-1-guoqing.jiang@linux.dev>
+ <CAPhsuW5SGxiosMw28km7v7bM9qSDRGbLFvyyH1nsAPg2_RcZgA@mail.gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <c8fd5b4f-58c7-e85b-f3ba-f3d8a519a059@linux.dev>
+Date:   Thu, 23 Jun 2022 09:29:46 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
+In-Reply-To: <CAPhsuW5SGxiosMw28km7v7bM9qSDRGbLFvyyH1nsAPg2_RcZgA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Language: en-US
-To:     Song Liu <song@kernel.org>, NeilBrown <neilb@suse.de>
-Cc:     Doug Ledford <dledford@redhat.com>,
-        Wols Lists <antlists@youngman.org.uk>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <d4163d9f-8900-1ec1-ffb8-c3834c512279@gmx.com>
- <63a9cfb7-4999-d902-a7df-278e2ec37593@youngman.org.uk>
- <1704788b-fb7d-b532-4911-238e4f7fd448@gmx.com>
- <06365833-bd91-7dcf-4541-f8e15ed3bef2@youngman.org.uk>
- <87cb53c4f08cc7b18010e62b9b3178ed70e06e8d.camel@redhat.com>
- <d15f352d-41b8-8ade-4724-8370ef17db8d@gmx.com>
- <165593717589.4786.11549155199368866575@noble.neil.brown.name>
- <CAPhsuW6CZwhUVw7iE7GhTRkuQmRfu9i+O6_V2C5buTNFvZ76mA@mail.gmail.com>
-From:   Qu Wenruo <quwenruo.btrfs@gmx.com>
-Subject: Re: About the md-bitmap behavior
-In-Reply-To: <CAPhsuW6CZwhUVw7iE7GhTRkuQmRfu9i+O6_V2C5buTNFvZ76mA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:69tQHBLIA3hhGMJj6K2ibTeJ8DOkEH4z2fM8Rdm8GxDfeNJDr53
- /z7LhNk0oUv+C01T55HRxwCwkWTdwMB6B6e3Y/9158pHoDt+2Ku9zS+Ai5guVgpk18alQjb
- JhSDJQc1GifsetxenRKnsO5Jufj98oJiSFvs1+vdC84xbl7l5hUpa5XH3X8cWwo0feB5VgM
- N7G5gHP6w/esMrrfIom1A==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:T+ScwQdp7go=:uDeO2I9UmaBd0zb09bEzkv
- d2PJxbiZe3l9XxBYZR2QtX2L+auDRZgHf2EJl/DCWmDS1eelM+NZZ/wjoK8xAybUc5NCCT0bO
- WVYAX8vo9bQ5UQnynbIykk+twOjYWFDiolzUmvBxSejvbW6c0opHTnU2JgjzSMhk8R/JHWYDt
- zCIp9hxWg2AcJ/Rjkd7Fh0BdgePGomgv1ld5lMmDzqEo9dkzsmVCp6UmJy/s13v52rzgwzzOa
- E7rWAXvVWH/quIjd4lRrBRybDPr+Br7nsstadMjGnu6pJ3w3PS3xY1Tj5N1CJq/zbeQvgfwoF
- +cInrUMzYlygmHwLNoDF0PipHzylIiBiXMynYBdHTAdSoB9SLgCm0asn+UyqkyT/dE+yaoR3p
- LAmUKJyjZZGRPgkn21OtdOrN24ZaxCcwi47MjFYwxCAdOp7ZpaRrVl5GGzyVCvdrTzsKegh6g
- uBprajaVme10hhAy302CVmU+DD8MA6ip2mSX0/mueaEHZCWuyfszX60Mil89wzEsdMKWm4gPl
- fjvcLjDBLVulmovgg0DYPq9maoLK9PKCLiXMbfDgfBvGbAriWIFfBC26mVfi9dXcD+7HagbdJ
- AZrGFGbKp9BizyS6NlnC+g3ZCd3tWXLAUXXSWZXOG2/8+qdLH2TD8VMRU+c3GgdmHjwH/pj61
- R7C8UQocHhyTe8Ddfk3sSX3EQzbD7OLrqsOzwLYX5KNnixpl9z7joQSUipSoN86TkwVDL71Jw
- P8RehJ5VVoeUTDAd25xyCc5/xe9x+/xcebzUSCTdZhL6Jo/Zk+51+LdYqG5BzFdoh0YbSf02h
- 690/XhxfGOxWKZBPvFOmx4aacWerFgdExytH1eGeiY5USpfKSbrtSFbjW1lb279sJ19O63ivO
- GIs7b2O8IipIufIcMg0EJzzsHvt7dK1rvldfTufEhyWLNT2uQqb8Tj0R+9iy0gdROfW8M/B/z
- 1kkX0ZrVU6EQ5U5qTvdmWTOQB4IbUKfbbpfXWPjcQtB28AnmkranCzcFlbnBfq8rnTPPIuvYI
- fd40TZ8kqu4SoGfDzs/SfbbJd08sLruBNOOlMWKpFuMG2mOFuWba7YEtKtA0dBBSEiEY6IOri
- ZM3PM6gWeT/m+eVtTSG+zrbsYA499am1dBjlN/LN+N9HDZB6kx5NwVIrw==
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 2022/6/23 07:00, Song Liu wrote:
-> On Wed, Jun 22, 2022 at 3:33 PM NeilBrown <neilb@suse.de> wrote:
+On 6/23/22 7:32 AM, Song Liu wrote:
+> On Mon, Jun 20, 2022 at 8:11 PM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
+>> Since the bug which commit 8b48ec23cc51a ("md: don't unregister sync_thread
+>> with reconfig_mutex held") fixed is related with action_store path, other
+>> callers which reap sync_thread didn't need to be changed.
 >>
->> On Wed, 22 Jun 2022, Qu Wenruo wrote:
->>>
->>> On 2022/6/22 10:15, Doug Ledford wrote:
->>>> On Mon, 2022-06-20 at 10:56 +0100, Wols Lists wrote:
->>>>> On 20/06/2022 08:56, Qu Wenruo wrote:
->>>>>>> The write-hole has been addressed with journaling already, and
->>>>>>> this will
->>>>>>> be adding a new and not-needed feature - not saying it wouldn't be
->>>>>>> nice
->>>>>>> to have, but do we need another way to skin this cat?
->>>>>>
->>>>>> I'm talking about the BTRFS RAID56, not md-raid RAID56, which is a
->>>>>> completely different thing.
->>>>>>
->>>>>> Here I'm just trying to understand how the md-bitmap works, so that
->>>>>> I
->>>>>> can do a proper bitmap for btrfs RAID56.
->>>>>
->>>>> Ah. Okay.
->>>>>
->>>>> Neil Brown is likely to be the best help here as I believe he wrote =
-a
->>>>> lot of the code, although I don't think he's much involved with md-
->>>>> raid
->>>>> any more.
->>>>
->>>> I can't speak to how it is today, but I know it was *designed* to be
->>>> sync flush of the dirty bit setting, then lazy, async write out of th=
-e
->>>> clear bits.  But, yes, in order for the design to be reliable, you mu=
-st
->>>> flush out the dirty bits before you put writes in flight.
->>>
->>> Thank you very much confirming my concern.
->>>
->>> So maybe it's me not checking the md-bitmap code carefully enough to
->>> expose the full picture.
->>>
->>>>
->>>> One thing I'm not sure about though, is that MD RAID5/6 uses fixed
->>>> stripes.  I thought btrfs, since it was an allocation filesystem, did=
-n't
->>>> have to use full stripes?  Am I wrong about that?
->>>
->>> Unfortunately, we only go allocation for the RAID56 chunks. In side a
->>> RAID56 the underlying devices still need to go the regular RAID56 full
->>> stripe scheme.
->>>
->>> Thus the btrfs RAID56 is still the same regular RAID56 inside one btrf=
-s
->>> RAID56 chunk, but without bitmap/journal.
->>>
->>>>   Because it would seem
->>>> that if your data isn't necessarily in full stripes, then a bitmap mi=
-ght
->>>> not work so well since it just marks a range of full stripes as
->>>> "possibly dirty, we were writing to them, do a parity resync to make
->>>> sure".
->>>
->>> For the resync part is where btrfs shines, as the extra csum (for the
->>> untouched part) and metadata COW ensures us only see the old untouched
->>> data, and with the extra csum, we can safely rebuild the full stripe.
->>>
->>> Thus as long as no device is missing, a write-intent-bitmap is enough =
-to
->>> address the write hole in btrfs (at least for COW protected data and a=
-ll
->>> metadata).
->>>
->>>>
->>>> In any case, Wols is right, probably want to ping Neil on this.  Migh=
-t
->>>> need to ping him directly though.  Not sure he'll see it just on the
->>>> list.
->>>>
->>>
->>> Adding Neil into this thread. Any clue on the existing
->>> md_bitmap_startwrite() behavior?
+>> Let's pull md_unregister_thread from md_reap_sync_thread, then fix previous
+>> bug with belows.
 >>
->> md_bitmap_startwrite() is used to tell the bitmap code that the raid
->> module is about to start writing at a location.  This may result in
->> md_bitmap_file_set_bit() being called to set a bit in the in-memory cop=
-y
->> of the bitmap, and to make that page of the bitmap as BITMAP_PAGE_DIRTY=
-.
+>> 1. unlock mddev before md_reap_sync_thread in action_store.
+>> 2. save reshape_position before unlock, then restore it to ensure position
+>>     not changed accidentally by others.
 >>
->> Before raid actually submits the writes to the device it will call
->> md_bitmap_unplug() which will submit the writes and wait for them to
->> complete.
+>> Signed-off-by: Guoqing Jiang <guoqing.jiang@linux.dev>
+>> ---
+>> V2 changes:
+>> 1. add set_bit(MD_RECOVERY_INTR, &mddev->recovery) before unregister sync thread
 >>
->> The is a comment at the top of md/raid5.c titled "BITMAP UNPLUGGING"
->> which says a few things about how raid5 ensure things happen in the
->> right order.
+>> And I didn't find regression with this version after run mdadm tests.
 >>
->> However I don't think if any sort of bitmap can solve the write-hole
->> problem for RAID5 - even in btrfs.
+>>   drivers/md/dm-raid.c |  1 +
+>>   drivers/md/md.c      | 19 +++++++++++++++++--
+>>   2 files changed, 18 insertions(+), 2 deletions(-)
 >>
->> The problem is that if the host crashes while the array is degraded and
->> while some write requests were in-flight, then you might have lost data=
-.
->> i.e.  to update a block you must write both that block and the parity
->> block.  If you actually wrote neither or both, everything is fine.  If
->> you wrote one but not the other then you CANNOT recover the data that
->> was on the missing device (there must be a missing device as the array
->> is degraded).  Even having checksums of everything is not enough to
->> recover that missing block.
->>
->> You must either:
->>   1/ have a safe duplicate of the blocks being written, so they can be
->>     recovered and re-written after a crash.  This is what journalling
->>     does.  Or
->>   2/ Only write to location which don't contain valid data.  i.e.  alwa=
-ys
->>     write full stripes to locations which are unused on each device.
->>     This way you cannot lose existing data.  Worst case: that whole
->>     stripe is ignored.  This is how I would handle RAID5 in a
->>     copy-on-write filesystem.
->
-> Thanks Neil for explaining this. I was about to say the same idea, but
-> couldn't phrase it well.
->
-> md raid5 suffers from write hole because the mapping from array-LBA to
-> component-LBA is fixed.
+>> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+>> index 9526ccbedafb..d43b8075c055 100644
+>> --- a/drivers/md/dm-raid.c
+>> +++ b/drivers/md/dm-raid.c
+>> @@ -3725,6 +3725,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+>>          if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
+>>                  if (mddev->sync_thread) {
+>>                          set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>> +                       md_unregister_thread(&mddev->sync_thread);
+>>                          md_reap_sync_thread(mddev);
+>>                  }
+>>          } else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index c7ecb0bffda0..04bab0511312 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -4830,6 +4830,19 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+>>                          if (work_pending(&mddev->del_work))
+>>                                  flush_workqueue(md_misc_wq);
+>>                          if (mddev->sync_thread) {
+>> +                               sector_t save_rp = mddev->reshape_position;
+>> +
+>> +                               mddev_unlock(mddev);
+>> +                               set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>> +                               md_unregister_thread(&mddev->sync_thread);
+>> +                               mddev_lock_nointr(mddev);
+>> +                               /*
+>> +                                * set RECOVERY_INTR again and restore reshape
+>> +                                * position in case others changed them after
+>> +                                * got lock, eg, reshape_position_store and
+>> +                                * md_check_recovery.
+>> +                                */
+> Hmm.. do we really need to handle reshape_position changed case? What would
+> break if we don't?
 
-In fact, inside one btrfs RAID56 chunk, it's the same fixed
-logical->physical mapping.
-Thus we still have the problem.
+I want to make the behavior consistent with previous code, and 
+reshape_position_store
+can change it as said in comment.
 
-> As a result, we have to update the data in place.
-> btrfs already has file-to-LBA mapping, so it shouldn't be too expensive =
-to
-> make btrfs free of write hole. (no need for maintain extra mapping, or
-> add journaling).
-
-Unfortunately, btrfs is not that flex yet.
-
-In fact, btrfs just does its mapping in a much smaller graduality.
-
-So in btrfs we have the following mapping scheme:
-				1G	2G	3G	4G
-Btrfs logical address space:  	| RAID1 | RAID5 | EMPTY |  ...
-
-And logical address range [1G, 2G) is mapped using RAID1, using some
-physical ranges from 2 devices in the pool
-
-Logical address range [2G, 3G) is mapped using RAID5, using some
-physical ranges from several devices in the pool.
-
-Logical address range [3G, 4G) is not mapped, read/write that range
-would directly lead to -EIO.
-
-By this, you can see, btrfs is not as flex as you think.
-Yes, we have file -> logical address mapping, but inside each mapped
-logical address range, everything is still fixed mapping.
-
-If we want to really make extent allocator (which currently works at
-logical address level, no caring the underlying mapping at all) to avoid
-partial stripe write, it's a lot of cross-layer work.
-
-In fact, Johannes is working on an extra layer of mapping for RAID56, by
-that it can be possible to do extra mapping to avoid partial write.
-But that requires a lot of work, and may not even work for metadata.
-
-Thus I'm still exploring the tried-and-true methods like
-write-intent-bitmap and journal for btrfs RAID56.
+Anyway, I didn't see regression with mdadm test with or without setting 
+reshape_position,
+so it is a more conservative way to avoid potential issue. I will remove 
+it if you think it is
+not necessary.
 
 Thanks,
-Qu
-
->
-> Thanks,
-> Song
->
->>
->> However, I see you wrote:
->>> Thus as long as no device is missing, a write-intent-bitmap is enough =
-to
->>> address the write hole in btrfs (at least for COW protected data and a=
-ll
->>> metadata).
->>
->> That doesn't make sense.  If no device is missing, then there is no
->> write hole.
->> If no device is missing, all you need to do is recalculate the parity
->> blocks on any stripe that was recently written.  In md with use the
->> write-intent-bitmap.  In btrfs I would expect that you would already
->> have some way of knowing where recent writes happened, so you can
->> validiate the various checksums.  That should be sufficient to
->> recalculate the parity.  I've be very surprised if btrfs doesn't alread=
-y
->> do this.
->>
->> So I'm somewhat confuses as to what your real goal is.
->>
->> NeilBrown
+Guoqing
