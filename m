@@ -2,117 +2,77 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B74A3C433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Jun 2022 23:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A535C433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 24 Jun 2022 01:01:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230388AbiFWXoS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Jun 2022 19:44:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50746 "EHLO
+        id S229965AbiFXBBd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Jun 2022 21:01:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbiFWXoR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Jun 2022 19:44:17 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D378D4D61C
-        for <linux-raid@vger.kernel.org>; Thu, 23 Jun 2022 16:44:15 -0700 (PDT)
-Received: from host86-158-155-35.range86-158.btcentralplus.com ([86.158.155.35] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1o4WUf-000C9v-Fv;
-        Fri, 24 Jun 2022 00:44:14 +0100
-Message-ID: <9ff8c1e7-7c29-6243-2749-c6e0a3e25640@youngman.org.uk>
-Date:   Fri, 24 Jun 2022 00:44:13 +0100
+        with ESMTP id S230308AbiFXBBb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Jun 2022 21:01:31 -0400
+X-Greylist: delayed 336 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 23 Jun 2022 18:01:28 PDT
+Received: from box.sotapeli.fi (sotapeli.fi [37.59.98.201])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB222515BE;
+        Thu, 23 Jun 2022 18:01:28 -0700 (PDT)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 834D483372;
+        Fri, 24 Jun 2022 02:55:48 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sotapeli.fi; s=dkim;
+        t=1656032150; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+         content-transfer-encoding:in-reply-to:references;
+        bh=7t9C+2pQUbBl1eXiPJLnxXEnRjMR6voVBZjRrkVy2j8=;
+        b=Fq92yFHUy7V/vF3MOnusdXKyGmhVKNFnxhQJisqnKtQOOV1YH25rJxP/ZL9nCFPYOpKTda
+        ggzDj6qFO5fnYizrHSUEUewC2kkN0zihKVKEm9KI4BA9jE+c2p/ce2XlzymVrQem8qyn02
+        NhrxiY/QfsBFBjxMj2Rv7MB0AzKJ0iBVWc3FYkYKs5w0uE+aNVL9Q5zbWmtbCpbKYESwYS
+        m63pXlNZs+ZtLc+GHg+pDHyWucRz601d/ZqNmBWB+9cVuixcLpkQA6HXFdERMblypTozvo
+        fvf67r0LDHto3ddGK8w2/afd05HVWPTzfLwkKAmgbaAiGFsa26/B8C4RZH+Miw==
+Message-ID: <8e682742-60b0-1820-7887-952b0963c783@sotapeli.fi>
+Date:   Fri, 24 Jun 2022 03:55:44 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: a new install - - - putting the system on raid
-Content-Language: en-GB
-To:     Pascal Hambourg <pascal@plouf.fr.eu.org>,
-        o1bigtenor <o1bigtenor@gmail.com>,
-        Linux-RAID <linux-raid@vger.kernel.org>
-References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
- <81c50899-7edb-e629-3bbc-16cfa8f17e34@youngman.org.uk>
- <b777865e-b265-1e83-dae0-f89654e86332@plouf.fr.eu.org>
- <5cbd9dd1-73fc-ce11-4a9d-8752f7bea979@youngman.org.uk>
- <1de4bf1f-242b-7d02-23dc-a6d05893db81@plouf.fr.eu.org>
-From:   Wol <antlists@youngman.org.uk>
-In-Reply-To: <1de4bf1f-242b-7d02-23dc-a6d05893db81@plouf.fr.eu.org>
+Subject: Re: About the md-bitmap behavior
+To:     Qu Wenruo <quwenruo.btrfs@gmx.com>, Song Liu <song@kernel.org>
+Cc:     NeilBrown <neilb@suse.de>, Doug Ledford <dledford@redhat.com>,
+        Wols Lists <antlists@youngman.org.uk>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <d4163d9f-8900-1ec1-ffb8-c3834c512279@gmx.com>
+ <63a9cfb7-4999-d902-a7df-278e2ec37593@youngman.org.uk>
+ <1704788b-fb7d-b532-4911-238e4f7fd448@gmx.com>
+ <06365833-bd91-7dcf-4541-f8e15ed3bef2@youngman.org.uk>
+ <87cb53c4f08cc7b18010e62b9b3178ed70e06e8d.camel@redhat.com>
+ <d15f352d-41b8-8ade-4724-8370ef17db8d@gmx.com>
+ <165593717589.4786.11549155199368866575@noble.neil.brown.name>
+ <a09d6a24-6e1a-0243-ea4c-ac6d6127b69d@gmx.com>
+ <CAPhsuW5iYWPkSyjqU0VUM-y+aQyFW6SkQXdjinu9ayz3DigcxA@mail.gmail.com>
+ <6a2d3909-edb1-96e8-4a29-d954a2ebdaef@gmx.com>
+From:   Jani Partanen <jiipee@sotapeli.fi>
+In-Reply-To: <6a2d3909-edb1-96e8-4a29-d954a2ebdaef@gmx.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Last-TLS-Session-Version: TLSv1.3
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 23/06/2022 23:27, Pascal Hambourg wrote:
-> 
 
->>
->> Why would it crash?
-> 
-> Do you really believe a program can lose some of its data and still 
-> behave as if nothing happened ? If that were true, then why not just 
-> discard data instead of swap them out when memory is short ?
 
-No ...
-> 
->> Firstly, the system shouldn't be swapping. MOST systems, under MOST 
->> workloads, don't need swap.
-> 
-> Conversely, some systems, under some workloads, do need swap. And when 
-> they do, swap needs to be as reliable as any other storage space.
+Qu Wenruo kirjoitti 23/06/2022 klo 7.52:
+> That makes sense, but that also means the extent allocator needs extra
+> info, not just which space is available.
+>
+> And there would make ENOSPC handling even more challenging, what if we
+> have no space left but only partially written stripes?
+>
+> There are some ideas, like extra layer for RAID56 to do extra mapping
+> between logical address to physical address, but I'm not yet confident
+> if we will see new (and even more complex) challenges going that path.
 
-And if your system is one of the ?majority? that shouldn't swap, the 
-cost/benefit analysis is COMPLETELY different for swap than for main 
-storage. So don't treat them the same.
-> 
->> And secondly, the *system* should not be using swap. User space, yes. 
->> So a bunch of running stuff might crash. But the system should stay up.
-> 
-> Firstly, the *system* is not only the kernel. Many user space processes 
-> are part of the *system*. Secondly, you were the one who wrote:
-> 
-> "/tmp - is usually tmpfs nowadays, if you need disk backing, just make 
-> sure you've got a big-enough swap (tmpfs defaults to half ram, make it 
-> bigger and let it swap)."
-> 
-And? /tmp is *explicitly* not to be trusted in the event of problems. If 
-you lose a disk and it takes /tmp out, sorry. If the tmp-cleaner decides 
-to do a random "rm /tmp/*" at an inconvenient moment, well, if the 
-system can't handle it then whoever set the system up (or wrote the 
-program) was incompetent. Sorry. It's true. (And, no, I'm not claiming 
-to be a competent person :-)
+Isn't there already in btrfs system in place for ENOSPC situation? You 
+just add some space temporaly? Thats what I remember when I was playing 
+around with different situations with btrfs.
+For me bigger issue with btrfs raid56 is the fact that scrub is very 
+very slow. That should be one of the top priority to solve.
 
->> Raid is meant to protect your data. The benefit for raiding your swap 
->> is much less, and *should* be negligible.
-> 
-> No, this is what backup is meant to. RAID does not protect your data 
-> against accidental or malicious deletion or corruption. RAID is meant to 
-> provide availabity. The benefit of having everything including swap on 
-> RAID is that the system as a whole will continue to operate normally 
-> when a drive fails.
-
-And how does backup protect your data when the system crashes? You know, 
-all that web-shop data that is fresh and new and arrived after the most 
-recent backup 5mins ago? But that is probably irrelevant to most people :-)
-
-(Oh, and I didn't tell o1bigtenor NOT to raid his swap. I asked him WHY 
-he would want to. Maybe he has good reason. But I know him of old, and 
-have good reason to suspect he's going OTT.)
-
-You need to know what the threats are, what the mitigations are, and 
-what strategies are RELEVANT. And you need different strategies for 
-long-term, short-term, and immediate protection/threats.
-
-I run xosview. Even with gentoo, and a massive tmpfs, swap in-use sits 
-at 0B practically ALL the time. Why would I want to protect it? On the 
-other hand, my data sits on raid-5 on top of dm-integrity - protected 
-against both disk corruption and disk loss.
-
-And then I usually forget I've got a massive disk sitting there for 
-backup. Losing a hard drive doesn't cross my mind, because in pretty 
-much 30 years I personally have yet to lose a disk. I know I'm lucky, 
-I've recovered other people who have, but ...
-
-As I say, different risks, different mitigations...
-
-Cheers,
-Wol
+// JiiPee
