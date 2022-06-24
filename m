@@ -2,114 +2,74 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C53C43334
-	for <linux-raid@archiver.kernel.org>; Fri, 24 Jun 2022 14:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 998F9C43334
+	for <linux-raid@archiver.kernel.org>; Fri, 24 Jun 2022 18:11:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233158AbiFXOyg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 24 Jun 2022 10:54:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54378 "EHLO
+        id S230324AbiFXSLk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 24 Jun 2022 14:11:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233135AbiFXOyH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 24 Jun 2022 10:54:07 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 953F681703
-        for <linux-raid@vger.kernel.org>; Fri, 24 Jun 2022 07:49:55 -0700 (PDT)
-Received: from host86-158-155-35.range86-158.btcentralplus.com ([86.158.155.35] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1o4kd7-00041J-DA;
-        Fri, 24 Jun 2022 15:49:53 +0100
-Message-ID: <92378403-adf6-dedb-828c-81b331c1d8c1@youngman.org.uk>
-Date:   Fri, 24 Jun 2022 15:49:52 +0100
+        with ESMTP id S229614AbiFXSLj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 24 Jun 2022 14:11:39 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AF8152E5D
+        for <linux-raid@vger.kernel.org>; Fri, 24 Jun 2022 11:11:37 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1656094287; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=E5oEig4faAnayh1YL4Tymu/jUdd3EtinaaNNn4d8otqeNtnQv7oHwJEPhpCVg5mNDrt0AwCFCmS/uyqJFKloOcI/C83zlmh7mrYc/4e8b74dhmKueuiv5Gja9oN42P9STQ+tzLDi9rliagyMtIz6BwOOHbHOuqJUbdKMfEoo8zk=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1656094287; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=4jekkjyMM5+4TbNU+XhI5Q4O3sf84ZLtGNSby8PxATU=; 
+        b=HzEnfF3jgpXW990nue6CQH4e8/LsjMrL5T7gR/JwFwcbWvdP6mZKrI6D2Wt0w6DzXSvHHSt/X1DhY21JmuHQVasck4ZdDl81zWehoVWBo/g0rg8ZdiTA1KYcobZeVZLNyT6hHTOzpIWBIlvsnZi+NbWLADan0z7e5wNshZM2IME=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.80] (pool-72-69-213-125.nycmny.fios.verizon.net [72.69.213.125]) by mx.zoho.eu
+        with SMTPS id 1656094285251322.1410911251437; Fri, 24 Jun 2022 20:11:25 +0200 (CEST)
+Message-ID: <5aca22db-508d-15b4-d3fd-f3fe12cb8440@trained-monkey.org>
+Date:   Fri, 24 Jun 2022 14:11:24 -0400
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: moving a working array
-Content-Language: en-GB
-To:     Wilson Jonathan <i400sjon@gmail.com>,
-        o1bigtenor <o1bigtenor@gmail.com>,
-        Linux-RAID <linux-raid@vger.kernel.org>
-References: <CAPpdf595_7eW8amX8eueMxgjaWvLW-hWHh1SHHaGAt8YyP7yDw@mail.gmail.com>
- <7683b644cf076f8db06d60fdd3e4f88424f35bd2.camel@gmail.com>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <7683b644cf076f8db06d60fdd3e4f88424f35bd2.camel@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH] mdadm: block update=ppl for non raid456 levels
+Content-Language: en-US
+To:     Lukasz Florczak <lukasz.florczak@linux.intel.com>,
+        linux-raid@vger.kernel.org
+Cc:     colyli@suse.de
+References: <20220615122839.458384-1-lukasz.florczak@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20220615122839.458384-1-lukasz.florczak@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 24/06/2022 15:09, Wilson Jonathan wrote:
-> On Fri, 2022-06-24 at 08:38 -0500, o1bigtenor wrote:
->> Greetings
->>
->> I have a working (no issues) raid-10 array in one box.
-
-Bummer. It's a raid-10. A raid-1 would have been easier.
->>
->> Want to move it to another (new) box.
->>
->> Please - - - a list of the software steps?
->>
->> (the physical moving is the easy part - - - the new box has room
->> for a lot of drives and is ready for these 4 easily)
->>
->> Just don't want a fubar situation because I've taken the wrong order
->> or even wrong steps.
+On 6/15/22 08:28, Lukasz Florczak wrote:
+> Option ppl should be used only for raid levels 4, 5 and 6. Cancel update
+> for other levels.
 > 
-> First make a backup...
+> Applied globally for imsm and ddf format.
 > 
-> Second check the backup...
+> Additionally introduce is_level456() helper function.
 > 
-> Third make another backup...
-> 
-> Fourth check that backup as well...
+> Signed-off-by: Lukasz Florczak <lukasz.florczak@linux.intel.com>
+> ---
+>  Assemble.c | 11 +++++------
+>  Grow.c     |  2 +-
+>  Manage.c   | 14 ++++++++++++--
+>  mdadm.h    | 11 +++++++++++
+>  super0.c   |  2 +-
+>  super1.c   |  3 +--
+>  6 files changed, 31 insertions(+), 12 deletions(-)
 
-Seconded. And thirded and fourthed.
+Hi Lukasz,
 
-Actually, that might not be necessary ...
-> 
-> Move disks... (I personally have just amended the /etc/mdadm/mdadm.conf
-> file to include the uuid prior to moving disks and been good to go. BUT
-> if I'd have lost all the data, without backups, I'd not have been
-> fussed as it could all have been recreated/downloaded so I guess it all
-> depends on how important or unique the data is.)
-> 
-> But if you've got a new machine, why not get new disks and set up a
-> nice new clean raid and then just rsync the data accross. That way your
-> old disks become the backup, to the data you've newly transfered to
-> clean a clean array.
-> 
-Yup. Do you need the old disks in your new system? If not, DON'T MOVE 
-THEM and they'll be your backup.
->>
->> The section 'using the array' has information but I'm not sure how
->> that will work moving from one box to the other.
->>
->> (One question would be if the uuid of the array will remain the same
->> as that would make things easier - - - I could copy the uuid from the
->> existing and then just do the # mdadm --scan --assemble --uuid=
->> blahblah )
->>
-Yup. If you move the disks, the UUID won't change.
+I like the level456 change, it really helps avoid trivial bugs. I would
+have preferred this being two patches, one for the 456 change and one
+for the functional change, but I still applied it.
 
-What I went and did - which took some down-time because it was a pretty 
-big array ... was to create my new array on new disks in the new system.
+Thanks,
+Jes
 
-Then I can't remember the syntax - I looked it up on the web - but I 
-just did a
-
-cat //old-system/dev/old-array | network > //new-system/dev/newarray
-
-So you're basically copying your filesystem across the network from the 
-old "disk" (array, actually) to the new equivalent on the new system.
-
-Worked a treat, apart from the time it took ...
-
-A major reason I went that route, rather than an rsync or whatever, is 
-that my system has hard-links all over the place, and while the various 
-filesystem copying mechanisms CAN handle it, they don't like it ... a 
-device copy simply doesn't need to know anything about it.
-
-Cheers,
-Wol
