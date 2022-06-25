@@ -2,89 +2,108 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FB52C433EF
-	for <linux-raid@archiver.kernel.org>; Sat, 25 Jun 2022 08:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E33C8C43334
+	for <linux-raid@archiver.kernel.org>; Sat, 25 Jun 2022 08:27:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231923AbiFYI0o (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 25 Jun 2022 04:26:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50550 "EHLO
+        id S232026AbiFYI1a (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 25 Jun 2022 04:27:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231340AbiFYI0n (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 25 Jun 2022 04:26:43 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5018B3137E
-        for <linux-raid@vger.kernel.org>; Sat, 25 Jun 2022 01:26:41 -0700 (PDT)
-Received: from host86-158-155-35.range86-158.btcentralplus.com ([86.158.155.35] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1o500O-0001Iq-CJ;
-        Sat, 25 Jun 2022 08:14:57 +0100
-Message-ID: <d912cd74-7140-c440-f3e2-1aad3be83464@youngman.org.uk>
-Date:   Sat, 25 Jun 2022 08:14:56 +0100
+        with ESMTP id S229722AbiFYI13 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 25 Jun 2022 04:27:29 -0400
+Received: from maiev.nerim.net (smtp-156-saturday.nerim.net [194.79.134.156])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C4E93137E
+        for <linux-raid@vger.kernel.org>; Sat, 25 Jun 2022 01:27:28 -0700 (PDT)
+Received: from [192.168.0.250] (plouf.fr.eu.org [213.41.155.166])
+        by maiev.nerim.net (Postfix) with ESMTP id E0F0A2E007;
+        Sat, 25 Jun 2022 10:27:26 +0200 (CEST)
+Message-ID: <350e9a93-7af1-d5e6-62d7-a427e3e78eee@plouf.fr.eu.org>
+Date:   Sat, 25 Jun 2022 10:27:26 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: Upgrading motherboard + CPU
-Content-Language: en-GB
-To:     Roman Mamedov <rm@romanrm.net>
-Cc:     Alexander Shenkin <al@shenkin.org>,
+Subject: Re: a new install - - - putting the system on raid
+Content-Language: en-US
+To:     Wol <antlists@youngman.org.uk>, o1bigtenor <o1bigtenor@gmail.com>,
         Linux-RAID <linux-raid@vger.kernel.org>
 References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
  <81c50899-7edb-e629-3bbc-16cfa8f17e34@youngman.org.uk>
  <b777865e-b265-1e83-dae0-f89654e86332@plouf.fr.eu.org>
  <5cbd9dd1-73fc-ce11-4a9d-8752f7bea979@youngman.org.uk>
  <1de4bf1f-242b-7d02-23dc-a6d05893db81@plouf.fr.eu.org>
- <20220624232049.502a541e@nvm>
- <dab2fe0a-c49e-5da7-5df3-4d01c86a65a7@shenkin.org>
- <20220624234453.43cf4c74@nvm>
- <22102e4b-4738-672d-0d00-bbeccb54fe84@shenkin.org>
- <d85093a4-be3e-d4f2-eca0-e20882584bab@youngman.org.uk>
- <b664e4ce-6ebe-86c6-78d9-d5606c0f6555@shenkin.org>
- <5cb8d159-be2a-aa6c-888a-fcb9ed4555c1@youngman.org.uk>
- <20220625030833.3398d8a4@nvm>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <20220625030833.3398d8a4@nvm>
+ <9ff8c1e7-7c29-6243-2749-c6e0a3e25640@youngman.org.uk>
+From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
+Organization: Plouf !
+In-Reply-To: <9ff8c1e7-7c29-6243-2749-c6e0a3e25640@youngman.org.uk>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 24/06/2022 23:08, Roman Mamedov wrote:
-> On Fri, 24 Jun 2022 23:00:02 +0100
-> Wol <antlists@youngman.org.uk> wrote:
+Le 24/06/2022 à 01:44, Wol a écrit :
+> On 23/06/2022 23:27, Pascal Hambourg wrote:
+>>
+>>> Firstly, the system shouldn't be swapping. MOST systems, under MOST 
+>>> workloads, don't need swap.
+>>
+>> Conversely, some systems, under some workloads, do need swap. And when 
+>> they do, swap needs to be as reliable as any other storage space.
 > 
->> So your boot device is currently in physical connector 1 on the mobo. If
->> you move it across, you need to make sure it stays in physical position
->> 1, otherwise the mobo will try to boot off whatever disk is in position
->> 1, and there won't be a boot system to boot off!
+> And if your system is one of the ?majority? that shouldn't swap, the 
+> cost/benefit analysis is COMPLETELY different for swap than for main 
+> storage. So don't treat them the same.
+
+If your system should not swap, then why use any swap at all ?
+
+>>> And secondly, the *system* should not be using swap. User space, yes. 
+>>> So a bunch of running stuff might crash. But the system should stay up.
+>>
+>> Firstly, the *system* is not only the kernel. Many user space 
+>> processes are part of the *system*. Secondly, you were the one who wrote:
+>>
+>> "/tmp - is usually tmpfs nowadays, if you need disk backing, just make 
+>> sure you've got a big-enough swap (tmpfs defaults to half ram, make it 
+>> bigger and let it swap)."
+>>
+> And? /tmp is *explicitly* not to be trusted in the event of problems. If 
+> you lose a disk and it takes /tmp out, sorry.
+
+Source ?
+
+> If the tmp-cleaner decides 
+> to do a random "rm /tmp/*" at an inconvenient moment, well, if the 
+> system can't handle it then whoever set the system up (or wrote the 
+> program) was incompetent.
+
+Cleaning /tmp is not the same as loosing access to it. Opened files are 
+still accessible.
+
+>>> Raid is meant to protect your data. The benefit for raiding your swap 
+>>> is much less, and *should* be negligible.
+>>
+>> No, this is what backup is meant to. RAID does not protect your data 
+>> against accidental or malicious deletion or corruption. RAID is meant 
+>> to provide availabity. The benefit of having everything including swap 
+>> on RAID is that the system as a whole will continue to operate 
+>> normally when a drive fails.
 > 
-> Using RAID1 across all disks with metadata 0.90 for /boot makes sure the BIOS
-> can boot no matter which disk it tries first.
-> 
-> In fact it could be with recent grub the "0.90" part is not even required
-> anymore.
-> 
-> Just make sure to "grub-install /dev/sdX" at least once to all of them.
-> 
-Don't use 0.9, use 1.0.
+> And how does backup protect your data when the system crashes? You know, 
+> all that web-shop data that is fresh and new and arrived after the most 
+> recent backup 5mins ago?
 
-Both of these put the superblock at the end, so the start of the array 
-on disk is also the start of the data area. Which means you can bypass 
-the raid (normally a bad idea, but here you need it).
+Use RAID, so that the system does not crash when a drive fails.
 
-Thing is, v0.x is deprecated, if it breaks it won't be fixed. v1.x is 
-supported, all the x indicates is the location of the superblock, it's 
-identical across all 1.x arrays.
+> (Oh, and I didn't tell o1bigtenor NOT to raid his swap. I asked him WHY 
+> he would want to. Maybe he has good reason. But I know him of old, and 
+> have good reason to suspect he's going OTT.)
 
-1.0 is at the end, not necessarily a good idea. To be avoided where 
-possible.
+I think you do not need a good reason to have swap on RAID when all the 
+rest is on RAID. It is the other way around : you need a good reason not 
+to have swap on RAID.
 
-1.1 is at the start. Where any problems with a rogue partitioner will 
-trample it. To be avoided.
+> I run xosview. Even with gentoo, and a massive tmpfs, swap in-use sits 
+> at 0B practically ALL the time. Why would I want to protect it?
 
-1.2 leaves a 4K scratch space and puts the superblock after that. So it 
-will survive most damage to the start of a partition. Recommended.
-
-Cheers,
-Wol
+Because you may not want anything to crash when a drive fails while the 
+swap is used. If you don't care, well, don't protect the swap.
