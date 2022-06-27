@@ -2,31 +2,31 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37EF7C43334
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Jun 2022 08:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28445C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 27 Jun 2022 10:04:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232842AbiF0Itg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Jun 2022 04:49:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43082 "EHLO
+        id S234224AbiF0KEC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 27 Jun 2022 06:04:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233648AbiF0Itf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 04:49:35 -0400
+        with ESMTP id S233538AbiF0KEB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 06:04:01 -0400
 Received: from maiev.nerim.net (smtp-151-monday.nerim.net [194.79.134.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C63EE62F2
-        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 01:49:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E321DDE8
+        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 03:03:58 -0700 (PDT)
 Received: from [192.168.0.250] (plouf.fr.eu.org [213.41.155.166])
-        by maiev.nerim.net (Postfix) with ESMTP id 137DF2E009;
-        Mon, 27 Jun 2022 10:49:27 +0200 (CEST)
-Message-ID: <b398bec4-6fac-779d-6f33-26033dae4562@plouf.fr.eu.org>
-Date:   Mon, 27 Jun 2022 10:49:27 +0200
+        by maiev.nerim.net (Postfix) with ESMTP id 6ECD62E008;
+        Mon, 27 Jun 2022 12:03:51 +0200 (CEST)
+Message-ID: <b8ee1e06-bace-6c83-8ec3-00440281049f@plouf.fr.eu.org>
+Date:   Mon, 27 Jun 2022 12:03:47 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
 Subject: Re: Upgrading motherboard + CPU
 Content-Language: en-US
-To:     Alexander Shenkin <al@shenkin.org>,
-        Wols Lists <antlists@youngman.org.uk>,
-        Stephan <linux@psjt.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To:     Stephan <linux@psjt.org>
+Cc:     Wols Lists <antlists@youngman.org.uk>,
+        Linux-RAID <linux-raid@vger.kernel.org>
 References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
  <81c50899-7edb-e629-3bbc-16cfa8f17e34@youngman.org.uk>
  <b777865e-b265-1e83-dae0-f89654e86332@plouf.fr.eu.org>
@@ -44,25 +44,66 @@ References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
  <s6nh748amrs.fsf@blaulicht.dmz.brux>
  <1b6c6601-22a0-af2a-81a9-34599b1b0fa7@youngman.org.uk>
  <f971e15d-9cd4-e6de-c174-f3c6bd338bb6@plouf.fr.eu.org>
- <b1c6b0c2-ff7b-59e0-580c-81d57b8f8ddb@shenkin.org>
+ <s6n7d52poia.fsf@blaulicht.dmz.brux>
 From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
 Organization: Plouf !
-In-Reply-To: <b1c6b0c2-ff7b-59e0-580c-81d57b8f8ddb@shenkin.org>
+In-Reply-To: <s6n7d52poia.fsf@blaulicht.dmz.brux>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Le 27/06/2022 à 03:32, Alexander Shenkin a écrit :
+Le 27/06/2022 à 09:13, Stephan a écrit :
+> Pascal Hambourg <pascal@plouf.fr.eu.org> writes:
 > 
-> Ok all.  I've put in the new mobo + CPU, and the BIOS isn't finding any 
-> bootable devices.  Suggestions for next steps?  Thanks in advance...
+>> Le 25/06/2022 à 19:10, Wols Lists wrote :
+>>> On 25/06/2022 14:35, Stephan wrote:
+>>>>
+>>>> Does mdraid with metadata 1 work on the root filesystem w/o initramfs?
+>>
+>> No. Why would one not use an initramfs ?
+> 
+> An initramfs adds unnecessary intransparency to the system.
 
-Was the system originally installed for BIOS or EFI boot ?
+An initramfs is already necessary if root|usr|hibernation swap is on LVM 
+or LUKS, if UUID or LABEL is used for root specification, with 
+merged+separated /usr... Some distributions do not support booting 
+without an initramfs any more.
 
-If BIOS, was the bootloader installed in the MBR of all drives ? Does 
-the new motherboard support BIOS/legacy boot ?
+>>> If you're using v1.0, then you could boot off of one of the mirror
+>>> members no problem.
+>>>
+>>> You would point the kernel boot line at sda1 say (if that's part of
+>>> your mirror). IFF that is mounted read-only for boot, then that's
+>>> not a problem.
+>>
+>> Mounting read-only does not guarantee that there won't be any
+>> write. See man mount(8)
+(...)
+> Good point.  Thus, there is no alternative to superblock 0.90 for root on
+> mdraid w/o initramfs.  This is the answer to the question why somebody
+> (like me) may need to use superblock 0.90.
+> 
+>>> Your fstab would then mount /dev/md0 as root read-write
+>>
+>> I don't think so. IME the root device in fstab is ignored, only the
+>> options are used.
+> 
+> This is some of the intransparency.  Will the / entry in the /etc/fstab
+> be copied to the initramfs to use it for mounting the real root
+> filesystem?  You imply that this is the case but the device will be
+> ignored.  Why?
 
-If EFI, was a copy of the boot loader installed in the "removable media 
-path" (\EFI\Boot\Bootx64.efi) of the EFI partition(s) ?
+There are different kind of initramfs out there, and I don't know them 
+all. I can only speak about the initramfs built by initramfs-tools used 
+by default in Debian and derivatives.
+
+AFAIK, /etc/fstab is not copied into the initramfs. The initramfs uses 
+only the command line parameters (root=, rootfstype=, rootflags=, 
+ro|rw...) to mount the real root filesystem, then hands over to the real 
+root init.
+
+At some point, init remounts the root filesystem (mount -o remount /) to 
+apply the mount options in /etc/fstab (this is usually when ro is 
+changed to rw). Remount does not change the root device.
