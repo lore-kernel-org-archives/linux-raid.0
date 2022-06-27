@@ -2,141 +2,61 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B4CCC433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Jun 2022 13:56:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69C5DC433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 27 Jun 2022 14:26:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235506AbiF0N4P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Jun 2022 09:56:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59322 "EHLO
+        id S237284AbiF0O0W (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 27 Jun 2022 10:26:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234616AbiF0N4N (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 09:56:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 95842B1E5
-        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 06:56:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1656338171;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ef5bxLSjOkhKAwh638F1gN0SMXoDq1o5NkFfN4YL/Cs=;
-        b=GDJrKYsajltPU9P9hY9zs9gzPFCfBQSrli5MVvirCYOiXG0yl3aUhJUvMCx5fACh4Rv9qp
-        YZ10rjpvzTAsWgmHX9NWCeXh0XOq+UUxezYovqWUULQlcaM+/S9RSa1C+1GSpe/ut7z31J
-        NUOn9xakVgQJQ/dR5lY6U2R2sPm/at8=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-608-0tp6m-VpOXyCGolU6HCljg-1; Mon, 27 Jun 2022 09:56:00 -0400
-X-MC-Unique: 0tp6m-VpOXyCGolU6HCljg-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 7D64A185A7A4;
-        Mon, 27 Jun 2022 13:56:00 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 651F0492CA3;
-        Mon, 27 Jun 2022 13:56:00 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 25RDu0Av016820;
-        Mon, 27 Jun 2022 09:56:00 -0400
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 25RDu06O016816;
-        Mon, 27 Jun 2022 09:56:00 -0400
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Mon, 27 Jun 2022 09:56:00 -0400 (EDT)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     Heinz Mauelshagen <heinzm@redhat.com>
-cc:     Mike Snitzer <msnitzer@redhat.com>, Song Liu <song@kernel.org>,
-        Benjamin Marzinski <bmarzins@redhat.com>,
-        Marian Csontos <mcsontos@redhat.com>,
-        Ming Lei <minlei@redhat.com>, dm-devel@redhat.com,
-        linux-raid <linux-raid@vger.kernel.org>
-Subject: [PATCH v2] dm-raid: fix out of memory accesses in dm-raid
-In-Reply-To: <CAM23VxqOH9SeZFvfbFD2zUF_WFDUVY1Xh0ngp_1E+7n=7+7TUQ@mail.gmail.com>
-Message-ID: <alpine.LRH.2.02.2206270954570.16147@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.2206270858520.13562@file01.intranet.prod.int.rdu2.redhat.com> <CAM23VxqOH9SeZFvfbFD2zUF_WFDUVY1Xh0ngp_1E+7n=7+7TUQ@mail.gmail.com>
-User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
+        with ESMTP id S237007AbiF0O0W (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 10:26:22 -0400
+Received: from mallaury.nerim.net (smtp-101-monday.noc.nerim.net [178.132.17.101])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 87A4B13F1C
+        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 07:26:19 -0700 (PDT)
+Received: from [192.168.0.250] (plouf.fr.eu.org [213.41.155.166])
+        by mallaury.nerim.net (Postfix) with ESMTP id 476B4DB17C;
+        Mon, 27 Jun 2022 16:26:11 +0200 (CEST)
+Message-ID: <3e756547-ae18-c0d8-209e-8dd1fc43bb0f@plouf.fr.eu.org>
+Date:   Mon, 27 Jun 2022 16:26:09 +0200
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Scanned-By: MIMEDefang 2.85 on 10.11.54.9
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: Upgrading motherboard + CPU
+Content-Language: en-US
+To:     Alexander Shenkin <al@shenkin.org>, Roman Mamedov <rm@romanrm.net>
+Cc:     Wols Lists <antlists@youngman.org.uk>, Stephan <linux@psjt.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>
+References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
+ <81c50899-7edb-e629-3bbc-16cfa8f17e34@youngman.org.uk>
+ <b777865e-b265-1e83-dae0-f89654e86332@plouf.fr.eu.org>
+ <5cbd9dd1-73fc-ce11-4a9d-8752f7bea979@youngman.org.uk>
+ <1de4bf1f-242b-7d02-23dc-a6d05893db81@plouf.fr.eu.org>
+ <20220624232049.502a541e@nvm>
+ <dab2fe0a-c49e-5da7-5df3-4d01c86a65a7@shenkin.org>
+ <20220624234453.43cf4c74@nvm>
+ <22102e4b-4738-672d-0d00-bbeccb54fe84@shenkin.org>
+ <d85093a4-be3e-d4f2-eca0-e20882584bab@youngman.org.uk>
+ <b664e4ce-6ebe-86c6-78d9-d5606c0f6555@shenkin.org>
+ <5cb8d159-be2a-aa6c-888a-fcb9ed4555c1@youngman.org.uk>
+ <20220625030833.3398d8a4@nvm>
+ <ae2288f4-ad06-65af-d30c-4aef6d478f27@plouf.fr.eu.org>
+ <s6nh748amrs.fsf@blaulicht.dmz.brux>
+ <1b6c6601-22a0-af2a-81a9-34599b1b0fa7@youngman.org.uk>
+ <f971e15d-9cd4-e6de-c174-f3c6bd338bb6@plouf.fr.eu.org>
+ <b1c6b0c2-ff7b-59e0-580c-81d57b8f8ddb@shenkin.org>
+ <20220627160558.0ec507ae@nvm> <693d4b1c-ee58-4cc2-854b-4ae445ff7d24@Spark>
+From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
+Organization: Plouf !
+In-Reply-To: <693d4b1c-ee58-4cc2-854b-4ae445ff7d24@Spark>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-dm-raid allocates the array of devices with rs->raid_disks entries and
-then accesses it in a loop for rs->md.raid_disks. During reshaping,
-rs->md.raid_disks may be greater than rs->raid_disks, so it accesses
-entries beyond the end of the array.
+On 27/06/2022 15:57, Alexander Shenkin wrote :
+> 
+> CSM is greyed out.  I think I need a graphics card
 
-We fix this bug by limiting the iteration to rs->raid_disks.
-
-The bug is triggered when running lvm test shell/lvconvert-raid.sh and the
-kernel is compiled with kasan.
-
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-Cc: stable@vger.kernel.org
-
----
- drivers/md/dm-raid.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-Index: linux-2.6/drivers/md/dm-raid.c
-===================================================================
---- linux-2.6.orig/drivers/md/dm-raid.c	2022-06-27 15:44:12.000000000 +0200
-+++ linux-2.6/drivers/md/dm-raid.c	2022-06-27 15:44:12.000000000 +0200
-@@ -1004,7 +1004,7 @@ static int validate_raid_redundancy(stru
- 	unsigned int rebuilds_per_group = 0, copies;
- 	unsigned int group_size, last_group_start;
- 
--	for (i = 0; i < rs->md.raid_disks; i++)
-+	for (i = 0; i < rs->raid_disks; i++)
- 		if (!test_bit(In_sync, &rs->dev[i].rdev.flags) ||
- 		    !rs->dev[i].rdev.sb_page)
- 			rebuild_cnt++;
-@@ -1047,7 +1047,7 @@ static int validate_raid_redundancy(stru
- 		 *	    C	 D    D	   E	E
- 		 */
- 		if (__is_raid10_near(rs->md.new_layout)) {
--			for (i = 0; i < rs->md.raid_disks; i++) {
-+			for (i = 0; i < rs->raid_disks; i++) {
- 				if (!(i % copies))
- 					rebuilds_per_group = 0;
- 				if ((!rs->dev[i].rdev.sb_page ||
-@@ -1073,7 +1073,7 @@ static int validate_raid_redundancy(stru
- 		group_size = (rs->md.raid_disks / copies);
- 		last_group_start = (rs->md.raid_disks / group_size) - 1;
- 		last_group_start *= group_size;
--		for (i = 0; i < rs->md.raid_disks; i++) {
-+		for (i = 0; i < rs->raid_disks; i++) {
- 			if (!(i % copies) && !(i > last_group_start))
- 				rebuilds_per_group = 0;
- 			if ((!rs->dev[i].rdev.sb_page ||
-@@ -1588,7 +1588,7 @@ static sector_t __rdev_sectors(struct ra
- {
- 	int i;
- 
--	for (i = 0; i < rs->md.raid_disks; i++) {
-+	for (i = 0; i < rs->raid_disks; i++) {
- 		struct md_rdev *rdev = &rs->dev[i].rdev;
- 
- 		if (!test_bit(Journal, &rdev->flags) &&
-@@ -3766,7 +3766,7 @@ static int raid_iterate_devices(struct d
- 	unsigned int i;
- 	int r = 0;
- 
--	for (i = 0; !r && i < rs->md.raid_disks; i++)
-+	for (i = 0; !r && i < rs->raid_disks; i++)
- 		if (rs->dev[i].data_dev)
- 			r = fn(ti,
- 				 rs->dev[i].data_dev,
-@@ -3817,7 +3817,7 @@ static void attempt_restore_of_faulty_de
- 
- 	memset(cleared_failed_devices, 0, sizeof(cleared_failed_devices));
- 
--	for (i = 0; i < mddev->raid_disks; i++) {
-+	for (i = 0; i < rs->raid_disks; i++) {
- 		r = &rs->dev[i].rdev;
- 		/* HM FIXME: enhance journal device recovery processing */
- 		if (test_bit(Journal, &r->flags))
-
+Is secure boot disabled? Legacy boot is not compatible with secure boot.
