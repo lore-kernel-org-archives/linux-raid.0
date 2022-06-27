@@ -2,131 +2,141 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87639C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Jun 2022 13:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B4CCC433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 27 Jun 2022 13:56:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235345AbiF0NSo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Jun 2022 09:18:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34644 "EHLO
+        id S235506AbiF0N4P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 27 Jun 2022 09:56:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235051AbiF0NSl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 09:18:41 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14A8CCF0
-        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 06:18:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1656335920; x=1687871920;
-  h=message-id:date:from:to:cc:subject:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=WmkeQi2emKO3QJGd+vShVAtaTjfWPpfQJVRC5m9qeCY=;
-  b=JrOzE91aO28wSyhHorugV8PSxv0dNYy0kiEzd4aEcJrfMcdS79XymBda
-   pejpKu0yhne9coPOGKEnpJlAmWJ2bOW66GhSUmYG1UUQvYHgzpBWullxh
-   77QREPiuREnowDa5A2TL+suyJxPnxNnUJ/eH/Xvk0yc3odxi7w5kdskwB
-   aD9xu0fVjP5c5WrvG47oTxusCy06l43bawSfL3us/iFYP46/92D9ExFL4
-   BBVjDo1jQa2sSJqHRk0MRb/birZN+/TROC1ttuPAIxu/eSE8Ub39cTegR
-   z522ADX9xySkzCpWRPkn9Ub8G72nI4q5C1o4993P20HC9sKZLeyZMsNdS
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10390"; a="367762463"
-X-IronPort-AV: E=Sophos;i="5.92,226,1650956400"; 
-   d="scan'208";a="367762463"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2022 06:18:39 -0700
-Message-Id: <7f4525$j8f9ri@fmsmga008-auth.fm.intel.com>
-X-IronPort-AV: E=Sophos;i="5.92,226,1650956400"; 
-   d="scan'208";a="646424434"
-Received: from lflorcza-mobl.ger.corp.intel.com (HELO intel.linux.com) ([10.237.140.94])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2022 06:18:38 -0700
-Date:   Mon, 27 Jun 2022 15:16:05 +0200
-From:   Lukasz Florczak <lukasz.florczak@linux.intel.com>
-To:     Coly Li <colyli@suse.de>
-Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org,
-        pmenzel@molgen.mpg.de
-Subject: Re: [PATCH 1/2] mdadm: Fix array size mismatch after grow
-In-Reply-To: <2747A949-7F7E-4C44-816B-F2B648EB87C9@suse.de>
-References: <20220407142739.60198-1-lukasz.florczak@linux.intel.com>
-        <20220407142739.60198-2-lukasz.florczak@linux.intel.com>
-        <35B48024-E02A-45EB-AC5C-4C3DDB2055E3@suse.de>
-        <7f4525$iu0ds4@fmsmga008-auth.fm.intel.com>
-        <2747A949-7F7E-4C44-816B-F2B648EB87C9@suse.de>
+        with ESMTP id S234616AbiF0N4N (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 09:56:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 95842B1E5
+        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 06:56:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1656338171;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ef5bxLSjOkhKAwh638F1gN0SMXoDq1o5NkFfN4YL/Cs=;
+        b=GDJrKYsajltPU9P9hY9zs9gzPFCfBQSrli5MVvirCYOiXG0yl3aUhJUvMCx5fACh4Rv9qp
+        YZ10rjpvzTAsWgmHX9NWCeXh0XOq+UUxezYovqWUULQlcaM+/S9RSa1C+1GSpe/ut7z31J
+        NUOn9xakVgQJQ/dR5lY6U2R2sPm/at8=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-608-0tp6m-VpOXyCGolU6HCljg-1; Mon, 27 Jun 2022 09:56:00 -0400
+X-MC-Unique: 0tp6m-VpOXyCGolU6HCljg-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 7D64A185A7A4;
+        Mon, 27 Jun 2022 13:56:00 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 651F0492CA3;
+        Mon, 27 Jun 2022 13:56:00 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 25RDu0Av016820;
+        Mon, 27 Jun 2022 09:56:00 -0400
+Received: from localhost (mpatocka@localhost)
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 25RDu06O016816;
+        Mon, 27 Jun 2022 09:56:00 -0400
+X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
+Date:   Mon, 27 Jun 2022 09:56:00 -0400 (EDT)
+From:   Mikulas Patocka <mpatocka@redhat.com>
+X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
+To:     Heinz Mauelshagen <heinzm@redhat.com>
+cc:     Mike Snitzer <msnitzer@redhat.com>, Song Liu <song@kernel.org>,
+        Benjamin Marzinski <bmarzins@redhat.com>,
+        Marian Csontos <mcsontos@redhat.com>,
+        Ming Lei <minlei@redhat.com>, dm-devel@redhat.com,
+        linux-raid <linux-raid@vger.kernel.org>
+Subject: [PATCH v2] dm-raid: fix out of memory accesses in dm-raid
+In-Reply-To: <CAM23VxqOH9SeZFvfbFD2zUF_WFDUVY1Xh0ngp_1E+7n=7+7TUQ@mail.gmail.com>
+Message-ID: <alpine.LRH.2.02.2206270954570.16147@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.2206270858520.13562@file01.intranet.prod.int.rdu2.redhat.com> <CAM23VxqOH9SeZFvfbFD2zUF_WFDUVY1Xh0ngp_1E+7n=7+7TUQ@mail.gmail.com>
+User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 21 Jun 2022 00:28:18 +0800, Coly Li <colyli@suse.de> wrote:
+dm-raid allocates the array of devices with rs->raid_disks entries and
+then accesses it in a loop for rs->md.raid_disks. During reshaping,
+rs->md.raid_disks may be greater than rs->raid_disks, so it accesses
+entries beyond the end of the array.
 
-> > 2022=E5=B9=B46=E6=9C=883=E6=97=A5 22:30=EF=BC=8CLukasz Florczak
-> > <lukasz.florczak@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
-> >=20
-> > On Mon, 30 May 2022 18:01:05 +0800, Coly Li <colyli@suse.de> wrote:
-> >=20
-> > Hi Coly, =20
-> >> Hi Lukasz,
-> >>=20
-> >>  =20
-> >>> 2022=E5=B9=B44=E6=9C=887=E6=97=A5 22:27=EF=BC=8CLukasz Florczak
-> >>> <lukasz.florczak@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
-> >>>=20
-> >>> imsm_fix_size_mismatch() is invoked to fix the problem, but it
-> >>> couldn't proceed due to migration check. This patch allows for
-> >>> intended behavior. =20
-> >>=20
-> >>=20
-> >> Could you please explain a bit more about why =E2=80=9Cit couldn=E2=80=
-=99t proceed
-> >> due to migration=E2=80=9D, and what is the =E2=80=9Cintended behavior=
-=E2=80=9D? It may help
-> >> me to understand your change and response faster. =20
-> >=20
-> > The intended behavior here is to fix the array size after grow that
-> > is displayed in mdadm detail, since there can be a mismatch if the
-> > raid was created in EFI [1]. That is the array size is not
-> > consistent with the formula:=20
-> > Array_size * block_size =3D Num_stripes * Chunk_size *
-> > Num_of_data_drives=20
-> >=20
-> > That fix couldn't happen as the metadata update part was efficiently
-> > omitted with continue statement after the migration type condition
-> > was met.=20
-> >=20
-> > About migration I didn't go that much into detail, but it was an
-> > issue that dev->vol.migr_type was still in MIGR_GEN_MIGR state even
-> > though imsm_fix_size_mismatch() was called after migration has been
-> > finished, at least from the mdadm's point of view. That happens
-> > because this value is changed later, afaik, by mdmon. The initial
-> > idea here must've been not to change the array size during
-> > migration, but that is not valid since its state is just not
-> > updated yet.
-> >=20
-> > [1]
-> > https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3D895ff=
-d992954069e4ea67efb8a85bb0fd72c3707
-> > =20
->=20
-> Copied, thanks for the hint.
->=20
-> BTW, now I do the imsm related test with IMSM_NO_PLATFORM=3D1 and
-> IMSM_DEVNAME_AS_SERIAL=3D1. To test situation as the above text
-> mentioned, do I have to find a real hardware with VROC supported?
+We fix this bug by limiting the iteration to rs->raid_disks.
 
-Hi Coly,
+The bug is triggered when running lvm test shell/lvconvert-raid.sh and the
+kernel is compiled with kasan.
 
-Having a real hardware with VROC support would be the most convenient
-solution here. However, you could do a quick hack to overcome this
-situation. That would be commenting out the line:
-array_size =3D round_size_to_mb(array_blocks, data_disks);
-in init_super_imsm_volume(). Then creating RAID in OS should have the
-same size mismatch issues as size per drive won't be aligned to 1MiB
-(considering you create raid with size not aligned to 1MiB) - raid
-size created in EFI only has to be multiple of sector size and chunk
-size.
-Hope this helps you.
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+Cc: stable@vger.kernel.org
 
-Thanks,
-Lukasz
->=20
-> Coly Li
->=20
+---
+ drivers/md/dm-raid.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+Index: linux-2.6/drivers/md/dm-raid.c
+===================================================================
+--- linux-2.6.orig/drivers/md/dm-raid.c	2022-06-27 15:44:12.000000000 +0200
++++ linux-2.6/drivers/md/dm-raid.c	2022-06-27 15:44:12.000000000 +0200
+@@ -1004,7 +1004,7 @@ static int validate_raid_redundancy(stru
+ 	unsigned int rebuilds_per_group = 0, copies;
+ 	unsigned int group_size, last_group_start;
+ 
+-	for (i = 0; i < rs->md.raid_disks; i++)
++	for (i = 0; i < rs->raid_disks; i++)
+ 		if (!test_bit(In_sync, &rs->dev[i].rdev.flags) ||
+ 		    !rs->dev[i].rdev.sb_page)
+ 			rebuild_cnt++;
+@@ -1047,7 +1047,7 @@ static int validate_raid_redundancy(stru
+ 		 *	    C	 D    D	   E	E
+ 		 */
+ 		if (__is_raid10_near(rs->md.new_layout)) {
+-			for (i = 0; i < rs->md.raid_disks; i++) {
++			for (i = 0; i < rs->raid_disks; i++) {
+ 				if (!(i % copies))
+ 					rebuilds_per_group = 0;
+ 				if ((!rs->dev[i].rdev.sb_page ||
+@@ -1073,7 +1073,7 @@ static int validate_raid_redundancy(stru
+ 		group_size = (rs->md.raid_disks / copies);
+ 		last_group_start = (rs->md.raid_disks / group_size) - 1;
+ 		last_group_start *= group_size;
+-		for (i = 0; i < rs->md.raid_disks; i++) {
++		for (i = 0; i < rs->raid_disks; i++) {
+ 			if (!(i % copies) && !(i > last_group_start))
+ 				rebuilds_per_group = 0;
+ 			if ((!rs->dev[i].rdev.sb_page ||
+@@ -1588,7 +1588,7 @@ static sector_t __rdev_sectors(struct ra
+ {
+ 	int i;
+ 
+-	for (i = 0; i < rs->md.raid_disks; i++) {
++	for (i = 0; i < rs->raid_disks; i++) {
+ 		struct md_rdev *rdev = &rs->dev[i].rdev;
+ 
+ 		if (!test_bit(Journal, &rdev->flags) &&
+@@ -3766,7 +3766,7 @@ static int raid_iterate_devices(struct d
+ 	unsigned int i;
+ 	int r = 0;
+ 
+-	for (i = 0; !r && i < rs->md.raid_disks; i++)
++	for (i = 0; !r && i < rs->raid_disks; i++)
+ 		if (rs->dev[i].data_dev)
+ 			r = fn(ti,
+ 				 rs->dev[i].data_dev,
+@@ -3817,7 +3817,7 @@ static void attempt_restore_of_faulty_de
+ 
+ 	memset(cleared_failed_devices, 0, sizeof(cleared_failed_devices));
+ 
+-	for (i = 0; i < mddev->raid_disks; i++) {
++	for (i = 0; i < rs->raid_disks; i++) {
+ 		r = &rs->dev[i].rdev;
+ 		/* HM FIXME: enhance journal device recovery processing */
+ 		if (test_bit(Journal, &r->flags))
+
