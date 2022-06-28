@@ -2,168 +2,82 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45537CCA481
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Jun 2022 02:22:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89239C43334
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Jun 2022 07:00:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243880AbiF1CWz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Jun 2022 22:22:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60944 "EHLO
+        id S244919AbiF1HAk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Jun 2022 03:00:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243804AbiF1CWB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 22:22:01 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B476248F4;
-        Mon, 27 Jun 2022 19:21:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 26F64B818E4;
-        Tue, 28 Jun 2022 02:21:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3298C341CB;
-        Tue, 28 Jun 2022 02:21:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656382894;
-        bh=pqPD6qoEi8JT199in7jg5DAol4iF8DjKFPgIGYlvQoc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GyqsByaDXQg5yOq6smuSw5cw5zuxTHl+rHrYo/OlHMZ1OuAvd9ONI8/jqrzLdImbD
-         VTWK7UP5itlkHBzyKuMpIHQb6qIkgBzcX3Jxv+GaaOi42Ij7zVfd0aNVRCj/2kEQLZ
-         O6R0SdzzjedD8BThjNur1AhOSXcjIOf8wUfiJdziqd597shekW5NqBhdePKYvvXsYS
-         oJiSFkiCFnaZl7loW+605mJuFv8NTwWJO3O6z94S5MRsftmK5FPbSEThNMZ5b+uoVL
-         ifMihZ1oD6Ug5EuhwczB9HuCayJu7LpnnMklqlMLvNn/Nf3BKVwwKkKVP3/5TDDlCW
-         d3gJG/ZMvv/2g==
-Date:   Tue, 28 Jun 2022 04:21:29 +0200
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     Daniel Borkmann <daniel@iogearbox.net>,
-        Kees Cook <keescook@chromium.org>,
-        linux-kernel@vger.kernel.org, x86@kernel.org, dm-devel@redhat.com,
-        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
-        linux-s390@vger.kernel.org, kvm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        netdev@vger.kernel.org, bpf@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net, io-uring@vger.kernel.org,
-        lvs-devel@vger.kernel.org, linux-mtd@lists.infradead.org,
-        kasan-dev@googlegroups.com, linux-mmc@vger.kernel.org,
-        nvdimm@lists.linux.dev, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, linux-perf-users@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        v9fs-developer@lists.sourceforge.net, linux-rdma@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] treewide: uapi: Replace zero-length arrays with
- flexible-array members
-Message-ID: <20220628022129.GA8452@embeddedor>
-References: <20220627180432.GA136081@embeddedor>
- <6bc1e94c-ce1d-a074-7d0c-8dbe6ce22637@iogearbox.net>
- <20220628004052.GM23621@ziepe.ca>
- <20220628005825.GA161566@embeddedor>
+        with ESMTP id S229705AbiF1HAi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Jun 2022 03:00:38 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC474B86
+        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 00:00:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1656399637; x=1687935637;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=i74Co+OGWCyDvdm9khgPo552FK1jhQ/uIlnlvjNTPes=;
+  b=P8rj74G/K+GqOff8Tps+FVZY61qpoKpn5mXdvKoPCVLbo4nYSevr9SQq
+   jAx5K7U35JJeoQN/PLXJOsEZQh4gP3PrnSJXb2QCjXWNi0dAoYCA5frVP
+   5xxfT5+oAPytvHom+jW+yaPSaDtCYEXnNDwAO6IIyDM2L8KLw+2TD58Js
+   vesBCaINqIBg/bbh2L4XJRQxiCr18dUxW7rNpzt4NyivBWUYm9LfKJqbX
+   d/wqUT+4DojaI8STwspdeP+MOwqjbTSvG2wP1lfINexCVpMnnKigpO+lD
+   YrRT4Aq/9iuSQHcT5FPa6H67HNKNby6QGmztiuGdPS+HU+tlTjXh5ej6x
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10391"; a="282746780"
+X-IronPort-AV: E=Sophos;i="5.92,227,1650956400"; 
+   d="scan'208";a="282746780"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2022 00:00:37 -0700
+X-IronPort-AV: E=Sophos;i="5.92,227,1650956400"; 
+   d="scan'208";a="646782376"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.37.142])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2022 00:00:33 -0700
+Date:   Tue, 28 Jun 2022 09:00:28 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
+        Song Liu <song@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Donald Buczek <buczek@molgen.mpg.de>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Coly Li <colyli@suse.de>, Bruce Dubbs <bruce.dubbs@gmail.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Subject: Re: [PATCH mdadm v2 01/14] Makefile: Don't build static build with
+ everything and everything-test
+Message-ID: <20220628090028.00003c95@linux.intel.com>
+In-Reply-To: <20220622202519.35905-2-logang@deltatee.com>
+References: <20220622202519.35905-1-logang@deltatee.com>
+        <20220622202519.35905-2-logang@deltatee.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220628005825.GA161566@embeddedor>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Jun 28, 2022 at 02:58:25AM +0200, Gustavo A. R. Silva wrote:
-> On Mon, Jun 27, 2022 at 09:40:52PM -0300, Jason Gunthorpe wrote:
-> > On Mon, Jun 27, 2022 at 08:27:37PM +0200, Daniel Borkmann wrote:
-> > > On 6/27/22 8:04 PM, Gustavo A. R. Silva wrote:
-> > > > There is a regular need in the kernel to provide a way to declare
-> > > > having a dynamically sized set of trailing elements in a structure.
-> > > > Kernel code should always use “flexible array members”[1] for these
-> > > > cases. The older style of one-element or zero-length arrays should
-> > > > no longer be used[2].
-> > > > 
-> > > > This code was transformed with the help of Coccinelle:
-> > > > (linux-5.19-rc2$ spatch --jobs $(getconf _NPROCESSORS_ONLN) --sp-file script.cocci --include-headers --dir . > output.patch)
-> > > > 
-> > > > @@
-> > > > identifier S, member, array;
-> > > > type T1, T2;
-> > > > @@
-> > > > 
-> > > > struct S {
-> > > >    ...
-> > > >    T1 member;
-> > > >    T2 array[
-> > > > - 0
-> > > >    ];
-> > > > };
-> > > > 
-> > > > -fstrict-flex-arrays=3 is coming and we need to land these changes
-> > > > to prevent issues like these in the short future:
-> > > > 
-> > > > ../fs/minix/dir.c:337:3: warning: 'strcpy' will always overflow; destination buffer has size 0,
-> > > > but the source string has length 2 (including NUL byte) [-Wfortify-source]
-> > > > 		strcpy(de3->name, ".");
-> > > > 		^
-> > > > 
-> > > > Since these are all [0] to [] changes, the risk to UAPI is nearly zero. If
-> > > > this breaks anything, we can use a union with a new member name.
-> > > > 
-> > > > [1] https://en.wikipedia.org/wiki/Flexible_array_member
-> > > > [2] https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-and-one-element-arrays
-> > > > 
-> > > > Link: https://github.com/KSPP/linux/issues/78
-> > > > Build-tested-by: https://lore.kernel.org/lkml/62b675ec.wKX6AOZ6cbE71vtF%25lkp@intel.com/
-> > > > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> > > > ---
-> > > > Hi all!
-> > > > 
-> > > > JFYI: I'm adding this to my -next tree. :)
-> > > 
-> > > Fyi, this breaks BPF CI:
-> > > 
-> > > https://github.com/kernel-patches/bpf/runs/7078719372?check_suite_focus=true
-> > > 
-> > >   [...]
-> > >   progs/map_ptr_kern.c:314:26: error: field 'trie_key' with variable sized type 'struct bpf_lpm_trie_key' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
-> > >           struct bpf_lpm_trie_key trie_key;
-> > >                                   ^
-> > 
-> > This will break the rdma-core userspace as well, with a similar
-> > error:
-> > 
-> > /usr/bin/clang-13 -DVERBS_DEBUG -Dibverbs_EXPORTS -Iinclude -I/usr/include/libnl3 -I/usr/include/drm -g -O2 -fdebug-prefix-map=/__w/1/s=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wmissing-prototypes -Wmissing-declarations -Wwrite-strings -Wformat=2 -Wcast-function-type -Wformat-nonliteral -Wdate-time -Wnested-externs -Wshadow -Wstrict-prototypes -Wold-style-definition -Werror -Wredundant-decls -g -fPIC   -std=gnu11 -MD -MT libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o -MF libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o.d -o libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o   -c ../libibverbs/cmd_flow.c
-> > In file included from ../libibverbs/cmd_flow.c:33:
-> > In file included from include/infiniband/cmd_write.h:36:
-> > In file included from include/infiniband/cmd_ioctl.h:41:
-> > In file included from include/infiniband/verbs.h:48:
-> > In file included from include/infiniband/verbs_api.h:66:
-> > In file included from include/infiniband/ib_user_ioctl_verbs.h:38:
-> > include/rdma/ib_user_verbs.h:436:34: error: field 'base' with variable sized type 'struct ib_uverbs_create_cq_resp' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
-> >         struct ib_uverbs_create_cq_resp base;
-> >                                         ^
-> > include/rdma/ib_user_verbs.h:644:34: error: field 'base' with variable sized type 'struct ib_uverbs_create_qp_resp' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
-> >         struct ib_uverbs_create_qp_resp base;
-> > 
-> > Which is why I gave up trying to change these..
-> > 
-> > Though maybe we could just switch off -Wgnu-variable-sized-type-not-at-end  during configuration ?
+On Wed, 22 Jun 2022 14:25:06 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
+
+> Running the test suite requires building everything, but it seems to be
+> difficult to build the static version of mdadm now seeing there
+> is no readily available static udev library.
 > 
-> No. I think now we can easily workaround these sorts of problems with
-> something like this:
+> The test suite doesn't need the static binary so just don't build it
+> with the everything or everything-test targets.
 > 
-> 	struct flex {
-> 		any_type any_member;
-> 		union {
-> 			type array[0];
-> 			__DECLARE_FLEX_ARRAY(type, array_flex);
-> 		};
-> 	};
+> Leave the mdadm.static and install-static targets in place in case
+> someone still has a use case for the static binary.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
 
-Mmmh... nope; this doesn't work[1].
-
-We need to think in a different strategy.
-
---
-Gustavo
-
-[1] https://godbolt.org/z/av79Pqbfz
+Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
