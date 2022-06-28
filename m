@@ -2,62 +2,62 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 245A7C43334
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Jun 2022 21:32:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17B3CC433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Jun 2022 21:57:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230393AbiF1Vca (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Jun 2022 17:32:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41982 "EHLO
+        id S229980AbiF1V5a (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Jun 2022 17:57:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230350AbiF1Vc3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Jun 2022 17:32:29 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCBE13AA71
-        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 14:32:28 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d5so12190133plo.12
-        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 14:32:28 -0700 (PDT)
+        with ESMTP id S230064AbiF1V50 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Jun 2022 17:57:26 -0400
+Received: from mail-oi1-x229.google.com (mail-oi1-x229.google.com [IPv6:2607:f8b0:4864:20::229])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7E981D300
+        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 14:57:23 -0700 (PDT)
+Received: by mail-oi1-x229.google.com with SMTP id e131so19019487oif.13
+        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 14:57:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shenkin.org; s=google;
+        d=gmail.com; s=20210112;
         h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=LzOVrIMwMjRwghyBiSOHMTWWg1GxTXQYN8l5kMQ/RmI=;
-        b=CiPlMMmjFiFC/Yvl3fWwdejVr9ejh/H9vN/RIbOWqypq29zRQ0sjCYhr/OqvRHPuzb
-         0JOKXS+bER49KSOudKcG3Sk3hdSLIRi/9xGb4b6NouHgMGM0pGvfnBxy8RxoH3sLsU0m
-         A+aazknwZXQuTu5drvqVUslrJ+TZpehXLqMjw=
+         :references:from:in-reply-to:content-transfer-encoding;
+        bh=fF4X3Udqcbdm+20pG2a7lwakaQN12PolF+9BMFiW+H0=;
+        b=gh5Vf03rGMKd8nWGtCdvwZ5tn2M5MZkQ3NzGAMmet5AOtpSGgQvhyBNpviN59H7Hqm
+         24mnFamJ1kP3Sou6RohLmZFSPb69k13+wBUJtTlndMmw0KFntxe7SfcB/P7nb/Rf6HC4
+         1h7ATQ19q7mfucFVkD3YBXTBAYKKNAbMvkvYtooEhTW1wHmXuPeSkmHOi2XQi1Oj/zGn
+         MWuZpPcfyO7WoMYg2FsXXodyL5gY5XeE1Pe6SojkwL8p81rYH3LuJN6wUp0dLQIw/h2m
+         sOjO7Ril/+VeykVx9rOVSSEtthMXu7Y+j6/MMczHO4osdVEdfE36AjLbcwfBFKOZZIYR
+         IGPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+         :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=LzOVrIMwMjRwghyBiSOHMTWWg1GxTXQYN8l5kMQ/RmI=;
-        b=UeXE6t4Sr+LpiJl32S+1izajEXdBiXHw+gdMRb2m5/2OqDbAaZLwpOI1i1jMzc2SLq
-         YAgbWzPXsJWr68Iv5n6sBKUUF36IludpX7rXFHFQ6ryWZe1QhKe0ZUbKFOy8XzqHtR8R
-         aVAOGqcgfZiHogPI+Oq2FL5yjqEVSVtH4OsVA8qPSxDQt4rUcrw5Y/ofyZ24r/Q6k3a/
-         UM73+0+PqsP7Dub6A7t0wu/Z4GR9FydSb/V40eF7e66OR2B/2qlZmH2r2nLiuXBPf7Ke
-         cFpjM2DKij7nG4AJkXqrgPZ3k3XjKg4IroSbABRtAER1FBuyH8ZYOZPTUhxpYVIkGKAD
-         YeDQ==
-X-Gm-Message-State: AJIora/uI5+0pbhFv3Pg8drIuyzGievg5x+jw0HFg5oc+P+NdqHa+gNW
-        pBsbP0a24j04IGxBfYCKiC6wKmpj978BKPpg
-X-Google-Smtp-Source: AGRyM1t9AuQESbZOx5n7ymFo/MUG/MdSXdnD4lzGkTarUnQTUJvIG/m6ewFWYSigvnmkgN1HoapSfA==
-X-Received: by 2002:a17:902:f804:b0:16a:da1:1ef7 with SMTP id ix4-20020a170902f80400b0016a0da11ef7mr5653786plb.17.1656451948313;
-        Tue, 28 Jun 2022 14:32:28 -0700 (PDT)
-Received: from [192.168.1.243] ([47.215.181.107])
-        by smtp.googlemail.com with ESMTPSA id x5-20020a1709029a4500b001678e9670d8sm9834966plv.2.2022.06.28.14.32.27
+        bh=fF4X3Udqcbdm+20pG2a7lwakaQN12PolF+9BMFiW+H0=;
+        b=sEMDDRFALfR9i+oSQYXD+x6OFfIUvvF5W7lkBNqp2j76M7qxqSECQ5VYxuBbWKCyo/
+         rwNV926RolyoD1UZZysKOlxLQZ/PGINkj0UmvzMRDs67Aa2qw4kNGGWnHfX6t5EMP/S5
+         9VZpSk6DhiIKPG7l7/h+OjnwzD8y8KiABSAo0exrgS0k/aBeSIRxP6uEMVb7UulIHsdO
+         wKfKb0TmFIIIyHY41amKHFEpLGdJJHdP7VBcOjcz+lMCyi1PTiyzIYjGnfZL07MF/yCL
+         yHVMnM5Qj0XTC+y1F/eK/o4HeCnpyyilMs0pAUKiJfL+6RLch9SPoPtaUrtcXZ+UCpyF
+         rbMA==
+X-Gm-Message-State: AJIora8SF4bBzLlqglBIZcgCDGqunibjDt0Eq0Lrbh1GooqM5U//q+L5
+        zX56sxrn9sEHDDvf4tj4SVk=
+X-Google-Smtp-Source: AGRyM1vaLBLGGANA4S4ZZe76iW8/UQXcyVQIKXLPeE2aE4G3r5rIf2WAuG6wINyUL74i2KEuIACRog==
+X-Received: by 2002:aca:b744:0:b0:32f:4c19:cec1 with SMTP id h65-20020acab744000000b0032f4c19cec1mr92658oif.43.1656453442817;
+        Tue, 28 Jun 2022 14:57:22 -0700 (PDT)
+Received: from [192.168.3.92] ([47.189.16.5])
+        by smtp.gmail.com with ESMTPSA id u9-20020a0568301f4900b0061680c8c9e2sm8574677oth.70.2022.06.28.14.57.22
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Jun 2022 14:32:27 -0700 (PDT)
-Message-ID: <24ac75be-4e0b-0c50-8d87-b673535f7686@shenkin.org>
-Date:   Tue, 28 Jun 2022 14:32:24 -0700
+        Tue, 28 Jun 2022 14:57:22 -0700 (PDT)
+Message-ID: <2bece936-f802-3137-3597-6269b1cfc9bb@gmail.com>
+Date:   Tue, 28 Jun 2022 16:57:22 -0500
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
 Subject: Re: Upgrading motherboard + CPU
 Content-Language: en-US
-To:     Pascal Hambourg <pascal@plouf.fr.eu.org>,
-        Roman Mamedov <rm@romanrm.net>
-Cc:     Wols Lists <antlists@youngman.org.uk>, Stephan <linux@psjt.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>
+To:     Alexander Shenkin <al@shenkin.org>,
+        Linux Raid <linux-raid@vger.kernel.org>
 References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
- <b777865e-b265-1e83-dae0-f89654e86332@plouf.fr.eu.org>
  <5cbd9dd1-73fc-ce11-4a9d-8752f7bea979@youngman.org.uk>
  <1de4bf1f-242b-7d02-23dc-a6d05893db81@plouf.fr.eu.org>
  <20220624232049.502a541e@nvm>
@@ -75,21 +75,33 @@ References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
  <b1c6b0c2-ff7b-59e0-580c-81d57b8f8ddb@shenkin.org>
  <20220627160558.0ec507ae@nvm> <693d4b1c-ee58-4cc2-854b-4ae445ff7d24@Spark>
  <3e756547-ae18-c0d8-209e-8dd1fc43bb0f@plouf.fr.eu.org>
-From:   Alexander Shenkin <al@shenkin.org>
-In-Reply-To: <3e756547-ae18-c0d8-209e-8dd1fc43bb0f@plouf.fr.eu.org>
+ <24ac75be-4e0b-0c50-8d87-b673535f7686@shenkin.org>
+From:   Ram Ramesh <rramesh2400@gmail.com>
+In-Reply-To: <24ac75be-4e0b-0c50-8d87-b673535f7686@shenkin.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-On 6/27/2022 7:26 AM, Pascal Hambourg wrote:
-> On 27/06/2022 15:57, Alexander Shenkin wrote :
+On 6/28/22 16:32, Alexander Shenkin wrote:
+>
+> On 6/27/2022 7:26 AM, Pascal Hambourg wrote:
+>> On 27/06/2022 15:57, Alexander Shenkin wrote :
+>>>
+>>> CSM is greyed out.  I think I need a graphics card
 >>
->> CSM is greyed out.  I think I need a graphics card
-> 
-> Is secure boot disabled? Legacy boot is not compatible with secure boot.
+>> Is secure boot disabled? Legacy boot is not compatible with secure boot.
+>
+> There's no way to completely disable secure boot on this mobo. It's an 
+> Asus Prime B560M-A.
 
-There's no way to completely disable secure boot on this mobo.  It's an 
-Asus Prime B560M-A.
+Can you boot legacy install with UEFI boot disk? Have you  tried booting 
+with sysrescuecd or some such to boot your installed OS?
+
+Have you considered converting UEFI? CSM/Legacy boot support is dropping 
+steadily. Sooner or later it will be extinct.
+
+Regards
+Ramesh
+
