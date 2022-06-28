@@ -2,90 +2,166 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED555C43334
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Jun 2022 23:37:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBDEDCCA483
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Jun 2022 00:41:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239056AbiF0Xhh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Jun 2022 19:37:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49450 "EHLO
+        id S237242AbiF1Ak7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 27 Jun 2022 20:40:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231842AbiF0Xhg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 19:37:36 -0400
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A13DEE0C4
-        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 16:37:35 -0700 (PDT)
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4LX3zx2SLYzXMl;
-        Tue, 28 Jun 2022 01:37:33 +0200 (CEST)
-Message-ID: <5c168a88-093f-9e3c-181a-1d5ca37f9c3e@thelounge.net>
-Date:   Tue, 28 Jun 2022 01:37:32 +0200
+        with ESMTP id S241528AbiF1Ak6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Jun 2022 20:40:58 -0400
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12C5CCE2F
+        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 17:40:55 -0700 (PDT)
+Received: by mail-qk1-x72e.google.com with SMTP id b24so7818513qkn.4
+        for <linux-raid@vger.kernel.org>; Mon, 27 Jun 2022 17:40:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=nrCjPCGAs4MTUiLBt7Ijf/MJPuIyH6lM8yqPhdyhJD8=;
+        b=QGfGz2XeyaJLxS6IycR7jteyzbs2f9vu4fQQcftWhoNW5sUtbyuMKwRS5XXshn3Hg2
+         yZubOZXW72TGsXoMKBc9lhqncUYMSH0Z6bymz383cNPRRHeF7rKM5RXMNm4Eaw5tsGTg
+         BQX0bHWNlf6m2F5J4oWG32dxQT2CTBmnGX6tl+1lipYgts8fc/1uUmHwN5t3zZzoA6Qn
+         DTeDwoNVOxWo0hy32OR9hFE/UO0/97qh5eo+5ewqu/iIRVMFQ1AIctopaFBuZOm9BPLs
+         HAx/pGMXLvvVO6Cb9sesF2T5smUMb44u7gsx78px69APS8fFzY4PmSgo/WM3D328ZbRr
+         X/FA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=nrCjPCGAs4MTUiLBt7Ijf/MJPuIyH6lM8yqPhdyhJD8=;
+        b=t97iUqSHElkGROUbIYgmq5ZB1TUCN2cP7+JK0n0IgDzsAI2sYSx9s3GLvsyNhgP2kX
+         pGWDrXDT8GwdFpJJij/j1pfPn3mY0W7zuK2tVHR4vpMpyrxJnocLfkLxRP4aDP900Vn4
+         3C2mtyMCGJn6bMn3bjaUXMg0BHPU8kKiIit73ymqLMquGLZ9mxwi2CJb4CYj6EfE/gI6
+         zuzSmoiupT0/7IzHK6R97L9jrZdVrkHYqKS6zJvC0UBtM64aopoVS2Z0uU9jxq3VMwUg
+         +HdASYFUo+CYXgzWIR37QBMMR5t7CdhfKH+nsW4SkCikpY+Zs/t7G1KIncyz5WAEsNtz
+         I2SA==
+X-Gm-Message-State: AJIora+K8Qsj++itr3/3CZUlqG4yiYAWwG2gnGF922hV0yAcvoSbljrB
+        VvEDNT00A+hkAOAIvq+CiJ9pww==
+X-Google-Smtp-Source: AGRyM1vTCFcIzhygOqc0dfz0XQz9dolsiNFu6n34Zw7Kl9e9LRh00tD6U1uaxZUOgaZBY5Ks0qTgkA==
+X-Received: by 2002:a05:620a:1450:b0:6af:1999:5f4c with SMTP id i16-20020a05620a145000b006af19995f4cmr7538467qkl.301.1656376854703;
+        Mon, 27 Jun 2022 17:40:54 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-162-113-129.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.129])
+        by smtp.gmail.com with ESMTPSA id x11-20020a05620a448b00b006a768c699adsm10335849qkp.125.2022.06.27.17.40.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jun 2022 17:40:53 -0700 (PDT)
+Received: from jgg by mlx with local (Exim 4.94)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1o5zHg-002iu4-9Z; Mon, 27 Jun 2022 21:40:52 -0300
+Date:   Mon, 27 Jun 2022 21:40:52 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Daniel Borkmann <daniel@iogearbox.net>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        linux-kernel@vger.kernel.org, x86@kernel.org, dm-devel@redhat.com,
+        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
+        linux-s390@vger.kernel.org, kvm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        netdev@vger.kernel.org, bpf@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, io-uring@vger.kernel.org,
+        lvs-devel@vger.kernel.org, linux-mtd@lists.infradead.org,
+        kasan-dev@googlegroups.com, linux-mmc@vger.kernel.org,
+        nvdimm@lists.linux.dev, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, linux-perf-users@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        v9fs-developer@lists.sourceforge.net, linux-rdma@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH][next] treewide: uapi: Replace zero-length arrays with
+ flexible-array members
+Message-ID: <20220628004052.GM23621@ziepe.ca>
+References: <20220627180432.GA136081@embeddedor>
+ <6bc1e94c-ce1d-a074-7d0c-8dbe6ce22637@iogearbox.net>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: what's wrong with RAID-10? (was "Re: moving a working array")
-Content-Language: en-US
-To:     Wols Lists <antlists@youngman.org.uk>,
-        David T-G <davidtg-robot@justpickone.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>
-References: <CAPpdf595_7eW8amX8eueMxgjaWvLW-hWHh1SHHaGAt8YyP7yDw@mail.gmail.com>
- <7683b644cf076f8db06d60fdd3e4f88424f35bd2.camel@gmail.com>
- <92378403-adf6-dedb-828c-81b331c1d8c1@youngman.org.uk>
- <20220627104109.GJ18273@justpickone.org>
- <d058da47-528e-f9af-dbb1-5941eef72b56@youngman.org.uk>
- <4b90d4e6-186c-23ea-78be-c507bcc04427@thelounge.net>
- <6ee3bff1-b7b4-5309-6a9e-d23c868f2e59@youngman.org.uk>
-From:   Reindl Harald <h.reindl@thelounge.net>
-Organization: the lounge interactive design
-In-Reply-To: <6ee3bff1-b7b4-5309-6a9e-d23c868f2e59@youngman.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <6bc1e94c-ce1d-a074-7d0c-8dbe6ce22637@iogearbox.net>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-Am 27.06.22 um 20:52 schrieb Wols Lists:
-> On 27/06/2022 19:41, Reindl Harald wrote:
->>
->>
->> Am 27.06.22 um 17:10 schrieb Wols Lists:
->>> On 27/06/2022 11:41, David T-G wrote:
->>>> Wol, et al --
->>>>
->>>> ...and then Wols Lists said...
->>>> %
->>>> % On 24/06/2022 15:09, Wilson Jonathan wrote:
->>>> % > On Fri, 2022-06-24 at 08:38 -0500, o1bigtenor wrote:
->>>> % > >
->>>> % > > I have a working (no issues) raid-10 array in one box.
->>>> %
->>>> % Bummer. It's a raid-10. A raid-1 would have been easier.
->>>> [snip]
->>>>
->>>> This tripped me.  I presumed that the reason for -10, not least because
->>>> he also said "these 4 drives", was because the array space is bigger 
->>>> than
->>>> just one hard drive size, ie 6T on 4ea 3T drives.  How would RAID-1 
->>>> work
->>>> for that storage?  And why would it be easier than RAID-10?
->>>>
->>> Just that raid-1 would have been a simple case of two drives, each a 
->>> backup of the other. Keep one safe, put the other in the new system.
->>>
->>> With raid-10, it's much more complicated - you can't just do that :-(
->>
->> you can easily do that with RAID10
+On Mon, Jun 27, 2022 at 08:27:37PM +0200, Daniel Borkmann wrote:
+> On 6/27/22 8:04 PM, Gustavo A. R. Silva wrote:
+> > There is a regular need in the kernel to provide a way to declare
+> > having a dynamically sized set of trailing elements in a structure.
+> > Kernel code should always use “flexible array members”[1] for these
+> > cases. The older style of one-element or zero-length arrays should
+> > no longer be used[2].
+> > 
+> > This code was transformed with the help of Coccinelle:
+> > (linux-5.19-rc2$ spatch --jobs $(getconf _NPROCESSORS_ONLN) --sp-file script.cocci --include-headers --dir . > output.patch)
+> > 
+> > @@
+> > identifier S, member, array;
+> > type T1, T2;
+> > @@
+> > 
+> > struct S {
+> >    ...
+> >    T1 member;
+> >    T2 array[
+> > - 0
+> >    ];
+> > };
+> > 
+> > -fstrict-flex-arrays=3 is coming and we need to land these changes
+> > to prevent issues like these in the short future:
+> > 
+> > ../fs/minix/dir.c:337:3: warning: 'strcpy' will always overflow; destination buffer has size 0,
+> > but the source string has length 2 (including NUL byte) [-Wfortify-source]
+> > 		strcpy(de3->name, ".");
+> > 		^
+> > 
+> > Since these are all [0] to [] changes, the risk to UAPI is nearly zero. If
+> > this breaks anything, we can use a union with a new member name.
+> > 
+> > [1] https://en.wikipedia.org/wiki/Flexible_array_member
+> > [2] https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-and-one-element-arrays
+> > 
+> > Link: https://github.com/KSPP/linux/issues/78
+> > Build-tested-by: https://lore.kernel.org/lkml/62b675ec.wKX6AOZ6cbE71vtF%25lkp@intel.com/
+> > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> > ---
+> > Hi all!
+> > 
+> > JFYI: I'm adding this to my -next tree. :)
 > 
-> Only if all the disks are the same size ... and an even number
+> Fyi, this breaks BPF CI:
+> 
+> https://github.com/kernel-patches/bpf/runs/7078719372?check_suite_focus=true
+> 
+>   [...]
+>   progs/map_ptr_kern.c:314:26: error: field 'trie_key' with variable sized type 'struct bpf_lpm_trie_key' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
+>           struct bpf_lpm_trie_key trie_key;
+>                                   ^
 
-in other words: in every typical usecase
-how does RAID1 work with different disk sizes?
+This will break the rdma-core userspace as well, with a similar
+error:
 
-the point is that "With raid-10, it's much more complicated" is simply 
-wrong unledss you say "it can be more complicated if you have a strange 
-setup"
+/usr/bin/clang-13 -DVERBS_DEBUG -Dibverbs_EXPORTS -Iinclude -I/usr/include/libnl3 -I/usr/include/drm -g -O2 -fdebug-prefix-map=/__w/1/s=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wmissing-prototypes -Wmissing-declarations -Wwrite-strings -Wformat=2 -Wcast-function-type -Wformat-nonliteral -Wdate-time -Wnested-externs -Wshadow -Wstrict-prototypes -Wold-style-definition -Werror -Wredundant-decls -g -fPIC   -std=gnu11 -MD -MT libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o -MF libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o.d -o libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o   -c ../libibverbs/cmd_flow.c
+In file included from ../libibverbs/cmd_flow.c:33:
+In file included from include/infiniband/cmd_write.h:36:
+In file included from include/infiniband/cmd_ioctl.h:41:
+In file included from include/infiniband/verbs.h:48:
+In file included from include/infiniband/verbs_api.h:66:
+In file included from include/infiniband/ib_user_ioctl_verbs.h:38:
+include/rdma/ib_user_verbs.h:436:34: error: field 'base' with variable sized type 'struct ib_uverbs_create_cq_resp' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
+        struct ib_uverbs_create_cq_resp base;
+                                        ^
+include/rdma/ib_user_verbs.h:644:34: error: field 'base' with variable sized type 'struct ib_uverbs_create_qp_resp' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
+        struct ib_uverbs_create_qp_resp base;
+
+Which is why I gave up trying to change these..
+
+Though maybe we could just switch off -Wgnu-variable-sized-type-not-at-end  during configuration ?
+
+Jason
