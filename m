@@ -2,102 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4E54CCA483
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Jun 2022 18:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 245A7C43334
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Jun 2022 21:32:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233041AbiF1SoL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Jun 2022 14:44:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44802 "EHLO
+        id S230393AbiF1Vca (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Jun 2022 17:32:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232838AbiF1SoJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Jun 2022 14:44:09 -0400
-Received: from mail-qv1-xf34.google.com (mail-qv1-xf34.google.com [IPv6:2607:f8b0:4864:20::f34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CA8323BE6
-        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 11:44:06 -0700 (PDT)
-Received: by mail-qv1-xf34.google.com with SMTP id t16so21434202qvh.1
-        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 11:44:06 -0700 (PDT)
+        with ESMTP id S230350AbiF1Vc3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Jun 2022 17:32:29 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCBE13AA71
+        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 14:32:28 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d5so12190133plo.12
+        for <linux-raid@vger.kernel.org>; Tue, 28 Jun 2022 14:32:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=srd0vxfduo9pXREXizXvQ1Gwi/kEACFP1rdXcY0Aglg=;
-        b=QDfPPT0fYl+zbzIvYII9znFGb4s02ZWc7rdJXgoVlQii3pb6MPHXUbo2NQcshGpobE
-         dWlWXPBgu4AcM4BoWih7Z1Nr6ImLeGEz2FZoCblM4qyf8MsycIzs6ej4nXX7nwNpGP6Q
-         WS2wAoLm7tunOmWFHsCTXENR5aJ2dwangh3Hiy+KajaZLCQ31/GJ39i5LG+HlW0f/4Yp
-         DzCT3gMR3JvAVHruRt3NJZXTCo87e7XIf3RRiCTD40KLgGYQ8Oy9U016RK3fPhyNykEI
-         VcI+7whSObzV9gDqoR9iwpi6V1hWpQPbHnX1dl7fE5ec/owdsM9r7W03JXKpNXxaLmSi
-         lJng==
+        d=shenkin.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=LzOVrIMwMjRwghyBiSOHMTWWg1GxTXQYN8l5kMQ/RmI=;
+        b=CiPlMMmjFiFC/Yvl3fWwdejVr9ejh/H9vN/RIbOWqypq29zRQ0sjCYhr/OqvRHPuzb
+         0JOKXS+bER49KSOudKcG3Sk3hdSLIRi/9xGb4b6NouHgMGM0pGvfnBxy8RxoH3sLsU0m
+         A+aazknwZXQuTu5drvqVUslrJ+TZpehXLqMjw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=srd0vxfduo9pXREXizXvQ1Gwi/kEACFP1rdXcY0Aglg=;
-        b=XC2jp4QkWY5uzfXU4cz53woAaO6RY0boul74C+JCrSIk9QPQXMkLZB1qBKHy1zgjBG
-         l5Er22rwkmy93UXMWVy1CzEZGjke+ftwlw3SyC3zGXuLDRxM86drMMa7GMK3hPjLVbC8
-         tm/tdED6UaOo6jHXcorv4DmjlZOrAUZBYcSt7CwWsWe2Grn+r/nx3ph3W7P8Xfm0dJmF
-         KlMLw8YGQmWTG/+eK0enOx8wHP52w48jOWcZXhj96MkhNufqJ5/UxhU60taIqr0zBOGs
-         Xc7SeRnmFdro81haqBHu1ulPgFqR6O9sMGSoQ+FUosVPBFhxG7upPPeZLvdG8CvJKjuV
-         EaAQ==
-X-Gm-Message-State: AJIora/w1yxV/Ja06icPFROX4x8mt5jZ6DUmwKFaxRNIfbY03JmR+9v5
-        agpm2VXunqEtS90BFWByWxhDGQ==
-X-Google-Smtp-Source: AGRyM1uBRJ6m7mmrK5Ju1JW1doBHC+UzIgAGX/xwYqaVx3XSmh4juFCDP3TjiYp7BZ5iZ3elpoeXxg==
-X-Received: by 2002:a05:622a:7:b0:31b:74bd:1597 with SMTP id x7-20020a05622a000700b0031b74bd1597mr6494688qtw.677.1656441846052;
-        Tue, 28 Jun 2022 11:44:06 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-142-162-113-129.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.129])
-        by smtp.gmail.com with ESMTPSA id h9-20020ac85149000000b003050bd1f7c9sm9708477qtn.76.2022.06.28.11.44.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jun 2022 11:44:05 -0700 (PDT)
-Received: from jgg by mlx with local (Exim 4.94)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1o6GBw-0035y2-Fs; Tue, 28 Jun 2022 15:44:04 -0300
-Date:   Tue, 28 Jun 2022 15:44:04 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Daniel Borkmann <daniel@iogearbox.net>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-kernel@vger.kernel.org, x86@kernel.org, dm-devel@redhat.com,
-        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
-        linux-s390@vger.kernel.org, kvm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        netdev@vger.kernel.org, bpf@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net, io-uring@vger.kernel.org,
-        lvs-devel@vger.kernel.org, linux-mtd@lists.infradead.org,
-        kasan-dev@googlegroups.com, linux-mmc@vger.kernel.org,
-        nvdimm@lists.linux.dev, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, linux-perf-users@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        v9fs-developer@lists.sourceforge.net, linux-rdma@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] treewide: uapi: Replace zero-length arrays with
- flexible-array members
-Message-ID: <20220628184404.GS23621@ziepe.ca>
-References: <20220627180432.GA136081@embeddedor>
- <6bc1e94c-ce1d-a074-7d0c-8dbe6ce22637@iogearbox.net>
- <20220628004052.GM23621@ziepe.ca>
- <202206281009.4332AA33@keescook>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=LzOVrIMwMjRwghyBiSOHMTWWg1GxTXQYN8l5kMQ/RmI=;
+        b=UeXE6t4Sr+LpiJl32S+1izajEXdBiXHw+gdMRb2m5/2OqDbAaZLwpOI1i1jMzc2SLq
+         YAgbWzPXsJWr68Iv5n6sBKUUF36IludpX7rXFHFQ6ryWZe1QhKe0ZUbKFOy8XzqHtR8R
+         aVAOGqcgfZiHogPI+Oq2FL5yjqEVSVtH4OsVA8qPSxDQt4rUcrw5Y/ofyZ24r/Q6k3a/
+         UM73+0+PqsP7Dub6A7t0wu/Z4GR9FydSb/V40eF7e66OR2B/2qlZmH2r2nLiuXBPf7Ke
+         cFpjM2DKij7nG4AJkXqrgPZ3k3XjKg4IroSbABRtAER1FBuyH8ZYOZPTUhxpYVIkGKAD
+         YeDQ==
+X-Gm-Message-State: AJIora/uI5+0pbhFv3Pg8drIuyzGievg5x+jw0HFg5oc+P+NdqHa+gNW
+        pBsbP0a24j04IGxBfYCKiC6wKmpj978BKPpg
+X-Google-Smtp-Source: AGRyM1t9AuQESbZOx5n7ymFo/MUG/MdSXdnD4lzGkTarUnQTUJvIG/m6ewFWYSigvnmkgN1HoapSfA==
+X-Received: by 2002:a17:902:f804:b0:16a:da1:1ef7 with SMTP id ix4-20020a170902f80400b0016a0da11ef7mr5653786plb.17.1656451948313;
+        Tue, 28 Jun 2022 14:32:28 -0700 (PDT)
+Received: from [192.168.1.243] ([47.215.181.107])
+        by smtp.googlemail.com with ESMTPSA id x5-20020a1709029a4500b001678e9670d8sm9834966plv.2.2022.06.28.14.32.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 28 Jun 2022 14:32:27 -0700 (PDT)
+Message-ID: <24ac75be-4e0b-0c50-8d87-b673535f7686@shenkin.org>
+Date:   Tue, 28 Jun 2022 14:32:24 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202206281009.4332AA33@keescook>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: Upgrading motherboard + CPU
+Content-Language: en-US
+To:     Pascal Hambourg <pascal@plouf.fr.eu.org>,
+        Roman Mamedov <rm@romanrm.net>
+Cc:     Wols Lists <antlists@youngman.org.uk>, Stephan <linux@psjt.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>
+References: <CAPpdf59G6UjOe-80oqgwPmMY14t0_E=D20cbUwDwtOT8=AFcLQ@mail.gmail.com>
+ <b777865e-b265-1e83-dae0-f89654e86332@plouf.fr.eu.org>
+ <5cbd9dd1-73fc-ce11-4a9d-8752f7bea979@youngman.org.uk>
+ <1de4bf1f-242b-7d02-23dc-a6d05893db81@plouf.fr.eu.org>
+ <20220624232049.502a541e@nvm>
+ <dab2fe0a-c49e-5da7-5df3-4d01c86a65a7@shenkin.org>
+ <20220624234453.43cf4c74@nvm>
+ <22102e4b-4738-672d-0d00-bbeccb54fe84@shenkin.org>
+ <d85093a4-be3e-d4f2-eca0-e20882584bab@youngman.org.uk>
+ <b664e4ce-6ebe-86c6-78d9-d5606c0f6555@shenkin.org>
+ <5cb8d159-be2a-aa6c-888a-fcb9ed4555c1@youngman.org.uk>
+ <20220625030833.3398d8a4@nvm>
+ <ae2288f4-ad06-65af-d30c-4aef6d478f27@plouf.fr.eu.org>
+ <s6nh748amrs.fsf@blaulicht.dmz.brux>
+ <1b6c6601-22a0-af2a-81a9-34599b1b0fa7@youngman.org.uk>
+ <f971e15d-9cd4-e6de-c174-f3c6bd338bb6@plouf.fr.eu.org>
+ <b1c6b0c2-ff7b-59e0-580c-81d57b8f8ddb@shenkin.org>
+ <20220627160558.0ec507ae@nvm> <693d4b1c-ee58-4cc2-854b-4ae445ff7d24@Spark>
+ <3e756547-ae18-c0d8-209e-8dd1fc43bb0f@plouf.fr.eu.org>
+From:   Alexander Shenkin <al@shenkin.org>
+In-Reply-To: <3e756547-ae18-c0d8-209e-8dd1fc43bb0f@plouf.fr.eu.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Jun 28, 2022 at 10:54:58AM -0700, Kees Cook wrote:
 
- 
-> which must also be assuming it's a header. So probably better to just
-> drop the driver_data field? I don't see anything using it (that I can
-> find) besides as a sanity-check that the field exists and is at the end
-> of the struct.
+On 6/27/2022 7:26 AM, Pascal Hambourg wrote:
+> On 27/06/2022 15:57, Alexander Shenkin wrote :
+>>
+>> CSM is greyed out.  I think I need a graphics card
+> 
+> Is secure boot disabled? Legacy boot is not compatible with secure boot.
 
-The field is guaranteeing alignment of the following structure. IIRC
-there are a few cases that we don't have a u64 already to force this.
-
-Jason
+There's no way to completely disable secure boot on this mobo.  It's an 
+Asus Prime B560M-A.
