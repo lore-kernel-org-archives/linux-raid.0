@@ -2,976 +2,629 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB56C43334
-	for <linux-raid@archiver.kernel.org>; Thu, 30 Jun 2022 09:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A01EC433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 30 Jun 2022 16:18:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234310AbiF3JSG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 30 Jun 2022 05:18:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45274 "EHLO
+        id S235934AbiF3QSa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 30 Jun 2022 12:18:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234166AbiF3JRr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Jun 2022 05:17:47 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2063.outbound.protection.outlook.com [40.107.94.63])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FFE23B3EA;
-        Thu, 30 Jun 2022 02:16:23 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OgDeWxUgudCufb/AgSW91agR1LHhR22Zr7Ln0uRExcks6Fvm7kQ1o/6O7shukdw0sqrUQsC5BY1+WioCvR/7vWQ3VH/eL7YXw+NgfFcXq98goE5v0H9S3FrLrhLenf9bITKUyqY2/QP+Ly1SBPCCV+kk2ipCKJ2xne0j4ffqJZrbIysnoad6U0r7PZj82NWknYA8T4REQcJGfa5AzgAz+qtASLvy+pfAJObk2Wk/5BgKAMX5yU9u7byC5UGKQJNuaJsSs0EQGyEWmp/xKZzyrRy7O1W0x2gd/FBqOYKDg9L+blp4BDrUI63jOqdVO47v87Yk5fM5+IlOLfKuMK6vbQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iPZs7OYN4FZ+SmQc9J9/JunPcK7ctzZQQiiCscacw4c=;
- b=izljQfwPVJIxrzh96HDuxTAkEYyfb9IkrmxqGFCqKk9y7AUdfeCEXGXwE0k8WgXaMxg9y+BNngqUHOvyaHg8DjW6Td7l0Oo3yw+oUGWvNOu002mR5+jDbwdUZN4m9LQ/AuMtoccam8HHrEdyWwD99hXSJMIHgcYj7m+vMdEJMJyq00X4x545X4sPTyLmR1JagvYlhJuoptaWI77//cM7Nc/wnnyQNHqVsDZxwBy3uvBk63DMCMoUqztnshMHaagLI9FOfcVoxH1qf6Jv9Sd4u0C8mMVrKhtjbqErcPGdrEJe9UmRLhoGfW93SE2IeWdXpY/hn5LSc7Hf24kXPZZl9A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.238) smtp.rcpttodomain=grimberg.me smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iPZs7OYN4FZ+SmQc9J9/JunPcK7ctzZQQiiCscacw4c=;
- b=gc6vY7/mJ9sKWVdd8lJbnSyEwtgdj45E0JFL0pguj9yetUemsUbAKMozq4gHGUQ/+AQ1BTYraetAJu1WSt1JJR4sM9fNUR1AtROLjHcLEHE7PmUev79ZQ4Zgli/PB64kqoQIAucrHdmqUzYNb+rLPUR+MOHylwi+5sqeO9vfHi6FfZuC4CjYgG9/RZxKzYkaJByayQQBXMEd94ai5boCjlnn8DHLMkOQo6ad8XfebI390zFF4n+kxnXnKkzyoon3eBrraX9NhjZv39ubcvEDOPoYuYF7HmqT1UQCQtf0Ns5VZAsN7YMF1cnTA1/XnQkmrf8+MnzQJjbcDgFucQ2lVA==
-Received: from DS7PR05CA0056.namprd05.prod.outlook.com (2603:10b6:8:2f::17) by
- SA0PR12MB4509.namprd12.prod.outlook.com (2603:10b6:806:9e::16) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5395.14; Thu, 30 Jun 2022 09:16:21 +0000
-Received: from DM6NAM11FT020.eop-nam11.prod.protection.outlook.com
- (2603:10b6:8:2f:cafe::d8) by DS7PR05CA0056.outlook.office365.com
- (2603:10b6:8:2f::17) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.7 via Frontend
- Transport; Thu, 30 Jun 2022 09:16:20 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.238)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.238 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.238; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (12.22.5.238) by
- DM6NAM11FT020.mail.protection.outlook.com (10.13.172.224) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.5395.14 via Frontend Transport; Thu, 30 Jun 2022 09:16:20 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL105.nvidia.com
- (10.27.9.14) with Microsoft SMTP Server (TLS) id 15.0.1497.32; Thu, 30 Jun
- 2022 09:16:19 +0000
-Received: from dev.nvidia.com (10.126.231.35) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Thu, 30 Jun
- 2022 02:16:17 -0700
-From:   Chaitanya Kulkarni <kch@nvidia.com>
-To:     <linux-block@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <linux-nvme@lists.infradead.org>, <linux-fsdevel@vger.kernel.org>
-CC:     <axboe@kernel.dk>, <agk@redhat.com>, <song@kernel.org>,
-        <djwong@kernel.org>, <kbusch@kernel.org>, <hch@lst.de>,
-        <sagi@grimberg.me>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <viro@zeniv.linux.org.uk>,
-        <javier@javigon.com>, <johannes.thumshirn@wdc.com>,
-        <bvanassche@acm.org>, <dongli.zhang@oracle.com>,
-        <ming.lei@redhat.com>, <willy@infradead.org>,
-        <jefflexu@linux.alibaba.com>, <josef@toxicpanda.com>, <clm@fb.com>,
-        <dsterba@suse.com>, <jack@suse.com>, <tytso@mit.edu>,
-        <adilger.kernel@dilger.ca>, <jlayton@kernel.org>,
-        <idryomov@gmail.com>, <danil.kipnis@cloud.ionos.com>,
-        <ebiggers@google.com>, <jinpu.wang@cloud.ionos.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [PATCH] sys-utils: add blkverify command
-Date:   Thu, 30 Jun 2022 02:16:05 -0700
-Message-ID: <20220630091606.21438-1-kch@nvidia.com>
-X-Mailer: git-send-email 2.29.0
+        with ESMTP id S235069AbiF3QS2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Jun 2022 12:18:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 171A21EC7F;
+        Thu, 30 Jun 2022 09:18:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9987661FFB;
+        Thu, 30 Jun 2022 16:18:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1484C34115;
+        Thu, 30 Jun 2022 16:18:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656605906;
+        bh=FNqG9nClUfdn9TnASVFMj5V788rc3hGSwKyxEuvVVFk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=J5p3lhbJI8VOen72bxecwV8g5Ml7LefIqf5OH1zPkd9Jt3JcxXB+X+moMJ1nrh5I2
+         Imlltepf26S9tc6h8M/0MBSitMRtaUPlhbs6HsPORqcITAtCb90jpRmV4rYU5M/7OF
+         JrCUtb7D3e3clNn2akgZUIT0+8C85A6j/57/wRgCD/aKydbpyPrSDydOtVt5H5xY4+
+         OYCzkxo3S9M1z6qgEsf9QpB69x911R8quDYLNIya88m3jta3ld3JKUpkrAS82yQ+9T
+         UtDO3ClLaNbklWNJwTPsZB5oys2NrzgXdO7/r8bLWKcGLlhSHPNhYA3APv5EEiqmke
+         hGr3o8VkSEGPw==
+Date:   Thu, 30 Jun 2022 09:18:25 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chaitanya Kulkarni <kch@nvidia.com>
+Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        axboe@kernel.dk, agk@redhat.com, song@kernel.org,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, javier@javigon.com,
+        johannes.thumshirn@wdc.com, bvanassche@acm.org,
+        dongli.zhang@oracle.com, ming.lei@redhat.com, willy@infradead.org,
+        jefflexu@linux.alibaba.com, josef@toxicpanda.com, clm@fb.com,
+        dsterba@suse.com, jack@suse.com, tytso@mit.edu,
+        adilger.kernel@dilger.ca, jlayton@kernel.org, idryomov@gmail.com,
+        danil.kipnis@cloud.ionos.com, ebiggers@google.com,
+        jinpu.wang@cloud.ionos.com
+Subject: Re: [PATCH 1/6] block: add support for REQ_OP_VERIFY
+Message-ID: <Yr3M0W5T/CwMtvte@magnolia>
+References: <20220630091406.19624-1-kch@nvidia.com>
+ <20220630091406.19624-2-kch@nvidia.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.126.231.35]
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d8a7615d-6536-4168-d780-08da5a79323b
-X-MS-TrafficTypeDiagnostic: SA0PR12MB4509:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: /gFexYLbuJWWOmZCrSbTLHFRex2OzHKuh8+0vf7K6T9OYQooUHXncpKUmPu9X65F8NhznKSDg1GNQniduTLMT2B4f2eGf69wvQbcvr0UDTHe0lSaMfqhbXb1uS65c/JWGkqBgxHdFzg9Z77BV4HncsUOdwTR7wWB+MHdzG5ZxAXmqGtyHUVm2wzX/0PYljAQt1jLK++yzNjuHcXJbj3LljZjTDl1ZcjimHjMEbxaqpB+uuway7tJlOl49JLBMrUdQQOu7EywpJvcU2ttFt6RjKF4WcR7DGizmacAKLb7oDQdb+Y+/ndlzWQmd5HAXe3ZuRwvy709zgoIEn+qf/g+Ik5pvU70RTqqIHKUVTYDzg3JeB5uwgwU6ibzT952assl14mLx+AE5ponGOR+Dc04cwFJcD4dK9COVAIi/AbOQnQZqoNFPoJMi5Gub2MhY2rr5glIr+RbLNZWuQ3WfufTUoHmBr0srNfflrhGUVATPJ08Bd3dwYzWfwo8eSMIw6GrS4LPhjBkW/UJXPLivOKnXp3xp4g1Bh6wwwQb25Egyby/dfmFUJTPLyHvEtvPhYBSpgdNcpILoq5EyzblD+W9njbtbqKpzJ2zvuDwNxnVWHkVLlwX6JoPtAxdb1V7vfzY/EDc+QjnzvyG4KBsaVCDZbm7MBtgxvSb1oh5XVmUZGs7FQ2905okMtmrac47/IzEKME0Sj9FD/O5gbCSXD/V9fEXhBvO3cLJrlKD0acC2PEIQmGxUQlaF/kLyErbX1RqqQ+xOMouPCzFunhamUHvp6C1M1GDHs5vTpA4bzhnPFVLYgzIPsAQtkKBJ5U+uOWw2/iMuRw1V4qG215VcqSGTMvuQE8udSF2DCVKnNrNLGcJad7LOx8azNfAahGcD5IKrbhwwuDPmJD6YzI/Xr52O6cfimL4qv8ytU2V2kYrdQu4nJ+G7x92UwHfIeHW33S1
-X-Forefront-Antispam-Report: CIP:12.22.5.238;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(136003)(396003)(376002)(346002)(39860400002)(46966006)(40470700004)(36840700001)(8676002)(4326008)(356005)(54906003)(478600001)(40460700003)(7696005)(47076005)(41300700001)(336012)(6666004)(186003)(2906002)(8936002)(426003)(110136005)(7406005)(26005)(7416002)(16526019)(83380400001)(30864003)(1076003)(2616005)(107886003)(40480700001)(316002)(36756003)(82740400003)(81166007)(36860700001)(82310400005)(70586007)(5660300002)(70206006)(2004002)(2101003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2022 09:16:20.5109
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d8a7615d-6536-4168-d780-08da5a79323b
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.238];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT020.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4509
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220630091406.19624-2-kch@nvidia.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
----
- AUTHORS                                       |   1 +
- bash-completion/Makemodule.am                 |   3 +
- bash-completion/blkverify                     |  34 +++
- configure.ac                                  |   4 +
- include/blkdev.h                              |   4 +
- meson.build                                   |  12 +
- sys-utils/Makemodule.am                       |   9 +
- sys-utils/blkverify.8.adoc                    |  57 +++++
- sys-utils/blkverify.c                         | 207 ++++++++++++++++++
- sys-utils/fstrim.8.adoc                       |   1 +
- sys-utils/meson.build                         |   5 +
- tests/commands.sh                             |   1 +
- tests/expected/blkverify/offsets              |  48 ++++
- tests/expected/blkverify/offsets.err          |  20 ++
- tests/expected/build-sys/config-all           |   1 +
- tests/expected/build-sys/config-all-non-nls   |   1 +
- tests/expected/build-sys/config-audit         |   1 +
- .../expected/build-sys/config-chfnsh-libuser  |   1 +
- .../build-sys/config-chfnsh-no-password       |   1 +
- tests/expected/build-sys/config-chfnsh-pam    |   1 +
- tests/expected/build-sys/config-core          |   1 +
- tests/expected/build-sys/config-devel         |   1 +
- .../expected/build-sys/config-devel-non-asan  |   1 +
- .../expected/build-sys/config-devel-non-docs  |   1 +
- tests/expected/build-sys/config-non-libblkid  |   1 +
- tests/expected/build-sys/config-non-libmount  |   1 +
- tests/expected/build-sys/config-non-libs      |   1 +
- .../build-sys/config-non-libsmartcols         |   1 +
- tests/expected/build-sys/config-non-libuuid   |   1 +
- tests/expected/build-sys/config-non-nls       |   1 +
- tests/expected/build-sys/config-selinux       |   1 +
- tests/expected/build-sys/config-slang         |   1 +
- tests/expected/build-sys/config-static        |   1 +
- tests/ts/blkverify/offsets                    |  91 ++++++++
- 34 files changed, 516 insertions(+)
- create mode 100644 bash-completion/blkverify
- create mode 100644 sys-utils/blkverify.8.adoc
- create mode 100644 sys-utils/blkverify.c
- create mode 100644 tests/expected/blkverify/offsets
- create mode 100644 tests/expected/blkverify/offsets.err
- create mode 100755 tests/ts/blkverify/offsets
+On Thu, Jun 30, 2022 at 02:14:01AM -0700, Chaitanya Kulkarni wrote:
+> This adds a new block layer operation to offload verifying a range of
+> LBAs. This support is needed in order to provide file systems and
+> fabrics, kernel components to offload LBA verification when it is
+> supported by the hardware controller. In case hardware offloading is
+> not supported then we provide API to emulate the same. The prominent
+> example of that is SCSI and NVMe Verify command. We also provide
+> an emulation of the same operation that can be used in case H/W does
+> not support verify. This is still useful when block device is remotely
+> attached e.g. using NVMeOF.
+> 
+> Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
+> ---
+>  Documentation/ABI/stable/sysfs-block |  12 +++
+>  block/blk-core.c                     |   5 +
+>  block/blk-lib.c                      | 155 +++++++++++++++++++++++++++
+>  block/blk-merge.c                    |  18 ++++
+>  block/blk-settings.c                 |  17 +++
+>  block/blk-sysfs.c                    |   8 ++
+>  block/blk.h                          |   4 +
+>  block/ioctl.c                        |  35 ++++++
+>  include/linux/bio.h                  |   9 +-
+>  include/linux/blk_types.h            |   2 +
+>  include/linux/blkdev.h               |  22 ++++
+>  include/uapi/linux/fs.h              |   1 +
+>  12 files changed, 285 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Documentation/ABI/stable/sysfs-block b/Documentation/ABI/stable/sysfs-block
+> index e8797cd09aff..a71d9c41cf8b 100644
+> --- a/Documentation/ABI/stable/sysfs-block
+> +++ b/Documentation/ABI/stable/sysfs-block
+> @@ -657,6 +657,18 @@ Description:
+>  		in a single write zeroes command. If write_zeroes_max_bytes is
+>  		0, write zeroes is not supported by the device.
+>  
+> +What:		/sys/block/<disk>/queue/verify_max_bytes
+> +Date:		April 2022
+> +Contact:	Chaitanya Kulkarni <kch@nvidia.com>
+> +Description:
+> +		Devices that support verify operation in which a single
+> +		request can be issued to verify the range of the contiguous
+> +		blocks on the storage without any payload in the request.
+> +		This can be used to optimize verifying LBAs on the device
+> +		without reading by offloading functionality. verify_max_bytes
+> +		indicates how many bytes can be written in a single verify
+> +		command. If verify_max_bytes is 0, verify operation is not
+> +		supported by the device.
+>  
+>  What:		/sys/block/<disk>/queue/zone_append_max_bytes
+>  Date:		May 2020
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 06ff5bbfe8f6..9ad52247dcdf 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -123,6 +123,7 @@ static const char *const blk_op_name[] = {
+>  	REQ_OP_NAME(ZONE_FINISH),
+>  	REQ_OP_NAME(ZONE_APPEND),
+>  	REQ_OP_NAME(WRITE_ZEROES),
+> +	REQ_OP_NAME(VERIFY),
+>  	REQ_OP_NAME(DRV_IN),
+>  	REQ_OP_NAME(DRV_OUT),
+>  };
+> @@ -842,6 +843,10 @@ void submit_bio_noacct(struct bio *bio)
+>  		if (!q->limits.max_write_zeroes_sectors)
+>  			goto not_supported;
+>  		break;
+> +	case REQ_OP_VERIFY:
+> +		if (!q->limits.max_verify_sectors)
+> +			goto not_supported;
+> +		break;
+>  	default:
+>  		break;
+>  	}
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index 09b7e1200c0f..4624d68bb3cb 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -340,3 +340,158 @@ int blkdev_issue_secure_erase(struct block_device *bdev, sector_t sector,
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(blkdev_issue_secure_erase);
+> +
+> +/**
+> + * __blkdev_emulate_verify - emulate number of verify operations
+> + * 				asynchronously
+> + * @bdev:	blockdev to issue
+> + * @sector:	start sector
+> + * @nr_sects:	number of sectors to verify
+> + * @gfp_mask:	memory allocation flags (for bio_alloc)
+> + * @biop:	pointer to anchor bio
+> + * @buf:	data buffer to mapped on bio
+> + *
+> + * Description:
+> + *  Verify a block range by emulating REQ_OP_VERIFY into REQ_OP_READ,
+> + *  use this when H/W offloading is not supported asynchronously.
+> + *  Caller is responsible to handle anchored bio.
+> + */
+> +static int __blkdev_emulate_verify(struct block_device *bdev, sector_t sector,
+> +		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop, char *buf)
+> +{
+> +	struct bio *bio = *biop;
+> +	unsigned int sz;
+> +	int bi_size;
+> +
+> +	while (nr_sects != 0) {
+> +		bio = blk_next_bio(bio, bdev,
+> +				__blkdev_sectors_to_bio_pages(nr_sects),
+> +				REQ_OP_READ, gfp_mask);
+> +		bio->bi_iter.bi_sector = sector;
+> +
+> +		while (nr_sects != 0) {
+> +			bool is_vaddr = is_vmalloc_addr(buf);
+> +			struct page *p;
+> +
+> +			p = is_vaddr ? vmalloc_to_page(buf) : virt_to_page(buf);
+> +			sz = min((sector_t) PAGE_SIZE, nr_sects << 9);
+> +
+> +			bi_size = bio_add_page(bio, p, sz, offset_in_page(buf));
+> +			if (bi_size < sz)
+> +				return -EIO;
+> +
+> +			nr_sects -= bi_size >> 9;
+> +			sector += bi_size >> 9;
+> +			buf += bi_size;
+> +		}
+> +		cond_resched();
+> +	}
+> +
+> +	*biop = bio;
+> +	return 0;
+> +}
+> +
+> +/**
+> + * __blkdev_issue_verify - generate number of verify operations
+> + * @bdev:	blockdev to issue
+> + * @sector:	start sector
+> + * @nr_sects:	number of sectors to verify
+> + * @gfp_mask:	memory allocation flags (for bio_alloc())
+> + * @biop:	pointer to anchor bio
+> + *
+> + * Description:
+> + *  Verify a block range using hardware offload.
+> + *
+> + * The function will emulate verify operation if no explicit hardware
+> + * offloading for verifying is provided.
+> + */
+> +int __blkdev_issue_verify(struct block_device *bdev, sector_t sector,
+> +		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop)
+> +{
+> +	unsigned int max_verify_sectors = bdev_verify_sectors(bdev);
+> +	sector_t min_io_sect = (BIO_MAX_VECS << PAGE_SHIFT) >> 9;
+> +	struct bio *bio = *biop;
+> +	sector_t curr_sects;
+> +	char *buf;
+> +
+> +	if (!max_verify_sectors) {
+> +		int ret = 0;
+> +
+> +		buf = kzalloc(min_io_sect << 9, GFP_KERNEL);
 
-diff --git a/AUTHORS b/AUTHORS
-index f0e88af19..3cf8f7452 100644
---- a/AUTHORS
-+++ b/AUTHORS
-@@ -15,6 +15,7 @@ PAST MAINTAINERS:
- AUTHORS (merged projects & commands):
- 
-       blkdiscard:      Lukas Czerner <lczerner@redhat.com>
-+      blkverify:       Chaitanya Kulkarni <kch@nvidia.com>
-       blkzone:         Shaun Tancheff <shaun@tancheff.com>
-                        Damien Le Moal <damien.lemoal@wdc.com>
-       fallocate:       Eric Sandeen <sandeen@redhat.com>
-diff --git a/bash-completion/Makemodule.am b/bash-completion/Makemodule.am
-index 5d59b5593..3857bd705 100644
---- a/bash-completion/Makemodule.am
-+++ b/bash-completion/Makemodule.am
-@@ -279,6 +279,9 @@ endif
- if BUILD_BLKDISCARD
- dist_bashcompletion_DATA += bash-completion/blkdiscard
- endif
-+if BUILD_BLKVERIFY
-+dist_bashcompletion_DATA += bash-completion/blkverify
-+endif
- if BUILD_BLKZONE
- dist_bashcompletion_DATA += bash-completion/blkzone
- endif
-diff --git a/bash-completion/blkverify b/bash-completion/blkverify
-new file mode 100644
-index 000000000..dcbae19b0
---- /dev/null
-+++ b/bash-completion/blkverify
-@@ -0,0 +1,34 @@
-+_blkverify_module()
-+{
-+	local cur prev OPTS
-+	COMPREPLY=()
-+	cur="${COMP_WORDS[COMP_CWORD]}"
-+	prev="${COMP_WORDS[COMP_CWORD-1]}"
-+	case $prev in
-+		'-o'|'--offset'|'-l'|'--length'|'-p'|'--step')
-+			COMPREPLY=( $(compgen -W "num" -- $cur) )
-+			return 0
-+			;;
-+		'-h'|'--help'|'-V'|'--version')
-+			return 0
-+			;;
-+	esac
-+	case $cur in
-+		-*)
-+			OPTS="
-+				--offset
-+				--length
-+				--step
-+				--verbose
-+				--help
-+				--version
-+			"
-+			COMPREPLY=( $(compgen -W "${OPTS[*]}" -- $cur) )
-+			return 0
-+			;;
-+	esac
-+	compopt -o bashdefault -o default
-+	COMPREPLY=( $(compgen -W "$(lsblk -pnro name)" -- $cur) )
-+	return 0
-+}
-+complete -F _blkverify_module blkverify
-diff --git a/configure.ac b/configure.ac
-index 3ac79a503..050017cae 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -1993,6 +1993,10 @@ UL_BUILD_INIT([blkdiscard], [check])
- UL_REQUIRES_LINUX([blkdiscard])
- AM_CONDITIONAL([BUILD_BLKDISCARD], [test "x$build_blkdiscard" = xyes])
- 
-+UL_BUILD_INIT([blkverify], [check])
-+UL_REQUIRES_LINUX([blkverify])
-+AM_CONDITIONAL([BUILD_BLKVERIFY], [test "x$build_blkverify" = xyes])
-+
- UL_BUILD_INIT([blkzone], [check])
- UL_REQUIRES_LINUX([blkzone])
- UL_REQUIRES_HAVE([blkzone], [linux_blkzoned_h], [linux/blkzoned.h header])
-diff --git a/include/blkdev.h b/include/blkdev.h
-index 43a5f5224..6b5683b99 100644
---- a/include/blkdev.h
-+++ b/include/blkdev.h
-@@ -64,6 +64,10 @@
- #  define BLKDISCARDZEROES _IO(0x12,124)
- # endif
- 
-+# ifndef BLKVERIFY
-+#  define BLKVERIFY _IO(0x12,129)
-+# endif
-+
- /* filesystem freeze, introduced in 2.6.29 (commit fcccf502) */
- # ifndef FIFREEZE
- #  define FIFREEZE   _IOWR('X', 119, int)    /* Freeze */
-diff --git a/meson.build b/meson.build
-index 460c322e7..1c92d42b0 100644
---- a/meson.build
-+++ b/meson.build
-@@ -1346,6 +1346,18 @@ exes += exe
- manadocs += ['sys-utils/blkdiscard.8.adoc']
- bashcompletions += ['blkdiscard']
- 
-+exe = executable(
-+  'blkverify',
-+  blkverify_sources,
-+  include_directories : includes,
-+  link_with : [lib_common,
-+               lib_blkid],
-+  install_dir : sbindir,
-+  install : true)
-+exes += exe
-+manadocs += ['sys-utils/blkverify.8.adoc']
-+bashcompletions += ['blkverify']
-+
- exe = executable(
-   'blkzone',
-   blkzone_sources,
-diff --git a/sys-utils/Makemodule.am b/sys-utils/Makemodule.am
-index 22047d9bd..61daa3c23 100644
---- a/sys-utils/Makemodule.am
-+++ b/sys-utils/Makemodule.am
-@@ -194,6 +194,15 @@ blkdiscard_CFLAGS += -I$(ul_libblkid_incdir)
- endif
- endif
- 
-+if BUILD_BLKVERIFY
-+sbin_PROGRAMS += blkverify
-+MANPAGES += sys-utils/blkverify.8
-+dist_noinst_DATA += sys-utils/blkverify.8.adoc
-+blkverify_SOURCES = sys-utils/blkverify.c lib/monotonic.c
-+blkverify_LDADD = $(LDADD) libcommon.la $(REALTIME_LIBS)
-+blkverify_CFLAGS = $(AM_CFLAGS)
-+endif
-+
- if BUILD_BLKZONE
- sbin_PROGRAMS += blkzone
- MANPAGES += sys-utils/blkzone.8
-diff --git a/sys-utils/blkverify.8.adoc b/sys-utils/blkverify.8.adoc
-new file mode 100644
-index 000000000..0cc3881d2
---- /dev/null
-+++ b/sys-utils/blkverify.8.adoc
-@@ -0,0 +1,57 @@
-+//po4a: entry man manual
-+= blkverify(8)
-+:doctype: manpage
-+:man manual: System Administration
-+:man source: util-linux {release-version}
-+:page-layout: base
-+:command: blkverify
-+
-+== NAME
-+
-+blkverify - verify sectors on a device
-+
-+== SYNOPSIS
-+
-+*blkverify* [options] [*-o* _offset_] [*-l* _length_] _device_
-+
-+== DESCRIPTION
-+
-+*blkverify* is used to verify device sectors. This is useful in order to provide low level media scrubbing and possibly moving the data to the right place in case it has correctable media degradation. Also, this provides a way to enhance file-system level scrubbing/checksum verification and optinally offload this task, which is CPU intensive, to the kernel (when emulated), over the fabric, and to the controller (when supported). This command is used directly on the block device.
-+
-+By default, *blkverify* will verify all blocks on the device. Options may be used to modify this behavior based on range or size, as explained below.
-+
-+The _device_ argument is the pathname of the block device.
-+
-+== OPTIONS
-+
-+The _offset_ and _length_ arguments may be followed by the multiplicative suffixes KiB (=1024), MiB (=1024*1024), and so on for GiB, TiB, PiB, EiB, ZiB and YiB (the "iB" is optional, e.g., "K" has the same meaning as "KiB") or the suffixes KB (=1000), MB (=1000*1000), and so on for GB, TB, PB, EB, ZB and YB.
-+
-+*-o*, *--offset* _offset_::
-+Byte offset into the device from which to start verifying. The provided value must be aligned to the device sector size. The default value is zero.
-+
-+*-l*, *--length* _length_::
-+The number of bytes to verify (counting from the starting point). The provided value must be aligned to the device sector size. If the specified value extends past the end of the device, *blkverify* will stop at the device size boundary. The default value extends to the end of the device.
-+
-+*-p*, *--step* _length_::
-+The number of bytes to verify within one iteration. The default is to verify all by one ioctl call.
-+
-+*-v*, *--verbose*::
-+Display the aligned values of _offset_ and _length_. If the *--step* option is specified, it prints the verify progress every second.
-+
-+include::man-common/help-version.adoc[]
-+
-+== AUTHORS
-+
-+mailto:kch@nvidia.com[Chaitanya Kulkarni]
-+
-+== SEE ALSO
-+
-+*fstrim*(8)
-+
-+include::man-common/bugreports.adoc[]
-+
-+include::man-common/footer.adoc[]
-+
-+ifdef::translation[]
-+include::man-common/translation.adoc[]
-+endif::[]
-diff --git a/sys-utils/blkverify.c b/sys-utils/blkverify.c
-new file mode 100644
-index 000000000..9d6c3a85e
---- /dev/null
-+++ b/sys-utils/blkverify.c
-@@ -0,0 +1,207 @@
-+/*
-+ * blkverify.c -- Verify the part (or whole) of the block device.
-+ *
-+ * This program uses BLKVERIFY ioctl to verify part or the whole block
-+ * device if the device supports it. You can specify range (start and
-+ * length) to be verified, or simply verify the whole device.
-+ */
-+
-+
-+#include <string.h>
-+#include <unistd.h>
-+#include <stdlib.h>
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <fcntl.h>
-+#include <limits.h>
-+#include <getopt.h>
-+#include <time.h>
-+
-+#include <sys/ioctl.h>
-+#include <sys/stat.h>
-+#include <sys/time.h>
-+#include <linux/fs.h>
-+
-+#include "nls.h"
-+#include "strutils.h"
-+#include "c.h"
-+#include "closestream.h"
-+#include "monotonic.h"
-+
-+#ifndef BLKVERIFY
-+#define BLKVERIFY _IO(0x12,129)
-+#endif
-+
-+enum {
-+	ACT_VERIFY = 0,	/* default */
-+};
-+
-+static void print_stats(int act, char *path, uint64_t stats[])
-+{
-+	switch (act) {
-+	case ACT_VERIFY:
-+		printf(_("%s: Verified %" PRIu64 " bytes from the offset %" PRIu64"\n"), \
-+			path, stats[1], stats[0]);
-+		break;
-+	}
-+}
-+
-+static void __attribute__((__noreturn__)) usage(void)
-+{
-+	FILE *out = stdout;
-+
-+	fputs(USAGE_HEADER, out);
-+	fprintf(out,
-+	      _(" %s [options] <device>\n"), program_invocation_short_name);
-+
-+	fputs(USAGE_SEPARATOR, out);
-+	fputs(_("Verify the content of sectors on a device.\n"), out);
-+
-+	fputs(USAGE_OPTIONS, out);
-+	fputs(_(" -o, --offset <num>  offset in bytes to verify from\n"), out);
-+	fputs(_(" -l, --length <num>  length of bytes to verify from the offset\n"), out);
-+	fputs(_(" -p, --step <num>    size of the verify iterations within the offset\n"), out);
-+	fputs(_(" -v, --verbose       print aligned length and offset\n"), out);
-+
-+	fputs(USAGE_SEPARATOR, out);
-+	printf(USAGE_HELP_OPTIONS(21));
-+
-+	fputs(USAGE_ARGUMENTS, out);
-+	printf(USAGE_ARG_SIZE(_("<num>")));
-+
-+	printf(USAGE_MAN_TAIL("blkverify(8)"));
-+	exit(EXIT_SUCCESS);
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	char *path;
-+	int c, fd, verbose = 0, secsize;
-+	uint64_t end, blksize, step, range[2], stats[2];
-+	struct stat sb;
-+	struct timeval now = { 0 }, last = { 0 };
-+	int act = ACT_VERIFY;
-+
-+	static const struct option longopts[] = {
-+	    { "help",      no_argument,       NULL, 'h' },
-+	    { "version",   no_argument,       NULL, 'V' },
-+	    { "offset",    required_argument, NULL, 'o' },
-+	    { "length",    required_argument, NULL, 'l' },
-+	    { "step",      required_argument, NULL, 'p' },
-+	    { "verbose",   no_argument,       NULL, 'v' },
-+	    { NULL, 0, NULL, 0 }
-+	};
-+
-+	setlocale(LC_ALL, "");
-+	bindtextdomain(PACKAGE, LOCALEDIR);
-+	textdomain(PACKAGE);
-+	close_stdout_atexit();
-+
-+	range[0] = 0;
-+	range[1] = ULLONG_MAX;
-+	step = 0;
-+
-+	while ((c = getopt_long(argc, argv, "hVvo:l:p:", longopts, NULL)) != -1) {
-+		switch(c) {
-+		case 'l':
-+			range[1] = strtosize_or_err(optarg,
-+					_("failed to parse length"));
-+			break;
-+		case 'o':
-+			range[0] = strtosize_or_err(optarg,
-+					_("failed to parse offset"));
-+			break;
-+		case 'p':
-+			step = strtosize_or_err(optarg,
-+					_("failed to parse step"));
-+			break;
-+		case 'v':
-+			verbose = 1;
-+			break;
-+
-+		case 'h':
-+			usage();
-+		case 'V':
-+			print_version(EXIT_SUCCESS);
-+		default:
-+			errtryhelp(EXIT_FAILURE);
-+		}
-+	}
-+
-+	if (optind == argc)
-+		errx(EXIT_FAILURE, _("no device specified"));
-+
-+	path = argv[optind++];
-+
-+	if (optind != argc) {
-+		warnx(_("unexpected number of arguments"));
-+		errtryhelp(EXIT_FAILURE);
-+	}
-+
-+	fd = open(path, O_RDONLY);
-+	if (fd < 0)
-+		err(EXIT_FAILURE, _("cannot open %s"), path);
-+
-+	if (fstat(fd, &sb) == -1)
-+		err(EXIT_FAILURE, _("stat of %s failed"), path);
-+	if (!S_ISBLK(sb.st_mode))
-+		errx(EXIT_FAILURE, _("%s: not a block device"), path);
-+
-+	if (ioctl(fd, BLKGETSIZE64, &blksize))
-+		err(EXIT_FAILURE, _("%s: BLKGETSIZE64 ioctl failed"), path);
-+	if (ioctl(fd, BLKSSZGET, &secsize))
-+		err(EXIT_FAILURE, _("%s: BLKSSZGET ioctl failed"), path);
-+
-+	/* check offset alignment to the sector size */
-+	if (range[0] % secsize)
-+		errx(EXIT_FAILURE, _("%s: offset %" PRIu64 " is not aligned "
-+			 "to sector size %i"), path, range[0], secsize);
-+
-+	/* is the range end behind the end of the device ?*/
-+	if (range[0] > blksize)
-+		errx(EXIT_FAILURE, _("%s: offset is greater than device size"), path);
-+	end = range[0] + range[1];
-+	if (end < range[0] || end > blksize)
-+		end = blksize;
-+
-+	range[1] = (step > 0) ? step : end - range[0];
-+
-+	/* check length alignment to the sector size */
-+	if (range[1] % secsize)
-+		errx(EXIT_FAILURE, _("%s: length %" PRIu64 " is not aligned "
-+			 "to sector size %i"), path, range[1], secsize);
-+
-+	stats[0] = range[0], stats[1] = 0;
-+	gettime_monotonic(&last);
-+
-+	for (/* nothing */; range[0] < end; range[0] += range[1]) {
-+		if (range[0] + range[1] > end)
-+			range[1] = end - range[0];
-+
-+		switch (act) {
-+		case ACT_VERIFY:
-+			if (ioctl(fd, BLKVERIFY, &range))
-+				err(EXIT_FAILURE, _("%s: BLKVERIFY ioctl failed"), path);
-+			break;
-+		}
-+
-+		stats[1] += range[1];
-+
-+		/* reporting progress at most once per second */
-+		if (verbose && step) {
-+			gettime_monotonic(&now);
-+			if (now.tv_sec > last.tv_sec &&
-+			    (now.tv_usec >= last.tv_usec || now.tv_sec > last.tv_sec + 1)) {
-+				print_stats(act, path, stats);
-+				stats[0] += stats[1], stats[1] = 0;
-+				last = now;
-+			}
-+		}
-+	}
-+
-+	if (verbose && stats[1])
-+		print_stats(act, path, stats);
-+
-+	close(fd);
-+	return EXIT_SUCCESS;
-+}
-diff --git a/sys-utils/fstrim.8.adoc b/sys-utils/fstrim.8.adoc
-index 7accc4273..8f20a6311 100644
---- a/sys-utils/fstrim.8.adoc
-+++ b/sys-utils/fstrim.8.adoc
-@@ -83,6 +83,7 @@ mailto:kzak@redhat.com[Karel Zak]
- == SEE ALSO
- 
- *blkdiscard*(8),
-+*blkverify*(8),
- *mount*(8)
- 
- include::man-common/bugreports.adoc[]
-diff --git a/sys-utils/meson.build b/sys-utils/meson.build
-index 4b6cb7a1c..f27c8165b 100644
---- a/sys-utils/meson.build
-+++ b/sys-utils/meson.build
-@@ -70,6 +70,11 @@ blkdiscard_sources = files(
- ) + \
-   monotonic_c
- 
-+blkverify_sources = files(
-+  'blkverify.c',
-+) + \
-+  monotonic_c
-+
- blkzone_sources = files(
-   'blkzone.c',
- )
-diff --git a/tests/commands.sh b/tests/commands.sh
-index aff324c1f..a6db49339 100644
---- a/tests/commands.sh
-+++ b/tests/commands.sh
-@@ -50,6 +50,7 @@ TS_HELPER_MKFDS="${ts_helpersdir}test_mkfds"
- TS_CMD_ADDPART=${TS_CMD_ADDPART:-"${ts_commandsdir}addpart"}
- TS_CMD_DELPART=${TS_CMD_DELPART:-"${ts_commandsdir}delpart"}
- TS_CMD_BLKDISCARD=${TS_CMD_BLKID-"${ts_commandsdir}blkdiscard"}
-+TS_CMD_BLKVERIFY=${TS_CMD_BLKID-"${ts_commandsdir}blkverify"}
- TS_CMD_BLKID=${TS_CMD_BLKID-"${ts_commandsdir}blkid"}
- TS_CMD_CAL=${TS_CMD_CAL-"${ts_commandsdir}cal"}
- TS_CMD_COLCRT=${TS_CMD_COLCRT:-"${ts_commandsdir}colcrt"}
-diff --git a/tests/expected/blkverify/offsets b/tests/expected/blkverify/offsets
-new file mode 100644
-index 000000000..cf1270a11
---- /dev/null
-+++ b/tests/expected/blkverify/offsets
-@@ -0,0 +1,48 @@
-+testing offsets with full block size
-+Verified 1073741824 bytes from the offset 0
-+ret: 0
-+ret: 1
-+ret: 1
-+Verified 1073741312 bytes from the offset 512
-+ret: 0
-+Verified 1073740800 bytes from the offset 1024
-+ret: 0
-+testing offsets with specific length
-+Verified 5242880 bytes from the offset 0
-+ret: 0
-+ret: 1
-+ret: 1
-+ret: 1
-+ret: 1
-+Verified 5242880 bytes from the offset 512
-+ret: 0
-+Verified 5242880 bytes from the offset 1024
-+ret: 0
-+testing aligned steps full device
-+Verified 1073741824 bytes from the offset 0
-+ret: 0
-+Verified 1073741824 bytes from the offset 0
-+ret: 0
-+testing aligned steps with offsets and length
-+Verified 1024 bytes from the offset 0
-+ret: 0
-+ret: 1
-+ret: 1
-+ret: 1
-+Verified 1536 bytes from the offset 512
-+ret: 0
-+Verified 1024 bytes from the offset 1024
-+ret: 0
-+testing misaligned steps full device
-+ret: 1
-+ret: 1
-+ret: 1
-+ret: 1
-+ret: 1
-+testing misaligned steps with offsets and length
-+ret: 1
-+ret: 1
-+ret: 1
-+ret: 1
-+ret: 1
-+ret: 1
-diff --git a/tests/expected/blkverify/offsets.err b/tests/expected/blkverify/offsets.err
-new file mode 100644
-index 000000000..8898aa149
---- /dev/null
-+++ b/tests/expected/blkverify/offsets.err
-@@ -0,0 +1,20 @@
-+blkverify: offset 1 is not aligned to sector size 512
-+blkverify: offset 511 is not aligned to sector size 512
-+blkverify: length 5242881 is not aligned to sector size 512
-+blkverify: length 5243391 is not aligned to sector size 512
-+blkverify: offset 1 is not aligned to sector size 512
-+blkverify: offset 511 is not aligned to sector size 512
-+blkverify: offset 1 is not aligned to sector size 512
-+blkverify: offset 1 is not aligned to sector size 512
-+blkverify: offset 511 is not aligned to sector size 512
-+blkverify: length 1 is not aligned to sector size 512
-+blkverify: length 256 is not aligned to sector size 512
-+blkverify: length 511 is not aligned to sector size 512
-+blkverify: length 513 is not aligned to sector size 512
-+blkverify: length 768 is not aligned to sector size 512
-+blkverify: length 511 is not aligned to sector size 512
-+blkverify: offset 1 is not aligned to sector size 512
-+blkverify: offset 511 is not aligned to sector size 512
-+blkverify: length 511 is not aligned to sector size 512
-+blkverify: offset 1 is not aligned to sector size 512
-+blkverify: offset 511 is not aligned to sector size 512
-diff --git a/tests/expected/build-sys/config-all b/tests/expected/build-sys/config-all
-index cc09c6596..108a7f798 100644
---- a/tests/expected/build-sys/config-all
-+++ b/tests/expected/build-sys/config-all
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-all-non-nls b/tests/expected/build-sys/config-all-non-nls
-index cc09c6596..108a7f798 100644
---- a/tests/expected/build-sys/config-all-non-nls
-+++ b/tests/expected/build-sys/config-all-non-nls
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-audit b/tests/expected/build-sys/config-audit
-index 4031db086..548ba483d 100644
---- a/tests/expected/build-sys/config-audit
-+++ b/tests/expected/build-sys/config-audit
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-chfnsh-libuser b/tests/expected/build-sys/config-chfnsh-libuser
-index 0059b3812..564aa5dc6 100644
---- a/tests/expected/build-sys/config-chfnsh-libuser
-+++ b/tests/expected/build-sys/config-chfnsh-libuser
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-chfnsh-no-password b/tests/expected/build-sys/config-chfnsh-no-password
-index 35d5f722d..1aad8484d 100644
---- a/tests/expected/build-sys/config-chfnsh-no-password
-+++ b/tests/expected/build-sys/config-chfnsh-no-password
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-chfnsh-pam b/tests/expected/build-sys/config-chfnsh-pam
-index eae24a293..a7d7e8766 100644
---- a/tests/expected/build-sys/config-chfnsh-pam
-+++ b/tests/expected/build-sys/config-chfnsh-pam
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-core b/tests/expected/build-sys/config-core
-index fed47bb64..33f7c38a0 100644
---- a/tests/expected/build-sys/config-core
-+++ b/tests/expected/build-sys/config-core
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-devel b/tests/expected/build-sys/config-devel
-index d80af4675..9fc453d04 100644
---- a/tests/expected/build-sys/config-devel
-+++ b/tests/expected/build-sys/config-devel
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-devel-non-asan b/tests/expected/build-sys/config-devel-non-asan
-index d80af4675..9fc453d04 100644
---- a/tests/expected/build-sys/config-devel-non-asan
-+++ b/tests/expected/build-sys/config-devel-non-asan
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-devel-non-docs b/tests/expected/build-sys/config-devel-non-docs
-index d80af4675..9fc453d04 100644
---- a/tests/expected/build-sys/config-devel-non-docs
-+++ b/tests/expected/build-sys/config-devel-non-docs
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-non-libblkid b/tests/expected/build-sys/config-non-libblkid
-index bc34d67e6..3ce1809ea 100644
---- a/tests/expected/build-sys/config-non-libblkid
-+++ b/tests/expected/build-sys/config-non-libblkid
-@@ -1,4 +1,5 @@
- cfdisk:  libfdisk libncursesw libsmartcols libtinfo 
-+blkverify:   
- column:  libsmartcols 
- fdisk:  libfdisk libreadline libsmartcols libtinfo 
- fincore:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-non-libmount b/tests/expected/build-sys/config-non-libmount
-index 890f7c2f9..cffdb0f42 100644
---- a/tests/expected/build-sys/config-non-libmount
-+++ b/tests/expected/build-sys/config-non-libmount
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-non-libs b/tests/expected/build-sys/config-non-libs
-index 5bf0e0c9d..018d7d96c 100644
---- a/tests/expected/build-sys/config-non-libs
-+++ b/tests/expected/build-sys/config-non-libs
-@@ -1,5 +1,6 @@
- agetty:  
- blkdiscard:  
-+blkverify:  
- blkzone:  
- blockdev:  
- cal:  libtinfo 
-diff --git a/tests/expected/build-sys/config-non-libsmartcols b/tests/expected/build-sys/config-non-libsmartcols
-index d58ec93c3..13fcba8ea 100644
---- a/tests/expected/build-sys/config-non-libsmartcols
-+++ b/tests/expected/build-sys/config-non-libsmartcols
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- eject:  libmount 
- findfs:  libblkid 
-diff --git a/tests/expected/build-sys/config-non-libuuid b/tests/expected/build-sys/config-non-libuuid
-index 77912475c..373351d26 100644
---- a/tests/expected/build-sys/config-non-libuuid
-+++ b/tests/expected/build-sys/config-non-libuuid
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- column:  libsmartcols 
- eject:  libmount 
-diff --git a/tests/expected/build-sys/config-non-nls b/tests/expected/build-sys/config-non-nls
-index fed47bb64..33f7c38a0 100644
---- a/tests/expected/build-sys/config-non-nls
-+++ b/tests/expected/build-sys/config-non-nls
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-selinux b/tests/expected/build-sys/config-selinux
-index fcb55bda2..e9d637a9b 100644
---- a/tests/expected/build-sys/config-selinux
-+++ b/tests/expected/build-sys/config-selinux
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-slang b/tests/expected/build-sys/config-slang
-index 8eea3cf1c..fd6d1ee1e 100644
---- a/tests/expected/build-sys/config-slang
-+++ b/tests/expected/build-sys/config-slang
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libslang libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/expected/build-sys/config-static b/tests/expected/build-sys/config-static
-index 8d1b4b9b5..69c258c6a 100644
---- a/tests/expected/build-sys/config-static
-+++ b/tests/expected/build-sys/config-static
-@@ -1,4 +1,5 @@
- blkdiscard:  libblkid 
-+blkverify:   
- blkid:  libblkid 
- cfdisk:  libfdisk libmount libncursesw libsmartcols libtinfo 
- column:  libsmartcols 
-diff --git a/tests/ts/blkverify/offsets b/tests/ts/blkverify/offsets
-new file mode 100755
-index 000000000..56e27f6c1
---- /dev/null
-+++ b/tests/ts/blkverify/offsets
-@@ -0,0 +1,91 @@
-+#!/bin/bash
-+
-+#
-+# Copyright (C) 2022 <kch@nvidia.com>
-+#
-+# This file is part of util-linux.
-+#
-+# This file is free software; you can redistribute it and/or modify
-+# it under the terms of the GNU General Public License as published by
-+# the Free Software Foundation; either version 2 of the License, or
-+# (at your option) any later version.
-+#
-+# This file is distributed in the hope that it will be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+TS_TOPDIR="${0%/*}/../.."
-+TS_DESC="offsets"
-+
-+. $TS_TOPDIR/functions.sh
-+ts_init "$*"
-+ts_check_test_command "$TS_CMD_BLKVERIFY"
-+ts_skip_nonroot
-+
-+ORIGPWD=$(pwd)
-+modprobe -r null_blk
-+modprobe null_blk gb=1
-+
-+DEVICE=$(ls /dev/nullb*)
-+function run_tscmd {
-+	local ret
-+
-+	"$@" >> $TS_OUTPUT 2>> $TS_ERRLOG
-+	ret=$?
-+	echo "ret: $ret" >> "$TS_OUTPUT"
-+	return $ret
-+}
-+
-+ts_log "testing offsets with full block size"
-+run_tscmd $TS_CMD_BLKVERIFY -v $DEVICE
-+if [ "$?" != "0" ]; then
-+	# Skip the rest? For example loop backing files on NFS seem unsupported.
-+	grep -q "BLKVERIFY ioctl failed: Operation not supported" "$TS_ERRLOG" \
-+		&& ts_skip "BLKVERIFY not supported"
-+fi
-+run_tscmd $TS_CMD_BLKVERIFY -v -o 1 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -o 511 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -o 512 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -o 1024 $DEVICE
-+
-+ts_log "testing offsets with specific length"
-+run_tscmd $TS_CMD_BLKVERIFY -v -l 5242880 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -l 5242881 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -l 5243391 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -o 1 -l 5242880 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -o 511 -l 5242880 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -o 512 -l 5242880 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -o 1024 -l 5242880 $DEVICE
-+
-+ts_log "testing aligned steps full device"
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 5242880 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 1310720 $DEVICE
-+
-+ts_log "testing aligned steps with offsets and length"
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 512 -l 1024 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 512 -o 1 -l 1024 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 512 -o 1 -l 1536 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 512 -o 511 -l 1536 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 512 -o 512 -l 1536 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 512 -o 1024 -l 1024 $DEVICE
-+
-+ts_log "testing misaligned steps full device"
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 1 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 256 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 511 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 513 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 768 $DEVICE
-+
-+ts_log "testing misaligned steps with offsets and length"
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 511 -l 1024 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 511 -o 1 -l 1536 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 511 -o 511 -l 1536 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 511 -l 10240 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 511 -o 1 -l 10240 $DEVICE
-+run_tscmd $TS_CMD_BLKVERIFY -v -p 511 -o 511 -l 10240 $DEVICE
-+
-+sed -i "s#$DEVICE:\s##" $TS_OUTPUT $TS_ERRLOG
-+
-+ts_cd "$ORIGPWD"
-+ts_finalize
--- 
-2.29.0
+k*z*alloc?  I don't think you need to zero a buffer that we're reading
+into, right?
 
+--D
+
+> +		if (!buf)
+> +			return -ENOMEM;
+> +
+> +		while (nr_sects > 0) {
+> +			curr_sects = min_t(sector_t, nr_sects, min_io_sect);
+> +			ret = __blkdev_emulate_verify(bdev, sector, curr_sects,
+> +						      gfp_mask, &bio, buf);
+> +			if (ret)
+> +				break;
+> +
+> +			if (bio) {
+> +				ret = submit_bio_wait(bio);
+> +				bio_put(bio);
+> +				bio = NULL;
+> +			}
+> +
+> +			nr_sects -= curr_sects;
+> +			sector += curr_sects;
+> +
+> +		}
+> +		/* set the biop to NULL since we have alrady completed above */
+> +		*biop = NULL;
+> +		kfree(buf);
+> +		return ret;
+> +	}
+> +
+> +	while (nr_sects) {
+> +		bio = blk_next_bio(bio, bdev, 0, REQ_OP_VERIFY, gfp_mask);
+> +		bio->bi_iter.bi_sector = sector;
+> +
+> +		if (nr_sects > max_verify_sectors) {
+> +			bio->bi_iter.bi_size = max_verify_sectors << 9;
+> +			nr_sects -= max_verify_sectors;
+> +			sector += max_verify_sectors;
+> +		} else {
+> +			bio->bi_iter.bi_size = nr_sects << 9;
+> +			nr_sects = 0;
+> +		}
+> +		cond_resched();
+> +	}
+> +	*biop = bio;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(__blkdev_issue_verify);
+> +
+> +/**
+> + * blkdev_issue_verify - verify a block range
+> + * @bdev:	blockdev to verify
+> + * @sector:	start sector
+> + * @nr_sects:	number of sectors to verify
+> + * @gfp_mask:	memory allocation flags (for bio_alloc)
+> + *
+> + * Description:
+> + *  Verify a block range using hardware offload.
+> + */
+> +int blkdev_issue_verify(struct block_device *bdev, sector_t sector,
+> +		sector_t nr_sects, gfp_t gfp_mask)
+> +{
+> +	sector_t bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
+> +	struct bio *bio = NULL;
+> +	struct blk_plug plug;
+> +	int ret = 0;
+> +
+> +	if ((sector | nr_sects) & bs_mask)
+> +		return -EINVAL;
+> +
+> +	blk_start_plug(&plug);
+> +	ret = __blkdev_issue_verify(bdev, sector, nr_sects, gfp_mask, &bio);
+> +	if (ret == 0 && bio) {
+> +		ret = submit_bio_wait(bio);
+> +		bio_put(bio);
+> +	}
+> +	blk_finish_plug(&plug);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(blkdev_issue_verify);
+> diff --git a/block/blk-merge.c b/block/blk-merge.c
+> index 7771dacc99cb..8ff305377b5a 100644
+> --- a/block/blk-merge.c
+> +++ b/block/blk-merge.c
+> @@ -153,6 +153,20 @@ static struct bio *blk_bio_write_zeroes_split(struct request_queue *q,
+>  	return bio_split(bio, q->limits.max_write_zeroes_sectors, GFP_NOIO, bs);
+>  }
+>  
+> +static struct bio *blk_bio_verify_split(struct request_queue *q,
+> +		struct bio *bio, struct bio_set *bs, unsigned *nsegs)
+> +{
+> +	*nsegs = 0;
+> +
+> +	if (!q->limits.max_verify_sectors)
+> +		return NULL;
+> +
+> +	if (bio_sectors(bio) <= q->limits.max_verify_sectors)
+> +		return NULL;
+> +
+> +	return bio_split(bio, q->limits.max_verify_sectors, GFP_NOIO, bs);
+> +}
+> +
+>  /*
+>   * Return the maximum number of sectors from the start of a bio that may be
+>   * submitted as a single request to a block device. If enough sectors remain,
+> @@ -336,6 +350,10 @@ void __blk_queue_split(struct request_queue *q, struct bio **bio,
+>  		split = blk_bio_write_zeroes_split(q, *bio, &q->bio_split,
+>  				nr_segs);
+>  		break;
+> +	case REQ_OP_VERIFY:
+> +		split = blk_bio_verify_split(q, *bio, &q->bio_split,
+> +				nr_segs);
+> +		break;
+>  	default:
+>  		split = blk_bio_segment_split(q, *bio, &q->bio_split, nr_segs);
+>  		break;
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 6ccceb421ed2..c77697290bc5 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -43,6 +43,7 @@ void blk_set_default_limits(struct queue_limits *lim)
+>  	lim->max_dev_sectors = 0;
+>  	lim->chunk_sectors = 0;
+>  	lim->max_write_zeroes_sectors = 0;
+> +	lim->max_verify_sectors = 0;
+>  	lim->max_zone_append_sectors = 0;
+>  	lim->max_discard_sectors = 0;
+>  	lim->max_hw_discard_sectors = 0;
+> @@ -80,6 +81,7 @@ void blk_set_stacking_limits(struct queue_limits *lim)
+>  	lim->max_sectors = UINT_MAX;
+>  	lim->max_dev_sectors = UINT_MAX;
+>  	lim->max_write_zeroes_sectors = UINT_MAX;
+> +	lim->max_verify_sectors = UINT_MAX;
+>  	lim->max_zone_append_sectors = UINT_MAX;
+>  }
+>  EXPORT_SYMBOL(blk_set_stacking_limits);
+> @@ -202,6 +204,19 @@ void blk_queue_max_write_zeroes_sectors(struct request_queue *q,
+>  }
+>  EXPORT_SYMBOL(blk_queue_max_write_zeroes_sectors);
+>  
+> +/**
+> + * blk_queue_max_verify_sectors - set max sectors for a single verify
+> + *
+> + * @q:  the request queue for the device
+> + * @max_verify_sectors: maximum number of sectors to verify per command
+> + **/
+> +void blk_queue_max_verify_sectors(struct request_queue *q,
+> +		unsigned int max_verify_sectors)
+> +{
+> +	q->limits.max_verify_sectors = max_verify_sectors;
+> +}
+> +EXPORT_SYMBOL(blk_queue_max_verify_sectors);
+> +
+>  /**
+>   * blk_queue_max_zone_append_sectors - set max sectors for a single zone append
+>   * @q:  the request queue for the device
+> @@ -554,6 +569,8 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>  	t->max_dev_sectors = min_not_zero(t->max_dev_sectors, b->max_dev_sectors);
+>  	t->max_write_zeroes_sectors = min(t->max_write_zeroes_sectors,
+>  					b->max_write_zeroes_sectors);
+> +	t->max_verify_sectors = min(t->max_verify_sectors,
+> +				    b->max_verify_sectors);
+>  	t->max_zone_append_sectors = min(t->max_zone_append_sectors,
+>  					b->max_zone_append_sectors);
+>  	t->bounce = max(t->bounce, b->bounce);
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 88bd41d4cb59..4fb6a731acad 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -113,6 +113,12 @@ queue_ra_store(struct request_queue *q, const char *page, size_t count)
+>  	return ret;
+>  }
+>  
+> +static ssize_t queue_verify_max_show(struct request_queue *q, char *page)
+> +{
+> +	return sprintf(page, "%llu\n",
+> +		(unsigned long long)q->limits.max_verify_sectors << 9);
+> +}
+> +
+>  static ssize_t queue_max_sectors_show(struct request_queue *q, char *page)
+>  {
+>  	int max_sectors_kb = queue_max_sectors(q) >> 1;
+> @@ -588,6 +594,7 @@ QUEUE_RO_ENTRY(queue_discard_zeroes_data, "discard_zeroes_data");
+>  
+>  QUEUE_RO_ENTRY(queue_write_same_max, "write_same_max_bytes");
+>  QUEUE_RO_ENTRY(queue_write_zeroes_max, "write_zeroes_max_bytes");
+> +QUEUE_RO_ENTRY(queue_verify_max, "verify_max_bytes");
+>  QUEUE_RO_ENTRY(queue_zone_append_max, "zone_append_max_bytes");
+>  QUEUE_RO_ENTRY(queue_zone_write_granularity, "zone_write_granularity");
+>  
+> @@ -644,6 +651,7 @@ static struct attribute *queue_attrs[] = {
+>  	&queue_discard_zeroes_data_entry.attr,
+>  	&queue_write_same_max_entry.attr,
+>  	&queue_write_zeroes_max_entry.attr,
+> +	&queue_verify_max_entry.attr,
+>  	&queue_zone_append_max_entry.attr,
+>  	&queue_zone_write_granularity_entry.attr,
+>  	&queue_nonrot_entry.attr,
+> diff --git a/block/blk.h b/block/blk.h
+> index 434017701403..63a0e3aca7e0 100644
+> --- a/block/blk.h
+> +++ b/block/blk.h
+> @@ -132,6 +132,9 @@ static inline bool rq_mergeable(struct request *rq)
+>  	if (req_op(rq) == REQ_OP_WRITE_ZEROES)
+>  		return false;
+>  
+> +	if (req_op(rq) == REQ_OP_VERIFY)
+> +		return false;
+> +
+>  	if (req_op(rq) == REQ_OP_ZONE_APPEND)
+>  		return false;
+>  
+> @@ -286,6 +289,7 @@ static inline bool blk_may_split(struct request_queue *q, struct bio *bio)
+>  	case REQ_OP_DISCARD:
+>  	case REQ_OP_SECURE_ERASE:
+>  	case REQ_OP_WRITE_ZEROES:
+> +	case REQ_OP_VERIFY:
+>  		return true; /* non-trivial splitting decisions */
+>  	default:
+>  		break;
+> diff --git a/block/ioctl.c b/block/ioctl.c
+> index 46949f1b0dba..60a48e24b82d 100644
+> --- a/block/ioctl.c
+> +++ b/block/ioctl.c
+> @@ -192,6 +192,39 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
+>  	return err;
+>  }
+>  
+> +static int blk_ioctl_verify(struct block_device *bdev, fmode_t mode,
+> +		unsigned long arg)
+> +{
+> +	uint64_t range[2];
+> +	struct address_space *mapping;
+> +	uint64_t start, end, len;
+> +
+> +	if (!(mode & FMODE_READ))
+> +		return -EBADF;
+> +
+> +	if (copy_from_user(range, (void __user *)arg, sizeof(range)))
+> +		return -EFAULT;
+> +
+> +	start = range[0];
+> +	len = range[1];
+> +	end = start + len - 1;
+> +
+> +	if (start & 511)
+> +		return -EINVAL;
+> +	if (len & 511)
+> +		return -EINVAL;
+> +	if (end >= (uint64_t)i_size_read(bdev->bd_inode))
+> +		return -EINVAL;
+> +	if (end < start)
+> +		return -EINVAL;
+> +
+> +	/* Invalidate the page cache, including dirty pages */
+> +	mapping = bdev->bd_inode->i_mapping;
+> +	truncate_inode_pages_range(mapping, start, end);
+
+You might want to write any dirty pagecache contents to disk before you
+invalidate them all...
+
+> +
+> +	return blkdev_issue_verify(bdev, start >> 9, len >> 9, GFP_KERNEL);
+> +}
+> +
+>  static int put_ushort(unsigned short __user *argp, unsigned short val)
+>  {
+>  	return put_user(val, argp);
+> @@ -483,6 +516,8 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
+>  		return blk_ioctl_secure_erase(bdev, mode, argp);
+>  	case BLKZEROOUT:
+>  		return blk_ioctl_zeroout(bdev, mode, arg);
+> +	case BLKVERIFY:
+> +		return blk_ioctl_verify(bdev, mode, arg);
+>  	case BLKGETDISKSEQ:
+>  		return put_u64(argp, bdev->bd_disk->diskseq);
+>  	case BLKREPORTZONE:
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index 1cf3738ef1ea..3dfafe1da098 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -55,7 +55,8 @@ static inline bool bio_has_data(struct bio *bio)
+>  	    bio->bi_iter.bi_size &&
+>  	    bio_op(bio) != REQ_OP_DISCARD &&
+>  	    bio_op(bio) != REQ_OP_SECURE_ERASE &&
+> -	    bio_op(bio) != REQ_OP_WRITE_ZEROES)
+> +	    bio_op(bio) != REQ_OP_WRITE_ZEROES &&
+> +	    bio_op(bio) != REQ_OP_VERIFY)
+>  		return true;
+>  
+>  	return false;
+> @@ -65,7 +66,8 @@ static inline bool bio_no_advance_iter(const struct bio *bio)
+>  {
+>  	return bio_op(bio) == REQ_OP_DISCARD ||
+>  	       bio_op(bio) == REQ_OP_SECURE_ERASE ||
+> -	       bio_op(bio) == REQ_OP_WRITE_ZEROES;
+> +	       bio_op(bio) == REQ_OP_WRITE_ZEROES ||
+> +	       bio_op(bio) == REQ_OP_VERIFY;
+>  }
+>  
+>  static inline void *bio_data(struct bio *bio)
+> @@ -176,7 +178,7 @@ static inline unsigned bio_segments(struct bio *bio)
+>  	struct bvec_iter iter;
+>  
+>  	/*
+> -	 * We special case discard/write same/write zeroes, because they
+> +	 * We special case discard/write same/write zeroes/verify, because they
+>  	 * interpret bi_size differently:
+>  	 */
+>  
+> @@ -184,6 +186,7 @@ static inline unsigned bio_segments(struct bio *bio)
+>  	case REQ_OP_DISCARD:
+>  	case REQ_OP_SECURE_ERASE:
+>  	case REQ_OP_WRITE_ZEROES:
+> +	case REQ_OP_VERIFY:
+>  		return 0;
+>  	default:
+>  		break;
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index a24d4078fb21..0d5383fc84ed 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -363,6 +363,8 @@ enum req_opf {
+>  	REQ_OP_FLUSH		= 2,
+>  	/* discard sectors */
+>  	REQ_OP_DISCARD		= 3,
+> +	/* Verify the sectors */
+> +	REQ_OP_VERIFY		= 6,
+>  	/* securely erase sectors */
+>  	REQ_OP_SECURE_ERASE	= 5,
+>  	/* write the zero filled sector many times */
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 608d577734c2..78fd6c5530d7 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -266,6 +266,7 @@ struct queue_limits {
+>  	unsigned int		max_hw_discard_sectors;
+>  	unsigned int		max_secure_erase_sectors;
+>  	unsigned int		max_write_zeroes_sectors;
+> +	unsigned int		max_verify_sectors;
+>  	unsigned int		max_zone_append_sectors;
+>  	unsigned int		discard_granularity;
+>  	unsigned int		discard_alignment;
+> @@ -925,6 +926,9 @@ static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
+>  	if (unlikely(op == REQ_OP_WRITE_ZEROES))
+>  		return q->limits.max_write_zeroes_sectors;
+>  
+> +	if (unlikely(op == REQ_OP_VERIFY))
+> +		return q->limits.max_verify_sectors;
+> +
+>  	return q->limits.max_sectors;
+>  }
+>  
+> @@ -968,6 +972,8 @@ extern void blk_queue_max_discard_sectors(struct request_queue *q,
+>  		unsigned int max_discard_sectors);
+>  extern void blk_queue_max_write_zeroes_sectors(struct request_queue *q,
+>  		unsigned int max_write_same_sectors);
+> +extern void blk_queue_max_verify_sectors(struct request_queue *q,
+> +		unsigned int max_verify_sectors);
+>  extern void blk_queue_logical_block_size(struct request_queue *, unsigned int);
+>  extern void blk_queue_max_zone_append_sectors(struct request_queue *q,
+>  		unsigned int max_zone_append_sectors);
+> @@ -1119,6 +1125,12 @@ extern int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+>  extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+>  		sector_t nr_sects, gfp_t gfp_mask, unsigned flags);
+>  
+> +extern int __blkdev_issue_verify(struct block_device *bdev,
+> +		sector_t sector, sector_t nr_sects, gfp_t gfp_mask,
+> +		struct bio **biop);
+> +extern int blkdev_issue_verify(struct block_device *bdev, sector_t sector,
+> +		sector_t nr_sects, gfp_t gfp_mask);
+> +
+>  static inline int sb_issue_discard(struct super_block *sb, sector_t block,
+>  		sector_t nr_blocks, gfp_t gfp_mask, unsigned long flags)
+>  {
+> @@ -1293,6 +1305,16 @@ static inline unsigned int bdev_write_zeroes_sectors(struct block_device *bdev)
+>  	return 0;
+>  }
+>  
+> +static inline unsigned int bdev_verify_sectors(struct block_device *bdev)
+> +{
+> +	struct request_queue *q = bdev_get_queue(bdev);
+> +
+> +	if (q)
+> +		return q->limits.max_verify_sectors;
+> +
+> +	return 0;
+> +}
+> +
+>  static inline bool bdev_nonrot(struct block_device *bdev)
+>  {
+>  	return blk_queue_nonrot(bdev_get_queue(bdev));
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index bdf7b404b3e7..ad0e5cb5cac4 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -185,6 +185,7 @@ struct fsxattr {
+>  #define BLKROTATIONAL _IO(0x12,126)
+>  #define BLKZEROOUT _IO(0x12,127)
+>  #define BLKGETDISKSEQ _IOR(0x12,128,__u64)
+> +#define BLKVERIFY _IO(0x12,129)
+>  /*
+>   * A jump here: 130-136 are reserved for zoned block devices
+>   * (see uapi/linux/blkzoned.h)
+> -- 
+> 2.29.0
+> 
