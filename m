@@ -2,122 +2,81 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FEC4C433EF
-	for <linux-raid@archiver.kernel.org>; Mon,  4 Jul 2022 08:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D171C43334
+	for <linux-raid@archiver.kernel.org>; Mon,  4 Jul 2022 10:06:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232698AbiGDInb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 4 Jul 2022 04:43:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46602 "EHLO
+        id S233816AbiGDKGG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 4 Jul 2022 06:06:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231996AbiGDIna (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Jul 2022 04:43:30 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D88426D3
-        for <linux-raid@vger.kernel.org>; Mon,  4 Jul 2022 01:43:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1656924209; x=1688460209;
-  h=message-id:date:from:to:cc:subject:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Ord0W/HuSaN+5VbNTBLL8rIyOmBJLFxwaHd9Q6HL2a4=;
-  b=PuLQ8RWtghHGEnCXgH94xo7V48QrM6oiW9GAH5WMo7FJf09TqmHoj7uT
-   R2pprbGcyJ0r4rb42kKxcBpU+lSei09tRleE1GkmUdbFl8L9xDlTIgZMO
-   RmrUJ/VvEsgJKFMGNlLTRILWJ1okwv/4YAwRt4h8jokbDWU+vaVwQq5d3
-   3TYpbwINXLyqzHxOmzK/xkW7HVsCzs89yxgXdJr3eOmd+MIoh7Ros6ANo
-   cP28gJbJny+kEfo5ghIQA+mVuaMfkQNQjidlT7JvGLNSqJa9XxG9xKdf0
-   Lo7ZF3HT97jqkG34GQrpNUG4JN3ocR1ksalmOxURofcc7AKfZpQe09CRG
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10397"; a="262866933"
-X-IronPort-AV: E=Sophos;i="5.92,243,1650956400"; 
-   d="scan'208";a="262866933"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2022 01:43:28 -0700
-Message-Id: <b72376$g5buij@orsmga003-auth.jf.intel.com>
-X-IronPort-AV: E=Sophos;i="5.92,243,1650956400"; 
-   d="scan'208";a="542505555"
-Received: from lflorcza-mobl.ger.corp.intel.com (HELO intel.linux.com) ([10.237.140.88])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2022 01:43:27 -0700
-Date:   Mon, 4 Jul 2022 10:43:23 +0200
-From:   Lukasz Florczak <lukasz.florczak@linux.intel.com>
-To:     Marc MERLIN <marc@merlins.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: Is it correct that raid5 cannot be converted from Consistency
- Policy: bitmap to ppl?
-In-Reply-To: <20220703200741.GA3138296@merlins.org>
-References: <20220703200741.GA3138296@merlins.org>
+        with ESMTP id S233832AbiGDKGF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Jul 2022 06:06:05 -0400
+Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D622530B;
+        Mon,  4 Jul 2022 03:06:03 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id 7C2391E80CCF;
+        Mon,  4 Jul 2022 18:04:07 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id X9lF_6B9pUia; Mon,  4 Jul 2022 18:04:04 +0800 (CST)
+Received: from localhost.localdomain (unknown [180.167.10.98])
+        (Authenticated sender: jiaming@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id 34A861E80C90;
+        Mon,  4 Jul 2022 18:04:04 +0800 (CST)
+From:   Zhang Jiaming <jiaming@nfschina.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        liqiong@nfschina.com, renyu@nfschina.com,
+        Zhang Jiaming <jiaming@nfschina.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [PATCH] block: Fix spelling mistakes in comments
+Date:   Mon,  4 Jul 2022 18:05:57 +0800
+Message-Id: <20220704100557.6429-1-jiaming@nfschina.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220704012328.6507-1-jiaming@nfschina.com>
+References: <20220704012328.6507-1-jiaming@nfschina.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sun, 3 Jul 2022 13:07:41 -0700, Marc MERLIN <marc@merlins.org> wrote:
+Fix spelling of dones't and waitting in comments.
 
-> Is there any way around this, or not without a full reformat/rebuild?
-> 
-Hi,
-I've been able to change the consistency using mdadm v4.2 on a imsm
-container. I don't know if it will work for native metadata. Hope this
-helps you a little.
+Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
+Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+---
+ drivers/md/raid5-cache.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-The steps I did it:
-1. Stop the volume
-# mdadm -S /dev/md/<volume_name>
-2. Update to ppl
-# mdadm --update-subarray=0 --update=ppl /dev/md/<container_name>
-3. Assemble incrementally
-# mdadm --incremental /dev/md/<container_name>
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 83c184eddbda..4b799005eb6e 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -125,7 +125,7 @@ struct r5l_log {
+ 					 * reclaimed.  if it's 0, reclaim spaces
+ 					 * used by io_units which are in
+ 					 * IO_UNIT_STRIPE_END state (eg, reclaim
+-					 * dones't wait for specific io_unit
++					 * doesn't wait for specific io_unit
+ 					 * switching to IO_UNIT_STRIPE_END
+ 					 * state) */
+ 	wait_queue_head_t iounit_wait;
+@@ -1327,9 +1327,9 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
+ 	 * superblock is updated to new log tail. Updating superblock (either
+ 	 * directly call md_update_sb() or depend on md thread) must hold
+ 	 * reconfig mutex. On the other hand, raid5_quiesce is called with
+-	 * reconfig_mutex hold. The first step of raid5_quiesce() is waitting
+-	 * for all IO finish, hence waitting for reclaim thread, while reclaim
+-	 * thread is calling this function and waitting for reconfig mutex. So
++	 * reconfig_mutex hold. The first step of raid5_quiesce() is waiting
++	 * for all IO finish, hence waiting for reclaim thread, while reclaim
++	 * thread is calling this function and waiting for reconfig mutex. So
+ 	 * there is a deadlock. We workaround this issue with a trylock.
+ 	 * FIXME: we could miss discard if we can't take reconfig mutex
+ 	 */
+-- 
+2.34.1
 
-Thanks,
-Lukasz
-
-> gargamel:~# mdadm --query --detail /dev/md5
-> /dev/md5:
->            Version : 1.2
->      Creation Time : Tue Jan 21 10:35:52 2014
->         Raid Level : raid5
->         Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
->      Used Dev Size : 3906885632 (3725.90 GiB 4000.65 GB)
->       Raid Devices : 5
->      Total Devices : 5
->        Persistence : Superblock is persistent
-> 
->      Intent Bitmap : Internal
-> 
->        Update Time : Sun Jul  3 03:02:01 2022
->              State : active, checking 
->     Active Devices : 5
->    Working Devices : 5
->     Failed Devices : 0
->      Spare Devices : 0
-> 
->             Layout : left-symmetric
->         Chunk Size : 512K
-> 
-> Consistency Policy : bitmap
-> 
->       Check Status : 99% complete
-> 
->               Name : gargamel.svh.merlins.org:5  (local to host
-> gargamel.svh.merlins.org) UUID : ec672af7:a66d9557:2f00d76c:38c9f705
->             Events : 642977
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8      193        0      active sync   /dev/sdm1
->        6       8      177        1      active sync   /dev/sdl1
->        2       8      209        2      active sync   /dev/sdn1
->        3       8        1        3      active sync   /dev/sda1
->        5       8       17        4      active sync   /dev/sdb1
-> gargamel:~# mdadm --grow --consistency-policy=ppl /dev/md5
-> mdadm: Current consistency policy is bitmap, cannot change to ppl
-> 
-> Kernel 5.16.
-> 
-> Thanks,
-> Marc
-> -- 
-> "A mouse is a device used to point at the xterm you want to type in"
-> - A.S.R. 
-> Home page: http://marc.merlins.org/                       | PGP
-> 7F55D5F27AAF9D08
