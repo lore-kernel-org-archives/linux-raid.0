@@ -2,164 +2,144 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C687C43334
-	for <linux-raid@archiver.kernel.org>; Mon,  4 Jul 2022 01:42:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF941C433EF
+	for <linux-raid@archiver.kernel.org>; Mon,  4 Jul 2022 03:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232905AbiGDBmo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 3 Jul 2022 21:42:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58626 "EHLO
+        id S230397AbiGDDo4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 3 Jul 2022 23:44:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230193AbiGDBmo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 3 Jul 2022 21:42:44 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5598D6437
-        for <linux-raid@vger.kernel.org>; Sun,  3 Jul 2022 18:42:43 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id 145so7592286pga.12
-        for <linux-raid@vger.kernel.org>; Sun, 03 Jul 2022 18:42:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=cEwn6ALzf01K94LBQxplMMDRDWdDE3+nYTcscNaPiuY=;
-        b=a3j1kNvK1WvYMGDACd5zY+xlKI7dIu2NE3NyJakuBWsKfwpbkioqEaNSDX1HSSE1r9
-         GEhhw0zoG7haCgBveTCCu2E5ivlYJqeZXhHupUtLFQe0fT3eunZVp1Zc4GiG9rdAMSgr
-         b7+QzvuttLYGFB8Uub4bi4JTfViFGtOkplI4xswV3WST2c9tjgadZ0QY4FdQV18tN4En
-         ONrLJaDD4c+TTMbCYpooAer7g8mMmPq7d6VOTu0ykOMsh3teY/921AqaBsqr7Hnri45z
-         95abEyYlqgG9TZDWnlIQQPCgW3KBKbYZA2FPzc13NxvkRoxespbt4+hrPFuhQ7Qxdqda
-         GBmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=cEwn6ALzf01K94LBQxplMMDRDWdDE3+nYTcscNaPiuY=;
-        b=nrd5WkDuuuGHW6biPq6kYEJyCjaeAZINhjWq//kRj+2kf9S6+9SVd/KZg1g2icTUtE
-         SPeG4XMWBeD+Ut8OHVYF/a/iS6UqAEojK5tSUSi2Oq5KgbC2DoWIx26A/mPy/QGWDrdB
-         XVCZ9vreQa57+NTb88QcsD85+VMkrOie5ur7x32wlk5983mDSNTmxeNispdK84pCuPbx
-         3k+FbihZPosA9ZiXrBLnySmwDXngs/MS8XpB6rQlgcT0Yt6OuQ4sE0eRfq9ScP4RIvYI
-         VHzNihVpMIzoOfeuIg7hionPvyOEv+Fy/ihVKRwHC4/uC8LU8i1lqATnoEfHjaV3/Cmu
-         DvJw==
-X-Gm-Message-State: AJIora90SkiW/+886TbjB24ZxT+LEwWY0LCv6BtSERoRMbr/lscYbt9+
-        U45wzEEzslKxWiitrdTHiiqC7A==
-X-Google-Smtp-Source: AGRyM1vQdCDeaEmj88I8VXW25wkU2QTVVMW4fhmnVgO6PQNcx8fVZOIF16IRLANGuDVEn7JZtPSaDA==
-X-Received: by 2002:a63:82c3:0:b0:40d:3b63:a806 with SMTP id w186-20020a6382c3000000b0040d3b63a806mr23247938pgd.75.1656898962736;
-        Sun, 03 Jul 2022 18:42:42 -0700 (PDT)
-Received: from [192.168.1.100] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id lx13-20020a17090b4b0d00b001df264610c4sm13551540pjb.0.2022.07.03.18.42.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 03 Jul 2022 18:42:42 -0700 (PDT)
-Message-ID: <78ef66c1-9a2d-2296-5b13-24ea46d9abae@kernel.dk>
-Date:   Sun, 3 Jul 2022 19:42:40 -0600
+        with ESMTP id S229629AbiGDDoy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 3 Jul 2022 23:44:54 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E0F82620
+        for <linux-raid@vger.kernel.org>; Sun,  3 Jul 2022 20:44:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1656906294; x=1688442294;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=kkfYXHBD7HTMhAENJ6Krdzxx2zsK8L+Yo9ImlmdrKao=;
+  b=EhbM347ZMQcvA+4TB96i6tt/ZyRBbQKN7wox7veIuMcgjk1HyWhW9/Bm
+   HWq/leDK3F4gniAoJBg18EmZb1BRM59qC9lESPmBdXLWHJYwwZA9jebVy
+   8bQ99Sek2+WJiheQZwVLHwgy6IEt2n+CUr+XoRGR7BbJJ4veVb48co9kN
+   HiVBxktrHZPChFJN4pF5hUTvAHrC4YfUuHZjqHv9yVinAsPPi0C5XpCJU
+   jNL64gZmAfR84l0PJijMu93csIIQI21X/anoXaWNaleVB/9m7pbbaEA/b
+   rpnv7RoaIqobinA/P4oEtjVib74mcCCr/40jA+/0oCL5TDkg/8O+6+4+R
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10397"; a="280578549"
+X-IronPort-AV: E=Sophos;i="5.92,243,1650956400"; 
+   d="scan'208";a="280578549"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jul 2022 20:44:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,243,1650956400"; 
+   d="scan'208";a="649355236"
+Received: from lkp-server01.sh.intel.com (HELO 68b931ab7ac1) ([10.239.97.150])
+  by fmsmga008.fm.intel.com with ESMTP; 03 Jul 2022 20:44:53 -0700
+Received: from kbuild by 68b931ab7ac1 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1o8D12-000HPb-IF;
+        Mon, 04 Jul 2022 03:44:52 +0000
+Date:   Mon, 04 Jul 2022 11:44:24 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ ff4ec5f79108cf82fe7168547c76fe754c4ade0a
+Message-ID: <62c26218.9XfUKR3d0aFMsSkV%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [GIT PULL] md-next 20220703
-Content-Language: en-US
-To:     Song Liu <songliubraving@fb.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Guoqing Jiang <jgq516@gmail.com>,
-        Chris Webb <chris@arachsys.com>,
-        Zhang Jiaming <jiaming@nfschina.com>
-References: <9727B564-F3B3-4CB1-A609-01AAD3C193F6@fb.com>
- <d76ca8b8-b827-4928-6286-47a0dbb6de25@kernel.dk>
- <275e61e8-44bc-2247-41c0-730d0e0f3bab@kernel.dk>
- <E5976072-2F61-4B96-98D0-FADE94F96B5F@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <E5976072-2F61-4B96-98D0-FADE94F96B5F@fb.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 7/3/22 5:49 PM, Song Liu wrote:
-> 
-> 
->> On Jul 3, 2022, at 9:19 AM, Jens Axboe <axboe@kernel.dk> wrote:
->>
->> On 7/3/22 10:02 AM, Jens Axboe wrote:
->>> On 7/3/22 9:13 AM, Song Liu wrote:
->>>> Hi Jens, 
->>>>
->>>> Please consider pulling the following changes on top of your for-5.20/drivers
->>>> branch. The major changes are:
->>>>
->>>> 1. Improve raid5 lock contention, by Logan Gunthorpe.
->>>> 2. Misc fixes to raid5, by Logan Gunthorpe.
->>>> 3. Fix race condition with md_reap_sync_thread(), by Guoqing Jiang.
->>>>
->>>
->>> I pulled this in, but what I pulled doesn't match this pull request.
->>> There seems to be an extra patch in there, and diffstat doesn't match
->>> what is in your email:
->>>
->>>> MAINTAINERS                |   1 +
->>>> drivers/md/dm-raid.c       |   1 +
->>>> drivers/md/md-autodetect.c |   1 +
->>>> drivers/md/md-cluster.c    |   4 +-
->>>> drivers/md/md.c            |  76 ++++++++++++++++---------
->>>> drivers/md/md.h            |  16 ++++++
->>>> drivers/md/raid5-cache.c   |  40 +++++++------
->>>> drivers/md/raid5-log.h     |  77 ++++++++++++-------------
->>>> drivers/md/raid5-ppl.c     |   2 +-
->>>> drivers/md/raid5.c         | 646 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-------------------------------------------------------------------------
->>>> 10 files changed, 549 insertions(+), 315 deletions(-)
->>>
->>> MAINTAINERS                      |   1 +
->>> drivers/block/drbd/drbd_bitmap.c |  49 +++-
->>> drivers/md/dm-raid.c             |   1 +
->>> drivers/md/md-autodetect.c       |   1 +
->>> drivers/md/md-cluster.c          |   4 +-
->>> drivers/md/md.c                  |  76 +++--
->>> drivers/md/md.h                  |  16 ++
->>> drivers/md/raid5-cache.c         |  40 ++-
->>> drivers/md/raid5-log.h           |  77 +++--
->>> drivers/md/raid5-ppl.c           |   2 +-
->>> drivers/md/raid5.c               | 654 +++++++++++++++++++++++++++---------------
->>> 11 files changed, 595 insertions(+), 326 deletions(-)
->>
->> TUrns out I pulled it into the wrong branch. But even after correcting
->> that, I now see:
->>
->> MAINTAINERS                |   1 +
->> drivers/md/dm-raid.c       |   1 +
->> drivers/md/md-autodetect.c |   1 +
->> drivers/md/md-cluster.c    |   4 +-
->> drivers/md/md.c            |  76 ++++--
->> drivers/md/md.h            |  16 ++
->> drivers/md/raid5-cache.c   |  40 ++-
->> drivers/md/raid5-log.h     |  77 +++---
->> drivers/md/raid5-ppl.c     |   2 +-
->> drivers/md/raid5.c         | 654 +++++++++++++++++++++++++++++++-----------------
->> 10 files changed, 553 insertions(+), 319 deletions(-)
->>
->> which is still off, with the discrepancy being in raid5.c?
-> 
-> Hmm... I just pulled your for-5.20/drivers branch again, and I am
-> still getting the original diff:
-> 
->  MAINTAINERS                |   1 +
->  drivers/md/dm-raid.c       |   1 +
->  drivers/md/md-autodetect.c |   1 +
->  drivers/md/md-cluster.c    |   4 +-
->  drivers/md/md.c            |  76 ++++++++++++-------
->  drivers/md/md.h            |  16 ++++
->  drivers/md/raid5-cache.c   |  40 +++++-----
->  drivers/md/raid5-log.h     |  77 +++++++++----------
->  drivers/md/raid5-ppl.c     |   2 +-
->  drivers/md/raid5.c         | 646 ++++++++++++++++++++++++++++++++++++++++++++++++++\
->        +++++++++++++++++++++++++++++++++++++++++++++++++++--------------------------\
->        ----------------------------
->  10 files changed, 549 insertions(+), 315 deletions(-)
-> 
-> Is is because different git versions? My current version is git
-> version 2.30.2. 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: ff4ec5f79108cf82fe7168547c76fe754c4ade0a  md: Fix spelling mistake in comments
 
-Oh, I think I may know what it is. It's the histrogram vs default diff.
-I just checked the results and it looks fine. Sorry for the noise, there
-was nothing wrong with your pull request! Now queued up.
+elapsed time: 724m
+
+configs tested: 69
+configs skipped: 4
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+i386                          randconfig-c001
+powerpc                     ep8248e_defconfig
+sh                          r7785rp_defconfig
+arm                        oxnas_v6_defconfig
+arm                           h3600_defconfig
+sh                     magicpanelr2_defconfig
+m68k                        mvme16x_defconfig
+sh                      rts7751r2d1_defconfig
+sh                        dreamcast_defconfig
+sh                          rsk7269_defconfig
+arm                            xcep_defconfig
+openrisc                  or1klitex_defconfig
+sh                           sh2007_defconfig
+powerpc                     pq2fads_defconfig
+powerpc                     mpc83xx_defconfig
+m68k                            mac_defconfig
+ia64                             allmodconfig
+arc                              allyesconfig
+alpha                            allyesconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+powerpc                           allnoconfig
+mips                             allyesconfig
+powerpc                          allmodconfig
+sh                               allmodconfig
+i386                                defconfig
+i386                             allyesconfig
+i386                          randconfig-a001
+i386                          randconfig-a003
+i386                          randconfig-a005
+x86_64                        randconfig-a013
+x86_64                        randconfig-a011
+x86_64                        randconfig-a015
+i386                          randconfig-a014
+i386                          randconfig-a012
+i386                          randconfig-a016
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+x86_64                        randconfig-a006
+riscv                randconfig-r042-20220703
+s390                 randconfig-r044-20220703
+arc                  randconfig-r043-20220703
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                               rhel-8.3
+x86_64                           rhel-8.3-syz
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+
+clang tested configs:
+x86_64                        randconfig-k001
+i386                          randconfig-a002
+i386                          randconfig-a006
+i386                          randconfig-a004
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a013
+i386                          randconfig-a015
+i386                          randconfig-a011
+x86_64                        randconfig-a005
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+hexagon              randconfig-r041-20220703
+hexagon              randconfig-r045-20220703
 
 -- 
-Jens Axboe
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
