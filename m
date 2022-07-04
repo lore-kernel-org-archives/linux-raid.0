@@ -2,144 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF941C433EF
-	for <linux-raid@archiver.kernel.org>; Mon,  4 Jul 2022 03:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECE99C433EF
+	for <linux-raid@archiver.kernel.org>; Mon,  4 Jul 2022 07:52:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230397AbiGDDo4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 3 Jul 2022 23:44:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57914 "EHLO
+        id S233009AbiGDHwC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 4 Jul 2022 03:52:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229629AbiGDDoy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 3 Jul 2022 23:44:54 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E0F82620
-        for <linux-raid@vger.kernel.org>; Sun,  3 Jul 2022 20:44:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1656906294; x=1688442294;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=kkfYXHBD7HTMhAENJ6Krdzxx2zsK8L+Yo9ImlmdrKao=;
-  b=EhbM347ZMQcvA+4TB96i6tt/ZyRBbQKN7wox7veIuMcgjk1HyWhW9/Bm
-   HWq/leDK3F4gniAoJBg18EmZb1BRM59qC9lESPmBdXLWHJYwwZA9jebVy
-   8bQ99Sek2+WJiheQZwVLHwgy6IEt2n+CUr+XoRGR7BbJJ4veVb48co9kN
-   HiVBxktrHZPChFJN4pF5hUTvAHrC4YfUuHZjqHv9yVinAsPPi0C5XpCJU
-   jNL64gZmAfR84l0PJijMu93csIIQI21X/anoXaWNaleVB/9m7pbbaEA/b
-   rpnv7RoaIqobinA/P4oEtjVib74mcCCr/40jA+/0oCL5TDkg/8O+6+4+R
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10397"; a="280578549"
-X-IronPort-AV: E=Sophos;i="5.92,243,1650956400"; 
-   d="scan'208";a="280578549"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jul 2022 20:44:54 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,243,1650956400"; 
-   d="scan'208";a="649355236"
-Received: from lkp-server01.sh.intel.com (HELO 68b931ab7ac1) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 03 Jul 2022 20:44:53 -0700
-Received: from kbuild by 68b931ab7ac1 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1o8D12-000HPb-IF;
-        Mon, 04 Jul 2022 03:44:52 +0000
-Date:   Mon, 04 Jul 2022 11:44:24 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- ff4ec5f79108cf82fe7168547c76fe754c4ade0a
-Message-ID: <62c26218.9XfUKR3d0aFMsSkV%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S233118AbiGDHvw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Jul 2022 03:51:52 -0400
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06AF9A472;
+        Mon,  4 Jul 2022 00:51:49 -0700 (PDT)
+Received: from [192.168.0.3] (ip5f5aede6.dynamic.kabel-deutschland.de [95.90.237.230])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id D72F261EA1923;
+        Mon,  4 Jul 2022 09:51:46 +0200 (CEST)
+Message-ID: <a4aeb494-7ffd-86ee-856f-5d3091cdb705@molgen.mpg.de>
+Date:   Mon, 4 Jul 2022 09:51:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] block: Fix spelling mistake in comments
+Content-Language: en-US
+To:     Zhang Jiaming <jiaming@nfschina.com>
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        liqiong@nfschina.com, renyu@nfschina.com, song@kernel.org
+References: <20220704012328.6507-1-jiaming@nfschina.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20220704012328.6507-1-jiaming@nfschina.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: ff4ec5f79108cf82fe7168547c76fe754c4ade0a  md: Fix spelling mistake in comments
+Dear Zhang,
 
-elapsed time: 724m
 
-configs tested: 69
-configs skipped: 4
+Thank you for your patch. Some nits.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Am 04.07.22 um 03:23 schrieb Zhang Jiaming:
+> There are some typos(dones't, waitting) in comments.
+> Fix it.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm                              allyesconfig
-i386                          randconfig-c001
-powerpc                     ep8248e_defconfig
-sh                          r7785rp_defconfig
-arm                        oxnas_v6_defconfig
-arm                           h3600_defconfig
-sh                     magicpanelr2_defconfig
-m68k                        mvme16x_defconfig
-sh                      rts7751r2d1_defconfig
-sh                        dreamcast_defconfig
-sh                          rsk7269_defconfig
-arm                            xcep_defconfig
-openrisc                  or1klitex_defconfig
-sh                           sh2007_defconfig
-powerpc                     pq2fads_defconfig
-powerpc                     mpc83xx_defconfig
-m68k                            mac_defconfig
-ia64                             allmodconfig
-arc                              allyesconfig
-alpha                            allyesconfig
-m68k                             allmodconfig
-m68k                             allyesconfig
-powerpc                           allnoconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-sh                               allmodconfig
-i386                                defconfig
-i386                             allyesconfig
-i386                          randconfig-a001
-i386                          randconfig-a003
-i386                          randconfig-a005
-x86_64                        randconfig-a013
-x86_64                        randconfig-a011
-x86_64                        randconfig-a015
-i386                          randconfig-a014
-i386                          randconfig-a012
-i386                          randconfig-a016
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-x86_64                        randconfig-a006
-riscv                randconfig-r042-20220703
-s390                 randconfig-r044-20220703
-arc                  randconfig-r043-20220703
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                              defconfig
-x86_64                           allyesconfig
-x86_64                               rhel-8.3
-x86_64                           rhel-8.3-syz
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
+Please add a space before the (. “Fix it.” also fits on the line above, 
+and maybe use plural in the commit message summary. For the body, maybe:
 
-clang tested configs:
-x86_64                        randconfig-k001
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-i386                          randconfig-a013
-i386                          randconfig-a015
-i386                          randconfig-a011
-x86_64                        randconfig-a005
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-hexagon              randconfig-r041-20220703
-hexagon              randconfig-r045-20220703
+Fix spelling of dones't and waitting in comments.
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+> Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
+> ---
+>   drivers/md/raid5-cache.c | 8 ++++----
+>   1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 83c184eddbda..4b799005eb6e 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -125,7 +125,7 @@ struct r5l_log {
+>   					 * reclaimed.  if it's 0, reclaim spaces
+>   					 * used by io_units which are in
+>   					 * IO_UNIT_STRIPE_END state (eg, reclaim
+> -					 * dones't wait for specific io_unit
+> +					 * doesn't wait for specific io_unit
+>   					 * switching to IO_UNIT_STRIPE_END
+>   					 * state) */
+>   	wait_queue_head_t iounit_wait;
+> @@ -1327,9 +1327,9 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
+>   	 * superblock is updated to new log tail. Updating superblock (either
+>   	 * directly call md_update_sb() or depend on md thread) must hold
+>   	 * reconfig mutex. On the other hand, raid5_quiesce is called with
+> -	 * reconfig_mutex hold. The first step of raid5_quiesce() is waitting
+> -	 * for all IO finish, hence waitting for reclaim thread, while reclaim
+> -	 * thread is calling this function and waitting for reconfig mutex. So
+> +	 * reconfig_mutex hold. The first step of raid5_quiesce() is waiting
+> +	 * for all IO finish, hence waiting for reclaim thread, while reclaim
+> +	 * thread is calling this function and waiting for reconfig mutex. So
+>   	 * there is a deadlock. We workaround this issue with a trylock.
+>   	 * FIXME: we could miss discard if we can't take reconfig mutex
+>   	 */
+
+Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+
+
+Kind regards,
+
+Paul
