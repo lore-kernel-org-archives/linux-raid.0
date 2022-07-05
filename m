@@ -2,78 +2,88 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94B04C433EF
-	for <linux-raid@archiver.kernel.org>; Mon,  4 Jul 2022 19:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D614C43334
+	for <linux-raid@archiver.kernel.org>; Tue,  5 Jul 2022 02:26:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230057AbiGDTaS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 4 Jul 2022 15:30:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41316 "EHLO
+        id S234337AbiGEC01 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 4 Jul 2022 22:26:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbiGDTaR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Jul 2022 15:30:17 -0400
-X-Greylist: delayed 5322 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 04 Jul 2022 12:30:15 PDT
-Received: from out.tornado.email (out.tornado.email [77.40.237.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A93A214;
-        Mon,  4 Jul 2022 12:30:15 -0700 (PDT)
-Received: from [92.221.249.155] (helo=[192.168.1.10])
-        by out.tornado.email with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <d@ja.vu>)
-        id 1o8QNx-00Amu0-Fj; Mon, 04 Jul 2022 20:01:25 +0200
-Message-ID: <44f85603-8a34-7654-54cf-987a62e44778@ja.vu>
-Date:   Mon, 4 Jul 2022 18:01:22 +0000
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] block: Fix spelling mistakes in comments
-Content-Language: en-US
-To:     Zhang Jiaming <jiaming@nfschina.com>, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        with ESMTP id S234470AbiGEC00 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Jul 2022 22:26:26 -0400
+Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1291A1274C;
+        Mon,  4 Jul 2022 19:26:24 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id 2DAE51E80D71;
+        Tue,  5 Jul 2022 10:24:22 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id SBn1PamTXi59; Tue,  5 Jul 2022 10:24:19 +0800 (CST)
+Received: from localhost.localdomain (unknown [180.167.10.98])
+        (Authenticated sender: jiaming@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id BB7911E80D19;
+        Tue,  5 Jul 2022 10:24:18 +0800 (CST)
+From:   Zhang Jiaming <jiaming@nfschina.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, d@ja.vu,
         liqiong@nfschina.com, renyu@nfschina.com,
+        Zhang Jiaming <jiaming@nfschina.com>,
         Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [PATCH v2] block: Fix spelling mistakes in comments
+Date:   Tue,  5 Jul 2022 10:26:17 +0800
+Message-Id: <20220705022617.12555-1-jiaming@nfschina.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220704012328.6507-1-jiaming@nfschina.com>
 References: <20220704012328.6507-1-jiaming@nfschina.com>
- <20220704100557.6429-1-jiaming@nfschina.com>
-From:   "Daniel K." <d@ja.vu>
-In-Reply-To: <20220704100557.6429-1-jiaming@nfschina.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Authenticated-Id: daniel@cluded.net
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 7/4/22 10:05, Zhang Jiaming wrote:
-> Fix spelling of dones't and waitting in comments.
+Fix spelling of dones't and waitting in comments.
+Fix tense mistakes of hold and finsh in comments.
+Use underline to connecting reconfig and mutex.
 
-Version your patches, you're now at v2. [PATCH v2] ...
+Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
+Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+---
+ drivers/md/raid5-cache.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Please find a few suggestions below as to what can be fixed in this
-block of text as you're making a pass over it.
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 83c184eddbda..8d5154d94f86 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -125,7 +125,7 @@ struct r5l_log {
+ 					 * reclaimed.  if it's 0, reclaim spaces
+ 					 * used by io_units which are in
+ 					 * IO_UNIT_STRIPE_END state (eg, reclaim
+-					 * dones't wait for specific io_unit
++					 * doesn't wait for specific io_unit
+ 					 * switching to IO_UNIT_STRIPE_END
+ 					 * state) */
+ 	wait_queue_head_t iounit_wait;
+@@ -1326,12 +1326,12 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
+ 	 * Discard could zero data, so before discard we must make sure
+ 	 * superblock is updated to new log tail. Updating superblock (either
+ 	 * directly call md_update_sb() or depend on md thread) must hold
+-	 * reconfig mutex. On the other hand, raid5_quiesce is called with
+-	 * reconfig_mutex hold. The first step of raid5_quiesce() is waitting
+-	 * for all IO finish, hence waitting for reclaim thread, while reclaim
+-	 * thread is calling this function and waitting for reconfig mutex. So
++	 * reconfig_mutex. On the other hand, raid5_quiesce is called with
++	 * reconfig_mutex held. The first step of raid5_quiesce() is waiting
++	 * for all IO to finish, hence waiting for reclaim thread, while reclaim
++	 * thread is calling this function and waiting for reconfig_mutex. So
+ 	 * there is a deadlock. We workaround this issue with a trylock.
+-	 * FIXME: we could miss discard if we can't take reconfig mutex
++	 * FIXME: we could miss discard if we can't take reconfig_mutex
+ 	 */
+ 	set_mask_bits(&mddev->sb_flags, 0,
+ 		BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
+-- 
+2.34.1
 
-
-> @@ -1327,9 +1327,9 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
->  	 * superblock is updated to new log tail. Updating superblock (either
->  	 * directly call md_update_sb() or depend on md thread) must hold
->  	 * reconfig mutex. On the other hand, raid5_quiesce is called with
-> -	 * reconfig_mutex hold. The first step of raid5_quiesce() is waitting
-> -	 * for all IO finish, hence waitting for reclaim thread, while reclaim
-> -	 * thread is calling this function and waitting for reconfig mutex. So
-> +	 * reconfig_mutex hold. The first step of raid5_quiesce() is waiting
-
-                          held
-
-> +	 * for all IO finish, hence waiting for reclaim thread, while reclaim
-
-              all IO to finish
-
-> +	 * thread is calling this function and waiting for reconfig mutex. So
->  	 * there is a deadlock. We workaround this issue with a trylock.
->  	 * FIXME: we could miss discard if we can't take reconfig mutex
->  	 */
-
-There are several mentions of 'reconfig mutex' that should probably be
-'reconfig_mutex'. What's the correct way to refer to a mutex in comments
-like the above?
-
-
-Daniel K.
