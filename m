@@ -2,60 +2,76 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FEE5C433EF
-	for <linux-raid@archiver.kernel.org>; Tue,  5 Jul 2022 08:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1321C43334
+	for <linux-raid@archiver.kernel.org>; Tue,  5 Jul 2022 11:51:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230462AbiGEIiI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 5 Jul 2022 04:38:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44476 "EHLO
+        id S231520AbiGELvh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 5 Jul 2022 07:51:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230426AbiGEIiH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Jul 2022 04:38:07 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3722DC5;
-        Tue,  5 Jul 2022 01:38:07 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 6823468BEB; Tue,  5 Jul 2022 10:38:04 +0200 (CEST)
-Date:   Tue, 5 Jul 2022 10:38:03 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Chaitanya Kulkarni <kch@nvidia.com>
-Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        axboe@kernel.dk, agk@redhat.com, song@kernel.org,
-        djwong@kernel.org, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        viro@zeniv.linux.org.uk, javier@javigon.com,
-        johannes.thumshirn@wdc.com, bvanassche@acm.org,
-        dongli.zhang@oracle.com, ming.lei@redhat.com, willy@infradead.org,
-        jefflexu@linux.alibaba.com, josef@toxicpanda.com, clm@fb.com,
-        dsterba@suse.com, jack@suse.com, tytso@mit.edu,
-        adilger.kernel@dilger.ca, jlayton@kernel.org, idryomov@gmail.com,
-        danil.kipnis@cloud.ionos.com, ebiggers@google.com,
-        jinpu.wang@cloud.ionos.com
-Subject: Re: [PATCH 0/6] block: add support for REQ_OP_VERIFY
-Message-ID: <20220705083803.GE19123@lst.de>
-References: <20220630091406.19624-1-kch@nvidia.com>
+        with ESMTP id S229457AbiGELvf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Jul 2022 07:51:35 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 519F4175BE
+        for <linux-raid@vger.kernel.org>; Tue,  5 Jul 2022 04:51:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1657021895; x=1688557895;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=oizT1hApKL2FIufRyaQLsoW7LskswXJjkC+v7InBU2U=;
+  b=dZJdo6P3rWEyAmBqvnjFZ3AG1jgE98FEprzbsale650QfARBZYvV0ThH
+   4vPOv5Z8QbXzrqeKJIq+dTxpTveVw8aJxOoERXxNmq1QKjPKmuCY9xBBT
+   /ur6KFJXGxN/n4fLnyKHgsuHBN9g9sDuGD0YBteXMJ6fW2smn/bNOecJS
+   9NpvFCFVgczCxScNksf1AUjPoSdw512849mjsWEcJNuuo4JZwTNVmoUXX
+   32UZfQ9Gl/VmXITR0V5yDWCr/uGabv9Sn/vb+sbZxG8y7VOxR2QPNb0Tz
+   dHhy/2KuSaaVNJAEGaXylpM8x8JW8qlJ0mazs0n+LY6mhvoyIf/0SYGcW
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10398"; a="284065276"
+X-IronPort-AV: E=Sophos;i="5.92,245,1650956400"; 
+   d="scan'208";a="284065276"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 04:51:35 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,245,1650956400"; 
+   d="scan'208";a="619800186"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.97])
+  by orsmga008.jf.intel.com with ESMTP; 05 Jul 2022 04:51:34 -0700
+From:   Kinga Tanska <kinga.tanska@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org, colyli@suse.de
+Subject: [PATCH v3 0/2] Fix force assemblation
+Date:   Tue,  5 Jul 2022 13:58:10 +0200
+Message-Id: <20220705115812.6946-1-kinga.tanska@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220630091406.19624-1-kch@nvidia.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jun 30, 2022 at 02:14:00AM -0700, Chaitanya Kulkarni wrote:
-> This adds support for the REQ_OP_VERIFY. In this version we add
-> support for block layer. NVMe host side, NVMeOF Block device backend,
-> and NVMeOF File device backend and null_blk driver.
+Series of patches contains fix to prevent update operation
+for container, when force assemblation is triggered. To unify all
+uses of checking array level, inline function was introduced and
+propagated.
 
-Who is "we" in this patch set?
+Kinga Tanska (2):
+  Assemble: check if device is container before scheduling force-clean
+    update
+  mdadm: replace container level checking with inline
 
-> Here is a link for the complete cover-letter for the background to save
-> reviewer's time :-
-> https://patchwork.kernel.org/project/dm-devel/cover/20211104064634.4481-1-chaitanyak@nvidia.com/
+ Assemble.c    | 10 ++++------
+ Create.c      |  6 +++---
+ Grow.c        |  6 +++---
+ Incremental.c |  4 ++--
+ mdadm.h       | 14 ++++++++++++++
+ super-ddf.c   |  6 +++---
+ super-intel.c |  4 ++--
+ super0.c      |  2 +-
+ super1.c      |  2 +-
+ sysfs.c       |  2 +-
+ 10 files changed, 34 insertions(+), 22 deletions(-)
 
-Well, the cover letter should be here.
+-- 
+2.26.2
 
-Also I don't see how an NVMe-only implementation.  If we don't also
-cover SCSI and ATA there isn't much this API buys a potential user.
