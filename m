@@ -2,88 +2,57 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D614C43334
-	for <linux-raid@archiver.kernel.org>; Tue,  5 Jul 2022 02:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80907C43334
+	for <linux-raid@archiver.kernel.org>; Tue,  5 Jul 2022 08:34:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234337AbiGEC01 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 4 Jul 2022 22:26:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51290 "EHLO
+        id S229652AbiGEIeX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 5 Jul 2022 04:34:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234470AbiGEC00 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Jul 2022 22:26:26 -0400
-Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1291A1274C;
-        Mon,  4 Jul 2022 19:26:24 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mail.nfschina.com (Postfix) with ESMTP id 2DAE51E80D71;
-        Tue,  5 Jul 2022 10:24:22 +0800 (CST)
-X-Virus-Scanned: amavisd-new at test.com
-Received: from mail.nfschina.com ([127.0.0.1])
-        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id SBn1PamTXi59; Tue,  5 Jul 2022 10:24:19 +0800 (CST)
-Received: from localhost.localdomain (unknown [180.167.10.98])
-        (Authenticated sender: jiaming@nfschina.com)
-        by mail.nfschina.com (Postfix) with ESMTPA id BB7911E80D19;
-        Tue,  5 Jul 2022 10:24:18 +0800 (CST)
-From:   Zhang Jiaming <jiaming@nfschina.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, d@ja.vu,
-        liqiong@nfschina.com, renyu@nfschina.com,
-        Zhang Jiaming <jiaming@nfschina.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: [PATCH v2] block: Fix spelling mistakes in comments
-Date:   Tue,  5 Jul 2022 10:26:17 +0800
-Message-Id: <20220705022617.12555-1-jiaming@nfschina.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220704012328.6507-1-jiaming@nfschina.com>
-References: <20220704012328.6507-1-jiaming@nfschina.com>
+        with ESMTP id S229478AbiGEIeX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Jul 2022 04:34:23 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA2BA2645;
+        Tue,  5 Jul 2022 01:34:21 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 521C168AA6; Tue,  5 Jul 2022 10:34:16 +0200 (CEST)
+Date:   Tue, 5 Jul 2022 10:34:16 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Chaitanya Kulkarni <kch@nvidia.com>
+Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        axboe@kernel.dk, agk@redhat.com, song@kernel.org,
+        djwong@kernel.org, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, javier@javigon.com,
+        johannes.thumshirn@wdc.com, bvanassche@acm.org,
+        dongli.zhang@oracle.com, ming.lei@redhat.com, willy@infradead.org,
+        jefflexu@linux.alibaba.com, josef@toxicpanda.com, clm@fb.com,
+        dsterba@suse.com, jack@suse.com, tytso@mit.edu,
+        adilger.kernel@dilger.ca, jlayton@kernel.org, idryomov@gmail.com,
+        danil.kipnis@cloud.ionos.com, ebiggers@google.com,
+        jinpu.wang@cloud.ionos.com
+Subject: Re: [PATCH 1/6] block: add support for REQ_OP_VERIFY
+Message-ID: <20220705083416.GA19123@lst.de>
+References: <20220630091406.19624-1-kch@nvidia.com> <20220630091406.19624-2-kch@nvidia.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220630091406.19624-2-kch@nvidia.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Fix spelling of dones't and waitting in comments.
-Fix tense mistakes of hold and finsh in comments.
-Use underline to connecting reconfig and mutex.
+On Thu, Jun 30, 2022 at 02:14:01AM -0700, Chaitanya Kulkarni wrote:
+> This adds a new block layer operation to offload verifying a range of
+> LBAs. This support is needed in order to provide file systems and
+> fabrics, kernel components to offload LBA verification when it is
+> supported by the hardware controller. In case hardware offloading is
+> not supported then we provide API to emulate the same. The prominent
+> example of that is SCSI and NVMe Verify command. We also provide
+> an emulation of the same operation that can be used in case H/W does
+> not support verify. This is still useful when block device is remotely
+> attached e.g. using NVMeOF.
 
-Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
-Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
----
- drivers/md/raid5-cache.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 83c184eddbda..8d5154d94f86 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -125,7 +125,7 @@ struct r5l_log {
- 					 * reclaimed.  if it's 0, reclaim spaces
- 					 * used by io_units which are in
- 					 * IO_UNIT_STRIPE_END state (eg, reclaim
--					 * dones't wait for specific io_unit
-+					 * doesn't wait for specific io_unit
- 					 * switching to IO_UNIT_STRIPE_END
- 					 * state) */
- 	wait_queue_head_t iounit_wait;
-@@ -1326,12 +1326,12 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
- 	 * Discard could zero data, so before discard we must make sure
- 	 * superblock is updated to new log tail. Updating superblock (either
- 	 * directly call md_update_sb() or depend on md thread) must hold
--	 * reconfig mutex. On the other hand, raid5_quiesce is called with
--	 * reconfig_mutex hold. The first step of raid5_quiesce() is waitting
--	 * for all IO finish, hence waitting for reclaim thread, while reclaim
--	 * thread is calling this function and waitting for reconfig mutex. So
-+	 * reconfig_mutex. On the other hand, raid5_quiesce is called with
-+	 * reconfig_mutex held. The first step of raid5_quiesce() is waiting
-+	 * for all IO to finish, hence waiting for reclaim thread, while reclaim
-+	 * thread is calling this function and waiting for reconfig_mutex. So
- 	 * there is a deadlock. We workaround this issue with a trylock.
--	 * FIXME: we could miss discard if we can't take reconfig mutex
-+	 * FIXME: we could miss discard if we can't take reconfig_mutex
- 	 */
- 	set_mask_bits(&mddev->sb_flags, 0,
- 		BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
--- 
-2.34.1
-
+What is the point of providing the offload?
