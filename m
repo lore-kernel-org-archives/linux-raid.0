@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02222C43334
-	for <linux-raid@archiver.kernel.org>; Wed,  6 Jul 2022 15:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE2EDC43334
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Jul 2022 15:09:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232706AbiGFPIT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Jul 2022 11:08:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52460 "EHLO
+        id S231552AbiGFPJO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Jul 2022 11:09:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232336AbiGFPIN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Jul 2022 11:08:13 -0400
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01BE7275C5
-        for <linux-raid@vger.kernel.org>; Wed,  6 Jul 2022 08:08:11 -0700 (PDT)
-Received: by mail-qt1-f177.google.com with SMTP id x1so18603619qtv.8
-        for <linux-raid@vger.kernel.org>; Wed, 06 Jul 2022 08:08:10 -0700 (PDT)
+        with ESMTP id S231920AbiGFPJM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Jul 2022 11:09:12 -0400
+Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 401C1A1AF
+        for <linux-raid@vger.kernel.org>; Wed,  6 Jul 2022 08:09:11 -0700 (PDT)
+Received: by mail-qt1-f175.google.com with SMTP id z13so18599991qts.12
+        for <linux-raid@vger.kernel.org>; Wed, 06 Jul 2022 08:09:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=ScRkAz/VqtB+AtxqVIwVUVdF/rIZB4AANK+myVEOT60=;
-        b=B7ELmbpxW5IFzRoTOSPlqIOPzpy/4IhYhkoyFNeOZhCTOtl2YgwZbTfQT1rG/zbR0f
-         w8th4gdJPpsta7ItSvRRygStHrIZPZMuUv+IXu456sofhstKmmV92sJ8SCldUywL/ujk
-         YPdQyFyLlD6QpUr2Xelbremvn0HJtDybOlty9/EX91jI5EkNhVqTYXIDA/EkGsmDHVPi
-         q5qjLXkqt1FzBfNmz78BX2ng76ZiZqJWj4mZVWqZUQ+wdvikI1AsiwOsK7BWHNe0MMFB
-         dOcMwkFPQV85WgcAtQzTWgABmXbpvdA+prZqXjjF7AjIk3EM+L5DZhHt6f5/52vOEmpA
-         ErpA==
-X-Gm-Message-State: AJIora/u2NLeUy0vhdV4d4MPLWggY7eRrRpmbLjlZALQLwhJdoZY+lgh
-        aKQuIVgmUA7C2eumj9sebBVa
-X-Google-Smtp-Source: AGRyM1vURiVQNneit1uIOq0gI+2o4Q1iXAOnL3S780GQ4xr/mr7+VNJ3IiJ/UQzyRS8zDfx/h2ANCg==
-X-Received: by 2002:a05:622a:196:b0:319:83f5:7a2c with SMTP id s22-20020a05622a019600b0031983f57a2cmr33294199qtw.0.1657120090010;
-        Wed, 06 Jul 2022 08:08:10 -0700 (PDT)
+        bh=Tsz2MOLF2Bl4qmuGvjK22N+/EXyHNeIKMYNiVvkEHV8=;
+        b=4D2DAeryux+pWgJsN4kfMWe49pyEQt12bzApOseLo5fEykX7b1coFkFv2LWztPcg/N
+         CqetLZrBsly/wffq3nXO79PzWP0RmzaIie9c+LZGAQdefeJpTJ6FgOtswvSl/cQA96SN
+         dKqRd4otaFYBXFVaKkVq9iaO4NkxI9FfC7gcw8t7OfPHxJUBTuJUy3mim94CUSWF3yyc
+         oeR5jncgFTdHpwzpsnXQVIo9kV0xKdbsha6LPa1eddihm1y3jgBrxIGIxla95dsGcWKz
+         JANHChqAMvPocPLti5nI3bsgsdWnMsGkwp0TtGbTO4gJXqc7nr7gE16Nee+dfsYZ1wIB
+         W7kg==
+X-Gm-Message-State: AJIora/E0vNztbf7DNkoZ0zlCl1xyjEsae4dbtabh3KBY9d0LEFz/d6U
+        1YNEgrG/VWYnHktgvxVyP8hF
+X-Google-Smtp-Source: AGRyM1t5PF0DSFrQbt4bi5LBPcIBQxZL7P89Hk2jkSRxl7RATw5BhQNCdgNUDq/Dg1qVd17q5SsXwQ==
+X-Received: by 2002:a05:622a:110b:b0:31d:3958:e6e9 with SMTP id e11-20020a05622a110b00b0031d3958e6e9mr22319256qty.660.1657120150141;
+        Wed, 06 Jul 2022 08:09:10 -0700 (PDT)
 Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
-        by smtp.gmail.com with ESMTPSA id l26-20020ac848da000000b003177969a48fsm24329478qtr.21.2022.07.06.08.08.09
+        by smtp.gmail.com with ESMTPSA id u16-20020a05620a431000b006a7284e5741sm30587670qko.54.2022.07.06.08.09.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Jul 2022 08:08:09 -0700 (PDT)
-Date:   Wed, 6 Jul 2022 11:08:08 -0400
+        Wed, 06 Jul 2022 08:09:09 -0700 (PDT)
+Date:   Wed, 6 Jul 2022 11:09:08 -0400
 From:   Mike Snitzer <snitzer@kernel.org>
 To:     Matthias Kaehlcke <mka@chromium.org>
 Cc:     Alasdair Kergon <agk@redhat.com>,
@@ -48,15 +48,15 @@ Cc:     Alasdair Kergon <agk@redhat.com>,
         linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
         linux-security-module@vger.kernel.org,
         Milan Broz <gmazyland@gmail.com>
-Subject: Re: [PATCH v7 2/3] LoadPin: Enable loading from trusted dm-verity
- devices
-Message-ID: <YsWlWIbzJtUQUaWy@redhat.com>
+Subject: Re: [PATCH v7 3/3] dm: verity-loadpin: Use
+ CONFIG_SECURITY_LOADPIN_VERITY for conditional compilation
+Message-ID: <YsWllA0uZadrrXut@redhat.com>
 References: <20220627153526.3750341-1-mka@chromium.org>
- <20220627083512.v7.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
+ <20220627083512.v7.3.I5aca2dcc3b06de4bf53696cd21329dce8272b8aa@changeid>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220627083512.v7.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
+In-Reply-To: <20220627083512.v7.3.I5aca2dcc3b06de4bf53696cd21329dce8272b8aa@changeid>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -64,40 +64,9 @@ X-Mailing-List: linux-raid@vger.kernel.org
 On Mon, Jun 27 2022 at 11:35P -0400,
 Matthias Kaehlcke <mka@chromium.org> wrote:
 
-> Extend LoadPin to allow loading of kernel files from trusted dm-verity [1]
-> devices.
-> 
-> This change adds the concept of trusted verity devices to LoadPin. LoadPin
-> maintains a list of root digests of verity devices it considers trusted.
-> Userspace can populate this list through an ioctl on the new LoadPin
-> securityfs entry 'dm-verity'. The ioctl receives a file descriptor of
-> a file with verity digests as parameter. Verity reads the digests from
-> this file after confirming that the file is located on the pinned root.
-> The digest file must contain one digest per line. The list of trusted
-> digests can only be set up once, which is typically done at boot time.
-> 
-> When a kernel file is read LoadPin first checks (as usual) whether the file
-> is located on the pinned root, if so the file can be loaded. Otherwise, if
-> the verity extension is enabled, LoadPin determines whether the file is
-> located on a verity backed device and whether the root digest of that
-> device is in the list of trusted digests. The file can be loaded if the
-> verity device has a trusted root digest.
-> 
-> Background:
-> 
-> As of now LoadPin restricts loading of kernel files to a single pinned
-> filesystem, typically the rootfs. This works for many systems, however it
-> can result in a bloated rootfs (and OTA updates) on platforms where
-> multiple boards with different hardware configurations use the same rootfs
-> image. Especially when 'optional' files are large it may be preferable to
-> download/install them only when they are actually needed by a given board.
-> Chrome OS uses Downloadable Content (DLC) [2] to deploy certain 'packages'
-> at runtime. As an example a DLC package could contain firmware for a
-> peripheral that is not present on all boards. DLCs use dm-verity to verify
-> the integrity of the DLC content.
-> 
-> [1] https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/verity.html
-> [2] https://chromium.googlesource.com/chromiumos/platform2/+/HEAD/dlcservice/docs/developer.md
+> The verity glue for LoadPin is only needed when CONFIG_SECURITY_LOADPIN_VERITY
+> is set, use this option for conditional compilation instead of the combo of
+> CONFIG_DM_VERITY and CONFIG_SECURITY_LOADPIN.
 > 
 > Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
 > Acked-by: Kees Cook <keescook@chromium.org>
