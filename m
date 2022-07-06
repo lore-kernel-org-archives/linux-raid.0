@@ -2,168 +2,82 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25060C433EF
-	for <linux-raid@archiver.kernel.org>; Wed,  6 Jul 2022 01:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB6E2C43334
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Jul 2022 15:07:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229974AbiGFBcE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 5 Jul 2022 21:32:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35572 "EHLO
+        id S233315AbiGFPHI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Jul 2022 11:07:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229511AbiGFBcD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Jul 2022 21:32:03 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2066.outbound.protection.outlook.com [40.107.94.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF8FF1838E;
-        Tue,  5 Jul 2022 18:32:02 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QpLQkdqAR1/j53dFQeiPO9Ui41vw7mw0i5MU5WTd3SxJ1rsHSKrGsQcta1k1GEwVKpa2WECtKCS2QjXk92NoyCfa+gQ00lG6de0psfYZn9/1+yJcIJeBxuGgX7wXcRxZiI7DkoweblLLhSYOomUd9BSKimp9kQfRV7pB8rW8FwdIiAda1OmpjAPGMkQ2EYyqgrDiFoivuG++gTR4KYqnFEej8BoKI/rNebdpvOsaQoMM8s8OBAcm4OGns3ykxNFyF8T2PqW0oanYOBoL/yzOevbm6DDKnQxX8mv0ab/Hj+IlrklJbbiiSlm3e0kvA8zLipD6ufHS+9XZqZo//le7fA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rE9jSQkEEJLz6bMBKBzqM64C+9EQOY0w8LurI8pV1R0=;
- b=FWjuY0Ddrzz/C7hm9jtABziGp72KWFDdg0K2dchCxQxs82XiMP4HaGMU8xYrKis4Umbmx8A2YxJGCPBaX13g1/1tabxZvOBp3ykjckGC16AxuwcQ/NHYmGmWBrOYQ5jXFarzwdZtND/9Euxrfzxj03aW5HC2eKk4ch0C9KHMhkf1b2VAbdCOcL8KQrS06NEX33WxKJwNLde3nPErR4+8kdDt1zGQPyvvUUI5xVh7hzrrfpK3qR3qEHg1ha/J2SZklfjA1iH39lYHydpe2kvwbZIyqrUzKv1tPZfwy7t3LfmT2+zu4JcY0tGd1cXwzYXFON8HG6toN36yQX2vKZEwug==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rE9jSQkEEJLz6bMBKBzqM64C+9EQOY0w8LurI8pV1R0=;
- b=RNaXguAmM8riCWh//axsMEHOIH11REIJG12z1z5CddGC9lD/z0IJIRrWbWfjYHSDHhnZXBoFll4vQeOY6eu/3uc13vaEUJPELJtcmVg64XaHg2tYVGsrYQotsRaMk6u9NQKh02UbVEmz3u93o0Psp2BBs38F1Ju61FvKPmmbDDkdKJjhEHdBW6sfhmgtbINqUvCU95ExUXThfNL3X5Jkdsblzf4pKLPS3655aMNkHkIBZtJjjoMrNCqtfdH3HjnGw5DCwh1DtvKI7YDLvATDiZuI+0ezQFbbfESme6l5n6PBUKRKf9gahaWcqhlV1x5pUbd6LPnke9d9hqc//PKRAQ==
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
- by BL0PR12MB2404.namprd12.prod.outlook.com (2603:10b6:207:4c::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.15; Wed, 6 Jul
- 2022 01:32:01 +0000
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::240b:5f1b:9900:d214]) by MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::240b:5f1b:9900:d214%7]) with mapi id 15.20.5395.021; Wed, 6 Jul 2022
- 01:32:01 +0000
-From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "kbusch@kernel.org" <kbusch@kernel.org>, "hch@lst.de" <hch@lst.de>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "javier@javigon.com" <javier@javigon.com>,
-        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
-        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "idryomov@gmail.com" <idryomov@gmail.com>,
-        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
-        "ebiggers@google.com" <ebiggers@google.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
-Subject: Re: [PATCH 1/6] block: add support for REQ_OP_VERIFY
-Thread-Topic: [PATCH 1/6] block: add support for REQ_OP_VERIFY
-Thread-Index: AQHYjGHTGA1KUuSqQ0qn1A7ygjqAAq1oIUiAgAfko4CAABLCgIAAfu8A
-Date:   Wed, 6 Jul 2022 01:32:01 +0000
-Message-ID: <e5794ff6-5174-c1d6-3c48-db4a35f18890@nvidia.com>
-References: <20220630091406.19624-1-kch@nvidia.com>
- <20220630091406.19624-2-kch@nvidia.com> <Yr3M0W5T/CwMtvte@magnolia>
- <476112fe-c01e-dbaa-793d-19d3ec94c6ef@nvidia.com> <YsR7lbTfBH0dUMMg@magnolia>
-In-Reply-To: <YsR7lbTfBH0dUMMg@magnolia>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: a8320733-434b-4073-acc2-08da5eef531b
-x-ms-traffictypediagnostic: BL0PR12MB2404:EE_
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 2fhkrlZDjvmAPXUKf3A/xfN+PPuyJ/0DY9ZKs7vsqoeJ0CXzUvfXwoS7fzMeEhMGWW8uM8H05xcuSrQ7+iMMsb4n7btsVO1jPRJuloKcxX2sUeCHqU52wsrXNt5Pn7rtp5C1xX56GB7n4zQGJ2Lq9tyUKtq5YmgeKnI7VTvYbq5DpJ7mCL0Ef9v8dCop577kVT1C4PpuL5QzrahINKy8Gpcbn8mTxu237xSIYXDRefT0ecp8fbfNx6CJ9LSq8FTj1xH+sw8IyFaF+Gm8euyTR7SaLkpg0hKZSOB+Yu4qUf6sguYttQNt9dnHfDBByTWpKdhksYj5kyvxoUgMvGZd3L4OIqAI3JjysamLXeeM4bhweIZyDu9HxigZYmpuwJYrnwsCVybi4fn0qUIRAKblFJ34Y1rsKGJt1ktOyh4Eht0yYdw3FRADb0AUnSgxNkUAZHhxDGikV1c48M7T7iefX1iI7+R5d4sQRyHQBY7Iwj8bsE177cXPAZSVpO+1WFJTTfnfBYoYn1dlhBO4FdAqFgOyCi9kBl2Gfn9p0Kmvp9NXqIOaFGzsPyaFpukN3Od/flb0pJ/nYndQkABUl+co14BIxlulJEuSuSUqanjRuYTpgs7++qoisB+k1bVZbmxZVz3QHUwHY4e/UXAYYnDsVTcprkKM+1VX5BE/6khjOZPEA36QRmxAspBMrLnIN++D5+ht7+lVFNsNIh7DP1bvUXof2SIS8K0gJtF0OAkq4pTk6ofs9zod1eSmXHZeXPdCW4NOhb9zDSjYzgtuiA5s/cP8kQ9QWBm5IugvQNs2roYsyLkhWjyY5JtvoIR/ZmFOS9sZzkvWzzsivzr5fEiB7XX3TQ/trpPszACS/mUSlu/AHY4iFWHZ60qjJuw5ho5g
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(396003)(366004)(346002)(376002)(39860400002)(136003)(66556008)(66946007)(8936002)(64756008)(316002)(76116006)(4326008)(8676002)(54906003)(66476007)(6916009)(2616005)(31696002)(66446008)(38100700002)(6512007)(41300700001)(86362001)(6506007)(83380400001)(71200400001)(91956017)(478600001)(38070700005)(2906002)(5660300002)(36756003)(4744005)(7416002)(7406005)(6486002)(186003)(122000001)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?OVcyam9FWkdDb3craXdvZjlRT2VrbGFyMmlyWUxTUS9ucWI5TEJsNTVwa3E4?=
- =?utf-8?B?RGo5L1R1NUs3UzRRNE83MFRvTjNDQWFLN1ZqTWlMT2dsaGNSUUg5cnNRVFRp?=
- =?utf-8?B?TktZR3dMN2JDS3RYMUc2bHFmOWFBRUNWWE1Idm5HQzFCUGNlU3FCUDlCU09s?=
- =?utf-8?B?NFdxWTltQ3pGQXdQbEs4M1ExTmdzM1EzdXVGWkV6WlloeU92S3lMKzkzN0VN?=
- =?utf-8?B?ZXUyamJobUphUTNmQVg3VFRBTFlZT2JkMTdQbnlxOW5OS0MrYXlUVGVha3l0?=
- =?utf-8?B?RXlyN0ZGY0hxcHd0aXpmTng0R0NaU284YjJKS3JWU09jdFpqT3ZDeWwxak1S?=
- =?utf-8?B?WlM4UzVIY1cvTFVzd2hrcUZFM2cxYzdVSThNREJLSWRTZmxwb2JBOFJkNWVx?=
- =?utf-8?B?d3lUYWN4a3h3UjlCcE9kNE9tUEIveDgrMnpTbnpoZDJ6Mkt2Q01EVTF4MDJX?=
- =?utf-8?B?YlhDaTU2TEhSZlVyZjgvZkFPTFZsdmVtNmgzU1BVK21mczBGdGtoN0RjalhL?=
- =?utf-8?B?WXMraVRrMVNaY3hMV0xiZE1oay8wV3JuVWtJTzdER2NYcjFSck1rT3JqeUlG?=
- =?utf-8?B?R3AyQ29ERktlVG5hZmxNMjJBK3RVTE5KRTdqd3NFSXM1dWFCWFBsRGxCbEgz?=
- =?utf-8?B?dUkrMlZqQkRsNVpqWENjK1o0azFiV24yUTdtaXJOcG5qUXBFY2ZGcnFVOUxt?=
- =?utf-8?B?ZUdkZmR1Z0lzeVZ5Ti9DZkltWjYrTERLWWRHcWhBK3JtS01icGMrTUhhUllG?=
- =?utf-8?B?eHpsRHh0WEUrcFYzb2lDUFhkalZFUXExNkM3UVAxZVhkakVDYXBwUHd0czFM?=
- =?utf-8?B?ZW5tYVJWczJnVklGRnYxV2J5TUlGMHgxa2JmQzR0eUg1YnlJMVBiK1BRV3Nx?=
- =?utf-8?B?RG1OdXkwQlp5dXZoMTdUaUpDaGhhS09tTTk1cU5mazhPQTVvc1l0NHNjbWNI?=
- =?utf-8?B?VlRTWHNOYUlIM1p3WlVmVmUxejFoZ0hoVG96M1pldlhXZkJyNW1tSWFKWFhX?=
- =?utf-8?B?RFNrRHo2TjFjb2U1USsxaFFXZ09yYjhQWldqT0JWNXZ6TmJhbERRWmZ6by9C?=
- =?utf-8?B?c1dwdmRmVC9QQ2t4SUdJRkp4QXp4ZFBtaDA1MDBvOVZJM3ZJN1dadFN6WFov?=
- =?utf-8?B?WStuaXc4eVVtR2ZIVHliUU9EMjRHbkNZMVQ4TUhXNjcvMUs5UnNEWUdFTWFV?=
- =?utf-8?B?UGcvQUROVE10ZXlZM3RBVXRCMFZMNjZlRXdVWDBZZS9pdGlXMEFGS044M1Ey?=
- =?utf-8?B?cXdBanE5bnE3NDJWeEpOd3dKR1ZKWDNlSGZ4Z1JVMWo4eFBKOGd0U296eDBG?=
- =?utf-8?B?dVAvTndNTjY2YVZaRW1XTmJORGZWWVNCYjhBL1dHSUMwVnNGRndWNXVyci96?=
- =?utf-8?B?ZENUbzRlTmFwTHJtUjBMR2Zjc2Zwb25EeXQ0R3VqSlRERWZrWjE0Vi9zSE54?=
- =?utf-8?B?OTJKbjJkT2tnSllqSEdxalFORnpNQzdmd2R2Y0NVSXRpd3V2UG5mVTArLzJi?=
- =?utf-8?B?Sjl3UGhCcElPWFdYL0hWUGR3M3luc25ZcWNFbXRmWUZCT1psUDF3UHZUWlkx?=
- =?utf-8?B?Ynk0LzVJekZWRnFMQzhBSWNyQzFFUmtFZnA0MjgzR1ZLS0JKeVpicHAyK0dl?=
- =?utf-8?B?ZER6ZzFuNG9KUldkUmo2Y2ZVekNSYU9PNk1iVHJvc0lyQXlQWGg3cDBNeEdt?=
- =?utf-8?B?SE1XYlIzUEFFemlnVnpzWWpKSGtHMjREOWNlQnA2dEJYR3FYS3lpNFpUOEhT?=
- =?utf-8?B?dGtwaE1yUG5NK21aazRGSHBxLzRDZTVKOTNuOExURng1KzZCcUZRZHJPOTMw?=
- =?utf-8?B?MG5HSThUNFVBTERFUHJacUtWb0ZkNTFFZnArOVJiUFlBR3QvazlJT1hQNXl2?=
- =?utf-8?B?WFEybnRTMTF4cVhlM3VyeUQ5em5JdHJSRTIwSFJHS1A1d3VPanAzUi9NczZo?=
- =?utf-8?B?Q2NxWklWcTh4MFp1WWZvMEVKT3BHMmR0RmdvVW13Q3ZXYjRwcm52c1RRdTFj?=
- =?utf-8?B?d1pFdHJHcmdIZjdpaytUNGswNGxScm5EWmdsTkV5RWdNcTN3dFAwYmpRcE9Q?=
- =?utf-8?B?bitFa1U5Si9GUWtNd0piL3gyZVJ5b0lpWnZORU1lSGNUTmZTMjIyWUhoOHVp?=
- =?utf-8?B?WHdqOGcrWnFTT01wWEd1aFU5VlJWUEtScXY1WFhXNkd5Nk96VVlkMnNhL0w3?=
- =?utf-8?Q?JVORaIi1tqTEaymxysZ7gorTjLOWPypjbXgtTGE2uyY2?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <1C8115D4352FDE4DBB18189B4BA25606@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S232625AbiGFPHH (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Jul 2022 11:07:07 -0400
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A64541AF2A
+        for <linux-raid@vger.kernel.org>; Wed,  6 Jul 2022 08:07:01 -0700 (PDT)
+Received: by mail-qt1-f177.google.com with SMTP id c13so18572838qtq.10
+        for <linux-raid@vger.kernel.org>; Wed, 06 Jul 2022 08:07:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=I0RXuzZs3s0id/kcom5gH7O0HmNMUUNPAv91LFO4+a4=;
+        b=7AN/kI7Ry3IgOoHlORIijPtzTzhUz2Kn7M435S2Az7WGDgjR40+48VTtZjFeuPYWVA
+         u6z3S5wL5Z+76z+jhuRIdRYcqbXs/79lb7OPnISPciDeatQHmlAF7w7uU1lytzAsOVpJ
+         ITfitBaAuwB2p+R6s12YWSJY3ONMnbpzRoiGSQmhcxQcqlWaRu/1MOiBGQLTKMKsULKR
+         UlRIXjGwaICzA/5vWdmPKbc7vRGYxAgkqFc81xUW7ijthyPPTiaYIs2BRab2XrNiJKUu
+         g2oRVl8ij3AR7c7zTkAjsP8hoSORzn5qW3bvXMRn5zE5CO9SPzI41Mqf21g0lVUhmq5t
+         Z5yQ==
+X-Gm-Message-State: AJIora8/F5tSNUJC82ETkghI42Yd1baK3Q6+11P/uJlL6sy1R4/RrMQN
+        5dUO++jcZp04WFrEqsxwfgPG
+X-Google-Smtp-Source: AGRyM1syM2piJxHzgzwmYO+2F/M3+bHsRSC/l80bNxbiOkjZ/DCWE9FGy+Tge1oNYwtQpJp5Yz7jXQ==
+X-Received: by 2002:a05:6214:29e6:b0:470:44d9:1ec5 with SMTP id jv6-20020a05621429e600b0047044d91ec5mr36520228qvb.95.1657120020754;
+        Wed, 06 Jul 2022 08:07:00 -0700 (PDT)
+Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
+        by smtp.gmail.com with ESMTPSA id d3-20020ac81183000000b0031a2cdab5cesm19492709qtj.37.2022.07.06.08.06.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Jul 2022 08:07:00 -0700 (PDT)
+Date:   Wed, 6 Jul 2022 11:06:58 -0400
+From:   Mike Snitzer <snitzer@kernel.org>
+To:     Matthias Kaehlcke <mka@chromium.org>
+Cc:     Alasdair Kergon <agk@redhat.com>,
+        Kees Cook <keescook@chromium.org>,
+        James Morris <jmorris@namei.org>,
+        "Serge E . Hallyn" <serge@hallyn.com>,
+        linux-kernel@vger.kernel.org, dm-devel@redhat.com,
+        Douglas Anderson <dianders@chromium.org>,
+        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
+        linux-security-module@vger.kernel.org,
+        Milan Broz <gmazyland@gmail.com>
+Subject: Re: [PATCH v7 1/3] dm: Add verity helpers for LoadPin
+Message-ID: <YsWlEmaQsIVUiKC0@redhat.com>
+References: <20220627153526.3750341-1-mka@chromium.org>
+ <20220627083512.v7.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a8320733-434b-4073-acc2-08da5eef531b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Jul 2022 01:32:01.0551
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: nR3WgwcsguE/9Gx0pTYxGMTS6RKSEAPsh93K4upd8C3sjuk69VdkDkXXDG7HfOOi1G53Px3OAeQkXa3VDcGbeA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR12MB2404
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220627083512.v7.1.I3e928575a23481121e73286874c4c2bdb403355d@changeid>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-DQo+Pj4+ICtpbnQgX19ibGtkZXZfaXNzdWVfdmVyaWZ5KHN0cnVjdCBibG9ja19kZXZpY2UgKmJk
-ZXYsIHNlY3Rvcl90IHNlY3RvciwNCj4+Pj4gKwkJc2VjdG9yX3QgbnJfc2VjdHMsIGdmcF90IGdm
-cF9tYXNrLCBzdHJ1Y3QgYmlvICoqYmlvcCkNCj4+Pj4gK3sNCj4+Pj4gKwl1bnNpZ25lZCBpbnQg
-bWF4X3ZlcmlmeV9zZWN0b3JzID0gYmRldl92ZXJpZnlfc2VjdG9ycyhiZGV2KTsNCj4+Pj4gKwlz
-ZWN0b3JfdCBtaW5faW9fc2VjdCA9IChCSU9fTUFYX1ZFQ1MgPDwgUEFHRV9TSElGVCkgPj4gOTsN
-Cj4+Pj4gKwlzdHJ1Y3QgYmlvICpiaW8gPSAqYmlvcDsNCj4+Pj4gKwlzZWN0b3JfdCBjdXJyX3Nl
-Y3RzOw0KPj4+PiArCWNoYXIgKmJ1ZjsNCj4+Pj4gKw0KPj4+PiArCWlmICghbWF4X3ZlcmlmeV9z
-ZWN0b3JzKSB7DQo+Pj4+ICsJCWludCByZXQgPSAwOw0KPj4+PiArDQo+Pj4+ICsJCWJ1ZiA9IGt6
-YWxsb2MobWluX2lvX3NlY3QgPDwgOSwgR0ZQX0tFUk5FTCk7DQo+Pj4NCj4+PiBrKnoqYWxsb2M/
-ICBJIGRvbid0IHRoaW5rIHlvdSBuZWVkIHRvIHplcm8gYSBidWZmZXIgdGhhdCB3ZSdyZSByZWFk
-aW5nDQo+Pj4gaW50bywgcmlnaHQ/DQo+Pj4NCj4+PiAtLUQNCj4+DQo+PiB3ZSBkb24ndCBuZWVk
-IHRvIGJ1dCBJIGd1ZXNzIGl0IGlzIGp1c3QgYSBoYWJpdCB0byBtYWtlIHN1cmUgYWxsb2NlZA0K
-Pj4gYnVmZmVyIGlzIHplb3JlZCwgc2hvdWxkIEkgcmVtb3ZlIGl0IGZvciBhbnkgcGFydGljdWxh
-ciByZWFzb24gPw0KPiANCj4gV2hhdCdzIHRoZSBwb2ludCBpbiB3YXN0aW5nIENQVSB0aW1lIHpl
-cm9pbmcgYSBidWZmZXIgaWYgeW91J3JlIGp1c3QNCj4gZ29pbmcgdG8gRE1BIGludG8gaXQ/DQo+
-IA0KPiAtLUQNCj4gDQoNCnRydWUsIHdpbGwgcmVtb3ZlIGl0IC4uLg0KDQo+PiAtY2sNCj4+DQo+
-Pg0K
+On Mon, Jun 27 2022 at 11:35P -0400,
+Matthias Kaehlcke <mka@chromium.org> wrote:
+
+> LoadPin limits loading of kernel modules, firmware and certain
+> other files to a 'pinned' file system (typically a read-only
+> rootfs). To provide more flexibility LoadPin is being extended
+> to also allow loading these files from trusted dm-verity
+> devices. For that purpose LoadPin can be provided with a list
+> of verity root digests that it should consider as trusted.
+> 
+> Add a bunch of helpers to allow LoadPin to check whether a DM
+> device is a trusted verity device. The new functions broadly
+> fall in two categories: those that need access to verity
+> internals (like the root digest), and the 'glue' between
+> LoadPin and verity. The new file dm-verity-loadpin.c contains
+> the glue functions.
+> 
+> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> Acked-by: Kees Cook <keescook@chromium.org>
+
+Acked-by: Mike Snitzer <snitzer@kernel.org>
