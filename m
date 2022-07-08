@@ -2,94 +2,64 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17E82C433EF
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Jul 2022 05:45:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21411C433EF
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Jul 2022 06:01:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237202AbiGHFp5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Jul 2022 01:45:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59048 "EHLO
+        id S237142AbiGHGBf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Jul 2022 02:01:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237142AbiGHFp4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Jul 2022 01:45:56 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FEA02CC8E;
-        Thu,  7 Jul 2022 22:45:55 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F23F0B824C1;
-        Fri,  8 Jul 2022 05:45:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90D39C341C8;
-        Fri,  8 Jul 2022 05:45:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657259152;
-        bh=7qC9gsOF6NFJYCvzdCsuZTse6wTpCSAa+LAm1AdIefI=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=beYpX+D2ey5f7Lq1Lmv23P4ooH3KGpo4IZzeAMNjwnXBYreclF1pEjfFYZNrVzTSN
-         NYku4odIasQ2Bzj0sN3WLZW9hvuDDljFGdXL9/vpWqmJkNjtJ+MMxmx7XYrboDsEUM
-         BkYgk/qb63ZTFVCHY6PhSC7h92RtMy5FFl0T3M5WcFB2VZxML5YH8E3Ip6mgcs6ufj
-         kKShNqjWx7yyR/VLr1vqjs/JTig2Abrgu2xEwp840kqXqJchVbfR+7AmEddsBnHxpw
-         DfQeirmJlIE7tVz7OrWJ5yVEhdSGhMDGi9PqNs3E2G+DjmMmObx6p7ha1MuUIfonae
-         /sPczvt1AMsow==
-Received: by mail-yb1-f170.google.com with SMTP id r3so36184236ybr.6;
-        Thu, 07 Jul 2022 22:45:52 -0700 (PDT)
-X-Gm-Message-State: AJIora9HA5ztWz3bOp1yVVWkO8zAgz4PvpL1sbSoQ8xRt9FM6P3ZCGVa
-        X92XeVgl9jYLKwoKKQncsdqfcz4yuePRr+MLzfs=
-X-Google-Smtp-Source: AGRyM1v1rmjHrz98tDPMJhJXDz9uVINgK9FUfGLHX4jUIRqrx9rp4fJDh4F6AsSGUGTVseF8zzhc5mbrIekxtyujmzk=
-X-Received: by 2002:a25:9c09:0:b0:66e:4d5c:8cbc with SMTP id
- c9-20020a259c09000000b0066e4d5c8cbcmr1685559ybo.449.1657259151607; Thu, 07
- Jul 2022 22:45:51 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220707191533.293795-1-logang@deltatee.com>
-In-Reply-To: <20220707191533.293795-1-logang@deltatee.com>
-From:   Song Liu <song@kernel.org>
-Date:   Thu, 7 Jul 2022 22:45:38 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5R=t=k0zKvJsOf3eaQE9MVu6kLEc5i2cN-72WB75SVbg@mail.gmail.com>
-Message-ID: <CAPhsuW5R=t=k0zKvJsOf3eaQE9MVu6kLEc5i2cN-72WB75SVbg@mail.gmail.com>
-Subject: Re: [PATCH 0/2] Raid5 Bug Fixes
+        with ESMTP id S229911AbiGHGBe (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Jul 2022 02:01:34 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BA4D796B0;
+        Thu,  7 Jul 2022 23:01:34 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 5A4AE68BFE; Fri,  8 Jul 2022 08:01:27 +0200 (CEST)
+Date:   Fri, 8 Jul 2022 08:01:26 +0200
+From:   Christoph Hellwig <hch@lst.de>
 To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     open list <linux-kernel@vger.kernel.org>,
+Cc:     Christoph Hellwig <hch@lst.de>, axboe@kernel.dk,
+        shinichiro.kawasaki@wdc.com, dan.j.williams@intel.com,
+        yukuai3@huawei.com, ming.lei@redhat.com,
+        linux-block@vger.kernel.org,
         linux-raid <linux-raid@vger.kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        David Sloan <David.Sloan@eideticom.com>
-Content-Type: text/plain; charset="UTF-8"
+        Song Liu <song@kernel.org>
+Subject: Re: REGRESSION: [PATCH 4/4] block: freeze the queue earlier in
+ del_gendisk
+Message-ID: <20220708060126.GA16457@lst.de>
+References: <20220614074827.458955-1-hch@lst.de> <20220614074827.458955-5-hch@lst.de> <72a5bf2e-cd56-a85c-2b99-cb8729a66fed@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <72a5bf2e-cd56-a85c-2b99-cb8729a66fed@deltatee.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jul 7, 2022 at 12:15 PM Logan Gunthorpe <logang@deltatee.com> wrote:
->
-> Hey,
->
-> Please find two patches with fixes to the raid5 code.
->
-> The first patch fixes a bug in my recent commit that causes data
-> corruption in very specific circumstances.
->
-> The second patch fixes a theoretical issue with nested waits in
-> code that was recently cleaned up in the previous series (though the
-> issue always existed).
->
-> Thanks,
+On Thu, Jul 07, 2022 at 11:41:40PM -0600, Logan Gunthorpe wrote:
+> I'm not really sure why this is yet, but this patch in rc4 causes some
+> random failures with mdadm tests.
+> 
+> It seems the 11spare-migration tests starts failing roughly every other
+> run because the block device is not quite cleaned up after mdadm --stop
+> by the time the next mdadm --create commands starts, or rather there
+> appears to be a race now between the newly created device and the one
+> being cleaned up. This results in an infrequent sysfs panic with a
+> duplicate filename error (see the end of this email).
+> 
+> I managed to bisect this and found a09b314005f3a09 to be the problematic
+> commit.
 
-Applied to md-next after fixing a couple typos.
+Taking a look at the mddev code this commit just seems to increase the
+race window of hitting horrible life time problems in md, but I'll also
+try to reproduce and verify it myself.
 
-Thanks!
-Song
-
->
-> Logan
->
-> --
->
-> Logan Gunthorpe (2):
->   md/raid5: Fix sectors_to_do bitmap overflow in raid5_make_request()
->   md/raid5: Convert prepare_to_wait() to wait_woken() api
->
->  drivers/md/raid5.c | 32 +++++++++++++++++---------------
->  1 file changed, 17 insertions(+), 15 deletions(-)
->
->
-> base-commit: ff4ec5f79108cf82fe7168547c76fe754c4ade0a
-> --
-> 2.30.2
+Take a look at how md searches for a duplicate name in md_alloc,
+mddev_alloc_unit and mddev_find_locked based on the all_mddevs list,
+and how the mddev gets dropped from all_mddevs very early and long
+before the gendisk is gone in mddev_put.  I think what needs to be
+done is to implement a free_disk method and drop the mddev (and free it)
+from that.  But given how much intricate mess is based on all_mddevs
+we'll have to be very careful about that.
