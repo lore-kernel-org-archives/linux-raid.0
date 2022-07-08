@@ -2,91 +2,155 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A6EEC43334
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Jul 2022 17:48:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA3B3C43334
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Jul 2022 19:00:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238649AbiGHRsL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Jul 2022 13:48:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49050 "EHLO
+        id S239723AbiGHTAH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Jul 2022 15:00:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238511AbiGHRsJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Jul 2022 13:48:09 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 491EA74DE4
-        for <linux-raid@vger.kernel.org>; Fri,  8 Jul 2022 10:48:08 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id s206so22947208pgs.3
-        for <linux-raid@vger.kernel.org>; Fri, 08 Jul 2022 10:48:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=SCpgoi0bej3E/k3q1Zzvx8WQzQbsCorWnUbIjfYa/X8=;
-        b=ml3Kny+TDNHdTGvuVDpKu9tNVsI9rg6LeipWZ5ZOkteqKLFBxM5ekj3E07IlhnmCZV
-         QEGA9z/6eokWng2H3lP1krXx7MXUvPNoY40dacqit8ht0YCevulLcYBnXMrbRvrml9OS
-         XyUb9Idq8wvH8qCWN0cfxK4yhsSKzD1PJ0xMs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=SCpgoi0bej3E/k3q1Zzvx8WQzQbsCorWnUbIjfYa/X8=;
-        b=r36PO+EyzCETKp8543xM9+HoLwrlgsei2T6OK9TUaNffY6Lw+pQwkBC4mrxR8yYVcK
-         xbOsJpQ85DvAxgPVu7zLCnmk5NSTUp0JMX2vClHQHjlV48fBHwCAZlj8CacR4BzZ0XFM
-         yi2ryfsIQk2bDq0rmLXeH5UiZffTYX5J+6lS5f8KxAdb2/gFdsWJetbQliV1W3/Wl49e
-         R/7EgBDGxP/yR74jpj1v+Htwh6EnS1MirRQP7TpuyHbHN6AWr/mc5sRnGniD80PxTtyf
-         x+iixhUVExSXAhFtUbFGIWIdtfAAY5eGIfAYGm7We6znzCfLu0Z5zOIW0UuUnQL3cVS2
-         wTOw==
-X-Gm-Message-State: AJIora8N5puqE5eVrJWAxR+akIsHE2F6uqxrfBuHYoKnKUH4EQtXExba
-        /tRi9eMPaBwbftVHCfKn17Pz6w==
-X-Google-Smtp-Source: AGRyM1sZCb3nACbVv0Xqctc8zBRDdY2BX228aDhc1USUQoc2fpKbCJNkaQ1aAGFkZEau8j+w/Chrcg==
-X-Received: by 2002:a63:187:0:b0:411:6434:d017 with SMTP id 129-20020a630187000000b004116434d017mr4274618pgb.350.1657302487803;
-        Fri, 08 Jul 2022 10:48:07 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id a74-20020a621a4d000000b00528d4f647f2sm3404184pfa.91.2022.07.08.10.48.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Jul 2022 10:48:07 -0700 (PDT)
-From:   Kees Cook <keescook@chromium.org>
-To:     jmorris@namei.org, agk@redhat.com, snitzer@kernel.org,
-        mka@chromium.org, serge@hallyn.com
-Cc:     Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org,
-        song@kernel.org, dianders@chromium.org,
-        linux-security-module@vger.kernel.org, dm-devel@redhat.com,
-        gmazyland@gmail.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 0/3] LoadPin: Enable loading from trusted dm-verity devices
-Date:   Fri,  8 Jul 2022 10:47:59 -0700
-Message-Id: <165730247648.3882109.12888837825450019581.b4-ty@chromium.org>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220627153526.3750341-1-mka@chromium.org>
-References: <20220627153526.3750341-1-mka@chromium.org>
+        with ESMTP id S238179AbiGHTAF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Jul 2022 15:00:05 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AC0021801
+        for <linux-raid@vger.kernel.org>; Fri,  8 Jul 2022 12:00:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1657306804; x=1688842804;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=lJ/uIuxc5uPacR8v+kVBlBpsWw1p2YC0neHsUBTiYSw=;
+  b=bQ2rpvdH16UVLcEYSUCynLbZaFlkDAIUlgvN8DA3jL9m6OfBZSW1+hGe
+   Ib7HPUMHg7NJvFCr+W6HLjMSpk+ZDBXfx1bgwIlD6DdLFwD2MT7PRlCxz
+   Y4IYqUR2ypAqFwL4JQ+i9RvxqOpgD+p+5ZXNvRldVgm/EhXGuWtF2azV6
+   B2hTUobWdpwQ/4U4al9vd2wNHSCAv7zbsUl6OyPYMrxN6BkXEzNIiIJre
+   T0FSIB1aJi5W1AzTAMtqFwIDMe6t3EQtKRQghzse/k5vPk2SbJ08l5ovf
+   UZYrsEvIopTA9plwmrQ6fmsISWlWrrGdjFua8JD6GlplPzf/UlkqYMKsj
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10402"; a="284366251"
+X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
+   d="scan'208";a="284366251"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jul 2022 12:00:04 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
+   d="scan'208";a="661866110"
+Received: from lkp-server01.sh.intel.com (HELO 68b931ab7ac1) ([10.239.97.150])
+  by fmsmga004.fm.intel.com with ESMTP; 08 Jul 2022 12:00:03 -0700
+Received: from kbuild by 68b931ab7ac1 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1o9tCs-000NoT-As;
+        Fri, 08 Jul 2022 19:00:02 +0000
+Date:   Sat, 09 Jul 2022 02:59:15 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ e3ce2720dc12b8cc9ac5057007b12ac34dfdb58b
+Message-ID: <62c87e83.cfQUyvSQzhxboaUd%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, 27 Jun 2022 08:35:23 -0700, Matthias Kaehlcke wrote:
-> As of now LoadPin restricts loading of kernel files to a single pinned
-> filesystem, typically the rootfs. This works for many systems, however it
-> can result in a bloated rootfs (and OTA updates) on platforms where
-> multiple boards with different hardware configurations use the same rootfs
-> image. Especially when 'optional' files are large it may be preferable to
-> download/install them only when they are actually needed by a given board.
-> Chrome OS uses Downloadable Content (DLC) [1] to deploy certain 'packages'
-> at runtime. As an example a DLC package could contain firmware for a
-> peripheral that is not present on all boards. DLCs use dm-verity [2] to
-> verify the integrity of the DLC content.
-> 
-> [...]
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: e3ce2720dc12b8cc9ac5057007b12ac34dfdb58b  md/raid5: Convert prepare_to_wait() to wait_woken() api
 
-Applied to for-next/hardening, thanks!
+elapsed time: 726m
 
-[1/3] dm: Add verity helpers for LoadPin
-      https://git.kernel.org/kees/c/b6c1c5745ccc
-[2/3] LoadPin: Enable loading from trusted dm-verity devices
-      https://git.kernel.org/kees/c/3f805f8cc23b
-[3/3] dm: verity-loadpin: Use CONFIG_SECURITY_LOADPIN_VERITY for conditional compilation
-      https://git.kernel.org/kees/c/231af4709018
+configs tested: 80
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+i386                          randconfig-c001
+sh                               j2_defconfig
+powerpc                     sequoia_defconfig
+arm                           h3600_defconfig
+mips                         rt305x_defconfig
+powerpc                      mgcoge_defconfig
+sh                             shx3_defconfig
+mips                           xway_defconfig
+sh                           se7721_defconfig
+sh                           se7750_defconfig
+alpha                            alldefconfig
+riscv                               defconfig
+sh                           se7722_defconfig
+xtensa                              defconfig
+powerpc                     tqm8555_defconfig
+m68k                       m5475evb_defconfig
+sh                   sh7770_generic_defconfig
+sh                         microdev_defconfig
+mips                             allmodconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+riscv                             allnoconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+ia64                             allmodconfig
+m68k                             allmodconfig
+alpha                            allyesconfig
+arc                              allyesconfig
+m68k                             allyesconfig
+powerpc                           allnoconfig
+mips                             allyesconfig
+powerpc                          allmodconfig
+sh                               allmodconfig
+i386                             allyesconfig
+i386                                defconfig
+x86_64                        randconfig-a006
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+i386                          randconfig-a001
+i386                          randconfig-a003
+i386                          randconfig-a005
+x86_64                        randconfig-a013
+x86_64                        randconfig-a011
+x86_64                        randconfig-a015
+i386                          randconfig-a012
+i386                          randconfig-a014
+i386                          randconfig-a016
+riscv                randconfig-r042-20220707
+arc                  randconfig-r043-20220707
+s390                 randconfig-r044-20220707
+x86_64                    rhel-8.3-kselftests
+um                             i386_defconfig
+um                           x86_64_defconfig
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                               rhel-8.3
+x86_64                           rhel-8.3-syz
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+
+clang tested configs:
+powerpc                  mpc885_ads_defconfig
+powerpc                    mvme5100_defconfig
+x86_64                        randconfig-k001
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+x86_64                        randconfig-a005
+i386                          randconfig-a002
+i386                          randconfig-a006
+i386                          randconfig-a004
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a013
+i386                          randconfig-a011
+i386                          randconfig-a015
+hexagon              randconfig-r045-20220707
+hexagon              randconfig-r041-20220707
 
 -- 
-Kees Cook
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
