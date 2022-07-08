@@ -2,104 +2,91 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6F84C433EF
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Jul 2022 15:56:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A6EEC43334
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Jul 2022 17:48:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238861AbiGHP4M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Jul 2022 11:56:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40206 "EHLO
+        id S238649AbiGHRsL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Jul 2022 13:48:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238231AbiGHP4K (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Jul 2022 11:56:10 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40D0C70E51;
-        Fri,  8 Jul 2022 08:56:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=ZhbelBsJa/6H2udfVLFm+KR3QIH8CfJyNQNmrBUwPGg=; b=ZVGjNgbP1TNRjvkrJFzSGHxFSv
-        U92XgdEkzY/TT3JnYvYetH+ag89tcxhnoNnd1DpgP/r/JSdW1LvNuRYoSHDIOG6fhexX1Zu3ejkIc
-        YNLU6FYAgKJ9i1w+euxpHjvqRWqnpYgp9NL+lAgPrp8xc6fmhX2R3tTrH+hSbf/Gs1NsFwZ9UsIJ8
-        jKu+VKTMlr1F+BTpyKYs+VAuHzHbFxJRAkUawZoneRgUWcBn7yYkopul9MQq9EcJFXTpUGN2ND5Is
-        oTMTPOLEnH1NeCApBto0XKJIqf7GOHwe4rY8nL/OYnBYvyqenx/NrcHQLJGd3dJthIhzHagBpgAG1
-        6TiCZiSQ==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1o9qKk-009wqN-Qk; Fri, 08 Jul 2022 09:55:59 -0600
-Message-ID: <c43e40da-7549-0c81-2a3c-d837b59f7e76@deltatee.com>
-Date:   Fri, 8 Jul 2022 09:55:55 -0600
+        with ESMTP id S238511AbiGHRsJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Jul 2022 13:48:09 -0400
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 491EA74DE4
+        for <linux-raid@vger.kernel.org>; Fri,  8 Jul 2022 10:48:08 -0700 (PDT)
+Received: by mail-pg1-x531.google.com with SMTP id s206so22947208pgs.3
+        for <linux-raid@vger.kernel.org>; Fri, 08 Jul 2022 10:48:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=SCpgoi0bej3E/k3q1Zzvx8WQzQbsCorWnUbIjfYa/X8=;
+        b=ml3Kny+TDNHdTGvuVDpKu9tNVsI9rg6LeipWZ5ZOkteqKLFBxM5ekj3E07IlhnmCZV
+         QEGA9z/6eokWng2H3lP1krXx7MXUvPNoY40dacqit8ht0YCevulLcYBnXMrbRvrml9OS
+         XyUb9Idq8wvH8qCWN0cfxK4yhsSKzD1PJ0xMs=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=SCpgoi0bej3E/k3q1Zzvx8WQzQbsCorWnUbIjfYa/X8=;
+        b=r36PO+EyzCETKp8543xM9+HoLwrlgsei2T6OK9TUaNffY6Lw+pQwkBC4mrxR8yYVcK
+         xbOsJpQ85DvAxgPVu7zLCnmk5NSTUp0JMX2vClHQHjlV48fBHwCAZlj8CacR4BzZ0XFM
+         yi2ryfsIQk2bDq0rmLXeH5UiZffTYX5J+6lS5f8KxAdb2/gFdsWJetbQliV1W3/Wl49e
+         R/7EgBDGxP/yR74jpj1v+Htwh6EnS1MirRQP7TpuyHbHN6AWr/mc5sRnGniD80PxTtyf
+         x+iixhUVExSXAhFtUbFGIWIdtfAAY5eGIfAYGm7We6znzCfLu0Z5zOIW0UuUnQL3cVS2
+         wTOw==
+X-Gm-Message-State: AJIora8N5puqE5eVrJWAxR+akIsHE2F6uqxrfBuHYoKnKUH4EQtXExba
+        /tRi9eMPaBwbftVHCfKn17Pz6w==
+X-Google-Smtp-Source: AGRyM1sZCb3nACbVv0Xqctc8zBRDdY2BX228aDhc1USUQoc2fpKbCJNkaQ1aAGFkZEau8j+w/Chrcg==
+X-Received: by 2002:a63:187:0:b0:411:6434:d017 with SMTP id 129-20020a630187000000b004116434d017mr4274618pgb.350.1657302487803;
+        Fri, 08 Jul 2022 10:48:07 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id a74-20020a621a4d000000b00528d4f647f2sm3404184pfa.91.2022.07.08.10.48.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Jul 2022 10:48:07 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     jmorris@namei.org, agk@redhat.com, snitzer@kernel.org,
+        mka@chromium.org, serge@hallyn.com
+Cc:     Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org,
+        song@kernel.org, dianders@chromium.org,
+        linux-security-module@vger.kernel.org, dm-devel@redhat.com,
+        gmazyland@gmail.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 0/3] LoadPin: Enable loading from trusted dm-verity devices
+Date:   Fri,  8 Jul 2022 10:47:59 -0700
+Message-Id: <165730247648.3882109.12888837825450019581.b4-ty@chromium.org>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220627153526.3750341-1-mka@chromium.org>
+References: <20220627153526.3750341-1-mka@chromium.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Content-Language: en-CA
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     axboe@kernel.dk, shinichiro.kawasaki@wdc.com,
-        dan.j.williams@intel.com, yukuai3@huawei.com, ming.lei@redhat.com,
-        linux-block@vger.kernel.org,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Song Liu <song@kernel.org>
-References: <20220614074827.458955-1-hch@lst.de>
- <20220614074827.458955-5-hch@lst.de>
- <72a5bf2e-cd56-a85c-2b99-cb8729a66fed@deltatee.com>
- <20220708060126.GA16457@lst.de>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20220708060126.GA16457@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: hch@lst.de, axboe@kernel.dk, shinichiro.kawasaki@wdc.com, dan.j.williams@intel.com, yukuai3@huawei.com, ming.lei@redhat.com, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: REGRESSION: [PATCH 4/4] block: freeze the queue earlier in
- del_gendisk
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 2022-07-08 00:01, Christoph Hellwig wrote:
-> On Thu, Jul 07, 2022 at 11:41:40PM -0600, Logan Gunthorpe wrote:
->> I'm not really sure why this is yet, but this patch in rc4 causes some
->> random failures with mdadm tests.
->>
->> It seems the 11spare-migration tests starts failing roughly every other
->> run because the block device is not quite cleaned up after mdadm --stop
->> by the time the next mdadm --create commands starts, or rather there
->> appears to be a race now between the newly created device and the one
->> being cleaned up. This results in an infrequent sysfs panic with a
->> duplicate filename error (see the end of this email).
->>
->> I managed to bisect this and found a09b314005f3a09 to be the problematic
->> commit.
+On Mon, 27 Jun 2022 08:35:23 -0700, Matthias Kaehlcke wrote:
+> As of now LoadPin restricts loading of kernel files to a single pinned
+> filesystem, typically the rootfs. This works for many systems, however it
+> can result in a bloated rootfs (and OTA updates) on platforms where
+> multiple boards with different hardware configurations use the same rootfs
+> image. Especially when 'optional' files are large it may be preferable to
+> download/install them only when they are actually needed by a given board.
+> Chrome OS uses Downloadable Content (DLC) [1] to deploy certain 'packages'
+> at runtime. As an example a DLC package could contain firmware for a
+> peripheral that is not present on all boards. DLCs use dm-verity [2] to
+> verify the integrity of the DLC content.
 > 
-> Taking a look at the mddev code this commit just seems to increase the
-> race window of hitting horrible life time problems in md, but I'll also
-> try to reproduce and verify it myself.
-> 
-> Take a look at how md searches for a duplicate name in md_alloc,
-> mddev_alloc_unit and mddev_find_locked based on the all_mddevs list,
-> and how the mddev gets dropped from all_mddevs very early and long
-> before the gendisk is gone in mddev_put.  I think what needs to be
-> done is to implement a free_disk method and drop the mddev (and free it)
-> from that.  But given how much intricate mess is based on all_mddevs
-> we'll have to be very careful about that.
+> [...]
 
-I agree it's a mess, probably buggy and could use a cleanup with a
-free_disk method. But I'm not sure the all_mdevs lifetime issues are the
-problem here. If the entry in all_mdevs outlasts the disk, then
-md_alloc() will just fail earlier. Many test scripts rely on the fact
-that you can stop an mddev and recreate it immediately after. We need
-some way of ensuring any deleted disks are fully deleted before trying
-to make a new mddev, in case the new one has the same name as one being
-deleted.
+Applied to for-next/hardening, thanks!
 
-The md code deletes the disk in md_delayed_delete(), a work queue item
-on md_misc_wq. That queue is flushed first in md_misc_wq, but somehow,
-some of the disk is still not fully deleted by the time
-flush_workqueue() returns. I'm not sure why that would be.
+[1/3] dm: Add verity helpers for LoadPin
+      https://git.kernel.org/kees/c/b6c1c5745ccc
+[2/3] LoadPin: Enable loading from trusted dm-verity devices
+      https://git.kernel.org/kees/c/3f805f8cc23b
+[3/3] dm: verity-loadpin: Use CONFIG_SECURITY_LOADPIN_VERITY for conditional compilation
+      https://git.kernel.org/kees/c/231af4709018
 
-Logan
+-- 
+Kees Cook
+
