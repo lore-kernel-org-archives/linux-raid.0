@@ -2,134 +2,121 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A277C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 12:18:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6CDCCCA483
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 12:25:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236038AbiGMMSP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Jul 2022 08:18:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36032 "EHLO
+        id S236467AbiGMMZ5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Jul 2022 08:25:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229613AbiGMMSM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 08:18:12 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1886DA238F;
-        Wed, 13 Jul 2022 05:18:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=WgehCo4EWz54AyF2jDUuG0Xj0H/FjQtWvzeLouBbzy8=; b=hiFqFuAZ+D4oDZkdGrk3mNwzMD
-        RIy2FWRD01ImOMohxZ8m+oSnAnrZugKZCrbRbuLAfgfm93CUmmSdIq/4hwbRAbDr0ukKJWTnGpHXR
-        iQ1Tr4QcsDokLiSOoXImkKWeQz3d51T3UJX1Uhw8xWnu1KOCxOaCG3ndxI3FniFiEWESfF1YjfWv0
-        xpqgBJ67IfhYi0ILfNdc7DxI3lJNsEeE75sm/g4LS9TGlCHw3D9nhrwHl1znFQNqekPD1rNs6qWMf
-        +YTEq1Cvs1rFBavrhFCxNokpBT1AY4DDVYumygqVZ6vgUL/WHbSkJ6TWJqHGUr13Wu+sIJDCDql6d
-        ZbukAvMg==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oBbJU-008AhI-St; Wed, 13 Jul 2022 12:17:56 +0000
-Date:   Wed, 13 Jul 2022 13:17:56 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "kbusch@kernel.org" <kbusch@kernel.org>, "hch@lst.de" <hch@lst.de>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "javier@javigon.com" <javier@javigon.com>,
-        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
-        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "idryomov@gmail.com" <idryomov@gmail.com>,
-        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
-        "ebiggers@google.com" <ebiggers@google.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
-Subject: Re: [PATCH 0/6] block: add support for REQ_OP_VERIFY
-Message-ID: <Ys639LsjBUGPNErd@casper.infradead.org>
-References: <20220630091406.19624-1-kch@nvidia.com>
- <YsXJdXnXsMtaC8DJ@casper.infradead.org>
- <5ffe57d3-354c-eabe-ea38-9c4201c13970@nvidia.com>
+        with ESMTP id S231236AbiGMMZv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 08:25:51 -0400
+Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB646E7CFF
+        for <linux-raid@vger.kernel.org>; Wed, 13 Jul 2022 05:25:42 -0700 (PDT)
+Received: by mail-ed1-x52a.google.com with SMTP id eq6so13881898edb.6
+        for <linux-raid@vger.kernel.org>; Wed, 13 Jul 2022 05:25:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linbit-com.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=qXqGFu8U4gPDVSr/ggPX1zJdQr5HzeAZdYNrxVaBP2U=;
+        b=vTibGfqb8AoB8dfwXHh8bxVf5FbFeYJTrOLebeWcAQTsARpBmyHDJEnUnBIrIfttvA
+         r3uR8GsvihZGcnixyJ1ybBzhizpsWGC8XNv0eah0RCuuKzDmiAti20pRwJemgLF+BEVc
+         ehKpt9RsXGhj8HC0ZOoluR+VGr8i6Ga8NNvsMXbCqi6yI57KT9Rt3agP9JXsB/Han+gK
+         zlfO+6gnu5fZbFAJFUVBzLfGv6wM7uLmp/82YfF6L0pZCUM5prM7HSQT6YHfrk27znqQ
+         xp645/qTAw+03mufD09Axo2GVH6ifvt1mOsvsUAtOalPKP2vZRehwNJrzk4M4k10rqJY
+         g68Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=qXqGFu8U4gPDVSr/ggPX1zJdQr5HzeAZdYNrxVaBP2U=;
+        b=IixDJH+RcEhqg4/VUcvlmT7RFy3qHYUCEiWyRSKQs+N7Npf07j2wrNYJZlijZmOTl1
+         YnOGkbGxq3R7h9Po0OgoFITxD6WxoUxlApASUdrVR6RCa3f6oZOx/h7dwZYB4knDGfct
+         mRDgmKZF7V0ChyNlWfe/HA3m10frLXjnSwpB6ACiBWnrz3UeNHDB6HeEsHsngS02U7uh
+         /1tE30KVxAm+O9XAUx3tClSQ+PQC+Fb/bLDejCG9Dq3Vy9JwyIPsrnB7PlvuvZXWQpdS
+         XTPPN2jwYVPreDTL/NUF4rVYJuppRJwRQ5DVhbLhYva/oeKlZ/iMPJGJFm/WJYkhJCYK
+         jiwQ==
+X-Gm-Message-State: AJIora/RlwqIhUclNlOlFSzO/8MsuDNzVyrvkaGg7mwAPzAvil+FJf1S
+        sbF27WhWX9olFxgeD1x8rVmr2Q==
+X-Google-Smtp-Source: AGRyM1t2anjpsABs9moN8/saQwoeQFzlk9BcJwJ81FhrhmrzcGBgnKja0O11XVp6U4a5FFOg06Pmhg==
+X-Received: by 2002:a05:6402:354c:b0:43a:dc59:657 with SMTP id f12-20020a056402354c00b0043adc590657mr4381358edd.405.1657715140797;
+        Wed, 13 Jul 2022 05:25:40 -0700 (PDT)
+Received: from [192.168.178.55] (h082218028181.host.wavenet.at. [82.218.28.181])
+        by smtp.gmail.com with ESMTPSA id k5-20020a17090632c500b0072aa014e852sm4924686ejk.87.2022.07.13.05.25.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 Jul 2022 05:25:40 -0700 (PDT)
+Message-ID: <1304fd58-1577-3f27-0ee8-64964bd54467@linbit.com>
+Date:   Wed, 13 Jul 2022 14:25:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5ffe57d3-354c-eabe-ea38-9c4201c13970@nvidia.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 3/9] drbd: stop using bdevname in drbd_report_io_error
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>, Song Liu <song@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jan Kara <jack@suse.com>, Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
+        ocfs2-devel@oss.oracle.com
+References: <20220713055317.1888500-1-hch@lst.de>
+ <20220713055317.1888500-4-hch@lst.de>
+From:   =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>
+In-Reply-To: <20220713055317.1888500-4-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jul 13, 2022 at 09:14:42AM +0000, Chaitanya Kulkarni wrote:
-> On 7/6/22 10:42, Matthew Wilcox wrote:
-> > On Thu, Jun 30, 2022 at 02:14:00AM -0700, Chaitanya Kulkarni wrote:
-> >> This adds support for the REQ_OP_VERIFY. In this version we add
-> > 
-> > IMO, VERIFY is a useless command.  The history of storage is full of
-> > devices which simply lie.  Since there's no way for the host to check if
-> > the device did any work, cheap devices may simply implement it as a NOOP.
+Am 13.07.22 um 07:53 schrieb Christoph Hellwig:
+> Just use the %pg format specifier instead.
 > 
-> Thanks for sharing your feedback regarding cheap devices.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/block/drbd/drbd_req.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> This falls outside of the scope of the work, as scope of this work is
-> not to analyze different vendor implementations of the verify command.
+> diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
+> index e64bcfba30ef3..6d8dd14458c69 100644
+> --- a/drivers/block/drbd/drbd_req.c
+> +++ b/drivers/block/drbd/drbd_req.c
+> @@ -523,16 +523,14 @@ static void mod_rq_state(struct drbd_request *req, struct bio_and_error *m,
+>  
+>  static void drbd_report_io_error(struct drbd_device *device, struct drbd_request *req)
+>  {
+> -        char b[BDEVNAME_SIZE];
+> -
+>  	if (!__ratelimit(&drbd_ratelimit_state))
+>  		return;
+>  
+> -	drbd_warn(device, "local %s IO error sector %llu+%u on %s\n",
+> +	drbd_warn(device, "local %s IO error sector %llu+%u on %pg\n",
+>  			(req->rq_state & RQ_WRITE) ? "WRITE" : "READ",
+>  			(unsigned long long)req->i.sector,
+>  			req->i.size >> 9,
+> -			bdevname(device->ldev->backing_bdev, b));
+> +			device->ldev->backing_bdev);
+>  }
+>  
+>  /* Helper for HANDED_OVER_TO_NETWORK.
 
-The work is pointless.  As a customer, I can't ever use the VERIFY
-command because I have no reason for trusting the outcome.  And there's
-no way for a vendor to convince me that I should trust the result.
+For the drbd part:
 
-> > Even expensive devices where there's an ironclad legal contract between
-> > the vendor and customer may have bugs that result in only some of the
-> > bytes being VERIFYed.  We shouldn't support it.
-> This is not true with enterprise SSDs, I've been involved with product
-> qualification of the high end enterprise SSDs since 2012 including good
-> old non-nvme devices with e.g. skd driver on linux/windows/vmware.
+Reviewed-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com>
 
-Oh, I'm sure there's good faith at the high end.  But bugs happen in
-firmware, and everybody knows it.
+Thanks.
 
-> > Now, everything you say about its value (not consuming bus bandwidth)
-> > is true, but the device should provide the host with proof-of-work.
-> 
-> Yes that seems to be missing but it is not a blocker in this work since
-> protocol needs to provide this information.
-
-There's no point in providing access to a feature when that feature is
-not useful.
-
-> We can update the respective specification to add a log page which
-> shows proof of work for verify command e.g.
-> A log page consist of the information such as :-
-> 
-> 1. How many LBAs were verified ? How long it took.
-> 2. What kind of errors were detected ?
-> 3. How many blocks were moved to safe location ?
-> 4. How much data (LBAs) been moved successfully ?
-> 5. How much data we lost permanently with uncorrectible errors?
-> 6. What is the impact on the overall size of the storage, in
->     case of flash reduction in the over provisioning due to
->     uncorrectible errors.
-
-That's not proof of work.  That's claim of work.
-
-> > I'd suggest calculating some kind of checksum, even something like a
-> > SHA-1 of the contents would be worth having.  It doesn't need to be
-> > crypto-secure; just something the host can verify the device didn't spoof.
-> 
-> I did not understand exactly what you mean here.
-
-The firmware needs to prove to me that it *did something*.  That it
-actually read those bytes that it claims to have verified.  The simplest
-way to do so is to calculate a hash over the blocks which were read
-(maybe the host needs to provide a nonce as part of the VERIFY command
-so the drive can't "remember" the checksum).
+-- 
+Christoph Böhmwalder
+LINBIT | Keeping the Digital World Running
+DRBD HA —  Disaster Recovery — Software defined Storage
