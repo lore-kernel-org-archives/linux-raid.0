@@ -2,188 +2,131 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CB2BC43334
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 07:03:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A37EC433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 07:17:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234488AbiGMHDq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Jul 2022 03:03:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58692 "EHLO
+        id S234679AbiGMHRM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Jul 2022 03:17:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234469AbiGMHDo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 03:03:44 -0400
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8FC06553
-        for <linux-raid@vger.kernel.org>; Wed, 13 Jul 2022 00:03:42 -0700 (PDT)
-Received: by mail-ej1-x633.google.com with SMTP id j22so18255044ejs.2
-        for <linux-raid@vger.kernel.org>; Wed, 13 Jul 2022 00:03:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=0gYYvt1vWIXI8HNMSYfXYBDt+l8mgcRYRjUuxGt2NPY=;
-        b=eUO8a1qjrBJuiWZEU95ms0v4NGhQo/R6mzhJN0jU2rcmOAvZOCm6tQTO5Q4hKqZnUL
-         geUOthwICiNUBd836aa64R1Yi3PO4S+3JrnUsG7/lBN6blQCZkQdvRz8SYJG77Idkh5Q
-         G+vTK9EBX1JQgTUXhm0jqY1sRsWQltfpPJ/Nkuo1Hptetw5RCCA2hU4cePeny5j8nPfc
-         MgkOCQ5cPt79WIbZwWEyGciWFbIcp6Nr78DXPhcUDPFodFxN1dE+/5KvRi256xDOJJKZ
-         IGoCRENig3iGtwks7i7MDn/ifVeo0LQXlfZLxqj0pHadHjoBYFoZFIrpbYQOwkibk7H5
-         rp6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=0gYYvt1vWIXI8HNMSYfXYBDt+l8mgcRYRjUuxGt2NPY=;
-        b=z6BjUyZYl0HvQSmWYl9a0TD7URH7kO881lnejxfGuNNByFm4ve7f1tO/JstVf3UKeX
-         2aZGqb95CujnpJlZWrDCoHalUq41F4EUe/XgZ5URyEZL4PD4LxSdvb0bpPCsffNxM/79
-         OLiZP3hHsHj7XucyKwRs0aSCPP//wQdXUvPwPM7cfnHeIi2K6UzvBf9EttQIrpVW4DuE
-         2KtwQSye2bY6Miv2hVbTJ9uCe25k9FpO/qrFC6Xj9uhzkGEHluUUfzqLrtKG3Ig1DLcH
-         UhEQitii2osnMnUXVbkeaoMF7TdB4OMJjkDfEnG20skoYnKDe5Aw5AyJ8lXmO2/TyfRe
-         irRw==
-X-Gm-Message-State: AJIora9BfL+rX6K6RzrTby90U+IVo0zAW2TGbgV4Kyl+Vl1xQQPiWma7
-        rbCTvGfd1c6lzREYEWHA+Uru8PTeZ6EPAfQeV9Kh2w==
-X-Google-Smtp-Source: AGRyM1v6tCbmP3It1PfK7ATbjED1frOwrB/fUUoQmetZ+KCzzdeBWp+khkKlwSMizYudxhMnhwJ7AyxgtQitWHTVyzw=
-X-Received: by 2002:a17:906:d54f:b0:726:2c7c:c0f9 with SMTP id
- cr15-20020a170906d54f00b007262c7cc0f9mr1952611ejc.441.1657695821259; Wed, 13
- Jul 2022 00:03:41 -0700 (PDT)
+        with ESMTP id S231770AbiGMHRL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 03:17:11 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 164EE675B7;
+        Wed, 13 Jul 2022 00:17:11 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id C9D4967373; Wed, 13 Jul 2022 09:17:07 +0200 (CEST)
+Date:   Wed, 13 Jul 2022 09:17:07 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH 2/8] md: implement ->free_disk
+Message-ID: <20220713071707.GA14903@lst.de>
+References: <20220712070331.1390700-1-hch@lst.de> <20220712070331.1390700-3-hch@lst.de> <85666118-cbb0-83e2-5c27-c3be8c5c6688@deltatee.com>
 MIME-Version: 1.0
-References: <20220713055317.1888500-1-hch@lst.de> <20220713055317.1888500-7-hch@lst.de>
-In-Reply-To: <20220713055317.1888500-7-hch@lst.de>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Wed, 13 Jul 2022 09:03:30 +0200
-Message-ID: <CAMGffEkbzTKkYY2yt-G8t1nO+y3+2+97=-ZgeUdF+ZE3iZvjng@mail.gmail.com>
-Subject: Re: [PATCH 6/9] rnbd-srv: remove the name field from struct rnbd_dev
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        =?UTF-8?Q?Christoph_B=C3=B6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Song Liu <song@kernel.org>, "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jan Kara <jack@suse.com>, Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
-        linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
-        ocfs2-devel@oss.oracle.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <85666118-cbb0-83e2-5c27-c3be8c5c6688@deltatee.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jul 13, 2022 at 7:53 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> Just print the block device name directly using the %pg format specifier.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
-Thx!
-> ---
->  drivers/block/rnbd/rnbd-srv-dev.c   | 1 -
->  drivers/block/rnbd/rnbd-srv-dev.h   | 1 -
->  drivers/block/rnbd/rnbd-srv-sysfs.c | 5 ++---
->  drivers/block/rnbd/rnbd-srv.c       | 9 ++++-----
->  drivers/block/rnbd/rnbd-srv.h       | 3 +--
->  5 files changed, 7 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/block/rnbd/rnbd-srv-dev.c b/drivers/block/rnbd/rnbd-srv-dev.c
-> index c5d0a03911659..c63017f6e4214 100644
-> --- a/drivers/block/rnbd/rnbd-srv-dev.c
-> +++ b/drivers/block/rnbd/rnbd-srv-dev.c
-> @@ -28,7 +28,6 @@ struct rnbd_dev *rnbd_dev_open(const char *path, fmode_t flags)
->                 goto err;
->
->         dev->blk_open_flags = flags;
-> -       bdevname(dev->bdev, dev->name);
->
->         return dev;
->
-> diff --git a/drivers/block/rnbd/rnbd-srv-dev.h b/drivers/block/rnbd/rnbd-srv-dev.h
-> index 4309e52524691..8407d12f70afe 100644
-> --- a/drivers/block/rnbd/rnbd-srv-dev.h
-> +++ b/drivers/block/rnbd/rnbd-srv-dev.h
-> @@ -15,7 +15,6 @@
->  struct rnbd_dev {
->         struct block_device     *bdev;
->         fmode_t                 blk_open_flags;
-> -       char                    name[BDEVNAME_SIZE];
->  };
->
->  /**
-> diff --git a/drivers/block/rnbd/rnbd-srv-sysfs.c b/drivers/block/rnbd/rnbd-srv-sysfs.c
-> index feaa76c5a3423..297a6924ff4e2 100644
-> --- a/drivers/block/rnbd/rnbd-srv-sysfs.c
-> +++ b/drivers/block/rnbd/rnbd-srv-sysfs.c
-> @@ -38,14 +38,13 @@ static struct kobj_type dev_ktype = {
->  };
->
->  int rnbd_srv_create_dev_sysfs(struct rnbd_srv_dev *dev,
-> -                              struct block_device *bdev,
-> -                              const char *dev_name)
-> +                              struct block_device *bdev)
->  {
->         struct kobject *bdev_kobj;
->         int ret;
->
->         ret = kobject_init_and_add(&dev->dev_kobj, &dev_ktype,
-> -                                  rnbd_devs_kobj, dev_name);
-> +                                  rnbd_devs_kobj, "%pg", bdev);
->         if (ret) {
->                 kobject_put(&dev->dev_kobj);
->                 return ret;
-> diff --git a/drivers/block/rnbd/rnbd-srv.c b/drivers/block/rnbd/rnbd-srv.c
-> index beaef43a67b9d..0713014bf423f 100644
-> --- a/drivers/block/rnbd/rnbd-srv.c
-> +++ b/drivers/block/rnbd/rnbd-srv.c
-> @@ -419,7 +419,7 @@ static struct rnbd_srv_sess_dev
->         return sess_dev;
->  }
->
-> -static struct rnbd_srv_dev *rnbd_srv_init_srv_dev(const char *id)
-> +static struct rnbd_srv_dev *rnbd_srv_init_srv_dev(struct block_device *bdev)
->  {
->         struct rnbd_srv_dev *dev;
->
-> @@ -427,7 +427,7 @@ static struct rnbd_srv_dev *rnbd_srv_init_srv_dev(const char *id)
->         if (!dev)
->                 return ERR_PTR(-ENOMEM);
->
-> -       strscpy(dev->id, id, sizeof(dev->id));
-> +       snprintf(dev->id, sizeof(dev->id), "%pg", bdev);
->         kref_init(&dev->kref);
->         INIT_LIST_HEAD(&dev->sess_dev_list);
->         mutex_init(&dev->lock);
-> @@ -512,7 +512,7 @@ rnbd_srv_get_or_create_srv_dev(struct rnbd_dev *rnbd_dev,
->         int ret;
->         struct rnbd_srv_dev *new_dev, *dev;
->
-> -       new_dev = rnbd_srv_init_srv_dev(rnbd_dev->name);
-> +       new_dev = rnbd_srv_init_srv_dev(rnbd_dev->bdev);
->         if (IS_ERR(new_dev))
->                 return new_dev;
->
-> @@ -758,8 +758,7 @@ static int process_msg_open(struct rnbd_srv_session *srv_sess,
->          */
->         mutex_lock(&srv_dev->lock);
->         if (!srv_dev->dev_kobj.state_in_sysfs) {
-> -               ret = rnbd_srv_create_dev_sysfs(srv_dev, rnbd_dev->bdev,
-> -                                                rnbd_dev->name);
-> +               ret = rnbd_srv_create_dev_sysfs(srv_dev, rnbd_dev->bdev);
->                 if (ret) {
->                         mutex_unlock(&srv_dev->lock);
->                         rnbd_srv_err(srv_sess_dev,
-> diff --git a/drivers/block/rnbd/rnbd-srv.h b/drivers/block/rnbd/rnbd-srv.h
-> index be2ae486d407e..6926f9069dc4b 100644
-> --- a/drivers/block/rnbd/rnbd-srv.h
-> +++ b/drivers/block/rnbd/rnbd-srv.h
-> @@ -68,8 +68,7 @@ void rnbd_srv_sess_dev_force_close(struct rnbd_srv_sess_dev *sess_dev,
->  /* rnbd-srv-sysfs.c */
->
->  int rnbd_srv_create_dev_sysfs(struct rnbd_srv_dev *dev,
-> -                             struct block_device *bdev,
-> -                             const char *dir_name);
-> +                             struct block_device *bdev);
->  void rnbd_srv_destroy_dev_sysfs(struct rnbd_srv_dev *dev);
->  int rnbd_srv_create_dev_session_sysfs(struct rnbd_srv_sess_dev *sess_dev);
->  void rnbd_srv_destroy_dev_session_sysfs(struct rnbd_srv_sess_dev *sess_dev);
-> --
-> 2.30.2
->
+On Tue, Jul 12, 2022 at 05:13:48PM -0600, Logan Gunthorpe wrote:
+> > +
+> > +	percpu_ref_exit(&mddev->writes_pending);
+> > +	bioset_exit(&mddev->bio_set);
+> > +	bioset_exit(&mddev->sync_set);
+> > +
+> > +	kfree(mddev);
+> > +}
+> 
+> I still don't think this is entirely correct. There are error paths that
+> will put the kobject before the disk is created and if they get hit then
+> the kfree(mddev) will never be called and the memory will be leaked.
+
+True.
+
+> Instead of creating an ugly special path for that, I came up with a solution 
+> that I think  makes a bit more sense: the kobject is still freed in it's 
+> own free  function, but the disk holds a reference to the kobject and drops
+> it in its free function. The sysfs puts and del_gendisk are then moved
+> into mddev_delayed_delete() so they happen earlier.
+
+I'm not sure this is a good idea.  The mddev kobject hangs off the
+disk, so I don't think that it should in any way control the life
+time of the disk, as that just creates potential problems down the
+road.
+
+Moreover we actually need the special kfree path anyway for the
+add_disk failure, something that I had missed.  Something like
+the untested patch below on top of my series.  I'll look into folding
+and testing it.
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 53a92b306b1fc..62f40c49344e4 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5641,7 +5641,7 @@ static int md_alloc(dev_t dev, char *name)
+ 			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
+ 				spin_unlock(&all_mddevs_lock);
+ 				error = -EEXIST;
+-				goto out_unlock_disks_mutex;
++				goto out_free_mddev;
+ 			}
+ 		spin_unlock(&all_mddevs_lock);
+ 	}
+@@ -5654,7 +5654,7 @@ static int md_alloc(dev_t dev, char *name)
+ 	error = -ENOMEM;
+ 	disk = blk_alloc_disk(NUMA_NO_NODE);
+ 	if (!disk)
+-		goto out_unlock_disks_mutex;
++		goto out_free_mddev;
+ 
+ 	disk->major = MAJOR(mddev->unit);
+ 	disk->first_minor = unit << shift;
+@@ -5674,26 +5674,35 @@ static int md_alloc(dev_t dev, char *name)
+ 	disk->events |= DISK_EVENT_MEDIA_CHANGE;
+ 	mddev->gendisk = disk;
+ 	error = add_disk(disk);
+-	if (error) {
+-		mddev->gendisk = NULL;
+-		put_disk(disk);
+-		goto out_unlock_disks_mutex;
+-	}
++	if (error)
++		goto out_put_disk;
+ 
+ 	error = kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
+-	if (error)
++	if (error) {
++		/*
++		 * The disk is already live at this point.  Clear the hold flag
++		 * and let mddev_put take care of the deletion, as it isn't any
++		 * different from a normal close on last release now.
++		 */
++		mddev->hold_active = 0;
+ 		goto out_unlock_disks_mutex;
++	}
+ 
+ 	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+ 	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
+ 	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
+ 
+ out_unlock_disks_mutex:
+-	if (error)
+-		mddev->hold_active = 0;
+ 	mutex_unlock(&disks_mutex);
+ 	mddev_put(mddev);
+ 	return error;
++
++out_put_disk:
++	put_disk(disk);
++out_free_mddev:
++	mutex_unlock(&disks_mutex);
++	kfree(mddev);
++	return error;
+ }
+ 
+ static void md_probe(dev_t dev)
