@@ -2,104 +2,101 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA13ACCA483
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 15:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90EECC43334
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 15:26:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236748AbiGMPFM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Jul 2022 11:05:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40518 "EHLO
+        id S236105AbiGMP0p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Jul 2022 11:26:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234652AbiGMPFL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 11:05:11 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77E4341D35;
-        Wed, 13 Jul 2022 08:05:09 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 2CE4933EBC;
-        Wed, 13 Jul 2022 15:05:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1657724708; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=3UthFAv3XYV85llf1wlYTZ00AmCnaMVjVxb5nRXSeSw=;
-        b=SwqlHRDxgN7Jzn2rO6klx+TGxsb5kYnOmvpEnxIg442V/TJzgxweZNo1LA6Ou5tZZYxHC6
-        t41LQy7I8A6ZbJwe+P2NX8LDtAf1Zc5eL+wOkIHnF2nXws/Mlsw50FBKcAPRTIpieoP3zd
-        kHWda9H3XDl8OidcG3UyH52gQDD9QPE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1657724708;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=3UthFAv3XYV85llf1wlYTZ00AmCnaMVjVxb5nRXSeSw=;
-        b=WYu1r+884kvySXmy1H9WTd4t806hphyxPIyqSBY+c85qDWJ77/AiWD6xWQ3IX8zhNjROLV
-        1s/OrNwCvZyDTfBQ==
-Received: from quack3.suse.cz (unknown [10.163.28.18])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id EE9CE2C141;
-        Wed, 13 Jul 2022 15:05:07 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id A1E4BA0635; Wed, 13 Jul 2022 17:05:07 +0200 (CEST)
-Date:   Wed, 13 Jul 2022 17:05:07 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Christoph =?utf-8?Q?B=C3=B6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Jack Wang <jinpu.wang@ionos.com>, Song Liu <song@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jan Kara <jack@suse.com>, Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
-        linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
-        ocfs2-devel@oss.oracle.com
-Subject: Re: remove bdevname
-Message-ID: <20220713150507.6bvq4bidmirs2mql@quack3>
-References: <20220713055317.1888500-1-hch@lst.de>
+        with ESMTP id S231580AbiGMP0o (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 11:26:44 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B78574D150;
+        Wed, 13 Jul 2022 08:26:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=rCgriMAFX6Fc1Z9GttOJf9X15MY+Tb2PCaFusOBQ5WU=; b=N7snfzk+LYYN0nmGLg7rxRSbff
+        Pt0Dg6tNToce7TLYoSefFqPRJzDQLD54HpxYH+djGheiJICducjb0P5YxZcVUX2Q2tdOO0niln71H
+        FQYgpgUOEV4M8e9aCjKoRzleXzvagKx+9BGST8ndSZxFZaN97FhuXGTsTN2ULXPv0ZQOVPQiwsU47
+        23Tf0GRN9e3RJk8oUr67G2fAz1y+6srpR1QYY/zC1ANxzAAO5L5KaeMW8SfVmtYpOoPleg/jzxSkR
+        YlP9R80knnIdo4ZoSb8Qz58NYg2IPIYdaki5tIWA+6ZMKNvBGiyI9REu4NG6f+Wj86irnTPoSHZG9
+        6qLs7oGw==;
+Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1oBeG7-00E8ZX-6n; Wed, 13 Jul 2022 09:26:39 -0600
+Message-ID: <1f9beba5-3fa0-a0e6-c810-a82cec8e3496@deltatee.com>
+Date:   Wed, 13 Jul 2022 09:26:37 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220713055317.1888500-1-hch@lst.de>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Content-Language: en-CA
+To:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org, linux-block@vger.kernel.org
+References: <20220713113125.2232975-1-hch@lst.de>
+ <20220713113125.2232975-2-hch@lst.de>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20220713113125.2232975-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 24.64.144.200
+X-SA-Exim-Rcpt-To: hch@lst.de, song@kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH 1/9] md: fix error handling in md_alloc
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed 13-07-22 07:53:08, Christoph Hellwig wrote:
-> Hi Jens,
+
+
+
+On 2022-07-13 05:31, Christoph Hellwig wrote:
+> Error handling in md_alloc is a mess.  Untangle it to just free the mddev
+> directly before add_disk is called and thus the gendisk is globally
+> visible.  After that clear the hold flag and let the mddev_put take care
+> of cleaning up the mddev through the usual mechanisms.
 > 
-> this series removes the final uses and the implementation of the bdevname()
-> function.
-
-All patches look good to me. Feel free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
+> Fixes: 5e55e2f5fc95 ("[PATCH] md: convert compile time warnings into runtime warnings")
+> Fixes: 9be68dd7ac0e ("md: add error handling support for add_disk()")
+> Fixes: 7ad1069166c0 ("md: properly unwind when failing to add the kobject in md_alloc")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 > 
-> Diffstat:
->  block/bdev.c                        |   10 ++---
->  block/blk-lib.c                     |    6 +--
->  block/genhd.c                       |   23 ------------
->  drivers/block/drbd/drbd_req.c       |    6 +--
->  drivers/block/pktcdvd.c             |   10 +----
->  drivers/block/rnbd/rnbd-srv-dev.c   |    1 
->  drivers/block/rnbd/rnbd-srv-dev.h   |    1 
->  drivers/block/rnbd/rnbd-srv-sysfs.c |    5 +-
->  drivers/block/rnbd/rnbd-srv.c       |    9 ++---
->  drivers/block/rnbd/rnbd-srv.h       |    3 -
->  drivers/md/md.c                     |    2 -
->  drivers/md/raid1.c                  |    2 -
->  drivers/md/raid10.c                 |    2 -
->  fs/ext4/mmp.c                       |    9 ++---
->  fs/jbd2/journal.c                   |    6 ++-
->  fs/ocfs2/cluster/heartbeat.c        |   64 ++++++++++++++++--------------------
->  include/linux/blkdev.h              |    1 
->  kernel/trace/blktrace.c             |    4 +-
->  18 files changed, 62 insertions(+), 102 deletions(-)
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> Note: the put_disk here is not fully correct on md-next, but will
+> do the right thing once merged with the block tree.
+> 
+>  drivers/md/md.c | 45 ++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 32 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index b64de313838f2..7affddade8b6b 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -791,6 +791,15 @@ static struct mddev *mddev_alloc(dev_t unit)
+>  	return ERR_PTR(error);
+>  }
+>  
+> +static void mddev_free(struct mddev *mddev)
+> +{
+> +	spin_lock(&all_mddevs_lock);
+> +	list_del(&mddev->all_mddevs);
+> +	spin_unlock(&all_mddevs_lock);
+> +
+> +	kfree(mddev);
+> +}
+
+Sadly, I still don't think this is correct. mddev_init() has already
+called kobject_init() and according to the documentation it *must* be
+cleaned up with a call to kobject_put(). That doesn't happen in this
+path -- so I believe this will cause memory leaks.
+
+I have also noticed this code base already makes that same mistake in
+mddev_alloc(): freeing the mddev on the error path after kobject_init().
+But that would be easy to fix up.
+
+Logan
