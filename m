@@ -2,94 +2,104 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89223C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 14:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA13ACCA483
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 15:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236019AbiGMOES (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Jul 2022 10:04:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39320 "EHLO
+        id S236748AbiGMPFM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Jul 2022 11:05:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236348AbiGMOEM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 10:04:12 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7500330F62;
-        Wed, 13 Jul 2022 07:04:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S234652AbiGMPFL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 11:05:11 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77E4341D35;
+        Wed, 13 Jul 2022 08:05:09 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 2CE4933EBC;
+        Wed, 13 Jul 2022 15:05:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1657724708; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3UthFAv3XYV85llf1wlYTZ00AmCnaMVjVxb5nRXSeSw=;
+        b=SwqlHRDxgN7Jzn2rO6klx+TGxsb5kYnOmvpEnxIg442V/TJzgxweZNo1LA6Ou5tZZYxHC6
+        t41LQy7I8A6ZbJwe+P2NX8LDtAf1Zc5eL+wOkIHnF2nXws/Mlsw50FBKcAPRTIpieoP3zd
+        kHWda9H3XDl8OidcG3UyH52gQDD9QPE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1657724708;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3UthFAv3XYV85llf1wlYTZ00AmCnaMVjVxb5nRXSeSw=;
+        b=WYu1r+884kvySXmy1H9WTd4t806hphyxPIyqSBY+c85qDWJ77/AiWD6xWQ3IX8zhNjROLV
+        1s/OrNwCvZyDTfBQ==
+Received: from quack3.suse.cz (unknown [10.163.28.18])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 329CAB81FC6;
-        Wed, 13 Jul 2022 14:04:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0153C34114;
-        Wed, 13 Jul 2022 14:04:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657721049;
-        bh=ZAU0L5kK4Sf9McbG926Hj/XUT0R01MpGmbcgsJYk0eo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JfznMmDaQH8d32YdV1e+uqSCeYmXGCrB04FZaz89S34KHt+hYUNSByGZqfuyt8WaJ
-         OXEs5vq9mIuJZVjZSfiO3VQGq17tu956YqCQYKrTviTMbGlc/FmaBatE1ij2Un8cJu
-         ma92AqTrKLaKbwKsTf3ddF93RILXggb102oGrWXD7NNZjvJ0hxyvCPlaUMGd3Ubtz/
-         P+fi5Q43yiUn4WjZ/LMf/PljTOCIuc0JYEQpQedQnEJpRE9jzeed85Y7qufijypS2/
-         Q46HfTgC5K/9xlwN6PWBZk/CAVeoGTHOEELqfB+2XjR98j1PjCER8gYkAAQGulFCBe
-         XpJ/yVKe1IYTA==
-Date:   Wed, 13 Jul 2022 08:04:03 -0600
-From:   Keith Busch <kbusch@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "djwong@kernel.org" <djwong@kernel.org>, "hch@lst.de" <hch@lst.de>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "javier@javigon.com" <javier@javigon.com>,
-        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
-        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "idryomov@gmail.com" <idryomov@gmail.com>,
-        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
-        "ebiggers@google.com" <ebiggers@google.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
-Subject: Re: [PATCH 0/6] block: add support for REQ_OP_VERIFY
-Message-ID: <Ys7Q020ELE80OL+X@kbusch-mbp.dhcp.thefacebook.com>
-References: <20220630091406.19624-1-kch@nvidia.com>
- <YsXJdXnXsMtaC8DJ@casper.infradead.org>
- <5ffe57d3-354c-eabe-ea38-9c4201c13970@nvidia.com>
- <Ys639LsjBUGPNErd@casper.infradead.org>
+        by relay2.suse.de (Postfix) with ESMTPS id EE9CE2C141;
+        Wed, 13 Jul 2022 15:05:07 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id A1E4BA0635; Wed, 13 Jul 2022 17:05:07 +0200 (CEST)
+Date:   Wed, 13 Jul 2022 17:05:07 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Christoph =?utf-8?Q?B=C3=B6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>, Song Liu <song@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jan Kara <jack@suse.com>, Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
+        ocfs2-devel@oss.oracle.com
+Subject: Re: remove bdevname
+Message-ID: <20220713150507.6bvq4bidmirs2mql@quack3>
+References: <20220713055317.1888500-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Ys639LsjBUGPNErd@casper.infradead.org>
+In-Reply-To: <20220713055317.1888500-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jul 13, 2022 at 01:17:56PM +0100, Matthew Wilcox wrote:
-> The firmware needs to prove to me that it *did something*.  That it
-> actually read those bytes that it claims to have verified.  The simplest
-> way to do so is to calculate a hash over the blocks which were read
-> (maybe the host needs to provide a nonce as part of the VERIFY command
-> so the drive can't "remember" the checksum).
+On Wed 13-07-22 07:53:08, Christoph Hellwig wrote:
+> Hi Jens,
+> 
+> this series removes the final uses and the implementation of the bdevname()
+> function.
 
-From a protocol perspective, NVMe's verify command currently leaves 8-bytes in
-the response unused, so this could be a reasonable way to return something like
-a crc64 of the verified blocks. The verify command starts at an arbitrary block
-and spans an arbitrary number of them, so I think a device "remembering" all
-possible combinations as a way to cheat may be harder than just doing the work
-:).
+All patches look good to me. Feel free to add:
 
-But this is just theoretical; it'd be some time before we'd see devices
-supporting such a scheme, assuming there's support from the standards
-committees.
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> 
+> Diffstat:
+>  block/bdev.c                        |   10 ++---
+>  block/blk-lib.c                     |    6 +--
+>  block/genhd.c                       |   23 ------------
+>  drivers/block/drbd/drbd_req.c       |    6 +--
+>  drivers/block/pktcdvd.c             |   10 +----
+>  drivers/block/rnbd/rnbd-srv-dev.c   |    1 
+>  drivers/block/rnbd/rnbd-srv-dev.h   |    1 
+>  drivers/block/rnbd/rnbd-srv-sysfs.c |    5 +-
+>  drivers/block/rnbd/rnbd-srv.c       |    9 ++---
+>  drivers/block/rnbd/rnbd-srv.h       |    3 -
+>  drivers/md/md.c                     |    2 -
+>  drivers/md/raid1.c                  |    2 -
+>  drivers/md/raid10.c                 |    2 -
+>  fs/ext4/mmp.c                       |    9 ++---
+>  fs/jbd2/journal.c                   |    6 ++-
+>  fs/ocfs2/cluster/heartbeat.c        |   64 ++++++++++++++++--------------------
+>  include/linux/blkdev.h              |    1 
+>  kernel/trace/blktrace.c             |    4 +-
+>  18 files changed, 62 insertions(+), 102 deletions(-)
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
