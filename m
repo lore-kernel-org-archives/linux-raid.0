@@ -2,50 +2,53 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90EECC43334
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 15:26:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC786C43334
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jul 2022 15:30:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236105AbiGMP0p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Jul 2022 11:26:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33776 "EHLO
+        id S235537AbiGMPaO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Jul 2022 11:30:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231580AbiGMP0o (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 11:26:44 -0400
+        with ESMTP id S230466AbiGMPaN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Jul 2022 11:30:13 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B78574D150;
-        Wed, 13 Jul 2022 08:26:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F26334D17B;
+        Wed, 13 Jul 2022 08:30:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
         MIME-Version:Date:Message-ID:content-disposition;
-        bh=rCgriMAFX6Fc1Z9GttOJf9X15MY+Tb2PCaFusOBQ5WU=; b=N7snfzk+LYYN0nmGLg7rxRSbff
-        Pt0Dg6tNToce7TLYoSefFqPRJzDQLD54HpxYH+djGheiJICducjb0P5YxZcVUX2Q2tdOO0niln71H
-        FQYgpgUOEV4M8e9aCjKoRzleXzvagKx+9BGST8ndSZxFZaN97FhuXGTsTN2ULXPv0ZQOVPQiwsU47
-        23Tf0GRN9e3RJk8oUr67G2fAz1y+6srpR1QYY/zC1ANxzAAO5L5KaeMW8SfVmtYpOoPleg/jzxSkR
-        YlP9R80knnIdo4ZoSb8Qz58NYg2IPIYdaki5tIWA+6ZMKNvBGiyI9REu4NG6f+Wj86irnTPoSHZG9
-        6qLs7oGw==;
+        bh=LUETXbF8HCRKfyRXGDknfCyAwKINDb5RGVv7tBw8vy4=; b=Zp86ovS8lPaQ+MxNcgVUj9Ivlg
+        Ca4gNEq5zMne6tB4fzanArJH1wnm7w0kBqTeH+IbaEtGQ6LMQDVrVsmpOI4fYLIwMJgHAKriTp0xf
+        MgY5SQkCFF89giZILHtpC/TMba+RU8JwA//b8XgCRubNsa/l7qZLju77PYh2vT3yEpI/fPws9JG9D
+        V7ydKq+u2prIpJG9xjQijMMvL71i/jqsJcjqcpR0xaRsWzfQzFnQTWY3qIWxeYfNIp3tfLmm7qodI
+        /XBh67TndyKbKXMieEmuXOkTb2U75bo17sE49MfhR5wK4gqlBOuC0adp56neAZwAmyGkr0MsJqf+/
+        hQnYQEhA==;
 Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
         by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
         (Exim 4.94.2)
         (envelope-from <logang@deltatee.com>)
-        id 1oBeG7-00E8ZX-6n; Wed, 13 Jul 2022 09:26:39 -0600
-Message-ID: <1f9beba5-3fa0-a0e6-c810-a82cec8e3496@deltatee.com>
-Date:   Wed, 13 Jul 2022 09:26:37 -0600
+        id 1oBeJV-00E8al-Gj; Wed, 13 Jul 2022 09:30:10 -0600
+Message-ID: <90ae41d3-08b9-0342-6435-e636e18d3de2@deltatee.com>
+Date:   Wed, 13 Jul 2022 09:30:08 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
 Content-Language: en-CA
-To:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org, linux-block@vger.kernel.org
-References: <20220713113125.2232975-1-hch@lst.de>
- <20220713113125.2232975-2-hch@lst.de>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        linux-block@vger.kernel.org
+References: <20220712070331.1390700-1-hch@lst.de>
+ <20220712070331.1390700-3-hch@lst.de>
+ <85666118-cbb0-83e2-5c27-c3be8c5c6688@deltatee.com>
+ <20220713071707.GA14903@lst.de>
 From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20220713113125.2232975-2-hch@lst.de>
+In-Reply-To: <20220713071707.GA14903@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-SA-Exim-Connect-IP: 24.64.144.200
 X-SA-Exim-Rcpt-To: hch@lst.de, song@kernel.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org
 X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH 1/9] md: fix error handling in md_alloc
+Subject: Re: [PATCH 2/8] md: implement ->free_disk
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
@@ -55,48 +58,37 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 2022-07-13 05:31, Christoph Hellwig wrote:
-> Error handling in md_alloc is a mess.  Untangle it to just free the mddev
-> directly before add_disk is called and thus the gendisk is globally
-> visible.  After that clear the hold flag and let the mddev_put take care
-> of cleaning up the mddev through the usual mechanisms.
+On 2022-07-13 01:17, Christoph Hellwig wrote:
+> On Tue, Jul 12, 2022 at 05:13:48PM -0600, Logan Gunthorpe wrote:
+>>> +
+>>> +	percpu_ref_exit(&mddev->writes_pending);
+>>> +	bioset_exit(&mddev->bio_set);
+>>> +	bioset_exit(&mddev->sync_set);
+>>> +
+>>> +	kfree(mddev);
+>>> +}
+>>
+>> I still don't think this is entirely correct. There are error paths that
+>> will put the kobject before the disk is created and if they get hit then
+>> the kfree(mddev) will never be called and the memory will be leaked.
 > 
-> Fixes: 5e55e2f5fc95 ("[PATCH] md: convert compile time warnings into runtime warnings")
-> Fixes: 9be68dd7ac0e ("md: add error handling support for add_disk()")
-> Fixes: 7ad1069166c0 ("md: properly unwind when failing to add the kobject in md_alloc")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> True.
 > 
-> Note: the put_disk here is not fully correct on md-next, but will
-> do the right thing once merged with the block tree.
+>> Instead of creating an ugly special path for that, I came up with a solution 
+>> that I think  makes a bit more sense: the kobject is still freed in it's 
+>> own free  function, but the disk holds a reference to the kobject and drops
+>> it in its free function. The sysfs puts and del_gendisk are then moved
+>> into mddev_delayed_delete() so they happen earlier.
 > 
->  drivers/md/md.c | 45 ++++++++++++++++++++++++++++++++-------------
->  1 file changed, 32 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index b64de313838f2..7affddade8b6b 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -791,6 +791,15 @@ static struct mddev *mddev_alloc(dev_t unit)
->  	return ERR_PTR(error);
->  }
->  
-> +static void mddev_free(struct mddev *mddev)
-> +{
-> +	spin_lock(&all_mddevs_lock);
-> +	list_del(&mddev->all_mddevs);
-> +	spin_unlock(&all_mddevs_lock);
-> +
-> +	kfree(mddev);
-> +}
+> I'm not sure this is a good idea.  The mddev kobject hangs off the
+> disk, so I don't think that it should in any way control the life
+> time of the disk, as that just creates potential problems down the
+> road.
 
-Sadly, I still don't think this is correct. mddev_init() has already
-called kobject_init() and according to the documentation it *must* be
-cleaned up with a call to kobject_put(). That doesn't happen in this
-path -- so I believe this will cause memory leaks.
-
-I have also noticed this code base already makes that same mistake in
-mddev_alloc(): freeing the mddev on the error path after kobject_init().
-But that would be easy to fix up.
+My interpretation was that kobject_del() (which is called in
+mddev_delayed_delete() before the disk would be removed) removes the
+mddev from the disk. At that point, it's just a structure hanging around
+that will be freed when its last reference is dropped, which is the disk
+itself cleaning up. I'm not sure how that would cause potential problems.
 
 Logan
