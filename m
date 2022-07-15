@@ -2,95 +2,128 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80261C43334
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Jul 2022 09:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD348C43334
+	for <linux-raid@archiver.kernel.org>; Fri, 15 Jul 2022 20:35:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234243AbiGOJED (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 15 Jul 2022 05:04:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55676 "EHLO
+        id S231315AbiGOUfj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 15 Jul 2022 16:35:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234164AbiGOJEC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Jul 2022 05:04:02 -0400
-Received: from out1.migadu.com (out1.migadu.com [91.121.223.63])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FD71326F4;
-        Fri, 15 Jul 2022 02:03:59 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1657875837;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WPXhRGaB5wWkfgqzF6hiNAnMCSLA9BFfN8O2CbZzIk8=;
-        b=fsC8cukxlB7/Camcv619ubW+9amqdGR2Gz9Eh1WY1UfmivUxs9tMQaRvVI+7XmF+3yP5mW
-        VL3A/mugbDcicK+F8zQpOKo1YN5ge9sWwTCy4DDGpWUB8AoczJ1Y3JLcCfx8MJRvPQvAHT
-        E5HF89sWiY4AqbMVhF05HZuYx+ML/To=
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Subject: Re: [PATCH 8/9] md: only delete entries from all_mddevs when the disk
- is freed
-To:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>
-Cc:     Logan Gunthorpe <logang@deltatee.com>, linux-raid@vger.kernel.org,
-        linux-block@vger.kernel.org
-References: <20220713113125.2232975-1-hch@lst.de>
- <20220713113125.2232975-9-hch@lst.de>
-Message-ID: <0117b8d7-b318-df06-4ada-2d4eaefea68a@linux.dev>
-Date:   Fri, 15 Jul 2022 17:03:53 +0800
+        with ESMTP id S230474AbiGOUfi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Jul 2022 16:35:38 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE3417D1F2
+        for <linux-raid@vger.kernel.org>; Fri, 15 Jul 2022 13:35:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
+        :references:content-disposition:in-reply-to;
+        bh=UbVBltW3g219ENkCAPpNNIBp1z5m/OyLqDoUOp8Pcv0=; b=ZTlrszXkBotncEbhEY1GrzrANi
+        7I+yXSTf30rF020sZr2afzCE6nXiBv/m6wTyuEjv675RIEwkv3dyWwpuCkwrdXRhIUgikte7mN0xj
+        gNeaWcT6sSAO1cXRV9V3dL7YYRb3t/BZiNKr/TOvRIe1bcWBPRAVYVBFQiQ8hMssQXT7rXe1mYew4
+        3Yn5sdFfRhxftsnOuLfJnvhk7q+K7okr9OUUxgWWsMXHpHf3wjdm4Pb+xi+uh5ByZDnjKwUzFUR25
+        pYdes6acS1qe2gs7rhB2hSi6iLnAUfqIIXZbxlNAQnjpYrVfOQITrpGbTgbfmD2YHGC7XkFCMDyZT
+        banmUQrg==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1oCS2B-00FqHl-8L; Fri, 15 Jul 2022 14:35:35 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1oCS26-00051G-A1; Fri, 15 Jul 2022 14:35:30 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>
+Cc:     Song Liu <song@kernel.org>, Christoph Hellwig <hch@infradead.org>,
+        Donald Buczek <buczek@molgen.mpg.de>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Coly Li <colyli@suse.de>, Bruce Dubbs <bruce.dubbs@gmail.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Fri, 15 Jul 2022 14:35:29 -0600
+Message-Id: <20220715203529.19249-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-In-Reply-To: <20220713113125.2232975-9-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-raid@vger.kernel.org, jsorensen@fb.com, song@kernel.org, hch@infradead.org, buczek@molgen.mpg.de, guoqing.jiang@linux.dev, xni@redhat.com, himanshu.madhani@oracle.com, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, bruce.dubbs@gmail.com, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH mdadm v2] mdadm: Don't open md device for CREATE and ASSEMBLE
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+The mdadm command tries to open the md device for most modes, first
+thing, no matter what. When running to create or assemble an array,
+in most cases, the md device will not exist, the open call will fail
+and everything will proceed correctly.
 
+However, when running tests, a create or assembly command may be run
+shortly after stopping an array and the old md device file may still
+be around. Then, if create_on_open is set in the kernel, a new md
+device will be created when mdadm does its initial open.
 
-On 7/13/22 7:31 PM, Christoph Hellwig wrote:
-> This ensures device names don't get prematurely reused.*Instead*  add a
-> deleted flag to skip already deleted devices in mddev_get and other
-> places that only want to see live mddevs.
+When mdadm gets around to creating the new device with the new_array
+parameter it issues this error:
 
-The patch actually adds a deleted member to struct mddev , so the 
-"Instead" here
-is at least confusing to me.
+   mdadm: Fail to create md0 when using
+   /sys/module/md_mod/parameters/new_array, fallback to creation via node
 
-> Reported-by; Logan Gunthorpe<logang@deltatee.com>
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
-> ---
->   drivers/md/md.c | 56 +++++++++++++++++++++++++++++++++----------------
->   drivers/md/md.h |  1 +
->   2 files changed, 39 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index df99a16892bce..f3ff61e540ee0 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -625,6 +625,10 @@ EXPORT_SYMBOL(md_flush_request);
->   
->   static inline struct mddev *mddev_get(struct mddev *mddev)
->   {
-> +	lockdep_assert_held(&all_mddevs_lock);
-> +
-> +	if (mddev->deleted)
-> +		return NULL;
->   	atomic_inc(&mddev->active);
+This is because an mddev was already created by the kernel with the
+earlier open() call and thus the new one being created will fail with
+EEXIST. The mdadm command will still successfully be created due to
+falling back to the node creation method. However, the error message
+itself will fail any test that's running it.
 
-...
+This issue is a race condition that is very rare, but a recent change
+in the kernel caused this to happen more frequently: about 1 in 50
+times.
 
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 1a85dbe78a71c..bc870e1f1e8c2 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -503,6 +503,7 @@ struct mddev {
->   
->   	atomic_t			max_corr_read_errors; /* max read retries */
->   	struct list_head		all_mddevs;
-> +	bool				deleted;
->   
->   	const struct attribute_group	*to_remove;
+To fix this, don't bother trying to open the md device for CREATE,
+ASSEMBLE and BUILD commands, as the file descriptor will never be used
+anyway even if it is successfully openned. The mdfd has not been used
+for these commands since:
 
-Thanks,
-Guoqing
+   7f91af49ad09 ("Delay creation of array devices for assemble/build/create")
+
+Side note: it would be nice to disable create_on_open as well to help
+solve this, but it seems the work for this was never finished. By default,
+mdadm will create using the old node interface when a name is specified
+unless the user specifically puts names=yes in a config file, which
+doesn't seem to be very common yet.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+
+Changes since v1:
+
+  - Also removed the early open for the BUILD command as it's
+    also not necessary (as pointed out by Guoqing)
+  - Added the note in the commit message to the commit Guoqing noted
+    as the commit that removed the need for the early open.
+
+ mdadm.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/mdadm.c b/mdadm.c
+index 56722ed997a2..680bf5577428 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1347,8 +1347,7 @@ int main(int argc, char *argv[])
+ 	 * an md device.  We check that here and open it.
+ 	 */
+
+-	if (mode == MANAGE || mode == BUILD || mode == CREATE ||
+-	    mode == GROW || (mode == ASSEMBLE && ! c.scan)) {
++	if (mode == MANAGE || mode == GROW) {
+ 		if (devs_found < 1) {
+ 			pr_err("an md device must be given in this mode\n");
+ 			exit(2);
+--
+2.30.2
