@@ -2,184 +2,87 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D94D5C433EF
-	for <linux-raid@archiver.kernel.org>; Sat, 16 Jul 2022 10:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48B71C43334
+	for <linux-raid@archiver.kernel.org>; Sat, 16 Jul 2022 21:23:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229540AbiGPKQJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 16 Jul 2022 06:16:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54778 "EHLO
+        id S232086AbiGPVXZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 16 Jul 2022 17:23:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbiGPKQI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 16 Jul 2022 06:16:08 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBFD31EEE1
-        for <linux-raid@vger.kernel.org>; Sat, 16 Jul 2022 03:16:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657966567; x=1689502567;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=O94saDvox3vN8lIoUs/zZOfGN0gILoi7Mv8vLypBfq0=;
-  b=J1fZvmh+TlecZQIAXWA5mltYUofcwCBZ5hcPAYvpcmXX3oTNvNuyTRF5
-   RkNZf7x8h0gHZBJdTaz7w++1wYEt0uUZd4LNc70blN8rQF69G/SrzJDL4
-   3/i6PEYtwI4E4ztGwoirMGMcrrfeDd0hTAesFdxe+j1A1ILZ7QwcgIeck
-   GlvzMhQnMadAacz80LDchkLg/LMPm/RfTC/V2Z3o6Ry/Q4mBpo3fa+L0b
-   4AtU1wtbI+zw/ztw0t8yMWat+s87EqGAYg7KUxNk0Ar5dAo4gf90OzCUA
-   yhwFYU5zxif0qOJE5zb0jZIMHFusGzibT+epCnxhXuSh1+QeOcyV5Zcln
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10409"; a="347652259"
-X-IronPort-AV: E=Sophos;i="5.92,276,1650956400"; 
-   d="scan'208";a="347652259"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2022 03:16:07 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,276,1650956400"; 
-   d="scan'208";a="654662563"
-Received: from lkp-server02.sh.intel.com (HELO ff137eb26ff1) ([10.239.97.151])
-  by fmsmga008.fm.intel.com with ESMTP; 16 Jul 2022 03:16:06 -0700
-Received: from kbuild by ff137eb26ff1 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1oCeqD-0001MC-DC;
-        Sat, 16 Jul 2022 10:16:05 +0000
-Date:   Sat, 16 Jul 2022 18:16:03 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 2369e0972c95bb8b8bc54d165bfc79cf77d297f5
-Message-ID: <62d28fe3.IpHihyP4w0WXsrpK%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229501AbiGPVXY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 16 Jul 2022 17:23:24 -0400
+X-Greylist: delayed 357 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 16 Jul 2022 14:23:23 PDT
+Received: from sneak2.sneakemail.com (sneak2.sneakemail.com [64.46.159.148])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A7191BEB6
+        for <linux-raid@vger.kernel.org>; Sat, 16 Jul 2022 14:23:23 -0700 (PDT)
+Received: (sneakemail censored 4470-1658006245-486940 #2); 16 Jul 2022
+ 21:17:25 -0000
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=liamekaens.com;
+        s=mail; t=1658006245;
+        bh=Q+rTJRqhqT29bCgEz+EwD5HZA33MFvI0tkdPoAogJJA=;
+        h=Date:From:To:Subject:From;
+        b=hlQSILaRKkBFca4gulETD0puAjtLF4IOszjfNIBuSKGADe28aw72kQykvtYd01Vmi
+         /y9Rba2U4rPypzZwli7rkgitRjTdSbuZZbZ+Z/8OXqy7ZI9tudKmnw+WoO78be0X0f
+         XB9YmbdbqZrxyluIwClNgq4TIDIhthNakoPhdn3pWCi9iN6l5ONY81RHpOGrcxhCei
+         1daCyzpZ1c36fAE7PFOZB4Kz/EgUPN9s5HbBc0SPNOYhdA7lKTFYDnVBDHvQQwnBYc
+         kAqwVICqzfwUwpqavGSAJe3r146hjuPx8JsGu6eREJf7KNthm8qTHqho/SiMk3Qtnm
+         Moez6T09q66Kw==
+Received: (sneakemail censored 4470-1658006245-486940 #1); 16 Jul 2022
+ 21:17:25 -0000
+Date:   Sat, 16 Jul 2022 21:17:25 +0000
+From:   esqychd2f5@liamekaens.com
+To:     linux-raid@vger.kernel.org
+Message-ID: <4470-1658006245-486940@sneakemail.com>
+Subject: Determining cause of md RAID 'recovery interrupted'
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Mailer: Perl5 Mail::Internet v
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 2369e0972c95bb8b8bc54d165bfc79cf77d297f5  md/raid5: Convert prepare_to_wait() to wait_woken() api
+Hi,
 
-elapsed time: 723m
+I'm a long-time md raid user, and a big fan of the project.  I have run into an issue that I haven't been able to track down a solution to online.
 
-configs tested: 108
-configs skipped: 4
+I have an md raid array using 12TB Seagate Iron Wolf NAS drives in a RAID6 configuration.  This array grew from 4 drives to 10 drives over several years, and after the restripe to 10 drives it started occasionally dropping drives without obvious errors (no read or write issues).
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+The server is running Ubuntu 20.04.4 LTS (fully updated) and the drives are connected using LSI SAS 9207-8i adapters.
 
-gcc tested configs:
-arm64                            allyesconfig
-arm                                 defconfig
-arm                              allyesconfig
-i386                          randconfig-c001
-arm                      footbridge_defconfig
-xtensa                              defconfig
-openrisc                    or1ksim_defconfig
-s390                       zfcpdump_defconfig
-m68k                             alldefconfig
-arm                     eseries_pxa_defconfig
-sh                         ap325rxa_defconfig
-arm                          gemini_defconfig
-arm                           sama5_defconfig
-xtensa                generic_kc705_defconfig
-mips                           jazz_defconfig
-arm                          simpad_defconfig
-arm                       multi_v4t_defconfig
-powerpc                     ep8248e_defconfig
-sh                        sh7763rdp_defconfig
-mips                    maltaup_xpa_defconfig
-xtensa                    xip_kc705_defconfig
-powerpc                     tqm8555_defconfig
-sh                        sh7785lcr_defconfig
-sh                           se7721_defconfig
-m68k                        mvme147_defconfig
-sh                          polaris_defconfig
-powerpc                  storcenter_defconfig
-arc                            hsdk_defconfig
-i386                                defconfig
-s390                                defconfig
-s390                             allmodconfig
-arc                                 defconfig
-alpha                               defconfig
-s390                             allyesconfig
-csky                              allnoconfig
-alpha                             allnoconfig
-arc                               allnoconfig
-riscv                             allnoconfig
-m68k                             allmodconfig
-alpha                            allyesconfig
-arc                              allyesconfig
-m68k                             allyesconfig
-powerpc                           allnoconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-sh                               allmodconfig
-i386                             allyesconfig
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-x86_64                        randconfig-a006
-i386                          randconfig-a001
-i386                          randconfig-a003
-i386                          randconfig-a005
-x86_64                        randconfig-a015
-x86_64                        randconfig-a013
-x86_64                        randconfig-a011
-i386                          randconfig-a012
-i386                          randconfig-a014
-i386                          randconfig-a016
-arc                  randconfig-r043-20220716
-arc                  randconfig-r043-20220715
-s390                 randconfig-r044-20220716
-riscv                randconfig-r042-20220716
-x86_64                    rhel-8.3-kselftests
-x86_64                           allyesconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                           rhel-8.3-syz
-x86_64                         rhel-8.3-kunit
+The dropping of drives has led to the array now being in a degraded state, and I can't get it to rebuild.  It fails with a 'recovery interrupted' message. It did rebuild successfully a few times, but now fails consistently at the same point around 12% done.
 
-clang tested configs:
-i386                             allyesconfig
-arm                    vt8500_v6_v7_defconfig
-mips                      pic32mzda_defconfig
-mips                           mtx1_defconfig
-powerpc                      ppc64e_defconfig
-arm                       aspeed_g4_defconfig
-arm                          moxart_defconfig
-powerpc                     ppa8548_defconfig
-mips                      maltaaprp_defconfig
-arm                        mvebu_v5_defconfig
-arm                         bcm2835_defconfig
-riscv                          rv32_defconfig
-mips                  cavium_octeon_defconfig
-arm                       netwinder_defconfig
-mips                       lemote2f_defconfig
-arm                   milbeaut_m10v_defconfig
-powerpc                    ge_imp3a_defconfig
-arm                          collie_defconfig
-x86_64                        randconfig-k001
-x86_64                        randconfig-a005
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-x86_64                        randconfig-a012
-i386                          randconfig-a013
-i386                          randconfig-a011
-i386                          randconfig-a015
-hexagon              randconfig-r045-20220715
-s390                 randconfig-r044-20220715
-hexagon              randconfig-r041-20220715
-riscv                randconfig-r042-20220715
-hexagon              randconfig-r041-20220716
-hexagon              randconfig-r045-20220716
+I have confirmed that I can read all data from all of my drives using the 'badblocks' tool to read all data from all drives.  No read errors are reported.
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+The rebuild start up to failure looks like this in the system log:
+[  715.210403] md: md3 stopped.
+[  715.447441] md/raid:md3: device sdd operational as raid disk 1
+[  715.447443] md/raid:md3: device sdp operational as raid disk 9
+[  715.447444] md/raid:md3: device sdc operational as raid disk 7
+[  715.447445] md/raid:md3: device sdb operational as raid disk 6
+[  715.447446] md/raid:md3: device sdm operational as raid disk 5
+[  715.447447] md/raid:md3: device sdn operational as raid disk 4
+[  715.447448] md/raid:md3: device sdq operational as raid disk 3
+[  715.447449] md/raid:md3: device sdo operational as raid disk 2
+[  715.451780] md/raid:md3: raid level 6 active with 8 out of 10 devices, algorithm 2
+[  715.451839] md3: detected capacity change from 0 to 96000035258368
+[  715.452035] md: recovery of RAID array md3
+[  715.674492]  md3: p1
+[ 9803.487218] md: md3: recovery interrupted.
+
+I have the technical data about the drive, but it is very large (181K) so I'll post it as a response to this post to minimize clutter.
+There are a few md RAID arrays shown in the logs, the one with the problem is 'md3'.
+
+Initially, I'd like to figure out why the rebuild gets interrupted (later I will look into why drives are being dropped).  I would expect an error message explaining the interruption, but I haven't been able to find it.  Maybe it is in an unexpected system log file?
+
+One thing I notice is that one of my drives (/dev/sdc) has 'Bad Blocks Present':
+  Bad Block Log : 512 entries available at offset 264 sectors - bad blocks present.
+
+So, a few questions:
+
+- Would the 'Bad Blocks Present' for sdc lead to 'recovery interrupted'?
+- More generally, how do I find out what has interrupted the rebuild?
+
+Thanks in advance for your help!
+
+Joe
