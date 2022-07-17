@@ -2,104 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC2ACC433EF
-	for <linux-raid@archiver.kernel.org>; Sat, 16 Jul 2022 22:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FEFDC433EF
+	for <linux-raid@archiver.kernel.org>; Sun, 17 Jul 2022 05:31:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231651AbiGPWjU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 16 Jul 2022 18:39:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45738 "EHLO
+        id S232659AbiGQFb6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 17 Jul 2022 01:31:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229501AbiGPWjT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 16 Jul 2022 18:39:19 -0400
-Received: from zimbra.karlsbakk.net (zimbra.karlsbakk.net [IPv6:2a0a:51c0:0:1f:4ca5::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 299D6140E3
-        for <linux-raid@vger.kernel.org>; Sat, 16 Jul 2022 15:39:18 -0700 (PDT)
-Received: from localhost (localhost.localdomain [IPv6:::1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id 55BE83C1200;
-        Sun, 17 Jul 2022 00:39:15 +0200 (CEST)
-Received: from zimbra.karlsbakk.net ([IPv6:::1])
-        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10032)
-        with ESMTP id kiAlAQEgPjO5; Sun, 17 Jul 2022 00:39:13 +0200 (CEST)
-Received: from localhost (localhost.localdomain [IPv6:::1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id CF5A73C1E37;
-        Sun, 17 Jul 2022 00:39:13 +0200 (CEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 zimbra.karlsbakk.net CF5A73C1E37
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=karlsbakk.net;
-        s=1DC131FE-D37A-11E7-BD32-3AD4DFE620DF; t=1658011153;
-        bh=4yW5dHI6eWGRnylzv3Mb/JDJFlQ5EZS5iRFZeVk/U+0=;
-        h=Date:From:To:Message-ID:MIME-Version;
-        b=LYVwzZqRO7B45Cryjn9o/EPb2DcuZKn2M2qV4vu8wp9LHoG/FeUBtbNqOqCl45lRQ
-         bHUSthUhvvpeem40Skfb3RkJPdEpulYaramotKWoljpUgBNUie44lfbLLQs11UZWh4
-         Qt4riWeR6MjJvBTvyM9535+tU7yTj1hUF8zNeGdpgM//mxknUfSL88c9xMywcGwz7+
-         7S/FHMwsG69Y56r0RloNF/xgZZbMIV9KRIgebTO9P83uaeeHgY+PLwJ1EObvMt1UZq
-         V3fYwcku1sVk4p1i6rl0UzKRnlsrcn0jjUl3QdFN+3JKR2qB0Xhqfg4VsWGiVy7L8F
-         Quq/15wjqnh/Q==
-X-Virus-Scanned: amavisd-new at zimbra.karlsbakk.net
-Received: from zimbra.karlsbakk.net ([IPv6:::1])
-        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10026)
-        with ESMTP id 5pwsJrxjKTlb; Sun, 17 Jul 2022 00:39:13 +0200 (CEST)
-Received: from zimbra.karlsbakk.net (localhost.localdomain [127.0.0.1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id 8B0C33C1200;
-        Sun, 17 Jul 2022 00:39:13 +0200 (CEST)
-Date:   Sun, 17 Jul 2022 00:39:13 +0200 (CEST)
-From:   Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-To:     esqychd2f5 <esqychd2f5@liamekaens.com>
-Cc:     Linux Raid <linux-raid@vger.kernel.org>
-Message-ID: <60336221.14987498.1658011153157.JavaMail.zimbra@karlsbakk.net>
-In-Reply-To: <4837-1658010660-795188@sneakemail.com>
-References: <4837-1658010660-795188@sneakemail.com>
-Subject: Re: Determining cause of md RAID 'recovery interrupted'
+        with ESMTP id S232533AbiGQFb5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 17 Jul 2022 01:31:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE3E922B2E
+        for <linux-raid@vger.kernel.org>; Sat, 16 Jul 2022 22:31:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8B7B160FAF
+        for <linux-raid@vger.kernel.org>; Sun, 17 Jul 2022 05:31:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8D47C341CD
+        for <linux-raid@vger.kernel.org>; Sun, 17 Jul 2022 05:31:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1658035915;
+        bh=KkdGrdwp5Q/M2TBioRiz7Y7An71RrKUQiUzWHuOxGAw=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=WqSNQl+z6m3hMpZk3e3BUALi/KrtxLPIizKzzjRsKcTxJqJUSPllpaGdkCYAQNcWt
+         x9DOC0A+px7hxP46t30I1xatHzTthU34n6CeCRaWPAbYtQiqL+hQTI35TOi7huKeih
+         ubT6kCQEkiXIGJ2b6FOejnSsTGyjiJKh+idquAQ19vxeYfo2wJetofe5f2wu5ZbyUs
+         yk1SyUV8K1cerIDfG3BVGdUyH/gsJyk1rjKqY0LfORXapGhHJTYI8kdduJ5+xbCNKo
+         Gq0amF3KdXQ9PBu9125OhriYlkC5JXmA1aRK+NHoizOXLmzTp3mzGqmkri4LfUk5Wl
+         pMfsUFJVbDTFA==
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-31c86fe1dddso80785957b3.1
+        for <linux-raid@vger.kernel.org>; Sat, 16 Jul 2022 22:31:55 -0700 (PDT)
+X-Gm-Message-State: AJIora/4cLDgMIW46bwtXIiGPfptMw/6vWLcghsd49Sn5T5RfWwRberb
+        +8ikRmQlfuHknrnF2hH2TmP5uMpShJ/A40iBIHQ=
+X-Google-Smtp-Source: AGRyM1vRNnlH+ColX0ydVPFOeWZf5e9MKuzdMdzdQ2ufjwVUUOSArAnjtLIDxY8ZehWDk53N4u0iTXFobDEYQG5tY2g=
+X-Received: by 2002:a0d:d285:0:b0:31e:1eca:6996 with SMTP id
+ u127-20020a0dd285000000b0031e1eca6996mr1092750ywd.211.1658035914984; Sat, 16
+ Jul 2022 22:31:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Originating-IP: [2001:700:700:403::6:104b]
-X-Mailer: Zimbra 8.8.10_GA_3801 (ZimbraWebClient - FF102 (Mac)/8.8.10_GA_3786)
-Thread-Topic: Determining cause of md RAID 'recovery interrupted'
-Thread-Index: tpKmLGg6DXwbrdJt47n5dbmyYkBQ3Q==
+References: <20220716031136.1426264-1-liu.yun@linux.dev>
+In-Reply-To: <20220716031136.1426264-1-liu.yun@linux.dev>
+From:   Song Liu <song@kernel.org>
+Date:   Sat, 16 Jul 2022 22:31:44 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7O2V1D4OT7xJKnjeQVVd8=oKLsxq7K4mXJGR31MN03Lw@mail.gmail.com>
+Message-ID: <CAPhsuW7O2V1D4OT7xJKnjeQVVd8=oKLsxq7K4mXJGR31MN03Lw@mail.gmail.com>
+Subject: Re: [PATCH RESEND] raid5: fix duplicate checks for rdev->saved_raid_disk
+To:     Jackie Liu <liu.yun@linux.dev>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Perhaps replacing that drive should be a good idea, then. Also - don't mdad=
-m --replace it - better --fail, --remove and --add. Otherwise, md might jus=
-t replicate the badblock list unless you turn the shite off first. ZFS hand=
-les this far better, that's true, but I chose to go back to md since zfs is=
-n't really very flexible.
+On Fri, Jul 15, 2022 at 8:11 PM Jackie Liu <liu.yun@linux.dev> wrote:
+>
+> From: Jackie Liu <liuyun01@kylinos.cn>
+>
+> 'first' will always be greater than or equal to 0, it is unnecessary to
+> repeat the 0 check, clean it up.
+>
+> Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
 
-Vennlig hilsen
+This looks identical to the original version. Which branch is this based on?
+Please rebase on top of md-next branch and resend the patch:
 
-roy
---=20
-Roy Sigurd Karlsbakk
-(+47) 98013356
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-Hi=C3=B0 g=C3=B3=C3=B0a skaltu =C3=AD stein h=C3=B6ggva, hi=C3=B0 illa =C3=
-=AD snj=C3=B3 rita.
+https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=md-next
 
------ Original Message -----
-> From: "esqychd2f5" <esqychd2f5@liamekaens.com>
-> To: "Linux Raid" <linux-raid@vger.kernel.org>
-> Sent: Sunday, 17 July, 2022 00:31:00
-> Subject: Re: Determining cause of md RAID 'recovery interrupted'
+Thanks,
+Song
 
-> Roy,
->=20
-> Thanks, one of the drives does have a badblocks list (/dev/sdc).  It
-> is also the only one with reallocated sectors (56 of them).  No drives
-> have a non-zero 'Current_Pending_Sector'.
->=20
-> This would explain why the rebuild worked for a while, but not now.
-> It doesn't explain whatever was happening to make drives drop out of
-> the array, but I'll resolve the rebuild issue before digging into
-> that.  I want to understand what is failing here before I put the
-> drives back into use.  I may leave the drive with reallocated sectors
-> out when I reuse the drives.
->=20
-> The MD array has a ZFS volume on it (meaning it should get checksum
-> errors if there are problems), and doesn't have critical data, so I
-> followed your instructions on how to disable the BBL and restarted the
-> rebuild.  I'll see if it completes now.
->=20
-> Joe
+> ---
+>  drivers/md/raid5.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 20e53b167f81..a0b38a0ea9c3 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -8063,8 +8063,7 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>          * find the disk ... but prefer rdev->saved_raid_disk
+>          * if possible.
+>          */
+> -       if (rdev->saved_raid_disk >= 0 &&
+> -           rdev->saved_raid_disk >= first &&
+> +       if (rdev->saved_raid_disk >= first &&
+>             rdev->saved_raid_disk <= last &&
+>             conf->disks[rdev->saved_raid_disk].rdev == NULL)
+>                 first = rdev->saved_raid_disk;
+> --
+> 2.25.1
+>
