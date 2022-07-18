@@ -2,151 +2,71 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AFC4CCA479
-	for <linux-raid@archiver.kernel.org>; Mon, 18 Jul 2022 07:19:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DF07C43334
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Jul 2022 12:25:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233798AbiGRHTL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 18 Jul 2022 03:19:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49812 "EHLO
+        id S234217AbiGRMZH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 18 Jul 2022 08:25:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233794AbiGRHTI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Jul 2022 03:19:08 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D4FF63DB;
-        Mon, 18 Jul 2022 00:19:05 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id F412E3476D;
-        Mon, 18 Jul 2022 07:19:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1658128744; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=8Qlhf9RDC9+P1dUjKbkTpu9mABQtBPjpqZyVqgLnyPE=;
-        b=bVCwE72hyrM13oBWrYan81mxqVXGY7KwumU8R5Vj56EeudqyAyl/CT/R9r+KDKBGYTgY4r
-        JHwutUisJ11LN+ox5FbAPWm5lXK7wP5/bwE8huPyXf2tC0ynZBM1kg2w4slQH4clG2llqS
-        Z5TTMj0WimTkd3xEBD+h4X05AYGqyEU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1658128744;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=8Qlhf9RDC9+P1dUjKbkTpu9mABQtBPjpqZyVqgLnyPE=;
-        b=L86h1sjjfZ8DEnZHp6DaVc7DBXIO8ptp3G51nG5wZCt1SruSptIxAQ1DDAQAMPvXIKDt+G
-        T5aDDmOxKvib+sCQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E256013A37;
-        Mon, 18 Jul 2022 07:19:03 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id RDiTNmcJ1WK8bgAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 18 Jul 2022 07:19:03 +0000
-Message-ID: <dc52a1b9-f007-e42b-0ef0-0de2387aa2f5@suse.de>
-Date:   Mon, 18 Jul 2022 09:19:03 +0200
+        with ESMTP id S233797AbiGRMZG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Jul 2022 08:25:06 -0400
+X-Greylist: delayed 283 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 18 Jul 2022 05:25:04 PDT
+Received: from mail.esperi.org.uk (icebox.esperi.org.uk [81.187.191.129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C64FD121
+        for <linux-raid@vger.kernel.org>; Mon, 18 Jul 2022 05:25:03 -0700 (PDT)
+Received: from loom (nix@sidle.srvr.nix [192.168.14.8])
+        by mail.esperi.org.uk (8.16.1/8.16.1) with ESMTPS id 26ICKGpw001870
+        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO)
+        for <linux-raid@vger.kernel.org>; Mon, 18 Jul 2022 13:20:17 +0100
+From:   Nix <nix@esperi.org.uk>
+To:     linux-raid@vger.kernel.org
+Subject: 5.18: likely useless very preliminary bug report: mdadm raid-6
+ boot-time assembly failure
+Emacs:  resistance is futile; you will be assimilated and byte-compiled.
+Date:   Mon, 18 Jul 2022 13:20:16 +0100
+Message-ID: <87o7xmsjcv.fsf@esperi.org.uk>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.2.50 (gnu/linux)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH 10/10] md: simplify md_open
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>
-Cc:     Logan Gunthorpe <logang@deltatee.com>, linux-raid@vger.kernel.org,
-        linux-block@vger.kernel.org
-References: <20220718063410.338626-1-hch@lst.de>
- <20220718063410.338626-11-hch@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220718063410.338626-11-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-DCC--Metrics: loom 1102; Body=1 Fuz1=1 Fuz2=1
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 7/18/22 08:34, Christoph Hellwig wrote:
-> Now that devices are on the all_mddevs list until the gendisk is freed,
-> there can't be any duplicates.  Remove the global list lookup and just
-> grab a reference.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/md/md.c | 42 +++++++++++++++---------------------------
->   1 file changed, 15 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 08cf21ad4c2d7..9b1e61b4bac8b 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7785,45 +7785,33 @@ static int md_set_read_only(struct block_device *bdev, bool ro)
->   
->   static int md_open(struct block_device *bdev, fmode_t mode)
->   {
-> -	/*
-> -	 * Succeed if we can lock the mddev, which confirms that
-> -	 * it isn't being stopped right now.
-> -	 */
-> -	struct mddev *mddev = mddev_find(bdev->bd_dev);
-> +	struct mddev *mddev;
->   	int err;
->   
-> +	spin_lock(&all_mddevs_lock);
-> +	mddev = mddev_get(bdev->bd_disk->private_data);
-> +	spin_unlock(&all_mddevs_lock);
->   	if (!mddev)
->   		return -ENODEV;
->   
-> -	if (mddev->gendisk != bdev->bd_disk) {
-> -		/* we are racing with mddev_put which is discarding this
-> -		 * bd_disk.
-> -		 */
-> -		mddev_put(mddev);
-> -		/* Wait until bdev->bd_disk is definitely gone */
-> -		if (work_pending(&mddev->del_work))
-> -			flush_workqueue(md_misc_wq);
-> -		return -EBUSY;
-> -	}
-> -	BUG_ON(mddev != bdev->bd_disk->private_data);
-> -
-> -	if ((err = mutex_lock_interruptible(&mddev->open_mutex)))
-> +	err = mutex_lock_interruptible(&mddev->open_mutex);
-> +	if (err)
->   		goto out;
->   
-> -	if (test_bit(MD_CLOSING, &mddev->flags)) {
-> -		mutex_unlock(&mddev->open_mutex);
-> -		err = -ENODEV;
-> -		goto out;
-> -	}
-> +	err = -ENODEV;
-> +	if (test_bit(MD_CLOSING, &mddev->flags))
-> +		goto out_unlock;
->   
-> -	err = 0;
->   	atomic_inc(&mddev->openers);
->   	mutex_unlock(&mddev->open_mutex);
->   
->   	bdev_check_media_change(bdev);
-> - out:
-> -	if (err)
-> -		mddev_put(mddev);
-> +	return 0;
-> +
-> +out_unlock:
-> +	mutex_unlock(&mddev->open_mutex);
-> +out:
-> +	mddev_put(mddev);
->   	return err;
->   }
->   
+So I have a pair of RAID-6 mdraid arrays on this machine (one of which
+has a bcache layered on top of it, with an LVM VG stretched across
+both). Kernel 5.16 + mdadm 4.0 (I know, it's old) works fine, but I just
+rebooted into 5.18.12 and it failed to assemble. mdadm didn't display
+anything useful: an mdadm --assemble --scan --auto=md --freeze-reshape
+simply didn't find anything to assemble, and after that nothing else was
+going to work. But rebooting into 5.16 worked fine, so everything was
+(thank goodness) actually still there.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Alas I can't say what the state of the blockdevs was (other than that
+they all seemed to be in /dev, and I'm using DEVICE partitions so they
+should all have been spotted) or anything else about the boot because
+console scrollback is still a nonexistent thing (as far as I can tell),
+it scrolls past too fast for me to video it, and I can't use netconsole
+because this is the NFS and loghost server for the local network so all
+the other machines are more or less frozen waiting for NFS to come back.
 
-Cheers,
+Any suggestions for getting more useful info out of this thing? I
+suppose I could get a spare laptop and set it up to run as a netconsole
+server for this one boot... but even that won't tell me what's going on
+if the error (if any) is reported by some userspace process rather than
+in the kernel message log.
 
-Hannes
+I'll do some mdadm --examine's and look at /proc/partitions next time I
+try booting (which won't be before this weekend), but I'd be fairly
+surprised if mdadm itself was at fault, even though it's the failing
+component and it's old, unless the kernel upgrade has tripped some bug
+in 4.0 -- or perhaps 4.0 built against a fairly old musl: I haven't even
+recompiled it since 2019. So this looks like something in the blockdev
+layer, which at this stage in booting is purely libata-based. (There is
+an SSD on the machine, but it's used as a bcache cache device and for
+XFS journals, both of which are at layers below mdadm so can't possibly
+be involved in this.)
 
+-- 
+NULL && (void)
