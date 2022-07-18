@@ -2,38 +2,38 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1404FC433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 18 Jul 2022 06:34:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2739ACCA479
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Jul 2022 06:34:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233399AbiGRGeg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 18 Jul 2022 02:34:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51480 "EHLO
+        id S233554AbiGRGej (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 18 Jul 2022 02:34:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233555AbiGRGed (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Jul 2022 02:34:33 -0400
+        with ESMTP id S233540AbiGRGeg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Jul 2022 02:34:36 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F5DD165B0;
-        Sun, 17 Jul 2022 23:34:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BAC015822;
+        Sun, 17 Jul 2022 23:34:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=PY4QooK06sCV10t6WAPOaaOFpQ/Z9wrv2mUgV1NKDaY=; b=yA2oZT7uaQQy1/lLrvuv+FB02p
-        mmt+SW0IwidrQ349XZ8I08LgvtpXAXmDiln3d2x/ZiZ2ZhH8XJTjWujY35vdBBgKXXk/d/NXd6Imw
-        IT+cFZIqDKJkZoakWX40TnlxzGn0K8fATZUkBU+ebO+zonUQluDUP0RdWbQ8ZlMF95rLq0UtDKGAE
-        QXouWuukrcL3r7yKbdva9SVnSnkbZiF4JY/1d0JpT1f5HRoBa828kvVppSS+UyG3CmRYELOxWwyTU
-        mf+2w8cVwEg+Gfp4G1/y69YmlBpxVPGpUxb0+G5oO5rKCjIG+ccM87oHcKi7rwAtrUkOu6zKleruJ
-        sypCA8cA==;
+        bh=H50lfvGOS9SaO9Dm7DJU5AbgKIBUefx/R/cDgUx6bVE=; b=42wCqnMNIZnH/uxsD+ZdebdaKl
+        UIVtZteQ4hAGJScevVaRPniewIuNC8wBt7LEOxrFJhdXzKny3blsHqqQTLOT5yKffG4+fpSztEwSw
+        mJYmjCkX0AqSW10ULMAWRA4LJULYyZ9hDzE59t+i/b5CNIrFhoMWuxzv/E+r2tfp6lGpjKvbgaieW
+        YmkCSPNlvf1Kk0ozI+EigKryCpJwJWNW55o+eQVGA7hDCQ6XDLFLq54k/vl0RqIgSXNaRS1ra1HMv
+        63oV8uETmOsth5aksmGgHt49NEuvz9LSWdnEQHq/msYyLflCK98gIQ35lZI0+MGulJc5WpGHNipcy
+        0QqNsJew==;
 Received: from 089144198117.atnat0007.highway.a1.net ([89.144.198.117] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oDKKs-00BEcz-6H; Mon, 18 Jul 2022 06:34:30 +0000
+        id 1oDKKv-00BEe4-5d; Mon, 18 Jul 2022 06:34:33 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Song Liu <song@kernel.org>
 Cc:     Logan Gunthorpe <logang@deltatee.com>, linux-raid@vger.kernel.org,
         linux-block@vger.kernel.org
-Subject: [PATCH 05/10] md: factor out the rdev overlaps check from rdev_size_store
-Date:   Mon, 18 Jul 2022 08:34:05 +0200
-Message-Id: <20220718063410.338626-6-hch@lst.de>
+Subject: [PATCH 06/10] md: stop using for_each_mddev in md_do_sync
+Date:   Mon, 18 Jul 2022 08:34:06 +0200
+Message-Id: <20220718063410.338626-7-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220718063410.338626-1-hch@lst.de>
 References: <20220718063410.338626-1-hch@lst.de>
@@ -44,119 +44,54 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This splits the code into nicely readable chunks and also avoids
-the refcount inc/dec manipulations.
+Just do a plain list_for_each that only grabs a mddev reference in
+the case where the thread sleeps and restarts the list iteration.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/md.c | 84 +++++++++++++++++++++++--------------------------
- 1 file changed, 39 insertions(+), 45 deletions(-)
+ drivers/md/md.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 96b4e901ff6b5..c8a5f9340060a 100644
+index c8a5f9340060a..687f320c7ec4a 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -3343,14 +3343,33 @@ rdev_size_show(struct md_rdev *rdev, char *page)
- 	return sprintf(page, "%llu\n", (unsigned long long)rdev->sectors / 2);
- }
- 
--static int overlaps(sector_t s1, sector_t l1, sector_t s2, sector_t l2)
-+static int md_rdevs_overlap(struct md_rdev *a, struct md_rdev *b)
- {
- 	/* check if two start/length pairs overlap */
--	if (s1+l1 <= s2)
--		return 0;
--	if (s2+l2 <= s1)
--		return 0;
--	return 1;
-+	if (a->data_offset + a->sectors <= b->data_offset)
-+		return false;
-+	if (b->data_offset + b->sectors <= a->data_offset)
-+		return false;
-+	return true;
-+}
+@@ -8725,7 +8725,6 @@ void md_do_sync(struct md_thread *thread)
+ 	unsigned long update_time;
+ 	sector_t mark_cnt[SYNC_MARKS];
+ 	int last_mark,m;
+-	struct list_head *tmp;
+ 	sector_t last_check;
+ 	int skipped = 0;
+ 	struct md_rdev *rdev;
+@@ -8789,7 +8788,8 @@ void md_do_sync(struct md_thread *thread)
+ 	try_again:
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+ 			goto skip;
+-		for_each_mddev(mddev2, tmp) {
++		spin_lock(&all_mddevs_lock);
++		list_for_each_entry(mddev2, &all_mddevs, all_mddevs) {
+ 			if (mddev2 == mddev)
+ 				continue;
+ 			if (!mddev->parallel_resync
+@@ -8821,7 +8821,8 @@ void md_do_sync(struct md_thread *thread)
+ 							desc, mdname(mddev),
+ 							mdname(mddev2));
+ 					}
+-					mddev_put(mddev2);
++					spin_unlock(&all_mddevs_lock);
 +
-+static bool md_rdev_overlaps(struct md_rdev *rdev)
-+{
-+	struct mddev *mddev;
-+	struct md_rdev *rdev2;
-+
-+	spin_lock(&all_mddevs_lock);
-+	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
-+		rdev_for_each(rdev2, mddev) {
-+			if (rdev != rdev2 && rdev->bdev == rdev2->bdev &&
-+			    md_rdevs_overlap(rdev, rdev2)) {
-+				spin_unlock(&all_mddevs_lock);
-+				return true;
-+			}
-+		}
-+	}
-+	spin_unlock(&all_mddevs_lock);
-+	return false;
- }
+ 					if (signal_pending(current))
+ 						flush_signals(current);
+ 					schedule();
+@@ -8831,6 +8832,7 @@ void md_do_sync(struct md_thread *thread)
+ 				finish_wait(&resync_wait, &wq);
+ 			}
+ 		}
++		spin_unlock(&all_mddevs_lock);
+ 	} while (mddev->curr_resync < MD_RESYNC_DELAYED);
  
- static int strict_blocks_to_sectors(const char *buf, sector_t *sectors)
-@@ -3402,46 +3421,21 @@ rdev_size_store(struct md_rdev *rdev, const char *buf, size_t len)
- 		return -EINVAL; /* component must fit device */
- 
- 	rdev->sectors = sectors;
--	if (sectors > oldsectors && my_mddev->external) {
--		/* Need to check that all other rdevs with the same
--		 * ->bdev do not overlap.  'rcu' is sufficient to walk
--		 * the rdev lists safely.
--		 * This check does not provide a hard guarantee, it
--		 * just helps avoid dangerous mistakes.
--		 */
--		struct mddev *mddev;
--		int overlap = 0;
--		struct list_head *tmp;
- 
--		rcu_read_lock();
--		for_each_mddev(mddev, tmp) {
--			struct md_rdev *rdev2;
--
--			rdev_for_each(rdev2, mddev)
--				if (rdev->bdev == rdev2->bdev &&
--				    rdev != rdev2 &&
--				    overlaps(rdev->data_offset, rdev->sectors,
--					     rdev2->data_offset,
--					     rdev2->sectors)) {
--					overlap = 1;
--					break;
--				}
--			if (overlap) {
--				mddev_put(mddev);
--				break;
--			}
--		}
--		rcu_read_unlock();
--		if (overlap) {
--			/* Someone else could have slipped in a size
--			 * change here, but doing so is just silly.
--			 * We put oldsectors back because we *know* it is
--			 * safe, and trust userspace not to race with
--			 * itself
--			 */
--			rdev->sectors = oldsectors;
--			return -EBUSY;
--		}
-+	/*
-+	 * Check that all other rdevs with the same bdev do not overlap.  This
-+	 * check does not provide a hard guarantee, it just helps avoid
-+	 * dangerous mistakes.
-+	 */
-+	if (sectors > oldsectors && my_mddev->external &&
-+	    md_rdev_overlaps(rdev)) {
-+		/*
-+		 * Someone else could have slipped in a size change here, but
-+		 * doing so is just silly.  We put oldsectors back because we
-+		 * know it is safe, and trust userspace not to race with itself.
-+		 */
-+		rdev->sectors = oldsectors;
-+		return -EBUSY;
- 	}
- 	return len;
- }
+ 	j = 0;
 -- 
 2.30.2
 
