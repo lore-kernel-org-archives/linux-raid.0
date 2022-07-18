@@ -2,102 +2,131 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B98C9C43334
-	for <linux-raid@archiver.kernel.org>; Mon, 18 Jul 2022 18:20:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5780C43334
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Jul 2022 18:25:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235333AbiGRSUy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 18 Jul 2022 14:20:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59530 "EHLO
+        id S233751AbiGRSZL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 18 Jul 2022 14:25:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234906AbiGRSUx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Jul 2022 14:20:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEA032ED7B;
-        Mon, 18 Jul 2022 11:20:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5386161625;
-        Mon, 18 Jul 2022 18:20:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4401CC341CE;
-        Mon, 18 Jul 2022 18:20:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658168451;
-        bh=PnxMBy8fxW18f0T5GnUx+lo4QdMgo44VTpGfg/xcKDQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=A6HqTKO4Ffmr4pWeTvRmBaTHbh1WQV4vyBSGg/DM7A5hLp4cJKO+7KNEk1HP1gv4M
-         NOB7rCMqA2wDbjrZw7GosfIvPoJWF5d8fGxHmcTgERiXT7axZ0kk7rRCYXj7SIX8D+
-         4YAAWEnzresDnlKQNWI1a2bsy23gn8LvIK4MmQnBiEc0aHreEPFAwqHhvqHfIEXjJ1
-         75/jXDYHySw3DZHw0LLWLaZPcGiy+PdEBzBfyQNJwgHfxLi1YBlcq5AsxNNMgKgiyW
-         3fuAZk/dTuCdRChyYHDph0uF7Z/pF73O/wEBhJYoCg9H6owrL0bgFCpT5S4g/jh2zR
-         8fW3VwAiYlstg==
-Received: by mail-yb1-f170.google.com with SMTP id h62so22265853ybb.11;
-        Mon, 18 Jul 2022 11:20:51 -0700 (PDT)
-X-Gm-Message-State: AJIora8l57nMrVlk1vAl4dy0nULYZRVgK8nDvRuy121B37ULV+0p34NV
-        o4LOQtyTwSLmZuGQGoKE9rWuQ4xQMwJ3lGKrWdo=
-X-Google-Smtp-Source: AGRyM1uKWFBosHjgaAbV3yZIw7T4eJxjkO2blUEJbSazn7fbV1jt9DTNa4LNaAt3UUYBZRujPJssQjKWU2RvEEdYDxs=
-X-Received: by 2002:a25:8611:0:b0:66e:d9e7:debc with SMTP id
- y17-20020a258611000000b0066ed9e7debcmr28379734ybk.257.1658168450283; Mon, 18
- Jul 2022 11:20:50 -0700 (PDT)
+        with ESMTP id S229639AbiGRSZJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Jul 2022 14:25:09 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1F5413E2F
+        for <linux-raid@vger.kernel.org>; Mon, 18 Jul 2022 11:25:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658168708; x=1689704708;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=v3jKC+AA1hHYDrEIVV4YEk8hYkzlekNmR4vmxI3iiTI=;
+  b=eYK1Wec16bxFt7a2l/wyFbPFWy4st7R1/0xYmonJ2EKW2rm2a/rbBEjL
+   uut5YdPB7/kwnsyvm6LpC7yKtX/78ln2JlUguJlbGhNY+R/NN6M2ie+uy
+   GpXaqAXlIIGlsSO3DYfGXyPEeini25QhBifsN6tF9I0LyZwZvgAv9vKEZ
+   rcygzPPo55ZzpXa3ziqUtdYMFJb03Wdw7wm9CF1Vbm1bePBVWHSeDlTiN
+   VB9MVHQckVQN9uc2ZrXkgxe9nO/PRxqX91mkHZXFSzpmAf7QXC6xQMhbd
+   wMMykNQMUvdccvsaf5L21VS9saEwew+HdOeWN3lGBPc3937GHBzlDAV8r
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10412"; a="311976596"
+X-IronPort-AV: E=Sophos;i="5.92,281,1650956400"; 
+   d="scan'208";a="311976596"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jul 2022 11:25:08 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,281,1650956400"; 
+   d="scan'208";a="572519977"
+Received: from lkp-server02.sh.intel.com (HELO ff137eb26ff1) ([10.239.97.151])
+  by orsmga006.jf.intel.com with ESMTP; 18 Jul 2022 11:25:07 -0700
+Received: from kbuild by ff137eb26ff1 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1oDVQY-0004dm-I5;
+        Mon, 18 Jul 2022 18:25:06 +0000
+Date:   Tue, 19 Jul 2022 02:24:26 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 07ac95f0d934331ed71b45cc0bbcafe5f3136a79
+Message-ID: <62d5a55a.8IjFxhfUsZ4uxI/P%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-References: <20220718063410.338626-1-hch@lst.de> <20220718063410.338626-10-hch@lst.de>
- <b8521a53-fb41-279c-dc43-580e8d0de045@suse.de>
-In-Reply-To: <b8521a53-fb41-279c-dc43-580e8d0de045@suse.de>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 18 Jul 2022 11:20:39 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6VYLt0hPsa667mr5+Zn1pxjY_670NaD8+No=2ZjoOzYg@mail.gmail.com>
-Message-ID: <CAPhsuW6VYLt0hPsa667mr5+Zn1pxjY_670NaD8+No=2ZjoOzYg@mail.gmail.com>
-Subject: Re: [PATCH 09/10] md: only delete entries from all_mddevs when the
- disk is freed
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        linux-block@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jul 18, 2022 at 12:17 AM Hannes Reinecke <hare@suse.de> wrote:
->
-> On 7/18/22 08:34, Christoph Hellwig wrote:
-> > This ensures device names don't get prematurely reused.  Instead add a
-> > deleted flag to skip already deleted devices in mddev_get and other
-> > places that only want to see live mddevs.
-> >
-> > Reported-by; Logan Gunthorpe <logang@deltatee.com>
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >   drivers/md/md.c | 56 +++++++++++++++++++++++++++++++++----------------
-> >   drivers/md/md.h |  1 +
-> >   2 files changed, 39 insertions(+), 18 deletions(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 805f2b4ed9c0d..08cf21ad4c2d7 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -625,6 +625,10 @@ EXPORT_SYMBOL(md_flush_request);
-> >
-> >   static inline struct mddev *mddev_get(struct mddev *mddev)
-> >   {
-> > +     lockdep_assert_held(&all_mddevs_lock);
-> > +
-> > +     if (mddev->deleted)
-> > +             return NULL;
-> >       atomic_inc(&mddev->active);
-> >       return mddev;
-> >   }
->
-> Why can't we use 'atomic_inc_unless_zero' here and do away with the
-> additional 'deleted' flag?
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 07ac95f0d934331ed71b45cc0bbcafe5f3136a79  raid5: fix duplicate checks for rdev->saved_raid_disk
 
-Thanks Christoph for the set. And thanks Hannes for the quick review!
+elapsed time: 721m
 
-I think atomic_inc_unless_zero() should work here. Alternatively, we can
-also grab a big from mddev->flags as MD_DELETED.
+configs tested: 56
+configs skipped: 2
 
-Thanks,
-Song
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-[...]
+gcc tested configs:
+arm                                 defconfig
+arm                              allyesconfig
+arm64                            allyesconfig
+ia64                             allmodconfig
+arc                               allnoconfig
+alpha                             allnoconfig
+riscv                             allnoconfig
+csky                              allnoconfig
+alpha                            allyesconfig
+arc                              allyesconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+powerpc                           allnoconfig
+sh                               allmodconfig
+mips                             allyesconfig
+powerpc                          allmodconfig
+i386                                defconfig
+i386                             allyesconfig
+x86_64                        randconfig-a002
+x86_64                        randconfig-a006
+x86_64                        randconfig-a004
+i386                          randconfig-a001
+i386                          randconfig-a003
+i386                          randconfig-a005
+x86_64                        randconfig-a015
+x86_64                        randconfig-a013
+x86_64                        randconfig-a011
+i386                          randconfig-a014
+i386                          randconfig-a012
+i386                          randconfig-a016
+riscv                randconfig-r042-20220718
+arc                  randconfig-r043-20220718
+s390                 randconfig-r044-20220718
+um                             i386_defconfig
+um                           x86_64_defconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                           allyesconfig
+x86_64                           rhel-8.3-syz
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+x86_64                    rhel-8.3-kselftests
+
+clang tested configs:
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+x86_64                        randconfig-a005
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+x86_64                        randconfig-a016
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+i386                          randconfig-a013
+i386                          randconfig-a015
+i386                          randconfig-a011
+hexagon              randconfig-r041-20220718
+hexagon              randconfig-r045-20220718
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
