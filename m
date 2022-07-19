@@ -2,38 +2,38 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ED0ECCA481
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jul 2022 09:19:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FD22C43334
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jul 2022 09:19:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229533AbiGSJTt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jul 2022 05:19:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48014 "EHLO
+        id S237310AbiGSJTw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jul 2022 05:19:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237344AbiGSJTI (ORCPT
+        with ESMTP id S237348AbiGSJTI (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jul 2022 05:19:08 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66B833E748;
-        Tue, 19 Jul 2022 02:18:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36CB33ED76;
+        Tue, 19 Jul 2022 02:19:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=zWfrdXUaEINEnISTogNv+v0vjHXsopu7YXHg0pes71U=; b=4ygIZ+l0jNxB0zcHYBSQapoVTE
-        3STI3WBoxGUyj+lMbY6E71H8KBmEjXA+19f8j++sz7yp+vVb3XJ62+43uuePGL91ydxgv+GFfOebJ
-        CnqG3vcQI5kMp3elMuWu4rJdjd+ShP9sH7d1mn8LfFBLi0fEZgEuXOHwSGAlhu00NmkuLPE1epyss
-        0FcnyaGQlINF9uH+wvCNhVh4qnA2cwHTsbWAoUvcuS6a4Yeji3xLqLMVvHs8G6a4YBAr0hdkMJSqI
-        vwNrBnEufetFQaJbCkMQssQVsJJ52NK7DbGwCXAfulDI4xRvpwQj6OqoJYQ9onLTBdXn1eJcv+H56
-        qJTWfcow==;
+        bh=xw5Z1sy7vt2KlQduSrrum+ZM/79fUw9gyDM1dqFUOvY=; b=RY2HPNzSTAaOVeqnzjEMmvFp4n
+        q+6XDUkM6apog7+b6bG+e/+7g9b8307E8EoQZBzzp7siGGjPQp0Z+6wUoX76hloB3J8kN3zbwQypM
+        ixhQs8ikhyUCqSqxzIf+Iwm0qGl7kfRDjVPtCVq571BvjT4sRga7c5jaa3rzLO8F8LKrWyHikdwPQ
+        JvpfiMc5Va53h7f+yelqfvyInsZbhB9YmtJs71M5HwUNZgfkdg56B+luxbVZzVXqxArw5eLsB9iHW
+        Xy4KfEn/jLIiD+y0SRrJiYj9hjf6Yeg5M26/cO3r+SVFNq520uWIQuWm1VnLLo/YvDApI7qhe32WS
+        xil5ECHg==;
 Received: from 089144198117.atnat0007.highway.a1.net ([89.144.198.117] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oDjNU-007Ce9-RU; Tue, 19 Jul 2022 09:18:53 +0000
+        id 1oDjNZ-007CkS-1a; Tue, 19 Jul 2022 09:18:57 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Song Liu <song@kernel.org>
 Cc:     Logan Gunthorpe <logang@deltatee.com>, linux-raid@vger.kernel.org,
         linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/10] md: stop using for_each_mddev in md_do_sync
-Date:   Tue, 19 Jul 2022 11:18:20 +0200
-Message-Id: <20220719091824.1064989-7-hch@lst.de>
+Subject: [PATCH 07/10] md: stop using for_each_mddev in md_notify_reboot
+Date:   Tue, 19 Jul 2022 11:18:21 +0200
+Message-Id: <20220719091824.1064989-8-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220719091824.1064989-1-hch@lst.de>
 References: <20220719091824.1064989-1-hch@lst.de>
@@ -44,56 +44,49 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Just do a plain list_for_each that only grabs a mddev reference in
-the case where the thread sleeps and restarts the list iteration.
+Just do a simple list_for_each_entry_safe on all_mddevs, and only grab a
+reference when we drop the lock.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/md/md.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/md/md.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 581cebd5478d6..bd87d59086947 100644
+index bd87d59086947..ede817286cacd 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8723,7 +8723,6 @@ void md_do_sync(struct md_thread *thread)
- 	unsigned long update_time;
- 	sector_t mark_cnt[SYNC_MARKS];
- 	int last_mark,m;
+@@ -9585,11 +9585,13 @@ EXPORT_SYMBOL_GPL(rdev_clear_badblocks);
+ static int md_notify_reboot(struct notifier_block *this,
+ 			    unsigned long code, void *x)
+ {
 -	struct list_head *tmp;
- 	sector_t last_check;
- 	int skipped = 0;
- 	struct md_rdev *rdev;
-@@ -8787,7 +8786,8 @@ void md_do_sync(struct md_thread *thread)
- 	try_again:
- 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
- 			goto skip;
--		for_each_mddev(mddev2, tmp) {
-+		spin_lock(&all_mddevs_lock);
-+		list_for_each_entry(mddev2, &all_mddevs, all_mddevs) {
- 			if (mddev2 == mddev)
- 				continue;
- 			if (!mddev->parallel_resync
-@@ -8819,7 +8819,8 @@ void md_do_sync(struct md_thread *thread)
- 							desc, mdname(mddev),
- 							mdname(mddev2));
- 					}
--					mddev_put(mddev2);
-+					spin_unlock(&all_mddevs_lock);
-+
- 					if (signal_pending(current))
- 						flush_signals(current);
- 					schedule();
-@@ -8829,6 +8830,7 @@ void md_do_sync(struct md_thread *thread)
- 				finish_wait(&resync_wait, &wq);
- 			}
- 		}
-+		spin_unlock(&all_mddevs_lock);
- 	} while (mddev->curr_resync < MD_RESYNC_DELAYED);
+-	struct mddev *mddev;
++	struct mddev *mddev, *n;
+ 	int need_delay = 0;
  
- 	j = 0;
+-	for_each_mddev(mddev, tmp) {
++	spin_lock(&all_mddevs_lock);
++	list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
++		mddev_get(mddev);
++		spin_unlock(&all_mddevs_lock);
+ 		if (mddev_trylock(mddev)) {
+ 			if (mddev->pers)
+ 				__md_stop_writes(mddev);
+@@ -9598,7 +9600,11 @@ static int md_notify_reboot(struct notifier_block *this,
+ 			mddev_unlock(mddev);
+ 		}
+ 		need_delay = 1;
++		mddev_put(mddev);
++		spin_lock(&all_mddevs_lock);
+ 	}
++	spin_unlock(&all_mddevs_lock);
++
+ 	/*
+ 	 * certain more exotic SCSI devices are known to be
+ 	 * volatile wrt too early system reboots. While the
 -- 
 2.30.2
 
