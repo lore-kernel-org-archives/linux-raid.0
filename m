@@ -2,88 +2,86 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9285DC43334
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jul 2022 18:44:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62271C433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jul 2022 18:45:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235886AbiGSSov (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jul 2022 14:44:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41454 "EHLO
+        id S229920AbiGSSp1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jul 2022 14:45:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229529AbiGSSou (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jul 2022 14:44:50 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E2CB5D0DA;
-        Tue, 19 Jul 2022 11:44:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=g4n3pn/BdiidAVlG8n7vW9SOKjeAQObM3+2LI6wCqWc=; b=LlysqE2TdB89G+TLfwT00mqfzD
-        2OpHtnNOFfryQhYFboKAvRYOx1TpReXdtvA6ultRLboH1tneT+1kKgyOWhbBihF1qQzi7XUt1rK+f
-        5MoojWrZSO4ZwBD7ia0UTjdMIVc34JDmRtXcPCJ2njWOd8boC9/Bwds2IKZupCipCVRjSYKYfqMen
-        Iyqu5MBY7H6pzY9vEO+UsK13679ENFBi5UlPci5j4DSFXRltBOxZoCsjXKWExuEVthFotA1OiJNEZ
-        3U+kdUhhHhMkhXLKQzSQM4mzhQ0URr2FavNwTIbr8FzaQj2WBv5CWkSQ2gLU779hMc1YlvwerdpUW
-        zO/E5r7g==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1oDsD7-001XEL-RH; Tue, 19 Jul 2022 12:44:46 -0600
-Message-ID: <f601eb55-54cf-ff0f-8ec0-586ca4dbe38a@deltatee.com>
-Date:   Tue, 19 Jul 2022 12:44:45 -0600
+        with ESMTP id S229529AbiGSSp0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jul 2022 14:45:26 -0400
+Received: from mail-il1-x132.google.com (mail-il1-x132.google.com [IPv6:2607:f8b0:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE92B54645
+        for <linux-raid@vger.kernel.org>; Tue, 19 Jul 2022 11:45:25 -0700 (PDT)
+Received: by mail-il1-x132.google.com with SMTP id c16so6886685ils.7
+        for <linux-raid@vger.kernel.org>; Tue, 19 Jul 2022 11:45:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=UeGizcQzHp97kXef1KfNY4iKepPNZXDRRLwstQZfw3Q=;
+        b=aCNE0VY3T/lcEWrG9exo5V5U/+QmsOybLM0ZYddD7MI8HNIB79r7ZLNg1/NUV2crfc
+         aGpQ44Yfqcjp1Er4xECSv6VpNChjUar3aYuVo3vxNyqoHo4Xt9RwZUePxXTisVFYXIne
+         Rwfazd1bUfQBG+Q8ueRcus2nspDANRC8yIPoX4CDmiL1B0fSmICW6kpLucsRw+y0hMNn
+         wjgU3xhk3qC27BJ+/LD1FFkNjf6yFIvWtKPmzpR7pxPk9az9fChZkFZY63lVRIZZZ71V
+         4+P8Zrm1507MGMhIjrLyA66mXVnTrykbMZkEQl+8s9oZP7YGg8WpWe+QSE9MxWz9Da++
+         qDTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=UeGizcQzHp97kXef1KfNY4iKepPNZXDRRLwstQZfw3Q=;
+        b=nlsPyIDsl/53INE3y7lnPVP0lGrE3Z3hWUF4ksXi1Dm6fLPjbRL7BvES92cXC77ToD
+         oPz50gXDyVRsa3rrpCpfeszrmDf+SRO4bunIby/BhCGoQhoy79s1Whez1PTKa3q65XCx
+         CeDcc7VgNgiIHfzIkO8EX1yv7nWL/7U71LHGPXWA7MhrFOHdsIw9LmKZh4+/7Dx22yY6
+         KnTDu+jvrnMzQWvN4QBG3X+XnXGGrPG7B8uVBCCA3XOXuhBNxdOAjRxFbADn2uxZB3Cg
+         ff383Vo7pfWI4JvfQ/VOJfFhHojqYfUPtvRG17DmQW9ch8NMZw+xD0jgo8FnOyPOgaBd
+         Hohg==
+X-Gm-Message-State: AJIora95aEvRyBGhxQY5tBzSrYEqvwZA3y9TsdXjtLK/2Pwl5djLXi9E
+        YOTW6U1WIxFUOYLki5TRENZc3tGfwVgvWA==
+X-Google-Smtp-Source: AGRyM1uCbnDYrDP9hj4uaKdtXOMqGU9o1TYN6S1qkSyQE7uCSyAazQzDm5bA+fWQwMoWDqGcJ2deCg==
+X-Received: by 2002:a05:6e02:b2b:b0:2dc:882d:161e with SMTP id e11-20020a056e020b2b00b002dc882d161emr16234721ilu.182.1658256325188;
+        Tue, 19 Jul 2022 11:45:25 -0700 (PDT)
+Received: from [192.168.1.172] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id k21-20020a02a715000000b00333fa7a642asm6963613jam.63.2022.07.19.11.45.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Jul 2022 11:45:24 -0700 (PDT)
+Message-ID: <57876115-7e41-f11e-3cca-738235cd68db@kernel.dk>
+Date:   Tue, 19 Jul 2022 12:45:23 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Content-Language: en-CA
-To:     Song Liu <song@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        linux-block@vger.kernel.org
-References: <20220719091824.1064989-1-hch@lst.de>
- <CAPhsuW7hYzg-o6a7rdLs4==fv+0hqFtEyUVS0XtPjOqLHYg3eg@mail.gmail.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <CAPhsuW7hYzg-o6a7rdLs4==fv+0hqFtEyUVS0XtPjOqLHYg3eg@mail.gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [GIT PULL] md-next 20220719
+Content-Language: en-US
+To:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+References: <5553FDCD-7628-4A40-A228-8E1BEF6FFFA1@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <5553FDCD-7628-4A40-A228-8E1BEF6FFFA1@fb.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: song@kernel.org, hch@lst.de, linux-raid@vger.kernel.org, linux-block@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: fix md disk_name lifetime problems v4
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 2022-07-19 12:42, Song Liu wrote:
-> On Tue, Jul 19, 2022 at 2:18 AM Christoph Hellwig <hch@lst.de> wrote:
->>
->> Hi all,
->>
->> this series tries to fix a problem repored by Logan where we see
->> duplicate sysfs file name in md.  It is due to the fact that the
->> md driver only checks for duplicates on currently live mddevs,
->> while the sysfs name can live on longer.  It is an old problem,
->> but the race window got longer due to waiting for the device freeze
->> earlier in del_gendisk.
->>
->> Changes since v3:
->>  - remove a now superflous mddev->gendisk NULL check
->>  - use a bit in mddev->flags instead of a new field
->>
->> Changes since v2:
->>  - delay mddev->kobj initialization
->>
->> Changes since v1:
->>  - rebased to the md-next branch
->>  - fixed error handling in md_alloc for real
->>  - add a little cleanup patch
+On 7/19/22 12:43 PM, Song Liu wrote:
+> Hi Jens, 
 > 
-> Applied to md-next. Thanks!
+> Please consider pulling the following changes on top of your for-5.20/drivers
+> branch. The major changes are:
+> 1. Fix md disk_name lifetime problems, by Christoph Hellwig;
+> 2. Convert prepare_to_wait() to wait_woken() api, by Logan Gunthorpe;
+> 3. Fix sectors_to_do bitmap issue, by Logan Gunthorpe. 
 
-I've only just finished my testing on this and it all looks good to me.
+This has worse conflicts, it looks like. And not particularly trivial.
+Do you have a merge resolution?
 
-I've also reviewed the last 2 patches, for what it's worth.
+We might want to consider doing a special branch for this...
 
-Logan
+-- 
+Jens Axboe
 
