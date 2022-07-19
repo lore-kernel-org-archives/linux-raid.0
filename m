@@ -2,88 +2,65 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D0F8CCA47F
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jul 2022 16:57:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FABAC433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jul 2022 17:10:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237324AbiGSQ5y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jul 2022 12:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51852 "EHLO
+        id S237770AbiGSRKA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jul 2022 13:10:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237261AbiGSQ5v (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jul 2022 12:57:51 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A02051A15;
-        Tue, 19 Jul 2022 09:57:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=r8Nqtkf1uaTzgdVUBUNTgArhA2QHvJON00ySwCfGbnw=; b=LZs0xg7tAI984GWphl8SIVXpSQ
-        BHqShxF6W2+TDWCHTIUDskeWSuT5jgLDdHa0J1NuCg3fblmW6sHw38649uGvbtxbOMkGSuvXrUI4J
-        SMXllIt89XXomoLNkqgdCyh0gypPHFkqB9Q7voKHXBoQwiGmJzrxGorwXOF5sGHDx9h/PYYTeo60Y
-        9z6bzKfKxT1dnSvboRX5PLjhkh36D6XA1V/jORSOujQ2If2HnMySa3mTYg24wsPAVa86RqQmfRjaE
-        GCMj/D3N3hSMTf0lO2X2EJO9Dv+KUulNwedxo3/uB4dxQHq2yGTUAcvM7uAyncF7px4AZTSj0eyC7
-        CClF1Y7w==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1oDqXa-001VeN-Ak; Tue, 19 Jul 2022 10:57:47 -0600
-Message-ID: <909f1c33-27e3-3f3a-7d8d-ba6fdb57cdb3@deltatee.com>
-Date:   Tue, 19 Jul 2022 10:57:45 -0600
+        with ESMTP id S236176AbiGSRKA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jul 2022 13:10:00 -0400
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FCE04D4CF
+        for <linux-raid@vger.kernel.org>; Tue, 19 Jul 2022 10:09:58 -0700 (PDT)
+Received: from host86-158-105-35.range86-158.btcentralplus.com ([86.158.105.35] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1oDqjM-0009vI-A4;
+        Tue, 19 Jul 2022 18:09:56 +0100
+Message-ID: <0cbb4267-2b0d-5e34-97e0-5e4d13f3275b@youngman.org.uk>
+Date:   Tue, 19 Jul 2022 18:09:55 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Content-Language: en-CA
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <YtZ90ZYlrVvucwr9@kili>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <YtZ90ZYlrVvucwr9@kili>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: dan.carpenter@oracle.com, song@kernel.org, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH] md/raid5: missing error code in setup_conf()
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Subject: Re: 5.18: likely useless very preliminary bug report: mdadm raid-6
+ boot-time assembly failure
+Content-Language: en-GB
+To:     Jani Partanen <jiipee@sotapeli.fi>, Nix <nix@esperi.org.uk>,
+        linux-raid@vger.kernel.org
+References: <87o7xmsjcv.fsf@esperi.org.uk>
+ <d28a695e-1958-d438-b43d-65470c1bbe7a@youngman.org.uk>
+ <8ac1185f-1522-6343-c6c4-19bd307858f4@sotapeli.fi>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <8ac1185f-1522-6343-c6c4-19bd307858f4@sotapeli.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 2022-07-19 03:48, Dan Carpenter wrote:
-> Return -ENOMEM if the allocation fails.  Don't return success.
+On 19/07/2022 10:17, Jani Partanen wrote:
+> Sorry to jump in but could you suggest something what is quite much 
+> default programs, not something that works only debian or something..
+> lsdrv on Fedora 36 spit this:
+>   ./lsdrv
+>    File "/root/lsdrv/./lsdrv", line 323
+>      os.mkdir('/dev/block', 0755)
+>                             ^
+> SyntaxError: leading zeros in decimal integer literals are not 
+> permitted; use an 0o prefix for octal integers
 > 
-> Fixes: 8fbcba6b999b ("md/raid5: Cleanup setup_conf() error returns")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Well, LAST I TRIED, it worked fine on gentoo, so it's certainly not 
+Debian-specific.
 
-Oops, nice catch. 
+I did have to tell it to use Python 2.7 because gentoo defaulted to 3. 
+Apparently it's since been updated, but I haven't (tried to) use it for 
+a while.
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+I've just googled your error, and it looks like a Python-2-ism, so it's 
+nothing to do with the distro, and everything to do with the Python 
+version change. (As I did warn about in my original post!)
 
-Thanks,
-
-Logan
-
-> ---
->  drivers/md/raid5.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index a7db73d36cc4..f31012357572 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7492,7 +7492,9 @@ static struct r5conf *setup_conf(struct mddev *mddev)
->  		goto abort;
->  	conf->mddev = mddev;
->  
-> -	if ((conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL)) == NULL)
-> +	ret = -ENOMEM;
-> +	conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL);
-> +	if (!conf->stripe_hashtbl)
->  		goto abort;
->  
->  	/* We init hash_locks[0] separately to that it can be used
+Cheers,
+Wol
