@@ -2,90 +2,126 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BE88C43334
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jul 2022 22:35:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A52C43334
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jul 2022 00:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238680AbiGSWfs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jul 2022 18:35:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37830 "EHLO
+        id S229944AbiGTAXi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jul 2022 20:23:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237616AbiGSWfr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jul 2022 18:35:47 -0400
-Received: from box.sotapeli.fi (sotapeli.fi [37.59.98.201])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDC42192AF
-        for <linux-raid@vger.kernel.org>; Tue, 19 Jul 2022 15:35:46 -0700 (PDT)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 0D10383694;
-        Wed, 20 Jul 2022 00:35:41 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sotapeli.fi; s=dkim;
-        t=1658270142; h=from:subject:date:message-id:to:mime-version:content-type:
-         content-transfer-encoding:in-reply-to:references;
-        bh=7xOUgZwzc+qxtKft7PjLISfUuNnaFSVcSj1f9d+JWCI=;
-        b=olZisA6JABRfe3T/sGHk+PsMv6eunU4MhsBjrh7fCcNxdh8S2uXY5PM9Xkfkle7zkNO8Wy
-        h+4h8zrHbRHyMY6727gIXIt6pBPU4i6a4278usRQaZ5Xiiwib++VdLxnre4AJkpJdfd2eh
-        VIYIntPhgwJMmD5I1qfMFaHJP7W0gVCKHNBPvBPxpV09pNZuEDwGffrRcpJIJh0DTVL8dW
-        JgmWTvDkjVUw1aytmrIMtNRSVX6bO4PyZIjxeIGI3dgEij9NhWKklieBjUnCUNnRlDgCy+
-        ljJQk9/U5o2EB0n6+1IIgtrADpSVSN5JPhLhSYXyBXuAsQ8slFfZ3DFyMh4jGQ==
-Message-ID: <1fb9ba77-e1ab-c06a-ab1d-c2acb9c2f53a@sotapeli.fi>
-Date:   Wed, 20 Jul 2022 01:35:37 +0300
+        with ESMTP id S229822AbiGTAXh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jul 2022 20:23:37 -0400
+Received: from out0.migadu.com (out0.migadu.com [94.23.1.103])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0D9859270
+        for <linux-raid@vger.kernel.org>; Tue, 19 Jul 2022 17:23:36 -0700 (PDT)
+Message-ID: <7be202aa-b2e4-7053-d9a4-e08358e50b9e@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1658276614;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=V7FLMzwQqqmbCrGL9que8rDlv7YNVJZWp+AjBTXyVro=;
+        b=rODosPvl++nYtvuELyOkwNej71FMqHlatxjopLNBUqmfGvXNoeZIbKJkCSvDGrC4b4Z+uM
+        bQNHlPLHzXuqCfypw2rRh6pTxqzshFbnHBhdgkZR+EgVt7bad/n0pvpQdb/Dt4N4NZDlNM
+        CyeSMaI+pMnc4rfGkT+q0cHKx3sItDI=
+Date:   Wed, 20 Jul 2022 08:23:25 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: 5.18: likely useless very preliminary bug report: mdadm raid-6
- boot-time assembly failure
-To:     Wols Lists <antlists@youngman.org.uk>,
-        Reindl Harald <h.reindl@thelounge.net>,
-        Nix <nix@esperi.org.uk>, linux-raid@vger.kernel.org
-References: <87o7xmsjcv.fsf@esperi.org.uk>
- <d28a695e-1958-d438-b43d-65470c1bbe7a@youngman.org.uk>
- <8ac1185f-1522-6343-c6c4-19bd307858f4@sotapeli.fi>
- <0cbb4267-2b0d-5e34-97e0-5e4d13f3275b@youngman.org.uk>
- <4036832a-ee33-8da4-b1f6-739214c5cdad@thelounge.net>
- <130972ea-1d6c-8b60-10fc-b536e1b8db0d@youngman.org.uk>
- <58129f84-1132-26ad-654b-624c43f9431e@thelounge.net>
- <3c2a7de7-505d-1ca8-c334-b4b7d0c8fa59@youngman.org.uk>
-From:   Jani Partanen <jiipee@sotapeli.fi>
-In-Reply-To: <3c2a7de7-505d-1ca8-c334-b4b7d0c8fa59@youngman.org.uk>
+Subject: Re: [PATCH RESEND] raid5: fix duplicate checks for
+ rdev->saved_raid_disk
+Content-Language: en-US
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <20220716031136.1426264-1-liu.yun@linux.dev>
+ <CAPhsuW7O2V1D4OT7xJKnjeQVVd8=oKLsxq7K4mXJGR31MN03Lw@mail.gmail.com>
+ <8c062246-5cdf-9821-c047-e18f54f392e3@linux.dev>
+ <CAPhsuW5qeiAUPmOg33JPH-ha1Rus+1qA0ET+oQLLhex6w65MDg@mail.gmail.com>
+ <CAPhsuW4d9kS9m211wrQUFeXQdeim7POpoWno-1_fFocNS=ik6g@mail.gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Jackie Liu <liu.yun@linux.dev>
+In-Reply-To: <CAPhsuW4d9kS9m211wrQUFeXQdeim7POpoWno-1_fFocNS=ik6g@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-I said debian specific because it provide some debian stuff. Maybe 
-debian comes python 2.7 installed by default.
-Tool itself havent  got any update in 4 years. It really should be 
-converted to work with python3.
-IIRC python devs have said that python 2.7 should not be used anymore 
-and that was already years ago.
+Hi Song.
 
-https://www.python.org/doc/sunset-python-2/
+It's fine. Thanks.
 
+--
+Jackie Liu
 
-Wols Lists kirjoitti 20/07/2022 klo 0.51:
-> On 19/07/2022 21:01, Reindl Harald wrote:
+在 2022/7/20 02:45, Song Liu 写道:
+> Hi Jackie,
+> 
+> As suggested by Jens, I will postpone this fix until after the merge window.
+> 
+> Thanks,
+> Song
+> 
+> On Sun, Jul 17, 2022 at 11:08 PM Song Liu <song@kernel.org> wrote:
 >>
->>
->> Am 19.07.22 um 21:22 schrieb Wol:
->>> On 19/07/2022 19:10, Reindl Harald wrote:
->>>>
->>>>
->>>> Am 19.07.22 um 19:09 schrieb Wols Lists:
->>>>> Well, LAST I TRIED, it worked fine on gentoo, so it's certainly 
->>>>> not Debian-specific
->>>>
->>>> i can't follow that logic
+>> On Sun, Jul 17, 2022 at 10:19 PM Jackie Liu <liu.yun@linux.dev> wrote:
 >>>
->>> Gentoo is a rolling release. I strongly suspect that 2.7 is 
->>> deceased. It is no more. It has shuffled off this mortal coil
+>>> Hi, Song.
+>>>
+>>> 在 2022/7/17 13:31, Song Liu 写道:
+>>>> On Fri, Jul 15, 2022 at 8:11 PM Jackie Liu <liu.yun@linux.dev> wrote:
+>>>>>
+>>>>> From: Jackie Liu <liuyun01@kylinos.cn>
+>>>>>
+>>>>> 'first' will always be greater than or equal to 0, it is unnecessary to
+>>>>> repeat the 0 check, clean it up.
+>>>>>
+>>>>> Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
+>>>>
+>>>> This looks identical to the original version. Which branch is this based on?
+>>>> Please rebase on top of md-next branch and resend the patch:
+>>>>
+>>>> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=md-next
+>>>>
+>>>
+>>> The md-next branch is lower than the upstream version, v5.19-rc5
+>>> adds a patch.
+>>>
+>>> commit 617b365872a247480e9dcd50a32c8d1806b21861
+>>> Author: Mikulas Patocka <mpatocka@redhat.com>
+>>> Date:   Wed Jun 29 13:40:57 2022 -0400
+>>>
+>>>       dm raid: fix KASAN warning in raid5_add_disks
+>>>
+>>>       There's a KASAN warning in raid5_add_disk when running the LVM
+>>> testsuite.
+>>>       The warning happens in the test
+>>>       lvconvert-raid-reshape-linear_to_raid6-single-type.sh. We fix the
+>>> warning
+>>>       by verifying that rdev->saved_raid_disk is within limits.
+>>>
+>>>       Cc: stable@vger.kernel.org
+>>>       Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+>>>       Signed-off-by: Mike Snitzer <snitzer@kernel.org>
+>>>
+>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>>> index ba289411f26f..20e53b167f81 100644
+>>> --- a/drivers/md/raid5.c
+>>> +++ b/drivers/md/raid5.c
+>>> @@ -8065,6 +8065,7 @@ static int raid5_add_disk(struct mddev *mddev,
+>>> struct md_rdev *rdev)
+>>>            */
+>>>           if (rdev->saved_raid_disk >= 0 &&
+>>>               rdev->saved_raid_disk >= first &&
+>>> +           rdev->saved_raid_disk <= last &&
+>>>               conf->disks[rdev->saved_raid_disk].rdev == NULL)
+>>>                   first = rdev->saved_raid_disk;
+>>>
+>>> ...
+>>> can you rebase from upstream? Thanks.
 >>
->> no matter what just because something woked fine on Gentoo don't rule 
->> out a Debian specific problem and for sure not "certainly"
->
-> PLEASE FOLLOW THE THREAD.
->
-> The complaint was it was a Debian-specific PROGRAM - not problem.
->
-> Cheers,
-> Wol
-
+>> ah, I see. Now it works. No need to resend.
+>>
+>> Thanks,
+>> Song
