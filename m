@@ -2,273 +2,118 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D29BFC43334
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jul 2022 08:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D219C43334
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jul 2022 13:01:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237710AbiGTIU2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 20 Jul 2022 04:20:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33528 "EHLO
+        id S229613AbiGTNBo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 20 Jul 2022 09:01:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239877AbiGTIU1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Jul 2022 04:20:27 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1F3A3B976
-        for <linux-raid@vger.kernel.org>; Wed, 20 Jul 2022 01:20:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1658305225; x=1689841225;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=skwO77cob8xNt+YJplkQgKHfImKR8OTax6QqbIVJNPE=;
-  b=aKPklGhJYnS9T/pHfTktFzJzQVoo93d9qXO2omUKEnU/ulR/JdQTQEow
-   66D2uVENRzZB8QXv3X/xXAzjaE4aqj9muKnWTKWIIaCrPvo6if+Nylu7r
-   0AlBhwlUTgTq2V+9AXhdCjvsy4I9JthuCBsrnNQ1D8ZFCV3EGbS/lUx3p
-   Dv+fTTvmAj3QZC5sWfzWMrUYxuzy5B6kY19VAyrK7Pub1QLyEGIBd+IRE
-   mRE768/0KuV4ezxl0p2gU1gvn/U3Rxu9j0dIWmQEZCx43kW/+RPkG80ve
-   g36rJB3a9AyH9CngHGSde2BQPqAT8ROsJpW5suT6QntLAWSS56vErApKA
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10413"; a="312406803"
-X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
-   d="scan'208";a="312406803"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2022 01:20:25 -0700
-X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
-   d="scan'208";a="625568575"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.55.87])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2022 01:20:21 -0700
-Date:   Wed, 20 Jul 2022 10:20:15 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Song Liu <song@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Donald Buczek <buczek@molgen.mpg.de>, Xiao Ni <xni@redhat.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Coly Li <colyli@suse.de>, Bruce Dubbs <bruce.dubbs@gmail.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH mdadm] mdadm: Don't open md device for CREATE and
- ASSEMBLE
-Message-ID: <20220720102015.00000bd0@linux.intel.com>
-In-Reply-To: <dcaf3af0-95c5-bf9a-bd2c-9c6a60c67e97@deltatee.com>
-References: <20220714223749.17250-1-logang@deltatee.com>
-        <150ffbb2-9881-9c1f-cc5e-331926b8e423@linux.dev>
-        <20220719132739.00001b94@linux.intel.com>
-        <dcaf3af0-95c5-bf9a-bd2c-9c6a60c67e97@deltatee.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229490AbiGTNBn (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Jul 2022 09:01:43 -0400
+X-Greylist: delayed 1676 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 20 Jul 2022 06:01:42 PDT
+Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A38A50739
+        for <linux-raid@vger.kernel.org>; Wed, 20 Jul 2022 06:01:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To
+        :Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=VVGYqhVhDPUW552IbAdRcIgC7uRswHvm4eUDFPCQjAM=; b=fjEB/Wn/8Jln3QA4V2xgI+/uZG
+        MZ4az5nx+pv3XPIUwQTIuKB9JQq20DKOb/wQreELtKgC+Gg+De3z5+57HbWeg4yIjNUzrzCRoIXR8
+        W6PJIWDQljRIbbmkmWMuaGk5CDiV5sMArvfPY07FyiQt9jHS7yZE0Y1rVjFdIqVgCXA2dSHKadKhH
+        ghCgyD9i6NwqT9lMYuHitNhWcyQqewWS4QHSFuv60m9fkaGjX7Onfc2CGn7niJleeaDbNaCLx8RyT
+        +LKpA1lFzFBnl0DIeXDQuFH4OY9gxW5xBa4HwBNDEEasU49JNTUNabqvjDsewKlkjvz38JXrIuLRS
+        b/0olRhA==;
+Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1oE8tO-0004CB-Ef; Wed, 20 Jul 2022 12:33:30 +0000
+Message-ID: <825e0b96-6761-bd38-78e9-56d606878f33@turmel.org>
+Date:   Wed, 20 Jul 2022 08:33:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: 5.18: likely useless very preliminary bug report: mdadm raid-6
+ boot-time assembly failure
+Content-Language: en-US
+To:     Jani Partanen <jiipee@sotapeli.fi>,
+        Wols Lists <antlists@youngman.org.uk>,
+        Reindl Harald <h.reindl@thelounge.net>,
+        Nix <nix@esperi.org.uk>, linux-raid@vger.kernel.org
+References: <87o7xmsjcv.fsf@esperi.org.uk>
+ <d28a695e-1958-d438-b43d-65470c1bbe7a@youngman.org.uk>
+ <8ac1185f-1522-6343-c6c4-19bd307858f4@sotapeli.fi>
+ <0cbb4267-2b0d-5e34-97e0-5e4d13f3275b@youngman.org.uk>
+ <4036832a-ee33-8da4-b1f6-739214c5cdad@thelounge.net>
+ <130972ea-1d6c-8b60-10fc-b536e1b8db0d@youngman.org.uk>
+ <58129f84-1132-26ad-654b-624c43f9431e@thelounge.net>
+ <3c2a7de7-505d-1ca8-c334-b4b7d0c8fa59@youngman.org.uk>
+ <1fb9ba77-e1ab-c06a-ab1d-c2acb9c2f53a@sotapeli.fi>
+From:   Phil Turmel <philip@turmel.org>
+In-Reply-To: <1fb9ba77-e1ab-c06a-ab1d-c2acb9c2f53a@sotapeli.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 19 Jul 2022 10:43:06 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+As the author of lsdrv, I can say that python3 is on my to-do list, via 
+the techniques ESR recommended for mutual compatibility.  Pointless 
+syntax changes like this one for constants is discouraging.
 
-> On 2022-07-19 05:27, Mariusz Tkaczyk wrote:
-> > On Fri, 15 Jul 2022 10:20:26 +0800
-> > Guoqing Jiang <guoqing.jiang@linux.dev> wrote:  
-> >> On 7/15/22 6:37 AM, Logan Gunthorpe wrote:  
-> >>> To fix this, don't bother trying to open the md device for CREATE and
-> >>> ASSEMBLE commands, as the file descriptor will never be used anyway
-> >>> even if it is successfully openned.  
-> > Hi All,
-> > 
-> > This is not a fix, it just reduces race probability because file descriptor
-> > will be opened later.  
+FWIW, python 2.7 (the language) is far from dead, as jython has not yet 
+released a python 3 (the language) implementation.  I use jython heavily 
+in my commercial work, on a platform that is very popular worldwide. 
+(Ignition by Inductive Automation, if anyone cares.)
+
+The two primary drivers of the move to python3, namely, distinguishing 
+between character and bytes, and the introduction of async programming 
+to mitigate the GIL, are both non-issues in jython 2.7 thanks to the 
+java standard library.
+
+I suspect python 2.7 (the language) will be alive and kicking for at 
+least another decade.
+
+On 7/19/22 18:35, Jani Partanen wrote:
+> I said debian specific because it provide some debian stuff. Maybe 
+> debian comes python 2.7 installed by default.
+> Tool itself havent  got any update in 4 years. It really should be 
+> converted to work with python3.
+> IIRC python devs have said that python 2.7 should not be used anymore 
+> and that was already years ago.
 > 
-> That's not correct. The later "open" call actually will use the new_array
-> parameter which will wait for the workqueue before creating a new array
-> device, so the old one is properly cleaned up and there is no longer
-> a race condition with this patch. If new_array doesn't exist and it falls back
-> to a regular open, then it will still do the right thing and open the device 
-> with create_on_open.
-
-Array is created by /sys/module/md/parameters/new_array if chosen_name has
-certain form. For IMSM, when we are creating arrays using "/dev/md/name" or
-"name" only create_on_open is used (if no "names=yes" in config). I
-understand that it works with tests but I don't feel that it is complete yet.
-Could you how it behaves when we use "whatever"? 
-
-#mdadm -CR whatever -l0 -n2 /dev/nvme[01]n1
-
-Please do not use --name= parameter.
-
-I want to disable create_on_open and always use new_array in the future, without
-fallback to create_on_open possibility. So I would like to have solution which
-is not relying on it.
+> https://www.python.org/doc/sunset-python-2/
 > 
-> > I tried to resolve it in the past by adding completion to md driver and
-> > force mdadm --stop command to wait for sysfs clean up but I have never
-> > finished it. IMO it is a better way, wait for device to be fully removed by
-> > MD during stop. Thoughts?  
 > 
-> I don't think that would work very well. Userspace would end up blocking
-> on --stop indefinitely if there are any references delaying cleanup to
-> the device. That's not very user friendly. Given that opening the md
-> device has side-effects, I think we should avoid opening when we
-> should know that we are about to try to create a new device.
-
-Got it, thanks!
-
-Hmm, so maybe the existing MD device should be marked as "in the middle of
-removal" somehow to gives mdadm possibility to detect that. If we are using
-node as name "/dev/mdX" then we will need to throw error, but when node needs
-to be determined by find_free_devnm() then it will simply skip this one and
-gives next one. But it will require changes in kernel probably.
-
+> Wols Lists kirjoitti 20/07/2022 klo 0.51:
+>> On 19/07/2022 21:01, Reindl Harald wrote:
+>>>
+>>>
+>>> Am 19.07.22 um 21:22 schrieb Wol:
+>>>> On 19/07/2022 19:10, Reindl Harald wrote:
+>>>>>
+>>>>>
+>>>>> Am 19.07.22 um 19:09 schrieb Wols Lists:
+>>>>>> Well, LAST I TRIED, it worked fine on gentoo, so it's certainly 
+>>>>>> not Debian-specific
+>>>>>
+>>>>> i can't follow that logic
+>>>>
+>>>> Gentoo is a rolling release. I strongly suspect that 2.7 is 
+>>>> deceased. It is no more. It has shuffled off this mortal coil
+>>>
+>>> no matter what just because something woked fine on Gentoo don't rule 
+>>> out a Debian specific problem and for sure not "certainly"
+>>
+>> PLEASE FOLLOW THE THREAD.
+>>
+>> The complaint was it was a Debian-specific PROGRAM - not problem.
+>>
+>> Cheers,
+>> Wol
 > 
-> > One objection I have here is that error handling is changed, so it could be
-> > harmful change for users.   
-> 
-> Hmm, yes seems like I was a bit sloppy here. However, it still seems possible
-> to fix this up by not pre-opening the device. The only use for the mdfd
-> in CREATE, ASSEMBLE and BUILD is to get the minor number if
-> ident.super_minor == -2 and check if an existing specified device is an md 
-> device (which may be redundant). We could replace this with a stat() call to
-> avoid opening the device. What about the patch at the end of this email?
-
-LGTM, I put small comment. But as I said before, probably it don't fix all
-creation cases.
-
-Thanks,
-Mariusz
-
-> 
-> >>>
-> >>> Side note: it would be nice to disable create_on_open as well to help
-> >>> solve this, but it seems the work for this was never finished. By default,
-> >>> mdadm will create using the old node interface when a name is specified
-> >>> unless the user specifically puts names=yes in a config file, which
-> >>> doesn't seem to be vcreate_on_openery common yet.    
-> >>
-> >> Hmm, 'create_on_open' is default to true, not sure if there is any side 
-> >> effect
-> >> after change to false.  
-> > 
-> > I'm slowly working on this. The change is not simple, starting from terrible
-> > create_mddev code and char *mddev and char *name rules , ending with hidden
-> > references which we are not aware off (it is common to create temp node and
-> > open mddevice in mdadm) and other references in systemd (because of that,
-> > udev is avoiding to open device).
-> > This also indicate that we should drop partition discover in kernel and use
-> > udev in the future, especially for external metadata (where RO -> RW
-> > transition happens during assembly). But this is a separate problem.  
-> 
-> I'm glad to hear someone is still working on that. Thanks!
-> 
-> Logan
-> 
-> --
-> 
-> diff --git a/mdadm.c b/mdadm.c
-> index 56722ed997a2..7b757c79d6bf 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1349,6 +1349,8 @@ int main(int argc, char *argv[])
->  
->  	if (mode == MANAGE || mode == BUILD || mode == CREATE ||
->  	    mode == GROW || (mode == ASSEMBLE && ! c.scan)) {
-> +		struct stat stb;
-> +
->  		if (devs_found < 1) {
->  			pr_err("an md device must be given in this mode\n");
->  			exit(2);
-> @@ -1361,37 +1363,31 @@ int main(int argc, char *argv[])
->  			mdfd = open_mddev(devlist->devname, 1);
->  			if (mdfd < 0)
->  				exit(1);
-> +
-> +			fstat(mdfd, &stb);
->  		} else {
->  			char *bname = basename(devlist->devname);
-> +			int ret;
->  
->  			if (strlen(bname) > MD_NAME_MAX) {
->  				pr_err("Name %s is too long.\n",
-> devlist->devname); exit(1);
->  			}
-> -			/* non-existent device is OK */
-> -			mdfd = open_mddev(devlist->devname, 0);
-> -		}
-> -		if (mdfd == -2) {
-> -			pr_err("device %s exists but is not an md array.\n",
-> devlist->devname);
-> -			exit(1);
-> -		}
-> -		if ((int)ident.super_minor == -2) {
-> -			struct stat stb;
-> -			if (mdfd < 0) {
-> +
-> +			ret = stat(devlist->devname, &stb);
-> +			if (ident.super_minor == -2 && ret) {
->  				pr_err("--super-minor=dev given, and listed
-> device %s doesn't exist.\n", devlist->devname);
-> +				exit(1);
-> +			}
-please check ret != 0.
-
-> +
-> +			if (!ret && !md_array_valid_stat(&stb)) {
-> +				pr_err("device %s exists but is not an md
-> array.\n", devlist->devname); exit(1);
->  			}
-> -			fstat(mdfd, &stb);
-> -			ident.super_minor = minor(stb.st_rdev);
-> -		}
-> -		if (mdfd >= 0 && mode != MANAGE && mode != GROW) {
-> -			/* We don't really want this open yet, we just might
-> -			 * have wanted to check some things
-> -			 */
-> -			close(mdfd);
-> -			mdfd = -1;
->  		}
-> +		if (ident.super_minor == -2)
-> +			ident.super_minor = minor(stb.st_rdev);
->  	}
->  
->  	if (s.raiddisks) {
-> diff --git a/mdadm.h b/mdadm.h
-> index 05ef881f4709..7462336b381c 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1504,6 +1504,7 @@ extern int Restore_metadata(char *dev, char *dir,
-> struct context *c, struct supertype *st, int only);
->  
->  int md_array_valid(int fd);
-> +int md_array_valid_stat(struct stat *st);
->  int md_array_active(int fd);
->  int md_array_is_active(struct mdinfo *info);
->  int md_get_array_info(int fd, struct mdu_array_info_s *array);
-> diff --git a/util.c b/util.c
-> index cc94f96ef120..20acdcf6af22 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -250,6 +250,23 @@ int md_array_valid(int fd)
->  	return !ret;
->  }
->  
-> +int md_array_valid_stat(struct stat *st)
-> +{
-> +	struct mdinfo *sra;
-> +	char *devnm;
-> +
-> +	devnm = stat2devnm(st);
-> +	if (!devnm)
-> +		return 0;
-> +
-> +	sra = sysfs_read(-1, devnm, GET_ARRAY_STATE);
-> +	if (!sra)
-> +		return 0;
-> +
-> +	free(sra);
-> +	return 1;
-> +}
-> +
->  int md_array_active(int fd)
->  {
->  	struct mdinfo *sra;
 
