@@ -2,177 +2,119 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6C20C43334
-	for <linux-raid@archiver.kernel.org>; Thu, 21 Jul 2022 08:19:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF10DC433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 21 Jul 2022 12:12:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229472AbiGUITP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 21 Jul 2022 04:19:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50706 "EHLO
+        id S233535AbiGUMMM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 21 Jul 2022 08:12:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229600AbiGUITP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 21 Jul 2022 04:19:15 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5EE45E815
-        for <linux-raid@vger.kernel.org>; Thu, 21 Jul 2022 01:19:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1658391553; x=1689927553;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=WjEdT4vvJq7p72Mlx/J31tBXJ3SPG3TTQzWCsjT613k=;
-  b=Szr3mjLNiB6IA7shMAslVPobE1AzzKcGhhdEaIKn0G/nPTsWx06JdU08
-   6a/Ring/Y95jk5u6x67nqdNJRuckGwvp4eH+wGpxuN+LzpZsoFRMbIRMc
-   e9bDNtuAsG1Z/dBeXjYyFFro9dpaU1iRAKAzAyVHy5awe+A1ae2/eF3Th
-   7iOvLaQdS9E/Cxyj0mv0guaE2Fv1ucV/AM/rd2+c+fc+Gdw1IAJntVKfo
-   E+kNtlpMhV1ZVuiYvQl3KPhNhcBhvWzpKn6UqGoCyLPimH+uBPzF7Ll+S
-   E/zVOKQqFglhfDnO8Zv+qsPb5qvpzsZC14d4szfQoySzIsQdfU0CCqbEj
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10414"; a="284541123"
-X-IronPort-AV: E=Sophos;i="5.92,289,1650956400"; 
-   d="scan'208";a="284541123"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2022 01:19:13 -0700
-X-IronPort-AV: E=Sophos;i="5.92,289,1650956400"; 
-   d="scan'208";a="656640128"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.43.182])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2022 01:19:11 -0700
-Date:   Thu, 21 Jul 2022 10:19:07 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     "NeilBrown" <neilb@suse.de>
-Cc:     "Paul Menzel" <pmenzel@molgen.mpg.de>,
-        "Jes Sorensen" <jes@trained-monkey.org>, linux-raid@vger.kernel.org
-Subject: Re: [PATCH mdadm v2] super1: report truncated device
-Message-ID: <20220721101907.00002fee@linux.intel.com>
-In-Reply-To: <165768409124.25184.3270769367375387242@noble.neil.brown.name>
-References: <165758762945.25184.10396277655117806996@noble.neil.brown.name>
-        <cff69e79-d681-c9d6-c719-8b10999a558a@molgen.mpg.de>
-        <165768409124.25184.3270769367375387242@noble.neil.brown.name>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S233422AbiGUMMK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 21 Jul 2022 08:12:10 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8C0C85D7C;
+        Thu, 21 Jul 2022 05:12:09 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 63EB033B1B;
+        Thu, 21 Jul 2022 12:12:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1658405528; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=egR2joWkG1+t+z/IWkDo9SUageousK0DwRASKkHhVfU=;
+        b=MKfAMXWymz/PeJ+Hj+TOowtdvYcslKgrLg9O9B52SBiSr5Q4s94nWiUreKNJYK4mt3Jp+F
+        Ae2+3tyzG+B/5mhs9mBbqU54hX7W3N2bhXrTlsA6No+9kMvohw4D1356kdNuRULr7O+Yot
+        DiDImJXw05Ux1QFcYcW2PG+s647bUcc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1658405528;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=egR2joWkG1+t+z/IWkDo9SUageousK0DwRASKkHhVfU=;
+        b=5GqiOy0esk3vevbXgeq18R+LEEJiqAIn4/R7hfUrIZccvGqJhf83iximXo2tZmXigx1XQO
+        AOhFWSYcLCFtxhCQ==
+Received: from localhost.localdomain (unknown [10.163.16.22])
+        by relay2.suse.de (Postfix) with ESMTP id 1296E2C149;
+        Thu, 21 Jul 2022 12:12:01 +0000 (UTC)
+From:   Coly Li <colyli@suse.de>
+To:     linux-block@vger.kernel.org
+Cc:     nvdimm@lists.linux.dev, linux-raid@vger.kernel.org,
+        Coly Li <colyli@suse.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Geliang Tang <geliang.tang@suse.com>,
+        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+        NeilBrown <neilb@suse.de>, Richard Fan <richard.fan@suse.com>,
+        Vishal L Verma <vishal.l.verma@intel.com>,
+        Wols Lists <antlists@youngman.org.uk>, Xiao Ni <xni@redhat.com>
+Subject: [PATCH v6 0/7] badblocks improvement for multiple bad block ranges 
+Date:   Thu, 21 Jul 2022 20:11:45 +0800
+Message-Id: <20220721121152.4180-1-colyli@suse.de>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Neil,
+This is the v6 version of the badblocks improvement series, which makes
+badblocks APIs to handle multiple ranges in bad block table.
 
-On Wed, 13 Jul 2022 13:48:11 +1000
-"NeilBrown" <neilb@suse.de> wrote:
+The change comparing to previous v5 version is the modification against
+review comments from Xiao Ni,
+- Typo fixes in code comments or commit logs.
+- The over thought checking conditions like '<=' are simplified as '<'.
+- Some unnecessary condition checks are removed.
+- In _badblocks_set(), if prev returned from prev_badblocks() is <0, set 
+  it properly before jumping to update_sectors. This helps to avoid un-
+  necessary looping.
 
-> When the metadata is at the start of the device, it is possible that it
-> describes a device large than the one it is actually stored on.  When
-> this happens, report it loudly in --examine.
-> 
-> ....
->    Unused Space : before=1968 sectors, after=-2047 sectors DEVICE TOO SMALL
->           State : clean TRUNCATED DEVICE
-> ....
+There is NO in-memory or on-disk format change in the whole series, all
+existing API and data structures are consistent. This series just only
+improve the code algorithm to handle more corner cases, the interfaces
+are same and consistency to all existing callers (md raid and nvdimm
+drivers).
 
-State : clean TRUNCATED DEVICE is enough. "DEVICE TOO SMALL" seems to be
-redundant.
-> 
-> Also report in --assemble so that the failure which the kernel will
-> report will be explained.
+The original motivation of the change is from the requirement from our
+customer, that current badblocks routines don't handle multiple ranges.
+For example if the bad block setting range covers multiple ranges from
+bad block table, only the first two bad block ranges merged and rested
+ranges are intact. The expected behavior should be all the covered
+ranges to be handled.
 
-Understand but you've added it in load_super1() so it affects all load_super()
-calls, is it indented? I assume yes but please confirm. 
-> 
-> mdadm: Device /dev/sdb is not large enough for data described in superblock
-> mdadm: no RAID superblock on /dev/sdb
-> mdadm: /dev/sdb has no superblock - assembly aborted
-> 
-> Scenario can be demonstrated as follows:
-> 
-> mdadm: Note: this array has metadata at the start and
->     may not be suitable as a boot device.  If you plan to
->     store '/boot' on this device please ensure that
->     your boot-loader understands md/v1.x metadata, or use
->     --metadata=0.90
-> mdadm: Defaulting to version 1.2 metadata
-> mdadm: array /dev/md/test started.
-> mdadm: stopped /dev/md/test
->    Unused Space : before=1968 sectors, after=-2047 sectors DEVICE TOO SMALL
->           State : clean TRUNCATED DEVICE
->    Unused Space : before=1968 sectors, after=-2047 sectors DEVICE TOO SMALL
->           State : clean TRUNCATED DEVICE
-> 
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> ---
->  super1.c | 34 +++++++++++++++++++++++++++-------
->  1 file changed, 27 insertions(+), 7 deletions(-)
-> 
-> diff --git a/super1.c b/super1.c
-> index 71af860c0e3e..4d8dba8a5a44 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -406,12 +406,18 @@ static void examine_super1(struct supertype *st, char
-> *homehost) 
->  	st->ss->getinfo_super(st, &info, NULL);
->  	if (info.space_after != 1 &&
-> -	    !(__le32_to_cpu(sb->feature_map) & MD_FEATURE_NEW_OFFSET))
-> -		printf("   Unused Space : before=%llu sectors, after=%llu
-> sectors\n",
-> -		       info.space_before, info.space_after);
-> -
-> -	printf("          State : %s\n",
-> -	       (__le64_to_cpu(sb->resync_offset)+1)? "active":"clean");
-> +	    !(__le32_to_cpu(sb->feature_map) & MD_FEATURE_NEW_OFFSET)) {
-> +		printf("   Unused Space : before=%llu sectors, ",
-> +		       info.space_before);
-> +		if (info.space_after < INT64_MAX)
-> +			printf("after=%llu sectors\n", info.space_after);
-> +		else
-> +			printf("after=-%llu sectors DEVICE TOO SMALL\n",
-> +			       UINT64_MAX - info.space_after);
-As above, for me this else here is not necessary.
+All the patches are tested by modified user space code and the code
+logic works as expected. The modified user space testing code is
+provided in the last patch. The testing code is an example how the
+improved code is tested.
 
-> +	}
-> +	printf("          State : %s%s\n",
-> +	       (__le64_to_cpu(sb->resync_offset)+1)? "active":"clean",
-> +	       info.space_after > INT64_MAX ? " TRUNCATED DEVICE" : "");
+The whole change is divided into 6 patches to make the code review more
+clear and easier. If people prefer, I'd like to post a single large
+patch finally after the code review accomplished.
 
-Could you use standard if instruction to make the code more readable? We are
-avoiding ternary operators if possible now.
+Please review the code and response. Thank you all in advance.
 
->  	printf("    Device UUID : ");
->  	for (i=0; i<16; i++) {
->  		if ((i&3)==0 && i != 0)
-> @@ -2206,6 +2212,7 @@ static int load_super1(struct supertype *st, int fd,
-> char *devname) tst.ss = &super1;
->  		for (tst.minor_version = 0; tst.minor_version <= 2;
->  		     tst.minor_version++) {
-> +			tst.ignore_hw_compat = st->ignore_hw_compat;
->  			switch(load_super1(&tst, fd, devname)) {
->  			case 0: super = tst.sb;
->  				if (bestvers == -1 ||
-> @@ -2312,7 +2319,6 @@ static int load_super1(struct supertype *st, int fd,
-> char *devname) free(super);
->  		return 2;
->  	}
-> -	st->sb = super;
->  
->  	bsb = (struct bitmap_super_s *)(((char*)super)+MAX_SB_SIZE);
->  
-> @@ -2322,6 +2328,20 @@ static int load_super1(struct supertype *st, int fd,
-> char *devname) if (st->data_offset == INVALID_SECTORS)
->  		st->data_offset = __le64_to_cpu(super->data_offset);
->  
-> +	if (st->minor_version >= 1 &&
-> +	    st->ignore_hw_compat == 0 &&
-> +	    (__le64_to_cpu(super->data_offset) +
-> +	     __le64_to_cpu(super->size) > dsize ||
-> +	     __le64_to_cpu(super->data_offset) +
-> +	     __le64_to_cpu(super->data_size) > dsize)) {
-> +		if (devname)
-> +			pr_err("Device %s is not large enough for data
-> described in superblock\n",
-> +			       devname);
+Coly Li
 
-why not just:
-if (__le64_to_cpu(super->data_offset) + __le64_to_cpu(super->data_size) > dsize)
-from my understanding, only this check matters.
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Geliang Tang <geliang.tang@suse.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: NeilBrown <neilb@suse.de>
+Cc: Richard Fan <richard.fan@suse.com>
+Cc: Vishal L Verma <vishal.l.verma@intel.com>
+Cc: Wols Lists <antlists@youngman.org.uk>
+Cc: Xiao Ni <xni@redhat.com>
+---
 
-Thanks,
-Mariusz
+Coly Li (6):
+  badblocks: add more helper structure and routines in badblocks.h
+  badblocks: add helper routines for badblock ranges handling
+  badblocks: improve badblocks_set() for multiple ranges handling
+  badblocks: improve badblocks_clear() for multiple ranges handling
+  badblocks: improve badblocks_check() for multiple ranges handling
+  badblocks: switch to the improved badblock handling code
+
+ block/badblocks.c         | 1609 ++++++++++++++++++++++++++++++-------
+ include/linux/badblocks.h |   30 +
+ 2 files changed, 1345 insertions(+), 294 deletions(-)
+
+-- 
+2.35.3
 
