@@ -2,69 +2,59 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C25EC43334
-	for <linux-raid@archiver.kernel.org>; Thu, 21 Jul 2022 16:21:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4244EC433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 22 Jul 2022 00:28:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233204AbiGUQVx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 21 Jul 2022 12:21:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55694 "EHLO
+        id S233827AbiGVA2H (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 21 Jul 2022 20:28:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229680AbiGUQVw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 21 Jul 2022 12:21:52 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 308545006E
-        for <linux-raid@vger.kernel.org>; Thu, 21 Jul 2022 09:21:49 -0700 (PDT)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id F1FE761EA192A;
-        Thu, 21 Jul 2022 18:21:46 +0200 (CEST)
-Message-ID: <4cea4ea7-7d59-da76-6518-ef12ec51c09e@molgen.mpg.de>
-Date:   Thu, 21 Jul 2022 18:21:46 +0200
+        with ESMTP id S233823AbiGVA2B (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 21 Jul 2022 20:28:01 -0400
+Received: from out30-54.freemail.mail.aliyun.com (out30-54.freemail.mail.aliyun.com [115.124.30.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C61F588F19;
+        Thu, 21 Jul 2022 17:27:59 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045170;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VK2d9Zb_1658449676;
+Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0VK2d9Zb_1658449676)
+          by smtp.aliyun-inc.com;
+          Fri, 22 Jul 2022 08:27:57 +0800
+From:   Yang Li <yang.lee@linux.alibaba.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yang Li <yang.lee@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH -next] md: remove unneeded semicolon
+Date:   Fri, 22 Jul 2022 08:27:55 +0800
+Message-Id: <20220722002755.71703-1-yang.lee@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.2
-Subject: Ternary Operator (was: [PATCH mdadm v2] super1: report truncated
- device)
-Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-References: <165758762945.25184.10396277655117806996@noble.neil.brown.name>
- <cff69e79-d681-c9d6-c719-8b10999a558a@molgen.mpg.de>
- <165768409124.25184.3270769367375387242@noble.neil.brown.name>
- <20220721101907.00002fee@linux.intel.com>
-Cc:     Neil Brown <neilb@suse.de>, Jes Sorensen <jes@trained-monkey.org>,
-        linux-raid@vger.kernel.org
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220721101907.00002fee@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Mariusz,
+Eliminate the following coccicheck warning:
+./drivers/md/md.c:8208:2-3: Unneeded semicolon
 
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Am 21.07.22 um 10:19 schrieb Mariusz Tkaczyk:
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 673a39042208..2b2267be5c32 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8205,7 +8205,7 @@ static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+ 			break;
+ 		mddev = next_mddev;
+ 		tmp = mddev->all_mddevs.next;
+-	};
++	}
+ 	spin_unlock(&all_mddevs_lock);
+ 
+ 	if (to_put)
+-- 
+2.20.1.7.g153144c
 
-> On Wed, 13 Jul 2022 13:48:11 +1000 NeilBrown wrote:
-
-[…]
-
->> +	}
->> +	printf("          State : %s%s\n",
->> +	       (__le64_to_cpu(sb->resync_offset)+1)? "active":"clean",
->> +	       info.space_after > INT64_MAX ? " TRUNCATED DEVICE" : "");
-> 
-> Could you use standard if instruction to make the code more readable? We are
-> avoiding ternary operators if possible now.
-
-That’s news to me. Where is that documented? If find the operator quite 
-useful in situations like this.
-
-
-Kind regards,
-
-Paul
