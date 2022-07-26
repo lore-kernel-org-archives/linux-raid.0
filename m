@@ -2,82 +2,188 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B85BC433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jul 2022 05:15:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE767C43334
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jul 2022 05:21:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230339AbiGZFPh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Jul 2022 01:15:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59864 "EHLO
+        id S231849AbiGZFVp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Jul 2022 01:21:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229749AbiGZFPg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Jul 2022 01:15:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5012FBF43
-        for <linux-raid@vger.kernel.org>; Mon, 25 Jul 2022 22:15:33 -0700 (PDT)
+        with ESMTP id S231258AbiGZFVp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Jul 2022 01:21:45 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D23E311146
+        for <linux-raid@vger.kernel.org>; Mon, 25 Jul 2022 22:21:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B24FE611ED
-        for <linux-raid@vger.kernel.org>; Tue, 26 Jul 2022 05:15:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18AD5C341C0
-        for <linux-raid@vger.kernel.org>; Tue, 26 Jul 2022 05:15:32 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5914EB80025
+        for <linux-raid@vger.kernel.org>; Tue, 26 Jul 2022 05:21:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F14F3C385A5
+        for <linux-raid@vger.kernel.org>; Tue, 26 Jul 2022 05:21:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658812532;
-        bh=pmTqeTYpJPQfx9YsXPos61vEA4ZAiGY4J1h7jg+cQWg=;
+        s=k20201202; t=1658812901;
+        bh=QUvmeazRpDBcoxDPs8wW6VK5t8X/O8dJ0lOjGK+E0I4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=BP3PAZrqTfzdUr5/rKfyWS3OlTQk2Oocb5EVIJbUKoNK5gXbEvKOHWK3+8k9znqkw
-         J0u3w2nivQk2vZemF90pMseLE95FIBiKkK/8ORe50ULR4N9527JoJLPJWFyEW7aTB/
-         hJERLjAY8m9eXcA5DaHUsoKPVorrc1sLtljJ40UIvmqw+3FRMnSLkb0UJVmjKpSCJH
-         j5tcFgGSoz/rjNbb7X/61b08ccNh1+dEw0GCpobsppagnN4FKf3VXlTMSNOgHn1/PT
-         arfawSWe0PIA1MzQ1NKp8iCk6zRpSqqEhD1Emhxmg3QdotrSGSlUiPoX8pgPXuFHlI
-         rmnY57HrPBAPA==
-Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-31e7055a61dso130778917b3.11
-        for <linux-raid@vger.kernel.org>; Mon, 25 Jul 2022 22:15:32 -0700 (PDT)
-X-Gm-Message-State: AJIora8j/ieDTCKp79/IR0L/hNopZYNpbFMQHjAT30wwe2SaCz905CPK
-        fSWLo6VViqrYVpf/rOAaaRriJQwvywvviF5C6FM=
-X-Google-Smtp-Source: AGRyM1v4oXOth8dCg84lUmOQtogDXKbc4VxxtZZagOfxfYnKzViVT1tIMa9RM4xg8bv5nYiIf4nFvQYWPw5oPL7V07c=
-X-Received: by 2002:a81:2389:0:b0:31e:6212:5bb6 with SMTP id
- j131-20020a812389000000b0031e62125bb6mr12797129ywj.472.1658812531114; Mon, 25
- Jul 2022 22:15:31 -0700 (PDT)
+        b=pbKrgbETVblWo+RZMr3RJ23sY5LHpnybXDpYqf8Ajcc6KjU4tFeTLO1Jds8y1FBuq
+         aE6fdnrxj5fS35SisHh7C68ytQf3DxhFAe+ISplIgGLzS+dEfH5/46Z30fTbcS87jn
+         HnikFSXPQb/0w7HiLTxTnwqGujpoXaiy0SG2Bz9ELG/Bqse8qv8haA4yIRvwbpPSOf
+         reEpT4IE+aFjcMroCUPItNGmS/P9D7t3G71ZmzqR8pEsHGeM3aZeFAzZAgfmXPFtv8
+         itC44GuI8bieYNVcaHPda+RmeFOjvhHZNkUGgRVoaRr4jhzeLV0alq8j8WiMh0iEtI
+         mbMEiWMRBUinQ==
+Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-31bf3656517so130842327b3.12
+        for <linux-raid@vger.kernel.org>; Mon, 25 Jul 2022 22:21:40 -0700 (PDT)
+X-Gm-Message-State: AJIora/EHDPnOIrFXF2S7MFf2rH9LJnnEaYaOnrPP4PIsQYKm230psNy
+        oodX5rE9QXbO9FKNm9YaTIv6yj4BKk/8MFFR1ro=
+X-Google-Smtp-Source: AGRyM1sQ3hNM89OMbn2MSAnPDMXOA8Kg7+edZOoBlE32tOTa7SZnbBxM5HVNvOz518bHMZm5uwM2iWlEOdvZ+Yu/4zU=
+X-Received: by 2002:a0d:d285:0:b0:31e:1eca:6996 with SMTP id
+ u127-20020a0dd285000000b0031e1eca6996mr13754768ywd.211.1658812900009; Mon, 25
+ Jul 2022 22:21:40 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220723062429.2210193-1-hch@lst.de> <8663e200-a825-d169-cb27-dff774f0a9ed@deltatee.com>
-In-Reply-To: <8663e200-a825-d169-cb27-dff774f0a9ed@deltatee.com>
+References: <alpine.LRH.2.02.2207130714180.12929@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <alpine.LRH.2.02.2207130714180.12929@file01.intranet.prod.int.rdu2.redhat.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 25 Jul 2022 22:15:20 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4Lp+BaTxGVVLVV=T_zpGPTCzdDOXdbcmq5hqd-bq+XhQ@mail.gmail.com>
-Message-ID: <CAPhsuW4Lp+BaTxGVVLVV=T_zpGPTCzdDOXdbcmq5hqd-bq+XhQ@mail.gmail.com>
-Subject: Re: md device allocation cleanups
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        linux-raid <linux-raid@vger.kernel.org>
+Date:   Mon, 25 Jul 2022 22:21:29 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5gc4AakdGNdF8ubpezAuDLFOYUO_sfMZcec6hQFm8nhg@mail.gmail.com>
+Message-ID: <CAPhsuW5gc4AakdGNdF8ubpezAuDLFOYUO_sfMZcec6hQFm8nhg@mail.gmail.com>
+Subject: Re: [PATCH] md-raid: destroy the bitmap after destroying the thread
+To:     Mikulas Patocka <mpatocka@redhat.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Mike Snitzer <msnitzer@redhat.com>,
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@fb.com>,
+        dm-devel@redhat.com
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jul 25, 2022 at 9:30 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+On Sun, Jul 24, 2022 at 11:26 AM Mikulas Patocka <mpatocka@redhat.com> wrote:
 >
+> When we ran the lvm test "shell/integrity-blocksize-3.sh" on a kernel with
+> kasan, we got failure in write_page.
 >
+> The reason for the failure is that md_bitmap_destroy is called before
+> destroying the thread and the thread may be waiting in the function
+> write_page for the bio to complete. When the thread finishes waiting, it
+> executes "if (test_bit(BITMAP_WRITE_ERROR, &bitmap->flags))", which
+> triggers the kasan warning.
 >
-> On 2022-07-23 00:24, Christoph Hellwig wrote:
-> > Hi all,
-> >
-> > this small series cleans up the mddev allocation a bit by returning
-> > the structure to callers that want it instead of requiring another
-> > lookup.
-
-Applied to md-next. Thanks!
-
+> Note that the commit 48df498daf62 that caused this bug claims that it is
+> neede for md-cluster, you should check md-cluster and possibly find
+> another bugfix for it.
 >
-> I've reviewed and tested these two patches and they look good to me.
+> BUG: KASAN: use-after-free in write_page+0x18d/0x680 [md_mod]
+> Read of size 8 at addr ffff889162030c78 by task mdX_raid1/5539
 >
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+> CPU: 10 PID: 5539 Comm: mdX_raid1 Not tainted 5.19.0-rc2 #1
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-2 04/01/2014
+> Call Trace:
+>  <TASK>
+>  dump_stack_lvl+0x34/0x44
+>  print_report.cold+0x45/0x57a
+>  ? __lock_text_start+0x18/0x18
+>  ? write_page+0x18d/0x680 [md_mod]
+>  kasan_report+0xa8/0xe0
+>  ? write_page+0x18d/0x680 [md_mod]
+>  kasan_check_range+0x13f/0x180
+>  write_page+0x18d/0x680 [md_mod]
+>  ? super_sync+0x4d5/0x560 [dm_raid]
+>  ? md_bitmap_file_kick+0xa0/0xa0 [md_mod]
+>  ? rs_set_dev_and_array_sectors+0x2e0/0x2e0 [dm_raid]
+>  ? mutex_trylock+0x120/0x120
+>  ? preempt_count_add+0x6b/0xc0
+>  ? preempt_count_sub+0xf/0xc0
+>  md_update_sb+0x707/0xe40 [md_mod]
+>  md_reap_sync_thread+0x1b2/0x4a0 [md_mod]
+>  md_check_recovery+0x533/0x960 [md_mod]
+>  raid1d+0xc8/0x2a20 [raid1]
+>  ? var_wake_function+0xe0/0xe0
+>  ? psi_group_change+0x411/0x500
+>  ? preempt_count_sub+0xf/0xc0
+>  ? _raw_spin_lock_irqsave+0x78/0xc0
+>  ? __lock_text_start+0x18/0x18
+>  ? raid1_end_read_request+0x2a0/0x2a0 [raid1]
+>  ? preempt_count_sub+0xf/0xc0
+>  ? _raw_spin_unlock_irqrestore+0x19/0x40
+>  ? del_timer_sync+0xa9/0x100
+>  ? try_to_del_timer_sync+0xc0/0xc0
+>  ? _raw_spin_lock_irqsave+0x78/0xc0
+>  ? __lock_text_start+0x18/0x18
+>  ? __list_del_entry_valid+0x68/0xa0
+>  ? finish_wait+0xa3/0x100
+>  md_thread+0x161/0x260 [md_mod]
+>  ? unregister_md_personality+0xa0/0xa0 [md_mod]
+>  ? _raw_spin_lock_irqsave+0x78/0xc0
+>  ? prepare_to_wait_event+0x2c0/0x2c0
+>  ? unregister_md_personality+0xa0/0xa0 [md_mod]
+>  kthread+0x148/0x180
+>  ? kthread_complete_and_exit+0x20/0x20
+>  ret_from_fork+0x1f/0x30
+>  </TASK>
+>
+> Allocated by task 5522:
+>  kasan_save_stack+0x1e/0x40
+>  __kasan_kmalloc+0x80/0xa0
+>  md_bitmap_create+0xa8/0xe80 [md_mod]
+>  md_run+0x777/0x1300 [md_mod]
+>  raid_ctr+0x249c/0x4a30 [dm_raid]
+>  dm_table_add_target+0x2b0/0x620 [dm_mod]
+>  table_load+0x1c8/0x400 [dm_mod]
+>  ctl_ioctl+0x29e/0x560 [dm_mod]
+>  dm_compat_ctl_ioctl+0x7/0x20 [dm_mod]
+>  __do_compat_sys_ioctl+0xfa/0x160
+>  do_syscall_64+0x90/0xc0
+>  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+>
+> Freed by task 5680:
+>  kasan_save_stack+0x1e/0x40
+>  kasan_set_track+0x21/0x40
+>  kasan_set_free_info+0x20/0x40
+>  __kasan_slab_free+0xf7/0x140
+>  kfree+0x80/0x240
+>  md_bitmap_free+0x1c3/0x280 [md_mod]
+>  __md_stop+0x21/0x120 [md_mod]
+>  md_stop+0x9/0x40 [md_mod]
+>  raid_dtr+0x1b/0x40 [dm_raid]
+>  dm_table_destroy+0x98/0x1e0 [dm_mod]
+>  __dm_destroy+0x199/0x360 [dm_mod]
+>  dev_remove+0x10c/0x160 [dm_mod]
+>  ctl_ioctl+0x29e/0x560 [dm_mod]
+>  dm_compat_ctl_ioctl+0x7/0x20 [dm_mod]
+>  __do_compat_sys_ioctl+0xfa/0x160
+>  do_syscall_64+0x90/0xc0
+>  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+>
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> Cc: stable@vger.kernel.org
+> Fixes: 48df498daf62 ("md: move bitmap_destroy to the beginning of __md_stop")
 
-I changed this to
-
-Reviewed-and-tested-by: Logan Gunthorpe <logang@deltatee.com>
-
-Please let me know if you think this is not appropriate.
+Applied to md-next.
 
 Thanks,
 Song
+
+>
+> ---
+>  drivers/md/md.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> Index: linux-2.6/drivers/md/md.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/md/md.c      2022-06-08 15:39:08.000000000 +0200
+> +++ linux-2.6/drivers/md/md.c   2022-06-24 20:22:34.000000000 +0200
+> @@ -6244,11 +6244,11 @@ static void mddev_detach(struct mddev *m
+>  static void __md_stop(struct mddev *mddev)
+>  {
+>         struct md_personality *pers = mddev->pers;
+> -       md_bitmap_destroy(mddev);
+>         mddev_detach(mddev);
+>         /* Ensure ->event_work is done */
+>         if (mddev->event_work.func)
+>                 flush_workqueue(md_misc_wq);
+> +       md_bitmap_destroy(mddev);
+>         spin_lock(&mddev->lock);
+>         mddev->pers = NULL;
+>         spin_unlock(&mddev->lock);
+>
