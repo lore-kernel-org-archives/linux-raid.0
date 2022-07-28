@@ -2,122 +2,170 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 109AFC19F21
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Jul 2022 12:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04883C04A68
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Jul 2022 14:13:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233422AbiG1Mup (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Jul 2022 08:50:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60406 "EHLO
+        id S230180AbiG1ONw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Jul 2022 10:13:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237970AbiG1Mun (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Jul 2022 08:50:43 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B7BA140BD
-        for <linux-raid@vger.kernel.org>; Thu, 28 Jul 2022 05:50:42 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id C4CFD1FA8A;
-        Thu, 28 Jul 2022 12:50:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1659012640; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=vnSel90MU0T5NQudvd7clLooeugw2H6hDjGnnGYtPYY=;
-        b=IqeH/cWgO4ojmQZnVwPVJtb88BTY3DQBwwgACXgs/DDzb9OChOSMwbE0NGEJVtihhLWUmp
-        udlzI0I5ttF3RCzjbIa1fALKTqBIU5UNmB5A1zNhG5lNuvEgp2j2WmQSE9qYcNyHQ2xmLx
-        X26WfAAovVi2KQaTj5nzNhUN+0Vrm5A=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1659012640;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=vnSel90MU0T5NQudvd7clLooeugw2H6hDjGnnGYtPYY=;
-        b=Omjr472E2WCYC+W3ndE8UHfqbkWgD0SQZP9dcbfI8FczwBR3soR2muRf2b7H76TG9/Rw0q
-        LlwGqft3Q6XKLUCA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3F8FA13427;
-        Thu, 28 Jul 2022 12:50:38 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id UZ9BOR6G4mICNQAAMHmgww
-        (envelope-from <colyli@suse.de>); Thu, 28 Jul 2022 12:50:38 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
-Subject: Re: [PATCH 1/2] Monitor: use devname as char array instead of pointer
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220714070211.9941-2-kinga.tanska@intel.com>
-Date:   Thu, 28 Jul 2022 20:50:33 +0800
-Cc:     linux-raid <linux-raid@vger.kernel.org>, jes@trained-monkey.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <4CACC0E0-0F9D-4428-85CF-C968D6931EE8@suse.de>
-References: <20220714070211.9941-1-kinga.tanska@intel.com>
- <20220714070211.9941-2-kinga.tanska@intel.com>
-To:     Kinga Tanska <kinga.tanska@intel.com>
-X-Mailer: Apple Mail (2.3696.100.31)
+        with ESMTP id S230150AbiG1ONv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Jul 2022 10:13:51 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A80641033;
+        Thu, 28 Jul 2022 07:13:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=lFLuDGPlqkNDa/zEoJSr26bGwaBIGwbl7RjFAJrM96U=; b=1AMo3p2GTsK9zZQ5tLu73rIo4p
+        fRmi3FPF3sq0P6USgQ9LhnvhBLPJYMG1O3uaR6p4Pm1hoW/8Swa5kEIEt1By7LSJ5KynKfPcv8Y9p
+        Yx54a3XbJ11wmih1rVO6FDefDpz2eDr97UtFZCY5iBqr9iQkTDiFQierMorQBhTlnGW1N22dp5XdQ
+        Z8ZCSjgzWTBlETQ2B+IUVUq5ASk1PQAhJ/+8mgl1h+zvN/7/Vzemq4rBt9xDYfYwOiYnPBnzp9eWp
+        eP/TTenbUtXxe6UJYF4lSCqt02VBqJS1O2qBacUJ/mbRwvsCUvPOwISe3UFHlORGeNY3npvSuysOF
+        2Cdr7yMA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oH4Go-00A1rc-Jv; Thu, 28 Jul 2022 14:13:46 +0000
+Date:   Thu, 28 Jul 2022 07:13:46 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Subject: Re: [PATCH 1/5] md/raid5: Refactor raid5_get_active_stripe()
+Message-ID: <YuKZmloAcZWY5of8@infradead.org>
+References: <20220727210600.120221-1-logang@deltatee.com>
+ <20220727210600.120221-2-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220727210600.120221-2-logang@deltatee.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Wed, Jul 27, 2022 at 03:05:56PM -0600, Logan Gunthorpe wrote:
+> Refactor the raid5_get_active_stripe() to read more linearly in
+> the order it's typically executed.
+> 
+> The init_stripe() call is called if a free stripe is found and the
+> function is exited early which removes a lot of if (sh) checks and
+> unindents the following code.
+> 
+> Remove the while loop in favour of the 'goto retry' pattern, which
+> reduces indentation further. And use a 'goto wait_for_stripe' instead
+> of an additional indent seeing it is the unusual path and this makes
+> the code easier to read.
+> 
+> No functional changes intended. Will make subsequent changes
+> in patches easier to understand.
 
+I find the new loop even more confusing than the old one.  I'd go
+with something like the version below (on top of the whol md-next tree
+that pulled this in way too fast..)
 
-> 2022=E5=B9=B47=E6=9C=8814=E6=97=A5 15:02=EF=BC=8CKinga Tanska =
-<kinga.tanska@intel.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Device name wasn't filled properly due to incorrect use of strcpy.
-> Strcpy was used twice. Firstly to fill devname with "/dev/md/"
-> and then to add chosen name. First strcpy result was overwritten by
-> second one (as a result <device_name> instead of =
-"/dev/md/<device_name>"
-> was assigned). This commit changes this implementation to use snprintf
-> and devname with fixed size.
->=20
-> Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
-
-This patch looks good to me. I added my Acked-by and submitted to Jes =
-today.
-
-Thanks.
-
-Coly Li
-
-> ---
-> Monitor.c | 8 +++++---
-> 1 file changed, 5 insertions(+), 3 deletions(-)
->=20
-> diff --git a/Monitor.c b/Monitor.c
-> index 6ca1ebe5..a5b11ae2 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -190,9 +190,11 @@ int Monitor(struct mddev_dev *devlist,
-> 			if (mdlist->devname[0] =3D=3D '/')
-> 				st->devname =3D =
-xstrdup(mdlist->devname);
-> 			else {
-> -				st->devname =3D =
-xmalloc(8+strlen(mdlist->devname)+1);
-> -				strcpy(strcpy(st->devname, "/dev/md/"),
-> -				       mdlist->devname);
-> +				/* length of "/dev/md/" + device name + =
-terminating byte */
-> +				size_t _len =3D sizeof("/dev/md/") + =
-strnlen(mdlist->devname, PATH_MAX);
-> +
-> +				st->devname =3D xcalloc(_len, =
-sizeof(char));
-> +				snprintf(st->devname, _len, =
-"/dev/md/%s", mdlist->devname);
-> 			}
-> 			if (!is_mddev(mdlist->devname))
-> 				return 1;
-> --=20
-> 2.26.2
->=20
-
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4456ac51f7c53..cd8ec4995a49b 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -811,54 +811,54 @@ static struct stripe_head *__raid5_get_active_stripe(struct r5conf *conf,
+ 
+ 	spin_lock_irq(conf->hash_locks + hash);
+ 
+-retry:
+-	if (!noquiesce && conf->quiesce) {
+-		/*
+-		 * Must release the reference to batch_last before waiting,
+-		 * on quiesce, otherwise the batch_last will hold a reference
+-		 * to a stripe and raid5_quiesce() will deadlock waiting for
+-		 * active_stripes to go to zero.
+-		 */
+-		if (ctx && ctx->batch_last) {
+-			raid5_release_stripe(ctx->batch_last);
+-			ctx->batch_last = NULL;
+-		}
+-
+-		wait_event_lock_irq(conf->wait_for_quiescent, !conf->quiesce,
+-				    *(conf->hash_locks + hash));
+-	}
++	for (;;) {
++		if (!noquiesce && conf->quiesce) {
++			/*
++			 * Must release the reference to batch_last before
++			 * waiting on quiesce, otherwise the batch_last will
++			 * hold a reference to a stripe and raid5_quiesce()
++			 * will deadlock waiting for active_stripes to go to
++			 * zero.
++			 */
++			if (ctx && ctx->batch_last) {
++				raid5_release_stripe(ctx->batch_last);
++				ctx->batch_last = NULL;
++			}
+ 
+-	sh = find_get_stripe(conf, sector, conf->generation - previous, hash);
+-	if (sh)
+-		goto out;
++			wait_event_lock_irq(conf->wait_for_quiescent,
++					    !conf->quiesce,
++					    *(conf->hash_locks + hash));
++		}
+ 
+-	if (test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state))
+-		goto wait_for_stripe;
++		sh = find_get_stripe(conf, sector, conf->generation - previous,
++				     hash);
++		if (sh)
++			break;
+ 
+-	sh = get_free_stripe(conf, hash);
+-	if (sh) {
+-		r5c_check_stripe_cache_usage(conf);
+-		init_stripe(sh, sector, previous);
+-		atomic_inc(&sh->count);
+-		goto out;
+-	}
++		if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
++			sh = get_free_stripe(conf, hash);
++			if (sh) {
++				r5c_check_stripe_cache_usage(conf);
++				init_stripe(sh, sector, previous);
++				atomic_inc(&sh->count);
++				break;
++			}
+ 
+-	if (!test_bit(R5_DID_ALLOC, &conf->cache_state))
+-		set_bit(R5_ALLOC_MORE, &conf->cache_state);
++			if (!test_bit(R5_DID_ALLOC, &conf->cache_state))
++				set_bit(R5_ALLOC_MORE, &conf->cache_state);
++		}
+ 
+-wait_for_stripe:
+-	if (noblock)
+-		goto out;
++		if (noblock)
++			break;
+ 
+-	set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
+-	r5l_wake_reclaim(conf->log, 0);
+-	wait_event_lock_irq(conf->wait_for_stripe,
+-			    is_inactive_blocked(conf, hash),
+-			    *(conf->hash_locks + hash));
+-	clear_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
+-	goto retry;
++		set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
++		r5l_wake_reclaim(conf->log, 0);
++		wait_event_lock_irq(conf->wait_for_stripe,
++				    is_inactive_blocked(conf, hash),
++				    *(conf->hash_locks + hash));
++		clear_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
++	}
+ 
+-out:
+ 	spin_unlock_irq(conf->hash_locks + hash);
+ 	return sh;
+ }
