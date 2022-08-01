@@ -2,191 +2,96 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2444C00144
-	for <linux-raid@archiver.kernel.org>; Fri, 29 Jul 2022 22:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5185C00144
+	for <linux-raid@archiver.kernel.org>; Mon,  1 Aug 2022 08:08:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239464AbiG2WtE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 29 Jul 2022 18:49:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40686 "EHLO
+        id S229725AbiHAIIG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 1 Aug 2022 04:08:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231290AbiG2WtC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 29 Jul 2022 18:49:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E84661054E;
-        Fri, 29 Jul 2022 15:49:01 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7F9E36069C;
-        Fri, 29 Jul 2022 22:49:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2029C433C1;
-        Fri, 29 Jul 2022 22:49:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659134940;
-        bh=LkvPfzYtfb9EjP1LAFWhigdFg66QIUbWSN0sx4uuD5U=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=rIhE8QZHqZkY2dVBmpIWzaOfDZb672NNgWXlQNsS69rJ8P3KUjxsDZxTUIxKDm9+u
-         G4NSbiizBSRcct7TwS6e2ZIInUXS/CxOnm4gIPY87wW7Jtw24BjnrqhoCQyFUmIrM8
-         pIgD8bPiju7uEAovlI/r7oc284DMDdcRyJpth8jltcEUr+3DGZJ0MkJnx/coSs1KXa
-         Tkmi8UxohvDSfh35guDxJ6pj5UvcoM06b0xoeWKrosAHmk7GoShC/efILj+LlrUep8
-         mO02f5HHBLOHTxHDhtmstuIe1keiTRFI7jkDANOxSr1wpb0r7q9NQz6r25kQVQA+7w
-         wjUHd6ZUu4ljQ==
-Received: by mail-yb1-f180.google.com with SMTP id e127so9757059yba.12;
-        Fri, 29 Jul 2022 15:49:00 -0700 (PDT)
-X-Gm-Message-State: ACgBeo3/JwWBDBqMmq+8EQMAMtM9wVPsYeOHOK7ha75oKVsCOBaRR/R1
-        OgWlr6sjd9gXUWBObQ49NNauLQsdbxhp+KkcJcM=
-X-Google-Smtp-Source: AA6agR42WT30UcPMWcAnSW+BY9IARYILzVHBkx7ZY7ZWL7bp4J+x4UkZWsqyY/BK+Ob3MBki6HHkRAC0sguKu/PL3pw=
-X-Received: by 2002:a25:9d8c:0:b0:676:cd19:b236 with SMTP id
- v12-20020a259d8c000000b00676cd19b236mr2019179ybp.257.1659134939828; Fri, 29
- Jul 2022 15:48:59 -0700 (PDT)
+        with ESMTP id S229555AbiHAIIE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 1 Aug 2022 04:08:04 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDFFB18E07
+        for <linux-raid@vger.kernel.org>; Mon,  1 Aug 2022 01:08:03 -0700 (PDT)
+Received: from dggpemm500021.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Lx9cg4t5VzWfnD;
+        Mon,  1 Aug 2022 16:04:03 +0800 (CST)
+Received: from dggpemm500014.china.huawei.com (7.185.36.153) by
+ dggpemm500021.china.huawei.com (7.185.36.109) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 1 Aug 2022 16:07:43 +0800
+Received: from [10.174.177.211] (10.174.177.211) by
+ dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 1 Aug 2022 16:07:42 +0800
+Message-ID: <3b232f33-f2f7-dced-b823-302ea0647894@huawei.com>
+Date:   Mon, 1 Aug 2022 16:07:42 +0800
 MIME-Version: 1.0
-References: <20220727210600.120221-1-logang@deltatee.com> <20220727210600.120221-2-logang@deltatee.com>
- <YuKZmloAcZWY5of8@infradead.org>
-In-Reply-To: <YuKZmloAcZWY5of8@infradead.org>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 29 Jul 2022 15:48:48 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4jtiuNPzC2aK-Jo80X15AWdYi7HQ2n7YWqVP6Uux3hYg@mail.gmail.com>
-Message-ID: <CAPhsuW4jtiuNPzC2aK-Jo80X15AWdYi7HQ2n7YWqVP6Uux3hYg@mail.gmail.com>
-Subject: Re: [PATCH 1/5] md/raid5: Refactor raid5_get_active_stripe()
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.3
+Subject: Re: [PATCH 1/5 v2] parse_layout_faulty: fix memleak
+To:     Jes Sorensen <jes@trained-monkey.org>,
+        <linux-raid@vger.kernel.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>
+CC:     <linfeilong@huawei.com>, <lixiaokeng@huawei.com>
+References: <fd86d427-2d3e-b337-6de8-d70dcbbd6ce1@huawei.com>
+ <00ae6b42-b561-6542-0421-4ab8542d5d75@huawei.com>
+ <e4affbf6-621c-4bdd-b8dd-b4a60ef1b0a6@trained-monkey.org>
+From:   Wu Guanghao <wuguanghao3@huawei.com>
+In-Reply-To: <e4affbf6-621c-4bdd-b8dd-b4a60ef1b0a6@trained-monkey.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.177.211]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpemm500014.china.huawei.com (7.185.36.153)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jul 28, 2022 at 7:13 AM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Wed, Jul 27, 2022 at 03:05:56PM -0600, Logan Gunthorpe wrote:
-> > Refactor the raid5_get_active_stripe() to read more linearly in
-> > the order it's typically executed.
-> >
-> > The init_stripe() call is called if a free stripe is found and the
-> > function is exited early which removes a lot of if (sh) checks and
-> > unindents the following code.
-> >
-> > Remove the while loop in favour of the 'goto retry' pattern, which
-> > reduces indentation further. And use a 'goto wait_for_stripe' instead
-> > of an additional indent seeing it is the unusual path and this makes
-> > the code easier to read.
-> >
-> > No functional changes intended. Will make subsequent changes
-> > in patches easier to understand.
->
-> I find the new loop even more confusing than the old one.  I'd go
-> with something like the version below (on top of the whol md-next tree
-> that pulled this in way too fast..)
 
-This looks good to me. Christoph, would you mind send official patch
-for this?
 
-Thanks,
-Song
+在 2022/7/29 5:15, Jes Sorensen 写道:
+> On 6/8/22 23:06, Wu Guanghao wrote:
+>> char *m is allocated by xstrdup but not free() before return, will cause
+>> a memory leak.
+>>
+>> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+>> ---
+>>  util.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+> 
+> Hi Wu
+> 
+> This no longer seems to apply, would you mind rebasing and resending the
+> series?
+> 
+> Thanks,
+> Jes
+OK, I will rebase and resend later.
 
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 4456ac51f7c53..cd8ec4995a49b 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -811,54 +811,54 @@ static struct stripe_head *__raid5_get_active_stripe(struct r5conf *conf,
->
->         spin_lock_irq(conf->hash_locks + hash);
->
-> -retry:
-> -       if (!noquiesce && conf->quiesce) {
-> -               /*
-> -                * Must release the reference to batch_last before waiting,
-> -                * on quiesce, otherwise the batch_last will hold a reference
-> -                * to a stripe and raid5_quiesce() will deadlock waiting for
-> -                * active_stripes to go to zero.
-> -                */
-> -               if (ctx && ctx->batch_last) {
-> -                       raid5_release_stripe(ctx->batch_last);
-> -                       ctx->batch_last = NULL;
-> -               }
-> -
-> -               wait_event_lock_irq(conf->wait_for_quiescent, !conf->quiesce,
-> -                                   *(conf->hash_locks + hash));
-> -       }
-> +       for (;;) {
-> +               if (!noquiesce && conf->quiesce) {
-> +                       /*
-> +                        * Must release the reference to batch_last before
-> +                        * waiting on quiesce, otherwise the batch_last will
-> +                        * hold a reference to a stripe and raid5_quiesce()
-> +                        * will deadlock waiting for active_stripes to go to
-> +                        * zero.
-> +                        */
-> +                       if (ctx && ctx->batch_last) {
-> +                               raid5_release_stripe(ctx->batch_last);
-> +                               ctx->batch_last = NULL;
-> +                       }
->
-> -       sh = find_get_stripe(conf, sector, conf->generation - previous, hash);
-> -       if (sh)
-> -               goto out;
-> +                       wait_event_lock_irq(conf->wait_for_quiescent,
-> +                                           !conf->quiesce,
-> +                                           *(conf->hash_locks + hash));
-> +               }
->
-> -       if (test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state))
-> -               goto wait_for_stripe;
-> +               sh = find_get_stripe(conf, sector, conf->generation - previous,
-> +                                    hash);
-> +               if (sh)
-> +                       break;
->
-> -       sh = get_free_stripe(conf, hash);
-> -       if (sh) {
-> -               r5c_check_stripe_cache_usage(conf);
-> -               init_stripe(sh, sector, previous);
-> -               atomic_inc(&sh->count);
-> -               goto out;
-> -       }
-> +               if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
-> +                       sh = get_free_stripe(conf, hash);
-> +                       if (sh) {
-> +                               r5c_check_stripe_cache_usage(conf);
-> +                               init_stripe(sh, sector, previous);
-> +                               atomic_inc(&sh->count);
-> +                               break;
-> +                       }
->
-> -       if (!test_bit(R5_DID_ALLOC, &conf->cache_state))
-> -               set_bit(R5_ALLOC_MORE, &conf->cache_state);
-> +                       if (!test_bit(R5_DID_ALLOC, &conf->cache_state))
-> +                               set_bit(R5_ALLOC_MORE, &conf->cache_state);
-> +               }
->
-> -wait_for_stripe:
-> -       if (noblock)
-> -               goto out;
-> +               if (noblock)
-> +                       break;
->
-> -       set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
-> -       r5l_wake_reclaim(conf->log, 0);
-> -       wait_event_lock_irq(conf->wait_for_stripe,
-> -                           is_inactive_blocked(conf, hash),
-> -                           *(conf->hash_locks + hash));
-> -       clear_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
-> -       goto retry;
-> +               set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
-> +               r5l_wake_reclaim(conf->log, 0);
-> +               wait_event_lock_irq(conf->wait_for_stripe,
-> +                                   is_inactive_blocked(conf, hash),
-> +                                   *(conf->hash_locks + hash));
-> +               clear_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
-> +       }
->
-> -out:
->         spin_unlock_irq(conf->hash_locks + hash);
->         return sh;
->  }
+Wu
+> 
+>> diff --git a/util.c b/util.c
+>> index cc94f96e..46b04afb 100644
+>> --- a/util.c
+>> +++ b/util.c
+>> @@ -427,8 +427,11 @@ int parse_layout_faulty(char *layout)
+>>         int ln = strcspn(layout, "0123456789");
+>>         char *m = xstrdup(layout);
+>>         int mode;
+>> +
+>>         m[ln] = 0;
+>>         mode = map_name(faultylayout, m);
+>> +       free(m);
+>> +
+>>         if (mode == UnSet)
+>>                 return -1;
+>>
+>> --
+>> 2.27.0
+> 
+> .
+> 
