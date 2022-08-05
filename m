@@ -2,122 +2,91 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DF46C00140
-	for <linux-raid@archiver.kernel.org>; Fri,  5 Aug 2022 10:03:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BABBC00140
+	for <linux-raid@archiver.kernel.org>; Fri,  5 Aug 2022 10:06:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236370AbiHEKDB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 5 Aug 2022 06:03:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57382 "EHLO
+        id S237056AbiHEKGi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 5 Aug 2022 06:06:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232412AbiHEKC7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 Aug 2022 06:02:59 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9265A896
-        for <linux-raid@vger.kernel.org>; Fri,  5 Aug 2022 03:02:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1659693778; x=1691229778;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=n74WVAtQIHYaasHKci+cRlH5R/ZWZLJdeX0a5cMcJlk=;
-  b=Z1CglA6bqbpPEOBZr6Pfl+4VQet+56+JwwLEK0XWhz7GtXZmhOUVNbtX
-   9PWjWlTG6zhBUQzhmRFQ7DgdxbHGojmzCOVm1OIl+TO8+pNPy0/Bu+o+h
-   1EBbD+gLNYpKUfdAcS75YnrkXTAObEerfxy5GYRdGNx2x7I3J97Aupyug
-   t3mvcmm4jWWCRcY6tjpVy75Q5oqNH7EBhM/SMEtQ3ihTRXI7IG6SbGeUo
-   WL8UsKTbBUDpWVIqgkxrnrQw7s54GM3SseeSwOb5NiZ7tOUmzuIvFyeAN
-   QujDfguX9FMU+T4AqMzkkcEyaXVLG2UqrBwOkjsHFLdHsMcvmdjDCL2BC
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10429"; a="290942966"
-X-IronPort-AV: E=Sophos;i="5.93,216,1654585200"; 
-   d="scan'208";a="290942966"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Aug 2022 03:02:57 -0700
-X-IronPort-AV: E=Sophos;i="5.93,216,1654585200"; 
-   d="scan'208";a="579449001"
-Received: from ktanska-mobl1.ger.corp.intel.com (HELO intel.linux.com) ([10.213.19.214])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Aug 2022 03:02:56 -0700
-Date:   Fri, 5 Aug 2022 12:02:53 +0200
-From:   Kinga Tanska <kinga.tanska@linux.intel.com>
-To:     Coly Li <colyli@suse.de>, Hannes Reinecke <hare@suse.de>
-Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 19/23] mdadm: enable Intel Alderlake RSTe configuration
-Message-ID: <20220805120119.00000087@intel.linux.com>
-In-Reply-To: <20220728122101.28744-20-colyli@suse.de>
-References: <20220728122101.28744-1-colyli@suse.de>
- <20220728122101.28744-20-colyli@suse.de>
-X-Mailer: Claws Mail 3.19.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+        with ESMTP id S232412AbiHEKGh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 Aug 2022 06:06:37 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9147B6715E
+        for <linux-raid@vger.kernel.org>; Fri,  5 Aug 2022 03:06:36 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id o22so2720936edc.10
+        for <linux-raid@vger.kernel.org>; Fri, 05 Aug 2022 03:06:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=2Nvxo5qXuobDV2MK+2hopUCdKoWqYOZODw81A6GIbaA=;
+        b=ccgyWBtWHMHpG2rhFmraPuRS+Ngv2nYFsKypIjwIYjxQgi9ThpefgPo8+hJiwU0HfB
+         zCZ2EOxuVlrcMQnCntuAXS+uSogGuSx5xlbJ/VODd+Z1gWqPkMdnFOXgnziapmSKTNNd
+         GZ/pArvxy3hQGRBjIe9PLP6e0R3NyDyY9pzl+3kAJFvlBEPrdoB4U8uiW/HsW3Hz69XZ
+         mJR6Vuo1vnXZd5q7SRFBNt3e1clwghk3Mc6UYx8ewBaNfFTzVF4yA0ARx8SrNB1B2jir
+         19T/Buj1qcnXIPFi9zmWVi6As0jy/tpBFVciIhbBHkl1ewhPp2ItMFkpduWy65UUIWDi
+         /r1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc;
+        bh=2Nvxo5qXuobDV2MK+2hopUCdKoWqYOZODw81A6GIbaA=;
+        b=RB9QQlu0sv+7bMLU6JrfVeo9VuqQM6iukOiFFR65/Pbr85NOgCKfQSmBnf7F+Ff+5B
+         8uFrb50qlj5v5W8nFILgZ/ZhfFNVO/WVp4BcqwJlsvlY6uwtcaQ1feND5gcTuwtvX9ZY
+         8KBv9j9E8BXS2dSdbdTYKn106VTfZ47cdKhsf9QExVVOc/Z048o5rH7ERatRfeGGJ8n7
+         JEGtO+UCFMllJgBZh+cjSbEJ1e4OEZ6hAa7QgnyLIxvIRGwohO/ccwLCsTAzm5dh07OL
+         RS48x61q1KKk6xpv85Aezk5szohdqNskHkZhypN4/3bp82k7Dsc2y+D3PgPHzazY5LBa
+         vFVQ==
+X-Gm-Message-State: ACgBeo2Iy4vqVz3O1PjjmyI9Coq4tbr4R4lz0F2gSi+QhMsVxQM+HxpC
+        ifpqec+28vj9Jd+jNLd3WmKoIjV5Leg=
+X-Google-Smtp-Source: AA6agR71L2rwv4D733ED6S8c6G5ruujdYfk1zA45Vy9etl7RmDrcT7UK9pIzvFVcjx74Vy/wrFEmyQ==
+X-Received: by 2002:a05:6402:2741:b0:434:fe8a:1f96 with SMTP id z1-20020a056402274100b00434fe8a1f96mr6033430edd.331.1659693994638;
+        Fri, 05 Aug 2022 03:06:34 -0700 (PDT)
+Received: from localhost-live.home.oldium.net (smtp.home.oldium.net. [77.48.26.242])
+        by smtp.gmail.com with ESMTPSA id ca11-20020a170906a3cb00b007308812ce89sm1369206ejb.168.2022.08.05.03.06.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Aug 2022 03:06:34 -0700 (PDT)
+From:   =?UTF-8?q?Old=C5=99ich=20Jedli=C4=8Dka?= <oldium.pro@gmail.com>
+To:     linux-raid@vger.kernel.org
+Cc:     =?UTF-8?q?Old=C5=99ich=20Jedli=C4=8Dka?= <oldium.pro@gmail.com>
+Subject: [PATCH 0/1] enable Intel Alderlake RST VMD configuration
+Date:   Fri,  5 Aug 2022 12:05:44 +0200
+Message-Id: <20220805100545.9369-1-oldium.pro@gmail.com>
+X-Mailer: git-send-email 2.37.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 28 Jul 2022 20:20:57 +0800
-Coly Li <colyli@suse.de> wrote:
-
-> From: Hannes Reinecke <hare@suse.de>
-> 
-> Alderlake has a slightly different RST configuration; the UEFI
-> variable is name 'RstVmdV', and the AHCI controller shows up as
-> a child device of the VMD bridge, but continues to use the 'AHCI HBA'
-> PCI class (and not the RAID class as RSTe would normally do).
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Acked-by: Coly Li <colyli@suse.de>
-> ---
->  platform-intel.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/platform-intel.c b/platform-intel.c
-> index 5a8729e7..a4d55a38 100644
-> --- a/platform-intel.c
-> +++ b/platform-intel.c
-> @@ -512,12 +512,14 @@ static const struct imsm_orom
-> *find_imsm_hba_orom(struct sys_dev *hba) #define AHCI_PROP "RstSataV"
->  #define AHCI_SSATA_PROP "RstsSatV"
->  #define AHCI_TSATA_PROP "RsttSatV"
-> +#define AHCI_RST_PROP "RstVmdV"
->  #define VMD_PROP "RstUefiV"
->  
->  #define VENDOR_GUID \
->  	EFI_GUID(0x193dfefa, 0xa445, 0x4302, 0x99, 0xd8, 0xef, 0x3a,
-> 0xad, 0x1a, 0x04, 0xc6) 
->  #define PCI_CLASS_RAID_CNTRL 0x010400
-> +#define PCI_CLASS_SATA_HBA 0x010601
->  
->  static int read_efi_var(void *buffer, ssize_t buf_size,
->  			const char *variable_name, struct efi_guid
-> guid) @@ -604,7 +606,8 @@ const struct imsm_orom
-> *find_imsm_efi(struct sys_dev *hba) struct imsm_orom orom;
->  	struct orom_entry *ret;
->  	static const char * const sata_efivars[] = {AHCI_PROP,
-> AHCI_SSATA_PROP,
-> -						    AHCI_TSATA_PROP};
-> +						    AHCI_TSATA_PROP,
-> +						    AHCI_RST_PROP};
->  	unsigned long i;
->  
->  	if (check_env("IMSM_TEST_AHCI_EFI") ||
-> check_env("IMSM_TEST_SCU_EFI")) @@ -622,7 +625,8 @@ const struct
-> imsm_orom *find_imsm_efi(struct sys_dev *hba) 
->  		return NULL;
->  	case SYS_DEV_SATA:
-> -		if (hba->class != PCI_CLASS_RAID_CNTRL)
-> +		if (hba->class != PCI_CLASS_RAID_CNTRL &&
-> +		    hba->class != PCI_CLASS_SATA_HBA)
->  			return NULL;
->  
->  		for (i = 0; i < ARRAY_SIZE(sata_efivars); i++) {
-
-
 Hi,
 
-This patch causes a regression. I've checked how SATA controllers will
-be visible in --detail-platform output for IMSM. If RAID mode will be
-turned on for one of the SATA controllers, rest of them will be also
-visible as supported ones.
-Please analyze this scenario.
+I was testing RAID 0 on my Dell Precision 3570 with Intel i7-1255U
+Alderlake processor. The mdadm tool did not work initially (the
+RAID was not recognised), but I was able to get the RAID working when
+I simply set IMSM_NO_PLATFORM=1. Then I tracked the issue down to UEFI
+variables and discovered that the platform newly uses the 'RstVmdV'
+name. This exactly same variable was used in recent patch series called
+"mdadm-CI for-jes/20220728", so I updated the code to recognise the new
+variable name also for VMD controller case. I then verified the change
+by first running it in a debugger and then by putting it to initrd on
+Fedora 36 (kernel 5.17). The startup was fine, the RAID 0 was correctly
+setup.
+
+I based my work on top of "mdadm-CI for-jes/20220728" patch series,
+it is required in order to apply the patch.
 
 Regards,
-Kinga Tanska
+Oldrich.
+
+Oldřich Jedlička (1):
+  mdadm: enable Intel Alderlake RST VMD configuration
+
+ platform-intel.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+
+-- 
+2.37.1
+
