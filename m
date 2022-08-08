@@ -2,69 +2,102 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C202C19F2A
-	for <linux-raid@archiver.kernel.org>; Sun,  7 Aug 2022 20:41:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2C4FC00140
+	for <linux-raid@archiver.kernel.org>; Mon,  8 Aug 2022 10:03:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231411AbiHGUlb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 7 Aug 2022 16:41:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51158 "EHLO
+        id S234685AbiHHKD6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 8 Aug 2022 06:03:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229507AbiHGUla (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 7 Aug 2022 16:41:30 -0400
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A39562E6
-        for <linux-raid@vger.kernel.org>; Sun,  7 Aug 2022 13:41:28 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1659904882; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=ApAXEeuhh5boFUFeKggjJJVxCngdM5jAfkYJdCrJ7Z99A/n6p9RV/5RB2QKhakZYFYl6JOmCt2Q+IFrUAHMo+E+AKsNjt3SBF7PGxnuKa3FaGVTIc8NIxDXRfqy3eAl2PhftVf+ye2OEW9fbw/fg5zENcYalOlT/QyhllQQUDdU=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1659904882; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=Q8YQLSW2kGgNhj2zyTW1h7/zm/WQZqN3zKRBstgh/CQ=; 
-        b=I0x6OqtkjzWLOXEKzrdeqDYZpTp0Ycz7Q3J+CFCGfT5bLMU3PU1X8YTZ7Lv9YH/58pHs1TcY73Pz1gbCCSX1XM8eEHqK72p0hf34tFH15E9+nFSiYJ2uK35r+SLiRa2OJ6i2Dxa+ZlRulDFNY/AKN23WGYNF4rbr/mTfgJ2tHy8=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [172.20.4.58] (207.253.54.47 [207.253.54.47]) by mx.zoho.eu
-        with SMTPS id 1659904879667446.9684691903062; Sun, 7 Aug 2022 22:41:19 +0200 (CEST)
-Message-ID: <9b885a13-21cf-3c9a-f320-c047301294de@trained-monkey.org>
-Date:   Sun, 7 Aug 2022 16:41:18 -0400
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
+        with ESMTP id S232740AbiHHKD4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 8 Aug 2022 06:03:56 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3795247
+        for <linux-raid@vger.kernel.org>; Mon,  8 Aug 2022 03:03:54 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id B21D420B28;
+        Mon,  8 Aug 2022 10:03:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1659953033; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7jxFz7wcX5MOXDf2DCL2z47CKzQ4W5Nd+02cSBmlkXM=;
+        b=OZozGDLXptdOytGIGgYe4f/Pw1iY4QxFD+RiIT4ybqlXe9zNv98hNDnsTlq+85h5LeUUJx
+        ZPDY3OrgdugHIDRFCbOn6wfBinozWD88AU6eKNfZ5sr41XVFiatCLmk1jvxgpt++2MQBya
+        Uab27g7kM9Om+RGTg3RolhzQGG4Y14E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1659953033;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7jxFz7wcX5MOXDf2DCL2z47CKzQ4W5Nd+02cSBmlkXM=;
+        b=nxAzz4TCPNXRzG1o9cei8RtmjBAa5+Qwyxgr9IdmgLUs639FhlaObwo+YlvgYo6wfx5sNA
+        qBxr600DZYPr3RBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E08EC13A7C;
+        Mon,  8 Aug 2022 10:03:52 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 8YJkK4jf8GIefgAAMHmgww
+        (envelope-from <colyli@suse.de>); Mon, 08 Aug 2022 10:03:52 +0000
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
 Subject: Re: [PATCH v3] Grow: Split Grow_reshape into helper function
-Content-Language: en-US
-To:     Mateusz Kusiak <mateusz.kusiak@intel.com>,
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <9b885a13-21cf-3c9a-f320-c047301294de@trained-monkey.org>
+Date:   Mon, 8 Aug 2022 18:03:47 +0800
+Cc:     Mateusz Kusiak <mateusz.kusiak@intel.com>,
         linux-raid@vger.kernel.org
-Cc:     colyli@suse.de
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <2622AABD-75DC-41D4-9F1E-E958463E9FD0@suse.de>
 References: <20220609074101.14132-1-mateusz.kusiak@intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20220609074101.14132-1-mateusz.kusiak@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+ <9b885a13-21cf-3c9a-f320-c047301294de@trained-monkey.org>
+To:     Jes Sorensen <jes@trained-monkey.org>
+X-Mailer: Apple Mail (2.3696.100.31)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 6/9/22 03:41, Mateusz Kusiak wrote:
-> Grow_reshape should be split into helper functions given its size.
-> - Add helper function for preparing reshape on external metadata.
-> - Close cfd file descriptor.
-> 
-> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
-> ---
-> 
-> Changes since v2:
-> - removed dot from commit message
-> - formatted commit description as a list
-> - got rid of returning -1 in prepare_external_reshape()
-> - changed "return" section in prepare_external_reshape() description
 
-Hi Mateusz,
 
-Changes look good to me, but it no longer applies. Mind sending an 
+> 2022=E5=B9=B48=E6=9C=888=E6=97=A5 04:41=EF=BC=8CJes Sorensen =
+<jes@trained-monkey.org> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> On 6/9/22 03:41, Mateusz Kusiak wrote:
+>> Grow_reshape should be split into helper functions given its size.
+>> - Add helper function for preparing reshape on external metadata.
+>> - Close cfd file descriptor.
+>> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
+>> ---
+>> Changes since v2:
+>> - removed dot from commit message
+>> - formatted commit description as a list
+>> - got rid of returning -1 in prepare_external_reshape()
+>> - changed "return" section in prepare_external_reshape() description
+>=20
+> Hi Mateusz,
+>=20
+> Changes look good to me, but it no longer applies. Mind sending an =
 updated version?
 
-Thanks,
-Jes
+Hi Jes,
+
+Please check the version I post to you in series =E2=80=9Cmdadm-CI =
+for-jes/20220728: patches for merge=E2=80=9D (Message-Id: =
+<20220728122101.28744-1-colyli@suse.de>), the patch in this series is =
+rebased and confirmed with Mateusz, it could be applied to upstream =
+mdadm.
+
+Thanks.
+
+Coly Li
 
