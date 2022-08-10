@@ -2,155 +2,150 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 799D4C00140
-	for <linux-raid@archiver.kernel.org>; Wed, 10 Aug 2022 07:03:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4A18C25B07
+	for <linux-raid@archiver.kernel.org>; Wed, 10 Aug 2022 17:16:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231441AbiHJHDJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 10 Aug 2022 03:03:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56572 "EHLO
+        id S233442AbiHJRQe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 10 Aug 2022 13:16:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230119AbiHJHDI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 Aug 2022 03:03:08 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B72F274DF1
-        for <linux-raid@vger.kernel.org>; Wed, 10 Aug 2022 00:03:06 -0700 (PDT)
-Received: from host86-128-157-135.range86-128.btcentralplus.com ([86.128.157.135] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1oLfk8-0001d5-7g;
-        Wed, 10 Aug 2022 08:03:04 +0100
-Message-ID: <d2901788-91bd-265f-e016-89496e9b1c74@youngman.org.uk>
-Date:   Wed, 10 Aug 2022 08:03:02 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: mirroring existing boot drive sanity check
-Content-Language: en-GB
-To:     David T-G <davidtg-robot@justpickone.org>,
-        linux-raid@vger.kernel.org
-References: <8319a7ea67dc601c8ca4556ff15702d5@justpickone.org>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <8319a7ea67dc601c8ca4556ff15702d5@justpickone.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S233446AbiHJRPx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 Aug 2022 13:15:53 -0400
+X-Greylist: delayed 1200 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 10 Aug 2022 10:15:47 PDT
+Received: from new1-smtp.messagingengine.com (new1-smtp.messagingengine.com [66.111.4.221])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA97E60507;
+        Wed, 10 Aug 2022 10:15:47 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailnew.nyi.internal (Postfix) with ESMTP id 5AA815808B4;
+        Wed, 10 Aug 2022 12:35:55 -0400 (EDT)
+Received: from imap50 ([10.202.2.100])
+  by compute3.internal (MEProxy); Wed, 10 Aug 2022 12:35:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        colorremedies.com; h=cc:cc:content-type:date:date:from:from
+        :in-reply-to:message-id:mime-version:reply-to:sender:subject
+        :subject:to:to; s=fm1; t=1660149355; x=1660152955; bh=a5G2IQ23cL
+        Cu11/Dp61pjDw8jpOTjVuQZnVVwZuO120=; b=E5rcuw1Lzya7Hd9QgncERZJ+DM
+        3erv7Qs5pOlJ3aUk2u5R1Drx14Ej4xg9OFUX7RDcCfNpYFT/me+V7Ihsez/rdFfB
+        +56KLWTrqZBZcsPoDnfBY8reNZ+iyqRghhF7py4WzVd5FHuRo/O+nOH0ZM7uInAs
+        79QkukhEk6Ny3ntzeYWXr7f2B2+h1o0h/SiFTN5ubuJ6yshvbpm3mAA1368E8GLB
+        xEEGHdGJDiL+yfTJ64cNKY7TXY9jWUfGNJYymA5wNTJdMtf58p2Jmp32dclTOSzR
+        igoVEauuJ1Vp8M4cHOlVB19/ThpVOgog8r4iRdsdaHV/JSrby2HfJsjMN9/Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:message-id:mime-version
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1660149355; x=
+        1660152955; bh=a5G2IQ23cLCu11/Dp61pjDw8jpOTjVuQZnVVwZuO120=; b=i
+        QAlnvmltaI0+qqHZDEFRzJWpwhuxxw7oRyzuJbZUTBNRthP/6TGX5EtwfuZp0nFp
+        KLvyN2iz8RWxhBe6hLittmTZXZL2cKVFyQKVgItsCQYXl/dOytlP7qTebCIQP3v8
+        j18DXXOY9Sa9EZGKh/8dd41dPZPMNUDYzhpRVoZwgdfvXLjL6sUgm9mKqEzpUEtU
+        +NWZfGeM+UmLOHUYtRVHhA6jW/G9kvIu/MAyWU/YsUmGHQU4AMF+ruR8lbeeyH5N
+        6ohQGDpy0yjJlZWdBXkHNydNje37EwzzYgkBId7tOlHxt9saKkHo4u2szgHz5ivR
+        xEb22wBUL6ybtSGiGwjkQ==
+X-ME-Sender: <xms:at7zYihx_unb8Y37UslQb4rHWqNmFqyKW6Xqie9-5BQ9TdhFf6BIXQ>
+    <xme:at7zYjA61oOTOvUCq0Ik4EkLyFhQ0Oiqf-im02yPtZcw78osMtmD2Um4Et1SJbTRW
+    wbHLfMmxYt7p6dcyLg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdegvddguddttdcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enogfuuhhsphgvtghtffhomhgrihhnucdlgeelmdenucfjughrpefofgggkfffhffvvefu
+    tgesthdtredtreertdenucfhrhhomhepfdevhhhrihhsucfouhhrphhhhidfuceolhhish
+    htshestgholhhorhhrvghmvgguihgvshdrtghomheqnecuggftrfgrthhtvghrnhepffei
+    gfefgeefleejfedtudelieetfefhtefhteejkefhtdevtdeufeffffdvteelnecuffhomh
+    grihhnpehhthhtphgujhhouhhrnhgrlhgurghuughithgurghnughpohhsthhgrhgvshhq
+    lhdrihhopdhgohhoghhlvgdrtghomhdpkhgvrhhnvghlrdhorhhgpdhkvghrnhgvlhdrug
+    hknecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheplhhi
+    shhtshestgholhhorhhrvghmvgguihgvshdrtghomh
+X-ME-Proxy: <xmx:at7zYqE-HtauFBCyQ9yJuM4ehPc1mXFdvQWtu1wf5fF_im_u0VIj4A>
+    <xmx:at7zYrS8dPYG12zhatdeHSkEgAYfo36uF9UmvRoWZ6qLARhaicMLWQ>
+    <xmx:at7zYvzUcRunktnbi1VaVsyMdbCty0n-7JoscqAxHhEsWhTVZNbSkQ>
+    <xmx:a97zYq8FLEaBP3xE5IHCoY-YAJ7q5K6Ngc_M9zmPRtT9l2DrIw77-w>
+Feedback-ID: i06494636:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id C62691700082; Wed, 10 Aug 2022 12:35:54 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-811-gb808317eab-fm-20220801.001-gb808317e
+Mime-Version: 1.0
+Message-Id: <e38aa76d-6034-4dde-8624-df1745bb17fc@www.fastmail.com>
+Date:   Wed, 10 Aug 2022 12:35:34 -0400
+From:   "Chris Murphy" <lists@colorremedies.com>
+To:     "Btrfs BTRFS" <linux-btrfs@vger.kernel.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>,
+        linux-block@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Cc:     "Josef Bacik" <josef@toxicpanda.com>
+Subject: stalling IO regression in linux 5.12
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 09/08/2022 15:50, David T-G wrote:
-> Hi, all --
-> 
-> I think that this has been asked before, and so I think that I know 
-> where I'm
-> going, but before I take aim at my foot with a large-caliber mdadm ... :-)
-> 
-> I have an existing
-> 
->    diskfarm:~ # parted /dev/sda unit MiB print free
->    Model: ATA SanDisk SD6SB1M1 (scsi)
->    Disk /dev/sda: 122104MiB
->    Sector size (logical/physical): 512B/512B
->    Partition Table: gpt
->    Disk Flags: pmbr_boot
-> 
->    Number  Start     End        Size      File system     Name Flags
->            0.02MiB   1.00MiB    0.98MiB   Free Space
->     1      1.00MiB   33793MiB   33792MiB  linux-swap(v1)  diskfarm-swap 
-> swap
->     2      33793MiB  66561MiB   32768MiB  xfs             diskfarmsuse
->     3      66561MiB  99329MiB   32768MiB                  diskfarmknop 
-> legacy_boot
->     4      99329MiB  122104MiB  22775MiB  xfs             diskfarm-ssd
-> 
-> 128G SSD.  I have obtained a shiny new
-> 
->    diskfarm:~ # parted /dev/sde unit MiB print free
->    Model: ATA SATA SSD (scsi)
->    Disk /dev/sde: 244198MiB
->    Sector size (logical/physical): 512B/512B
->    Partition Table: gpt
->    Disk Flags:
-> 
->    Number  Start      End        Size       File system  Name Flags
->            0.02MiB    1.00MiB    0.98MiB    Free Space
->     1      1.00MiB    33793MiB   33792MiB                diskfarm-swap swap
->     2      33793MiB   66561MiB   32768MiB                diskfarmsuse
->     3      66561MiB   99329MiB   32768MiB                diskfarmknop 
-> legacy_boot
->     4      99329MiB   122104MiB  22775MiB                diskfarm-ssd
->            122104MiB  244198MiB  122094MiB  Free Space
-> 
-> 256G SSD to use as a mirror.  [You can ignore the sgdisk-copied partition
-> layout for the moment; that was a false start.]  My final-view plan is, in
-> fact, to replace the 128 with another 256 and grow the -ssd data partition.
-> 
-> For a typical mirror-an-existing, I think that I need to create all of my
-> slices and the [degraded] mirror on the new, copy over the old, boot 
-> from new,
-> and then treat old as just another disk to shove in.  There's the 
-> question of
-> making partitions larger for the RAID superblock info, though, and -- and
-> here's where I get confused -- even on the old disk when adding it in.
+CPU: Intel E5-2680 v3
+RAM: 128 G
+02:00.0 RAID bus controller [0104]: Broadcom / LSI MegaRAID SAS-3 3108 [Invader] [1000:005d] (rev 02), using megaraid_sas driver
+8 Disks: TOSHIBA AL13SEB600
 
-https://raid.wiki.kernel.org/index.php/Converting_an_existing_system
-> 
-> As you can see, I have no free space on the little guy.  I was thinking I'd
-> bump my slices larger on the new disk so that I have room to spare to copy
-> everything over, with the data slice a little less larger than it would 
-> have
-> been, but then ... I think I saw that I need to make the 2nd-drive slices
-> larger, too, so what do I do with the old guy?
 
-Yup. If your old system is full (or even if it isn't), if you're moving 
-a straight partition on to raid, it's easier just to create all your 
-slices new on the new system and move across.
+The problem exhibits as increasing load, increasing IO pressure (PSI), and actual IO goes to zero. It never happens on kernel 5.11 series, and always happens after 5.12-rc1 and persists through 5.18.0. There's a new mix of behaviors with 5.19, I suspect the mm improvements in this series might be masking the problem.
 
-If you really want to re-use the old drive, then you've got some maths 
-ahead of you ...
+The workload involves openqa, which spins up 30 qemu-kvm instances, and does a bunch of tests, generating quite a lot of writes: qcow2 files, and video in the form of many screenshots, and various log files, for each VM. These VMs are each in their own cgroup. As the problem begins, I see increasing IO pressure, and decreasing IO, for each qemu instance's cgroup, and the cgroups for httpd, journald, auditd, and postgresql. IO pressure goes to nearly ~99% and IO is literally 0.
 
-You need to allocate the planned partition to your raid.
-Then you create the raid, telling it to only use a space equal or less 
-than your original disk.
-Then you copy your original filesystem into the raid, except it probably 
-doesn't quite fit, so you have to shrink it (not a simple matter) or use 
-cp or rsync instead, equally unpleasant.
-Then you wipe your old drive and add it as the new raid member.
+The problem left unattended to progress will eventually result in a completely unresponsive system, with no kernel messages. It reproduces in the following configurations, the first two I provide links to full dmesg with sysrq+w:
 
-It's probably not hard. But it's got vastly more scope for error, 
-cock-up, fat-finger, or plain hardware hiccup. Is it worth it ...
-> 
-> And, in fact, does it even matter?  If I understand this correctly, I'll be
-> running entirely from the new disk in the mirror once this is done, and 
-> so it
-> doesn't matter whether I put the little old or the other big new in to 
-> fill out
-> the mirror.  If that's the case, then I don't really care about 
-> partition size
-> because I'm going to start with mirrored partitions.
+btrfs raid10 (native) on plain partitions [1]
+btrfs single/dup on dmcrypt on mdadm raid 10 and parity raid [2]
+XFS on dmcrypt on mdadm raid10 or parity raid
 
-Yup again. You're better off just putting in a new 256GB.
+I've started a bisect, but for some reason I haven't figured out I've started getting compiled kernels that don't boot the hardware. The failure is very early on such that the UUID for the root file system isn't found, but not much to go on as to why.[3] I have tested the first and last skipped commits in the bisect log below, they successfully boot a VM but not the hardware.
 
-Then you can just dd your old root (and whatever else) filesystem(s) 
-across, and grow them into the new space.
+Anyway, I'm kinda stuck at this point trying to narrow it down further. Any suggestions? Thanks.
 
-Plus your old drive is now just sitting there as a backup.
-> 
-> Oh, and just because I'm a glutton for punishment (even more than using 
-> this
-> stupid webmail because we're currently down my home directory disk on 
-> our mail
-> server and I'm impatient), if I'm essentially starting from scratch, 
-> should I
-> mirror the entire [yes, identical] drive and partition the metadevice,
-> *BSD-style, or mirror individual partitions?
-> 
-As my wife says about my driving, she trusts me, but there are too many 
-idiots out there. Advice is *ALWAYS* partition your hard drive. raid 
-couldn't care, but there are too many idiots out there that assume an 
-unpartitioned drive is empty, and will stomp on it without asking. It's 
-fallen off, but probably the biggest single cause of raid recoveries 
-here is "something overwrote my superblock with a partition table" or 
-the like - it's usually partition-related ...
+[1] btrfs raid10, plain partitions
+https://drive.google.com/file/d/1-oT3MX-hHYtQqI0F3SpgPjCIDXXTysLU/view?usp=sharing
 
-Cheers,
-Wol
+[2] btrfs single/dup, dmcrypt, mdadm raid10
+https://drive.google.com/file/d/1m_T3YYaEjBKUROz6dHt5_h92ZVRji9FM/view?usp=sharing
+
+[3] 
+$ git bisect log
+git bisect start
+# status: waiting for both good and bad commits
+# bad: [c03c21ba6f4e95e406a1a7b4c34ef334b977c194] Merge tag 'keys-misc-20210126' of git://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs
+git bisect bad c03c21ba6f4e95e406a1a7b4c34ef334b977c194
+# status: waiting for good commit(s), bad commit known
+# good: [f40ddce88593482919761f74910f42f4b84c004b] Linux 5.11
+git bisect good f40ddce88593482919761f74910f42f4b84c004b
+# bad: [df24212a493afda0d4de42176bea10d45825e9a0] Merge tag 's390-5.12-1' of git://git.kernel.org/pub/scm/linux/kernel/git/s390/linux
+git bisect bad df24212a493afda0d4de42176bea10d45825e9a0
+# good: [82851fce6107d5a3e66d95aee2ae68860a732703] Merge tag 'arm-dt-v5.12' of git://git.kernel.org/pub/scm/linux/kernel/git/soc/soc
+git bisect good 82851fce6107d5a3e66d95aee2ae68860a732703
+# good: [99f1a5872b706094ece117368170a92c66b2e242] Merge tag 'nfsd-5.12' of git://git.kernel.org/pub/scm/linux/kernel/git/cel/linux
+git bisect good 99f1a5872b706094ece117368170a92c66b2e242
+# bad: [9eef02334505411667a7b51a8f349f8c6c4f3b66] Merge tag 'locking-core-2021-02-17' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+git bisect bad 9eef02334505411667a7b51a8f349f8c6c4f3b66
+# bad: [9820b4dca0f9c6b7ab8b4307286cdace171b724d] Merge tag 'for-5.12/drivers-2021-02-17' of git://git.kernel.dk/linux-block
+git bisect bad 9820b4dca0f9c6b7ab8b4307286cdace171b724d
+# good: [bd018bbaa58640da786d4289563e71c5ef3938c7] Merge tag 'for-5.12/libata-2021-02-17' of git://git.kernel.dk/linux-block
+git bisect good bd018bbaa58640da786d4289563e71c5ef3938c7
+# skip: [203c018079e13510f913fd0fd426370f4de0fd05] Merge branch 'md-next' of https://git.kernel.org/pub/scm/linux/kernel/git/song/md into for-5.12/drivers
+git bisect skip 203c018079e13510f913fd0fd426370f4de0fd05
+# skip: [49d1ec8573f74ff1e23df1d5092211de46baa236] block: manage bio slab cache by xarray
+git bisect skip 49d1ec8573f74ff1e23df1d5092211de46baa236
+# bad: [73d90386b559d6f4c3c5db5e6bb1b68aae8fd3e7] nvme: cleanup zone information initialization
+git bisect bad 73d90386b559d6f4c3c5db5e6bb1b68aae8fd3e7
+# skip: [71217df39dc67a0aeed83352b0d712b7892036a2] block, bfq: make waker-queue detection more robust
+git bisect skip 71217df39dc67a0aeed83352b0d712b7892036a2
+# bad: [8358c28a5d44bf0223a55a2334086c3707bb4185] block: fix memory leak of bvec
+git bisect bad 8358c28a5d44bf0223a55a2334086c3707bb4185
+# skip: [3a905c37c3510ea6d7cfcdfd0f272ba731286560] block: skip bio_check_eod for partition-remapped bios
+git bisect skip 3a905c37c3510ea6d7cfcdfd0f272ba731286560
+# skip: [3c337690d2ebb7a01fa13bfa59ce4911f358df42] block, bfq: avoid spurious switches to soft_rt of interactive queues
+git bisect skip 3c337690d2ebb7a01fa13bfa59ce4911f358df42
+# skip: [3e1a88ec96259282b9a8b45c3f1fda7a3ff4f6ea] bio: add a helper calculating nr segments to alloc
+git bisect skip 3e1a88ec96259282b9a8b45c3f1fda7a3ff4f6ea
+# skip: [4eb1d689045552eb966ebf25efbc3ce648797d96] blk-crypto: use bio_kmalloc in blk_crypto_clone_bio
+git bisect skip 4eb1d689045552eb966ebf25efbc3ce648797d96
+
+
+--
+Chris Murphy
