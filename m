@@ -2,92 +2,86 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 296C1C25B0C
-	for <linux-raid@archiver.kernel.org>; Thu, 11 Aug 2022 17:19:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6627AC19F2A
+	for <linux-raid@archiver.kernel.org>; Thu, 11 Aug 2022 17:46:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235682AbiHKRTD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 11 Aug 2022 13:19:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53242 "EHLO
+        id S235510AbiHKRqh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 11 Aug 2022 13:46:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235538AbiHKRSg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 Aug 2022 13:18:36 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9D2699B7D;
-        Thu, 11 Aug 2022 10:14:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=SgHT/zfKxTbDAmqhpgq66pRNjKFLXPKimkzOnUBsB3Q=; b=CT3gsWB96MLXcXizgWnaQl7RFN
-        fWcF58gHWIJ13AWjQ2tkOF3/G4DPC3pyG6Ym8twKUUh/32oRa+MWBc8WgkgoMvPUYfmQhN1ZLzHAW
-        npsq3JGtpwRNmMqCcDtMLBzRykbBw7rW5NHlSLzlHO2Vi+tW3YEwM6fKi6CU7ZoTXq2qicCTvbms/
-        e+su+jq8lmb4FZ4wbf06y1esQfFQMST32BuUl8Klhyr0JhPK76cNO56Bq9BnI5N6ZsOW+845C8nYY
-        vygsLlqFDj1VeZvwbu2GZV8cYOA9IbaB3gV1y+vUHU71PwOusmkV7Pw9frMDwvd17alNaKS7fd+wG
-        FVv5OlQw==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1oMBlK-00EAyh-NK; Thu, 11 Aug 2022 11:14:27 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1oMBlI-000cRJ-EV; Thu, 11 Aug 2022 11:14:24 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
+        with ESMTP id S235193AbiHKRqg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 Aug 2022 13:46:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF77A025B;
+        Thu, 11 Aug 2022 10:46:36 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A87F161746;
+        Thu, 11 Aug 2022 17:46:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15A6EC4347C;
+        Thu, 11 Aug 2022 17:46:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660239995;
+        bh=ERpZlEJSnT2eqU2XoItuClL1ABvHKuD1I/5qTQERD9g=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=RBLDVeVA+dt+2L+u5iby39SqxlFaqE82Ch8xUqSvUOY5SvkKe9juEfwHAj/QmsYWI
+         5Fh363TEuu+p36FUmkpELZvX5i4EEWFzyxWyRpLR5/ONy9qaKdpCQYrb0dJlgvXFgA
+         iPyEjcFP0PL7AGP8jmV09luibvXZfXP2SEH/puyUuzIri9r79mh51savEToIpQNiXY
+         a0XSI6UYv1hzETkhrDc3ciZ4LdWWxvVVjjTGJwcYrIPadOELXd6K3hXQqyx/AaVSef
+         mIZuPN3y73PYa6ws5hhvUbBEKmgcu/NdHMa3HoXwzSsN+dWFe4G2aNZxKGCS7M5h5V
+         Wr0T5ZBA8Ff+A==
+Received: by mail-yb1-f181.google.com with SMTP id 7so29430682ybw.0;
+        Thu, 11 Aug 2022 10:46:35 -0700 (PDT)
+X-Gm-Message-State: ACgBeo2hHVsv9P3/DtIDe9BynG/uf7qPykurRKFZ0XJtNsokMeJCZ7zV
+        FnSM56uZxPk8YVtn/HVZwMSPjEsbVMeRSeSNDeg=
+X-Google-Smtp-Source: AA6agR4ZCEdl4tiVg2UOwg7/4Gz0jhe16HiQ1xftAjdC5QyxW8bGm2zu3wSIiXdd14XUgyywP9FeO0UipMyOZjUntyk=
+X-Received: by 2002:a25:2d5b:0:b0:67d:e14:7daa with SMTP id
+ s27-20020a252d5b000000b0067d0e147daamr350929ybe.561.1660239994038; Thu, 11
+ Aug 2022 10:46:34 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220811171417.147697-1-logang@deltatee.com> <20220811171417.147697-2-logang@deltatee.com>
+In-Reply-To: <20220811171417.147697-2-logang@deltatee.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 11 Aug 2022 10:46:22 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW66hmkAE=iWHt=F8PfFus_Q5_zB_nqPdZMKr=N2Ddfesg@mail.gmail.com>
+Message-ID: <CAPhsuW66hmkAE=iWHt=F8PfFus_Q5_zB_nqPdZMKr=N2Ddfesg@mail.gmail.com>
+Subject: Re: [PATCH 1/5] md: Flush workqueue md_rdev_misc_wq in md_alloc()
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
         Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 11 Aug 2022 11:14:17 -0600
-Message-Id: <20220811171417.147697-6-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220811171417.147697-1-logang@deltatee.com>
-References: <20220811171417.147697-1-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 5/5] md/raid5: Don't read ->active_stripes if it's not needed
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+        David Sloan <David.Sloan@eideticom.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The atomic_read() is not needed in many cases so only do
-the read after the first checks are done.
+On Thu, Aug 11, 2022 at 10:14 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> From: David Sloan <david.sloan@eideticom.com>
+>
+> A race condition still exists when removing and re-creating md devices
+> in test cases. However, it is only seen on some setups.
+>
+> The race condition was tracked down to a reference still being held
+> to the kobject by the rdev in the md_rdev_misc_wq which will be released
+> in rdev_delayed_delete().
+>
+> md_alloc() waits for previous deletions by waiting on the md_misc_wq,
+> but the md_rdev_misc_wq may still be holding a reference to a recently
+> removed device.
+>
+> To fix this, also flush the md_rdev_misc_wq in md_alloc().
+>
+> Signed-off-by: David Sloan <david.sloan@eideticom.com>
+> [logang@deltatee.com: rewrote commit message]
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/md/raid5.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Applied 1/5 to md-fixes.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7e7205bb40f1..0b73eeea1b19 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -789,15 +789,14 @@ struct stripe_request_ctx {
-  */
- static bool is_inactive_blocked(struct r5conf *conf, int hash)
- {
--	int active = atomic_read(&conf->active_stripes);
--
- 	if (list_empty(conf->inactive_list + hash))
- 		return false;
- 
- 	if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state))
- 		return true;
- 
--	return active < (conf->max_nr_stripes * 3 / 4);
-+	return (atomic_read(&conf->active_stripes) <
-+		(conf->max_nr_stripes * 3 / 4));
- }
- 
- struct stripe_head *raid5_get_active_stripe(struct r5conf *conf,
--- 
-2.30.2
-
+Thanks!
+Song
