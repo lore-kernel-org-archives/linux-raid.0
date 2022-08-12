@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B1CC00140
-	for <linux-raid@archiver.kernel.org>; Fri, 12 Aug 2022 14:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F32ECC00140
+	for <linux-raid@archiver.kernel.org>; Fri, 12 Aug 2022 15:08:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238408AbiHLOwp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 12 Aug 2022 10:52:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44200 "EHLO
+        id S238654AbiHLPIz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 12 Aug 2022 11:08:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229760AbiHLOwo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 Aug 2022 10:52:44 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F7301F2F4
-        for <linux-raid@vger.kernel.org>; Fri, 12 Aug 2022 07:52:43 -0700 (PDT)
+        with ESMTP id S238574AbiHLPIy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 Aug 2022 11:08:54 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 892EF9E109
+        for <linux-raid@vger.kernel.org>; Fri, 12 Aug 2022 08:08:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1660315963; x=1691851963;
+  t=1660316932; x=1691852932;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=0L1lz1gdP0a3JQIuqzz5Y3MBX765v5fKphxYq53tUys=;
-  b=VkZVRuio4HFXUsQW/VhchU82qMe4QHsTGivGuzSEKTYumvNcBf3D0qYv
-   ywfgEGXMIbgI2ptgxR1MhHoK7wAoAaid1grmwn69s3bzO0Hh4VdoDTFfI
-   E4AOTsj9wVhkpeHoHqGvIeUJgwu/NBxpizgbNBp+0471tTfQJMBYvYpPi
-   WKTNjz/+cC+Sddp+HLf/QiWr8e3ATWSYIrMQ/R1XxD7x6gukMfkTriESC
-   UPDr2RdLuo+kwrYL+zZ25gN6IaeSgsfsOIdabIu4a/b87Qjk0APh7wY5V
-   aLAOPQy+JTa8PEbBMcgYfLWcKXNgzi0c8tLw9zPcNVDsL4NUKR3gA7RW5
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10437"; a="317578511"
+  bh=TujHukmLxd9c24zWN3BagJ2nOHEoc+00VEkoSZcFizk=;
+  b=Hjm15Q2wK9WumJEaevd73TT8hHK6NZwei0hq50thdRHqnhkexAz+oNSZ
+   sm5gZita/gjsi/OrWs/i3JOR+3P+ddYOY5qvv1E93pQ1rlDMvZQM+nqyj
+   FgsJOZc9YfBGVfLO60GpN2C+wDWYXzvfwL4F9eXhIidZ1Yi/OdJ+tB1jD
+   po6nFAhGM2IrYd2EpkoG0BxqHWmZ0m16urMgFAJ6MTN6bUNjsG3I0pGna
+   UUTonNLLrXoxMIFvpv3VJcga2woJS8ejGUjKS3H/9mda5eP1CrB+HS94U
+   sSDMwY6JDM4IrGU2NHx1Mou5CdKSeER961vg2Vi5o0Xqfz+GLiSN8A+/k
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10437"; a="274666661"
 X-IronPort-AV: E=Sophos;i="5.93,233,1654585200"; 
-   d="scan'208";a="317578511"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2022 07:52:42 -0700
+   d="scan'208";a="274666661"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2022 08:08:51 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.93,233,1654585200"; 
-   d="scan'208";a="605934546"
+   d="scan'208";a="933744309"
 Received: from unknown (HELO localhost.elements.local) ([10.102.102.57])
-  by orsmga002.jf.intel.com with ESMTP; 12 Aug 2022 07:52:41 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 12 Aug 2022 08:08:49 -0700
 From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
 To:     linux-raid@vger.kernel.org
 Cc:     jes@trained-monkey.org
-Subject: [PATCH] mdadm: Replace obsolete usleep with nanosleep
-Date:   Fri, 12 Aug 2022 16:36:02 +0200
-Message-Id: <20220812143602.15338-1-mateusz.grzonka@intel.com>
+Subject: [PATCH v2] mdadm: Correct typos, punctuation and grammar in man
+Date:   Fri, 12 Aug 2022 16:52:12 +0200
+Message-Id: <20220812145212.16138-1-mateusz.grzonka@intel.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -50,313 +50,617 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-According to POSIX.1-2001, usleep is considered obsolete.
-Replace it with a wrapper that uses nanosleep, as recommended in man.
-Add handy macros for conversions between msec, usec and nsec.
-
 Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+Reviewed-by: Wol <anthony@youngman.org.uk>
 ---
- Assemble.c    |  2 +-
- Grow.c        |  4 ++--
- Manage.c      | 10 +++++-----
- managemon.c   |  8 ++++----
- mdadm.h       |  4 ++++
- mdmon.c       |  4 ++--
- super-intel.c |  6 +++---
- util.c        | 42 +++++++++++++++++++++++++++++++++---------
- 8 files changed, 54 insertions(+), 26 deletions(-)
+ mdadm.8.in | 178 ++++++++++++++++++++++++++---------------------------
+ 1 file changed, 88 insertions(+), 90 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 9eac9ce0..1f14175d 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1949,7 +1949,7 @@ out:
- 						break;
- 					close(mdfd);
- 				}
--				usleep(usecs);
-+				sleep_for(0, USEC_TO_NSEC(usecs), true);
- 				usecs <<= 1;
- 			}
- 		}
-diff --git a/Grow.c b/Grow.c
-index 8a242b0f..6610423a 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -954,7 +954,7 @@ int start_reshape(struct mdinfo *sra, int already_running,
- 			err = sysfs_set_str(sra, NULL, "sync_action",
- 					    "reshape");
- 			if (err)
--				sleep(1);
-+				sleep_for(1, 0, true);
- 		} while (err && errno == EBUSY && cnt-- > 0);
- 	}
- 	return err;
-@@ -5048,7 +5048,7 @@ int Grow_continue_command(char *devname, int fd,
- 			}
- 			st->ss->getinfo_super(st, content, NULL);
- 			if (!content->reshape_active)
--				sleep(3);
-+				sleep_for(3, 0, true);
- 			else
- 				break;
- 		} while (cnt-- > 0);
-diff --git a/Manage.c b/Manage.c
-index f789e0c1..150a684c 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -244,7 +244,7 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- 					    "array_state",
- 					    "inactive")) < 0 &&
- 		       errno == EBUSY) {
--			usleep(200000);
-+			sleep_for(0, MSEC_TO_NSEC(200), true);
- 			count--;
- 		}
- 		if (err) {
-@@ -328,7 +328,7 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- 		       sysfs_get_ll(mdi, NULL, "sync_max", &old_sync_max) == 0) {
- 			/* must be in the critical section - wait a bit */
- 			delay -= 1;
--			usleep(100000);
-+			sleep_for(0, MSEC_TO_NSEC(100), true);
- 		}
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 0be02e4a..f180c5c0 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -158,7 +158,7 @@ adding new spares and removing faulty devices.
+ .B Misc
+ This is an 'everything else' mode that supports operations on active
+ arrays, operations on component devices such as erasing old superblocks, and
+-information gathering operations.
++information-gathering operations.
+ .\"This mode allows operations on independent devices such as examine MD
+ .\"superblocks, erasing old superblocks and stopping active arrays.
  
- 		if (sysfs_set_str(mdi, NULL, "sync_action", "frozen") != 0)
-@@ -405,7 +405,7 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- 				 * quite started yet.  Wait a bit and
- 				 * check  'sync_action' to see.
- 				 */
--				usleep(10000);
-+				sleep_for(0, MSEC_TO_NSEC(10), true);
- 				sysfs_get_str(mdi, NULL, "sync_action", buf, sizeof(buf));
- 				if (strncmp(buf, "reshape", 7) != 0)
- 					break;
-@@ -447,7 +447,7 @@ done:
- 	count = 25; err = 0;
- 	while (count && fd >= 0 &&
- 	       (err = ioctl(fd, STOP_ARRAY, NULL)) < 0 && errno == EBUSY) {
--		usleep(200000);
-+		sleep_for(0, MSEC_TO_NSEC(200), true);
- 		count --;
- 	}
- 	if (fd >= 0 && err) {
-@@ -1105,7 +1105,7 @@ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
- 				ret = sysfs_unique_holder(devnm, rdev);
- 				if (ret < 2)
- 					break;
--				usleep(100 * 1000);	/* 100ms */
-+				sleep_for(0, MSEC_TO_NSEC(100), true);
- 			} while (--count > 0);
+@@ -231,12 +231,12 @@ mode to be assumed.
  
- 			if (ret == 0) {
-diff --git a/managemon.c b/managemon.c
-index 0e9bdf00..a7bfa8f6 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -207,7 +207,7 @@ static void replace_array(struct supertype *container,
- 	remove_old();
- 	while (pending_discard) {
- 		while (discard_this == NULL)
--			sleep(1);
-+			sleep_for(1, 0, true);
- 		remove_old();
- 	}
- 	pending_discard = old;
-@@ -568,7 +568,7 @@ static void manage_member(struct mdstat_ent *mdstat,
- 		updates = NULL;
- 		while (update_queue_pending || update_queue) {
- 			check_update_queue(container);
--			usleep(15*1000);
-+			sleep_for(0, MSEC_TO_NSEC(15), true);
- 		}
- 		replace_array(container, a, newa);
- 		if (sysfs_set_str(&a->info, NULL,
-@@ -822,7 +822,7 @@ static void handle_message(struct supertype *container, struct metadata_update *
- 	if (msg->len <= 0)
- 		while (update_queue_pending || update_queue) {
- 			check_update_queue(container);
--			usleep(15*1000);
-+			sleep_for(0, MSEC_TO_NSEC(15), true);
- 		}
+ .TP
+ .BR \-h ", " \-\-help
+-Display general help message or, after one of the above options, a
++Display a general help message or, after one of the above options, a
+ mode-specific help message.
  
- 	if (msg->len == 0) { /* ping_monitor */
-@@ -836,7 +836,7 @@ static void handle_message(struct supertype *container, struct metadata_update *
- 		wakeup_monitor();
+ .TP
+ .B \-\-help\-options
+-Display more detailed help about command line parsing and some commonly
++Display more detailed help about command-line parsing and some commonly
+ used options.
  
- 		while (monitor_loop_cnt - cnt < 0)
--			usleep(10 * 1000);
-+			sleep_for(0, MSEC_TO_NSEC(10), true);
- 	} else if (msg->len == -1) { /* ping_manager */
- 		struct mdstat_ent *mdstat = mdstat_read(1, 0);
+ .TP
+@@ -266,7 +266,7 @@ the exact meaning of this option in different contexts.
  
-diff --git a/mdadm.h b/mdadm.h
-index 09915a00..1c3bc9e3 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1707,6 +1707,10 @@ extern int cluster_get_dlmlock(void);
- extern int cluster_release_dlmlock(void);
- extern void set_dlm_hooks(void);
+ .TP
+ .BR \-c ", " \-\-config=
+-Specify the config file or directory.  If not specified, default config file
++Specify the config file or directory.  If not specified, the default config file
+ and default conf.d directory will be used.  See
+ .BR mdadm.conf (5)
+ for more details.
+@@ -379,7 +379,7 @@ When creating an array, the
+ .B homehost
+ will be recorded in the metadata.  For version-1 superblocks, it will
+ be prefixed to the array name.  For version-0.90 superblocks, part of
+-the SHA1 hash of the hostname will be stored in the later half of the
++the SHA1 hash of the hostname will be stored in the latter half of the
+ UUID.
  
-+#define MSEC_TO_NSEC(msec) ((msec) * 1000000)
-+#define USEC_TO_NSEC(usec) ((usec) * 1000)
-+extern void sleep_for(unsigned int sec, long nsec, bool wake_after_interrupt);
-+
- #define _ROUND_UP(val, base)	(((val) + (base) - 1) & ~(base - 1))
- #define ROUND_UP(val, base)	_ROUND_UP(val, (typeof(val))(base))
- #define ROUND_UP_PTR(ptr, base)	((typeof(ptr)) \
-diff --git a/mdmon.c b/mdmon.c
-index 5570574b..2f8e676f 100644
---- a/mdmon.c
-+++ b/mdmon.c
-@@ -99,7 +99,7 @@ static int clone_monitor(struct supertype *container)
- 	if (rc)
- 		return rc;
- 	while (mon_tid == -1)
--		usleep(10);
-+		sleep_for(0, USEC_TO_NSEC(10), true);
- 	pthread_attr_destroy(&attr);
+ When reporting information about an array, any array which is tagged
+@@ -388,7 +388,7 @@ for the given homehost will be reported as such.
+ When using Auto-Assemble, only arrays tagged for the given homehost
+ will be allowed to use 'local' names (i.e. not ending in '_' followed
+ by a digit string).  See below under
+-.BR "Auto Assembly" .
++.BR "Auto-Assembly" .
  
- 	mgr_tid = syscall(SYS_gettid);
-@@ -209,7 +209,7 @@ static void try_kill_monitor(pid_t pid, char *devname, int sock)
- 		rv = kill(pid, SIGUSR1);
- 		if (rv < 0)
- 			break;
--		usleep(200000);
-+		sleep_for(0, MSEC_TO_NSEC(200), true);
- 	}
- }
+ The special name "\fBany\fP" can be used as a wild card.  If an array
+ is created with
+@@ -403,7 +403,7 @@ When
+ .I mdadm
+ needs to print the name for a device it normally finds the name in
+ .B /dev
+-which refers to the device and is shortest.  When a path component is
++which refers to the device and is the shortest.  When a path component is
+ given with
+ .B \-\-prefer
+ .I mdadm
+@@ -478,9 +478,9 @@ still be larger than any replacement.
  
-diff --git a/super-intel.c b/super-intel.c
-index ba3bd41f..65c42089 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5220,7 +5220,7 @@ static int get_super_block(struct intel_super **super_list, char *devnm, char *d
- 	/* retry the load if we might have raced against mdmon */
- 	if (err == 3 && devnm && mdmon_running(devnm))
- 		for (retry = 0; retry < 3; retry++) {
--			usleep(3000);
-+			sleep_for(0, MSEC_TO_NSEC(3), true);
- 			err = load_and_parse_mpb(dfd, s, NULL, keep_fd);
- 			if (err != 3)
- 				break;
-@@ -5322,7 +5322,7 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ This option can be used with
+ .B \-\-create
+-for determining initial size of an array. For external metadata,
++for determining the initial size of an array. For external metadata,
+ it can be used on a volume, but not on a container itself.
+-Setting initial size of
++Setting the initial size of
+ .B RAID 0
+ array is only valid for external metadata.
  
- 		if (mdstat && mdmon_running(mdstat->devnm) && getpid() != mdmon_pid(mdstat->devnm)) {
- 			for (retry = 0; retry < 3; retry++) {
--				usleep(3000);
-+				sleep_for(0, MSEC_TO_NSEC(3), true);
- 				rv = load_and_parse_mpb(fd, super, devname, 0);
- 				if (rv != 3)
- 					break;
-@@ -11991,7 +11991,7 @@ int wait_for_reshape_imsm(struct mdinfo *sra, int ndata)
- 				close(fd);
- 				return 1;
- 			}
--			usleep(30000);
-+			sleep_for(0, MSEC_TO_NSEC(30), true);
- 		} else
- 			break;
- 	} while (retry--);
-diff --git a/util.c b/util.c
-index cc94f96e..f9d3e6e0 100644
---- a/util.c
-+++ b/util.c
-@@ -166,7 +166,7 @@ retry:
- 		pr_err("error %d when get PW mode on lock %s\n", errno, str);
- 		/* let's try several times if EAGAIN happened */
- 		if (dlm_lock_res->lksb.sb_status == EAGAIN && retry_count < 10) {
--			sleep(10);
-+			sleep_for(10, 0, true);
- 			retry_count++;
- 			goto retry;
- 		}
-@@ -1085,7 +1085,7 @@ int open_dev_excl(char *devnm)
- 	int i;
- 	int flags = O_RDWR;
- 	dev_t devid = devnm2devid(devnm);
--	long delay = 1000;
-+	unsigned int delay = 1; // miliseconds
+@@ -545,20 +545,20 @@ Clustered arrays do not support this parameter yet.
  
- 	sprintf(buf, "%d:%d", major(devid), minor(devid));
- 	for (i = 0; i < 25; i++) {
-@@ -1098,8 +1098,8 @@ int open_dev_excl(char *devnm)
- 		}
- 		if (errno != EBUSY)
- 			return fd;
--		usleep(delay);
--		if (delay < 200000)
-+		sleep_for(0, MSEC_TO_NSEC(delay), true);
-+		if (delay < 200)
- 			delay *= 2;
- 	}
- 	return -1;
-@@ -1123,7 +1123,7 @@ void wait_for(char *dev, int fd)
- {
- 	int i;
- 	struct stat stb_want;
--	long delay = 1000;
-+	unsigned int delay = 1; // miliseconds
+ .TP
+ .BR \-c ", " \-\-chunk=
+-Specify chunk size of kilobytes.  The default when creating an
++Specify chunk size in kilobytes.  The default when creating an
+ array is 512KB.  To ensure compatibility with earlier versions, the
+ default when building an array with no persistent metadata is 64KB.
+ This is only meaningful for RAID0, RAID4, RAID5, RAID6, and RAID10.
  
- 	if (fstat(fd, &stb_want) != 0 ||
- 	    (stb_want.st_mode & S_IFMT) != S_IFBLK)
-@@ -1135,8 +1135,8 @@ void wait_for(char *dev, int fd)
- 		    (stb.st_mode & S_IFMT) == S_IFBLK &&
- 		    (stb.st_rdev == stb_want.st_rdev))
- 			return;
--		usleep(delay);
--		if (delay < 200000)
-+		sleep_for(0, MSEC_TO_NSEC(delay), true);
-+		if (delay < 200)
- 			delay *= 2;
- 	}
- 	if (i == 25)
-@@ -1821,7 +1821,7 @@ int hot_remove_disk(int mdfd, unsigned long dev, int force)
- 	while ((ret = ioctl(mdfd, HOT_REMOVE_DISK, dev)) == -1 &&
- 	       errno == EBUSY &&
- 	       cnt-- > 0)
--		usleep(10000);
-+		sleep_for(0, MSEC_TO_NSEC(10), true);
+ RAID4, RAID5, RAID6, and RAID10 require the chunk size to be a power
+-of 2.  In any case it must be a multiple of 4KB.
++of 2, with minimal chunk size being 4KB.
  
- 	return ret;
- }
-@@ -1834,7 +1834,7 @@ int sys_hot_remove_disk(int statefd, int force)
- 	while ((ret = write(statefd, "remove", 6)) == -1 &&
- 	       errno == EBUSY &&
- 	       cnt-- > 0)
--		usleep(10000);
-+		sleep_for(0, MSEC_TO_NSEC(10), true);
- 	return ret == 6 ? 0 : -1;
- }
+ A suffix of 'K', 'M', 'G' or 'T' can be given to indicate Kilobytes,
+ Megabytes, Gigabytes or Terabytes respectively.
  
-@@ -2375,3 +2375,27 @@ out:
- 	close(fd_zero);
- 	return ret;
- }
-+
-+/**
-+ * sleep_for() - Sleeps for specified time.
-+ * @sec: Seconds to sleep for.
-+ * @nsec: Nanoseconds to sleep for, has to be less than one second.
-+ * @wake_after_interrupt: If set, wake up if interrupted.
-+ *
-+ * Function immediately returns if error different than EINTR occurs.
-+ */
-+void sleep_for(unsigned int sec, long nsec, bool wake_after_interrupt)
-+{
-+	struct timespec delay = {.tv_sec = sec, .tv_nsec = nsec};
-+
-+	assert(nsec < MSEC_TO_NSEC(1000));
-+
-+	do {
-+		errno = 0;
-+		nanosleep(&delay, &delay);
-+		if (errno != 0 && errno != EINTR) {
-+			pr_err("Error sleeping for %us %ldns: %s\n", sec, nsec, strerror(errno));
-+			return;
-+		}
-+	} while (!wake_after_interrupt && errno == EINTR);
-+}
+ .TP
+ .BR \-\-rounding=
+-Specify rounding factor for a Linear array.  The size of each
++Specify the rounding factor for a Linear array.  The size of each
+ component will be rounded down to a multiple of this size.
+ This is a synonym for
+ .B \-\-chunk
+@@ -655,7 +655,8 @@ option to set subsequent failure modes.
+ and "flush" will clear any persistent faults.
+ 
+ The layout options for RAID10 are one of 'n', 'o' or 'f' followed
+-by a small number.  The default is 'n2'.  The supported options are:
++by a small number signifying the number of copies of each datablock.
++The default is 'n2'.  The supported options are:
+ 
+ .I 'n'
+ signals 'near' copies.  Multiple copies of one data block are at
+@@ -673,7 +674,7 @@ signals 'far' copies
+ (multiple copies have very different offsets).
+ See md(4) for more detail about 'near', 'offset', and 'far'.
+ 
+-The number is the number of copies of each datablock.  2 is normal, 3
++As for the number of copies of each data block, 2 is normal, 3
+ can be useful.  This number can be at most equal to the number of
+ devices in the array.  It does not need to divide evenly into that
+ number (e.g. it is perfectly legal to have an 'n2' layout for an array
+@@ -684,7 +685,7 @@ A bug introduced in Linux 3.14 means that RAID0 arrays
+ started using a different layout.  This could lead to
+ data corruption.  Since Linux 5.4 (and various stable releases that received
+ backports), the kernel will not accept such an array unless
+-a layout is explictly set.  It can be set to
++a layout is explicitly set.  It can be set to
+ .RB ' original '
+ or
+ .RB ' alternate '.
+@@ -760,13 +761,13 @@ or by selecting a different consistency policy with
+ 
+ .TP
+ .BR \-\-bitmap\-chunk=
+-Set the chunksize of the bitmap.  Each bit corresponds to that many
++Set the chunk size of the bitmap.  Each bit corresponds to that many
+ Kilobytes of storage.
+-When using a file based bitmap, the default is to use the smallest
+-size that is at-least 4 and requires no more than 2^21 chunks.
++When using a file-based bitmap, the default is to use the smallest
++size that is at least 4 and requires no more than 2^21 chunks.
+ When using an
+ .B internal
+-bitmap, the chunksize defaults to 64Meg, or larger if necessary to
++bitmap, the chunk size defaults to 64Meg, or larger if necessary to
+ fit the bitmap into the available space.
+ 
+ A suffix of 'K', 'M', 'G' or 'T' can be given to indicate Kilobytes,
+@@ -840,7 +841,7 @@ can be used with that command to avoid the automatic resync.
+ .BR \-\-backup\-file=
+ This is needed when
+ .B \-\-grow
+-is used to increase the number of raid-devices in a RAID5 or RAID6 if
++is used to increase the number of raid devices in a RAID5 or RAID6 if
+ there are no spare devices available, or to shrink, change RAID level
+ or layout.  See the GROW MODE section below on RAID\-DEVICES CHANGES.
+ The file must be stored on a separate device, not on the RAID array
+@@ -879,7 +880,7 @@ When creating an array,
+ .B \-\-data\-offset
+ can be specified as
+ .BR variable .
+-In the case each member device is expected to have a offset appended
++In the case each member device is expected to have an offset appended
+ to the name, separated by a colon.  This makes it possible to recreate
+ exactly an array which has varying data offsets (as can happen when
+ different versions of
+@@ -943,7 +944,7 @@ Insist that
+ .I mdadm
+ accept the geometry and layout specified without question.  Normally
+ .I mdadm
+-will not allow creation of an array with only one device, and will try
++will not allow the creation of an array with only one device, and will try
+ to create a RAID5 array with one missing drive (as this makes the
+ initial resync work faster).  With
+ .BR \-\-force ,
+@@ -1004,7 +1005,7 @@ number added, e.g.
+ If the md device name is in a 'standard' format as described in DEVICE
+ NAMES, then it will be created, if necessary, with the appropriate
+ device number based on that name.  If the device name is not in one of these
+-formats, then a unused device number will be allocated.  The device
++formats, then an unused device number will be allocated.  The device
+ number will be considered unused if there is no active array for that
+ number, and there is no entry in /dev for that number and with a
+ non-standard name.  Names that are not in 'standard' format are only
+@@ -1032,21 +1033,21 @@ then
+ .B \-\-add
+ can be used to add some extra devices to be included in the array.
+ In most cases this is not needed as the extra devices can be added as
+-spares first, and then the number of raid-disks can be changed.
+-However for RAID0, it is not possible to add spares.  So to increase
++spares first, and then the number of raid disks can be changed.
++However, for RAID0 it is not possible to add spares.  So to increase
+ the number of devices in a RAID0, it is necessary to set the new
+ number of devices, and to add the new devices, in the same command.
+ 
+ .TP
+ .BR \-\-nodes
+-Only works when the array is for clustered environment. It specifies
++Only works when the array is created for a clustered environment. It specifies
+ the maximum number of nodes in the cluster that will use this device
+ simultaneously. If not specified, this defaults to 4.
+ 
+ .TP
+ .BR \-\-write-journal
+ Specify journal device for the RAID-4/5/6 array. The journal device
+-should be a SSD with reasonable lifetime.
++should be an SSD with a reasonable lifetime.
+ 
+ .TP
+ .BR \-\-symlinks
+@@ -1055,7 +1056,7 @@ be 'no' or 'yes' and work with --create and --build.
+ 
+ .TP
+ .BR \-k ", " \-\-consistency\-policy=
+-Specify how the array maintains consistency in case of unexpected shutdown.
++Specify how the array maintains consistency in the case of an unexpected shutdown.
+ Only relevant for RAID levels with redundancy.
+ Currently supported options are:
+ .RS
+@@ -1063,7 +1064,7 @@ Currently supported options are:
+ .TP
+ .B resync
+ Full resync is performed and all redundancy is regenerated when the array is
+-started after unclean shutdown.
++started after an unclean shutdown.
+ 
+ .TP
+ .B bitmap
+@@ -1072,8 +1073,8 @@ Resync assisted by a write-intent bitmap. Implicitly selected when using
+ 
+ .TP
+ .B journal
+-For RAID levels 4/5/6, journal device is used to log transactions and replay
+-after unclean shutdown. Implicitly selected when using
++For RAID levels 4/5/6, the journal device is used to log transactions and replay
++after an unclean shutdown. Implicitly selected when using
+ .BR \-\-write\-journal .
+ 
+ .TP
+@@ -1242,7 +1243,7 @@ This can be useful if
+ reports a different "Preferred Minor" to
+ .BR \-\-detail .
+ In some cases this update will be performed automatically
+-by the kernel driver.  In particular the update happens automatically
++by the kernel driver.  In particular, the update happens automatically
+ at the first write to an array with redundancy (RAID level 1 or
+ greater) on a 2.6 (or later) kernel.
+ 
+@@ -1282,7 +1283,7 @@ For version-1 superblocks, this involves updating the name.
+ The
+ .B home\-cluster
+ option will change the cluster name as recorded in the superblock and
+-bitmap. This option only works for clustered environment.
++bitmap. This option only works for a clustered environment.
+ 
+ The
+ .B resync
+@@ -1395,10 +1396,10 @@ This option should be used with great caution.
+ 
+ .TP
+ .BR \-\-freeze\-reshape
+-Option is intended to be used in start-up scripts during initrd boot phase.
+-When array under reshape is assembled during initrd phase, this option
+-stops reshape after reshape critical section is being restored. This happens
+-before file system pivot operation and avoids loss of file system context.
++This option is intended to be used in start-up scripts during the initrd boot phase.
++When the array under reshape is assembled during the initrd phase, this option
++stops the reshape after the reshape-critical section has been restored. This happens
++before the file system pivot operation and avoids loss of filesystem context.
+ Losing file system context would cause reshape to be broken.
+ 
+ Reshape can be continued later using the
+@@ -1446,9 +1447,9 @@ re\-add a device that was previously removed from an array.
+ If the metadata on the device reports that it is a member of the
+ array, and the slot that it used is still vacant, then the device will
+ be added back to the array in the same position.  This will normally
+-cause the data for that device to be recovered.  However based on the
++cause the data for that device to be recovered.  However, based on the
+ event count on the device, the recovery may only require sections that
+-are flagged a write-intent bitmap to be recovered or may not require
++are flagged by a write-intent bitmap to be recovered or may not require
+ any recovery at all.
+ 
+ When used on an array that has no metadata (i.e. it was built with
+@@ -1456,13 +1457,12 @@ When used on an array that has no metadata (i.e. it was built with
+ it will be assumed that bitmap-based recovery is enough to make the
+ device fully consistent with the array.
+ 
+-When used with v1.x metadata,
+ .B \-\-re\-add
+-can be accompanied by
++can also be accompanied by
+ .BR \-\-update=devicesize ,
+ .BR \-\-update=bbl ", or"
+ .BR \-\-update=no\-bbl .
+-See the description of these option when used in Assemble mode for an
++See descriptions of these options when used in Assemble mode for an
+ explanation of their use.
+ 
+ If the device name given is
+@@ -1489,7 +1489,7 @@ Add a device as a spare.  This is similar to
+ except that it does not attempt
+ .B \-\-re\-add
+ first.  The device will be added as a spare even if it looks like it
+-could be an recent member of the array.
++could be a recent member of the array.
+ 
+ .TP
+ .BR \-r ", " \-\-remove
+@@ -1506,12 +1506,12 @@ and names like
+ .B set-A
+ can be given to
+ .BR \-\-remove .
+-The first causes all failed device to be removed.  The second causes
++The first causes all failed devices to be removed.  The second causes
+ any device which is no longer connected to the system (i.e an 'open'
+ returns
+ .BR ENXIO )
+ to be removed.
+-The third will remove a set as describe below under
++The third will remove a set as described below under
+ .BR \-\-fail .
+ 
+ .TP
+@@ -1528,7 +1528,7 @@ For RAID10 arrays where the number of copies evenly divides the number
+ of devices, the devices can be conceptually divided into sets where
+ each set contains a single complete copy of the data on the array.
+ Sometimes a RAID10 array will be configured so that these sets are on
+-separate controllers.  In this case all the devices in one set can be
++separate controllers.  In this case, all the devices in one set can be
+ failed by giving a name like
+ .B set\-A
+ or
+@@ -1558,9 +1558,9 @@ This can follow a list of
+ .B \-\-replace
+ devices.  The devices listed after
+ .B \-\-with
+-will be preferentially used to replace the devices listed after
++will preferentially be used to replace the devices listed after
+ .BR \-\-replace .
+-These device must already be spare devices in the array.
++These devices must already be spare devices in the array.
+ 
+ .TP
+ .BR \-\-write\-mostly
+@@ -1583,8 +1583,8 @@ the device is found or <slot>:missing in case the device is not found.
+ 
+ .TP
+ .BR \-\-add-journal
+-Add journal to an existing array, or recreate journal for RAID-4/5/6 array
+-that lost a journal device. To avoid interrupting on-going write opertions,
++Add a journal to an existing array, or recreate journal for a RAID-4/5/6 array
++that lost a journal device. To avoid interrupting ongoing write operations,
+ .B \-\-add-journal
+ only works for array in Read-Only state.
+ 
+@@ -1640,9 +1640,9 @@ Print details of one or more md devices.
+ .TP
+ .BR \-\-detail\-platform
+ Print details of the platform's RAID capabilities (firmware / hardware
+-topology) for a given metadata format. If used without argument, mdadm
++topology) for a given metadata format. If used without an argument, mdadm
+ will scan all controllers looking for their capabilities. Otherwise, mdadm
+-will only look at the controller specified by the argument in form of an
++will only look at the controller specified by the argument in the form of an
+ absolute filepath or a link, e.g.
+ .IR /sys/devices/pci0000:00/0000:00:1f.2 .
+ 
+@@ -1751,8 +1751,8 @@ the block where the superblock would be is overwritten even if it
+ doesn't appear to be valid.
+ 
+ .B Note:
+-Be careful to call \-\-zero\-superblock with clustered raid, make sure
+-array isn't used or assembled in other cluster node before execute it.
++Be careful when calling \-\-zero\-superblock with clustered raid. Make sure
++the array isn't used or assembled in another cluster node before executing it.
+ 
+ .TP
+ .B \-\-kill\-subarray=
+@@ -1799,7 +1799,7 @@ For each md device given, or each device in /proc/mdstat if
+ is given, arrange for the array to be marked clean as soon as possible.
+ .I mdadm
+ will return with success if the array uses external metadata and we
+-successfully waited.  For native arrays this returns immediately as the
++successfully waited.  For native arrays, this returns immediately as the
+ kernel handles dirty-clean transitions at shutdown.  No action is taken
+ if safe-mode handling is disabled.
+ 
+@@ -1839,7 +1839,7 @@ uses to help track which arrays are currently being assembled.
+ 
+ .TP
+ .BR \-\-run ", " \-R
+-Run any array assembled as soon as a minimal number of devices are
++Run any array assembled as soon as a minimal number of devices is
+ available, rather than waiting until all expected devices are present.
+ 
+ .TP
+@@ -1869,7 +1869,7 @@ Only used with \-\-fail.  The 'path' given will be recorded so that if
+ a new device appears at the same location it can be automatically
+ added to the same array.  This allows the failed device to be
+ automatically replaced by a new device without metadata if it appears
+-at specified path.   This option is normally only set by a
++at specified path.   This option is normally only set by an
+ .I udev
+ script.
+ 
+@@ -1970,7 +1970,7 @@ Usage:
+ .PP
+ This usage assembles one or more RAID arrays from pre-existing components.
+ For each array, mdadm needs to know the md device, the identity of the
+-array, and a number of component-devices.  These can be found in a number of ways.
++array, and the number of component devices.  These can be found in a number of ways.
+ 
+ In the first usage example (without the
+ .BR \-\-scan )
+@@ -2010,7 +2010,7 @@ The config file is only used if explicitly named with
+ .B \-\-config
+ or requested with (a possibly implicit)
+ .BR \-\-scan .
+-In the later case, default config file is used.  See
++In the latter case, the default config file is used.  See
+ .BR mdadm.conf (5)
+ for more details.
+ 
+@@ -2048,14 +2048,14 @@ detects that udev is not configured, it will create the devices in
+ .B /dev
+ itself.
+ 
+-In Linux kernels prior to version 2.6.28 there were two distinctly
+-different types of md devices that could be created: one that could be
++In Linux kernels prior to version 2.6.28 there were two distinct
++types of md devices that could be created: one that could be
+ partitioned using standard partitioning tools and one that could not.
+-Since 2.6.28 that distinction is no longer relevant as both type of
++Since 2.6.28 that distinction is no longer relevant as both types of
+ devices can be partitioned.
+ .I mdadm
+ will normally create the type that originally could not be partitioned
+-as it has a well defined major number (9).
++as it has a well-defined major number (9).
+ 
+ Prior to 2.6.28, it is important that mdadm chooses the correct type
+ of array device to use.  This can be controlled with the
+@@ -2075,7 +2075,7 @@ can also be given in the configuration file as a word starting
+ .B auto=
+ on the ARRAY line for the relevant array.
+ 
+-.SS Auto Assembly
++.SS Auto-Assembly
+ When
+ .B \-\-assemble
+ is used with
+@@ -2131,11 +2131,11 @@ See
+ .IR mdadm.conf (5)
+ for further details.
+ 
+-Note: Auto assembly cannot be used for assembling and activating some
++Note: Auto-assembly cannot be used for assembling and activating some
+ arrays which are undergoing reshape.  In particular as the
+ .B backup\-file
+-cannot be given, any reshape which requires a backup-file to continue
+-cannot be started by auto assembly.  An array which is growing to more
++cannot be given, any reshape which requires a backup file to continue
++cannot be started by auto-assembly.  An array which is growing to more
+ devices and has passed the critical section can be assembled using
+ auto-assembly.
+ 
+@@ -2242,7 +2242,7 @@ When creating a partition based array, using
+ .I mdadm
+ with version-1.x metadata, the partition type should be set to
+ .B 0xDA
+-(non fs-data).  This type selection allows for greater precision since
++(non fs-data).  This type of selection allows for greater precision since
+ using any other [RAID auto-detect (0xFD) or a GNU/Linux partition (0x83)],
+ might create problems in the event of array recovery through a live cdrom.
+ 
+@@ -2258,7 +2258,7 @@ when creating a v0.90 array will silently override any
+ setting.
+ .\"If the
+ .\".B \-\-size
+-.\"option is given, it is not necessary to list any component-devices in this command.
++.\"option is given, it is not necessary to list any component devices in this command.
+ .\"They can be added later, before a
+ .\".B \-\-run.
+ .\"If no
+@@ -2272,7 +2272,7 @@ requested with the
+ .B \-\-bitmap
+ option or a different consistency policy is selected with the
+ .B \-\-consistency\-policy
+-option. In any case space for a bitmap will be reserved so that one
++option. In any case, space for a bitmap will be reserved so that one
+ can be added later with
+ .BR "\-\-grow \-\-bitmap=internal" .
+ 
+@@ -2322,7 +2322,7 @@ will firstly mark
+ as faulty in
+ .B /dev/md0
+ and will then remove it from the array and finally add it back
+-in as a spare.  However only one md array can be affected by a single
++in as a spare.  However, only one md array can be affected by a single
+ command.
+ 
+ When a device is added to an active array, mdadm checks to see if it
+@@ -2467,14 +2467,14 @@ config file to be examined.
+ If the device contains RAID metadata, a file will be created in the
+ .I directory
+ and the metadata will be written to it.  The file will be the same
+-size as the device and have the metadata written in the file at the
+-same locate that it exists in the device.  However the file will be "sparse" so
++size as the device and will have the metadata written at the
++same location as it exists in the device.  However, the file will be "sparse" so
+ that only those blocks containing metadata will be allocated. The
+ total space used will be small.
+ 
+-The file name used in the
++The filename used in the
+ .I directory
+-will be the base name of the device.   Further if any links appear in
++will be the base name of the device.   Further, if any links appear in
+ .I /dev/disk/by-id
+ which point to the device, then hard links to the file will be created
+ in
+@@ -2576,7 +2576,7 @@ and if the destination array has a failed drive but no spares.
+ 
+ If any devices are listed on the command line,
+ .I mdadm
+-will only monitor those devices.  Otherwise all arrays listed in the
++will only monitor those devices, otherwise, all arrays listed in the
+ configuration file will be monitored.  Further, if
+ .B \-\-scan
+ is given, then any other md devices that appear in
+@@ -2633,10 +2633,10 @@ check, repair). (syslog priority: Warning)
+ .BI Rebuild NN
+ Where
+ .I NN
+-is a two-digit number (ie. 05, 48). This indicates that rebuild
+-has passed that many percent of the total. The events are generated
+-with fixed increment since 0. Increment size may be specified with
+-a commandline option (default is 20). (syslog priority: Warning)
++is a two-digit number (eg. 05, 48). This indicates that the rebuild
++has reached that percentage of the total. The events are generated
++at a fixed increment from 0. The increment size may be specified with
++a command-line option (the default is 20). (syslog priority: Warning)
+ 
+ .TP
+ .B RebuildFinished
+@@ -2744,8 +2744,8 @@ When
+ detects that an array in a spare group has fewer active
+ devices than necessary for the complete array, and has no spare
+ devices, it will look for another array in the same spare group that
+-has a full complement of working drive and a spare.  It will then
+-attempt to remove the spare from the second drive and add it to the
++has a full complement of working drives and a spare.  It will then
++attempt to remove the spare from the second array and add it to the
+ first.
+ If the removal succeeds but the adding fails, then it is added back to
+ the original array.
+@@ -2759,10 +2759,8 @@ and then follow similar steps as above if a matching spare is found.
+ .SH GROW MODE
+ The GROW mode is used for changing the size or shape of an active
+ array.
+-For this to work, the kernel must support the necessary change.
+-Various types of growth are being added during 2.6 development.
+ 
+-Currently the supported changes include
++During the kernel 2.6 era the following changes were added:
+ .IP \(bu 4
+ change the "size" attribute for RAID1, RAID4, RAID5 and RAID6.
+ .IP \(bu 4
+@@ -2805,8 +2803,8 @@ use more than half of a spare device for backup space.
+ 
+ .SS SIZE CHANGES
+ Normally when an array is built the "size" is taken from the smallest
+-of the drives.  If all the small drives in an arrays are, one at a
+-time, removed and replaced with larger drives, then you could have an
++of the drives.  If all the small drives in an arrays are, over time,
++removed and replaced with larger drives, then you could have an
+ array of large drives with only a small amount used.  In this
+ situation, changing the "size" with "GROW" mode will allow the extra
+ space to start being used.  If the size is increased in this way, a
+@@ -2821,7 +2819,7 @@ after growing, or to reduce its size
+ .B prior
+ to shrinking the array.
+ 
+-Also the size of an array cannot be changed while it has an active
++Also, the size of an array cannot be changed while it has an active
+ bitmap.  If an array has a bitmap, it must be removed before the size
+ can be changed. Once the change is complete a new bitmap can be created.
+ 
+@@ -2901,7 +2899,7 @@ long time.  A
+ is required.  If the array is not simultaneously being grown or
+ shrunk, so that the array size will remain the same - for example,
+ reshaping a 3-drive RAID5 into a 4-drive RAID6 - the backup file will
+-be used not just for a "cricital section" but throughout the reshape
++be used not just for a "critical section" but throughout the reshape
+ operation, as described below under LAYOUT CHANGES.
+ 
+ .SS CHUNK-SIZE AND LAYOUT CHANGES
+@@ -2919,7 +2917,7 @@ slowly.
+ If the reshape is interrupted for any reason, this backup file must be
+ made available to
+ .B "mdadm --assemble"
+-so the array can be reassembled.  Consequently the file cannot be
++so the array can be reassembled.  Consequently, the file cannot be
+ stored on the device being reshaped.
+ 
+ 
 -- 
 2.26.2
 
