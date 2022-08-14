@@ -2,43 +2,44 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D78DFC2BB45
-	for <linux-raid@archiver.kernel.org>; Sun, 14 Aug 2022 15:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C0BBC2BB41
+	for <linux-raid@archiver.kernel.org>; Sun, 14 Aug 2022 15:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241353AbiHNPrK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:47:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54686 "EHLO
+        id S241458AbiHNPrN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:47:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241620AbiHNPpz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Aug 2022 11:45:55 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3CF8DE96;
-        Sun, 14 Aug 2022 08:34:30 -0700 (PDT)
+        with ESMTP id S241600AbiHNPpw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Aug 2022 11:45:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 137D6BC36;
+        Sun, 14 Aug 2022 08:34:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 968BAB80B43;
-        Sun, 14 Aug 2022 15:34:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90964C433C1;
-        Sun, 14 Aug 2022 15:34:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 37F6A60CF1;
+        Sun, 14 Aug 2022 15:34:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB027C4347C;
+        Sun, 14 Aug 2022 15:34:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491268;
-        bh=aD74N/hsr51I4dViwIJ6uB1M3qdYNTympSCUrh97GdU=;
+        s=k20201202; t=1660491265;
+        bh=5J3CrasuJ+H3IhnQusuUS3vDZ0zL0c+C2iD72KLsHps=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TWlwmNsenGcf6a//seJH/I5Y2yiL9Irkd03Lzc7QctWHoBfo/+Ihq9GZiOcv/8ICP
-         ya1hcdep7SO56kpTgJ13i4LcZcaSuCD5mfwbQkDJRp4rkH+6orQ32gG+pbF8BR3Uke
-         KVrwS9fOXCjurPW2CbA7JHsUBEoRF+oAkuM6X0ZgMuoOkvBrAbowefum3En3t1THFv
-         oXmATLD1Bgfj/Iy7UL+7vf5ViZEc96vXAr7eFsEm42ihiaWC6sjDmDUAHN7oi4lI9M
-         cqAKoKX04JG1zkgobA7rB6Y+zMlfEgCC8nZnQcmqCzMw2lV27PVqCj6bqiLb+TjGDc
-         sjlqJ6xqBt1rA==
+        b=uZi5/QxuLhNPAti1Sk9ufaQ4UL9hPieMHMyQgvpx+xhBpxJv5/duZ5rsI82X3Ktp/
+         0SHSs/Pf3TD4NaVeEavp+4cUDMUR5k664U5SlDHi9tlVtgp3rce/4lemyu9o7kgici
+         bEBnDUu4yIBi45aRtZVQNa6OfGPh9IkcCCbTjb+v+9R7iDctiXPJvsWHcV7Hdl1UpT
+         fFTYITB8A3AMPSDgZoxwcyeewWRCwDAH9h97zoXpS/e578UlA/G7qyQtMW0V25lf2L
+         RwCicvNiS5LfmZNbk17OZuNJ2tzCGwSjFA9sO1ORJQQq0tCDJKBGQa4myKRGvbxXQ5
+         ybJwPjSE6aqYw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wentao_Liang <Wentao_Liang_g@163.com>, Song Liu <song@kernel.org>,
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 44/46] drivers:md:fix a potential use-after-free bug
-Date:   Sun, 14 Aug 2022 11:32:45 -0400
-Message-Id: <20220814153247.2378312-44-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 42/46] md: Notify sysfs sync_completed in md_reap_sync_thread()
+Date:   Sun, 14 Aug 2022 11:32:43 -0400
+Message-Id: <20220814153247.2378312-42-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220814153247.2378312-1-sashal@kernel.org>
 References: <20220814153247.2378312-1-sashal@kernel.org>
@@ -50,42 +51,48 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Wentao_Liang <Wentao_Liang_g@163.com>
+From: Logan Gunthorpe <logang@deltatee.com>
 
-[ Upstream commit 104212471b1c1817b311771d817fb692af983173 ]
+[ Upstream commit 9973f0fa7d20269fe6fefe6333997fb5914449c1 ]
 
-In line 2884, "raid5_release_stripe(sh);" drops the reference to sh and
-may cause sh to be released. However, sh is subsequently used in lines
-2886 "if (sh->batch_head && sh != sh->batch_head)". This may result in an
-use-after-free bug.
+The mdadm test 07layouts randomly produces a kernel hung task deadlock.
+The deadlock is caused by the suspend_lo/suspend_hi files being set by
+the mdadm background process during reshape and not being cleared
+because the process hangs. (Leaving aside the issue of the fragility of
+freezing kernel tasks by buggy userspace processes...)
 
-It can be fixed by moving "raid5_release_stripe(sh);" to the bottom of
-the function.
+When the background mdadm process hangs it, is waiting (without a
+timeout) on a change to the sync_completed file signalling that the
+reshape has completed. The process is woken up a couple times when
+the reshape finishes but it is woken up before MD_RECOVERY_RUNNING
+is cleared so sync_completed_show() reports 0 instead of "none".
 
-Signed-off-by: Wentao_Liang <Wentao_Liang_g@163.com>
+To fix this, notify the sysfs file in md_reap_sync_thread() after
+MD_RECOVERY_RUNNING has been cleared. This wakes up mdadm and causes
+it to continue and write to suspend_lo/suspend_hi to allow IO to
+continue.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Song Liu <song@kernel.org>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/raid5.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/md.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b58984ddca13..19e497a7e747 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2864,10 +2864,10 @@ static void raid5_end_write_request(struct bio *bi)
- 	if (!test_and_clear_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags))
- 		clear_bit(R5_LOCKED, &sh->dev[i].flags);
- 	set_bit(STRIPE_HANDLE, &sh->state);
--	raid5_release_stripe(sh);
- 
- 	if (sh->batch_head && sh != sh->batch_head)
- 		raid5_release_stripe(sh->batch_head);
-+	raid5_release_stripe(sh);
- }
- 
- static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index bf1c5c0e472e..4be9b23019c7 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9467,6 +9467,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	wake_up(&resync_wait);
+ 	/* flag recovery needed just to double check */
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	md_new_event(mddev);
+ 	if (mddev->event_work.func)
 -- 
 2.35.1
 
