@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C0BBC2BB41
-	for <linux-raid@archiver.kernel.org>; Sun, 14 Aug 2022 15:47:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87407C282E7
+	for <linux-raid@archiver.kernel.org>; Sun, 14 Aug 2022 15:49:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241458AbiHNPrN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:47:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55378 "EHLO
+        id S241652AbiHNPtm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:49:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241600AbiHNPpw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Aug 2022 11:45:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 137D6BC36;
-        Sun, 14 Aug 2022 08:34:26 -0700 (PDT)
+        with ESMTP id S241680AbiHNPsl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Aug 2022 11:48:41 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F1DFE091;
+        Sun, 14 Aug 2022 08:35:28 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 37F6A60CF1;
-        Sun, 14 Aug 2022 15:34:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB027C4347C;
-        Sun, 14 Aug 2022 15:34:24 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D8AC2B80B48;
+        Sun, 14 Aug 2022 15:35:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7143C433D6;
+        Sun, 14 Aug 2022 15:35:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491265;
-        bh=5J3CrasuJ+H3IhnQusuUS3vDZ0zL0c+C2iD72KLsHps=;
+        s=k20201202; t=1660491325;
+        bh=MbuwiAIDCIAhGbfb6UylE+MBmJo/z7UQiz0v3eaRbT0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uZi5/QxuLhNPAti1Sk9ufaQ4UL9hPieMHMyQgvpx+xhBpxJv5/duZ5rsI82X3Ktp/
-         0SHSs/Pf3TD4NaVeEavp+4cUDMUR5k664U5SlDHi9tlVtgp3rce/4lemyu9o7kgici
-         bEBnDUu4yIBi45aRtZVQNa6OfGPh9IkcCCbTjb+v+9R7iDctiXPJvsWHcV7Hdl1UpT
-         fFTYITB8A3AMPSDgZoxwcyeewWRCwDAH9h97zoXpS/e578UlA/G7qyQtMW0V25lf2L
-         RwCicvNiS5LfmZNbk17OZuNJ2tzCGwSjFA9sO1ORJQQq0tCDJKBGQa4myKRGvbxXQ5
-         ybJwPjSE6aqYw==
+        b=cOFtlSaHYC0V4dvMkljj9Pjs7KxavG/xOEZzFbl/+qUq6KCzqJjcQnHVFQ2/kh/cZ
+         ELyQlNdfkcwWO6M+bPg4FuhGwZ83XQwbYN44JdbZkZeVtMBYcZVz1P8A1aMyPAMcp7
+         2AgAcixrVH/BozFg8eBE5PBGO2o1+5nJD5DlXrGiqQxGI6PuTtiZutJQYyInOhvIHF
+         n0SQUE/P62ZUKbsEjHhzLi88FZKtgpFqlw53b3jxEnxGg/WKNj+ROCWRjYQGGKZXtd
+         wYfFGHrpr4wC7M1omawrMPSX7aTBxe7/r5ImyPTLEeo3ZPCxqWBJ1YI3uIbej48YM7
+         nioV15Ju1X/tg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 42/46] md: Notify sysfs sync_completed in md_reap_sync_thread()
-Date:   Sun, 14 Aug 2022 11:32:43 -0400
-Message-Id: <20220814153247.2378312-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 27/31] md: Notify sysfs sync_completed in md_reap_sync_thread()
+Date:   Sun, 14 Aug 2022 11:34:27 -0400
+Message-Id: <20220814153431.2379231-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220814153247.2378312-1-sashal@kernel.org>
-References: <20220814153247.2378312-1-sashal@kernel.org>
+In-Reply-To: <20220814153431.2379231-1-sashal@kernel.org>
+References: <20220814153431.2379231-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -82,10 +82,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index bf1c5c0e472e..4be9b23019c7 100644
+index 5bd1edbb415b..f0c7a3032242 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9467,6 +9467,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+@@ -9424,6 +9424,7 @@ void md_reap_sync_thread(struct mddev *mddev)
  	wake_up(&resync_wait);
  	/* flag recovery needed just to double check */
  	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
