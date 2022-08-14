@@ -2,43 +2,43 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1A07C25B08
-	for <linux-raid@archiver.kernel.org>; Sun, 14 Aug 2022 15:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D2DBC28B2C
+	for <linux-raid@archiver.kernel.org>; Sun, 14 Aug 2022 15:42:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240792AbiHNPmR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:42:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55004 "EHLO
+        id S240927AbiHNPmS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:42:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240750AbiHNPj0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Aug 2022 11:39:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CE071AF3C;
-        Sun, 14 Aug 2022 08:32:41 -0700 (PDT)
+        with ESMTP id S241072AbiHNPkL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Aug 2022 11:40:11 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D451521805;
+        Sun, 14 Aug 2022 08:32:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D2F3A60D2D;
-        Sun, 14 Aug 2022 15:32:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77A0CC433C1;
-        Sun, 14 Aug 2022 15:32:39 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 02AC7B80B56;
+        Sun, 14 Aug 2022 15:32:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05604C433B5;
+        Sun, 14 Aug 2022 15:32:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491160;
-        bh=WiHeptf/eanu/Vr13BE54U6jH1OAmEL/kgFHLVKmCk4=;
+        s=k20201202; t=1660491162;
+        bh=hIO3oN5eDL2EKz1zAiwin8jpVWT8nxVWMN5hH6JlTJk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o78nE1Qy6GYRTZHW8kG8wrGAKVV0/5v9LlRGGUqGe7gi6MU697ojhWSTHxPpquP0N
-         mK09gpdx7gEWFtO3MtSOb4eGg28CwFQ6WBO26I66TMvKQ/SkqrU9HnVSrnoaQb88ar
-         jW/cZOo8HOCumj70TFWT9xpU8G/DJaD2Jbt/TSSbw7YeSXypQeWfi0zHjBat0E4AVg
-         Ejdjfll9yprbfUIdm8BvvzSdNNusUVLlWkfzWv1kHbF/9EFmamqspMe1EMBRUY8ibi
-         0rjs3CjjHGo6UMLW5+X8O4P2FweEv6DfNeq3VSob4dtq9y9KyxbHiKJ1kSVMmkVpYv
-         LWbk1iPO68rlg==
+        b=rKPSN5grc4Xw8pzy3x9gN0Ghe6rbL08tcivAfmGOSAPDiw01aCcvfNo05opeThAXW
+         IF2qcUX13yAIy1ggNOLx8ldnbVFtfTTvhgH0ZY/3vUGaxB3l6yN5LSZiZRGb+d9JYJ
+         6EXPvtT8RX1iMJt9orP5QFN7tsD1tWgTek/weCngs3XikN2EEdw58Pl8eYDJWn7CeQ
+         O/E6L+66AlsZy1r0dCIkZLluDz/0c6b3AK1tbzG6H1L6NT9zgsVkaTUQqiyQZYt3ka
+         RqYdkhPHUhcRi4pWLvsEOZG4YkYLtmpvvla7EsOtsrG536XMvhQT3mLJT4cu8veZu9
+         W1kFVSkFTeeXA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Logan Gunthorpe <logang@deltatee.com>, Song Liu <song@kernel.org>,
+Cc:     Wentao_Liang <Wentao_Liang_g@163.com>, Song Liu <song@kernel.org>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 51/56] md/raid5: Make logic blocking check consistent with logic that blocks
-Date:   Sun, 14 Aug 2022 11:30:21 -0400
-Message-Id: <20220814153026.2377377-51-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.18 53/56] drivers:md:fix a potential use-after-free bug
+Date:   Sun, 14 Aug 2022 11:30:23 -0400
+Message-Id: <20220814153026.2377377-53-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220814153026.2377377-1-sashal@kernel.org>
 References: <20220814153026.2377377-1-sashal@kernel.org>
@@ -50,26 +50,19 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Logan Gunthorpe <logang@deltatee.com>
+From: Wentao_Liang <Wentao_Liang_g@163.com>
 
-[ Upstream commit 6e3f50d30af847bebce072182bd735e90a294c6a ]
+[ Upstream commit 104212471b1c1817b311771d817fb692af983173 ]
 
-The check in raid5_make_request differs very slightly from the logic
-that causes it to block lower down. This likely does not cause a bug
-as the check is fuzzy anyway (as reshape may move on between the first
-check and the subsequent check). However, make it consistent so it can
-be cleaned up in a subsequent patch.
+In line 2884, "raid5_release_stripe(sh);" drops the reference to sh and
+may cause sh to be released. However, sh is subsequently used in lines
+2886 "if (sh->batch_head && sh != sh->batch_head)". This may result in an
+use-after-free bug.
 
-The condition which causes the schedule is:
+It can be fixed by moving "raid5_release_stripe(sh);" to the bottom of
+the function.
 
- !(mddev->reshape_backwards ? logical_sector < conf->reshape_progress :
-   logical_sector >= conf->reshape_progress) &&
-  (mddev->reshape_backwards ? logical_sector < conf->reshape_safe :
-   logical_sector >= conf->reshape_safe)
-
-The condition that causes the early bailout is made to match this.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Wentao_Liang <Wentao_Liang_g@163.com>
 Signed-off-by: Song Liu <song@kernel.org>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
@@ -78,18 +71,21 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0dd4679deb61..402b627139d6 100644
+index 402b627139d6..9998fd275ee1 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -5809,7 +5809,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	if ((bi->bi_opf & REQ_NOWAIT) &&
- 	    (conf->reshape_progress != MaxSector) &&
- 	    (mddev->reshape_backwards
--	    ? (logical_sector > conf->reshape_progress && logical_sector <= conf->reshape_safe)
-+	    ? (logical_sector >= conf->reshape_progress && logical_sector < conf->reshape_safe)
- 	    : (logical_sector >= conf->reshape_safe && logical_sector < conf->reshape_progress))) {
- 		bio_wouldblock_error(bi);
- 		if (rw == WRITE)
+@@ -2850,10 +2850,10 @@ static void raid5_end_write_request(struct bio *bi)
+ 	if (!test_and_clear_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags))
+ 		clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+-	raid5_release_stripe(sh);
+ 
+ 	if (sh->batch_head && sh != sh->batch_head)
+ 		raid5_release_stripe(sh->batch_head);
++	raid5_release_stripe(sh);
+ }
+ 
+ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
 -- 
 2.35.1
 
