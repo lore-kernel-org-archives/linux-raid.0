@@ -2,46 +2,46 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F380CC25B06
-	for <linux-raid@archiver.kernel.org>; Sun, 14 Aug 2022 15:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21948C25B06
+	for <linux-raid@archiver.kernel.org>; Sun, 14 Aug 2022 15:53:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240597AbiHNPwu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:52:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40358 "EHLO
+        id S241915AbiHNPw4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:52:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242100AbiHNPvN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Aug 2022 11:51:13 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C2781D304;
-        Sun, 14 Aug 2022 08:36:52 -0700 (PDT)
+        with ESMTP id S241936AbiHNPul (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Aug 2022 11:50:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 831151CFD4;
+        Sun, 14 Aug 2022 08:36:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D6016B80B7F;
-        Sun, 14 Aug 2022 15:36:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E93F9C43143;
-        Sun, 14 Aug 2022 15:36:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E252460DDA;
+        Sun, 14 Aug 2022 15:36:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D5B1C433B5;
+        Sun, 14 Aug 2022 15:36:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491409;
-        bh=9+9TAGae0fTA/X972osI2oujsoHgyW6Ylmjy3Vai+/w=;
+        s=k20201202; t=1660491367;
+        bh=aNmfpcaxTpFNfqz2CgXLsqoeLB3uweq9V9AqqFqHcRg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=G5Nf8BiS9wbiiFakvaNrCSOQ1az6iZ4tf4e627yIjYXozk44pRBSaTHw9tKmdsjpa
-         PXEnsaRQ744eNvo8+6zq8O6yp1hYF8GZKoG/nbI/nwVMoNKd5ZMAyistSDz1BzJAET
-         1N2q0tH9lmDt243DD30EwwDWG9qOLoW6o6sV/SuGxXAtDzl8kgHmRHPD/sMeGSDH9Y
-         8iDm2JFaFQ26e7a75Y7aLFyjgeskQNbCAWkovpDMe1/j2RT5cNnnfnNBoEzVJWsR+S
-         KVlVVNb04+yXlq9kQm5viCAjP4B8JGJDz/gV3YP4u1V/l8t3dJ2kcLyTIec5uM6K5o
-         E4uBELYhrgVlw==
+        b=ZDo2TslTnyfH3BYMgR2+5xyYa2UkbOuR1AN8tNT/gt+eMzFNBJZEda+K/v9zeqpHC
+         DaPNy3Zoft1BT756KJT1uZxzeyhyxf3YFaalBTwygNcZHPnuLGeoZ8R7k/ilRHGS04
+         bfByuQvXoInGnoJu6CqzIr+vbobtC9v1betkHK20ohBMQ3Jt2DPFgLvJoZ2fzqgr2g
+         cT/aZ/KhX4/ikdD0MjbtmpkhgZ9oJd+gE/PNsNwN/peeKhwtSblv2AqsMHUEuLBBHF
+         j4D7pAkXNN+kMh5NLOuLrY9XzI05VrUCOdCVxiE5O6le2GpGkbp/gi1UmBEJo+mNxL
+         C3SQ6LmzgQW7A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Wentao_Liang <Wentao_Liang_g@163.com>, Song Liu <song@kernel.org>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 7/9] drivers:md:fix a potential use-after-free bug
-Date:   Sun, 14 Aug 2022 11:36:34 -0400
-Message-Id: <20220814153637.2380406-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 19/21] drivers:md:fix a potential use-after-free bug
+Date:   Sun, 14 Aug 2022 11:35:29 -0400
+Message-Id: <20220814153531.2379705-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220814153637.2380406-1-sashal@kernel.org>
-References: <20220814153637.2380406-1-sashal@kernel.org>
+In-Reply-To: <20220814153531.2379705-1-sashal@kernel.org>
+References: <20220814153531.2379705-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1e52443f3aca..866ba1743f9f 100644
+index 474cf6abefea..fe99e8cdc026 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2668,10 +2668,10 @@ static void raid5_end_write_request(struct bio *bi)
+@@ -2666,10 +2666,10 @@ static void raid5_end_write_request(struct bio *bi)
  	if (!test_and_clear_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags))
  		clear_bit(R5_LOCKED, &sh->dev[i].flags);
  	set_bit(STRIPE_HANDLE, &sh->state);
