@@ -2,199 +2,132 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13DCFC25B0E
-	for <linux-raid@archiver.kernel.org>; Tue, 16 Aug 2022 11:59:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 056E8C25B0E
+	for <linux-raid@archiver.kernel.org>; Tue, 16 Aug 2022 13:54:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229690AbiHPL7r (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 16 Aug 2022 07:59:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39454 "EHLO
+        id S234250AbiHPNyd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 16 Aug 2022 09:54:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233634AbiHPL70 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 16 Aug 2022 07:59:26 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1797B3FA2C
-        for <linux-raid@vger.kernel.org>; Tue, 16 Aug 2022 04:43:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1660650215; x=1692186215;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=abzcypgiQFgCDBL8H3ULUuGqlr7FJ1l/fgakT1EgFP4=;
-  b=nFm14SRTbtW1kD5C4ugqSUF6nDMugpAHrbqOJclfMldx1iV/d5K5WRo9
-   I2QdGE/Mb7oMXUZsowgNsTK+uJFO0hTfUo1o5/0/9/5nHRdMGYwFI8vsQ
-   ccBo/EvhAWHpiaeIljUVYbxAwU9GVaOoh2Fo6/hd72GXMKZcUxwffsSQU
-   w++Vut8dhvlw2YWIOztVfR9+e5qqhiLEUHfdXNYerqisiK2/jFJl4gDTj
-   udGE8H5OCLGddoOa4wcMcQz9IyyuPbuQxDk2AUGMc/QS/d1qaakXXSi+3
-   2MSVbnLwshyz3YM+X42unKPxvnwO1xWPTgPZlM7WSls1vC/2Y32bUATwQ
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10440"; a="318190074"
-X-IronPort-AV: E=Sophos;i="5.93,240,1654585200"; 
-   d="scan'208";a="318190074"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2022 04:43:34 -0700
-X-IronPort-AV: E=Sophos;i="5.93,240,1654585200"; 
-   d="scan'208";a="667077822"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.38.225])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2022 04:43:33 -0700
-Date:   Tue, 16 Aug 2022 13:43:29 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     =?UTF-8?Q?Old=C5=99ich_Jedli=C4=8Dka?= <oldium.pro@gmail.com>
-Cc:     Kinga Tanska <kinga.tanska@linux.intel.com>,
-        linux-raid@vger.kernel.org
-Subject: Re: [PATCH 1/1] mdadm: enable Intel Alderlake RST VMD configuration
-Message-ID: <20220816134329.0000183d@linux.intel.com>
-In-Reply-To: <CALdrqOTQjLmpF42dTfEG4cDE0W+02X=GB5JYkxJRHb4RtsXGWQ@mail.gmail.com>
-References: <20220805100545.9369-1-oldium.pro@gmail.com>
-        <20220805100545.9369-2-oldium.pro@gmail.com>
-        <20220805135603.00002723@intel.linux.com>
-        <CALdrqORp1vTu+c8C9Pydn_ftGuSL_6QH1hhKe=Gd7Vo4AdrNKQ@mail.gmail.com>
-        <20220811121838.0000585e@linux.intel.com>
-        <CALdrqOTQjLmpF42dTfEG4cDE0W+02X=GB5JYkxJRHb4RtsXGWQ@mail.gmail.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S234505AbiHPNy3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 16 Aug 2022 09:54:29 -0400
+Received: from out1.migadu.com (out1.migadu.com [IPv6:2001:41d0:2:863f::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48D8440567
+        for <linux-raid@vger.kernel.org>; Tue, 16 Aug 2022 06:54:23 -0700 (PDT)
+Subject: Re: [PATCH RFC] md: call md_cluster_stop() in __md_stop()
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1660658061;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=VhBwF2/an4ccjAAgxP4ikTnppPJY7Wpbm3FN1LqhV38=;
+        b=vSo3gvNL5KaxjXx8KQ++berXGByMbr055QE7Ov48iXDRA+BBJI0lAQLjEmIU1e8G/213Wd
+        ZemXSf2WnVqT+uEd17Xl+jg145xH611QHT7FoBsDpWK1owXoHEgUlvKHIc/1y031pPYOM3
+        qps6zPViBVPv7R8jeYh/4NmLbBQmmj8=
+To:     NeilBrown <neilb@suse.de>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+References: <166027061107.20931.13490156249149223084@noble.neil.brown.name>
+ <d45190a8-fffe-3a96-19ff-bdeccbc31945@linux.dev>
+ <166061152702.5425.9507699881285566239@noble.neil.brown.name>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <a6657e08-b6a7-358b-2d2a-0ac37d49d23a@linux.dev>
+Date:   Tue, 16 Aug 2022 21:53:53 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <166061152702.5425.9507699881285566239@noble.neil.brown.name>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 11 Aug 2022 21:38:59 +0200
-Old=C5=99ich Jedli=C4=8Dka <oldium.pro@gmail.com> wrote:
 
-> Hi Mariusz,
->=20
-> =C4=8Dt 11. 8. 2022 v 12:18 odes=C3=ADlatel Mariusz Tkaczyk
-> <mariusz.tkaczyk@linux.intel.com> napsal:
-> >
-> > Hello Old=C5=99ich,
-> >
-> > On Fri, 5 Aug 2022 14:50:36 +0200
-> > Old=C5=99ich Jedli=C4=8Dka <oldium.pro@gmail.com> wrote:
-> > =20
-> > > p=C3=A1 5. 8. 2022 v 13:56 odes=C3=ADlatel Kinga Tanska
-> > > <kinga.tanska@linux.intel.com> napsal: =20
-> > > >
-> > > > On Fri,  5 Aug 2022 12:05:45 +0200
-> > > > Old=C5=99ich Jedli=C4=8Dka <oldium.pro@gmail.com> wrote:
-> > > > =20
-> > > > > Alderlake changed UEFI variable name to 'RstVmdV' also and for VMD
-> > > > > devices, so check the updated name for VMD devices like it is don=
-e in
-> > > > > the SATA case. =20
-> >
-> > Alderlake is RST so it doesn't changed, it is different. It is a suppor=
-t for
-> > RST family product. =20
-> > > > >
-> > > > > Signed-off-by: Old=C5=99ich Jedli=C4=8Dka <oldium.pro@gmail.com>
-> > > > > ---
-> > > > >  platform-intel.c | 19 ++++++++++++-------
-> > > > >  1 file changed, 12 insertions(+), 7 deletions(-)
-> > > > >
-> > > > > diff --git a/platform-intel.c b/platform-intel.c
-> > > > > index a4d55a3..2f8e6af 100644
-> > > > > --- a/platform-intel.c
-> > > > > +++ b/platform-intel.c
-> > > > > @@ -512,8 +512,8 @@ static const struct imsm_orom
-> > > > > *find_imsm_hba_orom(struct sys_dev *hba) #define AHCI_PROP "RstSa=
-taV"
-> > > > >  #define AHCI_SSATA_PROP "RstsSatV"
-> > > > >  #define AHCI_TSATA_PROP "RsttSatV"
-> > > > > -#define AHCI_RST_PROP "RstVmdV"
-> > > > > -#define VMD_PROP "RstUefiV"
-> > > > > +#define RST_VMD_PROP "RstVmdV"
-> > > > > +#define RST_UEFI_PROP "RstUefiV" =20
-> >
-> > There are two products RSTe/ VROC and RST.  Here you are adding support=
- for
-> > RST platform. Please name it accordingly (yeah, I know that naming is
-> > confusing). I propose:
-> >
-> > #define RST_VMD_PROP "RstVmdV"
-> > #define VROC_VMD_PROP "RstUefiV"
-> > =20
-> > > > >
-> > > > >  #define VENDOR_GUID \
-> > > > >       EFI_GUID(0x193dfefa, 0xa445, 0x4302, 0x99, 0xd8, 0xef, 0x3a,
-> > > > > 0xad, 0x1a, 0x04, 0xc6) @@ -607,7 +607,8 @@ const struct imsm_orom
-> > > > > *find_imsm_efi(struct sys_dev *hba) struct orom_entry *ret;
-> > > > >       static const char * const sata_efivars[] =3D {AHCI_PROP,
-> > > > > AHCI_SSATA_PROP, AHCI_TSATA_PROP,
-> > > > > -                                                 AHCI_RST_PROP};
-> > > > > +                                                 RST_VMD_PROP};
-> > > > > +     static const char * const vmd_efivars[] =3D {RST_UEFI_PROP,
-> > > > > RST_VMD_PROP}; unsigned long i;
-> > > > >
-> > > > >       if (check_env("IMSM_TEST_AHCI_EFI") ||
-> > > > > check_env("IMSM_TEST_SCU_EFI")) @@ -640,10 +641,14 @@ const struct
-> > > > > imsm_orom *find_imsm_efi(struct sys_dev *hba)
-> > > > >               break;
-> > > > >       case SYS_DEV_VMD:
-> > > > > -             if (!read_efi_variable(&orom, sizeof(orom), VMD_PRO=
-P,
-> > > > > -                                    VENDOR_GUID))
-> > > > > -                     break;
-> > > > > -             return NULL;
-> > > > > +             for (i =3D 0; i < ARRAY_SIZE(vmd_efivars); i++) {
-> > > > > +                     if (!read_efi_variable(&orom, sizeof(orom),
-> > > > > +                                             vmd_efivars[i],
-> > > > > VENDOR_GUID))
-> > > > > +                             break;
-> > > > > +             }
-> > > > > +             if (i =3D=3D ARRAY_SIZE(vmd_efivars))
-> > > > > +                     return NULL;
-> > > > > +             break;
-> > > > >       default:
-> > > > >               return NULL;
-> > > > >       } =20
-> > > >
-> > > > Hi,
-> > > >
-> > > > please have a look at the following mail:
-> > > > https://marc.info/?l=3Dlinux-raid&m=3D165969352101643&w=3D2 =20
-> > >
-> > >
-> > > Hi, the described issue applies specifically in the SYS_DEV_SATA (SATA
-> > > configuration) case, so it should not apply to SYS_DEV_VMD (VMD
-> > > configuration) one.
-> > >
-> > > For me, the platform output looks reasonable (I have RAID 0 active):
-> > > =20
-> > > #> sudo mdadm --detail-platform =20
-> > >        Platform : Intel(R) Rapid Storage Technology
-> > >         Version : 19.0.7.5579
-> > >     RAID Levels : raid0 raid1 raid10 raid5
-> > >     Chunk Sizes : 4k 8k 16k 32k 64k 128k
-> > >     2TB volumes : supported
-> > >       2TB disks : supported
-> > >       Max Disks : 32
-> > >     Max Volumes : 2 per array, 4 per controller
-> > >  3rd party NVMe : supported
-> > >  I/O Controller : /sys/devices/pci0000:00/0000:00:0e.0 (VMD)
-> > >  NVMe under VMD : /dev/nvme0n1 (S6P1NS0T318266R)
-> > >  NVMe under VMD : /dev/nvme1n1 (S6P1NS0T318223V)
-> > >
-> > > Without the patch the platform isn't even recognized. Common to both
-> > > changes is the usage of the new UEFI variable 'RstVmdV', not the chan=
-ges
-> > > to the controller.
-> > > =20
-> >
-> > This version is different than one sent by Coly. We will test that to s=
-ee
-> > if it doesn't cause regression in our VROC product.
-> > I noted  some nits, we will test this version anyway. =20
->=20
-> Should I update the description (to just mention adding support for
-> Alderlake RST on VMD platform), change the defines in the patch, and
-> send V2, or you will send (possibly) updated version after your
-> testing?
->=20
-> The patch was tested on my Dell Precision 3570 notebook with Intel
-> i7-1255U CPU and two 2TB NVMe disks.
->=20
 
-Please do. This is your patch, so I don't want to take a your glory :)
+On 8/16/22 8:58 AM, NeilBrown wrote:
+> On Mon, 15 Aug 2022, Guoqing Jiang wrote:
+>> Hi Neil,
+>>
+>> Sorry for later reply since I was on vacation last week.
+>>
+>> On 8/12/22 10:16 AM, NeilBrown wrote:
+>>> [[ I noticed the e151 patch recently which seems to admit that it broke
+>>>      something.  So I looked into it and came up with this.
+>> I just noticed it ...
+>>
+>>>      It seems to make sense, but I'm not in a position to test it.
+>>>      Guoqing: does it look OK to you?
+>>>      - NeilBrown
+>>> ]]
+>>>
+>>> As described in Commit: 48df498daf62 ("md: move bitmap_destroy to the
+>>> beginning of __md_stop") md_cluster_stop() needs to run before the
+>>> mdddev->thread is stopped.
+>>> The change to make this happen was reverted in Commit: e151db8ecfb0
+>>> ("md-raid: destroy the bitmap after destroying the thread") due to
+>>> problems it caused.
+>>>
+>>> To restore correct behaviour, make md_cluster_stop() reentrant and
+>>> explicitly call it at the start of __md_stop(), after first calling
+>>> md_bitmap_wait_behind_writes().
+>>>
+>>> Fixes: e151db8ecfb0 ("md-raid: destroy the bitmap after destroying the thread")
+>>> Signed-off-by: NeilBrown <neilb@suse.de>
+>>> ---
+>>>    drivers/md/md-cluster.c | 1 +
+>>>    drivers/md/md.c         | 3 +++
+>>>    2 files changed, 4 insertions(+)
+>>>
+>>> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+>>> index 742b2349fea3..37bf0aa4ed71 100644
+>>> --- a/drivers/md/md-cluster.c
+>>> +++ b/drivers/md/md-cluster.c
+>>> @@ -1009,6 +1009,7 @@ static int leave(struct mddev *mddev)
+>>>    	     test_bit(MD_CLOSING, &mddev->flags)))
+>>>    		resync_bitmap(mddev);
+>>>    
+>>> +	mddev->cluster_info = NULL;
+>> The above makes sense.
+> Thanks.
+>
+>>>    	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
+>>>    	md_unregister_thread(&cinfo->recovery_thread);
+>>>    	md_unregister_thread(&cinfo->recv_thread);
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index afaf36b2f6ab..a57b2dff64dd 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -6238,6 +6238,9 @@ static void mddev_detach(struct mddev *mddev)
+>>>    static void __md_stop(struct mddev *mddev)
+>>>    {
+>>>    	struct md_personality *pers = mddev->pers;
+>>> +
+>>> +	md_bitmap_wait_behind_writes(mddev);
+>>> +	md_cluster_stop(mddev);
+>>>    	mddev_detach(mddev);
+>>>    	/* Ensure ->event_work is done */
+>>>    	if (mddev->event_work.func)
+>> The md_bitmap_destroy is called in __md_stop with or without e151db8ecfb0,
+>> and it already invokes md_bitmap_wait_behind_writes and md_cluster_stop by
+>> md_bitmap_free. So the above is sort of redundant to me.
+> The point is that md_cluster_stop() needs to run before mddev_detach()
+> shuts down the thread.  If we don't call all of md_bitmap_destroy()
+> before mddev_detach() we need to at least run md_cluster_stop(), and I
+> think we need to run md_bitmap_wait_behind_writes() before that.
+>
+>
+>> For the issue described in e151db8ecfb, looks like raid1d was running after
+>> __md_stop, I am wondering if dm-raid should stop write first just like
+>> normal md-raid.
+> That looks like a really good idea, that should make it safe to move
+> md_bitmap_destroy() back before mddev_detach().
+> Would you like to post a patch to make those two changes, and include
+> Mikulas Patocka, or should I?
 
-Thanks,
-Mariusz
+NP, will send it later, thanks for your review.
+
+BRs,
+Guoqing
