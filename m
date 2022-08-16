@@ -2,130 +2,177 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20B56C19F2C
-	for <linux-raid@archiver.kernel.org>; Tue, 16 Aug 2022 05:42:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3101AC2BB41
+	for <linux-raid@archiver.kernel.org>; Tue, 16 Aug 2022 06:34:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229742AbiHPFm0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 16 Aug 2022 01:42:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40430 "EHLO
+        id S229804AbiHPGey (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 16 Aug 2022 02:34:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229704AbiHPFl7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 16 Aug 2022 01:41:59 -0400
-Received: from mail-ot1-x32b.google.com (mail-ot1-x32b.google.com [IPv6:2607:f8b0:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DA6A1A805
-        for <linux-raid@vger.kernel.org>; Mon, 15 Aug 2022 15:28:21 -0700 (PDT)
-Received: by mail-ot1-x32b.google.com with SMTP id cb12-20020a056830618c00b00616b871cef3so6349902otb.5
-        for <linux-raid@vger.kernel.org>; Mon, 15 Aug 2022 15:28:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc;
-        bh=A84AqG8UpNzHXB3esJR/kPGFK4W+hiHbH5gDTWf2hTg=;
-        b=MIPIDf5XedMUJoOa1+ED8NdyKJ/7dD5pDyiq7OTMJ7PgEv6R34LxCuFbNoxkLSfLx4
-         ton2gOcW3O2GbNy4UUH5jmtJVg7xnGVyQLeIMrz2YA4zPND0GKwC6zlgLYJyjm19encM
-         wfj0ePSWxEGLdS05f1atwV2AEx5f842syQRDUWIkOatFriIgbW3fCP9g7Q7vdVVFjxzD
-         azegQ5ihDH/1FhA5g5WUvKmQV8BRh1Y8gPPRdOOQQudulfc29LrMLvVEWrmabgN7FItj
-         LXnXEJ2uLj409epQ2pa3cAzqeswaJ51wI9QUdV8XkLS99uJeVUvJTKqX6dhMntoKsS2X
-         gkEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc;
-        bh=A84AqG8UpNzHXB3esJR/kPGFK4W+hiHbH5gDTWf2hTg=;
-        b=G9Z2GdQUcY0Q7xBaCkRBZk9j8aTaHHEEhhoL7m/RQr01iMvL/+lQ4vEptKt7DhuhNv
-         GcHzD9g2OMmPbaTLsMTZlhXPsbwLIL+bvQAdlm+1xBfiTWIwGAv5OWZpVDPmN0FOyo38
-         P2gaGdf42ll9dpPqSVpnM2pkE4ixOHxgU4diJYcHaTn33su3Lzfc9sbVC86VKGGrRcQU
-         8s7a7Xm3ZAuqO2Ajuq/+7m/6+MaBwQ7nZ8MlEShVH2R6CQOek28xgbhHoN7LscPx0E5e
-         vaJVwktqE9LRqAe8FeZCGHT99jSnlpOuzD0qrziAtbImsJdr0MD+ZAc4eq93tTcYGVcF
-         7cnA==
-X-Gm-Message-State: ACgBeo0vi5Fcj15HuV/f1FfIc6N4lmTcrf5eTHs+XZOl3SWGHZc9vyu9
-        zSbcudxb/zSY2vMsP3ZSNc+AJceBhDX9wMkXqSMelmWYlD8=
-X-Google-Smtp-Source: AA6agR50wVqcTlUseHaHKoeg0GDWxmDlOxMHtMPtyIRghjyDe9Xs5ZlbkYyhbUAodFl5p9ct1IeV+KzNOCZRVEdwZMo=
-X-Received: by 2002:a9d:4a8:0:b0:60c:76b1:f1be with SMTP id
- 37-20020a9d04a8000000b0060c76b1f1bemr6580194otm.347.1660602499563; Mon, 15
- Aug 2022 15:28:19 -0700 (PDT)
+        with ESMTP id S230016AbiHPGeh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 16 Aug 2022 02:34:37 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3480FDAECF
+        for <linux-raid@vger.kernel.org>; Mon, 15 Aug 2022 17:58:56 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 4A22134FC9;
+        Tue, 16 Aug 2022 00:58:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1660611531; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=D/2VUdJMtbSMBE2GjT/OGgCGq72AjDA5aHzsANfVQmQ=;
+        b=hQQwH7PGZO+ms46fXkmhcp81bnd4gxAJHzQQjm0MQk/XhEiNr9IfsTEcX2NnYMTF3KwKj+
+        wOUnZ2kb/tHcLCSQBIDgHW0RMLfc1RsDTucuK4S0/eBlTTBMY2vEJMv/Zr/zg0w4yfyxPO
+        ovz12l2z3Y7O+p6oCVbZ/z/oqINC1GY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1660611531;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=D/2VUdJMtbSMBE2GjT/OGgCGq72AjDA5aHzsANfVQmQ=;
+        b=gjBLY1Fpdi4duUhI/0puptrERt6EomUySxcHuuVnYqDYygDGyt8blrj9V6HP6iUN4Fu1Dt
+        TZ0rKxZcVyUeOaCw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2EC0D13A93;
+        Tue, 16 Aug 2022 00:58:49 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id MSvHNsnr+mJWSAAAMHmgww
+        (envelope-from <neilb@suse.de>); Tue, 16 Aug 2022 00:58:49 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-From:   "David F." <df7729@gmail.com>
-Date:   Mon, 15 Aug 2022 15:28:08 -0700
-Message-ID: <CAGRSmLvY48qanq6qdi40LE_50xT9ZzUq456KntesLSrxt8AmBw@mail.gmail.com>
-Subject: Timeout waiting for /dev/md/imsm0 ?
-To:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Guoqing Jiang" <guoqing.jiang@linux.dev>
+Cc:     "Song Liu" <song@kernel.org>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH RFC] md: call md_cluster_stop() in __md_stop()
+In-reply-to: <d45190a8-fffe-3a96-19ff-bdeccbc31945@linux.dev>
+References: <166027061107.20931.13490156249149223084@noble.neil.brown.name>,
+ <d45190a8-fffe-3a96-19ff-bdeccbc31945@linux.dev>
+Date:   Tue, 16 Aug 2022 10:58:47 +1000
+Message-id: <166061152702.5425.9507699881285566239@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-I'm not sure if this list is getting the messages but to summarize, if
-I pass the 5.15.x kernel parameter "nomdraid" to skip udev from doing
-anything with the RAID and then run:
+On Mon, 15 Aug 2022, Guoqing Jiang wrote:
+> Hi Neil,
+>=20
+> Sorry for later reply since I was on vacation last week.
+>=20
+> On 8/12/22 10:16 AM, NeilBrown wrote:
+> > [[ I noticed the e151 patch recently which seems to admit that it broke
+> >     something.  So I looked into it and came up with this.
+>=20
+> I just noticed it ...
+>=20
+> >     It seems to make sense, but I'm not in a position to test it.
+> >     Guoqing: does it look OK to you?
+> >     - NeilBrown
+> > ]]
+> >
+> > As described in Commit: 48df498daf62 ("md: move bitmap_destroy to the
+> > beginning of __md_stop") md_cluster_stop() needs to run before the
+> > mdddev->thread is stopped.
+> > The change to make this happen was reverted in Commit: e151db8ecfb0
+> > ("md-raid: destroy the bitmap after destroying the thread") due to
+> > problems it caused.
+> >
+> > To restore correct behaviour, make md_cluster_stop() reentrant and
+> > explicitly call it at the start of __md_stop(), after first calling
+> > md_bitmap_wait_behind_writes().
+> >
+> > Fixes: e151db8ecfb0 ("md-raid: destroy the bitmap after destroying the th=
+read")
+> > Signed-off-by: NeilBrown <neilb@suse.de>
+> > ---
+> >   drivers/md/md-cluster.c | 1 +
+> >   drivers/md/md.c         | 3 +++
+> >   2 files changed, 4 insertions(+)
+> >
+> > diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> > index 742b2349fea3..37bf0aa4ed71 100644
+> > --- a/drivers/md/md-cluster.c
+> > +++ b/drivers/md/md-cluster.c
+> > @@ -1009,6 +1009,7 @@ static int leave(struct mddev *mddev)
+> >   	     test_bit(MD_CLOSING, &mddev->flags)))
+> >   		resync_bitmap(mddev);
+> >  =20
+> > +	mddev->cluster_info =3D NULL;
+>=20
+> The above makes sense.
 
-mdadm - v4.1 - 2018-10-01
+Thanks.
 
-mdadm --examine --scan to create the /etc/mdadm/mdadm.conf file with:
+>=20
+> >   	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
+> >   	md_unregister_thread(&cinfo->recovery_thread);
+> >   	md_unregister_thread(&cinfo->recv_thread);
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index afaf36b2f6ab..a57b2dff64dd 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -6238,6 +6238,9 @@ static void mddev_detach(struct mddev *mddev)
+> >   static void __md_stop(struct mddev *mddev)
+> >   {
+> >   	struct md_personality *pers =3D mddev->pers;
+> > +
+> > +	md_bitmap_wait_behind_writes(mddev);
+> > +	md_cluster_stop(mddev);
+> >   	mddev_detach(mddev);
+> >   	/* Ensure ->event_work is done */
+> >   	if (mddev->event_work.func)
+>=20
+> The md_bitmap_destroy is called in __md_stop with or without e151db8ecfb0,
+> and it already invokes md_bitmap_wait_behind_writes and md_cluster_stop by
+> md_bitmap_free. So the above is sort of redundant to me.
 
-ARRAY metadata=imsm UUID=788c3635:2e37de4b:87d08323:987f57e5
-ARRAY /dev/md/TestRAID container=788c3635:2e37de4b:87d08323:987f57e5
-member=0 UUID=835de710:3d35bfb1:d159af46:6570f120
+The point is that md_cluster_stop() needs to run before mddev_detach()
+shuts down the thread.  If we don't call all of md_bitmap_destroy()
+before mddev_detach() we need to at least run md_cluster_stop(), and I
+think we need to run md_bitmap_wait_behind_writes() before that.
 
-Then run:
 
-mdadm --assemble --scan --no-degraded -v
+>=20
+> For the issue described in e151db8ecfb, looks like raid1d was running after
+> __md_stop, I am wondering if dm-raid should stop write first just like=20
+> normal
+> md-raid.
 
-I get:
+That looks like a really good idea, that should make it safe to move
+md_bitmap_destroy() back before mddev_detach().
+Would you like to post a patch to make those two changes, and include
+Mikulas Patocka, or should I?
 
-mdadm: looking for devices for further assembly
-mdadm: no RAID superblock on /dev/sdc1
-mdadm: /dev/sdc is not attached to Intel(R) RAID controller.
-mdadm: No OROM/EFI properties for /dev/sdc
-mdadm: no RAID superblock on /dev/sdc
-mdadm: no RAID superblock on /dev/sda5
-mdadm: no RAID superblock on /dev/sda3
-mdadm: no RAID superblock on /dev/sda2
-mdadm: no RAID superblock on /dev/sda1
-mdadm: /dev/sdb is identified as a member of /dev/md/imsm0, slot 1.
-mdadm: /dev/sda is identified as a member of /dev/md/imsm0, slot 0.
-mdadm: added /dev/sdb to /dev/md/imsm0 as 1
-mdadm: added /dev/sda to /dev/md/imsm0 as 0
-mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
-mdadm: timeout waiting for /dev/md/imsm0
-mdadm: looking for devices for /dev/md/TestRAID
-mdadm: cannot open device /dev/md/imsm0: No such file or directory
-mdadm: Cannot assemble mbr metadata on /dev/sdc1
-mdadm: Cannot assemble mbr metadata on /dev/sdc
-mdadm: /dev/sdb has wrong uuid.
-mdadm: Cannot assemble mbr metadata on /dev/sda5
-mdadm: Cannot assemble mbr metadata on /dev/sda3
-mdadm: Cannot assemble mbr metadata on /dev/sda2
-mdadm: no recogniseable superblock on /dev/sda1
-mdadm: /dev/sda has wrong uuid.
-mdadm: looking for devices for /dev/md/TestRAID
-mdadm: cannot open device /dev/md/imsm0: No such file or directory
-mdadm: Cannot assemble mbr metadata on /dev/sdc1
-mdadm: Cannot assemble mbr metadata on /dev/sdc
-mdadm: /dev/sdb has wrong uuid.
-mdadm: Cannot assemble mbr metadata on /dev/sda5
-mdadm: Cannot assemble mbr metadata on /dev/sda3
-mdadm: Cannot assemble mbr metadata on /dev/sda2
-mdadm: no recogniseable superblock on /dev/sda1
-mdadm: /dev/sda has wrong uuid.
+Thanks,
+NeilBrown
 
-If I let UDEV start it and then stop the RAID with:
 
-mdadm --stop --scan
-
-(which does stop it) then try to start again using the above command,
-I still get the timeout.
-
-This was working fine with older version 5.10.x kernel with the
-following differences:
-
-   mdadm v4.1 - 2018-10-01 (but from a different build - debian
-instead of devuan)
-   kmod as an older version
-   udev (eudev) was built against the older kmod.
-   all the various shared libraries and utilities were moved up to
-versions with Devuan Chimaera
-   rules updated (although I tried with the old rules too, no difference)
-
-Any idea on what is wrong?  Any tricks to have it output more
-information to diagnose what is happening?   The /dev/md127 device
-gets created, the actual devices never get created, even if you wait.
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index afaf36b2f6ab..afc8d638eba0 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -6260,6 +6260,7 @@ void md_stop(struct mddev *mddev)
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* stop the array and free an a=
+ttached data structures.
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * This is called from dm-=
+raid
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __md_stop_writes(mddev);
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __md_stop(mddev);
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bioset_exit(&mddev->bio_set);
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bioset_exit(&mddev->sync_set);
+>=20
+> Thanks,
+> Guoqing
+>=20
