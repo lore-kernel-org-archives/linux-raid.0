@@ -2,33 +2,70 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F278C25B08
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Aug 2022 12:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00960C3F6B0
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Aug 2022 14:35:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239436AbiHQMbN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Aug 2022 08:31:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58072 "EHLO
+        id S236621AbiHQOfF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Aug 2022 10:35:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233642AbiHQMbM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Aug 2022 08:31:12 -0400
-Received: from mail.itouring.de (mail.itouring.de [IPv6:2a01:4f8:a0:4463::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2F4B83F0C;
-        Wed, 17 Aug 2022 05:31:11 -0700 (PDT)
-Received: from tux.applied-asynchrony.com (p5ddd78be.dip0.t-ipconnect.de [93.221.120.190])
-        by mail.itouring.de (Postfix) with ESMTPSA id 14C27103762;
-        Wed, 17 Aug 2022 14:31:10 +0200 (CEST)
-Received: from [192.168.100.221] (hho.applied-asynchrony.com [192.168.100.221])
-        by tux.applied-asynchrony.com (Postfix) with ESMTP id C18A5F01600;
-        Wed, 17 Aug 2022 14:31:09 +0200 (CEST)
-Subject: Re: stalling IO regression since linux 5.12, through 5.18
-To:     Chris Murphy <lists@colorremedies.com>,
-        Nikolay Borisov <nborisov@suse.com>,
-        Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
-        Paolo Valente <paolo.valente@linaro.org>
-Cc:     Linux-RAID <linux-raid@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>
+        with ESMTP id S234267AbiHQOfE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Aug 2022 10:35:04 -0400
+Received: from new3-smtp.messagingengine.com (new3-smtp.messagingengine.com [66.111.4.229])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45DC998D2E;
+        Wed, 17 Aug 2022 07:35:01 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailnew.nyi.internal (Postfix) with ESMTP id 3ACB7580DD0;
+        Wed, 17 Aug 2022 10:34:59 -0400 (EDT)
+Received: from imap50 ([10.202.2.100])
+  by compute3.internal (MEProxy); Wed, 17 Aug 2022 10:34:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        colorremedies.com; h=cc:cc:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to; s=fm1; t=1660746899; x=
+        1660750499; bh=LKAtXnNRZjf7HOL+a5fvbCQjSFrC2arcLqqtzB9D/T0=; b=i
+        2Yc0j1JaZ1K6BH0QVUfz9M1QWgDAHVlRzr0RuK8p1b3+bej4viaWHonWBYwWL2mN
+        ty6pz8fI/N3mQbhi+CFz1WE7cIjBiFuA/VynPQg0Z6/eTloGNGgV51rRcVXsgYS8
+        uX7haAZOKKjqKSu2y6dYH8dJ9a+9KhdBddj8jw9Y7+OwKn5RuS8yjAFwMC7MFN5t
+        a69ET65isDGsQ5fc7Ej/5GBYMaf2/7SEJ74KF5NVPNv8I8ArlvZHs42ePE9dXPWr
+        9xPNqn64RbFsJms6vgpscWX7yDQHALTJTe6WSSPE6HA38ojezm+6kPzu5GqyHnWH
+        P6O6IrO5yR4fMYwJfWoew==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
+        :mime-version:references:reply-to:sender:subject:subject:to:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm1; t=1660746899; x=1660750499; bh=LKAtXnNRZjf7HOL+a5fvbCQjSFrC
+        2arcLqqtzB9D/T0=; b=D4lOcERm5opWkkE9Lp2LyMupzv20uyAOxkeNDukNZBFc
+        ZU5IH44+0hiCIaourmL7MwrQeumaS/jJw7qqHM01ajIUoHi+Z6UwqvrrK93nliR4
+        FcWGcab2vpl3Q88IaryGfJxly6f81+3Y+NVL2R85e+5u1aROj9rjIsZUjsT1QFbT
+        TQQKQNUh+wDBrixUAAzEHxurCkc+s8m6bE1r3vFzMhQsr767KfcCmgayR0OC+F+V
+        qxXuiRFsOST2LRdPipxsiFoAx0ag+kwzLNMiYbX2a955noucA2dXEG2nbR4a/OR9
+        CRI5CCzYPDCKaWBb7nBkQR6g4sSxA2c78YlgEG8WCA==
+X-ME-Sender: <xms:kvz8YgxIEvmNuBrUezdvVQFB9IP-Wo0iatp3tM53RJIPj-nUm2Qv_A>
+    <xme:kvz8YkSRiZRMWgJ-siy4T7JR4dii15vpz4ULviBvyxjrsifBHi0VVaHpIgegkwGhZ
+    6CMEuqpuyCyKWRiOIs>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehiedgjeejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    goufhushhpvggtthffohhmrghinhculdegledmnecujfgurhepofgfggfkjghffffhvfev
+    ufgtsehttdertderredtnecuhfhrohhmpedfvehhrhhishcuofhurhhphhihfdcuoehlih
+    hsthhssegtohhlohhrrhgvmhgvughivghsrdgtohhmqeenucggtffrrghtthgvrhhnpeef
+    heeliedugeeuleetffeuheegkeetgfdtveevudffgfejvdegveeljefhvdefhfenucffoh
+    hmrghinhepghhoohhglhgvrdgtohhmnecuvehluhhsthgvrhfuihiivgeptdenucfrrghr
+    rghmpehmrghilhhfrhhomheplhhishhtshestgholhhorhhrvghmvgguihgvshdrtghomh
+X-ME-Proxy: <xmx:kvz8YiVKJrH397tnj2KjSIhSnk6_QR2yz02WhKQvZ5HfyJU6H7JAmA>
+    <xmx:kvz8Yug76ogNh-LvW82VYd-Wlk58i3cmNtszgXIJp7unAxHH48aouA>
+    <xmx:kvz8YiC2sWMAOsrhtC1-XJMnKq9-KhD_2PbGfgKiWsFJ8szG1RgSRg>
+    <xmx:k_z8YoD0SQ9Z7Kpqx1TjZIBnkaaBLOOaWdlaoswUB2uGaRm8v1snJg>
+Feedback-ID: i06494636:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id CE9F21700082; Wed, 17 Aug 2022 10:34:58 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-841-g7899e99a45-fm-20220811.002-g7899e99a
+Mime-Version: 1.0
+Message-Id: <b236ca6e-2e69-4faf-9c95-642339d04543@www.fastmail.com>
+In-Reply-To: <CAFj5m9+6Vj3NdSg_n3nw1icscY1qr9f9SOvkWYyqpEtFBb_-1g@mail.gmail.com>
 References: <e38aa76d-6034-4dde-8624-df1745bb17fc@www.fastmail.com>
  <YvPvghdv6lzVRm/S@localhost.localdomain>
  <2220d403-e443-4e60-b7c3-d149e402c13e@www.fastmail.com>
@@ -41,65 +78,38 @@ References: <e38aa76d-6034-4dde-8624-df1745bb17fc@www.fastmail.com>
  <4995baed-c561-421d-ba3e-3a75d6a738a3@www.fastmail.com>
  <dcd8beea-d2d9-e692-6e5d-c96b2d29dfd1@suse.com>
  <2b8a38fa-f15f-45e8-8caa-61c5f8cd52de@www.fastmail.com>
- <7c830487-95a6-b008-920b-8bc4a318f10a@applied-asynchrony.com>
- <8b361f8e-cc4f-466c-90f0-031a43436af2@www.fastmail.com>
-From:   =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Organization: Applied Asynchrony, Inc.
-Message-ID: <6eece869-5cab-57b6-6f8f-98eaf65a742f@applied-asynchrony.com>
-Date:   Wed, 17 Aug 2022 14:31:09 +0200
-MIME-Version: 1.0
-In-Reply-To: <8b361f8e-cc4f-466c-90f0-031a43436af2@www.fastmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+ <CAFj5m9+6Vj3NdSg_n3nw1icscY1qr9f9SOvkWYyqpEtFBb_-1g@mail.gmail.com>
+Date:   Wed, 17 Aug 2022 10:34:38 -0400
+From:   "Chris Murphy" <lists@colorremedies.com>
+To:     "Ming Lei" <ming.lei@redhat.com>
+Cc:     "Nikolay Borisov" <nborisov@suse.com>,
+        "Jens Axboe" <axboe@kernel.dk>, "Jan Kara" <jack@suse.cz>,
+        "Paolo Valente" <paolo.valente@linaro.org>,
+        "Btrfs BTRFS" <linux-btrfs@vger.kernel.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        "Josef Bacik" <josef@toxicpanda.com>
+Subject: Re: stalling IO regression since linux 5.12, through 5.18
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2022-08-17 13:57, Chris Murphy wrote:
-> 
-> 
-> On Wed, Aug 17, 2022, at 5:52 AM, Holger Hoffstätte wrote:
->> On 2022-08-16 17:34, Chris Murphy wrote:
->>>
->>> On Tue, Aug 16, 2022, at 11:25 AM, Nikolay Borisov wrote:
->>>> How about changing the scheduler either mq-deadline or noop, just
->>>> to see if this is also reproducible with a different scheduler. I
->>>> guess noop would imply the blk cgroup controller is going to be
->>>> disabled
->>>
->>> I already reported on that: always happens with bfq within an hour or
->>> less. Doesn't happen with mq-deadline for ~25+ hours. Does happen
->>> with bfq with the above patches removed. Does happen with
->>> cgroup.disabled=io set.
->>>
->>> Sounds to me like it's something bfq depends on and is somehow
->>> becoming perturbed in a way that mq-deadline does not, and has
->>> changed between 5.11 and 5.12. I have no idea what's under bfq that
->>> matches this description.
->>
->> Chris, just a shot in the dark but can you try the patch from
->>
->> https://lore.kernel.org/linux-block/20220803121504.212071-1-yukuai1@huaweicloud.com/
->>
->> on top of something more recent than 5.12? Ideally 5.19 where it applies
->> cleanly.
-> 
-> The problem doesn't reliably reproduce on 5.19. A patch for 5.12..5.18 would be much more testable.
 
-If you look at the changes to sbitmap at:
 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/lib/sbitmap.c
+On Wed, Aug 17, 2022, at 8:06 AM, Ming Lei wrote:
 
-you'll find that they are relatively recent, so Yukai's patch will probably also apply
-to 5.18 - I don't know. Also look at the most recent commit which mentions
-"Checking free bits when setting the target bits. Otherwise, it may reuse the busying bits."
+> blk-mq debugfs log is usually helpful for io stall issue, care to post
+> the blk-mq debugfs log:
+>
+> (cd /sys/kernel/debug/block/$disk && find . -type f -exec grep -aH . {} \;)
 
-Reusing the busy bits sounds "not great" either and (AFAIU) may also be a cause for
-lost wakeups, but I'm sure Jan and Ming know all that better than me.
+This is only sda
+https://drive.google.com/file/d/1aAld-kXb3RUiv_ShAvD_AGAFDRS03Lr0/view?usp=sharing
 
-Especially Jan's suggestions re. disabling BFQ cgroup support is probably the easiest
-thing to try first. What you're observing may not have a single root cause, and even if
-it does, it might not be where we suspect.
+This is all the block devices
+https://drive.google.com/file/d/1iHqRuoz8ZzvkNcMtkV3Ep7h5Uof7sTKw/view?usp=sharing
 
--h
+-- 
+Chris Murphy
