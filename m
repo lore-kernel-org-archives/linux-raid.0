@@ -2,50 +2,50 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4B97C32771
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Aug 2022 16:35:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 538B1C25B08
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Aug 2022 16:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238069AbiHQQfN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Aug 2022 12:35:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42338 "EHLO
+        id S237585AbiHQQrv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Aug 2022 12:47:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237825AbiHQQfL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Aug 2022 12:35:11 -0400
+        with ESMTP id S234267AbiHQQru (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Aug 2022 12:47:50 -0400
 Received: from new2-smtp.messagingengine.com (new2-smtp.messagingengine.com [66.111.4.224])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FA2C5A81A;
-        Wed, 17 Aug 2022 09:35:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 021915E57F;
+        Wed, 17 Aug 2022 09:47:50 -0700 (PDT)
 Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailnew.nyi.internal (Postfix) with ESMTP id D6C18580D40;
-        Wed, 17 Aug 2022 12:35:07 -0400 (EDT)
+        by mailnew.nyi.internal (Postfix) with ESMTP id 63CFE580DCD;
+        Wed, 17 Aug 2022 12:47:49 -0400 (EDT)
 Received: from imap50 ([10.202.2.100])
-  by compute3.internal (MEProxy); Wed, 17 Aug 2022 12:35:07 -0400
+  by compute3.internal (MEProxy); Wed, 17 Aug 2022 12:47:49 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         colorremedies.com; h=cc:cc:content-type:date:date:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to; s=fm1; t=1660754107; x=
-        1660757707; bh=TWFUPTKciI9FuFZsf756Ud6YDkWosddvhORawGRFzBM=; b=d
-        7xqd2HpyOZDjRS+qD16tcYZnD+D5563TrA1kiu3/8I/7N+jwa5ijg7JkRwi1byl2
-        TcaWKbfmExk/oqFDcEoset0ODBykv4df76olXP+pk/LUbhu8NzaAPtCOES3yerW9
-        N3PYu4HsXL73KONzBwfvJwObD65WCs1UNbKuIbObXP2poTjtEHuo1keV3faCHjAn
-        p+tTAf89E89j/+Rud3yK4XolhP8jTlAsP6swDtzaiK+3JDN89H1+dUqW37bGzL7x
-        kNvcrBVKmR9syn5ELpYbmDXXLwp6/bvphgwv5FpCftl6R7X8SU9RjoOFpASpEvZc
-        i9ss0CdLCgOF098EaSyMw==
+        :reply-to:sender:subject:subject:to:to; s=fm1; t=1660754869; x=
+        1660758469; bh=e7kbwoZBIRw10cSPvBzfrGXpN7ylcVJroUO/rkVUtcs=; b=W
+        RhtvnStTDxP3KhIK4pUtcUImXsHQyU2D8ITizJByep1+YXzheOXTPrZD5groPqcP
+        hbUyBjZLN8wGheXBsVY7Km3jgIiZ/M59f814yr+5lcZQM8cpzbxS3nYzZS+DosvQ
+        0jE+DxWYmhj89aa2LrAR95s0dK/GPdgENKyh/Z4hbGqrlq7EMr9I5SnO1NUXm9DW
+        3OQ4JkHM6vhrzVWtVKLzVf1BVNRWNDSdPv96dgNI4oiiBt7gZ8cIdEcdQzfXh20c
+        8DK0ecSBSjrn/NbzPa6ZpwT1w/jw6c2wMu79Vk1xb15wjmh8apD5As4+H0Zn46Qp
+        qSj8Nim3wyxUBPMIPFS9w==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
         :feedback-id:from:from:in-reply-to:in-reply-to:message-id
         :mime-version:references:reply-to:sender:subject:subject:to:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1660754107; x=1660757707; bh=TWFUPTKciI9FuFZsf756Ud6YDkWo
-        sddvhORawGRFzBM=; b=m++RJXdZAkg3Rpiw9AI4+wyCkLFuEoZ1FfGxzrmx0zMB
-        KyJ99PLB80JkG1jVmEsGmqYGDjT/7EU5mVLoyi2rBVUyaheB0CkqqzpkI4XehzbT
-        iFguqN7HgRwJieFGA95g/k+EZC2T5jR3Cg1r0QWUz8DmVAHKBy1PXdJtCsOXmp1a
-        3aDoXPE2yO6QkIb1FVo8G8+iosrEedK841go7nisI7lDiREbDkOFhv05bcfS1+ie
-        jtjrxwbqO2Wd0Fi56xHoB8zkzbIG59yyCbVMYM19dbxzneN+sV9bt4sojIvwbJWF
-        P6PA0N6KnzvtiRYWRpIN6hHdklEYFowzojMM+u+khQ==
-X-ME-Sender: <xms:uxj9Yn-I9lme5D9fBXhswqHMtnqeKe4abFKepjeczh4ZQ4SCxy5NsQ>
-    <xme:uxj9YjtUpAvTqQ8GwemmWZrKZQ0NUhiIk8OKSC1NQYlyWQtAMNzC_VEJVI_lu5krw
-    hLf6WxuvHXcG2HjYb0>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehiedguddtvdcutefuodetggdotefrod
+        fm1; t=1660754869; x=1660758469; bh=e7kbwoZBIRw10cSPvBzfrGXpN7yl
+        cVJroUO/rkVUtcs=; b=r5z3tV2FlA4GSpPjG6dhyeNYMQFOIm7qyWpFqy0J17x0
+        ETY87suOsddfQdzhT6nlZ0GkxoGAkPtMdOlH7KUvesU7K50mPx548B2twDDdrnP5
+        Q36dn9kYz+HfgsGw8f9+8XsiGSeeMuTmDFt5u61R2HxpgIN04NAgiQqv6824lM/Y
+        6uv8+lcWvEdZc+LjddQrqNcnfLcu94sUyolwvB6Qxp6o5epZ6AIw+TPigBNiu7iA
+        ClJdLOa8SLSqCuByZuqxgihXEeGWUDiiN5NGebZdpF5RzspsYYmJ0ECcdgmcWJYs
+        1KAGL4xNGxfIvZxStGFc36vRiPUiRy7e0wYMRBSbjg==
+X-ME-Sender: <xms:tBv9Yn-CFrLqh5B28m98OCtHZuFV_yo2qvQfjmGndkoPXUlJZ1OH0w>
+    <xme:tBv9YjvG3cNWLLadhHnSzENLxpnFB4IvWtv3oIewqY293bsTKzVxAc7930NJgN3yV
+    d85AZaRHy4mYZB6O_g>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehiedguddthecutefuodetggdotefrod
     ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
     necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
     enucfjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdev
@@ -53,36 +53,36 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehiedguddtvdcutefuodetgg
     homheqnecuggftrfgrthhtvghrnhepgfdvueektdefgfefgfdtleffvdeileetgfefuddt
     ffelueeiveeiveekhedtheeunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpe
     hmrghilhhfrhhomheplhhishhtshestgholhhorhhrvghmvgguihgvshdrtghomh
-X-ME-Proxy: <xmx:uxj9YlA3aWCWJgh2xotPHQGBSS8tQuT7_N5zciYzww7GdTGdqp_sIQ>
-    <xmx:uxj9YjfZITecstfVN_fYfQDAz0sLxiAmBx6W8RS9k0L9XZB-gCjOLA>
-    <xmx:uxj9YsOqiA-CFXq5rNB9X1AaetuejSCo4MuU9JKulFd03VrZsFR4DQ>
-    <xmx:uxj9Yjdjh3oeQ-7qCgMyDv6cyz6WwJoGHr29VpYPrOrhAeNdCfzlyg>
+X-ME-Proxy: <xmx:tBv9YlDBSoX93SmklgMEIdo2g6T0mpyPnO5ZroKEwrtRyPh2icaaHA>
+    <xmx:tBv9YjebJcWlvHMPzmSTBI2nOmnULkpH3ipXQAy7K4XXzv908rdUJg>
+    <xmx:tBv9YsNEbr-7QYUb_QHbDBkEHJennFLIb56g1AvHzpw9lsWgTYDz3g>
+    <xmx:tRv9YoCFtdHumGQK03Iqq2u1MdiDPVjuVsFvFI61xpboDlC-6K2GRw>
 Feedback-ID: i06494636:Fastmail
 Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 723671700084; Wed, 17 Aug 2022 12:35:07 -0400 (EDT)
+        id BFEF51700082; Wed, 17 Aug 2022 12:47:48 -0400 (EDT)
 X-Mailer: MessagingEngine.com Webmail Interface
 User-Agent: Cyrus-JMAP/3.7.0-alpha0-841-g7899e99a45-fm-20220811.002-g7899e99a
 Mime-Version: 1.0
-Message-Id: <35f0d608-7448-4276-8922-19a23d8f9049@www.fastmail.com>
-In-Reply-To: <Yv0KmT8UYos2/4SX@T590>
-References: <CAEzrpqe3rRTvH=s+-aXTtupn-XaCxe0=KUe_iQfEyHWp-pXb5w@mail.gmail.com>
+Message-Id: <f6f899a5-97e2-460f-ad73-73d4b5e38eb6@www.fastmail.com>
+In-Reply-To: <20220817163059.kigrvdfmxfswmhls@quack3>
+References: <e36fe80f-a33b-4750-b593-3108ba169611@www.fastmail.com>
+ <CAEzrpqe3rRTvH=s+-aXTtupn-XaCxe0=KUe_iQfEyHWp-pXb5w@mail.gmail.com>
  <d48c7e95-e21e-dcdc-a776-8ae7bed566cb@kernel.dk>
  <61e5ccda-a527-4fea-9850-91095ffa91c4@www.fastmail.com>
  <4995baed-c561-421d-ba3e-3a75d6a738a3@www.fastmail.com>
  <dcd8beea-d2d9-e692-6e5d-c96b2d29dfd1@suse.com>
  <2b8a38fa-f15f-45e8-8caa-61c5f8cd52de@www.fastmail.com>
- <CAFj5m9+6Vj3NdSg_n3nw1icscY1qr9f9SOvkWYyqpEtFBb_-1g@mail.gmail.com>
- <b236ca6e-2e69-4faf-9c95-642339d04543@www.fastmail.com>
- <Yv0A6UhioH3rbi0E@T590>
- <f633c476-bdc9-40e2-a93f-29601979f833@www.fastmail.com>
- <Yv0KmT8UYos2/4SX@T590>
-Date:   Wed, 17 Aug 2022 12:34:42 -0400
+ <7c830487-95a6-b008-920b-8bc4a318f10a@applied-asynchrony.com>
+ <20220817114933.66c4g4xjsi4df2tg@quack3>
+ <85a141ae-56a7-4dcd-b75a-04be4b276b3a@www.fastmail.com>
+ <20220817163059.kigrvdfmxfswmhls@quack3>
+Date:   Wed, 17 Aug 2022 12:47:23 -0400
 From:   "Chris Murphy" <lists@colorremedies.com>
-To:     "Ming Lei" <ming.lei@redhat.com>
-Cc:     "Nikolay Borisov" <nborisov@suse.com>,
-        "Jens Axboe" <axboe@kernel.dk>, "Jan Kara" <jack@suse.cz>,
+To:     "Jan Kara" <jack@suse.cz>
+Cc:     =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>,
+        "Nikolay Borisov" <nborisov@suse.com>,
+        "Jens Axboe" <axboe@kernel.dk>,
         "Paolo Valente" <paolo.valente@linaro.org>,
-        "Btrfs BTRFS" <linux-btrfs@vger.kernel.org>,
         Linux-RAID <linux-raid@vger.kernel.org>,
         linux-block <linux-block@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>,
@@ -95,36 +95,23 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On Wed, Aug 17, 2022, at 11:34 AM, Ming Lei wrote:
+On Wed, Aug 17, 2022, at 12:30 PM, Jan Kara wrote:
 
-> From the 2nd log of blockdebugfs-all.txt, still not see any in-flight IO on
-> request based block devices, but sda is _not_ included in this log, and
-> only sdi, sdg and sdf are collected, is that expected?
+> BTW, are you sure the first problematic kernel is 5.12? 
 
-While the problem was happening I did
+100%
 
-cd /sys/kernel/debug/block
-find . -type f -exec grep -aH . {} \;
+It consistently reproduces with any 5.12 series kernel, including from c03c21ba6f4e which is before rc1. It's frustrating that git bisect produces kernels that won't boot, I was more than half way through! :D And could have been done by now...
 
-The file has the nodes out of order, but I don't know enough about the interface to see if there are things that are missing, or what it means.
+We've been running on 5.11 series kernels for a year because of this problem.
 
 
-> BTW, all request based block devices should be observed in blk-mq debugfs.
+> BTW that may be an
+> interesting thing to try: Can you boot with
+> "megaraid_sas.host_tagset_enable = 0" kernel option and see whether the
+> issue reproduces?
 
-/sys/kernel/debug/block contains
-
-drwxr-xr-x.  2 root root 0 Aug 17 15:20 md0
-drwxr-xr-x. 51 root root 0 Aug 17 15:20 sda
-drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdb
-drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdc
-drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdd
-drwxr-xr-x. 51 root root 0 Aug 17 15:20 sde
-drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdf
-drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdg
-drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdh
-drwxr-xr-x.  4 root root 0 Aug 17 15:20 sdi
-drwxr-xr-x.  2 root root 0 Aug 17 15:20 zram0
-
+Yep.
 
 -- 
 Chris Murphy
