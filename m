@@ -2,50 +2,50 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3682BC25B08
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Aug 2022 18:55:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44339C25B08
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Aug 2022 19:24:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241319AbiHQSzU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Aug 2022 14:55:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45986 "EHLO
+        id S240981AbiHQTYK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Aug 2022 15:24:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233617AbiHQSzT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Aug 2022 14:55:19 -0400
-Received: from new2-smtp.messagingengine.com (new2-smtp.messagingengine.com [66.111.4.224])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA75C57209;
-        Wed, 17 Aug 2022 11:55:18 -0700 (PDT)
+        with ESMTP id S240411AbiHQTYJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Aug 2022 15:24:09 -0400
+Received: from new4-smtp.messagingengine.com (new4-smtp.messagingengine.com [66.111.4.230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D985E67165;
+        Wed, 17 Aug 2022 12:24:07 -0700 (PDT)
 Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 18AE9581153;
-        Wed, 17 Aug 2022 14:55:18 -0400 (EDT)
+        by mailnew.nyi.internal (Postfix) with ESMTP id 5BD3C580BD8;
+        Wed, 17 Aug 2022 15:24:05 -0400 (EDT)
 Received: from imap50 ([10.202.2.100])
-  by compute3.internal (MEProxy); Wed, 17 Aug 2022 14:55:18 -0400
+  by compute3.internal (MEProxy); Wed, 17 Aug 2022 15:24:05 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         colorremedies.com; h=cc:cc:content-type:date:date:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to; s=fm1; t=1660762518; x=
-        1660766118; bh=2MSzHf7ULCb3kZkQymVkXbgysig1iR5rZCCBOLTeyYk=; b=J
-        6RpGRAB8er5OtqTwFoSv99IibnkkxQSmPTHsH6PTM0ychl74tOyhxCDoq+N3oiL3
-        gWJCBrYbFwHTDFwxmKH4krAdtSjiQqYueFzQZCYcalHSYLPBijPbJ98BXAOFi03R
-        NlBHluWZUf3BedagU/MrlLIjP46hHscZOZGN86WS/jL4uh3buXTUmBPUrqteSuR8
-        9jpl2mkTibR15MdaUfLSs2LB1WkS8HbTjSETx46E676XnvUsGVM+qdRFRbWqAmZS
-        RJRx67cxEbOZ0GqftDKHkVXJO0qs5DSzZkfciknwL6pvlU6yjKmRxoBdxCgnszRt
-        h/Da8XLwjd5jj34g1C8MA==
+        :reply-to:sender:subject:subject:to:to; s=fm1; t=1660764245; x=
+        1660767845; bh=i6g6uhetDZvPnuAOa38J5AKruYl3djzKfCW4PCzxY6Y=; b=Y
+        NMS7yyfXPFMaiZGsLL7J3h+e4rw2M/AeNtS8dkIywnXgNqTHQu5xRG5nkGm84URL
+        lpNfik3egDOJtp8iV0kCphYKQALNxGrE8ZexhhOQeJsNT3KO2jMRe2Vic6aF6qYb
+        6cFNhCdp+JH1npjrGznwbpnSHVukUMPb8ebbl3NN+3x1ThpwhYXAdx/KP7xY06XS
+        zGwL6XG5/lyGR4lr4Emq1mcFBVndlP0XNV+R/2MzzKlZBQglgh+2gDXOoZ/5nR2f
+        ZzzmXVzZebYJPgLY7hHrekeJ2AOvtaYlAYKNGOAQyhW4SWJRR/4zJM+nle12oZbw
+        zU7+ifK/17689dig4LW0A==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
         :feedback-id:from:from:in-reply-to:in-reply-to:message-id
         :mime-version:references:reply-to:sender:subject:subject:to:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1660762518; x=1660766118; bh=2MSzHf7ULCb3kZkQymVkXbgysig1
-        iR5rZCCBOLTeyYk=; b=fKlkXzeY3T1X6lDoHRmZyhzHI+rnwVk0dEzPZWk3EmEK
-        Tc5wYnCbVprGssXbQvp6Os4phdDd24CYfvN30BXcGwqvb9lbrdWLlpuL6XGDXCSZ
-        K+4qFdwKa+nbuWmHsn9Q1TtqI3bxPqNUci5aHQGngNT6uPgQCPb88VvyBLuEEffe
-        MI2fgQv6+Z+zinSNHzTPdePtaOSRBu+foKS7NQ+OUjCCjDq4z6j6s8hlBVWxWLD8
-        C8oKR62ZMHL7t1zlCSiEXUh2yz8VPz4P2x9BxC9E/4j12MRUDagueXcBCJ1944CW
-        i33KsosNmIF+M5VAFmowuPTvJIoxjvTvTOL5HU6HHw==
-X-ME-Sender: <xms:lTn9YswnFe3PqZnR5lGZ14X0fYhBRJremBOnsjJKW7qTnParAfHBCA>
-    <xme:lTn9YgRWydPQquTKc10FE8TEpLoHqLX11eyzr-cG2HAu9fyYw8AcrK5gf2eLQQuY_
-    _l2iIlyhEMrBwR3ygM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehiedgudefvdcutefuodetggdotefrod
+        fm1; t=1660764245; x=1660767845; bh=i6g6uhetDZvPnuAOa38J5AKruYl3
+        djzKfCW4PCzxY6Y=; b=pPruFcAjUVUuJy+I8ncL+yUzveYopoo3pSDrlEVGsb95
+        oXmAEv9Mn3dbL+lNGsxLpZw4H0X1MgguURVqcNh/U+czvwUax1dFPI3Qr/VKwTCT
+        VG3t8AOAAArtdFSr3auwaJMRriUJHyjo15wpZWfst0H2+QjWr4FEd3CsRzduhAIJ
+        Y0ApjcmfesJ5/BPOlE9S5Pf+WGf5L3KEt3DJ+14yV0GWMXPEstA8tFf3b6p1c/75
+        dwwXEFh7MNVokCu8vrRNe/wsyQS32pIBuS1FK90RbsspjBOJ/U/iSaB7vQnrFSF1
+        9KOIU4p5PAFJUWpyVvCZWzonDYs/gkPHiEpnN9udFA==
+X-ME-Sender: <xms:VED9YmOKQW99bNRyG-lc3nGSWs_h-ihVLmMXtawcWSqzrWzMACwbPA>
+    <xme:VED9Yk_6dvZPkwJDIimMhKUPr_if7IPUQkLP0T4W4JcQlrdVVF88BTDSywysOPPcZ
+    Fpr3oYiMj46BAuucLk>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehiedgudefjecutefuodetggdotefrod
     ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
     necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
     enucfjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdev
@@ -53,18 +53,18 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehiedgudefvdcutefuodetgg
     homheqnecuggftrfgrthhtvghrnhepgfdvueektdefgfefgfdtleffvdeileetgfefuddt
     ffelueeiveeiveekhedtheeunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpe
     hmrghilhhfrhhomheplhhishhtshestgholhhorhhrvghmvgguihgvshdrtghomh
-X-ME-Proxy: <xmx:lTn9YuWPEcuaC_ECqX5WKJJ_wVzuSK4LAJABqgueMMAtNEUWqcPvjw>
-    <xmx:lTn9Yqhuwb9I6mQps7MD0IE2bwq5xCfalGbFh0S0b7lbvcDPIZx-IQ>
-    <xmx:lTn9YuDR6l3Mu8o6I56QT_2UeX67ecWclkWA6IrJ_PkFsi3iIW9CPg>
-    <xmx:ljn9Yg0YjJA_u65qyn4VKZFWV9dLfbWdsOZyjCrtXS2wP-D2dNF4Kg>
+X-ME-Proxy: <xmx:VED9YtTlvw8ztfgobE4F41Ky7_PKq9lZ9W_ma1Y154LaZA3Fbv71AQ>
+    <xmx:VED9Ymu_hBnOugzNB4o-bHa9qPtL3ndu5CowZs9xwBPkBUuOuQbNbA>
+    <xmx:VED9YudmZ54A77Frk1aKnJOdDXZI4RBPAdCr3xmWNGAFIfxhLiz1jg>
+    <xmx:VUD9YmROAkOe8hZXTh7xeHDm9VXAnNKjwjzLUliL6PosQQno83CUCg>
 Feedback-ID: i06494636:Fastmail
 Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 553831700082; Wed, 17 Aug 2022 14:55:17 -0400 (EDT)
+        id 9148E1700082; Wed, 17 Aug 2022 15:24:04 -0400 (EDT)
 X-Mailer: MessagingEngine.com Webmail Interface
 User-Agent: Cyrus-JMAP/3.7.0-alpha0-841-g7899e99a45-fm-20220811.002-g7899e99a
 Mime-Version: 1.0
-Message-Id: <2f252399-0e30-4465-8c02-3f42c145174a@www.fastmail.com>
-In-Reply-To: <20220817183335.47a4ao26wjopavo2@quack3>
+Message-Id: <e8317df3-7955-4109-981c-f85f0416ce0f@www.fastmail.com>
+In-Reply-To: <2f252399-0e30-4465-8c02-3f42c145174a@www.fastmail.com>
 References: <dcd8beea-d2d9-e692-6e5d-c96b2d29dfd1@suse.com>
  <2b8a38fa-f15f-45e8-8caa-61c5f8cd52de@www.fastmail.com>
  <7c830487-95a6-b008-920b-8bc4a318f10a@applied-asynchrony.com>
@@ -76,7 +76,8 @@ References: <dcd8beea-d2d9-e692-6e5d-c96b2d29dfd1@suse.com>
  <20220817181554.znqljc6mmci45ukd@quack3>
  <e4c260da-2df7-49a3-a8dc-1d3fc7ca12a0@www.fastmail.com>
  <20220817183335.47a4ao26wjopavo2@quack3>
-Date:   Wed, 17 Aug 2022 14:54:42 -0400
+ <2f252399-0e30-4465-8c02-3f42c145174a@www.fastmail.com>
+Date:   Wed, 17 Aug 2022 15:23:43 -0400
 From:   "Chris Murphy" <lists@colorremedies.com>
 To:     "Jan Kara" <jack@suse.cz>
 Cc:     =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>,
@@ -95,24 +96,41 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On Wed, Aug 17, 2022, at 2:33 PM, Jan Kara wrote:
-> On Wed 17-08-22 14:18:01, Chris Murphy wrote:
->> 
->> 
->> On Wed, Aug 17, 2022, at 2:15 PM, Jan Kara wrote:
->> 
->> > OK, if this indeed passes then b6e68ee82585 ("blk-mq: Improve performance
->> > of non-mq IO schedulers with multiple HW queues") might be what's causing
->> > issues (although I don't know how yet...).
->> 
->> I can revert it from 5.12.0 and try. Let me know which next test is preferred :)
+On Wed, Aug 17, 2022, at 2:54 PM, Chris Murphy wrote:
+> On Wed, Aug 17, 2022, at 2:33 PM, Jan Kara wrote:
+>> On Wed 17-08-22 14:18:01, Chris Murphy wrote:
+>>> 
+>>> 
+>>> On Wed, Aug 17, 2022, at 2:15 PM, Jan Kara wrote:
+>>> 
+>>> > OK, if this indeed passes then b6e68ee82585 ("blk-mq: Improve performance
+>>> > of non-mq IO schedulers with multiple HW queues") might be what's causing
+>>> > issues (although I don't know how yet...).
+>>> 
+>>> I can revert it from 5.12.0 and try. Let me know which next test is preferred :)
+>>
+>> Let's try to revert this first so that we have it narrowed down what
+>> started causing the issues. 
 >
-> Let's try to revert this first so that we have it narrowed down what
-> started causing the issues. 
+> OK I've reverted b6e68ee82585, and removing 
+> megaraid_sas.host_tagset_enable=0, and will restart the workload...
+>
+> Usually it's within 10 minutes but the newer the kernel it seems the 
+> longer it takes, or the more things I have to throw at it. The problem 
+> doesn't reproduce at all with 5.19 series unless I also run a separate 
+> dnf install, and that only triggers maybe 1 in 3 times.
 
-OK I've reverted b6e68ee82585, and removing megaraid_sas.host_tagset_enable=0, and will restart the workload...
+What I'm seeing is similar to 5.18 and occasionally 5.19...
 
-Usually it's within 10 minutes but the newer the kernel it seems the longer it takes, or the more things I have to throw at it. The problem doesn't reproduce at all with 5.19 series unless I also run a separate dnf install, and that only triggers maybe 1 in 3 times.
+top reports high %wa, above 30% sometimes above 60%, and increasing load (48 cpus so load 48 is OK, but this is triple digits which never happens on 5.11 series kernels).
+
+IO pressure is 10x higher than with mq-deadline (or bfq on 5.11 series kernel) 40-50% right now
+
+iotop usually craters to 0 by now, but it's near normal.
+
+So I think b6e68ee82585 is s contributing factor. But isn't the only factor. I'm going to let this keep running and see if it matures into the more typical failure pattern.
+
+
 
 -- 
 Chris Murphy
