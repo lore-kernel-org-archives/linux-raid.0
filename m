@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E6E6C32772
-	for <linux-raid@archiver.kernel.org>; Thu, 18 Aug 2022 14:58:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BDD7C00140
+	for <linux-raid@archiver.kernel.org>; Thu, 18 Aug 2022 14:59:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343887AbiHRO6u (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 18 Aug 2022 10:58:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41202 "EHLO
+        id S1343885AbiHRO7M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 18 Aug 2022 10:59:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343940AbiHRO6d (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 18 Aug 2022 10:58:33 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CA5A1758F
-        for <linux-raid@vger.kernel.org>; Thu, 18 Aug 2022 07:58:28 -0700 (PDT)
+        with ESMTP id S1343927AbiHRO6l (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 18 Aug 2022 10:58:41 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D47C831DDB
+        for <linux-raid@vger.kernel.org>; Thu, 18 Aug 2022 07:58:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1660834708; x=1692370708;
+  t=1660834717; x=1692370717;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=sBIAwm83vtuc4r9a/18owVmE6YBxk+U6ywYzlndDAzA=;
-  b=kcZnaC2izTEjiKnr3GdQs7hyz4ZpgwdLJawdHIXsUszfWm8Lk1WiV42C
-   nlnAjOYhRRQQt9sN/mVapZv3ZGuzLmbwbOzwAsOx9inRAbnl4pUHqE1S+
-   7w0hrrjgWri0AJKc2RU0SIsFjGfYUWcB6cZNbQN8VtRIx+fMyUdM43Rz1
-   /a+gZpsHEVEAfKfpzjEmDfQJG9A5hcay2GVZj/r6T0ghxI6awtbI2cSl1
-   qN+9IQRoYG2gfYE8AG6TLeZLkLf26SrBcgYjT/kAH2bDkzCyuwL10NQci
-   DLCKtGkUidc2p2M1Gw3eDg09t5MrYTOCsKQGuJN/sa+QoeWh0cCiLEgc7
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10443"; a="275823824"
+  bh=CConeVxtRmBzp20xaOMTDWJZw9RDDkuWxb12mmArUug=;
+  b=ZiJ5N/MOiu2jYP0h+rHOL2F+gkMayQafvmPfu/PfjI32pk3MRSvK7yeH
+   KlSBcXuEEcQUDahNVJJUm11eBcko5V8y0FqB/RGpxZALpnGwWUugxkN8O
+   IzCRglmq0x6S+aEsW4VUBiZ/MWWm5/gdP7b/Ilwq1sduJtswLpsnOeoS6
+   aAl7rwOGLtk3yojwPgF+0bT+72EaxO6oX0wVozkKqBE5otgH5ieMksA3x
+   d7EyLF9bet5kGBsW0SPiA07PtSoT4UhbsD5W4rTHHj84927ndjwtXctHx
+   Ka9NKKPnq/5HthxEL6UKysu//9a/Rrnyyphq3pGHvFhUesbaTIFm2yA0f
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10443"; a="318799167"
 X-IronPort-AV: E=Sophos;i="5.93,246,1654585200"; 
-   d="scan'208";a="275823824"
+   d="scan'208";a="318799167"
 Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2022 07:58:27 -0700
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2022 07:58:36 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.93,246,1654585200"; 
-   d="scan'208";a="676084881"
+   d="scan'208";a="676084895"
 Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.52])
-  by fmsmga004.fm.intel.com with ESMTP; 18 Aug 2022 07:58:26 -0700
+  by fmsmga004.fm.intel.com with ESMTP; 18 Aug 2022 07:58:35 -0700
 From:   Mateusz Kusiak <mateusz.kusiak@intel.com>
 To:     linux-raid@vger.kernel.org
 Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH 09/10] Manage&Incremental: code refactor, string to enum
-Date:   Thu, 18 Aug 2022 16:56:20 +0200
-Message-Id: <20220818145621.21982-10-mateusz.kusiak@intel.com>
+Subject: [PATCH 10/10] Change char* to enum in context->update & refactor code
+Date:   Thu, 18 Aug 2022 16:56:21 +0200
+Message-Id: <20220818145621.21982-11-mateusz.kusiak@intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220818145621.21982-1-mateusz.kusiak@intel.com>
 References: <20220818145621.21982-1-mateusz.kusiak@intel.com>
@@ -52,276 +52,283 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Prepare Manage and Incremental for later changing context->update to enum.
-Change update from string to enum in multiple functions and pass enum
-where already possible.
+Storing update option in string is bad for frequent comparisons and
+error prone.
+Replace char array with enum so already existing enum is passed around
+instead of string.
+Adapt code to changes.
 
 Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 ---
- Grow.c        |  8 ++++----
- Incremental.c |  8 ++++----
- Manage.c      | 35 +++++++++++++++++------------------
- mdadm.c       | 23 ++++++++++++++++++-----
- mdadm.h       |  4 ++--
- 5 files changed, 45 insertions(+), 33 deletions(-)
+ Assemble.c | 40 +++++++++++++++++-----------------------
+ mdadm.c    | 52 +++++++++++++++++++---------------------------------
+ mdadm.h    |  2 +-
+ 3 files changed, 37 insertions(+), 57 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 83b38a71..3cd4db48 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -602,12 +602,12 @@ int Grow_consistency_policy(char *devname, int fd, struct context *c, struct sha
+diff --git a/Assemble.c b/Assemble.c
+index 8cd3d533..942e352e 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -135,17 +135,17 @@ static int ident_matches(struct mddev_ident *ident,
+ 			 struct mdinfo *content,
+ 			 struct supertype *tst,
+ 			 char *homehost, int require_homehost,
+-			 char *update, char *devname)
++			 enum update_opt update, char *devname)
+ {
+ 
+-	if (ident->uuid_set && (!update || strcmp(update, "uuid")!= 0) &&
++	if (ident->uuid_set && update != UOPT_UUID &&
+ 	    same_uuid(content->uuid, ident->uuid, tst->ss->swapuuid)==0 &&
+ 	    memcmp(content->uuid, uuid_zero, sizeof(int[4])) != 0) {
+ 		if (devname)
+ 			pr_err("%s has wrong uuid.\n", devname);
+ 		return 0;
  	}
+-	if (ident->name[0] && (!update || strcmp(update, "name")!= 0) &&
++	if (ident->name[0] && update != UOPT_NAME &&
+ 	    name_matches(content->name, ident->name, homehost, require_homehost)==0) {
+ 		if (devname)
+ 			pr_err("%s has wrong name.\n", devname);
+@@ -648,11 +648,10 @@ static int load_devices(struct devs *devices, char *devmap,
+ 			int err;
+ 			fstat(mdfd, &stb2);
  
- 	if (subarray) {
--		char *update;
-+		enum update_opt update;
+-			if (strcmp(c->update, "uuid") == 0 && !ident->uuid_set)
++			if (c->update == UOPT_UUID && !ident->uuid_set)
+ 				random_uuid((__u8 *)ident->uuid);
  
- 		if (s->consistency_policy == CONSISTENCY_POLICY_PPL)
--			update = "ppl";
-+			update = UOPT_PPL;
- 		else
--			update = "no-ppl";
-+			update = UOPT_NO_PPL;
+-			if (strcmp(c->update, "ppl") == 0 &&
+-			    ident->bitmap_fd >= 0) {
++			if (c->update == UOPT_PPL && ident->bitmap_fd >= 0) {
+ 				pr_err("PPL is not compatible with bitmap\n");
+ 				close(mdfd);
+ 				free(devices);
+@@ -684,34 +683,30 @@ static int load_devices(struct devs *devices, char *devmap,
+ 			strcpy(content->name, ident->name);
+ 			content->array.md_minor = minor(stb2.st_rdev);
  
- 		sprintf(container_dev, "/dev/%s", st->container_devnm);
+-			if (strcmp(c->update, "byteorder") == 0)
++			if (c->update == UOPT_BYTEORDER)
+ 				err = 0;
+-			else if (strcmp(c->update, "home-cluster") == 0) {
++			else if (c->update == UOPT_HOME_CLUSTER) {
+ 				tst->cluster_name = c->homecluster;
+ 				err = tst->ss->write_bitmap(tst, dfd, NameUpdate);
+-			} else if (strcmp(c->update, "nodes") == 0) {
++			} else if (c->update == UOPT_NODES) {
+ 				tst->nodes = c->nodes;
+ 				err = tst->ss->write_bitmap(tst, dfd, NodeNumUpdate);
+-			} else if (strcmp(c->update, "revert-reshape") == 0 &&
+-				   c->invalid_backup)
++			} else if (c->update == UOPT_REVERT_RESHAPE && c->invalid_backup)
+ 				err = tst->ss->update_super(tst, content,
+ 							    UOPT_SPEC_REVERT_RESHAPE_NOBACKUP,
+ 							    devname, c->verbose,
+ 							    ident->uuid_set,
+ 							    c->homehost);
+ 			else
+-				/*
+-				 * Mapping is temporary, will be removed in this patchset
+-				 */
+ 				err = tst->ss->update_super(tst, content,
+-							    map_name(update_options, c->update),
++							    c->update,
+ 							    devname, c->verbose,
+ 							    ident->uuid_set,
+ 							    c->homehost);
+ 			if (err < 0) {
+ 				if (err == -1)
+ 					pr_err("--update=%s not understood for %s metadata\n",
+-					       c->update, tst->ss->name);
++					       map_num(update_options, c->update), tst->ss->name);
+ 				tst->ss->free_super(tst);
+ 				free(tst);
+ 				close(mdfd);
+@@ -721,7 +716,7 @@ static int load_devices(struct devs *devices, char *devmap,
+ 				*stp = st;
+ 				return -1;
+ 			}
+-			if (strcmp(c->update, "uuid")==0 &&
++			if (c->update == UOPT_UUID &&
+ 			    !ident->uuid_set) {
+ 				ident->uuid_set = 1;
+ 				memcpy(ident->uuid, content->uuid, 16);
+@@ -730,7 +725,7 @@ static int load_devices(struct devs *devices, char *devmap,
+ 				pr_err("Could not re-write superblock on %s.\n",
+ 				       devname);
  
-@@ -3234,7 +3234,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 	 * level and frozen, we can safely add them.
+-			if (strcmp(c->update, "uuid")==0 &&
++			if (c->update == UOPT_UUID &&
+ 			    ident->bitmap_fd >= 0 && !bitmap_done) {
+ 				if (bitmap_update_uuid(ident->bitmap_fd,
+ 						       content->uuid,
+@@ -1188,8 +1183,7 @@ static int start_array(int mdfd,
+ 				pr_err("%s: Need a backup file to complete reshape of this array.\n",
+ 				       mddev);
+ 				pr_err("Please provided one with \"--backup-file=...\"\n");
+-				if (c->update &&
+-				    strcmp(c->update, "revert-reshape") == 0)
++				if (c->update == UOPT_REVERT_RESHAPE)
+ 					pr_err("(Don't specify --update=revert-reshape again, that part succeeded.)\n");
+ 				return 1;
+ 			}
+@@ -1487,7 +1481,7 @@ try_again:
  	 */
- 	if (devlist) {
--		if (Manage_subdevs(devname, fd, devlist, verbose, 0, NULL, 0))
-+		if (Manage_subdevs(devname, fd, devlist, verbose, 0, UOPT_UNDEFINED, 0))
- 			goto release;
- 	}
- 
-diff --git a/Incremental.c b/Incremental.c
-index 4d0cd9d6..cfee582f 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -1025,7 +1025,7 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
- 			close(dfd);
- 			*dfdp = -1;
- 			rv =  Manage_subdevs(chosen->sys_name, mdfd, &devlist,
--					     -1, 0, NULL, 0);
-+					     -1, 0, UOPT_UNDEFINED, 0);
- 			close(mdfd);
- 		}
- 		if (verbose > 0) {
-@@ -1666,7 +1666,7 @@ static void remove_from_member_array(struct mdstat_ent *memb,
- 
- 	if (subfd >= 0) {
- 		rv = Manage_subdevs(memb->devnm, subfd, devlist, verbose,
--				    0, NULL, 0);
-+				    0, UOPT_UNDEFINED, 0);
- 		if (rv & 2) {
- 			if (sysfs_init(&mmdi, -1, memb->devnm))
- 				pr_err("unable to initialize sysfs for: %s\n",
-@@ -1758,7 +1758,7 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
- 		free_mdstat(mdstat);
- 	} else {
- 		rv |= Manage_subdevs(ent->devnm, mdfd, &devlist,
--				    verbose, 0, NULL, 0);
-+				    verbose, 0, UOPT_UNDEFINED, 0);
- 		if (rv & 2) {
- 		/* Failed due to EBUSY, try to stop the array.
- 		 * Give udisks a chance to unmount it first.
-@@ -1770,7 +1770,7 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
- 
- 	devlist.disposition = 'r';
- 	rv = Manage_subdevs(ent->devnm, mdfd, &devlist,
--			    verbose, 0, NULL, 0);
-+			    verbose, 0, UOPT_UNDEFINED, 0);
- end:
- 	close(mdfd);
- 	free_mdstat(ent);
-diff --git a/Manage.c b/Manage.c
-index c47b6262..e560bdb9 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -598,14 +598,12 @@ static void add_set(struct mddev_dev *dv, int fd, char set_char)
- 
- int attempt_re_add(int fd, int tfd, struct mddev_dev *dv,
- 		   struct supertype *dev_st, struct supertype *tst,
--		   unsigned long rdev,
--		   char *update, char *devname, int verbose,
--		   mdu_array_info_t *array)
-+		   unsigned long rdev, enum update_opt update,
-+		   char *devname, int verbose, mdu_array_info_t *array)
- {
- 	struct mdinfo mdi;
- 	int duuid[4];
- 	int ouuid[4];
--	enum update_opt update_enum = map_name(update_options, update);
- 
- 	dev_st->ss->getinfo_super(dev_st, &mdi, NULL);
- 	dev_st->ss->uuid_from_super(dev_st, ouuid);
-@@ -683,7 +681,7 @@ int attempt_re_add(int fd, int tfd, struct mddev_dev *dv,
- 					devname, verbose, 0, NULL);
- 			if (update)
- 				rv = dev_st->ss->update_super(
--					dev_st, NULL, update_enum,
-+					dev_st, NULL, update,
- 					devname, verbose, 0, NULL);
- 			if (rv == 0)
- 				rv = dev_st->ss->store_super(dev_st, tfd);
-@@ -715,8 +713,8 @@ skip_re_add:
- int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 	       struct supertype *tst, mdu_array_info_t *array,
- 	       int force, int verbose, char *devname,
--	       char *update, unsigned long rdev, unsigned long long array_size,
--	       int raid_slot)
-+	       enum update_opt update, unsigned long rdev,
-+	       unsigned long long array_size, int raid_slot)
- {
- 	unsigned long long ldsize;
- 	struct supertype *dev_st;
-@@ -1288,7 +1286,7 @@ int Manage_with(struct supertype *tst, int fd, struct mddev_dev *dv,
- 
- int Manage_subdevs(char *devname, int fd,
- 		   struct mddev_dev *devlist, int verbose, int test,
--		   char *update, int force)
-+		   enum update_opt update, int force)
- {
- 	/* Do something to each dev.
- 	 * devmode can be
-@@ -1676,12 +1674,13 @@ int autodetect(void)
- 	return rv;
- }
- 
--int Update_subarray(char *dev, char *subarray, char *update, struct mddev_ident *ident, int verbose)
-+int Update_subarray(char *dev, char *subarray, enum update_opt update,
-+		    struct mddev_ident *ident, int verbose)
- {
- 	struct supertype supertype, *st = &supertype;
- 	int fd, rv = 2;
- 	struct mdinfo *info = NULL;
--	enum update_opt update_enum = map_name(update_options, update);
-+	char *update_verb = map_num(update_options, update);
- 
- 	memset(st, 0, sizeof(*st));
- 
-@@ -1699,7 +1698,7 @@ int Update_subarray(char *dev, char *subarray, char *update, struct mddev_ident
- 	if (is_subarray_active(subarray, st->devnm)) {
- 		if (verbose >= 0)
- 			pr_err("Subarray %s in %s is active, cannot update %s\n",
--			       subarray, dev, update);
-+				subarray, dev, update_verb);
- 		goto free_super;
- 	}
- 
-@@ -1708,23 +1707,23 @@ int Update_subarray(char *dev, char *subarray, char *update, struct mddev_ident
- 
- 	info = st->ss->container_content(st, subarray);
- 
--	if (strncmp(update, "ppl", 3) == 0 && !is_level456(info->array.level)) {
-+	if (update == UOPT_PPL && !is_level456(info->array.level)) {
- 		pr_err("RWH policy ppl is supported only for raid4, raid5 and raid6.\n");
- 		goto free_super;
- 	}
- 
--	rv = st->ss->update_subarray(st, subarray, update_enum, ident);
-+	rv = st->ss->update_subarray(st, subarray, update, ident);
- 
- 	if (rv) {
- 		if (verbose >= 0)
- 			pr_err("Failed to update %s of subarray-%s in %s\n",
--				update, subarray, dev);
-+				update_verb, subarray, dev);
- 	} else if (st->update_tail)
- 		flush_metadata_updates(st);
+ 	if (map_lock(&map))
+ 		pr_err("failed to get exclusive lock on mapfile - continue anyway...\n");
+-	if (c->update && strcmp(c->update,"uuid") == 0)
++	if (c->update == UOPT_UUID)
+ 		mp = NULL;
  	else
- 		st->ss->sync_metadata(st);
- 
--	if (rv == 0 && strcmp(update, "name") == 0 && verbose >= 0)
-+	if (rv == 0 && update == UOPT_NAME && verbose >= 0)
- 		pr_err("Updated subarray-%s name from %s, UUIDs may have changed\n",
- 		       subarray, dev);
- 
-@@ -1765,10 +1764,10 @@ int move_spare(char *from_devname, char *to_devname, dev_t devid)
- 	sprintf(devname, "%d:%d", major(devid), minor(devid));
- 
- 	devlist.disposition = 'r';
--	if (Manage_subdevs(from_devname, fd2, &devlist, -1, 0, NULL, 0) == 0) {
-+	if (Manage_subdevs(from_devname, fd2, &devlist, -1, 0, UOPT_UNDEFINED, 0) == 0) {
- 		devlist.disposition = 'a';
- 		if (Manage_subdevs(to_devname, fd1, &devlist, -1, 0,
--				   NULL, 0) == 0) {
-+				   UOPT_UNDEFINED, 0) == 0) {
- 			/* make sure manager is aware of changes */
- 			ping_manager(to_devname);
- 			ping_manager(from_devname);
-@@ -1778,7 +1777,7 @@ int move_spare(char *from_devname, char *to_devname, dev_t devid)
- 		}
- 		else
- 			Manage_subdevs(from_devname, fd2, &devlist,
--				       -1, 0, NULL, 0);
-+				       -1, 0, UOPT_UNDEFINED, 0);
+ 		mp = map_by_uuid(&map, content->uuid);
+@@ -1635,7 +1629,7 @@ try_again:
+ 		goto out;
  	}
- 	close(fd1);
- 	close(fd2);
+ 
+-	if (c->update && strcmp(c->update, "byteorder")==0)
++	if (c->update == UOPT_BYTEORDER)
+ 		st->minor_version = 90;
+ 
+ 	st->ss->getinfo_super(st, content, NULL);
+@@ -1904,7 +1898,7 @@ try_again:
+ 	/* First, fill in the map, so that udev can find our name
+ 	 * as soon as we become active.
+ 	 */
+-	if (c->update && strcmp(c->update, "metadata")==0) {
++	if (c->update == UOPT_METADATA) {
+ 		content->array.major_version = 1;
+ 		content->array.minor_version = 0;
+ 		strcpy(content->text_version, "1.0");
 diff --git a/mdadm.c b/mdadm.c
-index 3705d114..b55e0d9a 100644
+index b55e0d9a..dc6d6a95 100644
 --- a/mdadm.c
 +++ b/mdadm.c
-@@ -1433,10 +1433,22 @@ int main(int argc, char *argv[])
+@@ -746,7 +746,7 @@ int main(int argc, char *argv[])
+ 		case O(MISC,'U'):
+ 			if (c.update) {
+ 				pr_err("Can only update one aspect of superblock, both %s and %s given.\n",
+-					c.update, optarg);
++					map_num(update_options, c.update), optarg);
+ 				exit(2);
+ 			}
+ 			if (mode == MISC && !c.subarray) {
+@@ -754,8 +754,7 @@ int main(int argc, char *argv[])
+ 				exit(2);
+ 			}
+ 
+-			c.update = optarg;
+-			enum update_opt updateopt = map_name(update_options, c.update);
++			c.update = map_name(update_options, optarg);
+ 			enum update_opt print_mode = UOPT_HELP;
+ 			const char *error_addon = "update option";
+ 
+@@ -763,14 +762,14 @@ int main(int argc, char *argv[])
+ 				print_mode = UOPT_SUBARRAY_ONLY;
+ 				error_addon = "update-subarray option";
+ 
+-				if (updateopt > UOPT_SUBARRAY_ONLY && updateopt < UOPT_HELP)
+-					updateopt = UOPT_UNDEFINED;
++				if (c.update > UOPT_SUBARRAY_ONLY && c.update < UOPT_HELP)
++					c.update = UOPT_UNDEFINED;
+ 			}
+ 
+-			switch (updateopt) {
++			switch (c.update) {
+ 			case UOPT_UNDEFINED:
+ 				pr_err("'--update=%s' is invalid %s. ",
+-					c.update, error_addon);
++					optarg, error_addon);
+ 				outf = stderr;
+ 			case UOPT_HELP:
+ 				if (!outf)
+@@ -795,14 +794,14 @@ int main(int argc, char *argv[])
+ 			}
+ 			if (c.update) {
+ 				pr_err("Can only update one aspect of superblock, both %s and %s given.\n",
+-					c.update, optarg);
++					map_num(update_options, c.update), optarg);
+ 				exit(2);
+ 			}
+-			c.update = optarg;
+-			if (strcmp(c.update, "devicesize") != 0 &&
+-			    strcmp(c.update, "bbl") != 0 &&
+-			    strcmp(c.update, "force-no-bbl") != 0 &&
+-			    strcmp(c.update, "no-bbl") != 0) {
++			c.update = map_name(update_options, optarg);
++			if (c.update != UOPT_DEVICESIZE &&
++			    c.update != UOPT_BBL &&
++			    c.update != UOPT_NO_BBL &&
++			    c.update != UOPT_FORCE_NO_BBL) {
+ 				pr_err("only 'devicesize', 'bbl', 'no-bbl', and 'force-no-bbl' can be updated with --re-add\n");
+ 				exit(2);
+ 			}
+@@ -1388,7 +1387,7 @@ int main(int argc, char *argv[])
+ 		}
+ 	}
+ 
+-	if (c.update && strcmp(c.update, "nodes") == 0 && c.nodes == 0) {
++	if (c.update && c.update == UOPT_NODES && c.nodes == 0) {
+ 		pr_err("Please specify nodes number with --nodes\n");
+ 		exit(1);
+ 	}
+@@ -1433,22 +1432,10 @@ int main(int argc, char *argv[])
  		/* readonly, add/remove, readwrite, runstop */
  		if (c.readonly > 0)
  			rv = Manage_ro(devlist->devname, mdfd, c.readonly);
--		if (!rv && devs_found>1)
--			rv = Manage_subdevs(devlist->devname, mdfd,
--					    devlist->next, c.verbose, c.test,
--					    c.update, c.force);
-+		if (!rv && devs_found > 1) {
-+			/*
-+			 * This is temporary and will be removed in next patches
-+			 * Null c.update will cause segfault
-+			 */
-+			if (c.update)
-+				rv = Manage_subdevs(devlist->devname, mdfd,
-+						devlist->next, c.verbose, c.test,
-+						map_name(update_options, c.update),
-+						c.force);
-+			else
-+				rv = Manage_subdevs(devlist->devname, mdfd,
-+						devlist->next, c.verbose, c.test,
-+						UOPT_UNDEFINED,
-+						c.force);
-+		}
+-		if (!rv && devs_found > 1) {
+-			/*
+-			 * This is temporary and will be removed in next patches
+-			 * Null c.update will cause segfault
+-			 */
+-			if (c.update)
+-				rv = Manage_subdevs(devlist->devname, mdfd,
+-						devlist->next, c.verbose, c.test,
+-						map_name(update_options, c.update),
+-						c.force);
+-			else
+-				rv = Manage_subdevs(devlist->devname, mdfd,
+-						devlist->next, c.verbose, c.test,
+-						UOPT_UNDEFINED,
+-						c.force);
+-		}
++		if (!rv && devs_found > 1)
++			rv = Manage_subdevs(devlist->devname, mdfd,
++					    devlist->next, c.verbose,
++					    c.test, c.update, c.force);
  		if (!rv && c.readonly < 0)
  			rv = Manage_ro(devlist->devname, mdfd, c.readonly);
  		if (!rv && c.runstop > 0)
-@@ -1964,7 +1976,8 @@ static int misc_list(struct mddev_dev *devlist,
+@@ -1970,14 +1957,13 @@ static int misc_list(struct mddev_dev *devlist,
+ 			rv |= Kill_subarray(dv->devname, c->subarray, c->verbose);
+ 			continue;
+ 		case UpdateSubarray:
+-			if (c->update == NULL) {
++			if (!c->update) {
+ 				pr_err("-U/--update must be specified with --update-subarray\n");
+ 				rv |= 1;
  				continue;
  			}
  			rv |= Update_subarray(dv->devname, c->subarray,
--					      c->update, ident, c->verbose);
-+					      map_name(update_options, c->update),
-+					      ident, c->verbose);
+-					      map_name(update_options, c->update),
+-					      ident, c->verbose);
++					      c->update, ident, c->verbose);
  			continue;
  		case Dump:
  			rv |= Dump_metadata(dv->devname, dump_directory, c, ss);
 diff --git a/mdadm.h b/mdadm.h
-index afc2e2a8..fe09fd46 100644
+index fe09fd46..c732a936 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -1477,7 +1477,7 @@ extern int Manage_stop(char *devname, int fd, int quiet,
- 		       int will_retry);
- extern int Manage_subdevs(char *devname, int fd,
- 			  struct mddev_dev *devlist, int verbose, int test,
--			  char *update, int force);
-+			  enum update_opt update, int force);
- extern int autodetect(void);
- extern int Grow_Add_device(char *devname, int fd, char *newdev);
- extern int Grow_addbitmap(char *devname, int fd,
-@@ -1533,7 +1533,7 @@ extern int Monitor(struct mddev_dev *devlist,
- 
- extern int Kill(char *dev, struct supertype *st, int force, int verbose, int noexcl);
- extern int Kill_subarray(char *dev, char *subarray, int verbose);
--extern int Update_subarray(char *dev, char *subarray, char *update, struct mddev_ident *ident, int quiet);
-+extern int Update_subarray(char *dev, char *subarray, enum update_opt update, struct mddev_ident *ident, int quiet);
- extern int Wait(char *dev);
- extern int WaitClean(char *dev, int verbose);
- extern int SetAction(char *dev, char *action);
+@@ -616,7 +616,7 @@ struct context {
+ 	int	export;
+ 	int	test;
+ 	char	*subarray;
+-	char	*update;
++	enum	update_opt update;
+ 	int	scan;
+ 	int	SparcAdjust;
+ 	int	autof;
 -- 
 2.26.2
 
