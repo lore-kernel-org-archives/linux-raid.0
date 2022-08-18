@@ -2,75 +2,54 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C28A0C25B0E
-	for <linux-raid@archiver.kernel.org>; Thu, 18 Aug 2022 04:32:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B59BC00140
+	for <linux-raid@archiver.kernel.org>; Thu, 18 Aug 2022 05:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243377AbiHREcx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 18 Aug 2022 00:32:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49084 "EHLO
+        id S243504AbiHRFPi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 18 Aug 2022 01:15:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241247AbiHREcw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 18 Aug 2022 00:32:52 -0400
-Received: from new3-smtp.messagingengine.com (new3-smtp.messagingengine.com [66.111.4.229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F2F6A3D47;
-        Wed, 17 Aug 2022 21:32:50 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailnew.nyi.internal (Postfix) with ESMTP id B7756580B04;
-        Thu, 18 Aug 2022 00:32:49 -0400 (EDT)
-Received: from imap50 ([10.202.2.100])
-  by compute3.internal (MEProxy); Thu, 18 Aug 2022 00:32:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        colorremedies.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to; s=fm1; t=1660797169; x=
-        1660800769; bh=W2eJw7KGKlXQRQPp791lExmWC5wtIiq7rEevTDXit7U=; b=q
-        KPsDELaFWEZhbn1wGk1MlUp7ZAtpFeOVxzTL+flv1958SBLjYwRgSSDNSmm8tP1v
-        0qbhkXsJu//yksy3uRLzTZcgh0stFcleU++a1ctX8bWfU5yMgMvo27kY265V4ZgJ
-        GfKDSClkR39dTL9TDS5WdTTx4BhB/F7sCZQ0N6LyU0Ip6xRrq6cF22R20HbFiZo0
-        eiEyD0D+iBAxjZqMSiWg787QD7AjfZpIqVuptuJJ9LrwnTTOWHd98oU6Wxhq6jNb
-        Nz/syUmKvqja+sagCQpGWRN5rXpJXel6Tp3hN6JOHsHtvGPiaMevckRhxk92y668
-        x4BrPVAaFYTbmRoJ4gp9g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1660797169; x=1660800769; bh=W2eJw7KGKlXQRQPp791lExmWC5wt
-        Iiq7rEevTDXit7U=; b=acl3ROum7Kf0ueXUdDeMApAC4WoAT6qkp4P4pmeKZYP5
-        CU4AJkpuPapFYFG4ZzCJpHc6TrbUcNmCBNM/ebWov9eaWaTJTKXv+7mude1G6Wz5
-        DCthDdml92AizUlnrnhaIt+wz6PvkaxpZaiYuvrvpSZ35azyyKzVgwDlxh/wJsYc
-        YJ5B1WkfgQ5iZcpBgmJJ7cWSxFUA4DF/1I4OL2+6mLI697hOb+eMH4lx7BgF/4zl
-        u/Dohd/E/ApSfssUn8v/+Ca+IrwG62jBOnF0cJc/3PEei7m7zGUlcSovUS+Ipz7v
-        5VeUQELYyesDqAIz4tF7tt1TSFHYYL/MbP6J0RdgxQ==
-X-ME-Sender: <xms:8cD9Yj3Wt3EMUeBgi6ugycuhgPmhFS_DO3nVTeQ_IrreRY9aj6EAfA>
-    <xme:8cD9YiEi80OkdTP-iKcPouDxB-3c2TURsfPvuIK0P6Sgxkb-9ZNGjaXRAqbbg_R0h
-    O4Emdr12DZ1SZJsM7U>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehjedgkeehucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    goufhushhpvggtthffohhmrghinhculdegledmnecujfgurhepofgfggfkjghffffhvfev
-    ufgtsehttdertderredtnecuhfhrohhmpedfvehhrhhishcuofhurhhphhihfdcuoehlih
-    hsthhssegtohhlohhrrhgvmhgvughivghsrdgtohhmqeenucggtffrrghtthgvrhhnpeef
-    heeliedugeeuleetffeuheegkeetgfdtveevudffgfejvdegveeljefhvdefhfenucffoh
-    hmrghinhepghhoohhglhgvrdgtohhmnecuvehluhhsthgvrhfuihiivgeptdenucfrrghr
-    rghmpehmrghilhhfrhhomheplhhishhtshestgholhhorhhrvghmvgguihgvshdrtghomh
-X-ME-Proxy: <xmx:8cD9Yj6G-2poML8ZfB-tNtMbwwimq7PyzUV5L5a73Vo4l6AVkt3Chw>
-    <xmx:8cD9Yo1Iv1E9uY9gnjzlNG0fa7VKI0oYy8W82uLARnUVtQsTIpZF-Q>
-    <xmx:8cD9YmFW4A2JpKl5h-b4HTxpujH57GWZ3NLvNL_-x-rQ_9irz6ymWw>
-    <xmx:8cD9Yp12XfAg2KmeZp9bGb7QFEguYNQsYT4sumTAiQTDHzR9Xx2OKg>
-Feedback-ID: i06494636:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 3B2BE1700082; Thu, 18 Aug 2022 00:32:49 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.7.0-alpha0-841-g7899e99a45-fm-20220811.002-g7899e99a
-Mime-Version: 1.0
-Message-Id: <f74b484c-4258-41db-b3d4-a585197f73b7@www.fastmail.com>
-In-Reply-To: <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
-References: <dcd8beea-d2d9-e692-6e5d-c96b2d29dfd1@suse.com>
- <2b8a38fa-f15f-45e8-8caa-61c5f8cd52de@www.fastmail.com>
- <CAFj5m9+6Vj3NdSg_n3nw1icscY1qr9f9SOvkWYyqpEtFBb_-1g@mail.gmail.com>
- <b236ca6e-2e69-4faf-9c95-642339d04543@www.fastmail.com>
- <Yv0A6UhioH3rbi0E@T590>
+        with ESMTP id S243501AbiHRFPg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 18 Aug 2022 01:15:36 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 872A0AE214
+        for <linux-raid@vger.kernel.org>; Wed, 17 Aug 2022 22:15:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1660799734;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VTzKvXSmWh1TMhjc0Co13nZ/hVTaoOofQvw86K3S3UM=;
+        b=ORgnap2b+CxeMIxXdJj5tFAv25vuRM8nnf+428+Ew7NbCLeec1SxgCtqtLZiYt8g+QQKCr
+        GSUANJX0DYePlqbnebw21jXciYkPwH2lYHi+aFi+AC4vJuUJJeywypkW+P1MHlmpBpYQ0D
+        hNyxcfyd604rtBN3/K1VMF0AXU/PRmo=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-277--OvbFB14PB-XdV3zUfhK1A-1; Thu, 18 Aug 2022 01:15:29 -0400
+X-MC-Unique: -OvbFB14PB-XdV3zUfhK1A-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B86B13806705;
+        Thu, 18 Aug 2022 05:15:28 +0000 (UTC)
+Received: from T590 (ovpn-8-20.pek2.redhat.com [10.72.8.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DCAFD2026D4C;
+        Thu, 18 Aug 2022 05:15:17 +0000 (UTC)
+Date:   Thu, 18 Aug 2022 13:15:12 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Chris Murphy <lists@colorremedies.com>
+Cc:     Nikolay Borisov <nborisov@suse.com>, Jens Axboe <axboe@kernel.dk>,
+        Jan Kara <jack@suse.cz>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Josef Bacik <josef@toxicpanda.com>
+Subject: Re: stalling IO regression since linux 5.12, through 5.18
+Message-ID: <Yv3K4G/Sv2KDEqif@T590>
+References: <Yv0A6UhioH3rbi0E@T590>
  <f633c476-bdc9-40e2-a93f-29601979f833@www.fastmail.com>
  <Yv0KmT8UYos2/4SX@T590>
  <35f0d608-7448-4276-8922-19a23d8f9049@www.fastmail.com>
@@ -80,39 +59,49 @@ References: <dcd8beea-d2d9-e692-6e5d-c96b2d29dfd1@suse.com>
  <9f2f608a-cd5f-4736-9e6d-07ccc2eca12c@www.fastmail.com>
  <a817431f-276f-4aab-9ff8-c3e397494339@www.fastmail.com>
  <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
-Date:   Thu, 18 Aug 2022 00:32:28 -0400
-From:   "Chris Murphy" <lists@colorremedies.com>
-To:     "Ming Lei" <ming.lei@redhat.com>
-Cc:     "Nikolay Borisov" <nborisov@suse.com>,
-        "Jens Axboe" <axboe@kernel.dk>, "Jan Kara" <jack@suse.cz>,
-        "Paolo Valente" <paolo.valente@linaro.org>,
-        "Btrfs BTRFS" <linux-btrfs@vger.kernel.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "Josef Bacik" <josef@toxicpanda.com>
-Subject: Re: stalling IO regression since linux 5.12, through 5.18
-Content-Type: text/plain
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
+X-Scanned-By: MIMEDefang 2.78 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On Thu, Aug 18, 2022, at 12:27 AM, Chris Murphy wrote:
+On Thu, Aug 18, 2022 at 12:27:04AM -0400, Chris Murphy wrote:
+> 
+> 
 > On Thu, Aug 18, 2022, at 12:18 AM, Chris Murphy wrote:
->> On Thu, Aug 18, 2022, at 12:12 AM, Chris Murphy wrote:
->>> On Wed, Aug 17, 2022, at 11:41 PM, Ming Lei wrote:
->>>
->>>> OK, can you post the blk-mq debugfs log after you trigger it on v5.17?
->
+> > On Thu, Aug 18, 2022, at 12:12 AM, Chris Murphy wrote:
+> >> On Wed, Aug 17, 2022, at 11:41 PM, Ming Lei wrote:
+> >>
+> >>> OK, can you post the blk-mq debugfs log after you trigger it on v5.17?
+> 
 > Same boot, 3rd log. But the load is above 300 so I kinda need to sysrq+b soon.
->
+> 
 > https://drive.google.com/file/d/1375H558kqPTdng439rvG6LuXXWPXLToo/view?usp=sharing
+> 
 
-sysfs sdc
+Please test the following patch and see if it makes a difference:
 
-https://drive.google.com/file/d/1DLZHX8Mg_d5w-XSsAYYK1NDzn1pA_QPm/view?usp=sharing
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index a4f7c101b53b..8e8d77e79dd6 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -44,7 +44,10 @@ void __blk_mq_sched_restart(struct blk_mq_hw_ctx *hctx)
+ 	 */
+ 	smp_mb();
+ 
+-	blk_mq_run_hw_queue(hctx, true);
++	if (blk_mq_is_shared_tags(hctx->flags))
++		blk_mq_run_hw_queues(hctx->queue, true);
++	else
++		blk_mq_run_hw_queue(hctx, true);
+ }
+ 
+ static int sched_rq_cmp(void *priv, const struct list_head *a,
 
--- 
-Chris Murphy
+
+Thanks,
+Ming
+
