@@ -2,120 +2,144 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CE44C25B08
-	for <linux-raid@archiver.kernel.org>; Thu, 18 Aug 2022 02:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 041D9C3F6B0
+	for <linux-raid@archiver.kernel.org>; Thu, 18 Aug 2022 03:25:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242759AbiHRCcR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Aug 2022 22:32:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59424 "EHLO
+        id S243107AbiHRDZE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Aug 2022 23:25:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233588AbiHRCcQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Aug 2022 22:32:16 -0400
-Received: from new4-smtp.messagingengine.com (new4-smtp.messagingengine.com [66.111.4.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81E1758085;
-        Wed, 17 Aug 2022 19:32:15 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailnew.nyi.internal (Postfix) with ESMTP id C72B15809F1;
-        Wed, 17 Aug 2022 22:32:14 -0400 (EDT)
-Received: from imap50 ([10.202.2.100])
-  by compute3.internal (MEProxy); Wed, 17 Aug 2022 22:32:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        colorremedies.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to; s=fm1; t=1660789934; x=
-        1660793534; bh=Dg3lZIUBn8ktbKE2tjHQauC07j8CEBmMwKDQfaoiWGo=; b=w
-        LOFrKFri4BUQ3b7AR5n36w9aw3yzWBnGKS51gkKgYdYUC5ZFD4pfU//TUgfDfKUd
-        MJeG9qPO/43xOU/QDtSRscMZtopaGyxD7Ms7pEWHSur6yrEqA/3Uv/bj4SdPW7Po
-        GGPcxsTD8h+enKHaR3u9D4YrqlR2Vsuxh6eSC+IWWM9QIjD6b5hlsxgm4rrp+FnK
-        AZGHR2Ac7wfDlkHkHvkS3q7Y6t9zA80uqNJuUa5m0I5cjCSN5foeYIiqlXFDSgp5
-        iYE8nbNsmxALWYyWIQr1+nDXvy52LRt9B3HxEzJ1J9Xf8aBvKpkCzJF2YQhs+z94
-        OVnMVga4J/9wInCAyQiyg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1660789934; x=1660793534; bh=Dg3lZIUBn8ktbKE2tjHQauC07j8C
-        EBmMwKDQfaoiWGo=; b=qvQmIIwTNsdAQNov9+uqL5k2CdiUgbUqpg1PY5v1FBRj
-        8hcWJa3lswiXU/s3TBsFHH1/fHoHPMOGbeSwKo/giHqFYfvu5XBukxyJFU/+7dFP
-        uBmtA+HtT0GEabsrCj/rmbIGoE7FDLKT3UIdRsniX1ag2jq9Vp6ZAiZYwdNk6EAd
-        1rWHG0I3OXqLkhF+d8EP0Tkf+OXUImRrzQNhWHmgrUmCstyup0dHJPPJKNuUlMiE
-        cTNaTXgcW1XRgejzJvl/6dFzUOffcC0AY5pT1NtR1JDdIFuZkCAwTnpv3z0F5W1W
-        txPZikRKc2HwN2UPlFsuSHiRg/WmN3ktrEpuKsryiw==
-X-ME-Sender: <xms:rqT9Yjs2bbuyTpQPYQcLX-eHKYCeWdSN7fR8jGlbP_IIAYD7kRYZ-Q>
-    <xme:rqT9Ykc1k1x4xjitOuzA6U_dZu1yXIBBXlTydVfjqFjMNwJn7mg8ZS8R75a-DB4b0
-    wOUlZWkLD8wHCtrWwM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehjedgieduucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedfvehh
-    rhhishcuofhurhhphhihfdcuoehlihhsthhssegtohhlohhrrhgvmhgvughivghsrdgtoh
-    hmqeenucggtffrrghtthgvrhhnpefgvdeukedtfefgfefgtdelffdvieeltefgfedutdff
-    leeuieevieevkeehtdehueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmh
-    grihhlfhhrohhmpehlihhsthhssegtohhlohhrrhgvmhgvughivghsrdgtohhm
-X-ME-Proxy: <xmx:rqT9YmzRX1N5uSCS9PWh1fjtlkzkpIRS5yCF943-KJV3HIrTCihxYA>
-    <xmx:rqT9YiOfZpLiMoAOalTt5n5EvswMod1lQFwCD6NHkBVxaJR11hkUMw>
-    <xmx:rqT9Yj_4MtNG46BO0RV1oJ1Id0FBpEA6buDS_KMqbA4i77YYuQMZXQ>
-    <xmx:rqT9YjygUM_LxVTbXR-Fu9xoHaj9CnoFNDUI3otnocctc9QtYG-WIg>
-Feedback-ID: i06494636:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 6AE601700082; Wed, 17 Aug 2022 22:32:14 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.7.0-alpha0-841-g7899e99a45-fm-20220811.002-g7899e99a
-Mime-Version: 1.0
-Message-Id: <c233d75c-c8d5-4fba-b102-925fe537aad3@www.fastmail.com>
-In-Reply-To: <2f252399-0e30-4465-8c02-3f42c145174a@www.fastmail.com>
-References: <dcd8beea-d2d9-e692-6e5d-c96b2d29dfd1@suse.com>
- <2b8a38fa-f15f-45e8-8caa-61c5f8cd52de@www.fastmail.com>
- <7c830487-95a6-b008-920b-8bc4a318f10a@applied-asynchrony.com>
- <20220817114933.66c4g4xjsi4df2tg@quack3>
- <85a141ae-56a7-4dcd-b75a-04be4b276b3a@www.fastmail.com>
- <20220817163059.kigrvdfmxfswmhls@quack3>
- <f6f899a5-97e2-460f-ad73-73d4b5e38eb6@www.fastmail.com>
- <51cd43f9-ab6b-4dd6-814f-e0c1ace3143c@www.fastmail.com>
- <20220817181554.znqljc6mmci45ukd@quack3>
- <e4c260da-2df7-49a3-a8dc-1d3fc7ca12a0@www.fastmail.com>
- <20220817183335.47a4ao26wjopavo2@quack3>
- <2f252399-0e30-4465-8c02-3f42c145174a@www.fastmail.com>
-Date:   Wed, 17 Aug 2022 22:31:54 -0400
-From:   "Chris Murphy" <lists@colorremedies.com>
-To:     "Jan Kara" <jack@suse.cz>
-Cc:     =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>,
-        "Nikolay Borisov" <nborisov@suse.com>,
-        "Jens Axboe" <axboe@kernel.dk>,
-        "Paolo Valente" <paolo.valente@linaro.org>,
+        with ESMTP id S238882AbiHRDZD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Aug 2022 23:25:03 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB6555C9E9
+        for <linux-raid@vger.kernel.org>; Wed, 17 Aug 2022 20:25:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1660793100;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3MPK+GM2uD1yCea/zMrRjLKC1MQOzHK2bgMfr6/LwJY=;
+        b=FCOmCd1zTMP5ewQVtkF9vmSuU6PSbpAxg90/p2egm0jjjMQ/EyLY/Wu3Oghmyd6OZmHmOw
+        iJYltkxLzMEk3XNSBMdGOHQO3JH9hRhAwnj4ustgoShDfwc7r6PefoZE/3afJn5Z6LePKM
+        JJ40DVEghTBYKa0t21eGNOR6a7HZ4FE=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-463-ZFERLax1Opu6ZvU_1l8PDQ-1; Wed, 17 Aug 2022 23:24:56 -0400
+X-MC-Unique: ZFERLax1Opu6ZvU_1l8PDQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id F1EC3804197;
+        Thu, 18 Aug 2022 03:24:55 +0000 (UTC)
+Received: from T590 (ovpn-8-20.pek2.redhat.com [10.72.8.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0487E2026D4C;
+        Thu, 18 Aug 2022 03:24:46 +0000 (UTC)
+Date:   Thu, 18 Aug 2022 11:24:41 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Chris Murphy <lists@colorremedies.com>
+Cc:     Nikolay Borisov <nborisov@suse.com>, Jens Axboe <axboe@kernel.dk>,
+        Jan Kara <jack@suse.cz>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
         Linux-RAID <linux-raid@vger.kernel.org>,
         linux-block <linux-block@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>,
-        "Josef Bacik" <josef@toxicpanda.com>
+        Josef Bacik <josef@toxicpanda.com>
 Subject: Re: stalling IO regression since linux 5.12, through 5.18
-Content-Type: text/plain
+Message-ID: <Yv2w+Tuhw1RAoXI5@T590>
+References: <dcd8beea-d2d9-e692-6e5d-c96b2d29dfd1@suse.com>
+ <2b8a38fa-f15f-45e8-8caa-61c5f8cd52de@www.fastmail.com>
+ <CAFj5m9+6Vj3NdSg_n3nw1icscY1qr9f9SOvkWYyqpEtFBb_-1g@mail.gmail.com>
+ <b236ca6e-2e69-4faf-9c95-642339d04543@www.fastmail.com>
+ <Yv0A6UhioH3rbi0E@T590>
+ <f633c476-bdc9-40e2-a93f-29601979f833@www.fastmail.com>
+ <Yv0KmT8UYos2/4SX@T590>
+ <35f0d608-7448-4276-8922-19a23d8f9049@www.fastmail.com>
+ <Yv2P0zyoVvz35w/m@T590>
+ <568465de-5c3b-4d94-a74b-5b83ce2f942f@www.fastmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <568465de-5c3b-4d94-a74b-5b83ce2f942f@www.fastmail.com>
+X-Scanned-By: MIMEDefang 2.78 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Wed, Aug 17, 2022 at 10:30:39PM -0400, Chris Murphy wrote:
+> 
+> 
+> On Wed, Aug 17, 2022, at 9:03 PM, Ming Lei wrote:
+> > On Wed, Aug 17, 2022 at 12:34:42PM -0400, Chris Murphy wrote:
+> >> 
+> >> 
+> >> On Wed, Aug 17, 2022, at 11:34 AM, Ming Lei wrote:
+> >> 
+> >> > From the 2nd log of blockdebugfs-all.txt, still not see any in-flight IO on
+> >> > request based block devices, but sda is _not_ included in this log, and
+> >> > only sdi, sdg and sdf are collected, is that expected?
+> >> 
+> >> While the problem was happening I did
+> >> 
+> >> cd /sys/kernel/debug/block
+> >> find . -type f -exec grep -aH . {} \;
+> >> 
+> >> The file has the nodes out of order, but I don't know enough about the interface to see if there are things that are missing, or what it means.
+> >> 
+> >> 
+> >> > BTW, all request based block devices should be observed in blk-mq debugfs.
+> >> 
+> >> /sys/kernel/debug/block contains
+> >> 
+> >> drwxr-xr-x.  2 root root 0 Aug 17 15:20 md0
+> >> drwxr-xr-x. 51 root root 0 Aug 17 15:20 sda
+> >> drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdb
+> >> drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdc
+> >> drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdd
+> >> drwxr-xr-x. 51 root root 0 Aug 17 15:20 sde
+> >> drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdf
+> >> drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdg
+> >> drwxr-xr-x. 51 root root 0 Aug 17 15:20 sdh
+> >> drwxr-xr-x.  4 root root 0 Aug 17 15:20 sdi
+> >> drwxr-xr-x.  2 root root 0 Aug 17 15:20 zram0
+> >
+> > OK, so lots of devices are missed in your log, and the following command
+> > is supposed to work for collecting log from all block device's debugfs:
+> >
+> > (cd /sys/kernel/debug/block/ && find . -type f -exec grep -aH . {} \;)
+> 
+> OK here it is:
+> 
+> https://drive.google.com/file/d/18nEOx2Ghsqx8uII6nzWpCFuYENHuQd-f/view?usp=sharing
+
+The above log shows that the io stall happens on sdd, where:
+
+1) 616 requests pending from scheduler queue
+
+grep "busy=" blockdebugfs-all2.txt | grep sdd | grep sched | awk -F "=" '{s+=$2} END {print s}'
+616
+
+2) 11 requests pending from ./sdd/hctx2/dispatch for more than 300 seconds
+
+Recently we seldom observe io hang from dispatch list, except for the
+following two:
+
+https://lore.kernel.org/linux-block/20220803023355.3687360-1-yuyufen@huaweicloud.com/
+https://lore.kernel.org/linux-block/20220726122224.1790882-1-yukuai1@huaweicloud.com/
+
+BTW, what is the output of the following log?
+
+	(cd /sys/block/sdd/device && find . -type f -exec grep -aH . {} \;)
+
+Also the above log shows that host_tagset_enable support is still
+crippled on v5.12, I guess the issue may not be triggered(or pretty hard)
+after you update to d97e594c5166 ("blk-mq: Use request queue-wide tags for
+tagset-wide sbitmap"), or v5.14.
 
 
-On Wed, Aug 17, 2022, at 2:54 PM, Chris Murphy wrote:
-> On Wed, Aug 17, 2022, at 2:33 PM, Jan Kara wrote:
->> On Wed 17-08-22 14:18:01, Chris Murphy wrote:
->>> 
->>> 
->>> On Wed, Aug 17, 2022, at 2:15 PM, Jan Kara wrote:
->>> 
->>> > OK, if this indeed passes then b6e68ee82585 ("blk-mq: Improve performance
->>> > of non-mq IO schedulers with multiple HW queues") might be what's causing
->>> > issues (although I don't know how yet...).
->>> 
->>> I can revert it from 5.12.0 and try. Let me know which next test is preferred :)
->>
->> Let's try to revert this first so that we have it narrowed down what
->> started causing the issues. 
->
-> OK I've reverted b6e68ee82585, and removing 
-> megaraid_sas.host_tagset_enable=0, and will restart the workload...
 
-I ran this for 7 hours and the problem didn't happen.
+thanks,
+Ming
 
--- 
-Chris Murphy
