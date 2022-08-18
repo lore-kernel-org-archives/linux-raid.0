@@ -2,138 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5742AC3F6B0
-	for <linux-raid@archiver.kernel.org>; Thu, 18 Aug 2022 18:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36256C3F6B0
+	for <linux-raid@archiver.kernel.org>; Thu, 18 Aug 2022 21:02:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345464AbiHRSxG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 18 Aug 2022 14:53:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46600 "EHLO
+        id S1346441AbiHRVCH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 18 Aug 2022 17:02:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345235AbiHRSw6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 18 Aug 2022 14:52:58 -0400
-Received: from new1-smtp.messagingengine.com (new1-smtp.messagingengine.com [66.111.4.221])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 585E9C2E84;
-        Thu, 18 Aug 2022 11:52:57 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 842235801B4;
-        Thu, 18 Aug 2022 14:52:56 -0400 (EDT)
-Received: from imap50 ([10.202.2.100])
-  by compute3.internal (MEProxy); Thu, 18 Aug 2022 14:52:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        colorremedies.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to; s=fm1; t=1660848776; x=
-        1660852376; bh=Ts6SgEwcKB+gnnxX0Mg89SPTORlM9/ZfOczJIVc1pgY=; b=s
-        jHZfKEnrAWU7KnQmcdIQeoJaQKZ9a7y4Lzssq43mdkqlnmN38vMUWHeAVGl/92p9
-        EF5j2pfU/3ibfgMCIu+DPLxxLbhqlPCxe1krQs+xeoO/U/nB3NdR5hE3TXYXM7wX
-        ybnhDKA4MwlnPQ84ekJb8uD0ladMlnMxQol4eKsdHhZVXH76m85+kDT72CanzoOl
-        vURpyj2wIbWOaocr7PxF6u9BiusjRxYGHmGWqCNEWBrTZOWWRnfPL+xCcrDtyPv1
-        Q//iIxRkuneguH1OZX+KoE2msbjl33EIuqay+K6L10+1t5KqPqog/sYFMVzgWL0t
-        q/jvnk0S2Ww9xE8N98+kg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1660848776; x=1660852376; bh=Ts6SgEwcKB+gnnxX0Mg89SPTORlM
-        9/ZfOczJIVc1pgY=; b=LHrMOXycIBvofkcqKnNkKZGsoW75RVE5rbIm62q68gef
-        hgNUfn66xH9tYrXJJj7hT4Uz+n0RSsuo5wHwjPeBycW6myH75JFXzd3HC9BhnxkJ
-        G3xRsIyQz+jRXb1BIcs07qYtffwjbR90MtF/mHBoTaxBYJiYJdR961qAAUmp8l/0
-        kpF+wQxfMIt9d0cgf0Wrji8rME8JBarxujmwI42L8PZw6IgLG//U1rMKt1HuqjII
-        G0mAqPR0Pc9/hIBt6try1mTR2JEq2D8Cjxxf3Jdo/0pyiZ/EhjkrYRzoJY0UVlot
-        yFNDPxRp4+VFE/QA3s6Jj9R3naFTKbpXxFfEUAbSag==
-X-ME-Sender: <xms:h4r-YmQ9WP2krC5G1entLJ7EUPya8p4CoU9562V313IWfSqAGQ7wYg>
-    <xme:h4r-YrwX4L2Xo8eZA1rkNZxVfMbkgQlG9SM6_7s3duRx0u5ilrUsIe3iOkVsHMd9u
-    N6Mf7i-Y_2T13YQCUk>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehledguddtgecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
-    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
-    enogfuuhhsphgvtghtffhomhgrihhnucdlgeelmdenucfjughrpefofgggkfgjfhffhffv
-    vefutgesthdtredtreertdenucfhrhhomhepfdevhhhrihhsucfouhhrphhhhidfuceolh
-    hishhtshestgholhhorhhrvghmvgguihgvshdrtghomheqnecuggftrfgrthhtvghrnhep
-    feehleeiudegueelteffueehgeektefgtdevvedufffgjedvgeevleejhfdvfefhnecuff
-    homhgrihhnpehgohhoghhlvgdrtghomhenucevlhhushhtvghrufhiiigvpedtnecurfgr
-    rhgrmhepmhgrihhlfhhrohhmpehlihhsthhssegtohhlohhrrhgvmhgvughivghsrdgtoh
-    hm
-X-ME-Proxy: <xmx:h4r-Yj1bbQ4madkVb0dx8BXBTl3dA1aeP0_Bg0NB73CzngWa6DM_yw>
-    <xmx:h4r-YiATqKs_aiFBNkKsfRUT_YaG9Bi6INsyAP09-vwxXEIwIEVMLg>
-    <xmx:h4r-YviogrXyWGUyIkP0dcrda1UG_9Xbc3abPNgOXpXgvjR3mRT6Rw>
-    <xmx:iIr-YvgIryn7QxtJm1dMEBop9bbI4FM64_OAQUUsWm2E0QVeCs0UWQ>
-Feedback-ID: i06494636:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id DD34E1700082; Thu, 18 Aug 2022 14:52:55 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.7.0-alpha0-841-g7899e99a45-fm-20220811.002-g7899e99a
-Mime-Version: 1.0
-Message-Id: <bfaa8b43-519f-4e4c-b04b-a37b0ee9babf@www.fastmail.com>
-In-Reply-To: <Yv3K4G/Sv2KDEqif@T590>
-References: <Yv0A6UhioH3rbi0E@T590>
- <f633c476-bdc9-40e2-a93f-29601979f833@www.fastmail.com>
- <Yv0KmT8UYos2/4SX@T590>
- <35f0d608-7448-4276-8922-19a23d8f9049@www.fastmail.com>
- <Yv2P0zyoVvz35w/m@T590>
- <568465de-5c3b-4d94-a74b-5b83ce2f942f@www.fastmail.com>
- <Yv2w+Tuhw1RAoXI5@T590>
- <9f2f608a-cd5f-4736-9e6d-07ccc2eca12c@www.fastmail.com>
- <a817431f-276f-4aab-9ff8-c3e397494339@www.fastmail.com>
- <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
- <Yv3K4G/Sv2KDEqif@T590>
-Date:   Thu, 18 Aug 2022 14:52:34 -0400
-From:   "Chris Murphy" <lists@colorremedies.com>
-To:     "Ming Lei" <ming.lei@redhat.com>
-Cc:     "Nikolay Borisov" <nborisov@suse.com>,
-        "Jens Axboe" <axboe@kernel.dk>, "Jan Kara" <jack@suse.cz>,
-        "Paolo Valente" <paolo.valente@linaro.org>,
-        "Btrfs BTRFS" <linux-btrfs@vger.kernel.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "Josef Bacik" <josef@toxicpanda.com>
-Subject: Re: stalling IO regression since linux 5.12, through 5.18
-Content-Type: text/plain
+        with ESMTP id S1346334AbiHRVA5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 18 Aug 2022 17:00:57 -0400
+Received: from mail.zeus03.de (www.zeus03.de [194.117.254.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A15ED3E67
+        for <linux-raid@vger.kernel.org>; Thu, 18 Aug 2022 14:00:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=sang-engineering.com; h=
+        from:to:cc:subject:date:message-id:mime-version
+        :content-transfer-encoding; s=k1; bh=t65pDCnGnoh4YuAC0bcg18YMcxC
+        Scyc0kBucHooluKE=; b=Q81xMVeS4ga6c9O6LLC122bu6xs7Dq8BI/gGi9adOwN
+        /JwVXdC3uEfpZpo4B9vdoVMRsDA5vChGa4F5zB58Q1PN9cXpqRKF8K6QsHjKaL/H
+        hlkMz3EEhJ+9unfR8k38+B38vB4zGBA6kafcOzJW2c7jJI5FRCt15pZjr+FfhlEQ
+        =
+Received: (qmail 3960514 invoked from network); 18 Aug 2022 23:00:28 +0200
+Received: by mail.zeus03.de with ESMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 18 Aug 2022 23:00:28 +0200
+X-UD-Smtp-Session: l3s3148p1@ONFiRYrmlucucref
+From:   Wolfram Sang <wsa+renesas@sang-engineering.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Subject: [PATCH] md: move from strlcpy with unused retval to strscpy
+Date:   Thu, 18 Aug 2022 23:00:27 +0200
+Message-Id: <20220818210027.6964-1-wsa+renesas@sang-engineering.com>
+X-Mailer: git-send-email 2.35.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Follow the advice of the below link and prefer 'strscpy' in this
+subsystem. Conversion is 1:1 because the return value is not used.
+Generated by a coccinelle script.
 
+Link: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+---
+ drivers/md/dm-ioctl.c | 4 ++--
+ drivers/md/md.c       | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-On Thu, Aug 18, 2022, at 1:15 AM, Ming Lei wrote:
-> On Thu, Aug 18, 2022 at 12:27:04AM -0400, Chris Murphy wrote:
->> 
->> 
->> On Thu, Aug 18, 2022, at 12:18 AM, Chris Murphy wrote:
->> > On Thu, Aug 18, 2022, at 12:12 AM, Chris Murphy wrote:
->> >> On Wed, Aug 17, 2022, at 11:41 PM, Ming Lei wrote:
->> >>
->> >>> OK, can you post the blk-mq debugfs log after you trigger it on v5.17?
->> 
->> Same boot, 3rd log. But the load is above 300 so I kinda need to sysrq+b soon.
->> 
->> https://drive.google.com/file/d/1375H558kqPTdng439rvG6LuXXWPXLToo/view?usp=sharing
->> 
->
-> Please test the following patch and see if it makes a difference:
->
-> diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-> index a4f7c101b53b..8e8d77e79dd6 100644
-> --- a/block/blk-mq-sched.c
-> +++ b/block/blk-mq-sched.c
-> @@ -44,7 +44,10 @@ void __blk_mq_sched_restart(struct blk_mq_hw_ctx *hctx)
->  	 */
->  	smp_mb();
-> 
-> -	blk_mq_run_hw_queue(hctx, true);
-> +	if (blk_mq_is_shared_tags(hctx->flags))
-> +		blk_mq_run_hw_queues(hctx->queue, true);
-> +	else
-> +		blk_mq_run_hw_queue(hctx, true);
->  }
-> 
->  static int sched_rq_cmp(void *priv, const struct list_head *a,
-
-
-I still get a stall. By the time I noticed it, I can't run any new commands (they just hang) so I had to sysrq+b. Let me know if I should rerun the test in order to capture block debug log.
-
-
+diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+index 98976aaa9db9..6148fb73ccb4 100644
+--- a/drivers/md/dm-ioctl.c
++++ b/drivers/md/dm-ioctl.c
+@@ -921,9 +921,9 @@ static struct hash_cell *__find_device_hash_cell(struct dm_ioctl *param)
+ 	 * Sneakily write in both the name and the uuid
+ 	 * while we have the cell.
+ 	 */
+-	strlcpy(param->name, hc->name, sizeof(param->name));
++	strscpy(param->name, hc->name, sizeof(param->name));
+ 	if (hc->uuid)
+-		strlcpy(param->uuid, hc->uuid, sizeof(param->uuid));
++		strscpy(param->uuid, hc->uuid, sizeof(param->uuid));
+ 	else
+ 		param->uuid[0] = '\0';
+ 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index afaf36b2f6ab..4d019ac0a549 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5743,7 +5743,7 @@ static int add_named_array(const char *val, const struct kernel_param *kp)
+ 		len--;
+ 	if (len >= DISK_NAME_LEN)
+ 		return -E2BIG;
+-	strscpy(buf, val, len+1);
++	strscpy(buf, val, len + 1);
+ 	if (strncmp(buf, "md_", 3) == 0)
+ 		return md_alloc_and_put(0, buf);
+ 	if (strncmp(buf, "md", 2) == 0 &&
 -- 
-Chris Murphy
+2.35.1
+
