@@ -2,123 +2,109 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 783BBC32774
-	for <linux-raid@archiver.kernel.org>; Sat, 20 Aug 2022 07:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBAD4C32789
+	for <linux-raid@archiver.kernel.org>; Mon, 22 Aug 2022 07:04:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343692AbiHTHBB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 20 Aug 2022 03:01:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39254 "EHLO
+        id S232403AbiHVHEj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 22 Aug 2022 03:04:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244715AbiHTHA7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 20 Aug 2022 03:00:59 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1236CC275B
-        for <linux-raid@vger.kernel.org>; Sat, 20 Aug 2022 00:00:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1660978856;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=KPdKF7NqQbYWJNAZGbU7fSXV546gMmrYZuRP+B0Ko2s=;
-        b=AapS/aEZaOlG9syRMo2oLuMXu3kdeT5/EUPtZSUTWpCylPMpn1SjW+tWcPXCBTvMQ9YTOs
-        JQXUDPvSB1sQGp/xqvHyTQdDa2enaUUpR21QGLKRjEaS+KDHVEzN+3p0+4hDygn/x/bU4c
-        g3WsoDeD1lO246mjRfJ5uWpFqWlTiwg=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-509-2n2OG7CWME6p8qoOGZJWWg-1; Sat, 20 Aug 2022 03:00:52 -0400
-X-MC-Unique: 2n2OG7CWME6p8qoOGZJWWg-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S230361AbiHVHEg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 22 Aug 2022 03:04:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 285832ACB
+        for <linux-raid@vger.kernel.org>; Mon, 22 Aug 2022 00:04:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D61BD85A581;
-        Sat, 20 Aug 2022 07:00:51 +0000 (UTC)
-Received: from T590 (ovpn-8-18.pek2.redhat.com [10.72.8.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B6334492CA4;
-        Sat, 20 Aug 2022 07:00:44 +0000 (UTC)
-Date:   Sat, 20 Aug 2022 15:00:39 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Chris Murphy <lists@colorremedies.com>
-Cc:     Nikolay Borisov <nborisov@suse.com>, Jens Axboe <axboe@kernel.dk>,
-        Jan Kara <jack@suse.cz>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>
-Subject: Re: stalling IO regression since linux 5.12, through 5.18
-Message-ID: <YwCGlyDMhWubqKoL@T590>
-References: <Yv0KmT8UYos2/4SX@T590>
- <35f0d608-7448-4276-8922-19a23d8f9049@www.fastmail.com>
- <Yv2P0zyoVvz35w/m@T590>
- <568465de-5c3b-4d94-a74b-5b83ce2f942f@www.fastmail.com>
- <Yv2w+Tuhw1RAoXI5@T590>
- <9f2f608a-cd5f-4736-9e6d-07ccc2eca12c@www.fastmail.com>
- <a817431f-276f-4aab-9ff8-c3e397494339@www.fastmail.com>
- <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
- <Yv3NIQlDL0T3lstU@T590>
- <0f731b0a-fbd5-4e7b-a3df-0ed63360c1e0@www.fastmail.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C1EFF60FBF
+        for <linux-raid@vger.kernel.org>; Mon, 22 Aug 2022 07:04:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E2F3C433D7
+        for <linux-raid@vger.kernel.org>; Mon, 22 Aug 2022 07:04:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661151869;
+        bh=7bvfLxOQLFjD77d5gCWuis5asBPZM9Cb4CCxsJ1GFUc=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Q5KE1wpLZObdrKNfdWz8tOQomKgSb3l3NW0a6oELqxOgXmJgSzbDMDFqbdyT2fM6u
+         K+IFhOO4J1vRnwMLoIWGGPu9DWP4RA12hGkf+k/cKFT9A2Z/i+6CvP5Ep8it/9cnJU
+         brULnU88zOVeRE6FPd5CzqDPUbSBEcF/01B0Z62ipkcXBnRQyCjAGRov1kWmi0slBL
+         u5bxYPFj7Tx8QSJRsBXpGsdMcgeyAY3AAssN59UTuheUY+F8DhQhDttbTGY+kD5z3H
+         ucn89nYAVar5SJ49fBiFx4xtxnKdEd/x6Hi4ytZhyiYeb/tZc22E+ywfa4Noq+JIwn
+         gCcZX7Q05jekg==
+Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-333b049f231so268107947b3.1
+        for <linux-raid@vger.kernel.org>; Mon, 22 Aug 2022 00:04:29 -0700 (PDT)
+X-Gm-Message-State: ACgBeo0Bu+ObPrFG/B/8kBVvIeV9kWcvip5qFTjoCq9yBU8U5JopNWTo
+        dxbsvX/PDgByfYz/nXyNmuKMXpfFYhMAD28xVJ4=
+X-Google-Smtp-Source: AA6agR7Dz54fdcKxBf7C3ocTDmrgJxt2B/PobqcC0oEi9wRwUypn805WQAcEcKBVQJKzm4e3x/m0mprzJisYnqNCkN4=
+X-Received: by 2002:a81:91d0:0:b0:335:10ff:8ee4 with SMTP id
+ i199-20020a8191d0000000b0033510ff8ee4mr19098683ywg.73.1661151868144; Mon, 22
+ Aug 2022 00:04:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0f731b0a-fbd5-4e7b-a3df-0ed63360c1e0@www.fastmail.com>
-X-Scanned-By: MIMEDefang 2.85 on 10.11.54.9
+References: <e05c4239-41a9-d2f7-3cfa-4aa9d2cea8c1@deltatee.com>
+In-Reply-To: <e05c4239-41a9-d2f7-3cfa-4aa9d2cea8c1@deltatee.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 22 Aug 2022 00:04:17 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4=aa08-XGDtoQ3rLb8r-5t9Q7VwwFgGbTTt-xbkzEW8Q@mail.gmail.com>
+Message-ID: <CAPhsuW4=aa08-XGDtoQ3rLb8r-5t9Q7VwwFgGbTTt-xbkzEW8Q@mail.gmail.com>
+Subject: Re: raid5 Journal Recovery Bug
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Aug 19, 2022 at 03:20:25PM -0400, Chris Murphy wrote:
-> 
-> 
-> On Thu, Aug 18, 2022, at 1:24 AM, Ming Lei wrote:
-> > On Thu, Aug 18, 2022 at 12:27:04AM -0400, Chris Murphy wrote:
-> >> 
-> >> 
-> >> On Thu, Aug 18, 2022, at 12:18 AM, Chris Murphy wrote:
-> >> > On Thu, Aug 18, 2022, at 12:12 AM, Chris Murphy wrote:
-> >> >> On Wed, Aug 17, 2022, at 11:41 PM, Ming Lei wrote:
-> >> >>
-> >> >>> OK, can you post the blk-mq debugfs log after you trigger it on v5.17?
-> >> 
-> >> Same boot, 3rd log. But the load is above 300 so I kinda need to sysrq+b soon.
-> >> 
-> >> https://drive.google.com/file/d/1375H558kqPTdng439rvG6LuXXWPXLToo/view?usp=sharing
-> >> 
-> >
-> > Also please test the following one too:
-> >
-> >
-> > diff --git a/block/blk-mq.c b/block/blk-mq.c
-> > index 5ee62b95f3e5..d01c64be08e2 100644
-> > --- a/block/blk-mq.c
-> > +++ b/block/blk-mq.c
-> > @@ -1991,7 +1991,8 @@ bool blk_mq_dispatch_rq_list(struct blk_mq_hw_ctx 
-> > *hctx, struct list_head *list,
-> >  		if (!needs_restart ||
-> >  		    (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
-> >  			blk_mq_run_hw_queue(hctx, true);
-> > -		else if (needs_restart && needs_resource)
-> > +		else if (needs_restart && (needs_resource ||
-> > +					blk_mq_is_shared_tags(hctx->flags)))
-> >  			blk_mq_delay_run_hw_queue(hctx, BLK_MQ_RESOURCE_DELAY);
-> > 
-> >  		blk_mq_update_dispatch_busy(hctx, true);
-> >
-> 
-> 
-> With just this patch on top of 5.17.0, it still hangs. I've captured block debugfs log:
-> https://drive.google.com/file/d/1ic4YHxoL9RrCdy_5FNdGfh_q_J3d_Ft0/view?usp=sharing
+On Fri, Aug 19, 2022 at 3:52 PM Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> Hi Song,
+>
+> I'm wondering if you can help shed some light on a bug I'm trying to
+> track down.
+>
+> We're hitting the BUG_ON in handle_parity_checks5() that tests to ensure
+> R5_UPTODATE is set for a failed disk in a stripe[1].
+>
+> We hit this in our test suite somewhat rarely when the journal is
+> enabled doing device removal and recovery tests. We've concocted a test
+> that can hit it in under ten minutes.
+>
+> After some debugging I've found that the stripe that hits the BUG_ON is
+> hitting a conditional in handle_stripe_fill() for stripes that are in
+> the journal with a failed disk[2]. This check was added in 2017 by your
+> patch:
+>
+>    07e83364845e ("md/r5cache: shift complex rmw from read path to write
+> path")
+>
+> A stripe that hits the bug has one injournal dev, and one failed dev and
+> does not have STRIPE_R5C_CACHING set and therefore hits the conditional
+> and returns from handle_stripe_fill() without calling fetch_block() or
+> doing anything else to change the flow of execution. Normally,
+> fetch_block() would set STRIPE_COMPUTE_RUN to recompute the missing
+> disk, however that gets skipped for this case. After returning from
+> handle_stripe_fill(), handle_stripe() will then call
+> handle_parity_checks5() because STRIPE_COMPUTE_RUN was not set and this
+> will immediately hit the BUG_ON, because nothing has computed the disk
+> and set it UPTODATE yet.
+>
+> I can't say I fully understand the patch that added this, so I don't
+> really understand why that conditional is there or what it's trying to
+> accomplish and thus I don't know what the correct solution might be.
+>
+> Any thoughts?
 
-The log is similar with before, and the only difference is RESTART not
-set.
+Could you please add some printk so that we know which condition triggered
+handle_stripe_fill() here:
 
-Also follows another patch merged to v5.18 and it fixes io stall too, feel free to test it:
+        if (s.to_read || s.non_overwrite
+            || (s.to_write && s.failed)
+            || (s.syncing && (s.uptodate + s.compute < disks))
+            || s.replacing
+            || s.expanding)
+                handle_stripe_fill(sh, &s, disks);
 
-8f5fea65b06d blk-mq: avoid extending delays of active hctx from blk_mq_delay_run_hw_queues
+This would help us narrow down to the exact condition. I guess it is
+"(s.to_write && s.failed)", but I am not quite sure.
 
-
-
-Thanks, 
-Ming
-
+Thanks,
+Song
