@@ -2,103 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14A6EC00140
-	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 16:23:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96952C00140
+	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 16:34:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234904AbiHXQX5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 Aug 2022 12:23:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44768 "EHLO
+        id S239525AbiHXQeE convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 Aug 2022 12:34:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238635AbiHXQXv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 12:23:51 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E09039C1F8
-        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 09:23:46 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 62EC634568;
-        Wed, 24 Aug 2022 16:23:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1661358224; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wtw43/986k4UNehFV3h0cYqDKJxuLMdI9cCOYoJKW6Q=;
-        b=ZW08gGXugjnU9mZlTTQJi68QcBGL5GdepmM/qSMz0u7IgWOgva8402shS+NJif6aGUxwml
-        5pu8VbsX08pYFcMOMkhfC5yeNIWs9j41YlTuMJ+UVvSTTFjo1qHXZuXNKdW5XVs3SZfe/v
-        CQxkv26f0CL8m93rh49cXMFC/m5dqrU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1661358224;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wtw43/986k4UNehFV3h0cYqDKJxuLMdI9cCOYoJKW6Q=;
-        b=0YUybIUnLSotZpnK4f+qfg15x8ABUlMd5Wr90MmgaosY0j/lICUoEY5NAMqwaEjFhJ6U+Z
-        pxD1Xm/8LHL+TZDA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id F04EE13780;
-        Wed, 24 Aug 2022 16:23:42 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id zVjYLY5QBmNtNQAAMHmgww
-        (envelope-from <colyli@suse.de>); Wed, 24 Aug 2022 16:23:42 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
-Subject: Re: Python tests
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <11ab82$jvatnj@fmsmga008-auth.fm.intel.com>
-Date:   Thu, 25 Aug 2022 00:23:40 +0800
-Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        with ESMTP id S239550AbiHXQeA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 12:34:00 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8FEC923FA
+        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 09:33:58 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1661358810; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=OusjIxywDqBxBej6ZBI51TY6qkzJkEy0qCXpBM1HJa3517pqhfmYh6sozT+jr74zArrWFMQ/tJQZ0GuLBYff+X8S809xG8JI45yR9PMZsT3tI0PSRzuxRT30nxbe7GzSOvYiIcXq4AITNbV5hycztkB2Nt4ESqiFgbqn/lwYj2w=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1661358810; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=pzebTsAfCYa40zVH6Wp3jTLaUUtVs1Qc9UTTlLfBlio=; 
+        b=SKgTWSHMSQWejdIauMJ7ydcJ01FnsbMRmJyO9/zVjVkbr1y3nJVJmeTHeHAcfWLGUkGohv7a8rGthAOu6L5TRDgDfyhualHzle/2VvZ2yMLkH2Su9XM8u1bO7hyD11ImtEq25Pc0xF4NqV0MD6z0XN8nQTQl2SKr0SGmS/+L6eo=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.78] (pool-72-69-213-125.nycmny.fios.verizon.net [72.69.213.125]) by mx.zoho.eu
+        with SMTPS id 1661358806815958.7344190044031; Wed, 24 Aug 2022 18:33:26 +0200 (CEST)
+Date:   Wed, 24 Aug 2022 12:33:25 -0400
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v3] Grow: Split Grow_reshape into helper function
+Content-Language: en-US
+To:     Coly Li <colyli@suse.de>
+Cc:     Mateusz Kusiak <mateusz.kusiak@intel.com>,
         linux-raid@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <8C1AB1D5-54FD-406C-BBA3-509F669C9116@suse.de>
-References: <11ab82$jvatnj@fmsmga008-auth.fm.intel.com>
-To:     Lukasz Florczak <lukasz.florczak@linux.intel.com>
-X-Mailer: Apple Mail (2.3696.120.41.1.1)
+References: <20220609074101.14132-1-mateusz.kusiak@intel.com>
+ <9b885a13-21cf-3c9a-f320-c047301294de@trained-monkey.org>
+ <2622AABD-75DC-41D4-9F1E-E958463E9FD0@suse.de>
+ <42df7fa8-1a9a-afdc-5298-1850f5bce879@trained-monkey.org>
+ <193A9B1E-ACB9-40C1-A6B0-BE0FC5C29753@suse.de>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <f732cc9e-65d5-2b8a-cd66-20f99bc2d625@trained-monkey.org>
+In-Reply-To: <193A9B1E-ACB9-40C1-A6B0-BE0FC5C29753@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 8/24/22 12:09, Coly Li wrote:
+> 
+> 
+>> 2022年8月24日 23:56，Jes Sorensen <jes@trained-monkey.org> 写道：
+>>> Hi Jes,
+>>>
+>>> Please check the version I post to you in series “mdadm-CI for-jes/20220728: patches for merge” (Message-Id: <20220728122101.28744-1-colyli@suse.de>), the patch in this series is rebased and confirmed with Mateusz, it could be applied to upstream mdadm.
+> 
+>> I applied this one, but none of the versions applied cleanly. I had to
+>> play formail games to pull it out of your stack, as I am not going to
+>> apply a set of 23 commits in one batch without going through them.
+> 
+> These days I was in partner’s office and planed to repost the rebased version soon. If you don’t do the rebase yet, please wait for me to post a v4 version on behavior of Mateusz tomorrow.
 
+No worries, I already pulled some of it in, but you can check my repo
+and see whats there.
 
-> 2022=E5=B9=B48=E6=9C=8824=E6=97=A5 16:15=EF=BC=8CLukasz Florczak =
-<lukasz.florczak@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Hi Coly,
-> I want to write some mdadm tests for assemblation and incremental
-> regarding duplicated array names in config and I'd like to do it in
-> python. I've seen that some time ago[1] you said that you could try to
-> integrate the python tests framework into the mdadm ci. I was =
-wondering
-> how is it going? Do you need any help with this subject?
->=20
-> Thanks,
-> Lukasz
->=20
-> [1] https://marc.info/?l=3Dlinux-raid&m=3D165277539509464&w=3D2
+>> It's really awesome to have your help reviewing patches, much
+>> appreciated, but I would prefer to keep them in the original batches so
+>> I can pull them from patchwork, rather than trying to deal with the
+>> giant stack.
+> 
+> How about we improve the process like this,
+> 1) I will continue to review and response the patches from the original emails, so patch work may track them as they were.
+> 2) For all the reviewed patches are not handled by your after a period, let’s set it as 2 weeks for now, I will post a email with all the patches with their message-IDs to you as a remind.
 
-Hi Lukasz,
+This sounds good to me! I think it's also fine to have a branch with
+everything applied for testing, it's just less easy for me to pull from.
 
-Now I just make some of the existed mdadm test scripts running, which =
-are copied from upstream mdadm. There won=E2=80=99t be any conflict for =
-the python testing code between you and me, because now I am just =
-studying Python again and not do any useful thing yet.
-
-As I said if no one works on the testing framework, I will do it, but it =
-may take time. How about posting out the python code once you make it, =
-then let=E2=80=99s put it into mdadm-test to test mdadm-CI, and improve =
-whole things step by step.
-
-Thanks.
-
-Coly Li
-
-
+Thanks,
+Jes
 
