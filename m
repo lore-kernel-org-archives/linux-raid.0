@@ -2,132 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DEC0C32793
-	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 09:54:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5820FC32793
+	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 12:03:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236588AbiHXJy0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 Aug 2022 05:54:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43138 "EHLO
+        id S236836AbiHXMDb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 Aug 2022 08:03:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234326AbiHXJyJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 05:54:09 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 084BB6C753
-        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 02:52:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661334775; x=1692870775;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=6ZO59X/JNjYC94enLjNEXbDBrhd9pWmQ2d+pdrWBWPo=;
-  b=Aqqex52uAuXyGtVLOB2RY0N0Jyh8HSyBUwOcGWL/ieZBHdBwsLXrK98S
-   GT7rhAHnG/t4ci10UIeJsYTrX54+f9a/Ve1Y4165b9tJs55oEaxY/Smjr
-   p9ta2dyVNFkFo0iHNxIz/vO1c6NN2fTUNT6sIHLgUMTT0NGR8hqOFtbew
-   BQ9SXjJ3FEBOKkKFn3NHPPpcWsoSvJZow82KgKbc5XKlUK9MvK9gPWYNZ
-   NB0yYZSUbXQovaceTSgNTUY15ph4eNB8n8EgeVlleEZ4hvXwFQxQpaaof
-   M2ROvMvh4ZpkAX/ozsZwPpVedHhPdqU9mHT5ep6OpkptpqE3OS4myJRG9
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10448"; a="319982261"
-X-IronPort-AV: E=Sophos;i="5.93,260,1654585200"; 
-   d="scan'208";a="319982261"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2022 02:52:46 -0700
-X-IronPort-AV: E=Sophos;i="5.93,260,1654585200"; 
-   d="scan'208";a="670433356"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.39.240])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2022 02:52:44 -0700
-Date:   Wed, 24 Aug 2022 11:52:39 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+        with ESMTP id S236223AbiHXMDa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 08:03:30 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B60F5B074
+        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 05:03:28 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 456B133D5B;
+        Wed, 24 Aug 2022 12:03:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1661342607; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=onW2ocuP/+mpNGWmP1kQDm1MP5EAMEVHbWd9ZNBWIAA=;
+        b=ckG5XyB1Y0QhJ9rFd5h/y2MQZ50sGXw16m4HzoTQ+tjE4jbX/wgObr3fPuzM7q93kUSCJw
+        q1fBSG5xGuMLk1YNDefrzOMwyppqHVxbxwiTFcxoz21G2ycSxH+tljdZzmG7sJ5I4I+e+N
+        OFNqTqhU33rTiasFlL6TyRVVzmdnunY=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 15F2613AC0;
+        Wed, 24 Aug 2022 12:03:27 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id x5pPBI8TBmPuRQAAMHmgww
+        (envelope-from <mkoutny@suse.com>); Wed, 24 Aug 2022 12:03:27 +0000
+Date:   Wed, 24 Aug 2022 14:03:25 +0200
+From:   Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 Cc:     NeilBrown <neilb@suse.de>, Coly Li <colyli@suse.de>,
         linux-raid@vger.kernel.org, Benjamin Brunner <bbrunner@suse.com>,
         Franck Bui <fbui@suse.de>,
         Jes Sorensen <jes@trained-monkey.org>, Xiao Ni <xni@redhat.com>
 Subject: Re: [PATCH] mdadm/systemd: remove KillMode=none from service file
-Message-ID: <20220824115239.00004ac4@linux.intel.com>
-In-Reply-To: <Yv62jwZwp7kNPSUF@blackbook>
+Message-ID: <20220824120325.GA19154@blackbody.suse.cz>
 References: <20220215133415.4138-1-colyli@suse.de>
-        <20220728095535.00007b7b@linux.intel.com>
-        <165905971898.4359.3905352912598347760@noble.neil.brown.name>
-        <20220802174305.00000336@linux.intel.com>
-        <Yv62jwZwp7kNPSUF@blackbook>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+ <20220728095535.00007b7b@linux.intel.com>
+ <165905971898.4359.3905352912598347760@noble.neil.brown.name>
+ <20220802174305.00000336@linux.intel.com>
+ <Yv62jwZwp7kNPSUF@blackbook>
+ <20220824115239.00004ac4@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220824115239.00004ac4@linux.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Michal,
-Thank you for support.
+On Wed, Aug 24, 2022 at 11:52:39AM +0200, Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
+> I removed those setting but it was something like:
+> 
+> Before=initrd-switch-root.target dev-%I.device
+> 
+> I can test more if you have suggestions.
 
-On Fri, 19 Aug 2022 00:00:47 +0200
-Michal Koutn=FD <mkoutny@suse.com> wrote:
+Sorry, I realize it won't work, device deps are restricted [1]. (I
+considered relaxing that [2] in order to terminate loop devs properly.)
 
-> Hello.
->=20
-> (Coming via
-> https://lists.freedesktop.org/archives/systemd-devel/2022-August/048201.h=
-tml.)
->=20
-> On Tue, Aug 02, 2022 at 05:43:05PM +0200, Mariusz Tkaczyk
-> <mariusz.tkaczyk@linux.intel.com> wrote:
-> > https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/udev-md-raid-=
-arrays.rules#n41
-> > but i can't find wants dependency in:
-> > #systemctl show dev-md126.service
-> > #systemctl show dev-md127.service =20
->=20
-> Typo here
->=20
-> s/service/device/
->=20
-> But the Wants dependency won't help with shutdown ordering.
->=20
-> > I got:
-> > systemd[1]: /usr/lib/systemd/system/mdmon@.service:11: Failed to resolve
-> > unit specifiers in 'dev-%I.device', ignoring: Invalid slot =20
->=20
-> What was your exact directive in service unit file and what was the
-> template parameter?
-> (This may not work though, since there'd be no stop job for .device unit
-> during shutdown to order against. (not tested))
+> Will check but it can be considered as workaround, not as a solution. VROC
+> arrays are automatically configured in installers, also users may mount them
+> manually, without any additional settings (as standalone disk). We need to
+> resolve it globally.
 
-I removed those setting but it was something like:
+It's not the only setup when a device requires a userspace daemon.
+There is a generic solution for root devices [3] (when the daemon is
+marked to run indefinitely).
 
-Before=3Dinitrd-switch-root.target dev-%I.device
+The device job ordering dependencies during shutdown would need better
+handling in systemd. (But I don't understand how much
+mdmon@.serice is necessary for device existence and teardown.)
 
-I can test more if you have suggestions.
+HTH,
+Michal
 
->=20
-> > Probably it tries to umount every exiting .mount unit, i didn't check
-> > deeply. https://www.freedesktop.org/software/systemd/man/systemd.mount.=
-html
-> >=20
-> > I can see that we can define something for .mount units so I tried both:
-> > # mount -o x-systemd.after=3Dmdmon@md127.service /dev/mapper/vg0-lvm_ra=
-id /mnt
-> > # mount -o x-systemd.requires=3Dmdmon@md127.service /dev/mapper/vg0-lvm=
-_raid
-> > /mnt
-> >=20
-> > but I doesn't help either. I seems that it is ignored because I cannot =
-find
-> > mdmon dependency in systemctl show output for mnt.mount unit. =20
->=20
-> These x-* options are parsed from fstab. If you mount manually like
-> this, systemd won't learn about these non-kernel options (they don't get
-> through /proc/mountinfo).
->=20
-> Actually, I think if you add the .mount:After=3Dmdmon@....service
-> (via fstab), it should properly order the stop of mdmon after the
-> particular unmount during shutdown.=20
->=20
-Will check but it can be considered as workaround, not as a solution. VROC
-arrays are automatically configured in installers, also users may mount them
-manually, without any additional settings (as standalone disk). We need to
-resolve it globally.
-
-Thanks,
-Mariusz
+[1] https://github.com/systemd/systemd/blob/98f3e84342dbb9da48ffa22bfdf122bdae4da1c6/src/core/unit.c#L3101
+[2] https://github.com/Werkov/systemd/commit/bdaa49d34e78981f3535c42ec19ac0f314135c07
+    (forked repo, not an upstream commit)
+[3] https://systemd.io/ROOT_STORAGE_DAEMONS/
