@@ -2,69 +2,66 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1131C00140
-	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 16:41:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C0EC00140
+	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 16:45:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238635AbiHXQll (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 Aug 2022 12:41:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37280 "EHLO
+        id S239600AbiHXQo7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 Aug 2022 12:44:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239016AbiHXQlg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 12:41:36 -0400
+        with ESMTP id S238878AbiHXQoz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 12:44:55 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D035913F6F
-        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 09:41:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CACDDC6
+        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 09:44:50 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id E5EED20A1E;
-        Wed, 24 Aug 2022 16:41:32 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 937A520A38;
+        Wed, 24 Aug 2022 16:44:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1661359292; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1661359488; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=MJqfIkyUZMrapSC7DE8OdHSZziE/vGI5pcrqI6Ymin4=;
-        b=DX3dShBJqlpIJZk7W46fUtmFAT4zeZlOzk3qRLnbYUWiSO5Mb4goTTMmbrtzwAeLnlU9Cw
-        MlgnVcn9gAxJZESbR1ZT97aJSAla+nxiMBUsY5bm+oYpHfj+eyANLkak4u4USbvR0wKMCb
-        upWybhRrQwPYj5vwLtPfOLnwzuTStds=
+        bh=SVN6M9sHKHOvI/yPzlwynLhbIIyqkJD0Huf5RW4aXgo=;
+        b=Tia0rZYQblOrdyqgtm7nZJcMZ9Kl9l0gMBepsGbCYsMspoWzXt46ASeSgQdU0M22tLwOW1
+        DZbCNohNUMJPjhVG0sJUrVGk9SecfJo407eqT0SppmlCqNOfKZGCnDUn1ofIj3bgLIprPP
+        OSbmYga/EAZamakYZnvkP+I5p4ARg98=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1661359292;
+        s=susede2_ed25519; t=1661359488;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=MJqfIkyUZMrapSC7DE8OdHSZziE/vGI5pcrqI6Ymin4=;
-        b=16ju66NSHO9S+mIC4xsKFOzTcG3E7HHS0sgl7Ss4hpU6o75FvyRCdmVLea6FTP9FA6Oz6V
-        wcdUdDCvxwksLaDA==
+        bh=SVN6M9sHKHOvI/yPzlwynLhbIIyqkJD0Huf5RW4aXgo=;
+        b=nB7Z36hs91ZBlymfjf3FLtgZ555InywMT9QA28PIPhfNlywv2Gn3JqKTWEPJscr5m8uEqS
+        QWIsF0VySTtaZRAA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2F83513780;
-        Wed, 24 Aug 2022 16:41:32 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7F0FE13AC0;
+        Wed, 24 Aug 2022 16:44:47 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 68S6ALxUBmPiOwAAMHmgww
-        (envelope-from <colyli@suse.de>); Wed, 24 Aug 2022 16:41:32 +0000
+        id hAcgD39VBmPyPAAAMHmgww
+        (envelope-from <colyli@suse.de>); Wed, 24 Aug 2022 16:44:47 +0000
 Content-Type: text/plain;
         charset=utf-8
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
-Subject: Re: [PATCH v3] Grow: Split Grow_reshape into helper function
+Subject: Re: [PATCH v3 2/2] mdadm: replace container level checking with
+ inline
 From:   Coly Li <colyli@suse.de>
-In-Reply-To: <f732cc9e-65d5-2b8a-cd66-20f99bc2d625@trained-monkey.org>
-Date:   Thu, 25 Aug 2022 00:41:26 +0800
-Cc:     Mateusz Kusiak <mateusz.kusiak@intel.com>,
-        linux-raid@vger.kernel.org
+In-Reply-To: <f16e1cc6-e373-13ef-1d3e-b3f3a00d0e80@trained-monkey.org>
+Date:   Thu, 25 Aug 2022 00:44:43 +0800
+Cc:     Kinga Tanska <kinga.tanska@intel.com>, linux-raid@vger.kernel.org
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <B1592EF9-D385-470A-B6A2-C774D3CC3BF7@suse.de>
-References: <20220609074101.14132-1-mateusz.kusiak@intel.com>
- <9b885a13-21cf-3c9a-f320-c047301294de@trained-monkey.org>
- <2622AABD-75DC-41D4-9F1E-E958463E9FD0@suse.de>
- <42df7fa8-1a9a-afdc-5298-1850f5bce879@trained-monkey.org>
- <193A9B1E-ACB9-40C1-A6B0-BE0FC5C29753@suse.de>
- <f732cc9e-65d5-2b8a-cd66-20f99bc2d625@trained-monkey.org>
+Message-Id: <F52928B6-9C19-4C30-B6DB-1EAD5DB28624@suse.de>
+References: <20220819005547.17343-1-kinga.tanska@intel.com>
+ <20220819005547.17343-3-kinga.tanska@intel.com>
+ <f16e1cc6-e373-13ef-1d3e-b3f3a00d0e80@trained-monkey.org>
 To:     Jes Sorensen <jes@trained-monkey.org>
 X-Mailer: Apple Mail (2.3696.120.41.1.1)
 Precedence: bulk
@@ -73,71 +70,70 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-> 2022=E5=B9=B48=E6=9C=8825=E6=97=A5 00:33=EF=BC=8CJes Sorensen =
+> 2022=E5=B9=B48=E6=9C=8825=E6=97=A5 00:03=EF=BC=8CJes Sorensen =
 <jes@trained-monkey.org> =E5=86=99=E9=81=93=EF=BC=9A
 >=20
-> On 8/24/22 12:09, Coly Li wrote:
+> On 8/18/22 20:55, Kinga Tanska wrote:
+>> To unify all containers checks in code, is_container() function is
+>> added and propagated.
 >>=20
->>=20
->>> 2022=E5=B9=B48=E6=9C=8824=E6=97=A5 23:56=EF=BC=8CJes Sorensen =
-<jes@trained-monkey.org> =E5=86=99=E9=81=93=EF=BC=9A
->>>> Hi Jes,
->>>>=20
->>>> Please check the version I post to you in series =E2=80=9Cmdadm-CI =
-for-jes/20220728: patches for merge=E2=80=9D (Message-Id: =
-<20220728122101.28744-1-colyli@suse.de>), the patch in this series is =
-rebased and confirmed with Mateusz, it could be applied to upstream =
-mdadm.
->>=20
->>> I applied this one, but none of the versions applied cleanly. I had =
-to
->>> play formail games to pull it out of your stack, as I am not going =
-to
->>> apply a set of 23 commits in one batch without going through them.
->>=20
->> These days I was in partner=E2=80=99s office and planed to repost the =
-rebased version soon. If you don=E2=80=99t do the rebase yet, please =
-wait for me to post a v4 version on behavior of Mateusz tomorrow.
+>> Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+>> ---
+>> Assemble.c    |  5 ++---
+>> Create.c      |  6 +++---
+>> Grow.c        |  6 +++---
+>> Incremental.c |  4 ++--
+>> mdadm.h       | 14 ++++++++++++++
+>> super-ddf.c   |  6 +++---
+>> super-intel.c |  4 ++--
+>> super0.c      |  2 +-
+>> super1.c      |  2 +-
+>> sysfs.c       |  2 +-
+>> 10 files changed, 32 insertions(+), 19 deletions(-)
 >=20
-> No worries, I already pulled some of it in, but you can check my repo
-> and see whats there.
+> This one fails to apply for me from patcheworks. That said, a minor =
+nit
+> below.
 >=20
->>> It's really awesome to have your help reviewing patches, much
->>> appreciated, but I would prefer to keep them in the original batches =
-so
->>> I can pull them from patchwork, rather than trying to deal with the
->>> giant stack.
->>=20
->> How about we improve the process like this,
->> 1) I will continue to review and response the patches from the =
-original emails, so patch work may track them as they were.
->> 2) For all the reviewed patches are not handled by your after a =
-period, let=E2=80=99s set it as 2 weeks for now, I will post a email =
-with all the patches with their message-IDs to you as a remind.
+> Mind fixing this and posting an updated version?
 >=20
-> This sounds good to me! I think it's also fine to have a branch with
-> everything applied for testing, it's just less easy for me to pull =
-from.
+> Thanks,
+> Jes
+>=20
+>=20
+>> diff --git a/mdadm.h b/mdadm.h
+>> index c7268a71..72abfc50 100644
+>> --- a/mdadm.h
+>> +++ b/mdadm.h
+>> @@ -1885,3 +1885,17 @@ enum r0layout {
+>>  * This is true for native and DDF, IMSM allows 16.
+>>  */
+>> #define MD_NAME_MAX 32
+>> +
+>> +/**
+>> + * is_container() - check if @level is &LEVEL_CONTAINER
+>> + * @level: level value
+>> + *
+>> + * return:
+>> + * 1 if level is equal to &LEVEL_CONTAINER, 0 otherwise.
+>> + */
+>> +static inline int is_container(const int level)
+>> +{
+>> +	if (level =3D=3D LEVEL_CONTAINER)
+>> +		return 1;
+>> +	return 0;
+>> +}
+>> \ No newline at end of file
+>=20
+> Please add the lost newline
 
-Yes there is already. Every time when I post the reviewed patches to =
-you, there is a branch for all the patches. For example currently the =
-branches in mdadm-CI tree,
-  remotes/origin/20220315-testing
-  remotes/origin/20220406-testing
-  remotes/origin/20220719-testing
-  remotes/origin/for-jes/20220402
-  remotes/origin/for-jes/20220620
-  remotes/origin/for-jes/20220728
-  remotes/origin/master
+Hi Jes,
 
-All the branches in for-jes/ are the patches I posted to you as email =
-thread. You may take any one for your convenience. And the latest branch =
-will be rebased against the latest mdadm tree before I post the remind =
-email to you.
+This one was fixed in my previous post to you. And it can be found from =
+the mdadm-CI tree =
+(git://git.kernel.org/pub/scm/linux/kernel/git/colyli/mdadm.git) at =
+commit 1065f521f833ebaac1bce934e8dea91fcd8221ae
 
-BTW, the mdadm-CI tree can be found from =
-git://git.kernel.org/pub/scm/linux/kernel/git/colyli/mdadm.git
-
-Thanks.
+If you want, I can post a v4 version for this patch.
 
 Coly Li=
