@@ -2,102 +2,62 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC83C32772
-	for <linux-raid@archiver.kernel.org>; Tue, 23 Aug 2022 19:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E2E4C00140
+	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 08:15:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232982AbiHWTsI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 23 Aug 2022 15:48:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55440 "EHLO
+        id S235648AbiHXIPh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 Aug 2022 04:15:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230326AbiHWTrE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 23 Aug 2022 15:47:04 -0400
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BF59A78BF9;
-        Tue, 23 Aug 2022 11:51:09 -0700 (PDT)
-Received: from linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net (linux.microsoft.com [13.77.154.182])
-        by linux.microsoft.com (Postfix) with ESMTPSA id 563D42125976;
-        Tue, 23 Aug 2022 11:51:09 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 563D42125976
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-        s=default; t=1661280669;
-        bh=NBFeGJMwCnn/s60bkc/kPbdd0y34vbhoOIUgYJBG02k=;
-        h=From:To:Subject:Date:From;
-        b=IUxhbzEW7vaVZ4Ng+5wGWzMb9yRhskDwc0vqAVJdcKR1EDxy5lPqeD6yhI5DrAehI
-         KCTmfRLw8KGGFkzC3xhyKav2zSZeFJYqRM+EaW53o+8P3o126lHnPkE8eaXwMq/c75
-         1Uwz/VCxdHh05yIri3MNwg6cvnFXU1CeLR7upAUs=
-From:   Saurabh Sengar <ssengar@linux.microsoft.com>
-To:     song@kernel.org, shli@fb.com, neilb@suse.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ssengar@microsoft.com, mikelley@microsoft.com,
-        guoqing.jiang@linux.dev
-Subject: [PATCH v2] md : Replace snprintf with scnprintf
-Date:   Tue, 23 Aug 2022 11:51:04 -0700
-Message-Id: <1661280664-10588-1-git-send-email-ssengar@linux.microsoft.com>
-X-Mailer: git-send-email 1.8.3.1
+        with ESMTP id S234736AbiHXIPX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 04:15:23 -0400
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92B70753A6
+        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 01:15:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1661328921; x=1692864921;
+  h=message-id:date:from:to:cc:subject:mime-version:
+   content-transfer-encoding;
+  bh=Rey2aSedne+RRQyGPpzlVBC3ATzNxIiU1C0/KcTnS2A=;
+  b=G78vlzrBcjoh9VQc0SH3d8xHcgEkrRfRNOPqpNu8BNHI0uHxQy0l0dA3
+   Fz9AH1kf1q4U/nCFUjlQYyzzuXZQJGqwb8up3jmyxnAjz16A26QiWpO4A
+   E09OMSCAioz7+E1BPe+ZJziPvkZtH9qo329yKO5nRVuZqvhg11RklyZtR
+   QvjRMkDd4osHQS3D5ptZyCKPVPgH+SDlS0Kmdsf/pA0KCcaPls59BDJd0
+   7VDt1Uh8VmZVaghoTUFy+4Lj3wQD30Wm7ARYtb337zolN+ag7OGWV58F9
+   mKoKzhx9t0Jp6bq0GnWYtTeK52OTdNQHf9YScMDFxydA3PQdnLfMfJvfi
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10448"; a="292645856"
+X-IronPort-AV: E=Sophos;i="5.93,260,1654585200"; 
+   d="scan'208";a="292645856"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2022 01:15:21 -0700
+Message-Id: <11ab82$jvatnj@fmsmga008-auth.fm.intel.com>
+X-IronPort-AV: E=Sophos;i="5.93,260,1654585200"; 
+   d="scan'208";a="670398195"
+Received: from lflorcza-mobl.ger.corp.intel.com (HELO intel.linux.com) ([10.252.52.14])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2022 01:15:20 -0700
+Date:   Wed, 24 Aug 2022 10:15:15 +0200
+From:   Lukasz Florczak <lukasz.florczak@linux.intel.com>
+To:     Coly Li <colyli@suse.de>
+Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        linux-raid@vger.kernel.org
+Subject: Python tests
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Current code produces a warning as shown below when total characters
-in the constituent block device names plus the slashes exceeds 200.
-snprintf() returns the number of characters generated from the given
-input, which could cause the expression “200 – len” to wrap around
-to a large positive number. Fix this by using scnprintf() instead,
-which returns the actual number of characters written into the buffer.
+Hi Coly,
+I want to write some mdadm tests for assemblation and incremental
+regarding duplicated array names in config and I'd like to do it in
+python. I've seen that some time ago[1] you said that you could try to
+integrate the python tests framework into the mdadm ci. I was wondering
+how is it going? Do you need any help with this subject?
 
-[ 1513.267938] ------------[ cut here ]------------
-[ 1513.267943] WARNING: CPU: 15 PID: 37247 at <snip>/lib/vsprintf.c:2509 vsnprintf+0x2c8/0x510
-[ 1513.267944] Modules linked in:  <snip>
-[ 1513.267969] CPU: 15 PID: 37247 Comm: mdadm Not tainted 5.4.0-1085-azure #90~18.04.1-Ubuntu
-[ 1513.267969] Hardware name: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS Hyper-V UEFI Release v4.1 05/09/2022
-[ 1513.267971] RIP: 0010:vsnprintf+0x2c8/0x510
-<-snip->
-[ 1513.267982] Call Trace:
-[ 1513.267986]  snprintf+0x45/0x70
-[ 1513.267990]  ? disk_name+0x71/0xa0
-[ 1513.267993]  dump_zones+0x114/0x240 [raid0]
-[ 1513.267996]  ? _cond_resched+0x19/0x40
-[ 1513.267998]  raid0_run+0x19e/0x270 [raid0]
-[ 1513.268000]  md_run+0x5e0/0xc50
-[ 1513.268003]  ? security_capable+0x3f/0x60
-[ 1513.268005]  do_md_run+0x19/0x110
-[ 1513.268006]  md_ioctl+0x195e/0x1f90
-[ 1513.268007]  blkdev_ioctl+0x91f/0x9f0
-[ 1513.268010]  block_ioctl+0x3d/0x50
-[ 1513.268012]  do_vfs_ioctl+0xa9/0x640
-[ 1513.268014]  ? __fput+0x162/0x260
-[ 1513.268016]  ksys_ioctl+0x75/0x80
-[ 1513.268017]  __x64_sys_ioctl+0x1a/0x20
-[ 1513.268019]  do_syscall_64+0x5e/0x200
-[ 1513.268021]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+Thanks,
+Lukasz
 
-Fixes: 766038846e875 ("md/raid0: replace printk() with pr_*()")
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
-Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
-Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
----
-V2 :
-	- Rebase
-
- drivers/md/raid0.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 78addfe..857c493 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -47,7 +47,7 @@ static void dump_zones(struct mddev *mddev)
- 		int len = 0;
- 
- 		for (k = 0; k < conf->strip_zone[j].nb_dev; k++)
--			len += snprintf(line+len, 200-len, "%s%pg", k?"/":"",
-+			len += scnprintf(line+len, 200-len, "%s%pg", k?"/":"",
- 				conf->devlist[j * raid_disks + k]->bdev);
- 		pr_debug("md: zone%d=[%s]\n", j, line);
- 
--- 
-1.8.3.1
-
+[1] https://marc.info/?l=linux-raid&m=165277539509464&w=2
