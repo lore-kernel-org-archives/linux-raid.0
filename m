@@ -2,114 +2,90 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 470CBC00140
-	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 12:58:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1BD8C00140
+	for <linux-raid@archiver.kernel.org>; Wed, 24 Aug 2022 15:56:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237726AbiHXM6G (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 Aug 2022 08:58:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59976 "EHLO
+        id S237934AbiHXP47 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 Aug 2022 11:56:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231596AbiHXM6E (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 08:58:04 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F1AD979C1
-        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 05:58:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661345883; x=1692881883;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=/tB/zROSvYKPWYF2MjP1cN5UlYNxHKwqglxmhQHdJjw=;
-  b=evyvwesUx7qM4QmZRF/08HlCH8oOgnf6czQAKtYfn+0gqNz0WpIcBAK0
-   AEyALFGm66hf/BN9dgWZHeXbuSDpfoQcFb1GCUOGxocsAWoJhGcevdl30
-   TiLRsYuM540HebzdOYYpXMCBnnkV290BNQQsUioaC4dQjURxXbhQmXYf1
-   BgawfZNZod/pUTBgrTW9gknuMKYLwwJxZduMz8LokOxJXdnkCKZR+iRDO
-   KFoTtIGhrd/RY7r3I0hGpFdF/n+SFHIwEbXLorvUGdsVi88Uis+BhLE+B
-   KMP849FJtEQHpJZOE/RiuQ2PZKm6aUv0v7BqdAAhhpmejfrfcSpQJCvYl
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10448"; a="292700352"
-X-IronPort-AV: E=Sophos;i="5.93,260,1654585200"; 
-   d="scan'208";a="292700352"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2022 05:58:03 -0700
-X-IronPort-AV: E=Sophos;i="5.93,260,1654585200"; 
-   d="scan'208";a="937895606"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.39.240])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2022 05:58:01 -0700
-Date:   Wed, 24 Aug 2022 14:57:56 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc:     NeilBrown <neilb@suse.de>, Coly Li <colyli@suse.de>,
-        linux-raid@vger.kernel.org, Benjamin Brunner <bbrunner@suse.com>,
-        Franck Bui <fbui@suse.de>,
-        Jes Sorensen <jes@trained-monkey.org>, Xiao Ni <xni@redhat.com>
-Subject: Re: [PATCH] mdadm/systemd: remove KillMode=none from service file
-Message-ID: <20220824145756.000048f8@linux.intel.com>
-In-Reply-To: <20220824120325.GA19154@blackbody.suse.cz>
-References: <20220215133415.4138-1-colyli@suse.de>
-        <20220728095535.00007b7b@linux.intel.com>
-        <165905971898.4359.3905352912598347760@noble.neil.brown.name>
-        <20220802174305.00000336@linux.intel.com>
-        <Yv62jwZwp7kNPSUF@blackbook>
-        <20220824115239.00004ac4@linux.intel.com>
-        <20220824120325.GA19154@blackbody.suse.cz>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S237589AbiHXP45 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Aug 2022 11:56:57 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B74E47C326
+        for <linux-raid@vger.kernel.org>; Wed, 24 Aug 2022 08:56:56 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1661356609; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=MpgXQTjyLdooLg1yHYQ6/5BnbWzdogsSl5uLhsURhPP50tMUptkTFLMUCKPzL6Fyb4UqNJnaDImqf3fOTxidETrBeKHz9VloVqbxipMEly+24g+oMpvVtEbpaKHkGHe98vfTg1Mpn4ANSuJDQbIl0FSaukzu3WeVQADLKajdeOA=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1661356609; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=wAcg2r8KuLaCAHC0Aj0L7hcAxnIreQSXhUxUOglJw4M=; 
+        b=GU+0hVGhtaOcWVvSpldqnuxDZFzW74wSBCsY5Q+F/j7x1NDi8PTlZTOnsaRE2kI+qRSGF3JCZUhoOcax2hpFS+E/qw8bPyxRG9enuGlWFNEIM2Nm4csqXbh5nizC7jjUMlrwHCVm259mebrfySa4mmH3rEEK/9aQlWyzUsIIk+I=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.78] (pool-72-69-213-125.nycmny.fios.verizon.net [72.69.213.125]) by mx.zoho.eu
+        with SMTPS id 1661356607277489.42549768851177; Wed, 24 Aug 2022 17:56:47 +0200 (CEST)
+Date:   Wed, 24 Aug 2022 11:56:44 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v3] Grow: Split Grow_reshape into helper function
+Content-Language: en-US
+To:     Coly Li <colyli@suse.de>
+Cc:     Mateusz Kusiak <mateusz.kusiak@intel.com>,
+        linux-raid@vger.kernel.org
+References: <20220609074101.14132-1-mateusz.kusiak@intel.com>
+ <9b885a13-21cf-3c9a-f320-c047301294de@trained-monkey.org>
+ <2622AABD-75DC-41D4-9F1E-E958463E9FD0@suse.de>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <42df7fa8-1a9a-afdc-5298-1850f5bce879@trained-monkey.org>
+In-Reply-To: <2622AABD-75DC-41D4-9F1E-E958463E9FD0@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 24 Aug 2022 14:03:25 +0200
-Michal Koutn=FD <mkoutny@suse.com> wrote:
+On 8/8/22 06:03, Coly Li wrote:
+> 
+> 
+>> 2022年8月8日 04:41，Jes Sorensen <jes@trained-monkey.org> 写道：
+>>
+>> On 6/9/22 03:41, Mateusz Kusiak wrote:
+>>> Grow_reshape should be split into helper functions given its size.
+>>> - Add helper function for preparing reshape on external metadata.
+>>> - Close cfd file descriptor.
+>>> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
+>>> ---
+>>> Changes since v2:
+>>> - removed dot from commit message
+>>> - formatted commit description as a list
+>>> - got rid of returning -1 in prepare_external_reshape()
+>>> - changed "return" section in prepare_external_reshape() description
+>>
+>> Hi Mateusz,
+>>
+>> Changes look good to me, but it no longer applies. Mind sending an updated version?
+> 
+> Hi Jes,
+> 
+> Please check the version I post to you in series “mdadm-CI for-jes/20220728: patches for merge” (Message-Id: <20220728122101.28744-1-colyli@suse.de>), the patch in this series is rebased and confirmed with Mateusz, it could be applied to upstream mdadm.
 
-> On Wed, Aug 24, 2022 at 11:52:39AM +0200, Mariusz Tkaczyk
-> <mariusz.tkaczyk@linux.intel.com> wrote:
-> > I removed those setting but it was something like:
-> >=20
-> > Before=3Dinitrd-switch-root.target dev-%I.device
-> >=20
-> > I can test more if you have suggestions. =20
->=20
-> Sorry, I realize it won't work, device deps are restricted [1]. (I
-> considered relaxing that [2] in order to terminate loop devs properly.)
->=20
-> > Will check but it can be considered as workaround, not as a solution. V=
-ROC
-> > arrays are automatically configured in installers, also users may mount=
- them
-> > manually, without any additional settings (as standalone disk). We need=
- to
-> > resolve it globally. =20
->=20
-> It's not the only setup when a device requires a userspace daemon.
-> There is a generic solution for root devices [3] (when the daemon is
-> marked to run indefinitely).
+Hi
 
-Yes, I know that trick and we are setting '@' to prevent systemd from killi=
-ng
-it[1] but we do mdmon@ service restart after switch root. This is the simpl=
-est
-way to reopen descriptors. We can try to change that.
+I applied this one, but none of the versions applied cleanly. I had to
+play formail games to pull it out of your stack, as I am not going to
+apply a set of 23 commits in one batch without going through them.
 
-It will be great if you can really prove that the mechanism is working. Do =
-you
-know any project which really uses this functionality?
+It's really awesome to have your help reviewing patches, much
+appreciated, but I would prefer to keep them in the original batches so
+I can pull them from patchwork, rather than trying to deal with the
+giant stack.
 
->
-> The device job ordering dependencies during shutdown would need better
-> handling in systemd. (But I don't understand how much
-> mdmon@.serice is necessary for device existence and teardown.)
->=20
+Best regards,
+Jes
 
-We need to handle dirty clean transaction. On shutdown, when umount is
-requested them filesystem could flush in flight data, and them kernel is
-waiting for mdmon to acknowledge the change in metadata[2].
 
-Thanks,
-Mariusz
-
-[1] https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/mdmon.c#n342
-[2] https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/mdmon-design.=
-txt
