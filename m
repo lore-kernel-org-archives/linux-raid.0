@@ -2,118 +2,188 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E65A3ECAAA2
-	for <linux-raid@archiver.kernel.org>; Thu, 25 Aug 2022 22:20:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 198C7ECAAA3
+	for <linux-raid@archiver.kernel.org>; Thu, 25 Aug 2022 22:56:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244341AbiHYWUC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 25 Aug 2022 18:20:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54362 "EHLO
+        id S243874AbiHYW4L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 25 Aug 2022 18:56:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244414AbiHYWTr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 25 Aug 2022 18:19:47 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90080C59D7;
-        Thu, 25 Aug 2022 15:19:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:From:Cc:To:MIME-Version:Date:Message-ID
-        :references:content-disposition:in-reply-to;
-        bh=j5DvIPz+Xj4DPIqyLR8g5oRUclTxtSnyrrcCMGtVKXk=; b=WpXQ0jaJi6RMaCqt2ndLThxBEy
-        h2cIADkkEtlz08++oNzbSZy8Jin+b+5EBctI+5kH6lHe+oemU3lzXjTu50q9u11zzyI/gUyghs3ax
-        j5wT/yHBeUgAw+mruDNjoFynbfa9VGsu9+/Kt69oeNVataloJphO28EDhPKCVgEtlI1SCcI9iiG+o
-        Qvlqk4eV2AiNMbDC7njXib4LEH2BgJiGFCNAks83jhEO+KYBaOYsgVpZeTCdAiE5aRt9iCeeCaZII
-        okl6U8TmXW5HjavT3/mrPlMhaC/jcEZ86DSJNE678MDttTsP2MfxC7Wnu7YEkqIS3466HvZXku3jR
-        0Zwz8UVQ==;
-Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1oRLCM-008CAf-1Z; Thu, 25 Aug 2022 16:19:39 -0600
-Message-ID: <7f3b87b6-b52a-f737-51d7-a4eec5c44112@deltatee.com>
-Date:   Thu, 25 Aug 2022 16:19:35 -0600
+        with ESMTP id S244254AbiHYW4I (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 25 Aug 2022 18:56:08 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA0FBC2EAB
+        for <linux-raid@vger.kernel.org>; Thu, 25 Aug 2022 15:56:02 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 5C35A37A65;
+        Thu, 25 Aug 2022 22:56:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1661468161; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=V/V/YDkoXU+9ZHXmhyGqonXA2L9PLZ9zw7WVpzNIM34=;
+        b=Y8RokynaGds2PwejZ3ri1WQKTJ8NQdAarPCP4RRq9EyA3glYQE42duWso/BhTuwUAJx05D
+        11g5hYjYWHt927ZAlBKzI7YJ04bFccn2TCwUpmL/R6c6R4ZQOm3j9gEE0yFHgqv9NQ9Po9
+        cx8YJkntiWPCXY9onfNxZUYPUBcNjAE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1661468161;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=V/V/YDkoXU+9ZHXmhyGqonXA2L9PLZ9zw7WVpzNIM34=;
+        b=S9Y9y6TG9TdsNwlY2lp7hd9Fj2ZTyEfqDkcX0En6bFX1VpOeSFA6PlLKR/llI4IcT0OscX
+        YzbPbZpLG4SsuQBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EF5E613517;
+        Thu, 25 Aug 2022 22:55:59 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id pC3bKf/9B2M3egAAMHmgww
+        (envelope-from <neilb@suse.de>); Thu, 25 Aug 2022 22:55:59 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Content-Language: en-CA
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Song Liu <song@kernel.org>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 24.64.144.200
-X-SA-Exim-Rcpt-To: axboe@kernel.dk, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Deadlock Issue with blk-wbt and raid5+journal
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Jes Sorensen" <jes@trained-monkey.org>
+Cc:     "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>,
+        "Paul Menzel" <pmenzel@molgen.mpg.de>, linux-raid@vger.kernel.org
+Subject: [PATCH v3] super1: report truncated device
+In-reply-to: <571bde96-e70d-9c87-1544-49790844d160@trained-monkey.org>
+References: <165758762945.25184.10396277655117806996@noble.neil.brown.name>,
+ <cff69e79-d681-c9d6-c719-8b10999a558a@molgen.mpg.de>,
+ <165768409124.25184.3270769367375387242@noble.neil.brown.name>,
+ <20220721101907.00002fee@linux.intel.com>,
+ <165855103166.25184.12700264207415054726@noble.neil.brown.name>,
+ <20220725094238.000014f0@linux.intel.com>,
+ <1c04ce1c-cf02-2891-cb88-c5f91a80f620@trained-monkey.org>,
+ <166138706173.27490.18440987438153337183@noble.neil.brown.name>,
+ <20220825095917.00002549@linux.intel.com>,
+ <571bde96-e70d-9c87-1544-49790844d160@trained-monkey.org>
+Date:   Fri, 26 Aug 2022 08:55:56 +1000
+Message-id: <166146815642.27490.8510532689362169941@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jens,
 
-While testing md/raid5 with the journal option using loop devices, I've
-found an easily reproducible hang on my system. Simply running an fio
-write job with the md threadcnt set to 4 can hit it. However, curiously,
-it is not hit without the journal being used.
+When the metadata is at the start of the device, it is possible that it
+describes a device large than the one it is actually stored on.  When
+this happens, report it loudly in --examine.
 
-I'm running on the current md/md-next branch; however I've seen this bug
-for a couple months now on recent kernels and have no idea how long it's
-been in the kernel for.
+....
+   Unused Space : before=3D1968 sectors, after=3D-2047 sectors DEVICE TOO SMA=
+LL
+          State : clean TRUNCATED DEVICE
+....
 
-I end up seeing multiple hung tasks with the following stack trace:
+Also report in --assemble so that the failure which the kernel will
+report will be explained.
 
-   schedule+0x9e/0x140
-  io_schedule+0x70/0xb0
-  rq_qos_wait+0x153/0x210
-  wbt_wait+0x127/0x1f0
-  __rq_qos_throttle+0x38/0x60
-  blk_mq_submit_bio+0x589/0xcd0
-  __submit_bio+0xe6/0x100
-  submit_bio_noacct_nocheck+0x42e/0x470
-  submit_bio_noacct+0x4c2/0xbb0
-  ops_run_io+0x46b/0x1a30
-  handle_stripe+0xcd3/0x36c0
-  handle_active_stripes.constprop.0+0x6f6/0xa60
-  raid5_do_work+0x177/0x330
-  process_one_work+0x609/0xb00
-  worker_thread+0x2d4/0x710
-  kthread+0x18c/0x1c0
-  ret_from_fork+0x1f/0x30
+mdadm: Device /dev/sdb is not large enough for data described in superblock
+mdadm: no RAID superblock on /dev/sdb
+mdadm: /dev/sdb has no superblock - assembly aborted
 
-When this happens, I find 1 to 10ish inflight IO on the WBT of the
-underlying loop devices as seen in
-'/sys/kernel/debug/block/loop[0-3]/rqos/wbt/inflight'.
+Scenario can be demonstrated as follows:
 
-I've done some debugging in this area and this is what I'm seeing:
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=3D0.90
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md/test started.
+mdadm: stopped /dev/md/test
+   Unused Space : before=3D1968 sectors, after=3D-2047 sectors DEVICE TOO SMA=
+LL
+          State : clean TRUNCATED DEVICE
+   Unused Space : before=3D1968 sectors, after=3D-2047 sectors DEVICE TOO SMA=
+LL
+          State : clean TRUNCATED DEVICE
 
-There are a few IO in the WBT that start scheduling when the inflight
-counter reaches the limit (96 in my case). Then, a number of IO tasks
-are scheduled after the limit gets exceeded. So far that makes sense. I
-put some tracing in wbt_rqw_done() and can see that the inflight counts
-back down to a low number as other IO are completed, but then it hangs
-before reaching zero. However, wbt_rqw_done() never wakes up any other
-threads  because, for some reason, wb_recent_wait(rwb) always returns
-false and thus the limit is always zero, and the conditional:
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ super1.c | 35 ++++++++++++++++++++++++++++-------
+ 1 file changed, 28 insertions(+), 7 deletions(-)
 
-        if (inflight && inflight >= limit)
-                return;
+diff --git a/super1.c b/super1.c
+index 71af860c0e3e..58345e68b97c 100644
+--- a/super1.c
++++ b/super1.c
+@@ -406,12 +406,18 @@ static void examine_super1(struct supertype *st, char *=
+homehost)
+=20
+ 	st->ss->getinfo_super(st, &info, NULL);
+ 	if (info.space_after !=3D 1 &&
+-	    !(__le32_to_cpu(sb->feature_map) & MD_FEATURE_NEW_OFFSET))
+-		printf("   Unused Space : before=3D%llu sectors, after=3D%llu sectors\n",
+-		       info.space_before, info.space_after);
+-
+-	printf("          State : %s\n",
+-	       (__le64_to_cpu(sb->resync_offset)+1)? "active":"clean");
++	    !(__le32_to_cpu(sb->feature_map) & MD_FEATURE_NEW_OFFSET)) {
++		printf("   Unused Space : before=3D%llu sectors, ",
++		       info.space_before);
++		if (info.space_after < INT64_MAX)
++			printf("after=3D%llu sectors\n", info.space_after);
++		else
++			printf("after=3D-%llu sectors DEVICE TOO SMALL\n",
++			       UINT64_MAX - info.space_after);
++	}
++	printf("          State : %s%s\n",
++	       (__le64_to_cpu(sb->resync_offset)+1) ? "active":"clean",
++	       (info.space_after > INT64_MAX)       ? " TRUNCATED DEVICE" : "");
+ 	printf("    Device UUID : ");
+ 	for (i=3D0; i<16; i++) {
+ 		if ((i&3)=3D=3D0 && i !=3D 0)
+@@ -2206,6 +2212,7 @@ static int load_super1(struct supertype *st, int fd, ch=
+ar *devname)
+ 		tst.ss =3D &super1;
+ 		for (tst.minor_version =3D 0; tst.minor_version <=3D 2;
+ 		     tst.minor_version++) {
++			tst.ignore_hw_compat =3D st->ignore_hw_compat;
+ 			switch(load_super1(&tst, fd, devname)) {
+ 			case 0: super =3D tst.sb;
+ 				if (bestvers =3D=3D -1 ||
+@@ -2312,7 +2319,6 @@ static int load_super1(struct supertype *st, int fd, ch=
+ar *devname)
+ 		free(super);
+ 		return 2;
+ 	}
+-	st->sb =3D super;
+=20
+ 	bsb =3D (struct bitmap_super_s *)(((char*)super)+MAX_SB_SIZE);
+=20
+@@ -2322,6 +2328,21 @@ static int load_super1(struct supertype *st, int fd, c=
+har *devname)
+ 	if (st->data_offset =3D=3D INVALID_SECTORS)
+ 		st->data_offset =3D __le64_to_cpu(super->data_offset);
+=20
++	if (st->minor_version >=3D 1 &&
++	    st->ignore_hw_compat =3D=3D 0 &&
++	    (dsize < (__le64_to_cpu(super->data_offset) +
++		      __le64_to_cpu(super->size))
++	     ||
++	     dsize < (__le64_to_cpu(super->data_offset) +
++		      __le64_to_cpu(super->data_size)))) {
++		if (devname)
++			pr_err("Device %s is not large enough for data described in superblock\n",
++			       devname);
++		free(super);
++		return 2;
++	}
++	st->sb =3D super;
++
+ 	/* Now check on the bitmap superblock */
+ 	if ((__le32_to_cpu(super->feature_map)&MD_FEATURE_BITMAP_OFFSET) =3D=3D 0)
+ 		return 0;
+--=20
+2.37.1
 
-always gets hit because inflight is always greater than the zero limit
-(as some inflight IO are sleeping waiting to be worken up). Thus the
-sleeping tasks remain sleeping forever. I've also verified that
-rwb_wake_all() never gets called in this scenario as well.
-
-Given the conditions of hitting the bug, I fully expected this to be an
-issue in the raid code, but unless I'm missing something, it sure looks
-to me like a deadlock issue in the wbt code, which makes me wonder why
-nobody else has hit it. Is there something else I'm missing that are
-supposed to be waking up these processes? Or something weird about the
-raid5+journal+loop code that is causing wb_recent_wait() to always be false?
-
-Any thoughts?
-
-Thanks,
-
-Logan
