@@ -2,112 +2,136 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F34E0ECAAD6
-	for <linux-raid@archiver.kernel.org>; Fri, 26 Aug 2022 05:16:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 765F8ECAAA3
+	for <linux-raid@archiver.kernel.org>; Fri, 26 Aug 2022 08:12:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244838AbiHZFQe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 26 Aug 2022 01:16:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44398 "EHLO
+        id S1343556AbiHZIMy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 26 Aug 2022 04:12:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244794AbiHZFQb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 Aug 2022 01:16:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BD266C104;
-        Thu, 25 Aug 2022 22:16:30 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 40C05614F1;
-        Fri, 26 Aug 2022 05:16:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A36FFC4347C;
-        Fri, 26 Aug 2022 05:16:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661490989;
-        bh=uyZGmJwOBpkolJ9LNPlmylFgaRR16dpZi0zbiaPJQDc=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=H6Umh6W3V62MsmhQL3pEdTB7G51zZw9JP1n0yUdMEmvIWohhN/63HjjiKxofbosKP
-         5gap/Xyub6I/zCVucNhA4MfAkr//Y122zPsTdl5VclnbW7hMAN+X8lv3sYTVKd2o0p
-         FrMOxSULupBuvz67LiS5rA9WlsLKG6oWFB3L+K60h1SLdb0RYKNTg9XHT8/FjdkwOV
-         UJR5AWoljPhF+z5qinWKjMtsd8fZDLdlS4hO4RfkmomaqwucgnrNEeDjUhDlQbtsSK
-         P5f00KMFwL3ElqFc8gn/i3gnP/DgIswpGA8gZrgI3latdZdLbncL5RnbTE0KDeyQ4r
-         1m8QFElqyview==
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-333a4a5d495so9692177b3.10;
-        Thu, 25 Aug 2022 22:16:29 -0700 (PDT)
-X-Gm-Message-State: ACgBeo1AlQudMVmsEcNZqJIRzXjVOuNFP6XQ1QQ+HbNf+t7+drMWNfyK
-        kv/KAibX3XdOX2oerGMLFp2BpKnjhzI2u3vSIYE=
-X-Google-Smtp-Source: AA6agR4JCDmgsqn0pYnsxlp0bm/cfl9OT4FnXjsbXtnLeaiwrnUoQ9jpag9ZHTVqfL7OXbia5o9ZST9ke1eGxozHCuc=
-X-Received: by 2002:a25:6003:0:b0:68c:870b:2405 with SMTP id
- u3-20020a256003000000b0068c870b2405mr6111336ybb.9.1661490988671; Thu, 25 Aug
- 2022 22:16:28 -0700 (PDT)
+        with ESMTP id S1343559AbiHZIMu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 Aug 2022 04:12:50 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07448D3ED1
+        for <linux-raid@vger.kernel.org>; Fri, 26 Aug 2022 01:12:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1661501569; x=1693037569;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=4QUAa4WkvDt/6UsW2g6IvFEVBhI1N8XHOVDFuNLAhIg=;
+  b=kt/Vk81MrdaFfD/h6Ci7CF2fKWmdRlCDLMr/TTscd9q3KM6apzLlj6bR
+   26u433S9j8/bGyuDYAmbYFHyBs7h3MfaoYg94+op0oTwpWToRS0iUh1zl
+   3soYyggbF7F7N74dSuaRJJ4VWbDGS/m6BUECRkCfobHiedpmmGHgySrCO
+   sBtO3s2r9acC26qS3Kiqb1s/KK071NirnKYUA5q6Jn1l8FaEIg+kPZEF7
+   PhJinX90GyBEoxPdLs8RsTw4P/K0/ymOoSG+KQhxymS8dBoKxPeR0gGCV
+   wJmoJUMlWQnptK57r2bfDe2T4GuogvnYAVl0xU8kgkHDV1Ao6goM/VmfI
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10450"; a="277467478"
+X-IronPort-AV: E=Sophos;i="5.93,264,1654585200"; 
+   d="scan'208";a="277467478"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2022 01:12:48 -0700
+X-IronPort-AV: E=Sophos;i="5.93,264,1654585200"; 
+   d="scan'208";a="671370827"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.40.220])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2022 01:12:46 -0700
+Date:   Fri, 26 Aug 2022 10:12:42 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Logan Gunthorpe <logan@eideticom.com>, Coly Li <colyli@suse.de>,
+        Lukasz Florczak <lukasz.florczak@linux.intel.com>,
+        linux-raid@vger.kernel.org
+Subject: Re: Python tests
+Message-ID: <20220826101242.000055d0@linux.intel.com>
+In-Reply-To: <f40217bd-5db4-65e9-0829-5d652281f3f2@suse.de>
+References: <11ab82$jvatnj@fmsmga008-auth.fm.intel.com>
+        <8C1AB1D5-54FD-406C-BBA3-509F669C9116@suse.de>
+        <494eee73-5da3-55c9-c374-4166f0117288@eideticom.com>
+        <f40217bd-5db4-65e9-0829-5d652281f3f2@suse.de>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-References: <20220705022617.12555-1-jiaming@nfschina.com> <20220826030800.10583-1-jiaming@nfschina.com>
-In-Reply-To: <20220826030800.10583-1-jiaming@nfschina.com>
-From:   Song Liu <song@kernel.org>
-Date:   Thu, 25 Aug 2022 22:16:18 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7YuPCU-OG=Ux++sRzuHmztjUpPES0QOzBq=vbZAaaXqg@mail.gmail.com>
-Message-ID: <CAPhsuW7YuPCU-OG=Ux++sRzuHmztjUpPES0QOzBq=vbZAaaXqg@mail.gmail.com>
-Subject: Re: [PATCH v3] md/raid5-cache: Resolve patch confilcts
-To:     Zhang Jiaming <jiaming@nfschina.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>, liqiong@nfschina.com,
-        renyu@nfschina.com, yuzhe@nfschina.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 25, 2022 at 8:09 PM Zhang Jiaming <jiaming@nfschina.com> wrote:
->
-> Resolve conflicts when applying patches.
+On Thu, 25 Aug 2022 08:15:14 +0200
+Hannes Reinecke <hare@suse.de> wrote:
 
-^^^^^^ this is not a proper commit log. If we need something that is part
-of the patch/email, but not part of the commit log, we can add below
+> On 8/24/22 22:40, Logan Gunthorpe wrote:
+> > Hi,
+> >=20
+> > On 2022-08-24 10:23, Coly Li wrote: =20
+> >>
+> >> =20
+> >>> 2022=E5=B9=B48=E6=9C=8824=E6=97=A5 16:15=EF=BC=8CLukasz Florczak <luk=
+asz.florczak@linux.intel.com>
+> >>> =E5=86=99=E9=81=93=EF=BC=9A
+> >>>
+> >>> Hi Coly,
+> >>> I want to write some mdadm tests for assemblation and incremental
+> >>> regarding duplicated array names in config and I'd like to do it in
+> >>> python. I've seen that some time ago[1] you said that you could try to
+> >>> integrate the python tests framework into the mdadm ci. I was wonderi=
+ng
+> >>> how is it going? Do you need any help with this subject?
+> >>>
+> >>> Thanks,
+> >>> Lukasz
+> >>>
+> >>> [1] https://marc.info/?l=3Dlinux-raid&m=3D165277539509464&w=3D2 =20
+> >>
+> >> Hi Lukasz,
+> >>
+> >> Now I just make some of the existed mdadm test scripts running, which =
+are
+> >> copied from upstream mdadm. There won=E2=80=99t be any conflict for th=
+e python
+> >> testing code between you and me, because now I am just studying Python
+> >> again and not do any useful thing yet.
+> >>
+> >> As I said if no one works on the testing framework, I will do it, but =
+it
+> >> may take time. How about posting out the python code once you make it,
+> >> then let=E2=80=99s put it into mdadm-test to test mdadm-CI, and improv=
+e whole
+> >> things step by step.=20
+> >=20
+> > I'm not sure if this is of use to anyone but we are very slowly growing
+> > a testing framework written mostly in python. Its focused on raid5 at
+> > the moment and still is a fairly sizable mess, but we've caught a lot of
+> > bugs with it and continue to run it, clean it up and make improvements.
+> >=20
+> > https://github.com/Eideticom/raid5-tests/
+> >=20
+> > The 'md.py 'file provides a nice interface to setup an array based on
+> > ram, loop or block devices and provides methods to degrade, recover or
+> > grow the array. 'test3' does grow/degrade tests while running IO,
+> > 'test_all' runs all the tests with an array of different settings.
+> >=20
+> > Feel free to use anything from it that you may find useful.
+> >  =20
+> When developing 'md_monitor' (https://github.com/hreinecke/md_monitor)=20
+> I've also created an extensive testsuite for it.
+> The one thing which I found particularly painful is error handling once=20
+> mdadm fails. It's really hard to figure out _what_ went wrong, and more=20
+> often than not mdadm simply locked up on me (try to stall I/O on one=20
+> component device while md is running and you are in a world of pain).
+>=20
+> That's when I started to split mdadm into a library, as then we could=20
+> have a python binding and the life would so much more fun.
+> So maybe I should resurrect that patchset.
+>=20
+Hi Hannes,
 
->
-> Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
+Will be great if you can handle this. Beside library part you did huge code
+rearrangement and divides one big mdadm.h header into separate ones which is
+also great improvement. mdadm.h is still growing.
 
-Signed-off-by: ...
----
-git-am will remove the message here (between two '---').
----
-drivers/md/raid5-cache.c | 12 ++++++------
+It is hard to do this separately, one by one due to cross references between
+files.
 
-
-> ---
->  drivers/md/raid5-cache.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 058d82e..a4a84a0 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -125,7 +125,7 @@ struct r5l_log {
->                                          * reclaimed.  if it's 0, reclaim spaces
->                                          * used by io_units which are in
->                                          * IO_UNIT_STRIPE_END state (eg, reclaim
-> -                                        * dones't wait for specific io_unit
-> +                                        * doesn't wait for specific io_unit
->                                          * switching to IO_UNIT_STRIPE_END
->                                          * state) */
->         wait_queue_head_t iounit_wait;
-> @@ -1326,12 +1326,12 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
->          * Discard could zero data, so before discard we must make sure
->          * superblock is updated to new log tail. Updating superblock (either
->          * directly call md_update_sb() or depend on md thread) must hold
-> -        * reconfig mutex. On the other hand, raid5_quiesce is called with
-> -        * reconfig_mutex hold. The first step of raid5_quiesce() is waiting
-> -        * for all IO finish, hence waiting for reclaim thread, while reclaim
-> -        * thread is calling this function and waiting for reconfig mutex. So
-> +        * reconfig_mutex. On the other hand, raid5_quiesce is called with
-> +        * reconfig_mutex held. The first step of raid5_quiesce() is waiting
-> +        * for all IO to finish, hence waiting for reclaim thread, while reclaim
-> +        * thread is calling this function and waiting for reconfig_mutex. So
->          * there is a deadlock. We workaround this issue with a trylock.
-> -        * FIXME: we could miss discard if we can't take reconfig mutex
-> +        * FIXME: we could miss discard if we can't take reconfig_mutex
->          */
->         set_mask_bits(&mddev->sb_flags, 0,
->                 BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
-> --
-> 2.11.0
->
+Thanks,
+Mariusz
