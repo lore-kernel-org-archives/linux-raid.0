@@ -2,99 +2,181 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C1E0ECAAD4
-	for <linux-raid@archiver.kernel.org>; Mon, 29 Aug 2022 21:45:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 289E3ECAAD2
+	for <linux-raid@archiver.kernel.org>; Mon, 29 Aug 2022 22:23:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229700AbiH2Vpr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 Aug 2022 17:45:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37874 "EHLO
+        id S229687AbiH2WXt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 Aug 2022 18:23:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229679AbiH2Vpq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 Aug 2022 17:45:46 -0400
-Received: from mail.stoffel.org (li1843-175.members.linode.com [172.104.24.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50AFC844F9
-        for <linux-raid@vger.kernel.org>; Mon, 29 Aug 2022 14:45:45 -0700 (PDT)
-Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S229486AbiH2WXs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 Aug 2022 18:23:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 695968276A;
+        Mon, 29 Aug 2022 15:23:47 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.stoffel.org (Postfix) with ESMTPSA id 45F4C2A458;
-        Mon, 29 Aug 2022 17:45:44 -0400 (EDT)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-        id D3C33A7E39; Mon, 29 Aug 2022 17:45:43 -0400 (EDT)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 04E9B612EE;
+        Mon, 29 Aug 2022 22:23:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6317BC433B5;
+        Mon, 29 Aug 2022 22:23:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661811826;
+        bh=2ngJC3O39kPRPMioYMTDLmYI3pojOfPaE67eugc3YTA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=uVzIJsFVejbF0ji2G2ZS+ClcNFicRXvUKBMgcETzO0C8MUpFf0YPCrVc5jXQe8uke
+         C039MfGScOmsjUqhizIbXZX1jH1NVSqXDA7eSLjOsnEiYVmy/gbMvGjRZ03Ir3wx66
+         IYhYkzlT791FN+ZHPysYm2FrTL38XUWvzpuwdB0ucBxADL+zh1tdqSpP4xN5YA5loG
+         kA4APiDCL4AfuE+ZfRH5NZ5Mr0UbXlipB4hiVTZBhbc0Pw0RcdKcr5So1lLwJEpYX1
+         PHiLhpF92+B2LTdc/yXaVSGztt3LhLPhm+36AnG5ArjAPctIYPE0tBmwbn3Ihi5d4i
+         MP2h5xKYQFWQQ==
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-334dc616f86so230897167b3.8;
+        Mon, 29 Aug 2022 15:23:46 -0700 (PDT)
+X-Gm-Message-State: ACgBeo1jAvBoLB78M/kIvtjCaPKbmBHUH4FsrhC3g/4WuDex0d5uBGpy
+        9O6Ll6wga0h/CQdC+/h6fb5VD9/zF5NAQ/cMMHA=
+X-Google-Smtp-Source: AA6agR5U4Uzz8rYMXw2KnNoFv48bfkckDUw6S3y8fqqklfQ7G7REWuoo9KTXTTKEKKI8F3wScitBzfrlxX7sdFWmYi8=
+X-Received: by 2002:a05:6902:1501:b0:697:c614:2079 with SMTP id
+ q1-20020a056902150100b00697c6142079mr9813353ybu.389.1661811825340; Mon, 29
+ Aug 2022 15:23:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <25357.13191.843087.630097@quad.stoffel.home>
-Date:   Mon, 29 Aug 2022 17:45:43 -0400
-From:   "John Stoffel" <john@stoffel.org>
-To:     Peter Sanders <plsander@gmail.com>
-Cc:     John Stoffel <john@stoffel.org>, Phil Turmel <philip@turmel.org>,
-        Wols Lists <antlists@youngman.org.uk>,
-        NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
-Subject: Re: RAID 6, 6 device array - all devices lost superblock
-In-Reply-To: <CAKAPSkLQ4K1R_aD1=iURTFQmm_DXDMr=wx+VDET7DOUy+6Zp_Q@mail.gmail.com>
-References: <CAKAPSkJLd836Zp3xU=zSOHg3qcEmi29Y2qOwWzeAFaDp+dNTvg@mail.gmail.com>
-        <70e2ae22-bbba-77a4-c9bc-4c02752f4cb7@youngman.org.uk>
-        <dc24b476-2f0a-8406-f1c0-e33b5b0eb388@youngman.org.uk>
-        <4a414fc6-2666-302f-8d3d-08eb7a2986fc@turmel.org>
-        <CAKAPSkJAQYsec-4zzcePbkJ7Ee0=sd_QvHj4Stnyineq+T8BXw@mail.gmail.com>
-        <25355.47062.897268.3355@quad.stoffel.home>
-        <ee66bcbe-0a9b-57a6-439f-72cc46debe48@turmel.org>
-        <25355.50871.743993.605394@quad.stoffel.home>
-        <CAKAPSkLQ4K1R_aD1=iURTFQmm_DXDMr=wx+VDET7DOUy+6Zp_Q@mail.gmail.com>
-X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
+References: <20220811171417.147697-1-logang@deltatee.com> <20220811171417.147697-3-logang@deltatee.com>
+In-Reply-To: <20220811171417.147697-3-logang@deltatee.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 29 Aug 2022 15:23:34 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7p4e6PNUo8dwMi8+2WLkUUo3mb6ctDD+jjquNqoqAcOw@mail.gmail.com>
+Message-ID: <CAPhsuW7p4e6PNUo8dwMi8+2WLkUUo3mb6ctDD+jjquNqoqAcOw@mail.gmail.com>
+Subject: Re: [PATCH 2/5] md/raid5: Refactor raid5_get_active_stripe()
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
->>>>> "Peter" == Peter Sanders <plsander@gmail.com> writes:
+On Thu, Aug 11, 2022 at 10:14 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> Refactor raid5_get_active_stripe() without the gotos with an
+> explicit infinite loop and some additional nesting.
+>
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-Peter> Phil,
-Peter> fstab from the working config -
+Applied to md-next.
 
-Peter> # <file system> <mount point>   <type>  <options>       <dump>  <pass>
-Peter> # / was on /dev/sda1 during installation
-Peter> UUID=50976432-b750-4809-80ac-3bbdd2773163 /               ext4
-Peter> errors=remount-ro 0       1
-Peter> # /home was on /dev/sda6 during installation
-Peter> UUID=eb93a2c4-0190-41fa-a41d-7a5966c6bc47 /home           ext4
-Peter> defaults        0       2
-Peter> # /var was on /dev/sda5 during installation
-Peter> UUID=d1aa6d1f-3ee9-48a8-9350-b15149f738c4 /var            ext4
-Peter> defaults        0       2
-Peter> /dev/sr0        /media/cdrom0   udf,iso9660 user,noauto     0       0
-Peter> /dev/sr1        /media/cdrom1   udf,iso9660 user,noauto     0       0
-Peter> # raid array
-Peter> /dev/md0    /mnt/raid6    ext4    defaults    0    2
+Thanks!
+Song
 
-Peter> No LVM, one large EXT4 partition
-
-Peter> I have several large files ( NEF and various mpg files) I can identify
-Peter> and have backup copies available.
-
-Peter> I have the overlays created. 300G for each of the six drives.
-
-So that's good.  Now you have to try and figure out which order they
-were created in.  As the docs show, you setup the overlayfs on top of
-each of the six drives.  
-
-Keep track by noting the drive serial numbers, since Linux can move
-them around and change drive letters on reboots.
-
-
-Then using the overlays, do an:
-
-     mdadm --create /dev/md0 --level=raid6 -n 6 /dev/sd[bcdefg] 
-     fsck -n /dev/md0
-
-and see what you get.  If it doesn't look like a real filesystem, then
-you can break it down, and then modify the order you give the drive
-letters, like:
-
-	 /dev/sd[cdefge]
-
-and rinse and repeat as it goes.  Not fun... but should hopefully fix
-things for you.
-
-John
+> ---
+>  drivers/md/raid5.c | 82 +++++++++++++++++++++++-----------------------
+>  1 file changed, 41 insertions(+), 41 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 4456ac51f7c5..1288ef9e1571 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -811,54 +811,54 @@ static struct stripe_head *__raid5_get_active_stripe(struct r5conf *conf,
+>
+>         spin_lock_irq(conf->hash_locks + hash);
+>
+> -retry:
+> -       if (!noquiesce && conf->quiesce) {
+> -               /*
+> -                * Must release the reference to batch_last before waiting,
+> -                * on quiesce, otherwise the batch_last will hold a reference
+> -                * to a stripe and raid5_quiesce() will deadlock waiting for
+> -                * active_stripes to go to zero.
+> -                */
+> -               if (ctx && ctx->batch_last) {
+> -                       raid5_release_stripe(ctx->batch_last);
+> -                       ctx->batch_last = NULL;
+> -               }
+> -
+> -               wait_event_lock_irq(conf->wait_for_quiescent, !conf->quiesce,
+> -                                   *(conf->hash_locks + hash));
+> -       }
+> +       for (;;) {
+> +               if (!noquiesce && conf->quiesce) {
+> +                       /*
+> +                        * Must release the reference to batch_last before
+> +                        * waiting, on quiesce, otherwise the batch_last will
+> +                        * hold a reference to a stripe and raid5_quiesce()
+> +                        * will deadlock waiting for active_stripes to go to
+> +                        * zero.
+> +                        */
+> +                       if (ctx && ctx->batch_last) {
+> +                               raid5_release_stripe(ctx->batch_last);
+> +                               ctx->batch_last = NULL;
+> +                       }
+>
+> -       sh = find_get_stripe(conf, sector, conf->generation - previous, hash);
+> -       if (sh)
+> -               goto out;
+> +                       wait_event_lock_irq(conf->wait_for_quiescent,
+> +                                           !conf->quiesce,
+> +                                           *(conf->hash_locks + hash));
+> +               }
+>
+> -       if (test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state))
+> -               goto wait_for_stripe;
+> +               sh = find_get_stripe(conf, sector, conf->generation - previous,
+> +                                    hash);
+> +               if (sh)
+> +                       break;
+>
+> -       sh = get_free_stripe(conf, hash);
+> -       if (sh) {
+> -               r5c_check_stripe_cache_usage(conf);
+> -               init_stripe(sh, sector, previous);
+> -               atomic_inc(&sh->count);
+> -               goto out;
+> -       }
+> +               if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
+> +                       sh = get_free_stripe(conf, hash);
+> +                       if (sh) {
+> +                               r5c_check_stripe_cache_usage(conf);
+> +                               init_stripe(sh, sector, previous);
+> +                               atomic_inc(&sh->count);
+> +                               break;
+> +                       }
+>
+> -       if (!test_bit(R5_DID_ALLOC, &conf->cache_state))
+> -               set_bit(R5_ALLOC_MORE, &conf->cache_state);
+> +                       if (!test_bit(R5_DID_ALLOC, &conf->cache_state))
+> +                               set_bit(R5_ALLOC_MORE, &conf->cache_state);
+> +               }
+>
+> -wait_for_stripe:
+> -       if (noblock)
+> -               goto out;
+> +               if (noblock)
+> +                       break;
+>
+> -       set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
+> -       r5l_wake_reclaim(conf->log, 0);
+> -       wait_event_lock_irq(conf->wait_for_stripe,
+> -                           is_inactive_blocked(conf, hash),
+> -                           *(conf->hash_locks + hash));
+> -       clear_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
+> -       goto retry;
+> +               set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
+> +               r5l_wake_reclaim(conf->log, 0);
+> +               wait_event_lock_irq(conf->wait_for_stripe,
+> +                                   is_inactive_blocked(conf, hash),
+> +                                   *(conf->hash_locks + hash));
+> +               clear_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
+> +       }
+>
+> -out:
+>         spin_unlock_irq(conf->hash_locks + hash);
+>         return sh;
+>  }
+> --
+> 2.30.2
+>
