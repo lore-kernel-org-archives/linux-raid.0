@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5613ECAAD1
-	for <linux-raid@archiver.kernel.org>; Tue, 30 Aug 2022 17:23:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC33DECAAA1
+	for <linux-raid@archiver.kernel.org>; Tue, 30 Aug 2022 17:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231409AbiH3RXK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 Aug 2022 13:23:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60416 "EHLO
+        id S231452AbiH3R0C (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 Aug 2022 13:26:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231195AbiH3RWa (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 Aug 2022 13:22:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8CE7E3997;
-        Tue, 30 Aug 2022 10:20:41 -0700 (PDT)
+        with ESMTP id S231451AbiH3RZY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 Aug 2022 13:25:24 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9EF1C1644;
+        Tue, 30 Aug 2022 10:23:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 301A16179B;
-        Tue, 30 Aug 2022 17:20:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFAE5C433B5;
-        Tue, 30 Aug 2022 17:20:39 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 321ACB81D12;
+        Tue, 30 Aug 2022 17:22:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F64CC433C1;
+        Tue, 30 Aug 2022 17:22:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661880040;
-        bh=3jde7WJZiin2Rjh87cIry/BxsilzrzWH2bb2GcGujIw=;
+        s=k20201202; t=1661880169;
+        bh=L+kb1PjlO2zZUHIOB4XWHokuhAxTc5I1jpYA5piofE8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=G97Oglpq0+KLZldQ4mLMJ9Q5ZFQGZfJEhf6MujXFM29iJGnVxn46DL1Xpdq9juNEZ
-         c2rYRdZWuMEiz4VfIHmDnIc1xvb4ByEijf4vAjzVFS0WJAp/X40DF9AFcMVVwVK8cp
-         rbzTrUzdG1UiTDOhHUhwbmJbr7RrikW7RcbjAoZOu8oLov2CLNDZF8NTbcYR4mXn4A
-         BZvGCKL+6Enmj+KKtUdTq8nFj8LrHXUsOALUxb9C+TFI5IkqoDfNIkqP1dqDg1G6eT
-         eNoYBc5k8w5esFtisgyRH23afcCp86oTFf+k25IIXC0QXCoBaN0BL/TrFY7EF75KO+
-         YMsETOIfkumpg==
+        b=IJsFmY1CufURLN/8BSKxeYADOqrOu7iTS+nb5vahZJtnexa8hFfJ7/ga+USEKrLxQ
+         Zi+0E7u8wPP9WJHIzcb6ArWiJvj48Cgli8LDP32SaRAinJAJF6OmZzKCVBPVx/lD/k
+         5RkTpVrlpEEJmlBviO5ZHg+0mzBIZ8TlXfySS2Fo7aHPT53o/KLLJpa0cXcUvF+nGq
+         5e/D5DTERVjzSKKO8zqcrjhJRxOJfLxQq2mR1BAmjlZN3qZzjj047ehjfMifvjXUi5
+         RLG+qKHchAu6GnKJ5KIAT4CBVam/k5ES/wrTLsr66joYajefclirPsj++MpdKt4avc
+         Uiz3PwLrzi0NA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     David Sloan <david.sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>,
         Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.19 26/33] md: Flush workqueue md_rdev_misc_wq in md_alloc()
-Date:   Tue, 30 Aug 2022 13:18:17 -0400
-Message-Id: <20220830171825.580603-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 19/23] md: Flush workqueue md_rdev_misc_wq in md_alloc()
+Date:   Tue, 30 Aug 2022 13:21:36 -0400
+Message-Id: <20220830172141.581086-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220830171825.580603-1-sashal@kernel.org>
-References: <20220830171825.580603-1-sashal@kernel.org>
+In-Reply-To: <20220830172141.581086-1-sashal@kernel.org>
+References: <20220830172141.581086-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -78,10 +78,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 522b3d6b8c46b..3f31db141b2f2 100644
+index 33946adb0d6f6..17100b39ff14a 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -5647,6 +5647,7 @@ static int md_alloc(dev_t dev, char *name)
+@@ -5651,6 +5651,7 @@ static int md_alloc(dev_t dev, char *name)
  	 * removed (mddev_delayed_delete).
  	 */
  	flush_workqueue(md_misc_wq);
