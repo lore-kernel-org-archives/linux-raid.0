@@ -2,165 +2,124 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31EB5ECAAD8
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Sep 2022 07:03:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A1F2ECAAD2
+	for <linux-raid@archiver.kernel.org>; Thu,  1 Sep 2022 07:07:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232746AbiIAHDf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 1 Sep 2022 03:03:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48810 "EHLO
+        id S233482AbiIAHHS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 1 Sep 2022 03:07:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232374AbiIAHDG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Sep 2022 03:03:06 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32732125369;
-        Thu,  1 Sep 2022 00:02:09 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4MJBky3fZSz6T57F;
-        Thu,  1 Sep 2022 15:00:26 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP2 (Coremail) with SMTP id Syh0CgA3inPrWBBjs6fcAA--.6039S3;
-        Thu, 01 Sep 2022 15:02:05 +0800 (CST)
-Subject: Re: stalling IO regression since linux 5.12, through 5.18
-To:     Ming Lei <ming.lei@redhat.com>,
-        Chris Murphy <lists@colorremedies.com>, Jan Kara <jack@suse.cz>
-Cc:     Nikolay Borisov <nborisov@suse.com>, Jens Axboe <axboe@kernel.dk>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <Yv0KmT8UYos2/4SX@T590>
- <35f0d608-7448-4276-8922-19a23d8f9049@www.fastmail.com>
- <Yv2P0zyoVvz35w/m@T590>
- <568465de-5c3b-4d94-a74b-5b83ce2f942f@www.fastmail.com>
- <Yv2w+Tuhw1RAoXI5@T590>
- <9f2f608a-cd5f-4736-9e6d-07ccc2eca12c@www.fastmail.com>
- <a817431f-276f-4aab-9ff8-c3e397494339@www.fastmail.com>
- <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
- <Yv3NIQlDL0T3lstU@T590>
- <0f731b0a-fbd5-4e7b-a3df-0ed63360c1e0@www.fastmail.com>
- <YwCGlyDMhWubqKoL@T590>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <297cbb87-87aa-2e1d-1fc3-8e96c241f28f@huaweicloud.com>
-Date:   Thu, 1 Sep 2022 15:02:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S233583AbiIAHGl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Sep 2022 03:06:41 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99ED01226A2
+        for <linux-raid@vger.kernel.org>; Thu,  1 Sep 2022 00:06:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1662015981;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=eeBUu9nEhT4Kc4CwsZdP2lrb/xjOrC7tj07BpY9X5O8=;
+        b=CUH0gJ4BSThZ0nqdQI52C6uDiwNIfYiSnCnpjdM1RolQgYl4+wdkM/p8nlQ3Ew5/RhIIpD
+        NkRWbkszNtRbl6JmpGmnzbt56AczQxCVWKhzr57Cr0LV17c1VIJl65p4RONoBvUQ2vUGW+
+        1gfRtfcvXKN/oVXACycmR7OIfeb4kmw=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-620-2PaaNq9yOrG3TBDajA1iqw-1; Thu, 01 Sep 2022 03:06:15 -0400
+X-MC-Unique: 2PaaNq9yOrG3TBDajA1iqw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CDC8485A58A;
+        Thu,  1 Sep 2022 07:06:14 +0000 (UTC)
+Received: from T590 (ovpn-8-28.pek2.redhat.com [10.72.8.28])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4AE802026D4C;
+        Thu,  1 Sep 2022 07:06:09 +0000 (UTC)
+Date:   Thu, 1 Sep 2022 15:06:08 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Dusty Mabe <dusty@dustymabe.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, hch@lst.de,
+        linux-raid@vger.kernel.org
+Subject: Re: regression caused by block: freeze the queue earlier in
+ del_gendisk
+Message-ID: <YxBZ4BBjxvAkvI2A@T590>
+References: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com>
 MIME-Version: 1.0
-In-Reply-To: <YwCGlyDMhWubqKoL@T590>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgA3inPrWBBjs6fcAA--.6039S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWw45CF4UJF1UZw1DJF1UKFg_yoW5XFyfpF
-        Z7tanYkanIqr10kryI9a18tr1rtws8Gr98WFyFy343JrnF9r90gF4IqrWYkrykXrs5Cr42
-        yFWjyFyxWr15Z3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
-        e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-        Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
-        6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-        kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
-        14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-        9x07UWE__UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com>
+X-Scanned-By: MIMEDefang 2.78 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi, Chris
+Hi Dusty,
 
-ÔÚ 2022/08/20 15:00, Ming Lei Ð´µÀ:
-> On Fri, Aug 19, 2022 at 03:20:25PM -0400, Chris Murphy wrote:
->>
->>
->> On Thu, Aug 18, 2022, at 1:24 AM, Ming Lei wrote:
->>> On Thu, Aug 18, 2022 at 12:27:04AM -0400, Chris Murphy wrote:
->>>>
->>>>
->>>> On Thu, Aug 18, 2022, at 12:18 AM, Chris Murphy wrote:
->>>>> On Thu, Aug 18, 2022, at 12:12 AM, Chris Murphy wrote:
->>>>>> On Wed, Aug 17, 2022, at 11:41 PM, Ming Lei wrote:
->>>>>>
->>>>>>> OK, can you post the blk-mq debugfs log after you trigger it on v5.17?
->>>>
->>>> Same boot, 3rd log. But the load is above 300 so I kinda need to sysrq+b soon.
->>>>
->>>> https://drive.google.com/file/d/1375H558kqPTdng439rvG6LuXXWPXLToo/view?usp=sharing
->>>>
->>>
->>> Also please test the following one too:
->>>
->>>
->>> diff --git a/block/blk-mq.c b/block/blk-mq.c
->>> index 5ee62b95f3e5..d01c64be08e2 100644
->>> --- a/block/blk-mq.c
->>> +++ b/block/blk-mq.c
->>> @@ -1991,7 +1991,8 @@ bool blk_mq_dispatch_rq_list(struct blk_mq_hw_ctx
->>> *hctx, struct list_head *list,
->>>   		if (!needs_restart ||
->>>   		    (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
->>>   			blk_mq_run_hw_queue(hctx, true);
->>> -		else if (needs_restart && needs_resource)
->>> +		else if (needs_restart && (needs_resource ||
->>> +					blk_mq_is_shared_tags(hctx->flags)))
->>>   			blk_mq_delay_run_hw_queue(hctx, BLK_MQ_RESOURCE_DELAY);
->>>
->>>   		blk_mq_update_dispatch_busy(hctx, true);
->>>
->>
->>
->> With just this patch on top of 5.17.0, it still hangs. I've captured block debugfs log:
->> https://drive.google.com/file/d/1ic4YHxoL9RrCdy_5FNdGfh_q_J3d_Ft0/view?usp=sharing
+On Fri, Aug 26, 2022 at 12:15:22PM -0400, Dusty Mabe wrote:
+> Hey All,
 > 
-> The log is similar with before, and the only difference is RESTART not
-> set.
+> I think I've found a regression introduced by:
 > 
-> Also follows another patch merged to v5.18 and it fixes io stall too, feel free to test it:
+> a09b314 o block: freeze the queue earlier in del_gendisk
 > 
-> 8f5fea65b06d blk-mq: avoid extending delays of active hctx from blk_mq_delay_run_hw_queues
+> In Fedora CoreOS we have tests that set up RAID1 on the /boot/ and /root/ partitions
+> and then subsequently removes one of the disks to simulate a failure. Sometime recently
 
-Have you tried this patch?
+Do you have test case which doesn't need raid1 over /boot or /root? such
+as by create raid1 over two disks, then mount & remove one of device, ...
 
-We meet a similar problem in our test, and I'm pretty sure about the
-situation at the scene,
+It isn't easy to setup/observe such test case and observe what is wrong.
 
-Our test environment£ºnvme with bfq ioscheduler,
+> this test started timing out occasionally. Looking a bit closer it appears instances are
+> getting stuck during reboot with a bunch of looping messages:
+> 
+> ```
+> [   17.978854] block device autoloading is deprecated and will be removed.
+> [   17.982555] block device autoloading is deprecated and will be removed.
+> [   17.985537] block device autoloading is deprecated and will be removed.
+> [   17.987546] block device autoloading is deprecated and will be removed.
+> [   17.989540] block device autoloading is deprecated and will be removed.
+> [   17.991547] block device autoloading is deprecated and will be removed.
+> [   17.993555] block device autoloading is deprecated and will be removed.
+> [   17.995539] block device autoloading is deprecated and will be removed.
+> [   17.997577] block device autoloading is deprecated and will be removed.
+> [   17.999544] block device autoloading is deprecated and will be removed.
+> [   22.979465] blkdev_get_no_open: 1666 callbacks suppressed
+> ...
+> ...
+> ...
+> [  618.221270] blkdev_get_no_open: 1664 callbacks suppressed
+> [  618.221273] block device autoloading is deprecated and will be removed.
+> [  618.224274] block device autoloading is deprecated and will be removed.
+> [  618.227267] block device autoloading is deprecated and will be removed.
+> [  618.229274] block device autoloading is deprecated and will be removed.
+> [  618.231277] block device autoloading is deprecated and will be removed.
+> [  618.233277] block device autoloading is deprecated and will be removed.
+> [  618.235282] block device autoloading is deprecated and will be removed.
+> [  618.237370] block device autoloading is deprecated and will be removed.
+> [  618.239356] block device autoloading is deprecated and will be removed.
+> [  618.241290] block device autoloading is deprecated and will be removed.
+> ```
+> 
+> Using the Fedora kernels I narrowed it down to being introduced between 
+> `kernel-5.19.0-0.rc3.27.fc37` (good) and `kernel-5.19.0-0.rc4.33.fc37` (bad).
+> 
+> I then did a bisect and found:
+> 
+> ```
+> $ git bisect bad
+> a09b314005f3a0956ebf56e01b3b80339df577cc is the first bad commit
+> commit a09b314005f3a0956ebf56e01b3b80339df577cc
+> Author: Christoph Hellwig <hch@lst.de>
+> Date:   Tue Jun 14 09:48:27 2022 +0200
+> 
+>     block: freeze the queue earlier in del_gendisk
 
-How io is stalled:
+It is a bit hard to associate the above commit with reported issue.
 
-1. hctx1 dispatch rq from bfq in service queue, bfqq becomes empty,
-dispatch somehow fails and rq is inserted to hctx1->dispatch, new run
-work is queued.
-
-2. other hctx tries to dispatch rq, however, in service bfqq is
-empty, bfq_dispatch_request return NULL, thus
-blk_mq_delay_run_hw_queues is called.
-
-3. for the problem described in above patch£¬run work from "hctx1"
-can be stalled.
-
-Above patch should fix this io stall, however, it seems to me bfq do
-have some problems that in service bfqq doesn't expire under following
-situation:
-
-1. dispatched rqs don't complete
-2. no new rq is issued to bfq
 
 Thanks,
-Kuai
-> 
-> 
-> 
-> Thanks,
-> Ming
-> 
-> .
-> 
+Ming
 
