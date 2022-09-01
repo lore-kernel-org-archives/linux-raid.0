@@ -2,180 +2,157 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A701DECAAD1
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Sep 2022 08:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AABFECAAD1
+	for <linux-raid@archiver.kernel.org>; Thu,  1 Sep 2022 09:21:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234141AbiIAITY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 1 Sep 2022 04:19:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57254 "EHLO
+        id S233134AbiIAJVP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 1 Sep 2022 05:21:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233979AbiIAITX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Sep 2022 04:19:23 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C418BD2917;
-        Thu,  1 Sep 2022 01:19:21 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MJDS11vrczKHQ5;
-        Thu,  1 Sep 2022 16:17:37 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP2 (Coremail) with SMTP id Syh0CgA3inMEaxBjFgPfAA--.12124S3;
-        Thu, 01 Sep 2022 16:19:18 +0800 (CST)
-Subject: Re: stalling IO regression since linux 5.12, through 5.18
-To:     Jan Kara <jack@suse.cz>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        Chris Murphy <lists@colorremedies.com>,
-        Nikolay Borisov <nborisov@suse.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <Yv2P0zyoVvz35w/m@T590>
- <568465de-5c3b-4d94-a74b-5b83ce2f942f@www.fastmail.com>
- <Yv2w+Tuhw1RAoXI5@T590>
- <9f2f608a-cd5f-4736-9e6d-07ccc2eca12c@www.fastmail.com>
- <a817431f-276f-4aab-9ff8-c3e397494339@www.fastmail.com>
- <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
- <Yv3NIQlDL0T3lstU@T590>
- <0f731b0a-fbd5-4e7b-a3df-0ed63360c1e0@www.fastmail.com>
- <YwCGlyDMhWubqKoL@T590>
- <297cbb87-87aa-2e1d-1fc3-8e96c241f28f@huaweicloud.com>
- <20220901080336.glpv4i3hyae2zkpk@quack3>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <ee48bdc1-1020-78ca-a90e-ef958171a05f@huaweicloud.com>
-Date:   Thu, 1 Sep 2022 16:19:16 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S232599AbiIAJVO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Sep 2022 05:21:14 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44005124860
+        for <linux-raid@vger.kernel.org>; Thu,  1 Sep 2022 02:21:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1662024073; x=1693560073;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=LnQkYzQY6oGUoHrCLac8d5mNN4XvfuImU6Q5XQVSi5M=;
+  b=iMx0YWTe0p5K2G1rdgv/C/tjaU6h+R6qDIdQmiXSbR8MiJ+h3z0OSFN/
+   AqhSCBtr8zkh3d15y9sWJAq5ZtmTJOSRyvGs9Br2xO2pGIpaBh2/Q9JI7
+   9TFxvkZqZCkhuMNDkclfwCIn6oxYSvuG1uyCOYjLtWxhbqAXlyxdxa1eS
+   EaXUUu3VsyVKmLTP+ic7bD/EtUBoirAqfa1b0QDc0GU7EorX8nPfZnIZM
+   GwW2ronIJe2B6sGGRwsVWfS+jcV0XPS5N7o0HOrnwbzgsPQLkqhblFPFk
+   9B49Oy1t6VA7gCFf3mFijDNWYiaLEgeZClBlHU9T+i120NTtSZRX/j0Kq
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10456"; a="278683702"
+X-IronPort-AV: E=Sophos;i="5.93,280,1654585200"; 
+   d="scan'208";a="278683702"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2022 02:21:12 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,280,1654585200"; 
+   d="scan'208";a="738427986"
+Received: from gklab-154-222.elements.local ([10.102.102.222])
+  by orsmga004.jf.intel.com with ESMTP; 01 Sep 2022 02:21:11 -0700
+From:   Pawel Baldysiak <pawel.baldysiak@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH 1/1] Monitor: Fix statelist memory leaks
+Date:   Thu,  1 Sep 2022 11:20:31 +0200
+Message-Id: <20220901092031.3274605-1-pawel.baldysiak@intel.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-In-Reply-To: <20220901080336.glpv4i3hyae2zkpk@quack3>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgA3inMEaxBjFgPfAA--.12124S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWr4UtFyrCFykuFWrGFWruFg_yoWrJFyUpF
-        Wrta1Yyan8tr10y34Iy3Wjqr15twn0kr98WF1rtw43JrnFgr98Kr4IqrWY9Fn5Zrs5Cr47
-        tryjyFyxWr15Z37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-在 2022/09/01 16:03, Jan Kara 写道:
-> On Thu 01-09-22 15:02:03, Yu Kuai wrote:
->> Hi, Chris
->>
->> 在 2022/08/20 15:00, Ming Lei 写道:
->>> On Fri, Aug 19, 2022 at 03:20:25PM -0400, Chris Murphy wrote:
->>>>
->>>>
->>>> On Thu, Aug 18, 2022, at 1:24 AM, Ming Lei wrote:
->>>>> On Thu, Aug 18, 2022 at 12:27:04AM -0400, Chris Murphy wrote:
->>>>>>
->>>>>>
->>>>>> On Thu, Aug 18, 2022, at 12:18 AM, Chris Murphy wrote:
->>>>>>> On Thu, Aug 18, 2022, at 12:12 AM, Chris Murphy wrote:
->>>>>>>> On Wed, Aug 17, 2022, at 11:41 PM, Ming Lei wrote:
->>>>>>>>
->>>>>>>>> OK, can you post the blk-mq debugfs log after you trigger it on v5.17?
->>>>>>
->>>>>> Same boot, 3rd log. But the load is above 300 so I kinda need to sysrq+b soon.
->>>>>>
->>>>>> https://drive.google.com/file/d/1375H558kqPTdng439rvG6LuXXWPXLToo/view?usp=sharing
->>>>>>
->>>>>
->>>>> Also please test the following one too:
->>>>>
->>>>>
->>>>> diff --git a/block/blk-mq.c b/block/blk-mq.c
->>>>> index 5ee62b95f3e5..d01c64be08e2 100644
->>>>> --- a/block/blk-mq.c
->>>>> +++ b/block/blk-mq.c
->>>>> @@ -1991,7 +1991,8 @@ bool blk_mq_dispatch_rq_list(struct blk_mq_hw_ctx
->>>>> *hctx, struct list_head *list,
->>>>>    		if (!needs_restart ||
->>>>>    		    (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
->>>>>    			blk_mq_run_hw_queue(hctx, true);
->>>>> -		else if (needs_restart && needs_resource)
->>>>> +		else if (needs_restart && (needs_resource ||
->>>>> +					blk_mq_is_shared_tags(hctx->flags)))
->>>>>    			blk_mq_delay_run_hw_queue(hctx, BLK_MQ_RESOURCE_DELAY);
->>>>>
->>>>>    		blk_mq_update_dispatch_busy(hctx, true);
->>>>>
->>>>
->>>>
->>>> With just this patch on top of 5.17.0, it still hangs. I've captured block debugfs log:
->>>> https://drive.google.com/file/d/1ic4YHxoL9RrCdy_5FNdGfh_q_J3d_Ft0/view?usp=sharing
->>>
->>> The log is similar with before, and the only difference is RESTART not
->>> set.
->>>
->>> Also follows another patch merged to v5.18 and it fixes io stall too, feel free to test it:
->>>
->>> 8f5fea65b06d blk-mq: avoid extending delays of active hctx from blk_mq_delay_run_hw_queues
->>
->> Have you tried this patch?
->>
->> We meet a similar problem in our test, and I'm pretty sure about the
->> situation at the scene,
->>
->> Our test environment：nvme with bfq ioscheduler,
->>
->> How io is stalled:
->>
->> 1. hctx1 dispatch rq from bfq in service queue, bfqq becomes empty,
->> dispatch somehow fails and rq is inserted to hctx1->dispatch, new run
->> work is queued.
->>
->> 2. other hctx tries to dispatch rq, however, in service bfqq is
->> empty, bfq_dispatch_request return NULL, thus
->> blk_mq_delay_run_hw_queues is called.
->>
->> 3. for the problem described in above patch，run work from "hctx1"
->> can be stalled.
->>
->> Above patch should fix this io stall, however, it seems to me bfq do
->> have some problems that in service bfqq doesn't expire under following
->> situation:
->>
->> 1. dispatched rqs don't complete
->> 2. no new rq is issued to bfq
-> 
-> And I guess:
-> 3. there are requests queued in other bfqqs
-> ?
+Free statelist in error path in Monitor initialization.
 
-Yes, of course, other bfqqs still have requests, but current
-implementation have flaws that even if other bfqqs doesn't have
-requests, bfq_asymmetric_scenario() can still return true because
-num_groups_with_pending_reqs > 0. We tried to fix this, however, there
-seems to be some misunderstanding with Paolo, and it's not applied to
-mainline yet...
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ Monitor.c | 40 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 31 insertions(+), 9 deletions(-)
 
-Thanks,
-Kuai
-> 
-> Otherwise I don't see a point in expiring current bfqq because there's
-> nothing bfq could do anyway. But under normal circumstances the request
-> completion should not take so long so I don't think it would be really
-> worth it to implement some special mechanism for this in bfq.
-> 
-> 								Honza
-> 
+diff --git a/Monitor.c b/Monitor.c
+index 93f36ac0..b4e954c6 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -74,6 +74,7 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
+ 			  int test, struct alert_info *info);
+ static void try_spare_migration(struct state *statelist, struct alert_info *info);
+ static void link_containers_with_subarrays(struct state *list);
++static void free_statelist(struct state *statelist);
+ #ifndef NO_LIBUDEV
+ static int check_udev_activity(void);
+ #endif
+@@ -128,7 +129,6 @@ int Monitor(struct mddev_dev *devlist,
+ 	 */
+ 
+ 	struct state *statelist = NULL;
+-	struct state *st2;
+ 	int finished = 0;
+ 	struct mdstat_ent *mdstat = NULL;
+ 	char *mailfrom;
+@@ -185,12 +185,14 @@ int Monitor(struct mddev_dev *devlist,
+ 				continue;
+ 			if (strcasecmp(mdlist->devname, "<ignore>") == 0)
+ 				continue;
++			if (!is_mddev(mdlist->devname)) {
++				free_statelist(statelist);
++				return 1;
++			}
+ 
+ 			st = xcalloc(1, sizeof *st);
+ 			snprintf(st->devname, MD_NAME_MAX + sizeof("/dev/md/"),
+ 				 "/dev/md/%s", basename(mdlist->devname));
+-			if (!is_mddev(mdlist->devname))
+-				return 1;
+ 			st->next = statelist;
+ 			st->devnm[0] = 0;
+ 			st->percent = RESYNC_UNKNOWN;
+@@ -206,8 +208,10 @@ int Monitor(struct mddev_dev *devlist,
+ 		for (dv = devlist; dv; dv = dv->next) {
+ 			struct state *st;
+ 
+-			if (!is_mddev(dv->devname))
++			if (!is_mddev(dv->devname)) {
++				free_statelist(statelist);
+ 				return 1;
++			}
+ 
+ 			st = xcalloc(1, sizeof *st);
+ 			mdlist = conf_get_ident(dv->devname);
+@@ -294,16 +298,16 @@ int Monitor(struct mddev_dev *devlist,
+ 		for (stp = &statelist; (st = *stp) != NULL; ) {
+ 			if (st->from_auto && st->err > 5) {
+ 				*stp = st->next;
+-				free(st->spare_group);
++				if (st->spare_group)
++					free(st->spare_group);
++
+ 				free(st);
+ 			} else
+ 				stp = &st->next;
+ 		}
+ 	}
+-	for (st2 = statelist; st2; st2 = statelist) {
+-		statelist = st2->next;
+-		free(st2);
+-	}
++
++	free_statelist(statelist);
+ 
+ 	if (pidfile)
+ 		unlink(pidfile);
+@@ -1056,6 +1060,24 @@ static void link_containers_with_subarrays(struct state *list)
+ 				}
+ }
+ 
++/**
++ * free_statelist() - Frees statelist.
++ * @statelist: statelist to free
++ */
++static void free_statelist(struct state *statelist)
++{
++	struct state *tmp = NULL;
++
++	while (statelist) {
++		if (statelist->spare_group)
++			free(statelist->spare_group);
++
++		tmp = statelist;
++		statelist = statelist->next;
++		free(tmp);
++	}
++}
++
+ #ifndef NO_LIBUDEV
+ /* function: check_udev_activity
+  * Description: Function waits for udev to finish
+-- 
+2.25.4
 
