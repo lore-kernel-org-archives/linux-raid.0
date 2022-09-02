@@ -2,163 +2,81 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0717ECAAD5
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Sep 2022 17:03:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40A5BC001B5
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Sep 2022 17:16:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236965AbiIBRDy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 2 Sep 2022 13:03:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55428 "EHLO
+        id S236240AbiIBRQT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Sep 2022 13:16:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232692AbiIBRDx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Sep 2022 13:03:53 -0400
+        with ESMTP id S235633AbiIBRQR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Sep 2022 13:16:17 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37223D9E9C;
-        Fri,  2 Sep 2022 10:03:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8C1DE39AF;
+        Fri,  2 Sep 2022 10:16:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:References:Cc:To:From:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=jpsICczICn8Q4xTvkjWRgq8EqQ73PfJQ2wJlU/1VNwo=; b=X5vJ/NgGF2bmx349FqaKM6X2sM
-        jMRG0gVeG6XxRFfKWLZZk1WyUbQfWng2Ipl0USLQug1kY90PGNem0SuSM4w4+CGehumnY3ME6fFvJ
-        0y0dPVrexJLbvoihJy9qL99nR5Xh8axfeKtu8L2n2+kYp8GvHUf8TRzRIq4ybkPDxbHScQGXOooka
-        NTYoy3Yxv2ADymExZAw0RQp/xJXAhIVCaqF7DZbS+aS45AmSDUH09MBrkYNZydhX9CDWHNNTQA8iD
-        TCA2rTlGu+NPEYmOwgw0IqY+3wGukRkySnsnEIOHQ3WSnprgVehzHtvIuFFchl7atl2onZTkUnkxc
-        zoxL4kBA==;
-Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
+        :references:content-disposition:in-reply-to;
+        bh=49sOK8rTAQ4C6g4afuJZ0iDVLIkKGyM8k5dbP5h4iQM=; b=IaDL6DUTJYPDdvwWPLpZ4VUAFx
+        juyS13S9v2gknLyjXta+ALYV0DQaiVkMy/1GUR7CvUP0un+5GhLLCwvS5yqTsEmLKB6/3yIyCbgLd
+        Sea/Kt5VBa2XTvOpTmQorokOW/EcNoKI0wLkwIxdWv8TXBjWUfE1KaomY1GEAVwwsEYMzXjSiB+Y/
+        a73jVBDfreYUpz9ov2Z6HQV7xqiz8LwdkALi/Q8EHjEZItL1a9rgj5JKhspyWoPCokmt9zWIA9c5q
+        FiEiKG1FMLN3mQq06BtxU+JualpZ5SgrrNDxwTnOiYvj4wi27ikJtynXBpdFPfyRFGYdbSvRcxSW1
+        ndW7c63Q==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1oUA4x-00Ejgx-P2; Fri, 02 Sep 2022 11:03:40 -0600
-Message-ID: <04571bb7-10b3-e841-a975-d9b6e0305e8a@deltatee.com>
-Date:   Fri, 2 Sep 2022 11:03:32 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1oUAH8-00Ejne-GW; Fri, 02 Sep 2022 11:16:15 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1oUAH6-00065r-Pe; Fri, 02 Sep 2022 11:16:12 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20220829131502.165356-1-yukuai1@huaweicloud.com>
- <20220829131502.165356-3-yukuai1@huaweicloud.com>
- <04128618-962f-fd4e-64a9-09ecf7f83776@deltatee.com>
- <b87d0e03-ea92-4e79-f304-7d4c1cbf3fbf@huaweicloud.com>
- <3d07a8fd-3b5e-dc68-4c32-6c0dcd0c1264@huaweicloud.com>
-Content-Language: en-CA
-In-Reply-To: <3d07a8fd-3b5e-dc68-4c32-6c0dcd0c1264@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 24.64.144.200
-X-SA-Exim-Rcpt-To: yukuai1@huaweicloud.com, song@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yukuai3@huawei.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH -next 2/3] md/raid10: convert resync_lock to use seqlock
+To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Fri,  2 Sep 2022 11:16:07 -0600
+Message-Id: <20220902171609.23376-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH 0/2] Couple more bug fixes from recent commits
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hey,
 
+We've managed to track down some hard to hit bugs that were introduced
+in two relatively recent commits. The fixes are both one liners.
 
-
-On 2022-09-02 02:14, Yu Kuai wrote:
-> Can you try the following patch? I'm running mdadm tests myself and I
-> didn't see any problems yet.
-
-Yes, that patch seems to fix the issue.
-
-However, may I suggest we do this without trying to introduce new
-helpers into wait.h? I suspect that could result in a fair amount of
-bike shedding and delay. wait_event_cmd() is often used in situations 
-where a specific lock type doesn't have a helper.
-
-My stab at it is in a diff below which also fixes the bug. 
-
-I'd also recommend somebody clean up that nasty condition in 
-wait_barrier(). Put it into an appropriately named function
-with some comments. As is, it is pretty much unreadable.
+Thanks,
 
 Logan
 
 --
 
+David Sloan (1):
+  md/raid5: Remove unnecessary bio_put() in raid5_read_one_chunk()
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 0e3229ee1ebc..ae297bc870bd 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -934,22 +934,26 @@ static void flush_pending_writes(struct r10conf *conf)
-  *    lower_barrier when the particular background IO completes.
-  */
- 
-+#define wait_event_barrier_cmd(conf, cond, cmd) \
-+	wait_event_cmd((conf)->wait_barrier, cond, \
-+		       write_sequnlock_irq(&(conf)->resync_lock); cmd, \
-+		       write_seqlock_irq(&(conf)->resync_lock))
-+#define wait_event_barrier(conf, cond) wait_event_barrier_cmd(conf, cond, )
-+
- static void raise_barrier(struct r10conf *conf, int force)
- {
- 	write_seqlock_irq(&conf->resync_lock);
- 	BUG_ON(force && !conf->barrier);
- 
- 	/* Wait until no block IO is waiting (unless 'force') */
--	wait_event_lock_irq(conf->wait_barrier, force || !conf->nr_waiting,
--			    conf->resync_lock.lock);
-+	wait_event_barrier(conf, force || !conf->nr_waiting);
- 
- 	/* block any new IO from starting */
- 	WRITE_ONCE(conf->barrier, conf->barrier + 1);
- 
- 	/* Now wait for all pending IO to complete */
--	wait_event_lock_irq(conf->wait_barrier,
--			    !atomic_read(&conf->nr_pending) && conf->barrier < RESYNC_DEPTH,
--			    conf->resync_lock.lock);
-+	wait_event_barrier(conf, !atomic_read(&conf->nr_pending) &&
-+			   conf->barrier < RESYNC_DEPTH);
- 
- 	write_sequnlock_irq(&conf->resync_lock);
- }
-@@ -1007,20 +1011,19 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
- 			ret = false;
- 		} else {
- 			raid10_log(conf->mddev, "wait barrier");
--			wait_event_lock_irq(conf->wait_barrier,
--					    !conf->barrier ||
--					    (atomic_read(&conf->nr_pending) &&
--					     bio_list &&
--					     (!bio_list_empty(&bio_list[0]) ||
--					      !bio_list_empty(&bio_list[1]))) ||
-+			wait_event_barrier(conf,
-+					   !conf->barrier ||
-+					   (atomic_read(&conf->nr_pending) &&
-+					    bio_list &&
-+					    (!bio_list_empty(&bio_list[0]) ||
-+					     !bio_list_empty(&bio_list[1]))) ||
- 					     /* move on if recovery thread is
- 					      * blocked by us
- 					      */
--					     (conf->mddev->thread->tsk == current &&
--					      test_bit(MD_RECOVERY_RUNNING,
--						       &conf->mddev->recovery) &&
--					      conf->nr_queued > 0),
--					    conf->resync_lock.lock);
-+					    (conf->mddev->thread->tsk == current &&
-+					     test_bit(MD_RECOVERY_RUNNING,
-+					       &conf->mddev->recovery) &&
-+					     conf->nr_queued > 0));
- 		}
- 		conf->nr_waiting--;
- 		if (!conf->nr_waiting)
-@@ -1058,10 +1061,9 @@ static void freeze_array(struct r10conf *conf, int extra)
- 	conf->array_freeze_pending++;
- 	WRITE_ONCE(conf->barrier, conf->barrier + 1);
- 	conf->nr_waiting++;
--	wait_event_lock_irq_cmd(conf->wait_barrier,
--				atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
--				conf->resync_lock.lock,
--				flush_pending_writes(conf));
-+	wait_event_barrier_cmd(conf,
-+		atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
-+		flush_pending_writes(conf));
- 
- 	conf->array_freeze_pending--;
- 	write_sequnlock_irq(&conf->resync_lock);
+Logan Gunthorpe (1):
+  md: Remove extra mddev_get() in md_seq_start()
+
+ drivers/md/md.c    | 1 -
+ drivers/md/raid5.c | 1 -
+ 2 files changed, 2 deletions(-)
+
+
+base-commit: 526bd69b9d330eed1db59b2cf6a7d18caf866847
+--
+2.30.2
