@@ -2,165 +2,290 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EC8CECAAD5
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Sep 2022 17:16:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63C2BC6FA83
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Sep 2022 18:52:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236813AbiIBRQX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 2 Sep 2022 13:16:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54164 "EHLO
+        id S230049AbiIBSw3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Sep 2022 14:52:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235922AbiIBRQS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Sep 2022 13:16:18 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E56F5E924A;
-        Fri,  2 Sep 2022 10:16:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=9Bimk/cnccyN5tFjLmzHEdwdb/DxwQkZVqw8pj3d/TY=; b=pG7ZtNNGnIizo+Y/66igqBtZYR
-        YVwLGBPymdDS1rgNiAa2wiSKWKyhr/SFjJmzPKCSRul719FR7UqAcy0gNSglbMjVtjEMTA4nQAAr/
-        y6+flg0BPuFDvnUqMB1j3xIGzV45Cs67CeFpckDq9Bw5mN16X3QtBg8/Kt7mJjaE4Mqwc31RABwEZ
-        2n4Yvs2o7U1JMdd2spfr97SHrpY/+KucJBieWCCdjOHWOQxr1Ks5HgzvFJwrKHf1xZqfwTo+1/gw+
-        +yXfNLqsbP1mEx6Pb8KTnMOGfl6kHgTePJ5+r5clQAFusYCbBASP4LDTKn1zthdL/ZiFwGfwYOcj/
-        bGQWK5Pw==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1oUAH8-00Ejnf-GY; Fri, 02 Sep 2022 11:16:15 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1oUAH6-00065t-Tv; Fri, 02 Sep 2022 11:16:12 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        David Sloan <david.sloan@eideticom.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Fri,  2 Sep 2022 11:16:08 -0600
-Message-Id: <20220902171609.23376-2-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220902171609.23376-1-logang@deltatee.com>
-References: <20220902171609.23376-1-logang@deltatee.com>
+        with ESMTP id S229968AbiIBSw2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Sep 2022 14:52:28 -0400
+Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28EF3E1ABB
+        for <linux-raid@vger.kernel.org>; Fri,  2 Sep 2022 11:52:26 -0700 (PDT)
+Received: by mail-io1-xd32.google.com with SMTP id p187so2369607iod.8
+        for <linux-raid@vger.kernel.org>; Fri, 02 Sep 2022 11:52:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date;
+        bh=9iGINOu3ArsvLN2VwRpyclb8al5c4172ORJdrqAFid4=;
+        b=c/ke+nkzJ5gEsFRFAkww5/w6/Hb2M7pjmol9j7HdlWZqUg9XEJfGhexm+jsPbJQhYh
+         HCpF7V0qp8gdYiwvRGZuXBxyr3tAtWNgX5aP9gqy3fUxfOpZHansHQkR5mmwkjJA6KXv
+         KLM3EIbhaaPuRS7U7L2S6P2TloZIiB5hTomeQvWXZrKenOVWDA9CQfd+XZCLmjk+SrGs
+         KzqlFIkGSFL4J/DwZUuvrxErCAbO3pOEOVW7Bl2qr18CmoGb71uBaxZb1iK9svAsQ4mo
+         DNSCGSmDTxzWw9WlgCikyFBqpIbMxK5KmdcGVtwzvnmkQwCtZ7KgjUOP86OKWQLNkd+a
+         4QwA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=9iGINOu3ArsvLN2VwRpyclb8al5c4172ORJdrqAFid4=;
+        b=TWesGaGq+wMS6dQcMpGmzWcrikFasHNzK/8f/GPpFwi/5j387oHDtBL2d+bPUlgkN+
+         XOoitI9PXzF4tn8oWlMpYGEz/3khG70V/ORAYftt9+iVYaK+a4sAKQVyFMxwP917KBVH
+         QXliOnhfKPfeAZH41PY11wGlsosNgDmD0Z+AW/c0iZkSvpK1gioG1iaAtpl2WxUEjfkj
+         Q3x2owt196IWptctuMTw9o1/rHr7t01m395Y29Mqlqb4muUZqTWZ41z8yYxoNBV1HRrN
+         22juxwfokIMYSUd+ff6geGbtJA1+vwAtSbMMb4UnU1rJmG/nbRTO6gIYr2qMfcgVxdmH
+         UBKg==
+X-Gm-Message-State: ACgBeo3Gm2OI5G98StZ21Vy1kQdwgazvIhvp7YhRFrc/gTC7wa/EaM3J
+        pMkINDWFrIJEUjXSLs6imQu+FSC52n7ncWJbn7ZSjGA=
+X-Google-Smtp-Source: AA6agR4qoBijhLdYJJqQpYkRQ1JpaJ0JW1GyImItmDXBKqUHpfLbzLzwZ4qit27UbLIf0TSSTHaAtU+FDQlnwHGvg6g=
+X-Received: by 2002:a05:6602:2c02:b0:690:b560:7fae with SMTP id
+ w2-20020a0566022c0200b00690b5607faemr2946368iov.169.1662144746191; Fri, 02
+ Sep 2022 11:52:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, david.sloan@eideticom.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 1/2] md/raid5: Remove unnecessary bio_put() in raid5_read_one_chunk()
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+References: <CAKAPSkJLd836Zp3xU=zSOHg3qcEmi29Y2qOwWzeAFaDp+dNTvg@mail.gmail.com>
+ <70e2ae22-bbba-77a4-c9bc-4c02752f4cb7@youngman.org.uk> <dc24b476-2f0a-8406-f1c0-e33b5b0eb388@youngman.org.uk>
+ <4a414fc6-2666-302f-8d3d-08eb7a2986fc@turmel.org> <CAKAPSkJAQYsec-4zzcePbkJ7Ee0=sd_QvHj4Stnyineq+T8BXw@mail.gmail.com>
+ <25355.47062.897268.3355@quad.stoffel.home> <ee66bcbe-0a9b-57a6-439f-72cc46debe48@turmel.org>
+ <25355.50871.743993.605394@quad.stoffel.home> <CAKAPSkLQ4K1R_aD1=iURTFQmm_DXDMr=wx+VDET7DOUy+6Zp_Q@mail.gmail.com>
+ <25357.13191.843087.630097@quad.stoffel.home> <1d978f6c-e1cc-e928-efc5-11ff167938b1@eyal.emu.id.au>
+ <CAKAPSkJhf8hWGTQiCne6BnMPYoum4hJT3diz9U1FGAfq=_N-nA@mail.gmail.com>
+ <CAKAPSkK1bTf+7GOxmB-odjr2zej6XBCT_VGhfNC1KnSXZHjeRw@mail.gmail.com>
+ <8e994200-146e-61ce-bb4a-f7f111f47b10@youngman.org.uk> <CAKAPSkKQA3cV1rcj9cNrdKorOOqyjHf_4BCLxbEx8ibusJP5nA@mail.gmail.com>
+ <25359.50842.604856.467479@quad.stoffel.home> <CAKAPSkL45hc2kTkZyZwhuMz+Pr+rqP70tARvMz4CzEdTtB1sHw@mail.gmail.com>
+In-Reply-To: <CAKAPSkL45hc2kTkZyZwhuMz+Pr+rqP70tARvMz4CzEdTtB1sHw@mail.gmail.com>
+From:   Peter Sanders <plsander@gmail.com>
+Date:   Fri, 2 Sep 2022 14:52:15 -0400
+Message-ID: <CAKAPSkKpykx7wCy9Qqc4QjyXAT4MbiRuTEZf2nE0F9eWyW5F4A@mail.gmail.com>
+Subject: Re: RAID 6, 6 device array - all devices lost superblock
+To:     John Stoffel <john@stoffel.org>
+Cc:     Wols Lists <antlists@youngman.org.uk>,
+        Eyal Lebedinsky <fedora@eyal.emu.id.au>,
+        linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: David Sloan <david.sloan@eideticom.com>
+Question on restarting from scratch...
 
-When running chunk-sized reads on disks with badblocks duplicate bio
-free/puts are observed:
+How to reset to the starting point?
+dmsetup, both for remove and create of the overlay seems to be hanging.
 
-   =============================================================================
-   BUG bio-200 (Not tainted): Object already free
-   -----------------------------------------------------------------------------
-   Allocated in mempool_alloc_slab+0x17/0x20 age=3 cpu=2 pid=7504
-    __slab_alloc.constprop.0+0x5a/0xb0
-    kmem_cache_alloc+0x31e/0x330
-    mempool_alloc_slab+0x17/0x20
-    mempool_alloc+0x100/0x2b0
-    bio_alloc_bioset+0x181/0x460
-    do_mpage_readpage+0x776/0xd00
-    mpage_readahead+0x166/0x320
-    blkdev_readahead+0x15/0x20
-    read_pages+0x13f/0x5f0
-    page_cache_ra_unbounded+0x18d/0x220
-    force_page_cache_ra+0x181/0x1c0
-    page_cache_sync_ra+0x65/0xb0
-    filemap_get_pages+0x1df/0xaf0
-    filemap_read+0x1e1/0x700
-    blkdev_read_iter+0x1e5/0x330
-    vfs_read+0x42a/0x570
-   Freed in mempool_free_slab+0x17/0x20 age=3 cpu=2 pid=7504
-    kmem_cache_free+0x46d/0x490
-    mempool_free_slab+0x17/0x20
-    mempool_free+0x66/0x190
-    bio_free+0x78/0x90
-    bio_put+0x100/0x1a0
-    raid5_make_request+0x2259/0x2450
-    md_handle_request+0x402/0x600
-    md_submit_bio+0xd9/0x120
-    __submit_bio+0x11f/0x1b0
-    submit_bio_noacct_nocheck+0x204/0x480
-    submit_bio_noacct+0x32e/0xc70
-    submit_bio+0x98/0x1a0
-    mpage_readahead+0x250/0x320
-    blkdev_readahead+0x15/0x20
-    read_pages+0x13f/0x5f0
-    page_cache_ra_unbounded+0x18d/0x220
-   Slab 0xffffea000481b600 objects=21 used=0 fp=0xffff8881206d8940 flags=0x17ffffc0010201(locked|slab|head|node=0|zone=2|lastcpupid=0x1fffff)
-   CPU: 0 PID: 34525 Comm: kworker/u24:2 Not tainted 6.0.0-rc2-localyes-265166-gf11c5343fa3f #143
-   Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
-   Workqueue: raid5wq raid5_do_work
-   Call Trace:
-    <TASK>
-    dump_stack_lvl+0x5a/0x78
-    dump_stack+0x10/0x16
-    print_trailer+0x158/0x165
-    object_err+0x35/0x50
-    free_debug_processing.cold+0xb7/0xbe
-    __slab_free+0x1ae/0x330
-    kmem_cache_free+0x46d/0x490
-    mempool_free_slab+0x17/0x20
-    mempool_free+0x66/0x190
-    bio_free+0x78/0x90
-    bio_put+0x100/0x1a0
-    mpage_end_io+0x36/0x150
-    bio_endio+0x2fd/0x360
-    md_end_io_acct+0x7e/0x90
-    bio_endio+0x2fd/0x360
-    handle_failed_stripe+0x960/0xb80
-    handle_stripe+0x1348/0x3760
-    handle_active_stripes.constprop.0+0x72a/0xaf0
-    raid5_do_work+0x177/0x330
-    process_one_work+0x616/0xb20
-    worker_thread+0x2bd/0x6f0
-    kthread+0x179/0x1b0
-    ret_from_fork+0x22/0x30
-    </TASK>
-
-The double free is caused by an unnecessary bio_put() in the
-if(is_badblock(...)) error path in raid5_read_one_chunk().
-
-The error path was moved ahead of bio_alloc_clone() in c82aa1b76787c
-("md/raid5: move checking badblock before clone bio in
-raid5_read_one_chunk"). The previous code checked and freed align_bio
-which required a bio_put. After he move that is no longer needed as
-raid_bio is returned to the control of the common io path which
-performs its own endio resulting in a double free on bad device blocks.
-
-Fixes: c82aa1b76787c ("md/raid5: move checking badblock before clone bio in raid5_read_one_chunk")
-Signed-off-by: David Sloan <david.sloan@eideticom.com>
-[logang@deltatee.com: minor rewording of commit message]
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/md/raid5.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 4e6d865a6456..734f92e75f85 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5538,7 +5538,6 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 
- 	if (is_badblock(rdev, sector, bio_sectors(raid_bio), &first_bad,
- 			&bad_sectors)) {
--		bio_put(raid_bio);
- 		rdev_dec_pending(rdev, mddev);
- 		return 0;
- 	}
--- 
-2.30.2
-
+On Fri, Sep 2, 2022 at 10:56 AM Peter Sanders <plsander@gmail.com> wrote:
+>
+> contents of /proc/mdstat
+>
+> root@superior:/mnt/backup# cat /proc/mdstat
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+> [raid4] [raid10]
+> unused devices: <none>
+> root@superior:/mnt/backup#
+>
+>
+>
+> Here are the steps I ran (minus some mounting other devices and
+> looking around for mdadm tracks on the old os disk)
+>
+>   410  DEVICES=3D$(cat /proc/partitions | parallel --tagstring {5}
+> --colsep ' +' mdadm -E /dev/{5} |grep $UUID | parallel --colsep '\t'
+> echo /dev/{1})
+>   411  apt install parallel
+>   412  DEVICES=3D$(cat /proc/partitions | parallel --tagstring {5}
+> --colsep ' +' mdadm -E /dev/{5} |grep $UUID | parallel --colsep '\t'
+> echo /dev/{1})
+>   413  echo $DEVICES
+>   414  cat /proc/partitions
+>   415  DEVICES=3D/dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg
+>   416  DEVICES=3D"/dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg"
+>   417  echo $DEVICES
+>   418  parallel 'test -e /dev/loop{#} || mknod -m 660 /dev/loop{#} b 7
+> {#}' ::: $DEVICES
+>   419  ls /dev/loop*
+>   420  dc
+>   421  cd /mnt/backup/
+>   422  ls
+>   423  parallel truncate -s300G overlay-{/} ::: $DEVICES
+>   424  ls
+>   425  ls -la
+>   426  df -h
+>   427  parallel 'size=3D$(blockdev --getsize {}); loop=3D$(losetup -f
+> --show -- overlay-{/}); echo 0 $size snapshot {} $loop P 8 | dmsetup
+> create {/}' ::: $DEVICES
+>   428  ls /dev/mapper/
+>   429  OVERLAYS=3D$(parallel echo /dev/mapper/{/} ::: $DEVICES)
+>   430  echo $OVERLAYS
+>   431  dmsetup status
+>   432  mdadm --assemble --force /dev/md1 $OVERLAYS
+>   433  history
+>   434  dmsetup status
+>   435  echo $OVERLAYS
+>   436  mdadm --assemble --force /dev/md0 $OVERLAYS
+>   437  cat /proc/partitions
+>   438  mkdir /mnt/oldroot
+>   << look for inird mdadm files >>
+>   484  echo $OVERLAYS
+>   485  mdadm --create /dev/md0 --level=3Draid6 -n 6 /dev/mapper/sdb
+> /dev/mapper/sdc /dev/mapper/sdd /dev/mapper/sde /dev/mapper/sdf
+> /dev/mapper/sdg
+>   << cancelled out of 485, review instructions... >>
+>   486  mdadm --create /dev/md0 --level=3Draid6 -n 6 /dev/mapper/sdb
+> /dev/mapper/sdc /dev/mapper/sdd /dev/mapper/sde /dev/mapper/sdf
+> /dev/mapper/sdg
+>   487  fsck -n /dev/md0
+>   488  mdadm --stop /dev/md0
+>   489  echo $DEVICES
+>   490   parallel 'dmsetup remove {/}; rm overlay-{/}' ::: $DEVICES
+>   491  dmsetup status
+>   492  ls
+>   493  rm overlay-*
+>   494  ls
+>   495  parallel losetup -d ::: /dev/loop[0-9]*
+>   496  parallel 'test -e /dev/loop{#} || mknod -m 660 /dev/loop{#} b 7
+> {#}' ::: $DEVICES
+>   497  parallel truncate -s300G overlay-{/} ::: $DEVICES
+>   498  parallel 'size=3D$(blockdev --getsize {}); loop=3D$(losetup -f
+> --show -- overlay-{/}); echo 0 $size snapshot {} $loop P 8 | dmsetup
+> create {/}' ::: $DEVICES
+>   499  dmsetup status
+>   500  /sbin/reboot
+>   501  history
+>   502  dmsetup status
+>   503  mount
+>   504  cat /proc/partitions
+>   505  nano /etc/fstab
+>   506  mount /mnt/backup/
+>   507  ls /mnt/backup/
+>   508  rm /mnt/backup/
+>   509  rm /mnt/backup/overlay-sd*
+>   510  emacs setupOverlay &
+>   511  ps auxww | grep emacs
+>   512  kill 65017
+>   513  ls /dev/loo*
+>   514  DEVICES=3D'/dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg'
+>   515  echo $DEVICES
+>   516   parallel 'test -e /dev/loop{#} || mknod -m 660 /dev/loop{#} b
+> 7 {#}' ::: $DEVICES
+>   517  ls /dev/loo*
+>   518  parallel truncate -s4000G overlay-{/} ::: $DEVICES
+>   519  ls
+>   520  rm overlay-sd*
+>   521  cd /mnt/bak
+>   522  cd /mnt/backup/
+>   523  ls
+>   524  parallel truncate -s4000G overlay-{/} ::: $DEVICES
+>   525  ls -la
+>   526  blockdev --getsize /dev/sdb
+>   527  man losetup
+>   528  man losetup
+>   529  parallel 'size=3D$(blockdev --getsize {}); loop=3D$(losetup -f
+> --show -- overlay-{/}); echo 0 $size snapshot {} $loop P 8 | dmsetup
+> create {/}' ::: $DEVICES
+>   530  dmsetup status
+>   531  history | grep mdadm
+>   532  history
+>   533  dmsetup status
+>   534  history | grep dmsetup
+>   535  dmsetup status
+>   536  dmsetup remove sdg
+>   537  dmsetup ls --tree
+>   538  lsof
+>   539  dmsetup ls --tre
+>   540  dmsetup ls --tree
+>   541  lsof | grep -i sdg
+>   542  lsof | grep -i sdf
+>   543  history |grep dmsetup | less
+>   544  dmsetup status
+>   545  history > ~plsander/Documents/raidIssues/joblog
+>
+> On Wed, Aug 31, 2022 at 4:37 PM John Stoffel <john@stoffel.org> wrote:
+> >
+> > >>>>> "Peter" =3D=3D Peter Sanders <plsander@gmail.com> writes:
+> >
+> > > encountering a puzzling situation.
+> > > dmsetup is failing to return.
+> >
+> > I don't think you need to use dmsetup in your case, but can you post
+> > *all* the commands you ran before you got to this point, and the
+> > output of
+> >
+> >        cat /proc/mdstat
+> >
+> > as well?  Thinking on this some more, you might need to actually also
+> > add:
+> >
+> >         --assume-clean
+> >
+> > to the 'mdadm create ....' string, since you don't want it to zero the
+> > array or anything.
+> >
+> > Sorry for not remembering this at the time!
+> >
+> > So if you can, please just start over from scratch, showing the setup
+> > of the loop devices, the overlayfs setup, and the building the RAID6
+> > array, along with the cat /proc/mdstat after you do the initial build.
+> >
+> > John
+> >
+> > P.S.  For those who hated my email citing tool, I pulled it out for
+> > now.  Only citing with > now.  :-)
+> >
+> > > root@superior:/mnt/backup# dmsetup status
+> > > sdg: 0 5860533168 snapshot 16/8388608000 16
+> > > sdf: 0 5860533168 snapshot 16/8388608000 16
+> > > sde: 0 5860533168 snapshot 16/8388608000 16
+> > > sdd: 0 5860533168 snapshot 16/8388608000 16
+> > > sdc: 0 5860533168 snapshot 16/8388608000 16
+> > > sdb: 0 5860533168 snapshot 16/8388608000 16
+> >
+> > > dmsetup remove sdg  runs for hours.
+> > > Canceled it, ran dmsetup ls --tree and find that sdg is not present i=
+n the list.
+> >
+> > > dmsetup status shows:
+> > > sdf: 0 5860533168 snapshot 16/8388608000 16
+> > > sde: 0 5860533168 snapshot 16/8388608000 16
+> > > sdd: 0 5860533168 snapshot 16/8388608000 16
+> > > sdc: 0 5860533168 snapshot 16/8388608000 16
+> > > sdb: 0 5860533168 snapshot 16/8388608000 16
+> >
+> > > dmsetup ls --tree
+> > > root@superior:/mnt/backup# dmsetup ls --tree
+> > > sdf (253:3)
+> > >  =E2=94=9C=E2=94=80 (7:3)
+> > >  =E2=94=94=E2=94=80 (8:80)
+> > > sde (253:1)
+> > >  =E2=94=9C=E2=94=80 (7:1)
+> > >  =E2=94=94=E2=94=80 (8:64)
+> > > sdd (253:2)
+> > >  =E2=94=9C=E2=94=80 (7:2)
+> > >  =E2=94=94=E2=94=80 (8:48)
+> > > sdc (253:0)
+> > >  =E2=94=9C=E2=94=80 (7:0)
+> > >  =E2=94=94=E2=94=80 (8:32)
+> > > sdb (253:5)
+> > >  =E2=94=9C=E2=94=80 (7:5)
+> > >  =E2=94=94=E2=94=80 (8:16)
+> >
+> > > any suggestions?
+> >
+> >
+> >
+> > > On Tue, Aug 30, 2022 at 2:03 PM Wols Lists <antlists@youngman.org.uk>=
+ wrote:
+> > >>
+> > >> On 30/08/2022 14:27, Peter Sanders wrote:
+> > >> >
+> > >> > And the victory conditions would be a mountable file system that p=
+asses a fsck?
+> > >>
+> > >> Yes. Just make sure you delve through the file system a bit and sati=
+sfy
+> > >> yourself it looks good, too ...
+> > >>
+> > >> Cheers,
+> > >> Wol
