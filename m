@@ -2,114 +2,163 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 957D6C38145
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Sep 2022 16:53:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0717ECAAD5
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Sep 2022 17:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236592AbiIBQxg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 2 Sep 2022 12:53:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33418 "EHLO
+        id S236965AbiIBRDy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Sep 2022 13:03:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236265AbiIBQxe (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Sep 2022 12:53:34 -0400
-Received: from out4-smtp.messagingengine.com (out4-smtp.messagingengine.com [66.111.4.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8F0C109520;
-        Fri,  2 Sep 2022 09:53:33 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailout.nyi.internal (Postfix) with ESMTP id 1A4575C0098;
-        Fri,  2 Sep 2022 12:53:33 -0400 (EDT)
-Received: from imap50 ([10.202.2.100])
-  by compute3.internal (MEProxy); Fri, 02 Sep 2022 12:53:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        colorremedies.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to; s=fm2; t=1662137613; x=
-        1662224013; bh=6qA7lebsNoe0qaVBnLzE2yT/XJd2sQGK0XBPJNKv/Yw=; b=R
-        xVZNXHhzt0puvbLyE74kkQojDQ6606NuOmpXNUfDcAuYJXojglnpBsoqvR+EF5JY
-        TD8R9hLB54s1Iu0F4tSFJkUPoPwul1TBCN7g2Bvci5K5w2ryMnR+ZXPA7MHnLD1p
-        SnSHvY67/nQ7HTEc4jqnbIFb2IZ1AtMJ/CUzWeDJJVFcM0kKwsrSZB6u+tIMI0W+
-        WEGvofwCAUMuBEvpix4emT/2Ay3f22iZ4NaMCFXnM7dYmRi4o1AqhTQghdOBodvz
-        91YIEDXrU1sHxWFnBYU2PdPnWrMFwiovVz6vlVLfRIC4s4zartQgoWh43OPSB9Vb
-        sEYIA49IY2/fVyZP1v9yQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1662137613; x=1662224013; bh=6qA7lebsNoe0qaVBnLzE2yT/XJd2
-        sQGK0XBPJNKv/Yw=; b=y/v5sBx1o5vTLrrrv61Gjsn2XKPMwdezDpEhws2B3kNh
-        WAtiRUOb94sJ+78+igrFGQwEtVnn0bOn+OQ09cucpEikR+xBtE7UHesz3RQgunv3
-        QFbfZ6Q7ccpHhON/qwkjyTf6kia3SohZg8y8zaNbpZuyVBomkIvGETnuQiWBxTtf
-        DmuFw+LsGfkKNVkwBLAhvzJNLaWTcUSsBVVZo6TPTUvzp2LzIo8FJA4xLpFGxhud
-        OSzYr3mCNnfPp4WNl+Rtr6Q+H0rRbv9nwl3WaDr9U/HQhRfm9SXMBKA7h1IvqS4m
-        AxlcJme9w2vSaZ62TkoIXpjBKqLoBIMYVgAg5rO14g==
-X-ME-Sender: <xms:DDUSY8dA8g3XXog0_9F1_EMugWcFLU-f3b5bV0gta4BS5xrG1STsOg>
-    <xme:DDUSY-N6wifJZfplB7aqW1NojTTNKvo4Ht3cFCmSFZUamVP3VMmjkNTawjEyjTDHt
-    xFoN_7xz7jPOcXkMRU>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvdeltddguddtkecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
-    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
-    enucfjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdev
-    hhhrihhsucfouhhrphhhhidfuceolhhishhtshestgholhhorhhrvghmvgguihgvshdrtg
-    homheqnecuggftrfgrthhtvghrnhepgfdvueektdefgfefgfdtleffvdeileetgfefuddt
-    ffelueeiveeiveekhedtheeunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpe
-    hmrghilhhfrhhomheplhhishhtshestgholhhorhhrvghmvgguihgvshdrtghomh
-X-ME-Proxy: <xmx:DDUSY9ic2sLq_d63iiVOJ4ugHQEmX-_2aQ7mcleWR4UdRMUoBa5ILw>
-    <xmx:DDUSYx9EAoygpWJ4TIAAnKD9U3VX6rl6INLrJuIEnyUSGnVT7XF1Vg>
-    <xmx:DDUSY4ufApFGEpaTRKuh3EJHCUcym536CyCPqZeXawTZUBZ0gQEkZQ>
-    <xmx:DTUSY6KqPCwzhdpbGyIkEyprtpSE5WV8E_X6YpLtK7Ec6Ee3m0BGNw>
-Feedback-ID: i06494636:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id F3EE41700082; Fri,  2 Sep 2022 12:53:31 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.7.0-alpha0-841-g7899e99a45-fm-20220811.002-g7899e99a
-Mime-Version: 1.0
-Message-Id: <a8bf11e4-8d2f-4fe8-9d6d-533c7b19db8d@www.fastmail.com>
-In-Reply-To: <297cbb87-87aa-2e1d-1fc3-8e96c241f28f@huaweicloud.com>
-References: <Yv0KmT8UYos2/4SX@T590>
- <35f0d608-7448-4276-8922-19a23d8f9049@www.fastmail.com>
- <Yv2P0zyoVvz35w/m@T590>
- <568465de-5c3b-4d94-a74b-5b83ce2f942f@www.fastmail.com>
- <Yv2w+Tuhw1RAoXI5@T590>
- <9f2f608a-cd5f-4736-9e6d-07ccc2eca12c@www.fastmail.com>
- <a817431f-276f-4aab-9ff8-c3e397494339@www.fastmail.com>
- <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
- <Yv3NIQlDL0T3lstU@T590>
- <0f731b0a-fbd5-4e7b-a3df-0ed63360c1e0@www.fastmail.com>
- <YwCGlyDMhWubqKoL@T590>
- <297cbb87-87aa-2e1d-1fc3-8e96c241f28f@huaweicloud.com>
-Date:   Fri, 02 Sep 2022 12:53:10 -0400
-From:   "Chris Murphy" <lists@colorremedies.com>
-To:     "Yu Kuai" <yukuai1@huaweicloud.com>,
-        "Ming Lei" <ming.lei@redhat.com>, "Jan Kara" <jack@suse.cz>
-Cc:     "Nikolay Borisov" <nborisov@suse.com>,
-        "Jens Axboe" <axboe@kernel.dk>,
-        "Paolo Valente" <paolo.valente@linaro.org>,
-        "Btrfs BTRFS" <linux-btrfs@vger.kernel.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "Josef Bacik" <josef@toxicpanda.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: stalling IO regression since linux 5.12, through 5.18
-Content-Type: text/plain
+        with ESMTP id S232692AbiIBRDx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Sep 2022 13:03:53 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37223D9E9C;
+        Fri,  2 Sep 2022 10:03:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:References:Cc:To:From:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=jpsICczICn8Q4xTvkjWRgq8EqQ73PfJQ2wJlU/1VNwo=; b=X5vJ/NgGF2bmx349FqaKM6X2sM
+        jMRG0gVeG6XxRFfKWLZZk1WyUbQfWng2Ipl0USLQug1kY90PGNem0SuSM4w4+CGehumnY3ME6fFvJ
+        0y0dPVrexJLbvoihJy9qL99nR5Xh8axfeKtu8L2n2+kYp8GvHUf8TRzRIq4ybkPDxbHScQGXOooka
+        NTYoy3Yxv2ADymExZAw0RQp/xJXAhIVCaqF7DZbS+aS45AmSDUH09MBrkYNZydhX9CDWHNNTQA8iD
+        TCA2rTlGu+NPEYmOwgw0IqY+3wGukRkySnsnEIOHQ3WSnprgVehzHtvIuFFchl7atl2onZTkUnkxc
+        zoxL4kBA==;
+Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1oUA4x-00Ejgx-P2; Fri, 02 Sep 2022 11:03:40 -0600
+Message-ID: <04571bb7-10b3-e841-a975-d9b6e0305e8a@deltatee.com>
+Date:   Fri, 2 Sep 2022 11:03:32 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20220829131502.165356-1-yukuai1@huaweicloud.com>
+ <20220829131502.165356-3-yukuai1@huaweicloud.com>
+ <04128618-962f-fd4e-64a9-09ecf7f83776@deltatee.com>
+ <b87d0e03-ea92-4e79-f304-7d4c1cbf3fbf@huaweicloud.com>
+ <3d07a8fd-3b5e-dc68-4c32-6c0dcd0c1264@huaweicloud.com>
+Content-Language: en-CA
+In-Reply-To: <3d07a8fd-3b5e-dc68-4c32-6c0dcd0c1264@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 24.64.144.200
+X-SA-Exim-Rcpt-To: yukuai1@huaweicloud.com, song@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yukuai3@huawei.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH -next 2/3] md/raid10: convert resync_lock to use seqlock
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On Thu, Sep 1, 2022, at 3:02 AM, Yu Kuai wrote:
-> Hi, Chris
+
+On 2022-09-02 02:14, Yu Kuai wrote:
+> Can you try the following patch? I'm running mdadm tests myself and I
+> didn't see any problems yet.
+
+Yes, that patch seems to fix the issue.
+
+However, may I suggest we do this without trying to introduce new
+helpers into wait.h? I suspect that could result in a fair amount of
+bike shedding and delay. wait_event_cmd() is often used in situations 
+where a specific lock type doesn't have a helper.
+
+My stab at it is in a diff below which also fixes the bug. 
+
+I'd also recommend somebody clean up that nasty condition in 
+wait_barrier(). Put it into an appropriately named function
+with some comments. As is, it is pretty much unreadable.
+
+Logan
+
+--
 
 
->> Also follows another patch merged to v5.18 and it fixes io stall too, feel free to test it:
->> 
->> 8f5fea65b06d blk-mq: avoid extending delays of active hctx from blk_mq_delay_run_hw_queues
->
-> Have you tried this patch?
-
-The problem happens on 5.18 series kernels. But takes longer. Once I regain access to this setup, I can try to reproduce on 5.18 and 5.19, and provide block debugfs logs. 
-
-
--- 
-Chris Murphy
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0e3229ee1ebc..ae297bc870bd 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -934,22 +934,26 @@ static void flush_pending_writes(struct r10conf *conf)
+  *    lower_barrier when the particular background IO completes.
+  */
+ 
++#define wait_event_barrier_cmd(conf, cond, cmd) \
++	wait_event_cmd((conf)->wait_barrier, cond, \
++		       write_sequnlock_irq(&(conf)->resync_lock); cmd, \
++		       write_seqlock_irq(&(conf)->resync_lock))
++#define wait_event_barrier(conf, cond) wait_event_barrier_cmd(conf, cond, )
++
+ static void raise_barrier(struct r10conf *conf, int force)
+ {
+ 	write_seqlock_irq(&conf->resync_lock);
+ 	BUG_ON(force && !conf->barrier);
+ 
+ 	/* Wait until no block IO is waiting (unless 'force') */
+-	wait_event_lock_irq(conf->wait_barrier, force || !conf->nr_waiting,
+-			    conf->resync_lock.lock);
++	wait_event_barrier(conf, force || !conf->nr_waiting);
+ 
+ 	/* block any new IO from starting */
+ 	WRITE_ONCE(conf->barrier, conf->barrier + 1);
+ 
+ 	/* Now wait for all pending IO to complete */
+-	wait_event_lock_irq(conf->wait_barrier,
+-			    !atomic_read(&conf->nr_pending) && conf->barrier < RESYNC_DEPTH,
+-			    conf->resync_lock.lock);
++	wait_event_barrier(conf, !atomic_read(&conf->nr_pending) &&
++			   conf->barrier < RESYNC_DEPTH);
+ 
+ 	write_sequnlock_irq(&conf->resync_lock);
+ }
+@@ -1007,20 +1011,19 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
+ 			ret = false;
+ 		} else {
+ 			raid10_log(conf->mddev, "wait barrier");
+-			wait_event_lock_irq(conf->wait_barrier,
+-					    !conf->barrier ||
+-					    (atomic_read(&conf->nr_pending) &&
+-					     bio_list &&
+-					     (!bio_list_empty(&bio_list[0]) ||
+-					      !bio_list_empty(&bio_list[1]))) ||
++			wait_event_barrier(conf,
++					   !conf->barrier ||
++					   (atomic_read(&conf->nr_pending) &&
++					    bio_list &&
++					    (!bio_list_empty(&bio_list[0]) ||
++					     !bio_list_empty(&bio_list[1]))) ||
+ 					     /* move on if recovery thread is
+ 					      * blocked by us
+ 					      */
+-					     (conf->mddev->thread->tsk == current &&
+-					      test_bit(MD_RECOVERY_RUNNING,
+-						       &conf->mddev->recovery) &&
+-					      conf->nr_queued > 0),
+-					    conf->resync_lock.lock);
++					    (conf->mddev->thread->tsk == current &&
++					     test_bit(MD_RECOVERY_RUNNING,
++					       &conf->mddev->recovery) &&
++					     conf->nr_queued > 0));
+ 		}
+ 		conf->nr_waiting--;
+ 		if (!conf->nr_waiting)
+@@ -1058,10 +1061,9 @@ static void freeze_array(struct r10conf *conf, int extra)
+ 	conf->array_freeze_pending++;
+ 	WRITE_ONCE(conf->barrier, conf->barrier + 1);
+ 	conf->nr_waiting++;
+-	wait_event_lock_irq_cmd(conf->wait_barrier,
+-				atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
+-				conf->resync_lock.lock,
+-				flush_pending_writes(conf));
++	wait_event_barrier_cmd(conf,
++		atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
++		flush_pending_writes(conf));
+ 
+ 	conf->array_freeze_pending--;
+ 	write_sequnlock_irq(&conf->resync_lock);
