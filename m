@@ -2,301 +2,283 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A0A9C38145
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Sep 2022 14:23:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0D31ECAAD5
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Sep 2022 15:24:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236742AbiIBOXS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 2 Sep 2022 10:23:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39610 "EHLO
+        id S236148AbiIBPX6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Sep 2022 11:23:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236805AbiIBOW7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Sep 2022 10:22:59 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 958332A943
-        for <linux-raid@vger.kernel.org>; Fri,  2 Sep 2022 06:49:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662126548; x=1693662548;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=FcheTaAFQ081j97k+kf47a17YZuQH7u/I5GWbbRw008=;
-  b=lKC9jBk7ZtuWMDhx4CKL6Xl7NMwrFEdp9QTRNTOvD98ifu3JRyslTg85
-   uUE/Xdy6T7tz895jzSNj1w3WSiPGkv7+GZVlAqfVzwrRVP0y3Ef9QiEFT
-   JMBdPPs4gQl/IyCmz0V8s0LTdpjip8jKkMpDVE0XdLQwdWycz+9foQqOG
-   vj9Ad1SsWqU4r+NGq9DHGvjzudt+kmms2DfrYkC8gjy9iM+Ua6Xtz8hYM
-   RzZhXTAqu78fI98kcFrUVt9ej3aTxsfQhlEryVXjbPxDY6LF9kuquW86b
-   dD8NS6Tw0/3hvYpg7/5Is6vFmScg/j30PP+1IM5Oe9f3++XzkyNC/E0lF
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10457"; a="276384706"
-X-IronPort-AV: E=Sophos;i="5.93,283,1654585200"; 
-   d="scan'208";a="276384706"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2022 06:49:07 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,283,1654585200"; 
-   d="scan'208";a="590074922"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
-  by orsmga006.jf.intel.com with ESMTP; 02 Sep 2022 06:49:06 -0700
-From:   Kinga Tanska <kinga.tanska@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH v4] mdadm: replace container level checking with inline
-Date:   Fri,  2 Sep 2022 08:49:23 +0200
-Message-Id: <20220902064923.19955-1-kinga.tanska@intel.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S236736AbiIBPXl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Sep 2022 11:23:41 -0400
+Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9181C14798D
+        for <linux-raid@vger.kernel.org>; Fri,  2 Sep 2022 07:56:48 -0700 (PDT)
+Received: by mail-io1-xd34.google.com with SMTP id 62so1811973iov.5
+        for <linux-raid@vger.kernel.org>; Fri, 02 Sep 2022 07:56:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date;
+        bh=EtTF9EqiNb9FltUoRB7YeQSN4yRH+4IQSs4gnc82N08=;
+        b=m+6M+GnNEs3H2+hqxUT+TReZQzR/jtkEL7dJ1KG+FiDQekxj961Kj/1BnGnGOQnYO4
+         QYJ9KnVRacrzP8dpmSbwCKdYHqyD+/vQPMIJ8GSFZQ8Pl0ncmyMiczi/02pamypBGAcw
+         3M5+hfO9jbJuedWeOS6ZsqXFtHYMST/qaKwtz8rXJvr4zgYNVdX0E6z7zGthZZJloVmP
+         igxzbisnwWI6kZgzTHmMj/IxMcKjErRKdSmWdjcBkZXkcdKA/s8d742FGwuMh9z80xfM
+         t1PzPLADAMVKh+sGuuT4XBs3vLdP6/WmQpyThPKWXZsx21Y6h+e/4x9zGR7ygR4Bi5yN
+         4U4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=EtTF9EqiNb9FltUoRB7YeQSN4yRH+4IQSs4gnc82N08=;
+        b=AJf7xPJULGk4R6gcGIIKzNMxYwx0/vjN18Ccgv6uxPMlTnWzygWtJ+7AxS/nCdC4vy
+         J1dbrqgQj9XcnnrLvweIz8Pl3WBM0uEYwfg1GcJEqJASxnUVvhBjBeqjZwk+TV8eC/X6
+         5QdD2Teai3PfVxyLU0xPrWx0uNZeEawergXYwbEYysBiVSqPTpUg8yyo4xG4HUga/nCg
+         Pr25ghfWFZPKFbTCVvUv63SykS2Z2j2nhE988raSgdOBsyFtKYrcD2i7T+2TA+JTWAGW
+         6Zf8hr1Q1PI8thCSp8HPEFHVipEcmGPukbWP0WXGEjB2ys4cOIOMShimwCI10SKos7kT
+         bznQ==
+X-Gm-Message-State: ACgBeo33wmG3EJADM0Ob3l45/XrZh/DWP6YJyc41qhR54HfDayqtg1sm
+        jKf/KtZqdFZ4DVvMokbHinUXwVHVrKeZa8EmsWoX7QWkOA==
+X-Google-Smtp-Source: AA6agR6AiPB1CJGdWDu2jvGUYOs1YcaFu3GLNe0AvhSN5UuR+5o1Y959bN69sY1PtLRHw71exnWERKvWoojW1fUcyiQ=
+X-Received: by 2002:a05:6638:3888:b0:349:f45b:4d28 with SMTP id
+ b8-20020a056638388800b00349f45b4d28mr19849395jav.40.1662130607820; Fri, 02
+ Sep 2022 07:56:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAKAPSkJLd836Zp3xU=zSOHg3qcEmi29Y2qOwWzeAFaDp+dNTvg@mail.gmail.com>
+ <70e2ae22-bbba-77a4-c9bc-4c02752f4cb7@youngman.org.uk> <dc24b476-2f0a-8406-f1c0-e33b5b0eb388@youngman.org.uk>
+ <4a414fc6-2666-302f-8d3d-08eb7a2986fc@turmel.org> <CAKAPSkJAQYsec-4zzcePbkJ7Ee0=sd_QvHj4Stnyineq+T8BXw@mail.gmail.com>
+ <25355.47062.897268.3355@quad.stoffel.home> <ee66bcbe-0a9b-57a6-439f-72cc46debe48@turmel.org>
+ <25355.50871.743993.605394@quad.stoffel.home> <CAKAPSkLQ4K1R_aD1=iURTFQmm_DXDMr=wx+VDET7DOUy+6Zp_Q@mail.gmail.com>
+ <25357.13191.843087.630097@quad.stoffel.home> <1d978f6c-e1cc-e928-efc5-11ff167938b1@eyal.emu.id.au>
+ <CAKAPSkJhf8hWGTQiCne6BnMPYoum4hJT3diz9U1FGAfq=_N-nA@mail.gmail.com>
+ <CAKAPSkK1bTf+7GOxmB-odjr2zej6XBCT_VGhfNC1KnSXZHjeRw@mail.gmail.com>
+ <8e994200-146e-61ce-bb4a-f7f111f47b10@youngman.org.uk> <CAKAPSkKQA3cV1rcj9cNrdKorOOqyjHf_4BCLxbEx8ibusJP5nA@mail.gmail.com>
+ <25359.50842.604856.467479@quad.stoffel.home>
+In-Reply-To: <25359.50842.604856.467479@quad.stoffel.home>
+From:   Peter Sanders <plsander@gmail.com>
+Date:   Fri, 2 Sep 2022 10:56:36 -0400
+Message-ID: <CAKAPSkL45hc2kTkZyZwhuMz+Pr+rqP70tARvMz4CzEdTtB1sHw@mail.gmail.com>
+Subject: Re: RAID 6, 6 device array - all devices lost superblock
+To:     John Stoffel <john@stoffel.org>
+Cc:     Wols Lists <antlists@youngman.org.uk>,
+        Eyal Lebedinsky <fedora@eyal.emu.id.au>,
+        linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-To unify all containers checks in code, is_container() function is
-added and propagated.
+contents of /proc/mdstat
 
-Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
----
- Assemble.c    |  7 +++----
- Create.c      |  6 +++---
- Grow.c        |  6 +++---
- Incremental.c |  4 ++--
- mdadm.h       | 14 ++++++++++++++
- super-ddf.c   |  6 +++---
- super-intel.c |  4 ++--
- super0.c      |  2 +-
- super1.c      |  2 +-
- sysfs.c       |  2 +-
- 10 files changed, 33 insertions(+), 20 deletions(-)
+root@superior:/mnt/backup# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+unused devices: <none>
+root@superior:/mnt/backup#
 
-diff --git a/Assemble.c b/Assemble.c
-index 1dd82a8c..8b0af0c9 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1120,7 +1120,7 @@ static int start_array(int mdfd,
- 			       i/2, mddev);
- 	}
- 
--	if (content->array.level == LEVEL_CONTAINER) {
-+	if (is_container(content->array.level)) {
- 		sysfs_rules_apply(mddev, content);
- 		if (c->verbose >= 0) {
- 			pr_err("Container %s has been assembled with %d drive%s",
-@@ -1549,8 +1549,7 @@ try_again:
- 			 */
- 			trustworthy = LOCAL;
- 
--		if (name[0] == 0 &&
--		    content->array.level == LEVEL_CONTAINER) {
-+		if (!name[0] && is_container(content->array.level)) {
- 			name = content->text_version;
- 			trustworthy = METADATA;
- 		}
-@@ -1809,7 +1808,7 @@ try_again:
- 		}
- #endif
- 	}
--	if (c->force && !clean && content->array.level != LEVEL_CONTAINER &&
-+	if (c->force && !clean && !is_container(content->array.level) &&
- 	    !enough(content->array.level, content->array.raid_disks,
- 		    content->array.layout, clean, avail)) {
- 		change += st->ss->update_super(st, content, "force-array",
-diff --git a/Create.c b/Create.c
-index e06ec2ae..953e7372 100644
---- a/Create.c
-+++ b/Create.c
-@@ -487,7 +487,7 @@ int Create(struct supertype *st, char *mddev,
- 			    st->minor_version >= 1)
- 				/* metadata at front */
- 				warn |= check_partitions(fd, dname, 0, 0);
--			else if (s->level == 1 || s->level == LEVEL_CONTAINER ||
-+			else if (s->level == 1 || is_container(s->level) ||
- 				 (s->level == 0 && s->raiddisks == 1))
- 				/* partitions could be meaningful */
- 				warn |= check_partitions(fd, dname, freesize*2, s->size*2);
-@@ -997,7 +997,7 @@ int Create(struct supertype *st, char *mddev,
- 			 * again returns container info.
- 			 */
- 			st->ss->getinfo_super(st, &info_new, NULL);
--			if (st->ss->external && s->level != LEVEL_CONTAINER &&
-+			if (st->ss->external && !is_container(s->level) &&
- 			    !same_uuid(info_new.uuid, info.uuid, 0)) {
- 				map_update(&map, fd2devnm(mdfd),
- 					   info_new.text_version,
-@@ -1040,7 +1040,7 @@ int Create(struct supertype *st, char *mddev,
- 	map_unlock(&map);
- 	free(infos);
- 
--	if (s->level == LEVEL_CONTAINER) {
-+	if (is_container(s->level)) {
- 		/* No need to start.  But we should signal udev to
- 		 * create links */
- 		sysfs_uevent(&info, "change");
-diff --git a/Grow.c b/Grow.c
-index 0f07a894..e362403a 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2175,7 +2175,7 @@ size_change_error:
- 					devname, s->size);
- 		}
- 		changed = 1;
--	} else if (array.level != LEVEL_CONTAINER) {
-+	} else if (!is_container(array.level)) {
- 		s->size = get_component_size(fd)/2;
- 		if (s->size == 0)
- 			s->size = array.size;
-@@ -2231,7 +2231,7 @@ size_change_error:
- 	info.component_size = s->size*2;
- 	info.new_level = s->level;
- 	info.new_chunk = s->chunk * 1024;
--	if (info.array.level == LEVEL_CONTAINER) {
-+	if (is_container(info.array.level)) {
- 		info.delta_disks = UnSet;
- 		info.array.raid_disks = s->raiddisks;
- 	} else if (s->raiddisks)
-@@ -2344,7 +2344,7 @@ size_change_error:
- 				printf("layout for %s set to %d\n",
- 				       devname, array.layout);
- 		}
--	} else if (array.level == LEVEL_CONTAINER) {
-+	} else if (is_container(array.level)) {
- 		/* This change is to be applied to every array in the
- 		 * container.  This is only needed when the metadata imposes
- 		 * restraints of the various arrays in the container.
-diff --git a/Incremental.c b/Incremental.c
-index 4d0cd9d6..5a5f4c4c 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -244,7 +244,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 		c->autof = ci->autof;
- 
- 	name_to_use = info.name;
--	if (name_to_use[0] == 0 && info.array.level == LEVEL_CONTAINER) {
-+	if (name_to_use[0] == 0 && is_container(info.array.level)) {
- 		name_to_use = info.text_version;
- 		trustworthy = METADATA;
- 	}
-@@ -472,7 +472,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 
- 	/* 7/ Is there enough devices to possibly start the array? */
- 	/* 7a/ if not, finish with success. */
--	if (info.array.level == LEVEL_CONTAINER) {
-+	if (is_container(info.array.level)) {
- 		char devnm[32];
- 		/* Try to assemble within the container */
- 		sysfs_uevent(sra, "change");
-diff --git a/mdadm.h b/mdadm.h
-index 941a5f38..3673494e 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1924,3 +1924,17 @@ enum r0layout {
-  * This is true for native and DDF, IMSM allows 16.
-  */
- #define MD_NAME_MAX 32
-+
-+/**
-+ * is_container() - check if @level is &LEVEL_CONTAINER
-+ * @level: level value
-+ *
-+ * return:
-+ * 1 if level is equal to &LEVEL_CONTAINER, 0 otherwise.
-+ */
-+static inline int is_container(const int level)
-+{
-+	if (level == LEVEL_CONTAINER)
-+		return 1;
-+	return 0;
-+}
-diff --git a/super-ddf.c b/super-ddf.c
-index 949e7d15..9d1e3b94 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -3325,7 +3325,7 @@ validate_geometry_ddf_container(struct supertype *st,
- 	int fd;
- 	unsigned long long ldsize;
- 
--	if (level != LEVEL_CONTAINER)
-+	if (!is_container(level))
- 		return 0;
- 	if (!dev)
- 		return 1;
-@@ -3371,7 +3371,7 @@ static int validate_geometry_ddf(struct supertype *st,
- 
- 	if (level == LEVEL_NONE)
- 		level = LEVEL_CONTAINER;
--	if (level == LEVEL_CONTAINER) {
-+	if (is_container(level)) {
- 		/* Must be a fresh device to add to a container */
- 		return validate_geometry_ddf_container(st, level, raiddisks,
- 						       data_offset, dev,
-@@ -3488,7 +3488,7 @@ static int validate_geometry_ddf_bvd(struct supertype *st,
- 	struct dl *dl;
- 	unsigned long long maxsize;
- 	/* ddf/bvd supports lots of things, but not containers */
--	if (level == LEVEL_CONTAINER) {
-+	if (is_container(level)) {
- 		if (verbose)
- 			pr_err("DDF cannot create a container within an container\n");
- 		return 0;
-diff --git a/super-intel.c b/super-intel.c
-index 4d82af3d..b0565610 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6727,7 +6727,7 @@ static int validate_geometry_imsm_container(struct supertype *st, int level,
- 	struct intel_super *super = NULL;
- 	int rv = 0;
- 
--	if (level != LEVEL_CONTAINER)
-+	if (!is_container(level))
- 		return 0;
- 	if (!dev)
- 		return 1;
-@@ -7692,7 +7692,7 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 	 * if given unused devices create a container
- 	 * if given given devices in a container create a member volume
- 	 */
--	if (level == LEVEL_CONTAINER)
-+	if (is_container(level))
- 		/* Must be a fresh device to add to a container */
- 		return validate_geometry_imsm_container(st, level, raiddisks,
- 							data_offset, dev,
-diff --git a/super0.c b/super0.c
-index 37f595ed..93876e2e 100644
---- a/super0.c
-+++ b/super0.c
-@@ -1273,7 +1273,7 @@ static int validate_geometry0(struct supertype *st, int level,
- 	if (get_linux_version() < 3001000)
- 		tbmax = 2;
- 
--	if (level == LEVEL_CONTAINER) {
-+	if (is_container(level)) {
- 		if (verbose)
- 			pr_err("0.90 metadata does not support containers\n");
- 		return 0;
-diff --git a/super1.c b/super1.c
-index 58345e68..0b505a7e 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2830,7 +2830,7 @@ static int validate_geometry1(struct supertype *st, int level,
- 	unsigned long long overhead;
- 	int fd;
- 
--	if (level == LEVEL_CONTAINER) {
-+	if (is_container(level)) {
- 		if (verbose)
- 			pr_err("1.x metadata does not support containers\n");
- 		return 0;
-diff --git a/sysfs.c b/sysfs.c
-index 0d98a65f..ca1d888f 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -763,7 +763,7 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
- 
- 	rv = sysfs_set_num(sra, sd, "offset", sd->data_offset);
- 	rv |= sysfs_set_num(sra, sd, "size", (sd->component_size+1) / 2);
--	if (sra->array.level != LEVEL_CONTAINER) {
-+	if (!is_container(sra->array.level)) {
- 		if (sra->consistency_policy == CONSISTENCY_POLICY_PPL) {
- 			rv |= sysfs_set_num(sra, sd, "ppl_sector", sd->ppl_sector);
- 			rv |= sysfs_set_num(sra, sd, "ppl_size", sd->ppl_size);
--- 
-2.26.2
 
+
+Here are the steps I ran (minus some mounting other devices and
+looking around for mdadm tracks on the old os disk)
+
+  410  DEVICES=3D$(cat /proc/partitions | parallel --tagstring {5}
+--colsep ' +' mdadm -E /dev/{5} |grep $UUID | parallel --colsep '\t'
+echo /dev/{1})
+  411  apt install parallel
+  412  DEVICES=3D$(cat /proc/partitions | parallel --tagstring {5}
+--colsep ' +' mdadm -E /dev/{5} |grep $UUID | parallel --colsep '\t'
+echo /dev/{1})
+  413  echo $DEVICES
+  414  cat /proc/partitions
+  415  DEVICES=3D/dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg
+  416  DEVICES=3D"/dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg"
+  417  echo $DEVICES
+  418  parallel 'test -e /dev/loop{#} || mknod -m 660 /dev/loop{#} b 7
+{#}' ::: $DEVICES
+  419  ls /dev/loop*
+  420  dc
+  421  cd /mnt/backup/
+  422  ls
+  423  parallel truncate -s300G overlay-{/} ::: $DEVICES
+  424  ls
+  425  ls -la
+  426  df -h
+  427  parallel 'size=3D$(blockdev --getsize {}); loop=3D$(losetup -f
+--show -- overlay-{/}); echo 0 $size snapshot {} $loop P 8 | dmsetup
+create {/}' ::: $DEVICES
+  428  ls /dev/mapper/
+  429  OVERLAYS=3D$(parallel echo /dev/mapper/{/} ::: $DEVICES)
+  430  echo $OVERLAYS
+  431  dmsetup status
+  432  mdadm --assemble --force /dev/md1 $OVERLAYS
+  433  history
+  434  dmsetup status
+  435  echo $OVERLAYS
+  436  mdadm --assemble --force /dev/md0 $OVERLAYS
+  437  cat /proc/partitions
+  438  mkdir /mnt/oldroot
+  << look for inird mdadm files >>
+  484  echo $OVERLAYS
+  485  mdadm --create /dev/md0 --level=3Draid6 -n 6 /dev/mapper/sdb
+/dev/mapper/sdc /dev/mapper/sdd /dev/mapper/sde /dev/mapper/sdf
+/dev/mapper/sdg
+  << cancelled out of 485, review instructions... >>
+  486  mdadm --create /dev/md0 --level=3Draid6 -n 6 /dev/mapper/sdb
+/dev/mapper/sdc /dev/mapper/sdd /dev/mapper/sde /dev/mapper/sdf
+/dev/mapper/sdg
+  487  fsck -n /dev/md0
+  488  mdadm --stop /dev/md0
+  489  echo $DEVICES
+  490   parallel 'dmsetup remove {/}; rm overlay-{/}' ::: $DEVICES
+  491  dmsetup status
+  492  ls
+  493  rm overlay-*
+  494  ls
+  495  parallel losetup -d ::: /dev/loop[0-9]*
+  496  parallel 'test -e /dev/loop{#} || mknod -m 660 /dev/loop{#} b 7
+{#}' ::: $DEVICES
+  497  parallel truncate -s300G overlay-{/} ::: $DEVICES
+  498  parallel 'size=3D$(blockdev --getsize {}); loop=3D$(losetup -f
+--show -- overlay-{/}); echo 0 $size snapshot {} $loop P 8 | dmsetup
+create {/}' ::: $DEVICES
+  499  dmsetup status
+  500  /sbin/reboot
+  501  history
+  502  dmsetup status
+  503  mount
+  504  cat /proc/partitions
+  505  nano /etc/fstab
+  506  mount /mnt/backup/
+  507  ls /mnt/backup/
+  508  rm /mnt/backup/
+  509  rm /mnt/backup/overlay-sd*
+  510  emacs setupOverlay &
+  511  ps auxww | grep emacs
+  512  kill 65017
+  513  ls /dev/loo*
+  514  DEVICES=3D'/dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg'
+  515  echo $DEVICES
+  516   parallel 'test -e /dev/loop{#} || mknod -m 660 /dev/loop{#} b
+7 {#}' ::: $DEVICES
+  517  ls /dev/loo*
+  518  parallel truncate -s4000G overlay-{/} ::: $DEVICES
+  519  ls
+  520  rm overlay-sd*
+  521  cd /mnt/bak
+  522  cd /mnt/backup/
+  523  ls
+  524  parallel truncate -s4000G overlay-{/} ::: $DEVICES
+  525  ls -la
+  526  blockdev --getsize /dev/sdb
+  527  man losetup
+  528  man losetup
+  529  parallel 'size=3D$(blockdev --getsize {}); loop=3D$(losetup -f
+--show -- overlay-{/}); echo 0 $size snapshot {} $loop P 8 | dmsetup
+create {/}' ::: $DEVICES
+  530  dmsetup status
+  531  history | grep mdadm
+  532  history
+  533  dmsetup status
+  534  history | grep dmsetup
+  535  dmsetup status
+  536  dmsetup remove sdg
+  537  dmsetup ls --tree
+  538  lsof
+  539  dmsetup ls --tre
+  540  dmsetup ls --tree
+  541  lsof | grep -i sdg
+  542  lsof | grep -i sdf
+  543  history |grep dmsetup | less
+  544  dmsetup status
+  545  history > ~plsander/Documents/raidIssues/joblog
+
+On Wed, Aug 31, 2022 at 4:37 PM John Stoffel <john@stoffel.org> wrote:
+>
+> >>>>> "Peter" =3D=3D Peter Sanders <plsander@gmail.com> writes:
+>
+> > encountering a puzzling situation.
+> > dmsetup is failing to return.
+>
+> I don't think you need to use dmsetup in your case, but can you post
+> *all* the commands you ran before you got to this point, and the
+> output of
+>
+>        cat /proc/mdstat
+>
+> as well?  Thinking on this some more, you might need to actually also
+> add:
+>
+>         --assume-clean
+>
+> to the 'mdadm create ....' string, since you don't want it to zero the
+> array or anything.
+>
+> Sorry for not remembering this at the time!
+>
+> So if you can, please just start over from scratch, showing the setup
+> of the loop devices, the overlayfs setup, and the building the RAID6
+> array, along with the cat /proc/mdstat after you do the initial build.
+>
+> John
+>
+> P.S.  For those who hated my email citing tool, I pulled it out for
+> now.  Only citing with > now.  :-)
+>
+> > root@superior:/mnt/backup# dmsetup status
+> > sdg: 0 5860533168 snapshot 16/8388608000 16
+> > sdf: 0 5860533168 snapshot 16/8388608000 16
+> > sde: 0 5860533168 snapshot 16/8388608000 16
+> > sdd: 0 5860533168 snapshot 16/8388608000 16
+> > sdc: 0 5860533168 snapshot 16/8388608000 16
+> > sdb: 0 5860533168 snapshot 16/8388608000 16
+>
+> > dmsetup remove sdg  runs for hours.
+> > Canceled it, ran dmsetup ls --tree and find that sdg is not present in =
+the list.
+>
+> > dmsetup status shows:
+> > sdf: 0 5860533168 snapshot 16/8388608000 16
+> > sde: 0 5860533168 snapshot 16/8388608000 16
+> > sdd: 0 5860533168 snapshot 16/8388608000 16
+> > sdc: 0 5860533168 snapshot 16/8388608000 16
+> > sdb: 0 5860533168 snapshot 16/8388608000 16
+>
+> > dmsetup ls --tree
+> > root@superior:/mnt/backup# dmsetup ls --tree
+> > sdf (253:3)
+> >  =E2=94=9C=E2=94=80 (7:3)
+> >  =E2=94=94=E2=94=80 (8:80)
+> > sde (253:1)
+> >  =E2=94=9C=E2=94=80 (7:1)
+> >  =E2=94=94=E2=94=80 (8:64)
+> > sdd (253:2)
+> >  =E2=94=9C=E2=94=80 (7:2)
+> >  =E2=94=94=E2=94=80 (8:48)
+> > sdc (253:0)
+> >  =E2=94=9C=E2=94=80 (7:0)
+> >  =E2=94=94=E2=94=80 (8:32)
+> > sdb (253:5)
+> >  =E2=94=9C=E2=94=80 (7:5)
+> >  =E2=94=94=E2=94=80 (8:16)
+>
+> > any suggestions?
+>
+>
+>
+> > On Tue, Aug 30, 2022 at 2:03 PM Wols Lists <antlists@youngman.org.uk> w=
+rote:
+> >>
+> >> On 30/08/2022 14:27, Peter Sanders wrote:
+> >> >
+> >> > And the victory conditions would be a mountable file system that pas=
+ses a fsck?
+> >>
+> >> Yes. Just make sure you delve through the file system a bit and satisf=
+y
+> >> yourself it looks good, too ...
+> >>
+> >> Cheers,
+> >> Wol
