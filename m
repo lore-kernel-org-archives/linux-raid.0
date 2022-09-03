@@ -2,119 +2,183 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 465A7ECAAD4
-	for <linux-raid@archiver.kernel.org>; Sat,  3 Sep 2022 05:57:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B39BCECAAD4
+	for <linux-raid@archiver.kernel.org>; Sat,  3 Sep 2022 06:07:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231511AbiICF5q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 3 Sep 2022 01:57:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40532 "EHLO
+        id S232032AbiICGHK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 3 Sep 2022 02:07:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229952AbiICF5p (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 3 Sep 2022 01:57:45 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2A1022BCB
-        for <linux-raid@vger.kernel.org>; Fri,  2 Sep 2022 22:57:44 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 4EAF720AE0;
-        Sat,  3 Sep 2022 05:57:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1662184663; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=32Mud2svtUBF8HALhK3/wH2BMQRQ/yNAJOMeV3lbDY8=;
-        b=i1nRUbRLCxo0LdRGY81WB4eQGY+So1tAKXbgSZVDBITW1nVa5prylFNEBy4VoEun2anoWI
-        yNdulThHsuNMePoqAiiLHWFPjt0Pwk6ucALgfSn5+Ltqp8BKrkfEm0URI3m+QWgL3zynQe
-        qa9PMWhM6eZJAqJTT8NT+ki+lXdsSxg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1662184663;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=32Mud2svtUBF8HALhK3/wH2BMQRQ/yNAJOMeV3lbDY8=;
-        b=eDdNF3Y12syhrcliB7/OQOHNagy1khffBiLw/CRe8NCLfw0ZTGaQVEvk9EI9JSqwwcwHUc
-        Gyb8Sxngy7+firAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 77D84139F9;
-        Sat,  3 Sep 2022 05:57:42 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id TQeAEdbsEmMpQgAAMHmgww
-        (envelope-from <colyli@suse.de>); Sat, 03 Sep 2022 05:57:42 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
-Subject: Re: [PATCH 08/10] Change update to enum in update_super and
- update_subarray
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220818145621.21982-9-mateusz.kusiak@intel.com>
-Date:   Sat, 3 Sep 2022 13:57:39 +0800
-Cc:     linux-raid <linux-raid@vger.kernel.org>, jes@trained-monkey.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <2E7253EA-FF33-4DED-A5F2-360FB619CE5E@suse.de>
-References: <20220818145621.21982-1-mateusz.kusiak@intel.com>
- <20220818145621.21982-9-mateusz.kusiak@intel.com>
-To:     Mateusz Kusiak <mateusz.kusiak@intel.com>
-X-Mailer: Apple Mail (2.3696.120.41.1.1)
+        with ESMTP id S231643AbiICGHJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 3 Sep 2022 02:07:09 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83AFADC09A;
+        Fri,  2 Sep 2022 23:07:07 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MKPQn1wFgzl3xd;
+        Sat,  3 Sep 2022 14:05:37 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP2 (Coremail) with SMTP id Syh0CgAnenMH7xJjzRo3AQ--.49859S3;
+        Sat, 03 Sep 2022 14:07:05 +0800 (CST)
+Subject: Re: [PATCH -next 2/3] md/raid10: convert resync_lock to use seqlock
+To:     Logan Gunthorpe <logang@deltatee.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20220829131502.165356-1-yukuai1@huaweicloud.com>
+ <20220829131502.165356-3-yukuai1@huaweicloud.com>
+ <04128618-962f-fd4e-64a9-09ecf7f83776@deltatee.com>
+ <b87d0e03-ea92-4e79-f304-7d4c1cbf3fbf@huaweicloud.com>
+ <3d07a8fd-3b5e-dc68-4c32-6c0dcd0c1264@huaweicloud.com>
+ <04571bb7-10b3-e841-a975-d9b6e0305e8a@deltatee.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <8dd81e04-0041-63a4-e16f-f92dd8c4930e@huaweicloud.com>
+Date:   Sat, 3 Sep 2022 14:07:03 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <04571bb7-10b3-e841-a975-d9b6e0305e8a@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: Syh0CgAnenMH7xJjzRo3AQ--.49859S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXw4fKF1rAF4DCr43KFW8Crg_yoWrXry8p3
+        ySqr15tFWUtF90qw1Dta1j9F1Fgw4kKF9rGFZ5Wa1kZFsYqryfJFy3GryrKryqvr93AFy8
+        Xa98GrZ3Gw1UtFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8
+        JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUU
+        UU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi,
 
+在 2022/09/03 1:03, Logan Gunthorpe 写道:
+> 
+> 
+> 
+> On 2022-09-02 02:14, Yu Kuai wrote:
+>> Can you try the following patch? I'm running mdadm tests myself and I
+>> didn't see any problems yet.
+> 
+> Yes, that patch seems to fix the issue.
+> 
+> However, may I suggest we do this without trying to introduce new
+> helpers into wait.h? I suspect that could result in a fair amount of
+> bike shedding and delay. wait_event_cmd() is often used in situations
+> where a specific lock type doesn't have a helper.
 
-> 2022=E5=B9=B48=E6=9C=8818=E6=97=A5 22:56=EF=BC=8CMateusz Kusiak =
-<mateusz.kusiak@intel.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Use already existing enum, change update_super and update_subarray
-> update to enum globally.
-> Refactor function references also.
-> Remove code specific options from update_options.
->=20
-> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
-> ---
-> Assemble.c    | 14 +++++++++-----
-> Examine.c     |  2 +-
-> Grow.c        |  9 +++++----
-> Manage.c      | 14 ++++++++------
-> maps.c        | 21 ---------------------
-> mdadm.h       | 12 +++++++++---
-> super-intel.c | 16 ++++++++--------
-> super0.c      |  9 ++++-----
-> super1.c      | 17 ++++++++---------
-> 9 files changed, 52 insertions(+), 62 deletions(-)
->=20
-> diff --git a/Assemble.c b/Assemble.c
-> index 6df6bfbc..8cd3d533 100644
-> --- a/Assemble.c
-> +++ b/Assemble.c
->=20
+Yes, that sounds good.
+> 
+> My stab at it is in a diff below which also fixes the bug.
+> 
+> I'd also recommend somebody clean up that nasty condition in
+> wait_barrier(). Put it into an appropriately named function
+> with some comments. As is, it is pretty much unreadable.
 
-> @@ -1813,7 +1817,7 @@ try_again:
-> 	    !enough(content->array.level, content->array.raid_disks,
-> 		    content->array.layout, clean,
-> 		    avail)) {
-> -		change +=3D st->ss->update_super(st, content, =
-"force-array",
-> +		change +=3D st->ss->update_super(st, content, =
-UOPT_SPEC_FORCE_ARRAY,
-> 					       =
-devices[chosen_drive].devname, c->verbose,
-> 					       0, NULL);
-> 		was_forced =3D 1;
+Now we're at it, I can take a look.
 
-Hi Mateusz,
+Thanks,
+Kuai
+> 
+> Logan
+> 
+> --
+> 
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 0e3229ee1ebc..ae297bc870bd 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -934,22 +934,26 @@ static void flush_pending_writes(struct r10conf *conf)
+>    *    lower_barrier when the particular background IO completes.
+>    */
+>   
+> +#define wait_event_barrier_cmd(conf, cond, cmd) \
+> +	wait_event_cmd((conf)->wait_barrier, cond, \
+> +		       write_sequnlock_irq(&(conf)->resync_lock); cmd, \
+> +		       write_seqlock_irq(&(conf)->resync_lock))
+> +#define wait_event_barrier(conf, cond) wait_event_barrier_cmd(conf, cond, )
+> +
+>   static void raise_barrier(struct r10conf *conf, int force)
+>   {
+>   	write_seqlock_irq(&conf->resync_lock);
+>   	BUG_ON(force && !conf->barrier);
+>   
+>   	/* Wait until no block IO is waiting (unless 'force') */
+> -	wait_event_lock_irq(conf->wait_barrier, force || !conf->nr_waiting,
+> -			    conf->resync_lock.lock);
+> +	wait_event_barrier(conf, force || !conf->nr_waiting);
+>   
+>   	/* block any new IO from starting */
+>   	WRITE_ONCE(conf->barrier, conf->barrier + 1);
+>   
+>   	/* Now wait for all pending IO to complete */
+> -	wait_event_lock_irq(conf->wait_barrier,
+> -			    !atomic_read(&conf->nr_pending) && conf->barrier < RESYNC_DEPTH,
+> -			    conf->resync_lock.lock);
+> +	wait_event_barrier(conf, !atomic_read(&conf->nr_pending) &&
+> +			   conf->barrier < RESYNC_DEPTH);
+>   
+>   	write_sequnlock_irq(&conf->resync_lock);
+>   }
+> @@ -1007,20 +1011,19 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
+>   			ret = false;
+>   		} else {
+>   			raid10_log(conf->mddev, "wait barrier");
+> -			wait_event_lock_irq(conf->wait_barrier,
+> -					    !conf->barrier ||
+> -					    (atomic_read(&conf->nr_pending) &&
+> -					     bio_list &&
+> -					     (!bio_list_empty(&bio_list[0]) ||
+> -					      !bio_list_empty(&bio_list[1]))) ||
+> +			wait_event_barrier(conf,
+> +					   !conf->barrier ||
+> +					   (atomic_read(&conf->nr_pending) &&
+> +					    bio_list &&
+> +					    (!bio_list_empty(&bio_list[0]) ||
+> +					     !bio_list_empty(&bio_list[1]))) ||
+>   					     /* move on if recovery thread is
+>   					      * blocked by us
+>   					      */
+> -					     (conf->mddev->thread->tsk == current &&
+> -					      test_bit(MD_RECOVERY_RUNNING,
+> -						       &conf->mddev->recovery) &&
+> -					      conf->nr_queued > 0),
+> -					    conf->resync_lock.lock);
+> +					    (conf->mddev->thread->tsk == current &&
+> +					     test_bit(MD_RECOVERY_RUNNING,
+> +					       &conf->mddev->recovery) &&
+> +					     conf->nr_queued > 0));
+>   		}
+>   		conf->nr_waiting--;
+>   		if (!conf->nr_waiting)
+> @@ -1058,10 +1061,9 @@ static void freeze_array(struct r10conf *conf, int extra)
+>   	conf->array_freeze_pending++;
+>   	WRITE_ONCE(conf->barrier, conf->barrier + 1);
+>   	conf->nr_waiting++;
+> -	wait_event_lock_irq_cmd(conf->wait_barrier,
+> -				atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
+> -				conf->resync_lock.lock,
+> -				flush_pending_writes(conf));
+> +	wait_event_barrier_cmd(conf,
+> +		atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
+> +		flush_pending_writes(conf));
+>   
+>   	conf->array_freeze_pending--;
+>   	write_sequnlock_irq(&conf->resync_lock);
+> .
+> 
 
-The above part doesn=E2=80=99t apply on my current mdadm-CI queue. Just =
-FYI, after I finish to review all this series, I will ask you to confirm =
-the rebased patch or repost another version.
-
-Thanks.
-
-Coly Li=
