@@ -2,88 +2,199 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE3DC38145
-	for <linux-raid@archiver.kernel.org>; Tue,  6 Sep 2022 06:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71E6AC54EE9
+	for <linux-raid@archiver.kernel.org>; Tue,  6 Sep 2022 09:46:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238347AbiIFGHQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 6 Sep 2022 02:07:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48840 "EHLO
+        id S233842AbiIFJqH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 6 Sep 2022 05:46:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231836AbiIFGHP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 6 Sep 2022 02:07:15 -0400
-Received: from out0.migadu.com (out0.migadu.com [94.23.1.103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 890776EF37;
-        Mon,  5 Sep 2022 23:07:12 -0700 (PDT)
-Subject: Re: [PATCH 2/2] md: Remove extra mddev_get() in md_seq_start()
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1662444431;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Y1CvBcxrHvkaMLJk5BCgtnP/bQwD8Zm5U2RwKt6uWao=;
-        b=kOyQ4jXN8FYJcHCE6RT1CkOxgPt/OJ2qu67NYxffw5ImSjOgHdTEM1GaYxLhnafgSrfFb1
-        8C7dg6Mpw2rK2VTD8Ytln5grtPk4AYoU3HZahU5gLhL6J9pk1py2c2IdvOgYO1rp218zZ9
-        bKn42dPBBPv5Pw6i6GC9hgIY7iN/CM8=
-To:     Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-References: <20220902171609.23376-1-logang@deltatee.com>
- <20220902171609.23376-3-logang@deltatee.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <09bd3888-db60-3221-6820-055c0ee9e29a@linux.dev>
-Date:   Tue, 6 Sep 2022 14:06:51 +0800
-MIME-Version: 1.0
-In-Reply-To: <20220902171609.23376-3-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+        with ESMTP id S233414AbiIFJqC (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 6 Sep 2022 05:46:02 -0400
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9424A760C0
+        for <linux-raid@vger.kernel.org>; Tue,  6 Sep 2022 02:45:59 -0700 (PDT)
+Received: by mail-ej1-x62a.google.com with SMTP id gb36so21846882ejc.10
+        for <linux-raid@vger.kernel.org>; Tue, 06 Sep 2022 02:45:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date;
+        bh=VtLdd7vkvDTE4ZQfVBsC4VxzNjo0K0INFc86CHoi1Co=;
+        b=mDh9NxcPOaUlXnZU9kI6p49EzyANeI/LZ/y/fSYtsOIvabWsGS3h3W73ZJoc6x9ssj
+         wF/MwocRBvfg9Ld/ylStXfB9bX2roLVCzU/XGTDAEVE95ZqQj82bKJlynZe4a0OGqfkn
+         jzneNXhMPz2+h7fS7RP9+OLMaMh2doQOn26aAbPbVdRTrgf/R3lAPetQeRY74o+BwzCA
+         cNvWkYPTZ5tZf0mRBkX7vcX4BrLDvOfFZpmMNC8pH6tulrg+3KlJbnmcHc3UBPSHdqR9
+         W2+hq9eEmZ0faXJCBHCuVfjXjhr9vDGLGA0l8tdMdqINkIX7CG6ayVTUCxxOtIYscUIW
+         8SXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=VtLdd7vkvDTE4ZQfVBsC4VxzNjo0K0INFc86CHoi1Co=;
+        b=X4tbELXxwelgAZcZ/yKV4nSuMXa8Ve1s/8GG+Ehb21g4xofvBb4N1p3u+MRsU+b8sG
+         qi0iZmKOWzuJR4VsvSLgvtOGpDVNyQ17xMr2jLgRXokGIQEW7Pr+RDamKSw/+8gm9mGQ
+         QQGg8ebtkqd9OUtITZeZxzxHKwEZmhIk9L6/m2W1gRoyIcGGAOxh8VHuLFiia+IK6JMf
+         eUJzWjHa4/dRt9qiW059VoX4Rt4y55Odony6TVZJP2LhEyzyEe6IsjFt5WLIA0tt1L0t
+         hvdKVOVSkawBRwZvH6aj7ARXi+fbV2nGavXer4tl2QGx2K72SodkoR+Bio7oS/QQKFeY
+         UGWg==
+X-Gm-Message-State: ACgBeo1pMu36b0/mGULV3vmr/axH1fHHlfR7dzb3BNT0mHBW7PbWyPNH
+        QWXtoJIGWpuK5JtpvuBehPVDtA==
+X-Google-Smtp-Source: AA6agR6kYrPMIegCZ/MD9J95k2Z6B0Ycf9T8Cat6OfFamb+zoIbBd/kPLFPHo3yGBug8Z1F/Da++sA==
+X-Received: by 2002:a17:906:9c82:b0:6e1:1d6c:914c with SMTP id fj2-20020a1709069c8200b006e11d6c914cmr1145411ejc.769.1662457557672;
+        Tue, 06 Sep 2022 02:45:57 -0700 (PDT)
+Received: from [192.168.0.13] ([83.216.184.132])
+        by smtp.gmail.com with ESMTPSA id 10-20020a170906300a00b00738795e7d9bsm6273344ejz.2.2022.09.06.02.45.56
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 06 Sep 2022 02:45:56 -0700 (PDT)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Subject: Re: stalling IO regression since linux 5.12, through 5.18
+From:   Paolo Valente <paolo.valente@linaro.org>
+In-Reply-To: <297cbb87-87aa-2e1d-1fc3-8e96c241f28f@huaweicloud.com>
+Date:   Tue, 6 Sep 2022 11:45:54 +0200
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Chris Murphy <lists@colorremedies.com>,
+        Jan Kara <jack@suse.cz>, Nikolay Borisov <nborisov@suse.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "yukuai (C)" <yukuai3@huawei.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <69523E26-6A87-4C8A-A5CD-D37A28018109@linaro.org>
+References: <Yv0KmT8UYos2/4SX@T590>
+ <35f0d608-7448-4276-8922-19a23d8f9049@www.fastmail.com>
+ <Yv2P0zyoVvz35w/m@T590>
+ <568465de-5c3b-4d94-a74b-5b83ce2f942f@www.fastmail.com>
+ <Yv2w+Tuhw1RAoXI5@T590>
+ <9f2f608a-cd5f-4736-9e6d-07ccc2eca12c@www.fastmail.com>
+ <a817431f-276f-4aab-9ff8-c3e397494339@www.fastmail.com>
+ <5426d0f9-6539-477d-8feb-2b49136b960f@www.fastmail.com>
+ <Yv3NIQlDL0T3lstU@T590>
+ <0f731b0a-fbd5-4e7b-a3df-0ed63360c1e0@www.fastmail.com>
+ <YwCGlyDMhWubqKoL@T590>
+ <297cbb87-87aa-2e1d-1fc3-8e96c241f28f@huaweicloud.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+X-Mailer: Apple Mail (2.3445.104.11)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 9/3/22 1:16 AM, Logan Gunthorpe wrote:
-> A regression is seen where mddev devices stay permanently after they
-> are stopped due to an elevated reference count.
->
-> This was tracked down to an extra mddev_get() in md_seq_start().
->
-> It only happened rarely because most of the time the md_seq_start()
-> is called with a zero offset. The path with an extra mddev_get() only
-> happens when it starts with a non-zero offset.
->
-> The commit noted below changed an mddev_get() to check its success
-> but inadevrtantly left the original call in. Remove the extra call.
->
-> Fixes: 12a6caf27324 ("md: only delete entries from all_mddevs when the disk is freed")
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->   drivers/md/md.c | 1 -
->   1 file changed, 1 deletion(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index afaf36b2f6ab..9dc0175280b4 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8154,7 +8154,6 @@ static void *md_seq_start(struct seq_file *seq, loff_t *pos)
->   	list_for_each(tmp,&all_mddevs)
->   		if (!l--) {
->   			mddev = list_entry(tmp, struct mddev, all_mddevs);
-> -			mddev_get(mddev);
->   			if (!mddev_get(mddev))
->   				continue;
->   			spin_unlock(&all_mddevs_lock);
+> Il giorno 1 set 2022, alle ore 09:02, Yu Kuai =
+<yukuai1@huaweicloud.com> ha scritto:
+>=20
+> Hi, Chris
+>=20
+> =E5=9C=A8 2022/08/20 15:00, Ming Lei =E5=86=99=E9=81=93:
+>> On Fri, Aug 19, 2022 at 03:20:25PM -0400, Chris Murphy wrote:
+>>>=20
+>>>=20
+>>> On Thu, Aug 18, 2022, at 1:24 AM, Ming Lei wrote:
+>>>> On Thu, Aug 18, 2022 at 12:27:04AM -0400, Chris Murphy wrote:
+>>>>>=20
+>>>>>=20
+>>>>> On Thu, Aug 18, 2022, at 12:18 AM, Chris Murphy wrote:
+>>>>>> On Thu, Aug 18, 2022, at 12:12 AM, Chris Murphy wrote:
+>>>>>>> On Wed, Aug 17, 2022, at 11:41 PM, Ming Lei wrote:
+>>>>>>>=20
+>>>>>>>> OK, can you post the blk-mq debugfs log after you trigger it on =
+v5.17?
+>>>>>=20
+>>>>> Same boot, 3rd log. But the load is above 300 so I kinda need to =
+sysrq+b soon.
+>>>>>=20
+>>>>> =
+https://drive.google.com/file/d/1375H558kqPTdng439rvG6LuXXWPXLToo/view?usp=
+=3Dsharing
+>>>>>=20
+>>>>=20
+>>>> Also please test the following one too:
+>>>>=20
+>>>>=20
+>>>> diff --git a/block/blk-mq.c b/block/blk-mq.c
+>>>> index 5ee62b95f3e5..d01c64be08e2 100644
+>>>> --- a/block/blk-mq.c
+>>>> +++ b/block/blk-mq.c
+>>>> @@ -1991,7 +1991,8 @@ bool blk_mq_dispatch_rq_list(struct =
+blk_mq_hw_ctx
+>>>> *hctx, struct list_head *list,
+>>>>  		if (!needs_restart ||
+>>>>  		    (no_tag && =
+list_empty_careful(&hctx->dispatch_wait.entry)))
+>>>>  			blk_mq_run_hw_queue(hctx, true);
+>>>> -		else if (needs_restart && needs_resource)
+>>>> +		else if (needs_restart && (needs_resource ||
+>>>> +					=
+blk_mq_is_shared_tags(hctx->flags)))
+>>>>  			blk_mq_delay_run_hw_queue(hctx, =
+BLK_MQ_RESOURCE_DELAY);
+>>>>=20
+>>>>  		blk_mq_update_dispatch_busy(hctx, true);
+>>>>=20
+>>>=20
+>>>=20
+>>> With just this patch on top of 5.17.0, it still hangs. I've captured =
+block debugfs log:
+>>> =
+https://drive.google.com/file/d/1ic4YHxoL9RrCdy_5FNdGfh_q_J3d_Ft0/view?usp=
+=3Dsharing
+>> The log is similar with before, and the only difference is RESTART =
+not
+>> set.
+>> Also follows another patch merged to v5.18 and it fixes io stall too, =
+feel free to test it:
+>> 8f5fea65b06d blk-mq: avoid extending delays of active hctx from =
+blk_mq_delay_run_hw_queues
+>=20
+> Have you tried this patch?
+>=20
+> We meet a similar problem in our test, and I'm pretty sure about the
+> situation at the scene,
+>=20
+> Our test environment=EF=BC=9Anvme with bfq ioscheduler,
+>=20
+> How io is stalled:
+>=20
+> 1. hctx1 dispatch rq from bfq in service queue, bfqq becomes empty,
+> dispatch somehow fails and rq is inserted to hctx1->dispatch, new run
+> work is queued.
+>=20
+> 2. other hctx tries to dispatch rq, however, in service bfqq is
+> empty, bfq_dispatch_request return NULL, thus
+> blk_mq_delay_run_hw_queues is called.
+>=20
+> 3. for the problem described in above patch=EF=BC=8Crun work from =
+"hctx1"
+> can be stalled.
+>=20
+> Above patch should fix this io stall, however, it seems to me bfq do
+> have some problems that in service bfqq doesn't expire under following
+> situation:
+>=20
+> 1. dispatched rqs don't complete
+> 2. no new rq is issued to bfq
+>=20
 
-Acked-by: Guoqing Jiang <Guoqing.jiang@linux.dev>
+There may be one more important problem: is bfq_finish_requeue_request
+eventually invoked for the failed rq?  If it is not, then a memory
+leak follows, because recounting gets unavoidably unbalanced.
+
+In contrast, if bfq_finish_requeue_request is correctly invoked, then
+no stall should occur.
 
 Thanks,
-Guoqing
+Paolo
+
+> Thanks,
+> Kuai
+>> Thanks,
+>> Ming
+>> .
+
