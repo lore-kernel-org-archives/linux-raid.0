@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C152EC54EE9
-	for <linux-raid@archiver.kernel.org>; Wed,  7 Sep 2022 13:14:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C6CEC38145
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Sep 2022 13:15:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229880AbiIGNOs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 7 Sep 2022 09:14:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45948 "EHLO
+        id S229989AbiIGNPB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 7 Sep 2022 09:15:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229845AbiIGNOj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Sep 2022 09:14:39 -0400
+        with ESMTP id S229948AbiIGNOn (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Sep 2022 09:14:43 -0400
 Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36E269FE3
-        for <linux-raid@vger.kernel.org>; Wed,  7 Sep 2022 06:14:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEE5C12745
+        for <linux-raid@vger.kernel.org>; Wed,  7 Sep 2022 06:14:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662556466; x=1694092466;
+  t=1662556470; x=1694092470;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=1WcVMLvQ4JeY8NNq53wNRxVRJUCy+50xLcV07gQI8ow=;
-  b=fmwIcXaZrEDYv6s1cuzHmttaMyDS88tn7Vi9wBm3fM8IUQh6KFdjFtKY
-   3X0SXH833WMkOSkYbcGzAaYHa7U8DTxypPh0xeLPDEcIyZ0xpNAIHJPYX
-   1nczGDOJ0Quhup2HIKmg1BG4jIdIPlYxkIgMU1C1hTVLXKzJgqX4zXLli
-   SSb6A2fHhzVPx65q5+lkZNDcsI5JKLcQ6wQV3WxpYrq1X7QzoUTXu9gSH
-   ZzkYDyyVMR+l52PZccMdOxa64KeucPq5YVIzlrkKKDnSkVZai4IL2Lbe5
-   EQVpEsXSjK6SiDcxYEtyRRKYHESkWmD2IW5XpoVIlZ/XxQvIc0h/eDiXV
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10462"; a="296865371"
+  bh=q0jtphc85zOexzPM2Hj4KDwB3asV13mPiqefF7KT0XY=;
+  b=CP+NDp8UZF7dzZ7vBIkFn/9U/SH2EEOBMmU4Y2L6541vfSTZC28Lzxn3
+   KryzApPuesTg7JhfgPFug3SxA9TOuT3uSrQpymOD5KvxWoIHdR+Egtfl3
+   cDbYhFoCLASbY1uat1CRLnhypZyWr9jvLhBBpat2nWfJWJ6h7rNMRd8g8
+   MnatpQLzi3GQWx7xA8KQ3Gp+aSJ/9mwLyimgfTGkLmoA8dl0H3ZCmufyg
+   x0Y/n3VtSG950S8jiFePqJAKKiZBC2TnpfGLm8u0QGzpUIGiWEolbfX7n
+   3kzVQrnUguGv7jNBfRtOpbFJKJdSOZCkhgcwfN5j8/Dv42BEj3deyc0S8
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10462"; a="296865382"
 X-IronPort-AV: E=Sophos;i="5.93,296,1654585200"; 
-   d="scan'208";a="296865371"
+   d="scan'208";a="296865382"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2022 06:14:25 -0700
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2022 06:14:29 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.93,296,1654585200"; 
-   d="scan'208";a="644608648"
+   d="scan'208";a="644608657"
 Received: from unknown (HELO localhost.igk.intel.com) ([10.102.105.50])
-  by orsmga008.jf.intel.com with ESMTP; 07 Sep 2022 06:14:24 -0700
+  by orsmga008.jf.intel.com with ESMTP; 07 Sep 2022 06:14:28 -0700
 From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
 To:     linux-raid@vger.kernel.org
 Cc:     jes@trained-monkey.org
-Subject: [PATCH 5/9] Add helpers to determine whether directories or files are soft links
-Date:   Wed,  7 Sep 2022 14:56:53 +0200
-Message-Id: <20220907125657.12192-6-mateusz.grzonka@intel.com>
+Subject: [PATCH 6/9] Mdmonitor: Refactor write_autorebuild_pid()
+Date:   Wed,  7 Sep 2022 14:56:54 +0200
+Message-Id: <20220907125657.12192-7-mateusz.grzonka@intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220907125657.12192-1-mateusz.grzonka@intel.com>
 References: <20220907125657.12192-1-mateusz.grzonka@intel.com>
@@ -52,80 +52,106 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Add better error handling and check for symlinks when opening MDMON_DIR.
+
 Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
 ---
- mdadm.h |  3 +++
- util.c  | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 49 insertions(+)
+ Monitor.c | 55 ++++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 36 insertions(+), 19 deletions(-)
 
-diff --git a/mdadm.h b/mdadm.h
-index 09915a00..9183ee70 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1707,6 +1707,9 @@ extern int cluster_get_dlmlock(void);
- extern int cluster_release_dlmlock(void);
- extern void set_dlm_hooks(void);
+diff --git a/Monitor.c b/Monitor.c
+index 80e43ebe..3e09f2a2 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -33,6 +33,7 @@
+ #endif
  
-+extern bool is_directory(const char *path);
-+extern bool is_file(const char *path);
-+
- #define _ROUND_UP(val, base)	(((val) + (base) - 1) & ~(base - 1))
- #define ROUND_UP(val, base)	_ROUND_UP(val, (typeof(val))(base))
- #define ROUND_UP_PTR(ptr, base)	((typeof(ptr)) \
-diff --git a/util.c b/util.c
-index cc94f96e..97926f19 100644
---- a/util.c
-+++ b/util.c
-@@ -2375,3 +2375,49 @@ out:
- 	close(fd_zero);
- 	return ret;
+ #define EVENT_NAME_MAX 32
++#define AUTOREBUILD_PID_PATH MDMON_DIR "/autorebuild.pid"
+ 
+ struct state {
+ 	char *devname;
+@@ -123,7 +124,7 @@ static int check_udev_activity(void);
+ static void link_containers_with_subarrays(struct state *list);
+ static int make_daemon(char *pidfile);
+ static void try_spare_migration(struct state *statelist);
+-static void write_autorebuild_pid(void);
++static int write_autorebuild_pid(void);
+ 
+ int Monitor(struct mddev_dev *devlist,
+ 	    char *mailaddr, char *alert_cmd,
+@@ -224,7 +225,8 @@ int Monitor(struct mddev_dev *devlist,
+ 	}
+ 
+ 	if (share)
+-		write_autorebuild_pid();
++		if (write_autorebuild_pid() != 0)
++			return 1;
+ 
+ 	if (devlist == NULL) {
+ 		mdlist = conf_get_ident(NULL);
+@@ -428,29 +430,44 @@ static int check_one_sharer(int scan)
+ 	return 0;
  }
-+
+ 
+-static void write_autorebuild_pid()
 +/**
-+ * is_directory() - Checks if directory provided by path is indeed a regular directory.
-+ * @path: directory path to be checked
++ * write_autorebuild_pid() - Writes pid to autorebuild.pid file.
 + *
-+ * Doesn't accept symlinks.
-+ *
-+ * Return: true if is a directory, false if not
++ * Return: 0 on success, 1 on error
 + */
-+bool is_directory(const char *path)
-+{
-+	struct stat st;
++static int write_autorebuild_pid(void)
+ {
+-	char path[PATH_MAX];
+-	int pid;
+-	FILE *fp = NULL;
+-	sprintf(path, "%s/autorebuild.pid", MDMON_DIR);
++	FILE *fp;
++	int fd;
+ 
+ 	if (mkdir(MDMON_DIR, 0700) < 0 && errno != EEXIST) {
+-		pr_err("Can't create autorebuild.pid file\n");
+-	} else {
+-		int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0700);
++		pr_err("%s: %s\n", strerror(errno), MDMON_DIR);
++		return 1;
++	}
+ 
+-		if (fd >= 0)
+-			fp = fdopen(fd, "w");
++	if (!is_directory(MDMON_DIR)) {
++		pr_err("%s is not a regular directory.\n", MDMON_DIR);
++		return 1;
++	}
+ 
+-		if (!fp)
+-			pr_err("Can't create autorebuild.pid file\n");
+-		else {
+-			pid = getpid();
+-			fprintf(fp, "%d\n", pid);
+-			fclose(fp);
+-		}
++	fd = open(AUTOREBUILD_PID_PATH, O_WRONLY | O_CREAT | O_TRUNC, 0700);
 +
-+	if (lstat(path, &st) != 0) {
-+		pr_err("%s: %s\n", strerror(errno), path);
-+		return false;
++	if (fd < 0) {
++		pr_err("Error opening %s file.\n", AUTOREBUILD_PID_PATH);
++		return 1;
+ 	}
++
++	fp = fdopen(fd, "w");
++
++	if (!fp) {
++		pr_err("Error opening fd for %s file.\n", AUTOREBUILD_PID_PATH);
++		return 1;
 +	}
 +
-+	if (!S_ISDIR(st.st_mode))
-+		return false;
++	fprintf(fp, "%d\n", getpid());
 +
-+	return true;
-+}
-+
-+/**
-+ * is_file() - Checks if file provided by path is indeed a regular file.
-+ * @path: file path to be checked
-+ *
-+ * Doesn't accept symlinks.
-+ *
-+ * Return: true if is  a file, false if not
-+ */
-+bool is_file(const char *path)
-+{
-+	struct stat st;
-+
-+	if (lstat(path, &st) != 0) {
-+		pr_err("%s: %s\n", strerror(errno), path);
-+		return false;
-+	}
-+
-+	if (!S_ISREG(st.st_mode))
-+		return false;
-+
-+	return true;
-+}
++	fclose(fp);
++	return 0;
+ }
+ 
+ #define BASE_MESSAGE "%s event detected on md device %s"
 -- 
 2.26.2
 
