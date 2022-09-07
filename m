@@ -2,53 +2,48 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 630C8C6FA86
-	for <linux-raid@archiver.kernel.org>; Tue,  6 Sep 2022 13:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C6FCC38145
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Sep 2022 07:33:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240447AbiIFNUZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 6 Sep 2022 09:20:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60536 "EHLO
+        id S229651AbiIGHdz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 7 Sep 2022 03:33:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240405AbiIFNUL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 6 Sep 2022 09:20:11 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 484F72613E
-        for <linux-raid@vger.kernel.org>; Tue,  6 Sep 2022 06:20:06 -0700 (PDT)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 5A13961EA192A;
-        Tue,  6 Sep 2022 15:20:03 +0200 (CEST)
-Message-ID: <8c81bb5e-dd0d-3454-f0e9-fe0f14d6d4fd@molgen.mpg.de>
-Date:   Tue, 6 Sep 2022 15:20:03 +0200
+        with ESMTP id S229609AbiIGHdq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Sep 2022 03:33:46 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 426B4A4051;
+        Wed,  7 Sep 2022 00:33:29 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id EE9656732D; Wed,  7 Sep 2022 09:33:24 +0200 (CEST)
+Date:   Wed, 7 Sep 2022 09:33:24 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Dusty Mabe <dusty@dustymabe.com>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hch@lst.de, linux-raid@vger.kernel.org
+Subject: Re: regression caused by block: freeze the queue earlier in
+ del_gendisk
+Message-ID: <20220907073324.GB23826@lst.de>
+References: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com> <YxBZ4BBjxvAkvI2A@T590>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [PATCH 1/2] mdadm: systemd services adjustments
-Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     jes@trained-monkey.org, colyli@suse.de, linux-raid@vger.kernel.org,
-        felix.lechner@lease-up.com
-References: <20220906125932.15214-1-mariusz.tkaczyk@linux.intel.com>
- <20220906125932.15214-2-mariusz.tkaczyk@linux.intel.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220906125932.15214-2-mariusz.tkaczyk@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YxBZ4BBjxvAkvI2A@T590>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Mariusz,
+On Thu, Sep 01, 2022 at 03:06:08PM +0800, Ming Lei wrote:
+> It is a bit hard to associate the above commit with reported issue.
 
+So the messages clearly are about something trying to open a device
+that went away at the block layer, but somehow does not get removed
+in time by udev (which seems to be a userspace bug in CoreOS).  But
+even with that we really should not hang.
 
-Thank you for the patches. Maybe use the summary/subject/title below:
-
-mdadm: Add Documentation entries to systemd services
-
-
-Kind regards,
-
-Paul
+Now that fact that it did hang before and this now becomes reproducible
+also makes me assume the change is not the root cause.  It might still
+be a good vehicle to fix the issue for real, but it really broadens
+the scope.
