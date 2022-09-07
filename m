@@ -2,75 +2,88 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7051C38145
-	for <linux-raid@archiver.kernel.org>; Wed,  7 Sep 2022 08:41:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B064C38145
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Sep 2022 13:14:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230046AbiIGIlj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 7 Sep 2022 04:41:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41240 "EHLO
+        id S229503AbiIGNOM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 7 Sep 2022 09:14:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230048AbiIGIli (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Sep 2022 04:41:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1144A4B07
-        for <linux-raid@vger.kernel.org>; Wed,  7 Sep 2022 01:41:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1662539932;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=v7tXqiRu6Q/ASgIKZPVujZFkCxqS9SjkhigXRzRcRk0=;
-        b=H5a6L83BoSP0KkLjmxRFRuN/LY7Sc1oZGCjXDHApedKbaNMoYySJ0CV1QLQlyi+75k1Cmy
-        dR3Q2oH3a6sKd2aPkrwvh2ReD4HzSFWnGOwh1D0Yqu/HBYhuy8wX4XSyqzXvx96UNV5VNf
-        bcQDAQDbjvmsIQk3g3W4j5Z9LBO4vQk=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-460-zdi2S9TtMO-e-EHkgYTvBg-1; Wed, 07 Sep 2022 04:38:48 -0400
-X-MC-Unique: zdi2S9TtMO-e-EHkgYTvBg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 80F398041BE;
-        Wed,  7 Sep 2022 08:38:47 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2050C1415102;
-        Wed,  7 Sep 2022 08:38:42 +0000 (UTC)
-Date:   Wed, 7 Sep 2022 16:38:37 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Dusty Mabe <dusty@dustymabe.com>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org
-Subject: Re: regression caused by block: freeze the queue earlier in
- del_gendisk
-Message-ID: <YxhYjaA3CrMz5njZ@T590>
-References: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com>
- <YxBZ4BBjxvAkvI2A@T590>
- <20220907073324.GB23826@lst.de>
+        with ESMTP id S229464AbiIGNOL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Sep 2022 09:14:11 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D811F7F247
+        for <linux-raid@vger.kernel.org>; Wed,  7 Sep 2022 06:14:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1662556450; x=1694092450;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=p7BeK1ePZgd/RFBsfkQ7LZqeQo2AfA/OpSRM6LbiizQ=;
+  b=nmbDBCNJb4Xpvukn609t6XqcOmnzolJoBvqso2oHH+SoCkuA0bfr2fAF
+   d7L4h8mgjhx6G9ACnjlTuuzS4YcyVXwlNK5EiIfIIUAvRnwif63y9hwwI
+   KduWxXTSUxa0HPmjDiHWUuR5CKCEchX9Uwslrggr4ps6vPkJ/XTIagBAF
+   qPL3N9itQ54UlUtuP8TJLwsMha/ZNUofMo0exsmD46jykLrfyLdG9ZWIT
+   T9FXI+ZiXq+t0Ac27jixNPmzTs8Sgrzvbqszvo9oNcCOKQakR8l6x0adp
+   g1iX4STSPUE/YgLvmfN6fZ72304cwtY5KI+BXSGHm/hAzX9IftvYxQaUK
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10462"; a="276605350"
+X-IronPort-AV: E=Sophos;i="5.93,296,1654585200"; 
+   d="scan'208";a="276605350"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2022 06:14:10 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,296,1654585200"; 
+   d="scan'208";a="644608556"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.105.50])
+  by orsmga008.jf.intel.com with ESMTP; 07 Sep 2022 06:14:09 -0700
+From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org
+Subject: [PATCH 0/9] Mdmonitor refactor and udev event handling improvements
+Date:   Wed,  7 Sep 2022 14:56:48 +0200
+Message-Id: <20220907125657.12192-1-mateusz.grzonka@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220907073324.GB23826@lst.de>
-X-Scanned-By: MIMEDefang 2.85 on 10.11.54.7
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Sep 07, 2022 at 09:33:24AM +0200, Christoph Hellwig wrote:
-> On Thu, Sep 01, 2022 at 03:06:08PM +0800, Ming Lei wrote:
-> > It is a bit hard to associate the above commit with reported issue.
-> 
-> So the messages clearly are about something trying to open a device
-> that went away at the block layer, but somehow does not get removed
-> in time by udev (which seems to be a userspace bug in CoreOS).  But
-> even with that we really should not hang.
+Along the way we observed many problems with current approach to event handling in mdmonitor.
+It frequently doesn't report Fail and DeviceDisappeared events.
+It's due to time races with udev, and too long delay in some cases.
+While there was a patch intending to address time races with udev, it didn't remove them completely.
+This patch series presents alternative approach, where mdmonitor wakes up on udev events, so that
+there should be no more conflicts with udev we saw before.
 
-The new device should be allocated from md_probe() via blk_request_module(),
-and the underlying devices are virtio-blk from the fedora BZ2121791.
+Additionally some code quality improvements were done, to make the code more maintainable.
 
-[1] https://bugzilla.redhat.com/show_bug.cgi?id=2121791
+Mateusz Grzonka (9):
+  Mdmonitor: Split alert() into separate functions
+  Mdmonitor: Make alert_info global
+  Mdmonitor: Pass events to alert() using enums instead of strings
+  Mdmonitor: Add helper functions
+  Add helpers to determine whether directories or files are soft links
+  Mdmonitor: Refactor write_autorebuild_pid()
+  Mdmonitor: Refactor check_one_sharer() for better error handling
+  Mdmonitor: Improve udev event handling
+  udev: Move udev_block() and udev_unblock() into udev.c
 
-Thanks,
-Ming
+ Create.c  |   1 +
+ Makefile  |   3 +-
+ Manage.c  |   3 +-
+ Monitor.c | 707 ++++++++++++++++++++++++++++++++----------------------
+ lib.c     |  42 ----
+ mdadm.h   |   6 +-
+ mdopen.c  |  19 +-
+ udev.c    | 191 +++++++++++++++
+ udev.h    |  38 +++
+ util.c    |  46 ++++
+ 10 files changed, 713 insertions(+), 343 deletions(-)
+ create mode 100644 udev.c
+ create mode 100644 udev.h
+
+-- 
+2.26.2
 
