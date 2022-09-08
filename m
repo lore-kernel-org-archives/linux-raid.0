@@ -2,284 +2,150 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2653BC38145
-	for <linux-raid@archiver.kernel.org>; Thu,  8 Sep 2022 07:56:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EC09C54EE9
+	for <linux-raid@archiver.kernel.org>; Thu,  8 Sep 2022 14:52:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229845AbiIHH4i (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 8 Sep 2022 03:56:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59728 "EHLO
+        id S232736AbiIHOwr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 8 Sep 2022 10:52:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230138AbiIHH4b (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 8 Sep 2022 03:56:31 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04873286C7
-        for <linux-raid@vger.kernel.org>; Thu,  8 Sep 2022 00:56:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662623790; x=1694159790;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Zz+gK4GCWRLTsVDb0EXTHh394X1oevcwUVPFlCor7Zc=;
-  b=ItIKHvXBFUgiPSK7tYa9o4gDCOFissWWrwWGQscQ/FaygroXskVscjU5
-   E8qFd3zjVlpbg8imV3k1kknxkgxiv3pssjvwjQvsDPovcr1oORGqXBEBQ
-   vO8sts0lMjTJhJhRoOYsaWpYNZ7SiffPmD74ZrB+r7nDdhFp2FyYPS2lq
-   BoRv7hOQ3UBgoDs4wU7S0pDcSlUpcB8G2P5VNUrLmbGwt9kMsI/UUwjpK
-   rjli9pOzrsajIAVDflx3zJLreCNormh5lYt5tpZSERKCwaizSDMr6k+2r
-   127TS9nQnIrZdsYRtt+zmY8botoXuZIPMYYM0Y8U6HTeB575HNqNemvff
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10463"; a="280129587"
-X-IronPort-AV: E=Sophos;i="5.93,299,1654585200"; 
-   d="scan'208";a="280129587"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2022 00:56:19 -0700
-X-IronPort-AV: E=Sophos;i="5.93,299,1654585200"; 
-   d="scan'208";a="676576593"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.47.178])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2022 00:56:16 -0700
-Date:   Thu, 8 Sep 2022 09:56:11 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>, Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH mdadm 1/2] mdadm: Add --discard option for Create
-Message-ID: <20220908095611.000072df@linux.intel.com>
-In-Reply-To: <20220907200355.205045-2-logang@deltatee.com>
-References: <20220907200355.205045-1-logang@deltatee.com>
-        <20220907200355.205045-2-logang@deltatee.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S232772AbiIHOwa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 8 Sep 2022 10:52:30 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2BFB1223A2
+        for <linux-raid@vger.kernel.org>; Thu,  8 Sep 2022 07:52:27 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id p18so18120181plr.8
+        for <linux-raid@vger.kernel.org>; Thu, 08 Sep 2022 07:52:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date;
+        bh=NT8pFe8DS6wtnbv2yHYTCWSten605vvSuplkcKIiyyA=;
+        b=ogmnwLdLsU2uWbRkw2x0q/05/vinyH1xE5YApy3sGCddv5tJJuiC/ib+I5g7OLEm+J
+         iTf2hyawHk19XdUbiHKTdgSr9/wio5rbE9WcXorSUq4bTyYyPq7RPkz+mvAecI6ATdmi
+         ag+esPLQD0cllJ9jrATPc43zFmjuwRQ+H6Ey9vxGFGLywO2C7zPmV9uV0svwxP2Q6mMK
+         W2brNbWmLPpK8hgIwkFt8NHPzManKmTjAqAlJaRxiYgpSVF5+dPdvaLWYSiE6jWpUVmu
+         dlzaksPxrYZZP2q6LIn9nXSW2kpLDeg5RCZlA+zQ+CqkW4IDoi7G1HEDtt3r8cL/Cosu
+         K0KQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date;
+        bh=NT8pFe8DS6wtnbv2yHYTCWSten605vvSuplkcKIiyyA=;
+        b=NV9TvS3D1cxM1k2j/PDK84Wr3dREckr6/3saZn7ljA0H7Wv7muXMOfdp7pTfk+/LEr
+         xYFvB4aGp5cZTUjIEi6Xr8VICewK0M3lePnRJ9O7HBFFum9P5BIOI6GYS0ByeAqmDdEK
+         jxPbLY4NTQ5h9p+qpNYcCQtEzniuBAlnwbQ/n0MLeFQgEIFVV+5ZGwCFtR/E+/dobm8t
+         c7AQBBZweUIKuCJIMczhd54E5ZdW2BBxNepHdxxdp8R8qW/RDU3iFNTSkNlZ4+TvgK6n
+         1XHLe4hk23dOFjUK8g42+ea+tRVNPMinWZKKWnhDSiPS06Zzu+7V64Vq49ei4FvNMwh7
+         lpQQ==
+X-Gm-Message-State: ACgBeo3W8XIdLmKOhes7dePOc2tTkWHIKrYDreIe9K/uAAgo8IN6vU/G
+        8gAApsXjwUym2YEmK1VXz97A3jStlhdP7uVj5AlDAOepDmQ=
+X-Google-Smtp-Source: AA6agR6HU70kQb21/XZRzwGE6V7//hHMA+6Z1s1AK8ScJ3QR9KYphVwm0k+z2UEs/jrdrusR5dkAP9QcqGq50sIVHQg=
+X-Received: by 2002:a17:90a:6784:b0:200:36ea:fe58 with SMTP id
+ o4-20020a17090a678400b0020036eafe58mr4533067pjj.16.1662648746471; Thu, 08 Sep
+ 2022 07:52:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From:   Luigi Fabio <luigi.fabio@gmail.com>
+Date:   Thu, 8 Sep 2022 10:51:50 -0400
+Message-ID: <CAJJqR20U=OcMq_8wBMQ5xmWmcBcYoKN5+Fe9sPHYPkZ_yHurQQ@mail.gmail.com>
+Subject: RAID5 failure and consequent ext4 problems
+To:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Logan,
-I like this idea but I have some question.
+[also on linux-ext4]
 
-Thanks,
-Mariusz
+I am encountering an unusual problem after an mdraid failure, I'll
+summarise briefly and can provide further details as required.
 
-On Wed,  7 Sep 2022 14:03:54 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+First of all, the context. This is happening on a Debian 11 system,
+amd64 arch, with current updates (kernel 5.10.136-1, util-linux
+2.36.1).
 
-> Add the --discard option for Create which will send BLKDISCARD requests to
-> all disks before assembling the array. This is a fast way to know the
-> current state of all the disks. If the discard request zeros the data
-> on the disks (as is common but not universal) then the array is in a
-> state with correct parity. Thus the initial sync may be skipped.
+The system has a 12 drive mdraid RAID5 for data, recently migrated to
+LSI 2308 HBAs.
+This is relevant because earlier this week, at around 13,00 local (EST), four
+drives, an entire HBA channel, decided to drop from the RAID.
 
-Are we discarding whole device or only space for array? I can see that we are
-specifying range in ioctl.
-> 
-> After issuing each discard request, check if the first page of the
-> block device is zero. If it is, it is safe to assume the entire
-> disk should be zero. If it's not report an error.
-> 
-> If all the discard requests are successful and there are no missing
-> disks thin it is safe to set assume_clean as we know the array is clean.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->  Create.c | 75 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  ReadMe.c |  1 +
->  mdadm.c  |  4 +++
->  mdadm.h  |  2 ++
->  4 files changed, 82 insertions(+)
-> 
-> diff --git a/Create.c b/Create.c
-> index e06ec2ae96a1..db99da1e8571 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -26,6 +26,12 @@
->  #include	"md_u.h"
->  #include	"md_p.h"
->  #include	<ctype.h>
-> +#include	<sys/ioctl.h>
-> +
-> +#ifndef BLKDISCARD
-> +#define BLKDISCARD _IO(0x12,119)
-> +#endif
-> +#include	<fcntl.h>
->  
->  static int round_size_and_verify(unsigned long long *size, int chunk)
->  {
-> @@ -91,6 +97,63 @@ int default_layout(struct supertype *st, int level, int
-> verbose) return layout;
->  }
->  
-> +static int discard_device(const char *devname, unsigned long long size)
-> +{
-> +	uint64_t range[2] = {0, size};
-Are we starting always from 0? If yest then it introduces bug. In IMSM there is
-a matrix array conception. Two arrays on same drives.
-I suspect that we are able to erase data from first array when we set --discard
-during second volume creation.
+Of course, mdraid didn't like that and stopped the arrays. I reverted
+to best practice and shut down the system first of all.
 
-> +	unsigned long buf[4096 / sizeof(unsigned long)];
-> +	unsigned long i;
-> +	int fd;
-> +
-> +	fd = open(devname, O_RDWR | O_EXCL);
+Further context: the filesystem in the array is ancient - I am vaguely
+proud of that - from 2001.
+It started as ext2, grew to ext3, then to ext4 and finally to ext4 with 64 bits.
+Because I am paranoid, I always mount ext4 with nodelalloc and data=journal.
+The journal is external on a RAID1 of SSDs.
+I recently (within the last ~3 months) enabled metadata_csum, which is
+relevant to the following - the filesystem had never had metadata_csum
+enabled before.
 
-Do we need to to open another RDWR descriptor, I think that mdadm will open
-something again soon. We are opening descriptors many times, it generates
-unnecessary uvents. We can incorporate it with existing logic and add
-discarding just before st->ss->add_to_super() and discard every drive one by
-one.
-We will fail on error anyway.
+Upon reboot, the arrays would not reassemble - this is expected,
+because 4/12 drives were marked faulty. So I re--created the array
+using the same parameters as were used back when the array was built.
+Unfortunately, I had a moment of stupid and didn't specify metadata
+0.90 in the re--create, so it was recreated with metadata 1.2... which
+writes its data block at the beginning of the components, not at the
+end. I noticed it, restopped the array and recreated with the correct
+0.90, but the damage was done: the 256 byte + 12 * 20 header was
+written at the beginning of each of the 12 components.
+Still, unless I am mistaken, this just means that at worst 12x (second
+block of each component) were damaged, which shouldn't be too bad. The
+only further possibility is that mdraid also zeroed out the 'blank
+space' that it puts AFTER the header block and BEFORE the data, but
+according to documentation it shouldn't do that.
+In any case, I subsequently reassembled the array 'correctly' to match
+the previous order and settings and I believe I got it right. I kept
+the array RO and tried fsck -n, which gave me this:
 
-> +	if (fd < 0) {
-> +		pr_err("could not open device for discard: %s\n", devname);
-> +		return 1;
-> +	}
+ext2fs_check_desc: Corrupt group descriptor: bad block for block bitmap
+fsck.ext4: Group descriptors look bad... trying backup blocks...
 
-Please use is_fd_valid() here.
+It then warns that it won't attempt journal recovery because it's in
+RO mode and declares the fs clean - with a reasonable looking number
+of files and blocks.
 
-> +
-> +	if (ioctl(fd, BLKDISCARD, &range)) {
-> +		pr_err("discard failed on '%s': %m\n", devname);
-> +		goto out_err;
-> +	}
-> +
-> +	if (read(fd, buf, sizeof(buf)) != sizeof(buf)) {
-> +		pr_err("failed to readback '%s' after discard: %m\n",
-> devname);
-> +		goto out_err;
-> +	}
-> +
-> +	for (i = 0; i < ARRAY_SIZE(buf); i++) {
-> +		if (buf[i]) {
-> +			pr_err("device did not read back zeros after discard
-> on '%s': %lx\n",
-> +			       devname, buf[i]);
-> +			goto out_err;
-Do we really need to print data here? Could you move it to debug?
+If I try to mount -t ext4 -o ro, I get :
 
-> +		}
-> +	}
-> +
-> +	close(fd);
-there is also close_fd() but I don't see it useful here.
+mount: /mnt: mount(2) system call failed: Structure needs cleaning.
 
-> +	return 0;
-> +
-> +out_err:
-> +	close(fd);
-> +	return 1;
-> +}
-> +
-> +static int discard_devices(struct context *c, struct mddev_dev *devlist,
-> +			   unsigned long long size)
-> +{
-> +	struct mddev_dev *dv;
-> +
-> +	for (dv = devlist; dv; dv = dv->next) {
-> +		if (!strcmp(dv->devname, "missing"))
-> +			continue;
-> +
-> +		if (c->verbose)
-> +			pr_err("discarding all data on: %s\n", dv->devname);
-I know that mdadm is printing messages to stderr mainly but for this one,
-stdout is enough IMO. I give it to you.
+so before anything else, I tried fsck -nf to make sure that the REST
+of the filesystem is in one logical piece.
+THAT painted a very different picture:
+On pass 1, I get approximately 980k (almost 10^6) of
+Inode nnnnn passes checks, but checksum does not match inode
+and ~ 2000
+Inode nnnnn contains garbage
+Plus some 'tree not optimised' which are technically not errors, from
+what I understand.
+After ~11 hours, it switches to 1b, tells me that inode 12 has a long
+list of duplicate blocks
 
-> +		if (discard_device(dv->devname, size))
-> +			return 1;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  int Create(struct supertype *st, char *mddev,
->  	   char *name, int *uuid,
->  	   int subdevs, struct mddev_dev *devlist,
-> @@ -603,6 +666,18 @@ int Create(struct supertype *st, char *mddev,
->  		}
->  	}
->  
-> +	if (s->discard) {
-> +		if (discard_devices(c, devlist, (s->size << 10) +
-> +				    (st->data_offset << 9)))
-> +			return 1;
-> +
-> +		/* All disks are zero so if there are none missing assume
-> +		 * the array is clean
-> +		 */
-> +		if (first_missing >= s->raiddisks)
-> +			s->assume_clean = 1;
+Running additional passes to resolve blocks claimed by more than one inode...
+Pass 1B: Rescanning for multiply-claimed blocks
+Multiply-claimed block(s) in inode 12: 2928004133 [....]
 
-IMO missing drive has nothing to do with clean conception but please correct me
-I'm wrong. All assume_clean does is skipping resync after the creation and that
-is true even if some drives are missing. Array will be still clean but will be
-also degraded.
+And ends after the list of multiply claimed blocks with:
 
-If I'm correct then it simplifies implementation because we can set
-s.assume_clean if s.discard is set too in mdadm.c.
+e2fsck: aborted
+Error while scanning inodes (8193): Inode checksum does not match inode
 
-If I'm wrong what is the point of discard when resync is started anyway with
-missing drive? Maybe those features should be mutually exclusive?
+/dev/md123: ********** WARNING: Filesystem still has errors **********
 
-> +	}
 
-> +
->  	/* If this is raid4/5, we want to configure the last active slot
->  	 * as missing, so that a reconstruct happens (faster than re-parity)
->  	 * FIX: Can we do this for raid6 as well?
-> diff --git a/ReadMe.c b/ReadMe.c
-> index 7f94847e9769..544a057f83a0 100644
-> --- a/ReadMe.c
-> +++ b/ReadMe.c
-> @@ -138,6 +138,7 @@ struct option long_options[] = {
->      {"size",	  1, 0, 'z'},
->      {"auto",	  1, 0, Auto}, /* also for --assemble */
->      {"assume-clean",0,0, AssumeClean },
-> +    {"discard",	  0, 0, Discard },
->      {"metadata",  1, 0, 'e'}, /* superblock format */
->      {"bitmap",	  1, 0, Bitmap},
->      {"bitmap-chunk", 1, 0, BitmapChunk},
-> diff --git a/mdadm.c b/mdadm.c
-> index 972adb524dfb..8dee85a54a6a 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -602,6 +602,10 @@ int main(int argc, char *argv[])
->  			s.assume_clean = 1;
->  			continue;
->  
-> +		case O(CREATE, Discard):
-> +			s.discard = 1;
-please use true.
+/dev/md123: ********** WARNING: Filesystem still has errors **********
 
-> +			continue;
-> +
->  		case O(GROW,'n'):
->  		case O(CREATE,'n'):
->  		case O(BUILD,'n'): /* number of raid disks */
-> diff --git a/mdadm.h b/mdadm.h
-> index 941a5f3823a0..99769be57ac5 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -433,6 +433,7 @@ extern char Version[], Usage[], Help[], OptionHelp[],
->   */
->  enum special_options {
->  	AssumeClean = 300,
-> +	Discard,
->  	BitmapChunk,
->  	WriteBehind,
->  	ReAdd,
-> @@ -593,6 +594,7 @@ struct shape {
->  	int	bitmap_chunk;
->  	char	*bitmap_file;
->  	int	assume_clean;
-> +	int	discard;
+So, what is my next step? I realise I should NOT have touched the
+original drives and dd-ed images to a separate array to work on those,
+but I believe the only writing that occurred were the mdraid
+superblocks. I am, in any case, grabbing more drives to image the
+'faulty' array and work on the images, leaving the original data
+alone.
 
-please use bool type.
+Where do I go from here? I have had similar issues in the past, all
+the way back to the early 00s, and I had a near-100% success rate by
+re--creating the arrays. What is different this time?
+Or, is nothing different and is the problem just in the checksumming?
 
->  	int	write_behind;
->  	unsigned long long size;
->  	unsigned long long data_offset;
+Thanks!
