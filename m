@@ -2,95 +2,65 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98516C54EE9
-	for <linux-raid@archiver.kernel.org>; Thu,  8 Sep 2022 16:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7F8BC38145
+	for <linux-raid@archiver.kernel.org>; Thu,  8 Sep 2022 16:56:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231582AbiIHQQW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 8 Sep 2022 12:16:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39350 "EHLO
+        id S231698AbiIHQ4M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 8 Sep 2022 12:56:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232021AbiIHQPn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 8 Sep 2022 12:15:43 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD78A14D0F;
-        Thu,  8 Sep 2022 09:15:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=yypPU1IxV0SG3MDtollNVAvP34loykQUhcCgU32lefk=; b=jNuOJ57jy3LdCqgpX/HqPM68qz
-        OT/YXMtTucTfBSMypX3X93FURdCt+XB6gcHRnw92V1kGrbcsgU2Z5UDNS1frydXzc0g1g0Q6TMhrf
-        pJXzPuv5lTtRH9NSIg1DwHMJky7eGpqtuyGwDdAxuR3SBW1kpJOABAiGihqpNZKvxGlZZ+fbBINiK
-        LFcDJSObcr42lXEdEvaRLsO7ZOx8rI2PQ8GU6t3arCyHd91zBwnsXCdUzSSVDq7Un+JydCyAJ3oo9
-        8NWa1C8zZCZ0UIqHjFzn2SoVnV2vNdYNTqe5vvK1BEhZrqtxspRWFeQ4GK25Uz+W7AV/QPWNlRkqk
-        Hz2ZtriA==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1oWKBW-001jK0-RD; Thu, 08 Sep 2022 10:15:24 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1oWKBU-00019G-L9; Thu, 08 Sep 2022 10:15:20 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Guoqing Jiang <Guoqing.jiang@linux.dev>
-Date:   Thu,  8 Sep 2022 10:15:15 -0600
-Message-Id: <20220908161516.4361-3-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220908161516.4361-1-logang@deltatee.com>
-References: <20220908161516.4361-1-logang@deltatee.com>
+        with ESMTP id S231590AbiIHQzi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 8 Sep 2022 12:55:38 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70395DF20
+        for <linux-raid@vger.kernel.org>; Thu,  8 Sep 2022 09:54:11 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1662655996; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=b70Ev+G389UBVtQrLwGO5JlcS5WEkVXihMv0ULHujJWDXDFSBycanhvtlg9Dig1qcJQr8qnalfQ4RHLkseZIjffuFIbhjPcjFKXTbys7JKJGGBjJQEwrDoXA1E/2ZX+m8aHXJiScEwE7Wlywb5n/ubHk+ijZ8bQvyQb4KYp5eYU=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1662655996; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=Rm6SguLwSUmvAInaa22PfLrAR8N40ATTZ4XUCDkAXio=; 
+        b=QekUbymhVx9drBktQsaN+RWtzc4QVZSitr/C3qvTzSa63FzNm5ATY7xrUWKOhAbgERexOQQn8hrbFsUlTK51CLNs+w8eoBACUA0nmU1ojOpbYFzGj4CwzqZ59Phnmu8HBe2DncRp3C9Kx4pvSS3H6c0Mglzc0f94auevBVE4l58=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.78] (pool-72-69-213-125.nycmny.fios.verizon.net [72.69.213.125]) by mx.zoho.eu
+        with SMTPS id 1662655991213497.8812826804873; Thu, 8 Sep 2022 18:53:11 +0200 (CEST)
+Message-ID: <a914b695-9b6d-fd45-97d4-ca5b98f1d1f3@trained-monkey.org>
+Date:   Thu, 8 Sep 2022 12:53:09 -0400
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, hch@lst.de, guoqing.jiang@linux.dev, Guoqing.jiang@linux.dev
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 2/3] md: Remove extra mddev_get() in md_seq_start()
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.0
+Subject: Re: [PATCH] Manage: Block unsafe member failing
+Content-Language: en-US
+To:     Mateusz Kusiak <mateusz.kusiak@intel.com>,
+        linux-raid@vger.kernel.org
+Cc:     colyli@suse.de
+References: <20220818094721.8969-1-mateusz.kusiak@intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20220818094721.8969-1-mateusz.kusiak@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-A regression is seen where mddev devices stay permanently after they
-are stopped due to an elevated reference count.
+On 8/18/22 05:47, Mateusz Kusiak wrote:
+> Kernel may or may not block mdadm from removing member device if it
+> will cause arrays failed state. It depends on raid personality
+> implementation in kernel.
+> Add verification on requested removal path (#mdadm --set-faulty
+> command).
+> 
+> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
+> ---
+>  Manage.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 52 insertions(+), 1 deletion(-)
 
-This was tracked down to an extra mddev_get() in md_seq_start().
+Applied!
 
-It only happened rarely because most of the time the md_seq_start()
-is called with a zero offset. The path with an extra mddev_get() only
-happens when it starts with a non-zero offset.
+Thanks,
+Jes
 
-The commit noted below changed an mddev_get() to check its success
-but inadevrtantly left the original call in. Remove the extra call.
-
-Fixes: 12a6caf27324 ("md: only delete entries from all_mddevs when the disk is freed")
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Guoqing Jiang <Guoqing.jiang@linux.dev>
----
- drivers/md/md.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index afaf36b2f6ab..9dc0175280b4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8154,7 +8154,6 @@ static void *md_seq_start(struct seq_file *seq, loff_t *pos)
- 	list_for_each(tmp,&all_mddevs)
- 		if (!l--) {
- 			mddev = list_entry(tmp, struct mddev, all_mddevs);
--			mddev_get(mddev);
- 			if (!mddev_get(mddev))
- 				continue;
- 			spin_unlock(&all_mddevs_lock);
--- 
-2.30.2
 
