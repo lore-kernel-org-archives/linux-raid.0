@@ -2,85 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9E9ECAAA1
-	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 04:10:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C7B2ECAAD3
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 04:53:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbiIIEKE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 9 Sep 2022 00:10:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37138 "EHLO
+        id S230032AbiIIExl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 9 Sep 2022 00:53:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229666AbiIIEKD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 00:10:03 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B81C36B8F4;
-        Thu,  8 Sep 2022 21:09:51 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id q9so447403pgq.6;
-        Thu, 08 Sep 2022 21:09:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=8RLKIEC5coZ0squ6v0xIcah94Pvav6o3jSl3N5xP2Q4=;
-        b=VSZqCEeWfo4HBqEmz+c8qCCNvWeCVhZ7GXP5TuRl6vyQOHWXUjVE0FYAgxiCs6iNJ+
-         EZfA2g//eDSbXg2+bb9lFjYHhqCw2ouajLrpyDicfmKz2TBon+9bjPYSyZ4UQHUNi5YV
-         EQ93XwfhnFiEgXNIudJ82+fgaDPk+nxtoADYLHFIkmxgpbTHKGPV+I/tSs8LQFQJ2RZL
-         eQdiPCXt9yV7ZaQwX9p/5VuyJCxiqThYUOQSlwr/IdjvfVp0FUK9/TInciYvdP0Pd7LJ
-         PdSdlX7WtslK+LE+Qu355XpFINa6nFw5H9dgajv7blX7jvxj6iDt8C6XOOEc4Dz8qXos
-         EH9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=8RLKIEC5coZ0squ6v0xIcah94Pvav6o3jSl3N5xP2Q4=;
-        b=QZ+YDQ2M/f0S/MlXji6frUxglUcwGATjAmrrnN6Eo0gqVwphzHMZZyoPYe3Rsmc2om
-         wT79h+QfjXi/wJjfr/Cc08PcbSxDXREotIACFMr4xx2LbJkSdpiVDgm8BeLjcItYAMnk
-         YyU+M49y+bODRTPc9XzGbez7kaRnE5aYGEN7ykFYzK+zvjZPwlktf+XqNvUVguNQKIZO
-         FSgPbAhhQQvIA2yr71WC0dv0QqKkuQwT17MI6Vx83lmE+HDxfA5eD3eqP76rmtEQNUuR
-         68O1O+UHo/yW2EimP5QsGcphHSrVE7dQpu7OE3LEFfZwdTqYZlBxDLaVYM8VW+3vobI9
-         Pf3A==
-X-Gm-Message-State: ACgBeo30ndopLou1gI3kLZ7txR+a1k+WFVvcncQ/O8Svqhfxa9SqMFOx
-        iiiZbTypGQlvrGm3LTLgEiJMoFu79sc=
-X-Google-Smtp-Source: AA6agR5iWtc9VwAvsdPPspO8pIpYOK6bsqQ8wHZQiqOS/j6juFYPy41EV4zghGLzHSnob2tAuL9zrQ==
-X-Received: by 2002:a05:6a00:1688:b0:53b:4239:7c5c with SMTP id k8-20020a056a00168800b0053b42397c5cmr12412828pfc.81.1662696590917;
-        Thu, 08 Sep 2022 21:09:50 -0700 (PDT)
-Received: from localhost.localdomain (lily-optiplex-3070.dynamic.ucsd.edu. [2607:f720:1300:3033::1:4dd])
-        by smtp.googlemail.com with ESMTPSA id t15-20020a170902b20f00b00176953f7997sm325484plr.158.2022.09.08.21.09.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Sep 2022 21:09:50 -0700 (PDT)
-From:   Li Zhong <floridsleeves@gmail.com>
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc:     song@kernel.org, Li Zhong <floridsleeves@gmail.com>
-Subject: [PATCH v1] drivers/md/md-bitmap: check the return value of md_bitmap_get_counter()
-Date:   Thu,  8 Sep 2022 21:09:36 -0700
-Message-Id: <20220909040936.2610780-1-floridsleeves@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230147AbiIIExj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 00:53:39 -0400
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CC11123EE7;
+        Thu,  8 Sep 2022 21:53:38 -0700 (PDT)
+Received: from [192.168.0.6] (ip5f5aedd0.dynamic.kabel-deutschland.de [95.90.237.208])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 7E82861EA1929;
+        Fri,  9 Sep 2022 06:53:35 +0200 (CEST)
+Message-ID: <4ccf5784-9e7f-6faf-a710-a97273ebd737@molgen.mpg.de>
+Date:   Fri, 9 Sep 2022 06:53:34 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH v2 2/3] md: Remove extra mddev_get() in md_seq_start()
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     Song Liu <song@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20220908161516.4361-1-logang@deltatee.com>
+ <20220908161516.4361-3-logang@deltatee.com>
+Content-Language: en-US
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20220908161516.4361-3-logang@deltatee.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Check the return value of md_bitmap_get_counter() in case it returns
-NULL pointer, which will result in a null pointer dereference.
+Dear Logan,
 
-Signed-off-by: Li Zhong <floridsleeves@gmail.com>
----
- drivers/md/md-bitmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index bf6dffadbe6f..06ab1098ff99 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2195,7 +2195,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 
- 		if (set) {
- 			bmc_new = md_bitmap_get_counter(&bitmap->counts, block, &new_blocks, 1);
--			if (*bmc_new == 0) {
-+			if (bmc_new && *bmc_new == 0) {
- 				/* need to set on-disk bits too. */
- 				sector_t end = block + new_blocks;
- 				sector_t start = block >> chunkshift;
--- 
-2.25.1
+Thank you for the updated series. One nit below, which could be 
+corrected by the maintainer before applying.
 
+Am 08.09.22 um 18:15 schrieb Logan Gunthorpe:
+> A regression is seen where mddev devices stay permanently after they
+> are stopped due to an elevated reference count.
+> 
+> This was tracked down to an extra mddev_get() in md_seq_start().
+> 
+> It only happened rarely because most of the time the md_seq_start()
+> is called with a zero offset. The path with an extra mddev_get() only
+> happens when it starts with a non-zero offset.
+> 
+> The commit noted below changed an mddev_get() to check its success
+> but inadevrtantly left the original call in. Remove the extra call.
+
+inadvertently
+
+> Fixes: 12a6caf27324 ("md: only delete entries from all_mddevs when the disk is freed")
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Guoqing Jiang <Guoqing.jiang@linux.dev>
+> ---
+>   drivers/md/md.c | 1 -
+>   1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index afaf36b2f6ab..9dc0175280b4 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8154,7 +8154,6 @@ static void *md_seq_start(struct seq_file *seq, loff_t *pos)
+>   	list_for_each(tmp,&all_mddevs)
+>   		if (!l--) {
+>   			mddev = list_entry(tmp, struct mddev, all_mddevs);
+> -			mddev_get(mddev);
+>   			if (!mddev_get(mddev))
+>   				continue;
+>   			spin_unlock(&all_mddevs_lock);
+
+
+Kind regards,
+
+Paul
