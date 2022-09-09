@@ -2,98 +2,99 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C61BEECAAA1
-	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 14:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F9E5ECAAA1
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 14:46:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231479AbiIIOlh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 9 Sep 2022 10:41:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39292 "EHLO
+        id S231479AbiIIOqE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 9 Sep 2022 10:46:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230108AbiIIOlf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 10:41:35 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E77FC1A83D;
-        Fri,  9 Sep 2022 07:41:33 -0700 (PDT)
+        with ESMTP id S229514AbiIIOqD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 10:46:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2536410BA5A;
+        Fri,  9 Sep 2022 07:46:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 86240B824F3;
-        Fri,  9 Sep 2022 14:41:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35409C433D7;
-        Fri,  9 Sep 2022 14:41:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8FB4A61D0E;
+        Fri,  9 Sep 2022 14:46:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC221C433B5;
+        Fri,  9 Sep 2022 14:46:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662734491;
-        bh=pDF6CD/WdtmLsC5f7nZVdUYpLF0DXSpD2lwT2UkCrHY=;
+        s=k20201202; t=1662734761;
+        bh=9gSGA2hfH49spBN23ew93MuTF9U1tiaHt2Iw1TUjlMs=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Oye9TXCjm6FroeQGIcG7qdbbL0U64P7kPBp4KY5PBN94fUjKiZSK3VrYbtkDs56+c
-         cUYmbzImBsa68VC1BkH1AT5Wk3O1rjaybNE1caG4P55HBRKY+14zVAnFNvv6Ctu9qJ
-         LIS4ikbUMrDIN1h5+fEQQPM4/agCpcxsKn8QNkMd+Wd66Tp8NKLT+khEUoZ2cxxhdc
-         VDFKbsm2LkcjJIGSFLTvs6L9sAY9DEqhuSB+Iq+DqyqgmC4rAdr8URTqAarsUYA5k+
-         cwJ1bQYVRazwfXV7XoBUtav2PbgkBJ1F/2mXQYzurVQVDtPZRp8cn33cj3xYRfRxnx
-         0mIHvlpVXeypg==
-Received: by mail-oa1-f48.google.com with SMTP id 586e51a60fabf-11eab59db71so4358006fac.11;
-        Fri, 09 Sep 2022 07:41:31 -0700 (PDT)
-X-Gm-Message-State: ACgBeo17jQ2B9CJWAinuND6nFqvuPyrM2HDAAcyWKDC4Fvwjm7CvQYdz
-        GiUTYImR6+vLQf0iAzU2ulma9eApzqxSvGX6iwc=
-X-Google-Smtp-Source: AA6agR6+EQnoPxBIvpImza/d4R+Tj6tPh6AhtM51xa7vMyTem/ovG9YHmMcMxgIsmKqH6tk8zsP+oa3W3g3Lza7BVEM=
+        b=Vk/rPwDsA7RKtVm1RTXqOC3pU9kiClv5WQjLYFoYRmCREJcHg7i8gYuc3N3Z878Hf
+         jmwQBIfn48M3KgzXsEA53Km09PPqEqrN90RpwmM+vpXE2Py34jY8xBzp/shpuEGfIb
+         JGHjHTL3I6mgoHcT9eZmpqOLGXIAOTgYmIbb5htf3PGQYl5jH1D2xuHDGNlTFbZonU
+         7/ogxXcq9hcZYn07pQnQjl272dbFL6bNRRBMdGdvyD+fmZs2qKzz2xdeea7yoa/VS3
+         x1VBQPTfsYpxTrGl817Luhtv04bfgn5KbyBrzZeKyGko69I9gxLqcRZAUqfvHwgX6I
+         1OoboPeaT3R+g==
+Received: by mail-oa1-f41.google.com with SMTP id 586e51a60fabf-1274ec87ad5so4537892fac.0;
+        Fri, 09 Sep 2022 07:46:00 -0700 (PDT)
+X-Gm-Message-State: ACgBeo1+P6fwBIYSy3GxOFFzpr1fEmEJ3jT1Q2N4lCNYgfi50l2QhDwf
+        RdgipyQsLmPK4BmI4PS/9AYbfkl5xktAMnXJnMo=
+X-Google-Smtp-Source: AA6agR75/qUGmnXgLr5EAw1GrE//OTfT/Ba/Jq6HJBB+ogB1sHH3NMMKIpbz3UzTr0y6sC6hO7+TGL/YJULQD78oQoc=
 X-Received: by 2002:a05:6870:32d2:b0:127:f0b4:418f with SMTP id
- r18-20020a05687032d200b00127f0b4418fmr5404709oac.22.1662734490372; Fri, 09
- Sep 2022 07:41:30 -0700 (PDT)
+ r18-20020a05687032d200b00127f0b4418fmr5417377oac.22.1662734760114; Fri, 09
+ Sep 2022 07:46:00 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220908161516.4361-1-logang@deltatee.com>
-In-Reply-To: <20220908161516.4361-1-logang@deltatee.com>
+References: <20220829131502.165356-1-yukuai1@huaweicloud.com>
+ <CAPhsuW6pKMeaULJajDGSjDRVmBUDEd=QQdGftK_Oo0vgsEuKVg@mail.gmail.com> <3e9385af-b02c-e886-bc4b-d85cb4f447af@huaweicloud.com>
+In-Reply-To: <3e9385af-b02c-e886-bc4b-d85cb4f447af@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 9 Sep 2022 07:41:17 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7HrBNr9JZZoia_UyPyUG3yd_Kbb=F+P2F7iLmF0SvGKw@mail.gmail.com>
-Message-ID: <CAPhsuW7HrBNr9JZZoia_UyPyUG3yd_Kbb=F+P2F7iLmF0SvGKw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] A couple more bug fixes
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     open list <linux-kernel@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
+Date:   Fri, 9 Sep 2022 07:45:47 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4aOfOjnUx39k4YHcZrNck-WGax1z4qdb61koE0ZugAEA@mail.gmail.com>
+Message-ID: <CAPhsuW4aOfOjnUx39k4YHcZrNck-WGax1z4qdb61koE0ZugAEA@mail.gmail.com>
+Subject: Re: [PATCH -next 0/3] md/raid10: reduce lock contention for io
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>, yi.zhang@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Sep 8, 2022 at 9:15 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+On Fri, Sep 2, 2022 at 11:08 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
 >
-> Hey,
+> Hi, Song
 >
-> The first two patches are a resend of the two sent earlier with tags
-> collected and a couple minor typos fixed.
+> =E5=9C=A8 2022/09/01 2:00, Song Liu =E5=86=99=E9=81=93:
+> > On Mon, Aug 29, 2022 at 6:03 AM Yu Kuai <yukuai1@huaweicloud.com> wrote=
+:
+> >>
+> >> From: Yu Kuai <yukuai3@huawei.com>
+> >>
+> >> patch 1 is a small problem found by code review.
+> >> patch 2 avoid holding resync_lock in fast path.
+> >> patch 3 avoid holding lock in wake_up() in fast path.
+> >>
+> >> Test environment:
+> >>
+> >> Architecture: aarch64
+> >> Cpu: Huawei KUNPENG 920, there are four numa nodes
+> >>
+> >> Raid10 initialize:
+> >> mdadm --create /dev/md0 --level 10 --bitmap none --raid-devices 4 /dev=
+/nvme0n1 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme3n1
+> >>
+> >> Test cmd:
+> >> fio -name=3D0 -ioengine=3Dlibaio -direct=3D1 -group_reporting=3D1 -ran=
+dseed=3D2022 -rwmixread=3D70 -refill_buffers -filename=3D/dev/md0 -numjobs=
+=3D16 -runtime=3D60s -bs=3D4k -iodepth=3D256 -rw=3Drandread
+> >>
+> >> Test result:
+> >> before this patchset:   2.9 GiB/s
+> >> after this patchset:    6.6 Gib/s
+> >
+> > Nice work! Applied to md-next.
 >
-> The third patch fixes the deadlock issue I brought up in another email.
->
-> These patches are based on the current md/md-next branch (526bd69b9d3).
->
-> Thanks,
->
-> Logan
+> Can you drop this version? There are something to improve. I can send a
+> new version.
 
-Applied to md-next. Thanks!
+Sure, I will drop it from md-next.
 
 Song
-
->
-> --
->
-> David Sloan (1):
->   md/raid5: Remove unnecessary bio_put() in raid5_read_one_chunk()
->
-> Logan Gunthorpe (2):
->   md: Remove extra mddev_get() in md_seq_start()
->   md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
->
->  drivers/md/md.c    | 1 -
->  drivers/md/raid5.c | 5 ++++-
->  2 files changed, 4 insertions(+), 2 deletions(-)
->
->
-> base-commit: 526bd69b9d330eed1db59b2cf6a7d18caf866847
-> --
-> 2.30.2
