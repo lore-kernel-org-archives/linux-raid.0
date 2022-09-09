@@ -2,96 +2,85 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2A5C6FA83
-	for <linux-raid@archiver.kernel.org>; Thu,  8 Sep 2022 23:09:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9E9ECAAA1
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 04:10:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229547AbiIHXJA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 8 Sep 2022 19:09:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37140 "EHLO
+        id S229721AbiIIEKE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 9 Sep 2022 00:10:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbiIHXI4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 8 Sep 2022 19:08:56 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D57C18F95D
-        for <linux-raid@vger.kernel.org>; Thu,  8 Sep 2022 16:08:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=lguvncpYIn1T+Y6gxuDW7BR2TNW1QaHuuhfTnIOq8nc=; b=h+3tHj9ZSOK6gQZt85z8j+52Pr
-        k2Ra/58+/G6bYTgNtz/T1uZvZcETa9L97jPj4EyTBU/fwsXPM4OzSxoM6SCx5OChCKCP4yqYXkJRZ
-        AlMbjeGIoKUk02xeMOSZlfNgWjVqxQuuqQPFuJ3ogHvkjiRBXdX6wpx96WhJKwdFAgItYNi7k7sO5
-        91I/yRdj99F6kwT38ZqwSC4kYQCoFZiTwAS98tRMOsbctj5Gyfl0IbThR35qALjFmtaA44FolYM78
-        w9hu4raE0PlJKo+fzaFy+lXOQ9yM3+AiFLlcR9rvUN89BNmKxkiHcsad3yO4/UVgKkEECAeV0KoWG
-        QqjpFDXQ==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1oWQde-001qIV-Rt; Thu, 08 Sep 2022 17:08:52 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1oWQde-0001Vd-51; Thu, 08 Sep 2022 17:08:50 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, Xiao Ni <xni@redhat.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu,  8 Sep 2022 17:08:47 -0600
-Message-Id: <20220908230847.5749-3-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220908230847.5749-1-logang@deltatee.com>
-References: <20220908230847.5749-1-logang@deltatee.com>
+        with ESMTP id S229666AbiIIEKD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 00:10:03 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B81C36B8F4;
+        Thu,  8 Sep 2022 21:09:51 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id q9so447403pgq.6;
+        Thu, 08 Sep 2022 21:09:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=8RLKIEC5coZ0squ6v0xIcah94Pvav6o3jSl3N5xP2Q4=;
+        b=VSZqCEeWfo4HBqEmz+c8qCCNvWeCVhZ7GXP5TuRl6vyQOHWXUjVE0FYAgxiCs6iNJ+
+         EZfA2g//eDSbXg2+bb9lFjYHhqCw2ouajLrpyDicfmKz2TBon+9bjPYSyZ4UQHUNi5YV
+         EQ93XwfhnFiEgXNIudJ82+fgaDPk+nxtoADYLHFIkmxgpbTHKGPV+I/tSs8LQFQJ2RZL
+         eQdiPCXt9yV7ZaQwX9p/5VuyJCxiqThYUOQSlwr/IdjvfVp0FUK9/TInciYvdP0Pd7LJ
+         PdSdlX7WtslK+LE+Qu355XpFINa6nFw5H9dgajv7blX7jvxj6iDt8C6XOOEc4Dz8qXos
+         EH9w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=8RLKIEC5coZ0squ6v0xIcah94Pvav6o3jSl3N5xP2Q4=;
+        b=QZ+YDQ2M/f0S/MlXji6frUxglUcwGATjAmrrnN6Eo0gqVwphzHMZZyoPYe3Rsmc2om
+         wT79h+QfjXi/wJjfr/Cc08PcbSxDXREotIACFMr4xx2LbJkSdpiVDgm8BeLjcItYAMnk
+         YyU+M49y+bODRTPc9XzGbez7kaRnE5aYGEN7ykFYzK+zvjZPwlktf+XqNvUVguNQKIZO
+         FSgPbAhhQQvIA2yr71WC0dv0QqKkuQwT17MI6Vx83lmE+HDxfA5eD3eqP76rmtEQNUuR
+         68O1O+UHo/yW2EimP5QsGcphHSrVE7dQpu7OE3LEFfZwdTqYZlBxDLaVYM8VW+3vobI9
+         Pf3A==
+X-Gm-Message-State: ACgBeo30ndopLou1gI3kLZ7txR+a1k+WFVvcncQ/O8Svqhfxa9SqMFOx
+        iiiZbTypGQlvrGm3LTLgEiJMoFu79sc=
+X-Google-Smtp-Source: AA6agR5iWtc9VwAvsdPPspO8pIpYOK6bsqQ8wHZQiqOS/j6juFYPy41EV4zghGLzHSnob2tAuL9zrQ==
+X-Received: by 2002:a05:6a00:1688:b0:53b:4239:7c5c with SMTP id k8-20020a056a00168800b0053b42397c5cmr12412828pfc.81.1662696590917;
+        Thu, 08 Sep 2022 21:09:50 -0700 (PDT)
+Received: from localhost.localdomain (lily-optiplex-3070.dynamic.ucsd.edu. [2607:f720:1300:3033::1:4dd])
+        by smtp.googlemail.com with ESMTPSA id t15-20020a170902b20f00b00176953f7997sm325484plr.158.2022.09.08.21.09.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Sep 2022 21:09:50 -0700 (PDT)
+From:   Li Zhong <floridsleeves@gmail.com>
+To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc:     song@kernel.org, Li Zhong <floridsleeves@gmail.com>
+Subject: [PATCH v1] drivers/md/md-bitmap: check the return value of md_bitmap_get_counter()
+Date:   Thu,  8 Sep 2022 21:09:36 -0700
+Message-Id: <20220909040936.2610780-1-floridsleeves@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-raid@vger.kernel.org, jes@trained-monkey.org, guoqing.jiang@linux.dev, xni@redhat.com, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH mdadm v2 2/2] manpage: Add --discard option to manpage
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Document the new --discard option in the manpage.
+Check the return value of md_bitmap_get_counter() in case it returns
+NULL pointer, which will result in a null pointer dereference.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Li Zhong <floridsleeves@gmail.com>
 ---
- mdadm.8.in | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/md/md-bitmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index f273622641da..93a0a32dd314 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -836,6 +836,21 @@ array is resynced at creation.  From Linux version 3.0,
- .B \-\-assume\-clean
- can be used with that command to avoid the automatic resync.
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index bf6dffadbe6f..06ab1098ff99 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2195,7 +2195,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
  
-+.TP
-+.BR \-\-discard
-+When creating an array, send block discard (aka trim or deallocate)
-+requests to all the block devices. In most cases this should zero all
-+the disks. If any discard fails, or if zeros are not read back from the
-+disk, then the operation will be aborted.
-+.IP
-+If all discards succeed, and there are no missing disks specified,
-+then the array should not need to be synchronized after it is created
-+(as all disks are zero). The operation will thus proceed as if
-+.B \-\-assume\-clean
-+was specified.
-+.IP
-+This is only meaningful with --create.
-+
- .TP
- .BR \-\-backup\-file=
- This is needed when
+ 		if (set) {
+ 			bmc_new = md_bitmap_get_counter(&bitmap->counts, block, &new_blocks, 1);
+-			if (*bmc_new == 0) {
++			if (bmc_new && *bmc_new == 0) {
+ 				/* need to set on-disk bits too. */
+ 				sector_t end = block + new_blocks;
+ 				sector_t start = block >> chunkshift;
 -- 
-2.30.2
+2.25.1
 
