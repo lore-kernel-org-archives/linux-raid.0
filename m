@@ -2,77 +2,98 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC2CECAAA1
-	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 13:51:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C61BEECAAA1
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 14:41:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231846AbiIINvv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 9 Sep 2022 09:51:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34644 "EHLO
+        id S231479AbiIIOlh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 9 Sep 2022 10:41:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231863AbiIINva (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 09:51:30 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68438A221B
-        for <linux-raid@vger.kernel.org>; Fri,  9 Sep 2022 06:51:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662731475; x=1694267475;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=I5I4wNq39rWKPSbxGewfd7As4Vy9kzMHehR4CLK3QvY=;
-  b=bPhIbSwL13hqCaJBW2gitHtkONREVO5OmH4Grga2IEXCVTWZbrh7bWDQ
-   i4Qty9DQb3U1ZQcm4hbJy59PGS53cv6E6LNm4ziiCCJ/crXDE2bKeYCNk
-   GSgxxwZ9XUeEfvuqB7U4TE25hyPwH0ZaCtq5tYgeS1zMilG6eCKttuqJe
-   WsFllCyJEu/IAB0mrlsYt3mcTS3ykyi6NADLXqHUdrnPB1SdrbsNwH31m
-   IZxmb/D3B5aHns9/A7rOpmFRKxE646OJRNHocL7KDm5UpJd3s2VvNu5Th
-   GVbusD4geAZtfw2Ta3EimpBRqv6mLMyVbS1XZasWkX3J9PRZdnF3hLfDv
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10464"; a="298815266"
-X-IronPort-AV: E=Sophos;i="5.93,303,1654585200"; 
-   d="scan'208";a="298815266"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2022 06:50:52 -0700
-X-IronPort-AV: E=Sophos;i="5.93,303,1654585200"; 
-   d="scan'208";a="592612693"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.105.40])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2022 06:50:51 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org, colyli@suse.de
-Cc:     felix.lechner@lease-up.com, linux-raid@vger.kernel.org
-Subject: [PATCH v2 2/2] ReadMe: fix command-line help
-Date:   Fri,  9 Sep 2022 15:50:34 +0200
-Message-Id: <20220909135034.14397-3-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20220909135034.14397-1-mariusz.tkaczyk@linux.intel.com>
-References: <20220909135034.14397-1-mariusz.tkaczyk@linux.intel.com>
+        with ESMTP id S230108AbiIIOlf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 10:41:35 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E77FC1A83D;
+        Fri,  9 Sep 2022 07:41:33 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 86240B824F3;
+        Fri,  9 Sep 2022 14:41:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35409C433D7;
+        Fri,  9 Sep 2022 14:41:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1662734491;
+        bh=pDF6CD/WdtmLsC5f7nZVdUYpLF0DXSpD2lwT2UkCrHY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Oye9TXCjm6FroeQGIcG7qdbbL0U64P7kPBp4KY5PBN94fUjKiZSK3VrYbtkDs56+c
+         cUYmbzImBsa68VC1BkH1AT5Wk3O1rjaybNE1caG4P55HBRKY+14zVAnFNvv6Ctu9qJ
+         LIS4ikbUMrDIN1h5+fEQQPM4/agCpcxsKn8QNkMd+Wd66Tp8NKLT+khEUoZ2cxxhdc
+         VDFKbsm2LkcjJIGSFLTvs6L9sAY9DEqhuSB+Iq+DqyqgmC4rAdr8URTqAarsUYA5k+
+         cwJ1bQYVRazwfXV7XoBUtav2PbgkBJ1F/2mXQYzurVQVDtPZRp8cn33cj3xYRfRxnx
+         0mIHvlpVXeypg==
+Received: by mail-oa1-f48.google.com with SMTP id 586e51a60fabf-11eab59db71so4358006fac.11;
+        Fri, 09 Sep 2022 07:41:31 -0700 (PDT)
+X-Gm-Message-State: ACgBeo17jQ2B9CJWAinuND6nFqvuPyrM2HDAAcyWKDC4Fvwjm7CvQYdz
+        GiUTYImR6+vLQf0iAzU2ulma9eApzqxSvGX6iwc=
+X-Google-Smtp-Source: AA6agR6+EQnoPxBIvpImza/d4R+Tj6tPh6AhtM51xa7vMyTem/ovG9YHmMcMxgIsmKqH6tk8zsP+oa3W3g3Lza7BVEM=
+X-Received: by 2002:a05:6870:32d2:b0:127:f0b4:418f with SMTP id
+ r18-20020a05687032d200b00127f0b4418fmr5404709oac.22.1662734490372; Fri, 09
+ Sep 2022 07:41:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220908161516.4361-1-logang@deltatee.com>
+In-Reply-To: <20220908161516.4361-1-logang@deltatee.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 9 Sep 2022 07:41:17 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7HrBNr9JZZoia_UyPyUG3yd_Kbb=F+P2F7iLmF0SvGKw@mail.gmail.com>
+Message-ID: <CAPhsuW7HrBNr9JZZoia_UyPyUG3yd_Kbb=F+P2F7iLmF0SvGKw@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] A couple more bug fixes
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Make command-line help consistent with manual page.
-Copied from Debian.
+On Thu, Sep 8, 2022 at 9:15 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> Hey,
+>
+> The first two patches are a resend of the two sent earlier with tags
+> collected and a couple minor typos fixed.
+>
+> The third patch fixes the deadlock issue I brought up in another email.
+>
+> These patches are based on the current md/md-next branch (526bd69b9d3).
+>
+> Thanks,
+>
+> Logan
 
-Cc: Felix Lechner <felix.lechner@lease-up.com>
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
----
- ReadMe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied to md-next. Thanks!
 
-diff --git a/ReadMe.c b/ReadMe.c
-index 7f94847..50a5e36 100644
---- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -477,7 +477,7 @@ char Help_assemble[] =
- ;
- 
- char Help_manage[] =
--"Usage: mdadm arraydevice options component devices...\n"
-+"Usage: mdadm [mode] arraydevice [options] <component devices...>\n"
- "\n"
- "This usage is for managing the component devices within an array.\n"
- "The --manage option is not needed and is assumed if the first argument\n"
--- 
-2.26.2
+Song
 
+>
+> --
+>
+> David Sloan (1):
+>   md/raid5: Remove unnecessary bio_put() in raid5_read_one_chunk()
+>
+> Logan Gunthorpe (2):
+>   md: Remove extra mddev_get() in md_seq_start()
+>   md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
+>
+>  drivers/md/md.c    | 1 -
+>  drivers/md/raid5.c | 5 ++++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+>
+>
+> base-commit: 526bd69b9d330eed1db59b2cf6a7d18caf866847
+> --
+> 2.30.2
