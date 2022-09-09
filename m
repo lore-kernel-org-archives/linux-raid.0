@@ -2,167 +2,273 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6609ECAAA1
-	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 08:25:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84EE9ECAAD3
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Sep 2022 09:58:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230355AbiIIIZA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 9 Sep 2022 04:25:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48714 "EHLO
+        id S229814AbiIIJ6M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 9 Sep 2022 05:58:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230221AbiIIIY6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 04:24:58 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCBAD2873E
-        for <linux-raid@vger.kernel.org>; Fri,  9 Sep 2022 01:24:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1662711896;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=zLgBFhbjWgsxc9dWG54TSxsLPfsBKw+Wx4DaHZWpGNc=;
-        b=YnvYXyd/rT2QNVZn68ZrLAZ14vvcE1bnMYjIp9WKQ0q0d65R30WIQL4cvt7NT/cO6An+VY
-        ro4z9CRnryIrPnx2Lq989IewvTBLys4bbxwgKnpKeUyqo1kMYn0csv9BpFlJJ1Kx5KnD2b
-        Ga78ckTAc76FHBdkXeUYKxorWjRUqlo=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-240-xfWXhLT0N96_XNj2orK8-g-1; Fri, 09 Sep 2022 04:24:54 -0400
-X-MC-Unique: xfWXhLT0N96_XNj2orK8-g-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D6EAE185A7B2;
-        Fri,  9 Sep 2022 08:24:53 +0000 (UTC)
-Received: from T590 (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 444422026D4C;
-        Fri,  9 Sep 2022 08:24:47 +0000 (UTC)
-Date:   Fri, 9 Sep 2022 16:24:40 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Dusty Mabe <dusty@dustymabe.com>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, ming.lei@redhat.com
-Subject: Re: regression caused by block: freeze the queue earlier in
- del_gendisk
-Message-ID: <Yxr4SD4d0rZ9TZik@T590>
-References: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com>
- <YxBZ4BBjxvAkvI2A@T590>
- <20220907073324.GB23826@lst.de>
+        with ESMTP id S229813AbiIIJ56 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 05:57:58 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6555112B34B
+        for <linux-raid@vger.kernel.org>; Fri,  9 Sep 2022 02:57:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1662717477; x=1694253477;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=0SNWqumiTMiEYUjTia7h0Y6IXL3HBCgZV/7N45/yKM8=;
+  b=e3F/hQxHudnM+tIBDo72H+nNcx1ANM+tT2y/VeYKF87/I8uJxD1RZ/XT
+   rSmXspvnD8OsLcWPh6Vr8EnckagkXFGIx4RL0LqQXv7bENnYq0K0R14v7
+   8BRlQW26PUDYT17OgC6kxHPuIbf9rouB/7Azn9+q5jLPZBdEHX41WGaaj
+   jGeUFiS32ciR0FJ1V1AEMWm2mQr1AlcewUHx/p3gyYv4H2Zze5Pydm3tE
+   Lbp2K9FayG3uZRjuWlSbZRj/pE/5+5EZzphNTMesRzo9uIJcFr7eEkR03
+   zK0oQM52narX+V3d8UL2kQNwORuJaWY3zvNF+UXr3PVz1C7rJhsokl5LW
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10464"; a="298780465"
+X-IronPort-AV: E=Sophos;i="5.93,302,1654585200"; 
+   d="scan'208";a="298780465"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2022 02:57:56 -0700
+X-IronPort-AV: E=Sophos;i="5.93,302,1654585200"; 
+   d="scan'208";a="677098346"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.45.91])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2022 02:57:53 -0700
+Date:   Fri, 9 Sep 2022 11:57:49 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>, Coly Li <colyli@suse.de>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Jonmichael Hands <jm@chia.net>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Subject: Re: [PATCH mdadm v2 1/2] mdadm: Add --discard option for Create
+Message-ID: <20220909115749.00007431@linux.intel.com>
+In-Reply-To: <20220908230847.5749-2-logang@deltatee.com>
+References: <20220908230847.5749-1-logang@deltatee.com>
+        <20220908230847.5749-2-logang@deltatee.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220907073324.GB23826@lst.de>
-X-Scanned-By: MIMEDefang 2.78 on 10.11.54.4
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Sep 07, 2022 at 09:33:24AM +0200, Christoph Hellwig wrote:
-> On Thu, Sep 01, 2022 at 03:06:08PM +0800, Ming Lei wrote:
-> > It is a bit hard to associate the above commit with reported issue.
-> 
-> So the messages clearly are about something trying to open a device
-> that went away at the block layer, but somehow does not get removed
-> in time by udev (which seems to be a userspace bug in CoreOS).  But
-> even with that we really should not hang.
-
-Xiao Ni provides one script[1] which can reproduce the issue more or less.
-
-- create raid
-#./imsm.sh imsm /dev/md/test 1 /dev/sda /dev/sdb
-#ls /dev/md/
-[root@ktest-36 md]# ls -l /dev/md/
-total 0
-lrwxrwxrwx. 1 root root 8 Sep  9 08:10 imsm -> ../md127
-lrwxrwxrwx. 1 root root 8 Sep  9 08:10 test -> ../md126
-
-- destroy the two raid devices
-# mdadm --stop /dev/md/test /dev/md/imsm
-mdadm: stopped /dev/md/test
-mdadm: stopped /dev/md/imsm
-
-# lsblk
-...
-md126     9:126  0    0B  0 md
-md127     9:127  0    0B  0 md
-
-md126 is actually added after it is deleted, and with the log of "block
-device autoloading is deprecated and will be removed.", and bcc stack trace
-shows that the device is added by mdadm.
-
-08:20:03 456     456     kworker/6:2     del_gendisk      disk b'md126'
-        b'del_gendisk+0x1 [kernel]'
-        b'md_kobj_release+0x34 [kernel]'
-        b'kobject_put+0x87 [kernel]'
-        b'process_one_work+0x1c4 [kernel]'
-        b'worker_thread+0x4d [kernel]'
-        b'kthread+0xe6 [kernel]'
-        b'ret_from_fork+0x1f [kernel]'
-
-08:20:03 2476    2476    mdadm           device_add_disk  disk b'md126'
-        b'device_add_disk+0x1 [kernel]'
-        b'md_alloc+0x3ba [kernel]'
-        b'md_probe+0x25 [kernel]'
-        b'blk_request_module+0x5f [kernel]'
-        b'blkdev_get_no_open+0x5c [kernel]'
-        b'blkdev_get_by_dev.part.0+0x1e [kernel]'
-        b'blkdev_open+0x52 [kernel]'
-        b'do_dentry_open+0x1ce [kernel]'
-        b'path_openat+0xc43 [kernel]'
-        b'do_filp_open+0xa1 [kernel]'
-        b'do_sys_openat2+0x7c [kernel]'
-        b'__x64_sys_openat+0x5c [kernel]'
-        b'do_syscall_64+0x37 [kernel]'
-        b'entry_SYSCALL_64_after_hwframe+0x63 [kernel]'
-
-
-Also the md device is delayed to remove by scheduling wq, and it is
-actually deleted in mddev's release handler:
-
-mddev_delayed_delete():
-	kobject_put(&mddev->kobj)
-
-...
-
-md_kobj_release():
-	del_gendisk(mddev->gendisk);
-
-> 
-> Now that fact that it did hang before and this now becomes reproducible
-> also makes me assume the change is not the root cause.  It might still
-> be a good vehicle to fix the issue for real, but it really broadens
-> the scope.
-> 
-
-[1] create one imsm raid1 
-
-./imsm.sh imsm /dev/md/test 1 /dev/sda /dev/sdb
-
-#!/bin/bash
-export IMSM_NO_PLATFORM=1
-export IMSM_DEVNAME_AS_SERIAL=1
-
-echo ""
-echo "==========================================================="
-echo "./test.sh container raid devlist level devnum"
-echo "example: ./test.sh imsm /dev/md/test 1 /dev/loop0 /dev/loop1"
-echo "==========================================================="
-echo ""
-
-container=$1
-raid=$2
-level=$3
-
-shift 3
-dev_num=$#
-dev_list=$@
-
-mdadm -CR $container -e imsm -n $dev_num $dev_list
-mdadm -CR $raid -l $level -n $dev_num $dev_list
-
-[2] destroy created raid devices
-mdadm --stop /dev/md/test /dev/md/imsm
+Hi Logan,
+See comments below.
 
 Thanks,
-Ming
+Mariusz
+
+On Thu,  8 Sep 2022 17:08:46 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
+
+> Add the --discard option for Create which will send BLKDISCARD requests to
+> all disks before assembling the array. This is a fast way to know the
+> current state of all the disks. If the discard request zeros the data
+> on the disks (as is common but not universal) then the array is in a
+> state with correct parity. Thus the initial sync may be skipped.
+> 
+> After issuing each discard request, check if the first page of the
+> block device is zero. If it is, it is safe to assume the entire
+> disk should be zero. If it's not report an error.
+> 
+> If all the discard requests are successful and there are no missing
+> disks thin it is safe to set assume_clean as we know the array is clean.
+
+Please update message. We agreed in v1 that missing disks and discard features
+are not related, right?
+
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
+>  Create.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++----
+>  ReadMe.c |  1 +
+>  mdadm.c  |  4 ++++
+>  mdadm.h  |  2 ++
+>  4 files changed, 58 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Create.c b/Create.c
+> index e06ec2ae96a1..52bb88bccd53 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -26,6 +26,12 @@
+>  #include	"md_u.h"
+>  #include	"md_p.h"
+>  #include	<ctype.h>
+> +#include	<sys/ioctl.h>
+> +
+> +#ifndef BLKDISCARD
+> +#define BLKDISCARD _IO(0x12,119)
+> +#endif
+> +#include	<fcntl.h>
+>  
+>  static int round_size_and_verify(unsigned long long *size, int chunk)
+>  {
+> @@ -91,6 +97,38 @@ int default_layout(struct supertype *st, int level, int
+> verbose) return layout;
+>  }
+>  
+> +static int discard_device(struct context *c, int fd, const char *devname,
+> +			  unsigned long long offset, unsigned long long size)
+
+Will be great if you can description.
+
+> +{
+> +	uint64_t range[2] = {offset, size};
+Probably you don't need to specify [2] but it is not an issue I think.
+
+> +	unsigned long buf[4096 / sizeof(unsigned long)];
+
+Can you use any define for 4096? 
+
+> +	unsigned long i;
+> +
+> +	if (c->verbose)
+> +		printf("discarding data from %lld to %lld on: %s\n",
+> +		       offset, size, devname);
+> +
+> +	if (ioctl(fd, BLKDISCARD, &range)) {
+> +		pr_err("discard failed on '%s': %m\n", devname);
+> +		return 1;
+> +	}
+> +
+> +	if (pread(fd, buf, sizeof(buf), offset) != sizeof(buf)) {
+> +		pr_err("failed to readback '%s' after discard: %m\n",
+> devname);
+> +		return 1;
+> +	}
+> +
+> +	for (i = 0; i < ARRAY_SIZE(buf); i++) {
+> +		if (buf[i]) {
+> +			pr_err("device did not read back zeros after discard
+> on '%s': %lx\n",
+> +			       devname, buf[i]);
+In previous version I wanted to leave the message on stderr, but just move a
+data (buf[i]) to debug, or if (verbose > 0).
+I think that printing binary data in error message is not necessary.
+
+BTW. I'm not sure if discard ensures that data will be all zero. It causes that
+drive drops all references but I doesn't mean that data is zeroed. Could you
+please check it in documentation? Should we expect zeroes?
+
+> +			return 1;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  int Create(struct supertype *st, char *mddev,
+>  	   char *name, int *uuid,
+>  	   int subdevs, struct mddev_dev *devlist,
+> @@ -607,7 +645,7 @@ int Create(struct supertype *st, char *mddev,
+>  	 * as missing, so that a reconstruct happens (faster than re-parity)
+>  	 * FIX: Can we do this for raid6 as well?
+>  	 */
+> -	if (st->ss->external == 0 && s->assume_clean == 0 &&
+> +	if (st->ss->external == 0 && s->assume_clean == 0 && s->discard == 0
+> && c->force == 0 && first_missing >= s->raiddisks) {
+>  		switch (s->level) {
+>  		case 4:
+> @@ -624,8 +662,8 @@ int Create(struct supertype *st, char *mddev,
+>  	/* For raid6, if creating with 1 missing drive, make a good drive
+>  	 * into a spare, else the create will fail
+>  	 */
+> -	if (s->assume_clean == 0 && c->force == 0 && first_missing <
+> s->raiddisks &&
+> -	    st->ss->external == 0 &&
+> +	if (s->assume_clean == 0 && s->discard == 0 && c->force == 0 &&
+> +	    first_missing < s->raiddisks && st->ss->external == 0 &&
+>  	    second_missing >= s->raiddisks && s->level == 6) {
+>  		insert_point = s->raiddisks - 1;
+>  		if (insert_point == first_missing)
+> @@ -686,7 +724,7 @@ int Create(struct supertype *st, char *mddev,
+>  	     (insert_point < s->raiddisks || first_missing < s->raiddisks))
+> || (s->level == 6 && (insert_point < s->raiddisks ||
+>  			       second_missing < s->raiddisks)) ||
+> -	    (s->level <= 0) || s->assume_clean) {
+> +	    (s->level <= 0) || s->assume_clean || s->discard) {
+>  		info.array.state = 1; /* clean, but one+ drive will be
+> missing*/ info.resync_start = MaxSector;
+>  	} else {
+> @@ -945,6 +983,15 @@ int Create(struct supertype *st, char *mddev,
+>  				}
+>  				if (fd >= 0)
+>  					remove_partitions(fd);
+> +
+> +				if (s->discard &&
+> +				    discard_device(c, fd, dv->devname,
+> +						   dv->data_offset << 9,
+> +						   s->size << 10)) {
+> +					ioctl(mdfd, STOP_ARRAY, NULL);
+> +					goto abort_locked;
+> +				}
+> +
+Feel free to use up to 100 char in one line it is allowed now.
+Why we need dv->data_offset << 9 and  s->size << 10 here?
+How this applies to zoned raid0?
+
+>  				if (st->ss->add_to_super(st, &inf->disk,
+>  							 fd, dv->devname,
+>  							 dv->data_offset)) {
+> diff --git a/ReadMe.c b/ReadMe.c
+> index 7f94847e9769..544a057f83a0 100644
+> --- a/ReadMe.c
+> +++ b/ReadMe.c
+> @@ -138,6 +138,7 @@ struct option long_options[] = {
+>      {"size",	  1, 0, 'z'},
+>      {"auto",	  1, 0, Auto}, /* also for --assemble */
+>      {"assume-clean",0,0, AssumeClean },
+> +    {"discard",	  0, 0, Discard },
+>      {"metadata",  1, 0, 'e'}, /* superblock format */
+>      {"bitmap",	  1, 0, Bitmap},
+>      {"bitmap-chunk", 1, 0, BitmapChunk},
+> diff --git a/mdadm.c b/mdadm.c
+> index 972adb524dfb..049cdce1cdd2 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -602,6 +602,10 @@ int main(int argc, char *argv[])
+>  			s.assume_clean = 1;
+>  			continue;
+>  
+> +		case O(CREATE, Discard):
+> +			s.discard = true;
+> +			continue;
+> +
+
+I would like to set s.assume_clean=true along with discard. Then will be no need
+to modify other conditions. If we are assuming that after discard all is zeros
+then we can skip resync, right? According to message, it should be.
+Please add message for user and set assume_clean too.
+
+>  		case O(GROW,'n'):
+>  		case O(CREATE,'n'):
+>  		case O(BUILD,'n'): /* number of raid disks */
+> diff --git a/mdadm.h b/mdadm.h
+> index 941a5f3823a0..a1e0bc9f01ad 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -433,6 +433,7 @@ extern char Version[], Usage[], Help[], OptionHelp[],
+>   */
+>  enum special_options {
+>  	AssumeClean = 300,
+> +	Discard,
+>  	BitmapChunk,
+>  	WriteBehind,
+>  	ReAdd,
+> @@ -593,6 +594,7 @@ struct shape {
+>  	int	bitmap_chunk;
+>  	char	*bitmap_file;
+>  	int	assume_clean;
+> +	bool	discard;
+>  	int	write_behind;
+>  	unsigned long long size;
+>  	unsigned long long data_offset;
 
