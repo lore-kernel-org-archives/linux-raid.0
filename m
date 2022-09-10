@@ -2,180 +2,177 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E21CECAAA1
-	for <linux-raid@archiver.kernel.org>; Sat, 10 Sep 2022 03:19:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 906AFECAAD3
+	for <linux-raid@archiver.kernel.org>; Sat, 10 Sep 2022 15:19:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229727AbiIJDTq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 9 Sep 2022 23:19:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50008 "EHLO
+        id S229488AbiIJPTA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 10 Sep 2022 11:19:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229585AbiIJDTn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Sep 2022 23:19:43 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35AC0958F
-        for <linux-raid@vger.kernel.org>; Fri,  9 Sep 2022 20:19:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662779980; x=1694315980;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=zVnEmgINbnWzk8XFuD2M+8reF98XOtZQPWlghDYmH54=;
-  b=ByoYt1F/pxtOCZ4NT5ASitiy4jXH47EQpr65i7fTxTzFQTb5g+9kYkQb
-   89Gz91cG0uO9ITVSD4nTt/UL+8wNnyx+oTzJ+FJpOaibOojCwZeiEQjl4
-   nZqpidJTeEQptqjveUUeSz8SwzUQW2QJm16fVzAYKescahjrKU4/6HZzM
-   Kaju356VzZWCUEbwdNbv7GfF6xKuMcGWU3CAYLEdkFQ5X1PicK8Ao/oHb
-   Ugz7Y5wSdFXCuAtpdBUUSzSxe0GVou2RecR9mZLJWVrHFgkUYCQeXqLgN
-   nisaGA020uf0fDnmJqMHV2V1Od4GCx7Z7I24YH/68ETOE8jH6LQbdFx2O
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10465"; a="361563067"
-X-IronPort-AV: E=Sophos;i="5.93,304,1654585200"; 
-   d="scan'208";a="361563067"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2022 20:19:32 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,304,1654585200"; 
-   d="scan'208";a="645775455"
-Received: from lkp-server02.sh.intel.com (HELO b2938d2e5c5a) ([10.239.97.151])
-  by orsmga008.jf.intel.com with ESMTP; 09 Sep 2022 20:19:31 -0700
-Received: from kbuild by b2938d2e5c5a with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oWr1m-00023x-2L;
-        Sat, 10 Sep 2022 03:19:30 +0000
-Date:   Sat, 10 Sep 2022 11:19:12 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 57f13b2f370be189aaa67299e400930632574ae4
-Message-ID: <631c0230.HXcxKJFlMgKlm4/M%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229446AbiIJPS5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 10 Sep 2022 11:18:57 -0400
+Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 661D24DB26
+        for <linux-raid@vger.kernel.org>; Sat, 10 Sep 2022 08:18:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc
+        :To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=HDaMK0rXTINar7T1sbj4DVGzQrmQuA+VoVYS2WBgOOs=; b=VmTZDAsNETX2pzwN934HZBxclz
+        nU3zM+KGIOxvMHPOWZjZgR4mO3OgC/yXJ1eDOwEbLcvUcvHzxkpwMzkr29hbzc/OWmT1i5Jugh4UU
+        +m3Uoeqx0/6WAQfb5+bU3+/ftUmuvnbIF8pbQ2xdiIPKQj/Xziu92LF4LpDwja1a8WcHk/5LD2FxT
+        xkrEgjsNu5tfCRQTyMDt3+du3Q3n4X5qXuuf6RTE7BNw9yiQZYz492RyJpv1ZOVwycBS2ZfeLVXCU
+        sHLMQ3N1gzI0lVUqNXdpRwQ5rEWzzYBIgtxZiOonweXvT0H46GEIt/WXDujAOxD7NFqJzP4rogZ+L
+        JLhDtMUA==;
+Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1oX2Fy-0003n3-60; Sat, 10 Sep 2022 15:18:54 +0000
+Message-ID: <593e868a-d0a4-3ad5-d983-e585607ec212@turmel.org>
+Date:   Sat, 10 Sep 2022 11:18:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: RAID5 failure and consequent ext4 problems
+Content-Language: en-US
+To:     Luigi Fabio <luigi.fabio@gmail.com>
+Cc:     linux-raid@vger.kernel.org
+References: <CAJJqR20U=OcMq_8wBMQ5xmWmcBcYoKN5+Fe9sPHYPkZ_yHurQQ@mail.gmail.com>
+ <e8b44f4a-b6ae-6912-1b26-f900a24204af@turmel.org>
+ <CAJJqR209OzydScj2jScKvKBR=B6d5JErfaFg=4qcSuC7aEvHEg@mail.gmail.com>
+ <CAJJqR22EWec7gMwtVZCxxWc4-w9fEp8jaHWmtENwsLYSi7G5PQ@mail.gmail.com>
+ <df503250-7c8e-d6f7-21fd-2fe4f1cae961@turmel.org>
+ <CAJJqR231QRUexo=eqi=ijF+ErT=LZHr7DxWPAqC+RqF51ehmxw@mail.gmail.com>
+ <CAJJqR22XEbkzF1wfO_RrnVV01E25q_OBHGdDOyBzOcGfUSwadg@mail.gmail.com>
+ <CAJJqR23vGGpL-QRGKi-ft6X4RWWF0SPWJEEa=TPuo1zRnHPS3A@mail.gmail.com>
+From:   Phil Turmel <philip@turmel.org>
+In-Reply-To: <CAJJqR23vGGpL-QRGKi-ft6X4RWWF0SPWJEEa=TPuo1zRnHPS3A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 57f13b2f370be189aaa67299e400930632574ae4  md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
+Hi Luigi,
 
-elapsed time: 724m
+Mixed in responses (and trimmed):
 
-configs tested: 105
-configs skipped: 2
+On 9/9/22 18:50, Luigi Fabio wrote:
+ > By different kernels, maybe - but the kernel has been the same for
+ > quite a while (months).
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Yes.  Same kernels are pretty repeatable for device order on bootup as 
+long as all are present.  Anything missing will shift the letter 
+assignments.
 
-gcc tested configs:
-um                           x86_64_defconfig
-um                             i386_defconfig
-arc                              allyesconfig
-alpha                            allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-m68k                             allmodconfig
-powerpc                           allnoconfig
-powerpc                          allmodconfig
-m68k                             allyesconfig
-x86_64                           allyesconfig
-i386                                defconfig
-mips                             allyesconfig
-sh                               allmodconfig
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-x86_64                    rhel-8.3-kselftests
-x86_64                           rhel-8.3-syz
-i386                          randconfig-a001
-x86_64                           rhel-8.3-kvm
-i386                          randconfig-a003
-i386                          randconfig-a005
-x86_64                        randconfig-a013
-x86_64                        randconfig-a011
-x86_64                        randconfig-a015
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-i386                             allyesconfig
-x86_64                        randconfig-a006
-arm64                            allyesconfig
-arm                              allyesconfig
-i386                          randconfig-a012
-arm                                 defconfig
-i386                          randconfig-a014
-i386                          randconfig-a016
-sh                             espt_defconfig
-riscv             nommu_k210_sdcard_defconfig
-arm                            mps2_defconfig
-csky                              allnoconfig
-alpha                             allnoconfig
-arc                               allnoconfig
-riscv                             allnoconfig
-powerpc                      ppc40x_defconfig
-arm                         axm55xx_defconfig
-mips                         db1xxx_defconfig
-arm                            zeus_defconfig
-parisc                              defconfig
-sh                     sh7710voipgw_defconfig
-arm                        keystone_defconfig
-x86_64                           alldefconfig
-xtensa                    xip_kc705_defconfig
-mips                    maltaup_xpa_defconfig
-mips                      maltasmvp_defconfig
-i386                          randconfig-c001
-m68k                        m5407c3_defconfig
-nios2                         3c120_defconfig
-loongarch                           defconfig
-loongarch                         allnoconfig
-arm                         cm_x300_defconfig
-powerpc                    klondike_defconfig
-arm                          badge4_defconfig
-mips                      fuloong2e_defconfig
-s390                       zfcpdump_defconfig
-mips                        bcm47xx_defconfig
-arm                            pleb_defconfig
-arc                              alldefconfig
-sh                              ul2_defconfig
-arm                           sunxi_defconfig
-arm                          exynos_defconfig
-riscv                               defconfig
-nios2                         10m50_defconfig
-powerpc                 mpc837x_rdb_defconfig
-sh                   secureedge5410_defconfig
-arm                         lubbock_defconfig
-sh                          rsk7264_defconfig
-i386                          debian-10.3-kvm
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
-mips                     decstation_defconfig
-sh                         ecovec24_defconfig
-sh                           se7712_defconfig
-ia64                             allmodconfig
-arm                        clps711x_defconfig
-sh                             shx3_defconfig
-riscv                            allmodconfig
+ > I did paste the whole of the command lines in the (very long) email,
+ > as David mentions (thanks!) - the first ones, the mistaken ones, did
+ > NOT have --assume-clean but they did have -o, so no parity activity
+ > should have started according to the docs?
 
-clang tested configs:
-i386                          randconfig-a002
-i386                          randconfig-a004
-x86_64                        randconfig-a012
-riscv                randconfig-r042-20220909
-hexagon              randconfig-r041-20220909
-hexagon              randconfig-r045-20220909
-s390                 randconfig-r044-20220909
-i386                          randconfig-a006
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-x86_64                        randconfig-a005
-x86_64                        randconfig-k001
-riscv                randconfig-r042-20220907
-hexagon              randconfig-r041-20220907
-hexagon              randconfig-r045-20220907
-s390                 randconfig-r044-20220907
-hexagon              randconfig-r041-20220908
-hexagon              randconfig-r045-20220908
+Okay, that should have saved you.  Except, I think it still writes all 
+the meta-data.  With v1.2, that would sparsely trash up to 1/4 gig at 
+tbe beginning of each device.
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+ > A new thought came to mind: one of the HBAs lost a channel, right?
+ > What if on the subsequent reboot the devices that were on that channel
+ > got 'rediscovered' and shunted to the end of the letter order? That
+ > would, I believe, be ordinary operating procedure.
+
+Well, yes.  But doesn't matter for assembly attempts, with always go by 
+the meta-data.  Device order only ever matters for --create when recreating.
+
+ > That would give us an almost-correct array, which would explain how
+ > fsck can get ... some pieces.
+
+If you consistently used -o or --assume-clean, then everything beyond 
+~3G should be untouched, if you can get the order right.  Have fsck try 
+backup superblocks way out.
+
+ > Also, I am not quite brave enough (...) to use shortcuts when handling
+ > mdadm commands.
+
+That's good.  But curly braces are safe.
+
+ > I am reconstructing the port order (scsi targets, if you prefer) from
+ > the 20220904 boot log. I should at that point be able to have an exact
+ > order of the drives.
+
+Please use lsdrv to capture names versus serial numbers.  Re-run it 
+before any --create operation to ensure the current names really do 
+match the expected serial numbers.  Keep track of ordering information 
+by serial number.  Note that lsdrv will reliably line up PHYs on SAS 
+controllers, so that can be trusted, too.
+
+ > Here it is:
+
+[trim /]
+
+ > We have a SCSI target -> raid disk number correspondence.
+ > As of this boot, the letter -> scsi target correspondences match,
+ > shifted by one because as discussed 7:0:0:0 is no longer there (the
+ > old, 'faulty' sdc).
+
+OK.
+
+ > Thus, having univocally determined the prior scsi target -> raid
+ > position we can transpose it to the present drive letters, which are
+ > shifted by one.
+ > Therefore, we can generate, rectius have generated, a --create with
+ > the same software versions, the same settings and the same drive
+ > order. Is there any reason why, minus the 1.2 metadata overwriting
+ > which should have only affected 12 blocks, the fs should 'not' be as
+ > before?
+ > Genuine question, mind.
+
+Superblocks other than 0.9x and 1.0 place a bad block log and a written 
+block bitmap between the superblock and the data area.  I'm not sure if 
+any of the remain space is wiped.  These would be written regardless of 
+-o or --assume-clean.  Those flags "protect" the *data area* of the 
+array, not the array's own metadata.
+
+On 9/9/22 19:04, Luigi Fabio wrote:
+ > A further question, in THIS boot's log I found:
+ > [ 9874.709903] md/raid:md123: raid level 5 active with 12 out of 12
+ > devices, algorithm 2
+ > [ 9874.710249] md123: bitmap file is out of date (0 < 1) -- forcing
+ > full recovery
+ > [ 9874.714178] md123: bitmap file is out of date, doing full recovery
+ > [ 9874.881106] md123: detected capacity change from 0 to 42945088192512
+ > From, I think, the second --create of /dev/123, before I added the
+ > bitmap=none. This should, however, not have written anything with -o
+ > and --assume-clean, correct?
+
+False assumption.  As described above.
+
+On 9/9/22 21:29, Luigi Fabio wrote:
+ > For completeness' sake, though it should not be relevant, here is the
+ > error that caused the mishap:
+
+[trim /]
+
+Noted, and helpful for correlating device names to PHYs.
+
+Okay.  To date, you've only done create with -o or --assume-clean?
+
+If so, it is likely your 0.90 superblocks are still present at the ends 
+of the disks.
+
+You will need to zero the v1.2 superblocks that have been placed on your 
+partitions.  Then attempt an --assemble and see if mdadm will deliver 
+the same message as before, identifying all of the members, but refusing 
+to proceed due to event counts.
+
+If so, repeat with --force.
+
+This procedure is safe to do without overlays, and will likely yield a 
+running array.
+
+Then you will have to fsck to fix up the borked beginning of your 
+filesystem.
+
+Phil
+
