@@ -2,91 +2,83 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93B23ECAAA1
-	for <linux-raid@archiver.kernel.org>; Mon, 12 Sep 2022 09:40:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18DF8ECAAD5
+	for <linux-raid@archiver.kernel.org>; Mon, 12 Sep 2022 12:48:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229802AbiILJks (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 12 Sep 2022 05:40:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35242 "EHLO
+        id S229543AbiILMsR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 12 Sep 2022 08:48:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229496AbiILJkr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 12 Sep 2022 05:40:47 -0400
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C4CD6342
-        for <linux-raid@vger.kernel.org>; Mon, 12 Sep 2022 02:40:46 -0700 (PDT)
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4MR1mr1s9wzXLZ;
-        Mon, 12 Sep 2022 11:40:44 +0200 (CEST)
-Message-ID: <e5aabf02-3735-b1eb-d349-e4f1c7bb9d18@thelounge.net>
-Date:   Mon, 12 Sep 2022 11:40:43 +0200
+        with ESMTP id S229601AbiILMsQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 12 Sep 2022 08:48:16 -0400
+Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75FBA13EAA
+        for <linux-raid@vger.kernel.org>; Mon, 12 Sep 2022 05:48:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To
+        :Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=I2NDlYATpEud+jFTqmz73BGOGqAOtjfQd3gNKy5lKiI=; b=muBBacM3YQIYD2ckZOShporW1J
+        tDzaYXuTCfA/UCpqI3tv6+r1e+qFbfaG6MD05yFos78027dIGhUtRRTTg5upPKszzOigMCXD7pgoB
+        dAQXBW1KXcMthVJdBUYIZGnWCWT+oq1DXbCZpxNWyfHCQWPKoxqWXZIpzTetCtUPIYXKFlq1DiigD
+        pJNLIysUooEW0nGbnlmdSa1BnledX+mn/sAwDChv4QeaUt4cBBNSQrFKHCQwYafzeql26II0xOwPl
+        iC23eabdfu7p7qErQdoLDYpguhTp/Wzyv2Nw79DJrOrkkXOyIWsBhyrCJuDxkkFmrdEVStXccIera
+        1DdLwI7w==;
+Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1oXirF-0006Hl-Bn; Mon, 12 Sep 2022 12:48:13 +0000
+Message-ID: <ef7f0cb8-3cbd-bf94-d60b-3c604668bd0d@turmel.org>
+Date:   Mon, 12 Sep 2022 08:48:12 -0400
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
 Subject: Re: 3 way mirror
 Content-Language: en-US
-To:     Roman Mamedov <rm@romanrm.net>
-Cc:     Wols Lists <antlists@youngman.org.uk>,
+To:     Wols Lists <antlists@youngman.org.uk>,
         Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>,
         Linux RAID Mailing List <linux-raid@vger.kernel.org>
 References: <CAJH6TXj0y_bfJ1q50S7xnTyz_4BSrgNboim9e+zK1nKZX9MR3g@mail.gmail.com>
- <53f5754d-e3e2-a8ba-bedb-07eb2b594595@thelounge.net>
- <CAJH6TXi=pCvV2xcyWcOD4KVDP6BcoPdgdMqhSwyW9BMVEhtzYA@mail.gmail.com>
- <dcef59a2-b8f6-ef8b-2fd6-2c8bfdfba4ad@thelounge.net>
- <2bcebfce-6def-38f8-99be-1f5702905f94@youngman.org.uk>
- <fe532dc9-daef-e096-f729-d1cd752f18d2@thelounge.net>
- <20220912142624.63ba4b5c@nvm>
-From:   Reindl Harald <h.reindl@thelounge.net>
-Organization: the lounge interactive design
-In-Reply-To: <20220912142624.63ba4b5c@nvm>
+ <73143dc1-e259-9dd1-d146-81d6c576b5d4@youngman.org.uk>
+ <e12bc8eb-6be0-f5a2-c57e-b0685752ae2b@turmel.org>
+ <3e694d50-a636-3fc8-b662-0268f680c738@youngman.org.uk>
+From:   Phil Turmel <philip@turmel.org>
+In-Reply-To: <3e694d50-a636-3fc8-b662-0268f680c738@youngman.org.uk>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+If you suffer a drive failure, your odds of a successful rebuild onto 
+that spare are decidedly mixed.
 
-Am 12.09.22 um 11:26 schrieb Roman Mamedov:
-> On Mon, 12 Sep 2022 10:16:55 +0200
-> Reindl Harald <h.reindl@thelounge.net> wrote:
-> 
->>> That's called paranoia
+https://marc.info/?l=linux-raid&m=139050322510249&w=2
+
+On 9/12/22 04:06, Wols Lists wrote:
+> On 12/09/2022 01:58, Phil Turmel wrote:
+>> Hi Wol,
 >>
->> that's called common sense
+>> On 9/11/22 06:08, Wols Lists wrote:
 >>
->>> ALL drives have hiccups when there's absolutely
->>> nothing wrong with them. What are the manufacturer's error figures?
->>> Expect at least one error every two or three complete passes of pretty
->>> much every large big disk nowadays?
->> i don't expect any SMART error at all and if one hits after years of
->> uptime fine that the drive don't fail completly - but would i trust it? no!
+>> [trim /]
+>>
+>>> old one is still good I'd go for a 3-disk raid-5 plus spare. That's 
+>>> my current setup.
+>>
+>> Eww.  Don't do that.  Always convert raid5+spare to raid6.
+>>
+> At the moment the fourth drive is, in my mind, a transient backup. I 
+> don't want to make it an actual part of the array in case I want to 
+> remove it.
 > 
-> I have multiple drives (Hitachi) which have developed around 3 to 10
-> reallocated sectors, and then just continue to work for years, not increasing
-> those further. Throwing them away would be uneconomical. 
+> I'm thinking of getting a second matching drive, but seeing as I've 
+> bought 16TB of drive space in the recentish past, another 8TB seems 
+> excessive :-)
+> 
+> Cheers,
+> Wol
 
-better safe than sorry
-
-in the past 15 years i replaced 6 drives on 8 machines (each 4 disks) 
-while some are running since 2011
-
-on every location with machines i am resposible for is at least one 
-replacment disk, switch, order a new reserve disk, case closed
-
-> Generally though, if you are way too concerned about individual drive failures,
-> it could be a sign that you do not have a robust enough backup scheme in place
-
-my backup scheme is perfect but my personal lifetime is much more worth 
-than a disk costs these days - the backups are regulary testet and in 
-the past 20 years i didn't need them which is a good thing
-
-no backup on this planet contains the last 30 minutes of work besides 
-that outtakes typically happen in the moment where you have no time to 
-deal with such events
-
-come on a restore a backup in a production environment, your customers 
-will be not much thankful when they lose the last 30 minutes of all 
-mails and work....
