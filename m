@@ -2,66 +2,51 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8CCFECAAD3
-	for <linux-raid@archiver.kernel.org>; Mon, 12 Sep 2022 00:58:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 146A1ECAAA1
+	for <linux-raid@archiver.kernel.org>; Mon, 12 Sep 2022 07:19:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229561AbiILA64 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 11 Sep 2022 20:58:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40614 "EHLO
+        id S230188AbiILHTF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 12 Sep 2022 03:19:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229546AbiILA6y (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 11 Sep 2022 20:58:54 -0400
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13C0427DEF
-        for <linux-raid@vger.kernel.org>; Sun, 11 Sep 2022 17:58:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To
-        :Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=/EVOSGZC2EgudPdYERH381tlwyYbPMr7TnHYpDPVfno=; b=oRhLrmbei1wsUhG2Q6AG9JiQGz
-        aeCEqUNNrnC2IOHxJfKb4DcFci3zFJ5SwnbXqV4dOv6iOgnCr03Y1apZisfP6vfFOcHY9fpJN8ikz
-        2QHJTWWbYo+7sjov43GmGwZlvqh/KJmdEdAeiUZA8j7yOPxHnCOfItRYVGOh6njr7+0bGqcyKP/Xf
-        F71lp5tAML1dCmfnSpweddtJ1aaOqoHWmOA1XkPoFP29324JzgUOm5CFFIg2iEbmnvNLQjL47j2ro
-        qKHG3kmTTQFfjy85D/bFBa4baxvkZ9e92gGpFi1MBo6Y10Ci14TQkDlaEcJFOCIMH1JqAK132OCjR
-        IfAhpAKg==;
-Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1oXXml-00040x-KA; Mon, 12 Sep 2022 00:58:51 +0000
-Message-ID: <e12bc8eb-6be0-f5a2-c57e-b0685752ae2b@turmel.org>
-Date:   Sun, 11 Sep 2022 20:58:50 -0400
+        with ESMTP id S230280AbiILHSf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 12 Sep 2022 03:18:35 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A0F31DC2;
+        Mon, 12 Sep 2022 00:16:50 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id B5EA96732D; Mon, 12 Sep 2022 09:16:18 +0200 (CEST)
+Date:   Mon, 12 Sep 2022 09:16:18 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Dusty Mabe <dusty@dustymabe.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Subject: Re: regression caused by block: freeze the queue earlier in
+ del_gendisk
+Message-ID: <20220912071618.GA4971@lst.de>
+References: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com> <YxBZ4BBjxvAkvI2A@T590> <20220907073324.GB23826@lst.de> <Yxr4SD4d0rZ9TZik@T590>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: 3 way mirror
-Content-Language: en-US
-To:     Wols Lists <antlists@youngman.org.uk>,
-        Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>,
-        Linux RAID Mailing List <linux-raid@vger.kernel.org>
-References: <CAJH6TXj0y_bfJ1q50S7xnTyz_4BSrgNboim9e+zK1nKZX9MR3g@mail.gmail.com>
- <73143dc1-e259-9dd1-d146-81d6c576b5d4@youngman.org.uk>
-From:   Phil Turmel <philip@turmel.org>
-In-Reply-To: <73143dc1-e259-9dd1-d146-81d6c576b5d4@youngman.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yxr4SD4d0rZ9TZik@T590>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Wol,
+On Fri, Sep 09, 2022 at 04:24:40PM +0800, Ming Lei wrote:
+> On Wed, Sep 07, 2022 at 09:33:24AM +0200, Christoph Hellwig wrote:
+> > On Thu, Sep 01, 2022 at 03:06:08PM +0800, Ming Lei wrote:
+> > > It is a bit hard to associate the above commit with reported issue.
+> > 
+> > So the messages clearly are about something trying to open a device
+> > that went away at the block layer, but somehow does not get removed
+> > in time by udev (which seems to be a userspace bug in CoreOS).  But
+> > even with that we really should not hang.
+> 
+> Xiao Ni provides one script[1] which can reproduce the issue more or less.
 
-On 9/11/22 06:08, Wols Lists wrote:
-
-[trim /]
-
-> old one is still good I'd go for a 3-disk raid-5 plus spare. That's my 
-> current setup.
-
-Eww.  Don't do that.  Always convert raid5+spare to raid6.
-
-> Cheers,
-> Wol
-
+I've run the reproduced 10000 times on current mainline, and while
+it prints one of the autoloading messages per run, I've not actually
+seen any kind of hang.
