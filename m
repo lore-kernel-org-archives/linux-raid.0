@@ -2,51 +2,63 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 146A1ECAAA1
-	for <linux-raid@archiver.kernel.org>; Mon, 12 Sep 2022 07:19:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77EF7ECAAD5
+	for <linux-raid@archiver.kernel.org>; Mon, 12 Sep 2022 08:06:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230188AbiILHTF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 12 Sep 2022 03:19:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56860 "EHLO
+        id S229997AbiILIGk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 12 Sep 2022 04:06:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230280AbiILHSf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 12 Sep 2022 03:18:35 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A0F31DC2;
-        Mon, 12 Sep 2022 00:16:50 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id B5EA96732D; Mon, 12 Sep 2022 09:16:18 +0200 (CEST)
-Date:   Mon, 12 Sep 2022 09:16:18 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Dusty Mabe <dusty@dustymabe.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: Re: regression caused by block: freeze the queue earlier in
- del_gendisk
-Message-ID: <20220912071618.GA4971@lst.de>
-References: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com> <YxBZ4BBjxvAkvI2A@T590> <20220907073324.GB23826@lst.de> <Yxr4SD4d0rZ9TZik@T590>
+        with ESMTP id S229963AbiILIGh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 12 Sep 2022 04:06:37 -0400
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72C9F2CDC9
+        for <linux-raid@vger.kernel.org>; Mon, 12 Sep 2022 01:06:35 -0700 (PDT)
+Received: from host86-157-192-122.range86-157.btcentralplus.com ([86.157.192.122] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1oXeSf-0009M3-Bs;
+        Mon, 12 Sep 2022 09:06:33 +0100
+Message-ID: <3e694d50-a636-3fc8-b662-0268f680c738@youngman.org.uk>
+Date:   Mon, 12 Sep 2022 09:06:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yxr4SD4d0rZ9TZik@T590>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: 3 way mirror
+Content-Language: en-GB
+To:     Phil Turmel <philip@turmel.org>,
+        Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>,
+        Linux RAID Mailing List <linux-raid@vger.kernel.org>
+References: <CAJH6TXj0y_bfJ1q50S7xnTyz_4BSrgNboim9e+zK1nKZX9MR3g@mail.gmail.com>
+ <73143dc1-e259-9dd1-d146-81d6c576b5d4@youngman.org.uk>
+ <e12bc8eb-6be0-f5a2-c57e-b0685752ae2b@turmel.org>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <e12bc8eb-6be0-f5a2-c57e-b0685752ae2b@turmel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Sep 09, 2022 at 04:24:40PM +0800, Ming Lei wrote:
-> On Wed, Sep 07, 2022 at 09:33:24AM +0200, Christoph Hellwig wrote:
-> > On Thu, Sep 01, 2022 at 03:06:08PM +0800, Ming Lei wrote:
-> > > It is a bit hard to associate the above commit with reported issue.
-> > 
-> > So the messages clearly are about something trying to open a device
-> > that went away at the block layer, but somehow does not get removed
-> > in time by udev (which seems to be a userspace bug in CoreOS).  But
-> > even with that we really should not hang.
+On 12/09/2022 01:58, Phil Turmel wrote:
+> Hi Wol,
 > 
-> Xiao Ni provides one script[1] which can reproduce the issue more or less.
+> On 9/11/22 06:08, Wols Lists wrote:
+> 
+> [trim /]
+> 
+>> old one is still good I'd go for a 3-disk raid-5 plus spare. That's my 
+>> current setup.
+> 
+> Eww.  Don't do that.  Always convert raid5+spare to raid6.
+> 
+At the moment the fourth drive is, in my mind, a transient backup. I 
+don't want to make it an actual part of the array in case I want to 
+remove it.
 
-I've run the reproduced 10000 times on current mainline, and while
-it prints one of the autoloading messages per run, I've not actually
-seen any kind of hang.
+I'm thinking of getting a second matching drive, but seeing as I've 
+bought 16TB of drive space in the recentish past, another 8TB seems 
+excessive :-)
+
+Cheers,
+Wol
