@@ -2,79 +2,202 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 166C5C54EE9
-	for <linux-raid@archiver.kernel.org>; Tue, 13 Sep 2022 04:02:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D208C54EE9
+	for <linux-raid@archiver.kernel.org>; Tue, 13 Sep 2022 07:36:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229960AbiIMECn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 13 Sep 2022 00:02:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52896 "EHLO
+        id S230026AbiIMHgK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 13 Sep 2022 03:36:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229751AbiIMECl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Sep 2022 00:02:41 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA76652E72
-        for <linux-raid@vger.kernel.org>; Mon, 12 Sep 2022 21:02:40 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id j6-20020a17090a694600b00200bba67dadso10095629pjm.5
-        for <linux-raid@vger.kernel.org>; Mon, 12 Sep 2022 21:02:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=b0tG/cqxkJEMIvokrm2R928o84swVDtCf47uSGlN4/Q=;
-        b=nWl6+SuuqIx5dZ8zaxk2o/CwBBs0igRGeLckMZxsM0C2wZyIequdXFHvxHDWljkD6Z
-         UKLu94XkxzAsCrPonaZPJAxPO5upvcVyOR4wKQNc1qSP8pDIYIXzgnb96uxFy+/fnRhx
-         U62IoXuO6WxSRlYrGnI6X5niS5uNqBfHvqsyUgd2TR1xrIttCVVnAz4YR4q5zBlQeAk9
-         awzGrTvQnkrAncMA3vA8L39Z1hzbgXcgb6VjuPzzyXkd4Xcq9g0KJgNEXNB4FmB5fWrb
-         2E2W4bFJC77OOgUsj9IuwhNvF52TwwOnkCs404HydvGvdeEqromNVxsg8vsxQSiImmzz
-         uUBQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=b0tG/cqxkJEMIvokrm2R928o84swVDtCf47uSGlN4/Q=;
-        b=IQgf+1WU6G02mNRg+9iTNDuSHs9pSYimeT1lHpKzr0NP6h54ubRjBkaQJA8zvAWV9k
-         vsenWn/2tl3R6tv+d6yif745IAIDPrJR0oUKuCA4uKe1Xw6hF6OFmHd1YR+DtgXLchJY
-         NUuhWH6fyB9T0114JdPQIox0F/9DTP3cC3Iu4jROT2ypIJT+2KZS5+bqX5C0PDpMVugi
-         3pedivD7PER08IheUmpR3aRxLP+omnWzRdcv9VFghg0oKZQUg+3tscv0KEcmTqU6lKf6
-         UuvqqtwLaPtJpn7bLYWN3lzA2JQyRR3ylDjmnBFZuxnHifllz/geu8zMUDEFdClHUQ8m
-         ZVFg==
-X-Gm-Message-State: ACgBeo0ncxhQo/8Kf5XFX9t/Ozg4XOXVOfgkqc2RwjGg62w5nqt34ePG
-        9xzhRrtCjvsCjmxdSzZo2qW6YvkRcVCCcnowUo8nVigo
-X-Google-Smtp-Source: AA6agR4xFTXt0BbHUN1+3Yya9WrHVWrjwLTJX1qnvzNZkBgmGsG5FD8BoIGEqSTm89d8EMAR8HAk0ky62U50wZNg7l8=
-X-Received: by 2002:a17:90a:d3c2:b0:202:acc2:1686 with SMTP id
- d2-20020a17090ad3c200b00202acc21686mr1872131pjw.126.1663041760232; Mon, 12
- Sep 2022 21:02:40 -0700 (PDT)
+        with ESMTP id S229601AbiIMHgJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Sep 2022 03:36:09 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2CF857E12
+        for <linux-raid@vger.kernel.org>; Tue, 13 Sep 2022 00:36:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663054567; x=1694590567;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=hz3h9c9Nnp7CVFUQPFGa5uYxR2hWkt1EUgGa0uYX+D0=;
+  b=eGBGwmozkFlFMnumJBlP9Z205mkeu8uF+IEvsX+sT1D6bGmH0OrYykQC
+   W52tHqM4nPX3/qZkYzOuGXsml5i8eagqrYxS2/Wssd7bDjQ4CQX3jbCw1
+   kwmx8H0HSbeb6S8/QCOLn/Bfa7FPTPSPlM0m4oMD26aPxtLQfRe221wqe
+   50q6ENk08KRtlDcsZhZLd+Fv62Vv9Hi7z1I/DRWR2Y1smx5gyiWDuaU6o
+   asNMOkED3chzq/7IwLfsPcXMfPa7TjIbKevscVhYLSQ5p3I0NpJexcWm/
+   4i/8VpdKyGqEy/jpkCSxJAQ9bANpV0cxnJpU81fRxlqbB31x/LRjBjtw8
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10468"; a="362017539"
+X-IronPort-AV: E=Sophos;i="5.93,312,1654585200"; 
+   d="scan'208";a="362017539"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2022 00:36:07 -0700
+X-IronPort-AV: E=Sophos;i="5.93,312,1654585200"; 
+   d="scan'208";a="678450486"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.47.207])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2022 00:36:04 -0700
+Date:   Tue, 13 Sep 2022 09:35:59 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>, Coly Li <colyli@suse.de>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Jonmichael Hands <jm@chia.net>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Subject: Re: [PATCH mdadm v2 1/2] mdadm: Add --discard option for Create
+Message-ID: <20220913093559.0000438b@linux.intel.com>
+In-Reply-To: <6dd46583-05ef-12e7-8a37-b732cbe79f23@deltatee.com>
+References: <20220908230847.5749-1-logang@deltatee.com>
+ <20220908230847.5749-2-logang@deltatee.com>
+ <20220909115749.00007431@linux.intel.com>
+ <6dd46583-05ef-12e7-8a37-b732cbe79f23@deltatee.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-References: <CAJJqR20U=OcMq_8wBMQ5xmWmcBcYoKN5+Fe9sPHYPkZ_yHurQQ@mail.gmail.com>
- <e8b44f4a-b6ae-6912-1b26-f900a24204af@turmel.org> <CAJJqR209OzydScj2jScKvKBR=B6d5JErfaFg=4qcSuC7aEvHEg@mail.gmail.com>
- <CAJJqR22EWec7gMwtVZCxxWc4-w9fEp8jaHWmtENwsLYSi7G5PQ@mail.gmail.com>
- <df503250-7c8e-d6f7-21fd-2fe4f1cae961@turmel.org> <CAJJqR231QRUexo=eqi=ijF+ErT=LZHr7DxWPAqC+RqF51ehmxw@mail.gmail.com>
- <CAJJqR22XEbkzF1wfO_RrnVV01E25q_OBHGdDOyBzOcGfUSwadg@mail.gmail.com>
- <CAJJqR23vGGpL-QRGKi-ft6X4RWWF0SPWJEEa=TPuo1zRnHPS3A@mail.gmail.com>
- <593e868a-d0a4-3ad5-d983-e585607ec212@turmel.org> <87k0688l6i.fsf@vps.thesusis.net>
-In-Reply-To: <87k0688l6i.fsf@vps.thesusis.net>
-From:   Luigi Fabio <luigi.fabio@gmail.com>
-Date:   Tue, 13 Sep 2022 00:02:08 -0400
-Message-ID: <CAJJqR21N2G5-nN_Ef+2W51FmQ40e8WbZfmrN6c42rdid2T_GoA@mail.gmail.com>
-Subject: Re: RAID5 failure and consequent ext4 problems
-To:     Phillip Susi <phill@thesusis.net>
-Cc:     Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Sep 12, 2022 at 3:09 PM Phillip Susi <phill@thesusis.net> wrote:
-> Every time I think about this I find myself amayzed that it does seem to
-> be so stable, and wonder how that can be.  The drives are all enumerated
-> in paralell these days so the order they get assigned in should be a
-> total crap shoot, shouldn't it?
-Well, there are several possible explanations, but persistence is
-desireable - so evidently enumeration occurs according to controller
-order in a repeatable way until something changes in the configuration
-- or until you change kernel, someone does something funny with a
-driver and the order changes. In 28 years of using Linux, however,
-this has happened.. rarely, save for before things were sensible WAY
-back when.
+On Fri, 9 Sep 2022 09:47:21 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
+> >> +{
+> >> +	uint64_t range[2] = {offset, size};  
+> > Probably you don't need to specify [2] but it is not an issue I think.
+> >   
+> >> +	unsigned long buf[4096 / sizeof(unsigned long)];  
+> > 
+> > Can you use any define for 4096?   
+> 
+> I don't see any appropriate defines in the code base. It really just
+> needs to be bigger than any O_DIRECT restrictions. 4096 bytes is usually
+> the worst case.
 
-LF
+See comment bellow.
+> 
+> >> +	unsigned long i;
+> >> +
+> >> +	if (c->verbose)
+> >> +		printf("discarding data from %lld to %lld on: %s\n",
+> >> +		       offset, size, devname);
+> >> +
+> >> +	if (ioctl(fd, BLKDISCARD, &range)) {
+> >> +		pr_err("discard failed on '%s': %m\n", devname);
+> >> +		return 1;
+> >> +	}
+> >> +
+> >> +	if (pread(fd, buf, sizeof(buf), offset) != sizeof(buf)) {
+> >> +		pr_err("failed to readback '%s' after discard: %m\n",
+> >> devname);
+> >> +		return 1;
+> >> +	}
+> >> +
+> >> +	for (i = 0; i < ARRAY_SIZE(buf); i++) {
+> >> +		if (buf[i]) {
+> >> +			pr_err("device did not read back zeros after
+> >> discard on '%s': %lx\n",
+> >> +			       devname, buf[i]);  
+> > In previous version I wanted to leave the message on stderr, but just move a
+> > data (buf[i]) to debug, or if (verbose > 0).
+> > I think that printing binary data in error message is not necessary.  
+> 
+> I added the hex because it might be informative to know what a discard
+> did to the device (all FFs or random data).
+> 
+> > BTW. I'm not sure if discard ensures that data will be all zero. It causes
+> > that drive drops all references but I doesn't mean that data is zeroed.
+> > Could you please check it in documentation? Should we expect zeroes?  
+> 
+> That's correct. I discussed this in the cover letter. That's why this
+> check is here. Per some of the discussion from others I still think the
+> best course of action is to just check what the discard did and fail if
+> it is non-zero. Even though many NVMe and ATA devices have the ability
+> to control or query the behaviour, the kernel doesn't support this and
+> I don't think it can be relied upon.
+
+It is also controversial approach[1].
+
+I think that the best we can do here is to warn user, for example:
+"Please ensure that drive you used return zeros after discard."
+We should ask for confirmation (it should be possible to skip with --run).
+I would like to leave discard feature validation on user side, it is not mdadm
+task. Simply, if you want to use it, then it is done on your own risk and
+hopefully you know what you want to achieve.
+That will simplify implementation on mdadm side. What do you think?
+
+> >> @@ -945,6 +983,15 @@ int Create(struct supertype *st, char *mddev,
+> >>  				}
+> >>  				if (fd >= 0)
+> >>  					remove_partitions(fd);
+> >> +
+> >> +				if (s->discard &&
+> >> +				    discard_device(c, fd, dv->devname,
+> >> +						   dv->data_offset << 9,
+> >> +						   s->size << 10)) {
+> >> +					ioctl(mdfd, STOP_ARRAY, NULL);
+> >> +					goto abort_locked;
+> >> +				}
+> >> +  
+> > Feel free to use up to 100 char in one line it is allowed now.
+> > Why we need dv->data_offset << 9 and  s->size << 10 here?
+> > How this applies to zoned raid0?  
+> 
+> As I understand it the offset and size will give the bounds of the
+> data region on the disk. Do you not think it works for zoned raid0?
+
+mdadm operates on 512B, so using 4K data regions could be destructive.
+Also left shift causes that size value is increasing. We can't clear more that
+user requested. We need to use 512b sectors as mdadm does.
+
+I don't know how native raid0 size is passed and how zones are created but I
+suspect that s->size may not be correct for all drives. It it a global property
+but for zoned raid member size could be different. You need to check how it
+applies.
+
+Also, I'm not sure if this feature is needed for raid0, because there is no
+resync. Maybe we can exclude raid0 from discard?
+> 
+> >> diff --git a/mdadm.c b/mdadm.c
+> >> index 972adb524dfb..049cdce1cdd2 100644
+> >> --- a/mdadm.c
+> >> +++ b/mdadm.c
+> >> @@ -602,6 +602,10 @@ int main(int argc, char *argv[])
+> >>  			s.assume_clean = 1;
+> >>  			continue;
+> >>  
+> >> +		case O(CREATE, Discard):
+> >> +			s.discard = true;
+> >> +			continue;
+> >> +  
+> > 
+> > I would like to set s.assume_clean=true along with discard. Then will be no
+> > need to modify other conditions. If we are assuming that after discard all
+> > is zeros then we can skip resync, right? According to message, it should be.
+> > Please add message for user and set assume_clean too.  
+> 
+> 
+> Well it was my opinion that it was clearer in the code to just
+> explicitly include discard in the conditionals instead of making discard
+> also set assume-clean, but if you think otherwise I can change it for v3.
+> 
+> What kind of user message are you thinking is necessary here?
+
+In my convention, all shape attributes should be set in mdadm.c, later they
+should be considered as const, we should not overwrite them. This structure
+represents user settings.
+This is why I consider updating assume_clean in Create.c as wrong. When discard
+is set then we are assuming that user want to skip resync too, otherwise it
+doesn't have sense. Also, if discard of any drive fails we are returning error
+and create operation will fail anyway.
+
+I would expected something like: "Discard requested, setting --assume-clean to
+skip resync".
+Also, will be great if you can add some tests, at least for command-line.
+
+[1] https://lore.kernel.org/linux-raid/yq1sfkw7yqi.fsf@ca-mkp.ca.oracle.com/T/#t
+
+Thanks,
+Mariusz
