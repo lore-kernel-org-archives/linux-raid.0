@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAF4EC6FA86
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 01:38:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F08DECAAD8
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 01:38:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229978AbiINBi2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 13 Sep 2022 21:38:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46522 "EHLO
+        id S229436AbiINBia (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 13 Sep 2022 21:38:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229773AbiINBiV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Sep 2022 21:38:21 -0400
+        with ESMTP id S229964AbiINBiW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Sep 2022 21:38:22 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4434F6D547;
-        Tue, 13 Sep 2022 18:38:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6D816D549;
+        Tue, 13 Sep 2022 18:38:19 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MS2xN4mw0zlCl1;
-        Wed, 14 Sep 2022 09:36:40 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MS2xP6qfPzlKhb;
+        Wed, 14 Sep 2022 09:36:41 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP2 (Coremail) with SMTP id Syh0CgDHGXOGMCFj24dCAw--.23886S5;
-        Wed, 14 Sep 2022 09:38:16 +0800 (CST)
+        by APP2 (Coremail) with SMTP id Syh0CgDHGXOGMCFj24dCAw--.23886S8;
+        Wed, 14 Sep 2022 09:38:17 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, logang@deltatee.com, guoqing.jiang@linux.dev,
         pmenzel@molgen.mpg.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
-Subject: [PATCH v2 1/4] md/raid10: cleanup wait_barrier()
-Date:   Wed, 14 Sep 2022 09:49:11 +0800
-Message-Id: <20220914014914.398712-2-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 4/4] md/raid10: convert resync_lock to use seqlock
+Date:   Wed, 14 Sep 2022 09:49:14 +0800
+Message-Id: <20220914014914.398712-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220914014914.398712-1-yukuai1@huaweicloud.com>
 References: <20220914014914.398712-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgDHGXOGMCFj24dCAw--.23886S5
-X-Coremail-Antispam: 1UD129KBjvJXoWxGrykJF4fKF4xCFWktFWUurg_yoW5Gw4Upw
-        43GrW3JrWUAF9xJ398JF48CFyFq393XFWUGFyS93ykJF4jyrZ3Wr93G348KryDCrZ5XFyF
-        qFWSyrZxKw4UtrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9m14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-        x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2
-        IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
-        6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
-        AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
-        s7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
-        0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqAp5UUUUU=
+X-CM-TRANSID: Syh0CgDHGXOGMCFj24dCAw--.23886S8
+X-Coremail-Antispam: 1UD129KBjvJXoW3Jw45Gr43CFWfCFy3Ar15CFg_yoWxWryUpw
+        4aqr15tFWUXrn0qr4DJa1q9r1Fgw4kKa47Ka9rW3WkZFs5tryfXF1UGr9Ygryqvr9xJFyv
+        qFWrCFWfGw17tFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9C14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
+        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
+        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
+        IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxK
+        x2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
+        0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,50 +58,101 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Currently the nasty condition is wait_barrier() is hard to read. This
-patch factor out the condition into a function.
+Currently, wait_barrier() will hold 'resync_lock' to read 'conf->barrier',
+and io can't be dispatched until 'barrier' is dropped.
 
-There are no functional changes.
+Since holding the 'barrier' is not common, convert 'resync_lock' to use
+seqlock so that holding lock can be avoided in fast path.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid10.c | 56 ++++++++++++++++++++++++++-------------------
- 1 file changed, 32 insertions(+), 24 deletions(-)
+ drivers/md/raid10.c | 85 +++++++++++++++++++++++++++++----------------
+ drivers/md/raid10.h |  2 +-
+ 2 files changed, 57 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 64d6e4cd8a3a..56458a53043d 100644
+index 377d4641bb54..6c2396fe75a0 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -957,44 +957,52 @@ static void lower_barrier(struct r10conf *conf)
- 	wake_up(&conf->wait_barrier);
+@@ -79,6 +79,21 @@ static void end_reshape(struct r10conf *conf);
+ 
+ #include "raid1-10.c"
+ 
++#define NULL_CMD
++#define cmd_before(conf, cmd) \
++	do { \
++		write_sequnlock_irq(&(conf)->resync_lock); \
++		cmd; \
++	} while (0)
++#define cmd_after(conf) write_seqlock_irq(&(conf)->resync_lock)
++
++#define wait_event_barrier_cmd(conf, cond, cmd) \
++	wait_event_cmd((conf)->wait_barrier, cond, cmd_before(conf, cmd), \
++		       cmd_after(conf))
++
++#define wait_event_barrier(conf, cond) \
++	wait_event_barrier_cmd(conf, cond, NULL_CMD)
++
+ /*
+  * for resync bio, r10bio pointer can be retrieved from the per-bio
+  * 'struct resync_pages'.
+@@ -936,30 +951,29 @@ static void flush_pending_writes(struct r10conf *conf)
+ 
+ static void raise_barrier(struct r10conf *conf, int force)
+ {
+-	spin_lock_irq(&conf->resync_lock);
++	write_seqlock_irq(&conf->resync_lock);
+ 	BUG_ON(force && !conf->barrier);
+ 
+ 	/* Wait until no block IO is waiting (unless 'force') */
+-	wait_event_lock_irq(conf->wait_barrier, force || !conf->nr_waiting,
+-			    conf->resync_lock);
++	wait_event_barrier(conf, force || !conf->nr_waiting);
+ 
+ 	/* block any new IO from starting */
+-	conf->barrier++;
++	WRITE_ONCE(conf->barrier, conf->barrier + 1);
+ 
+ 	/* Now wait for all pending IO to complete */
+-	wait_event_lock_irq(conf->wait_barrier,
+-			    !atomic_read(&conf->nr_pending) && conf->barrier < RESYNC_DEPTH,
+-			    conf->resync_lock);
++	wait_event_barrier(conf, !atomic_read(&conf->nr_pending) &&
++				 conf->barrier < RESYNC_DEPTH);
+ 
+-	spin_unlock_irq(&conf->resync_lock);
++	write_sequnlock_irq(&conf->resync_lock);
  }
  
-+static bool stop_waiting_barrier(struct r10conf *conf)
+ static void lower_barrier(struct r10conf *conf)
+ {
+ 	unsigned long flags;
+-	spin_lock_irqsave(&conf->resync_lock, flags);
+-	conf->barrier--;
+-	spin_unlock_irqrestore(&conf->resync_lock, flags);
++
++	write_seqlock_irqsave(&conf->resync_lock, flags);
++	WRITE_ONCE(conf->barrier, conf->barrier - 1);
++	write_sequnlock_irqrestore(&conf->resync_lock, flags);
+ 	wake_up_barrier(conf);
+ }
+ 
+@@ -992,11 +1006,29 @@ static bool stop_waiting_barrier(struct r10conf *conf)
+ 	return false;
+ }
+ 
++static bool wait_barrier_nolock(struct r10conf *conf)
 +{
-+	/* barrier is dropped */
-+	if (!conf->barrier)
++	unsigned int seq = read_seqbegin(&conf->resync_lock);
++
++	if (READ_ONCE(conf->barrier))
++		return false;
++
++	atomic_inc(&conf->nr_pending);
++	if (!read_seqretry(&conf->resync_lock, seq))
 +		return true;
 +
-+	/*
-+	 * If there are already pending requests (preventing the barrier from
-+	 * rising completely), and the pre-process bio queue isn't empty, then
-+	 * don't wait, as we need to empty that queue to get the nr_pending
-+	 * count down.
-+	 */
-+	if (atomic_read(&conf->nr_pending)) {
-+		struct bio_list *bio_list = current->bio_list;
-+
-+		if (bio_list && (!bio_list_empty(&bio_list[0]) ||
-+				 !bio_list_empty(&bio_list[1])))
-+			return true;
-+	}
-+
-+	/* move on if recovery thread is blocked by us */
-+	if (conf->mddev->thread->tsk == current &&
-+	    test_bit(MD_RECOVERY_RUNNING, &conf->mddev->recovery) &&
-+	    conf->nr_queued > 0)
-+		return true;
-+
++	atomic_dec(&conf->nr_pending);
 +	return false;
 +}
 +
@@ -109,46 +160,101 @@ index 64d6e4cd8a3a..56458a53043d 100644
  {
  	bool ret = true;
  
- 	spin_lock_irq(&conf->resync_lock);
+-	spin_lock_irq(&conf->resync_lock);
++	if (wait_barrier_nolock(conf))
++		return true;
++
++	write_seqlock_irq(&conf->resync_lock);
  	if (conf->barrier) {
--		struct bio_list *bio_list = current->bio_list;
--		conf->nr_waiting++;
--		/* Wait for the barrier to drop.
--		 * However if there are already pending
--		 * requests (preventing the barrier from
--		 * rising completely), and the
--		 * pre-process bio queue isn't empty,
--		 * then don't wait, as we need to empty
--		 * that queue to get the nr_pending
--		 * count down.
--		 */
  		/* Return false when nowait flag is set */
  		if (nowait) {
- 			ret = false;
+@@ -1004,9 +1036,7 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
  		} else {
-+			conf->nr_waiting++;
+ 			conf->nr_waiting++;
  			raid10_log(conf->mddev, "wait barrier");
- 			wait_event_lock_irq(conf->wait_barrier,
--					    !conf->barrier ||
--					    (atomic_read(&conf->nr_pending) &&
--					     bio_list &&
--					     (!bio_list_empty(&bio_list[0]) ||
--					      !bio_list_empty(&bio_list[1]))) ||
--					     /* move on if recovery thread is
--					      * blocked by us
--					      */
--					     (conf->mddev->thread->tsk == current &&
--					      test_bit(MD_RECOVERY_RUNNING,
--						       &conf->mddev->recovery) &&
--					      conf->nr_queued > 0),
-+					    stop_waiting_barrier(conf),
- 					    conf->resync_lock);
-+			conf->nr_waiting--;
+-			wait_event_lock_irq(conf->wait_barrier,
+-					    stop_waiting_barrier(conf),
+-					    conf->resync_lock);
++			wait_event_barrier(conf, stop_waiting_barrier(conf));
+ 			conf->nr_waiting--;
  		}
--		conf->nr_waiting--;
  		if (!conf->nr_waiting)
- 			wake_up(&conf->wait_barrier);
+@@ -1015,7 +1045,7 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
+ 	/* Only increment nr_pending when we wait */
+ 	if (ret)
+ 		atomic_inc(&conf->nr_pending);
+-	spin_unlock_irq(&conf->resync_lock);
++	write_sequnlock_irq(&conf->resync_lock);
+ 	return ret;
+ }
+ 
+@@ -1040,27 +1070,24 @@ static void freeze_array(struct r10conf *conf, int extra)
+ 	 * must match the number of pending IOs (nr_pending) before
+ 	 * we continue.
+ 	 */
+-	spin_lock_irq(&conf->resync_lock);
++	write_seqlock_irq(&conf->resync_lock);
+ 	conf->array_freeze_pending++;
+-	conf->barrier++;
++	WRITE_ONCE(conf->barrier, conf->barrier + 1);
+ 	conf->nr_waiting++;
+-	wait_event_lock_irq_cmd(conf->wait_barrier,
+-				atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
+-				conf->resync_lock,
+-				flush_pending_writes(conf));
+-
++	wait_event_barrier_cmd(conf, atomic_read(&conf->nr_pending) ==
++			conf->nr_queued + extra, flush_pending_writes(conf));
+ 	conf->array_freeze_pending--;
+-	spin_unlock_irq(&conf->resync_lock);
++	write_sequnlock_irq(&conf->resync_lock);
+ }
+ 
+ static void unfreeze_array(struct r10conf *conf)
+ {
+ 	/* reverse the effect of the freeze */
+-	spin_lock_irq(&conf->resync_lock);
+-	conf->barrier--;
++	write_seqlock_irq(&conf->resync_lock);
++	WRITE_ONCE(conf->barrier, conf->barrier - 1);
+ 	conf->nr_waiting--;
+ 	wake_up_barrier(conf);
+-	spin_unlock_irq(&conf->resync_lock);
++	write_sequnlock_irq(&conf->resync_lock);
+ }
+ 
+ static sector_t choose_data_offset(struct r10bio *r10_bio,
+@@ -4046,7 +4073,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 	INIT_LIST_HEAD(&conf->retry_list);
+ 	INIT_LIST_HEAD(&conf->bio_end_io_list);
+ 
+-	spin_lock_init(&conf->resync_lock);
++	seqlock_init(&conf->resync_lock);
+ 	init_waitqueue_head(&conf->wait_barrier);
+ 	atomic_set(&conf->nr_pending, 0);
+ 
+@@ -4365,7 +4392,7 @@ static void *raid10_takeover_raid0(struct mddev *mddev, sector_t size, int devs)
+ 				rdev->new_raid_disk = rdev->raid_disk * 2;
+ 				rdev->sectors = size;
+ 			}
+-		conf->barrier = 1;
++		WRITE_ONCE(conf->barrier, 1);
  	}
+ 
+ 	return conf;
+diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+index 5c0804d8bb1f..8c072ce0bc54 100644
+--- a/drivers/md/raid10.h
++++ b/drivers/md/raid10.h
+@@ -76,7 +76,7 @@ struct r10conf {
+ 	/* queue pending writes and submit them on unplug */
+ 	struct bio_list		pending_bio_list;
+ 
+-	spinlock_t		resync_lock;
++	seqlock_t		resync_lock;
+ 	atomic_t		nr_pending;
+ 	int			nr_waiting;
+ 	int			nr_queued;
 -- 
 2.31.1
 
