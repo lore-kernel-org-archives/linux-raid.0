@@ -2,64 +2,65 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40336C6FA82
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 15:03:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BE1FECAAD3
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 15:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229748AbiINPDe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Sep 2022 11:03:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50128 "EHLO
+        id S229787AbiINPDf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Sep 2022 11:03:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229978AbiINPD3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 11:03:29 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC00674DD3
-        for <linux-raid@vger.kernel.org>; Wed, 14 Sep 2022 08:03:22 -0700 (PDT)
+        with ESMTP id S230155AbiINPDb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 11:03:31 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94C2F7392E
+        for <linux-raid@vger.kernel.org>; Wed, 14 Sep 2022 08:03:30 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 9C6F51FD9D;
-        Wed, 14 Sep 2022 15:03:21 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 0EA5A3393A;
+        Wed, 14 Sep 2022 15:03:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1663167801; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1663167809; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Kv8ZYy3Xs5BUjelQCFhN4XZyijAeUwCbF2qwUcQUcaI=;
-        b=pTXeSIwH0GOq2otBkEsFAWjolonm4N9+TBH7L2wzBrm7jIyfv6IA4xci25HMfMMqbCsnOx
-        oPNHQG3/XQdn1k01DZl5dKOsjw5OiSwyCy5r05CkozCVPLJ6wWyvCoFuPnfhLaK21INMHF
-        9joVtSjk+Vh3byzQyEt5zvK4nawlfhE=
+        bh=OcgsIgCkM+BzqsKpUMb+SFe/yoJnCOnWSnx/CHjA5Hg=;
+        b=X31g+2Z7XI2ledURVLMDaKr1rjM9/4VOjO/Y0VO1IUPWTQT9JXWiHdbz37G7IR8ZD5i+vq
+        m6vsFzuw/uYaPYp41F4heT1e1qil60JzvojCdSXf6ZU+tQlWv2CEjWD4luOev6yqATV58a
+        rkbp+I8j4JEunbVOlE7Y4b+ZrW33tsc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1663167801;
+        s=susede2_ed25519; t=1663167809;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Kv8ZYy3Xs5BUjelQCFhN4XZyijAeUwCbF2qwUcQUcaI=;
-        b=to/B+na8b9jYBSIjEul9WPtkysiZLiVmFAgDhUseXF7HCymigpwEbfARM2vYinDnafPnp0
-        d/ArxEinBHZSvoCQ==
+        bh=OcgsIgCkM+BzqsKpUMb+SFe/yoJnCOnWSnx/CHjA5Hg=;
+        b=edoAhG19gEnUCKs+Brm97/CyYc4E/p2en6jeUrllqPGM+l1lXBXwxm3qMivzgFrsnJwWF/
+        CY03j2ysQDvv25BA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 21CBB134B3;
-        Wed, 14 Sep 2022 15:03:19 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 84397134B3;
+        Wed, 14 Sep 2022 15:03:27 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id gKALMzftIWNdRAAAMHmgww
-        (envelope-from <colyli@suse.de>); Wed, 14 Sep 2022 15:03:19 +0000
+        id 4Gi0ET/tIWNdRAAAMHmgww
+        (envelope-from <colyli@suse.de>); Wed, 14 Sep 2022 15:03:27 +0000
 Content-Type: text/plain;
         charset=utf-8
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
-Subject: Re: [PATCH 06/10] super1: refactor the code for enum
+Subject: Re: [PATCH 07/10] super-intel: refactor the code for enum
 From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220818145621.21982-7-mateusz.kusiak@intel.com>
-Date:   Wed, 14 Sep 2022 23:03:19 +0800
-Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org
+In-Reply-To: <20220818145621.21982-8-mateusz.kusiak@intel.com>
+Date:   Wed, 14 Sep 2022 23:03:26 +0800
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Jes Sorensen <jes@trained-monkey.org>
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <79C06B27-C8DD-4E87-9C40-72160D26C641@suse.de>
+Message-Id: <78011938-BC68-4E12-BD0A-F49F1EE6FA65@suse.de>
 References: <20220818145621.21982-1-mateusz.kusiak@intel.com>
- <20220818145621.21982-7-mateusz.kusiak@intel.com>
+ <20220818145621.21982-8-mateusz.kusiak@intel.com>
 To:     Mateusz Kusiak <mateusz.kusiak@intel.com>
 X-Mailer: Apple Mail (2.3696.120.41.1.1)
 Precedence: bulk
@@ -71,104 +72,75 @@ X-Mailing-List: linux-raid@vger.kernel.org
 > 2022=E5=B9=B48=E6=9C=8818=E6=97=A5 22:56=EF=BC=8CMateusz Kusiak =
 <mateusz.kusiak@intel.com> =E5=86=99=E9=81=93=EF=BC=9A
 >=20
-> It prepares update_super1 for change context->update to enum.
-> Change if else statements into switch.
+> It prepares super-intel for change context->update to enum.
 >=20
 > Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 > ---
-> super1.c | 149 ++++++++++++++++++++++++++++++++-----------------------
-> 1 file changed, 87 insertions(+), 62 deletions(-)
+> super-intel.c | 38 +++++++++++++++++++++++++-------------
+> 1 file changed, 25 insertions(+), 13 deletions(-)
 >=20
-> diff --git a/super1.c b/super1.c
-> index 71af860c..6c81c1b9 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1212,30 +1212,53 @@ static int update_super1(struct supertype *st, =
-struct mdinfo *info,
-> 	int rv =3D 0;
-> 	struct mdp_superblock_1 *sb =3D st->sb;
-> 	bitmap_super_t *bms =3D (bitmap_super_t*)(((char*)sb) + =
-MAX_SB_SIZE);
-> +	enum update_opt update_enum =3D map_name(update_options, =
-update);
+> diff --git a/super-intel.c b/super-intel.c
+> index 672f946e..3de3873e 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -3930,7 +3930,8 @@ static int update_super_imsm(struct supertype =
+*st, struct mdinfo *info,
 >=20
-> -	if (strcmp(update, "homehost") =3D=3D 0 &&
-> -	    homehost) {
-> -		/* Note that 'homehost' is special as it is really
-> +	if (update_enum =3D=3D UOPT_HOMEHOST && homehost) {
-> +		/*
-> +		 * Note that 'homehost' is special as it is really
-> 		 * a "name" update.
-> 		 */
-> 		char *c;
-> -		update =3D "name";
-> +		update_enum =3D UOPT_NAME;
-> 		c =3D strchr(sb->set_name, ':');
-> 		if (c)
-> -			strncpy(info->name, c+1, 31 - (c-sb->set_name));
-> +			snprintf(info->name, sizeof(info->name), "%s", =
-c+1);
-> 		else
-> -			strncpy(info->name, sb->set_name, 32);
-> -		info->name[32] =3D 0;
-> +			snprintf(info->name, sizeof(info->name), "%s", =
-sb->set_name);
-> 	}
+> 	mpb =3D super->anchor;
 >=20
-> -	if (strcmp(update, "force-one")=3D=3D0) {
-> +	switch (update_enum) {
-> +	case UOPT_NAME:
-> +		if (!info->name[0])
-> +			snprintf(info->name, sizeof(info->name), "%d", =
-info->array.md_minor);
-> +		memset(sb->set_name, 0, sizeof(sb->set_name));
-> +		int namelen;
-> +
-
-The above variable =E2=80=99namelen=E2=80=99 might be declared at =
-beginning of this code block.
-
-
-> +		namelen =3D strnlen(homehost, MD_NAME_MAX) + 1 + =
-strnlen(info->name, MD_NAME_MAX);
-> +		if (homehost &&
-> +		    strchr(info->name, ':') =3D=3D NULL &&
-> +		    namelen < MD_NAME_MAX) {
-> +			strcpy(sb->set_name, homehost);
-> +			strcat(sb->set_name, ":");
-> +			strcat(sb->set_name, info->name);
-> +		} else {
-> +			namelen =3D min((int)strnlen(info->name, =
-MD_NAME_MAX),
-> +				      (int)sizeof(sb->set_name) - 1);
-> +			memcpy(sb->set_name, info->name, namelen);
-> +			memset(&sb->set_name[namelen], '\0',
-> +			       sizeof(sb->set_name) - namelen);
-> +		}
-> +		break;
->=20
-[snipped]
-> @@ -1569,32 +1589,37 @@ static int update_super1(struct supertype *st, =
-struct mdinfo *info,
-> 			}
-> 		done:;
+> -	if (strcmp(update, "uuid") =3D=3D 0) {
+> +	switch (map_name(update_options, update)) {
+> +	case UOPT_UUID:
+> 		/* We take this to mean that the family_num should be =
+updated.
+> 		 * However that is much smaller than the uuid so we =
+cannot really
+> 		 * allow an explicit uuid to be given.  And it is hard =
+to reliably
+> @@ -3954,10 +3955,14 @@ static int update_super_imsm(struct supertype =
+*st, struct mdinfo *info,
 > 		}
-> -	} else if (strcmp(update, "_reshape_progress") =3D=3D 0)
+> 		if (rv =3D=3D 0)
+> 			mpb->orig_family_num =3D info->uuid[0];
+> -	} else if (strcmp(update, "assemble") =3D=3D 0)
 > +		break;
-> +	case UOPT_SPEC__RESHAPE_PROGRESS:
-> 		sb->reshape_position =3D =
-__cpu_to_le64(info->reshape_progress);
-> -	else if (strcmp(update, "writemostly") =3D=3D 0)
-> -		sb->devflags |=3D WriteMostly1;
-> -	else if (strcmp(update, "readwrite") =3D=3D 0)
+> +	case UOPT_SPEC_ASSEMBLE:
+> 		rv =3D 0;
+> -	else
 > +		break;
-> +	case UOPT_SPEC_READWRITE:
-> 		sb->devflags &=3D ~WriteMostly1;
-> -	else if (strcmp(update, "failfast") =3D=3D 0)
+> +	default:
+> 		rv =3D -1;
+> +		break;
+> +	}
+>=20
+> 	/* successful update? recompute checksum */
+> 	if (rv =3D=3D 0)
+> @@ -7888,18 +7893,25 @@ static int kill_subarray_imsm(struct supertype =
+*st, char *subarray_id)
+>=20
+> 	return 0;
+> }
+> -
+> -static int get_rwh_policy_from_update(char *update)
+> +/**
+> + * get_rwh_policy_from_update() - Get the rwh policy for update =
+option.
+> + * @update: Update option.
+> + */
 
-Writemostly-setting is removed here, is it on purpose ?
 
-[snip]
+The above comment format is not the existed code comments style.
+
+For example for getinfo_super_disks_imsm() in same file,
+
+ 3862 /* allocates memory and fills disk in mdinfo structure
+ 3863  * for each disk in array */
+ 3864 struct mdinfo *getinfo_super_disks_imsm(struct supertype *st)
+
+
+[snipped]
+
+The rested part is fine to me.
 
 Thanks.
 
