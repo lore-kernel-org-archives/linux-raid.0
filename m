@@ -2,64 +2,64 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4294C6FA8A
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 15:03:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40336C6FA82
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 15:03:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230042AbiINPDT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Sep 2022 11:03:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49828 "EHLO
+        id S229748AbiINPDe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Sep 2022 11:03:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229608AbiINPDR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 11:03:17 -0400
+        with ESMTP id S229978AbiINPD3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 11:03:29 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2E3E74B9B
-        for <linux-raid@vger.kernel.org>; Wed, 14 Sep 2022 08:03:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC00674DD3
+        for <linux-raid@vger.kernel.org>; Wed, 14 Sep 2022 08:03:22 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id A36991FDAF;
-        Wed, 14 Sep 2022 15:03:14 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 9C6F51FD9D;
+        Wed, 14 Sep 2022 15:03:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1663167794; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1663167801; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=NexBwOUzfZG3iM8Z+2DQU1oae9JXsN0GSvfxQ32kVI4=;
-        b=W6OEccpvDstsNZKNbGcPjtXvY5NLx6XYCWpYi3o4bxi7k6tlLM94c9YZn1X8ldmg4JRjYY
-        FQS1ofvejGYaVUeVrWCzT9deDWy1mZ7YiAIrWAe8cQ3i+WDKNHmGnzvnPcL0dg0T50VEeM
-        rMQlzj6Fj2jPY0MCoeuy4pDSbbOk6Js=
+        bh=Kv8ZYy3Xs5BUjelQCFhN4XZyijAeUwCbF2qwUcQUcaI=;
+        b=pTXeSIwH0GOq2otBkEsFAWjolonm4N9+TBH7L2wzBrm7jIyfv6IA4xci25HMfMMqbCsnOx
+        oPNHQG3/XQdn1k01DZl5dKOsjw5OiSwyCy5r05CkozCVPLJ6wWyvCoFuPnfhLaK21INMHF
+        9joVtSjk+Vh3byzQyEt5zvK4nawlfhE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1663167794;
+        s=susede2_ed25519; t=1663167801;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=NexBwOUzfZG3iM8Z+2DQU1oae9JXsN0GSvfxQ32kVI4=;
-        b=RnVL016B7sbHysmWk2dNYxqNjBBILHVQC4JRTLvajT31VuYYXGUzhdaHy7thU8Xo8I4tMB
-        7TV4Lmk59UyXe2Bw==
+        bh=Kv8ZYy3Xs5BUjelQCFhN4XZyijAeUwCbF2qwUcQUcaI=;
+        b=to/B+na8b9jYBSIjEul9WPtkysiZLiVmFAgDhUseXF7HCymigpwEbfARM2vYinDnafPnp0
+        d/ArxEinBHZSvoCQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8544A134B3;
-        Wed, 14 Sep 2022 15:03:13 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 21CBB134B3;
+        Wed, 14 Sep 2022 15:03:19 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 6PYnEjHtIWNdRAAAMHmgww
-        (envelope-from <colyli@suse.de>); Wed, 14 Sep 2022 15:03:13 +0000
+        id gKALMzftIWNdRAAAMHmgww
+        (envelope-from <colyli@suse.de>); Wed, 14 Sep 2022 15:03:19 +0000
 Content-Type: text/plain;
         charset=utf-8
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
-Subject: Re: [PATCH 05/10] super0: refactor the code for enum
+Subject: Re: [PATCH 06/10] super1: refactor the code for enum
 From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220818145621.21982-6-mateusz.kusiak@intel.com>
-Date:   Wed, 14 Sep 2022 23:03:12 +0800
-Cc:     linux-raid <linux-raid@vger.kernel.org>, jes@trained-monkey.org
+In-Reply-To: <20220818145621.21982-7-mateusz.kusiak@intel.com>
+Date:   Wed, 14 Sep 2022 23:03:19 +0800
+Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <4E9ADC20-2C7C-4438-A11A-766DF7078AC6@suse.de>
+Message-Id: <79C06B27-C8DD-4E87-9C40-72160D26C641@suse.de>
 References: <20220818145621.21982-1-mateusz.kusiak@intel.com>
- <20220818145621.21982-6-mateusz.kusiak@intel.com>
+ <20220818145621.21982-7-mateusz.kusiak@intel.com>
 To:     Mateusz Kusiak <mateusz.kusiak@intel.com>
 X-Mailer: Apple Mail (2.3696.120.41.1.1)
 Precedence: bulk
@@ -71,112 +71,104 @@ X-Mailing-List: linux-raid@vger.kernel.org
 > 2022=E5=B9=B48=E6=9C=8818=E6=97=A5 22:56=EF=BC=8CMateusz Kusiak =
 <mateusz.kusiak@intel.com> =E5=86=99=E9=81=93=EF=BC=9A
 >=20
-> It prepares update_super0 for change context->update to enum.
-> Change if else statements to switch.
+> It prepares update_super1 for change context->update to enum.
+> Change if else statements into switch.
 >=20
 > Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
-
-
-This patch is fine to me almost, except for 2 questions I placed in =
-line.
-
-
-
 > ---
-> super0.c | 102 ++++++++++++++++++++++++++++++++++---------------------
-> 1 file changed, 63 insertions(+), 39 deletions(-)
+> super1.c | 149 ++++++++++++++++++++++++++++++++-----------------------
+> 1 file changed, 87 insertions(+), 62 deletions(-)
 >=20
-> diff --git a/super0.c b/super0.c
-> index 37f595ed..4e53f41e 100644
-> --- a/super0.c
-> +++ b/super0.c
-> @@ -502,19 +502,39 @@ static int update_super0(struct supertype *st, =
+> diff --git a/super1.c b/super1.c
+> index 71af860c..6c81c1b9 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1212,30 +1212,53 @@ static int update_super1(struct supertype *st, =
 struct mdinfo *info,
 > 	int rv =3D 0;
-> 	int uuid[4];
-> 	mdp_super_t *sb =3D st->sb;
+> 	struct mdp_superblock_1 *sb =3D st->sb;
+> 	bitmap_super_t *bms =3D (bitmap_super_t*)(((char*)sb) + =
+MAX_SB_SIZE);
 > +	enum update_opt update_enum =3D map_name(update_options, =
 update);
 >=20
 > -	if (strcmp(update, "homehost") =3D=3D 0 &&
 > -	    homehost) {
-> -		/* note that 'homehost' is special as it is really
+> -		/* Note that 'homehost' is special as it is really
 > +	if (update_enum =3D=3D UOPT_HOMEHOST && homehost) {
 > +		/*
-> +		 * note that 'homehost' is special as it is really
-> 		 * a "uuid" update.
+> +		 * Note that 'homehost' is special as it is really
+> 		 * a "name" update.
 > 		 */
-> 		uuid_set =3D 0;
-> -		update =3D "uuid";
-> +		update_enum =3D UOPT_UUID;
-> 		info->uuid[0] =3D sb->set_uuid0;
-> 		info->uuid[1] =3D sb->set_uuid1;
+> 		char *c;
+> -		update =3D "name";
+> +		update_enum =3D UOPT_NAME;
+> 		c =3D strchr(sb->set_name, ':');
+> 		if (c)
+> -			strncpy(info->name, c+1, 31 - (c-sb->set_name));
+> +			snprintf(info->name, sizeof(info->name), "%s", =
+c+1);
+> 		else
+> -			strncpy(info->name, sb->set_name, 32);
+> -		info->name[32] =3D 0;
+> +			snprintf(info->name, sizeof(info->name), "%s", =
+sb->set_name);
 > 	}
 >=20
-> -	if (strcmp(update, "sparc2.2")=3D=3D0 ) {
+> -	if (strcmp(update, "force-one")=3D=3D0) {
 > +	switch (update_enum) {
-> +	case UOPT_UUID:
-> +		if (!uuid_set && homehost) {
-> +			char buf[20];
-> +			memcpy(info->uuid+2,
-> +			       sha1_buffer(homehost, strlen(homehost), =
-buf),
-> +			       8);
-> +		}
-> +		sb->set_uuid0 =3D info->uuid[0];
-> +		sb->set_uuid1 =3D info->uuid[1];
-> +		sb->set_uuid2 =3D info->uuid[2];
-> +		sb->set_uuid3 =3D info->uuid[3];
-> +		if (sb->state & (1<<MD_SB_BITMAP_PRESENT)) {
-> +			struct bitmap_super_s *bm;
-> +			bm =3D (struct bitmap_super_s *)(sb+1);
-> +			uuid_from_super0(st, uuid);
-> +			memcpy(bm->uuid, uuid, 16);
+> +	case UOPT_NAME:
+> +		if (!info->name[0])
+> +			snprintf(info->name, sizeof(info->name), "%d", =
+info->array.md_minor);
+> +		memset(sb->set_name, 0, sizeof(sb->set_name));
+> +		int namelen;
+> +
+
+The above variable =E2=80=99namelen=E2=80=99 might be declared at =
+beginning of this code block.
+
+
+> +		namelen =3D strnlen(homehost, MD_NAME_MAX) + 1 + =
+strnlen(info->name, MD_NAME_MAX);
+> +		if (homehost &&
+> +		    strchr(info->name, ':') =3D=3D NULL &&
+> +		    namelen < MD_NAME_MAX) {
+> +			strcpy(sb->set_name, homehost);
+> +			strcat(sb->set_name, ":");
+> +			strcat(sb->set_name, info->name);
+> +		} else {
+> +			namelen =3D min((int)strnlen(info->name, =
+MD_NAME_MAX),
+> +				      (int)sizeof(sb->set_name) - 1);
+> +			memcpy(sb->set_name, info->name, namelen);
+> +			memset(&sb->set_name[namelen], '\0',
+> +			       sizeof(sb->set_name) - namelen);
 > +		}
 > +		break;
-> +	case UOPT_SPARC22: {
-> 		/* 2.2 sparc put the events in the wrong place
-> 		 * So we copy the tail of the superblock
-> 		 * up 4 bytes before continuing
-> @@ -527,12 +547,15 @@ static int update_super0(struct supertype *st, =
-struct mdinfo *info,
-> 		if (verbose >=3D 0)
-> 			pr_err("adjusting superblock of %s for 2.2/sparc =
-compatibility.\n",
-> 			       devname);
-> -	} else if (strcmp(update, "super-minor") =3D=3D0) {
-> +		break;
-> +	}
-
-
-Wondering there isn't compiler warning for unmatched case/break pair, =
-since this break is inside the {} code block.
-
-Should the =E2=80=98break=E2=80=99 be placed after {} pair to match key =
-word =E2=80=98case=E2=80=99?
-
-
 >=20
 [snipped]
-> @@ -628,29 +659,15 @@ static int update_super0(struct supertype *st, =
+> @@ -1569,32 +1589,37 @@ static int update_super1(struct supertype *st, =
 struct mdinfo *info,
-> 		sb->disks[info->disk.number].minor =3D info->disk.minor;
-> 		sb->disks[info->disk.number].raid_disk =3D =
-info->disk.raid_disk;
-> 		sb->disks[info->disk.number].state =3D info->disk.state;
-> -	} else if (strcmp(update, "resync") =3D=3D 0) {
-> -		/* make sure resync happens */
+> 			}
+> 		done:;
+> 		}
+> -	} else if (strcmp(update, "_reshape_progress") =3D=3D 0)
 > +		break;
-> +	case UOPT_RESYNC:
-> +		/**
-> +		 *make sure resync happens
-> +		 */
+> +	case UOPT_SPEC__RESHAPE_PROGRESS:
+> 		sb->reshape_position =3D =
+__cpu_to_le64(info->reshape_progress);
+> -	else if (strcmp(update, "writemostly") =3D=3D 0)
+> -		sb->devflags |=3D WriteMostly1;
+> -	else if (strcmp(update, "readwrite") =3D=3D 0)
+> +		break;
+> +	case UOPT_SPEC_READWRITE:
+> 		sb->devflags &=3D ~WriteMostly1;
+> -	else if (strcmp(update, "failfast") =3D=3D 0)
 
+Writemostly-setting is removed here, is it on purpose ?
 
-The above change doesn=E2=80=99t follow existing code style for =
-comments. How about using the previous one line version?
-
-[snipped]
+[snip]
 
 Thanks.
 
