@@ -2,187 +2,198 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7EEBECAAD3
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 10:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA66ECAAD8
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 12:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229704AbiINK2X (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Sep 2022 06:28:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34820 "EHLO
+        id S230139AbiINMBh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Sep 2022 08:01:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229539AbiINK2V (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 06:28:21 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 681DE7C762;
-        Wed, 14 Sep 2022 03:28:19 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MSGhc64P3zKNZJ;
-        Wed, 14 Sep 2022 18:26:24 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP2 (Coremail) with SMTP id Syh0CgA3inPBrCFjuFVUAw--.57050S3;
-        Wed, 14 Sep 2022 18:28:17 +0800 (CST)
-Subject: Re: [PATCH v2 1/4] md/raid10: cleanup wait_barrier()
-To:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, logang@deltatee.com, guoqing.jiang@linux.dev,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20220914014914.398712-1-yukuai1@huaweicloud.com>
- <20220914014914.398712-2-yukuai1@huaweicloud.com>
- <0b67df9e-7f64-e710-5928-2098ed8d0f2d@molgen.mpg.de>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <302127e5-67fa-1ff0-0551-4719005640b8@huaweicloud.com>
-Date:   Wed, 14 Sep 2022 18:28:17 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S230043AbiINMB0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 08:01:26 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B392F7FFAE
+        for <linux-raid@vger.kernel.org>; Wed, 14 Sep 2022 05:01:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663156876; x=1694692876;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=lZOV8uk3LvQ7wz/ANPctOtuVNJt6R4HfeLuDojckD50=;
+  b=VpY5cGsGt7oZkV3bsTqh2T8ChE296zKwylMtlZiZ6XH0o6lkS6mk/6Un
+   80luPSNwXFWJ3Zx53N65qD3sSRgpdCK8seGno6cMIyld1l6EvzG0ayq2I
+   tL1vfKb+bG9hF8L1nx6SDlPzDilrK7FzgCt5eJbaec1AvgZrcI9Pa6dk+
+   WO5FwvJRf0tDRFg4lUiTLkopNkzqZ2qnUSDpABjdAPFZ9Tch8bldDfNUC
+   kPBx3gHr1wsJD0oOTvdVgzMiMiblKGwD2rogdQYWOtdEKygyae9vwtOVn
+   KJpKTEulpbVkTYHLceb1stv0QHq/YGWHywM0jfiQQN6DOVpyLpXrml+zK
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10469"; a="362371586"
+X-IronPort-AV: E=Sophos;i="5.93,315,1654585200"; 
+   d="scan'208";a="362371586"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2022 05:01:14 -0700
+X-IronPort-AV: E=Sophos;i="5.93,315,1654585200"; 
+   d="scan'208";a="679014708"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.32.226])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2022 05:01:11 -0700
+Date:   Wed, 14 Sep 2022 14:01:06 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>, Coly Li <colyli@suse.de>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Jonmichael Hands <jm@chia.net>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Subject: Re: [PATCH mdadm v2 1/2] mdadm: Add --discard option for Create
+Message-ID: <20220914140106.00000b36@linux.intel.com>
+In-Reply-To: <856072cb-ebdf-52fe-1a13-857763077bca@deltatee.com>
+References: <20220908230847.5749-1-logang@deltatee.com>
+        <20220908230847.5749-2-logang@deltatee.com>
+        <20220909115749.00007431@linux.intel.com>
+        <6dd46583-05ef-12e7-8a37-b732cbe79f23@deltatee.com>
+        <20220913093559.0000438b@linux.intel.com>
+        <856072cb-ebdf-52fe-1a13-857763077bca@deltatee.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-In-Reply-To: <0b67df9e-7f64-e710-5928-2098ed8d0f2d@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgA3inPBrCFjuFVUAw--.57050S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3WFWDWFyxJryUKFWrZw4Utwb_yoW7Xr4xpr
-        n5JrWUJryUJrn5Jr1UJr1UAFyUJr18J3WDJr18XF1DJr4UAr1jgr1UXryvgr1UJr48Jr1U
-        Jr1UJrnrZr1UJr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVW8JVWx
-        JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbE_M3
-        UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi, Paul
+On Tue, 13 Sep 2022 09:43:52 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-在 2022/09/14 14:36, Paul Menzel 写道:
-> Dear Yu,
+> On 2022-09-13 01:35, Mariusz Tkaczyk wrote:
+> > On Fri, 9 Sep 2022 09:47:21 -0600
+> > Logan Gunthorpe <logang@deltatee.com> wrote:  
+> >>>> +{
+> >>>> +	uint64_t range[2] = {offset, size};    
+> >>> Probably you don't need to specify [2] but it is not an issue I think.
+> >>>     
+> >>>> +	unsigned long buf[4096 / sizeof(unsigned long)];    
+> >>>
+> >>> Can you use any define for 4096?     
+> >>
+> >> I don't see any appropriate defines in the code base. It really just
+> >> needs to be bigger than any O_DIRECT restrictions. 4096 bytes is usually
+> >> the worst case.  
+> > 
+> > See comment bellow.  
 > 
-> 
-> Thank you for the improved patch. Three minor nits.
-> 
-> Am 14.09.22 um 03:49 schrieb Yu Kuai:
->> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> In the summary/title, I’d spell *Clean up* with a space. Maybe even use:
-> 
-> md/raid10: Factor out code from wait_barrier() to stop_waiting_barrier()
+> I don't see how the comment below relates to this at all. This 4k has
+> nothing to do with anything related to the array, it wos only a
+> convenient size to read and check the result. But per Martin's points,
+> this code will go away in v3 seeing it's more appropriate to use
+> WRITE_ZEROS and that interface guarantees that there will be zeros, thus
+> no need to check.
 
-Ok, sounds good, I'll change that in next version.
-> 
->> Currently the nasty condition is wait_barrier() is hard to read. This
->> patch factor out the condition into a function.
-> 
-> The first *is* above can be removed, and factor*s* needs an s.
+I suggested to skip verification at all in next comment but as you said with
+WRITE_ZEROS it is not needed anyway. Sorry for being inaccurate.
 
-Yes, you're right.
->> There are no functional changes.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   drivers/md/raid10.c | 56 ++++++++++++++++++++++++++-------------------
->>   1 file changed, 32 insertions(+), 24 deletions(-)
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index 64d6e4cd8a3a..56458a53043d 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -957,44 +957,52 @@ static void lower_barrier(struct r10conf *conf)
->>       wake_up(&conf->wait_barrier);
->>   }
->> +static bool stop_waiting_barrier(struct r10conf *conf)
->> +{
->> +    /* barrier is dropped */
->> +    if (!conf->barrier)
->> +        return true;
->> +
->> +    /*
->> +     * If there are already pending requests (preventing the barrier 
->> from
->> +     * rising completely), and the pre-process bio queue isn't empty, 
->> then
->> +     * don't wait, as we need to empty that queue to get the nr_pending
->> +     * count down.
->> +     */
->> +    if (atomic_read(&conf->nr_pending)) {
->> +        struct bio_list *bio_list = current->bio_list;
->> +
->> +        if (bio_list && (!bio_list_empty(&bio_list[0]) ||
->> +                 !bio_list_empty(&bio_list[1])))
->> +            return true;
->> +    }
->> +
->> +    /* move on if recovery thread is blocked by us */
->> +    if (conf->mddev->thread->tsk == current &&
->> +        test_bit(MD_RECOVERY_RUNNING, &conf->mddev->recovery) &&
->> +        conf->nr_queued > 0)
->> +        return true;
->> +
->> +    return false;
->> +}
->> +
->>   static bool wait_barrier(struct r10conf *conf, bool nowait)
->>   {
->>       bool ret = true;
->>       spin_lock_irq(&conf->resync_lock);
->>       if (conf->barrier) {
->> -        struct bio_list *bio_list = current->bio_list;
->> -        conf->nr_waiting++;
->> -        /* Wait for the barrier to drop.
->> -         * However if there are already pending
->> -         * requests (preventing the barrier from
->> -         * rising completely), and the
->> -         * pre-process bio queue isn't empty,
->> -         * then don't wait, as we need to empty
->> -         * that queue to get the nr_pending
->> -         * count down.
->> -         */
->>           /* Return false when nowait flag is set */
->>           if (nowait) {
->>               ret = false;
->>           } else {
->> +            conf->nr_waiting++;
->>               raid10_log(conf->mddev, "wait barrier");
->>               wait_event_lock_irq(conf->wait_barrier,
->> -                        !conf->barrier ||
->> -                        (atomic_read(&conf->nr_pending) &&
->> -                         bio_list &&
->> -                         (!bio_list_empty(&bio_list[0]) ||
->> -                          !bio_list_empty(&bio_list[1]))) ||
->> -                         /* move on if recovery thread is
->> -                          * blocked by us
->> -                          */
->> -                         (conf->mddev->thread->tsk == current &&
->> -                          test_bit(MD_RECOVERY_RUNNING,
->> -                               &conf->mddev->recovery) &&
->> -                          conf->nr_queued > 0),
->> +                        stop_waiting_barrier(conf),
->>                           conf->resync_lock);
->> +            conf->nr_waiting--;
->>           }
->> -        conf->nr_waiting--;
->>           if (!conf->nr_waiting)
->>               wake_up(&conf->wait_barrier);
->>       }
 > 
-> Acked-by: Paul Menzel <pmenzel@molgen.mpg.de>
+> 
+> >> That's correct. I discussed this in the cover letter. That's why this
+> >> check is here. Per some of the discussion from others I still think the
+> >> best course of action is to just check what the discard did and fail if
+> >> it is non-zero. Even though many NVMe and ATA devices have the ability
+> >> to control or query the behaviour, the kernel doesn't support this and
+> >> I don't think it can be relied upon.  
+> > 
+> > It is also controversial approach[1].
+> > 
+> > I think that the best we can do here is to warn user, for example:
+> > "Please ensure that drive you used return zeros after discard."
+> > We should ask for confirmation (it should be possible to skip with --run).
+> > I would like to leave discard feature validation on user side, it is not
+> > mdadm task. Simply, if you want to use it, then it is done on your own risk
+> > and hopefully you know what you want to achieve.
+> > That will simplify implementation on mdadm side. What do you think?  
+> 
+> I think the better approach is to just use WRITE_ZEROS.
 
-Thanks,
-Kuai
+Agree.
+
 > 
+> >>>> @@ -945,6 +983,15 @@ int Create(struct supertype *st, char *mddev,
+> >>>>  				}
+> >>>>  				if (fd >= 0)
+> >>>>  					remove_partitions(fd);
+> >>>> +
+> >>>> +				if (s->discard &&
+> >>>> +				    discard_device(c, fd, dv->devname,
+> >>>> +						   dv->data_offset << 9,
+> >>>> +						   s->size << 10)) {
+> >>>> +					ioctl(mdfd, STOP_ARRAY, NULL);
+> >>>> +					goto abort_locked;
+> >>>> +				}
+> >>>> +    
+> >>> Feel free to use up to 100 char in one line it is allowed now.
+> >>> Why we need dv->data_offset << 9 and  s->size << 10 here?
+> >>> How this applies to zoned raid0?    
+> >>
+> >> As I understand it the offset and size will give the bounds of the
+> >> data region on the disk. Do you not think it works for zoned raid0?  
+> > 
+> > mdadm operates on 512B, so using 4K data regions could be destructive.
+> > Also left shift causes that size value is increasing. We can't clear more
+> > that user requested. We need to use 512b sectors as mdadm does.  
 > 
-> Kind regards,
+> I don't really follow this.
+
+I understand that you want left shit is used to round size to data region
+and I assumed that data_region is 4K and that is probably wrong.
+You are right I has no sense, my apologizes.
+
+Let's imagine that our size is for example, 2687 sectors. Left shit will
+cause that we will get 2751488 and that will be passed as a size to function.
+Similar for data_offset. That is much more than we want to clear.
+Do I miss something? I guess that ioctl operates on sectors too but please
+correct me if that is wrong.
+
 > 
-> Paul
+> > I don't know how native raid0 size is passed and how zones are created but I
+> > suspect that s->size may not be correct for all drives. It it a global
+> > property but for zoned raid member size could be different. You need to
+> > check how it applies.  
 > 
-> .
+> > Also, I'm not sure if this feature is needed for raid0, because there is no
+> > resync. Maybe we can exclude raid0 from discard?  
+> 
+> I'll check raid0 size. If possible I'd rather not have the restriction
+> to avoid raid0 as it becomes complicated and users may have reason to
+> zero besides avoiding resync.
+
+Agree, thanks.
+
+> >>
+> >> Well it was my opinion that it was clearer in the code to just
+> >> explicitly include discard in the conditionals instead of making discard
+> >> also set assume-clean, but if you think otherwise I can change it for v3.
+> >>
+> >> What kind of user message are you thinking is necessary here?  
+> > 
+> > In my convention, all shape attributes should be set in mdadm.c, later they
+> > should be considered as const, we should not overwrite them. This structure
+> > represents user settings.
+> > This is why I consider updating assume_clean in Create.c as wrong. When
+> > discard is set then we are assuming that user want to skip resync too,
+> > otherwise it doesn't have sense. Also, if discard of any drive fails we are
+> > returning error and create operation will fail anyway.  
+> 
+> The v2 version of this patch did not modify the shape attributes in
+> Create.c; that was only in v1.
+
+Ok, I missed that, thanks.
+> 
+> > I would expected something like: "Discard requested, setting --assume-clean
+> > to skip resync".
+> > Also, will be great if you can add some tests, at least for command-line.  
+> 
+> Ok.
 > 
 
+Mariusz
