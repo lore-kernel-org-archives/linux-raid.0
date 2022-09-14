@@ -2,154 +2,200 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AABF0ECAAD3
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 06:36:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41910C6FA8B
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 10:21:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230035AbiINGgt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Sep 2022 02:36:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53556 "EHLO
+        id S229714AbiINKVS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Sep 2022 06:21:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229928AbiINGgs (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 02:36:48 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F22C38444;
-        Tue, 13 Sep 2022 23:36:46 -0700 (PDT)
-Received: from [192.168.0.2] (ip5f5aef39.dynamic.kabel-deutschland.de [95.90.239.57])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id B8A2561EA192A;
-        Wed, 14 Sep 2022 08:36:43 +0200 (CEST)
-Message-ID: <0b67df9e-7f64-e710-5928-2098ed8d0f2d@molgen.mpg.de>
-Date:   Wed, 14 Sep 2022 08:36:43 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH v2 1/4] md/raid10: cleanup wait_barrier()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, logang@deltatee.com, guoqing.jiang@linux.dev,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com
+        with ESMTP id S229727AbiINKVR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 06:21:17 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BE4E476CD;
+        Wed, 14 Sep 2022 03:21:14 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MSGXm1BxwzlDWv;
+        Wed, 14 Sep 2022 18:19:36 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP2 (Coremail) with SMTP id Syh0CgBH53AWqyFj1hlUAw--.28757S3;
+        Wed, 14 Sep 2022 18:21:12 +0800 (CST)
+Subject: Re: [PATCH v2 2/4] md/raid10: prevent unnecessary calls to wake_up()
+ in fast path
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
+        logang@deltatee.com, guoqing.jiang@linux.dev, pmenzel@molgen.mpg.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 References: <20220914014914.398712-1-yukuai1@huaweicloud.com>
- <20220914014914.398712-2-yukuai1@huaweicloud.com>
-Content-Language: en-US
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220914014914.398712-2-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <20220914014914.398712-3-yukuai1@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <39f4a1f0-7f84-ad84-c9f8-e45e63346190@huaweicloud.com>
+Date:   Wed, 14 Sep 2022 18:21:10 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <20220914014914.398712-3-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: Syh0CgBH53AWqyFj1hlUAw--.28757S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF15Kr4kAw4fZrykCrWktFb_yoWruF4xp3
+        yaqFWYyFWUZF90qw4DJFWUu3Wjgr1ktFWIkrWvkwn2yF48tr93tF1UGryDCryqvrZ7ur17
+        XFWFkrZ3Gw47tFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
+        UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Yu,
-
-
-Thank you for the improved patch. Three minor nits.
-
-Am 14.09.22 um 03:49 schrieb Yu Kuai:
+ÔÚ 2022/09/14 9:49, Yu Kuai Ð´µÀ:
 > From: Yu Kuai <yukuai3@huawei.com>
-
-In the summary/title, Iâ€™d spell *Clean up* with a space. Maybe even use:
-
-md/raid10: Factor out code from wait_barrier() to stop_waiting_barrier()
-
-> Currently the nasty condition is wait_barrier() is hard to read. This
-> patch factor out the condition into a function.
-
-The first *is* above can be removed, and factor*s* needs an s.
-> There are no functional changes.
 > 
+> Currently, wake_up() is called unconditionally in fast path such as
+> raid10_make_request(), which will cause lock contention under high
+> concurrency:
+> 
+> raid10_make_request
+>   wake_up
+>    __wake_up_common_lock
+>     spin_lock_irqsave
+> 
+> Improve performance by only call wake_up() if waitqueue is not empty.
+> 
+Hi,
+
+I'm replacing all the wake_up() here, currently I'm not quite sure it's
+OK, "conf->wait_barrier" is used for many purpose.
+
+Perhaps should I just replace host path here? (raid10_make_request
+and allow_barrier().
+
+Thanks,
+Kuai
+
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->   drivers/md/raid10.c | 56 ++++++++++++++++++++++++++-------------------
->   1 file changed, 32 insertions(+), 24 deletions(-)
+>   drivers/md/raid10.c | 26 ++++++++++++++++----------
+>   1 file changed, 16 insertions(+), 10 deletions(-)
 > 
 > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 64d6e4cd8a3a..56458a53043d 100644
+> index 56458a53043d..0edcd98461fe 100644
 > --- a/drivers/md/raid10.c
 > +++ b/drivers/md/raid10.c
-> @@ -957,44 +957,52 @@ static void lower_barrier(struct r10conf *conf)
->   	wake_up(&conf->wait_barrier);
+> @@ -274,6 +274,12 @@ static void put_buf(struct r10bio *r10_bio)
+>   	lower_barrier(conf);
 >   }
 >   
-> +static bool stop_waiting_barrier(struct r10conf *conf)
+> +static void wake_up_barrier(struct r10conf *conf)
 > +{
-> +	/* barrier is dropped */
-> +	if (!conf->barrier)
-> +		return true;
-> +
-> +	/*
-> +	 * If there are already pending requests (preventing the barrier from
-> +	 * rising completely), and the pre-process bio queue isn't empty, then
-> +	 * don't wait, as we need to empty that queue to get the nr_pending
-> +	 * count down.
-> +	 */
-> +	if (atomic_read(&conf->nr_pending)) {
-> +		struct bio_list *bio_list = current->bio_list;
-> +
-> +		if (bio_list && (!bio_list_empty(&bio_list[0]) ||
-> +				 !bio_list_empty(&bio_list[1])))
-> +			return true;
-> +	}
-> +
-> +	/* move on if recovery thread is blocked by us */
-> +	if (conf->mddev->thread->tsk == current &&
-> +	    test_bit(MD_RECOVERY_RUNNING, &conf->mddev->recovery) &&
-> +	    conf->nr_queued > 0)
-> +		return true;
-> +
-> +	return false;
+> +	if (wq_has_sleeper(&conf->wait_barrier))
+> +		wake_up(&conf->wait_barrier);
 > +}
 > +
->   static bool wait_barrier(struct r10conf *conf, bool nowait)
+>   static void reschedule_retry(struct r10bio *r10_bio)
 >   {
->   	bool ret = true;
+>   	unsigned long flags;
+> @@ -286,7 +292,7 @@ static void reschedule_retry(struct r10bio *r10_bio)
+>   	spin_unlock_irqrestore(&conf->device_lock, flags);
 >   
->   	spin_lock_irq(&conf->resync_lock);
->   	if (conf->barrier) {
-> -		struct bio_list *bio_list = current->bio_list;
-> -		conf->nr_waiting++;
-> -		/* Wait for the barrier to drop.
-> -		 * However if there are already pending
-> -		 * requests (preventing the barrier from
-> -		 * rising completely), and the
-> -		 * pre-process bio queue isn't empty,
-> -		 * then don't wait, as we need to empty
-> -		 * that queue to get the nr_pending
-> -		 * count down.
-> -		 */
->   		/* Return false when nowait flag is set */
->   		if (nowait) {
->   			ret = false;
->   		} else {
-> +			conf->nr_waiting++;
->   			raid10_log(conf->mddev, "wait barrier");
->   			wait_event_lock_irq(conf->wait_barrier,
-> -					    !conf->barrier ||
-> -					    (atomic_read(&conf->nr_pending) &&
-> -					     bio_list &&
-> -					     (!bio_list_empty(&bio_list[0]) ||
-> -					      !bio_list_empty(&bio_list[1]))) ||
-> -					     /* move on if recovery thread is
-> -					      * blocked by us
-> -					      */
-> -					     (conf->mddev->thread->tsk == current &&
-> -					      test_bit(MD_RECOVERY_RUNNING,
-> -						       &conf->mddev->recovery) &&
-> -					      conf->nr_queued > 0),
-> +					    stop_waiting_barrier(conf),
->   					    conf->resync_lock);
-> +			conf->nr_waiting--;
+>   	/* wake up frozen array... */
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   
+>   	md_wakeup_thread(mddev->thread);
+>   }
+> @@ -884,7 +890,7 @@ static void flush_pending_writes(struct r10conf *conf)
+>   		/* flush any pending bitmap writes to disk
+>   		 * before proceeding w/ I/O */
+>   		md_bitmap_unplug(conf->mddev->bitmap);
+> -		wake_up(&conf->wait_barrier);
+> +		wake_up_barrier(conf);
+>   
+>   		while (bio) { /* submit pending writes */
+>   			struct bio *next = bio->bi_next;
+> @@ -954,7 +960,7 @@ static void lower_barrier(struct r10conf *conf)
+>   	spin_lock_irqsave(&conf->resync_lock, flags);
+>   	conf->barrier--;
+>   	spin_unlock_irqrestore(&conf->resync_lock, flags);
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   }
+>   
+>   static bool stop_waiting_barrier(struct r10conf *conf)
+> @@ -1004,7 +1010,7 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
+>   			conf->nr_waiting--;
 >   		}
-> -		conf->nr_waiting--;
 >   		if (!conf->nr_waiting)
->   			wake_up(&conf->wait_barrier);
+> -			wake_up(&conf->wait_barrier);
+> +			wake_up_barrier(conf);
 >   	}
+>   	/* Only increment nr_pending when we wait */
+>   	if (ret)
+> @@ -1017,7 +1023,7 @@ static void allow_barrier(struct r10conf *conf)
+>   {
+>   	if ((atomic_dec_and_test(&conf->nr_pending)) ||
+>   			(conf->array_freeze_pending))
+> -		wake_up(&conf->wait_barrier);
+> +		wake_up_barrier(conf);
+>   }
+>   
+>   static void freeze_array(struct r10conf *conf, int extra)
+> @@ -1053,7 +1059,7 @@ static void unfreeze_array(struct r10conf *conf)
+>   	spin_lock_irq(&conf->resync_lock);
+>   	conf->barrier--;
+>   	conf->nr_waiting--;
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   	spin_unlock_irq(&conf->resync_lock);
+>   }
+>   
+> @@ -1078,7 +1084,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
+>   		spin_lock_irq(&conf->device_lock);
+>   		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+>   		spin_unlock_irq(&conf->device_lock);
+> -		wake_up(&conf->wait_barrier);
+> +		wake_up_barrier(conf);
+>   		md_wakeup_thread(mddev->thread);
+>   		kfree(plug);
+>   		return;
+> @@ -1087,7 +1093,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
+>   	/* we aren't scheduling, so we can do the write-out directly. */
+>   	bio = bio_list_get(&plug->pending);
+>   	md_bitmap_unplug(mddev->bitmap);
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   
+>   	while (bio) { /* submit pending writes */
+>   		struct bio *next = bio->bi_next;
+> @@ -1893,7 +1899,7 @@ static bool raid10_make_request(struct mddev *mddev, struct bio *bio)
+>   	__make_request(mddev, bio, sectors);
+>   
+>   	/* In case raid10d snuck in to freeze_array */
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   	return true;
+>   }
+>   
+> @@ -3040,7 +3046,7 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+>   			 * In case freeze_array() is waiting for condition
+>   			 * nr_pending == nr_queued + extra to be true.
+>   			 */
+> -			wake_up(&conf->wait_barrier);
+> +			wake_up_barrier(conf);
+>   			md_wakeup_thread(conf->mddev->thread);
+>   		} else {
+>   			if (test_bit(R10BIO_WriteError,
+> 
 
-Acked-by: Paul Menzel <pmenzel@molgen.mpg.de>
-
-
-Kind regards,
-
-Paul
