@@ -2,105 +2,148 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA5FFC6FA82
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Sep 2022 17:39:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7501DECAAD3
+	for <linux-raid@archiver.kernel.org>; Thu, 15 Sep 2022 07:21:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229484AbiINRje (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Sep 2022 13:39:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33468 "EHLO
+        id S229585AbiIOHV0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 15 Sep 2022 03:21:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229768AbiINRjc (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Sep 2022 13:39:32 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EC7CD97
-        for <linux-raid@vger.kernel.org>; Wed, 14 Sep 2022 10:39:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663177168; x=1694713168;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=8oTHm6p/PaDPvnefvwoYFOAaihPwq9qut++1MPJkZOY=;
-  b=LV4GWO/0UW0TUFKK3FAtfbocfx+TN83fT2Fp8oG5xBNqzahXDmITSIwp
-   rOTyOn94oQdWZ3wWULcuKhgutcptntmvszurX7app0lfZcnTV5iO19Es9
-   F6lYK4dtDIvVwIJ0A+Tqv1z1IAJFXv+nRnV+B3JBqRImrwWKau22o4ha0
-   hsWO465EQbnUl99yvPAG7jG/2MXF8rbNahKJ2KE7QmCjtmeLGPw62QVeR
-   IB3b7hSbqRA31ckuNEXmzssNxkrwa0hv/Ljdv77iZ1wjs7TBqqsUHo7uy
-   nAwrdh6Qn7310VqaWjkfwxgMlSZB8d4QlJVdsG6bGAwwEGMq4MLxLPtNE
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10470"; a="281526699"
-X-IronPort-AV: E=Sophos;i="5.93,315,1654585200"; 
-   d="scan'208";a="281526699"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2022 10:39:27 -0700
-X-IronPort-AV: E=Sophos;i="5.93,315,1654585200"; 
-   d="scan'208";a="679152197"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.32.226])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2022 10:39:23 -0700
-Date:   Wed, 14 Sep 2022 19:39:19 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>, Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH mdadm v2 1/2] mdadm: Add --discard option for Create
-Message-ID: <20220914193919.0000011e@linux.intel.com>
-In-Reply-To: <0ecc42e3-53bf-ac8d-2154-db28f27fabc3@deltatee.com>
-References: <20220908230847.5749-1-logang@deltatee.com>
-        <20220908230847.5749-2-logang@deltatee.com>
-        <20220909115749.00007431@linux.intel.com>
-        <6dd46583-05ef-12e7-8a37-b732cbe79f23@deltatee.com>
-        <20220913093559.0000438b@linux.intel.com>
-        <856072cb-ebdf-52fe-1a13-857763077bca@deltatee.com>
-        <20220914140106.00000b36@linux.intel.com>
-        <0ecc42e3-53bf-ac8d-2154-db28f27fabc3@deltatee.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229448AbiIOHVZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Sep 2022 03:21:25 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D1EA1F2E6;
+        Thu, 15 Sep 2022 00:21:23 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MSpVQ565TzKG5w;
+        Thu, 15 Sep 2022 15:19:26 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP2 (Coremail) with SMTP id Syh0CgC3VW9u0iJj+9h_Aw--.25937S3;
+        Thu, 15 Sep 2022 15:21:20 +0800 (CST)
+Subject: Re: [PATCH v2 1/4] md/raid10: cleanup wait_barrier()
+To:     Logan Gunthorpe <logang@deltatee.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
+        guoqing.jiang@linux.dev, pmenzel@molgen.mpg.de,
+        Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20220914014914.398712-1-yukuai1@huaweicloud.com>
+ <20220914014914.398712-2-yukuai1@huaweicloud.com>
+ <f0dd9208-05ec-b2fa-4b29-5fa140486fa3@deltatee.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <1932cd56-87fc-51ac-4cb0-ec35d912525c@huaweicloud.com>
+Date:   Thu, 15 Sep 2022 15:21:18 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <f0dd9208-05ec-b2fa-4b29-5fa140486fa3@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: Syh0CgC3VW9u0iJj+9h_Aw--.25937S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGw4xKrW3WF4rKw13Aw4DCFg_yoW5GF1Upw
+        sxGFW3AF4kJ342ywsxXa18ZFyS9397JrWUJF9Fk34kZFn0vr98Kr43t34FkryDurs3ua4F
+        qFs5Kr9xG3WjkrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 14 Sep 2022 10:29:53 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+Hi,
 
-> On 2022-09-14 06:01, Mariusz Tkaczyk wrote:
-> >>>> As I understand it the offset and size will give the bounds of the
-> >>>> data region on the disk. Do you not think it works for zoned raid0?    
-> >>>
-> >>> mdadm operates on 512B, so using 4K data regions could be destructive.
-> >>> Also left shift causes that size value is increasing. We can't clear more
-> >>> that user requested. We need to use 512b sectors as mdadm does.    
-> >>
-> >> I don't really follow this.  
-> > 
-> > I understand that you want left shit is used to round size to data region
-> > and I assumed that data_region is 4K and that is probably wrong.
-> > You are right I has no sense, my apologizes.
-> > 
-> > Let's imagine that our size is for example, 2687 sectors. Left shit will
-> > cause that we will get 2751488 and that will be passed as a size to
-> > function. Similar for data_offset. That is much more than we want to clear.
-> > Do I miss something? I guess that ioctl operates on sectors too but please
-> > correct me if that is wrong.  
+在 2022/09/15 0:16, Logan Gunthorpe 写道:
 > 
-> The BLKDISCARD ioctl assumes bytes for the range, not sectors. Though it
-> does have to be sector aligned.
 > 
-> dv->data_offset is then in sectors, so we shift by 9.
+> On 2022-09-13 19:49, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Currently the nasty condition is wait_barrier() is hard to read. This
+>> patch factor out the condition into a function.
+>>
+>> There are no functional changes.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/raid10.c | 56 ++++++++++++++++++++++++++-------------------
+>>   1 file changed, 32 insertions(+), 24 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 64d6e4cd8a3a..56458a53043d 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -957,44 +957,52 @@ static void lower_barrier(struct r10conf *conf)
+>>   	wake_up(&conf->wait_barrier);
+>>   }
+>>   
+>> +static bool stop_waiting_barrier(struct r10conf *conf)
+>> +{
+>> +	/* barrier is dropped */
+>> +	if (!conf->barrier)
+>> +		return true;
+>> +
+>> +	/*
+>> +	 * If there are already pending requests (preventing the barrier from
+>> +	 * rising completely), and the pre-process bio queue isn't empty, then
+>> +	 * don't wait, as we need to empty that queue to get the nr_pending
+>> +	 * count down.
+>> +	 */
+>> +	if (atomic_read(&conf->nr_pending)) {
+>> +		struct bio_list *bio_list = current->bio_list;
 > 
-> s->size is in KB, so we shift by 10.
+> I'd probably just put the bio_list declaration at the top of this
+> function, then the nested if statements are not necessary. The compiler
+> should be able to optimize the access just fine.
 > 
-Got it!
-I will be thankful if you can create #defines for that. For Example:
-KIB_TO_BYTES(s->size)
-SEC_TO_BYTES(dv->offset)
+>>   	if (conf->barrier) {
+>> -		struct bio_list *bio_list = current->bio_list;
+>> -		conf->nr_waiting++;
+>> -		/* Wait for the barrier to drop.
+>> -		 * However if there are already pending
+>> -		 * requests (preventing the barrier from
+>> -		 * rising completely), and the
+>> -		 * pre-process bio queue isn't empty,
+>> -		 * then don't wait, as we need to empty
+>> -		 * that queue to get the nr_pending
+>> -		 * count down.
+>> -		 */
+>>   		/* Return false when nowait flag is set */
+>>   		if (nowait) {
+>>   			ret = false;
+>>   		} else {
+>> +			conf->nr_waiting++;
+> 
+> Technically speaking, I think moving nr_waiting counts as a functional
+> change. As best as I can see it is correct, but it should probably be at
+> least mentioned in the commit message, or maybe done as a separate
+> commit with it's own justification. That way if it causes problems down
+> the road, a bisect will make the issue clearer.
 
-We could reuse them later in other places.
+Thanks for your advice, I just think increase and decrease nr_waiting in
+the case 'nowait' is pointless, and I move it incidentally.
+
+I'll post a separate clean up patch to do that.
+
+Paul, can I still add your Acked-by for this patch?
+
 Thanks,
-Mariusz
+Kuai
+> 
+> Thanks,
+> 
+> Logan
+> .
+> 
+
