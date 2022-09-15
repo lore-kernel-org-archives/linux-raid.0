@@ -2,131 +2,160 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4537FC6FA86
-	for <linux-raid@archiver.kernel.org>; Thu, 15 Sep 2022 09:13:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2EEAC6FA89
+	for <linux-raid@archiver.kernel.org>; Thu, 15 Sep 2022 15:21:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230126AbiIOJNW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 15 Sep 2022 05:13:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50216 "EHLO
+        id S229685AbiIOPVI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 15 Sep 2022 11:21:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229990AbiIOJND (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Sep 2022 05:13:03 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AC7698D2B;
-        Thu, 15 Sep 2022 02:12:35 -0700 (PDT)
-Received: from [172.30.1.130] (unknown [193.158.90.91])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 6FF8761EA1931;
-        Thu, 15 Sep 2022 11:12:32 +0200 (CEST)
-Message-ID: <6a1060e1-990c-b068-b515-b43c62595a8b@molgen.mpg.de>
-Date:   Thu, 15 Sep 2022 11:12:29 +0200
+        with ESMTP id S231143AbiIOPUo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Sep 2022 11:20:44 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DECDF7FF95;
+        Thu, 15 Sep 2022 08:15:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=rtmvdMNM1tIKTKTQ4X5UMPpH4NaSm76HjovqLB0QykE=; b=NfPcGucCbwdJT5fmosDrNL6bvP
+        Kus2Ef7Lkkd+ewc/l/HMeOxqAzSLH4mhEk8JllOwXwHEL0Gacq53by8GBEm/LOeq1CkgjBUE4citj
+        0Q4YX/opu6q2vVm8GZyeFK5aXmCMDDsi4EQfS13vZ0ta0+n/1m1i+4b24CyhKvN4VXdiFCXUMIw0q
+        57cEScy+ksf21bInUh9SySdhARep7B+fX7bvAzOYx+zSlppFso/oy/TDmNKiDlhbFQbaQ0xdKrNf1
+        TB575RnLLh1fXwiSQC6tR1US1mKzC2A/lG+Q4YWkQcPO8iZM3MwBEM/oGvANF3tVSqY+449FTB9Mp
+        nYA1sM7A==;
+Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1oYqa4-002TWX-CQ; Thu, 15 Sep 2022 09:15:09 -0600
+Message-ID: <67168c64-25f2-6efd-c743-9bc459ff87d2@deltatee.com>
+Date:   Thu, 15 Sep 2022 09:15:04 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH v2 1/4] md/raid10: cleanup wait_barrier()
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Logan Gunthorpe <logang@deltatee.com>, song@kernel.org,
-        guoqing.jiang@linux.dev, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20220914014914.398712-1-yukuai1@huaweicloud.com>
- <20220914014914.398712-2-yukuai1@huaweicloud.com>
- <f0dd9208-05ec-b2fa-4b29-5fa140486fa3@deltatee.com>
- <1932cd56-87fc-51ac-4cb0-ec35d912525c@huaweicloud.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <1932cd56-87fc-51ac-4cb0-ec35d912525c@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Content-Language: en-CA
+To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+References: <20220908161516.4361-1-logang@deltatee.com>
+ <20220908161516.4361-4-logang@deltatee.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20220908161516.4361-4-logang@deltatee.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 24.64.144.200
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v2 3/3] md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Yu,
 
+Hi Song,
 
-Am 15.09.22 um 09:21 schrieb Yu Kuai:
-
-> 在 2022/09/15 0:16, Logan Gunthorpe 写道:
-
->> On 2022-09-13 19:49, Yu Kuai wrote:
->>> From: Yu Kuai <yukuai3@huawei.com>
->>>
->>> Currently the nasty condition is wait_barrier() is hard to read. This
->>> patch factor out the condition into a function.
->>>
->>> There are no functional changes.
->>>
->>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>> ---
->>>   drivers/md/raid10.c | 56 ++++++++++++++++++++++++++-------------------
->>>   1 file changed, 32 insertions(+), 24 deletions(-)
->>>
->>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>> index 64d6e4cd8a3a..56458a53043d 100644
->>> --- a/drivers/md/raid10.c
->>> +++ b/drivers/md/raid10.c
->>> @@ -957,44 +957,52 @@ static void lower_barrier(struct r10conf *conf)
->>>       wake_up(&conf->wait_barrier);
->>>   }
->>> +static bool stop_waiting_barrier(struct r10conf *conf)
->>> +{
->>> +    /* barrier is dropped */
->>> +    if (!conf->barrier)
->>> +        return true;
->>> +
->>> +    /*
->>> +     * If there are already pending requests (preventing the barrier 
->>> from
->>> +     * rising completely), and the pre-process bio queue isn't 
->>> empty, then
->>> +     * don't wait, as we need to empty that queue to get the nr_pending
->>> +     * count down.
->>> +     */
->>> +    if (atomic_read(&conf->nr_pending)) {
->>> +        struct bio_list *bio_list = current->bio_list;
->>
->> I'd probably just put the bio_list declaration at the top of this
->> function, then the nested if statements are not necessary. The compiler
->> should be able to optimize the access just fine.
->>
->>>       if (conf->barrier) {
->>> -        struct bio_list *bio_list = current->bio_list;
->>> -        conf->nr_waiting++;
->>> -        /* Wait for the barrier to drop.
->>> -         * However if there are already pending
->>> -         * requests (preventing the barrier from
->>> -         * rising completely), and the
->>> -         * pre-process bio queue isn't empty,
->>> -         * then don't wait, as we need to empty
->>> -         * that queue to get the nr_pending
->>> -         * count down.
->>> -         */
->>>           /* Return false when nowait flag is set */
->>>           if (nowait) {
->>>               ret = false;
->>>           } else {
->>> +            conf->nr_waiting++;
->>
->> Technically speaking, I think moving nr_waiting counts as a functional
->> change. As best as I can see it is correct, but it should probably be at
->> least mentioned in the commit message, or maybe done as a separate
->> commit with it's own justification. That way if it causes problems down
->> the road, a bisect will make the issue clearer.
+On 2022-09-08 10:15, Logan Gunthorpe wrote:
+> A complicated deadlock exists when using the journal and an elevated
+> group_thrtead_cnt. It was found with loop devices, but its not clear
+> whether it can be seen with real disks. The deadlock can occur simply
+> by writing data with an fio script.
 > 
-> Thanks for your advice, I just think increase and decrease nr_waiting in
-> the case 'nowait' is pointless, and I move it incidentally.
+> When the deadlock occurs, multiple threads will hang in different ways:
 > 
-> I'll post a separate clean up patch to do that.
+>  1) The group threads will hang in the blk-wbt code with bios waiting to
+>     be submitted to the block layer:
 > 
-> Paul, can I still add your Acked-by for this patch?
+>         io_schedule+0x70/0xb0
+>         rq_qos_wait+0x153/0x210
+>         wbt_wait+0x115/0x1b0
+>         io_schedule+0x70/0xb0
+>         rq_qos_wait+0x153/0x210
+>         wbt_wait+0x115/0x1b0
+>         __rq_qos_throttle+0x38/0x60
+>         blk_mq_submit_bio+0x589/0xcd0
+>         wbt_wait+0x115/0x1b0
+>         __rq_qos_throttle+0x38/0x60
+>         blk_mq_submit_bio+0x589/0xcd0
+>         __submit_bio+0xe6/0x100
+>         submit_bio_noacct_nocheck+0x42e/0x470
+>         submit_bio_noacct+0x4c2/0xbb0
+>         ops_run_io+0x46b/0x1a30
+>         handle_stripe+0xcd3/0x36b0
+>         handle_active_stripes.constprop.0+0x6f6/0xa60
+>         raid5_do_work+0x177/0x330
+> 
+>     Or:
+>         io_schedule+0x70/0xb0
+>         rq_qos_wait+0x153/0x210
+>         wbt_wait+0x115/0x1b0
+>         __rq_qos_throttle+0x38/0x60
+>         blk_mq_submit_bio+0x589/0xcd0
+>         __submit_bio+0xe6/0x100
+>         submit_bio_noacct_nocheck+0x42e/0x470
+>         submit_bio_noacct+0x4c2/0xbb0
+>         flush_deferred_bios+0x136/0x170
+>         raid5_do_work+0x262/0x330
+> 
+>  2) The r5l_reclaim thread will hang in the same way, submitting a
+>     bio to the block layer:
+> 
+>         io_schedule+0x70/0xb0
+>         rq_qos_wait+0x153/0x210
+>         wbt_wait+0x115/0x1b0
+>         __rq_qos_throttle+0x38/0x60
+>         blk_mq_submit_bio+0x589/0xcd0
+>         __submit_bio+0xe6/0x100
+>         submit_bio_noacct_nocheck+0x42e/0x470
+>         submit_bio_noacct+0x4c2/0xbb0
+>         submit_bio+0x3f/0xf0
+>         md_super_write+0x12f/0x1b0
+>         md_update_sb.part.0+0x7c6/0xff0
+>         md_update_sb+0x30/0x60
+>         r5l_do_reclaim+0x4f9/0x5e0
+>         r5l_reclaim_thread+0x69/0x30b
+> 
+>     However, before hanging, the MD_SB_CHANGE_PENDING flag will be
+>     set for sb_flags in r5l_write_super_and_discard_space(). This
+>     flag will never be cleared because the submit_bio() call never
+>     returns.
+> 
+>  3) Due to the MD_SB_CHANGE_PENDING flag being set, handle_stripe()
+>     will do no processing on any pending stripes and re-set
+>     STRIPE_HANDLE. This will cause the raid5d thread to enter an
+>     infinite loop, constantly trying to handle the same stripes
+>     stuck in the queue.
+> 
+>     The raid5d thread has a blk_plug that holds a number of bios
+>     that are also stuck waiting seeing the thread is in a loop
+>     that never schedules. These bios have been accounted for by
+>     blk-wbt thus preventing the other threads above from
+>     continuing when they try to submit bios. --Deadlock.
+> 
+> To fix this, add the same wait_event() that is used in raid5_do_work()
+> to raid5d() such that if MD_SB_CHANGE_PENDING is set, the thread will
+> schedule and wait until the flag is cleared. The schedule action will
+> flush the plug which will allow the r5l_reclaim thread to continue,
+> thus preventing the deadlock.
+> 
+> It's not clear when the deadlock was introduced, but the similar
+> wait_event() call in raid5_do_work() was added in 2017 by this
+> commit:
+> 
+>     16d997b78b15 ("md/raid5: simplfy delaying of writes while metadata
+>                    is updated.")
+> 
+> Link: https://lore.kernel.org/r/7f3b87b6-b52a-f737-51d7-a4eec5c44112@deltatee.com
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-Yes, sure.
+Seems this patch of mine that is in md-next is causing an 1 in ~30
+failure on the mdadm test 13imsm-r0_r5_3d-grow-r0_r5_4d.
 
+I'm looking into it and will try to send an updated patch when I have a fix.
 
-Kind regards,
-
-Paul
+Logan
