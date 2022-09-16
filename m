@@ -2,108 +2,71 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3786ECAAA1
-	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 15:04:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF7E5ECAAD8
+	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 18:35:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231555AbiIPPEp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 16 Sep 2022 11:04:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40126 "EHLO
+        id S229572AbiIPSfv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 16 Sep 2022 14:35:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231416AbiIPPEj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Sep 2022 11:04:39 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1634D13D5B
-        for <linux-raid@vger.kernel.org>; Fri, 16 Sep 2022 08:04:36 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id C390733893;
-        Fri, 16 Sep 2022 15:04:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1663340674; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0IOJssIcs74dnimTKZ5xRynZb5kC3pP1fwa4Wqg2/D4=;
-        b=hpx/VmQFIfdASIjLEprdrhI0SEfkyU7DeuqeyjmI6ZThi5cAvQNbKfYrdyt6ttFHGv0dRn
-        72gVvm7KTBeqEAZqu3UP8Pt8X8TZW+BCn4oe3pTD+3dto7Zkzgn2do/DmuwMYBgbkpB1t2
-        NAGvSi9zXCFj0wO3yYQ6r8gEI21NJBw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1663340674;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0IOJssIcs74dnimTKZ5xRynZb5kC3pP1fwa4Wqg2/D4=;
-        b=zugIBFnqx4zqUd92LlJqLFXd7wIhzfQMrEE/PpDKoLBMs0ZRe2lWNCG8L5qQ/6z4Ym11Lu
-        +8SR2Rd2LWLJ1/Ag==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8686D1346B;
-        Fri, 16 Sep 2022 15:04:33 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 6Ae9EYGQJGNuZwAAMHmgww
-        (envelope-from <colyli@suse.de>); Fri, 16 Sep 2022 15:04:33 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
-Subject: Re: [PATCH v2 2/2] ReadMe: fix command-line help
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220909135034.14397-3-mariusz.tkaczyk@linux.intel.com>
-Date:   Fri, 16 Sep 2022 23:04:32 +0800
-Cc:     Jes Sorensen <jes@trained-monkey.org>, felix.lechner@lease-up.com,
-        linux-raid@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <FB255C3A-82D9-4B57-BE42-D7EC7AF25AA9@suse.de>
-References: <20220909135034.14397-1-mariusz.tkaczyk@linux.intel.com>
- <20220909135034.14397-3-mariusz.tkaczyk@linux.intel.com>
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-X-Mailer: Apple Mail (2.3696.120.41.1.1)
+        with ESMTP id S229505AbiIPSft (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Sep 2022 14:35:49 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D53AC979C4;
+        Fri, 16 Sep 2022 11:35:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=kJIc7NqcYR1MP3Jy8goJn5/NXsx5nBAkLTWuvTAL5Fk=; b=AaIrBbZEl3QaLssyMYrqkucXOc
+        VvwN8gndZkxkUjLcYdZ0Ve0+SpJgdVz3MlUMgUSchTR19j4crJj7sTMqCEfLZBzxzevYh8SUrAeaC
+        PJDKhSb+Zp2LhRllXy/6G5mD8eTHhjxU8+Fezp09BnlA6hyllghGx1aGZGyrvdbWt6FOdZmTniIvU
+        YKZpxjUSwu3HMCq2FgOkvJPsUTtk2tpKP/GaJxCrhsGjmHjBXgtAiFk4qcTBAR2TRY73EQmdvt0F/
+        t4z5xd+oqLs07sIsCNInBD1o9q/GCh8kwNYXhGao90wwFdxLmb08ZjzfY83Chtgs3Bq7BCOipj7tO
+        EhO/VfGA==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1oZGBU-003JOk-6m; Fri, 16 Sep 2022 12:35:29 -0600
+Message-ID: <d3f4ca12-a9dd-9eca-580e-938165a75d65@deltatee.com>
+Date:   Fri, 16 Sep 2022 12:35:23 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Content-Language: en-CA
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
+        guoqing.jiang@linux.dev, pmenzel@molgen.mpg.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com
+References: <20220916113428.774061-1-yukuai1@huaweicloud.com>
+ <20220916113428.774061-2-yukuai1@huaweicloud.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20220916113428.774061-2-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: yukuai1@huaweicloud.com, song@kernel.org, guoqing.jiang@linux.dev, pmenzel@molgen.mpg.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v3 1/5] md/raid10: factor out code from wait_barrier() to
+ stop_waiting_barrier()
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-> 2022=E5=B9=B49=E6=9C=889=E6=97=A5 21:50=EF=BC=8CMariusz Tkaczyk =
-<mariusz.tkaczyk@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Make command-line help consistent with manual page.
-> Copied from Debian.
->=20
-> Cc: Felix Lechner <felix.lechner@lease-up.com>
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+On 2022-09-16 05:34, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Currently the nasty condition in wait_barrier() is hard to read. This
+> patch factors out the condition into a function.
+> 
+> There are no functional changes.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Acked-by: Paul Menzel <pmenzel@molgen.mpg.de>
 
-Acked-by: Coly Li <colyli@suse.de>
-
-Thanks.
-
-Coly Li
-
-
-> ---
-> ReadMe.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/ReadMe.c b/ReadMe.c
-> index 7f94847..50a5e36 100644
-> --- a/ReadMe.c
-> +++ b/ReadMe.c
-> @@ -477,7 +477,7 @@ char Help_assemble[] =3D
-> ;
->=20
-> char Help_manage[] =3D
-> -"Usage: mdadm arraydevice options component devices...\n"
-> +"Usage: mdadm [mode] arraydevice [options] <component devices...>\n"
-> "\n"
-> "This usage is for managing the component devices within an array.\n"
-> "The --manage option is not needed and is assumed if the first =
-argument\n"
-> --=20
-> 2.26.2
->=20
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
