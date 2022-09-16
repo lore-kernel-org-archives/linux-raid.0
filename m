@@ -2,160 +2,118 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2EEAC6FA89
-	for <linux-raid@archiver.kernel.org>; Thu, 15 Sep 2022 15:21:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12C52ECAAD8
+	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 11:23:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229685AbiIOPVI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 15 Sep 2022 11:21:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46724 "EHLO
+        id S230505AbiIPLXj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 16 Sep 2022 07:23:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231143AbiIOPUo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Sep 2022 11:20:44 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DECDF7FF95;
-        Thu, 15 Sep 2022 08:15:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=rtmvdMNM1tIKTKTQ4X5UMPpH4NaSm76HjovqLB0QykE=; b=NfPcGucCbwdJT5fmosDrNL6bvP
-        Kus2Ef7Lkkd+ewc/l/HMeOxqAzSLH4mhEk8JllOwXwHEL0Gacq53by8GBEm/LOeq1CkgjBUE4citj
-        0Q4YX/opu6q2vVm8GZyeFK5aXmCMDDsi4EQfS13vZ0ta0+n/1m1i+4b24CyhKvN4VXdiFCXUMIw0q
-        57cEScy+ksf21bInUh9SySdhARep7B+fX7bvAzOYx+zSlppFso/oy/TDmNKiDlhbFQbaQ0xdKrNf1
-        TB575RnLLh1fXwiSQC6tR1US1mKzC2A/lG+Q4YWkQcPO8iZM3MwBEM/oGvANF3tVSqY+449FTB9Mp
-        nYA1sM7A==;
-Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1oYqa4-002TWX-CQ; Thu, 15 Sep 2022 09:15:09 -0600
-Message-ID: <67168c64-25f2-6efd-c743-9bc459ff87d2@deltatee.com>
-Date:   Thu, 15 Sep 2022 09:15:04 -0600
+        with ESMTP id S230008AbiIPLXi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Sep 2022 07:23:38 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2D6A6717D;
+        Fri, 16 Sep 2022 04:23:35 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MTWqQ3FrPzKG7L;
+        Fri, 16 Sep 2022 19:21:38 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP2 (Coremail) with SMTP id Syh0CgDXKXOzXCRjdyK5Aw--.60594S4;
+        Fri, 16 Sep 2022 19:23:33 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org, logang@deltatee.com, guoqing.jiang@linux.dev,
+        pmenzel@molgen.mpg.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
+Subject: [PATCH v3 0/5] md/raid10: reduce lock contention for io
+Date:   Fri, 16 Sep 2022 19:34:23 +0800
+Message-Id: <20220916113428.774061-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Content-Language: en-CA
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-References: <20220908161516.4361-1-logang@deltatee.com>
- <20220908161516.4361-4-logang@deltatee.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20220908161516.4361-4-logang@deltatee.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 24.64.144.200
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH v2 3/3] md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: Syh0CgDXKXOzXCRjdyK5Aw--.60594S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar1fKF15Jw1DWFW8XF1UKFg_yoW8uF4rpa
+        1fJrna9FsrAryIvrZxKr17CryYv3WFq39rCF97G34fZF98ArW5JF1xtFWrur1DXr9aqFy7
+        J3WUCa9agFyjvaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+        AvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7Cj
+        xVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+From: Yu Kuai <yukuai3@huawei.com>
 
-Hi Song,
+Changes in v3:
+ - split a patch from patch 1
+ - only modify hot path in patch 3
+ - wake up barrier if 'nr_pending' is decreased to 0 in
+ wait_barrier_nolock(), otherwise raise_barrier() might hung.
 
-On 2022-09-08 10:15, Logan Gunthorpe wrote:
-> A complicated deadlock exists when using the journal and an elevated
-> group_thrtead_cnt. It was found with loop devices, but its not clear
-> whether it can be seen with real disks. The deadlock can occur simply
-> by writing data with an fio script.
-> 
-> When the deadlock occurs, multiple threads will hang in different ways:
-> 
->  1) The group threads will hang in the blk-wbt code with bios waiting to
->     be submitted to the block layer:
-> 
->         io_schedule+0x70/0xb0
->         rq_qos_wait+0x153/0x210
->         wbt_wait+0x115/0x1b0
->         io_schedule+0x70/0xb0
->         rq_qos_wait+0x153/0x210
->         wbt_wait+0x115/0x1b0
->         __rq_qos_throttle+0x38/0x60
->         blk_mq_submit_bio+0x589/0xcd0
->         wbt_wait+0x115/0x1b0
->         __rq_qos_throttle+0x38/0x60
->         blk_mq_submit_bio+0x589/0xcd0
->         __submit_bio+0xe6/0x100
->         submit_bio_noacct_nocheck+0x42e/0x470
->         submit_bio_noacct+0x4c2/0xbb0
->         ops_run_io+0x46b/0x1a30
->         handle_stripe+0xcd3/0x36b0
->         handle_active_stripes.constprop.0+0x6f6/0xa60
->         raid5_do_work+0x177/0x330
-> 
->     Or:
->         io_schedule+0x70/0xb0
->         rq_qos_wait+0x153/0x210
->         wbt_wait+0x115/0x1b0
->         __rq_qos_throttle+0x38/0x60
->         blk_mq_submit_bio+0x589/0xcd0
->         __submit_bio+0xe6/0x100
->         submit_bio_noacct_nocheck+0x42e/0x470
->         submit_bio_noacct+0x4c2/0xbb0
->         flush_deferred_bios+0x136/0x170
->         raid5_do_work+0x262/0x330
-> 
->  2) The r5l_reclaim thread will hang in the same way, submitting a
->     bio to the block layer:
-> 
->         io_schedule+0x70/0xb0
->         rq_qos_wait+0x153/0x210
->         wbt_wait+0x115/0x1b0
->         __rq_qos_throttle+0x38/0x60
->         blk_mq_submit_bio+0x589/0xcd0
->         __submit_bio+0xe6/0x100
->         submit_bio_noacct_nocheck+0x42e/0x470
->         submit_bio_noacct+0x4c2/0xbb0
->         submit_bio+0x3f/0xf0
->         md_super_write+0x12f/0x1b0
->         md_update_sb.part.0+0x7c6/0xff0
->         md_update_sb+0x30/0x60
->         r5l_do_reclaim+0x4f9/0x5e0
->         r5l_reclaim_thread+0x69/0x30b
-> 
->     However, before hanging, the MD_SB_CHANGE_PENDING flag will be
->     set for sb_flags in r5l_write_super_and_discard_space(). This
->     flag will never be cleared because the submit_bio() call never
->     returns.
-> 
->  3) Due to the MD_SB_CHANGE_PENDING flag being set, handle_stripe()
->     will do no processing on any pending stripes and re-set
->     STRIPE_HANDLE. This will cause the raid5d thread to enter an
->     infinite loop, constantly trying to handle the same stripes
->     stuck in the queue.
-> 
->     The raid5d thread has a blk_plug that holds a number of bios
->     that are also stuck waiting seeing the thread is in a loop
->     that never schedules. These bios have been accounted for by
->     blk-wbt thus preventing the other threads above from
->     continuing when they try to submit bios. --Deadlock.
-> 
-> To fix this, add the same wait_event() that is used in raid5_do_work()
-> to raid5d() such that if MD_SB_CHANGE_PENDING is set, the thread will
-> schedule and wait until the flag is cleared. The schedule action will
-> flush the plug which will allow the r5l_reclaim thread to continue,
-> thus preventing the deadlock.
-> 
-> It's not clear when the deadlock was introduced, but the similar
-> wait_event() call in raid5_do_work() was added in 2017 by this
-> commit:
-> 
->     16d997b78b15 ("md/raid5: simplfy delaying of writes while metadata
->                    is updated.")
-> 
-> Link: https://lore.kernel.org/r/7f3b87b6-b52a-f737-51d7-a4eec5c44112@deltatee.com
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Changes in v2:
+ - add patch 1, as suggested by Logan Gunthorpe.
+ - in patch 4, instead of use spin_lock/unlock in wait_event, which will
+ confuse lockdep, use write_seqlock/unlock instead.
+ - in patch 4, use read_seqbegin() to get seqcount instead of unusual
+ usage of raw_read_seqcount().
+ - test result is different from v1 in aarch64 due to retest from different
+ environment.
 
-Seems this patch of mine that is in md-next is causing an 1 in ~30
-failure on the mdadm test 13imsm-r0_r5_3d-grow-r0_r5_4d.
+This patchset tries to avoid that two locks are held unconditionally
+in hot path.
 
-I'm looking into it and will try to send an updated patch when I have a fix.
+Test environment:
 
-Logan
+Architecture:
+aarch64 Huawei KUNPENG 920
+x86 Intel(R) Xeon(R) Platinum 8380
+
+Raid10 initialize:
+mdadm --create /dev/md0 --level 10 --bitmap none --raid-devices 4 /dev/nvme0n1 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme3n1
+
+Test cmd:
+(task set -c 0-15) fio -name=0 -ioengine=libaio -direct=1 -group_reporting=1 -randseed=2022 -rwmixread=70 -refill_buffers -filename=/dev/md0 -numjobs=16 -runtime=60s -bs=4k -iodepth=256 -rw=randread
+
+Test result:
+
+aarch64:
+before this patchset:		3.2 GiB/s
+bind node before this patchset: 6.9 Gib/s
+after this patchset:		7.9 Gib/s
+bind node after this patchset:	8.0 Gib/s
+
+x86:(bind node is not tested yet)
+before this patchset: 7.0 GiB/s
+after this patchset : 9.3 GiB/s
+
+Please noted that in the test machine, memory access latency is very bad
+across nodes compare to local node in aarch64, which is why bandwidth
+while bind node is much better.
+
+Yu Kuai (5):
+  md/raid10: Factor out code from wait_barrier() to
+    stop_waiting_barrier()
+  md/raid10: don't modify 'nr_waitng' in wait_barrier() for the case
+    nowait
+  md/raid10: prevent unnecessary calls to wake_up() in fast path
+  md/raid10: fix improper BUG_ON() in raise_barrier()
+  md/raid10: convert resync_lock to use seqlock
+
+ drivers/md/raid10.c | 149 ++++++++++++++++++++++++++++----------------
+ drivers/md/raid10.h |   2 +-
+ 2 files changed, 96 insertions(+), 55 deletions(-)
+
+-- 
+2.31.1
+
