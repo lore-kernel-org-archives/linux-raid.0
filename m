@@ -2,261 +2,193 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9C87ECAAD8
-	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 11:23:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A459FECAAA1
+	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 15:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231265AbiIPLXr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 16 Sep 2022 07:23:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49242 "EHLO
+        id S231519AbiIPPEJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 16 Sep 2022 11:04:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230470AbiIPLXi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Sep 2022 07:23:38 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1D2F79623;
-        Fri, 16 Sep 2022 04:23:36 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MTWqS3HndzKNp7;
-        Fri, 16 Sep 2022 19:21:40 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP2 (Coremail) with SMTP id Syh0CgDXKXOzXCRjdyK5Aw--.60594S9;
-        Fri, 16 Sep 2022 19:23:35 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, logang@deltatee.com, guoqing.jiang@linux.dev,
-        pmenzel@molgen.mpg.de
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
-Subject: [PATCH v3 5/5] md/raid10: convert resync_lock to use seqlock
-Date:   Fri, 16 Sep 2022 19:34:28 +0800
-Message-Id: <20220916113428.774061-6-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220916113428.774061-1-yukuai1@huaweicloud.com>
-References: <20220916113428.774061-1-yukuai1@huaweicloud.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgDXKXOzXCRjdyK5Aw--.60594S9
-X-Coremail-Antispam: 1UD129KBjvJXoW3Jw45Gr47JF4ftryruFWfXwb_yoWxWFWUpw
-        4aqr15tFWUXrs0qr4DJa1q9r1Fgw4kKa47Ka9ru3WkZFs5tryfWF1UGr9Ygryqvr9xJFyv
-        qFWrCFWfGw17tFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9E14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
-        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAv
-        wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14
-        v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZX7UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+        with ESMTP id S231446AbiIPPEH (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Sep 2022 11:04:07 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B28608A6C4
+        for <linux-raid@vger.kernel.org>; Fri, 16 Sep 2022 08:04:05 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 4F81C33C69;
+        Fri, 16 Sep 2022 15:04:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1663340644; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hGWeuiur9NYzFanSW87QXG9d04zSoAYmVFeiWhbLaSc=;
+        b=u8Y0GOlLR88iP4JyGLW89aCuIYj4HiSkIvPXZzaCMa6x9tD2gGR0BKohb3bnOwF9/+NAkM
+        oJE5BhNlznu/gR6d2LC8PH37ZTc4jVa8lEtBzdOTrWlQAFt22ODMG+sYTqWhvWnwlo9Qbt
+        cVEB8q//xA2OzwjI/pVvsp8TW1cpHqw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1663340644;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hGWeuiur9NYzFanSW87QXG9d04zSoAYmVFeiWhbLaSc=;
+        b=b9QmvgXRjnQEX6hUAdiZBejGhLc8VYvHlrSIJxAMxN+yrb7i2FHdzuNXF4GvP4pwKgO/RX
+        jSNv5xYtgIsiCKDA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 29EC81346B;
+        Fri, 16 Sep 2022 15:04:02 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id lngIN2KQJGNuZwAAMHmgww
+        (envelope-from <colyli@suse.de>); Fri, 16 Sep 2022 15:04:02 +0000
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
+Subject: Re: [PATCH v2 1/2] mdadm: Add Documentation entries to systemd
+ services
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20220909135034.14397-2-mariusz.tkaczyk@linux.intel.com>
+Date:   Fri, 16 Sep 2022 23:03:59 +0800
+Cc:     Jes Sorensen <jes@trained-monkey.org>, felix.lechner@lease-up.com,
+        linux-raid@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <1AA9035E-B7D0-46A6-AFAD-DBE3FB17D561@suse.de>
+References: <20220909135034.14397-1-mariusz.tkaczyk@linux.intel.com>
+ <20220909135034.14397-2-mariusz.tkaczyk@linux.intel.com>
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+X-Mailer: Apple Mail (2.3696.120.41.1.1)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
 
-Currently, wait_barrier() will hold 'resync_lock' to read 'conf->barrier',
-and io can't be dispatched until 'barrier' is dropped.
 
-Since holding the 'barrier' is not common, convert 'resync_lock' to use
-seqlock so that holding lock can be avoided in fast path.
+> 2022=E5=B9=B49=E6=9C=889=E6=97=A5 21:50=EF=BC=8CMariusz Tkaczyk =
+<mariusz.tkaczyk@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> Add documentation section.
+> Copied from Debian.
+>=20
+> Cc: Felix Lechner <felix.lechner@lease-up.com>
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid10.c | 87 ++++++++++++++++++++++++++++++---------------
- drivers/md/raid10.h |  2 +-
- 2 files changed, 59 insertions(+), 30 deletions(-)
+Acked-by: Coly Li <colyli@suse.de>
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 9a28abd19709..2daa7d57034c 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -79,6 +79,21 @@ static void end_reshape(struct r10conf *conf);
- 
- #include "raid1-10.c"
- 
-+#define NULL_CMD
-+#define cmd_before(conf, cmd) \
-+	do { \
-+		write_sequnlock_irq(&(conf)->resync_lock); \
-+		cmd; \
-+	} while (0)
-+#define cmd_after(conf) write_seqlock_irq(&(conf)->resync_lock)
-+
-+#define wait_event_barrier_cmd(conf, cond, cmd) \
-+	wait_event_cmd((conf)->wait_barrier, cond, cmd_before(conf, cmd), \
-+		       cmd_after(conf))
-+
-+#define wait_event_barrier(conf, cond) \
-+	wait_event_barrier_cmd(conf, cond, NULL_CMD)
-+
- /*
-  * for resync bio, r10bio pointer can be retrieved from the per-bio
-  * 'struct resync_pages'.
-@@ -936,30 +951,29 @@ static void flush_pending_writes(struct r10conf *conf)
- 
- static void raise_barrier(struct r10conf *conf, int force)
- {
--	spin_lock_irq(&conf->resync_lock);
-+	write_seqlock_irq(&conf->resync_lock);
- 	BUG_ON(force && !conf->barrier);
- 
- 	/* Wait until no block IO is waiting (unless 'force') */
--	wait_event_lock_irq(conf->wait_barrier, force || !conf->nr_waiting,
--			    conf->resync_lock);
-+	wait_event_barrier(conf, force || !conf->nr_waiting);
- 
- 	/* block any new IO from starting */
--	conf->barrier++;
-+	WRITE_ONCE(conf->barrier, conf->barrier + 1);
- 
- 	/* Now wait for all pending IO to complete */
--	wait_event_lock_irq(conf->wait_barrier,
--			    !atomic_read(&conf->nr_pending) && conf->barrier < RESYNC_DEPTH,
--			    conf->resync_lock);
-+	wait_event_barrier(conf, !atomic_read(&conf->nr_pending) &&
-+				 conf->barrier < RESYNC_DEPTH);
- 
--	spin_unlock_irq(&conf->resync_lock);
-+	write_sequnlock_irq(&conf->resync_lock);
- }
- 
- static void lower_barrier(struct r10conf *conf)
- {
- 	unsigned long flags;
--	spin_lock_irqsave(&conf->resync_lock, flags);
--	conf->barrier--;
--	spin_unlock_irqrestore(&conf->resync_lock, flags);
-+
-+	write_seqlock_irqsave(&conf->resync_lock, flags);
-+	WRITE_ONCE(conf->barrier, conf->barrier - 1);
-+	write_sequnlock_irqrestore(&conf->resync_lock, flags);
- 	wake_up(&conf->wait_barrier);
- }
- 
-@@ -990,11 +1004,31 @@ static bool stop_waiting_barrier(struct r10conf *conf)
- 	return false;
- }
- 
-+static bool wait_barrier_nolock(struct r10conf *conf)
-+{
-+	unsigned int seq = read_seqbegin(&conf->resync_lock);
-+
-+	if (READ_ONCE(conf->barrier))
-+		return false;
-+
-+	atomic_inc(&conf->nr_pending);
-+	if (!read_seqretry(&conf->resync_lock, seq))
-+		return true;
-+
-+	if (atomic_dec_and_test(&conf->nr_pending))
-+		wake_up_barrier(conf);
-+
-+	return false;
-+}
-+
- static bool wait_barrier(struct r10conf *conf, bool nowait)
- {
- 	bool ret = true;
- 
--	spin_lock_irq(&conf->resync_lock);
-+	if (wait_barrier_nolock(conf))
-+		return true;
-+
-+	write_seqlock_irq(&conf->resync_lock);
- 	if (conf->barrier) {
- 		/* Return false when nowait flag is set */
- 		if (nowait) {
-@@ -1002,9 +1036,7 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
- 		} else {
- 			conf->nr_waiting++;
- 			raid10_log(conf->mddev, "wait barrier");
--			wait_event_lock_irq(conf->wait_barrier,
--					    stop_waiting_barrier(conf),
--					    conf->resync_lock);
-+			wait_event_barrier(conf, stop_waiting_barrier(conf));
- 			conf->nr_waiting--;
- 		}
- 		if (!conf->nr_waiting)
-@@ -1013,7 +1045,7 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
- 	/* Only increment nr_pending when we wait */
- 	if (ret)
- 		atomic_inc(&conf->nr_pending);
--	spin_unlock_irq(&conf->resync_lock);
-+	write_sequnlock_irq(&conf->resync_lock);
- 	return ret;
- }
- 
-@@ -1038,27 +1070,24 @@ static void freeze_array(struct r10conf *conf, int extra)
- 	 * must match the number of pending IOs (nr_pending) before
- 	 * we continue.
- 	 */
--	spin_lock_irq(&conf->resync_lock);
-+	write_seqlock_irq(&conf->resync_lock);
- 	conf->array_freeze_pending++;
--	conf->barrier++;
-+	WRITE_ONCE(conf->barrier, conf->barrier + 1);
- 	conf->nr_waiting++;
--	wait_event_lock_irq_cmd(conf->wait_barrier,
--				atomic_read(&conf->nr_pending) == conf->nr_queued+extra,
--				conf->resync_lock,
--				flush_pending_writes(conf));
--
-+	wait_event_barrier_cmd(conf, atomic_read(&conf->nr_pending) ==
-+			conf->nr_queued + extra, flush_pending_writes(conf));
- 	conf->array_freeze_pending--;
--	spin_unlock_irq(&conf->resync_lock);
-+	write_sequnlock_irq(&conf->resync_lock);
- }
- 
- static void unfreeze_array(struct r10conf *conf)
- {
- 	/* reverse the effect of the freeze */
--	spin_lock_irq(&conf->resync_lock);
--	conf->barrier--;
-+	write_seqlock_irq(&conf->resync_lock);
-+	WRITE_ONCE(conf->barrier, conf->barrier - 1);
- 	conf->nr_waiting--;
- 	wake_up(&conf->wait_barrier);
--	spin_unlock_irq(&conf->resync_lock);
-+	write_sequnlock_irq(&conf->resync_lock);
- }
- 
- static sector_t choose_data_offset(struct r10bio *r10_bio,
-@@ -4044,7 +4073,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	INIT_LIST_HEAD(&conf->retry_list);
- 	INIT_LIST_HEAD(&conf->bio_end_io_list);
- 
--	spin_lock_init(&conf->resync_lock);
-+	seqlock_init(&conf->resync_lock);
- 	init_waitqueue_head(&conf->wait_barrier);
- 	atomic_set(&conf->nr_pending, 0);
- 
-@@ -4363,7 +4392,7 @@ static void *raid10_takeover_raid0(struct mddev *mddev, sector_t size, int devs)
- 				rdev->new_raid_disk = rdev->raid_disk * 2;
- 				rdev->sectors = size;
- 			}
--		conf->barrier = 1;
-+		WRITE_ONCE(conf->barrier, 1);
- 	}
- 
- 	return conf;
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index 5c0804d8bb1f..8c072ce0bc54 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -76,7 +76,7 @@ struct r10conf {
- 	/* queue pending writes and submit them on unplug */
- 	struct bio_list		pending_bio_list;
- 
--	spinlock_t		resync_lock;
-+	seqlock_t		resync_lock;
- 	atomic_t		nr_pending;
- 	int			nr_waiting;
- 	int			nr_queued;
--- 
-2.31.1
+Thanks.
+
+Coly Li
+
+
+
+> ---
+> systemd/mdadm-grow-continue@.service | 1 +
+> systemd/mdadm-last-resort@.service   | 1 +
+> systemd/mdcheck_continue.service     | 3 ++-
+> systemd/mdcheck_start.service        | 1 +
+> systemd/mdmon@.service               | 1 +
+> systemd/mdmonitor-oneshot.service    | 1 +
+> systemd/mdmonitor.service            | 1 +
+> 7 files changed, 8 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/systemd/mdadm-grow-continue@.service =
+b/systemd/mdadm-grow-continue@.service
+> index 9fdc8ec..64b8254 100644
+> --- a/systemd/mdadm-grow-continue@.service
+> +++ b/systemd/mdadm-grow-continue@.service
+> @@ -8,6 +8,7 @@
+> [Unit]
+> Description=3DManage MD Reshape on /dev/%I
+> DefaultDependencies=3Dno
+> +Documentation=3Dman:mdadm(8)
+>=20
+> [Service]
+> ExecStart=3DBINDIR/mdadm --grow --continue /dev/%I
+> diff --git a/systemd/mdadm-last-resort@.service =
+b/systemd/mdadm-last-resort@.service
+> index efeb3f6..e938112 100644
+> --- a/systemd/mdadm-last-resort@.service
+> +++ b/systemd/mdadm-last-resort@.service
+> @@ -2,6 +2,7 @@
+> Description=3DActivate md array %I even though degraded
+> DefaultDependencies=3Dno
+> ConditionPathExists=3D!/sys/devices/virtual/block/%i/md/sync_action
+> +Documentation=3Dman:mdadm(8)
+>=20
+> [Service]
+> Type=3Doneshot
+> diff --git a/systemd/mdcheck_continue.service =
+b/systemd/mdcheck_continue.service
+> index 854317f..f532490 100644
+> --- a/systemd/mdcheck_continue.service
+> +++ b/systemd/mdcheck_continue.service
+> @@ -7,7 +7,8 @@
+>=20
+> [Unit]
+> Description=3DMD array scrubbing - continuation
+> -ConditionPathExistsGlob =3D /var/lib/mdcheck/MD_UUID_*
+> +ConditionPathExistsGlob=3D/var/lib/mdcheck/MD_UUID_*
+> +Documentation=3Dman:mdadm(8)
+>=20
+> [Service]
+> Type=3Doneshot
+> diff --git a/systemd/mdcheck_start.service =
+b/systemd/mdcheck_start.service
+> index 3bb3d13..703a658 100644
+> --- a/systemd/mdcheck_start.service
+> +++ b/systemd/mdcheck_start.service
+> @@ -8,6 +8,7 @@
+> [Unit]
+> Description=3DMD array scrubbing
+> Wants=3Dmdcheck_continue.timer
+> +Documentation=3Dman:mdadm(8)
+>=20
+> [Service]
+> Type=3Doneshot
+> diff --git a/systemd/mdmon@.service b/systemd/mdmon@.service
+> index 7753395..97a1acd 100644
+> --- a/systemd/mdmon@.service
+> +++ b/systemd/mdmon@.service
+> @@ -9,6 +9,7 @@
+> Description=3DMD Metadata Monitor on /dev/%I
+> DefaultDependencies=3Dno
+> Before=3Dinitrd-switch-root.target
+> +Documentation=3Dman:mdmon(8)
+>=20
+> [Service]
+> # mdmon should never complain due to lack of a platform,
+> diff --git a/systemd/mdmonitor-oneshot.service =
+b/systemd/mdmonitor-oneshot.service
+> index 373955a..ba86b44 100644
+> --- a/systemd/mdmonitor-oneshot.service
+> +++ b/systemd/mdmonitor-oneshot.service
+> @@ -7,6 +7,7 @@
+>=20
+> [Unit]
+> Description=3DReminder for degraded MD arrays
+> +Documentation=3Dman:mdadm(8)
+>=20
+> [Service]
+> Environment=3DMDADM_MONITOR_ARGS=3D--scan
+> diff --git a/systemd/mdmonitor.service b/systemd/mdmonitor.service
+> index 46f7b88..9c36478 100644
+> --- a/systemd/mdmonitor.service
+> +++ b/systemd/mdmonitor.service
+> @@ -8,6 +8,7 @@
+> [Unit]
+> Description=3DMD array monitor
+> DefaultDependencies=3Dno
+> +Documentation=3Dman:mdadm(8)
+>=20
+> [Service]
+> Environment=3D  MDADM_MONITOR_ARGS=3D--scan
+> --=20
+> 2.26.2
+>=20
 
