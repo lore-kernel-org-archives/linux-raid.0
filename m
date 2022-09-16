@@ -2,44 +2,44 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04EBDC54EE9
-	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 11:23:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47848C6FA8B
+	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 11:23:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231168AbiIPLXl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 16 Sep 2022 07:23:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49234 "EHLO
+        id S231223AbiIPLXn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 16 Sep 2022 07:23:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229861AbiIPLXi (ORCPT
+        with ESMTP id S230458AbiIPLXi (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Sep 2022 07:23:38 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA7706B662;
-        Fri, 16 Sep 2022 04:23:35 -0700 (PDT)
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C21056B8A;
+        Fri, 16 Sep 2022 04:23:36 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MTWqm4tFKzlCjt;
-        Fri, 16 Sep 2022 19:21:56 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4MTWqR4fpZz6R70p;
+        Fri, 16 Sep 2022 19:21:39 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP2 (Coremail) with SMTP id Syh0CgDXKXOzXCRjdyK5Aw--.60594S7;
-        Fri, 16 Sep 2022 19:23:34 +0800 (CST)
+        by APP2 (Coremail) with SMTP id Syh0CgDXKXOzXCRjdyK5Aw--.60594S5;
+        Fri, 16 Sep 2022 19:23:33 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, logang@deltatee.com, guoqing.jiang@linux.dev,
         pmenzel@molgen.mpg.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
-Subject: [PATCH v3 3/5] md/raid10: prevent unnecessary calls to wake_up() in fast path
-Date:   Fri, 16 Sep 2022 19:34:26 +0800
-Message-Id: <20220916113428.774061-4-yukuai1@huaweicloud.com>
+Subject: [PATCH v3 1/5] md/raid10: factor out code from wait_barrier() to stop_waiting_barrier()
+Date:   Fri, 16 Sep 2022 19:34:24 +0800
+Message-Id: <20220916113428.774061-2-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220916113428.774061-1-yukuai1@huaweicloud.com>
 References: <20220916113428.774061-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgDXKXOzXCRjdyK5Aw--.60594S7
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZFyDKw1xCFyxWryfWrykXwb_yoW8Wr1fpw
-        sFgFyFvry5AF98tw4UJFWUuas8K34ktayIkFZ2k3s7ZFn8tF9akF1UJa4qkryjgrZ3uryU
-        ZFn0krW3Aw4UtFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9l14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+X-CM-TRANSID: Syh0CgDXKXOzXCRjdyK5Aw--.60594S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxGryDCr1DJw1rGr15WF4kJFb_yoW5GrW7pw
+        43GrW3Ar48AF9xJ398XFWxCFyFqasaqFWUGryS93ykJF4YyrZ5Wr93G34Fkry8CrZ3XFy0
+        qFWSyrZxKw4UKrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+        x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
         Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
         A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
         0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
@@ -49,7 +49,7 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7ZFyDKw1xCFyxWryfWrykXwb_yoW8Wr1fpw
         6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
         AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
         s7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
-        1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUojjgUUUUU
+        1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfU5SoXUUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,58 +58,91 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Currently, wake_up() is called unconditionally in fast path such as
-raid10_make_request(), which will cause lock contention under high
-concurrency:
+Currently the nasty condition in wait_barrier() is hard to read. This
+patch factors out the condition into a function.
 
-raid10_make_request
- wake_up
-  __wake_up_common_lock
-   spin_lock_irqsave
-
-Improve performance by only call wake_up() if waitqueue is not empty
-in allow_barrier() and raid10_make_request().
+There are no functional changes.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Paul Menzel <pmenzel@molgen.mpg.de>
 ---
- drivers/md/raid10.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/md/raid10.c | 50 +++++++++++++++++++++++++--------------------
+ 1 file changed, 28 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index df435d693637..cf452c25e1e5 100644
+index 64d6e4cd8a3a..37fd9284054e 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -274,6 +274,12 @@ static void put_buf(struct r10bio *r10_bio)
- 	lower_barrier(conf);
+@@ -957,41 +957,47 @@ static void lower_barrier(struct r10conf *conf)
+ 	wake_up(&conf->wait_barrier);
  }
  
-+static void wake_up_barrier(struct r10conf *conf)
++static bool stop_waiting_barrier(struct r10conf *conf)
 +{
-+	if (wq_has_sleeper(&conf->wait_barrier))
-+		wake_up(&conf->wait_barrier);
++	struct bio_list *bio_list = current->bio_list;
++
++	/* barrier is dropped */
++	if (!conf->barrier)
++		return true;
++
++	/*
++	 * If there are already pending requests (preventing the barrier from
++	 * rising completely), and the pre-process bio queue isn't empty, then
++	 * don't wait, as we need to empty that queue to get the nr_pending
++	 * count down.
++	 */
++	if (atomic_read(&conf->nr_pending) && bio_list &&
++	    (!bio_list_empty(&bio_list[0]) || !bio_list_empty(&bio_list[1])))
++		return true;
++
++	/* move on if recovery thread is blocked by us */
++	if (conf->mddev->thread->tsk == current &&
++	    test_bit(MD_RECOVERY_RUNNING, &conf->mddev->recovery) &&
++	    conf->nr_queued > 0)
++		return true;
++
++	return false;
 +}
 +
- static void reschedule_retry(struct r10bio *r10_bio)
+ static bool wait_barrier(struct r10conf *conf, bool nowait)
  {
- 	unsigned long flags;
-@@ -1015,7 +1021,7 @@ static void allow_barrier(struct r10conf *conf)
- {
- 	if ((atomic_dec_and_test(&conf->nr_pending)) ||
- 			(conf->array_freeze_pending))
--		wake_up(&conf->wait_barrier);
-+		wake_up_barrier(conf);
- }
+ 	bool ret = true;
  
- static void freeze_array(struct r10conf *conf, int extra)
-@@ -1891,7 +1897,7 @@ static bool raid10_make_request(struct mddev *mddev, struct bio *bio)
- 	__make_request(mddev, bio, sectors);
- 
- 	/* In case raid10d snuck in to freeze_array */
--	wake_up(&conf->wait_barrier);
-+	wake_up_barrier(conf);
- 	return true;
- }
- 
+ 	spin_lock_irq(&conf->resync_lock);
+ 	if (conf->barrier) {
+-		struct bio_list *bio_list = current->bio_list;
+ 		conf->nr_waiting++;
+-		/* Wait for the barrier to drop.
+-		 * However if there are already pending
+-		 * requests (preventing the barrier from
+-		 * rising completely), and the
+-		 * pre-process bio queue isn't empty,
+-		 * then don't wait, as we need to empty
+-		 * that queue to get the nr_pending
+-		 * count down.
+-		 */
+ 		/* Return false when nowait flag is set */
+ 		if (nowait) {
+ 			ret = false;
+ 		} else {
+ 			raid10_log(conf->mddev, "wait barrier");
+ 			wait_event_lock_irq(conf->wait_barrier,
+-					    !conf->barrier ||
+-					    (atomic_read(&conf->nr_pending) &&
+-					     bio_list &&
+-					     (!bio_list_empty(&bio_list[0]) ||
+-					      !bio_list_empty(&bio_list[1]))) ||
+-					     /* move on if recovery thread is
+-					      * blocked by us
+-					      */
+-					     (conf->mddev->thread->tsk == current &&
+-					      test_bit(MD_RECOVERY_RUNNING,
+-						       &conf->mddev->recovery) &&
+-					      conf->nr_queued > 0),
++					    stop_waiting_barrier(conf),
+ 					    conf->resync_lock);
+ 		}
+ 		conf->nr_waiting--;
 -- 
 2.31.1
 
