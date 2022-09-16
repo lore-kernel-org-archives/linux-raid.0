@@ -2,51 +2,54 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12C52ECAAD8
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C4D7C54EE9
 	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 11:23:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230505AbiIPLXj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 16 Sep 2022 07:23:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49232 "EHLO
+        id S231145AbiIPLXk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 16 Sep 2022 07:23:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230008AbiIPLXi (ORCPT
+        with ESMTP id S230349AbiIPLXi (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Sep 2022 07:23:38 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2D6A6717D;
-        Fri, 16 Sep 2022 04:23:35 -0700 (PDT)
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C51566A74;
+        Fri, 16 Sep 2022 04:23:36 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4MTWqQ3FrPzKG7L;
-        Fri, 16 Sep 2022 19:21:38 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4MTWqR6plkz6R7rY;
+        Fri, 16 Sep 2022 19:21:39 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP2 (Coremail) with SMTP id Syh0CgDXKXOzXCRjdyK5Aw--.60594S4;
+        by APP2 (Coremail) with SMTP id Syh0CgDXKXOzXCRjdyK5Aw--.60594S6;
         Fri, 16 Sep 2022 19:23:33 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, logang@deltatee.com, guoqing.jiang@linux.dev,
         pmenzel@molgen.mpg.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
-Subject: [PATCH v3 0/5] md/raid10: reduce lock contention for io
-Date:   Fri, 16 Sep 2022 19:34:23 +0800
-Message-Id: <20220916113428.774061-1-yukuai1@huaweicloud.com>
+Subject: [PATCH v3 2/5] md/raid10: don't modify 'nr_waitng' in wait_barrier() for the case nowait
+Date:   Fri, 16 Sep 2022 19:34:25 +0800
+Message-Id: <20220916113428.774061-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220916113428.774061-1-yukuai1@huaweicloud.com>
+References: <20220916113428.774061-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgDXKXOzXCRjdyK5Aw--.60594S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ar1fKF15Jw1DWFW8XF1UKFg_yoW8uF4rpa
-        1fJrna9FsrAryIvrZxKr17CryYv3WFq39rCF97G34fZF98ArW5JF1xtFWrur1DXr9aqFy7
-        J3WUCa9agFyjvaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
-        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-        AvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7Cj
-        xVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-TRANSID: Syh0CgDXKXOzXCRjdyK5Aw--.60594S6
+X-Coremail-Antispam: 1UD129KBjvdXoWrtw43AFW5Xr4fAF47WF43Awb_yoWDJwb_Ka
+        4rJryDur1aqw17Gw1UJw1fZrZYka1qqF1xZFn7t3ZxZr9xZa9rGr48XF1kJw13Way5ZrW5
+        ZrW7WFWjyrsrujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb-AFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY02
+        0Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+        wVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
+        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
+        026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
+        JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
+        v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
+        j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr
+        0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUc6pPUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -55,65 +58,38 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v3:
- - split a patch from patch 1
- - only modify hot path in patch 3
- - wake up barrier if 'nr_pending' is decreased to 0 in
- wait_barrier_nolock(), otherwise raise_barrier() might hung.
+For the case nowait in wait_barrier(), there is no point to increase
+nr_waiting and then decrease it.
 
-Changes in v2:
- - add patch 1, as suggested by Logan Gunthorpe.
- - in patch 4, instead of use spin_lock/unlock in wait_event, which will
- confuse lockdep, use write_seqlock/unlock instead.
- - in patch 4, use read_seqbegin() to get seqcount instead of unusual
- usage of raw_read_seqcount().
- - test result is different from v1 in aarch64 due to retest from different
- environment.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/raid10.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-This patchset tries to avoid that two locks are held unconditionally
-in hot path.
-
-Test environment:
-
-Architecture:
-aarch64 Huawei KUNPENG 920
-x86 Intel(R) Xeon(R) Platinum 8380
-
-Raid10 initialize:
-mdadm --create /dev/md0 --level 10 --bitmap none --raid-devices 4 /dev/nvme0n1 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme3n1
-
-Test cmd:
-(task set -c 0-15) fio -name=0 -ioengine=libaio -direct=1 -group_reporting=1 -randseed=2022 -rwmixread=70 -refill_buffers -filename=/dev/md0 -numjobs=16 -runtime=60s -bs=4k -iodepth=256 -rw=randread
-
-Test result:
-
-aarch64:
-before this patchset:		3.2 GiB/s
-bind node before this patchset: 6.9 Gib/s
-after this patchset:		7.9 Gib/s
-bind node after this patchset:	8.0 Gib/s
-
-x86:(bind node is not tested yet)
-before this patchset: 7.0 GiB/s
-after this patchset : 9.3 GiB/s
-
-Please noted that in the test machine, memory access latency is very bad
-across nodes compare to local node in aarch64, which is why bandwidth
-while bind node is much better.
-
-Yu Kuai (5):
-  md/raid10: Factor out code from wait_barrier() to
-    stop_waiting_barrier()
-  md/raid10: don't modify 'nr_waitng' in wait_barrier() for the case
-    nowait
-  md/raid10: prevent unnecessary calls to wake_up() in fast path
-  md/raid10: fix improper BUG_ON() in raise_barrier()
-  md/raid10: convert resync_lock to use seqlock
-
- drivers/md/raid10.c | 149 ++++++++++++++++++++++++++++----------------
- drivers/md/raid10.h |   2 +-
- 2 files changed, 96 insertions(+), 55 deletions(-)
-
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 37fd9284054e..df435d693637 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -990,17 +990,17 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
+ 
+ 	spin_lock_irq(&conf->resync_lock);
+ 	if (conf->barrier) {
+-		conf->nr_waiting++;
+ 		/* Return false when nowait flag is set */
+ 		if (nowait) {
+ 			ret = false;
+ 		} else {
++			conf->nr_waiting++;
+ 			raid10_log(conf->mddev, "wait barrier");
+ 			wait_event_lock_irq(conf->wait_barrier,
+ 					    stop_waiting_barrier(conf),
+ 					    conf->resync_lock);
++			conf->nr_waiting--;
+ 		}
+-		conf->nr_waiting--;
+ 		if (!conf->nr_waiting)
+ 			wake_up(&conf->wait_barrier);
+ 	}
 -- 
 2.31.1
 
