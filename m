@@ -2,41 +2,42 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27F00C32771
-	for <linux-raid@archiver.kernel.org>; Sun, 18 Sep 2022 11:36:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 453AFC54EE9
+	for <linux-raid@archiver.kernel.org>; Sun, 18 Sep 2022 11:37:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229681AbiIRLgj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 18 Sep 2022 07:36:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39950 "EHLO
+        id S229550AbiIRLhr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 18 Sep 2022 07:37:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229519AbiIRLgi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Sep 2022 07:36:38 -0400
-Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 976F8EE1D;
-        Sun, 18 Sep 2022 04:36:37 -0700 (PDT)
-Subject: Re: [PATCH v3 5/5] md/raid10: convert resync_lock to use seqlock
+        with ESMTP id S229497AbiIRLhk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Sep 2022 07:37:40 -0400
+Received: from out0.migadu.com (out0.migadu.com [94.23.1.103])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2F9C252B3;
+        Sun, 18 Sep 2022 04:37:38 -0700 (PDT)
+Subject: Re: [PATCH v3 4/5] md/raid10: fix improper BUG_ON() in
+ raise_barrier()
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1663500995;
+        t=1663501057;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=G1+OGv4dFkBOVxp4OCIgge5yTXIRZosYR+jSx6W73rc=;
-        b=G5FN5C8jAtDshvH1MV2Mrx/CW3u8FueyfS4Ure/+AfV2vocdKjXUmQEpPO4gz5CN4f9XSZ
-        qxPQ1YFb3QjsTm4G1vTjrI3h0lkAyYyXU1GgjenX9xxUDvrQfNVF/UfBwCogqsIDw8yBcK
-        ho1s6e21EsPpB3+fYL6h8v+vq7w9+ws=
+        bh=Zkg5e+PHceNZNg0PfBlFTwBxQxADGWdN9+rCaCAkYlM=;
+        b=mfT+D2nxiCzvo3fJ3QoWnGc6r0jfDZU9yXbVDhyXeKFNzrftoqWvBF/mbPqiuFCmLuKMQG
+        /IDQKGH2YdOvD7eG0JCoLsPTlOJt6zj5iXNxXKHOITYa/Edihggr6CdDu0rWBnit5wIvWx
+        Cmh6WiveHm/12X8S59i5fgjNovg7gQI=
 To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
         logang@deltatee.com, pmenzel@molgen.mpg.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yi.zhang@huawei.com
 References: <20220916113428.774061-1-yukuai1@huaweicloud.com>
- <20220916113428.774061-6-yukuai1@huaweicloud.com>
+ <20220916113428.774061-5-yukuai1@huaweicloud.com>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <e73dc8e8-09a3-ecc8-3199-ac87e8b9ee55@linux.dev>
-Date:   Sun, 18 Sep 2022 19:36:26 +0800
+Message-ID: <e6055714-d6da-3dac-8776-281602ffb099@linux.dev>
+Date:   Sun, 18 Sep 2022 19:37:25 +0800
 MIME-Version: 1.0
-In-Reply-To: <20220916113428.774061-6-yukuai1@huaweicloud.com>
+In-Reply-To: <20220916113428.774061-5-yukuai1@huaweicloud.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
@@ -51,45 +52,30 @@ X-Mailing-List: linux-raid@vger.kernel.org
 On 9/16/22 7:34 PM, Yu Kuai wrote:
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> Currently, wait_barrier() will hold 'resync_lock' to read 'conf->barrier',
-> and io can't be dispatched until 'barrier' is dropped.
->
-> Since holding the 'barrier' is not common, convert 'resync_lock' to use
-> seqlock so that holding lock can be avoided in fast path.
+> 'conf->barrier' is protected by 'conf->resync_lock', reading
+> 'conf->barrier' without holding the lock is wrong.
 >
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->   drivers/md/raid10.c | 87 ++++++++++++++++++++++++++++++---------------
->   drivers/md/raid10.h |  2 +-
->   2 files changed, 59 insertions(+), 30 deletions(-)
+>   drivers/md/raid10.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 >
 > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 9a28abd19709..2daa7d57034c 100644
+> index cf452c25e1e5..9a28abd19709 100644
 > --- a/drivers/md/raid10.c
 > +++ b/drivers/md/raid10.c
-> @@ -79,6 +79,21 @@ static void end_reshape(struct r10conf *conf);
+> @@ -936,8 +936,8 @@ static void flush_pending_writes(struct r10conf *conf)
 >   
->   #include "raid1-10.c"
+>   static void raise_barrier(struct r10conf *conf, int force)
+>   {
+> -	BUG_ON(force && !conf->barrier);
+>   	spin_lock_irq(&conf->resync_lock);
+> +	BUG_ON(force && !conf->barrier);
 >   
-> +#define NULL_CMD
-> +#define cmd_before(conf, cmd) \
-> +	do { \
-> +		write_sequnlock_irq(&(conf)->resync_lock); \
-> +		cmd; \
-> +	} while (0)
-> +#define cmd_after(conf) write_seqlock_irq(&(conf)->resync_lock)
+>   	/* Wait until no block IO is waiting (unless 'force') */
+>   	wait_event_lock_irq(conf->wait_barrier, force || !conf->nr_waiting,
 
-The two is not paired well given only cmd_before needs the 'cmd'.
-
-> +
-> +#define wait_event_barrier_cmd(conf, cond, cmd) \
-> +	wait_event_cmd((conf)->wait_barrier, cond, cmd_before(conf, cmd), \
-> +		       cmd_after(conf))
-> +
-> +#define wait_event_barrier(conf, cond) \
-> +	wait_event_barrier_cmd(conf, cond, NULL_CMD)
-
-What is the issue without define NULL_CMD?
+Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 
 Thanks,
 Guoqing
