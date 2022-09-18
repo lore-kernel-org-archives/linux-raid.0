@@ -2,114 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5789ECAAA1
-	for <linux-raid@archiver.kernel.org>; Fri, 16 Sep 2022 23:33:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27F00C32771
+	for <linux-raid@archiver.kernel.org>; Sun, 18 Sep 2022 11:36:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229786AbiIPXdY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 16 Sep 2022 19:33:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50416 "EHLO
+        id S229681AbiIRLgj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 18 Sep 2022 07:36:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229519AbiIPXdX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Sep 2022 19:33:23 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89D0CB9595;
-        Fri, 16 Sep 2022 16:33:22 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id r23so13113105pgr.6;
-        Fri, 16 Sep 2022 16:33:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=FkwcMuPKAyIP/oOmQ4uH+hyF+kMKI0zxNAQqGfbM4Z8=;
-        b=S9cmbn4CyhtMlh6aNtSmNTJvFCO+Yuk/HR7QzXFPqpi2dDaDucz2dfmEcw/fswaD0u
-         vCn+FvnuVGFtJ0lX49P4LuJHW50golAAP+ehiTfuV4WcWJcjLDv+8c8oqajhE52hSU9S
-         3b/X0EqXFkHkCzD9K+qbnJq4fwYM/lUMh1aAfRX+9fWc5hzuGr/CGQtalLuPjwvajL3t
-         4Z7klohE2d00G2bCBnrkINzOrND/AcgRZmwNfYCTGNxYmWwmbY+SRF4cuBD46V3D34zt
-         Wy+EBjmoII++9HSuIZkc1xgLXJvGyUsrtDZX8oAeVl3+eT9at7TURsRiNDbgNc0Ej/4d
-         4jjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=FkwcMuPKAyIP/oOmQ4uH+hyF+kMKI0zxNAQqGfbM4Z8=;
-        b=s0eAbKnMr20Qq6avWrDB3sQzSwVzTacLUyrq8GiHN1V5KrD12t+OqsZ65o/HZ2CCoT
-         UC4Bj2nY9NHHeWcVu0l3b1esvmxyr0e2i8v8yExE+tQu2fAE31wMpeEYp6kqSDP5Bdbr
-         Ce5ehsUXzJqKKLAKjVvGVjv7QwV56de43YnE8mVm784mJSVbN+zpsg8eiPAJ6JoNr+3h
-         RMlBdH1n/BOGLjJtZqB+95u/Z+TP/1rop8bNdGwUfx7sPYHd4kZCd3DfgWVE71FLCWSx
-         y6MA3YPK7U6YVmmNMujEZDt8ilhFU8EJ9yAtOxYqUK1+8g4xNlLQsbFijth+soTXO+zz
-         QwtQ==
-X-Gm-Message-State: ACrzQf3yZ0MdnXdhkdiVkPM0dAKAumBXxn9QYoAPmNotMzNr/ADwWnU/
-        XM4mptZwOVeewF1VaWhO10q6WXbMAmk=
-X-Google-Smtp-Source: AMsMyM54vHxTNdmLHLU1J//l6ttbSdd442EteUL6rW2u3LeoAdFWAJeGCW+zEpHLpwdaEd/qTAnSmw==
-X-Received: by 2002:a63:4714:0:b0:42b:82d9:b617 with SMTP id u20-20020a634714000000b0042b82d9b617mr6308979pga.223.1663371201616;
-        Fri, 16 Sep 2022 16:33:21 -0700 (PDT)
-Received: from localhost.localdomain (lily-optiplex-3070.dynamic.ucsd.edu. [2607:f720:1300:3033::1:4dd])
-        by smtp.googlemail.com with ESMTPSA id g2-20020a170902d1c200b001781a7c28b9sm14578525plb.240.2022.09.16.16.33.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Sep 2022 16:33:20 -0700 (PDT)
-From:   Li Zhong <floridsleeves@gmail.com>
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc:     song@kernel.org, Li Zhong <floridsleeves@gmail.com>
-Subject: [PATCH v2] drivers/md/md-bitmap: check the return value of md_bitmap_get_counter()
-Date:   Fri, 16 Sep 2022 16:33:05 -0700
-Message-Id: <20220916233305.3784826-1-floridsleeves@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229519AbiIRLgi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Sep 2022 07:36:38 -0400
+Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 976F8EE1D;
+        Sun, 18 Sep 2022 04:36:37 -0700 (PDT)
+Subject: Re: [PATCH v3 5/5] md/raid10: convert resync_lock to use seqlock
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1663500995;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=G1+OGv4dFkBOVxp4OCIgge5yTXIRZosYR+jSx6W73rc=;
+        b=G5FN5C8jAtDshvH1MV2Mrx/CW3u8FueyfS4Ure/+AfV2vocdKjXUmQEpPO4gz5CN4f9XSZ
+        qxPQ1YFb3QjsTm4G1vTjrI3h0lkAyYyXU1GgjenX9xxUDvrQfNVF/UfBwCogqsIDw8yBcK
+        ho1s6e21EsPpB3+fYL6h8v+vq7w9+ws=
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
+        logang@deltatee.com, pmenzel@molgen.mpg.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com
+References: <20220916113428.774061-1-yukuai1@huaweicloud.com>
+ <20220916113428.774061-6-yukuai1@huaweicloud.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <e73dc8e8-09a3-ecc8-3199-ac87e8b9ee55@linux.dev>
+Date:   Sun, 18 Sep 2022 19:36:26 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220916113428.774061-6-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Check the return value of md_bitmap_get_counter() in case it returns
-NULL pointer, which will result in a null pointer dereference.
 
-v2: update the check to include other dereference
 
-Signed-off-by: Li Zhong <floridsleeves@gmail.com>
----
- drivers/md/md-bitmap.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+On 9/16/22 7:34 PM, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Currently, wait_barrier() will hold 'resync_lock' to read 'conf->barrier',
+> and io can't be dispatched until 'barrier' is dropped.
+>
+> Since holding the 'barrier' is not common, convert 'resync_lock' to use
+> seqlock so that holding lock can be avoided in fast path.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   drivers/md/raid10.c | 87 ++++++++++++++++++++++++++++++---------------
+>   drivers/md/raid10.h |  2 +-
+>   2 files changed, 59 insertions(+), 30 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 9a28abd19709..2daa7d57034c 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -79,6 +79,21 @@ static void end_reshape(struct r10conf *conf);
+>   
+>   #include "raid1-10.c"
+>   
+> +#define NULL_CMD
+> +#define cmd_before(conf, cmd) \
+> +	do { \
+> +		write_sequnlock_irq(&(conf)->resync_lock); \
+> +		cmd; \
+> +	} while (0)
+> +#define cmd_after(conf) write_seqlock_irq(&(conf)->resync_lock)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index bf6dffadbe6f..63ece30114e5 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2195,20 +2195,23 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 
- 		if (set) {
- 			bmc_new = md_bitmap_get_counter(&bitmap->counts, block, &new_blocks, 1);
--			if (*bmc_new == 0) {
--				/* need to set on-disk bits too. */
--				sector_t end = block + new_blocks;
--				sector_t start = block >> chunkshift;
--				start <<= chunkshift;
--				while (start < end) {
--					md_bitmap_file_set_bit(bitmap, block);
--					start += 1 << chunkshift;
-+			if (bmc_new) {
-+				if (*bmc_new == 0) {
-+					/* need to set on-disk bits too. */
-+					sector_t end = block + new_blocks;
-+					sector_t start = block >> chunkshift;
-+
-+					start <<= chunkshift;
-+					while (start < end) {
-+						md_bitmap_file_set_bit(bitmap, block);
-+						start += 1 << chunkshift;
-+					}
-+					*bmc_new = 2;
-+					md_bitmap_count_page(&bitmap->counts, block, 1);
-+					md_bitmap_set_pending(&bitmap->counts, block);
- 				}
--				*bmc_new = 2;
--				md_bitmap_count_page(&bitmap->counts, block, 1);
--				md_bitmap_set_pending(&bitmap->counts, block);
-+				*bmc_new |= NEEDED_MASK;
- 			}
--			*bmc_new |= NEEDED_MASK;
- 			if (new_blocks < old_blocks)
- 				old_blocks = new_blocks;
- 		}
--- 
-2.25.1
+The two is not paired well given only cmd_before needs the 'cmd'.
 
+> +
+> +#define wait_event_barrier_cmd(conf, cond, cmd) \
+> +	wait_event_cmd((conf)->wait_barrier, cond, cmd_before(conf, cmd), \
+> +		       cmd_after(conf))
+> +
+> +#define wait_event_barrier(conf, cond) \
+> +	wait_event_barrier_cmd(conf, cond, NULL_CMD)
+
+What is the issue without define NULL_CMD?
+
+Thanks,
+Guoqing
