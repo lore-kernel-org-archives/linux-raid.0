@@ -2,85 +2,127 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EF47C54EE9
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Sep 2022 12:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CA72C6FA91
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Sep 2022 14:05:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229838AbiITMEQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Sep 2022 08:04:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36052 "EHLO
+        id S231296AbiITOFb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Sep 2022 10:05:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbiITMEP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Sep 2022 08:04:15 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 651F24A836;
-        Tue, 20 Sep 2022 05:04:13 -0700 (PDT)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id EA66461EA192A;
-        Tue, 20 Sep 2022 14:04:10 +0200 (CEST)
-Message-ID: <7146f97f-eace-9ef6-7a16-3f775d851f33@molgen.mpg.de>
-Date:   Tue, 20 Sep 2022 14:04:10 +0200
+        with ESMTP id S231248AbiITOFN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Sep 2022 10:05:13 -0400
+Received: from mail-io1-xd2a.google.com (mail-io1-xd2a.google.com [IPv6:2607:f8b0:4864:20::d2a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 628CE958A
+        for <linux-raid@vger.kernel.org>; Tue, 20 Sep 2022 07:05:11 -0700 (PDT)
+Received: by mail-io1-xd2a.google.com with SMTP id n81so2319668iod.6
+        for <linux-raid@vger.kernel.org>; Tue, 20 Sep 2022 07:05:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=tSt+TIRAC+j8jmijeG7Slz9mQYvn4dIMqWXdxkZMwII=;
+        b=pDZq9O89zt5c9P9djLhNuRMJjotd1+aXB7XJH/VMdJC20UE3ZZEKnXAyGkCDIMuTKB
+         pVq/bjEuIwaRbDNl79xe2dlR5CUTvP1pB0uCV/YeONAnWgl3NkdaolR7MtLZnYr6acqi
+         sF+7P2OQWc794yd0Xg+vItcDjpARQig/FvYvRfkZ/gFUpl6rBH/4PoWVnZbfza2iTtbd
+         vPe04lTNR2oJamlEVQAn2RlSRO4Mho27ZdYCpH1CyUC4k6U2sGJIHYswO/PU3+CYiWGC
+         93ofJYWlivrPMce3nN19QiRVl1Pyo+dMpA9AE5ogYUheoxsyPr6YnbSoTLITZscuutWP
+         /PMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=tSt+TIRAC+j8jmijeG7Slz9mQYvn4dIMqWXdxkZMwII=;
+        b=TfyUpBku3VuQndjT/h2u/GWAtg+VLqIkux8qBa/tGj4bUWpQvUr9sUalpTpohR3KGb
+         0pyC12HXSUI8EPwaquMoRZSE5qULVVQGVyA3Skm3K2gsG0CRSulLWjOt66qR7wFzMM/m
+         1bM9I4UXkg3GQxdXlcIgoZXuD5B/cWuWFz9jX4lmB/ZOt+/3YHaLuLPKmAJcoPyKjIOx
+         TdzE0mPVzZznVScAZiJPT/pAg1qnkoDgSncnvnP7BYGce2DqfdAT58Ze7qgLIO5mM2Sk
+         HRMFYnrpn+vxOp8MEX/HwVIYiD9u0jEQYzjK8soqNxhXhZsfWbzMuxL57qLmMsiw+7YQ
+         ov5A==
+X-Gm-Message-State: ACrzQf05uKnvveLVsspprxxa+h0tjiVWP0YWx6+IHPi1tXODMIrWz9Xr
+        4errgbfmLk63FnCIV760rly8Yw==
+X-Google-Smtp-Source: AMsMyM59GVInxWbQJpAoFsryT8RMGZ/gj3CIiidUTPZsyRhsYv7uE5TGbwRxR4macqcUYIT41f8uuA==
+X-Received: by 2002:a05:6638:140e:b0:35a:7a8e:86e5 with SMTP id k14-20020a056638140e00b0035a7a8e86e5mr10502979jad.276.1663682710679;
+        Tue, 20 Sep 2022 07:05:10 -0700 (PDT)
+Received: from [192.168.1.94] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id x10-20020a0566380caa00b00356726330a4sm640575jad.154.2022.09.20.07.05.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Sep 2022 07:05:10 -0700 (PDT)
+Message-ID: <d39e9149-fcb6-1f7c-4c19-234e74f286f8@kernel.dk>
+Date:   Tue, 20 Sep 2022 08:05:06 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
  Thunderbird/102.2.2
-Subject: Re: [PATCH] dm: Fix spelling mistake in comments
-To:     Zhou Nan <zhounan@nfschina.com>
-Cc:     song@kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org
-References: <CAPhsuW64vLfGUGOPjnQx-D7=qh7yFL=yvfWUTPn7teCegLeZaQ@mail.gmail.com>
- <20220920012848.84461-1-zhounan@nfschina.com>
- <20220920012848.84461-2-zhounan@nfschina.com>
+Subject: Re: regression caused by block: freeze the queue earlier in
+ del_gendisk
+To:     Thorsten Leemhuis <regressions@leemhuis.info>,
+        Dusty Mabe <dusty@dustymabe.com>,
+        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+References: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com>
+ <YxBZ4BBjxvAkvI2A@T590> <20220907073324.GB23826@lst.de>
+ <Yxr4SD4d0rZ9TZik@T590> <20220912071618.GA4971@lst.de>
+ <Yx/jLTknQm9VeHi4@T590> <95cbd47d-46ed-850e-7d4f-851b35d03069@dustymabe.com>
+ <f2c28043-59e6-0aee-b8bf-df38525ee899@leemhuis.info>
 Content-Language: en-US
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220920012848.84461-2-zhounan@nfschina.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <f2c28043-59e6-0aee-b8bf-df38525ee899@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Zhou,
-
-
-Am 20.09.22 um 03:28 schrieb Zhou nan:
-> From: zhounan <zhounan@nfschina.com>
-
-You missed the comment about using your full name.
-
-     $ git config --global user.name "Zhou Nan"
-     $ git commit --amend --author="Zhou Nan <zhounan@nfschina.com>"
-
-> Fix spelling of dones't in comments.
-
-… in one comment.
-
-(Also in summary.)
-
-> Signed-off-by: zhounan <zhounan@nfschina.com>
-> ---
->   drivers/md/raid5-cache.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+On 9/20/22 3:11 AM, Thorsten Leemhuis wrote:
+> Hi, this is your Linux kernel regression tracker.
 > 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index f4e1cc1ece43..683fd4adde17 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -125,7 +125,7 @@ struct r5l_log {
->   					 * reclaimed.  if it's 0, reclaim spaces
->   					 * used by io_units which are in
->   					 * IO_UNIT_STRIPE_END state (eg, reclaim
-> -					 * dones't wait for specific io_unit
-> +					 * doesn't wait for specific io_unit
->   					 * switching to IO_UNIT_STRIPE_END
->   					 * state) */
->   	wait_queue_head_t iounit_wait;
+> On 13.09.22 04:36, Dusty Mabe wrote:
+>> On 9/12/22 21:55, Ming Lei wrote:
+>>> On Mon, Sep 12, 2022 at 09:16:18AM +0200, Christoph Hellwig wrote:
+>>>> On Fri, Sep 09, 2022 at 04:24:40PM +0800, Ming Lei wrote:
+>>>>> On Wed, Sep 07, 2022 at 09:33:24AM +0200, Christoph Hellwig wrote:
+>>>>>> On Thu, Sep 01, 2022 at 03:06:08PM +0800, Ming Lei wrote:
+>>>>>>> It is a bit hard to associate the above commit with reported issue.
+>>>>>>
+>>>>>> So the messages clearly are about something trying to open a device
+>>>>>> that went away at the block layer, but somehow does not get removed
+>>>>>> in time by udev (which seems to be a userspace bug in CoreOS).  But
+>>>>>> even with that we really should not hang.
+>>>>>
+>>>>> Xiao Ni provides one script[1] which can reproduce the issue more or less.
+>>>>
+>>>> I've run the reproduced 10000 times on current mainline, and while
+>>>> it prints one of the autoloading messages per run, I've not actually
+>>>> seen any kind of hang.
+>>>
+>>> I can't reproduce the hang too.
+>>
+>> I obviously can reproduce the issue with the test in our Fedora CoreOS
+>> test suite. It's part of a framework (i.e. it's not simple some script
+>> you can run) but it is very reproducible so one can add some instrumentation
+>> to the kernel and feed it through a build/test cycle to see different
+>> results or logs.
+>>
+>> I'm willing to share this with other people (maybe a screen share or
+>> some written down instructions) if anyone would be interested.
+> 
+> This thread looked stalled, or was there any progress in the past week?
+> If not: Fedora apparently removed the patch in their kernels a while
+> ago, as quite a few users where hitting it. What is preventing us from
+> doing the same in mainline and 5.19.y until the issue can be resolved?
+> The description of a09b314005f3 ("block: freeze the queue earlier in
+> del_gendisk") doesn't sound like the change does something crucial that
+> can't wait a bit. I might be totally wrong with that, but I think it's
+> my duty to ask that question at this point.
 
-The rest looks good.
+Christoph and I discussed this one last week, and he has a plan to try
+a flag approach. Christoph, did you get a chance to bang that out? Would
+be nice to get this one wrapped up.
+
+-- 
+Jens Axboe
 
 
-Kind regards,
-
-Paul
