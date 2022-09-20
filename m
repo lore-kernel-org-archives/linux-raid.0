@@ -2,69 +2,51 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22DCDC54EE9
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Sep 2022 01:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57F0FC6FA82
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Sep 2022 02:28:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229838AbiITBhZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 19 Sep 2022 21:37:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48806 "EHLO
+        id S229990AbiITC2w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 19 Sep 2022 22:28:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbiITBhY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Sep 2022 21:37:24 -0400
-Received: from mail.nfschina.com (unknown [124.16.136.209])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 48A9B49B56;
-        Mon, 19 Sep 2022 18:37:23 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mail.nfschina.com (Postfix) with ESMTP id 0A5ED1E80D1C;
-        Tue, 20 Sep 2022 09:34:17 +0800 (CST)
-X-Virus-Scanned: amavisd-new at test.com
-Received: from mail.nfschina.com ([127.0.0.1])
-        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id x1KCLMsn8TXq; Tue, 20 Sep 2022 09:34:14 +0800 (CST)
-Received: from nfschina.com.localdomain (unknown [219.141.250.2])
-        (Authenticated sender: zhounan@nfschina.com)
-        by mail.nfschina.com (Postfix) with ESMTPA id 4D3771E80D17;
-        Tue, 20 Sep 2022 09:34:14 +0800 (CST)
-From:   zhoun <zhounan@nfschina.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zhou nan <zhounan@nfschina.com>
-Subject: [PATCH v2] md: Fix spelling mistake in comments of r5l_log
-Date:   Mon, 19 Sep 2022 21:36:45 -0400
-Message-Id: <20220920013645.84917-1-zhounan@nfschina.com>
-X-Mailer: git-send-email 2.27.0
+        with ESMTP id S229760AbiITC2v (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Sep 2022 22:28:51 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F9E85756E
+        for <linux-raid@vger.kernel.org>; Mon, 19 Sep 2022 19:28:50 -0700 (PDT)
+Received: from canpemm500010.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MWlk30HxXzlW3W;
+        Tue, 20 Sep 2022 10:24:43 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by canpemm500010.china.huawei.com
+ (7.192.105.118) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 20 Sep
+ 2022 10:28:48 +0800
+From:   Ye Bin <yebin10@huawei.com>
+To:     <song@kernel.org>, <linux-raid@vger.kernel.org>
+CC:     <yebin10@huawei.com>
+Subject: [PATCH -next 0/3] do some cleanup for md_ioctl
+Date:   Tue, 20 Sep 2022 10:39:35 +0800
+Message-ID: <20220920023938.3273598-1-yebin10@huawei.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ canpemm500010.china.huawei.com (7.192.105.118)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Zhou nan <zhounan@nfschina.com>
+Ye Bin (3):
+  md: refactor md ioctl cmd check
+  md: factor out __md_set_array_info()
+  md: introduce md_ro_state to make code easy to understand
 
-Fix spelling of dones't in comments.
+ drivers/md/md.c | 249 +++++++++++++++++++++++++-----------------------
+ 1 file changed, 131 insertions(+), 118 deletions(-)
 
-Signed-off-by: Zhou nan <zhounan@nfschina.com>
----
-v2:
-- Modify the title
-- Modify the name of sender
----
- drivers/md/raid5-cache.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index f4e1cc1ece43..683fd4adde17 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -125,7 +125,7 @@ struct r5l_log {
- 					 * reclaimed.  if it's 0, reclaim spaces
- 					 * used by io_units which are in
- 					 * IO_UNIT_STRIPE_END state (eg, reclaim
--					 * dones't wait for specific io_unit
-+					 * doesn't wait for specific io_unit
- 					 * switching to IO_UNIT_STRIPE_END
- 					 * state) */
- 	wait_queue_head_t iounit_wait;
 -- 
-2.27.0
+2.31.1
 
