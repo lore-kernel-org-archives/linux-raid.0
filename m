@@ -2,106 +2,85 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D904FECAAD8
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Sep 2022 09:13:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EF47C54EE9
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Sep 2022 12:04:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231749AbiITJNT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Sep 2022 05:13:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59444 "EHLO
+        id S229838AbiITMEQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Sep 2022 08:04:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231773AbiITJMy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Sep 2022 05:12:54 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B8DE6D9E9;
-        Tue, 20 Sep 2022 02:12:03 -0700 (PDT)
-Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1oaZIF-0003sr-Dh; Tue, 20 Sep 2022 11:11:51 +0200
-Message-ID: <f2c28043-59e6-0aee-b8bf-df38525ee899@leemhuis.info>
-Date:   Tue, 20 Sep 2022 11:11:50 +0200
+        with ESMTP id S229490AbiITMEP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Sep 2022 08:04:15 -0400
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 651F24A836;
+        Tue, 20 Sep 2022 05:04:13 -0700 (PDT)
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id EA66461EA192A;
+        Tue, 20 Sep 2022 14:04:10 +0200 (CEST)
+Message-ID: <7146f97f-eace-9ef6-7a16-3f775d851f33@molgen.mpg.de>
+Date:   Tue, 20 Sep 2022 14:04:10 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: regression caused by block: freeze the queue earlier in
- del_gendisk
-Content-Language: en-US, de-DE
-To:     Dusty Mabe <dusty@dustymabe.com>, Ming Lei <ming.lei@redhat.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-References: <017845ae-fbae-70f6-5f9e-29aff2742b8c@dustymabe.com>
- <YxBZ4BBjxvAkvI2A@T590> <20220907073324.GB23826@lst.de>
- <Yxr4SD4d0rZ9TZik@T590> <20220912071618.GA4971@lst.de>
- <Yx/jLTknQm9VeHi4@T590> <95cbd47d-46ed-850e-7d4f-851b35d03069@dustymabe.com>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <95cbd47d-46ed-850e-7d4f-851b35d03069@dustymabe.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1663665123;03f15537;
-X-HE-SMSGID: 1oaZIF-0003sr-Dh
+ Thunderbird/102.2.2
+Subject: Re: [PATCH] dm: Fix spelling mistake in comments
+To:     Zhou Nan <zhounan@nfschina.com>
+Cc:     song@kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org
+References: <CAPhsuW64vLfGUGOPjnQx-D7=qh7yFL=yvfWUTPn7teCegLeZaQ@mail.gmail.com>
+ <20220920012848.84461-1-zhounan@nfschina.com>
+ <20220920012848.84461-2-zhounan@nfschina.com>
+Content-Language: en-US
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20220920012848.84461-2-zhounan@nfschina.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi, this is your Linux kernel regression tracker.
+Dear Zhou,
 
-On 13.09.22 04:36, Dusty Mabe wrote:
-> On 9/12/22 21:55, Ming Lei wrote:
->> On Mon, Sep 12, 2022 at 09:16:18AM +0200, Christoph Hellwig wrote:
->>> On Fri, Sep 09, 2022 at 04:24:40PM +0800, Ming Lei wrote:
->>>> On Wed, Sep 07, 2022 at 09:33:24AM +0200, Christoph Hellwig wrote:
->>>>> On Thu, Sep 01, 2022 at 03:06:08PM +0800, Ming Lei wrote:
->>>>>> It is a bit hard to associate the above commit with reported issue.
->>>>>
->>>>> So the messages clearly are about something trying to open a device
->>>>> that went away at the block layer, but somehow does not get removed
->>>>> in time by udev (which seems to be a userspace bug in CoreOS).  But
->>>>> even with that we really should not hang.
->>>>
->>>> Xiao Ni provides one script[1] which can reproduce the issue more or less.
->>>
->>> I've run the reproduced 10000 times on current mainline, and while
->>> it prints one of the autoloading messages per run, I've not actually
->>> seen any kind of hang.
->>
->> I can't reproduce the hang too.
+
+Am 20.09.22 um 03:28 schrieb Zhou nan:
+> From: zhounan <zhounan@nfschina.com>
+
+You missed the comment about using your full name.
+
+     $ git config --global user.name "Zhou Nan"
+     $ git commit --amend --author="Zhou Nan <zhounan@nfschina.com>"
+
+> Fix spelling of dones't in comments.
+
+… in one comment.
+
+(Also in summary.)
+
+> Signed-off-by: zhounan <zhounan@nfschina.com>
+> ---
+>   drivers/md/raid5-cache.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> I obviously can reproduce the issue with the test in our Fedora CoreOS
-> test suite. It's part of a framework (i.e. it's not simple some script
-> you can run) but it is very reproducible so one can add some instrumentation
-> to the kernel and feed it through a build/test cycle to see different
-> results or logs.
-> 
-> I'm willing to share this with other people (maybe a screen share or
-> some written down instructions) if anyone would be interested.
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index f4e1cc1ece43..683fd4adde17 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -125,7 +125,7 @@ struct r5l_log {
+>   					 * reclaimed.  if it's 0, reclaim spaces
+>   					 * used by io_units which are in
+>   					 * IO_UNIT_STRIPE_END state (eg, reclaim
+> -					 * dones't wait for specific io_unit
+> +					 * doesn't wait for specific io_unit
+>   					 * switching to IO_UNIT_STRIPE_END
+>   					 * state) */
+>   	wait_queue_head_t iounit_wait;
 
-This thread looked stalled, or was there any progress in the past week?
-If not: Fedora apparently removed the patch in their kernels a while
-ago, as quite a few users where hitting it. What is preventing us from
-doing the same in mainline and 5.19.y until the issue can be resolved?
-The description of a09b314005f3 ("block: freeze the queue earlier in
-del_gendisk") doesn't sound like the change does something crucial that
-can't wait a bit. I might be totally wrong with that, but I think it's
-my duty to ask that question at this point.
+The rest looks good.
 
->> What I meant is that new raid disk can be added by mdadm after stopping
->> the imsm container and raid disk with the autoloading messages printed,
->> I understand this behavior isn't correct, but I am not familiar with
->> raid enough.
->>
->> It might be related with the delay deleting gendisk from wq & md kobj
->> release handler.
->>
->> During reboot, if mdadm does this stupid thing without stopping, the hang
->> could be caused.
->>
->> I think the root cause is that why mdadm tries to open/add new raid bdev
->> crazily during reboot.
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+Kind regards,
 
-P.S.: As the Linux kernel's regression tracker I deal with a lot of
-reports and sometimes miss something important when writing mails like
-this. If that's the case here, don't hesitate to tell me in a public
-reply, it's in everyone's interest to set the public record straight.
+Paul
