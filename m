@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD040ECAAD8
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Sep 2022 13:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08610ECAAD8
+	for <linux-raid@archiver.kernel.org>; Wed, 21 Sep 2022 13:51:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229542AbiIUNHw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 21 Sep 2022 09:07:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54756 "EHLO
+        id S229870AbiIUNu7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 21 Sep 2022 09:50:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229525AbiIUNHu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Sep 2022 09:07:50 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6213C883D1
-        for <linux-raid@vger.kernel.org>; Wed, 21 Sep 2022 06:07:48 -0700 (PDT)
+        with ESMTP id S230078AbiIUNu5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Sep 2022 09:50:57 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A551280F73
+        for <linux-raid@vger.kernel.org>; Wed, 21 Sep 2022 06:50:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663765668; x=1695301668;
+  t=1663768256; x=1695304256;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=0FBsJq7GCK4+dDy1ukHXamsNU+AAcd6ONQezUD+CBvM=;
-  b=n8hqQYj+WpkpOcECetZdI9dJ6A+HuK89UNPODc11w/G7WvgnOt//yWhW
-   3JVhPrHhN6ixKpr5re9Miy0zBimIlyM+lK12x6DaPsAxRK4lbsG0gnWqv
-   4QMRSpfO1m5CdEH8+mmsagGmxxYSXDk7jHNyekmXZ82YLvyEcS9biXdhc
-   SkPXI/XKdkbic0QK7JZNAvnb+jKEoto0aYiADQVZvh7C5lJpKc02jFs5g
-   z2fhRmI4AtoKMwaBJ1BVXUNNCVPxo1Cej1eaacshDzpv3FwQI8Dr0UEfU
-   dhNyTz3tc1pXLdfN/Ql+ngq5VKb/zQcYTebPm1XZ5696YMIbE2KeLMhf7
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10477"; a="361754966"
+  bh=8b9uMydaY9aE2g86T1ClzKEmQKbWWmc+fiHRN260hCM=;
+  b=N5DPv15xWzjd9nyXOrXTd2AlnX45XyE3LPPRu3kOqnO/nrzqgerqqUGQ
+   t9splQkYFk2fIfg2mAV0ngWSdQY1aX0UbPcAIuHBgM8FSCyVIAYxj6lfM
+   iWczhuCAvfHAyNawUO2dQlyVBg4sSlnRsOET0iQx1QZA8ufIurTLD/RsC
+   L9WTdzzbcxAyEtYBpCdM5caQ5lbXBD6W86fWjqiwRs7g6R5oHkBtsukOt
+   k2p/+DUE9tzoCDgPF6pbfQ67GRnDSEcLAMVOc4f0l9GSBiOM8MZtMoHEA
+   F2VHs2PgW9WAJReElY05B5mA6X1CYlYcVXnBzdZWAzElRiwKfuWb9Sos9
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10477"; a="386291037"
 X-IronPort-AV: E=Sophos;i="5.93,333,1654585200"; 
-   d="scan'208";a="361754966"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2022 06:07:48 -0700
+   d="scan'208";a="386291037"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2022 06:50:44 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.93,333,1654585200"; 
-   d="scan'208";a="570527599"
+   d="scan'208";a="596987223"
 Received: from unknown (HELO localhost.igk.intel.com) ([10.102.105.50])
-  by orsmga003.jf.intel.com with ESMTP; 21 Sep 2022 06:07:47 -0700
+  by orsmga006.jf.intel.com with ESMTP; 21 Sep 2022 06:50:43 -0700
 From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
 To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org
-Subject: [PATCH 9/9 v2] udev: Move udev_block() and udev_unblock() into udev.c
-Date:   Wed, 21 Sep 2022 14:50:51 +0200
-Message-Id: <20220921125051.21325-1-mateusz.grzonka@intel.com>
+Cc:     song@kernel.org
+Subject: [PATCH v2] md: generate CHANGE uevents for md device
+Date:   Wed, 21 Sep 2022 15:33:47 +0200
+Message-Id: <20220921133347.29270-1-mateusz.grzonka@intel.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -50,191 +50,206 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Because a file dedicated for udev-related stuff was created, move udev_block() and udev_unblock() into udev.c
-Also add kernel style comments and better error handling.
+Due to changes in mdadm event handling and moving to udev based
+approach [1], more CHANGE uevents need to be added.
 
+Generate CHANGE uevents to give a udev based software (e.g. mdmonitor)
+chance to see changes in case of any array reconfiguration.
+Add emitting a new CHANGE uevent into md_new_event() to keep consistency
+with currently used mdstat based approach.
+
+[1] https://lore.kernel.org/linux-raid/20220907125657.12192-1-mateusz.grzonka@intel.com/
+
+Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
 ---
- Create.c |  1 +
- lib.c    | 29 -----------------------------
- mdadm.h  |  2 --
- mdopen.c | 12 ++++++------
- udev.c   | 44 ++++++++++++++++++++++++++++++++++++++++++++
- udev.h   |  2 ++
- 6 files changed, 53 insertions(+), 37 deletions(-)
+ drivers/md/md.c     | 31 ++++++++++++++++---------------
+ drivers/md/md.h     |  2 +-
+ drivers/md/raid10.c |  2 +-
+ drivers/md/raid5.c  |  2 +-
+ 4 files changed, 19 insertions(+), 18 deletions(-)
 
-diff --git a/Create.c b/Create.c
-index c84c1ac8..e68894ed 100644
---- a/Create.c
-+++ b/Create.c
-@@ -23,6 +23,7 @@
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 9dc0175280b4..47c1cde56783 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -354,10 +354,11 @@ static bool create_on_open = true;
   */
- 
- #include	"mdadm.h"
-+#include	"udev.h"
- #include	"md_u.h"
- #include	"md_p.h"
- #include	<ctype.h>
-diff --git a/lib.c b/lib.c
-index 10a6ae40..5a1afd49 100644
---- a/lib.c
-+++ b/lib.c
-@@ -174,35 +174,6 @@ char *fd2devnm(int fd)
- 	return NULL;
+ static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
+ static atomic_t md_event_count;
+-void md_new_event(void)
++void md_new_event(struct mddev *mddev)
+ {
+ 	atomic_inc(&md_event_count);
+ 	wake_up(&md_event_waiters);
++	kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
  }
+ EXPORT_SYMBOL_GPL(md_new_event);
  
--/* When we create a new array, we don't want the content to
-- * be immediately examined by udev - it is probably meaningless.
-- * So create /run/mdadm/creating-mdXXX and expect that a udev
-- * rule will noticed this and act accordingly.
-- */
--static char block_path[] = "/run/mdadm/creating-%s";
--static char *unblock_path = NULL;
--void udev_block(char *devnm)
--{
--	int fd;
--	char *path = NULL;
--
--	xasprintf(&path, block_path, devnm);
--	fd = open(path, O_CREAT|O_RDWR, 0600);
--	if (fd >= 0) {
--		close(fd);
--		unblock_path = path;
--	} else
--		free(path);
--}
--
--void udev_unblock(void)
--{
--	if (unblock_path)
--		unlink(unblock_path);
--	free(unblock_path);
--	unblock_path = NULL;
--}
--
- /*
-  * convert a major/minor pair for a block device into a name in /dev, if possible.
-  * On the first call, walk /dev collecting name.
-diff --git a/mdadm.h b/mdadm.h
-index 3c08f826..3f81cce6 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1662,8 +1662,6 @@ extern char *stat2kname(struct stat *st);
- extern char *fd2kname(int fd);
- extern char *stat2devnm(struct stat *st);
- extern char *fd2devnm(int fd);
--extern void udev_block(char *devnm);
--extern void udev_unblock(void);
- 
- extern int in_initrd(void);
- 
-diff --git a/mdopen.c b/mdopen.c
-index 53da4d96..93193739 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -336,8 +336,8 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
- 	devnm[0] = 0;
- 	if (num < 0 && cname && ci->names) {
- 		sprintf(devnm, "md_%s", cname);
--		if (block_udev)
--			udev_block(devnm);
-+		if (block_udev && udev_block(devnm) != UDEV_STATUS_SUCCESS)
-+			return -1;
- 		if (!create_named_array(devnm)) {
- 			devnm[0] = 0;
- 			udev_unblock();
-@@ -345,8 +345,8 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
- 	}
- 	if (num >= 0) {
- 		sprintf(devnm, "md%d", num);
--		if (block_udev)
--			udev_block(devnm);
-+		if (block_udev && udev_block(devnm) != UDEV_STATUS_SUCCESS)
-+			return -1;
- 		if (!create_named_array(devnm)) {
- 			devnm[0] = 0;
- 			udev_unblock();
-@@ -369,8 +369,8 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
- 				return -1;
+@@ -2852,7 +2853,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+ 	if (mddev->degraded)
+ 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	md_new_event();
++	md_new_event(mddev);
+ 	md_wakeup_thread(mddev->thread);
+ 	return 0;
+ }
+@@ -2972,7 +2973,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 					md_wakeup_thread(mddev->thread);
+ 				}
+-				md_new_event();
++				md_new_event(mddev);
  			}
  		}
--		if (block_udev)
--			udev_block(devnm);
-+		if (block_udev && udev_block(devnm) != UDEV_STATUS_SUCCESS)
-+			return -1;
- 	}
- 
- 	sprintf(devname, "/dev/%s", devnm);
-diff --git a/udev.c b/udev.c
-index 18055bfc..d6e3d7b5 100644
---- a/udev.c
-+++ b/udev.c
-@@ -30,6 +30,7 @@
- 
- static struct udev *udev;
- static struct udev_monitor *udev_monitor;
-+static char *unblock_path;
- 
- /**
-  * udev_is_available() - Checks for udev in the system.
-@@ -145,3 +146,46 @@ void udev_release(void)
- 	udev_monitor_unref(udev_monitor);
- 	udev_unref(udev);
+ 	} else if (cmd_match(buf, "writemostly")) {
+@@ -4070,7 +4071,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (!mddev->thread)
+ 		md_update_sb(mddev, 1);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_level);
+-	md_new_event();
++	md_new_event(mddev);
+ 	rv = len;
+ out_unlock:
+ 	mddev_unlock(mddev);
+@@ -4590,7 +4591,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ 		export_rdev(rdev);
+ 	mddev_unlock(mddev);
+ 	if (!err)
+-		md_new_event();
++		md_new_event(mddev);
+ 	return err ? err : len;
  }
-+
-+/**
-+ * udev_block() - Block udev from examining newly created arrays.
-+ *
-+ * When array is created, we don't want udev to examine it immediately.
-+ * Function creates /run/mdadm/creating-mdXXX and expects that udev rule
-+ * will notice it and act accordingly.
-+ *
-+ * Return:
-+ * UDEV_STATUS_SUCCESS when successfully blocked udev
-+ * UDEV_STATUS_ERROR on error
-+ */
-+enum udev_status udev_block(char *devnm)
-+{
-+	int fd;
-+	char *path = xcalloc(1, BUFSIZ);
-+
-+	snprintf(path, BUFSIZ, "/run/mdadm/creating-%s", devnm);
-+
-+	fd = open(path, O_CREAT | O_RDWR, 0600);
-+	if (!is_fd_valid(fd)) {
-+		pr_err("Cannot block udev, error creating blocking file.\n");
-+		pr_err("%s: %s\n", strerror(errno), path);
-+		free(path);
-+		return UDEV_STATUS_ERROR;
-+	}
-+
-+	close(fd);
-+	unblock_path = path;
-+	return UDEV_STATUS_SUCCESS;
-+}
-+
-+/**
-+ * udev_unblock() - Unblock udev.
-+ */
-+void udev_unblock(void)
-+{
-+	if (unblock_path)
-+		unlink(unblock_path);
-+	free(unblock_path);
-+	unblock_path = NULL;
-+}
-+
-diff --git a/udev.h b/udev.h
-index 515366e7..e4da29cc 100644
---- a/udev.h
-+++ b/udev.h
-@@ -32,5 +32,7 @@ bool udev_is_available(void);
- enum udev_status udev_initialize(void);
- enum udev_status udev_wait_for_events(int seconds);
- void udev_release(void);
-+enum udev_status udev_block(char *devnm);
-+void udev_unblock(void);
  
- #endif
+@@ -6024,7 +6025,7 @@ int md_run(struct mddev *mddev)
+ 	if (mddev->sb_flags)
+ 		md_update_sb(mddev, 0);
+ 
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ 
+ bitmap_abort:
+@@ -6411,7 +6412,7 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 		if (mddev->hold_active == UNTIL_STOP)
+ 			mddev->hold_active = 0;
+ 	}
+-	md_new_event();
++	md_new_event(mddev);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	return 0;
+ }
+@@ -6910,7 +6911,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
+ 		md_wakeup_thread(mddev->thread);
+ 	else
+ 		md_update_sb(mddev, 1);
+-	md_new_event();
++	md_new_event(mddev);
+ 
+ 	return 0;
+ busy:
+@@ -6991,7 +6992,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+ 	 */
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ 
+ abort_export:
+@@ -7973,7 +7974,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	}
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
+-	md_new_event();
++	md_new_event(mddev);
+ }
+ EXPORT_SYMBOL(md_error);
+ 
+@@ -8893,7 +8894,7 @@ void md_do_sync(struct md_thread *thread)
+ 		mddev->curr_resync = MD_RESYNC_ACTIVE; /* no longer delayed */
+ 	mddev->curr_resync_completed = j;
+ 	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+-	md_new_event();
++	md_new_event(mddev);
+ 	update_time = jiffies;
+ 
+ 	blk_start_plug(&plug);
+@@ -8964,7 +8965,7 @@ void md_do_sync(struct md_thread *thread)
+ 			/* this is the earliest that rebuild will be
+ 			 * visible in /proc/mdstat
+ 			 */
+-			md_new_event();
++			md_new_event(mddev);
+ 
+ 		if (last_check + window > io_sectors || j == max_sectors)
+ 			continue;
+@@ -9188,7 +9189,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 			sysfs_link_rdev(mddev, rdev);
+ 			if (!test_bit(Journal, &rdev->flags))
+ 				spares++;
+-			md_new_event();
++			md_new_event(mddev);
+ 			set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 		}
+ 	}
+@@ -9222,7 +9223,7 @@ static void md_start_sync(struct work_struct *ws)
+ 	} else
+ 		md_wakeup_thread(mddev->sync_thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+-	md_new_event();
++	md_new_event(mddev);
+ }
+ 
+ /*
+@@ -9483,7 +9484,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+-	md_new_event();
++	md_new_event(mddev);
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
+ }
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b4e2d8b87b61..2a25af01ec72 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -757,7 +757,7 @@ extern int md_super_wait(struct mddev *mddev);
+ extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+ 		struct page *page, blk_opf_t opf, bool metadata_op);
+ extern void md_do_sync(struct md_thread *thread);
+-extern void md_new_event(void);
++extern void md_new_event(struct mddev *mddev);
+ extern void md_allow_write(struct mddev *mddev);
+ extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
+ extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 58c711912875..5c858e39c162 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4697,7 +4697,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	}
+ 	conf->reshape_checkpoint = jiffies;
+ 	md_wakeup_thread(mddev->sync_thread);
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ 
+ abort:
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 734f92e75f85..ad3eb87f60b7 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8577,7 +8577,7 @@ static int raid5_start_reshape(struct mddev *mddev)
+ 	}
+ 	conf->reshape_checkpoint = jiffies;
+ 	md_wakeup_thread(mddev->sync_thread);
+-	md_new_event();
++	md_new_event(mddev);
+ 	return 0;
+ }
+ 
 -- 
 2.26.2
 
