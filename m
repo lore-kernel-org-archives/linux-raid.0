@@ -2,126 +2,510 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2550C6FA82
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Sep 2022 14:59:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB5AECAAD8
+	for <linux-raid@archiver.kernel.org>; Wed, 21 Sep 2022 15:40:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230249AbiIUO7N (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 21 Sep 2022 10:59:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43856 "EHLO
+        id S231504AbiIUPk2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 21 Sep 2022 11:40:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230263AbiIUO66 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Sep 2022 10:58:58 -0400
-Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2445970E44
-        for <linux-raid@vger.kernel.org>; Wed, 21 Sep 2022 07:57:10 -0700 (PDT)
-Received: by mail-io1-xd36.google.com with SMTP id g8so5289708iob.0
-        for <linux-raid@vger.kernel.org>; Wed, 21 Sep 2022 07:57:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date;
-        bh=hllEYxW7NsLIs9BxyKkI80/JYA+jxi2TNvDqwFspVTQ=;
-        b=zRd+ASngO80XK6wz9GY4RXmrP2PfVaUEHPGr/LtU+8SG2JyHQeZOP9ZSbJIi4tRygw
-         kCaEaBGHJJBFBc/UOxidK5GxrXpprMfL1OQq74jKvqbDBawXEE1eJWJSmP7Hfzzx4y69
-         dP3LIurDHzU7q1VmoHrvJ7RLEi0kV5MPossBlHUlQfnQ/ztrAm8og0UEU8tTx6UTQ8p/
-         vR5IK9+AdKohw2XC34CgulB2ffMqn85ig6xRbU/fgOSJufU4/feIOhihEzaWg0oznHVI
-         fDXAGb3G+AWb/wGH03CoFC5SX0K9JROfStWyGty/ymIIF4dC3CnNEN0VH7pOyisdQ+Qk
-         bXVg==
+        with ESMTP id S229738AbiIUPkB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Sep 2022 11:40:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF0480F5C
+        for <linux-raid@vger.kernel.org>; Wed, 21 Sep 2022 08:38:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1663774681;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0zDFMiPHPy86k4ur/CUBB97B4MwXnibyATpgZf/KAv0=;
+        b=d4+ZbVWGlMRcg8tGyOeaRNBlT7VVuNsjFptBvLzxijK0t2ivKUiNZC6PhQpGsOBrlmCssL
+        PMX5P4aIWkQI3y4ja5tbXVWFeyc69HK9941XMUeanX/0UjxnCwMvqqVung9vy90o+d2N/a
+        v9Y55K8ElLIPfwNRHzoAe6NtN/xt6gs=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-513-YiZz28uzPrS72e5UzOZWTQ-1; Wed, 21 Sep 2022 11:27:05 -0400
+X-MC-Unique: YiZz28uzPrS72e5UzOZWTQ-1
+Received: by mail-pj1-f70.google.com with SMTP id ev16-20020a17090aead000b00202cf672e74so3458764pjb.2
+        for <linux-raid@vger.kernel.org>; Wed, 21 Sep 2022 08:27:04 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=hllEYxW7NsLIs9BxyKkI80/JYA+jxi2TNvDqwFspVTQ=;
-        b=DBiNzQpGEqAVSt1n6qRuvkleGv1DPZ78vZrpUKDI+4yWUgzi8v72COLg6oaYTWZ6oi
-         2tzE3BmtWGXtq7Mo4pYs7uXqvatprDNCjjl4oQZtbhSs1I3bv45CtKYaz620y+NLwX4P
-         ZYgP2XAzsdKMEOYpHU+zixJN0IEY7BZwakkih4n6YBEl3d4ktEkA9eV7m20lCbBep7nY
-         30Hz5O3arP/fa6s/AF/3qfXPfLBKzwl8fikZ2uia9YeXMk0FOyeO9gMwO5Yj71E5psDa
-         JLJ2Ln0Pho1OlhDaor1EBA2JLsdqLjI0BfkJ+OGktxN74m++oUD1ac5Rd1bXQH6sUC/E
-         P4wQ==
-X-Gm-Message-State: ACrzQf1htr6BKeB3mtwqItfSsZuD6mc36nnmsND1rP0VLqyxnLKEYeGd
-        U2otp9JynQM5iC+Ti9Uz4e7GJQ==
-X-Google-Smtp-Source: AMsMyM6gfJ0QxVIXyl6uTDviE8hjyB8sEV+XmAWYwTCskwgn2uYAlG3uY5TJIKGr2enjFCWiQtCKFA==
-X-Received: by 2002:a05:6638:13cb:b0:33f:336c:34ae with SMTP id i11-20020a05663813cb00b0033f336c34aemr12834269jaj.317.1663772217433;
-        Wed, 21 Sep 2022 07:56:57 -0700 (PDT)
-Received: from [192.168.1.94] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id p7-20020a92c107000000b002eac38773cdsm1041001ile.82.2022.09.21.07.56.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 Sep 2022 07:56:56 -0700 (PDT)
-Message-ID: <cecf4c71-14be-4ff8-df83-cfd1da102bcf@kernel.dk>
-Date:   Wed, 21 Sep 2022 08:56:53 -0600
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=0zDFMiPHPy86k4ur/CUBB97B4MwXnibyATpgZf/KAv0=;
+        b=0c6XdKTFbpNwgPEJjRV7Gd81Vb5nNvtcDKO561D/PXdmOLbieViPW4XE0uEjlNQjg/
+         LQ6tsqa21OETTTngmRel80UX9SV/xrjq4SvYC7iOUY/U0Lv0zuTq4IKbhS2qvvIfYi/i
+         PY54aNaF9k512632k9pezIGNf0+rMW/pGKoHbpk0mO3y7pbHnMbbozPudWcOss+hrlnq
+         4APWMnhPsga5X0B9uRGNvEqoZmje8ceGKCOUnt4GjqH2nH0Ng8ute2Jnf8hyggrH7R0C
+         wpqkvVGS79CG2EHRbhkWcm0aC5jrYnvHPrLeAyV+8wxO+fXxX2BoBJYsPxGHFBlaEsfh
+         XGrg==
+X-Gm-Message-State: ACrzQf3mPuysn0YXAcIT6znYyR7GQBdS8+8/WSLT8TN7aH03F8tqUxIW
+        EkyHpJv0zfV5N+bUjY0c8QOoiekwObtdeptTaF75b5wgzp9hb42wW+7t1kVf3Te8cpCcP9HJBW6
+        I1yR8qyuWHls2854IBA/SxWGljWdV2bGs481BMg==
+X-Received: by 2002:a63:2a57:0:b0:439:42f4:97e1 with SMTP id q84-20020a632a57000000b0043942f497e1mr25125334pgq.190.1663774023921;
+        Wed, 21 Sep 2022 08:27:03 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM7VJNbxmuLH6fUT1ABCUyZhYPXk83mEuylyorFQVWU8hbMpS3FRpZbAcSsIPX8Awmxao/EYed6Yu0XbbfZgVf8=
+X-Received: by 2002:a63:2a57:0:b0:439:42f4:97e1 with SMTP id
+ q84-20020a632a57000000b0043942f497e1mr25125311pgq.190.1663774023609; Wed, 21
+ Sep 2022 08:27:03 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-From:   Jens Axboe <axboe@kernel.dk>
-Subject: Re: regression caused by block: freeze the queue earlier in
- del_gendisk
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     Thorsten Leemhuis <regressions@leemhuis.info>,
-        Christoph Hellwig <hch@lst.de>,
-        Dusty Mabe <dusty@dustymabe.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-References: <Yxr4SD4d0rZ9TZik@T590> <20220912071618.GA4971@lst.de>
- <Yx/jLTknQm9VeHi4@T590> <95cbd47d-46ed-850e-7d4f-851b35d03069@dustymabe.com>
- <f2c28043-59e6-0aee-b8bf-df38525ee899@leemhuis.info>
- <d39e9149-fcb6-1f7c-4c19-234e74f286f8@kernel.dk>
- <20220920141217.GA12560@lst.de>
- <9594af4b-eb16-0a51-9a4a-e21bbce3317d@kernel.dk>
- <6a3660b2-fa7d-14a2-6977-f50926ad369c@leemhuis.info>
- <c7c909aa-71d9-b43c-293e-d4801a00861e@kernel.dk> <Yysj6AXQ44/el4pS@kroah.com>
-Content-Language: en-US
-In-Reply-To: <Yysj6AXQ44/el4pS@kroah.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20220721121152.4180-1-colyli@suse.de> <20220721121152.4180-5-colyli@suse.de>
+In-Reply-To: <20220721121152.4180-5-colyli@suse.de>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 21 Sep 2022 23:26:52 +0800
+Message-ID: <CALTww2_-K4nf7wYsa6z4YsT=Ma-59iGkiKia6nZLAH4nreeMVQ@mail.gmail.com>
+Subject: Re: [PATCH v6 4/7] badblocks: improve badblocks_clear() for multiple
+ ranges handling
+To:     Coly Li <colyli@suse.de>
+Cc:     linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Geliang Tang <geliang.tang@suse.com>,
+        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+        NeilBrown <neilb@suse.de>,
+        Vishal L Verma <vishal.l.verma@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Sep 21, 2022 at 8:47 AM Greg KH <gregkh@linuxfoundation.org> wrote:
+On Thu, Jul 21, 2022 at 8:12 PM Coly Li <colyli@suse.de> wrote:
 >
-> On Wed, Sep 21, 2022 at 08:34:26AM -0600, Jens Axboe wrote:
-> > On 9/21/22 3:25 AM, Thorsten Leemhuis wrote:
-> > > On 20.09.22 16:14, Jens Axboe wrote:
-> > >> On 9/20/22 8:12 AM, Christoph Hellwig wrote:
-> > >>> On Tue, Sep 20, 2022 at 08:05:06AM -0600, Jens Axboe wrote:
-> > >>>> Christoph and I discussed this one last week, and he has a plan to try
-> > >>>> a flag approach. Christoph, did you get a chance to bang that out? Would
-> > >>>> be nice to get this one wrapped up.
-> > >>>
-> > >>> I gave up on that as it will be far too much change so late in
-> > >>> the cycle and sent you the revert yesterday.
-> > >>
-> > >> Gotcha, haven't made it all the way through the emails of the morning yet.
-> > >> I'll queue it up.
-> > >
-> > > Thx to both of you for taking care of this.
-> > >
-> > > Nitpicking: that patch is missing a "CC: stable@..." tag to ensure
-> > > automatic and quick backporting to 5.19.y. Or is the block layer among
-> > > the subsystems that prefer to handle such things manually?
-> > >
-> > > Ohh, and a fixes tag might have been good as well; a "Link:" tag
-> > > pointing to the report, too. If either would have been there, regzbot
-> > > would have noticed Christoph's patch posting and I wouldn't have
-> > > bothered you yesterday. :-) But whatever, not that important.
-> >
-> > We'll just have to ensure we ping stable on it when it goes in.
+> With the fundamental ideas and helper routines from badblocks_set()
+> improvement, clearing bad block for multiple ranges is much simpler.
 >
-> If you have a git id that is not going to change, I can watch out for it
-> to land in Linus's tree...
+> With a similar idea from badblocks_set() improvement, this patch
+> simplifies bad block range clearing into 5 situations. No matter how
+> complicated the clearing condition is, we just look at the head part
+> of clearing range with relative already set bad block range from the
+> bad block table. The rested part will be handled in next run of the
+> while-loop.
+>
+> Based on existing helpers added from badblocks_set(), this patch adds
+> two more helpers,
+> - front_clear()
+>   Clear the bad block range from bad block table which is front
+>   overlapped with the clearing range.
+> - front_splitting_clear()
+>   Handle the condition that the clearing range hits middle of an
+>   already set bad block range from bad block table.
+>
+> Similar as badblocks_set(), the first part of clearing range is handled
+> with relative bad block range which is find by prev_badblocks(). In most
+> cases a valid hint is provided to prev_badblocks() to avoid unnecessary
+> bad block table iteration.
+>
+> This patch also explains the detail algorithm code comments at beginning
+> of badblocks.c, including which five simplified situations are
+> categrized and how all the bad block range clearing conditions are
+> handled by these five situations.
+>
+> Again, in order to make the code review easier and avoid the code
+> changes mixed together, this patch does not modify badblock_clear() and
+> implement another routine called _badblock_clear() for the improvement.
+> Later patch will delete current code of badblock_clear() and make it as
+> a wrapper to _badblock_clear(), so the code change can be much clear for
+> review.
+>
+> Signed-off-by: Coly Li <colyli@suse.de>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Geliang Tang <geliang.tang@suse.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: NeilBrown <neilb@suse.de>
+> Cc: Vishal L Verma <vishal.l.verma@intel.com>
+> Cc: Xiao Ni <xni@redhat.com>
+> ---
+>  block/badblocks.c | 325 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 325 insertions(+)
+>
+> diff --git a/block/badblocks.c b/block/badblocks.c
+> index ba126a2e138d..d3fa53594aa7 100644
+> --- a/block/badblocks.c
+> +++ b/block/badblocks.c
+> @@ -330,6 +330,123 @@
+>   * avoided. In my test with the hint to prev_badblocks(), except for the first
+>   * loop, all rested calls to prev_badblocks() can go into the fast path and
+>   * return correct bad blocks table index immediately.
+> + *
+> + *
+> + * Clearing a bad blocks range from the bad block table has similar idea as
+> + * setting does, but much more simpler. The only thing needs to be noticed is
+> + * when the clearing range hits middle of a bad block range, the existing bad
+> + * block range will split into two, and one more item should be added into the
+> + * bad block table. The simplified situations to be considered are, (The already
+> + * set bad blocks ranges in bad block table are naming with prefix E, and the
+> + * clearing bad blocks range is naming with prefix C)
+> + *
+> + * 1) A clearing range is not overlapped to any already set ranges in bad block
+> + *    table.
+> + *    +-----+         |          +-----+         |          +-----+
+> + *    |  C  |         |          |  C  |         |          |  C  |
+> + *    +-----+         or         +-----+         or         +-----+
+> + *            +---+   |   +----+         +----+  |  +---+
+> + *            | E |   |   | E1 |         | E2 |  |  | E |
+> + *            +---+   |   +----+         +----+  |  +---+
+> + *    For the above situations, no bad block to be cleared and no failure
+> + *    happens, simply returns 0.
+> + * 2) The clearing range hits middle of an already setting bad blocks range in
+> + *    the bad block table.
+> + *            +---+
+> + *            | C |
+> + *            +---+
+> + *     +-----------------+
+> + *     |         E       |
+> + *     +-----------------+
+> + *    In this situation if the bad block table is not full, the range E will be
+> + *    split into two ranges E1 and E2. The result is,
+> + *     +------+   +------+
+> + *     |  E1  |   |  E2  |
+> + *     +------+   +------+
+> + * 3) The clearing range starts exactly at same LBA as an already set bad block range
+> + *    from the bad block table.
+> + * 3.1) Partially covered at head part
+> + *         +------------+
+> + *         |     C      |
+> + *         +------------+
+> + *         +-----------------+
+> + *         |         E       |
+> + *         +-----------------+
+> + *    For this situation, the overlapped already set range will update the
+> + *    start LBA to end of C and shrink the range to BB_LEN(E) - BB_LEN(C). No
+> + *    item deleted from bad block table. The result is,
+> + *                      +----+
+> + *                      | E1 |
+> + *                      +----+
+> + * 3.2) Exact fully covered
+> + *         +-----------------+
+> + *         |         C       |
+> + *         +-----------------+
+> + *         +-----------------+
+> + *         |         E       |
+> + *         +-----------------+
+> + *    For this situation the whole bad blocks range E will be cleared and its
+> + *    corresponded item is deleted from the bad block table.
 
-This is the one:
+Does it need to add 3.3) here to explain when length of C is bigger than E
+Or we can change 3.2 to cover these two conditions. In the codes, it splits
+situation 3 into two parts.
 
-commit 4c66a326b5ab784cddd72de07ac5b6210e9e1b06 (origin/block-6.0, block-6.0)
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Mon Sep 19 16:40:49 2022 +0200
+> + * 4) The clearing range exactly ends at same LBA as an already set bad block
+> + *    range.
+> + *                   +-------+
+> + *                   |   C   |
+> + *                   +-------+
+> + *         +-----------------+
+> + *         |         E       |
+> + *         +-----------------+
+> + *    For the above situation, the already set range E is updated to shrink its
+> + *    end to the start of C, and reduce its length to BB_LEN(E) - BB_LEN(C).
+> + *    The result is,
+> + *         +---------+
+> + *         |    E    |
+> + *         +---------+
+> + * 5) The clearing range is partially overlapped with an already set bad block
+> + *    range from the bad block table.
+> + * 5.1) The already set bad block range is front overlapped with the clearing
+> + *    range.
+> + *         +----------+
+> + *         |     C    |
+> + *         +----------+
+> + *              +------------+
+> + *              |      E     |
+> + *              +------------+
+> + *   For such situation, the clearing range C can be treated as two parts. The
+> + *   first part ends at the start LBA of range E, and the second part starts at
+> + *   same LBA of range E.
+> + *         +----+-----+               +----+   +-----+
+> + *         | C1 | C2  |               | C1 |   | C2  |
+> + *         +----+-----+         ===>  +----+   +-----+
+> + *              +------------+                 +------------+
+> + *              |      E     |                 |      E     |
+> + *              +------------+                 +------------+
+> + *   Now the first part C1 can be handled as condition 1), and the second part C2 can be
+> + *   handled as condition 3.1) in next loop.
+> + * 5.2) The already set bad block range is behind overlaopped with the clearing
+> + *   range.
+> + *                 +----------+
+> + *                 |     C    |
+> + *                 +----------+
+> + *         +------------+
+> + *         |      E     |
+> + *         +------------+
+> + *   For such situation, the clearing range C can be treated as two parts. The
+> + *   first part C1 ends at same end LBA of range E, and the second part starts
+> + *   at end LBA of range E.
+> + *                 +----+-----+                 +----+    +-----+
+> + *                 | C1 | C2  |                 | C1 |    | C2  |
+> + *                 +----+-----+  ===>           +----+    +-----+
+> + *         +------------+               +------------+
+> + *         |      E     |               |      E     |
+> + *         +------------+               +------------+
+> + *   Now the first part clearing range C1 can be handled as condition 4), and
+> + *   the second part clearing range C2 can be handled as condition 1) in next
+> + *   loop.
+> + *
+> + *   All bad blocks range clearing can be simplified into the above 5 situations
+> + *   by only handling the head part of the clearing range in each run of the
+> + *   while-loop. The idea is similar to bad blocks range setting but much
+> + *   simpler.
+>   */
 
-    Revert "block: freeze the queue earlier in del_gendisk"
+The categorized situations are a little different with setting bad
+block. Is it better
+to use the same way as setting bad block? So we don't need to consider two
+categorized ways to avoid switching them when reading codes.
 
-Thanks Greg!
+>
+>  /*
+> @@ -937,6 +1054,214 @@ static int _badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+>         return rv;
+>  }
+>
+> +/*
+> + * Clear the bad block range from bad block table which is front overlapped
+> + * with the clearing range. The return value is how many sectors from an
+> + * already set bad block range are cleared. If the whole bad block range is
+> + * covered by the clearing range and fully cleared, 'delete' is set as 1 for
+> + * the caller to reduce bb->count.
+> + */
+> +static int front_clear(struct badblocks *bb, int prev,
+> +                      struct badblocks_context *bad, int *deleted)
+> +{
+> +       sector_t sectors = bad->len;
+> +       sector_t s = bad->start;
+> +       u64 *p = bb->page;
+> +       int cleared = 0;
+> +
+> +       *deleted = 0;
+> +       if (s == BB_OFFSET(p[prev])) {
+> +               if (BB_LEN(p[prev]) > sectors) {
+> +                       p[prev] = BB_MAKE(BB_OFFSET(p[prev]) + sectors,
+> +                                         BB_LEN(p[prev]) - sectors,
+> +                                         BB_ACK(p[prev]));
+> +                       cleared = sectors;
+> +               } else {
+> +                       /* BB_LEN(p[prev]) <= sectors */
+> +                       cleared = BB_LEN(p[prev]);
+> +                       if ((prev + 1) < bb->count)
+> +                               memmove(p + prev, p + prev + 1,
+> +                                      (bb->count - prev - 1) * 8);
+                            else
+                                    p[prev] = 0
 
--- 
-Jens Axboe
+> +                       *deleted = 1;
+> +               }
+> +       } else if (s > BB_OFFSET(p[prev])) {
+> +               if (BB_END(p[prev]) <= (s + sectors)) {
+> +                       cleared = BB_END(p[prev]) - s;
+> +                       p[prev] = BB_MAKE(BB_OFFSET(p[prev]),
+> +                                         s - BB_OFFSET(p[prev]),
+> +                                         BB_ACK(p[prev]));
+> +               } else {
+> +                       /* Splitting is handled in front_splitting_clear() */
+> +                       BUG();
+> +               }
+> +       }
+> +
+> +       return cleared;
+> +}
+> +
+> +/*
+> + * Handle the condition that the clearing range hits middle of an already set
+> + * bad block range from bad block table. In this condition the existing bad
+> + * block range is split into two after the middle part is cleared.
+> + */
+> +static int front_splitting_clear(struct badblocks *bb, int prev,
+> +                                 struct badblocks_context *bad)
+> +{
+> +       u64 *p = bb->page;
+> +       u64 end = BB_END(p[prev]);
+> +       int ack = BB_ACK(p[prev]);
+> +       sector_t sectors = bad->len;
+> +       sector_t s = bad->start;
+> +
+> +       p[prev] = BB_MAKE(BB_OFFSET(p[prev]),
+> +                         s - BB_OFFSET(p[prev]),
+> +                         ack);
+> +       memmove(p + prev + 2, p + prev + 1, (bb->count - prev - 1) * 8);
+> +       p[prev + 1] = BB_MAKE(s + sectors, end - s - sectors, ack);
+> +       return sectors;
+> +}
+> +
+> +/* Do the exact work to clear bad block range from the bad block table */
+> +static int _badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+> +{
+> +       struct badblocks_context bad;
+> +       int prev = -1, hint = -1;
+> +       int len = 0, cleared = 0;
+> +       int rv = 0;
+> +       u64 *p;
+> +
+> +       if (bb->shift < 0)
+> +               /* badblocks are disabled */
+> +               return 1;
+> +
+> +       if (sectors == 0)
+> +               /* Invalid sectors number */
+> +               return 1;
+> +
+> +       if (bb->shift) {
+> +               sector_t target;
+> +
+> +               /* When clearing we round the start up and the end down.
+> +                * This should not matter as the shift should align with
+> +                * the block size and no rounding should ever be needed.
+> +                * However it is better the think a block is bad when it
+> +                * isn't than to think a block is not bad when it is.
+> +                */
+> +               target = s + sectors;
+> +               roundup(s, bb->shift);
+> +               rounddown(target, bb->shift);
+> +               sectors = target - s;
+> +       }
+> +
+> +       write_seqlock_irq(&bb->lock);
+> +
+> +       bad.ack = true;
+> +       p = bb->page;
+> +
+> +re_clear:
+> +       bad.start = s;
+> +       bad.len = sectors;
+> +
+> +       if (badblocks_empty(bb)) {
+> +               len = sectors;
+> +               cleared++;
+> +               goto update_sectors;
+> +       }
+> +
+> +
+> +       prev = prev_badblocks(bb, &bad, hint);
+> +
+> +       /* Start before all badblocks */
+> +       if (prev < 0) {
+> +               if (overlap_behind(bb, &bad, 0)) {
+> +                       len = BB_OFFSET(p[0]) - s;
+> +                       hint = prev;
+
+s/prev/0/g
+
+> +               } else {
+> +                       len = sectors;
+> +               }
+> +               /*
+> +                * Both situations are to clear non-bad range,
+> +                * should be treated as successful
+> +                */
+> +               cleared++;
+> +               goto update_sectors;
+> +       }
+> +
+> +       /* Start after all badblocks */
+> +       if ((prev + 1) >= bb->count && !overlap_front(bb, prev, &bad)) {
+
+If we only want to check if it starts after all badblocks, we can use
+bad->start >= BB_END(p[prev]) directly. It's more easy to understand
+than !overlap_front.
+
+> +               len = sectors;
+> +               cleared++;
+> +               goto update_sectors;
+> +       }
+> +
+> +       /* Clear will split a bad record but the table is full */
+> +       if (badblocks_full(bb) && (BB_OFFSET(p[prev]) < bad.start) &&
+> +           (BB_END(p[prev]) > (bad.start + sectors))) {
+> +               len = sectors;
+> +               goto update_sectors;
+> +       }
+
+Can we move this check to overlap_front situation
+
+> +
+> +       if (overlap_front(bb, prev, &bad)) {
+> +               if ((BB_OFFSET(p[prev]) < bad.start) &&
+> +                   (BB_END(p[prev]) > (bad.start + bad.len))) {
+> +                       /* Splitting */
+
+If we move the check of table here, it should be
+                    if (bb->count + 1 >= MAX_BADBLOCKS) {
+                           len = sectors;
+                           goto update_sectors;
+                   }
+Then it can do front_splitting_clear directly.
+
+> +                       if ((bb->count + 1) < MAX_BADBLOCKS) {
+> +                               len = front_splitting_clear(bb, prev, &bad);
+> +                               bb->count += 1;
+> +                               cleared++;
+> +                       } else {
+> +                               /* No space to split, give up */
+> +                               len = sectors;
+> +                       }
+> +               } else {
+> +                       int deleted = 0;
+> +
+> +                       len = front_clear(bb, prev, &bad, &deleted);
+> +                       bb->count -= deleted;
+> +                       cleared++;
+> +                       hint = prev;
+> +               }
+> +
+> +               goto update_sectors;
+> +       }
+> +
+> +       /* Not front overlap, but behind overlap */
+> +       if ((prev + 1) < bb->count && overlap_behind(bb, &bad, prev + 1)) {
+> +               len = BB_OFFSET(p[prev + 1]) - bad.start;
+> +               hint = prev + 1;
+> +               /* Clear non-bad range should be treated as successful */
+> +               cleared++;
+> +               goto update_sectors;
+> +       }
+
+Can we do this like setting bad blocks? It can check behind overlap
+after the loop?
+So it can use the loop to handle the clearing bad block until the end of it.
+
+Regards
+Xiao
+
+> +
+> +       /* Not cover any badblocks range in the table */
+> +       len = sectors;
+> +       /* Clear non-bad range should be treated as successful */
+> +       cleared++;
+> +
+> +update_sectors:
+> +       s += len;
+> +       sectors -= len;
+> +
+> +       if (sectors > 0)
+> +               goto re_clear;
+> +
+> +       WARN_ON(sectors < 0);
+> +
+> +       if (cleared) {
+> +               badblocks_update_acked(bb);
+> +               set_changed(bb);
+> +       }
+> +
+> +       write_sequnlock_irq(&bb->lock);
+> +
+> +       if (!cleared)
+> +               rv = 1;
+> +
+> +       return rv;
+> +}
+> +
+> +
+>  /**
+>   * badblocks_check() - check a given range for bad sectors
+>   * @bb:                the badblocks structure that holds all badblock information
+> --
+> 2.35.3
+>
+
