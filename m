@@ -2,55 +2,55 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B69E5C54EE9
-	for <linux-raid@archiver.kernel.org>; Thu, 22 Sep 2022 11:22:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31643C6FA82
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Sep 2022 11:22:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230285AbiIVLWQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 22 Sep 2022 07:22:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41992 "EHLO
+        id S231149AbiIVLWb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 22 Sep 2022 07:22:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230072AbiIVLWP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Sep 2022 07:22:15 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D75E8ABF21
-        for <linux-raid@vger.kernel.org>; Thu, 22 Sep 2022 04:22:14 -0700 (PDT)
+        with ESMTP id S230072AbiIVLWa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Sep 2022 07:22:30 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AB38E05E1
+        for <linux-raid@vger.kernel.org>; Thu, 22 Sep 2022 04:22:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663845734; x=1695381734;
+  t=1663845749; x=1695381749;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=FDZLSEZP6D1nYTqFWyuTp/94rHW8R9KCS6bKwLycszg=;
-  b=cb+jCaYRiUQzm8ciLeeoNLRCPsZeEyzfh7IlT+eW4RD2DNC1pP7NhX1F
-   +bqJBkSt2mmN27WCG/cRmXzYE107TPs7H4sohTBYFo1QKHede3qC6YW/s
-   QPdGXmdjBITEJPoXeVebd9YlT+yUCqVYlElccF+WJ+DR/MDFj7xTO3Obc
-   0A0cEsX2mbPThtKYNWEjdFuH/Tv1niz0DeLJLpk0fUm7RpGXI7oH8USgu
-   jULip4BMMPXP/kRqHrUcjXXjHifsieIY9XExbGn3LroKxYPzWKOSuJG18
-   L9xZ/lfQ5cvG3p1c+/QehbtiK0GZo8WORtzY5NZT9Vk7NUT0fkFHXx9AO
+  bh=8viLB6k/Uy9Gf0iZlfdDFNLGVFN5RCqFt6VViHAnl3E=;
+  b=MnLvGwXmSJHfVNgTWtiKJ0SvnI/LciQyr3d6EZQYVNVmhovvv9G5uoKv
+   b07y0Je9bX1+hBHI2DeXj84rkWrdAyZNejTSCFggJnNg/Y6IwH++1+N6P
+   8quEJ335zDCL1io1+cQk7Q4PdEWMFuzOTPTg+R4sxWc5x75TjRKBBYox/
+   ibhonaFosTy1tTmSZyZkn28+kPIHDjWaoZqMrm1ovoV1s2ZQXSKvLkp+K
+   UGD6yt4V6QVrWACGkB2TW30hvRAkMkQDAtE8yny2DA+kvHf6d91fDhJ/c
+   hGueeEPI9YtE2T2b5ZLXazFpyf3Ypjy0zruYjAdDgKHSwEddPh3jUvpjc
    w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10477"; a="280638955"
+X-IronPort-AV: E=McAfee;i="6500,9779,10477"; a="301116686"
 X-IronPort-AV: E=Sophos;i="5.93,335,1654585200"; 
-   d="scan'208";a="280638955"
+   d="scan'208";a="301116686"
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 04:22:14 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 04:22:25 -0700
 X-IronPort-AV: E=Sophos;i="5.93,335,1654585200"; 
-   d="scan'208";a="948556107"
+   d="scan'208";a="948556142"
 Received: from mkusiak-mobl.ger.corp.intel.com (HELO [10.213.5.202]) ([10.213.5.202])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 04:22:13 -0700
-Message-ID: <4c03c96d-8689-9a3b-e6aa-a2eb7bd06e2c@linux.intel.com>
-Date:   Thu, 22 Sep 2022 13:22:11 +0200
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 04:22:23 -0700
+Message-ID: <88738717-437f-9dab-f9c0-c9df905a4931@linux.intel.com>
+Date:   Thu, 22 Sep 2022 13:22:21 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.13.0
-Subject: Re: [PATCH 07/10] super-intel: refactor the code for enum
+Subject: Re: [PATCH 08/10] Change update to enum in update_super and
+ update_subarray
 Content-Language: pl
 To:     Coly Li <colyli@suse.de>, Mateusz Kusiak <mateusz.kusiak@intel.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Jes Sorensen <jes@trained-monkey.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>, jes@trained-monkey.org
 References: <20220818145621.21982-1-mateusz.kusiak@intel.com>
- <20220818145621.21982-8-mateusz.kusiak@intel.com>
- <78011938-BC68-4E12-BD0A-F49F1EE6FA65@suse.de>
+ <20220818145621.21982-9-mateusz.kusiak@intel.com>
+ <9415B7D0-E2D6-486D-8143-AE53ED7657EF@suse.de>
 From:   "Kusiak, Mateusz" <mateusz.kusiak@linux.intel.com>
-In-Reply-To: <78011938-BC68-4E12-BD0A-F49F1EE6FA65@suse.de>
+In-Reply-To: <9415B7D0-E2D6-486D-8143-AE53ED7657EF@suse.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -62,74 +62,78 @@ On 14/09/2022 17:03, Coly Li wrote:
 > 
 >> 2022年8月18日 22:56，Mateusz Kusiak <mateusz.kusiak@intel.com> 写道：
 >>
->> It prepares super-intel for change context->update to enum.
+>> Use already existing enum, change update_super and update_subarray
+>> update to enum globally.
+>> Refactor function references also.
+>> Remove code specific options from update_options.
 >>
 >> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 >> ---
->> super-intel.c | 38 +++++++++++++++++++++++++-------------
->> 1 file changed, 25 insertions(+), 13 deletions(-)
+>> Assemble.c    | 14 +++++++++-----
+>> Examine.c     |  2 +-
+>> Grow.c        |  9 +++++----
+>> Manage.c      | 14 ++++++++------
+>> maps.c        | 21 ---------------------
+>> mdadm.h       | 12 +++++++++---
+>> super-intel.c | 16 ++++++++--------
+>> super0.c      |  9 ++++-----
+>> super1.c      | 17 ++++++++---------
+>> 9 files changed, 52 insertions(+), 62 deletions(-)
 >>
->> diff --git a/super-intel.c b/super-intel.c
->> index 672f946e..3de3873e 100644
->> --- a/super-intel.c
->> +++ b/super-intel.c
->> @@ -3930,7 +3930,8 @@ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
 >>
->> 	mpb = super->anchor;
->>
->> -	if (strcmp(update, "uuid") == 0) {
->> +	switch (map_name(update_options, update)) {
->> +	case UOPT_UUID:
->> 		/* We take this to mean that the family_num should be updated.
->> 		 * However that is much smaller than the uuid so we cannot really
->> 		 * allow an explicit uuid to be given.  And it is hard to reliably
->> @@ -3954,10 +3955,14 @@ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
->> 		}
->> 		if (rv == 0)
->> 			mpb->orig_family_num = info->uuid[0];
->> -	} else if (strcmp(update, "assemble") == 0)
->> +		break;
->> +	case UOPT_SPEC_ASSEMBLE:
->> 		rv = 0;
->> -	else
->> +		break;
->> +	default:
->> 		rv = -1;
->> +		break;
->> +	}
->>
->> 	/* successful update? recompute checksum */
->> 	if (rv == 0)
->> @@ -7888,18 +7893,25 @@ static int kill_subarray_imsm(struct supertype *st, char *subarray_id)
->>
->> 	return 0;
->> }
->> -
->> -static int get_rwh_policy_from_update(char *update)
->> +/**
->> + * get_rwh_policy_from_update() - Get the rwh policy for update option.
->> + * @update: Update option.
->> + */
-> 
-> 
-> The above comment format is not the existed code comments style.
-> 
-> For example for getinfo_super_disks_imsm() in same file,
-> 
->  3862 /* allocates memory and fills disk in mdinfo structure
->  3863  * for each disk in array */
->  3864 struct mdinfo *getinfo_super_disks_imsm(struct supertype *st)
-> 
-I believe it matches kernel style descriptions, like in
-imsm_get_free_size(). I can add "Return" part if you want me to.
-
-I just noticed that empty line is missing before the function
-description, I'll fix this in v2.
 > 
 > [snipped]
 > 
-> The rested part is fine to me.
+>> diff --git a/mdadm.h b/mdadm.h
+>> index 7bc31b16..afc2e2a8 100644
+>> --- a/mdadm.h
+>> +++ b/mdadm.h
+>> @@ -1010,7 +1010,7 @@ extern struct superswitch {
+>> 	 *                    it will resume going in the opposite direction.
+>> 	 */
+>> 	int (*update_super)(struct supertype *st, struct mdinfo *info,
+>> -			    char *update,
+>> +			    enum update_opt update,
+>> 			    char *devname, int verbose,
+>> 			    int uuid_set, char *homehost);
+>>
+>> @@ -1136,9 +1136,15 @@ extern struct superswitch {
+>> 	/* Permit subarray's to be deleted from inactive containers */
+>> 	int (*kill_subarray)(struct supertype *st,
+>> 			     char *subarray_id); /* optional */
+>> -	/* Permit subarray's to be modified */
+>> +	/**
+>> +	 * update_subarray() - Permit subarray to be modified.
+>> +	 * @st: Supertype.
+>> +	 * @subarray: Subarray name.
+>> +	 * @update: Update option.
+>> +	 * @ident: Optional identifiers.
+>> +	 */
 > 
+> Maybe we should follow existing comment code style like,
+> 
+> /* Commet start here,
+>  * and second line.
+>  */
+> 
+I am not concerned, IMO the comment (function description) follows kerel
+standards.
+There already are functions with this type of description inside the
+file like signal_s() or close_fd().
+
+> This patch doesn’t apply on latest mdadm upstream, in the mdadm-CI tree, I rebased the patch and push it into remotes/origin/20220903-testing.
+> Could you please to check the rebased patch?
+> 
+I checked the branch and it looks good to me.
+However, since there are allready fixes to be made, I'll rebase the
+whole patchset anyway, on top of the master, when sending v2.
+I'm planing to resend whole patchset to avoid complications.
+I'm looking forward your response regarding the rest of the questions,
+and I will resend patchset when everything is clear.
+
+Thanks,
+Mateusz
+
 > Thanks.
 > 
 > Coly Li
