@@ -2,54 +2,55 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D8DAC6FA82
-	for <linux-raid@archiver.kernel.org>; Thu, 22 Sep 2022 11:22:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B69E5C54EE9
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Sep 2022 11:22:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230371AbiIVLWD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 22 Sep 2022 07:22:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41906 "EHLO
+        id S230285AbiIVLWQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 22 Sep 2022 07:22:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230285AbiIVLWD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Sep 2022 07:22:03 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 609A6DE0FD
-        for <linux-raid@vger.kernel.org>; Thu, 22 Sep 2022 04:22:02 -0700 (PDT)
+        with ESMTP id S230072AbiIVLWP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Sep 2022 07:22:15 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D75E8ABF21
+        for <linux-raid@vger.kernel.org>; Thu, 22 Sep 2022 04:22:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663845722; x=1695381722;
+  t=1663845734; x=1695381734;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=9XaaMHYjyYhOMgI83xkMLalcvU4hYM8CcgMnR6Rbh6w=;
-  b=ACaH9cKj2XgsSUNyq02n36ec0qLyKTfdj3nyWTx1RaABYSOXXGbKhyUr
-   d44AEUDJlAMAQGCOPckTBfv+PAv51NVu26D7nz3BqFqMEpSralfuF4edY
-   4nhmzxOzhjWDk3hwyzg4PE8Vkp12QILXkkbh5tPOOlpR4Q0rGOPcJdMcl
-   1AZTFkD2bpXNLhIZ+J1h4XB2Oxsd4hYmNifV4Mk1aAEtQSXlvQGUje81W
-   JGD19a792vW08VFDCoPssV8JciAdtCEcwitOnblMFrMivnyUcD1YRTDCP
-   W/FzaTaGKpdQXXaPB7Lx+h/qU/hvQfBYF12y9vxViGy7G1r2hw+hHmarp
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10477"; a="297867899"
+  bh=FDZLSEZP6D1nYTqFWyuTp/94rHW8R9KCS6bKwLycszg=;
+  b=cb+jCaYRiUQzm8ciLeeoNLRCPsZeEyzfh7IlT+eW4RD2DNC1pP7NhX1F
+   +bqJBkSt2mmN27WCG/cRmXzYE107TPs7H4sohTBYFo1QKHede3qC6YW/s
+   QPdGXmdjBITEJPoXeVebd9YlT+yUCqVYlElccF+WJ+DR/MDFj7xTO3Obc
+   0A0cEsX2mbPThtKYNWEjdFuH/Tv1niz0DeLJLpk0fUm7RpGXI7oH8USgu
+   jULip4BMMPXP/kRqHrUcjXXjHifsieIY9XExbGn3LroKxYPzWKOSuJG18
+   L9xZ/lfQ5cvG3p1c+/QehbtiK0GZo8WORtzY5NZT9Vk7NUT0fkFHXx9AO
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10477"; a="280638955"
 X-IronPort-AV: E=Sophos;i="5.93,335,1654585200"; 
-   d="scan'208";a="297867899"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 04:22:02 -0700
+   d="scan'208";a="280638955"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 04:22:14 -0700
 X-IronPort-AV: E=Sophos;i="5.93,335,1654585200"; 
-   d="scan'208";a="597394976"
+   d="scan'208";a="948556107"
 Received: from mkusiak-mobl.ger.corp.intel.com (HELO [10.213.5.202]) ([10.213.5.202])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 04:22:00 -0700
-Message-ID: <0d8322fc-f457-ed65-811e-adc90b6a4970@linux.intel.com>
-Date:   Thu, 22 Sep 2022 13:21:58 +0200
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 04:22:13 -0700
+Message-ID: <4c03c96d-8689-9a3b-e6aa-a2eb7bd06e2c@linux.intel.com>
+Date:   Thu, 22 Sep 2022 13:22:11 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.13.0
-Subject: Re: [PATCH 06/10] super1: refactor the code for enum
+Subject: Re: [PATCH 07/10] super-intel: refactor the code for enum
 Content-Language: pl
 To:     Coly Li <colyli@suse.de>, Mateusz Kusiak <mateusz.kusiak@intel.com>
-Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Jes Sorensen <jes@trained-monkey.org>
 References: <20220818145621.21982-1-mateusz.kusiak@intel.com>
- <20220818145621.21982-7-mateusz.kusiak@intel.com>
- <79C06B27-C8DD-4E87-9C40-72160D26C641@suse.de>
+ <20220818145621.21982-8-mateusz.kusiak@intel.com>
+ <78011938-BC68-4E12-BD0A-F49F1EE6FA65@suse.de>
 From:   "Kusiak, Mateusz" <mateusz.kusiak@linux.intel.com>
-In-Reply-To: <79C06B27-C8DD-4E87-9C40-72160D26C641@suse.de>
+In-Reply-To: <78011938-BC68-4E12-BD0A-F49F1EE6FA65@suse.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -61,96 +62,73 @@ On 14/09/2022 17:03, Coly Li wrote:
 > 
 >> 2022年8月18日 22:56，Mateusz Kusiak <mateusz.kusiak@intel.com> 写道：
 >>
->> It prepares update_super1 for change context->update to enum.
->> Change if else statements into switch.
+>> It prepares super-intel for change context->update to enum.
 >>
 >> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 >> ---
->> super1.c | 149 ++++++++++++++++++++++++++++++++-----------------------
->> 1 file changed, 87 insertions(+), 62 deletions(-)
+>> super-intel.c | 38 +++++++++++++++++++++++++-------------
+>> 1 file changed, 25 insertions(+), 13 deletions(-)
 >>
->> diff --git a/super1.c b/super1.c
->> index 71af860c..6c81c1b9 100644
->> --- a/super1.c
->> +++ b/super1.c
->> @@ -1212,30 +1212,53 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
->> 	int rv = 0;
->> 	struct mdp_superblock_1 *sb = st->sb;
->> 	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
->> +	enum update_opt update_enum = map_name(update_options, update);
+>> diff --git a/super-intel.c b/super-intel.c
+>> index 672f946e..3de3873e 100644
+>> --- a/super-intel.c
+>> +++ b/super-intel.c
+>> @@ -3930,7 +3930,8 @@ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
 >>
->> -	if (strcmp(update, "homehost") == 0 &&
->> -	    homehost) {
->> -		/* Note that 'homehost' is special as it is really
->> +	if (update_enum == UOPT_HOMEHOST && homehost) {
->> +		/*
->> +		 * Note that 'homehost' is special as it is really
->> 		 * a "name" update.
->> 		 */
->> 		char *c;
->> -		update = "name";
->> +		update_enum = UOPT_NAME;
->> 		c = strchr(sb->set_name, ':');
->> 		if (c)
->> -			strncpy(info->name, c+1, 31 - (c-sb->set_name));
->> +			snprintf(info->name, sizeof(info->name), "%s", c+1);
->> 		else
->> -			strncpy(info->name, sb->set_name, 32);
->> -		info->name[32] = 0;
->> +			snprintf(info->name, sizeof(info->name), "%s", sb->set_name);
->> 	}
+>> 	mpb = super->anchor;
 >>
->> -	if (strcmp(update, "force-one")==0) {
->> +	switch (update_enum) {
->> +	case UOPT_NAME:
->> +		if (!info->name[0])
->> +			snprintf(info->name, sizeof(info->name), "%d", info->array.md_minor);
->> +		memset(sb->set_name, 0, sizeof(sb->set_name));
->> +		int namelen;
->> +
-> 
-> The above variable ’namelen’ might be declared at beginning of this code block.
-
-I'll fix this in v2.
-> 
->> +		namelen = strnlen(homehost, MD_NAME_MAX) + 1 + strnlen(info->name, MD_NAME_MAX);
->> +		if (homehost &&
->> +		    strchr(info->name, ':') == NULL &&
->> +		    namelen < MD_NAME_MAX) {
->> +			strcpy(sb->set_name, homehost);
->> +			strcat(sb->set_name, ":");
->> +			strcat(sb->set_name, info->name);
->> +		} else {
->> +			namelen = min((int)strnlen(info->name, MD_NAME_MAX),
->> +				      (int)sizeof(sb->set_name) - 1);
->> +			memcpy(sb->set_name, info->name, namelen);
->> +			memset(&sb->set_name[namelen], '\0',
->> +			       sizeof(sb->set_name) - namelen);
->> +		}
->> +		break;
->>
-> [snipped]
->> @@ -1569,32 +1589,37 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
->> 			}
->> 		done:;
+>> -	if (strcmp(update, "uuid") == 0) {
+>> +	switch (map_name(update_options, update)) {
+>> +	case UOPT_UUID:
+>> 		/* We take this to mean that the family_num should be updated.
+>> 		 * However that is much smaller than the uuid so we cannot really
+>> 		 * allow an explicit uuid to be given.  And it is hard to reliably
+>> @@ -3954,10 +3955,14 @@ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
 >> 		}
->> -	} else if (strcmp(update, "_reshape_progress") == 0)
+>> 		if (rv == 0)
+>> 			mpb->orig_family_num = info->uuid[0];
+>> -	} else if (strcmp(update, "assemble") == 0)
 >> +		break;
->> +	case UOPT_SPEC__RESHAPE_PROGRESS:
->> 		sb->reshape_position = __cpu_to_le64(info->reshape_progress);
->> -	else if (strcmp(update, "writemostly") == 0)
->> -		sb->devflags |= WriteMostly1;
->> -	else if (strcmp(update, "readwrite") == 0)
+>> +	case UOPT_SPEC_ASSEMBLE:
+>> 		rv = 0;
+>> -	else
 >> +		break;
->> +	case UOPT_SPEC_READWRITE:
->> 		sb->devflags &= ~WriteMostly1;
->> -	else if (strcmp(update, "failfast") == 0)
+>> +	default:
+>> 		rv = -1;
+>> +		break;
+>> +	}
+>>
+>> 	/* successful update? recompute checksum */
+>> 	if (rv == 0)
+>> @@ -7888,18 +7893,25 @@ static int kill_subarray_imsm(struct supertype *st, char *subarray_id)
+>>
+>> 	return 0;
+>> }
+>> -
+>> -static int get_rwh_policy_from_update(char *update)
+>> +/**
+>> + * get_rwh_policy_from_update() - Get the rwh policy for update option.
+>> + * @update: Update option.
+>> + */
 > 
-> Writemostly-setting is removed here, is it on purpose ?
+> 
+> The above comment format is not the existed code comments style.
+> 
+> For example for getinfo_super_disks_imsm() in same file,
+> 
+>  3862 /* allocates memory and fills disk in mdinfo structure
+>  3863  * for each disk in array */
+>  3864 struct mdinfo *getinfo_super_disks_imsm(struct supertype *st)
+> 
+I believe it matches kernel style descriptions, like in
+imsm_get_free_size(). I can add "Return" part if you want me to.
 
-No, thanks for noticing! I'll add this in v2.
+I just noticed that empty line is missing before the function
+description, I'll fix this in v2.
 > 
-> [snip]
+> [snipped]
+> 
+> The rested part is fine to me.
 > 
 > Thanks.
 > 
