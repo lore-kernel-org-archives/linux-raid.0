@@ -2,137 +2,114 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A9DC54EE9
-	for <linux-raid@archiver.kernel.org>; Thu, 22 Sep 2022 19:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8219C6FA82
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Sep 2022 11:20:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232442AbiIVTml (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 22 Sep 2022 15:42:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36742 "EHLO
+        id S229787AbiIWLUT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 23 Sep 2022 07:20:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232446AbiIVTmj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Sep 2022 15:42:39 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41F7D10B5A0
-        for <linux-raid@vger.kernel.org>; Thu, 22 Sep 2022 12:42:39 -0700 (PDT)
+        with ESMTP id S232149AbiIWLUQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Sep 2022 07:20:16 -0400
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28799AF0F4
+        for <linux-raid@vger.kernel.org>; Fri, 23 Sep 2022 04:20:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663875759; x=1695411759;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=wba5orC0xrPlr3Ck6kheNyaMLU2YWOlf0ZehB2drUBI=;
-  b=DlMjfqedPQT03Bfvg9hXxQXARVaE3UV1Fm1KrGSzXRzRias0dM1gsJfR
-   XDMDX1iHNJWAgcwMY5ojsfonnBFSDBICjQktHgSKVivQP7CHBnGWI0f9+
-   Y0fuGHM3DREynNr+ri9LXyzncOXOxbGy1l5CulVg2sCm1mUvbHZkeTUDR
-   e5ZaZFEVJ6rt2ZTO+hwzajyQ+iVbN3xdia/bagPipTIZuDsHu1EXHTsBu
-   xxnHAWIIxmWY32po7M7B01emEkrWiq+0rEGNg8VBMiKiKo5LD5/0I7NW4
-   Zp/5dkuKT39Qgq5Q8wxlg38KYKSNrQaRy6WoHhA+YfGQ+tJ1qWkQK09jq
+  t=1663932015; x=1695468015;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=c6uw6xl7GI2thRYAoQSE6QrE1MayuITHQBkxlEuSscg=;
+  b=Un26z3cKrLtw+hJB9uCtRGngmGWXS8RBylAJO77VLoqhL0DuwX+BN6Ct
+   PRhsIC5Scjr2y/ht8+o0NtBYWLI4GyJLlP6s66IyHcQhJxl5B+hjtMP6d
+   Ht5bNZUeyhFKgfaHlxOxDFIAIOleyYbcNdtrGjiOOl3+0Xc8e070Sj68i
+   WXHTqMDY8cJPcuv21aObXpVV/qxD1Im3ubUaZh0Ql9BjcQfCG5go9uPng
+   GkZB3YJlNNB+d4N/iZTTPfxhOku469NFasJdy2sg8E0ZiOSC3X1Vpr8/Y
+   RoZ9GUO3SZGcuYsA/ROkZ2XjOITZf5mV144D484Dm0oGpg1Cdruf8mL/j
    Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10478"; a="298011610"
-X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
-   d="scan'208";a="298011610"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 12:42:39 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
-   d="scan'208";a="688449255"
-Received: from lkp-server01.sh.intel.com (HELO c0a60f19fe7e) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 22 Sep 2022 12:42:37 -0700
-Received: from kbuild by c0a60f19fe7e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1obS5l-0004uD-19;
-        Thu, 22 Sep 2022 19:42:37 +0000
-Date:   Fri, 23 Sep 2022 03:42:08 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 65b94b527dfcb700b84d043c5bdf2924663724e7
-Message-ID: <632cba90.UEv0qMeDdUAjcmXE%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+X-IronPort-AV: E=McAfee;i="6500,9779,10478"; a="299290702"
+X-IronPort-AV: E=Sophos;i="5.93,339,1654585200"; 
+   d="scan'208";a="299290702"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2022 04:20:14 -0700
+X-IronPort-AV: E=Sophos;i="5.93,339,1654585200"; 
+   d="scan'208";a="571344747"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.213.16.20])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2022 04:20:11 -0700
+Date:   Fri, 23 Sep 2022 13:20:06 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>, Coly Li <colyli@suse.de>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Jonmichael Hands <jm@chia.net>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Subject: Re: [PATCH mdadm v3 5/7] mdadm: Add --write-zeros option for Create
+Message-ID: <20220923132006.000006ce@linux.intel.com>
+In-Reply-To: <20220921204356.4336-6-logang@deltatee.com>
+References: <20220921204356.4336-1-logang@deltatee.com>
+        <20220921204356.4336-6-logang@deltatee.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 65b94b527dfcb700b84d043c5bdf2924663724e7  md: Fix spelling mistake in comments of r5l_log
+Hi Logan,
+One comment from my side.
 
-elapsed time: 726m
+Thanks,
+Mariusz
 
-configs tested: 62
-configs skipped: 2
+On Wed, 21 Sep 2022 14:43:54 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> Add the --write-zeros option for Create which will send a write zeros
+> request to all the disks before assembling the array. After zeroing
+> the array, the disks will be in a known clean state and the initial
+> sync may be skipped.
+> 
+> Writing zeroes is best used when there is a hardware offload method
+> to zero the data. But even still, zeroing can take several minutes on
+> a large device. Because of this, all disks are zeroed in parallel using
+> their own forked process and a message is printed to the user. The main
+> process will proceed only after all the zeroing processes have completed
+> successfully.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> 
+> fixup! mdadm: Add --write-zeros option for Create
+> ---
 
-gcc tested configs:
-m68k                             allyesconfig
-arm                                 defconfig
-i386                                defconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-arc                                 defconfig
-arc                  randconfig-r043-20220921
-riscv                randconfig-r042-20220921
-alpha                               defconfig
-s390                 randconfig-r044-20220921
-i386                          randconfig-a001
-i386                          randconfig-a003
-arm                              allyesconfig
-x86_64                              defconfig
-arm64                            allyesconfig
-i386                          randconfig-a005
-x86_64                        randconfig-a013
-x86_64                    rhel-8.3-kselftests
-s390                             allmodconfig
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-s390                                defconfig
-x86_64                        randconfig-a011
-x86_64                           rhel-8.3-kvm
-i386                          randconfig-a014
-x86_64                        randconfig-a004
-x86_64                               rhel-8.3
-s390                             allyesconfig
-x86_64                        randconfig-a015
-i386                             allyesconfig
-x86_64                        randconfig-a002
-x86_64                           rhel-8.3-syz
-powerpc                           allnoconfig
-powerpc                          allmodconfig
-sh                               allmodconfig
-mips                             allyesconfig
-x86_64                           allyesconfig
-alpha                            allyesconfig
-m68k                             allmodconfig
-arc                              allyesconfig
-ia64                             allmodconfig
-csky                              allnoconfig
-alpha                             allnoconfig
-arc                               allnoconfig
-riscv                             allnoconfig
+> diff --git a/mdadm.h b/mdadm.h
+> index 1ab31564efef..c7e00195d8c8 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -273,6 +273,9 @@ static inline void __put_unaligned32(__u32 val, void *p)
+>  
+>  #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+>  
+> +#define KIB_TO_BYTES(x)	((x) << 10)
+> +#define SEC_TO_BYTES(x)	((x) << 9)
+> +
+>  extern const char Name[];
+>  
+>  struct md_bb_entry {
+> @@ -387,6 +390,8 @@ struct mdinfo {
+>  		ARRAY_UNKNOWN_STATE,
+>  	} array_state;
+>  	struct md_bb bb;
+> +
+> +	pid_t zero_pid;
+>  };
 
-clang tested configs:
-hexagon              randconfig-r041-20220921
-hexagon              randconfig-r045-20220921
-i386                          randconfig-a002
-i386                          randconfig-a004
-i386                          randconfig-a006
-i386                          randconfig-a013
-x86_64                        randconfig-a016
-x86_64                        randconfig-a012
-i386                          randconfig-a011
-x86_64                        randconfig-a005
-hexagon              randconfig-r041-20220922
-hexagon              randconfig-r045-20220922
-riscv                randconfig-r042-20220922
-s390                 randconfig-r044-20220922
-x86_64                        randconfig-a003
-x86_64                        randconfig-a001
-i386                          randconfig-a015
+mdinfo is  used  for raid properties. It is used for both system (sysfs_read())
+and metadata(getinfo_super()). zero_pid property doesn't fit well there, it is
+used once during creation. Could you please add it to mddev_dev struct or add
+it to local array /list? 
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
