@@ -2,114 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8219C6FA82
-	for <linux-raid@archiver.kernel.org>; Fri, 23 Sep 2022 11:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A08CCECAAD8
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Sep 2022 14:27:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229787AbiIWLUT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 23 Sep 2022 07:20:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44326 "EHLO
+        id S232601AbiIWO1O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 23 Sep 2022 10:27:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232149AbiIWLUQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Sep 2022 07:20:16 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28799AF0F4
-        for <linux-raid@vger.kernel.org>; Fri, 23 Sep 2022 04:20:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663932015; x=1695468015;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=c6uw6xl7GI2thRYAoQSE6QrE1MayuITHQBkxlEuSscg=;
-  b=Un26z3cKrLtw+hJB9uCtRGngmGWXS8RBylAJO77VLoqhL0DuwX+BN6Ct
-   PRhsIC5Scjr2y/ht8+o0NtBYWLI4GyJLlP6s66IyHcQhJxl5B+hjtMP6d
-   Ht5bNZUeyhFKgfaHlxOxDFIAIOleyYbcNdtrGjiOOl3+0Xc8e070Sj68i
-   WXHTqMDY8cJPcuv21aObXpVV/qxD1Im3ubUaZh0Ql9BjcQfCG5go9uPng
-   GkZB3YJlNNB+d4N/iZTTPfxhOku469NFasJdy2sg8E0ZiOSC3X1Vpr8/Y
-   RoZ9GUO3SZGcuYsA/ROkZ2XjOITZf5mV144D484Dm0oGpg1Cdruf8mL/j
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10478"; a="299290702"
-X-IronPort-AV: E=Sophos;i="5.93,339,1654585200"; 
-   d="scan'208";a="299290702"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2022 04:20:14 -0700
-X-IronPort-AV: E=Sophos;i="5.93,339,1654585200"; 
-   d="scan'208";a="571344747"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.213.16.20])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2022 04:20:11 -0700
-Date:   Fri, 23 Sep 2022 13:20:06 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>, Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH mdadm v3 5/7] mdadm: Add --write-zeros option for Create
-Message-ID: <20220923132006.000006ce@linux.intel.com>
-In-Reply-To: <20220921204356.4336-6-logang@deltatee.com>
-References: <20220921204356.4336-1-logang@deltatee.com>
-        <20220921204356.4336-6-logang@deltatee.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S232606AbiIWO0l (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Sep 2022 10:26:41 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54C28115BE5
+        for <linux-raid@vger.kernel.org>; Fri, 23 Sep 2022 07:26:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1663943199;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=w180rBcBHN2Zcn2xdzc4KVZDpW6w9VEo6bhjsfHEXCg=;
+        b=AvlOFOb6Fg+mpFVgJwGMItHUhkkIaHhRZYVmvQF2iABcrwUO53me6Owykn5zZFgLEYl6FR
+        QE2iwX2JNS/Slk+WXgsoTTY5hjGakv0qXRW/uuleGoMsLADHyke/tg8X8HDD4Z//m0Rd70
+        yUg9zoVXEitbGoQ2D50hHWZC5HArC6I=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-524-7LkeCMd5MEur_H9NM96TaQ-1; Fri, 23 Sep 2022 10:26:36 -0400
+X-MC-Unique: 7LkeCMd5MEur_H9NM96TaQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8B842185A7AC;
+        Fri, 23 Sep 2022 14:26:35 +0000 (UTC)
+Received: from localhost (dhcp-17-75.bos.redhat.com [10.18.17.75])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5D357C15BA4;
+        Fri, 23 Sep 2022 14:26:35 +0000 (UTC)
+From:   Nigel Croxon <ncroxon@redhat.com>
+To:     linux-raid@vger.kernel.org, jes@trained-monkey.org,
+        mariusz.tkaczyk@intel.com, kinga.tanska@intel.com
+Subject: [PATCH] mdadm reshape hangs on external grow chunk
+Date:   Fri, 23 Sep 2022 10:26:35 -0400
+Message-Id: <20220923142635.470305-1-ncroxon@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Logan,
-One comment from my side.
+After creating a raid array on top of a imsm container. Try to
+grow the chunk size and the reshape will hang with zero progress.
+The reason is the computation of sync_max_to_set value:
+if (before_data_disks <= data_disks)
+        sync_max_to_set = sra->reshape_progress / data_disks;
+    else
+        sync_max_to_set = (sra->component_size * data_disks
+                       - sra->reshape_progress) / data_disks;
 
-Thanks,
-Mariusz
+Can produce a zero result. Which is then used to set the maximum
+sync value, causing zero progress to the reshape.  The change is to
+test if the sync_max_to_set value is zero. And if so, set the sysfs
+sync_max to "max".
 
-On Wed, 21 Sep 2022 14:43:54 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+Steps to Reproduce:
+1. Create a container and RAID0 array
+mdadm -CR /dev/md/imsm -e imsm -n2 /dev/nvme0n1 /dev/nvme1n1
+mdadm -CR  /dev/md/vol -l0 --chunk=16 -n2 /dev/nvme0n1 /dev/nvme1n1
+2. Wait for resync
+3. Try to grow the chunk size
+mdadm --grow /dev/md/vol --chunk=256
 
-> Add the --write-zeros option for Create which will send a write zeros
-> request to all the disks before assembling the array. After zeroing
-> the array, the disks will be in a known clean state and the initial
-> sync may be skipped.
-> 
-> Writing zeroes is best used when there is a hardware offload method
-> to zero the data. But even still, zeroing can take several minutes on
-> a large device. Because of this, all disks are zeroed in parallel using
-> their own forked process and a message is printed to the user. The main
-> process will proceed only after all the zeroing processes have completed
-> successfully.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> 
-> fixup! mdadm: Add --write-zeros option for Create
-> ---
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+---
+ Grow.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> diff --git a/mdadm.h b/mdadm.h
-> index 1ab31564efef..c7e00195d8c8 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -273,6 +273,9 @@ static inline void __put_unaligned32(__u32 val, void *p)
->  
->  #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
->  
-> +#define KIB_TO_BYTES(x)	((x) << 10)
-> +#define SEC_TO_BYTES(x)	((x) << 9)
-> +
->  extern const char Name[];
->  
->  struct md_bb_entry {
-> @@ -387,6 +390,8 @@ struct mdinfo {
->  		ARRAY_UNKNOWN_STATE,
->  	} array_state;
->  	struct md_bb bb;
-> +
-> +	pid_t zero_pid;
->  };
-
-mdinfo is  used  for raid properties. It is used for both system (sysfs_read())
-and metadata(getinfo_super()). zero_pid property doesn't fit well there, it is
-used once during creation. Could you please add it to mddev_dev struct or add
-it to local array /list? 
+diff --git a/Grow.c b/Grow.c
+index 0f07a894..6c5021bc 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -943,7 +943,7 @@ int start_reshape(struct mdinfo *sra, int already_running,
+ 	if (!already_running)
+ 		sysfs_set_num(sra, NULL, "sync_min", sync_max_to_set);
+ 
+-        if (st->ss->external)
++        if (sync_max_to_set)
+ 		err = err ?: sysfs_set_num(sra, NULL, "sync_max", sync_max_to_set);
+ 	else
+ 		err = err ?: sysfs_set_str(sra, NULL, "sync_max", "max");
+-- 
+2.31.1
 
