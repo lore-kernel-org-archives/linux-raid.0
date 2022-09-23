@@ -2,93 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A08CCECAAD8
-	for <linux-raid@archiver.kernel.org>; Fri, 23 Sep 2022 14:27:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36045C04A95
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Sep 2022 21:00:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232601AbiIWO1O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 23 Sep 2022 10:27:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38460 "EHLO
+        id S230194AbiIWVAQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 23 Sep 2022 17:00:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232606AbiIWO0l (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Sep 2022 10:26:41 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54C28115BE5
-        for <linux-raid@vger.kernel.org>; Fri, 23 Sep 2022 07:26:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1663943199;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=w180rBcBHN2Zcn2xdzc4KVZDpW6w9VEo6bhjsfHEXCg=;
-        b=AvlOFOb6Fg+mpFVgJwGMItHUhkkIaHhRZYVmvQF2iABcrwUO53me6Owykn5zZFgLEYl6FR
-        QE2iwX2JNS/Slk+WXgsoTTY5hjGakv0qXRW/uuleGoMsLADHyke/tg8X8HDD4Z//m0Rd70
-        yUg9zoVXEitbGoQ2D50hHWZC5HArC6I=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-524-7LkeCMd5MEur_H9NM96TaQ-1; Fri, 23 Sep 2022 10:26:36 -0400
-X-MC-Unique: 7LkeCMd5MEur_H9NM96TaQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8B842185A7AC;
-        Fri, 23 Sep 2022 14:26:35 +0000 (UTC)
-Received: from localhost (dhcp-17-75.bos.redhat.com [10.18.17.75])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5D357C15BA4;
-        Fri, 23 Sep 2022 14:26:35 +0000 (UTC)
-From:   Nigel Croxon <ncroxon@redhat.com>
-To:     linux-raid@vger.kernel.org, jes@trained-monkey.org,
-        mariusz.tkaczyk@intel.com, kinga.tanska@intel.com
-Subject: [PATCH] mdadm reshape hangs on external grow chunk
-Date:   Fri, 23 Sep 2022 10:26:35 -0400
-Message-Id: <20220923142635.470305-1-ncroxon@redhat.com>
+        with ESMTP id S230089AbiIWVAO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Sep 2022 17:00:14 -0400
+Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C73BA98C5
+        for <linux-raid@vger.kernel.org>; Fri, 23 Sep 2022 14:00:12 -0700 (PDT)
+Received: by mail-io1-xd36.google.com with SMTP id e205so924273iof.1
+        for <linux-raid@vger.kernel.org>; Fri, 23 Sep 2022 14:00:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=n+GSOx7RX7Ww763AAFYmTwtTb8kBPDzlON6qDPatuwo=;
+        b=YPQW5GWe+IWVwksPpcVa1akvdLOnKSET3BWdtaG3I2EWcCjYZ4ZvHkXhVwNLt0Df6A
+         J8+FgPnKkwwJlbGgCOpL7uLflISaCOpWfH3nJi2n+iaOiwyBYD+nB16dPqJ6pDUk8Gz2
+         yA3ao22YoGqb58XvnfWgfVnIzixg2+ss7hiSgoRh/t2WKSzIOxPs4EftAwuW93DpzHuS
+         lBEAVR7nJ6jZfIKT+djmcFu7YdhSX9u2++ys+l1VmWo4HLIdZLVh7BvUnTEOoDbNmQCw
+         CyzG1XA5Xu74gQeDAMuac7pv47n3umgjo3fmsKA7oMXzUrRYZwPw/gjoujNFy+isiPia
+         1szw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=n+GSOx7RX7Ww763AAFYmTwtTb8kBPDzlON6qDPatuwo=;
+        b=Xy4WMy2DZgyrCkCOE+xZBABfD6lHp+oEdgBQ++RkCiFswI3ETNptS3Iz7BX6YTRJ8Q
+         5vNRtAU8rMO1jSbqlxPMc8fe/2VAgSVN9wiEWT7X58W4/liZS8jYmTJXb9XSdt1qAp7+
+         k7RYc9+3M3oZjf6gyLgY9gQGUicvFSLrE/zoqoLOlNU8uRL0zpf41zti2587BbYGmi5z
+         /WO0LyHjanljnIlUe1QWzdwgXXT3QYq4WLkNRzyfhDR9l2jGydaCgrcgzyHbEIDd0UHY
+         99jxNOv0RSu9pLJdaZlFc0ucSRMMR5cKRDs4bqUzVe5dXzyGvJZf8dmEilr4GJsdnouT
+         Q2EA==
+X-Gm-Message-State: ACrzQf1VKrW0mIUjcZzCUkW7gISw9cRhMyHiF2WfgfzvuO1rH008Ut9O
+        YZ1PVdF4T0wQxi7PzxCw2WhGNA==
+X-Google-Smtp-Source: AMsMyM5toa0D5utyhhKNwqmnaltsm4ia6ai/Cgb/bPlZqZ9EZQcLfMAX8cFf5DMHlJsA72nt5FKqCg==
+X-Received: by 2002:a5e:d502:0:b0:689:72da:ab3f with SMTP id e2-20020a5ed502000000b0068972daab3fmr4788296iom.109.1663966811521;
+        Fri, 23 Sep 2022 14:00:11 -0700 (PDT)
+Received: from [192.168.1.94] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id t131-20020a025489000000b0035a2efb05b1sm3655278jaa.114.2022.09.23.14.00.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 23 Sep 2022 14:00:11 -0700 (PDT)
+Message-ID: <a92d9756-56c9-f43e-68e4-fe5080c82cd9@kernel.dk>
+Date:   Fri, 23 Sep 2022 15:00:10 -0600
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [GIT PULL v2] md-next 20220922
+Content-Language: en-US
+To:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        David Sloan <david.sloan@eideticom.com>,
+        Yu Kuai <yukuai3@huawei.com>,
+        Saurabh Sengar <ssengar@linux.microsoft.com>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        XU pengfei <xupengfei@nfschina.com>,
+        Zhou nan <zhounan@nfschina.com>
+References: <68A2557F-ED5B-4644-AE9D-97F3F9881BA1@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <68A2557F-ED5B-4644-AE9D-97F3F9881BA1@fb.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-After creating a raid array on top of a imsm container. Try to
-grow the chunk size and the reshape will hang with zero progress.
-The reason is the computation of sync_max_to_set value:
-if (before_data_disks <= data_disks)
-        sync_max_to_set = sra->reshape_progress / data_disks;
-    else
-        sync_max_to_set = (sra->component_size * data_disks
-                       - sra->reshape_progress) / data_disks;
+On 9/22/22 1:07 AM, Song Liu wrote:
+> Hi Jens,
+> 
+> Please consider pulling the following changes for md-next on top of your
+> for-6.1/block branch (for-6.1/drivers branch doesn't exist yet). 
 
-Can produce a zero result. Which is then used to set the maximum
-sync value, causing zero progress to the reshape.  The change is to
-test if the sync_max_to_set value is zero. And if so, set the sysfs
-sync_max to "max".
+Not doing two branches going forward, probably, so it's all in block
+for now.
 
-Steps to Reproduce:
-1. Create a container and RAID0 array
-mdadm -CR /dev/md/imsm -e imsm -n2 /dev/nvme0n1 /dev/nvme1n1
-mdadm -CR  /dev/md/vol -l0 --chunk=16 -n2 /dev/nvme0n1 /dev/nvme1n1
-2. Wait for resync
-3. Try to grow the chunk size
-mdadm --grow /dev/md/vol --chunk=256
+>   ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
 
-Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
----
- Grow.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I used:
 
-diff --git a/Grow.c b/Grow.c
-index 0f07a894..6c5021bc 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -943,7 +943,7 @@ int start_reshape(struct mdinfo *sra, int already_running,
- 	if (!already_running)
- 		sysfs_set_num(sra, NULL, "sync_min", sync_max_to_set);
- 
--        if (st->ss->external)
-+        if (sync_max_to_set)
- 		err = err ?: sysfs_set_num(sra, NULL, "sync_max", sync_max_to_set);
- 	else
- 		err = err ?: sysfs_set_str(sra, NULL, "sync_max", "max");
+https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+
 -- 
-2.31.1
+Jens Axboe
+
 
