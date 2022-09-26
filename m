@@ -2,94 +2,106 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36045C04A95
-	for <linux-raid@archiver.kernel.org>; Fri, 23 Sep 2022 21:00:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50E70C6FA82
+	for <linux-raid@archiver.kernel.org>; Mon, 26 Sep 2022 07:10:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230194AbiIWVAQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 23 Sep 2022 17:00:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43766 "EHLO
+        id S234099AbiIZHK2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 26 Sep 2022 03:10:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230089AbiIWVAO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Sep 2022 17:00:14 -0400
-Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C73BA98C5
-        for <linux-raid@vger.kernel.org>; Fri, 23 Sep 2022 14:00:12 -0700 (PDT)
-Received: by mail-io1-xd36.google.com with SMTP id e205so924273iof.1
-        for <linux-raid@vger.kernel.org>; Fri, 23 Sep 2022 14:00:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=n+GSOx7RX7Ww763AAFYmTwtTb8kBPDzlON6qDPatuwo=;
-        b=YPQW5GWe+IWVwksPpcVa1akvdLOnKSET3BWdtaG3I2EWcCjYZ4ZvHkXhVwNLt0Df6A
-         J8+FgPnKkwwJlbGgCOpL7uLflISaCOpWfH3nJi2n+iaOiwyBYD+nB16dPqJ6pDUk8Gz2
-         yA3ao22YoGqb58XvnfWgfVnIzixg2+ss7hiSgoRh/t2WKSzIOxPs4EftAwuW93DpzHuS
-         lBEAVR7nJ6jZfIKT+djmcFu7YdhSX9u2++ys+l1VmWo4HLIdZLVh7BvUnTEOoDbNmQCw
-         CyzG1XA5Xu74gQeDAMuac7pv47n3umgjo3fmsKA7oMXzUrRYZwPw/gjoujNFy+isiPia
-         1szw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=n+GSOx7RX7Ww763AAFYmTwtTb8kBPDzlON6qDPatuwo=;
-        b=Xy4WMy2DZgyrCkCOE+xZBABfD6lHp+oEdgBQ++RkCiFswI3ETNptS3Iz7BX6YTRJ8Q
-         5vNRtAU8rMO1jSbqlxPMc8fe/2VAgSVN9wiEWT7X58W4/liZS8jYmTJXb9XSdt1qAp7+
-         k7RYc9+3M3oZjf6gyLgY9gQGUicvFSLrE/zoqoLOlNU8uRL0zpf41zti2587BbYGmi5z
-         /WO0LyHjanljnIlUe1QWzdwgXXT3QYq4WLkNRzyfhDR9l2jGydaCgrcgzyHbEIDd0UHY
-         99jxNOv0RSu9pLJdaZlFc0ucSRMMR5cKRDs4bqUzVe5dXzyGvJZf8dmEilr4GJsdnouT
-         Q2EA==
-X-Gm-Message-State: ACrzQf1VKrW0mIUjcZzCUkW7gISw9cRhMyHiF2WfgfzvuO1rH008Ut9O
-        YZ1PVdF4T0wQxi7PzxCw2WhGNA==
-X-Google-Smtp-Source: AMsMyM5toa0D5utyhhKNwqmnaltsm4ia6ai/Cgb/bPlZqZ9EZQcLfMAX8cFf5DMHlJsA72nt5FKqCg==
-X-Received: by 2002:a5e:d502:0:b0:689:72da:ab3f with SMTP id e2-20020a5ed502000000b0068972daab3fmr4788296iom.109.1663966811521;
-        Fri, 23 Sep 2022 14:00:11 -0700 (PDT)
-Received: from [192.168.1.94] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id t131-20020a025489000000b0035a2efb05b1sm3655278jaa.114.2022.09.23.14.00.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 23 Sep 2022 14:00:11 -0700 (PDT)
-Message-ID: <a92d9756-56c9-f43e-68e4-fe5080c82cd9@kernel.dk>
-Date:   Fri, 23 Sep 2022 15:00:10 -0600
+        with ESMTP id S234025AbiIZHKB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 26 Sep 2022 03:10:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C610F3136D;
+        Mon, 26 Sep 2022 00:09:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9DE2361785;
+        Mon, 26 Sep 2022 07:09:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF6EDC433C1;
+        Mon, 26 Sep 2022 07:09:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1664176154;
+        bh=+wwySMrMtE5CQ6gKHpsT7ms5I9rHyoBUL87VEi0oDP0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=J1+NL5oeoW+aj/l9B3+3Sh9nqoAlC6A3JngBgscVBPS0e/Vu4dNrTNcVropQczx/Q
+         1O0L1R7HvLYovDo+zujHFZyS0OZ94oVCnahT6vgs3N8shPACeqX+NDWud7TJQBlCwQ
+         6pyQ9zpd9zuV44nlicUdPuMIXSf38Km8N+l4sTJ0=
+Date:   Mon, 26 Sep 2022 09:09:11 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Thorsten Leemhuis <regressions@leemhuis.info>,
+        Christoph Hellwig <hch@lst.de>,
+        Dusty Mabe <dusty@dustymabe.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+Subject: Re: regression caused by block: freeze the queue earlier in
+ del_gendisk
+Message-ID: <YzFQF3cccwK1G2FS@kroah.com>
+References: <Yx/jLTknQm9VeHi4@T590>
+ <95cbd47d-46ed-850e-7d4f-851b35d03069@dustymabe.com>
+ <f2c28043-59e6-0aee-b8bf-df38525ee899@leemhuis.info>
+ <d39e9149-fcb6-1f7c-4c19-234e74f286f8@kernel.dk>
+ <20220920141217.GA12560@lst.de>
+ <9594af4b-eb16-0a51-9a4a-e21bbce3317d@kernel.dk>
+ <6a3660b2-fa7d-14a2-6977-f50926ad369c@leemhuis.info>
+ <c7c909aa-71d9-b43c-293e-d4801a00861e@kernel.dk>
+ <Yysj6AXQ44/el4pS@kroah.com>
+ <cecf4c71-14be-4ff8-df83-cfd1da102bcf@kernel.dk>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [GIT PULL v2] md-next 20220922
-Content-Language: en-US
-To:     Song Liu <songliubraving@fb.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        David Sloan <david.sloan@eideticom.com>,
-        Yu Kuai <yukuai3@huawei.com>,
-        Saurabh Sengar <ssengar@linux.microsoft.com>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        XU pengfei <xupengfei@nfschina.com>,
-        Zhou nan <zhounan@nfschina.com>
-References: <68A2557F-ED5B-4644-AE9D-97F3F9881BA1@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <68A2557F-ED5B-4644-AE9D-97F3F9881BA1@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cecf4c71-14be-4ff8-df83-cfd1da102bcf@kernel.dk>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 9/22/22 1:07 AM, Song Liu wrote:
-> Hi Jens,
+On Wed, Sep 21, 2022 at 08:56:53AM -0600, Jens Axboe wrote:
+> On Wed, Sep 21, 2022 at 8:47 AM Greg KH <gregkh@linuxfoundation.org> wrote:
+> >
+> > On Wed, Sep 21, 2022 at 08:34:26AM -0600, Jens Axboe wrote:
+> > > On 9/21/22 3:25 AM, Thorsten Leemhuis wrote:
+> > > > On 20.09.22 16:14, Jens Axboe wrote:
+> > > >> On 9/20/22 8:12 AM, Christoph Hellwig wrote:
+> > > >>> On Tue, Sep 20, 2022 at 08:05:06AM -0600, Jens Axboe wrote:
+> > > >>>> Christoph and I discussed this one last week, and he has a plan to try
+> > > >>>> a flag approach. Christoph, did you get a chance to bang that out? Would
+> > > >>>> be nice to get this one wrapped up.
+> > > >>>
+> > > >>> I gave up on that as it will be far too much change so late in
+> > > >>> the cycle and sent you the revert yesterday.
+> > > >>
+> > > >> Gotcha, haven't made it all the way through the emails of the morning yet.
+> > > >> I'll queue it up.
+> > > >
+> > > > Thx to both of you for taking care of this.
+> > > >
+> > > > Nitpicking: that patch is missing a "CC: stable@..." tag to ensure
+> > > > automatic and quick backporting to 5.19.y. Or is the block layer among
+> > > > the subsystems that prefer to handle such things manually?
+> > > >
+> > > > Ohh, and a fixes tag might have been good as well; a "Link:" tag
+> > > > pointing to the report, too. If either would have been there, regzbot
+> > > > would have noticed Christoph's patch posting and I wouldn't have
+> > > > bothered you yesterday. :-) But whatever, not that important.
+> > >
+> > > We'll just have to ensure we ping stable on it when it goes in.
+> >
+> > If you have a git id that is not going to change, I can watch out for it
+> > to land in Linus's tree...
 > 
-> Please consider pulling the following changes for md-next on top of your
-> for-6.1/block branch (for-6.1/drivers branch doesn't exist yet). 
+> This is the one:
+> 
+> commit 4c66a326b5ab784cddd72de07ac5b6210e9e1b06 (origin/block-6.0, block-6.0)
+> Author: Christoph Hellwig <hch@lst.de>
+> Date:   Mon Sep 19 16:40:49 2022 +0200
+> 
+>     Revert "block: freeze the queue earlier in del_gendisk"
+> 
+> Thanks Greg!
 
-Not doing two branches going forward, probably, so it's all in block
-for now.
+Now queued up, thanks.
 
->   ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-
-I used:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-
--- 
-Jens Axboe
-
-
+greg k-h
