@@ -2,146 +2,122 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3325AC433FE
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Sep 2022 14:25:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5B5CC433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 29 Sep 2022 15:06:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235532AbiI2OZM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 29 Sep 2022 10:25:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54706 "EHLO
+        id S234299AbiI2PG4 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 29 Sep 2022 11:06:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235035AbiI2OZE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Sep 2022 10:25:04 -0400
-Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00B40275E8
-        for <linux-raid@vger.kernel.org>; Thu, 29 Sep 2022 07:24:59 -0700 (PDT)
-Received: by mail-qk1-x72c.google.com with SMTP id 3so920720qka.5
-        for <linux-raid@vger.kernel.org>; Thu, 29 Sep 2022 07:24:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=wXZkiD20hdCTPVcZMfXTAj3nCtO6sMYCK1jkwMmRZUY=;
-        b=a1g3vRMppNAR5fSI65C+Abu7dkSyLCx1lhBbZLm1oJTZ6UKHhxiFHr+cQQiUio+Jo5
-         EO4eaP1Q/KpfeTC0BAa3kD74bGYaU7RuLYH9cppp+t9HfzrMBCRfDHuSYXUz7V1ZdWxT
-         bj6aFrxiNQw24aH6ifTCvpSzKbnJJ+lN9rRWJxTCmb967V/scwWmCSeQLJpEzzZEZGc6
-         wIpRNEA+0e2lCxvBJAGwUyuec/toRn9JacT7fVpSNTGQU+LnDUxa7yZxVfjulZkO2VXA
-         Aa/M/g5CMJMxHEKg1i6upw6Q7m+R3Q6C7LUJBekfmDNUnEsUIJawwq6llVl4GiShIb0b
-         PFUQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=wXZkiD20hdCTPVcZMfXTAj3nCtO6sMYCK1jkwMmRZUY=;
-        b=AaQW5Rq9BduPkurCMDgedFYxD6XCC/zthoTwMbrloGEi5MT7i/LcxFlJFqhUsxrUg5
-         jPPZmJ2s/CSWPNeuQVD4RmOYvJjkCqA0Caf14SVBYvQZLjCT3zYO7ENseCs9az66W4YW
-         UtKGBG/MytfC8cqtqT3ypKYzmLW2ZVfocHheAgZt5f7JGy/H4L/pW2sGRaC5FE2xlgej
-         6MT6IfOBRWu8xcULPc66oVmPxqxwRwyfP7JeifUM8J9NsIzRKEziNBx+rWsMJSpOzWr7
-         5plugsrWh0Rk7HHf9sR4Zg3aVo6ywudd6Qg1fTiRzLgHtHQ3RGOEjLqVxWMKTt9M1Xpq
-         HW4Q==
-X-Gm-Message-State: ACrzQf2cdwtOMQgMuPIrNQ8PMOy/vPBP3dQGsT7foAgsgSkScG3+PFiH
-        gyxlWAdNk/lWgTJzgTdbvh4JIkBGmx92iY6SEYzt1aun
-X-Google-Smtp-Source: AMsMyM7m5dCUrVnuJn320INC4lHlVO7Djrv7BCSsqY/S1lr9Lcxb1Rr5Hir02hGIV3EAeo2IwhajcgjWLDan/8ev/ps=
-X-Received: by 2002:a05:620a:46a4:b0:6ce:c4af:5a54 with SMTP id
- bq36-20020a05620a46a400b006cec4af5a54mr2356916qkb.377.1664461498485; Thu, 29
- Sep 2022 07:24:58 -0700 (PDT)
+        with ESMTP id S235322AbiI2PGz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Sep 2022 11:06:55 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5846E10BB2A
+        for <linux-raid@vger.kernel.org>; Thu, 29 Sep 2022 08:06:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1664463949; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=PXfkNKLLzCwzvC4hfenfJEzyT6QIlDC3V0j/H4KSMVSn7BcgBqhX1NchPJWzGNq3pZ6O+diwnj1jQ05EyG/qZlbj/73lroee33QMjuZ0JQN3PJc6K+cTLvGhYQf+9x/OJl7wTsFm3vxBUzhWs8WrlKwWheArPZ2r3W/rgZRok9I=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1664463949; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=dlgHV99/ifn1ba4bAcm3un/CzugEt5rOFBeoR5fuYGE=; 
+        b=I7RKNNtSGEdR020FBRAxAazacVXrk7acEcYgGvOEcTJTysXbYfrDG9rimGeGyD22A1JmXnWYjuG7rj/afb4+BHcNNWeu7Jb5AsWZIlAPoLKFY7D1WrFzENyHuSv7+zFX8DZkXTkxkcIhz+GsB6P42SLJ/rx9mCnJdc2lu5oMFMo=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.78] (pool-72-69-213-125.nycmny.fios.verizon.net [72.69.213.125]) by mx.zoho.eu
+        with SMTPS id 166446394645728.64320462781393; Thu, 29 Sep 2022 17:05:46 +0200 (CEST)
+Date:   Thu, 29 Sep 2022 11:05:44 -0400
 MIME-Version: 1.0
-References: <87o7xmsjcv.fsf@esperi.org.uk> <d28a695e-1958-d438-b43d-65470c1bbe7a@youngman.org.uk>
- <87bktjpyna.fsf@esperi.org.uk> <2a0119a2-814f-d61b-cf82-b446c453e6dc@youngman.org.uk>
- <875yjpo56x.fsf@esperi.org.uk> <CAAMCDect7m24tQaDZ7dqv+En2LveaLfOtTgYNJu5G1jtzVmbUg@mail.gmail.com>
- <878rm2fj3u.fsf@esperi.org.uk>
-In-Reply-To: <878rm2fj3u.fsf@esperi.org.uk>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Thu, 29 Sep 2022 09:24:47 -0500
-Message-ID: <CAAMCDedShpj=MZwfUqmSokdvSMhtypXkLQi6UHnhiCqG2SnckA@mail.gmail.com>
-Subject: Re: 5.18: likely useless very preliminary bug report: mdadm raid-6
- boot-time assembly failure
-To:     Nix <nix@esperi.org.uk>
-Cc:     Wols Lists <antlists@youngman.org.uk>,
-        Linux RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.0
+Subject: Re: [PATCH v4] mdadm: replace container level checking with inline
+Content-Language: en-US
+To:     Coly Li <colyli@suse.de>, Kinga Tanska <kinga.tanska@intel.com>
+Cc:     linux-raid@vger.kernel.org
+References: <20220902064923.19955-1-kinga.tanska@intel.com>
+ <CBEBAEB3-59DC-4756-9393-3709C0306F59@suse.de>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <a644fd31-1d05-9c35-6612-06d0577c2506@trained-monkey.org>
+In-Reply-To: <CBEBAEB3-59DC-4756-9393-3709C0306F59@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-partprobe will also recreate as needed the partition mappings.
+On 9/3/22 03:11, Coly Li wrote:
+> 
+> 
+>> 2022年9月2日 14:49，Kinga Tanska <kinga.tanska@intel.com> 写道：
+>>
+>> To unify all containers checks in code, is_container() function is
+>> added and propagated.
+>>
+>> Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+> 
+> Acked-by: Coly Li <colyli@suse.de>
+> 
+> 
+> But this patch has a minor conflict with Mateusz’s “Manage: Block unsafe member failing” series, it is simply because your patch landed a bit late than Mateusz’s.
+> I already rebased your patch in the mdadm-CI queue. After I finish to review all the pending patches, let’s see whether you should post a v6 version or I can post the rebased one for you.
 
-A serial port crossover cable (assuming your machine still has a
-serial port and you have another machine close by and a serial port
-and/or usb serial cable) can collect all of the console if
-console=ttyS0,115200 is set on the boot line (S0 = com1, s1=com2,...)
- Another option would be to use a fat/vfat formatted usb key and save
-it on that.
+Applied!
 
-It does not actually matter if the initramfs is built into the kernel
-image or not, grub is what loads both the kernel and initrd into
-memory and then tells the kernel to execute.   Once the kernel/ramfs
-is loaded you don't actually even need to be able to mount /boot and
-/boot/efi except to update the kernel and/or change parameters stored
-in /boot or /boot/efi.
+I pulled in this one since the Block series also had a conflict and this
+one applied cleanly.
+
+Thanks,
+Jes
 
 
-On Thu, Sep 29, 2022 at 7:41 AM Nix <nix@esperi.org.uk> wrote:
->
-> On 22 Jul 2022, Roger Heflin verbalised:
->
-> > On Fri, Jul 22, 2022 at 5:11 AM Nix <nix@esperi.org.uk> wrote:
-> >>
-> >> On 20 Jul 2022, Wols Lists outgrape:
-> >>
-> >> > On 20/07/2022 16:55, Nix wrote:
-> >> >> [    9.833720] md: md126 stopped.
-> >> >> [    9.847327] md/raid:md126: device sda4 operational as raid disk 0
-> >> >> [    9.857837] md/raid:md126: device sdf4 operational as raid disk 4
-> >> >> [    9.868167] md/raid:md126: device sdd4 operational as raid disk 3
-> >> >> [    9.878245] md/raid:md126: device sdc4 operational as raid disk 2
-> >> >> [    9.887941] md/raid:md126: device sdb4 operational as raid disk 1
-> >> >> [    9.897551] md/raid:md126: raid level 6 active with 5 out of 5 devices, algorithm 2
-> >> >> [    9.925899] md126: detected capacity change from 0 to 14520041472
-> >> >
-> >> > Hmm.
-> >> >
-> >> > Most of that looks perfectly normal to me. The only oddity, to my eyes, is that md126 is stopped before the disks become
-> >> > operational. That could be perfectly okay, it could be down to a bug, whatever whatever.
-> >>
-> >> Yeah this is the *working* boot. I can't easily get logs of the
-> >> non-working one because, well, no writable filesystems and most of the
-> >> interesting stuff scrolls straight off the screen anyway. (It's mostly
-> >> for comparison with the non-working boot once I manage to capture that.
-> >> Somehow. A high-speed camera on video mode and hand-transcribing? Uggh.)
-> >
-> > if you find the partitions missing if you initrd has kpartx on it that
-> > will create the mappings.
-> >
-> >   kpartx -av <device>
->
-> I may have to fall back to that, but the system is supposed to be doing
-> this for me dammit! :)
->
-> The initrd is using busybox 1.30.1 mdev and mdadm 4.0 both linked
-> against musl -- if this has suddenly broken, I suspect a lot of udevs
-> have similarly broken. But these are both old, upgraded only when
-> essential to avoid breaking stuff critical for boot (hah!): upgrading
-> all of these is on the cards to make sure it's not something fixed in
-> the userspace tools...
->
-> (Not been rebooting because of lots of time away from home: now not
-> rebooting because I've got probable flu and can't face it. But once
-> that's over, I'll attack this.)
->
-> > I wonder if it is some sort of module loading order issue and/or
-> > build-in vs module for one or more of the critical drives in the
-> > chain.
->
-> Definitely not! This kernel is almost totally non-modular:
->
-> compiler@loom 126 /usr/src/boost% cat /proc/modules
-> vfat 20480 1 - Live 0xffffffffc0176000
-> fat 73728 1 vfat, Live 0xffffffffc015c000
->
-> That's *it* for the currently loaded modules (those are probably loaded
-> because I built a test kernel and had to mount the EFI boot fs to
-> install it, which is not needed during normal boots because the
-> initramfs is linked into the kernel image).
->
-> --
-> NULL && (void)
+> Thanks.
+> 
+> Coly Li
+> 
+> 
+>> ---
+>> Assemble.c    |  7 +++----
+>> Create.c      |  6 +++---
+>> Grow.c        |  6 +++---
+>> Incremental.c |  4 ++--
+>> mdadm.h       | 14 ++++++++++++++
+>> super-ddf.c   |  6 +++---
+>> super-intel.c |  4 ++--
+>> super0.c      |  2 +-
+>> super1.c      |  2 +-
+>> sysfs.c       |  2 +-
+>> 10 files changed, 33 insertions(+), 20 deletions(-)
+>>
+>> diff --git a/Assemble.c b/Assemble.c
+>> index 1dd82a8c..8b0af0c9 100644
+>> --- a/Assemble.c
+>> +++ b/Assemble.c
+>>
+> [snipped]
+> 
+>> @@ -1809,7 +1808,7 @@ try_again:
+>> 		}
+>> #endif
+>> 	}
+>> -	if (c->force && !clean && content->array.level != LEVEL_CONTAINER &&
+>> +	if (c->force && !clean && !is_container(content->array.level) &&
+>> 	    !enough(content->array.level, content->array.raid_disks,
+>> 		    content->array.layout, clean, avail)) {
+>> 		change += st->ss->update_super(st, content, "force-array”,
+> 
+> 
+> The conflict is here, and the rebased change looks like this,
+> 
+> @@ -1807,7 +1806,7 @@ try_again:
+>                 }
+>  #endif
+>         }
+> -       if (c->force && !clean && content->array.level != LEVEL_CONTAINER &&
+> +       if (c->force && !clean && !is_container(content->array.level) &&
+>             !enough(content->array.level, content->array.raid_disks,
+>                     content->array.layout, clean, avail)) {
+>                 change += st->ss->update_super(st, content, UOPT_SPEC_FORCE_ARRAY,
+
+
