@@ -2,74 +2,95 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FA0CC433FE
-	for <linux-raid@archiver.kernel.org>; Fri, 30 Sep 2022 15:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27252C433FE
+	for <linux-raid@archiver.kernel.org>; Tue,  4 Oct 2022 09:49:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230471AbiI3Pju (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 30 Sep 2022 11:39:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33126 "EHLO
+        id S229964AbiJDJsc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Oct 2022 05:48:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230255AbiI3Pjp (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 30 Sep 2022 11:39:45 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8164D62F9
-        for <linux-raid@vger.kernel.org>; Fri, 30 Sep 2022 08:39:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=b/zUvCPf93iA4Zp0dGLJVObaAaZouaXd1Af16vheNEw=; b=HkxUZ9xwwLY2Fz7w7OQZ0cfrqo
-        CZ1/Owe0zvXYvpL0FbZKdN1c67ThNgzD45F57OUaCbaTusOHxxKfPL6KalYrfjIJLV6bK90LwcYtu
-        c2rJ9v6LGZlZEv+ZvupSNlKABAMT97ng9vWZLF73AouIrpaTL7T/qIc0JmZIaHgAw65H2MyRsDiAM
-        A+Bnb8XCiGeI+zY7/ffq5+3JdhHwLG3SSd0bJ7C48JQPWr+GxfiVxDFLOcb34ZT29CR+D/Xs1sxe1
-        v3RZQO414eNiLujYioulZunVt/HmyDKEZMTB2Cs9MIhfj8naFdrz0Ub3S0Z+S4BRQWW3sT3OTrSOm
-        mrjSk2Gw==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1oeI70-00EZhg-72; Fri, 30 Sep 2022 09:39:38 -0600
-Message-ID: <a10ddcc9-e081-abfa-2fef-671f6093ec59@deltatee.com>
-Date:   Fri, 30 Sep 2022 09:39:37 -0600
+        with ESMTP id S229965AbiJDJsN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Oct 2022 05:48:13 -0400
+Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C40FA1C0
+        for <linux-raid@vger.kernel.org>; Tue,  4 Oct 2022 02:45:48 -0700 (PDT)
+Received: by mail-ej1-x635.google.com with SMTP id a26so27658777ejc.4
+        for <linux-raid@vger.kernel.org>; Tue, 04 Oct 2022 02:45:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=pZYPVUL/QSpSgeRCqfSco3hgUPige10agfu312NmJpU=;
+        b=gsX0Fg7WWHQkD7Nk+24KkVFT8RpEct+Mfefdc+0pgyH56Qit8YnvtvnSJudj00JNqN
+         nW3r+4kmn7azcFrUiurDUJL7ZPbWeqctmDs6LywDLemMhQVOXByPqYBHouX+xS5al4yE
+         YOIZngS5dxWch0NwC82lp/zDlTZeZXkp0Jo2kM2sNvJWANmD/TQxOIgw6haGXsVwbXbN
+         9fcKRFuQfsuUQ4dMBfVAmlbqxeNkpm7zcgIalSKoHR4V//hvjl6oX5OVT9tOi+eG1S+S
+         /SOeXGTeBM4wOL1IRAh5+ot3mm4SeHfDpBELKjhDK41ZOTaM3xilZ27Fp80UVWUACK/3
+         MlNA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=pZYPVUL/QSpSgeRCqfSco3hgUPige10agfu312NmJpU=;
+        b=wP9gD+mfYITw5Ys0418yOqot+EbAmu0iyK6+OoTKr7Y1a7Coh00Xt39GegEwru6tmF
+         MDn9I0FFgWHpbOE7g9L6SOZLpFmDmkABsD6fgYzKe1iAtpTqUtpAIr+5DktJ6De2sGaO
+         Jw4OlYQP3iTFhDSp33iSsMDVA0/PRbYEv9uv2rPjO6E+GavmXIRaMmpc9AjpSjSjNmPm
+         s8PJbTGrRGYBS7GdGWKMa3O4XNUjzCW3YJYiGxmv/PKVtGjkuGgyDIKEtJtxJG0aLv9R
+         D5+IjEjs5RSZIu0T5lPnDTwNAQqzXt0tK/qU2lvC0JhB9t/1IcLhbHA+QNk3bVXq8Dk3
+         kaug==
+X-Gm-Message-State: ACrzQf0YsND+K+myEAHWwXyygK17nocfAr7V2McqIIrnBRrub75lUth1
+        XoKu+oc4kZl/DkIwswr5VtUFfXpVFJGoWQ==
+X-Google-Smtp-Source: AMsMyM4OeVOsM/KULdxyIu3jNN3nyYS1aGJm7QHUK4ptaYb1vbG7c5/afEtvU+oUK1OBQwP+QHwDJQ==
+X-Received: by 2002:a17:906:8144:b0:78a:ef70:2171 with SMTP id z4-20020a170906814400b0078aef702171mr7678730ejw.95.1664876711687;
+        Tue, 04 Oct 2022 02:45:11 -0700 (PDT)
+Received: from lb02065.fritz.box ([2001:9e8:1428:3700:4f35:4902:fc79:8669])
+        by smtp.gmail.com with ESMTPSA id d2-20020a50ea82000000b00457cdb5cf76sm1347928edo.50.2022.10.04.02.45.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Oct 2022 02:45:10 -0700 (PDT)
+From:   Jack Wang <jinpu.wang@ionos.com>
+To:     linux-raid@vger.kernel.org
+Cc:     song@kernel.org, stable@vger.kernel.org
+Subject: [PATCH] md/bitmap: Avoid chunksize overflow
+Date:   Tue,  4 Oct 2022 11:45:09 +0200
+Message-Id: <20221004094509.44171-1-jinpu.wang@ionos.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Content-Language: en-CA
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-References: <20220921204356.4336-1-logang@deltatee.com>
- <CALTww29fH+pa=-Pzd3anEKh49fmvc9EGmL52QGo1GrQEUGsf5g@mail.gmail.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <CALTww29fH+pa=-Pzd3anEKh49fmvc9EGmL52QGo1GrQEUGsf5g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: xni@redhat.com, linux-raid@vger.kernel.org, jes@trained-monkey.org, guoqing.jiang@linux.dev, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH mdadm v3 0/7] Write Zeroes option for Creating Arrays
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+When grow an array with bitmap to 4 TiB, the bitmap chunksize
+will be
+head /sys/block/md0/md/bitmap/chunksize <==
+18446744071562067968
 
+with 8 Tib, the chunksize is 4, which lead to assemble failure.
+The root cause is due to left shift count >= width of type and overflow.
 
-On 2022-09-29 23:26, Xiao Ni wrote:
-> Hi Logan
-> 
-> I like this idea, but I have a question. If we do discard against the
-> member disks
-> and then creating raid device with --assume-clean, it should work with the same
-> result. The reason that you add --write-zero is for automatic doing this?
+The fix is simple, do a type cast before shift, the bug is pretty old
+since kernel 4.0 at least.
 
-Yes, that is correct.
+Cc: stable@vger.kernel.org
+Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+---
+ drivers/md/md-bitmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Logan
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index bf6dffadbe6f..b4d7a606a9d8 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2150,7 +2150,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 	bitmap->counts.missing_pages = pages;
+ 	bitmap->counts.chunkshift = chunkshift;
+ 	bitmap->counts.chunks = chunks;
+-	bitmap->mddev->bitmap_info.chunksize = 1 << (chunkshift +
++	bitmap->mddev->bitmap_info.chunksize = 1UL << (chunkshift +
+ 						     BITMAP_BLOCK_SHIFT);
+ 
+ 	blocks = min(old_counts.chunks << old_counts.chunkshift,
+-- 
+2.34.1
+
