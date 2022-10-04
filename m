@@ -2,102 +2,98 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 783F3C433FE
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Oct 2022 20:38:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EED6C433FE
+	for <linux-raid@archiver.kernel.org>; Tue,  4 Oct 2022 20:44:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229647AbiJDUif (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 4 Oct 2022 16:38:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54300 "EHLO
+        id S229493AbiJDUn5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Oct 2022 16:43:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbiJDUie (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Oct 2022 16:38:34 -0400
-X-Greylist: delayed 62 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 04 Oct 2022 13:38:31 PDT
-Received: from USAT19PA21.eemsg.mail.mil (USAT19PA21.eemsg.mail.mil [214.24.22.195])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CC346BCE4
-        for <linux-raid@vger.kernel.org>; Tue,  4 Oct 2022 13:38:30 -0700 (PDT)
+        with ESMTP id S229514AbiJDUns (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Oct 2022 16:43:48 -0400
+Received: from USAT19PA24.eemsg.mail.mil (USAT19PA24.eemsg.mail.mil [214.24.22.198])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2553158DFA
+        for <linux-raid@vger.kernel.org>; Tue,  4 Oct 2022 13:43:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
-  t=1664915911; x=1696451911;
-  h=from:to:cc:subject:date:message-id:
-   content-transfer-encoding:mime-version;
-  bh=WKq+BrGHJ7gWQYDdOa9o/X1H4+qDf08e5dfcsKv2BMk=;
-  b=eS61SKTG2b8hNZih6lIfxPmDd4Wl9pBQW3/KXGD7T/EC3kVIngsag85C
-   ZmVwXa7hU3DrbDzxrWTIi6OBrHkOqWyZk3XMvTSWG1dWjDLBt0fYf/JOl
-   uk83uabxoTW7fk4WYlDwwrtVCw17dvNMKoPdy8P6beoV9xX8VVReeaTOJ
-   5uDf0JL6DbuFaJePfZG3rDmz2ZN/dng9Yx8K4eL9EzCcigAkM2vbatwE3
-   m2Hzg26PDlJDzCwro5kFQE0pEHF/ExB4IuBce5OOBSy8m7uLt6xYnYOic
-   7XI91aXWbq4WP/6mr4G6Sp1YdVlch31VM3/7Tvipvv87XgNV2yZAUF2vx
+  t=1664916219; x=1696452219;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=PlNJ7B9w/W+0dJFEq4c6RXu0+3rJQljA4FGqU3HriQE=;
+  b=d6VF82GC9/AIrZb2FZpv7VrcOJxoq80UEVtsv3brSBNXA+YrxgOUr1zW
+   5SC1HcX/qB/Kaiq8sETOgTIWM5CRqm410RZ+EWKSBUP8h3PITDRSqD5e6
+   JOxW+n6tm/hWMYJ5trL4xyhOBmyA4yd2gSBoUqd4RwrZ28h4urnMTzAdW
+   Cwn0owS6vxGova7mG/Sf4qfequUX6bKs+CQ8bhG7mnyccav22n/0bcYae
+   UpHNOmVlTvX9DvqE2h3TzEZiDMoveBhvEd5LCNPhbyeMRYmM6f1aZcotB
+   YNkqaVrcL9NItXkslFajRg8e23x92lj5iGDH7Bm1vjI0ACSwKHJyGtUxP
    g==;
-X-EEMSG-check-017: 373060004|USAT19PA21_ESA_OUT02.csd.disa.mil
+X-EEMSG-check-017: 373382040|USAT19PA24_ESA_OUT05.csd.disa.mil
 X-IronPort-AV: E=Sophos;i="5.95,158,1661817600"; 
-   d="scan'208";a="373060004"
-IronPort-Data: A9a23:xBt/RaM0LK5Oi3PvrR07lcFynXyQoLVcMsEvi/4bfWQNrUohhTwDz
- zcdX27UOPyJZWChLox/b46wpEIHv57cndRhHgZtpSBmQkwRpJueD7x1DKtR0wB+jCHnZBg6h
- ynLQoCYdKjYdleF+lH1dOKJQUBUjclkfJKkYAL/En03FFIMpBsJ00o5wbdh2tIw2rBVPivV0
- T/Mi5yHULOa82MsWo4kw/rrRMRH4ZweEBtB1rAPTagjUG32zhH5P7pGTU2FFEYUd6EPdgKMq
- 0Yv+5nilo/R109F5tpICd8XeGVSKlLZFVDmZna7x8FOjzAazhHe3JrXO9JMdB4QohqQwOkyz
- ZIQkoCLYwUHNIblzbF1vxlwS0mSPIVL9LDKZH24t9DLkwvDenrohfBvCCnaP6VBp7YxWDwIr
- KJHbmlVNHhvhMrvqF6/Yutlg8k4asytMoIZvnhx1jbfUbAtQI7rRqzL4Zld3TNYasVmRqmFP
- 5RBMWIzBPjGSzhXAWwsJ8wToPa5iyftfgEfpRXFnINitgA/yyQ0itABKuH9ft2MWNUQhE+Zq
- krY8GnjRBIXLtqSzXyC6H3EuwPUtS73V49XEbq+6qY2xliax2hVDRwSPbemncSEZoeFc4o3A
- yQpFuAG9vFtnKB3ZrERhyGFnUM=
-IronPort-HdrOrdr: A9a23:buJqV6v8+SyzyPe2mZWsxF0M7skCgoMji2hC6mlwRA09TyXGra
- GTdaUguyMc1gx/ZJh5o6H8BEGBKUmskqKdkrNhQYtKOzOW8ldATbsSprcKpgeBJ8SQzJ8n6U
- 4NSdkaNDSSNyk2sS+Z2njDLz9I+rDum8rE6Za8vhVQpGlRGuRdBmxCe2Cm+zhNNXF77O0CZe
- OhD6R81l6dUEVSSv7+KmgOXuDFqdGOvonhewQ6Cxku7xTLpS+06ZbheiLokis2Yndq+/MP4G
- LFmwv26uGIqPeg0CLR0GfV8tB/hMbh8N1eH8aB4/JlZQkEyzzYKriJaYfy/Azdk9vfq2rCpe
- O84ivIcf4DqU85NVvF3icFkzOQrgrGrUWSjWNwyEGT0PDRVXY0DdFMipledQac4008vMtk2K
- YOxG6BsYFLZCmw6hgVyuK4Iy2CrHDE1kYKgKoWlThSQIEeYLheocgW+15UCo4JGGb/5Jo8GO
- djAcnA7LIOGGnqJ0zxry1q2pihT34zFhCJTgwLvdGUySFfmDR8w1EDzMISk38c/NY2SoVC5e
- 7DLqN0/Ys+B/P+rZgNcdvpbfHHeFAlGyi8QF56CW6XZ506Bw==
-Received: from edge-mont04.mail.mil ([158.15.167.102])
-  by USAT19PA21.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 04 Oct 2022 20:37:02 +0000
-Received: from UGUNHPTI.easf.csd.disa.mil (158.15.167.38) by
- edge-mont04.mail.mil (158.15.167.102) with Microsoft SMTP Server (TLS) id
- 14.3.498.0; Tue, 4 Oct 2022 20:36:36 +0000
-Received: from ugunhybl.easf.csd.disa.mil (158.15.171.26) by
- ugunhpti.easf.csd.disa.mil (158.15.167.38) with Microsoft SMTP Server (TLS)
- id 14.3.498.0; Tue, 4 Oct 2022 20:36:33 +0000
-Received: from ugunhybi.easf.csd.disa.mil (158.15.171.25) by
- ugunhybl.easf.csd.disa.mil (158.15.171.26) with Microsoft SMTP Server
+   d="scan'208";a="373382040"
+IronPort-Data: A9a23:I4eF26K8lk+lv4irFE+RdJclxSXFcZb7ZxGr2PjKsXjdYENS0zdRy
+ zBLW2uPPfaCNGH8LdgkYYrgpB4OsJGHm95iTwRorCE8RH908seUXt7xwmUcns+xwm8vaGo9s
+ q3yv/GZdJhcokf0/0vrav67xZVF/fngqoDUUIYoAQgsA145IMsdoUg7wbRg2tY02YPR7z6l4
+ bseneWOYDdJ5BYpagr424rbwP+4lKmaVJsw5zTSVNgT1LPsvyB94KE3fMldG0DFrrx8RYZWc
+ QpjIIaRpQs19z91Yj+sfy2SnkciGtY+NiDW4pZatjTLbhVq/kQPPqgH2PU0b3oUuhSVwY5N6
+ O5868DzQDcqIqDmobFIO/VYO3kW0axu5aPGJ3inuMuYiUDPaHWqyO5iSk03JoRe/+dzaY1M3
+ aVFcnZXNEHF2rjwmergIgVvrp1LwM3DPooat2omyHfXDPAiSIHYRKOWo9RZwh81j8FKW/PfY
+ 6L1bBI0M0+bM0cXZg9/5JQWwsvvlyTzYidjjnXMte0o51aU6Spf6e24WDbSUpnQLSlPpW6cp
+ 2Tb7yHjCxAWHMKQxCDD8X+2gOLL2yThV+ov+KaQ+/JljRiUxWcfUERQUFK6pb+8i0rWt89jF
+ nH4MxEG9cAanHFHhPGmN/FkiBZoZiIhZuc=
+IronPort-HdrOrdr: A9a23:W5NpqKjyZ8e7V6wqzTLFlGVjZHBQXgwji2hC6mlwRA09TyW9rb
+ HMoB1973/JYVcqKRMdcL+7SdO9qE3nhPlICOUqTMiftWrdyQ2VxeNZnPLfKlTbckWUygc679
+ YdT0EUMqyKMbEVt7eG3OHBeexQpOVu98iT69s3mB9WIT2DsMlbnn9E4hTyKCxLrBovP/UE/I
+ r13KB6TyDJQxkqhr3QPAhhY9T+
+Received: from edge-okcd01.mail.mil (HELO utinhpaoc.easf.csd.disa.mil) ([152.229.52.103])
+  by USAT19PA24.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 04 Oct 2022 20:43:37 +0000
+Received: from UTINHPANM.easf.csd.disa.mil (152.229.52.33) by
+ edge-okcd01.mail.mil (152.229.52.103) with Microsoft SMTP Server (TLS) id
+ 14.3.498.0; Tue, 4 Oct 2022 20:43:20 +0000
+Received: from UTINHYII.easf.csd.disa.mil (152.229.111.24) by
+ UTINHPANM.easf.csd.disa.mil (152.229.52.33) with Microsoft SMTP Server (TLS)
+ id 14.3.498.0; Tue, 4 Oct 2022 20:43:20 +0000
+Received: from UTINHYE6.easf.csd.disa.mil (152.229.111.20) by
+ UTINHYII.easf.csd.disa.mil (152.229.111.24) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Tue, 4 Oct 2022 20:36:33 +0000
-Received: from USG01-DM2-obe.outbound.protection.office365.us (140.17.146.20)
- by ugunhybi.easf.csd.disa.mil (158.15.171.25) with Microsoft SMTP Server
+ 15.1.2507.9; Tue, 4 Oct 2022 20:43:19 +0000
+Received: from USG01-CY1-obe.outbound.protection.office365.us (140.17.139.229)
+ by UTINHYE6.easf.csd.disa.mil (152.229.111.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.9
- via Frontend Transport; Tue, 4 Oct 2022 20:36:33 +0000
+ via Frontend Transport; Tue, 4 Oct 2022 20:43:19 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector5501; d=microsoft.com; cv=none;
- b=K/lyTZWZB1QlklTgP4Z+xyP04AIEx36NFJ9t0Ujm6TZuNSBK2awB3BXPr+M3ESEjcrYVp9LiHVNnqWy8PA6tl988J/tdZI3cagUi7XBPoDSaLy6XgIgk8IE+a7gteRYfFXJG6uk9PIASTm3KQNRqtUJdwiDDI8FMRoC19zso9fqoxTfr6PpNNL7OxE1b6z59D51GGyvKbXIs5OT5w2VHq5/MDa5bpGv+p9acmZyVu/yvM8dNf2hvfhusizlOD1kD7oyliozpJ0v2XBLzsnX2534DPTD1fya8UvG16m5ixOT0HjtckPUe16ERaXmRTFcYBvyKqWZI7kHlBsaKDyN6CQ==
+ b=AhkeU+R2rkF3lUCTMUSEWLAFdTlImzL6WnM1Qw8F9pNvUBA/uX1Y7aV3Ylgy7OFyD6vHnYeHxUGGFvt57qSFrZ1+zJlkCj6iUxU+OSpKgNmfZeatP3Zm9wnQ46hEDMFTuQf9ZvBp/ugqHvYhVcqqMwGlqLTVzgydUDyQAdNFGQ2BhiHGEoKTrUHyG4Ah1oY4bla9XxNWB2uNuCrrN5WuMZLEOmRMB/PU2n9rnP+O9QwCqPCvSdzRB0dyzZYUot3ZyzDSLbjUBm7sOQagLhHH7nMxLzoLUfu5L3WPQr8vG30xn/pUYJNEq/pW1+pB4s78wRQ3JUc2Jduu6qU+9gopdw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector5501;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WKq+BrGHJ7gWQYDdOa9o/X1H4+qDf08e5dfcsKv2BMk=;
- b=ADFR2LxRPbMNjGBGjI6j3Z5AC/u7GsDH55oYPIxysBoBuT9u754AcIvfA/LcpAFQ7JINxTIr1w34q6QrFPkW7blITtPm2K9qv9J/I5AX6DpqbcpKRJhenef8uJ7fgVE0Xl6t3To8Ouc22qa86ZhOCG0TmXQ0eO2KEMotr+CiMqZfxUojHiILQZ0DdiA9nel0cIl14WMVoOprKV2YhVurBq1dKmWpAjKQIEMJuDCB2vBlgY/WKgnt3kaf+D3vccktUA2ZaAsBS1eb1JOgACZMykHpNB8NfDqYuq3pTbPe0lPMZRqR8Yazw22V7VBjYjMPp8OrbNZpU3tolJQOkYVaBg==
+ bh=PlNJ7B9w/W+0dJFEq4c6RXu0+3rJQljA4FGqU3HriQE=;
+ b=exXQwFvIdexuy6LQ5HCq5PQdaAtxvhah8c8nIL41JWu7hbuMC2SnvnubOXN04ofpZELFsOTDSz0WG+yetOqhB0TtD7LLk7uhgd42BKVRRtOLww5d1KA63ILSriIARUdxc/7yyytJEtqSdZpIRmVPsOZ6zfb4xCGueX+uukhWYiw/I9UCtNWD654Z8LlLR38BoAiC+OpStEqunNCn8GnBkk7hf9QlWvztoS96HAOW0A0skuu6DbS4KgOMKQn2JZPp47JiEq3So5SqMdFQuOqSV5qHpfs7JW8puxRPhiAcMcWAbFvtmpwa/RqVlTnimktpotQCVOX/cjA1dvNkit7/6w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=mail.mil; dmarc=pass action=none header.from=mail.mil;
  dkim=pass header.d=mail.mil; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dod365.onmicrosoft.us;
  s=selector1-dod365-onmicrosoft-us;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WKq+BrGHJ7gWQYDdOa9o/X1H4+qDf08e5dfcsKv2BMk=;
- b=hT+0NRS0bpQGjE6BbEK3HCCH/xDQ1d/sUnloYQ6Oj/8v+9pulSxlZk1Lvv2j40CGUBNLRRNfb5u0WAPJCmVu9h17M9xk/8WTlgA69pyO7ZnlqqrWurNgGx01M4gj0h83OsnymnepVucmFi1Lmm+tps2EFKcXoNXhkbQsOdhoa3TUZ3Uq7DDeEOXvSlRsge7hnAGX9mZuqyywMCuHq0TaSDeZHjuFzfrFqDaNer1DwHTwqbsFeQ+HnsFXegck5cswX7Cxzj2ivFLm35UO4UYSb1TNiPgvRg7dU3e673XI0YOSwkrvIUTzuU7BetxE3/AT8Ly3pQjcVh22Vl/GCNcifQ==
+ bh=PlNJ7B9w/W+0dJFEq4c6RXu0+3rJQljA4FGqU3HriQE=;
+ b=TyE10NW7raGT/N9Lkzr4vM7aQFNdPtm7SKoyjgDEDYuVkOLDB55CpOFRzKGx9Sa1gKYxVBRlRuft6tzv8KzkaQT5+PJuPsmYJKqyW/1UOmhhNyKUbq0ql5P57ikWp08j4jCA5Gv5XhXRnAMU5LQKl8gX4dAa410Yg9scmUhP0s9/LBapXBH9IsisMTuO97CL0UMOAPoO76mfgrrGzf+eTlxn/ErqgMooG2oL+HOLJwbd5Rcjr5ewt+af909I7krv8C4hoP+wCKbsYM6M+WaX1Gyx0YvSLWBN8G3hkUwxIYQ3OAmeDbGcpc65jLkCpLsHt75sN7g8qmw2cGeMvLfXcw==
 Received: from BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM (2001:489a:200:589::15)
- by BN8P111MB1740.NAMP111.PROD.OUTLOOK.COM (2001:489a:200:58b::6) with
+ by BN8P111MB1397.NAMP111.PROD.OUTLOOK.COM (2001:489a:200:58a::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.17; Tue, 4 Oct
- 2022 20:36:31 +0000
+ 2022 20:43:18 +0000
 Received: from BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM
  ([fe80::3c32:331c:38c7:e9b0]) by BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM
  ([fe80::3c32:331c:38c7:e9b0%5]) with mapi id 15.20.5676.020; Tue, 4 Oct 2022
- 20:36:31 +0000
+ 20:43:18 +0000
 From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
 To:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 CC:     "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
-Subject: Linux RAID futures question
+Subject: RE: Linux RAID futures question
 Thread-Topic: Linux RAID futures question
-Thread-Index: AdjYMPuHQO2okXsCTiG3TSyfFouhkA==
-Date:   Tue, 4 Oct 2022 20:36:31 +0000
-Message-ID: <BN8P111MB1956CAEE20D8EDA11B0DFDB3A95A9@BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM>
+Thread-Index: AdjYMPuHQO2okXsCTiG3TSyfFouhkAAAHSGg
+Date:   Tue, 4 Oct 2022 20:43:17 +0000
+Message-ID: <BN8P111MB195628A92DE701D773E63DD8A95A9@BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM>
+References: <BN8P111MB1956CAEE20D8EDA11B0DFDB3A95A9@BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM>
+In-Reply-To: <BN8P111MB1956CAEE20D8EDA11B0DFDB3A95A9@BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -105,29 +101,67 @@ X-MS-TNEF-Correlator:
 authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=mail.mil;
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BN8P111MB1956:EE_|BN8P111MB1740:EE_
-x-ms-office365-filtering-correlation-id: 7c17474e-0489-4d0e-6c64-08daa6481f0b
+x-ms-traffictypediagnostic: BN8P111MB1956:EE_|BN8P111MB1397:EE_
+x-ms-office365-filtering-correlation-id: 5757db34-85de-4957-1167-08daa6491146
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: MRAzSmD7D1/gfEicYF/PRD9bhPbxgMXW4VlK1r5qTQ73pV/5F3LE9oXSK+W8Fu3hPMRdBSQ+JvRO++LLjU09Vt8qzrCvnNexnwFzu1YjxKnOaoL2zSuJLoyPuwXBvgBL53ChFCWvCQOwzMMBZLKjDQhs0/Eks24XSoyjASW8ghlECz2KVjKzBNni64BB7BAy150eoq98ErdAsP5PctKlv1X8hXv8/2Uhf3FQRy+Oefqg9JKt7AACSV/EQsevidAKqo8/ed6t0fjEoWFLqG6uEyxEuN2DsifsgxBIM5libCxEOXpWtA4pdF3l0rPd6WeqXAteozVwbrA9Ob7O4AfjaFdRWhSymjxgfROG3ioq/GKiLlTQbDlnap5JeuO4Pg/qhiiyLFJyqhyvAez5TsNsFR2IpMVTOT5JTkWR/klxXOsywy/rORTcig/3gRer8S5RZ9CYO1DUu1GuyIqlb0UcRbp7fegy2hnHelqp8wHHOJ57qTLIjNuvHRtp5WYfkd+d7p8AO727o9zemJHrtBPpPFyCDPrxne/dZQpMXBmXGsRcBp/+AEqkR+P2sF8FROTQsL/uhXIrk5hTMVhdh9xn6FHPrEtxlkdw6HNRuKgUXFqMukmgri/LaMF0VVThFKYVR2nuNOiJ8R0qe2Br6BA5oE7FRAgqoIeO2DyZ5H4jbbu+j7DX5fLD3FvtuKiv60eA
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(451199015)(8676002)(86362001)(107886003)(38070700005)(498600001)(2906002)(6916009)(66899015)(4326008)(82960400001)(33656002)(8936002)(7696005)(122000001)(38100700002)(6506007)(55016003)(3480700007)(186003)(26005)(5660300002)(71200400001)(66476007)(64756008)(76116006)(66946007)(66556008)(83380400001)(9686003)(66446008)(52536014);DIR:OUT;SFP:1102;
+x-microsoft-antispam-message-info: 3Nrb9UaK2OagMxxxgye15xOTVlxFjR7M+52Ydhkm5SsGO2CiG/imeJ92gkdOySbbaei07JZpAekbFxmvYuMV4xWBV4sjJQDbj7uhbsTa26C++fXJIMtpgnFhPW3SVN3PRJdOlk8S9jJ6nOHJQcIryI1ZLgicL5lnxpUXHkXA2Qqa38tw8RdhmL427isYQly/bk/CmqmR82b6pPBbduzeT05BUwAFZiGwlNhVU2033kRlDHrhAh5M1VczPL04MddzQm8UPoh0909OgEmASB9ZwEyszaEnn0XnNSrX7tBmgpW7D3XAOPh+ZmUudGMtcAJxsFNvgsvlm//EbObEczPV8GbP3jTJ2nflexiw+TtaJOADfd8AeG5eZFSutdAWENPt8NwfXp6FXC3ON0+BXQ8ZIFgIjhjnDGkSkqa+noZbqLGoe7FozUAAHkgAHjYCNrC5aoa5rxa9ONeySKDQFaK9OpN4pnTrC3NUVUENw4o2p09uIcm0i4a8lJ7cw7+PLiDLI/VG6UqBg66Q7msHFje8f9Sm+DKGTvrTgrVDrIa4dNBQK0g8D3pg8h9pTVWV4d+YhDtKuAFi1bTE06rSTzbQe+cjdpI6qjOPXsBHhwQ60AcTDqiYBfRlOdossMepySsql5vxa2p1lX/8tzCdCm9kRH56h7UEDQ8tO9AkZvKiOAXU0f22aRbM3oImkJzx61CG
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(451199015)(83380400001)(66899015)(53546011)(6506007)(66556008)(26005)(4326008)(2906002)(64756008)(8676002)(66946007)(66446008)(76116006)(122000001)(7696005)(33656002)(52536014)(66476007)(8936002)(186003)(3480700007)(82960400001)(55016003)(86362001)(9686003)(38070700005)(6916009)(2940100002)(38100700002)(107886003)(498600001)(71200400001)(5660300002);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: nOhuspu8JmRRSAkVJMN9F051fRIl29nuWgMgNDgFd++eOHJaM+uyhuH97MWY5sSRbm+aW2vAsm7jmvDg4QcrQcsOQL90OiyW9Sc3wDh/RxU2L0j5jGtYHr1SJ3XiwpQrUjoinhEUZNePlbubXyLXG4smta3AUBd8vAztzAu5UsBZ3xV6V7TUqk4SRFih7QmsWVQx8rKyidLg5pdwxj98jt4BD6zgDUXzig98mUmAfC80hrOZDXB49BVfxNhCgimcbZptpm7JEEVMeWC9TUZrDPO+74hC5DSCPj8cyo4yNyWndLbq7jXsRHVmvS8LFkebDBnJZW9S/xFQGJxT1IrILrsTQgDjdiErL3l/LuvqxCodbEwBpLWOLKdI4uZKAp2OdOM9eZoA7GivSTb7eezn/apJoZOC663JRDG5IAgKngw=
+x-ms-exchange-antispam-messagedata-0: QfdjIiPtFke/5WWjUNYa9ah0yYUAKWLbuPY44Di4DL8f8zTQOOsvlRLyKXVw5NYdzw/38XmpmAfHJyanXDd31WyfOup1FAk+VjBbwU3Guf7eJT81aRQa+Rm9RNPAOpFxtQeUPQF5u/UZMhB4rz8vcrWjGtuRQSsnZMC+jefzkQKIPKKxnsRihsfgTg82bTPG3ejs4oUw92jLAsIG/mxJLZ37e9SL58bcK6B2PR5YGHAOi2Ul/zhURrnUoDcAMptI5k0xkQHt5kmbuWp3C0llsKLwt/LBw2U+fP+cv950znYpjp+3/qJ+u16OZAPtWvuSEis5fk8Jhui/Dl8bBGtoyUGqhdDT15kwstgrkiz/XT6DWt1FqN4rQUl8BqqMbN0kEYRa9uPyvcXWrZjJFswzdNH3LbzpLmyT2BHqRK3On3o=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: BN8P111MB1956.NAMP111.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7c17474e-0489-4d0e-6c64-08daa6481f0b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Oct 2022 20:36:31.4888
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5757db34-85de-4957-1167-08daa6491146
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Oct 2022 20:43:17.8505
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 102d0191-eeae-4761-b1cb-1a83e86ef445
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8P111MB1740
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8P111MB1397
 X-OriginatorOrg: mail.mil
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
+
+I messed with sync_force_parallel and got the speed up momentarily, but the=
+ drive bandwidth and IOPs are down and then my sync speed started dropping =
+to well below 1GB/s after climbing initially to 1.2GB/s....=20
+Device            r/s     w/s     rkB/s     wkB/s   rrqm/s   wrqm/s  %rrqm =
+ %wrqm r_await w_await aqu-sz rareq-sz wareq-sz  svctm  %util
+nvme16c16n1   117608.00    0.00 848824.00      0.00 94603.00     0.00  44.5=
+8   0.00    0.83    0.00  98.03     7.22     0.00   0.01 100.00
+nvme18c18n1   117614.00    0.00 848936.00      0.00 94580.00     0.00  44.5=
+7   0.00    0.85    0.00  99.91     7.22     0.00   0.01 100.00
+nvme17c17n1   117612.00    0.00 848856.00      0.00 94563.00     0.00  44.5=
+7   0.00    0.84    0.00  99.35     7.22     0.00   0.01 100.00
+nvme19c19n1   117615.00    0.00 848968.00      0.00 94553.00     0.00  44.5=
+7   0.00    0.85    0.00  99.72     7.22     0.00   0.01 100.00
+nvme21c21n1   117657.00    0.00 848940.00      0.00 94516.00     0.00  44.5=
+5   0.00    0.86    0.00 101.30     7.22     0.00   0.01 100.00
+nvme22c22n1   117687.00    0.00 849060.00      0.00 94513.00     0.00  44.5=
+4   0.00    0.86    0.00 101.44     7.21     0.00   0.01 100.00
+nvme23c23n1   117720.00    0.00 849248.00      0.00 94515.00     0.00  44.5=
+3   0.00    0.86    0.00 101.51     7.21     0.00   0.01 100.00
+nvme24c24n1   117793.00    0.00 849700.00      0.00 94512.00     0.00  44.5=
+2   0.00    0.86    0.00 101.07     7.21     0.00   0.01 100.00
+nvme29c29n1   118601.00    0.00 849520.00      0.00 93685.00     0.00  44.1=
+3   0.00    0.85    0.00 101.02     7.16     0.00   0.01  99.90
+nvme30c30n1   118615.00    0.00 849592.00      0.00 93702.00     0.00  44.1=
+3   0.00    0.85    0.00 100.55     7.16     0.00   0.01 100.00
+nvme31c31n1   118530.00    0.00 848924.00      0.00 93714.00     0.00  44.1=
+5   0.00    0.85    0.00 101.28     7.16     0.00   0.01 100.00
+nvme32c32n1   118495.00    0.00 848720.00      0.00 93709.00     0.00  44.1=
+6   0.00    0.86    0.00 102.13     7.16     0.00   0.01 100.00
+
+
+-----Original Message-----
+From: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>=20
+Sent: Tuesday, October 4, 2022 4:37 PM
+To: linux-raid@vger.kernel.org
+Cc: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>
+Subject: Linux RAID futures question
 
 All,
 First off, I'm a huge advocate for mdraid and I appreciate all of the effor=
