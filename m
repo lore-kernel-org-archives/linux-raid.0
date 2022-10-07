@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 070D2C433F5
-	for <linux-raid@archiver.kernel.org>; Fri,  7 Oct 2022 20:10:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D51EC433FE
+	for <linux-raid@archiver.kernel.org>; Fri,  7 Oct 2022 20:10:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230033AbiJGUKy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 7 Oct 2022 16:10:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38510 "EHLO
+        id S229791AbiJGUKz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 7 Oct 2022 16:10:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbiJGUKv (ORCPT
+        with ESMTP id S229720AbiJGUKv (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Oct 2022 16:10:51 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA4B792F4C
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA32A9259F
         for <linux-raid@vger.kernel.org>; Fri,  7 Oct 2022 13:10:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=4HsPQhP54k/BnsaoubsCMfQrH3B5ZDFJ3LyVnvBAjxU=; b=mVqWnpxf/o4TvGrTtwt0Rv6VXK
-        aZOIUZGvNRq/0xhQmFvpcoORmBCg9l54En+MvWixy+GV0r5SXS5fXhJmNrxWiCr8mlnECzT4LGDsR
-        COCb9nSkMHM1uhm/4of75WL+TkInp4upXv2mkh7VK8XcCQawarr0HQYCaqpyv6QixqnjUuoo5Crzv
-        bR4noWrDLfWyErJGZ9JT2XuYdmp0tnzhas6Qhg9YPZKUgrh3tESlSKz0tntLhMaWq/y7myzNwfncP
-        H4930BYY2mt0x4Lw0iKI3kksGtyX4eew1nXhw8/yrxidvK4S/QvM641mkJhsEIIg0CAZf0CBGZBGa
-        vv1ygOXg==;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
+        :references:content-disposition:in-reply-to;
+        bh=YJ407FP/WryCckr1uyU2XMHU7zb5/UTRRs1WoQ3h3s4=; b=AKja3zVzb16eXsBtyZOqpBSdBE
+        NMnuT64/NgoJRQ1p8+UBatHDcdS9AIThe5zjdMfE3AqqrMNSoTqJYm6lpazsZY8+3P962AToqM0Ee
+        GvblzQdfPMpm0FLug13+m+d/o9FE7M4Ts1pPl22SV9uBzTUrtYGvvvx6b5b9wJd5Gi6pfFyMjSWWJ
+        8TZ7IXRFhwAIk4uBkx90DXJ8JLDyVZXUc2JMDQuxxcsOA18HVAZBGvbIQ9bdok78Y+FbGn5sziwMY
+        GXRTRNV9VUsELoQTgJ4Cqqf+wGb2ukWgYIkZ6Xev/JGMYqapIx+KvrH6ZvAL6lOfl8UR+igO4HsXS
+        FfWNPezA==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ogtgA-002hCi-9n; Fri, 07 Oct 2022 14:10:43 -0600
+        id 1ogtgA-002hCh-9n; Fri, 07 Oct 2022 14:10:44 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ogtg7-0005Hl-6J; Fri, 07 Oct 2022 14:10:39 -0600
+        id 1ogtg7-0005Hj-1O; Fri, 07 Oct 2022 14:10:39 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>
 Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, Xiao Ni <xni@redhat.com>,
@@ -42,45 +42,106 @@ Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, Xiao Ni <xni@redhat.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Fri,  7 Oct 2022 14:10:31 -0600
-Message-Id: <20221007201037.20263-2-logang@deltatee.com>
+Date:   Fri,  7 Oct 2022 14:10:30 -0600
+Message-Id: <20221007201037.20263-1-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20221007201037.20263-1-logang@deltatee.com>
-References: <20221007201037.20263-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-raid@vger.kernel.org, jes@trained-monkey.org, guoqing.jiang@linux.dev, xni@redhat.com, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH mdadm v4 1/7] Create: goto abort_locked instead of return 1 in error path
+Subject: [PATCH mdadm v4 0/7] Write Zeroes option for Creating Arrays
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The return 1 after the fstat_is_blkdev() check should be replaced
-with an error return that goes through the error path to unlock
-resources locked by this function.
+Hi,
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- Create.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is the next iteration of the patchset that added the discard
+option to mdadm. Per feedback from Martin, it's more desirable
+to use the write-zeroes functionality than rely on devices to zero
+the data on a discard request. This is because standards typically
+only require the device to do the best effort to discard data and
+may not actually discard (and thus zero) it all in some circumstances.
 
-diff --git a/Create.c b/Create.c
-index 953e73722518..2e8203ecdccd 100644
---- a/Create.c
-+++ b/Create.c
-@@ -939,7 +939,7 @@ int Create(struct supertype *st, char *mddev,
- 						goto abort_locked;
- 					}
- 					if (!fstat_is_blkdev(fd, dv->devname, &rdev))
--						return 1;
-+						goto abort_locked;
- 					inf->disk.major = major(rdev);
- 					inf->disk.minor = minor(rdev);
- 				}
--- 
+This version of the patch set adds the --write-zeroes option which
+will imply --assume-clean and write zeros to the data region in
+each disk before starting the array. This can take some time so
+each disk is done in parallel in its own fork. To make the forking
+code easier to understand this patch set also starts with some
+cleanup of the existing Create code.
+
+We tested write-zeroes requests on a number of modern nvme drives of
+various manufacturers and found most are not as optimized as the
+discard path. A couple drives that were tested did not support
+write-zeroes at all but still performed similarly with the kernel
+falling back to writing zero pages. Typically we see it take on the
+order of one minute per 100GB of data zeroed.
+
+One reason write-zeroes is slower than discard is that today's NVMe
+devices only allow about 2MB to be zeroed in one command where as
+the entire drive can typically be discarded in one command. Partly,
+this is a limitation of the spec as there are only 16 bits avalaible
+in the write-zeros command size but drives still don't max this out.
+Hopefully, in the future this will all be optimized a bit more
+and this work will be able to take advantage of that.
+
+Logan
+
+--
+
+Changes since v3:
+   * Store the pid in a local variable instead of the mdinfo struct
+    (per Mariusz and Xiao)
+
+Changes since v2:
+
+   * Use write-zeroes instead of discard to zero the disks (per
+     Martin)
+   * Due to the time required to zero the disks, each disk is
+     now done in parallel with separate forks of the process.
+   * In order to add the forking some refactoring was done on the
+     Create() function to make it easier to understand
+   * Added a pr_info() call so that some prints can be done
+     to stdout instead of stdour (per Mariusz)
+   * Added KIB_TO_BYTES and SEC_TO_BYTES helpers (per Mariusz)
+   * Added a test to the mdadm test suite to test the option
+     works.
+   * Fixed up how the size and offset are calculated with some
+     great information from Xiao.
+
+Changes since v1:
+
+   * Discard the data in the devices later in the create process
+     while they are already open. This requires treating the
+     s.discard option the same as the s.assume_clean option.
+     Per Mariusz.
+   * A couple other minor cleanup changes from Mariusz.
+
+
+*** BLURB HERE ***
+
+Logan Gunthorpe (7):
+  Create: goto abort_locked instead of return 1 in error path
+  Create: remove safe_mode_delay local variable
+  Create: Factor out add_disks() helpers
+  mdadm: Introduce pr_info()
+  mdadm: Add --write-zeros option for Create
+  tests/00raid5-zero: Introduce test to exercise --write-zeros.
+  manpage: Add --write-zeroes option to manpage
+
+ Create.c           | 479 ++++++++++++++++++++++++++++-----------------
+ ReadMe.c           |   2 +
+ mdadm.8.in         |  16 ++
+ mdadm.c            |   9 +
+ mdadm.h            |   7 +
+ tests/00raid5-zero |  12 ++
+ 6 files changed, 350 insertions(+), 175 deletions(-)
+ create mode 100644 tests/00raid5-zero
+
+
+base-commit: 8b668d4aa3305af5963162b7499b128bd71f8f29
+--
 2.30.2
-
