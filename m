@@ -2,112 +2,258 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B1AC433FE
-	for <linux-raid@archiver.kernel.org>; Fri,  7 Oct 2022 17:50:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB0FC433F5
+	for <linux-raid@archiver.kernel.org>; Fri,  7 Oct 2022 18:58:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229665AbiJGRuy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 7 Oct 2022 13:50:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40192 "EHLO
+        id S229668AbiJGS6i (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 7 Oct 2022 14:58:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229602AbiJGRuw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Oct 2022 13:50:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2972ED25AF;
-        Fri,  7 Oct 2022 10:50:50 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BA2D761751;
-        Fri,  7 Oct 2022 17:50:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27FC4C433D7;
-        Fri,  7 Oct 2022 17:50:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665165049;
-        bh=XdASqid1WjCP+zuDzOTglZo+FyNPpRDuWBihXnZGd/k=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=ddFWbzcxGiqXaL7INczMieqLxcU7mZaVhxUIG9EpKEHyfuxfErlYzO1nZQFzSleeU
-         BLyuzuysWRBvYbx3CVtqS78iYxkhz/vM6xbugw0QW/0HmNCNbNe5Oib3N3y9q5cTm7
-         rbwZUphxaVa3ydueKcT0jqYaIIDIigDjNw3Gt4JBJBcQN1fMgGWMChqLsKv43t8Sxn
-         L56Sy0UuKRfoLw4FDexS8Dqo3nem0CbidNzl4LOnlJ209C0G1rhg+jlw11Mybjx7FA
-         4Sbv6mdoEw4+FSc7UzCqFAKDopO3avzblER5RZGABWGFt/JQdNoGQ78hgDvtdEe7On
-         tphsxwoFaVDeQ==
-Received: by mail-ej1-f43.google.com with SMTP id bj12so12800692ejb.13;
-        Fri, 07 Oct 2022 10:50:49 -0700 (PDT)
-X-Gm-Message-State: ACrzQf2jxXsP5if4uNsa4vN2fIDVXSJFLFnyFWzW1iRkz7f9VzaBKpE7
-        n9/38BQVH/cK0fonz9X4Dplx+1E69/vw51TMczM=
-X-Google-Smtp-Source: AMsMyM6OCZvuhLpktn8u7uUs7KATxARIi8VCIZiFZdHyw1cSIqnVMhtjwvyyvk280gtm9TfJJOT3sOvGsr5M29wBgXk=
-X-Received: by 2002:a17:907:a0c7:b0:787:ea3d:21c0 with SMTP id
- hw7-20020a170907a0c700b00787ea3d21c0mr5017045ejc.707.1665165047315; Fri, 07
- Oct 2022 10:50:47 -0700 (PDT)
+        with ESMTP id S229491AbiJGS6h (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Oct 2022 14:58:37 -0400
+Received: from out0.migadu.com (out0.migadu.com [IPv6:2001:41d0:2:267::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E34CBB067;
+        Fri,  7 Oct 2022 11:58:35 -0700 (PDT)
+Message-ID: <226b8745-6406-070a-6b08-a265b57a7242@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1665169113;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=IT8ODLRhhNnvHgCFEXu4ri4Gti7guG1+3jIpR/3mLIU=;
+        b=fiZIGPKnja0YxkxRjdYgBIzlp64oRLEPUswPh589ZkNjsHseBLIp+yGjU+zTx/ILw5l6yk
+        mVg8DfS1cSi2aGPiP18eD8VCqoDPsNC5V2YkuL+tEvVv9xIi5CjHdTxGQfGLiVlLdbAuHS
+        CCYW/sxE7uKhWppTEgV9Ap2WpjR0Sz0=
+Date:   Fri, 7 Oct 2022 12:58:31 -0600
 MIME-Version: 1.0
-References: <20221006220840.275-1-jonathan.derrick@linux.dev> <20221006220840.275-4-jonathan.derrick@linux.dev>
-In-Reply-To: <20221006220840.275-4-jonathan.derrick@linux.dev>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 7 Oct 2022 10:50:35 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6Ur8ic_u3nj9-TSpZ96jWqBa3GLEnw207sN8eJECYwZg@mail.gmail.com>
-Message-ID: <CAPhsuW6Ur8ic_u3nj9-TSpZ96jWqBa3GLEnw207sN8eJECYwZg@mail.gmail.com>
 Subject: Re: [PATCH 2/2] md/bitmap: Add chunk-count-based bitmap flushing
-To:     Jonathan Derrick <jonathan.derrick@linux.dev>
+Content-Language: en-US
+To:     Song Liu <song@kernel.org>
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         jonathan.derrick@solidigm.com, jonathanx.sk.derrick@intel.com
-Content-Type: text/plain; charset="UTF-8"
+References: <20221006220840.275-1-jonathan.derrick@linux.dev>
+ <20221006220840.275-4-jonathan.derrick@linux.dev>
+ <CAPhsuW6Ur8ic_u3nj9-TSpZ96jWqBa3GLEnw207sN8eJECYwZg@mail.gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Jonathan Derrick <jonathan.derrick@linux.dev>
+In-Reply-To: <CAPhsuW6Ur8ic_u3nj9-TSpZ96jWqBa3GLEnw207sN8eJECYwZg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Oct 6, 2022 at 3:09 PM Jonathan Derrick
-<jonathan.derrick@linux.dev> wrote:
 
-[...]
 
-> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-> index cfd7395de8fd..e0aeedbdde17 100644
-> --- a/drivers/md/md-bitmap.h
-> +++ b/drivers/md/md-bitmap.h
-> @@ -11,10 +11,12 @@
->  /* version 4 insists the bitmap is in little-endian order
->   * with version 3, it is host-endian which is non-portable
->   * Version 5 is currently set only for clustered devices
-> ++ * Version 6 supports the flush-chunks threshold
->   */
->  #define BITMAP_MAJOR_HI 4
->  #define BITMAP_MAJOR_CLUSTERED 5
->  #define        BITMAP_MAJOR_HOSTENDIAN 3
-> +#define BITMAP_MAJOR_CHUNKFLUSH 6
->
->  /*
->   * in-memory bitmap:
-> @@ -135,7 +137,8 @@ typedef struct bitmap_super_s {
->                                   * reserved for the bitmap. */
->         __le32 nodes;        /* 68 the maximum number of nodes in cluster. */
->         __u8 cluster_name[64]; /* 72 cluster name to which this md belongs */
-> -       __u8  pad[256 - 136]; /* set to zero */
-> +       __le32 daemon_flush_chunks; /* 136 dirty chunks between flushes */
-> +       __u8  pad[256 - 140]; /* set to zero */
->  } bitmap_super_t;
+On 10/7/2022 11:50 AM, Song Liu wrote:
+> On Thu, Oct 6, 2022 at 3:09 PM Jonathan Derrick
+> <jonathan.derrick@linux.dev> wrote:
+> 
+> [...]
+> 
+>> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+>> index cfd7395de8fd..e0aeedbdde17 100644
+>> --- a/drivers/md/md-bitmap.h
+>> +++ b/drivers/md/md-bitmap.h
+>> @@ -11,10 +11,12 @@
+>>  /* version 4 insists the bitmap is in little-endian order
+>>   * with version 3, it is host-endian which is non-portable
+>>   * Version 5 is currently set only for clustered devices
+>> ++ * Version 6 supports the flush-chunks threshold
+>>   */
+>>  #define BITMAP_MAJOR_HI 4
+>>  #define BITMAP_MAJOR_CLUSTERED 5
+>>  #define        BITMAP_MAJOR_HOSTENDIAN 3
+>> +#define BITMAP_MAJOR_CHUNKFLUSH 6
+>>
+>>  /*
+>>   * in-memory bitmap:
+>> @@ -135,7 +137,8 @@ typedef struct bitmap_super_s {
+>>                                   * reserved for the bitmap. */
+>>         __le32 nodes;        /* 68 the maximum number of nodes in cluster. */
+>>         __u8 cluster_name[64]; /* 72 cluster name to which this md belongs */
+>> -       __u8  pad[256 - 136]; /* set to zero */
+>> +       __le32 daemon_flush_chunks; /* 136 dirty chunks between flushes */
+>> +       __u8  pad[256 - 140]; /* set to zero */
+>>  } bitmap_super_t;
+> 
+> Do we really need this to be persistent? How about we configure it at run
+> time via a sysfs file?
+> 
+> Also, please share more data on the performance benefit of the set.
+> 
+> Thanks,
+> Song
+> 
+Hi Song,
 
-Do we really need this to be persistent? How about we configure it at run
-time via a sysfs file?
+Patch 1/2 changes default behavior, which patch 2/2 tries to address.
+I can change it to be configurable via sysfs instead.
+Should there be a default?
 
-Also, please share more data on the performance benefit of the set.
 
-Thanks,
-Song
+Here are my observations via biosnoop and RAID1, 4M chunksize, 238436 chunks, bitmap=internal
+fio --name=test --direct=1 --filename=/dev/md0 --rw=randwrite --runtime=60
+ --percentile_list=1.0:25.0:50.0:75.0:90.0:95.0:99.0:99.9:99.99:99..999999:100.0
 
->
->  /* notes:
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index b4e2d8b87b61..d25574e46283 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -497,6 +497,7 @@ struct mddev {
->                 struct mutex            mutex;
->                 unsigned long           chunksize;
->                 unsigned long           daemon_sleep; /* how many jiffies between updates? */
-> +               unsigned int            daemon_flush_chunks; /* how many dirty chunks between updates */
->                 unsigned long           max_write_behind; /* write-behind mode */
->                 int                     external;
->                 int                     nodes; /* Maximum number of nodes in the cluster */
-> --
-> 2.31.1
->
+
+Default, bitmap updates happened concurrently with I/O:
+   bw (  KiB/s): min=18690, max=30618, per=99.94%, avg=23822.07, stdev=2522.73, samples=119
+   iops        : min= 4672, max= 7654, avg=5955.20, stdev=630.71, samples=119
+
+TIME(s)     COMM           PID     DISK      T SECTOR     BYTES  LAT(ms)
+38.090366   md0_raid1      4800    nvme6n1   W 40         4096      0.01
+38.090423   md0_raid1      4800    nvme3n1   W 40         4096      0.07
+38.090442   md0_raid1      4800    nvme3n1   W 1016633184 4096      0.01
+38.090439   md0_raid1      4800    nvme6n1   W 1016633184 4096      0.01
+38.090479   md0_raid1      4800    nvme6n1   W 56         4096      0.01
+38.090493   md0_raid1      4800    nvme6n1   W 1449894256 4096      0.01
+38.090477   md0_raid1      4800    nvme3n1   W 56         4096      0.01
+38.090496   md0_raid1      4800    nvme3n1   W 1449894256 4096      0.01
+38.090530   md0_raid1      4800    nvme3n1   W 16         4096      0.01
+38.090555   md0_raid1      4800    nvme3n1   W 110493568  4096      0.01
+38.090538   md0_raid1      4800    nvme6n1   W 16         4096      0.01
+38.090551   md0_raid1      4800    nvme6n1   W 110493568  4096      0.01
+38.090596   md0_raid1      4800    nvme6n1   W 56         4096      0.01
+38.090647   md0_raid1      4800    nvme3n1   W 56         4096      0.06
+38.090666   md0_raid1      4800    nvme3n1   W 1455846976 4096      0.01
+38.090663   md0_raid1      4800    nvme6n1   W 1455846976 4096      0.01
+38.090707   md0_raid1      4800    nvme6n1   W 64         4096      0.01
+38.090699   md0_raid1      4800    nvme3n1   W 64         4096      0.01
+38.090723   md0_raid1      4800    nvme3n1   W 1665013728 4096      0.01
+38.090720   md0_raid1      4800    nvme6n1   W 1665013728 4096      0.01
+38.090764   md0_raid1      4800    nvme6n1   W 64         4096      0.01
+38.090812   md0_raid1      4800    nvme3n1   W 64         4096      0.06
+38.090832   md0_raid1      4800    nvme3n1   W 1637994296 4096      0.01
+38.090828   md0_raid1      4800    nvme6n1   W 1637994296 4096      0.01
+
+
+
+
+With patch 1/2, bitmaps only update on the 'delay' parameter (default 5s):
+   bw (  KiB/s): min=135712, max=230938, per=100.00%, avg=209308.56, stdev=29254.31, samples=119
+   iops        : min=33928, max=57734, avg=52326.78, stdev=7313.57, samples=119
+
+TIME(s)     COMM           PID     DISK      T SECTOR     BYTES  LAT(ms)
+16.292235   md0_raid1      4841    nvme6n1   W 297367432  4096      0.01
+16.292258   md0_raid1      4841    nvme6n1   W 16         4096      0.01
+16.292266   md0_raid1      4841    nvme6n1   W 24         4096      0.01
+16.292277   md0_raid1      4841    nvme6n1   W 32         4096      0.01
+16.292259   md0_raid1      4841    nvme3n1   W 16         4096      0.01
+16.292280   md0_raid1      4841    nvme3n1   W 32         4096      0.01
+16.292305   md0_raid1      4841    nvme3n1   W 56         4096      0.01
+16.292286   md0_raid1      4841    nvme6n1   W 40         4096      0.01
+16.292295   md0_raid1      4841    nvme6n1   W 48         4096      0.01
+16.292326   md0_raid1      4841    nvme3n1   W 72         1536      0.01
+16.292323   md0_raid1      4841    nvme6n1   W 64         4096      0.02
+16.292326   md0_raid1      4841    nvme6n1   W 56         4096      0.03
+16.292334   md0_raid1      4841    nvme6n1   W 72         1536      0.02
+16.300697   md0_raid1      4841    nvme3n1   W 1297533744 4096      0.01
+16.300702   md0_raid1      4841    nvme6n1   W 1297533744 4096      0.01
+16.300803   md0_raid1      4841    nvme6n1   W 1649080856 4096      0.01
+16.300798   md0_raid1      4841    nvme3n1   W 1649080856 4096      0.01
+16.300823   md0_raid1      4841    nvme3n1   W 1539317792 4096      0.01
+16.300845   md0_raid1      4841    nvme3n1   W 1634570232 4096      0.01
+16.300867   md0_raid1      4841    nvme3n1   W 579232208  4096      0.01
+16.300889   md0_raid1      4841    nvme3n1   W 1818140424 4096      0.01
+16.300922   md0_raid1      4841    nvme3n1   W 412971920  4096      0.02
+...
+21.293225   md0_raid1      4841    nvme3n1   W 1279122360 4096      0.01
+21.293242   md0_raid1      4841    nvme3n1   W 40326272   4096      0.01
+21.293223   md0_raid1      4841    nvme6n1   W 1279122360 4096      0.01
+21.293243   md0_raid1      4841    nvme6n1   W 40326272   4096      0.01
+21.293261   md0_raid1      4841    nvme6n1   W 16         4096      0.01
+21.293266   md0_raid1      4841    nvme6n1   W 24         4096      0.01
+21.293271   md0_raid1      4841    nvme6n1   W 32         4096      0.01
+21.293275   md0_raid1      4841    nvme3n1   W 32         4096      0.01
+21.293292   md0_raid1      4841    nvme3n1   W 48         4096      0.01
+21.293296   md0_raid1      4841    nvme3n1   W 56         4096      0.01
+21.293309   md0_raid1      4841    nvme3n1   W 72         1536      0.01
+21.293266   md0_raid1      4841    nvme3n1   W 24         4096      0.01
+21.293326   md0_raid1      4841    nvme6n1   W 48         4096      0.05
+21.293328   md0_raid1      4841    nvme6n1   W 40         4096      0.06
+21.293331   md0_raid1      4841    nvme6n1   W 72         1536      0.03
+21.293333   md0_raid1      4841    nvme6n1   W 64         4096      0.04
+21.293334   md0_raid1      4841    nvme6n1   W 56         4096      0.05
+21.298526   md0_raid1      4841    nvme3n1   W 681973000  4096      0.01
+
+
+
+
+Good, but with the granularity of N seconds, it might be too infrequent.
+Here is chunk-flush=512 (2GB threshold in 4MB chunk size):
+   bw (  KiB/s): min=92692, max=134904, per=100.00%, avg=125127.43, stdev=6758.51, samples=119
+   iops        : min=23173, max=33726, avg=31281.55, stdev=1689.63, samples=119
+
+TIME(s)     COMM           PID     DISK      T SECTOR     BYTES  LAT(ms)
+13.193339   md0_raid1      5972    nvme6n1   W 16         4096      0.01
+13.193344   md0_raid1      5972    nvme6n1   W 32         4096      0.01
+13.193346   md0_raid1      5972    nvme6n1   W 24         4096      0.01
+13.193350   md0_raid1      5972    nvme6n1   W 40         4096      0.01
+13.193356   md0_raid1      5972    nvme6n1   W 48         4096      0.01
+13.193361   md0_raid1      5972    nvme6n1   W 64         4096      0.01
+13.193363   md0_raid1      5972    nvme6n1   W 56         4096      0.01
+13.193555   md0_raid1      5972    nvme6n1   W 72         1536      0.20
+13.193289   md0_raid1      5972    nvme3n1   W 1912285848 4096      0.01
+13.193306   md0_raid1      5972    nvme3n1   W 836455896  4096      0.01
+13.193323   md0_raid1      5972    nvme3n1   W 233728136  4096      0.01
+13.193339   md0_raid1      5972    nvme3n1   W 16         4096      0.01
+13.193344   md0_raid1      5972    nvme3n1   W 24         4096      0.01
+13.193362   md0_raid1      5972    nvme3n1   W 48         4096      0.01
+13.193365   md0_raid1      5972    nvme3n1   W 64         4096      0.01
+13.193366   md0_raid1      5972    nvme3n1   W 56         4096      0.01
+13.193574   md0_raid1      5972    nvme3n1   W 72         1536      0.21
+13.196759   md0_raid1      5972    nvme3n1   W 89571592   4096      0.01
+13.196810   md0_raid1      5972    nvme6n1   W 89571592   4096      0.06
+13.196913   md0_raid1      5972    nvme6n1   W 16         4096      0.01
+13.196910   md0_raid1      5972    nvme3n1   W 16         4096      0.01
+13.199444   md0_raid1      5972    nvme3n1   W 64         4096      0.01
+13.199447   md0_raid1      5972    nvme3n1   W 137126232  4096      0.01
+13.199515   md0_raid1      5972    nvme6n1   W 137126232  4096      0.08
+13.199519   md0_raid1      5972    nvme6n1   W 64         4096      0.08
+13.199617   md0_raid1      5972    nvme6n1   W 1216062808 4096      0.01
+... (508 ios later)
+13.208764   md0_raid1      5972    nvme6n1   W 16         4096      0.01
+13.208768   md0_raid1      5972    nvme6n1   W 32         4096      0.01
+13.208770   md0_raid1      5972    nvme6n1   W 24         4096      0.01
+13.208775   md0_raid1      5972    nvme6n1   W 40         4096      0.01
+13.208781   md0_raid1      5972    nvme6n1   W 48         4096      0.01
+13.208786   md0_raid1      5972    nvme6n1   W 56         4096      0.01
+13.208790   md0_raid1      5972    nvme6n1   W 64         4096      0.01
+13.208729   md0_raid1      5972    nvme3n1   W 1607847808 4096      0.01
+13.208747   md0_raid1      5972    nvme3n1   W 371214368  4096      0.01
+13.208770   md0_raid1      5972    nvme3n1   W 32         4096      0.01
+13.208789   md0_raid1      5972    nvme3n1   W 64         4096      0.01
+13.208952   md0_raid1      5972    nvme6n1   W 72         1536      0.17
+13.209079   md0_raid1      5972    nvme3n1   W 72         1536      0.29
+13.212216   md0_raid1      5972    nvme3n1   W 1146106480 4096      0.01
+13.212269   md0_raid1      5972    nvme6n1   W 1146106480 4096      0.06
+13.212368   md0_raid1      5972    nvme6n1   W 16         4096      0.01
+13.212365   md0_raid1      5972    nvme3n1   W 16         4096      0.01
+
+
+Without 1/2: 6k iops
+With 1/2: 52k iops
+With 2/2 params as above: 31k iops
+
+The count calculation could use some improvement to close the iops gap to delay-based flushing
+
+>>
+>>  /* notes:
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index b4e2d8b87b61..d25574e46283 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -497,6 +497,7 @@ struct mddev {
+>>                 struct mutex            mutex;
+>>                 unsigned long           chunksize;
+>>                 unsigned long           daemon_sleep; /* how many jiffies between updates? */
+>> +               unsigned int            daemon_flush_chunks; /* how many dirty chunks between updates */
+>>                 unsigned long           max_write_behind; /* write-behind mode */
+>>                 int                     external;
+>>                 int                     nodes; /* Maximum number of nodes in the cluster */
+>> --
+>> 2.31.1
+>>
