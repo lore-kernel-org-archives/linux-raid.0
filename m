@@ -2,119 +2,110 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2731DC433FE
-	for <linux-raid@archiver.kernel.org>; Wed, 12 Oct 2022 17:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E15C4332F
+	for <linux-raid@archiver.kernel.org>; Wed, 12 Oct 2022 19:26:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229491AbiJLRAT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 Oct 2022 13:00:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40650 "EHLO
+        id S229844AbiJLT0f convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Oct 2022 15:26:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230030AbiJLRAE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Oct 2022 13:00:04 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51B50D9E
-        for <linux-raid@vger.kernel.org>; Wed, 12 Oct 2022 09:59:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=5Dr2oEmE6UnZFK8La87ojFbkgXphKoO6+tb9L1ERD0A=; b=In8ebRrGUhArT9ZOouKg9cWKyP
-        YMWGVr3BQOxQaik09nbOzFhnEKNaIofaI+4AJB/aASMeZwNQrFhLGqd10Tp1peTO9KaTwob3XPbkB
-        yLf7lixn5zSDFY5YJk2umhU9WrG8oO2sE99Ki5Lmbzq/rj3qeuydQk5p44h4jK6/Gp0xyVjjYVG8u
-        YfZp/ln8n5g+eKqEv5gXtFoZhi/rnhMJpS37YiJyNnlWkzuTd1y3z3E4sgZyhg93eucCWH2u5r71v
-        juUnY5T482+n2fuZVYkAdbORfKmTD49RH9ieErebpsxxKmhE8kbmlMXhONEjV58rQwclMvWS71EgJ
-        7ysy52hA==;
-Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([70.73.163.230] helo=[192.168.11.155])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1oif5A-006czx-D2; Wed, 12 Oct 2022 10:59:50 -0600
-Message-ID: <8ee5368c-1808-d2bc-9ad2-2f8332d2704e@deltatee.com>
-Date:   Wed, 12 Oct 2022 10:59:45 -0600
+        with ESMTP id S229748AbiJLT0b (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Oct 2022 15:26:31 -0400
+Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45A9910251A;
+        Wed, 12 Oct 2022 12:26:30 -0700 (PDT)
+Received: from omf12.hostedemail.com (a10.router.float.18 [10.200.18.1])
+        by unirelay01.hostedemail.com (Postfix) with ESMTP id 2096E1C6C41;
+        Wed, 12 Oct 2022 19:17:09 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf12.hostedemail.com (Postfix) with ESMTPA id AB9FC17;
+        Wed, 12 Oct 2022 19:16:43 +0000 (UTC)
+Message-ID: <f8ad3ba44d28dec1a5f7626b82c5e9c2aeefa729.camel@perches.com>
+Subject: Re: [PATCH v1 3/5] treewide: use get_random_u32() when possible
+From:   Joe Perches <joe@perches.com>
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linux-kernel@vger.kernel.org
+Cc:     brcm80211-dev-list.pdl@broadcom.com, cake@lists.bufferbloat.net,
+        ceph-devel@vger.kernel.org, coreteam@netfilter.org,
+        dccp@vger.kernel.org, dev@openvswitch.org,
+        dmaengine@vger.kernel.org, drbd-dev@lists.linbit.com,
+        dri-devel@lists.freedesktop.org, kasan-dev@googlegroups.com,
+        linux-actions@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-hams@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mm@kvack.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-raid@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-sctp@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        lvs-devel@vger.kernel.org, netdev@vger.kernel.org,
+        netfilter-devel@vger.kernel.org, rds-devel@oss.oracle.com,
+        SHA-cyfmac-dev-list@infineon.com, target-devel@vger.kernel.org,
+        tipc-discussion@lists.sourceforge.net
+Date:   Wed, 12 Oct 2022 12:16:53 -0700
+In-Reply-To: <20221005214844.2699-4-Jason@zx2c4.com>
+References: <20221005214844.2699-1-Jason@zx2c4.com>
+         <20221005214844.2699-4-Jason@zx2c4.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 8BIT
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Content-Language: en-US
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20221007201037.20263-1-logang@deltatee.com>
- <CALTww28HQUPbB647oP9WKvkLX=9PqZv+9am-884zZVM923H-KA@mail.gmail.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <CALTww28HQUPbB647oP9WKvkLX=9PqZv+9am-884zZVM923H-KA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 70.73.163.230
-X-SA-Exim-Rcpt-To: xni@redhat.com, linux-raid@vger.kernel.org, jes@trained-monkey.org, guoqing.jiang@linux.dev, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, martin.petersen@oracle.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH mdadm v4 0/7] Write Zeroes option for Creating Arrays
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-Stat-Signature: c3d78nppyrywoyngway5d943fw3wwtdu
+X-Rspamd-Server: rspamout03
+X-Rspamd-Queue-Id: AB9FC17
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX1/Qw27OeRP8/mQW0Su38d7rwhSo1NO9QCw=
+X-HE-Tag: 1665602203-428634
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-@ccing Martin hoping he has an opinion on the write zeroes interface
+On Wed, 2022-10-05 at 23:48 +0200, Jason A. Donenfeld wrote:
+> The prandom_u32() function has been a deprecated inline wrapper around
+> get_random_u32() for several releases now, and compiles down to the
+> exact same code. Replace the deprecated wrapper with a direct call to
+> the real function.
+[]
+> diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
+[]
+> @@ -734,7 +734,7 @@ static int send_connect(struct c4iw_ep *ep)
+>  				   &ep->com.remote_addr;
+>  	int ret;
+>  	enum chip_type adapter_type = ep->com.dev->rdev.lldi.adapter_type;
+> -	u32 isn = (prandom_u32() & ~7UL) - 1;
+> +	u32 isn = (get_random_u32() & ~7UL) - 1;
 
-On 2022-10-11 19:09, Xiao Ni wrote:
-> Hi Logan
-> 
-> I did a test with the patchset. There is a problem like this:
-> 
-> mdadm -CR /dev/md0 -l5 -n3 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme0n1 --write-zero
-> mdadm: zeroing data from 135266304 to 960061505536 on: /dev/nvme1n1
-> mdadm: zeroing data from 135266304 to 960061505536 on: /dev/nvme2n1
-> mdadm: zeroing data from 135266304 to 960061505536 on: /dev/nvme0n1
-> 
-> I ran ctrl+c when waiting, then the raid can't be created anymore. Because the
-> processes that write zero to nvmes are stuck.
-> 
-> ps auxf | grep mdadm
-> root       68764  0.0  0.0   9216  1104 pts/0    S+   21:09   0:00
->          \_ grep --color=auto mdadm
-> root       68633  0.1  0.0  27808   336 pts/0    D    21:04   0:00
-> mdadm -CR /dev/md0 -l5 -n3 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme0n1
-> --write-zero
-> root       68634  0.2  0.0  27808   336 pts/0    D    21:04   0:00
-> mdadm -CR /dev/md0 -l5 -n3 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme0n1
-> --write-zero
-> root       68635  0.0  0.0  27808   336 pts/0    D    21:04   0:00
-> mdadm -CR /dev/md0 -l5 -n3 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme0n1
-> --write-zero
+trivia:
 
-Yes, this is because the fallocate() call that the child processes use
-to write_zeros will submit a large number of bios in the kernel and then
-wait with submit_bio_wait() which is non-interruptible. So when the
-child processes get the SIGINT, they will not stop until after the
-fallocate() call completes which will pretty much be after the entire
-disk is zeroed. So if you are zeroing a very large disk, those processes
-will be stuck around for several minutes after the parent process
-terminates; though they do go away eventually.
+There are somewhat odd size mismatches here.
 
-There aren't many great solutions for this:
+I had to think a tiny bit if random() returned a value from 0 to 7
+and was promoted to a 64 bit value then truncated to 32 bit.
 
-1) We could install as signal handler in the parent so it sticks around
-until the zeroing is complete. This would mean mdadm will not be able to
-be terminated while the zeroing is occurring and the user has to wait.
+Perhaps these would be clearer as ~7U and not ~7UL
 
-2) We could split up the fallocate call into multiple calls to zero the
-entire disk. This would allow a quicker ctrl-c to occur, however it's
-not clear what the best size would be to split it into. Even zeroing 1GB
-can take a few seconds, but the smaller we go, the less efficient it
-will be if the block layer and devices ever get write-zeroes optimized
-in the same way discard has been optimized (with NVMe, discard only
-requires a single command to handle the entire disk where as
-write-zeroes requires a minimum of one command per 2MB of data to zero).
-I was hoping write-zeroes could be made faster in the future, at least
-for NVMe.
+>  	struct net_device *netdev;
+>  	u64 params;
+>  
+> @@ -2469,7 +2469,7 @@ static int accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
+>  	}
+>  
+>  	if (!is_t4(adapter_type)) {
+> -		u32 isn = (prandom_u32() & ~7UL) - 1;
+> +		u32 isn = (get_random_u32() & ~7UL) - 1;
 
-Thoughts?
+etc...
 
-Logan
+drivers/infiniband/hw/cxgb4/cm.c:	u32 isn = (prandom_u32() & ~7UL) - 1;
+drivers/infiniband/hw/cxgb4/cm.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
+drivers/net/ethernet/chelsio/inline_crypto/chtls/chtls_cm.c:	rpl5->iss = cpu_to_be32((prandom_u32() & ~7UL) - 1);
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
+drivers/target/iscsi/cxgbit/cxgbit_cm.c:	rpl5->iss = cpu_to_be32((prandom_u32() & ~7UL) - 1);
+
