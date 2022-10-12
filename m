@@ -2,165 +2,194 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1B33C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 11 Oct 2022 15:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F23FCC4332F
+	for <linux-raid@archiver.kernel.org>; Wed, 12 Oct 2022 01:10:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230038AbiJKPwU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 11 Oct 2022 11:52:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35910 "EHLO
+        id S229436AbiJLBKC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 11 Oct 2022 21:10:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231205AbiJKPwB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 Oct 2022 11:52:01 -0400
+        with ESMTP id S229545AbiJLBKB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 Oct 2022 21:10:01 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D094E1156
-        for <linux-raid@vger.kernel.org>; Tue, 11 Oct 2022 08:49:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2937213D49
+        for <linux-raid@vger.kernel.org>; Tue, 11 Oct 2022 18:09:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1665503378;
+        s=mimecast20190719; t=1665536996;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=zy7/iQNe7aEq5mCNbTqeQVw027bIDpxjtoePNJFgJoA=;
-        b=F7H/Ko2Rmh1hgSyRnLOoXsuUxqRnl30ZxqBqeqoRTCI7XaYfXFcSebPRPTolhoK+/ckFAe
-        BW9JgWpA5kprxrGMPVnx5/61RUjafsX2hNxTkKKEgbB4BDuW46LfO3KH2qmntT9kVSqKwP
-        7IIa3IS5J2gQZL/oM25z/2nMT+G8GyI=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=EHys6+kmn7J/jd9cCrwS7krwmfr0OeLIGgtQ7BYbUuQ=;
+        b=bAtAqBsjNij0scuqQUcWdIBlu0F11nAkhWIOIE6TMymU4BOJx+My+9imHCpafwcs7hcZMK
+        kLsx295f69kiFr6yYwSrHg/7ZvKDPoQZJQLD+lI+BpEO9ukeYMCT/HBh5sExhqn07dQZPH
+        MwCup+avJqJpQX6L7lCiaeGpF6/caAk=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-12-MkDXUhRAPei2dxo17Z8dow-1; Tue, 11 Oct 2022 11:49:37 -0400
-X-MC-Unique: MkDXUhRAPei2dxo17Z8dow-1
-Received: by mail-pj1-f69.google.com with SMTP id m21-20020a17090a7f9500b0020a88338009so6775999pjl.4
-        for <linux-raid@vger.kernel.org>; Tue, 11 Oct 2022 08:49:37 -0700 (PDT)
+ us-mta-384-xJLsGuQYN2eD-dmMWheWJA-1; Tue, 11 Oct 2022 21:09:55 -0400
+X-MC-Unique: xJLsGuQYN2eD-dmMWheWJA-1
+Received: by mail-pg1-f199.google.com with SMTP id l185-20020a6388c2000000b004610d11faddso4300862pgd.1
+        for <linux-raid@vger.kernel.org>; Tue, 11 Oct 2022 18:09:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=zy7/iQNe7aEq5mCNbTqeQVw027bIDpxjtoePNJFgJoA=;
-        b=6PlIy9ldic04pDYmtBJPkNbsRVVlKGTI6KUq9GgNCmFwfvcZW0IBvy7eopc80wS11q
-         x2j4ebyX75N062wA1D8BNBppUiXuU1/EUnI2j8HA/A1hzJuJGZpw08fsFoe/dvTW9lHn
-         DiCzBBIQJQrLEOaNEg38iG2QtAFdvV0zxTQ7RbD54otLf99ALDRnuhTAhB6y2Z1ztMHD
-         JD7TLbgtnmkmJtA9HqziVDz9074e5Oev76AqxVxSxls4wbxBgtR3R0yMdOQI3U/HHc7d
-         H0Db1FTEgPXqJ2igfB0sshGFXV18FO+eHCbhLrE+62jFa9fmOshlSlpxWI5yZCJL5MAF
-         s9kQ==
-X-Gm-Message-State: ACrzQf0ewmOcs83A4FntNSU9qs1TO84VOG35nomKK1Oy/lqJHylgJGBZ
-        FTMcA1yXgT/tHxSm1BeGv7bFjOt5bweylLivhHckU6r78OqaL639XVxUPa5MmXhgyh0so7CDNEX
-        /dif6cow4+9t/dYwtP1qUkl8kO4dPIMzt0iLtrg==
-X-Received: by 2002:aa7:958f:0:b0:563:6987:8b88 with SMTP id z15-20020aa7958f000000b0056369878b88mr10711786pfj.31.1665503376341;
-        Tue, 11 Oct 2022 08:49:36 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM6FtPidc7oKoIIHuEIRtji2p+fWckk3P/I3LcVvGgHiXNadoU0tRTEqgXErO5+7wr4ffuuxaSKuMl9NQvIdQBo=
-X-Received: by 2002:aa7:958f:0:b0:563:6987:8b88 with SMTP id
- z15-20020aa7958f000000b0056369878b88mr10711764pfj.31.1665503376028; Tue, 11
- Oct 2022 08:49:36 -0700 (PDT)
+        bh=EHys6+kmn7J/jd9cCrwS7krwmfr0OeLIGgtQ7BYbUuQ=;
+        b=kolAWSkZS2F1RAAHYlNVKqmRjYlm6wO22Vdc4kjXwTtui3+SUHzZgfmLOnMOBASbzC
+         myy43Cq1Z0bvhOl7sif4MWAq0qRmq+tOSkVdMj+JA0yfia61FJ2536G5PSP5HE8Nfd9/
+         wm2it0zNl9GC3Q/vQvH89+ww2JN7cxSgfTOqzQQdIaHkvJ3ehiBdcJmHDSUw9S2YF+JF
+         RrSjopOp4GdMQA2VmXevdgRlxfmLM5nkiFZ5OmM9VQk/wXp9hxfMYGizVSaNXcsgg29A
+         WB1PfkinBl+nXiUtBBC+HY2w8vHMGy0cNspM4GBmG3YX3K4qSQr2kg+fsc7ftJIdPFNJ
+         N01w==
+X-Gm-Message-State: ACrzQf12dOMj8EGdrdCs7K1kCAQ77C1MwwM6Fkm49rAHIJQPsPDq8hmP
+        gazW0HNi1pJSy14/5R4NpBub3rOl3xG2r0rCAdkPbErpNEYFo0Q927G7OWJOEBcFf6k5jQkpeZk
+        dxxgfRRFj0Z3crDLb257IeN4nRx1LmSLaO/s9zA==
+X-Received: by 2002:a63:d349:0:b0:460:b5ee:60ef with SMTP id u9-20020a63d349000000b00460b5ee60efmr15520293pgi.288.1665536993486;
+        Tue, 11 Oct 2022 18:09:53 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM5xuXLZMGNQONK2TxItS3XmgaHVyS/7c1lyVI3I28ife5qe2vD92Z4T8/1EhPQUXFjV4Y9TcvW5wdkdhQ89DRk=
+X-Received: by 2002:a63:d349:0:b0:460:b5ee:60ef with SMTP id
+ u9-20020a63d349000000b00460b5ee60efmr15520266pgi.288.1665536993136; Tue, 11
+ Oct 2022 18:09:53 -0700 (PDT)
 MIME-Version: 1.0
-References: <CALTww2-EAeM6aKeZbZ2udTwS5RFwNWfF9uag=npewB9j0H51Hw@mail.gmail.com>
- <35f4a626-7f83-56c5-4cad-73ede197ccbf@linux.dev> <CALTww2_jaUVEk-zeobWSn9+yDYfkESKEX6hAKZ+-O+dMzQS+Hg@mail.gmail.com>
- <861e6a43-40f6-a214-a72b-f641f9b6bc29@linux.dev>
-In-Reply-To: <861e6a43-40f6-a214-a72b-f641f9b6bc29@linux.dev>
+References: <20221007201037.20263-1-logang@deltatee.com>
+In-Reply-To: <20221007201037.20263-1-logang@deltatee.com>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 11 Oct 2022 23:49:24 +0800
-Message-ID: <CALTww2_FHYi7nsox4P4Mw+wFwUjZ8KPuuPCWXpwwB-e2XrRK+A@mail.gmail.com>
-Subject: Re: Memory leak when raid10 takeover raid0
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, Song Liu <song@kernel.org>
+Date:   Wed, 12 Oct 2022 09:09:41 +0800
+Message-ID: <CALTww28HQUPbB647oP9WKvkLX=9PqZv+9am-884zZVM923H-KA@mail.gmail.com>
+Subject: Re: [PATCH mdadm v4 0/7] Write Zeroes option for Creating Arrays
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Coly Li <colyli@suse.de>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Jonmichael Hands <jm@chia.net>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Oct 11, 2022 at 9:39 PM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
->
-> I finally reproduced it with 6.0 kernel, and It is a NULL dereference.
+Hi Logan
 
-That's cool. Could you share the steps?
+I did a test with the patchset. There is a problem like this:
 
-> >>>
-> >>> The reason is that raid0 doesn't do anything in raid0_quiesce. During
-> >>> the level change in level_store, it needs
-> >>> to make sure all inflight bios to finish.  We can add a count to do
-> >>> this in raid0. Is it a good way?
-> >>>
-> >>> There is a count mddev->active_io in mddev. But it's decreased in
-> >>> md_handle_request rather than in the callback
-> >>> endio function. Is it right to decrease active_io in callbcak endio function?
-> >>>
-> >> I think it is a race between ios and takeover action, since
-> >> mddev_suspend called by
-> >> level_store should ensure no io is submitted to array at that time by below.
-> >>
-> >>       wait_event(mddev->sb_wait, atomic_read(&mddev->active_io) == 0)
-> >>
-> >> However it can't guarantee new io comes after mddev_suspend because the
-> >> empty raid0 quiesce.  Maybe we can do something like this.
->
-> I was wrong given md_end_io_acct could happen after raid0_make_request,
-> so it could
-> be the previous io not finished before mddev_suspend, which means we
-> need to find a
-> way to drain member disk somehow but I doubt it is reasonable.
+mdadm -CR /dev/md0 -l5 -n3 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme0n1 --write-zero
+mdadm: zeroing data from 135266304 to 960061505536 on: /dev/nvme1n1
+mdadm: zeroing data from 135266304 to 960061505536 on: /dev/nvme2n1
+mdadm: zeroing data from 135266304 to 960061505536 on: /dev/nvme0n1
 
-It's what I wanted to mention in the original email. Sorry for not
-describing clearly. The inflight ios
-which mentioned in the first email are the bios that submit to the
-member disks. Because we introduced
-md_end_io_acct now, we need to ensure all the inflight ios come back
-and then free the memory.
-I put a patch in last email that tried to resolve it.
+I ran ctrl+c when waiting, then the raid can't be created anymore. Because the
+processes that write zero to nvmes are stuck.
 
->
-> Also change personality from raid0 seems doesn't obey the second rule.
->
->         /* request to change the personality.  Need to ensure:
->           *  - array is not engaged in resync/recovery/reshape
->           *  - *old personality can be suspended*
->           *  - new personality will access other array.
->           */
->
-> And I don't like the idea to add another clone during io path for the
-> special case which
+ps auxf | grep mdadm
+root       68764  0.0  0.0   9216  1104 pts/0    S+   21:09   0:00
+         \_ grep --color=auto mdadm
+root       68633  0.1  0.0  27808   336 pts/0    D    21:04   0:00
+mdadm -CR /dev/md0 -l5 -n3 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme0n1
+--write-zero
+root       68634  0.2  0.0  27808   336 pts/0    D    21:04   0:00
+mdadm -CR /dev/md0 -l5 -n3 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme0n1
+--write-zero
+root       68635  0.0  0.0  27808   336 pts/0    D    21:04   0:00
+mdadm -CR /dev/md0 -l5 -n3 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme0n1
+--write-zero
 
-That is what my last patch does. I didn't figure out a better way.
-
-> hurts performance. I would just warn user don't change personality from
-> raid0 unless
-> QUEUE_FLAG_IO_STAT flag is cleared for a while. Or do something like.
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 729be2c5296c..55e975233f66 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3979,6 +3979,12 @@ level_store(struct mddev *mddev, const char *buf,
-> size_t len)
->                  goto out_unlock;
->          }
->
-> +       if (blk_queue_io_stat(mddev->queue)) {
-> +               blk_queue_flag_clear(QUEUE_FLAG_IO_STAT, mddev->queue);
-> +               /* We want the previous bio is finished */
-> +               msleep(1000);
-> +       }
-> +
->          /* Looks like we have a winner */
->          mddev_suspend(mddev);
->          mddev_detach(mddev);
-> @@ -4067,6 +4073,7 @@ level_store(struct mddev *mddev, const char *buf,
-> size_t len)
->          pers->run(mddev);
->          set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->          mddev_resume(mddev);
-> +       blk_queue_flag_set(QUEUE_FLAG_IO_STAT, mddev->queue);
->
-> If you really want to fix it, maybe we have to ensure all inflight IOs
-> is finished by increase
-> inflight num in md_account_bio, then decrease it in md_end_io_acct after
-> add a new
-> inflight_num in mddev and also add "struct mddev *mddev" in md_io_acct,
-> just FYI.
-
-I thought about this method too. But then I thought it's only raid0 problem. So
-I didn't choose this method.
-
-Thanks for all the suggestions.
-
-Best Regards
+Regards
 Xiao
+
+On Sat, Oct 8, 2022 at 4:10 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> Hi,
+>
+> This is the next iteration of the patchset that added the discard
+> option to mdadm. Per feedback from Martin, it's more desirable
+> to use the write-zeroes functionality than rely on devices to zero
+> the data on a discard request. This is because standards typically
+> only require the device to do the best effort to discard data and
+> may not actually discard (and thus zero) it all in some circumstances.
+>
+> This version of the patch set adds the --write-zeroes option which
+> will imply --assume-clean and write zeros to the data region in
+> each disk before starting the array. This can take some time so
+> each disk is done in parallel in its own fork. To make the forking
+> code easier to understand this patch set also starts with some
+> cleanup of the existing Create code.
+>
+> We tested write-zeroes requests on a number of modern nvme drives of
+> various manufacturers and found most are not as optimized as the
+> discard path. A couple drives that were tested did not support
+> write-zeroes at all but still performed similarly with the kernel
+> falling back to writing zero pages. Typically we see it take on the
+> order of one minute per 100GB of data zeroed.
+>
+> One reason write-zeroes is slower than discard is that today's NVMe
+> devices only allow about 2MB to be zeroed in one command where as
+> the entire drive can typically be discarded in one command. Partly,
+> this is a limitation of the spec as there are only 16 bits avalaible
+> in the write-zeros command size but drives still don't max this out.
+> Hopefully, in the future this will all be optimized a bit more
+> and this work will be able to take advantage of that.
+>
+> Logan
+>
+> --
+>
+> Changes since v3:
+>    * Store the pid in a local variable instead of the mdinfo struct
+>     (per Mariusz and Xiao)
+>
+> Changes since v2:
+>
+>    * Use write-zeroes instead of discard to zero the disks (per
+>      Martin)
+>    * Due to the time required to zero the disks, each disk is
+>      now done in parallel with separate forks of the process.
+>    * In order to add the forking some refactoring was done on the
+>      Create() function to make it easier to understand
+>    * Added a pr_info() call so that some prints can be done
+>      to stdout instead of stdour (per Mariusz)
+>    * Added KIB_TO_BYTES and SEC_TO_BYTES helpers (per Mariusz)
+>    * Added a test to the mdadm test suite to test the option
+>      works.
+>    * Fixed up how the size and offset are calculated with some
+>      great information from Xiao.
+>
+> Changes since v1:
+>
+>    * Discard the data in the devices later in the create process
+>      while they are already open. This requires treating the
+>      s.discard option the same as the s.assume_clean option.
+>      Per Mariusz.
+>    * A couple other minor cleanup changes from Mariusz.
+>
+>
+> *** BLURB HERE ***
+>
+> Logan Gunthorpe (7):
+>   Create: goto abort_locked instead of return 1 in error path
+>   Create: remove safe_mode_delay local variable
+>   Create: Factor out add_disks() helpers
+>   mdadm: Introduce pr_info()
+>   mdadm: Add --write-zeros option for Create
+>   tests/00raid5-zero: Introduce test to exercise --write-zeros.
+>   manpage: Add --write-zeroes option to manpage
+>
+>  Create.c           | 479 ++++++++++++++++++++++++++++-----------------
+>  ReadMe.c           |   2 +
+>  mdadm.8.in         |  16 ++
+>  mdadm.c            |   9 +
+>  mdadm.h            |   7 +
+>  tests/00raid5-zero |  12 ++
+>  6 files changed, 350 insertions(+), 175 deletions(-)
+>  create mode 100644 tests/00raid5-zero
+>
+>
+> base-commit: 8b668d4aa3305af5963162b7499b128bd71f8f29
+> --
+> 2.30.2
+>
 
