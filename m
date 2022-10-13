@@ -2,45 +2,45 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA690C43219
-	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 00:36:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BB1C43219
+	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 00:36:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232069AbiJMAgW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 Oct 2022 20:36:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42550 "EHLO
+        id S231995AbiJMAgg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Oct 2022 20:36:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232575AbiJMAf2 (ORCPT
+        with ESMTP id S232583AbiJMAf2 (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Oct 2022 20:35:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2DD415E0E0;
-        Wed, 12 Oct 2022 17:31:03 -0700 (PDT)
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F180A139E64;
+        Wed, 12 Oct 2022 17:31:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CE7FD616E8;
-        Thu, 13 Oct 2022 00:20:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A06AC43151;
-        Thu, 13 Oct 2022 00:20:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 91B836170C;
+        Thu, 13 Oct 2022 00:27:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53078C43141;
+        Thu, 13 Oct 2022 00:27:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665620410;
-        bh=UrXTYZN138iLWkLhD3izbZxRH1f7d/hFdAP7pXGR8dE=;
+        s=k20201202; t=1665620851;
+        bh=8AMenu2oKcvpM/35Cpy1dqQoD74Ou3O5m1U5VSFst4I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VF5dUWeBSZYhsl9KxXaasoQT1U/wXBl383JCxrzxfNVGPQsUssF8KY1U5THrbApTY
-         QAtue2bKWCIJiWOVh2sZAFowJ2YIq0JXUr6kZXw6AJg7ApW7CHdElptRT8HJ4Qzr1r
-         o0W011rFloeGg3YyaPrZQ5ca76lZs+CKrk1/KylO2TsBdfoXzmmhj4GwxgGsL7tBN5
-         TzGEjL5i6FB7IsD79ogXsTIfqaNzbCO1PE/f1tnnDmT48t5CuMc9FUknsx39q6o2tr
-         yN5etcHT1Jo55igGjhTnp5PeUYWSCJfXD2j3FkDeDDlNGy+VvLxSfM3BnhgPxauXVP
-         inbNs34uNxilg==
+        b=CED4ucqSAwILNY3t2dVRujKG+bZSy/l262DLjCLfzFw+1tJ/RNnWVUK9eMuMM2IC9
+         8HQKNkprD4gheeQe7zgoNG6AfA8CT28m2Dw1ub2VJ00CKy49DHHkj/SplXTr4VIeDK
+         yvxegrwje0+elyjLnaXkIh5pFAyq3F4ARVk0dkbmqor/SyjjkgmhX9vJHsi1xq2/H8
+         Im4hSFEG0Ahm3iHJrLsGmQt4kJL+yXsj5XpafT9nAF/SPqvdS3F+HVxsWYbAF5o/VR
+         IICEqIh956Iz5FHdIsL+F51zTNNYz7ft6BzHoDZsOmanWg5BGeLrBil/7sFwwbwk2Z
+         Sy0DBA1IFZxcQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Logan Gunthorpe <logang@deltatee.com>, Song Liu <song@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.19 35/63] md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
-Date:   Wed, 12 Oct 2022 20:18:09 -0400
-Message-Id: <20221013001842.1893243-35-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 07/13] md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
+Date:   Wed, 12 Oct 2022 20:27:06 -0400
+Message-Id: <20221013002716.1895839-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221013001842.1893243-1-sashal@kernel.org>
-References: <20221013001842.1893243-1-sashal@kernel.org>
+In-Reply-To: <20221013002716.1895839-1-sashal@kernel.org>
+References: <20221013002716.1895839-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -156,10 +156,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 12 insertions(+)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1c1310d539f2..2905017184db 100644
+index 866ba1743f9f..2a74acc6371e 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -36,6 +36,7 @@
+@@ -44,6 +44,7 @@
   */
  
  #include <linux/blkdev.h>
@@ -167,7 +167,7 @@ index 1c1310d539f2..2905017184db 100644
  #include <linux/kthread.h>
  #include <linux/raid/pq.h>
  #include <linux/async_tx.h>
-@@ -6553,7 +6554,18 @@ static void raid5d(struct md_thread *thread)
+@@ -6308,7 +6309,18 @@ static void raid5d(struct md_thread *thread)
  			spin_unlock_irq(&conf->device_lock);
  			md_check_recovery(mddev);
  			spin_lock_irq(&conf->device_lock);
