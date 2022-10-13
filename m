@@ -2,37 +2,36 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DF9EC4332F
-	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 22:45:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94407C4321E
+	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 22:45:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229799AbiJMWpK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 13 Oct 2022 18:45:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33412 "EHLO
+        id S229830AbiJMWpL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 13 Oct 2022 18:45:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbiJMWpF (ORCPT
+        with ESMTP id S229792AbiJMWpF (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 13 Oct 2022 18:45:05 -0400
-X-Greylist: delayed 151 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 13 Oct 2022 15:44:58 PDT
-Received: from resdmta-c1p-023853.sys.comcast.net (resdmta-c1p-023853.sys.comcast.net [IPv6:2001:558:fd00:56::e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4B0960518
+Received: from resqmta-c1p-023465.sys.comcast.net (resqmta-c1p-023465.sys.comcast.net [IPv6:2001:558:fd00:56::5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B48516049C
         for <linux-raid@vger.kernel.org>; Thu, 13 Oct 2022 15:44:56 -0700 (PDT)
 Received: from resomta-c1p-023267.sys.comcast.net ([96.102.18.232])
-        by resdmta-c1p-023853.sys.comcast.net with ESMTP
-        id j6RpoJa5HOa5xj6uGoCAph; Thu, 13 Oct 2022 22:42:24 +0000
+        by resqmta-c1p-023465.sys.comcast.net with ESMTP
+        id j6mboDhuNf0y0j6uGoIgBU; Thu, 13 Oct 2022 22:42:24 +0000
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=comcastmailservice.net; s=20211018a; t=1665700944;
-        bh=uV9jv29H6aFjQ0ZSoY1eBV2TaHPRxfvEQYTsQ4HbTmo=;
+        bh=LV8/JcMHb+MmlhgjlVRQXW/dcI3Ijaatxb0kxbiP4wE=;
         h=Received:Received:From:To:Subject:Date:Message-Id:MIME-Version;
-        b=spZIFNb6z5BeGTqBl3rpkI4a3ZwN9PXgYkjrXmztgr1637tcIipdmIzSsXjmx8AQu
-         i2oqhtzt3rDVlQupoNxOIXlC0bAzi19KSA518cNKaV0Rwhl6NBY844USRVhkUFFfme
-         betvWoVl3pjx1k4N+HWlO8gkfcod1xfd9+Hlq8h1z8uTgZEc/kn/h7INO0kPj38SYM
-         +Rh9jbFk0oAHvsmEXv6Syqmpfdy2yPfdzkjXve8Cd/MVQ2olLlEWdITXTCAQduTYwl
-         uAbKWtf4RFbRt7BRLwedJCRl5WXKWT7vUI1KwoZTiNJ9Mtg5Zgq4ATryZNElMarkKq
-         rGrS1SLXoAHeA==
+        b=Fnkzuf7M7yXmK0kgcjoeMYIhbc3kJAWTBZlnOb55RDDpx9d6rr9Yo+DmXbr7CQTHl
+         4tRWD2vDgQ2Dmup3ijI/KK508+ha/wNi6kVegvonAzZUCMa0Xe8C8bW9Z+4I1nkl4m
+         Uoa4iZqH+J+SVM2cFct9SqV5HN5qqN/Aqp2Aar+pxuUfO4M5/T0SrZpJYj2c4yZ6zg
+         ++WLlzKtjsygmF24f1V9TCX1zqqfQRWhPxRqwiBqDendtwtj5ncM7eGt7MlQZOM8+G
+         Iif5G5R3pZAERCKB+lbi7OgopJT1CS9Fk92swJ47ARoRR+FVUmx3feGMbJIkyKEF/b
+         /269EXTaICgaA==
 Received: from jderrick-mobl4.amr.corp.intel.com ([71.205.181.50])
         by resomta-c1p-023267.sys.comcast.net with ESMTPA
-        id j6toofOVmA6uYj6ttozg6o; Thu, 13 Oct 2022 22:42:02 +0000
-X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvfedrfeekuddgudefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgggfestdekredtredttdenucfhrhhomheplfhonhgrthhhrghnucffvghrrhhitghkuceojhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvqeenucggtffrrghtthgvrhhnpedvtdejiefgueelteevudevhfdvjedvhfdtgfehjeeitdevueektdegtedttdehvdenucfkphepjedurddvtdehrddukedurdehtdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehjuggvrhhrihgtkhdqmhhosghlgedrrghmrhdrtghorhhprdhinhhtvghlrdgtohhmpdhinhgvthepjedurddvtdehrddukedurdehtddpmhgrihhlfhhrohhmpehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvhdpnhgspghrtghpthhtohepjedprhgtphhtthhopehsohhngheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohepjhhonhgrthhhrghnrdguvghrrhhitghksehsoh
- hlihguihhgmhdrtghomhdprhgtphhtthhopehjohhnrghthhgrnhigrdhskhdruggvrhhrihgtkhesihhnthgvlhdrtghomhdprhgtphhtthhopehmrghrihhushiirdhtkhgrtgiihihksehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtohepjhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghv
+        id j6toofOVmA6uYj6tuozg6t; Thu, 13 Oct 2022 22:42:03 +0000
+X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvfedrfeekuddgudefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomheplfhonhgrthhhrghnucffvghrrhhitghkuceojhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvqeenucggtffrrghtthgvrhhnpedtteeljeffgfffveehhfetveefuedvheevffffhedtjeeuvdevgfeftddtheeftdenucfkphepjedurddvtdehrddukedurdehtdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehjuggvrhhrihgtkhdqmhhosghlgedrrghmrhdrtghorhhprdhinhhtvghlrdgtohhmpdhinhgvthepjedurddvtdehrddukedurdehtddpmhgrihhlfhhrohhmpehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvhdpnhgspghrtghpthhtohepjedprhgtphhtthhopehsohhngheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohepjhhonhgrthhhrghnrdguvghrrhhitghkse
+ hsohhlihguihhgmhdrtghomhdprhgtphhtthhopehjohhnrghthhgrnhigrdhskhdruggvrhhrihgtkhesihhnthgvlhdrtghomhdprhgtphhtthhopehmrghrihhushiirdhtkhgrtgiihihksehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtohepjhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghv
 X-Xfinity-VMeta: sc=-100.00;st=legit
 From:   Jonathan Derrick <jonathan.derrick@linux.dev>
 To:     Song Liu <song@kernel.org>
@@ -40,49 +39,95 @@ Cc:     <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         jonathan.derrick@solidigm.com, jonathanx.sk.derrick@intel.com,
         Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
         Jonathan Derrick <jonathan.derrick@linux.dev>
-Subject: [PATCH v2 0/3] Bitmap percentage flushing
-Date:   Thu, 13 Oct 2022 16:41:48 -0600
-Message-Id: <20221013224151.300-1-jonathan.derrick@linux.dev>
+Subject: [PATCH v2 2/3] md/bitmap: Add sysfs interface for flush threshold
+Date:   Thu, 13 Oct 2022 16:41:50 -0600
+Message-Id: <20221013224151.300-3-jonathan.derrick@linux.dev>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20221013224151.300-1-jonathan.derrick@linux.dev>
+References: <20221013224151.300-1-jonathan.derrick@linux.dev>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This introduces a percentage-flushing mechanism that works in-tandem to the
-mdadm delay timer. The percentage argument is based on the number of chunks
-dirty (rather than percentage), due to large drives requiring smaller and
-smaller percentages (eg, 32TB drives-> 1% is 320GB).
+Adds a sysfs interface in the bitmap device for setting the chunk flush
+threshold. This is an unsigned integer value which defines the amount of
+dirty chunks allowed to be pending between bitmap flushes.
 
-This set hopes to provide a way to make the bitmap flushing more consistent. It
-was observed that a synchronous, random write qd1 workload, could make bitmap
-writes easily become almost half of the I/O. And in similar workloads with
-different timing, it was several minutes between bitmap updates. This is too
-inconsistent to be reliable.
+Signed-off-by: Jonathan Derrick <jonathan.derrick@linux.dev>
+---
+ Documentation/admin-guide/md.rst |  5 +++++
+ drivers/md/md-bitmap.c           | 33 ++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-This first and second patches adds the flush_threshold parameter. The default
-value of 0 defines the default behavior: unplugging immediately just as before.
-With a flush-threshold value of 1, it becomes more consistent and paranoid,
-flushing on nearly every I/O, leading to a 40% or greater situation. From
-there, the flush_threshold can be defined higher for those situations where
-power loss is rare and full resync can be tolerated.
-
-The third patch converts the daemon worker to an actual timer. This makes it
-more consistent and removes some ugly code.
-
-Jonathan Derrick (3):
-  md/bitmap: Add chunk-threshold unplugging
-  md/bitmap: Add sysfs interface for flush threshold
-  md/bitmap: Convert daemon_work to proper timer
-
- Documentation/admin-guide/md.rst |  5 ++
- drivers/md/md-bitmap.c           | 98 +++++++++++++++++++++++++-------
- drivers/md/md-bitmap.h           |  4 +-
- drivers/md/md.c                  |  9 ++-
- drivers/md/md.h                  |  2 +
- 5 files changed, 93 insertions(+), 25 deletions(-)
-
+diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
+index d8fc9a59c086..d688ae4065cf 100644
+--- a/Documentation/admin-guide/md.rst
++++ b/Documentation/admin-guide/md.rst
+@@ -401,6 +401,11 @@ All md devices contain:
+      once the array becomes non-degraded, and this fact has been
+      recorded in the metadata.
+ 
++  bitmap/flush_threshold
++     The number of outstanding dirty chunks that are allowed to be pending
++     before unplugging the bitmap queue. The default behavior is to always
++     unplugging the queue when requested.
++
+   consistency_policy
+      This indicates how the array maintains consistency in case of unexpected
+      shutdown. It can be:
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index c5c77f8371a8..cd8250368860 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2652,6 +2652,38 @@ static struct md_sysfs_entry max_backlog_used =
+ __ATTR(max_backlog_used, S_IRUGO | S_IWUSR,
+        behind_writes_used_show, behind_writes_used_reset);
+ 
++static ssize_t
++bitmap_flush_threshold_show(struct mddev *mddev, char *page)
++{
++	ssize_t ret;
++	spin_lock(&mddev->lock);
++	if (mddev->bitmap == NULL)
++		ret = sprintf(page, "0\n");
++	else
++		ret = sprintf(page, "%u\n",
++			      mddev->bitmap_info.flush_threshold);
++	spin_unlock(&mddev->lock);
++	return ret;
++}
++
++static ssize_t
++bitmap_flush_threshold_store(struct mddev *mddev, const char *buf, size_t len)
++{
++	unsigned int thresh;
++	int ret;
++	if (!mddev->bitmap)
++		return -ENOENT;
++	ret = kstrtouint(buf, 10, &thresh);
++	if (ret)
++		return ret;
++	mddev->bitmap_info.flush_threshold = thresh;
++	return len;
++}
++
++static struct md_sysfs_entry bitmap_flush_threshold =
++__ATTR(flush_threshold, S_IRUGO | S_IWUSR,
++       bitmap_flush_threshold_show, bitmap_flush_threshold_store);
++
+ static struct attribute *md_bitmap_attrs[] = {
+ 	&bitmap_location.attr,
+ 	&bitmap_space.attr,
+@@ -2661,6 +2693,7 @@ static struct attribute *md_bitmap_attrs[] = {
+ 	&bitmap_metadata.attr,
+ 	&bitmap_can_clear.attr,
+ 	&max_backlog_used.attr,
++	&bitmap_flush_threshold.attr,
+ 	NULL
+ };
+ const struct attribute_group md_bitmap_group = {
 -- 
 2.31.1
 
