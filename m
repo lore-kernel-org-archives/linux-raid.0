@@ -2,145 +2,190 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C530C43219
-	for <linux-raid@archiver.kernel.org>; Wed, 12 Oct 2022 21:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A78BDC433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 00:19:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230202AbiJLV3d convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 Oct 2022 17:29:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59178 "EHLO
+        id S229930AbiJMAT0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Oct 2022 20:19:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230173AbiJLV3S (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Oct 2022 17:29:18 -0400
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9115B120EC8
-        for <linux-raid@vger.kernel.org>; Wed, 12 Oct 2022 14:29:08 -0700 (PDT)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-269-WPghBqosPyeNkdeVSYELTw-1; Wed, 12 Oct 2022 22:29:04 +0100
-X-MC-Unique: WPghBqosPyeNkdeVSYELTw-1
-Received: from AcuMS.Aculab.com (10.202.163.6) by AcuMS.aculab.com
- (10.202.163.6) with Microsoft SMTP Server (TLS) id 15.0.1497.38; Wed, 12 Oct
- 2022 22:29:02 +0100
-Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
- id 15.00.1497.040; Wed, 12 Oct 2022 22:29:02 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Joe Perches' <joe@perches.com>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-sctp@vger.kernel.org" <linux-sctp@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-        "linux-stm32@st-md-mailman.stormreply.com" 
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
-        "dev@openvswitch.org" <dev@openvswitch.org>,
-        "rds-devel@oss.oracle.com" <rds-devel@oss.oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "dccp@vger.kernel.org" <dccp@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "lvs-devel@vger.kernel.org" <lvs-devel@vger.kernel.org>,
-        "SHA-cyfmac-dev-list@infineon.com" <SHA-cyfmac-dev-list@infineon.com>,
-        "coreteam@netfilter.org" <coreteam@netfilter.org>,
-        "tipc-discussion@lists.sourceforge.net" 
-        <tipc-discussion@lists.sourceforge.net>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-actions@lists.infradead.org" 
-        <linux-actions@lists.infradead.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-hams@vger.kernel.org" <linux-hams@vger.kernel.org>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "cake@lists.bufferbloat.net" <cake@lists.bufferbloat.net>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-f2fs-devel@lists.sourceforge.net" 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "netfilter-devel@vger.kernel.org" <netfilter-devel@vger.kernel.org>,
-        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [PATCH v1 3/5] treewide: use get_random_u32() when possible
-Thread-Topic: [PATCH v1 3/5] treewide: use get_random_u32() when possible
-Thread-Index: AQHY3m9QJDmwhr5XuUa4Hi/RfD23ja4LRXVg
-Date:   Wed, 12 Oct 2022 21:29:02 +0000
-Message-ID: <d45bd258e033453b85a137112e7694e1@AcuMS.aculab.com>
-References: <20221005214844.2699-1-Jason@zx2c4.com>
-         <20221005214844.2699-4-Jason@zx2c4.com>
- <f8ad3ba44d28dec1a5f7626b82c5e9c2aeefa729.camel@perches.com>
-In-Reply-To: <f8ad3ba44d28dec1a5f7626b82c5e9c2aeefa729.camel@perches.com>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        with ESMTP id S229655AbiJMAS7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Oct 2022 20:18:59 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F68CE6F53;
+        Wed, 12 Oct 2022 17:17:24 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EF112616C6;
+        Thu, 13 Oct 2022 00:17:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF290C433C1;
+        Thu, 13 Oct 2022 00:17:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665620242;
+        bh=7uZJGplQpBvIyYxzbRXiCnntghWUDegUByv5bMU+weU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=mvvHS5xtVTKZ2Z/F41yd9Y8dT+LTmRap/pXz0twfveibe+iQC5PtzMAqqO8zKFpPV
+         l+ssdZJyanvRUbG8HFBReA84gqnmYe8V8Vpvk6f9MZdVp/opaT3BKUnl1BZ8k378c5
+         XGX5u+1nisMUFohgJlX7ufykQFo8UzSqph9pmHbCVKeZPUJcWzNcHIbdb0EPbf/ZKL
+         ntfDn5RIOda0dFdxXuGs5a7VJPhk0Bq1GOLlE3Rw4M0IvP87XQrTjC5BLbXar74uPl
+         EasFUXnybclMUN+TuDpZ4avwu0IvLjt9M6pFPUBnk0WoPZaO9zIc+tXGLLjxj62v/h
+         D0+k28BwO+8Eg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Logan Gunthorpe <logang@deltatee.com>, Song Liu <song@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.0 36/67] md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
+Date:   Wed, 12 Oct 2022 20:15:17 -0400
+Message-Id: <20221013001554.1892206-36-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221013001554.1892206-1-sashal@kernel.org>
+References: <20221013001554.1892206-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Joe Perches
-> Sent: 12 October 2022 20:17
-> 
-> On Wed, 2022-10-05 at 23:48 +0200, Jason A. Donenfeld wrote:
-> > The prandom_u32() function has been a deprecated inline wrapper around
-> > get_random_u32() for several releases now, and compiles down to the
-> > exact same code. Replace the deprecated wrapper with a direct call to
-> > the real function.
-> []
-> > diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
-> []
-> > @@ -734,7 +734,7 @@ static int send_connect(struct c4iw_ep *ep)
-> >  				   &ep->com.remote_addr;
-> >  	int ret;
-> >  	enum chip_type adapter_type = ep->com.dev->rdev.lldi.adapter_type;
-> > -	u32 isn = (prandom_u32() & ~7UL) - 1;
-> > +	u32 isn = (get_random_u32() & ~7UL) - 1;
-> 
-> trivia:
-> 
-> There are somewhat odd size mismatches here.
-> 
-> I had to think a tiny bit if random() returned a value from 0 to 7
-> and was promoted to a 64 bit value then truncated to 32 bit.
-> 
-> Perhaps these would be clearer as ~7U and not ~7UL
+From: Logan Gunthorpe <logang@deltatee.com>
 
-That makes no difference - the compiler will generate the same code.
+[ Upstream commit 5e2cf333b7bd5d3e62595a44d598a254c697cd74 ]
 
-The real question is WTF is the code doing?
-The '& ~7u' clears the bottom 3 bits.
-The '- 1' then sets the bottom 3 bits and decrements the
-(random) high bits.
+A complicated deadlock exists when using the journal and an elevated
+group_thrtead_cnt. It was found with loop devices, but its not clear
+whether it can be seen with real disks. The deadlock can occur simply
+by writing data with an fio script.
 
-So is the same as get_random_u32() | 7.
-But I bet the coder had something else in mind.
+When the deadlock occurs, multiple threads will hang in different ways:
 
-	David
+ 1) The group threads will hang in the blk-wbt code with bios waiting to
+    be submitted to the block layer:
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+        io_schedule+0x70/0xb0
+        rq_qos_wait+0x153/0x210
+        wbt_wait+0x115/0x1b0
+        io_schedule+0x70/0xb0
+        rq_qos_wait+0x153/0x210
+        wbt_wait+0x115/0x1b0
+        __rq_qos_throttle+0x38/0x60
+        blk_mq_submit_bio+0x589/0xcd0
+        wbt_wait+0x115/0x1b0
+        __rq_qos_throttle+0x38/0x60
+        blk_mq_submit_bio+0x589/0xcd0
+        __submit_bio+0xe6/0x100
+        submit_bio_noacct_nocheck+0x42e/0x470
+        submit_bio_noacct+0x4c2/0xbb0
+        ops_run_io+0x46b/0x1a30
+        handle_stripe+0xcd3/0x36b0
+        handle_active_stripes.constprop.0+0x6f6/0xa60
+        raid5_do_work+0x177/0x330
+
+    Or:
+        io_schedule+0x70/0xb0
+        rq_qos_wait+0x153/0x210
+        wbt_wait+0x115/0x1b0
+        __rq_qos_throttle+0x38/0x60
+        blk_mq_submit_bio+0x589/0xcd0
+        __submit_bio+0xe6/0x100
+        submit_bio_noacct_nocheck+0x42e/0x470
+        submit_bio_noacct+0x4c2/0xbb0
+        flush_deferred_bios+0x136/0x170
+        raid5_do_work+0x262/0x330
+
+ 2) The r5l_reclaim thread will hang in the same way, submitting a
+    bio to the block layer:
+
+        io_schedule+0x70/0xb0
+        rq_qos_wait+0x153/0x210
+        wbt_wait+0x115/0x1b0
+        __rq_qos_throttle+0x38/0x60
+        blk_mq_submit_bio+0x589/0xcd0
+        __submit_bio+0xe6/0x100
+        submit_bio_noacct_nocheck+0x42e/0x470
+        submit_bio_noacct+0x4c2/0xbb0
+        submit_bio+0x3f/0xf0
+        md_super_write+0x12f/0x1b0
+        md_update_sb.part.0+0x7c6/0xff0
+        md_update_sb+0x30/0x60
+        r5l_do_reclaim+0x4f9/0x5e0
+        r5l_reclaim_thread+0x69/0x30b
+
+    However, before hanging, the MD_SB_CHANGE_PENDING flag will be
+    set for sb_flags in r5l_write_super_and_discard_space(). This
+    flag will never be cleared because the submit_bio() call never
+    returns.
+
+ 3) Due to the MD_SB_CHANGE_PENDING flag being set, handle_stripe()
+    will do no processing on any pending stripes and re-set
+    STRIPE_HANDLE. This will cause the raid5d thread to enter an
+    infinite loop, constantly trying to handle the same stripes
+    stuck in the queue.
+
+    The raid5d thread has a blk_plug that holds a number of bios
+    that are also stuck waiting seeing the thread is in a loop
+    that never schedules. These bios have been accounted for by
+    blk-wbt thus preventing the other threads above from
+    continuing when they try to submit bios. --Deadlock.
+
+To fix this, add the same wait_event() that is used in raid5_do_work()
+to raid5d() such that if MD_SB_CHANGE_PENDING is set, the thread will
+schedule and wait until the flag is cleared. The schedule action will
+flush the plug which will allow the r5l_reclaim thread to continue,
+thus preventing the deadlock.
+
+However, md_check_recovery() calls can also clear MD_SB_CHANGE_PENDING
+from the same thread and can thus deadlock if the thread is put to
+sleep. So avoid waiting if md_check_recovery() is being called in the
+loop.
+
+It's not clear when the deadlock was introduced, but the similar
+wait_event() call in raid5_do_work() was added in 2017 by this
+commit:
+
+    16d997b78b15 ("md/raid5: simplfy delaying of writes while metadata
+                   is updated.")
+
+Link: https://lore.kernel.org/r/7f3b87b6-b52a-f737-51d7-a4eec5c44112@deltatee.com
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Song Liu <song@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/raid5.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 31a0cbf63384..ffae21aaf306 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -36,6 +36,7 @@
+  */
+ 
+ #include <linux/blkdev.h>
++#include <linux/delay.h>
+ #include <linux/kthread.h>
+ #include <linux/raid/pq.h>
+ #include <linux/async_tx.h>
+@@ -6781,7 +6782,18 @@ static void raid5d(struct md_thread *thread)
+ 			spin_unlock_irq(&conf->device_lock);
+ 			md_check_recovery(mddev);
+ 			spin_lock_irq(&conf->device_lock);
++
++			/*
++			 * Waiting on MD_SB_CHANGE_PENDING below may deadlock
++			 * seeing md_check_recovery() is needed to clear
++			 * the flag when using mdmon.
++			 */
++			continue;
+ 		}
++
++		wait_event_lock_irq(mddev->sb_wait,
++			!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags),
++			conf->device_lock);
+ 	}
+ 	pr_debug("%d stripes handled\n", handled);
+ 
+-- 
+2.35.1
 
