@@ -2,212 +2,190 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8319DC433FE
-	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 01:17:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F527C4332F
+	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 01:32:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229639AbiJMBRH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 Oct 2022 21:17:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47942 "EHLO
+        id S229929AbiJMBc0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Oct 2022 21:32:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230392AbiJMBQq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Oct 2022 21:16:46 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB8F0D8EC3
-        for <linux-raid@vger.kernel.org>; Wed, 12 Oct 2022 18:15:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1665623649;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=N0Byx2bgYmFLKlhgaK0IR+lobbgzJzqZq2FLRANpW1w=;
-        b=MzxGuZhEjbYcB++/fqY1uTWlCCk5LYVv+qB6eT1lLh0jK+etGtsniGL2PJe2Ps88AlDNJ0
-        wbUiXsxSfS+H7k4lsHcLSX7/Ze8pj6afWeDRWyHPRK47woToZcoktK+YiJPuHB/AZaHHQn
-        8qOwLXwolGk43xsnDwhTKezSVakauIU=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-629-8Y8Ba6mjNEudHrZXXKtZWg-1; Wed, 12 Oct 2022 20:45:20 -0400
-X-MC-Unique: 8Y8Ba6mjNEudHrZXXKtZWg-1
-Received: by mail-pj1-f71.google.com with SMTP id bx24-20020a17090af49800b0020d9ac4b475so235062pjb.4
-        for <linux-raid@vger.kernel.org>; Wed, 12 Oct 2022 17:45:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=N0Byx2bgYmFLKlhgaK0IR+lobbgzJzqZq2FLRANpW1w=;
-        b=kGyoa6MAbe0ySQXgmskS9boIK48N/Wmn7h+5YX9D3xXzZ8sq0zQjRWZJXD5cd6Bw3i
-         YyCwvKiSDKYJw0XX7WEG8umJYlq8QXbqSiXwrH4Pl/LGlAhxM1ilrPeZgZ70P34PwBmH
-         m+o/gEC+AmPXEUpPD7DhhtPOLyK28DtA5y5p0pSSYDpUMUbM4tremyYyKYxnh6at8ich
-         JhgVN6FY9gWu75d7zqOzbs4i6rMYtmSD+kH5C/idVvxJ3xEcU9FqLEprk3R23UMEzNUF
-         /ea8Dd5K9IvOC0eh9iVBq/yRrMufHnY32ON240K1U74Fw+MhpiH0P/qMDhwoHg1NaqY4
-         ytQg==
-X-Gm-Message-State: ACrzQf1rQYJAyAtK3W9X0Zucb4oZL2cyeZ9eJONnu58HkdGSV7Qh6WJs
-        rWXhgFt/JjolkPDUBczn78mmojy9fNULplSiZ6v1IxXKb2zf+aPjzBNvG8BAxKcPZfnWcATCluf
-        uY5pU4VWtW42Ekbw/NDudmHIl5ddLLbk8yc2lhQ==
-X-Received: by 2002:a17:90a:eb0b:b0:20c:e5fa:db6d with SMTP id j11-20020a17090aeb0b00b0020ce5fadb6dmr8340451pjz.73.1665621919692;
-        Wed, 12 Oct 2022 17:45:19 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM4LhWsxc9lJ1ly4HYYIKIWQzp1QAaqQAk+ifzYbLjwRkwIR6xrHk5bYuEGvxJYFnTqFRlLHoXnVzmgvalEwYXo=
-X-Received: by 2002:a17:90a:eb0b:b0:20c:e5fa:db6d with SMTP id
- j11-20020a17090aeb0b00b0020ce5fadb6dmr8340429pjz.73.1665621919393; Wed, 12
- Oct 2022 17:45:19 -0700 (PDT)
+        with ESMTP id S229605AbiJMBcY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Oct 2022 21:32:24 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F38961D4A;
+        Wed, 12 Oct 2022 18:32:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1118C616C0;
+        Thu, 13 Oct 2022 00:26:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA6A0C4347C;
+        Thu, 13 Oct 2022 00:26:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665620804;
+        bh=pDfWdgrmGL3v4gY+NvOwF/FcqsCCUIwrxA9uS0UWmtw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=etsSi+J1zes3vHxAasqhzOjLN1iAZih0wJ1hzPTljjG/fEFzQzKT1blUZwm50RSqp
+         x37bUYlG1h0UaKgf2SjLtu7qdCgBGvEq2iOxwcZDNkJQkwPO1EZFx09RoNjkiLO8bc
+         EyCmpP2hxY8CDeXhLzDzqJ67e45y4L5+OlsupW1CoV6ivQ3j8VV3lPNXsgnEkg4Ow3
+         1PDU/DZuPHFNpsdrAuxIToisbvgIfcqgVNOdb76KN/Qj5Unc/3bJJfv/z11Lp11Z/S
+         hNfV0Q+JfY0pV3hZ1ULKwW880lVflN205t8h3MInSfNPsQfiAv58tgLWv95dzQ/LA8
+         nj9B0VL47lJ1Q==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Logan Gunthorpe <logang@deltatee.com>, Song Liu <song@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 10/19] md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d
+Date:   Wed, 12 Oct 2022 20:26:09 -0400
+Message-Id: <20221013002623.1895576-10-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221013002623.1895576-1-sashal@kernel.org>
+References: <20221013002623.1895576-1-sashal@kernel.org>
 MIME-Version: 1.0
-References: <20221012091151.71241-1-xni@redhat.com>
-In-Reply-To: <20221012091151.71241-1-xni@redhat.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Thu, 13 Oct 2022 08:45:07 +0800
-Message-ID: <CALTww2_adYGMHo6je2-15oK5bN61k-hZccyG+Qdu6LJw_ap_aQ@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Add mddev->io_acct_cnt for raid0_quiesce
-To:     song@kernel.org
-Cc:     ffan@redhat.com, guoqing.jiang@linux.dev,
-        linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Please ignore this patch. Now there is no place to wake up raid0_quiesce.
-I'll send a new one.
+From: Logan Gunthorpe <logang@deltatee.com>
 
-Regards
-Xiao
+[ Upstream commit 5e2cf333b7bd5d3e62595a44d598a254c697cd74 ]
 
-On Wed, Oct 12, 2022 at 5:12 PM Xiao Ni <xni@redhat.com> wrote:
->
-> It has added io_acct_set for raid0/raid5 io accounting and it needs to
-> alloc md_io_acct in the i/o path. They are free when the bios come back
-> from member disks. Now we don't have a method to monitor if those bios
-> are all come back. In the takeover process, it needs to free the raid0
-> memory resource including the memory pool for md_io_acct. But maybe some
-> bios are still not returned. When those bios are returned, it can cause
-> panic bcause of introducing NULL pointer or invalid address.
->
-> This patch adds io_acct_cnt. So when stopping raid0, it can use this
-> to wait until all bios come back.
->
-> Reported-by: Fine Fan <ffan@redhat.com>
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->  drivers/md/md.c    | 10 +++++++++-
->  drivers/md/md.h    |  8 +++++---
->  drivers/md/raid0.c |  8 ++++++++
->  drivers/md/raid0.h |  1 +
->  4 files changed, 23 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9dc0175280b4..d6e9fa914087 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8600,15 +8600,18 @@ int acct_bioset_init(struct mddev *mddev)
->  {
->         int err = 0;
->
-> -       if (!bioset_initialized(&mddev->io_acct_set))
-> +       if (!bioset_initialized(&mddev->io_acct_set)) {
-> +               atomic_set(&mddev->io_acct_cnt, 0);
->                 err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
->                         offsetof(struct md_io_acct, bio_clone), 0);
-> +       }
->         return err;
->  }
->  EXPORT_SYMBOL_GPL(acct_bioset_init);
->
->  void acct_bioset_exit(struct mddev *mddev)
->  {
-> +       WARN_ON(atomic_read(&mddev->io_acct_cnt) != 0);
->         bioset_exit(&mddev->io_acct_set);
->  }
->  EXPORT_SYMBOL_GPL(acct_bioset_exit);
-> @@ -8617,12 +8620,15 @@ static void md_end_io_acct(struct bio *bio)
->  {
->         struct md_io_acct *md_io_acct = bio->bi_private;
->         struct bio *orig_bio = md_io_acct->orig_bio;
-> +       struct mddev *mddev = md_io_acct->mddev;
->
->         orig_bio->bi_status = bio->bi_status;
->
->         bio_end_io_acct(orig_bio, md_io_acct->start_time);
->         bio_put(bio);
->         bio_endio(orig_bio);
-> +
-> +       atomic_dec(&mddev->io_acct_cnt);
->  }
->
->  /*
-> @@ -8642,6 +8648,8 @@ void md_account_bio(struct mddev *mddev, struct bio **bio)
->         md_io_acct = container_of(clone, struct md_io_acct, bio_clone);
->         md_io_acct->orig_bio = *bio;
->         md_io_acct->start_time = bio_start_io_acct(*bio);
-> +       md_io_acct->mddev = mddev;
-> +       atomic_inc(&mddev->io_acct_cnt);
->
->         clone->bi_end_io = md_end_io_acct;
->         clone->bi_private = md_io_acct;
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index b4e2d8b87b61..29d30642e13f 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -513,6 +513,7 @@ struct mddev {
->                                                    * metadata and bitmap writes
->                                                    */
->         struct bio_set                  io_acct_set; /* for raid0 and raid5 io accounting */
-> +       atomic_t                        io_acct_cnt;
->
->         /* Generic flush handling.
->          * The last to finish preflush schedules a worker to submit
-> @@ -710,9 +711,10 @@ struct md_thread {
->  };
->
->  struct md_io_acct {
-> -       struct bio *orig_bio;
-> -       unsigned long start_time;
-> -       struct bio bio_clone;
-> +       struct bio      *orig_bio;
-> +       unsigned long   start_time;
-> +       struct bio      bio_clone;
-> +       struct mddev    *mddev;
->  };
->
->  #define THREAD_WAKEUP  0
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 857c49399c28..1d2e098e0d52 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -73,6 +73,8 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
->         *private_conf = ERR_PTR(-ENOMEM);
->         if (!conf)
->                 return -ENOMEM;
-> +
-> +       init_waitqueue_head(&conf->wait_quiesce);
->         rdev_for_each(rdev1, mddev) {
->                 pr_debug("md/raid0:%s: looking at %pg\n",
->                          mdname(mddev),
-> @@ -754,6 +756,12 @@ static void *raid0_takeover(struct mddev *mddev)
->
->  static void raid0_quiesce(struct mddev *mddev, int quiesce)
->  {
-> +       struct r0conf *conf = mddev->private;
-> +
-> +       /* It doesn't use a separate struct to count how many bios are submitted
-> +        * to member disks to avoid memory alloc and performance decrease
-> +        */
-> +       wait_event(conf->wait_quiesce, atomic_read(&mddev->io_acct_cnt) == 0);
->  }
->
->  static struct md_personality raid0_personality=
-> diff --git a/drivers/md/raid0.h b/drivers/md/raid0.h
-> index 3816e5477db1..560dec93d459 100644
-> --- a/drivers/md/raid0.h
-> +++ b/drivers/md/raid0.h
-> @@ -27,6 +27,7 @@ struct r0conf {
->                                             * by strip_zone->dev */
->         int                     nr_strip_zones;
->         enum r0layout           layout;
-> +       wait_queue_head_t       wait_quiesce;
->  };
->
->  #endif
-> --
-> 2.32.0 (Apple Git-132)
->
+A complicated deadlock exists when using the journal and an elevated
+group_thrtead_cnt. It was found with loop devices, but its not clear
+whether it can be seen with real disks. The deadlock can occur simply
+by writing data with an fio script.
+
+When the deadlock occurs, multiple threads will hang in different ways:
+
+ 1) The group threads will hang in the blk-wbt code with bios waiting to
+    be submitted to the block layer:
+
+        io_schedule+0x70/0xb0
+        rq_qos_wait+0x153/0x210
+        wbt_wait+0x115/0x1b0
+        io_schedule+0x70/0xb0
+        rq_qos_wait+0x153/0x210
+        wbt_wait+0x115/0x1b0
+        __rq_qos_throttle+0x38/0x60
+        blk_mq_submit_bio+0x589/0xcd0
+        wbt_wait+0x115/0x1b0
+        __rq_qos_throttle+0x38/0x60
+        blk_mq_submit_bio+0x589/0xcd0
+        __submit_bio+0xe6/0x100
+        submit_bio_noacct_nocheck+0x42e/0x470
+        submit_bio_noacct+0x4c2/0xbb0
+        ops_run_io+0x46b/0x1a30
+        handle_stripe+0xcd3/0x36b0
+        handle_active_stripes.constprop.0+0x6f6/0xa60
+        raid5_do_work+0x177/0x330
+
+    Or:
+        io_schedule+0x70/0xb0
+        rq_qos_wait+0x153/0x210
+        wbt_wait+0x115/0x1b0
+        __rq_qos_throttle+0x38/0x60
+        blk_mq_submit_bio+0x589/0xcd0
+        __submit_bio+0xe6/0x100
+        submit_bio_noacct_nocheck+0x42e/0x470
+        submit_bio_noacct+0x4c2/0xbb0
+        flush_deferred_bios+0x136/0x170
+        raid5_do_work+0x262/0x330
+
+ 2) The r5l_reclaim thread will hang in the same way, submitting a
+    bio to the block layer:
+
+        io_schedule+0x70/0xb0
+        rq_qos_wait+0x153/0x210
+        wbt_wait+0x115/0x1b0
+        __rq_qos_throttle+0x38/0x60
+        blk_mq_submit_bio+0x589/0xcd0
+        __submit_bio+0xe6/0x100
+        submit_bio_noacct_nocheck+0x42e/0x470
+        submit_bio_noacct+0x4c2/0xbb0
+        submit_bio+0x3f/0xf0
+        md_super_write+0x12f/0x1b0
+        md_update_sb.part.0+0x7c6/0xff0
+        md_update_sb+0x30/0x60
+        r5l_do_reclaim+0x4f9/0x5e0
+        r5l_reclaim_thread+0x69/0x30b
+
+    However, before hanging, the MD_SB_CHANGE_PENDING flag will be
+    set for sb_flags in r5l_write_super_and_discard_space(). This
+    flag will never be cleared because the submit_bio() call never
+    returns.
+
+ 3) Due to the MD_SB_CHANGE_PENDING flag being set, handle_stripe()
+    will do no processing on any pending stripes and re-set
+    STRIPE_HANDLE. This will cause the raid5d thread to enter an
+    infinite loop, constantly trying to handle the same stripes
+    stuck in the queue.
+
+    The raid5d thread has a blk_plug that holds a number of bios
+    that are also stuck waiting seeing the thread is in a loop
+    that never schedules. These bios have been accounted for by
+    blk-wbt thus preventing the other threads above from
+    continuing when they try to submit bios. --Deadlock.
+
+To fix this, add the same wait_event() that is used in raid5_do_work()
+to raid5d() such that if MD_SB_CHANGE_PENDING is set, the thread will
+schedule and wait until the flag is cleared. The schedule action will
+flush the plug which will allow the r5l_reclaim thread to continue,
+thus preventing the deadlock.
+
+However, md_check_recovery() calls can also clear MD_SB_CHANGE_PENDING
+from the same thread and can thus deadlock if the thread is put to
+sleep. So avoid waiting if md_check_recovery() is being called in the
+loop.
+
+It's not clear when the deadlock was introduced, but the similar
+wait_event() call in raid5_do_work() was added in 2017 by this
+commit:
+
+    16d997b78b15 ("md/raid5: simplfy delaying of writes while metadata
+                   is updated.")
+
+Link: https://lore.kernel.org/r/7f3b87b6-b52a-f737-51d7-a4eec5c44112@deltatee.com
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Song Liu <song@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/raid5.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 6f04473f0838..cf021a7801d6 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -44,6 +44,7 @@
+  */
+ 
+ #include <linux/blkdev.h>
++#include <linux/delay.h>
+ #include <linux/kthread.h>
+ #include <linux/raid/pq.h>
+ #include <linux/async_tx.h>
+@@ -6329,7 +6330,18 @@ static void raid5d(struct md_thread *thread)
+ 			spin_unlock_irq(&conf->device_lock);
+ 			md_check_recovery(mddev);
+ 			spin_lock_irq(&conf->device_lock);
++
++			/*
++			 * Waiting on MD_SB_CHANGE_PENDING below may deadlock
++			 * seeing md_check_recovery() is needed to clear
++			 * the flag when using mdmon.
++			 */
++			continue;
+ 		}
++
++		wait_event_lock_irq(mddev->sb_wait,
++			!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags),
++			conf->device_lock);
+ 	}
+ 	pr_debug("%d stripes handled\n", handled);
+ 
+-- 
+2.35.1
 
