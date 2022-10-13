@@ -2,147 +2,133 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE8ECC433FE
-	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 01:43:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37650C4332F
+	for <linux-raid@archiver.kernel.org>; Thu, 13 Oct 2022 07:51:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229757AbiJMBn1 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 Oct 2022 21:43:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52382 "EHLO
+        id S229749AbiJMHv3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 13 Oct 2022 03:51:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbiJMBnV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Oct 2022 21:43:21 -0400
-Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7678936DEB;
-        Wed, 12 Oct 2022 18:43:19 -0700 (PDT)
-Received: from omf20.hostedemail.com (a10.router.float.18 [10.200.18.1])
-        by unirelay02.hostedemail.com (Postfix) with ESMTP id 640C9120237;
-        Thu, 13 Oct 2022 01:37:28 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf20.hostedemail.com (Postfix) with ESMTPA id 56EDD20026;
-        Thu, 13 Oct 2022 01:37:01 +0000 (UTC)
-Message-ID: <3f527ec95a12135eb40f5f2d156a2954feb7fbfe.camel@perches.com>
-Subject: Re: [PATCH v1 3/5] treewide: use get_random_u32() when possible
-From:   Joe Perches <joe@perches.com>
-To:     David Laight <David.Laight@ACULAB.COM>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc:     "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-sctp@vger.kernel.org" <linux-sctp@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-        "linux-stm32@st-md-mailman.stormreply.com" 
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
-        "dev@openvswitch.org" <dev@openvswitch.org>,
-        "rds-devel@oss.oracle.com" <rds-devel@oss.oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "dccp@vger.kernel.org" <dccp@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "lvs-devel@vger.kernel.org" <lvs-devel@vger.kernel.org>,
-        "SHA-cyfmac-dev-list@infineon.com" <SHA-cyfmac-dev-list@infineon.com>,
-        "coreteam@netfilter.org" <coreteam@netfilter.org>,
-        "tipc-discussion@lists.sourceforge.net" 
-        <tipc-discussion@lists.sourceforge.net>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-actions@lists.infradead.org" 
-        <linux-actions@lists.infradead.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-hams@vger.kernel.org" <linux-hams@vger.kernel.org>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "cake@lists.bufferbloat.net" <cake@lists.bufferbloat.net>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-f2fs-devel@lists.sourceforge.net" 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "netfilter-devel@vger.kernel.org" <netfilter-devel@vger.kernel.org>,
-        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Date:   Wed, 12 Oct 2022 18:37:11 -0700
-In-Reply-To: <d45bd258e033453b85a137112e7694e1@AcuMS.aculab.com>
-References: <20221005214844.2699-1-Jason@zx2c4.com>
-         <20221005214844.2699-4-Jason@zx2c4.com>
-         <f8ad3ba44d28dec1a5f7626b82c5e9c2aeefa729.camel@perches.com>
-         <d45bd258e033453b85a137112e7694e1@AcuMS.aculab.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8BIT
-User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
+        with ESMTP id S229683AbiJMHv2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 13 Oct 2022 03:51:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45BB768888
+        for <linux-raid@vger.kernel.org>; Thu, 13 Oct 2022 00:51:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1665647486;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yAWP4bcWfxX91VgxzqYoNJ7nC6UkZzpQsQvg2NZ/hlc=;
+        b=A1ntCr8LwtmS/7Ggpm+anMK6D0BPlgnRkJxBc85vH+GKGL7bB2WxEg/dfXfk7ndBi4IoX+
+        kzcZnjyk4OZbH0E2lC3Jnz2zMLBc65D23D6juQ6v8bGKO1gouJXYF38SRRDOKHa1TKgZNU
+        fQzata42Tpqz1ZGowA+sYBSTPB/ALmY=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-210-y3qAuVfTNvePAszUAu9YNA-1; Thu, 13 Oct 2022 03:51:25 -0400
+X-MC-Unique: y3qAuVfTNvePAszUAu9YNA-1
+Received: by mail-pg1-f199.google.com with SMTP id y71-20020a638a4a000000b0046014b2258dso619899pgd.19
+        for <linux-raid@vger.kernel.org>; Thu, 13 Oct 2022 00:51:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=yAWP4bcWfxX91VgxzqYoNJ7nC6UkZzpQsQvg2NZ/hlc=;
+        b=7OmBj88Fsd0/XQBRv5wVyDxbwCR4qzNMAzCw4OTt5qLESlcX/ymJ6irakJpewng9ZL
+         TnB3vr3fFxyTWg9VSPIvh1tdxAOyREOYYUUs58E4Pjd1RgM7i86xFiDUWpGKf7RvuMuM
+         LF/e0HjRDSrmD3QZE5e16v/3LtW5o5b/SAsylWDaHfCvkyIjfiQ7s4mgax1kt5XGuZLR
+         tUTQ7yRTkGZFv8wv3gNuoMuRinU6xfbseGtaVUx8EuM79ZqnrZ2Yb1Z6r8YSBZAc1pBE
+         DhRpR5CxI33Z3g45KWF7eRUy09KYVhg4BcMa/aXbuyLndeGPCkfEqqL9dEkgB1hNMy2m
+         pkbg==
+X-Gm-Message-State: ACrzQf1faqt8psMGINCt9ceG2VJGeTP0F0hsgMKdWVEKSEQmg4kID6Au
+        wpwmWC/Da8y15WHQqWypRNvvBvllrSnTQ8CKqez2MCS6Hb0kmDXnR1In3DE2EkmXZRUM5ugWA+x
+        DyRIeKigKxLyekYN4YEPwkFeKler4Ui4rg6q8DQ==
+X-Received: by 2002:a17:902:da8a:b0:180:6f4f:beee with SMTP id j10-20020a170902da8a00b001806f4fbeeemr29855043plx.82.1665647484073;
+        Thu, 13 Oct 2022 00:51:24 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM7UHMyxkcPFxjY1mSFY5+PnowUpCFE+kUfkMGKcHQ+f3QvYHgQPvpSFLbLGaKLbNrKFtqRJXu0wSF5txj2am0A=
+X-Received: by 2002:a17:902:da8a:b0:180:6f4f:beee with SMTP id
+ j10-20020a170902da8a00b001806f4fbeeemr29855033plx.82.1665647483798; Thu, 13
+ Oct 2022 00:51:23 -0700 (PDT)
 MIME-Version: 1.0
-X-Stat-Signature: jmxt1u5agdpi9w76hr4tp6uotie3p373
-X-Rspamd-Server: rspamout03
-X-Rspamd-Queue-Id: 56EDD20026
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX18KEIRmyyr9pSEavQqF5X0dTzAEITyiJq4=
-X-HE-Tag: 1665625021-540494
+References: <20221007201037.20263-1-logang@deltatee.com> <CALTww28HQUPbB647oP9WKvkLX=9PqZv+9am-884zZVM923H-KA@mail.gmail.com>
+ <8ee5368c-1808-d2bc-9ad2-2f8332d2704e@deltatee.com> <yq15ygo4jkv.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq15ygo4jkv.fsf@ca-mkp.ca.oracle.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Thu, 13 Oct 2022 15:51:12 +0800
+Message-ID: <CALTww28XKzYmKrVQn=yYyq3xpjcEDzz1Bao+eLx3LR5mbm333Q@mail.gmail.com>
+Subject: Re: [PATCH mdadm v4 0/7] Write Zeroes option for Creating Arrays
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Logan Gunthorpe <logang@deltatee.com>, linux-raid@vger.kernel.org,
+        Jes Sorensen <jes@trained-monkey.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Coly Li <colyli@suse.de>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Jonmichael Hands <jm@chia.net>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 2022-10-12 at 21:29 +0000, David Laight wrote:
-> From: Joe Perches
-> > Sent: 12 October 2022 20:17
-> > 
-> > On Wed, 2022-10-05 at 23:48 +0200, Jason A. Donenfeld wrote:
-> > > The prandom_u32() function has been a deprecated inline wrapper around
-> > > get_random_u32() for several releases now, and compiles down to the
-> > > exact same code. Replace the deprecated wrapper with a direct call to
-> > > the real function.
-> > []
-> > > diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
-> > []
-> > > @@ -734,7 +734,7 @@ static int send_connect(struct c4iw_ep *ep)
-> > >  				   &ep->com.remote_addr;
-> > >  	int ret;
-> > >  	enum chip_type adapter_type = ep->com.dev->rdev.lldi.adapter_type;
-> > > -	u32 isn = (prandom_u32() & ~7UL) - 1;
-> > > +	u32 isn = (get_random_u32() & ~7UL) - 1;
-> > 
-> > trivia:
-> > 
-> > There are somewhat odd size mismatches here.
-> > 
-> > I had to think a tiny bit if random() returned a value from 0 to 7
-> > and was promoted to a 64 bit value then truncated to 32 bit.
-> > 
-> > Perhaps these would be clearer as ~7U and not ~7UL
-> 
-> That makes no difference - the compiler will generate the same code.
+On Thu, Oct 13, 2022 at 9:34 AM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Logan,
+>
+> > 2) We could split up the fallocate call into multiple calls to zero
+> > the entire disk. This would allow a quicker ctrl-c to occur, however
+> > it's not clear what the best size would be to split it into. Even
+> > zeroing 1GB can take a few seconds,
+>
+> FWIW, we default to 32MB per request in SCSI unless the device
+> explicitly advertises wanting something larger.
 
-True, more or less.  It's more a question for the reader.
+Hi Martin
 
-> The real question is WTF is the code doing?
+If the upper layer submit 1GB request, SCSI will split them and handle 32MB
+requests in default. If the upper layer wants SCSI to handle 1GB one time, it
+needs to pass some information to SCSI, right?
 
-True.
+>
+> > (with NVMe, discard only requires a single command to handle the
+> > entire disk
+>
+> In NVMe there's a limit of 64K blocks per range and 256 ranges per
+> request. So 8GB or 64GB per request for discard depending on the block
+> size. So presumably it will take several operations to deallocate an
+> entire drive.
 
-> The '& ~7u' clears the bottom 3 bits.
-> The '- 1' then sets the bottom 3 bits and decrements the
-> (random) high bits.
+Could you tell the command how to check the block size.
+blockdev --getsz tells the sector size of the device. It should not be the
+block size you mentioned here.
 
-Right.
+It looks like we can decide the best size once the blocksize is found.
 
-> So is the same as get_random_u32() | 7.
+Regards
+Xiao
 
-True, it's effectively the same as the upper 29 bits are random
-anyway and the bottom 3 bits are always set.
+>
+> > where as write-zeroes requires a minimum of one command per 2MB of
+> > data to zero).
+>
+> 32MB for 512-byte blocks and 256MB for 4096-byte blocks. Which matches
+> how it currently works for SCSI devices.
+>
+> > I was hoping write-zeroes could be made faster in the future, at least
+> > for NVMe.
+>
+> Deallocate had a bit of a head start and vendors are still catching up
+> in the zeroing department. Some drives do support using Deallocate for
+> zeroing and we quirk those in the driver so they should perform OK with
+> your change.
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
+>
 
-> But I bet the coder had something else in mind.
-
-Likely.
-
-And it was also likely copy/pasted a few times.
