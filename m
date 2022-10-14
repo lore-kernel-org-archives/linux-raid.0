@@ -2,157 +2,152 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49784C4332F
-	for <linux-raid@archiver.kernel.org>; Fri, 14 Oct 2022 01:11:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F380C43217
+	for <linux-raid@archiver.kernel.org>; Fri, 14 Oct 2022 12:20:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229646AbiJNBLQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 13 Oct 2022 21:11:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56948 "EHLO
+        id S229652AbiJNMUj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 14 Oct 2022 08:20:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229491AbiJNBLP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 13 Oct 2022 21:11:15 -0400
-Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAE7912B35B;
-        Thu, 13 Oct 2022 18:11:12 -0700 (PDT)
-Message-ID: <e8509e11-3a40-09ba-330e-1e8371eac323@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1665709870;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=qxNGLneyLXiEIftrmWJ7UR9IFJikkY+SVPP4K4jC414=;
-        b=AQcOVBmmnWzup8jej9bMok8KskVHNuJTxaJ5yoetWfZH6A1UApc8jvAxMXhruVHWkTERJJ
-        vErOe0yRFjEkQbGatCDV58uqb3MI3FXFUAO58yf/+dMGYHjve1ts/3EMOesOkyP1Zjb/2C
-        B3tFEnJpjT/3KWiMgNDRsyaEsIYLcrE=
-Date:   Thu, 13 Oct 2022 19:11:06 -0600
+        with ESMTP id S229581AbiJNMUg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 14 Oct 2022 08:20:36 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63903C34F4
+        for <linux-raid@vger.kernel.org>; Fri, 14 Oct 2022 05:20:35 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id b12so6596139edd.6
+        for <linux-raid@vger.kernel.org>; Fri, 14 Oct 2022 05:20:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=0uYEnGywvne9fopfNBzfu2ahTVWilZnjJ1QFZzgosUc=;
+        b=DNN/qK/uZh4ntKOmhei+A2BdCQsRN9P4mp9bgRidsYLBIjh7NoDLaTeCuhjDYxWclM
+         y5MTUxzWdEbUqn5UmtoxlsBGA2N9JadUQmpqEbGUqMg2iWSWO9+NrxoZKHV1ffVHs+fZ
+         6GupVD9sb20vhbdFA+2hfSqi3Xw2qAVCw/gXVuk8nGiepR8yVVccxWrw+bl5nOwJq8Bb
+         tohJ33uQfn8osOJjdSWsk8vA1M5epdW2Jbc1In3LuCIBUT2z3wWbAxvKXy3yUhiLQy97
+         DtAfJERbSurx0F9FO5dBl1Llzw95vwn1HO9NA/nQSa8D7OKFQmAQDpDGW1i1trTVEmSG
+         UTEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=0uYEnGywvne9fopfNBzfu2ahTVWilZnjJ1QFZzgosUc=;
+        b=wxKxdy5A/bauzQH+eWlOiYB0gDoMv9aY704t3+b9Iem3CRGtL7Q4BfG7rHByz/wOSB
+         oMu2ag3f08XPOuG19FwzAHxY/rVa0I8i7c6BUDf6mvUEVLOR6EWnzBbrdb9svjZctfp1
+         cDrOxrBAtEhVp4Ezwip8x0tWFZpdmqqtXsY/Eb4FvXbCjyh/FrzbecxmCBTfhPMIG2wT
+         TPTOqI7STJ1g9JrLAahFhfnRgQD6oLZewPYreO0QIFNNcsx5GOm0xSMk5sp4Fhhtp3Gq
+         imuyODmqWOoEo8LnOAt60SzDhnx/XTiYe23HlzkbMPAf63smmNDvRZZDiqEa2E0Htv8x
+         NzZw==
+X-Gm-Message-State: ACrzQf3gk7OUXUQel7Tjvd2FdNUwHIXP2H8jMlxVQTRTtuLwCUaONwAp
+        vrHRv8MbPbdLzc7N5LhqO7pkhjG2F+sLVQ==
+X-Google-Smtp-Source: AMsMyM4G/1ecYDdnbut2cQJjiuhiu4XMZzExls7CHQeoI0xP7/iQwPCSDVxeD3/OmM+eoeqRqi3deg==
+X-Received: by 2002:a05:6402:50cf:b0:45c:dfce:66ae with SMTP id h15-20020a05640250cf00b0045cdfce66aemr3846913edb.370.1665750033552;
+        Fri, 14 Oct 2022 05:20:33 -0700 (PDT)
+Received: from lb02065.fritz.box ([2001:9e8:141a:3e00:b256:9dae:b5ab:8180])
+        by smtp.gmail.com with ESMTPSA id j18-20020a508a92000000b00458b8d4f4d5sm1737141edj.57.2022.10.14.05.20.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Oct 2022 05:20:33 -0700 (PDT)
+From:   Jack Wang <jinpu.wang@ionos.com>
+To:     linux-raid@vger.kernel.org
+Cc:     song@kernel.org,
+        Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>,
+        stable@vger.kernel.org
+Subject: [PATCH] md/bitmap: Fix bitmap chunk size overflow issues.
+Date:   Fri, 14 Oct 2022 14:20:32 +0200
+Message-Id: <20221014122032.47784-1-jinpu.wang@ionos.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 1/3] md/bitmap: Add chunk-threshold unplugging
-Content-Language: en-US
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        jonathan.derrick@solidigm.com, jonathanx.sk.derrick@intel.com,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-References: <20221013224151.300-1-jonathan.derrick@linux.dev>
- <20221013224151.300-2-jonathan.derrick@linux.dev>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Jonathan Derrick <jonathan.derrick@linux.dev>
-In-Reply-To: <20221013224151.300-2-jonathan.derrick@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
 
+- limit bitmap chunk size internal u64 variable to values not overflowing
+  the u32 bitmap superblock structure variable stored on persistent media.
+- assign bitmap chunk size internal u64 variable from unsigned values to
+  avoid possible sign extension artifacts when assigning from a s32 value.
 
-On 10/13/2022 4:41 PM, Jonathan Derrick wrote:
-> Add a mechanism to allow bitmap unplugging and flushing to wait until it
-> has surpassed a defined threshold of dirty chunks. This allows certain
-> high I/O write workloads to make good forward progress between bitmap
-> updates or provide reliable bitmap consistency. The default behavior is
-> previous behavior of always unplugging when called.
-> 
-> Signed-off-by: Jonathan Derrick <jonathan.derrick@linux.dev>
-> ---
->  drivers/md/md-bitmap.c | 35 +++++++++++++++++++++++++++++++----
->  drivers/md/md-bitmap.h |  1 +
->  drivers/md/md.h        |  1 +
->  3 files changed, 33 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index bf6dffadbe6f..c5c77f8371a8 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1004,7 +1004,7 @@ static int md_bitmap_file_test_bit(struct bitmap *bitmap, sector_t block)
->  /* this gets called when the md device is ready to unplug its underlying
->   * (slave) device queues -- before we let any writes go down, we need to
->   * sync the dirty pages of the bitmap file to disk */
-> -void md_bitmap_unplug(struct bitmap *bitmap)
-> +static void __md_bitmap_unplug(struct bitmap *bitmap)
->  {
->  	unsigned long i;
->  	int dirty, need_write;
-> @@ -1038,6 +1038,33 @@ void md_bitmap_unplug(struct bitmap *bitmap)
->  	if (test_bit(BITMAP_WRITE_ERROR, &bitmap->flags))
->  		md_bitmap_file_kick(bitmap);
->  }
-> +
-> +/*
-> + * Conditional unplug based on user-defined parameter
-> + * Defaults to unconditional behavior
-> + */
-> +void md_bitmap_unplug(struct bitmap *bitmap)
-> +{
-> +	unsigned int flush_threshold = bitmap->mddev->bitmap_info.flush_threshold;
-> +
-> +	if (!flush_threshold) {
-> +		__md_bitmap_unplug(bitmap);
-> +	} else {
-> +		struct bitmap_page *bp = bitmap->counts.bp;
-> +		unsigned long pages = bitmap->counts.pages;
-> +		unsigned long k, count = 0;
-> +
-> +		for (k = 0; k < pages; k++)
-> +			if (bp[k].map && !bp[k].hijacked)
-> +				count += bp[k].count;
-> +
-> +		if (count - bitmap->unplugged_count > flush_threshold) {
-> +			bitmap->unplugged_count = count;
-> +			md_bitmap_daemon_work(&bitmap->mddev->daemon_timer);
-I just noticed I call daemon_timer before adding it in 3/3
-I'll fix that in v3
+The bug has been there since at least kernel 4.0.
 
-> +			__md_bitmap_unplug(bitmap);
-> +		}
-> +	}
-> +}
->  EXPORT_SYMBOL(md_bitmap_unplug);
->  
->  static void md_bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int needed);
-> @@ -2012,9 +2039,9 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
->  		for (i = 0; i < bitmap->storage.file_pages; i++)
->  			if (test_page_attr(bitmap, i, BITMAP_PAGE_PENDING))
->  				set_page_attr(bitmap, i, BITMAP_PAGE_NEEDWRITE);
-> -		md_bitmap_unplug(bitmap);
-> +		__md_bitmap_unplug(bitmap);
->  	}
-> -	md_bitmap_unplug(mddev->bitmap);
-> +	__md_bitmap_unplug(mddev->bitmap);
->  	*low = lo;
->  	*high = hi;
->  	md_bitmap_free(bitmap);
-> @@ -2246,7 +2273,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
->  	spin_unlock_irq(&bitmap->counts.lock);
->  
->  	if (!init) {
-> -		md_bitmap_unplug(bitmap);
-> +		__md_bitmap_unplug(bitmap);
->  		bitmap->mddev->pers->quiesce(bitmap->mddev, 0);
->  	}
->  	ret = 0;
-> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-> index cfd7395de8fd..49a93d8ff307 100644
-> --- a/drivers/md/md-bitmap.h
-> +++ b/drivers/md/md-bitmap.h
-> @@ -223,6 +223,7 @@ struct bitmap {
->  	unsigned long daemon_lastrun; /* jiffies of last run */
->  	unsigned long last_end_sync; /* when we lasted called end_sync to
->  				      * update bitmap with resync progress */
-> +	unsigned long unplugged_count; /* last dirty count from md_bitmap_unplug */
->  
->  	atomic_t pending_writes; /* pending writes to the bitmap file */
->  	wait_queue_head_t write_wait;
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index b4e2d8b87b61..1a558cb18bd4 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -501,6 +501,7 @@ struct mddev {
->  		int			external;
->  		int			nodes; /* Maximum number of nodes in the cluster */
->  		char                    cluster_name[64]; /* Name of the cluster */
-> +		unsigned int		flush_threshold; /* how many dirty chunks between updates */
->  	} bitmap_info;
->  
->  	atomic_t			max_corr_read_errors; /* max read retries */
+Cc: stable@vger.kernel.org
+
+Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+---
+ drivers/md/md-bitmap.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index bf6dffadbe6f..b266711485a8 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -486,7 +486,7 @@ void md_bitmap_print_sb(struct bitmap *bitmap)
+ 	sb = kmap_atomic(bitmap->storage.sb_page);
+ 	pr_debug("%s: bitmap file superblock:\n", bmname(bitmap));
+ 	pr_debug("         magic: %08x\n", le32_to_cpu(sb->magic));
+-	pr_debug("       version: %d\n", le32_to_cpu(sb->version));
++	pr_debug("       version: %u\n", le32_to_cpu(sb->version));
+ 	pr_debug("          uuid: %08x.%08x.%08x.%08x\n",
+ 		 le32_to_cpu(*(__le32 *)(sb->uuid+0)),
+ 		 le32_to_cpu(*(__le32 *)(sb->uuid+4)),
+@@ -497,11 +497,11 @@ void md_bitmap_print_sb(struct bitmap *bitmap)
+ 	pr_debug("events cleared: %llu\n",
+ 		 (unsigned long long) le64_to_cpu(sb->events_cleared));
+ 	pr_debug("         state: %08x\n", le32_to_cpu(sb->state));
+-	pr_debug("     chunksize: %d B\n", le32_to_cpu(sb->chunksize));
+-	pr_debug("  daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
++	pr_debug("     chunksize: %u B\n", le32_to_cpu(sb->chunksize));
++	pr_debug("  daemon sleep: %us\n", le32_to_cpu(sb->daemon_sleep));
+ 	pr_debug("     sync size: %llu KB\n",
+ 		 (unsigned long long)le64_to_cpu(sb->sync_size)/2);
+-	pr_debug("max write behind: %d\n", le32_to_cpu(sb->write_behind));
++	pr_debug("max write behind: %u\n", le32_to_cpu(sb->write_behind));
+ 	kunmap_atomic(sb);
+ }
+ 
+@@ -2105,7 +2105,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 			bytes = DIV_ROUND_UP(chunks, 8);
+ 			if (!bitmap->mddev->bitmap_info.external)
+ 				bytes += sizeof(bitmap_super_t);
+-		} while (bytes > (space << 9));
++		} while (bytes > (space << 9) && (chunkshift + BITMAP_BLOCK_SHIFT) <
++			(BITS_PER_BYTE * sizeof(((bitmap_super_t *)0)->chunksize) - 1));
+ 	} else
+ 		chunkshift = ffz(~chunksize) - BITMAP_BLOCK_SHIFT;
+ 
+@@ -2150,7 +2151,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 	bitmap->counts.missing_pages = pages;
+ 	bitmap->counts.chunkshift = chunkshift;
+ 	bitmap->counts.chunks = chunks;
+-	bitmap->mddev->bitmap_info.chunksize = 1 << (chunkshift +
++	bitmap->mddev->bitmap_info.chunksize = 1UL << (chunkshift +
+ 						     BITMAP_BLOCK_SHIFT);
+ 
+ 	blocks = min(old_counts.chunks << old_counts.chunkshift,
+@@ -2176,8 +2177,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 				bitmap->counts.missing_pages = old_counts.pages;
+ 				bitmap->counts.chunkshift = old_counts.chunkshift;
+ 				bitmap->counts.chunks = old_counts.chunks;
+-				bitmap->mddev->bitmap_info.chunksize = 1 << (old_counts.chunkshift +
+-									     BITMAP_BLOCK_SHIFT);
++				bitmap->mddev->bitmap_info.chunksize =
++					1UL << (old_counts.chunkshift + BITMAP_BLOCK_SHIFT);
+ 				blocks = old_counts.chunks << old_counts.chunkshift;
+ 				pr_warn("Could not pre-allocate in-memory bitmap for cluster raid\n");
+ 				break;
+@@ -2534,6 +2535,9 @@ chunksize_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (csize < 512 ||
+ 	    !is_power_of_2(csize))
+ 		return -EINVAL;
++	if (csize >= (1UL << (BITS_PER_BYTE *
++		sizeof(((bitmap_super_t *)0)->chunksize))))
++		return -EOVERFLOW;
+ 	mddev->bitmap_info.chunksize = csize;
+ 	return len;
+ }
+-- 
+2.34.1
+
