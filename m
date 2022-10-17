@@ -2,97 +2,162 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83351C433FE
-	for <linux-raid@archiver.kernel.org>; Mon, 17 Oct 2022 05:15:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FB59C433FE
+	for <linux-raid@archiver.kernel.org>; Mon, 17 Oct 2022 10:10:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229660AbiJQFPy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 17 Oct 2022 01:15:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50914 "EHLO
+        id S230374AbiJQKKJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 17 Oct 2022 06:10:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229681AbiJQFPx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 Oct 2022 01:15:53 -0400
-X-Greylist: delayed 1393 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 16 Oct 2022 22:15:51 PDT
-Received: from www18.qth.com (www18.qth.com [69.16.238.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2143852E43
-        for <linux-raid@vger.kernel.org>; Sun, 16 Oct 2022 22:15:50 -0700 (PDT)
-Received: from [73.207.192.158] (port=48490 helo=jpo)
-        by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.95)
-        (envelope-from <davidtg-robot@justpickone.org>)
-        id 1okI7A-0000uS-5M
-        for linux-raid@vger.kernel.org;
-        Sun, 16 Oct 2022 23:52:36 -0500
-Date:   Mon, 17 Oct 2022 04:52:34 +0000
-From:   David T-G <davidtg-robot@justpickone.org>
-To:     Linux RAID list <linux-raid@vger.kernel.org>
-Subject: now that i've screwed up and apparently get to start over ...
-Message-ID: <20221017045234.GI20480@jpo>
+        with ESMTP id S230141AbiJQKKD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 Oct 2022 06:10:03 -0400
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D00002B1AE
+        for <linux-raid@vger.kernel.org>; Mon, 17 Oct 2022 03:09:55 -0700 (PDT)
+Received: by mail-ej1-x62f.google.com with SMTP id fy4so23728957ejc.5
+        for <linux-raid@vger.kernel.org>; Mon, 17 Oct 2022 03:09:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6DCblaajzz3mwQyFYu391W26ToVOeSQSUoFjijUTHs8=;
+        b=cdP6G3RjL4n4HZoBM6y19Ze4BwZNGN2JB+469S0Njn9VStt6GP8NlYSGS6XwVGtBCU
+         mApJkTsr+XsumQxWnzWxxThw25CoJ3xPnj0x7SrIDMCsqnOVFkOjy1JCxW22Xrna2peA
+         jG1Pec0q90Jw0xNpUc2C9pym+w8c6yQL0Ibj3ygMeiryaU9hDJElCPUHE3tUqu92BHjU
+         oeFfgMjDG3SZ67t/2avI6QmM3HHmm2lbL0DzrDzPeRTwBHI4yDI1iCXpIpigOnb9IWE9
+         rxfaeokwDvh6NNe1/YTS4kpO34KDYSfXA8enMgYh47+sUAoF8gPl0lk++7hWJn/j4vqf
+         g+Qw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6DCblaajzz3mwQyFYu391W26ToVOeSQSUoFjijUTHs8=;
+        b=ku63ry9yDHsJm9d4dSo+GkV+OnKi3j8jldpfhRre+h4Q6AFc/p7dMU6Bu65uvjvAOE
+         Phj+HOvtjGrYd26bZ5Rpj9OjsjSLVrbWaKReZiezodfI+uWX1HgmARc+goxzP/5t99EZ
+         9IHhxJStrjDrIPSNUrXdhc90+XKLgtg3+RavoVv4ITHHMf9W8GQiC/JhOpm7o62w7/Vu
+         deOFdRZJYZ8VgRQb8cjezgDc0y9FQ4t82MRSClzc6DXH/s1uCkbmTPbqw1w4n0QIlmU5
+         d3wmv9V473WYrc8muSypH+0sJ7ItWlwURAvo7q73L6dupz3qGLecF45YUnTvOQlm0feP
+         PAsg==
+X-Gm-Message-State: ACrzQf1axDkdWhwg7/6nK/9kqgMYagAxqG2dTqOoJh8UuvqjtMryhKU6
+        tmuKSRFZymWubx6PIZhRl7jBwGZJEnVJWg==
+X-Google-Smtp-Source: AMsMyM7gxAUO068ioP7tvUAylJaKTh59uHW+WkOLVXek9Z5dLzYRVg/Twfkt+NJ0cAfEoEteZ+bQVQ==
+X-Received: by 2002:a17:906:db07:b0:77b:82cf:54af with SMTP id xj7-20020a170906db0700b0077b82cf54afmr8231844ejb.666.1666001393209;
+        Mon, 17 Oct 2022 03:09:53 -0700 (PDT)
+Received: from lb02065.fritz.box ([2001:9e8:142e:f700:8ccf:9069:42be:668e])
+        by smtp.gmail.com with ESMTPSA id b21-20020aa7d495000000b004580862ffdbsm7040594edr.59.2022.10.17.03.09.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 Oct 2022 03:09:52 -0700 (PDT)
+From:   Jack Wang <jinpu.wang@ionos.com>
+To:     linux-raid@vger.kernel.org
+Cc:     song@kernel.org,
+        Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>,
+        stable@vger.kernel.org
+Subject: [PATCHv2] md/bitmap: Fix bitmap chunk size overflow issues
+Date:   Mon, 17 Oct 2022 12:09:51 +0200
+Message-Id: <20221017100951.22727-1-jinpu.wang@ionos.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-fccCC:  =F.sent
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - www18.qth.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - justpickone.org
-X-Get-Message-Sender-Via: www18.qth.com: authenticated_id: dmail@justpickone.org
-X-Authenticated-Sender: www18.qth.com: dmail@justpickone.org
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi, all --
+From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
 
-I have an existing system with a raw-partitioned /dev/sda (128G SSD)
-that I plan to convert to a mirrored boot drive.  I installed /dev/sde
-(256G SSD) and sliced it the same way (well, with a bigger 4th slice)
-and set up half mirrors in each partition.  I've been waiting for the
-opportunity to copy the sda partitions over to the new sde mirrors and
-then swap sda for a new 256G SSD and add the other half of each mirror.
+- limit bitmap chunk size internal u64 variable to values not overflowing
+  the u32 bitmap superblock structure variable stored on persistent media
+- assign bitmap chunk size internal u64 variable from unsigned values to
+  avoid possible sign extension artifacts when assigning from a s32 value
 
-So now I have just bought another 10T drive to add into the RAID-5 array
-(that's a whole separate project, of course), so I shut it all down and
-not only plugged in the big drive (but did nothing else with it) but also
-copied over each slice and figured hey, yippee, I'll reboot from the mirror
-and be another step forward.
+The bug has been there since at least kernel 4.0.
+Steps to reproduce it:
+1: mdadm -C /dev/mdx -l 1 --bitmap=internal --bitmap-chunk=256M -e 1.2
+-n2 /dev/rnbd1 /dev/rnbd2
+2 resize member device rnbd1 and rnbd2 to 8 TB
+3 mdadm --grow /dev/mdx --size=max
 
-Then GRUB puked all over itself and I can't get the stupid thing running
-at all now.  I've disconnected /dev/sde, I've disconnected all USB
-external drives, I've disconnected all internal drives, I've swapped out
-/dev/sda and put /dev/sde back, and I get that GRUB can't boot from a GPT
-disk ... except that /dev/sda has always been that!
+The bitmap_chunksize will overflow without patch.
 
-So now I might as well go ahead and install a fresh version into the
-alt-root slice in order to get GRUB working again and then figure out
-how to get back to the real-root original.  But ... do I slice the
-disk and create four mirrors or do I mirror the disk and create four
-partitions therein?  I was happy with four mirrors, but then there's
-the question of whether or not GRUB will work, and I don't really want
-to have to create another I've-lost-count partitions for /boot and /efi
-and whatever.  I've seen so much advice both ways, much of it from 2011
-and 2012, that I don't know which way to go!
+Cc: stable@vger.kernel.org
 
-My goal is to mirror two SSDs and have four
+Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+---
+v1->v2: extend commit message for steps to reproduce the problem.
+        fix the warning reported by buildbot
 
-  swap
-  real-root
-  alt-root
-  data
+ drivers/md/md-bitmap.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-partitions; however I get there so that I can boot from either root works
-for me.  Anyone have the "Simple Setup for Dummy David" instruction set?
-
-
-Thanks in advance!
-
-:-D
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index bf6dffadbe6f..d4bf7f603ef6 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -486,7 +486,7 @@ void md_bitmap_print_sb(struct bitmap *bitmap)
+ 	sb = kmap_atomic(bitmap->storage.sb_page);
+ 	pr_debug("%s: bitmap file superblock:\n", bmname(bitmap));
+ 	pr_debug("         magic: %08x\n", le32_to_cpu(sb->magic));
+-	pr_debug("       version: %d\n", le32_to_cpu(sb->version));
++	pr_debug("       version: %u\n", le32_to_cpu(sb->version));
+ 	pr_debug("          uuid: %08x.%08x.%08x.%08x\n",
+ 		 le32_to_cpu(*(__le32 *)(sb->uuid+0)),
+ 		 le32_to_cpu(*(__le32 *)(sb->uuid+4)),
+@@ -497,11 +497,11 @@ void md_bitmap_print_sb(struct bitmap *bitmap)
+ 	pr_debug("events cleared: %llu\n",
+ 		 (unsigned long long) le64_to_cpu(sb->events_cleared));
+ 	pr_debug("         state: %08x\n", le32_to_cpu(sb->state));
+-	pr_debug("     chunksize: %d B\n", le32_to_cpu(sb->chunksize));
+-	pr_debug("  daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
++	pr_debug("     chunksize: %u B\n", le32_to_cpu(sb->chunksize));
++	pr_debug("  daemon sleep: %us\n", le32_to_cpu(sb->daemon_sleep));
+ 	pr_debug("     sync size: %llu KB\n",
+ 		 (unsigned long long)le64_to_cpu(sb->sync_size)/2);
+-	pr_debug("max write behind: %d\n", le32_to_cpu(sb->write_behind));
++	pr_debug("max write behind: %u\n", le32_to_cpu(sb->write_behind));
+ 	kunmap_atomic(sb);
+ }
+ 
+@@ -2105,7 +2105,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 			bytes = DIV_ROUND_UP(chunks, 8);
+ 			if (!bitmap->mddev->bitmap_info.external)
+ 				bytes += sizeof(bitmap_super_t);
+-		} while (bytes > (space << 9));
++		} while (bytes > (space << 9) && (chunkshift + BITMAP_BLOCK_SHIFT) <
++			(BITS_PER_BYTE * sizeof(((bitmap_super_t *)0)->chunksize) - 1));
+ 	} else
+ 		chunkshift = ffz(~chunksize) - BITMAP_BLOCK_SHIFT;
+ 
+@@ -2150,7 +2151,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 	bitmap->counts.missing_pages = pages;
+ 	bitmap->counts.chunkshift = chunkshift;
+ 	bitmap->counts.chunks = chunks;
+-	bitmap->mddev->bitmap_info.chunksize = 1 << (chunkshift +
++	bitmap->mddev->bitmap_info.chunksize = 1UL << (chunkshift +
+ 						     BITMAP_BLOCK_SHIFT);
+ 
+ 	blocks = min(old_counts.chunks << old_counts.chunkshift,
+@@ -2176,8 +2177,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+ 				bitmap->counts.missing_pages = old_counts.pages;
+ 				bitmap->counts.chunkshift = old_counts.chunkshift;
+ 				bitmap->counts.chunks = old_counts.chunks;
+-				bitmap->mddev->bitmap_info.chunksize = 1 << (old_counts.chunkshift +
+-									     BITMAP_BLOCK_SHIFT);
++				bitmap->mddev->bitmap_info.chunksize =
++					1UL << (old_counts.chunkshift + BITMAP_BLOCK_SHIFT);
+ 				blocks = old_counts.chunks << old_counts.chunkshift;
+ 				pr_warn("Could not pre-allocate in-memory bitmap for cluster raid\n");
+ 				break;
+@@ -2534,6 +2535,9 @@ chunksize_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (csize < 512 ||
+ 	    !is_power_of_2(csize))
+ 		return -EINVAL;
++	if (csize >= (1ULL << (BITS_PER_BYTE *
++		sizeof(((bitmap_super_t *)0)->chunksize))))
++		return -EOVERFLOW;
+ 	mddev->bitmap_info.chunksize = csize;
+ 	return len;
+ }
 -- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
+2.34.1
 
