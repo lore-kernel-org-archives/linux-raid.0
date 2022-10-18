@@ -2,31 +2,30 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3714BC4321E
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Oct 2022 22:16:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A023C38A2D
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Oct 2022 22:16:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbiJRWQS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 Oct 2022 18:16:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48900 "EHLO
+        id S229844AbiJRWQV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 18 Oct 2022 18:16:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229691AbiJRWQP (ORCPT
+        with ESMTP id S229752AbiJRWQP (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Oct 2022 18:16:15 -0400
-X-Greylist: delayed 1088 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 18 Oct 2022 15:16:11 PDT
 Received: from smtpcmd02101.aruba.it (smtpcmd02101.aruba.it [62.149.158.101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 466173ED5C
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 467D78992E
         for <linux-raid@vger.kernel.org>; Tue, 18 Oct 2022 15:16:11 -0700 (PDT)
 Received: from localhost.localdomain ([146.241.87.206])
         by Aruba Outgoing Smtp  with ESMTPSA
-        id kub2omqjesjaWkub4oJ4kc; Tue, 18 Oct 2022 23:58:02 +0200
+        id kub2omqjesjaWkub3oJ4jq; Tue, 18 Oct 2022 23:58:01 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=aruba.it; s=a1;
-        t=1666130282; bh=ZwhxLxF6g1lFuT2l3LTNGqDL0I52Ig9aGdGV08f+w3s=;
+        t=1666130282; bh=a8oTHWoDPOIQF47GHhSIrxsKaQ/Iu/lrAtlAUr+eRSo=;
         h=From:To:Subject:Date:MIME-Version;
-        b=oCQr2GrCqLrPSn7BIL2PUk6aMU0FvWCF7q6OCMNgpGsmEgtYnBfcai5q2R0ySoba8
-         Qpu5crxM3dY02lEKLLmx2lH/4/pozFGX37nXXxNe5Wo7pB0MzghKc00NTHPLBYI19S
-         wo5ybgypogTbli7ikx4WpTygwulLb2mjtKuSdAjp1xZOybFiH5zmzw2hJJN/SuZcC6
-         ffkD0DMiVph2K0vjil8j1a5NOwTnAaQyvbr+0KJA7yZtJWmfHtJaqwaZ/iSRm7lLD+
-         hRTtMwhbBoPiVkBezezRWYoJZugA+VGj1arRzJ1opXWFgTAzbp8NAyijsVM5EqzlU2
-         8TfC8VH8aef/g==
+        b=bH7jWveRojiKBSLhRcmWnH1WifnDX/PHR9ZDeGXtEf1Y1rmOgXjcdg4yAj51bLQuQ
+         5bEIo64O8bV9knY+cMjoTHaHzSkZFsFnqjPRLvFqT33ISDNgHMBqt5qw3/eVDOfaYC
+         sOJ6CzjbCABCMo7RnE2Cl/4V7aCPI+gsfNc20Fl4bSm9fDzuDSNIaLXOiglemAOODg
+         SIJW9exVxIuy8U3/fwSwqd3WE3/v73W0d7LGYz9xIV5ZtBlQZ9rYebDKdEYE3hWxfQ
+         Q3SsY5vew+iYjOS0h/VExWQhC5pMv1ESnrw1JASfzZdmPAAiDUcC83dAq0o7Trmu+G
+         iiUwN0dbNNreA==
 From:   Giulio Benetti <giulio.benetti@benettiengineering.com>
 To:     Arnd Bergmann <arnd@arndb.de>, linux-acpi@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-spi@vger.kernel.org,
@@ -35,12 +34,10 @@ Cc:     "Rafael J . Wysocki" <rafael@kernel.org>,
         Len Brown <lenb@kernel.org>, Mark Brown <broonie@kernel.org>,
         Song Liu <song@kernel.org>,
         Giulio Benetti <giulio.benetti@benettiengineering.com>
-Subject: [PATCH 3/3] raid: substitute empty_zero_page with helper ZERO_PAGE(0)
-Date:   Tue, 18 Oct 2022 23:57:55 +0200
-Message-Id: <20221018215755.33566-3-giulio.benetti@benettiengineering.com>
+Subject: [PATCH 1/3] ACPI: scan: substitute empty_zero_page with helper ZERO_PAGE(0)
+Date:   Tue, 18 Oct 2022 23:57:53 +0200
+Message-Id: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
-References: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-CMAE-Envelope: MS4xfLP2urURZfQFB1yAY55ub1PVpneyUyJ0CHOO3oG9A8j9epcn57H4WVK+0ow2sxVOxI/GMoQzCt3q4X9ONmIe6QPNrjBO+Pu3SC60MP1YHQ0YnsUZpEhs
@@ -57,22 +54,22 @@ let's substitute empty_zero_page occurence with helper ZERO_PAGE(0).
 
 Signed-off-by: Giulio Benetti <giulio.benetti@benettiengineering.com>
 ---
- include/linux/raid/pq.h | 2 +-
+ drivers/acpi/scan.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
-index d6e5a1feb947..2dd46f4c7318 100644
---- a/include/linux/raid/pq.h
-+++ b/include/linux/raid/pq.h
-@@ -17,7 +17,7 @@
- /* We need a pre-zeroed page... if we don't want to use the kernel-provided
-    one define it here */
- #if RAID6_USE_EMPTY_ZERO_PAGE
--# define raid6_empty_zero_page empty_zero_page
-+# define raid6_empty_zero_page ZERO_PAGE(0)
- #else
- extern const char raid6_empty_zero_page[PAGE_SIZE];
- #endif
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 558664d169fc..4d2d274cc8ad 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -30,7 +30,7 @@ extern struct acpi_device *acpi_root;
+ #define ACPI_BUS_HID			"LNXSYBUS"
+ #define ACPI_BUS_DEVICE_NAME		"System Bus"
+ 
+-#define INVALID_ACPI_HANDLE	((acpi_handle)empty_zero_page)
++#define INVALID_ACPI_HANDLE	((acpi_handle)ZERO_PAGE(0))
+ 
+ static const char *dummy_hid = "device";
+ 
 -- 
 2.34.1
 
