@@ -2,72 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91B6FC433FE
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Oct 2022 07:04:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC51C4332F
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Oct 2022 19:34:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230026AbiJRHE3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 Oct 2022 03:04:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42810 "EHLO
+        id S229885AbiJRTeo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 18 Oct 2022 15:34:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230025AbiJRHEZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Oct 2022 03:04:25 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FEC9289
-        for <linux-raid@vger.kernel.org>; Tue, 18 Oct 2022 00:04:20 -0700 (PDT)
-Received: from host86-161-232-249.range86-161.btcentralplus.com ([86.161.232.249] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1okgeA-0006Ga-4T;
-        Tue, 18 Oct 2022 08:04:18 +0100
-Message-ID: <6e6fa554-adb4-18f3-894e-e65ebcf9ccef@youngman.org.uk>
-Date:   Tue, 18 Oct 2022 08:04:17 +0100
+        with ESMTP id S229769AbiJRTej (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Oct 2022 15:34:39 -0400
+Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47ECADF08
+        for <linux-raid@vger.kernel.org>; Tue, 18 Oct 2022 12:34:34 -0700 (PDT)
+Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: h.reindl@thelounge.net)
+        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4MsPFL6p5vzXN8;
+        Tue, 18 Oct 2022 21:34:30 +0200 (CEST)
+Message-ID: <aeae0cb6-142a-5a50-d174-80bb3a8eb479@thelounge.net>
+Date:   Tue, 18 Oct 2022 21:34:30 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.1
-Subject: Re: Rebuilding mdadm RAID array after OS drive failure
-Content-Language: en-GB
-To:     Steve Kolk <stevekolk@gmail.com>, anthony <antmbox@youngman.org.uk>
-Cc:     linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>,
-        NeilBrown <neilb@suse.com>
-References: <CACZftsg4Cg5UM8derE46m2JgHWFAoNYFvDXbFKfoU4Jrbmhx_g@mail.gmail.com>
- <499878ba-c52a-0041-e4b1-697bce7c9fba@youngman.org.uk>
- <CACZftsgxix6fQQE8dS0nnYvxPOgv10PQE8wt6z=WBeytcOaAdw@mail.gmail.com>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <CACZftsgxix6fQQE8dS0nnYvxPOgv10PQE8wt6z=WBeytcOaAdw@mail.gmail.com>
+Subject: Re: calculate "Array Size" for fdisk
+To:     Pascal Hambourg <pascal@plouf.fr.eu.org>,
+        Linux RAID Mailing List <linux-raid@vger.kernel.org>
+References: <e2c8b04b-1f4b-6d65-101f-6cb83dff6be8@thelounge.net>
+ <0a80cb3e-9f95-3058-b362-0d4eb03e1896@plouf.fr.eu.org>
+Content-Language: en-US
+From:   Reindl Harald <h.reindl@thelounge.net>
+Organization: the lounge interactive design
+In-Reply-To: <0a80cb3e-9f95-3058-b362-0d4eb03e1896@plouf.fr.eu.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 17/10/2022 23:46, Steve Kolk wrote:
-> I set up 3 of the drives with overlays and tried forcing the assembly,
-> but I still get the same error. I haven't tried the steps under
-> "Irreversible mdadm failure recovery", is there where I need to go
-> next?
+
+
+Am 10.10.22 um 17:23 schrieb Pascal Hambourg:
+> On 10/10/2022 at 15:49, Reindl Harald wrote :
+>> i  am at creating new RAID1 stoarges on twice sized disks to replace 
+>> existing 4 drive RAID10
+>>
+>> looking with fdisk and calculate twice din't end well and finally "dd" 
+>> the FS in the array stopped with around 2 MB too small
 > 
-> ubuntu@ubuntu:~$ echo $OVERLAYS
-> /dev/mapper/sda1 /dev/mapper/sdb1 /dev/mapper/sdc1
-> ubuntu@ubuntu:~$ sudo mdadm --assemble --force /dev/md1 $OVERLAYS
-> mdadm: no recogniseable superblock on /dev/mapper/sda1
-> mdadm: /dev/mapper/sda1 has no superblock - assembly aborted
+> Which is probably the size of RAID metadata added at the beginning or 
+> end of the partitions.
+> 
+>> is the "30716928" MiB or MB and what takes fdisk with "+30716928M"?
+> 
+> MiB for both
+>>          Array Size : 30716928 (29.29 GiB 31.45 GB)
+>>       Used Dev Size : 15358464 (14.65 GiB 15.73 GB)
 
-Sounds like you haven't understood what you're supposed to do.
+nonsense - the "30716928" or "Array Size" is something like K and fro 
+the sake of god no matter if you take that or 29.29 G or 31.45 G you end 
+up with something useful for a partition-size in fdisk so that "Array 
+Size" on that new RAID1 partition is >= as on the old RAID10
 
-The whole point of overlays is it is meant to protect the underlying 
-device while you do stuff that could be destructive.
+no matter qhat question i asked since 2014 on that list (--writemostly, 
+chagne UUID, claculate partition size) any useful response came
 
-What you should be doing is setting up the overlays, then running "mdadm 
---create". It sounds like if you run exactly the same command as when 
-you created the array, you'll get the original back.
+whatever you do ends in WAY larger or smaller "Array Size"
 
-Read up carefully on overlays to make sure you really understand what 
-you're doing. And then when you create the array with the overlays, if 
-you're doing as I suggested with three drives, make sure you tell it 
-it's a five drive array, and tell it two of the drives are missing.
+finally i took 30716928 / 1000 * 1024 + (10*1024) which made it sligltly 
+lager buth not that too much so that the data-parition/raid after that 
+has not enough space
 
-I'm just going to work, but whatever you do, DO NOT DO ANYTHING THAT 
-WILL ACTUALLY WRITE TO THE DRIVES.
+it's ridiculous that you have to shit around 2.5 hours to get a 
+partition on a new 4 TB disk nearby (gave up with exactly) the same size 
+as a 4x2 TB RAID10
 
-Cheers,
-Wol
+i can't believe that i am the only person on palent reath which ever 
+wanted to switch rom 4 drive RAID10 to 2 drive RAID1 and simply dd the 
+old filesystem from a live-sio from one md-device to the other
+
+
