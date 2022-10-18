@@ -2,84 +2,77 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC51C4332F
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Oct 2022 19:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3714BC4321E
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Oct 2022 22:16:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229885AbiJRTeo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 Oct 2022 15:34:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52574 "EHLO
+        id S229913AbiJRWQS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 18 Oct 2022 18:16:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229769AbiJRTej (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Oct 2022 15:34:39 -0400
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47ECADF08
-        for <linux-raid@vger.kernel.org>; Tue, 18 Oct 2022 12:34:34 -0700 (PDT)
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4MsPFL6p5vzXN8;
-        Tue, 18 Oct 2022 21:34:30 +0200 (CEST)
-Message-ID: <aeae0cb6-142a-5a50-d174-80bb3a8eb479@thelounge.net>
-Date:   Tue, 18 Oct 2022 21:34:30 +0200
+        with ESMTP id S229691AbiJRWQP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Oct 2022 18:16:15 -0400
+X-Greylist: delayed 1088 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 18 Oct 2022 15:16:11 PDT
+Received: from smtpcmd02101.aruba.it (smtpcmd02101.aruba.it [62.149.158.101])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 466173ED5C
+        for <linux-raid@vger.kernel.org>; Tue, 18 Oct 2022 15:16:11 -0700 (PDT)
+Received: from localhost.localdomain ([146.241.87.206])
+        by Aruba Outgoing Smtp  with ESMTPSA
+        id kub2omqjesjaWkub4oJ4kc; Tue, 18 Oct 2022 23:58:02 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=aruba.it; s=a1;
+        t=1666130282; bh=ZwhxLxF6g1lFuT2l3LTNGqDL0I52Ig9aGdGV08f+w3s=;
+        h=From:To:Subject:Date:MIME-Version;
+        b=oCQr2GrCqLrPSn7BIL2PUk6aMU0FvWCF7q6OCMNgpGsmEgtYnBfcai5q2R0ySoba8
+         Qpu5crxM3dY02lEKLLmx2lH/4/pozFGX37nXXxNe5Wo7pB0MzghKc00NTHPLBYI19S
+         wo5ybgypogTbli7ikx4WpTygwulLb2mjtKuSdAjp1xZOybFiH5zmzw2hJJN/SuZcC6
+         ffkD0DMiVph2K0vjil8j1a5NOwTnAaQyvbr+0KJA7yZtJWmfHtJaqwaZ/iSRm7lLD+
+         hRTtMwhbBoPiVkBezezRWYoJZugA+VGj1arRzJ1opXWFgTAzbp8NAyijsVM5EqzlU2
+         8TfC8VH8aef/g==
+From:   Giulio Benetti <giulio.benetti@benettiengineering.com>
+To:     Arnd Bergmann <arnd@arndb.de>, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-spi@vger.kernel.org,
+        linux-raid@vger.kernel.org
+Cc:     "Rafael J . Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>, Mark Brown <broonie@kernel.org>,
+        Song Liu <song@kernel.org>,
+        Giulio Benetti <giulio.benetti@benettiengineering.com>
+Subject: [PATCH 3/3] raid: substitute empty_zero_page with helper ZERO_PAGE(0)
+Date:   Tue, 18 Oct 2022 23:57:55 +0200
+Message-Id: <20221018215755.33566-3-giulio.benetti@benettiengineering.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
+References: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.1
-Subject: Re: calculate "Array Size" for fdisk
-To:     Pascal Hambourg <pascal@plouf.fr.eu.org>,
-        Linux RAID Mailing List <linux-raid@vger.kernel.org>
-References: <e2c8b04b-1f4b-6d65-101f-6cb83dff6be8@thelounge.net>
- <0a80cb3e-9f95-3058-b362-0d4eb03e1896@plouf.fr.eu.org>
-Content-Language: en-US
-From:   Reindl Harald <h.reindl@thelounge.net>
-Organization: the lounge interactive design
-In-Reply-To: <0a80cb3e-9f95-3058-b362-0d4eb03e1896@plouf.fr.eu.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CMAE-Envelope: MS4xfLP2urURZfQFB1yAY55ub1PVpneyUyJ0CHOO3oG9A8j9epcn57H4WVK+0ow2sxVOxI/GMoQzCt3q4X9ONmIe6QPNrjBO+Pu3SC60MP1YHQ0YnsUZpEhs
+ kppXUQ/W23tfU8VcLha7d6EfRUCpvKaOHPmyQj4oDi4PHXJfLl/k5083pJzmbwdKc4sab0oP9kM88PqZjhZbsLlb+7af01eviIlOVmxeQgtfNIrA3r9PtuCM
+ 38tjmV0Rvf8iRqJg3GclatvHMBMastuttgrqZfWIM96yUj/bbZx904Tok7HVi5rbJdmxvhhuXBvEk7pWnsw5AWxBhQRPjCdEQ6cXU1ceWAVoh5EThxOy67mB
+ pnnEoIHN8bPt1SahRnxY7XY5/eUQrxsFole9s6cvRinoSVA7CFTdnkRoCdSgP+BLnjunBjUbAYYXy3q/ZeO0JKDgENo5W0HDcs8Dm2KkEHiYJSE5ebUxorax
+ jmzqjWu4h8c6iyQlNseXLWIrqT+vHcYeO934LA8PJ2Cc5l7QWNvLtXVfQR+EaO/VH7/VS9dA1FMmQ2yT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Not all zero page implementations use empty_zero_page global pointer so
+let's substitute empty_zero_page occurence with helper ZERO_PAGE(0).
 
+Signed-off-by: Giulio Benetti <giulio.benetti@benettiengineering.com>
+---
+ include/linux/raid/pq.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Am 10.10.22 um 17:23 schrieb Pascal Hambourg:
-> On 10/10/2022 at 15:49, Reindl Harald wrote :
->> i  am at creating new RAID1 stoarges on twice sized disks to replace 
->> existing 4 drive RAID10
->>
->> looking with fdisk and calculate twice din't end well and finally "dd" 
->> the FS in the array stopped with around 2 MB too small
-> 
-> Which is probably the size of RAID metadata added at the beginning or 
-> end of the partitions.
-> 
->> is the "30716928" MiB or MB and what takes fdisk with "+30716928M"?
-> 
-> MiB for both
->>          Array Size : 30716928 (29.29 GiB 31.45 GB)
->>       Used Dev Size : 15358464 (14.65 GiB 15.73 GB)
-
-nonsense - the "30716928" or "Array Size" is something like K and fro 
-the sake of god no matter if you take that or 29.29 G or 31.45 G you end 
-up with something useful for a partition-size in fdisk so that "Array 
-Size" on that new RAID1 partition is >= as on the old RAID10
-
-no matter qhat question i asked since 2014 on that list (--writemostly, 
-chagne UUID, claculate partition size) any useful response came
-
-whatever you do ends in WAY larger or smaller "Array Size"
-
-finally i took 30716928 / 1000 * 1024 + (10*1024) which made it sligltly 
-lager buth not that too much so that the data-parition/raid after that 
-has not enough space
-
-it's ridiculous that you have to shit around 2.5 hours to get a 
-partition on a new 4 TB disk nearby (gave up with exactly) the same size 
-as a 4x2 TB RAID10
-
-i can't believe that i am the only person on palent reath which ever 
-wanted to switch rom 4 drive RAID10 to 2 drive RAID1 and simply dd the 
-old filesystem from a live-sio from one md-device to the other
-
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index d6e5a1feb947..2dd46f4c7318 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -17,7 +17,7 @@
+ /* We need a pre-zeroed page... if we don't want to use the kernel-provided
+    one define it here */
+ #if RAID6_USE_EMPTY_ZERO_PAGE
+-# define raid6_empty_zero_page empty_zero_page
++# define raid6_empty_zero_page ZERO_PAGE(0)
+ #else
+ extern const char raid6_empty_zero_page[PAGE_SIZE];
+ #endif
+-- 
+2.34.1
 
