@@ -2,86 +2,100 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07314C43217
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Oct 2022 15:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B004EC433FE
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Oct 2022 16:06:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230196AbiJSPEP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 Oct 2022 11:04:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60682 "EHLO
+        id S231691AbiJSQGZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Oct 2022 12:06:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231976AbiJSPD6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Oct 2022 11:03:58 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 542A91C2F0C;
-        Wed, 19 Oct 2022 07:58:15 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 95E6861908;
-        Wed, 19 Oct 2022 14:56:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F4C3C433D6;
-        Wed, 19 Oct 2022 14:56:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666191419;
-        bh=9Bw0aFAkSLNwxg2hqGz9POPzhqsT/j8ihEWCR51Rcjs=;
-        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-        b=qcg74Qw7KGsQEqZONGxvf3iDzilD0efRtWaDnjLieM38EazJhyp0okwur0gSZovND
-         Zw2Chlw0qEVxWQ/s8nD5v689CrMoLSMfum6CYuCA7yk/CN6ZE3OlLLCixoYk4LMbKG
-         Huaz0kqakGRjRK8C3wFVWvo7LtpPtbJdfJLpMsTz0xT+Ln+hd+N/UOzr+qGwLhSJ4G
-         La+vXCKf6uJkRT0Zb5pMJt0m4DGL/YmdJUUDa2rlRH13fEtlQeDYkS9Vg07weePl5w
-         TwOKgYup16B44vdK7FDK2oClVcSfwFA4omrzB4MzTEJDg+/23wM0gIFSX3nfb7QngB
-         93J9NNAGxCrFg==
-From:   Mark Brown <broonie@kernel.org>
-To:     linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Giulio Benetti <giulio.benetti@benettiengineering.com>,
-        linux-raid@vger.kernel.org, linux-spi@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>
+        with ESMTP id S231782AbiJSQFt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Oct 2022 12:05:49 -0400
+Received: from smtpdh19-2.aruba.it (smtpdh19-2.aruba.it [62.149.155.149])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4A126CF18A
+        for <linux-raid@vger.kernel.org>; Wed, 19 Oct 2022 09:04:40 -0700 (PDT)
+Received: from localhost.localdomain ([146.241.87.206])
+        by Aruba Outgoing Smtp  with ESMTPSA
+        id lBYBoox5FSmRKlBYCoDstr; Wed, 19 Oct 2022 18:04:13 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=aruba.it; s=a1;
+        t=1666195453; bh=GOiiI3+8vXjlQ7VXBWeCNN1srDCedk1v4RecNZAv7pg=;
+        h=From:To:Subject:Date:MIME-Version;
+        b=jTRQ/WLvghaA9QEMvIRdKd+hiS4Qa6RO6qs8uiyvxaGqYZxRtJkUZex89uzrTdBK5
+         hMIMwjMtj6C0TMIgeOFvx0oB8nE5OgaiOfqW/8vmtMiOIue9sf5E6aczbWtkiYPLfP
+         gfG7CmUVm/3pJqwsGxjeQMr3Wla7HXTPqRAMV1E7WbKGIZVzDhtqj0tEK4NrbuSljr
+         F5+rHChwbe6lfsDoZCFwawO3Wbcj2ExS7b5QY2iQAvZXw5KBM6Se0Rl2bGfzRmNTk1
+         5lrpiSgdAk0ITe6oDBZhdb3qNqj8JG9CPaRYX7U5MYHrbGFuJSPKTa4rRYN1D2QgLm
+         U6YGyGJACGTIA==
+From:   Giulio Benetti <giulio.benetti@benettiengineering.com>
+To:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Song Liu <song@kernel.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>
-In-Reply-To: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
-References: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
-Subject: Re: (subset) [PATCH 1/3] ACPI: scan: substitute empty_zero_page with helper ZERO_PAGE(0)
-Message-Id: <166619141690.565256.8563939546728659746.b4-ty@kernel.org>
-Date:   Wed, 19 Oct 2022 15:56:56 +0100
+        =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Giulio Benetti <giulio.benetti@benettiengineering.com>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] lib/raid6: drop RAID6_USE_EMPTY_ZERO_PAGE
+Date:   Wed, 19 Oct 2022 18:04:07 +0200
+Message-Id: <20221019160407.7550-1-giulio.benetti@benettiengineering.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <Y0/Yt4uJWg4knNoc@infradead.org>
+References: <Y0/Yt4uJWg4knNoc@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.10.0-dev-fc921
+X-CMAE-Envelope: MS4xfAG43ZSehpx2rzMtQ4WywAEY4w2w7pXjnboijBNvBg2L2b5faGjDfm7J/rWud9TgVdySsulvWquaGuvW9ztb2o5BitM3DsE/uaGn+77CpdMIhUgLmgbm
+ wG878r2326b18l0Ht3VRVev/Tod4w+s3XZhcx8Sb6ChaoD5KVTaKzTO635Jz2xFiGXDMwdTAyB3zcYrDs5OZ9nVMYmfA5R8abLEE0NUMvzzKWLvy3luA/gLu
+ 1NqtznKBoeA0lDf50Vd/8Fx6aZdOs+g9EzwTMW6HFUr92PwAuMrSryqt8aiguWvufsVo9+nfxyqJsE6KxLcfT244CWi3ewNHIPfNF14iLTjbb5JiRZ09PRtX
+ NXiInngJqqehS9OizZGFF1nXpSy8xSvD6GqTfU9JzsDdZPttRGxYjiBsHz6cMR5S8iFYEtp4+bhneaz0I2s0zZ4J4Wkaow==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 18 Oct 2022 23:57:53 +0200, Giulio Benetti wrote:
-> Not all zero page implementations use empty_zero_page global pointer so
-> let's substitute empty_zero_page occurence with helper ZERO_PAGE(0).
-> 
-> 
+RAID6_USE_EMPTY_ZERO_PAGE is unused and hardcoded to 0, so let's drop it.
 
-Applied to
+Signed-off-by: Giulio Benetti <giulio.benetti@benettiengineering.com>
+---
+ include/linux/raid/pq.h | 8 --------
+ lib/raid6/algos.c       | 2 --
+ 2 files changed, 10 deletions(-)
 
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index d6e5a1feb947..f29aaaf2eb21 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -10,17 +10,9 @@
+ 
+ #ifdef __KERNEL__
+ 
+-/* Set to 1 to use kernel-wide empty_zero_page */
+-#define RAID6_USE_EMPTY_ZERO_PAGE 0
+ #include <linux/blkdev.h>
+ 
+-/* We need a pre-zeroed page... if we don't want to use the kernel-provided
+-   one define it here */
+-#if RAID6_USE_EMPTY_ZERO_PAGE
+-# define raid6_empty_zero_page empty_zero_page
+-#else
+ extern const char raid6_empty_zero_page[PAGE_SIZE];
+-#endif
+ 
+ #else /* ! __KERNEL__ */
+ /* Used for testing in user space */
+diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+index 39b74221f4a7..a22a05c9af8a 100644
+--- a/lib/raid6/algos.c
++++ b/lib/raid6/algos.c
+@@ -18,12 +18,10 @@
+ #else
+ #include <linux/module.h>
+ #include <linux/gfp.h>
+-#if !RAID6_USE_EMPTY_ZERO_PAGE
+ /* In .bss so it's zeroed */
+ const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(256)));
+ EXPORT_SYMBOL(raid6_empty_zero_page);
+ #endif
+-#endif
+ 
+ struct raid6_calls raid6_call;
+ EXPORT_SYMBOL_GPL(raid6_call);
+-- 
+2.34.1
 
-Thanks!
-
-[2/3] spi: fsl-cpm: substitute empty_zero_page with helper ZERO_PAGE(0)
-      commit: 3be6acda8241352c57d47b4d7d9968cadcb954ea
-
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.
-
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
-
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
-
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
-
-Thanks,
-Mark
