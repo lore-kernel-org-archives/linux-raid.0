@@ -2,100 +2,54 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B004EC433FE
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Oct 2022 16:06:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A17AC433FE
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Oct 2022 16:10:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231691AbiJSQGZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 Oct 2022 12:06:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60366 "EHLO
+        id S230151AbiJSQKr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Oct 2022 12:10:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231782AbiJSQFt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Oct 2022 12:05:49 -0400
-Received: from smtpdh19-2.aruba.it (smtpdh19-2.aruba.it [62.149.155.149])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4A126CF18A
-        for <linux-raid@vger.kernel.org>; Wed, 19 Oct 2022 09:04:40 -0700 (PDT)
-Received: from localhost.localdomain ([146.241.87.206])
-        by Aruba Outgoing Smtp  with ESMTPSA
-        id lBYBoox5FSmRKlBYCoDstr; Wed, 19 Oct 2022 18:04:13 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=aruba.it; s=a1;
-        t=1666195453; bh=GOiiI3+8vXjlQ7VXBWeCNN1srDCedk1v4RecNZAv7pg=;
-        h=From:To:Subject:Date:MIME-Version;
-        b=jTRQ/WLvghaA9QEMvIRdKd+hiS4Qa6RO6qs8uiyvxaGqYZxRtJkUZex89uzrTdBK5
-         hMIMwjMtj6C0TMIgeOFvx0oB8nE5OgaiOfqW/8vmtMiOIue9sf5E6aczbWtkiYPLfP
-         gfG7CmUVm/3pJqwsGxjeQMr3Wla7HXTPqRAMV1E7WbKGIZVzDhtqj0tEK4NrbuSljr
-         F5+rHChwbe6lfsDoZCFwawO3Wbcj2ExS7b5QY2iQAvZXw5KBM6Se0Rl2bGfzRmNTk1
-         5lrpiSgdAk0ITe6oDBZhdb3qNqj8JG9CPaRYX7U5MYHrbGFuJSPKTa4rRYN1D2QgLm
-         U6YGyGJACGTIA==
-From:   Giulio Benetti <giulio.benetti@benettiengineering.com>
-To:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Song Liu <song@kernel.org>,
-        =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>,
+        with ESMTP id S231721AbiJSQKh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Oct 2022 12:10:37 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15C25143A76;
+        Wed, 19 Oct 2022 09:10:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=9vOa0+msvviK5V7ZlQiw3aFY3XiVnsGVWrJcmPEHwWI=; b=D5Vriblg+tFApNhrbvyUBH9YK+
+        O6JtPYdppx8i6ctqGiud/iZLz5NCZyImk4Firnmq0WZ0pyl19LaQWaSyEZr1TOpcW0mervHlzg/m8
+        FBc9PWYH3hgAc2bIoCZBF18w87NLdo/RevlzcsHqizCfCq6RulaJkW1TVtQGtveT1t0kt8iIcvGBz
+        8N7Vf3ACHXRYAG6sJK2vFDvL52MZ3u4zyIMTPYEqafLWxO9pnc0yz+e7bFWFYFflwexYo97RZJj6o
+        p2IjeUw/SRZAvzmJNuIAkwmyvHO3R3hnWP2kwFooTwyk3NjHUaNJduPckXMmKOj/sbKjV4gLymvSG
+        FizyZuuQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1olBeK-003lRO-20; Wed, 19 Oct 2022 16:10:32 +0000
+Date:   Wed, 19 Oct 2022 09:10:32 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Giulio Benetti <giulio.benetti@benettiengineering.com>
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Song Liu <song@kernel.org>,
+        Dirk =?iso-8859-1?Q?M=FCller?= <dmueller@suse.de>,
         Paul Menzel <pmenzel@molgen.mpg.de>,
-        Giulio Benetti <giulio.benetti@benettiengineering.com>,
         Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] lib/raid6: drop RAID6_USE_EMPTY_ZERO_PAGE
-Date:   Wed, 19 Oct 2022 18:04:07 +0200
-Message-Id: <20221019160407.7550-1-giulio.benetti@benettiengineering.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <Y0/Yt4uJWg4knNoc@infradead.org>
+Subject: Re: [PATCH] lib/raid6: drop RAID6_USE_EMPTY_ZERO_PAGE
+Message-ID: <Y1AhePTKiBS1WKf6@infradead.org>
 References: <Y0/Yt4uJWg4knNoc@infradead.org>
+ <20221019160407.7550-1-giulio.benetti@benettiengineering.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMAE-Envelope: MS4xfAG43ZSehpx2rzMtQ4WywAEY4w2w7pXjnboijBNvBg2L2b5faGjDfm7J/rWud9TgVdySsulvWquaGuvW9ztb2o5BitM3DsE/uaGn+77CpdMIhUgLmgbm
- wG878r2326b18l0Ht3VRVev/Tod4w+s3XZhcx8Sb6ChaoD5KVTaKzTO635Jz2xFiGXDMwdTAyB3zcYrDs5OZ9nVMYmfA5R8abLEE0NUMvzzKWLvy3luA/gLu
- 1NqtznKBoeA0lDf50Vd/8Fx6aZdOs+g9EzwTMW6HFUr92PwAuMrSryqt8aiguWvufsVo9+nfxyqJsE6KxLcfT244CWi3ewNHIPfNF14iLTjbb5JiRZ09PRtX
- NXiInngJqqehS9OizZGFF1nXpSy8xSvD6GqTfU9JzsDdZPttRGxYjiBsHz6cMR5S8iFYEtp4+bhneaz0I2s0zZ4J4Wkaow==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221019160407.7550-1-giulio.benetti@benettiengineering.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-RAID6_USE_EMPTY_ZERO_PAGE is unused and hardcoded to 0, so let's drop it.
+On Wed, Oct 19, 2022 at 06:04:07PM +0200, Giulio Benetti wrote:
+> RAID6_USE_EMPTY_ZERO_PAGE is unused and hardcoded to 0, so let's drop it.
 
-Signed-off-by: Giulio Benetti <giulio.benetti@benettiengineering.com>
----
- include/linux/raid/pq.h | 8 --------
- lib/raid6/algos.c       | 2 --
- 2 files changed, 10 deletions(-)
+Looks good:
 
-diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
-index d6e5a1feb947..f29aaaf2eb21 100644
---- a/include/linux/raid/pq.h
-+++ b/include/linux/raid/pq.h
-@@ -10,17 +10,9 @@
- 
- #ifdef __KERNEL__
- 
--/* Set to 1 to use kernel-wide empty_zero_page */
--#define RAID6_USE_EMPTY_ZERO_PAGE 0
- #include <linux/blkdev.h>
- 
--/* We need a pre-zeroed page... if we don't want to use the kernel-provided
--   one define it here */
--#if RAID6_USE_EMPTY_ZERO_PAGE
--# define raid6_empty_zero_page empty_zero_page
--#else
- extern const char raid6_empty_zero_page[PAGE_SIZE];
--#endif
- 
- #else /* ! __KERNEL__ */
- /* Used for testing in user space */
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 39b74221f4a7..a22a05c9af8a 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -18,12 +18,10 @@
- #else
- #include <linux/module.h>
- #include <linux/gfp.h>
--#if !RAID6_USE_EMPTY_ZERO_PAGE
- /* In .bss so it's zeroed */
- const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(256)));
- EXPORT_SYMBOL(raid6_empty_zero_page);
- #endif
--#endif
- 
- struct raid6_calls raid6_call;
- EXPORT_SYMBOL_GPL(raid6_call);
--- 
-2.34.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
