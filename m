@@ -2,76 +2,48 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E94C4332F
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Oct 2022 19:30:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8196BC4332F
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Oct 2022 20:16:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230505AbiJSTa5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 Oct 2022 15:30:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42222 "EHLO
+        id S229760AbiJSUQg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Oct 2022 16:16:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231168AbiJSTaw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Oct 2022 15:30:52 -0400
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F232FE09EE
-        for <linux-raid@vger.kernel.org>; Wed, 19 Oct 2022 12:30:50 -0700 (PDT)
-Received: by mail-wr1-x429.google.com with SMTP id bu30so30778196wrb.8
-        for <linux-raid@vger.kernel.org>; Wed, 19 Oct 2022 12:30:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=iHU2hd9JUYyJGL+SDJdGfd4IvUbM1z/k3GZ/lZnf4ak=;
-        b=aZI8WaRNp45l5AO2o7Fybs3u93enx7qdHkUTxYzaNuWCxYecc3MeDbi4AtEFsEftS8
-         LcqOduP/mHuQvUJbJmLK65lYyujlAWN9OqtcdeJ7p9skDcB6EUx0yMw81A2QQiORvaUK
-         ldGA9GSaM7CV5gLAko3KO4EPJ9hZuwt9A/xB/S9n91fU34CKuPvmxpww2EjaB3D3dMpN
-         /gQuktGid51MZSRWWbonQXdxTzvD4BbzD25TGPl8Ht4qadow2DjvLxx/bKlu8UcCpORd
-         ORXWbA1DG7G5f1CcxbTCeqvl+EZz0n+sO+yymRJxYBGFm7ks74WCwDxEUvUJKsL5d91a
-         ZZcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=iHU2hd9JUYyJGL+SDJdGfd4IvUbM1z/k3GZ/lZnf4ak=;
-        b=W89Dy64qzKs+10fDpAyijYeh+X99QwWtzhKGp4wfjT3Vq22Qp8sB46nXnUQ9lLUoPx
-         QQHLYN2CFkUk2pN3Vyr59nKGD1YoS71MeWsDXClz63gO5WndZ6/2HX+hhr/b8tL/NIkG
-         59vJoGhfSkE3KPxYyQlY0mm6iMfbGBKkIVlLNRJzP0CryJ/yVYAcOGIBMRJu3euPqTL+
-         aFMbub+By4roZgGniyDNvoF4+kJ4Sx/NxFpwrcKs9lSPpDk0GsQ9tCLasHCqJP69D/qT
-         l7YAdGcK2URaQZWVIzDJc9jgF/fz97udZM2YhGlH1cmnSlua07XsiyXn5p6BtMbFVyXm
-         s8Ag==
-X-Gm-Message-State: ACrzQf3NvlnhKI9hy8DPG9aZYwPF44pRnjskfTh7zjIb2zmS5xKZDaAL
-        s/vN+3DwtDU09zJ3LYYm4AWD94AsmYeRvBDcfcR14NbqMhI=
-X-Google-Smtp-Source: AMsMyM4XRUJjwxhu8ugB7GUi0ZVXOvz69zi9ERhkOrAKdhG9YKiGJe3eYUaQL1tG3c2P7klU5oSmu8HdlUCQlB9VjJA=
-X-Received: by 2002:a05:6000:18a5:b0:230:a3a:d93e with SMTP id
- b5-20020a05600018a500b002300a3ad93emr6202916wri.626.1666207848975; Wed, 19
- Oct 2022 12:30:48 -0700 (PDT)
+        with ESMTP id S229763AbiJSUQf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Oct 2022 16:16:35 -0400
+X-Greylist: delayed 406 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 19 Oct 2022 13:16:31 PDT
+Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BFA41C77EC
+        for <linux-raid@vger.kernel.org>; Wed, 19 Oct 2022 13:16:31 -0700 (PDT)
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+        id 5430FEC9A1; Wed, 19 Oct 2022 16:09:44 -0400 (EDT)
+References: <20221017045234.GI20480@jpo>
+User-agent: mu4e 1.7.12; emacs 27.1
+From:   Phillip Susi <phill@thesusis.net>
+To:     David T-G <davidtg-robot@justpickone.org>
+Cc:     Linux RAID list <linux-raid@vger.kernel.org>
+Subject: Re: now that i've screwed up and apparently get to start over ...
+Date:   Wed, 19 Oct 2022 16:07:17 -0400
+In-reply-to: <20221017045234.GI20480@jpo>
+Message-ID: <87sfjjefsn.fsf@vps.thesusis.net>
 MIME-Version: 1.0
-From:   Umang Agarwalla <umangagarwalla111@gmail.com>
-Date:   Thu, 20 Oct 2022 01:00:15 +0530
-Message-ID: <CAEQ-dADdRd91GBkTzVU0AQiXQ4tLitYsU2uLziWOi=hLtaBK0w@mail.gmail.com>
-Subject: Performance Testing MD-RAID10 with 1 failed drive
-To:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello all,
 
-We run Linux RAID 10 in our production with 8 SAS HDDs 7200RPM.
-We recently got to know from the application owners that the writes on
-these machines get affected when there is one failed drive in this
-RAID10 setup, but unfortunately we do not have much data around to
-prove this and exactly replicate this in production.
+David T-G <davidtg-robot@justpickone.org> writes:
 
-Wanted to know from the people of this mailing list if they have ever
-come across any such issues.
-Theoretically as per my understanding a RAID10 with even a failed
-drive should be able to handle all the production traffic without any
-issues. Please let me know if my understanding of this is correct or
-not.
+> Then GRUB puked all over itself and I can't get the stupid thing running
+> at all now.  I've disconnected /dev/sde, I've disconnected all USB
+> external drives, I've disconnected all internal drives, I've swapped out
+> /dev/sda and put /dev/sde back, and I get that GRUB can't boot from a GPT
+> disk ... except that /dev/sda has always been that!
 
-Also if anyone can help with some links/guides/how-tos about this
-would be great.
+GRUB can boot from GPT just fine.  Assuming you are booting in EFI mode,
+it just has to have an EFI system partition, and be registered with the
+EFI firmware.  You can't just copy the partitions to a new drive and
+remove the old drive and expect it to boot.  You will need to
+grub-install on the new drive to register it with the EFI firmware.
 
-Thanks,
-Umang Agarwalla
