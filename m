@@ -2,71 +2,76 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B19BBC4332F
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 18:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C15F9C43217
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 19:04:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229949AbiJTSWI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Oct 2022 14:22:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42842 "EHLO
+        id S229923AbiJTTEg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Oct 2022 15:04:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbiJTSWH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 14:22:07 -0400
+        with ESMTP id S229588AbiJTTEa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 15:04:30 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84F7B1A6531;
-        Thu, 20 Oct 2022 11:22:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 074471DDDB
+        for <linux-raid@vger.kernel.org>; Thu, 20 Oct 2022 12:04:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3FD52B828D6;
-        Thu, 20 Oct 2022 18:22:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFCE1C433D6;
-        Thu, 20 Oct 2022 18:22:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AF1F3B828D8
+        for <linux-raid@vger.kernel.org>; Thu, 20 Oct 2022 19:04:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B312C43143
+        for <linux-raid@vger.kernel.org>; Thu, 20 Oct 2022 19:04:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666290123;
-        bh=HDx1VUXLXqIkvh18udXGeMs2VUJJstLVJ1RQIFEpJKs=;
+        s=k20201202; t=1666292667;
+        bh=cnF6mXi+LaR5NJ7UOJ/SLdY3pJ9Pb6kvZlP6oeMXsJI=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=FRT+sCdYHIyTloHxtD18lczVYiMiNFLeACc2FQw2Kaln08o8TwSbZdBPmcEiqPs69
-         ccgXIFgRrikv1NzWULE845avD3X9tO5N92B/w5C3JiQqRGk+DRA5/s0QHj+2Vn/Uq6
-         N4SGOcQrnDL4vEuMYG2W6YYiD+vGgX0Tw8OEqn6I7uNj83yOMKVoY7NX4CXzdc3b6J
-         Wb1ho2/PiRLDETFfiihmgGMEsBnNdxf3nty7ZaEXCD5vOG5c2gOockvyRER2kHmjqs
-         aiOOVFbL/bovmVPstFcOzTCa1P3sB85SbUGpayG8G4/y+V8W/C+ftqjxcJCF4OWcsJ
-         TxmyoIsC/9CZA==
-Received: by mail-ej1-f54.google.com with SMTP id q9so1670951ejd.0;
-        Thu, 20 Oct 2022 11:22:03 -0700 (PDT)
-X-Gm-Message-State: ACrzQf2mnxD+cnvD+tWZg/9qNO9LKDtqgcusjONdZl8p2wpueKylOMFX
-        wLWTPHkw5AbfI/hpmA79RRvHnkuszkiu8g4+lgs=
-X-Google-Smtp-Source: AMsMyM6rBndJ2sgBfFKzB0PVAiHGjWqEgH88rEUQGLcZMoY3o+chkZoBl2FLhPOqx+8oO8uiFc9iLbB/OZZd6+Dw148=
-X-Received: by 2002:a17:907:970b:b0:78d:8d70:e4e8 with SMTP id
- jg11-20020a170907970b00b0078d8d70e4e8mr11724579ejc.614.1666290122156; Thu, 20
- Oct 2022 11:22:02 -0700 (PDT)
+        b=GKzufJK/7BXjJXnaC4XltgajjN6sUij/gMH9LeDZUdk3pq12uhHY+zitHHIyYqK6L
+         Httmqvsgxffcyf7iiQnNGJD6g6hKH4zzK94gezX/d2C9ltmiw/7REBi0uedOFsPlre
+         FRy2OH8RM9cAIigl/l9vP2Ju4yfv6RFJXB63UyrSbiRUkRiEa5dwndGNNhg6o+dNBx
+         sxisGoE5by9y2w5XRMe9z9qYTn9+8N7L52wsaY3/QCsFfZLNhd0cuMW2ou+BhyuNAY
+         FuO4YQxrkI+/361mNqKAZaTIs1ZlZA7IjVBmrXA4xOYEZGO3G8aq8XjUe9Z/lelaAb
+         WjJVaUd+V0WqA==
+Received: by mail-ej1-f44.google.com with SMTP id k2so1844876ejr.2
+        for <linux-raid@vger.kernel.org>; Thu, 20 Oct 2022 12:04:27 -0700 (PDT)
+X-Gm-Message-State: ACrzQf2QXFMIZuOCTXGegRsE1w4L0J+OahIzmjOGNa93lIv37NhUF4vd
+        Yts1LM8CYo3hHgNnjErUV2MuZ4nSofRguA14yEg=
+X-Google-Smtp-Source: AMsMyM46Lp+eXawvnoN5mdwA413VBgzLHgpjpj0i+axekoVVBxO3j6inalPqmVZDduSZ7+9tnuqZMVLeYFiAs0YY5UI=
+X-Received: by 2002:a17:907:7e87:b0:78e:1a4:130 with SMTP id
+ qb7-20020a1709077e8700b0078e01a40130mr12675440ejc.101.1666292665614; Thu, 20
+ Oct 2022 12:04:25 -0700 (PDT)
 MIME-Version: 1.0
-References: <Y0/Yt4uJWg4knNoc@infradead.org> <20221019160407.7550-1-giulio.benetti@benettiengineering.com>
- <Y1AhePTKiBS1WKf6@infradead.org>
-In-Reply-To: <Y1AhePTKiBS1WKf6@infradead.org>
+References: <20220920023938.3273598-1-yebin10@huawei.com>
+In-Reply-To: <20220920023938.3273598-1-yebin10@huawei.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 20 Oct 2022 11:21:50 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7A+BGurCFY0b243uA8cRBgaVPCMMridJ5DBtUHxVOy5w@mail.gmail.com>
-Message-ID: <CAPhsuW7A+BGurCFY0b243uA8cRBgaVPCMMridJ5DBtUHxVOy5w@mail.gmail.com>
-Subject: Re: [PATCH] lib/raid6: drop RAID6_USE_EMPTY_ZERO_PAGE
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Giulio Benetti <giulio.benetti@benettiengineering.com>,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        =?UTF-8?B?RGlyayBNw7xsbGVy?= <dmueller@suse.de>,
-        Paul Menzel <pmenzel@molgen.mpg.de>
+Date:   Thu, 20 Oct 2022 12:04:13 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6-Q18OEcYr08T4mRzH2L876Ny0PrziDKBHc8i1M+Dnwg@mail.gmail.com>
+Message-ID: <CAPhsuW6-Q18OEcYr08T4mRzH2L876Ny0PrziDKBHc8i1M+Dnwg@mail.gmail.com>
+Subject: Re: [PATCH -next 0/3] do some cleanup for md_ioctl
+To:     Ye Bin <yebin10@huawei.com>
+Cc:     linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Oct 19, 2022 at 9:10 AM Christoph Hellwig <hch@infradead.org> wrote:
+On Mon, Sep 19, 2022 at 7:28 PM Ye Bin <yebin10@huawei.com> wrote:
 >
-> On Wed, Oct 19, 2022 at 06:04:07PM +0200, Giulio Benetti wrote:
-> > RAID6_USE_EMPTY_ZERO_PAGE is unused and hardcoded to 0, so let's drop it.
->
-> Looks good:
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Ye Bin (3):
+>   md: refactor md ioctl cmd check
+>   md: factor out __md_set_array_info()
+>   md: introduce md_ro_state to make code easy to understand
 
-Applied to md-next. Thanks!
+Applied patch 2 and 3 to md-next, with some changes in the commit logs.
+For future patches, please follow the guidance in
+Documentation/process/submitting-patches.rst for the commit log.
 
+Thanks,
 Song
+
+>
+>  drivers/md/md.c | 249 +++++++++++++++++++++++++-----------------------
+>  1 file changed, 131 insertions(+), 118 deletions(-)
+>
+> --
+> 2.31.1
+>
