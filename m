@@ -2,105 +2,89 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDDFEC4332F
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 15:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C742C4332F
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 17:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230322AbiJTPv1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Oct 2022 11:51:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33826 "EHLO
+        id S230062AbiJTRrS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Oct 2022 13:47:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230406AbiJTPvX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 11:51:23 -0400
-Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 396821B90FE;
-        Thu, 20 Oct 2022 08:51:16 -0700 (PDT)
-Received: by mail-wm1-x334.google.com with SMTP id 186-20020a1c02c3000000b003c6c154d528so2685621wmc.4;
-        Thu, 20 Oct 2022 08:51:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=54fd/0yen88eFOEGtvTo0HIRTRehsPlXZmjj7D9lRYM=;
-        b=AYzEUOOvgKrh8OY79DYRWSgwx6N8g/vR6J3zOIQt1gL8WOjDLWAvK0msuxAhyjy8H5
-         gggcBJuxspkS1/wgrQLT9gieS4kFqu/mJAgZ91Qbp9fsYRwVSSdVjymrhQOpRcfHFyrs
-         vNRr0nHhoAQ+F8gPsOe5wA8m7xO+PAeHiFT3p0gr84lf5L/rtvXxecm4lkmf8I+c2Toh
-         2iNtwXaKtllOhvTEnCy8jnkFj3p8ozL9gV+oeNG/AXBMdhpeiy36hxivHZN0IEx6e6Fw
-         5Fpi5LiZdrRHQMMbr9nRKNAjvE+yYYa1ZFS3CvKJEAZ++wOhbYVd2+1kidN34KTWWFyZ
-         FD0w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=54fd/0yen88eFOEGtvTo0HIRTRehsPlXZmjj7D9lRYM=;
-        b=bFpCd6txKIsCYOdo9RQx292AGuDTLgwWP7IldpdxKjB8BgE/V2a82KeXcQ5mvU7eoA
-         SrNjf258FHSYw5g/oKffjx/3bohbnsTSWFL4etuJyntjhmMCfTkmXWek7QWpAnlm9qeq
-         ihtFzT8u858xCqI2+VMgyBMVVlnAeeMxNsGqFO5+YfxbQ7kukMOi2eW1CMms8yYqWy2C
-         98o8Qx8YJzLVlsTnbTt/QXuLkqoYeO5/Gp9QeXh9GYW/g3LPGCLvONmWE7UU0vh5vQDY
-         DjvQnHvCTHwunKKlsTwcPIs6sDKzUdrZUe6E0YAmOl5XJ6Np7z4Ljn4Zn4VQCL1iuYp4
-         2EUw==
-X-Gm-Message-State: ACrzQf3jQhfsei/+jAHvASx6INqiaz7SRou86Y6u9AeN2P+pkGGKDZXT
-        5WGHSMWBrhv/3O4ezgn/O2q90TGUDt+xUA==
-X-Google-Smtp-Source: AMsMyM4kwoM78oquyzfzXtDeD8DlaN+JrS1iv5KYcCC4O7CgALTGucAn/e7/srb06hAYQjUkLMB/vQ==
-X-Received: by 2002:a1c:f60d:0:b0:3be:708b:c96c with SMTP id w13-20020a1cf60d000000b003be708bc96cmr31458957wmc.168.1666281074889;
-        Thu, 20 Oct 2022 08:51:14 -0700 (PDT)
-Received: from localhost.localdomain ([46.248.82.114])
-        by smtp.gmail.com with ESMTPSA id b21-20020a05600c4e1500b003a83ca67f73sm31645wmq.3.2022.10.20.08.51.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Oct 2022 08:51:14 -0700 (PDT)
-From:   Uros Bizjak <ubizjak@gmail.com>
-To:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Uros Bizjak <ubizjak@gmail.com>, Song Liu <song@kernel.org>
-Subject: [PATCH v2] raid5-cache: use try_cmpxchg in r5l_wake_reclaim
-Date:   Thu, 20 Oct 2022 17:51:04 +0200
-Message-Id: <20221020155104.9485-1-ubizjak@gmail.com>
-X-Mailer: git-send-email 2.37.3
+        with ESMTP id S230029AbiJTRrR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 13:47:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FCF9198462;
+        Thu, 20 Oct 2022 10:47:16 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9DC3E61B4B;
+        Thu, 20 Oct 2022 17:47:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 088C8C43470;
+        Thu, 20 Oct 2022 17:47:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666288035;
+        bh=R58SloSkZJNs2f+jMVp8OnePu6OrZOnezUSWXEqsdSY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=LNRZ8u+1uS7SqR6aYqxwSUzHahgXN7Jv59k+yzRPxbhkgrEKM91A4yRAxuF9c5KdU
+         cuAu4qjkT3ki41W2HR3AjrpeRYilOSgMhSDdgWBxbxQYVHkJw0FZsIBm8A0geFDS3k
+         psvmQGR9Cbi2ft6XXB68wlbvMN3yZDfh7FFBkxbnYmbYqyiOxbI+uWVxk5eowIDr0j
+         NZm7UH2Xkxrd+hbGCjy3hZeeCBBpneBSnI7tfEqTIwFwK8xySl8Ib/bC7ECNaiyLW1
+         d053pTrph2z8phwZvMD49tfI5CXqQ5VL1uAj1Oi+1zYmXYPAxQoW86fpu0XR7dhRnt
+         YGzVXN9iGq5GA==
+Received: by mail-ej1-f49.google.com with SMTP id d26so1231980eje.10;
+        Thu, 20 Oct 2022 10:47:14 -0700 (PDT)
+X-Gm-Message-State: ACrzQf171s3ZI+OLUt3mWMhb1TUdrlyubxmYOCM4dsVjq5VrxwW8xbeN
+        g/4CD0Rwepy1SlKQqAcHMLnJ8beHMFAo8EDpPIA=
+X-Google-Smtp-Source: AMsMyM5D+R4LuYsDY86sucPnjTGdvXhl9R6Bd6whGckMGXpbxicb2Yyd7qTB4DoNw2h7V82yV/a5ujl82rwIxMj74EI=
+X-Received: by 2002:a17:906:58c6:b0:78d:b37f:5ce5 with SMTP id
+ e6-20020a17090658c600b0078db37f5ce5mr12019188ejs.707.1666288033278; Thu, 20
+ Oct 2022 10:47:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220909040936.2610780-1-floridsleeves@gmail.com>
+In-Reply-To: <20220909040936.2610780-1-floridsleeves@gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 20 Oct 2022 10:47:01 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6JJLsdcv2gQY6QEhbTSRiamTtGo4GBL1uSoUx8ZsdKgw@mail.gmail.com>
+Message-ID: <CAPhsuW6JJLsdcv2gQY6QEhbTSRiamTtGo4GBL1uSoUx8ZsdKgw@mail.gmail.com>
+Subject: Re: [PATCH v1] drivers/md/md-bitmap: check the return value of md_bitmap_get_counter()
+To:     Li Zhong <floridsleeves@gmail.com>
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use try_cmpxchg instead of cmpxchg (*ptr, old, new) == old in
-r5l_wake_reclaim. 86 CMPXCHG instruction returns success in ZF flag, so
-this change saves a compare after cmpxchg (and related move instruction in
-front of cmpxchg).
+On Thu, Sep 8, 2022 at 9:09 PM Li Zhong <floridsleeves@gmail.com> wrote:
+>
+> Check the return value of md_bitmap_get_counter() in case it returns
+> NULL pointer, which will result in a null pointer dereference.
+>
+> Signed-off-by: Li Zhong <floridsleeves@gmail.com>
 
-Also, try_cmpxchg implicitly assigns old *ptr value to "old" when cmpxchg
-fails. There is no need to re-read the value in the loop.
+Somehow I didn't get v2 of this in my inbox. So replying to v1:
 
-Note that the value from *ptr should be read using READ_ONCE to prevent
-the compiler from merging, refetching or reordering the read.
+Applied v2 to md-next.
 
-No functional change intended.
+Thanks,
+Song
 
-Cc: Song Liu <song@kernel.org>
-Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
----
-v2: Fix garbled subject line
----
- drivers/md/raid5-cache.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 832d8566e165..a63023aae21e 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1565,11 +1565,12 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
- 
- 	if (!log)
- 		return;
-+
-+	target = READ_ONCE(log->reclaim_target);
- 	do {
--		target = log->reclaim_target;
- 		if (new < target)
- 			return;
--	} while (cmpxchg(&log->reclaim_target, target, new) != target);
-+	} while (!try_cmpxchg(&log->reclaim_target, &target, new));
- 	md_wakeup_thread(log->reclaim_thread);
- }
- 
--- 
-2.37.3
-
+> ---
+>  drivers/md/md-bitmap.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index bf6dffadbe6f..06ab1098ff99 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2195,7 +2195,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+>
+>                 if (set) {
+>                         bmc_new = md_bitmap_get_counter(&bitmap->counts, block, &new_blocks, 1);
+> -                       if (*bmc_new == 0) {
+> +                       if (bmc_new && *bmc_new == 0) {
+>                                 /* need to set on-disk bits too. */
+>                                 sector_t end = block + new_blocks;
+>                                 sector_t start = block >> chunkshift;
+> --
+> 2.25.1
+>
