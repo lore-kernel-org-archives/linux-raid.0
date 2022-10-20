@@ -2,64 +2,69 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 470A5C4332F
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 15:31:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDDFEC4332F
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 15:51:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230386AbiJTPbG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Oct 2022 11:31:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56688 "EHLO
+        id S230322AbiJTPv1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Oct 2022 11:51:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230502AbiJTPax (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 11:30:53 -0400
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C491917D854;
-        Thu, 20 Oct 2022 08:30:46 -0700 (PDT)
-Received: by mail-wr1-x433.google.com with SMTP id bk15so35109531wrb.13;
-        Thu, 20 Oct 2022 08:30:46 -0700 (PDT)
+        with ESMTP id S230406AbiJTPvX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 11:51:23 -0400
+Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 396821B90FE;
+        Thu, 20 Oct 2022 08:51:16 -0700 (PDT)
+Received: by mail-wm1-x334.google.com with SMTP id 186-20020a1c02c3000000b003c6c154d528so2685621wmc.4;
+        Thu, 20 Oct 2022 08:51:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=iPQjPFTjC0qMsvit10ait3Iowd1EofoGDFX3tHvmwvY=;
-        b=dzVoNA4F/kQJT/mBsDBrzBYPMiGm5jeUOaJ6oxh9yO2QTxeBcnp2JL8uejgdmFbMWQ
-         Fa6gQr2Txx8b55bW3DwWarAqg7isndU869zu6vvmUlJqVbG1au+88ecQN2lj4jZvCk1U
-         OBiQ/bcGvhO3T5AucHxJ0TKqqqVZeDijHYkqdcQIhHbXXVi6rPf0CzcTCCJBDTfqjBFy
-         EhY1m4PwKTaiDb2iZqmCyT5TD7lNug+gTUDbkHVEE2HzZIiGUkldxdvXK5zsSgtWqW5X
-         4Z8j0JigS7BrkpkFq+GnjMnwl1beoYwx5lNfllD3Byxe6vl+ejtMdSQPNj6VAtqH0sND
-         OuQQ==
+        bh=54fd/0yen88eFOEGtvTo0HIRTRehsPlXZmjj7D9lRYM=;
+        b=AYzEUOOvgKrh8OY79DYRWSgwx6N8g/vR6J3zOIQt1gL8WOjDLWAvK0msuxAhyjy8H5
+         gggcBJuxspkS1/wgrQLT9gieS4kFqu/mJAgZ91Qbp9fsYRwVSSdVjymrhQOpRcfHFyrs
+         vNRr0nHhoAQ+F8gPsOe5wA8m7xO+PAeHiFT3p0gr84lf5L/rtvXxecm4lkmf8I+c2Toh
+         2iNtwXaKtllOhvTEnCy8jnkFj3p8ozL9gV+oeNG/AXBMdhpeiy36hxivHZN0IEx6e6Fw
+         5Fpi5LiZdrRHQMMbr9nRKNAjvE+yYYa1ZFS3CvKJEAZ++wOhbYVd2+1kidN34KTWWFyZ
+         FD0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=iPQjPFTjC0qMsvit10ait3Iowd1EofoGDFX3tHvmwvY=;
-        b=qEwk+feve1Su1+NeqdKCQ16ISNfVq0+NFI3xLqjw0REAC3GHOVsiaNRnkQjM1X3+lX
-         5ISIge440j5rJnKsx6NXTm9s3RDlvv7ZdPYk9z25G9ZpBeTpMpSLTkYxQHKpXFl3LiUT
-         fbd049aYXzJMvXwemqDwvmuk7/w+DAxZp5TvvG5n3HUTSfc91txvRrl+9KsxMn71CBdd
-         OqaOyoGiO4zVpz6+snklHezMP5HX0pN9ah2Z2eViQ/sd77+Rs/JwiU+ubIgqd3ddwsZu
-         Jv7K8vydObjw1N4oWHG6PdsTf9DCOJii630zxfw4jMfghRiHJaPygwEfzwTNcm4xPDDI
-         o/+g==
-X-Gm-Message-State: ACrzQf0ge0mk5aimR0IxOpjrZPu6Vb68cfoi4sIA0zjVgsp4P9dDymN+
-        OExXrKQj/si1l0cSk23qBou8tobzXduAog==
-X-Google-Smtp-Source: AMsMyM76+pdj4NBSwtpYXzW1ZE7v0SXxKGHBL1oMQy0SspGtIzskwiTN6umZfBVPC09nX4mBn0jOxA==
-X-Received: by 2002:adf:d842:0:b0:22e:33e2:f379 with SMTP id k2-20020adfd842000000b0022e33e2f379mr8913268wrl.23.1666279844608;
-        Thu, 20 Oct 2022 08:30:44 -0700 (PDT)
+        bh=54fd/0yen88eFOEGtvTo0HIRTRehsPlXZmjj7D9lRYM=;
+        b=bFpCd6txKIsCYOdo9RQx292AGuDTLgwWP7IldpdxKjB8BgE/V2a82KeXcQ5mvU7eoA
+         SrNjf258FHSYw5g/oKffjx/3bohbnsTSWFL4etuJyntjhmMCfTkmXWek7QWpAnlm9qeq
+         ihtFzT8u858xCqI2+VMgyBMVVlnAeeMxNsGqFO5+YfxbQ7kukMOi2eW1CMms8yYqWy2C
+         98o8Qx8YJzLVlsTnbTt/QXuLkqoYeO5/Gp9QeXh9GYW/g3LPGCLvONmWE7UU0vh5vQDY
+         DjvQnHvCTHwunKKlsTwcPIs6sDKzUdrZUe6E0YAmOl5XJ6Np7z4Ljn4Zn4VQCL1iuYp4
+         2EUw==
+X-Gm-Message-State: ACrzQf3jQhfsei/+jAHvASx6INqiaz7SRou86Y6u9AeN2P+pkGGKDZXT
+        5WGHSMWBrhv/3O4ezgn/O2q90TGUDt+xUA==
+X-Google-Smtp-Source: AMsMyM4kwoM78oquyzfzXtDeD8DlaN+JrS1iv5KYcCC4O7CgALTGucAn/e7/srb06hAYQjUkLMB/vQ==
+X-Received: by 2002:a1c:f60d:0:b0:3be:708b:c96c with SMTP id w13-20020a1cf60d000000b003be708bc96cmr31458957wmc.168.1666281074889;
+        Thu, 20 Oct 2022 08:51:14 -0700 (PDT)
 Received: from localhost.localdomain ([46.248.82.114])
-        by smtp.gmail.com with ESMTPSA id l16-20020a05600c1d1000b003c6cdbface4sm169886wms.11.2022.10.20.08.30.43
+        by smtp.gmail.com with ESMTPSA id b21-20020a05600c4e1500b003a83ca67f73sm31645wmq.3.2022.10.20.08.51.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Oct 2022 08:30:44 -0700 (PDT)
+        Thu, 20 Oct 2022 08:51:14 -0700 (PDT)
 From:   Uros Bizjak <ubizjak@gmail.com>
 To:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Uros Bizjak <ubizjak@gmail.com>, Song Liu <song@kernel.org>
-Subject: [PATCH] raid5-cache: use try_cmpxchg in r5l_wake_reclaim Use try_cmpxchg instead of cmpxchg (*ptr, old, new) == old in r5l_wake_reclaim.  x86 CMPXCHG instruction returns success in ZF flag, so this change saves a compare after cmpxchg (and related move instruction in front of cmpxchg).
-Date:   Thu, 20 Oct 2022 17:30:34 +0200
-Message-Id: <20221020153034.7905-1-ubizjak@gmail.com>
+Subject: [PATCH v2] raid5-cache: use try_cmpxchg in r5l_wake_reclaim
+Date:   Thu, 20 Oct 2022 17:51:04 +0200
+Message-Id: <20221020155104.9485-1-ubizjak@gmail.com>
 X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
+
+Use try_cmpxchg instead of cmpxchg (*ptr, old, new) == old in
+r5l_wake_reclaim. 86 CMPXCHG instruction returns success in ZF flag, so
+this change saves a compare after cmpxchg (and related move instruction in
+front of cmpxchg).
 
 Also, try_cmpxchg implicitly assigns old *ptr value to "old" when cmpxchg
 fails. There is no need to re-read the value in the loop.
@@ -71,6 +76,8 @@ No functional change intended.
 
 Cc: Song Liu <song@kernel.org>
 Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
+---
+v2: Fix garbled subject line
 ---
  drivers/md/raid5-cache.c | 5 +++--
  1 file changed, 3 insertions(+), 2 deletions(-)
