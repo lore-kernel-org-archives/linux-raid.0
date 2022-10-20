@@ -2,92 +2,98 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F25EC433FE
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 11:57:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 470A5C4332F
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 15:31:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229767AbiJTL5Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Oct 2022 07:57:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47544 "EHLO
+        id S230386AbiJTPbG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Oct 2022 11:31:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229710AbiJTL5X (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 07:57:23 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A309134DFB
-        for <linux-raid@vger.kernel.org>; Thu, 20 Oct 2022 04:57:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666267042; x=1697803042;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=vnvVVfi/ZMEAz10yimtTxnzkmNcWiSP9CttnEmiaV84=;
-  b=D7/rCt3qWtF1ReaXeAZa6NQqGHh1EyEZMksMFAVkcfI1rdqtObGSVunM
-   owBgkcUR8tHA95IchdqYQnSGeLD0sS1cpUfDa1lpGxXHWXrAgLu1DwyY8
-   jXBzjrLwqz2B78GIVDI02mn5L45DMs1lidofNOBhixOEh6WeznOJUvRmh
-   4/bQl+0gR7C1NI7VvVIr2aAAx9sWngaKeHZal8P/xV1IxpflgbGfyFPdV
-   2Ei6RIO8mbeWfKXar77d5VknZ8ku91yRbuHPwPtjnzVsovHbGXhOfbEDr
-   MxMkLnHPjAXM7jvhl1RTiY7dr7C2a8aaTmOpOgS/4Fqsc/dLPrE1cM8Lc
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10505"; a="307784055"
-X-IronPort-AV: E=Sophos;i="5.95,198,1661842800"; 
-   d="scan'208";a="307784055"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2022 04:57:21 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10505"; a="663000782"
-X-IronPort-AV: E=Sophos;i="5.95,198,1661842800"; 
-   d="scan'208";a="663000782"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
-  by orsmga001.jf.intel.com with ESMTP; 20 Oct 2022 04:57:20 -0700
-From:   Kinga Tanska <kinga.tanska@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH] super-intel: make freesize not required for chunk size migration
-Date:   Thu, 20 Oct 2022 06:59:03 +0200
-Message-Id: <20221020045903.19950-1-kinga.tanska@intel.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S230502AbiJTPax (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 11:30:53 -0400
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C491917D854;
+        Thu, 20 Oct 2022 08:30:46 -0700 (PDT)
+Received: by mail-wr1-x433.google.com with SMTP id bk15so35109531wrb.13;
+        Thu, 20 Oct 2022 08:30:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=iPQjPFTjC0qMsvit10ait3Iowd1EofoGDFX3tHvmwvY=;
+        b=dzVoNA4F/kQJT/mBsDBrzBYPMiGm5jeUOaJ6oxh9yO2QTxeBcnp2JL8uejgdmFbMWQ
+         Fa6gQr2Txx8b55bW3DwWarAqg7isndU869zu6vvmUlJqVbG1au+88ecQN2lj4jZvCk1U
+         OBiQ/bcGvhO3T5AucHxJ0TKqqqVZeDijHYkqdcQIhHbXXVi6rPf0CzcTCCJBDTfqjBFy
+         EhY1m4PwKTaiDb2iZqmCyT5TD7lNug+gTUDbkHVEE2HzZIiGUkldxdvXK5zsSgtWqW5X
+         4Z8j0JigS7BrkpkFq+GnjMnwl1beoYwx5lNfllD3Byxe6vl+ejtMdSQPNj6VAtqH0sND
+         OuQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=iPQjPFTjC0qMsvit10ait3Iowd1EofoGDFX3tHvmwvY=;
+        b=qEwk+feve1Su1+NeqdKCQ16ISNfVq0+NFI3xLqjw0REAC3GHOVsiaNRnkQjM1X3+lX
+         5ISIge440j5rJnKsx6NXTm9s3RDlvv7ZdPYk9z25G9ZpBeTpMpSLTkYxQHKpXFl3LiUT
+         fbd049aYXzJMvXwemqDwvmuk7/w+DAxZp5TvvG5n3HUTSfc91txvRrl+9KsxMn71CBdd
+         OqaOyoGiO4zVpz6+snklHezMP5HX0pN9ah2Z2eViQ/sd77+Rs/JwiU+ubIgqd3ddwsZu
+         Jv7K8vydObjw1N4oWHG6PdsTf9DCOJii630zxfw4jMfghRiHJaPygwEfzwTNcm4xPDDI
+         o/+g==
+X-Gm-Message-State: ACrzQf0ge0mk5aimR0IxOpjrZPu6Vb68cfoi4sIA0zjVgsp4P9dDymN+
+        OExXrKQj/si1l0cSk23qBou8tobzXduAog==
+X-Google-Smtp-Source: AMsMyM76+pdj4NBSwtpYXzW1ZE7v0SXxKGHBL1oMQy0SspGtIzskwiTN6umZfBVPC09nX4mBn0jOxA==
+X-Received: by 2002:adf:d842:0:b0:22e:33e2:f379 with SMTP id k2-20020adfd842000000b0022e33e2f379mr8913268wrl.23.1666279844608;
+        Thu, 20 Oct 2022 08:30:44 -0700 (PDT)
+Received: from localhost.localdomain ([46.248.82.114])
+        by smtp.gmail.com with ESMTPSA id l16-20020a05600c1d1000b003c6cdbface4sm169886wms.11.2022.10.20.08.30.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Oct 2022 08:30:44 -0700 (PDT)
+From:   Uros Bizjak <ubizjak@gmail.com>
+To:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Uros Bizjak <ubizjak@gmail.com>, Song Liu <song@kernel.org>
+Subject: [PATCH] raid5-cache: use try_cmpxchg in r5l_wake_reclaim Use try_cmpxchg instead of cmpxchg (*ptr, old, new) == old in r5l_wake_reclaim.  x86 CMPXCHG instruction returns success in ZF flag, so this change saves a compare after cmpxchg (and related move instruction in front of cmpxchg).
+Date:   Thu, 20 Oct 2022 17:30:34 +0200
+Message-Id: <20221020153034.7905-1-ubizjak@gmail.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Freesize is not required when chunk size migration is performed. Fix
-return value when superblock is not set.
+Also, try_cmpxchg implicitly assigns old *ptr value to "old" when cmpxchg
+fails. There is no need to re-read the value in the loop.
 
-Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+Note that the value from *ptr should be read using READ_ONCE to prevent
+the compiler from merging, refetching or reordering the read.
+
+No functional change intended.
+
+Cc: Song Liu <song@kernel.org>
+Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
 ---
- super-intel.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/md/raid5-cache.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 4d82af3d..37c59da5 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -7714,11 +7714,11 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 		struct intel_super *super = st->sb;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 832d8566e165..a63023aae21e 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1565,11 +1565,12 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
  
- 		/*
--		 * Autolayout mode, st->sb and freesize must be set.
-+		 * Autolayout mode, st->sb must be set.
- 		 */
--		if (!super || !freesize) {
--			pr_vrb("freesize and superblock must be set for autolayout, aborting\n");
--			return 1;
-+		if (!super) {
-+			pr_vrb("superblock must be set for autolayout, aborting\n");
-+			return 0;
- 		}
+ 	if (!log)
+ 		return;
++
++	target = READ_ONCE(log->reclaim_target);
+ 	do {
+-		target = log->reclaim_target;
+ 		if (new < target)
+ 			return;
+-	} while (cmpxchg(&log->reclaim_target, target, new) != target);
++	} while (!try_cmpxchg(&log->reclaim_target, &target, new));
+ 	md_wakeup_thread(log->reclaim_thread);
+ }
  
- 		if (!validate_geometry_imsm_orom(st->sb, level, layout,
-@@ -7726,7 +7726,7 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 						 verbose))
- 			return 0;
- 
--		if (super->orom) {
-+		if (super->orom && freesize) {
- 			imsm_status_t rv;
- 			int count = count_volumes(super->hba, super->orom->dpa,
- 					      verbose);
 -- 
-2.26.2
+2.37.3
 
