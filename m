@@ -2,89 +2,105 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C742C4332F
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 17:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DED3C433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Oct 2022 18:10:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230062AbiJTRrS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Oct 2022 13:47:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54132 "EHLO
+        id S230190AbiJTSKv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Oct 2022 14:10:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230029AbiJTRrR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 13:47:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FCF9198462;
-        Thu, 20 Oct 2022 10:47:16 -0700 (PDT)
+        with ESMTP id S230090AbiJTSKt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Oct 2022 14:10:49 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB71A16F74E;
+        Thu, 20 Oct 2022 11:10:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9DC3E61B4B;
-        Thu, 20 Oct 2022 17:47:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 088C8C43470;
-        Thu, 20 Oct 2022 17:47:15 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 90483B8274A;
+        Thu, 20 Oct 2022 18:09:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CA72C433D7;
+        Thu, 20 Oct 2022 18:09:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666288035;
-        bh=R58SloSkZJNs2f+jMVp8OnePu6OrZOnezUSWXEqsdSY=;
+        s=k20201202; t=1666289379;
+        bh=PBunTa7rce9oPUHewe2pTnhit7GvQJqymuWwU3QKUXM=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=LNRZ8u+1uS7SqR6aYqxwSUzHahgXN7Jv59k+yzRPxbhkgrEKM91A4yRAxuF9c5KdU
-         cuAu4qjkT3ki41W2HR3AjrpeRYilOSgMhSDdgWBxbxQYVHkJw0FZsIBm8A0geFDS3k
-         psvmQGR9Cbi2ft6XXB68wlbvMN3yZDfh7FFBkxbnYmbYqyiOxbI+uWVxk5eowIDr0j
-         NZm7UH2Xkxrd+hbGCjy3hZeeCBBpneBSnI7tfEqTIwFwK8xySl8Ib/bC7ECNaiyLW1
-         d053pTrph2z8phwZvMD49tfI5CXqQ5VL1uAj1Oi+1zYmXYPAxQoW86fpu0XR7dhRnt
-         YGzVXN9iGq5GA==
-Received: by mail-ej1-f49.google.com with SMTP id d26so1231980eje.10;
-        Thu, 20 Oct 2022 10:47:14 -0700 (PDT)
-X-Gm-Message-State: ACrzQf171s3ZI+OLUt3mWMhb1TUdrlyubxmYOCM4dsVjq5VrxwW8xbeN
-        g/4CD0Rwepy1SlKQqAcHMLnJ8beHMFAo8EDpPIA=
-X-Google-Smtp-Source: AMsMyM5D+R4LuYsDY86sucPnjTGdvXhl9R6Bd6whGckMGXpbxicb2Yyd7qTB4DoNw2h7V82yV/a5ujl82rwIxMj74EI=
-X-Received: by 2002:a17:906:58c6:b0:78d:b37f:5ce5 with SMTP id
- e6-20020a17090658c600b0078db37f5ce5mr12019188ejs.707.1666288033278; Thu, 20
- Oct 2022 10:47:13 -0700 (PDT)
+        b=T6KODpSujSMwgSBYn8ps6OsFiGEP+mFua+xq2LF7eTAmVCFXap2zrS/xQskdZRnE3
+         sX6muDQriwpDR8ycL/2J8aoBIPcJnM5F8FT3aZD2wmh0qRgH8TE2NhYpZ8XQowTc4R
+         AFilFdujps4dudONDLufhK52DdFGHp5Kse+jkrtu1+fhYLGsoLLo9o3B3NUfXN39cj
+         bp65K+KJzSANN87wy8wz/IDYYuG2lN3Isu/JdpCHHbkAaYIngamdyqJiUsz+kRsyWi
+         0spb8hQKhsmznSY1j0NmKbNbcm9+G2EkHxv5sW5r8cvyfB8i6yuaQq0ADtV1rx1hKj
+         ePH7bGJEhpV6Q==
+Received: by mail-ej1-f48.google.com with SMTP id a26so1465070ejc.4;
+        Thu, 20 Oct 2022 11:09:39 -0700 (PDT)
+X-Gm-Message-State: ACrzQf3g+BfHcZ9ADJSVA4HOcQcdAMBNAar4ttqM6haFPZQnlCgjPmxh
+        tvpX5g6Txwm+6FnscNco6iImT/ms//bGSK9yaiA=
+X-Google-Smtp-Source: AMsMyM6dBHethUPJpGWt/pGXdbIIfVcM3sIT6J9dz+n7IuFyddVg1deCn3XF+9udYMoHeEpl4tupoWZ4gVhAZEyiJik=
+X-Received: by 2002:a17:906:eec1:b0:782:6384:76be with SMTP id
+ wu1-20020a170906eec100b00782638476bemr12134290ejb.756.1666289377447; Thu, 20
+ Oct 2022 11:09:37 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220909040936.2610780-1-floridsleeves@gmail.com>
-In-Reply-To: <20220909040936.2610780-1-floridsleeves@gmail.com>
+References: <20221020155104.9485-1-ubizjak@gmail.com>
+In-Reply-To: <20221020155104.9485-1-ubizjak@gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 20 Oct 2022 10:47:01 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6JJLsdcv2gQY6QEhbTSRiamTtGo4GBL1uSoUx8ZsdKgw@mail.gmail.com>
-Message-ID: <CAPhsuW6JJLsdcv2gQY6QEhbTSRiamTtGo4GBL1uSoUx8ZsdKgw@mail.gmail.com>
-Subject: Re: [PATCH v1] drivers/md/md-bitmap: check the return value of md_bitmap_get_counter()
-To:     Li Zhong <floridsleeves@gmail.com>
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Date:   Thu, 20 Oct 2022 11:09:25 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4z+ttCn6zUWwz+QB_+Ddfo0YDDqLxWeTHLLuXHSDoeEQ@mail.gmail.com>
+Message-ID: <CAPhsuW4z+ttCn6zUWwz+QB_+Ddfo0YDDqLxWeTHLLuXHSDoeEQ@mail.gmail.com>
+Subject: Re: [PATCH v2] raid5-cache: use try_cmpxchg in r5l_wake_reclaim
+To:     Uros Bizjak <ubizjak@gmail.com>
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Sep 8, 2022 at 9:09 PM Li Zhong <floridsleeves@gmail.com> wrote:
+On Thu, Oct 20, 2022 at 8:51 AM Uros Bizjak <ubizjak@gmail.com> wrote:
 >
-> Check the return value of md_bitmap_get_counter() in case it returns
-> NULL pointer, which will result in a null pointer dereference.
+> Use try_cmpxchg instead of cmpxchg (*ptr, old, new) == old in
+> r5l_wake_reclaim. 86 CMPXCHG instruction returns success in ZF flag, so
+> this change saves a compare after cmpxchg (and related move instruction in
+> front of cmpxchg).
 >
-> Signed-off-by: Li Zhong <floridsleeves@gmail.com>
+> Also, try_cmpxchg implicitly assigns old *ptr value to "old" when cmpxchg
+> fails. There is no need to re-read the value in the loop.
+>
+> Note that the value from *ptr should be read using READ_ONCE to prevent
+> the compiler from merging, refetching or reordering the read.
+>
+> No functional change intended.
+>
+> Cc: Song Liu <song@kernel.org>
+> Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
 
-Somehow I didn't get v2 of this in my inbox. So replying to v1:
+Applied to md-next. Thanks!
 
-Applied v2 to md-next.
-
-Thanks,
 Song
 
 > ---
->  drivers/md/md-bitmap.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> v2: Fix garbled subject line
+> ---
+>  drivers/md/raid5-cache.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index bf6dffadbe6f..06ab1098ff99 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -2195,7 +2195,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 832d8566e165..a63023aae21e 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -1565,11 +1565,12 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
 >
->                 if (set) {
->                         bmc_new = md_bitmap_get_counter(&bitmap->counts, block, &new_blocks, 1);
-> -                       if (*bmc_new == 0) {
-> +                       if (bmc_new && *bmc_new == 0) {
->                                 /* need to set on-disk bits too. */
->                                 sector_t end = block + new_blocks;
->                                 sector_t start = block >> chunkshift;
+>         if (!log)
+>                 return;
+> +
+> +       target = READ_ONCE(log->reclaim_target);
+>         do {
+> -               target = log->reclaim_target;
+>                 if (new < target)
+>                         return;
+> -       } while (cmpxchg(&log->reclaim_target, target, new) != target);
+> +       } while (!try_cmpxchg(&log->reclaim_target, &target, new));
+>         md_wakeup_thread(log->reclaim_thread);
+>  }
+>
 > --
-> 2.25.1
+> 2.37.3
 >
