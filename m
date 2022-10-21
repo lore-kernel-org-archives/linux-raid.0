@@ -2,135 +2,80 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6702C433FE
-	for <linux-raid@archiver.kernel.org>; Fri, 21 Oct 2022 10:14:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29848C433FE
+	for <linux-raid@archiver.kernel.org>; Fri, 21 Oct 2022 10:51:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230435AbiJUKOW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 21 Oct 2022 06:14:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57528 "EHLO
+        id S230015AbiJUKvW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 21 Oct 2022 06:51:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231168AbiJUKOD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 21 Oct 2022 06:14:03 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1AB525D649
-        for <linux-raid@vger.kernel.org>; Fri, 21 Oct 2022 03:13:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666347231; x=1697883231;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=KhbYiCTGMT46sJkVZj6Ga1VZfCR03Esp3X7/KWfWBTY=;
-  b=VrPH5l0BoQ5brOQHmKSfuq4R+bwYb4XvGZndO8HpXNURJ9FXNbh2id29
-   EtYsKNlftVaCvLzdcxyEIAacNocbBUF3MVdYAGV11nEHAhy5Uqn1LXOX4
-   zd81bpJA31WiaGinZvAwxlsI9RMzgXoLlSwF8JdbRF8tMgguYc6WVLbR/
-   ej+gUJnorRc/gmv/GVZbdS7mjgFYQofNQIj+8dwZ9XULXhZB251HHKxyW
-   FCHfNC/9C0iGlgxBPgKm2IPG26yCxQD9N/2hrKHJqlMq4www+viXWUUl9
-   kR8/sCNu6iKq+dQhE8ephcWszQ7htWWcuycf3CotblNBvXkPco/h8nVEP
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10506"; a="333541169"
-X-IronPort-AV: E=Sophos;i="5.95,200,1661842800"; 
-   d="scan'208";a="333541169"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2022 03:13:27 -0700
-X-IronPort-AV: E=McAfee;i="6500,9779,10506"; a="630415337"
-X-IronPort-AV: E=Sophos;i="5.95,200,1661842800"; 
-   d="scan'208";a="630415337"
-Received: from ktanska-mobl1.ger.corp.intel.com (HELO intel.linux.com) ([10.213.29.92])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2022 03:13:25 -0700
-Date:   Fri, 21 Oct 2022 12:13:22 +0200
-From:   Kinga Tanska <kinga.tanska@linux.intel.com>
-To:     Coly Li <colyli@suse.de>
-Cc:     Kinga Tanska <kinga.tanska@intel.com>, linux-raid@vger.kernel.org,
-        jes@trained-monkey.org
-Subject: Re: [PATCH] super-intel: make freesize not required for chunk size
- migration
-Message-ID: <20221021121322.00002cee@intel.linux.com>
-In-Reply-To: <D036A378-7504-46EF-9EB6-802EA147CCB9@suse.de>
-References: <20221020045903.19950-1-kinga.tanska@intel.com>
-        <D036A378-7504-46EF-9EB6-802EA147CCB9@suse.de>
-X-Mailer: Claws Mail 3.19.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229761AbiJUKvT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 21 Oct 2022 06:51:19 -0400
+Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CCFB257CE3
+        for <linux-raid@vger.kernel.org>; Fri, 21 Oct 2022 03:51:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com
+        ; s=alpha; h=In-Reply-To:Content-Transfer-Encoding:Content-Type:MIME-Version:
+        References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=KdrBMjUcfNn/QqjgGJUs73DYv1Nc6KeFnoXxdfGD5c0=; b=QHKzWSLhim18bZGLOz9ZIXhJ44
+        bUtaaLM9EyhYGVamSQ9t5iH9iCYDZm1nxP3PTQT1MSUloT22VsJYYLsg/jctK0cZMgqcSEnkv1+s1
+        jBlODzLLfnm17afSgTl1IRa3siCCTjlmkHxSV2kZQXA230TocLoNQhTMk5ndkdRxUcs8YuDk7Xqme
+        FvJiWtq3RHjwo6KM9xWPn8Wbhd7HV7aBAPMWGGG/WECtGIstZwT1mO4a2oiUHR1pcEGqT0RQwkkJn
+        IdVD7W9j+WSwjJ9Ct4ce0Wv/1lKy/QY584T9vaa0LOkWYOhjhoXQTpUIDqis4WtQoMCqtECTjnwJ7
+        N8I6cdGw==;
+Received: from andy by mail.bitfolk.com with local (Exim 4.89)
+        (envelope-from <andy@strugglers.net>)
+        id 1olpcJ-0006vP-V7
+        for linux-raid@vger.kernel.org; Fri, 21 Oct 2022 10:51:07 +0000
+Date:   Fri, 21 Oct 2022 10:51:07 +0000
+From:   Andy Smith <andy@strugglers.net>
+To:     linux-raid@vger.kernel.org
+Subject: Re: Performance Testing MD-RAID10 with 1 failed drive
+Message-ID: <20221021105107.nhihftkjck74jg6i@bitfolk.com>
+Mail-Followup-To: linux-raid@vger.kernel.org
+References: <CAEQ-dADdRd91GBkTzVU0AQiXQ4tLitYsU2uLziWOi=hLtaBK0w@mail.gmail.com>
+ <e9feaefd-9ddb-c07a-86b8-3640ca4201af@thelounge.net>
+ <7ca2b272-4920-076f-ecaf-5109db0aae46@youngman.org.uk>
+ <CAAMCDef4bGs_LnbxEie=2FkxD6YJ_A4WFzW8c647k9MNLGoY3A@mail.gmail.com>
+ <CAEQ-dAAYRAg-t3ve9RJV-vJhzqMSe7YOw2bwJVJ_vk0BDp7NZw@mail.gmail.com>
+ <20221021001405.2uapizqtsj3wxptb@bitfolk.com>
+ <6c31fc94-b70e-88c5-205a-efff32baf594@plouf.fr.eu.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6c31fc94-b70e-88c5-205a-efff32baf594@plouf.fr.eu.org>
+OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
+X-URL:  http://strugglers.net/wiki/User:Andy
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-SA-Exim-Connect-IP: <locally generated>
+X-SA-Exim-Mail-From: andy@strugglers.net
+X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 21 Oct 2022 14:49:16 +0800
-Coly Li <colyli@suse.de> wrote:
+Hello,
 
->=20
->=20
-> > 2022=E5=B9=B410=E6=9C=8820=E6=97=A5 12:59=EF=BC=8CKinga Tanska <kinga.t=
-anska@intel.com> =E5=86=99=E9=81=93=EF=BC=9A
-> >=20
-> > Freesize is not required when chunk size migration is performed. Fix
-> > return value when superblock is not set.
->=20
-> Hi Kinga,
->=20
-> Could you please provide a bit more information why freesize is
-> unnecessary in this situation?
->=20
-> Thanks.
->=20
-> Coly Li
->=20
->=20
-> >=20
-> > Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
-> > ---
-> > super-intel.c | 10 +++++-----
-> > 1 file changed, 5 insertions(+), 5 deletions(-)
-> >=20
-> > diff --git a/super-intel.c b/super-intel.c
-> > index 4d82af3d..37c59da5 100644
-> > --- a/super-intel.c
-> > +++ b/super-intel.c
-> > @@ -7714,11 +7714,11 @@ static int validate_geometry_imsm(struct
-> > supertype *st, int level, int layout, struct intel_super *super =3D
-> > st->sb;
-> >=20
-> > 		/*
-> > -		 * Autolayout mode, st->sb and freesize must be
-> > set.
-> > +		 * Autolayout mode, st->sb must be set.
-> > 		 */
-> > -		if (!super || !freesize) {
-> > -			pr_vrb("freesize and superblock must be
-> > set for autolayout, aborting\n");
-> > -			return 1;
-> > +		if (!super) {
-> > +			pr_vrb("superblock must be set for
-> > autolayout, aborting\n");
-> > +			return 0;
-> > 		}
-> >=20
-> > 		if (!validate_geometry_imsm_orom(st->sb, level,
-> > layout, @@ -7726,7 +7726,7 @@ static int
-> > validate_geometry_imsm(struct supertype *st, int level, int layout,
-> > verbose)) return 0;
-> >=20
-> > -		if (super->orom) {
-> > +		if (super->orom && freesize) {
-> > 			imsm_status_t rv;
-> > 			int count =3D count_volumes(super->hba,
-> > super->orom->dpa, verbose);
-> > --=20
-> > 2.26.2
-> >=20
->=20
+On Fri, Oct 21, 2022 at 10:15:42AM +0200, Pascal Hambourg wrote:
+> Le 21/10/2022 à 02:14, Andy Smith a écrit :
+> > Perhaps you could use dm-dust to make an unreliable block device
+> > from a real device?
+> 
+> That seems uselessly complicated to me.
 
-Hi,
+Well I too do not understand why OP can't just fail one existing
+device, but it seemed important to them to experience actual errors
+and have it kicked out for that. A half way measure might be the
+offline / delete poking I mentioned in /sys/block.
 
-freesize is needed to be set for migrations where size of RAID could be
-changed - expand. It tells how many free space is determined
-for members. In chunk size migration freesize is not needed to
-be set, so we shouldn't check if pointer exists. I moved this
-check to condition which contains size calculations, instead of
-checking it always at the first step.
-We've tested it internally with both, chunk size migration and expand
-and freesize is checked only when is really needed now.
+*shrug*
 
-Regards,
-Kinga Tanska
+Cheers,
+Andy
+
+-- 
+https://bitfolk.com/ -- No-nonsense VPS hosting
