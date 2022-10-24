@@ -2,231 +2,193 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2822C3A59D
-	for <linux-raid@archiver.kernel.org>; Mon, 24 Oct 2022 04:33:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F0F1C3A59D
+	for <linux-raid@archiver.kernel.org>; Mon, 24 Oct 2022 06:48:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229556AbiJXEdA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 24 Oct 2022 00:33:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37286 "EHLO
+        id S230149AbiJXGst (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 24 Oct 2022 02:48:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbiJXEc7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Oct 2022 00:32:59 -0400
-Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00F7D753AF
-        for <linux-raid@vger.kernel.org>; Sun, 23 Oct 2022 21:32:58 -0700 (PDT)
-Received: by mail-lj1-x231.google.com with SMTP id r22so11270643ljn.10
-        for <linux-raid@vger.kernel.org>; Sun, 23 Oct 2022 21:32:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=krDAa9xRK8lyCQLKotOxWTGKlSnluuaefH3/GOgFpYs=;
-        b=KlMfiHRt3TrwEepk1JX/DA576ikJWMTq+Y89Wy/wGud3LZ2s4ndGJr0f0J2GUqV/4i
-         B4Qp7cLjYUIRHjL1XG4WWqkPalgYp1rPEE4YhgZblIY7x3BUM/GuxQRXvptl5BbEPuLl
-         eGLhZKDSj/rMbJ8cM0tDig+pmI28HNidmSD95y1/N634fodT5VO9llznjaEcphNs/+HA
-         9xbS+09KmMpW+As7Iw25ywDlSqXM8t9PpPz82yPUGtfV67w31q52SLMcEZGhY0kOPc/h
-         3Hi8R4ej9Nl+ry1jGEc6Agh186+CB4Yhso+Ehnv5lnFddtUZEyXB/2mOeTgnturD6IiV
-         BAJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=krDAa9xRK8lyCQLKotOxWTGKlSnluuaefH3/GOgFpYs=;
-        b=N68gVV2nUcApm3/MlHwm9z8DLCNQadoO6EKxDrEx24wdO1c0gvF5BASSzdfDz0Pn+e
-         h9B0mrj5VzK+v8WU/Y46GfRYlcS9ItIBupoMs0lnfIpozJViBaSVB6IsR4kbPCAo2K5Y
-         erQIlMq3AkkNf3s1QscmWPnlYyk54Bi5kszTfRqrkdgWJBJcsv+PuqY2ogBOGKMxHFB5
-         aPZWpDD79wE+9QURcGCzpANWHQuf27BJt3oERTSOs5n52zpoagr5UQWHiAHyOE991ZdV
-         nacgY2vnKcUvrfNeAhHVSD3JT/ElwwLkw2XDo7WCs2DkLrh3jCywif1AfHVbdzgXzzzd
-         aWFg==
-X-Gm-Message-State: ACrzQf0ekwHjFMf7TOJcveD3/3yD/jFL2yn2R6rNjFI6Mb43YcL07OYn
-        tYz+pQKoIsXM8bAlBU024m5kEWJjZ6ZqYqgo1TMIRw==
-X-Google-Smtp-Source: AMsMyM4LyGnf23EzB+dYN8BaPYltToL7B/NK5F/oFx5edShhBhIV3tr9oyL0rHb9VyZzWuxtTCftE4YYTiQR2ak3bUU=
-X-Received: by 2002:a2e:9e50:0:b0:261:e3fd:cdc5 with SMTP id
- g16-20020a2e9e50000000b00261e3fdcdc5mr11355028ljk.56.1666585976218; Sun, 23
- Oct 2022 21:32:56 -0700 (PDT)
+        with ESMTP id S230012AbiJXGss (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Oct 2022 02:48:48 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CF155E307
+        for <linux-raid@vger.kernel.org>; Sun, 23 Oct 2022 23:48:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1666594126;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=S39w8+qp7EaPLBKGImnYt+R+SH5ZWoFxE2eQdUUrlKk=;
+        b=hq/3Bbi9j1AXX8d34XqCf1b2qKNrTtwSJwCPVB5aSBHsT816Ho3eYMXcZbBwJfE5NuGxK5
+        ef2NzATSD2MkWFyRGEU3pb8896jtA2hKGrOQ3fmfHFFVYa+k94k1TdEYz+MO47TwJWAsuG
+        rhP+G9Te7arlKMNml233u8zaftEx+yI=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-633-xNhK1d7LMTiqFsKIBRmHRg-1; Mon, 24 Oct 2022 02:48:41 -0400
+X-MC-Unique: xNhK1d7LMTiqFsKIBRmHRg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 12EC029AA385;
+        Mon, 24 Oct 2022 06:48:41 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-12-46.pek2.redhat.com [10.72.12.46])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B51BA1121315;
+        Mon, 24 Oct 2022 06:48:38 +0000 (UTC)
+From:   Xiao Ni <xni@redhat.com>
+To:     song@kernel.org
+Cc:     guoqing.jiang@linux.dev, linux-raid@vger.kernel.org,
+        ffan@redhat.com
+Subject: [PATCH V2 1/1] Add mddev->io_acct_cnt for raid0_quiesce
+Date:   Mon, 24 Oct 2022 14:48:36 +0800
+Message-Id: <20221024064836.12731-1-xni@redhat.com>
 MIME-Version: 1.0
-References: <20221014122210.47888-1-jinpu.wang@ionos.com> <CAPhsuW7hSruJhubAcmwcpTbGPKXq2H3mBkC3FjBt6mWeZXtyRw@mail.gmail.com>
- <CAHJVUej9hgzH2FH1r2hsVwoBqbnCvi8PWM9j=m5ih_raxCZSpA@mail.gmail.com>
-In-Reply-To: <CAHJVUej9hgzH2FH1r2hsVwoBqbnCvi8PWM9j=m5ih_raxCZSpA@mail.gmail.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Mon, 24 Oct 2022 06:32:49 +0200
-Message-ID: <CAMGffEmLeru6A=EDaY3YwRwfLomrtHn4S2c+PqvAWYPwSa2+Kw@mail.gmail.com>
-Subject: Re: [RFC PATCH] md-bitmap: reuse former bitmap chunk size on resizing.
-To:     =?UTF-8?Q?Florian=2DEwald_M=C3=BCller?= 
-        <florian-ewald.mueller@ionos.com>
-Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Oct 20, 2022 at 10:26 PM Florian-Ewald M=C3=BCller
-<florian-ewald.mueller@ionos.com> wrote:
->
-> Hello Song,
->
-> Thank you for taking this patch into consideration.
-> This patch was indeed meant only as a RFC.
->
-> We have, sometimes, the situation that a md-raid1 device of e.g. size=3D1=
-28G, created
-> with bitmap=3Dinternal and bitmap-chunk=3D256M, needs to be resized to (l=
-et's say) size=3D8T.
->
-> We originally set the bitmap-chunk=3D256M because we found it a good comp=
-romise between performance and resync speed.
-> With that bitmap-chunk=3D256G and the starting size=3D128G, the md-bitmap=
- code will use only 512 bits fitting into a page (4K).
->
-> When resizing to size=3D8T, the md-bitmap code will attempt to reuse the =
-space available (4k) and calculate a bitmap-chunk=3D2G.
-> We found here that such a huge bitmap-chunk (2G) is not so suitable for a=
-n eventual, later resync process.
-> Also taking into consideration that IOPS issued on the now resized device=
- won't increase/differ significantly.
->
-> This is a particular usage scenario and the effect of this patch may, ind=
-eed, not be optimal in some other use case.
->
-> Best regards,
-> Florian
->
->
-resent with plain text, so it's available on mainlist
->
-> On Thu, Oct 20, 2022 at 9:22 PM Song Liu <song@kernel.org> wrote:
->>
->> On Fri, Oct 14, 2022 at 5:22 AM Jack Wang <jinpu.wang@ionos.com> wrote:
->> >
->> > From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
->> >
->> > On bitmap resizing, attempt to reuse the former chunk size (if any)
->> > in order to preserve the, ev. on purpose set, chunk size resolution.
->>
->> Could you please explain more on why we would rather keep the chunk size
->> instead of recalculating it?
->>
->> Thanks,
->> Song
->>
->> >
->> > Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
->> > Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
->> > ---
->> >  drivers/md/md-cluster.c |  3 ++-
->> >  drivers/md/raid1.c      |  3 ++-
->> >  drivers/md/raid10.c     | 12 ++++++++----
->> >  drivers/md/raid5.c      |  3 ++-
->> >  4 files changed, 14 insertions(+), 7 deletions(-)
->> >
->> > diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->> > index 10e0c5381d01..9929631bdc94 100644
->> > --- a/drivers/md/md-cluster.c
->> > +++ b/drivers/md/md-cluster.c
->> > @@ -604,7 +604,8 @@ static int process_recvd_msg(struct mddev *mddev, =
-struct cluster_msg *msg)
->> >         case BITMAP_RESIZE:
->> >                 if (le64_to_cpu(msg->high) !=3D mddev->pers->size(mdde=
-v, 0, 0))
->> >                         ret =3D md_bitmap_resize(mddev->bitmap,
->> > -                                           le64_to_cpu(msg->high), 0,=
- 0);
->> > +                                           le64_to_cpu(msg->high),
->> > +                                           mddev->bitmap_info.chunksi=
-ze, 0);
->> >                 break;
->> >         default:
->> >                 ret =3D -1;
->> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> > index 05d8438cfec8..8f1d25064a53 100644
->> > --- a/drivers/md/raid1.c
->> > +++ b/drivers/md/raid1.c
->> > @@ -3225,7 +3225,8 @@ static int raid1_resize(struct mddev *mddev, sec=
-tor_t sectors)
->> >             mddev->array_sectors > newsize)
->> >                 return -EINVAL;
->> >         if (mddev->bitmap) {
->> > -               int ret =3D md_bitmap_resize(mddev->bitmap, newsize, 0=
-, 0);
->> > +               int ret =3D md_bitmap_resize(mddev->bitmap, newsize,
->> > +                               mddev->bitmap_info.chunksize, 0);
->> >                 if (ret)
->> >                         return ret;
->> >         }
->> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> > index 3aa8b6e11d58..8f0453b6e0c6 100644
->> > --- a/drivers/md/raid10.c
->> > +++ b/drivers/md/raid10.c
->> > @@ -4346,7 +4346,8 @@ static int raid10_resize(struct mddev *mddev, se=
-ctor_t sectors)
->> >             mddev->array_sectors > size)
->> >                 return -EINVAL;
->> >         if (mddev->bitmap) {
->> > -               int ret =3D md_bitmap_resize(mddev->bitmap, size, 0, 0=
-);
->> > +               int ret =3D md_bitmap_resize(mddev->bitmap, size,
->> > +                               mddev->bitmap_info.chunksize, 0);
->> >                 if (ret)
->> >                         return ret;
->> >         }
->> > @@ -4618,7 +4619,8 @@ static int raid10_start_reshape(struct mddev *md=
-dev)
->> >                 newsize =3D raid10_size(mddev, 0, conf->geo.raid_disks=
-);
->> >
->> >                 if (!mddev_is_clustered(mddev)) {
->> > -                       ret =3D md_bitmap_resize(mddev->bitmap, newsiz=
-e, 0, 0);
->> > +                       ret =3D md_bitmap_resize(mddev->bitmap, newsiz=
-e,
->> > +                                       mddev->bitmap_info.chunksize, =
-0);
->> >                         if (ret)
->> >                                 goto abort;
->> >                         else
->> > @@ -4640,13 +4642,15 @@ static int raid10_start_reshape(struct mddev *=
-mddev)
->> >                             MD_FEATURE_RESHAPE_ACTIVE)) || (oldsize =
-=3D=3D newsize))
->> >                         goto out;
->> >
->> > -               ret =3D md_bitmap_resize(mddev->bitmap, newsize, 0, 0)=
-;
->> > +               ret =3D md_bitmap_resize(mddev->bitmap, newsize,
->> > +                               mddev->bitmap_info.chunksize, 0);
->> >                 if (ret)
->> >                         goto abort;
->> >
->> >                 ret =3D md_cluster_ops->resize_bitmaps(mddev, newsize,=
- oldsize);
->> >                 if (ret) {
->> > -                       md_bitmap_resize(mddev->bitmap, oldsize, 0, 0)=
-;
->> > +                       md_bitmap_resize(mddev->bitmap, oldsize,
->> > +                                       mddev->bitmap_info.chunksize, =
-0);
->> >                         goto abort;
->> >                 }
->> >         }
->> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> > index 7b820b81d8c2..bff7d3d779ae 100644
->> > --- a/drivers/md/raid5.c
->> > +++ b/drivers/md/raid5.c
->> > @@ -8372,7 +8372,8 @@ static int raid5_resize(struct mddev *mddev, sec=
-tor_t sectors)
->> >             mddev->array_sectors > newsize)
->> >                 return -EINVAL;
->> >         if (mddev->bitmap) {
->> > -               int ret =3D md_bitmap_resize(mddev->bitmap, sectors, 0=
-, 0);
->> > +               int ret =3D md_bitmap_resize(mddev->bitmap, sectors,
->> > +                               mddev->bitmap_info.chunksize, 0);
->> >                 if (ret)
->> >                         return ret;
->> >         }
->> > --
->> > 2.34.1
->> >
+It has added io_acct_set for raid0/raid5 io accounting and it needs to
+alloc md_io_acct in the i/o path. They are free when the bios come back
+from member disks. Now we don't have a method to monitor if those bios
+are all come back. In the takeover process, it needs to free the raid0
+memory resource including the memory pool for md_io_acct. But maybe some
+bios are still not returned. When those bios are returned, it can cause
+panic bcause of introducing NULL pointer or invalid address.
+
+This patch adds io_acct_cnt. So when stopping raid0, it can use this
+to wait until all bios come back.
+
+Reported-by: Fine Fan <ffan@redhat.com>
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+V2: Move struct mddev* to the start of struct mddev_io_acct
+ drivers/md/md.c    | 13 ++++++++++++-
+ drivers/md/md.h    | 11 ++++++++---
+ drivers/md/raid0.c |  6 ++++++
+ 3 files changed, 26 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 6f3b2c1cb6cd..208f69849054 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -685,6 +685,7 @@ void mddev_init(struct mddev *mddev)
+ 	atomic_set(&mddev->flush_pending, 0);
+ 	init_waitqueue_head(&mddev->sb_wait);
+ 	init_waitqueue_head(&mddev->recovery_wait);
++	init_waitqueue_head(&mddev->wait_io_acct);
+ 	mddev->reshape_position = MaxSector;
+ 	mddev->reshape_backwards = 0;
+ 	mddev->last_sync_action = "none";
+@@ -8618,15 +8619,18 @@ int acct_bioset_init(struct mddev *mddev)
+ {
+ 	int err = 0;
+ 
+-	if (!bioset_initialized(&mddev->io_acct_set))
++	if (!bioset_initialized(&mddev->io_acct_set)) {
++		atomic_set(&mddev->io_acct_cnt, 0);
+ 		err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
+ 			offsetof(struct md_io_acct, bio_clone), 0);
++	}
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(acct_bioset_init);
+ 
+ void acct_bioset_exit(struct mddev *mddev)
+ {
++	WARN_ON(atomic_read(&mddev->io_acct_cnt) != 0);
+ 	bioset_exit(&mddev->io_acct_set);
+ }
+ EXPORT_SYMBOL_GPL(acct_bioset_exit);
+@@ -8635,12 +8639,17 @@ static void md_end_io_acct(struct bio *bio)
+ {
+ 	struct md_io_acct *md_io_acct = bio->bi_private;
+ 	struct bio *orig_bio = md_io_acct->orig_bio;
++	struct mddev *mddev = md_io_acct->mddev;
+ 
+ 	orig_bio->bi_status = bio->bi_status;
+ 
+ 	bio_end_io_acct(orig_bio, md_io_acct->start_time);
+ 	bio_put(bio);
+ 	bio_endio(orig_bio);
++
++	if (atomic_dec_and_test(&mddev->io_acct_cnt))
++		if (unlikely(test_bit(MD_QUIESCE, &mddev->flags)))
++			wake_up(&mddev->wait_io_acct);
+ }
+ 
+ /*
+@@ -8660,6 +8669,8 @@ void md_account_bio(struct mddev *mddev, struct bio **bio)
+ 	md_io_acct = container_of(clone, struct md_io_acct, bio_clone);
+ 	md_io_acct->orig_bio = *bio;
+ 	md_io_acct->start_time = bio_start_io_acct(*bio);
++	md_io_acct->mddev = mddev;
++	atomic_inc(&mddev->io_acct_cnt);
+ 
+ 	clone->bi_end_io = md_end_io_acct;
+ 	clone->bi_private = md_io_acct;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b4e2d8b87b61..a7c89ed53be5 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -255,6 +255,7 @@ struct md_cluster_info;
+  *		   array is ready yet.
+  * @MD_BROKEN: This is used to stop writes and mark array as failed.
+  * @MD_DELETED: This device is being deleted
++ * @MD_QUIESCE: This device is being quiesced. Now only raid0 use this flag
+  *
+  * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
+  */
+@@ -272,6 +273,7 @@ enum mddev_flags {
+ 	MD_NOT_READY,
+ 	MD_BROKEN,
+ 	MD_DELETED,
++	MD_QUIESCE,
+ };
+ 
+ enum mddev_sb_flags {
+@@ -513,6 +515,8 @@ struct mddev {
+ 						   * metadata and bitmap writes
+ 						   */
+ 	struct bio_set			io_acct_set; /* for raid0 and raid5 io accounting */
++	atomic_t			io_acct_cnt;
++	wait_queue_head_t		wait_io_acct;
+ 
+ 	/* Generic flush handling.
+ 	 * The last to finish preflush schedules a worker to submit
+@@ -710,9 +714,10 @@ struct md_thread {
+ };
+ 
+ struct md_io_acct {
+-	struct bio *orig_bio;
+-	unsigned long start_time;
+-	struct bio bio_clone;
++	struct mddev	*mddev;
++	struct bio	*orig_bio;
++	unsigned long	start_time;
++	struct bio	bio_clone;
+ };
+ 
+ #define THREAD_WAKEUP  0
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 857c49399c28..aced0ad8cdab 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -754,6 +754,12 @@ static void *raid0_takeover(struct mddev *mddev)
+ 
+ static void raid0_quiesce(struct mddev *mddev, int quiesce)
+ {
++	/* It doesn't use a separate struct to count how many bios are submitted
++	 * to member disks to avoid memory alloc and performance decrease
++	 */
++	set_bit(MD_QUIESCE, &mddev->flags);
++	wait_event(mddev->wait_io_acct, !atomic_read(&mddev->io_acct_cnt));
++	clear_bit(MD_QUIESCE, &mddev->flags);
+ }
+ 
+ static struct md_personality raid0_personality=
+-- 
+2.32.0 (Apple Git-132)
+
