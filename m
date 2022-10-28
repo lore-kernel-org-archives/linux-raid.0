@@ -2,112 +2,97 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98562C38A2D
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Oct 2022 08:44:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4258AC38A02
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 09:53:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235100AbiJ0IoV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Oct 2022 04:44:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40780 "EHLO
+        id S230230AbiJ1JxR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Oct 2022 05:53:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234411AbiJ0IoT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Oct 2022 04:44:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E38D615D09A
-        for <linux-raid@vger.kernel.org>; Thu, 27 Oct 2022 01:44:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1666860258;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=DZm/LIvsghPLBMIPuv6JCPmWn6H+tGHz7qoBlvCV20U=;
-        b=KC7/wifhFBEm81mGGrl97V8bDOeFNRfZmmgRL+8W3LSDetNFswTg93OY+Q1+snk8m6GYrB
-        FvKBco7ACptkQZI1fxzL64bYk6IpGT8oRw+AV0AbRmEITfa3BUHcHLZ3gIKTYWnmsUGOIW
-        XMBaW3wYuJSwNm52LdrlD64iTCbqOHI=
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
- [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-357-ZJRHIh4JOaerWBcfVRuzCw-1; Thu, 27 Oct 2022 04:44:14 -0400
-X-MC-Unique: ZJRHIh4JOaerWBcfVRuzCw-1
-Received: by mail-pg1-f198.google.com with SMTP id h19-20020a63e153000000b00434dfee8dbaso407250pgk.18
-        for <linux-raid@vger.kernel.org>; Thu, 27 Oct 2022 01:44:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=DZm/LIvsghPLBMIPuv6JCPmWn6H+tGHz7qoBlvCV20U=;
-        b=zjsD73wbt5HhSyhen6wrCumvsgWNgHZphBtyGjJh40sHnwOx1eySUUbTuEJ1DupZ19
-         8nGXKVvVxfxcjDgsPrPYRB/X5v7jac/3cAU0aj5NRV9TIHDXgXyF4D9ZAtRKd2IRn4pz
-         FUtrqe1vNICSd0k0MDav8uBSGuHYPuWL7bWSl2wwjyfF/lJ3F1WUCEgw1MI+s554YLv/
-         p8hW8MwTMtyDdf2Z9wrEJvkMipe0Wfdqb71ab59JE+quzXQPSbqQojw9fGyeTxIIOrcd
-         PsJgvJjbCEmVl6H8Tq1WOpKoZEPCe86sfeRHCYX3E50itmt3E60oHS+uTPoc0OjCbb29
-         bdpA==
-X-Gm-Message-State: ACrzQf25OxEg+HvY86tBGC6c7RpxT3iEYhH99TJLp2ZbvWL9cmGiby4E
-        1AStadrlCSRZjnVvo3NWF/HlOIbN2kMRhPu8XwLO/xmrRPiBuWkwpGnxdwmaES8m5oJdLmJygFi
-        eUJmzTBGIwE8wzSsnvtHZFFBPUSJjcLi72GYQlQ==
-X-Received: by 2002:a17:902:da92:b0:186:611a:baa with SMTP id j18-20020a170902da9200b00186611a0baamr38511054plx.15.1666860253433;
-        Thu, 27 Oct 2022 01:44:13 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM7J8MOJHkQdffGBsdIlpucTbUjPCQONEQh3BlUS+SPPWb5GW2VeoiEdB251cTaxtc7ROkIbyERMcKcQHxX6jWo=
-X-Received: by 2002:a17:902:da92:b0:186:611a:baa with SMTP id
- j18-20020a170902da9200b00186611a0baamr38511035plx.15.1666860253157; Thu, 27
- Oct 2022 01:44:13 -0700 (PDT)
+        with ESMTP id S229994AbiJ1Jwb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 05:52:31 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1E8F24F3D
+        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 02:51:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1666950678; x=1698486678;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=wN6TGKZSmVqZ6PmZLn3527C47khU2QZluMwPh7stl6E=;
+  b=dXbt7h3rwQPrbRAH/pf9o/6hLQ2r4Dr94NGda5P5+DqEnqKgdfc9MkgP
+   PgFyNrZDAOk4wMNwPN/6mJnUGJlx39VtC7XE/lej2TSSC6t+5pt0inZvK
+   uvPllAmB2gosUBsAOV/moOO3S20gTJavqYWsFMJzYTpK+qhK04dTLWxca
+   Aa3nbgzINm16No6+47FW1mvulqFLtjZay7FQrdFzyt1WFcpfnXE8AUs/k
+   EF48X5iX3vcH/73WgImQ3i5nVUob3hnbHEt04ljEA/Box7inNYgb5KIwI
+   /SDmaDTCemhg3e7vIFc3akY3VU6F9NlvozbbTDh4n+rUtOs33tPVn4CH9
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="306065173"
+X-IronPort-AV: E=Sophos;i="5.95,220,1661842800"; 
+   d="scan'208";a="306065173"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2022 02:51:17 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="610691019"
+X-IronPort-AV: E=Sophos;i="5.95,220,1661842800"; 
+   d="scan'208";a="610691019"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
+  by orsmga006.jf.intel.com with ESMTP; 28 Oct 2022 02:51:16 -0700
+From:   Kinga Tanska <kinga.tanska@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org, colyli@suse.de, xni@redhat.com
+Subject: [PATCH v2] super-intel: make freesize not required for chunk size migration
+Date:   Fri, 28 Oct 2022 04:51:17 +0200
+Message-Id: <20221028025117.27048-1-kinga.tanska@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-References: <20221007201037.20263-1-logang@deltatee.com> <CALTww28HQUPbB647oP9WKvkLX=9PqZv+9am-884zZVM923H-KA@mail.gmail.com>
- <8ee5368c-1808-d2bc-9ad2-2f8332d2704e@deltatee.com> <yq15ygo4jkv.fsf@ca-mkp.ca.oracle.com>
- <CALTww28XKzYmKrVQn=yYyq3xpjcEDzz1Bao+eLx3LR5mbm333Q@mail.gmail.com> <yq1tu3rtio1.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1tu3rtio1.fsf@ca-mkp.ca.oracle.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Thu, 27 Oct 2022 16:44:02 +0800
-Message-ID: <CALTww28jqtYAzQfoCzD2L=B76J1Ld7jSRrF_Q0W_rRDCUM2BNQ@mail.gmail.com>
-Subject: Re: [PATCH mdadm v4 0/7] Write Zeroes option for Creating Arrays
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Logan Gunthorpe <logang@deltatee.com>, linux-raid@vger.kernel.org,
-        Jes Sorensen <jes@trained-monkey.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Oct 26, 2022 at 10:42 AM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Xiao,
->
-> > If the upper layer submit 1GB request, SCSI will split them and handle
-> > 32MB requests in default. If the upper layer wants SCSI to handle 1GB
-> > one time, it needs to pass some information to SCSI, right?
->
-> It is the device that defines its capabilities, not Linux. If the device
-> states it wants 32MB per request, then that's what we'll issue.
->
-> >> In NVMe there's a limit of 64K blocks per range and 256 ranges per
-> >> request. So 8GB or 64GB per request for discard depending on the block
-> >> size. So presumably it will take several operations to deallocate an
-> >> entire drive.
-> >
-> > Could you tell the command how to check the block size.
-> > blockdev --getsz tells the sector size of the device. It should not be the
-> > block size you mentioned here.
->
-> blockdev --getss will tell you the device's logical block size.
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
->
+Freesize is needed to be set for migrations where size of RAID could
+be changed - expand. It tells how many free space is determined for
+members. In chunk size migartion freesize is not needed to be set,
+pointer shouldn't be checked if exists. This commit moves check to
+condition which contains size calculations, instead of checking it
+always at the first step.
+Fix return value when superblock is not set.
 
-Hi Martin
+Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+---
+ super-intel.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Thanks for all the explanations :)
-
-Regards
-Xiao
+diff --git a/super-intel.c b/super-intel.c
+index 4d82af3d..37c59da5 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -7714,11 +7714,11 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
+ 		struct intel_super *super = st->sb;
+ 
+ 		/*
+-		 * Autolayout mode, st->sb and freesize must be set.
++		 * Autolayout mode, st->sb must be set.
+ 		 */
+-		if (!super || !freesize) {
+-			pr_vrb("freesize and superblock must be set for autolayout, aborting\n");
+-			return 1;
++		if (!super) {
++			pr_vrb("superblock must be set for autolayout, aborting\n");
++			return 0;
+ 		}
+ 
+ 		if (!validate_geometry_imsm_orom(st->sb, level, layout,
+@@ -7726,7 +7726,7 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
+ 						 verbose))
+ 			return 0;
+ 
+-		if (super->orom) {
++		if (super->orom && freesize) {
+ 			imsm_status_t rv;
+ 			int count = count_volumes(super->hba, super->orom->dpa,
+ 					      verbose);
+-- 
+2.26.2
 
