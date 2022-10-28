@@ -2,271 +2,161 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 984ACECAAA1
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 15:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B12C38A02
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 21:06:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229941AbiJ1Prk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Oct 2022 11:47:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52798 "EHLO
+        id S229619AbiJ1VG3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Oct 2022 17:06:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230033AbiJ1Prj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 11:47:39 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9B1E1EEF07
-        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 08:47:37 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229798AbiJ1VG1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 17:06:27 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 770D6249885;
+        Fri, 28 Oct 2022 14:06:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 8A8F21FA9A;
-        Fri, 28 Oct 2022 15:47:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1666972056; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Jxl3o7U7szgNuqi83ytTbruO2XgOpdu3y56r8darRnY=;
-        b=oPRSqjpcf5iscPoEhFzycQdYyQ6lfj9JPvUEvBmcp38xJYF/Zn0W3GwWL1ExkacGxqO9Rn
-        n5cYLdT9qEXea52cOMeVIQjZHWVJjmmQhxl5j0tZG0g35IFSKfBrlBCXaOxuIrYV3f+1yj
-        JmrqYtvoi67CjfR0RqTbdF99O4C6R7I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1666972056;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Jxl3o7U7szgNuqi83ytTbruO2XgOpdu3y56r8darRnY=;
-        b=jI8IWY9hGIeF+R/8orDCTY1nXvMnzK+q+OUySbRLmD0+H1T4MT/Dhwy/CKliKs7l2ScATu
-        hQoLpDrHMnrJUZCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AAA7513A6E;
-        Fri, 28 Oct 2022 15:47:35 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id /Ri3HJf5W2P2VQAAMHmgww
-        (envelope-from <colyli@suse.de>); Fri, 28 Oct 2022 15:47:35 +0000
-Message-ID: <07383573-e798-e99a-93e5-d94dbe3d3567@suse.de>
-Date:   Fri, 28 Oct 2022 23:47:33 +0800
+        by ams.source.kernel.org (Postfix) with ESMTPS id 37DEDB82B08;
+        Fri, 28 Oct 2022 21:06:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5710C433C1;
+        Fri, 28 Oct 2022 21:06:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666991182;
+        bh=v6kfg8IcSFY9dQNnIOsCwbA0rp3CWLwX37NbA9GNDZg=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=G1j8yKZUvUCyP6p0T206fYCh6r5e1sPODeEcSJCnSZQnZRRnswSIFJgFmeAAFLhvO
+         jkJkBxAvQOszKBDLMbZnVRV4Wjr0A5Ck5YIO8xg/bzX49dacSnxsudNco9hrTjx1f/
+         n1BEREy10EFgKv3bs5VgXOIGsWsyAtRoxVpNXnGPc1oz9DOYh30+oR20IpA1vxmD4/
+         qlSA3RGtg6ZIafhGa95hBb2NzRXZlKOt1T+ETFmSQwxkJFuBPZLo7Bv7bBpI07CFxX
+         mJ4soIklEHf0ng5KvHaHH5SVbe2S3OS3hzOe3zt2M+vlA7UXbAR0/T3dwM4TLjKCv/
+         TOtmJexszZQpQ==
+Received: by mail-ej1-f49.google.com with SMTP id y14so15782904ejd.9;
+        Fri, 28 Oct 2022 14:06:22 -0700 (PDT)
+X-Gm-Message-State: ACrzQf3v2tfXnH62BYn1DcCNTqmTSrupHSVxtduZuVdq8mY8a8j3suw8
+        wsKYTvfFaPhhBeAGLsxrwA4g4k+/RqkFfTry5Dw=
+X-Google-Smtp-Source: AMsMyM4JYK5belrwpEhuA8ojFZzHfF5XA/F3cvcWo8FCyQkPfGzeaItnioezDwiIua5UKyxArzf7LhfQ0PTNgKA+8IQ=
+X-Received: by 2002:a17:907:1c14:b0:7a6:38d7:5993 with SMTP id
+ nc20-20020a1709071c1400b007a638d75993mr1166014ejc.3.1666991181015; Fri, 28
+ Oct 2022 14:06:21 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.13.0
-Subject: Re: [PATCH 9/9] udev: Move udev_block() and udev_unblock() into
- udev.c
-Content-Language: en-US
-To:     Mateusz Grzonka <mateusz.grzonka@intel.com>
-Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
-References: <20220907125657.12192-1-mateusz.grzonka@intel.com>
- <20220907125657.12192-10-mateusz.grzonka@intel.com>
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220907125657.12192-10-mateusz.grzonka@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20221025073705.17692-1-jinpu.wang@ionos.com>
+In-Reply-To: <20221025073705.17692-1-jinpu.wang@ionos.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 28 Oct 2022 14:06:08 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5+F3EU1QDdJm-ViThdPfW_Gv83+H03MzZUHtZSy9xs1w@mail.gmail.com>
+Message-ID: <CAPhsuW5+F3EU1QDdJm-ViThdPfW_Gv83+H03MzZUHtZSy9xs1w@mail.gmail.com>
+Subject: Re: [PATCHv3] md/bitmap: Fix bitmap chunk size overflow issues
+To:     Jack Wang <jinpu.wang@ionos.com>
+Cc:     linux-raid@vger.kernel.org,
+        Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>,
+        stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 9/7/22 8:56 PM, Mateusz Grzonka wrote:
-> Add kernel style comments and better error handling.
+On Tue, Oct 25, 2022 at 12:37 AM Jack Wang <jinpu.wang@ionos.com> wrote:
 >
-> Change-Id: Ib6b8e7725d6739a2d7f7b8801e3403137c9cc402
+> From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+>
+> - limit bitmap chunk size internal u64 variable to values not overflowing
+>   the u32 bitmap superblock structure variable stored on persistent media
+> - assign bitmap chunk size internal u64 variable from unsigned values to
+>   avoid possible sign extension artifacts when assigning from a s32 value
+>
+> The bug has been there since at least kernel 4.0.
+> Steps to reproduce it:
+> 1: mdadm -C /dev/mdx -l 1 --bitmap=internal --bitmap-chunk=256M -e 1.2
+> -n2 /dev/rnbd1 /dev/rnbd2
+> 2 resize member device rnbd1 and rnbd2 to 8 TB
+> 3 mdadm --grow /dev/mdx --size=max
+>
+> The bitmap_chunksize will overflow without patch.
+>
+> Cc: stable@vger.kernel.org
+>
+> Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+> Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+> Signed-off-by: Song Liu <song@kernel.org>
 
-What does the above line mean?
+Applied to md-next. Thanks!
 
-
-BTW, for the code, it looks fine to me. I want to ack this patch after 
-the Change-Id in the commit log explained.
-
-Acked-by: Coly Li <colyli@suse.de>
-
-Thanks.
-
-Coly Li
-
+Song
 
 > ---
->   Create.c |  1 +
->   lib.c    | 29 -----------------------------
->   mdadm.h  |  2 --
->   mdopen.c | 12 ++++++------
->   udev.c   | 44 ++++++++++++++++++++++++++++++++++++++++++++
->   udev.h   |  2 ++
->   6 files changed, 53 insertions(+), 37 deletions(-)
+> v3: fix build warning on i386.
+>  drivers/md/md-bitmap.c | 20 ++++++++++++--------
+>  1 file changed, 12 insertions(+), 8 deletions(-)
 >
-> diff --git a/Create.c b/Create.c
-> index c84c1ac8..e68894ed 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -23,6 +23,7 @@
->    */
->   
->   #include	"mdadm.h"
-> +#include	"udev.h"
->   #include	"md_u.h"
->   #include	"md_p.h"
->   #include	<ctype.h>
-> diff --git a/lib.c b/lib.c
-> index 10a6ae40..5a1afd49 100644
-> --- a/lib.c
-> +++ b/lib.c
-> @@ -174,35 +174,6 @@ char *fd2devnm(int fd)
->   	return NULL;
->   }
->   
-> -/* When we create a new array, we don't want the content to
-> - * be immediately examined by udev - it is probably meaningless.
-> - * So create /run/mdadm/creating-mdXXX and expect that a udev
-> - * rule will noticed this and act accordingly.
-> - */
-> -static char block_path[] = "/run/mdadm/creating-%s";
-> -static char *unblock_path = NULL;
-> -void udev_block(char *devnm)
-> -{
-> -	int fd;
-> -	char *path = NULL;
-> -
-> -	xasprintf(&path, block_path, devnm);
-> -	fd = open(path, O_CREAT|O_RDWR, 0600);
-> -	if (fd >= 0) {
-> -		close(fd);
-> -		unblock_path = path;
-> -	} else
-> -		free(path);
-> -}
-> -
-> -void udev_unblock(void)
-> -{
-> -	if (unblock_path)
-> -		unlink(unblock_path);
-> -	free(unblock_path);
-> -	unblock_path = NULL;
-> -}
-> -
->   /*
->    * convert a major/minor pair for a block device into a name in /dev, if possible.
->    * On the first call, walk /dev collecting name.
-> diff --git a/mdadm.h b/mdadm.h
-> index 3c08f826..3f81cce6 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1662,8 +1662,6 @@ extern char *stat2kname(struct stat *st);
->   extern char *fd2kname(int fd);
->   extern char *stat2devnm(struct stat *st);
->   extern char *fd2devnm(int fd);
-> -extern void udev_block(char *devnm);
-> -extern void udev_unblock(void);
->   
->   extern int in_initrd(void);
->   
-> diff --git a/mdopen.c b/mdopen.c
-> index 53da4d96..93193739 100644
-> --- a/mdopen.c
-> +++ b/mdopen.c
-> @@ -336,8 +336,8 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
->   	devnm[0] = 0;
->   	if (num < 0 && cname && ci->names) {
->   		sprintf(devnm, "md_%s", cname);
-> -		if (block_udev)
-> -			udev_block(devnm);
-> +		if (block_udev && udev_block(devnm) != UDEV_STATUS_SUCCESS)
-> +			return -1;
->   		if (!create_named_array(devnm)) {
->   			devnm[0] = 0;
->   			udev_unblock();
-> @@ -345,8 +345,8 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
->   	}
->   	if (num >= 0) {
->   		sprintf(devnm, "md%d", num);
-> -		if (block_udev)
-> -			udev_block(devnm);
-> +		if (block_udev && udev_block(devnm) != UDEV_STATUS_SUCCESS)
-> +			return -1;
->   		if (!create_named_array(devnm)) {
->   			devnm[0] = 0;
->   			udev_unblock();
-> @@ -369,8 +369,8 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
->   				return -1;
->   			}
->   		}
-> -		if (block_udev)
-> -			udev_block(devnm);
-> +		if (block_udev && udev_block(devnm) != UDEV_STATUS_SUCCESS)
-> +			return -1;
->   	}
->   
->   	sprintf(devname, "/dev/%s", devnm);
-> diff --git a/udev.c b/udev.c
-> index 18055bfc..d6e3d7b5 100644
-> --- a/udev.c
-> +++ b/udev.c
-> @@ -30,6 +30,7 @@
->   
->   static struct udev *udev;
->   static struct udev_monitor *udev_monitor;
-> +static char *unblock_path;
->   
->   /**
->    * udev_is_available() - Checks for udev in the system.
-> @@ -145,3 +146,46 @@ void udev_release(void)
->   	udev_monitor_unref(udev_monitor);
->   	udev_unref(udev);
->   }
-> +
-> +/**
-> + * udev_block() - Block udev from examining newly created arrays.
-> + *
-> + * When array is created, we don't want udev to examine it immediately.
-> + * Function creates /run/mdadm/creating-mdXXX and expects that udev rule
-> + * will notice it and act accordingly.
-> + *
-> + * Return:
-> + * UDEV_STATUS_SUCCESS when successfully blocked udev
-> + * UDEV_STATUS_ERROR on error
-> + */
-> +enum udev_status udev_block(char *devnm)
-> +{
-> +	int fd;
-> +	char *path = xcalloc(1, BUFSIZ);
-> +
-> +	snprintf(path, BUFSIZ, "/run/mdadm/creating-%s", devnm);
-> +
-> +	fd = open(path, O_CREAT | O_RDWR, 0600);
-> +	if (!is_fd_valid(fd)) {
-> +		pr_err("Cannot block udev, error creating blocking file.\n");
-> +		pr_err("%s: %s\n", strerror(errno), path);
-> +		free(path);
-> +		return UDEV_STATUS_ERROR;
-> +	}
-> +
-> +	close(fd);
-> +	unblock_path = path;
-> +	return UDEV_STATUS_SUCCESS;
-> +}
-> +
-> +/**
-> + * udev_unblock() - Unblock udev.
-> + */
-> +void udev_unblock(void)
-> +{
-> +	if (unblock_path)
-> +		unlink(unblock_path);
-> +	free(unblock_path);
-> +	unblock_path = NULL;
-> +}
-> +
-> diff --git a/udev.h b/udev.h
-> index 515366e7..e4da29cc 100644
-> --- a/udev.h
-> +++ b/udev.h
-> @@ -32,5 +32,7 @@ bool udev_is_available(void);
->   enum udev_status udev_initialize(void);
->   enum udev_status udev_wait_for_events(int seconds);
->   void udev_release(void);
-> +enum udev_status udev_block(char *devnm);
-> +void udev_unblock(void);
->   
->   #endif
-
-
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 63ece30114e5..e7cc6ba1b657 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -486,7 +486,7 @@ void md_bitmap_print_sb(struct bitmap *bitmap)
+>         sb = kmap_atomic(bitmap->storage.sb_page);
+>         pr_debug("%s: bitmap file superblock:\n", bmname(bitmap));
+>         pr_debug("         magic: %08x\n", le32_to_cpu(sb->magic));
+> -       pr_debug("       version: %d\n", le32_to_cpu(sb->version));
+> +       pr_debug("       version: %u\n", le32_to_cpu(sb->version));
+>         pr_debug("          uuid: %08x.%08x.%08x.%08x\n",
+>                  le32_to_cpu(*(__le32 *)(sb->uuid+0)),
+>                  le32_to_cpu(*(__le32 *)(sb->uuid+4)),
+> @@ -497,11 +497,11 @@ void md_bitmap_print_sb(struct bitmap *bitmap)
+>         pr_debug("events cleared: %llu\n",
+>                  (unsigned long long) le64_to_cpu(sb->events_cleared));
+>         pr_debug("         state: %08x\n", le32_to_cpu(sb->state));
+> -       pr_debug("     chunksize: %d B\n", le32_to_cpu(sb->chunksize));
+> -       pr_debug("  daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
+> +       pr_debug("     chunksize: %u B\n", le32_to_cpu(sb->chunksize));
+> +       pr_debug("  daemon sleep: %us\n", le32_to_cpu(sb->daemon_sleep));
+>         pr_debug("     sync size: %llu KB\n",
+>                  (unsigned long long)le64_to_cpu(sb->sync_size)/2);
+> -       pr_debug("max write behind: %d\n", le32_to_cpu(sb->write_behind));
+> +       pr_debug("max write behind: %u\n", le32_to_cpu(sb->write_behind));
+>         kunmap_atomic(sb);
+>  }
+>
+> @@ -2105,7 +2105,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+>                         bytes = DIV_ROUND_UP(chunks, 8);
+>                         if (!bitmap->mddev->bitmap_info.external)
+>                                 bytes += sizeof(bitmap_super_t);
+> -               } while (bytes > (space << 9));
+> +               } while (bytes > (space << 9) && (chunkshift + BITMAP_BLOCK_SHIFT) <
+> +                       (BITS_PER_BYTE * sizeof(((bitmap_super_t *)0)->chunksize) - 1));
+>         } else
+>                 chunkshift = ffz(~chunksize) - BITMAP_BLOCK_SHIFT;
+>
+> @@ -2150,7 +2151,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+>         bitmap->counts.missing_pages = pages;
+>         bitmap->counts.chunkshift = chunkshift;
+>         bitmap->counts.chunks = chunks;
+> -       bitmap->mddev->bitmap_info.chunksize = 1 << (chunkshift +
+> +       bitmap->mddev->bitmap_info.chunksize = 1UL << (chunkshift +
+>                                                      BITMAP_BLOCK_SHIFT);
+>
+>         blocks = min(old_counts.chunks << old_counts.chunkshift,
+> @@ -2176,8 +2177,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+>                                 bitmap->counts.missing_pages = old_counts.pages;
+>                                 bitmap->counts.chunkshift = old_counts.chunkshift;
+>                                 bitmap->counts.chunks = old_counts.chunks;
+> -                               bitmap->mddev->bitmap_info.chunksize = 1 << (old_counts.chunkshift +
+> -                                                                            BITMAP_BLOCK_SHIFT);
+> +                               bitmap->mddev->bitmap_info.chunksize =
+> +                                       1UL << (old_counts.chunkshift + BITMAP_BLOCK_SHIFT);
+>                                 blocks = old_counts.chunks << old_counts.chunkshift;
+>                                 pr_warn("Could not pre-allocate in-memory bitmap for cluster raid\n");
+>                                 break;
+> @@ -2537,6 +2538,9 @@ chunksize_store(struct mddev *mddev, const char *buf, size_t len)
+>         if (csize < 512 ||
+>             !is_power_of_2(csize))
+>                 return -EINVAL;
+> +       if (BITS_PER_LONG > 32 && csize >= (1ULL << (BITS_PER_BYTE *
+> +               sizeof(((bitmap_super_t *)0)->chunksize))))
+> +               return -EOVERFLOW;
+>         mddev->bitmap_info.chunksize = csize;
+>         return len;
+>  }
+> --
+> 2.34.1
+>
