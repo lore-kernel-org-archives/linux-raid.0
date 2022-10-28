@@ -2,97 +2,124 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4258AC38A02
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 09:53:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 735D1C38A02
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 15:43:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230230AbiJ1JxR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Oct 2022 05:53:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36348 "EHLO
+        id S229750AbiJ1Pn0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Oct 2022 11:43:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229994AbiJ1Jwb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 05:52:31 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1E8F24F3D
-        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 02:51:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666950678; x=1698486678;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=wN6TGKZSmVqZ6PmZLn3527C47khU2QZluMwPh7stl6E=;
-  b=dXbt7h3rwQPrbRAH/pf9o/6hLQ2r4Dr94NGda5P5+DqEnqKgdfc9MkgP
-   PgFyNrZDAOk4wMNwPN/6mJnUGJlx39VtC7XE/lej2TSSC6t+5pt0inZvK
-   uvPllAmB2gosUBsAOV/moOO3S20gTJavqYWsFMJzYTpK+qhK04dTLWxca
-   Aa3nbgzINm16No6+47FW1mvulqFLtjZay7FQrdFzyt1WFcpfnXE8AUs/k
-   EF48X5iX3vcH/73WgImQ3i5nVUob3hnbHEt04ljEA/Box7inNYgb5KIwI
-   /SDmaDTCemhg3e7vIFc3akY3VU6F9NlvozbbTDh4n+rUtOs33tPVn4CH9
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="306065173"
-X-IronPort-AV: E=Sophos;i="5.95,220,1661842800"; 
-   d="scan'208";a="306065173"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2022 02:51:17 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="610691019"
-X-IronPort-AV: E=Sophos;i="5.95,220,1661842800"; 
-   d="scan'208";a="610691019"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
-  by orsmga006.jf.intel.com with ESMTP; 28 Oct 2022 02:51:16 -0700
-From:   Kinga Tanska <kinga.tanska@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de, xni@redhat.com
-Subject: [PATCH v2] super-intel: make freesize not required for chunk size migration
-Date:   Fri, 28 Oct 2022 04:51:17 +0200
-Message-Id: <20221028025117.27048-1-kinga.tanska@intel.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S229544AbiJ1PnY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 11:43:24 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 309DA1CA597
+        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 08:43:24 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id CF87A21D3A;
+        Fri, 28 Oct 2022 15:43:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1666971802; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=b2+wtU6zde7xyrANO9zO5XcjX9Ex+l4+AvdqE0G5zNM=;
+        b=nZahF8B+8KqWZyLpaAzCwGIsP+iCScyAXCTOoKqcdNqnqD3UsjHyD+7JotRL/4SxAnnJuu
+        UiGtltTx8zMZvP9fdpyYrbmpV+GeMWKTYkjzUzaiNxvBhCIdov7lOsS1qd1f0Q+Ax/47RM
+        lRg9j76JzyYjyns1SyT1LI3ykvrtAEc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1666971802;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=b2+wtU6zde7xyrANO9zO5XcjX9Ex+l4+AvdqE0G5zNM=;
+        b=TH3j/l+luECoFNh4+0FzrdkvysH8M/0TYM5WSp/bRr+fWLctICS6EHC7Guw/lpoG61SKyj
+        mRJSBbYwrqAxRDDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D2D0E13A6E;
+        Fri, 28 Oct 2022 15:43:21 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id UVcLJpn4W2P+UwAAMHmgww
+        (envelope-from <colyli@suse.de>); Fri, 28 Oct 2022 15:43:21 +0000
+Message-ID: <ed212b9a-8a56-63a9-a637-146c99beed3b@suse.de>
+Date:   Fri, 28 Oct 2022 23:42:52 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.13.0
+Subject: Re: [PATCH 0/9] Mdmonitor refactor and udev event handling
+ improvements
+Content-Language: en-US
+To:     Mateusz Grzonka <mateusz.grzonka@intel.com>
+Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
+References: <20220907125657.12192-1-mateusz.grzonka@intel.com>
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20220907125657.12192-1-mateusz.grzonka@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Freesize is needed to be set for migrations where size of RAID could
-be changed - expand. It tells how many free space is determined for
-members. In chunk size migartion freesize is not needed to be set,
-pointer shouldn't be checked if exists. This commit moves check to
-condition which contains size calculations, instead of checking it
-always at the first step.
-Fix return value when superblock is not set.
+On 9/7/22 8:56 PM, Mateusz Grzonka wrote:
+> Along the way we observed many problems with current approach to event handling in mdmonitor.
+> It frequently doesn't report Fail and DeviceDisappeared events.
+> It's due to time races with udev, and too long delay in some cases.
+> While there was a patch intending to address time races with udev, it didn't remove them completely.
+> This patch series presents alternative approach, where mdmonitor wakes up on udev events, so that
+> there should be no more conflicts with udev we saw before.
+>
+> Additionally some code quality improvements were done, to make the code more maintainable.
 
-Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
----
- super-intel.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Hi Mateusz,
 
-diff --git a/super-intel.c b/super-intel.c
-index 4d82af3d..37c59da5 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -7714,11 +7714,11 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 		struct intel_super *super = st->sb;
- 
- 		/*
--		 * Autolayout mode, st->sb and freesize must be set.
-+		 * Autolayout mode, st->sb must be set.
- 		 */
--		if (!super || !freesize) {
--			pr_vrb("freesize and superblock must be set for autolayout, aborting\n");
--			return 1;
-+		if (!super) {
-+			pr_vrb("superblock must be set for autolayout, aborting\n");
-+			return 0;
- 		}
- 
- 		if (!validate_geometry_imsm_orom(st->sb, level, layout,
-@@ -7726,7 +7726,7 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 						 verbose))
- 			return 0;
- 
--		if (super->orom) {
-+		if (super->orom && freesize) {
- 			imsm_status_t rv;
- 			int count = count_volumes(super->hba, super->orom->dpa,
- 					      verbose);
--- 
-2.26.2
+I am not familiar with the udev stuffs, and take some time to review all 
+this series. Overall I am fine with this series, except for the code 
+comment style like,
+/**
+  * It seems not md kernel code comment style
+  */
+
+
+And I leave my comments in each patch, please check them.
+
+Thanks.
+
+
+Coly Li
+
+
+
+>
+> Mateusz Grzonka (9):
+>    Mdmonitor: Split alert() into separate functions
+>    Mdmonitor: Make alert_info global
+>    Mdmonitor: Pass events to alert() using enums instead of strings
+>    Mdmonitor: Add helper functions
+>    Add helpers to determine whether directories or files are soft links
+>    Mdmonitor: Refactor write_autorebuild_pid()
+>    Mdmonitor: Refactor check_one_sharer() for better error handling
+>    Mdmonitor: Improve udev event handling
+>    udev: Move udev_block() and udev_unblock() into udev.c
+>
+>   Create.c  |   1 +
+>   Makefile  |   3 +-
+>   Manage.c  |   3 +-
+>   Monitor.c | 707 ++++++++++++++++++++++++++++++++----------------------
+>   lib.c     |  42 ----
+>   mdadm.h   |   6 +-
+>   mdopen.c  |  19 +-
+>   udev.c    | 191 +++++++++++++++
+>   udev.h    |  38 +++
+>   util.c    |  46 ++++
+>   10 files changed, 713 insertions(+), 343 deletions(-)
+>   create mode 100644 udev.c
+>   create mode 100644 udev.h
+>
 
