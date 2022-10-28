@@ -2,161 +2,205 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B12C38A02
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 21:06:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68CFCC38A02
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 21:06:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229619AbiJ1VG3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Oct 2022 17:06:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52406 "EHLO
+        id S229781AbiJ1VGt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Oct 2022 17:06:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229798AbiJ1VG1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 17:06:27 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 770D6249885;
-        Fri, 28 Oct 2022 14:06:25 -0700 (PDT)
+        with ESMTP id S229767AbiJ1VGs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 17:06:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C782E1DA375
+        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 14:06:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 37DEDB82B08;
-        Fri, 28 Oct 2022 21:06:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5710C433C1;
-        Fri, 28 Oct 2022 21:06:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 622A462A5B
+        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 21:06:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6206C433D6
+        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 21:06:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666991182;
-        bh=v6kfg8IcSFY9dQNnIOsCwbA0rp3CWLwX37NbA9GNDZg=;
+        s=k20201202; t=1666991206;
+        bh=dqrge/6wSPt2L6e3VfvFj7+GHwe4RqCdysBSm+6dOLY=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=G1j8yKZUvUCyP6p0T206fYCh6r5e1sPODeEcSJCnSZQnZRRnswSIFJgFmeAAFLhvO
-         jkJkBxAvQOszKBDLMbZnVRV4Wjr0A5Ck5YIO8xg/bzX49dacSnxsudNco9hrTjx1f/
-         n1BEREy10EFgKv3bs5VgXOIGsWsyAtRoxVpNXnGPc1oz9DOYh30+oR20IpA1vxmD4/
-         qlSA3RGtg6ZIafhGa95hBb2NzRXZlKOt1T+ETFmSQwxkJFuBPZLo7Bv7bBpI07CFxX
-         mJ4soIklEHf0ng5KvHaHH5SVbe2S3OS3hzOe3zt2M+vlA7UXbAR0/T3dwM4TLjKCv/
-         TOtmJexszZQpQ==
-Received: by mail-ej1-f49.google.com with SMTP id y14so15782904ejd.9;
-        Fri, 28 Oct 2022 14:06:22 -0700 (PDT)
-X-Gm-Message-State: ACrzQf3v2tfXnH62BYn1DcCNTqmTSrupHSVxtduZuVdq8mY8a8j3suw8
-        wsKYTvfFaPhhBeAGLsxrwA4g4k+/RqkFfTry5Dw=
-X-Google-Smtp-Source: AMsMyM4JYK5belrwpEhuA8ojFZzHfF5XA/F3cvcWo8FCyQkPfGzeaItnioezDwiIua5UKyxArzf7LhfQ0PTNgKA+8IQ=
-X-Received: by 2002:a17:907:1c14:b0:7a6:38d7:5993 with SMTP id
- nc20-20020a1709071c1400b007a638d75993mr1166014ejc.3.1666991181015; Fri, 28
- Oct 2022 14:06:21 -0700 (PDT)
+        b=bKVpx1f49ojuwMZLhiD0D//3Lj4ejA7rjUFjL6yq+QMP4S59m19lxFcnA3CN/IZYI
+         AhGZsKROlO5GLMNFzTu93kAmXU2J5GwpFbNdxJZgMPht+YN0H2RwVU/+XDH3igfN7K
+         TFPpJ4oB9KmQSKJvkuGs1D7GqIXYdNOlaT+isoMsiGzl3RdXysh2Qtv9Id4vtbl/Mo
+         XdZThTxlfDOPrqAOVfGnS2DfiX0p1xVvSvTQMEt8C1lNaLSufYdBfwYZwtKpDNYfyc
+         dmLTR/Cc8A2CaHsJHQJra1ovNz55uN3tfi8aNE0fQplLCU41SRtUH9rHnkAM15pKLI
+         yA5Qmg08yTXiQ==
+Received: by mail-ej1-f44.google.com with SMTP id t25so15806385ejb.8
+        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 14:06:46 -0700 (PDT)
+X-Gm-Message-State: ACrzQf2HExFpVQErK4tUsR99YGBpuLZXe6/DyIOO9kvdyEM1vlZQPXGa
+        DCsmc2MpB1P5HR9xDZwoMtX+w4R+sB9R9qMlu9c=
+X-Google-Smtp-Source: AMsMyM6PvWaq0HFjb9xUUOCwWYppgS7b8zmA3RBcMdLnv67feSNxAT7TreEn6m4meiDIzzTKcIHkdJuieqLW4fS6ZEk=
+X-Received: by 2002:a17:907:628f:b0:72f:58fc:3815 with SMTP id
+ nd15-20020a170907628f00b0072f58fc3815mr1084896ejc.719.1666991204959; Fri, 28
+ Oct 2022 14:06:44 -0700 (PDT)
 MIME-Version: 1.0
-References: <20221025073705.17692-1-jinpu.wang@ionos.com>
-In-Reply-To: <20221025073705.17692-1-jinpu.wang@ionos.com>
+References: <20221024064836.12731-1-xni@redhat.com>
+In-Reply-To: <20221024064836.12731-1-xni@redhat.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 28 Oct 2022 14:06:08 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5+F3EU1QDdJm-ViThdPfW_Gv83+H03MzZUHtZSy9xs1w@mail.gmail.com>
-Message-ID: <CAPhsuW5+F3EU1QDdJm-ViThdPfW_Gv83+H03MzZUHtZSy9xs1w@mail.gmail.com>
-Subject: Re: [PATCHv3] md/bitmap: Fix bitmap chunk size overflow issues
-To:     Jack Wang <jinpu.wang@ionos.com>
-Cc:     linux-raid@vger.kernel.org,
-        Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>,
-        stable@vger.kernel.org
+Date:   Fri, 28 Oct 2022 14:06:33 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4z1vG1QKGMapwttEHRHW3BJ3NubWW-axmhowSUDc4HjQ@mail.gmail.com>
+Message-ID: <CAPhsuW4z1vG1QKGMapwttEHRHW3BJ3NubWW-axmhowSUDc4HjQ@mail.gmail.com>
+Subject: Re: [PATCH V2 1/1] Add mddev->io_acct_cnt for raid0_quiesce
+To:     Xiao Ni <xni@redhat.com>
+Cc:     guoqing.jiang@linux.dev, linux-raid@vger.kernel.org,
+        ffan@redhat.com
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Oct 25, 2022 at 12:37 AM Jack Wang <jinpu.wang@ionos.com> wrote:
+On Sun, Oct 23, 2022 at 11:48 PM Xiao Ni <xni@redhat.com> wrote:
 >
-> From: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
+> It has added io_acct_set for raid0/raid5 io accounting and it needs to
+> alloc md_io_acct in the i/o path. They are free when the bios come back
+> from member disks. Now we don't have a method to monitor if those bios
+> are all come back. In the takeover process, it needs to free the raid0
+> memory resource including the memory pool for md_io_acct. But maybe some
+> bios are still not returned. When those bios are returned, it can cause
+> panic bcause of introducing NULL pointer or invalid address.
 >
-> - limit bitmap chunk size internal u64 variable to values not overflowing
->   the u32 bitmap superblock structure variable stored on persistent media
-> - assign bitmap chunk size internal u64 variable from unsigned values to
->   avoid possible sign extension artifacts when assigning from a s32 value
+> This patch adds io_acct_cnt. So when stopping raid0, it can use this
+> to wait until all bios come back.
 >
-> The bug has been there since at least kernel 4.0.
-> Steps to reproduce it:
-> 1: mdadm -C /dev/mdx -l 1 --bitmap=internal --bitmap-chunk=256M -e 1.2
-> -n2 /dev/rnbd1 /dev/rnbd2
-> 2 resize member device rnbd1 and rnbd2 to 8 TB
-> 3 mdadm --grow /dev/mdx --size=max
->
-> The bitmap_chunksize will overflow without patch.
->
-> Cc: stable@vger.kernel.org
->
-> Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@ionos.com>
-> Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
-> Signed-off-by: Song Liu <song@kernel.org>
+> Reported-by: Fine Fan <ffan@redhat.com>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 
 Applied to md-next. Thanks!
-
 Song
 
+
 > ---
-> v3: fix build warning on i386.
->  drivers/md/md-bitmap.c | 20 ++++++++++++--------
->  1 file changed, 12 insertions(+), 8 deletions(-)
+> V2: Move struct mddev* to the start of struct mddev_io_acct
+>  drivers/md/md.c    | 13 ++++++++++++-
+>  drivers/md/md.h    | 11 ++++++++---
+>  drivers/md/raid0.c |  6 ++++++
+>  3 files changed, 26 insertions(+), 4 deletions(-)
 >
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 63ece30114e5..e7cc6ba1b657 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -486,7 +486,7 @@ void md_bitmap_print_sb(struct bitmap *bitmap)
->         sb = kmap_atomic(bitmap->storage.sb_page);
->         pr_debug("%s: bitmap file superblock:\n", bmname(bitmap));
->         pr_debug("         magic: %08x\n", le32_to_cpu(sb->magic));
-> -       pr_debug("       version: %d\n", le32_to_cpu(sb->version));
-> +       pr_debug("       version: %u\n", le32_to_cpu(sb->version));
->         pr_debug("          uuid: %08x.%08x.%08x.%08x\n",
->                  le32_to_cpu(*(__le32 *)(sb->uuid+0)),
->                  le32_to_cpu(*(__le32 *)(sb->uuid+4)),
-> @@ -497,11 +497,11 @@ void md_bitmap_print_sb(struct bitmap *bitmap)
->         pr_debug("events cleared: %llu\n",
->                  (unsigned long long) le64_to_cpu(sb->events_cleared));
->         pr_debug("         state: %08x\n", le32_to_cpu(sb->state));
-> -       pr_debug("     chunksize: %d B\n", le32_to_cpu(sb->chunksize));
-> -       pr_debug("  daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
-> +       pr_debug("     chunksize: %u B\n", le32_to_cpu(sb->chunksize));
-> +       pr_debug("  daemon sleep: %us\n", le32_to_cpu(sb->daemon_sleep));
->         pr_debug("     sync size: %llu KB\n",
->                  (unsigned long long)le64_to_cpu(sb->sync_size)/2);
-> -       pr_debug("max write behind: %d\n", le32_to_cpu(sb->write_behind));
-> +       pr_debug("max write behind: %u\n", le32_to_cpu(sb->write_behind));
->         kunmap_atomic(sb);
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 6f3b2c1cb6cd..208f69849054 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -685,6 +685,7 @@ void mddev_init(struct mddev *mddev)
+>         atomic_set(&mddev->flush_pending, 0);
+>         init_waitqueue_head(&mddev->sb_wait);
+>         init_waitqueue_head(&mddev->recovery_wait);
+> +       init_waitqueue_head(&mddev->wait_io_acct);
+>         mddev->reshape_position = MaxSector;
+>         mddev->reshape_backwards = 0;
+>         mddev->last_sync_action = "none";
+> @@ -8618,15 +8619,18 @@ int acct_bioset_init(struct mddev *mddev)
+>  {
+>         int err = 0;
+>
+> -       if (!bioset_initialized(&mddev->io_acct_set))
+> +       if (!bioset_initialized(&mddev->io_acct_set)) {
+> +               atomic_set(&mddev->io_acct_cnt, 0);
+>                 err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
+>                         offsetof(struct md_io_acct, bio_clone), 0);
+> +       }
+>         return err;
+>  }
+>  EXPORT_SYMBOL_GPL(acct_bioset_init);
+>
+>  void acct_bioset_exit(struct mddev *mddev)
+>  {
+> +       WARN_ON(atomic_read(&mddev->io_acct_cnt) != 0);
+>         bioset_exit(&mddev->io_acct_set);
+>  }
+>  EXPORT_SYMBOL_GPL(acct_bioset_exit);
+> @@ -8635,12 +8639,17 @@ static void md_end_io_acct(struct bio *bio)
+>  {
+>         struct md_io_acct *md_io_acct = bio->bi_private;
+>         struct bio *orig_bio = md_io_acct->orig_bio;
+> +       struct mddev *mddev = md_io_acct->mddev;
+>
+>         orig_bio->bi_status = bio->bi_status;
+>
+>         bio_end_io_acct(orig_bio, md_io_acct->start_time);
+>         bio_put(bio);
+>         bio_endio(orig_bio);
+> +
+> +       if (atomic_dec_and_test(&mddev->io_acct_cnt))
+> +               if (unlikely(test_bit(MD_QUIESCE, &mddev->flags)))
+> +                       wake_up(&mddev->wait_io_acct);
 >  }
 >
-> @@ -2105,7 +2105,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
->                         bytes = DIV_ROUND_UP(chunks, 8);
->                         if (!bitmap->mddev->bitmap_info.external)
->                                 bytes += sizeof(bitmap_super_t);
-> -               } while (bytes > (space << 9));
-> +               } while (bytes > (space << 9) && (chunkshift + BITMAP_BLOCK_SHIFT) <
-> +                       (BITS_PER_BYTE * sizeof(((bitmap_super_t *)0)->chunksize) - 1));
->         } else
->                 chunkshift = ffz(~chunksize) - BITMAP_BLOCK_SHIFT;
+>  /*
+> @@ -8660,6 +8669,8 @@ void md_account_bio(struct mddev *mddev, struct bio **bio)
+>         md_io_acct = container_of(clone, struct md_io_acct, bio_clone);
+>         md_io_acct->orig_bio = *bio;
+>         md_io_acct->start_time = bio_start_io_acct(*bio);
+> +       md_io_acct->mddev = mddev;
+> +       atomic_inc(&mddev->io_acct_cnt);
 >
-> @@ -2150,7 +2151,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
->         bitmap->counts.missing_pages = pages;
->         bitmap->counts.chunkshift = chunkshift;
->         bitmap->counts.chunks = chunks;
-> -       bitmap->mddev->bitmap_info.chunksize = 1 << (chunkshift +
-> +       bitmap->mddev->bitmap_info.chunksize = 1UL << (chunkshift +
->                                                      BITMAP_BLOCK_SHIFT);
+>         clone->bi_end_io = md_end_io_acct;
+>         clone->bi_private = md_io_acct;
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index b4e2d8b87b61..a7c89ed53be5 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -255,6 +255,7 @@ struct md_cluster_info;
+>   *                array is ready yet.
+>   * @MD_BROKEN: This is used to stop writes and mark array as failed.
+>   * @MD_DELETED: This device is being deleted
+> + * @MD_QUIESCE: This device is being quiesced. Now only raid0 use this flag
+>   *
+>   * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
+>   */
+> @@ -272,6 +273,7 @@ enum mddev_flags {
+>         MD_NOT_READY,
+>         MD_BROKEN,
+>         MD_DELETED,
+> +       MD_QUIESCE,
+>  };
 >
->         blocks = min(old_counts.chunks << old_counts.chunkshift,
-> @@ -2176,8 +2177,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
->                                 bitmap->counts.missing_pages = old_counts.pages;
->                                 bitmap->counts.chunkshift = old_counts.chunkshift;
->                                 bitmap->counts.chunks = old_counts.chunks;
-> -                               bitmap->mddev->bitmap_info.chunksize = 1 << (old_counts.chunkshift +
-> -                                                                            BITMAP_BLOCK_SHIFT);
-> +                               bitmap->mddev->bitmap_info.chunksize =
-> +                                       1UL << (old_counts.chunkshift + BITMAP_BLOCK_SHIFT);
->                                 blocks = old_counts.chunks << old_counts.chunkshift;
->                                 pr_warn("Could not pre-allocate in-memory bitmap for cluster raid\n");
->                                 break;
-> @@ -2537,6 +2538,9 @@ chunksize_store(struct mddev *mddev, const char *buf, size_t len)
->         if (csize < 512 ||
->             !is_power_of_2(csize))
->                 return -EINVAL;
-> +       if (BITS_PER_LONG > 32 && csize >= (1ULL << (BITS_PER_BYTE *
-> +               sizeof(((bitmap_super_t *)0)->chunksize))))
-> +               return -EOVERFLOW;
->         mddev->bitmap_info.chunksize = csize;
->         return len;
+>  enum mddev_sb_flags {
+> @@ -513,6 +515,8 @@ struct mddev {
+>                                                    * metadata and bitmap writes
+>                                                    */
+>         struct bio_set                  io_acct_set; /* for raid0 and raid5 io accounting */
+> +       atomic_t                        io_acct_cnt;
+> +       wait_queue_head_t               wait_io_acct;
+>
+>         /* Generic flush handling.
+>          * The last to finish preflush schedules a worker to submit
+> @@ -710,9 +714,10 @@ struct md_thread {
+>  };
+>
+>  struct md_io_acct {
+> -       struct bio *orig_bio;
+> -       unsigned long start_time;
+> -       struct bio bio_clone;
+> +       struct mddev    *mddev;
+> +       struct bio      *orig_bio;
+> +       unsigned long   start_time;
+> +       struct bio      bio_clone;
+>  };
+>
+>  #define THREAD_WAKEUP  0
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 857c49399c28..aced0ad8cdab 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -754,6 +754,12 @@ static void *raid0_takeover(struct mddev *mddev)
+>
+>  static void raid0_quiesce(struct mddev *mddev, int quiesce)
+>  {
+> +       /* It doesn't use a separate struct to count how many bios are submitted
+> +        * to member disks to avoid memory alloc and performance decrease
+> +        */
+> +       set_bit(MD_QUIESCE, &mddev->flags);
+> +       wait_event(mddev->wait_io_acct, !atomic_read(&mddev->io_acct_cnt));
+> +       clear_bit(MD_QUIESCE, &mddev->flags);
 >  }
+>
+>  static struct md_personality raid0_personality=
 > --
-> 2.34.1
+> 2.32.0 (Apple Git-132)
 >
