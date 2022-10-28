@@ -2,65 +2,65 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 735D1C38A02
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 15:43:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 104A4ECAAA1
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Oct 2022 15:44:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229750AbiJ1Pn0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Oct 2022 11:43:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44678 "EHLO
+        id S229783AbiJ1PoQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Oct 2022 11:44:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229544AbiJ1PnY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 11:43:24 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 309DA1CA597
-        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 08:43:24 -0700 (PDT)
+        with ESMTP id S229482AbiJ1PoP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Oct 2022 11:44:15 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9152C1CD68C
+        for <linux-raid@vger.kernel.org>; Fri, 28 Oct 2022 08:44:14 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id CF87A21D3A;
-        Fri, 28 Oct 2022 15:43:22 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 22C0321D52;
+        Fri, 28 Oct 2022 15:44:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1666971802; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1666971853; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=b2+wtU6zde7xyrANO9zO5XcjX9Ex+l4+AvdqE0G5zNM=;
-        b=nZahF8B+8KqWZyLpaAzCwGIsP+iCScyAXCTOoKqcdNqnqD3UsjHyD+7JotRL/4SxAnnJuu
-        UiGtltTx8zMZvP9fdpyYrbmpV+GeMWKTYkjzUzaiNxvBhCIdov7lOsS1qd1f0Q+Ax/47RM
-        lRg9j76JzyYjyns1SyT1LI3ykvrtAEc=
+        bh=SVTMN3UsVr5mTODHheyV2q1n5yP+AqtpC+bO6dt6WLI=;
+        b=tEejoRS7SwkpTcXrJUCBLVgBkSJ0slkbEkIZYGhY6YjOpwlEoGSUNbBdPYQt9fuGqQNl8e
+        /dcqG+t8Z3Z1hpH7Ra/GYdDjpohnSLF4X4rJEwQJ69zvtW5ybQXqGf7jbvNXkPT2YTj7r+
+        DP82urT0KnHPhijfYGQ84+lVSkAnuoc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1666971802;
+        s=susede2_ed25519; t=1666971853;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=b2+wtU6zde7xyrANO9zO5XcjX9Ex+l4+AvdqE0G5zNM=;
-        b=TH3j/l+luECoFNh4+0FzrdkvysH8M/0TYM5WSp/bRr+fWLctICS6EHC7Guw/lpoG61SKyj
-        mRJSBbYwrqAxRDDQ==
+        bh=SVTMN3UsVr5mTODHheyV2q1n5yP+AqtpC+bO6dt6WLI=;
+        b=D/dVY0Ls5pgv/LAuB+GazMnDYcSbWcE92NecYCx8EwgbIpaaJqydrwcTNHBHI3Nsixoj5j
+        yjW/MwV6kGGRq6CA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D2D0E13A6E;
-        Fri, 28 Oct 2022 15:43:21 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 482BE13A6E;
+        Fri, 28 Oct 2022 15:44:12 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id UVcLJpn4W2P+UwAAMHmgww
-        (envelope-from <colyli@suse.de>); Fri, 28 Oct 2022 15:43:21 +0000
-Message-ID: <ed212b9a-8a56-63a9-a637-146c99beed3b@suse.de>
-Date:   Fri, 28 Oct 2022 23:42:52 +0800
+        id Amp6Bcz4W2NUVAAAMHmgww
+        (envelope-from <colyli@suse.de>); Fri, 28 Oct 2022 15:44:12 +0000
+Message-ID: <bba5423c-dc79-62f2-81cf-32f3d93518bc@suse.de>
+Date:   Fri, 28 Oct 2022 23:44:10 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.13.0
-Subject: Re: [PATCH 0/9] Mdmonitor refactor and udev event handling
- improvements
-Content-Language: en-US
+From:   Coly Li <colyli@suse.de>
+Subject: Re: [PATCH 1/9] Mdmonitor: Split alert() into separate functions
 To:     Mateusz Grzonka <mateusz.grzonka@intel.com>
 Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
 References: <20220907125657.12192-1-mateusz.grzonka@intel.com>
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220907125657.12192-1-mateusz.grzonka@intel.com>
+ <20220907125657.12192-2-mateusz.grzonka@intel.com>
+Content-Language: en-US
+In-Reply-To: <20220907125657.12192-2-mateusz.grzonka@intel.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -68,58 +68,252 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 On 9/7/22 8:56 PM, Mateusz Grzonka wrote:
-> Along the way we observed many problems with current approach to event handling in mdmonitor.
-> It frequently doesn't report Fail and DeviceDisappeared events.
-> It's due to time races with udev, and too long delay in some cases.
-> While there was a patch intending to address time races with udev, it didn't remove them completely.
-> This patch series presents alternative approach, where mdmonitor wakes up on udev events, so that
-> there should be no more conflicts with udev we saw before.
+> Signed-off-by: Mateusz Grzonka<mateusz.grzonka@intel.com>
+> ---
+>   Monitor.c | 186 ++++++++++++++++++++++++++++--------------------------
+>   1 file changed, 95 insertions(+), 91 deletions(-)
 >
-> Additionally some code quality improvements were done, to make the code more maintainable.
+> diff --git a/Monitor.c b/Monitor.c
+> index c0ab5412..65e66474 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -66,7 +66,7 @@ struct alert_info {
+>   static int make_daemon(char *pidfile);
+>   static int check_one_sharer(int scan);
+>   static void write_autorebuild_pid(void);
+> -static void alert(char *event, char *dev, char *disc, struct alert_info *info);
+> +static void alert(const char *event, const char *dev, const char *disc, struct alert_info *info);
+>   static int check_array(struct state *st, struct mdstat_ent *mdstat,
+>   		       int test, struct alert_info *info,
+>   		       int increments, char *prefer);
+> @@ -402,111 +402,115 @@ static void write_autorebuild_pid()
+>   	}
+>   }
+>   
+> -static void alert(char *event, char *dev, char *disc, struct alert_info *info)
+> +static void execute_alert_cmd(const char *event, const char *dev, const char *disc, struct alert_info *info)
+> +{
 
-Hi Mateusz,
 
-I am not familiar with the udev stuffs, and take some time to review all 
-this series. Overall I am fine with this series, except for the code 
-comment style like,
-/**
-  * It seems not md kernel code comment style
-  */
+The above line is too long, it would be better to modify the parameter 
+list into multiple lines.
 
 
-And I leave my comments in each patch, please check them.
+> +	int pid = fork();
+> +
+> +	switch (pid) {
+> +	default:
+> +		waitpid(pid, NULL, 0);
+> +		break;
+> +	case -1:
+> +		pr_err("Cannot fork to execute alert command");
+
+
+‘\n’ at the tail missed ?
+
+
+> +		break;
+> +	case 0:
+> +		execl(info->alert_cmd, info->alert_cmd, event, dev, disc, NULL);
+> +		exit(2);
+> +	}
+> +}
+> +
+> +static void send_event_email(const char *event, const char *dev, const char *disc, struct alert_info *info)
+> +{
+> +	FILE *mp, *mdstat;
+> +	char hname[256];
+> +	char buf[BUFSIZ];
+> +	int n;
+> +
+> +	mp = popen(Sendmail, "w");
+> +	if (!mp) {
+> +		pr_err("Cannot open pipe stream for sendmail.\n");
+> +		return;
+> +	}
+> +
+> +	gethostname(hname, sizeof(hname));
+> +	signal(SIGPIPE, SIG_IGN);
+> +	if (info->mailfrom)
+> +		fprintf(mp, "From: %s\n", info->mailfrom);
+> +	else
+> +		fprintf(mp, "From: %s monitoring <root>\n", Name);
+> +	fprintf(mp, "To: %s\n", info->mailaddr);
+> +	fprintf(mp, "Subject: %s event on %s:%s\n\n", event, dev, hname);
+> +	fprintf(mp, "This is an automatically generated mail message. \n");
+> +	fprintf(mp, "A %s event had been detected on md device %s.\n\n", event, dev);
+> +
+> +	if (disc && disc[0] != ' ')
+> +		fprintf(mp,
+> +			"It could be related to component device %s.\n\n", disc);
+> +	if (disc && disc[0] == ' ')
+> +		fprintf(mp, "Extra information:%s.\n\n", disc);
+> +
+> +	mdstat = fopen("/proc/mdstat", "r");
+> +	if (!mdstat) {
+> +		pr_err("Cannot open /proc/mdstat\n");
+> +		pclose(mp);
+> +		return;
+> +	}
+> +
+> +	fprintf(mp, "The /proc/mdstat file currently contains the following:\n\n");
+> +	while ((n = fread(buf, 1, sizeof(buf), mdstat)) > 0)
+> +		n = fwrite(buf, 1, n, mp);
+> +	fclose(mdstat);
+> +	pclose(mp);
+> +}
+> +
+> +static void log_event_to_syslog(const char *event, const char *dev, const char *disc)
+>   {
+>   	int priority;
+> +	/* Log at a different severity depending on the event.
+> +	 *
+> +	 * These are the critical events:  */
+
+The original code comment didn’t follow existed mdadm code style, maybe 
+we can fix the above mismatched code style here?
+
+
+The rested part looks good to me.
 
 Thanks.
-
 
 Coly Li
 
 
+> +	if (strncmp(event, "Fail", 4) == 0 ||
+> +		strncmp(event, "Degrade", 7) == 0 ||
+> +		strncmp(event, "DeviceDisappeared", 17) == 0)
+> +		priority = LOG_CRIT;
+> +	/* Good to know about, but are not failures: */
+> +	else if (strncmp(event, "Rebuild", 7) == 0 ||
+> +			strncmp(event, "MoveSpare", 9) == 0 ||
+> +			strncmp(event, "Spares", 6) != 0)
+> +		priority = LOG_WARNING;
+> +	/* Everything else: */
+> +	else
+> +		priority = LOG_INFO;
+>   
+> +	if (disc && disc[0] != ' ')
+> +		syslog(priority,
+> +			"%s event detected on md device %s, component device %s", event, dev, disc);
+> +	else if (disc)
+> +		syslog(priority, "%s event detected on md device %s: %s", event, dev, disc);
+> +	else
+> +		syslog(priority, "%s event detected on md device %s", event, dev);
+> +}
+> +
+> +static void alert(const char *event, const char *dev, const char *disc, struct alert_info *info)
+> +{
+>   	if (!info->alert_cmd && !info->mailaddr && !info->dosyslog) {
+>   		time_t now = time(0);
+>   
+>   		printf("%1.15s: %s on %s %s\n", ctime(&now) + 4,
+>   		       event, dev, disc?disc:"unknown device");
+>   	}
+> -	if (info->alert_cmd) {
+> -		int pid = fork();
+> -		switch(pid) {
+> -		default:
+> -			waitpid(pid, NULL, 0);
+> -			break;
+> -		case -1:
+> -			break;
+> -		case 0:
+> -			execl(info->alert_cmd, info->alert_cmd,
+> -			      event, dev, disc, NULL);
+> -			exit(2);
+> -		}
+> -	}
+> +	if (info->alert_cmd)
+> +		execute_alert_cmd(event, dev, disc, info);
+> +
+>   	if (info->mailaddr && (strncmp(event, "Fail", 4) == 0 ||
+>   			       strncmp(event, "Test", 4) == 0 ||
+>   			       strncmp(event, "Spares", 6) == 0 ||
+>   			       strncmp(event, "Degrade", 7) == 0)) {
+> -		FILE *mp = popen(Sendmail, "w");
+> -		if (mp) {
+> -			FILE *mdstat;
+> -			char hname[256];
+> -
+> -			gethostname(hname, sizeof(hname));
+> -			signal_s(SIGPIPE, SIG_IGN);
+> -
+> -			if (info->mailfrom)
+> -				fprintf(mp, "From: %s\n", info->mailfrom);
+> -			else
+> -				fprintf(mp, "From: %s monitoring <root>\n",
+> -					Name);
+> -			fprintf(mp, "To: %s\n", info->mailaddr);
+> -			fprintf(mp, "Subject: %s event on %s:%s\n\n",
+> -				event, dev, hname);
+> -
+> -			fprintf(mp,
+> -				"This is an automatically generated mail message from %s\n", Name);
+> -			fprintf(mp, "running on %s\n\n", hname);
+> -
+> -			fprintf(mp,
+> -				"A %s event had been detected on md device %s.\n\n", event, dev);
+> -
+> -			if (disc && disc[0] != ' ')
+> -				fprintf(mp,
+> -					"It could be related to component device %s.\n\n", disc);
+> -			if (disc && disc[0] == ' ')
+> -				fprintf(mp, "Extra information:%s.\n\n", disc);
+> -
+> -			fprintf(mp, "Faithfully yours, etc.\n");
+> -
+> -			mdstat = fopen("/proc/mdstat", "r");
+> -			if (mdstat) {
+> -				char buf[8192];
+> -				int n;
+> -				fprintf(mp,
+> -					"\nP.S. The /proc/mdstat file currently contains the following:\n\n");
+> -				while ((n = fread(buf, 1, sizeof(buf),
+> -						  mdstat)) > 0)
+> -					n = fwrite(buf, 1, n, mp);
+> -				fclose(mdstat);
+> -			}
+> -			pclose(mp);
+> -		}
+> +		send_event_email(event, dev, disc, info);
+>   	}
+>   
+> -	/* log the event to syslog maybe */
+> -	if (info->dosyslog) {
+> -		/* Log at a different severity depending on the event.
+> -		 *
+> -		 * These are the critical events:  */
+> -		if (strncmp(event, "Fail", 4) == 0 ||
+> -		    strncmp(event, "Degrade", 7) == 0 ||
+> -		    strncmp(event, "DeviceDisappeared", 17) == 0)
+> -			priority = LOG_CRIT;
+> -		/* Good to know about, but are not failures: */
+> -		else if (strncmp(event, "Rebuild", 7) == 0 ||
+> -			 strncmp(event, "MoveSpare", 9) == 0 ||
+> -			 strncmp(event, "Spares", 6) != 0)
+> -			priority = LOG_WARNING;
+> -		/* Everything else: */
+> -		else
+> -			priority = LOG_INFO;
+> -
+> -		if (disc && disc[0] != ' ')
+> -			syslog(priority,
+> -			       "%s event detected on md device %s, component device %s", event, dev, disc);
+> -		else if (disc)
+> -			syslog(priority,
+> -			       "%s event detected on md device %s: %s",
+> -			       event, dev, disc);
+> -		else
+> -			syslog(priority,
+> -			       "%s event detected on md device %s",
+> -			       event, dev);
+> -	}
+> +	if (info->dosyslog)
+> +		log_event_to_syslog(event, dev, disc);
+>   }
+>   
+>   static int check_array(struct state *st, struct mdstat_ent *mdstat,
 
->
-> Mateusz Grzonka (9):
->    Mdmonitor: Split alert() into separate functions
->    Mdmonitor: Make alert_info global
->    Mdmonitor: Pass events to alert() using enums instead of strings
->    Mdmonitor: Add helper functions
->    Add helpers to determine whether directories or files are soft links
->    Mdmonitor: Refactor write_autorebuild_pid()
->    Mdmonitor: Refactor check_one_sharer() for better error handling
->    Mdmonitor: Improve udev event handling
->    udev: Move udev_block() and udev_unblock() into udev.c
->
->   Create.c  |   1 +
->   Makefile  |   3 +-
->   Manage.c  |   3 +-
->   Monitor.c | 707 ++++++++++++++++++++++++++++++++----------------------
->   lib.c     |  42 ----
->   mdadm.h   |   6 +-
->   mdopen.c  |  19 +-
->   udev.c    | 191 +++++++++++++++
->   udev.h    |  38 +++
->   util.c    |  46 ++++
->   10 files changed, 713 insertions(+), 343 deletions(-)
->   create mode 100644 udev.c
->   create mode 100644 udev.h
->
 
