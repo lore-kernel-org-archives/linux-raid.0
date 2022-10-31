@@ -2,160 +2,159 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 723EDC38A02
-	for <linux-raid@archiver.kernel.org>; Sat, 29 Oct 2022 11:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87962FA3741
+	for <linux-raid@archiver.kernel.org>; Mon, 31 Oct 2022 18:17:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229616AbiJ2L1c (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 29 Oct 2022 07:27:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39706 "EHLO
+        id S229781AbiJaSRt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 31 Oct 2022 14:17:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229500AbiJ2L1b (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 29 Oct 2022 07:27:31 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D65D66888E
-        for <linux-raid@vger.kernel.org>; Sat, 29 Oct 2022 04:27:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1667042850; x=1698578850;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=5t3UrktjgrkGZCdZcCVKJPE/H52xKRpDY6WK4U4Y+eQ=;
-  b=M2Ur0BaldTNy8HB03CDwG0EitbzKxUAEd/Fki1avusKZ9TjyhLcIiyHA
-   BngIgjtP49orRuxwOYiAQ8SERv0lNx8WVD43iXQX5RnNPftZ2KU0ELydE
-   Q84zsJkOZQVGQPjsJ/Fjy/cLu8NmMNjCaT6h78vOEyXBzvu8kvABactjH
-   kI2+PjY4X19vBh+ABL57nR2BvBmDKLQ8SlfYMiP5JLV8ZMJzbpw3ELGrh
-   FtZr1pTUKKvSmcQPpOXR3+IxDn5NiHLxt15bgtHx7EVLlpsnHAK0NMYi/
-   7wZNdQNM21dWciIf4fDpDSpCtO1Yvmki3o6hULG0PG1LQKfANUppREsXU
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10514"; a="310353441"
-X-IronPort-AV: E=Sophos;i="5.95,223,1661842800"; 
-   d="scan'208";a="310353441"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2022 04:27:30 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10514"; a="702030600"
-X-IronPort-AV: E=Sophos;i="5.95,223,1661842800"; 
-   d="scan'208";a="702030600"
-Received: from lkp-server02.sh.intel.com (HELO b6d29c1a0365) ([10.239.97.151])
-  by fmsmga004.fm.intel.com with ESMTP; 29 Oct 2022 04:27:29 -0700
-Received: from kbuild by b6d29c1a0365 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oojzs-000AyN-1N;
-        Sat, 29 Oct 2022 11:27:28 +0000
-Date:   Sat, 29 Oct 2022 19:26:39 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- a24fec3fdfc56203e3cbb3b6c723babc6c4f1053
-Message-ID: <635d0def.DouM+RKZFHRhVnMg%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229599AbiJaSRt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 31 Oct 2022 14:17:49 -0400
+X-Greylist: delayed 2397 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 31 Oct 2022 11:17:46 PDT
+Received: from 2.mo583.mail-out.ovh.net (2.mo583.mail-out.ovh.net [178.33.109.111])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A511465C6
+        for <linux-raid@vger.kernel.org>; Mon, 31 Oct 2022 11:17:46 -0700 (PDT)
+Received: from player759.ha.ovh.net (unknown [10.109.156.39])
+        by mo583.mail-out.ovh.net (Postfix) with ESMTP id F388B20F2C
+        for <linux-raid@vger.kernel.org>; Mon, 31 Oct 2022 16:58:03 +0000 (UTC)
+Received: from rechte.fr (82-65-133-131.subs.proxad.net [82.65.133.131])
+        (Authenticated sender: marc4@rechte.fr)
+        by player759.ha.ovh.net (Postfix) with ESMTPSA id BC7A2304B0BCC
+        for <linux-raid@vger.kernel.org>; Mon, 31 Oct 2022 16:58:03 +0000 (UTC)
+Authentication-Results: garm.ovh; auth=pass (GARM-99G003936a450b-bd63-4f81-bb30-81064634c41d,
+                    71E8FAE561B63374669873A88B776FC2EB8801BC) smtp.auth=marc4@rechte.fr
+X-OVh-ClientIp: 82.65.133.131
+Message-ID: <3ebe5287-67bd-761b-1fef-9bf41ccadd71@rechte.fr>
+Date:   Mon, 31 Oct 2022 17:58:03 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+To:     linux-raid@vger.kernel.org
+Content-Language: en-US
+From:   =?UTF-8?Q?Marc_Recht=c3=a9?= <marc4@rechte.fr>
+Subject: mdadm udev rule does not start mdmonitor systemd unit.
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Ovh-Tracer-Id: 18346257507931528378
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: 0
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvgedrudefgdelhecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecunecujfgurhepkfffgggfvffhufgtgfesthejredttdefjeenucfhrhhomhepofgrrhgtucftvggthhhtrocuoehmrghrtgegsehrvggthhhtvgdrfhhrqeenucggtffrrghtthgvrhhnpeefgeeiueelfeefteeiffdthefhgeekudettdfhleetueekheehlefggeelheefkeenucfkphepuddvjedrtddrtddruddpkedvrdeihedrudeffedrudefudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeduvdejrddtrddtrddupdhmrghilhhfrhhomhepoehmrghrtgegsehrvggthhhtvgdrfhhrqedpnhgspghrtghpthhtohepuddprhgtphhtthhopehlihhnuhigqdhrrghiugesvhhgvghrrdhkvghrnhgvlhdrohhrghdpoffvtefjohhsthepmhhoheekfedpmhhouggvpehsmhhtphhouhht
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: a24fec3fdfc56203e3cbb3b6c723babc6c4f1053  Add mddev->io_acct_cnt for raid0_quiesce
+Hello,
 
-elapsed time: 853m
+I have a udev rule and a md127 device with the properties as following.
 
-configs tested: 84
-configs skipped: 2
+The mdmonitor service is not started (no trace in systemd journal). 
+However I can manually start the service.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+I don't know how to further debug.
 
-gcc tested configs:
-arc                                 defconfig
-s390                             allmodconfig
-alpha                               defconfig
-s390                             allyesconfig
-x86_64                          rhel-8.3-func
-um                             i386_defconfig
-s390                                defconfig
-um                           x86_64_defconfig
-x86_64                    rhel-8.3-kselftests
-arc                  randconfig-r043-20221028
-powerpc                          allmodconfig
-mips                             allyesconfig
-riscv                randconfig-r042-20221028
-powerpc                           allnoconfig
-s390                 randconfig-r044-20221028
-x86_64                              defconfig
-sh                               allmodconfig
-x86_64                           rhel-8.3-syz
-x86_64                        randconfig-a013
-i386                                defconfig
-x86_64                        randconfig-a011
-arm                                 defconfig
-x86_64                         rhel-8.3-kunit
-ia64                             allmodconfig
-i386                          randconfig-a001
-x86_64                               rhel-8.3
-i386                          randconfig-a014
-i386                          randconfig-a003
-alpha                            allyesconfig
-x86_64                           rhel-8.3-kvm
-x86_64                        randconfig-a015
-i386                          randconfig-a005
-m68k                             allyesconfig
-i386                          randconfig-a012
-x86_64                           allyesconfig
-i386                          randconfig-a016
-arc                              allyesconfig
-i386                             allyesconfig
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-arm64                            allyesconfig
-arm                              allyesconfig
-x86_64                        randconfig-a006
-powerpc                      ep88xc_defconfig
-powerpc                       ppc64_defconfig
-powerpc                      makalu_defconfig
-arm                           u8500_defconfig
-arm                         lpc18xx_defconfig
-arm                      jornada720_defconfig
-m68k                             allmodconfig
-i386                          randconfig-c001
-arm                            hisi_defconfig
-xtensa                  cadence_csp_defconfig
-m68k                           virt_defconfig
-powerpc                       holly_defconfig
-arm                          pxa3xx_defconfig
-sh                        dreamcast_defconfig
-s390                       zfcpdump_defconfig
-mips                     decstation_defconfig
-mips                         bigsur_defconfig
-powerpc                      arches_defconfig
-nios2                            allyesconfig
+Thanks
 
-clang tested configs:
-hexagon              randconfig-r041-20221028
-hexagon              randconfig-r045-20221028
-i386                          randconfig-a013
-i386                          randconfig-a015
-i386                          randconfig-a002
-x86_64                        randconfig-a012
-i386                          randconfig-a011
-i386                          randconfig-a004
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-i386                          randconfig-a006
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-x86_64                        randconfig-a005
-s390                 randconfig-r044-20221029
-hexagon              randconfig-r041-20221029
-hexagon              randconfig-r045-20221029
-riscv                randconfig-r042-20221029
-mips                          rm200_defconfig
-powerpc                     akebono_defconfig
-mips                  cavium_octeon_defconfig
-powerpc                      ppc44x_defconfig
+# udevadm info --query=property --name=/dev/md127
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+DEVPATH=/devices/virtual/block/md127
+DEVNAME=/dev/md127
+DEVTYPE=disk
+DISKSEQ=6
+MAJOR=9
+MINOR=127
+SUBSYSTEM=block
+USEC_INITIALIZED=5129215
+ID_IGNORE_DISKSEQ=1
+MD_LEVEL=raid1
+MD_DEVICES=2
+MD_METADATA=1.2
+MD_UUID=800ee577:652e6fdc:79f6768e:dea2f7ea
+MD_DEVNAME=SysRAID1Array1
+MD_NAME=linux2:SysRAID1Array1
+ID_FS_UUID=x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
+ID_FS_UUID_ENC=x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
+ID_FS_VERSION=LVM2 001
+ID_FS_TYPE=LVM2_member
+ID_FS_USAGE=raid
+SYSTEMD_WANTS=mdmonitor.service
+SYSTEMD_READY=0
+UDISKS_MD_LEVEL=raid1
+UDISKS_MD_DEVICES=2
+UDISKS_MD_METADATA=1.2
+UDISKS_MD_UUID=800ee577:652e6fdc:79f6768e:dea2f7ea
+UDISKS_MD_DEVNAME=SysRAID1Array1
+UDISKS_MD_NAME=linux2:SysRAID1Array1
+UDISKS_MD_DEVICE_dev_nvme0n1p2_ROLE=0
+UDISKS_MD_DEVICE_dev_nvme0n1p2_DEV=/dev/nvme0n1p2
+UDISKS_MD_DEVICE_dev_nvme1n1p2_ROLE=1
+UDISKS_MD_DEVICE_dev_nvme1n1p2_DEV=/dev/nvme1n1p2
+DEVLINKS=/dev/md/SysRAID1Array1 
+/dev/disk/by-id/md-name-linux2:SysRAID1Array1 
+/dev/disk/by-id/lvm-pv-uuid-x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq 
+/dev/disk/by-id/md-uuid-800ee577:652e6fdc:79f6768e:dea2f7ea
+TAGS=:systemd:
+CURRENT_TAGS=:systemd:
+
+# cat /usr/lib/udev/rules.d/63-md-raid-arrays.rules
+# do not edit this file, it will be overwritten on update
+
+SUBSYSTEM!="block", GOTO="md_end"
+
+# handle md arrays
+ACTION!="add|change", GOTO="md_end"
+KERNEL!="md*", GOTO="md_end"
+
+# partitions have no md/{array_state,metadata_version}, but should not
+# for that reason be ignored.
+ENV{DEVTYPE}=="partition", GOTO="md_ignore_state"
+
+# container devices have a metadata version of e.g. 'external:ddf' and
+# never leave state 'inactive'
+ATTR{md/metadata_version}=="external:[A-Za-z]*", 
+ATTR{md/array_state}=="inactive", GOTO="md_ignore_state"
+TEST!="md/array_state", ENV{SYSTEMD_READY}="0", GOTO="md_end"
+ATTR{md/array_state}=="clear*|inactive", ENV{SYSTEMD_READY}="0", 
+GOTO="md_end"
+ATTR{md/sync_action}=="reshape", ENV{RESHAPE_ACTIVE}="yes"
+LABEL="md_ignore_state"
+
+IMPORT{program}="/usr/bin/mdadm --detail --no-devices --export $devnode"
+ENV{DEVTYPE}=="disk", ENV{MD_NAME}=="?*", 
+SYMLINK+="disk/by-id/md-name-$env{MD_NAME}", 
+OPTIONS+="string_escape=replace"
+ENV{DEVTYPE}=="disk", ENV{MD_UUID}=="?*", 
+SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
+ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", SYMLINK+="md/$env{MD_DEVNAME}"
+ENV{DEVTYPE}=="partition", ENV{MD_NAME}=="?*", 
+SYMLINK+="disk/by-id/md-name-$env{MD_NAME}-part%n", 
+OPTIONS+="string_escape=replace"
+ENV{DEVTYPE}=="partition", ENV{MD_UUID}=="?*", 
+SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}-part%n"
+ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[^0-9]", 
+SYMLINK+="md/$env{MD_DEVNAME}%n"
+ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[0-9]", 
+SYMLINK+="md/$env{MD_DEVNAME}p%n"
+
+IMPORT{builtin}="blkid"
+OPTIONS+="link_priority=100"
+OPTIONS+="watch"
+ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", 
+SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
+ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_PART_ENTRY_UUID}=="?*", 
+SYMLINK+="disk/by-partuuid/$env{ID_PART_ENTRY_UUID}"
+ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", 
+SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
+
+ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="mdmonitor.service"
+
+# Tell systemd to run mdmon for our container, if we need it.
+ENV{MD_LEVEL}=="raid[1-9]*", ENV{MD_CONTAINER}=="?*", 
+PROGRAM="/usr/bin/readlink $env{MD_CONTAINER}", ENV{MD_MON_THIS}="%c"
+ENV{MD_MON_THIS}=="?*", PROGRAM="/usr/bin/basename $env{MD_MON_THIS}", 
+ENV{SYSTEMD_WANTS}+="mdmon@%c.service"
+ENV{RESHAPE_ACTIVE}=="yes", PROGRAM="/usr/bin/basename 
+$env{MD_MON_THIS}", ENV{SYSTEMD_WANTS}+="mdadm-grow-continue@%c.service"
+
+LABEL="md_end"
+
