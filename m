@@ -2,163 +2,86 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4314BFA373D
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Nov 2022 12:24:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 657C6C4332F
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Nov 2022 17:22:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229920AbiKAMYi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 1 Nov 2022 08:24:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36762 "EHLO
+        id S231165AbiKARWb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 1 Nov 2022 13:22:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229763AbiKAMYh (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Nov 2022 08:24:37 -0400
-X-Greylist: delayed 1097 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 01 Nov 2022 05:24:35 PDT
-Received: from 5.mo576.mail-out.ovh.net (5.mo576.mail-out.ovh.net [46.105.43.105])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9AC117A90
-        for <linux-raid@vger.kernel.org>; Tue,  1 Nov 2022 05:24:34 -0700 (PDT)
-Received: from player728.ha.ovh.net (unknown [10.110.171.31])
-        by mo576.mail-out.ovh.net (Postfix) with ESMTP id 5C86523B24
-        for <linux-raid@vger.kernel.org>; Tue,  1 Nov 2022 12:06:15 +0000 (UTC)
-Received: from rechte.fr (82-65-133-131.subs.proxad.net [82.65.133.131])
-        (Authenticated sender: marc4@rechte.fr)
-        by player728.ha.ovh.net (Postfix) with ESMTPSA id 234533037836B
-        for <linux-raid@vger.kernel.org>; Tue,  1 Nov 2022 12:06:15 +0000 (UTC)
-Authentication-Results: garm.ovh; auth=pass (GARM-101G004b77ba710-46c5-4658-8c04-4185dc0a6dca,
-                    A5F27E0C0C6FA5726B2F3F10CAED27144007A917) smtp.auth=marc4@rechte.fr
-X-OVh-ClientIp: 82.65.133.131
-Message-ID: <984d4620-e53f-0d1f-c61a-0485ea79e3f6@rechte.fr>
-Date:   Tue, 1 Nov 2022 13:06:14 +0100
+        with ESMTP id S230516AbiKARW2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Nov 2022 13:22:28 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D081C1B1DA;
+        Tue,  1 Nov 2022 10:22:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7BBEEB81E94;
+        Tue,  1 Nov 2022 17:22:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95AF3C43470;
+        Tue,  1 Nov 2022 17:22:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667323345;
+        bh=R3TRmjuGx+CX5AlLSbI9Rvvjf7XA13+5XQn1/SO/l5A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=L/kAMOScwPlrSIF+9gRC70XY3fpqGTMzrt3tXL/NorI0wBHDs8oJu+8+siDIvZ3U+
+         X7YFTBLqTcEAs4KyzWnMYYuDQGzwofeTbQt+bIHTpigOxuYtw5ltL0NGTSpVw4o1AZ
+         ZPTCjZImXmCP9ooRI96Y8WH8oOdpiqyR76XO0pTTjYvB/U7hJXwA7poJgI6GqAE7Is
+         LN3BJAIgO0rzZsgRi74wtYxMkBCqSSjRmxMY1gQTsxQ8+2Qmq3zSOrGsL2DGNdtvti
+         cdHoTgR3qen8cl0FZ+zNpyJKzTXj6iUbeTiPmslAtbz/avpihFxLNXA5+1ev48teOo
+         mMajMspEW1keA==
+Date:   Tue, 1 Nov 2022 11:22:21 -0600
+From:   Keith Busch <kbusch@kernel.org>
+To:     Dmitrii Tcvetkov <me@demsh.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [bisected] RAID1 direct IO redirecting sector loop since 6.0
+Message-ID: <Y2FVzdcro8HCfODK@kbusch-mbp>
+References: <20221101001558.648ee024@xps.demsh.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-From:   =?UTF-8?Q?Marc_Recht=c3=a9?= <marc4@rechte.fr>
-Subject: mdadm udev rule does not start mdmonitor systemd unit.
-To:     linux-raid@vger.kernel.org
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Ovh-Tracer-Id: 844143457816222906
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvgedrudehgdefiecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecunecujfgurhepkfffgggfhffuvfgtgfesthejredttdefjeenucfhrhhomhepofgrrhgtucftvggthhhtrocuoehmrghrtgegsehrvggthhhtvgdrfhhrqeenucggtffrrghtthgvrhhnpedvvdfgudegkedvueevheehvdehuddvheejtdfgveevfefgleekhedvgfelleeuvdenucfkphepuddvjedrtddrtddruddpkedvrdeihedrudeffedrudefudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeduvdejrddtrddtrddupdhmrghilhhfrhhomhepoehmrghrtgegsehrvggthhhtvgdrfhhrqedpnhgspghrtghpthhtohepuddprhgtphhtthhopehlihhnuhigqdhrrghiugesvhhgvghrrdhkvghrnhgvlhdrohhrghdpoffvtefjohhsthepmhhoheejiedpmhhouggvpehsmhhtphhouhht
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221101001558.648ee024@xps.demsh.org>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello,
+On Tue, Nov 01, 2022 at 12:15:58AM +0300, Dmitrii Tcvetkov wrote:
+> 
+> # cat /proc/7906/stack
+> [<0>] submit_bio_wait+0xdb/0x140
+> [<0>] blkdev_direct_IO+0x62f/0x770
+> [<0>] blkdev_read_iter+0xc1/0x140
+> [<0>] vfs_read+0x34e/0x3c0
+> [<0>] __x64_sys_pread64+0x74/0xc0
+> [<0>] do_syscall_64+0x6a/0x90
+> [<0>] entry_SYSCALL_64_after_hwframe+0x4b/0xb5
+> 
+> After "mdadm --fail" invocation the last line becomes:
+> [pid  7906] pread64(13, 0x627c34c8d200, 4096, 0) = -1 EIO (Input/output error)
 
-I have a udev rule and a md127 device with the properties as following.
+It looks like something isn't accounting for the IO size correctly when
+there's an offset. It may be something specific to one of the stacking
+drivers in your block setup. Does this still happen without the
+cryptosetup step?
 
-The mdmonitor service is not started (no trace in systemd journal). 
-However I can manually start the service.
+For a different experiment, it may be safer to just force all alignment
+for stacking drivers. Could you try the following and see if that gets
+it working again? 
 
-I just noticed that SYSTEMD_READY porperty is 0 which could explain this 
-behaviour (according to man systemd.device) ?
-
-I don't know how to further debug.
-
-Thanks
-
-# udevadm info --query=property --name=/dev/md127
-
-DEVPATH=/devices/virtual/block/md127
-DEVNAME=/dev/md127
-DEVTYPE=disk
-DISKSEQ=6
-MAJOR=9
-MINOR=127
-SUBSYSTEM=block
-USEC_INITIALIZED=5129215
-ID_IGNORE_DISKSEQ=1
-MD_LEVEL=raid1
-MD_DEVICES=2
-MD_METADATA=1.2
-MD_UUID=800ee577:652e6fdc:79f6768e:dea2f7ea
-MD_DEVNAME=SysRAID1Array1
-MD_NAME=linux2:SysRAID1Array1
-ID_FS_UUID=x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
-ID_FS_UUID_ENC=x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
-ID_FS_VERSION=LVM2 001
-ID_FS_TYPE=LVM2_member
-ID_FS_USAGE=raid
-SYSTEMD_WANTS=mdmonitor.service
-SYSTEMD_READY=0
-UDISKS_MD_LEVEL=raid1
-UDISKS_MD_DEVICES=2
-UDISKS_MD_METADATA=1.2
-UDISKS_MD_UUID=800ee577:652e6fdc:79f6768e:dea2f7ea
-UDISKS_MD_DEVNAME=SysRAID1Array1
-UDISKS_MD_NAME=linux2:SysRAID1Array1
-UDISKS_MD_DEVICE_dev_nvme0n1p2_ROLE=0
-UDISKS_MD_DEVICE_dev_nvme0n1p2_DEV=/dev/nvme0n1p2
-UDISKS_MD_DEVICE_dev_nvme1n1p2_ROLE=1
-UDISKS_MD_DEVICE_dev_nvme1n1p2_DEV=/dev/nvme1n1p2
-DEVLINKS=/dev/md/SysRAID1Array1 
-/dev/disk/by-id/md-name-linux2:SysRAID1Array1 
-/dev/disk/by-id/lvm-pv-uuid-x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq 
-/dev/disk/by-id/md-uuid-800ee577:652e6fdc:79f6768e:dea2f7ea
-TAGS=:systemd:
-CURRENT_TAGS=:systemd:
-
-# cat /usr/lib/udev/rules.d/63-md-raid-arrays.rules
-# do not edit this file, it will be overwritten on update
-
-SUBSYSTEM!="block", GOTO="md_end"
-
-# handle md arrays
-ACTION!="add|change", GOTO="md_end"
-KERNEL!="md*", GOTO="md_end"
-
-# partitions have no md/{array_state,metadata_version}, but should not
-# for that reason be ignored.
-ENV{DEVTYPE}=="partition", GOTO="md_ignore_state"
-
-# container devices have a metadata version of e.g. 'external:ddf' and
-# never leave state 'inactive'
-ATTR{md/metadata_version}=="external:[A-Za-z]*", 
-ATTR{md/array_state}=="inactive", GOTO="md_ignore_state"
-TEST!="md/array_state", ENV{SYSTEMD_READY}="0", GOTO="md_end"
-ATTR{md/array_state}=="clear*|inactive", ENV{SYSTEMD_READY}="0", 
-GOTO="md_end"
-ATTR{md/sync_action}=="reshape", ENV{RESHAPE_ACTIVE}="yes"
-LABEL="md_ignore_state"
-
-IMPORT{program}="/usr/bin/mdadm --detail --no-devices --export $devnode"
-ENV{DEVTYPE}=="disk", ENV{MD_NAME}=="?*", 
-SYMLINK+="disk/by-id/md-name-$env{MD_NAME}", 
-OPTIONS+="string_escape=replace"
-ENV{DEVTYPE}=="disk", ENV{MD_UUID}=="?*", 
-SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
-ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", SYMLINK+="md/$env{MD_DEVNAME}"
-ENV{DEVTYPE}=="partition", ENV{MD_NAME}=="?*", 
-SYMLINK+="disk/by-id/md-name-$env{MD_NAME}-part%n", 
-OPTIONS+="string_escape=replace"
-ENV{DEVTYPE}=="partition", ENV{MD_UUID}=="?*", 
-SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}-part%n"
-ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[^0-9]", 
-SYMLINK+="md/$env{MD_DEVNAME}%n"
-ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[0-9]", 
-SYMLINK+="md/$env{MD_DEVNAME}p%n"
-
-IMPORT{builtin}="blkid"
-OPTIONS+="link_priority=100"
-OPTIONS+="watch"
-ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", 
-SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
-ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_PART_ENTRY_UUID}=="?*", 
-SYMLINK+="disk/by-partuuid/$env{ID_PART_ENTRY_UUID}"
-ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", 
-SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
-
-ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="mdmonitor.service"
-
-# Tell systemd to run mdmon for our container, if we need it.
-ENV{MD_LEVEL}=="raid[1-9]*", ENV{MD_CONTAINER}=="?*", 
-PROGRAM="/usr/bin/readlink $env{MD_CONTAINER}", ENV{MD_MON_THIS}="%c"
-ENV{MD_MON_THIS}=="?*", PROGRAM="/usr/bin/basename $env{MD_MON_THIS}", 
-ENV{SYSTEMD_WANTS}+="mdmon@%c.service"
-ENV{RESHAPE_ACTIVE}=="yes", PROGRAM="/usr/bin/basename 
-$env{MD_MON_THIS}", ENV{SYSTEMD_WANTS}+="mdadm-grow-continue@%c.service"
-
-LABEL="md_end"
-
-
+---
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 8bb9eef5310e..5c16fdb00c6f 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -646,6 +646,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 		t->misaligned = 1;
+ 		ret = -1;
+ 	}
++	blk_queue_dma_alignment(t, t->logical_block_size - 1);
+ 
+ 	t->max_sectors = blk_round_down_sectors(t->max_sectors, t->logical_block_size);
+ 	t->max_hw_sectors = blk_round_down_sectors(t->max_hw_sectors, t->logical_block_size);
+--
