@@ -2,140 +2,193 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE0BC4332F
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Nov 2022 23:45:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BFFAC4332F
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Nov 2022 23:55:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229739AbiKAXpS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 1 Nov 2022 19:45:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32914 "EHLO
+        id S229968AbiKAXzA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 1 Nov 2022 19:55:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229517AbiKAXpQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Nov 2022 19:45:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E1A81D644
-        for <linux-raid@vger.kernel.org>; Tue,  1 Nov 2022 16:44:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667346256;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=k4zfyqt+78m6nMjBTYfUbfSj9Ttrp6eDPKSXytRcgls=;
-        b=QvLsVQOoVvduMTU2vyIAKSLCvy6TVJSuVlB9slfxS9Wu/kTcbQT7ihzda9YAerT/yVW+xJ
-        f7CjG7L8r6YWEee9GlBQkcUqwHbu3Bqm/i1AFfHgZ5rFxKW4JF2QqS43niW86IEqX2FFQb
-        P2/G8fRBCbwGu3qYpQBGgpKM1l2fZt0=
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
- [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-135-CJAEBjwvMBmrXs_YoLDObg-1; Tue, 01 Nov 2022 19:44:15 -0400
-X-MC-Unique: CJAEBjwvMBmrXs_YoLDObg-1
-Received: by mail-pg1-f198.google.com with SMTP id s82-20020a632c55000000b0046b2491aa95so8440566pgs.7
-        for <linux-raid@vger.kernel.org>; Tue, 01 Nov 2022 16:44:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=k4zfyqt+78m6nMjBTYfUbfSj9Ttrp6eDPKSXytRcgls=;
-        b=wyqeAgN0RFnnU+JLIxDJX3mLrVEflt0iFJ33RISSeN1nLF58s2kTLamUODiFntJSae
-         vd9Py2/B5FOC0stXUcvVRDb4q5ucEHNILGrEyZJXFUNZXxAvRQHdqRKYA9RnLlvWTSw8
-         7uBEh1xe1UpjIS7euuEjDylPeyeJYMeETVpgHtVb8xSHYUWy7W3UTez2Cd4a1ku8uznA
-         pb83zd/fvYx63EjzmVSKvUgKAWtoonG38nX4mr0baE8UKKICCTwstxR1wX09wW80DdW6
-         prdBVdUO0Wr9Zjjqq5gZBoq1d/zsug+jyPiVj/2hTHfoGoQcmSt7qr98q3HNaW8tFZ1f
-         GDoQ==
-X-Gm-Message-State: ACrzQf2OyN+8Q/INm+7gnGO4DmofRGxoyfZSJSXf45ayrCsW0a1LJtQb
-        UqSw/QjgSimqNoPItw8f/XHRupLWVNqVwtROydS0aUy9dwfL+PNXnh5YGzy1LTIVzjpNcEPmlWC
-        r3O7TD/XPlwg4rKW0qcxLY4L/5nGQDyWgDtXztA==
-X-Received: by 2002:a17:90b:1c82:b0:1ee:eb41:b141 with SMTP id oo2-20020a17090b1c8200b001eeeb41b141mr23220150pjb.143.1667346253767;
-        Tue, 01 Nov 2022 16:44:13 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM7Q0pm40av8URmmxgQgP54F9+auA+0ADDvPi+gjDzyJGsr6zMQRblSxP7NOCSCgjwLgNRMUFDk5gxaTEVRqbHM=
-X-Received: by 2002:a17:90b:1c82:b0:1ee:eb41:b141 with SMTP id
- oo2-20020a17090b1c8200b001eeeb41b141mr23220133pjb.143.1667346253484; Tue, 01
- Nov 2022 16:44:13 -0700 (PDT)
+        with ESMTP id S229695AbiKAXy6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Nov 2022 19:54:58 -0400
+X-Greylist: delayed 314 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 01 Nov 2022 16:54:56 PDT
+Received: from titan.solsystem.syn-net.org (smtp.syn-net.org [178.63.156.198])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 801FC1A075
+        for <linux-raid@vger.kernel.org>; Tue,  1 Nov 2022 16:54:56 -0700 (PDT)
+Received: from [10.17.1.100] (213-47-44-84.cable.dynamic.surfer.at [213.47.44.84])
+        by titan.solsystem.syn-net.org (Postfix) with ESMTPSA id A20E52095A
+        for <linux-raid@vger.kernel.org>; Wed,  2 Nov 2022 00:49:40 +0100 (CET)
+Message-ID: <46045b2b-2aa5-5e75-2616-d28bbcb66786@syn-net.org>
+Date:   Wed, 2 Nov 2022 00:49:32 +0100
 MIME-Version: 1.0
-References: <20221101050819.12509-1-xni@redhat.com> <CAPhsuW7QLFpMbsYcisTm32zdeeYEXMT+M76S=Kjn5rurTF8Lpw@mail.gmail.com>
-In-Reply-To: <CAPhsuW7QLFpMbsYcisTm32zdeeYEXMT+M76S=Kjn5rurTF8Lpw@mail.gmail.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 2 Nov 2022 07:44:02 +0800
-Message-ID: <CALTww2_CnyCatgr-c4JPubgNjoAXBHTra5WjO6WpFqB4T1e=hg@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Don't set discard sectors for request queue
-To:     Song Liu <song@kernel.org>
-Cc:     yi.zhang@redhat.com, ming.lei@redhat.com,
-        linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Content-Language: en-US
+To:     linux-raid@vger.kernel.org
+References: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com>
+ <87373og9z9.fsf@notabene.neil.brown.name>
+ <XUhdgUHMsoit8A9Qw13P1q6NQUxsgqNZCsgx6us_8kHu50GPOvQoOBwP-ryQz54CBi6Js7J2xwC8jgKQ5geXi5AdVLT27YlucQ4tWH-8xlM=@protonmail.com>
+ <87r2r8dk80.fsf@notabene.neil.brown.name>
+ <f92IIdV_PSMtdilVnQDOaLSxzvpTkAa6D0nxpuplzzdnaP9km9JveoXfzOlygcXD5Y_HpN49Fh0x4nOZFhXPfv5VyPrT6CgFO-nsULq6wn0=@protonmail.com>
+ <871sj5dsiv.fsf@notabene.neil.brown.name>
+ <M1riU2VdgyXq3ozdVUjaSDLksJfD8z3lZEy7D8JWIMb9mJk8A6CFz7Q1_tA_wFkVGC1lyTI7yTMb8DXv7T6JDGvKzUFGHbY7mZ9vLNqlowo=@protonmail.com>
+ <F_VxJAwrrEFTHG3fvMDQYPLKrS0w9yabmLk-nyrGRf3UQV-QxsnRSzojv6XQtCiKN7YMZ3sSOlbLduUL_apbYN25g7ouW-Th2S_fbMDgAEM=@protonmail.com>
+From:   Darshaka Pathirana <dpat@syn-net.org>
+Subject: Re: Troubleshooting "Buffer I/O error" on reading md device
+In-Reply-To: <F_VxJAwrrEFTHG3fvMDQYPLKrS0w9yabmLk-nyrGRf3UQV-QxsnRSzojv6XQtCiKN7YMZ3sSOlbLduUL_apbYN25g7ouW-Th2S_fbMDgAEM=@protonmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------0cENNGVdMTPUCgXU0oCpaJV8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Nov 2, 2022 at 4:21 AM Song Liu <song@kernel.org> wrote:
->
-> On Mon, Oct 31, 2022 at 10:08 PM Xiao Ni <xni@redhat.com> wrote:
->
-> Please update the subject as md/raid0, raid10: xxx.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------0cENNGVdMTPUCgXU0oCpaJV8
+Content-Type: multipart/mixed; boundary="------------2bVa0eu9M8B6RsyBHF6UAfca";
+ protected-headers="v1"
+From: Darshaka Pathirana <dpat@syn-net.org>
+To: linux-raid@vger.kernel.org
+Message-ID: <46045b2b-2aa5-5e75-2616-d28bbcb66786@syn-net.org>
+Subject: Re: Troubleshooting "Buffer I/O error" on reading md device
+References: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com>
+ <87373og9z9.fsf@notabene.neil.brown.name>
+ <XUhdgUHMsoit8A9Qw13P1q6NQUxsgqNZCsgx6us_8kHu50GPOvQoOBwP-ryQz54CBi6Js7J2xwC8jgKQ5geXi5AdVLT27YlucQ4tWH-8xlM=@protonmail.com>
+ <87r2r8dk80.fsf@notabene.neil.brown.name>
+ <f92IIdV_PSMtdilVnQDOaLSxzvpTkAa6D0nxpuplzzdnaP9km9JveoXfzOlygcXD5Y_HpN49Fh0x4nOZFhXPfv5VyPrT6CgFO-nsULq6wn0=@protonmail.com>
+ <871sj5dsiv.fsf@notabene.neil.brown.name>
+ <M1riU2VdgyXq3ozdVUjaSDLksJfD8z3lZEy7D8JWIMb9mJk8A6CFz7Q1_tA_wFkVGC1lyTI7yTMb8DXv7T6JDGvKzUFGHbY7mZ9vLNqlowo=@protonmail.com>
+ <F_VxJAwrrEFTHG3fvMDQYPLKrS0w9yabmLk-nyrGRf3UQV-QxsnRSzojv6XQtCiKN7YMZ3sSOlbLduUL_apbYN25g7ouW-Th2S_fbMDgAEM=@protonmail.com>
+In-Reply-To: <F_VxJAwrrEFTHG3fvMDQYPLKrS0w9yabmLk-nyrGRf3UQV-QxsnRSzojv6XQtCiKN7YMZ3sSOlbLduUL_apbYN25g7ouW-Th2S_fbMDgAEM=@protonmail.com>
 
-Sorry for forgetting about this again.
+--------------2bVa0eu9M8B6RsyBHF6UAfca
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
->
-> >
-> > It should use disk_stack_limits to get a proper max_discard_sectors
-> > rather than setting a value by stack drivers.
-> >
-> > And there is a bug. If all member disks are rotational devices,
-> > raid0/raid10 set max_discard_sectors. So the member devices are
-> > not ssd/nvme, but raid0/raid10 export the wrong value. It reports
-> > warning messages in function __blkdev_issue_discard when mkfs.xfs
->
-> Please provide more information about this bug: the warning message,
-> the impact, etc. in the commit log.
+Hi,
 
-I remember we need to obey a rule to paste the warning/panic messages,
-right? If so, can you tell the position again? I use the keyword
-"warning/panic/calltrace"
-to search in file process/submitting-patches.rst and can't find the
-useful information.
-Or it just needs to paste the calltraces in the patch?
+I am capturing this thread, because I also stumbled over the same problem=
+,
+except I am running a RAID-1 setup.
 
-Regards
-Xiao
->
-> >
-> > Signed-off-by: Xiao Ni <xni@redhat.com>
-> > Reported-by: Yi Zhang <yi.zhang@redhat.com>
->
-> Thanks,
-> Song
->
-> > ---
-> >  drivers/md/raid0.c  | 1 -
-> >  drivers/md/raid10.c | 2 --
-> >  2 files changed, 3 deletions(-)
-> >
-> > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> > index aced0ad8cdab..9d4831ca802c 100644
-> > --- a/drivers/md/raid0.c
-> > +++ b/drivers/md/raid0.c
-> > @@ -398,7 +398,6 @@ static int raid0_run(struct mddev *mddev)
-> >
-> >                 blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
-> >                 blk_queue_max_write_zeroes_sectors(mddev->queue, mddev->chunk_sectors);
-> > -               blk_queue_max_discard_sectors(mddev->queue, UINT_MAX);
-> >
-> >                 blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
-> >                 blk_queue_io_opt(mddev->queue,
-> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> > index 3aa8b6e11d58..9a6503f5cb98 100644
-> > --- a/drivers/md/raid10.c
-> > +++ b/drivers/md/raid10.c
-> > @@ -4145,8 +4145,6 @@ static int raid10_run(struct mddev *mddev)
-> >         conf->thread = NULL;
-> >
-> >         if (mddev->queue) {
-> > -               blk_queue_max_discard_sectors(mddev->queue,
-> > -                                             UINT_MAX);
-> >                 blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
-> >                 blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
-> >                 raid10_set_io_opt(conf);
-> > --
-> > 2.32.0 (Apple Git-132)
-> >
->
+The server is (still) running Debian/stretch with mdadm 3.4-4+b1.
 
+Basically this is what happens:
+
+Accessing the RAID fails:
+
+  % sudo dd if=3D/dev/md0 of=3D/dev/null skip=3D3112437760 count=3D335544=
+32
+  dd: error reading '/dev/md0': Input/output error
+  514936+0 records in
+  514936+0 records out
+  263647232 bytes (264 MB, 251 MiB) copied, 0.447983 s, 589 MB/s
+
+dmesg output while trying to access the RAID:
+
+  [Tue Nov  1 22:09:59 2022] Buffer I/O error on dev md0, logical block 3=
+89119087, async page read
+  [Tue Nov  1 22:22:01 2022] Buffer I/O error on dev md0, logical block 3=
+89119087, async page read
+
+Jumping to the 'logical block':
+
+  % sudo blockdev --getbsz /dev/md0
+  4096
+
+  % sudo dd if=3D/dev/md0 of=3D/dev/null skip=3D389119087 bs=3D4096 count=
+=3D33554432
+  dd: error reading '/dev/md0': Input/output error
+  0+0 records in
+  0+0 records out
+  0 bytes copied, 0.000129958 s, 0.0 kB/s
+
+But the underlying disk seemed ok, which was strange:
+
+  % sudo dd if=3D/dev/sdb1 skip=3D3112437760 count=3D33554432 of=3D/dev/n=
+ull
+  33554432+0 records in
+  33554432+0 records out
+  17179869184 bytes (17 GB, 16 GiB) copied, 112.802 s, 152 MB/s
+  sudo dd if=3D/dev/sdb1 skip=3D3112437760 count=3D33554432 of=3D/dev/nul=
+l  9.18s user 29.80s system 34% cpu 1:52.81 total
+
+Note, through trial + error I found the offset of /dev/md0 to
+/dev/sdb1 to be 262144 blocks (with block size 512). That's why skip is
+not the same for both commands.
+
+After a very long research I found this thread and yes, there is a bad
+block log:
+
+  % cat /sys/block/md0/md/rd*/bad_blocks
+  3113214840 8
+
+  % sudo mdadm -E /dev/sdb1 | grep Bad
+    Bad Block Log : 512 entries available at offset 72 sectors - bad bloc=
+ks present.
+
+The other disk of that RAID has been removed, because the disk had
+SMART errors and is about to be replaced. Only then I noticed the
+input/output error.
+
+I am not sure how to proceed from here. Do you have any advice?
+
+On 2018-02-02 02:55, NeilBrown wrote:
+>
+> Short answer is that if you use
+>   --assemble --force-no-bbl
+> it will really truly get rid of the bad block log.  I really should add=
+
+> that to the man page.
+
+*friendly wave*
+
+> Longer answer:
+> If you assemble the array (without force-no-bbl) and
+>
+> [...]
+>
+> So this should be row 2 (counting from 0)
+> D2 D3 P  D0 D1
+>
+> rd2 and rd2 are bad, so that is 'P' and 'D0'.
+>
+> So this confirms that it is just the first 4K block of that stripe whic=
+h
+> is bad.
+> Writing should fix it... but it doesn't.  The write gets an IO error.
+>
+> Looking at the code I can see why.  The fix isn't completely
+> trivial. I'll have think about it carefully.
+
+I am curious: did you come up with a solution?
+
+Best & thx for your help,
+ - Darsha
+
+P.s. I am not subscribed, please put me on CC.
+
+--------------2bVa0eu9M8B6RsyBHF6UAfca--
+
+--------------0cENNGVdMTPUCgXU0oCpaJV8
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEjfInGHHlfaVxTI7em7aYPd2Br+sFAmNhsIwFAwAAAAAACgkQm7aYPd2Br+tj
+9g/+Oaj2XaGNoWF6xqS+OevX8RHs5CB3Dzd70UYezeKQyKcXaauyGxnxBTlMsRZ18t0rsqIq7Dp5
++sUcVck/yCP4ngK1zjYOfX8CuFJgeoFoKnIL60Ko5LgalK1w39rhDRfDe99ITAWN6QsGfvlevwUy
+EVzdRWDE/seS8cov440EtTVyDc4xL8bZj9o/R/T1sPDqBgYYYuO8aXxjJJn4HDYPBZN4/PUscI6j
+h8eITUu+4quWZvxDgxUhCSng/7MT9R508GbAGDavIyqtWuoTO8XNJ3bmtPdcV7bwLk/W78vWZboL
+6+rTrq5mJFB95U6k6diRhpJzccqYoIVcYaRUN8g7d2Knwx4SOdGtiNndBP3qxLq2pKIEkJzmMkRK
+8IwsrnKQ4moEnVWtn1807pTmdYKMvUiFIIqgRokoy0rI0kYoikluvH8dnkJLFEWHXCZhyIciSO8o
+Lvh7DRklVNiaY8wakcFsoOK6OwhGc91gj1jt6kmRAalgFVmzhQHKGRr5JxpIs+M/c1pJniyQ6bCl
+MoPLskvWXldi7m3BjqE186IIY9gY73eR5GoRee/OYo7Qi8laodqlyG6IcgUHCEcn4yjB4iX8/ffz
+x3suKzkCe+hUl/BXADz4m+jbc6/yWUxb9NpqRrKzshkmqmjjyutCjETAxmlIQYtEuRI/uzjE20kC
+OzQ=
+=pgYP
+-----END PGP SIGNATURE-----
+
+--------------0cENNGVdMTPUCgXU0oCpaJV8--
