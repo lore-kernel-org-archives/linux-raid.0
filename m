@@ -2,112 +2,176 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB380C4332F
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Nov 2022 20:21:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F8AFC433FE
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Nov 2022 20:51:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230175AbiKAUV3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 1 Nov 2022 16:21:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58208 "EHLO
+        id S230158AbiKAUvn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 1 Nov 2022 16:51:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229939AbiKAUV1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Nov 2022 16:21:27 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1036F62DD
-        for <linux-raid@vger.kernel.org>; Tue,  1 Nov 2022 13:21:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9548DB81F0E
-        for <linux-raid@vger.kernel.org>; Tue,  1 Nov 2022 20:21:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B734C433D6
-        for <linux-raid@vger.kernel.org>; Tue,  1 Nov 2022 20:21:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667334084;
-        bh=+Bc7dg2H0VkmoZ9D7R6W7ijbGY05yXLdfMzpuE4kM7I=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=twMQ1BoNIxbNyaRMlqCrnt/CqVpGDqOIygtqqu9O7vALBCOmAd6OmY387tZf9PHxV
-         RW4DCIEBq9Oc23sL5zPgQVdCKsvMCiKBMo3UTCSowC77YYGOyM1OvN+WF9Q2JadeNJ
-         19a7Tl1WvafvIT085yK+2EgkzgQEE0K9EnXAMsif193Ina4MtDhmVpszmy86PhHxIg
-         jhNB2xgH/NQSw984F2VJBI0BD2rBnkNY+tbxSUOXQH2P7Rt7XIQnu3aoVFhm11fxmA
-         p+xocsRu/gjsVRLbZ2KMecXald4UKMWoZjrCySkouAMrci+oUriJTVO5RShSuaKWJ0
-         7z6HptBz3l0WA==
-Received: by mail-ej1-f43.google.com with SMTP id bj12so39865316ejb.13
-        for <linux-raid@vger.kernel.org>; Tue, 01 Nov 2022 13:21:24 -0700 (PDT)
-X-Gm-Message-State: ACrzQf1gMHL0hTJFNf2Quhoqj1I1LZ850kYT/wxGNHIE0fEJb7Yo9/dP
-        Jz0SLfxG7a6vhnEC1AHZbx+O8KEwrHksW4VqO1M=
-X-Google-Smtp-Source: AMsMyM6PLqYZMWT3hNkjKcmwlProMnYspiaW9kJMyEHCmVGonMFCa+i4o1wfIql0arNb2zTH3703wnGMNV4SANd6Vic=
-X-Received: by 2002:a17:907:628f:b0:72f:58fc:3815 with SMTP id
- nd15-20020a170907628f00b0072f58fc3815mr19604601ejc.719.1667334082483; Tue, 01
- Nov 2022 13:21:22 -0700 (PDT)
+        with ESMTP id S229511AbiKAUvm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Nov 2022 16:51:42 -0400
+Received: from hermod.demsh.org (hermod.demsh.org [45.140.147.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7362618B34;
+        Tue,  1 Nov 2022 13:51:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=demsh.org; s=022020;
+        t=1667335897;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lynTikTlbsL63yiBUJcjQJmAweLbFMnBPUDPM2HsYvc=;
+        b=fDSxtn/X7V/oaUc3Fga5kApTHiev2/SDYiuahPDgSUybP30jBgjuCeReUBUJK93xQmFE92
+        ReWqC2dxlXcD9JxIS6rnbFCdAWMf189ZA5fkwGxR69s76AdmUVLc1wL3RVJ1yu84OiKmMa
+        JNbZN3zs5VyvHbEC0gDxdTw55Khsl8lBmOtS9FyqOEcfXGFRcA7dFSIOoMGDJZfEgh4PUJ
+        kEfls9Jk6YzQcalfVqHfSPTKEtmuh7oEZ5fwNNoS6FqohNt7ATGvbnAMqpmkpcXb440E5t
+        AFNgYExHa4I0B3tNZsOZBIPflYbhayNPYPeE4e/9Ry+POwUnQ2LmQtUibW66ZA==
+Received: from xps.demsh.org (algiz.demsh.org [94.103.82.47])
+        by hermod.demsh.org (OpenSMTPD) with ESMTPSA id 36acce8b (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO) auth=yes user=me;
+        Tue, 1 Nov 2022 20:51:37 +0000 (UTC)
+Date:   Tue, 1 Nov 2022 23:51:44 +0300
+From:   Dmitrii Tcvetkov <me@demsh.org>
+To:     Keith Busch <kbusch@kernel.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [bisected] RAID1 direct IO redirecting sector loop since 6.0
+Message-ID: <20221101235144.06a3dbd3@xps.demsh.org>
+In-Reply-To: <Y2FVzdcro8HCfODK@kbusch-mbp>
+References: <20221101001558.648ee024@xps.demsh.org>
+ <Y2FVzdcro8HCfODK@kbusch-mbp>
 MIME-Version: 1.0
-References: <20221101050819.12509-1-xni@redhat.com>
-In-Reply-To: <20221101050819.12509-1-xni@redhat.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 1 Nov 2022 13:21:10 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7QLFpMbsYcisTm32zdeeYEXMT+M76S=Kjn5rurTF8Lpw@mail.gmail.com>
-Message-ID: <CAPhsuW7QLFpMbsYcisTm32zdeeYEXMT+M76S=Kjn5rurTF8Lpw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Don't set discard sectors for request queue
-To:     Xiao Ni <xni@redhat.com>
-Cc:     yi.zhang@redhat.com, ming.lei@redhat.com,
-        linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Oct 31, 2022 at 10:08 PM Xiao Ni <xni@redhat.com> wrote:
+On Tue, 1 Nov 2022 11:22:21 -0600
+Keith Busch <kbusch@kernel.org> wrote:
 
-Please update the subject as md/raid0, raid10: xxx.
+> On Tue, Nov 01, 2022 at 12:15:58AM +0300, Dmitrii Tcvetkov wrote:
+> >=20
+> > # cat /proc/7906/stack
+> > [<0>] submit_bio_wait+0xdb/0x140
+> > [<0>] blkdev_direct_IO+0x62f/0x770
+> > [<0>] blkdev_read_iter+0xc1/0x140
+> > [<0>] vfs_read+0x34e/0x3c0
+> > [<0>] __x64_sys_pread64+0x74/0xc0
+> > [<0>] do_syscall_64+0x6a/0x90
+> > [<0>] entry_SYSCALL_64_after_hwframe+0x4b/0xb5
+> >=20
+> > After "mdadm --fail" invocation the last line becomes:
+> > [pid  7906] pread64(13, 0x627c34c8d200, 4096, 0) =3D -1 EIO
+> > (Input/output error)
+>=20
+> It looks like something isn't accounting for the IO size correctly
+> when there's an offset. It may be something specific to one of the
+> stacking drivers in your block setup. Does this still happen without
+> the cryptosetup step?
+>=20
+I created setup lvm(mdraid(gpt(HDD))):
 
->
-> It should use disk_stack_limits to get a proper max_discard_sectors
-> rather than setting a value by stack drivers.
->
-> And there is a bug. If all member disks are rotational devices,
-> raid0/raid10 set max_discard_sectors. So the member devices are
-> not ssd/nvme, but raid0/raid10 export the wrong value. It reports
-> warning messages in function __blkdev_issue_discard when mkfs.xfs
+# lsblk -t -a
+NAME                 ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED RQ-=
+SIZE  RA WSAME
+...
+sdd                          0    512      0     512     512    1 bfq      =
+  64 128    0B
+=E2=94=9C=E2=94=80sdd3                       0    512      0     512     51=
+2    1 bfq        64 128    0B
+=E2=94=82 =E2=94=94=E2=94=80md1                      0    512      0     51=
+2     512    1           128 128    0B
+=E2=94=82   =E2=94=9C=E2=94=80512lvmraid-zfs         0    512      0     51=
+2     512    1           128 128    0B
+=E2=94=82   =E2=94=94=E2=94=80512lvmraid-wrk         0    512      0     51=
+2     512    1           128 128    0B
+sde                          0    512      0     512     512    1 bfq      =
+  64 128    0B
+=E2=94=9C=E2=94=80sde3                       0    512      0     512     51=
+2    1 bfq        64 128    0B
+=E2=94=82 =E2=94=94=E2=94=80md1                      0    512      0     51=
+2     512    1           128 128    0B
+=E2=94=82   =E2=94=9C=E2=94=80512lvmraid-zfs         0    512      0     51=
+2     512    1           128 128    0B
+=E2=94=82   =E2=94=94=E2=94=80512lvmraid-wrk         0    512      0     51=
+2     512    1           128 128    0B
 
-Please provide more information about this bug: the warning message,
-the impact, etc. in the commit log.
+where:
+# mdadm --create --level=3D1 --metadata=3D1.2 \
+	--raid-devices=3D2 /dev/md1 /dev/sdd3 /dev/sde3
+# pvcreate /dev/md1
+# vgcreate 512lvmraid /dev/md2
 
->
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> Reported-by: Yi Zhang <yi.zhang@redhat.com>
+In this case problem doesn't reproduce, both guests start successfully.
 
-Thanks,
-Song
+It also doesn't reproduce with 4096 sector loop:
+# lsblk -t -a                                                              =
+            =20
+NAME                 ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED RQ-=
+SIZE  RA WSAME
+loop0                        0   4096      0    4096    4096    0 none     =
+ 128 128    0B
+=E2=94=94=E2=94=80md2                        0   4096      0    4096    409=
+6    0           128 128    0B
+  =E2=94=9C=E2=94=804096lvmraid-zfs          0   4096      0    4096    409=
+6    0           128 128    0B
+  =E2=94=94=E2=94=804096lvmraid-wrk          0   4096      0    4096    409=
+6    0           128 128    0B
+loop1                        0   4096      0    4096    4096    0 none     =
+ 128 128    0B
+=E2=94=94=E2=94=80md2                        0   4096      0    4096    409=
+6    0           128 128    0B
+  =E2=94=9C=E2=94=804096lvmraid-zfs          0   4096      0    4096    409=
+6    0           128 128    0B
+  =E2=94=94=E2=94=804096lvmraid-wrk          0   4096      0    4096    409=
+6    0           128 128    0B
 
+where:
+# losetup --sector-size 4096 -f /dev/sdd4
+# losetup --sector-size 4096 -f /dev/sde4
+# mdadm --create --level=3D1 --metadata=3D1.2 \
+	--raid-devices=3D2 /dev/md2 /dev/loop0 /dev/loop1
+# pvcreate /dev/md2
+# vgcreate 4096lvmraid /dev/md2
+
+Indeed then something is wrong in LUKS.
+
+> For a different experiment, it may be safer to just force all
+> alignment for stacking drivers. Could you try the following and see
+> if that gets it working again?=20
+>=20
 > ---
->  drivers/md/raid0.c  | 1 -
->  drivers/md/raid10.c | 2 --
->  2 files changed, 3 deletions(-)
->
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index aced0ad8cdab..9d4831ca802c 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -398,7 +398,6 @@ static int raid0_run(struct mddev *mddev)
->
->                 blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
->                 blk_queue_max_write_zeroes_sectors(mddev->queue, mddev->chunk_sectors);
-> -               blk_queue_max_discard_sectors(mddev->queue, UINT_MAX);
->
->                 blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
->                 blk_queue_io_opt(mddev->queue,
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 3aa8b6e11d58..9a6503f5cb98 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4145,8 +4145,6 @@ static int raid10_run(struct mddev *mddev)
->         conf->thread = NULL;
->
->         if (mddev->queue) {
-> -               blk_queue_max_discard_sectors(mddev->queue,
-> -                                             UINT_MAX);
->                 blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
->                 blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
->                 raid10_set_io_opt(conf);
-> --
-> 2.32.0 (Apple Git-132)
->
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 8bb9eef5310e..5c16fdb00c6f 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -646,6 +646,7 @@ int blk_stack_limits(struct queue_limits *t,
+> struct queue_limits *b, t->misaligned =3D 1;
+>  		ret =3D -1;
+>  	}
+> +	blk_queue_dma_alignment(t, t->logical_block_size - 1);
+> =20
+>  	t->max_sectors =3D blk_round_down_sectors(t->max_sectors,
+> t->logical_block_size); t->max_hw_sectors =3D
+> blk_round_down_sectors(t->max_hw_sectors, t->logical_block_size); --
+
+This doesn't compile:
+  CC      block/blk-settings.o                                             =
+                   =20
+block/blk-settings.c: In function =E2=80=98blk_stack_limits=E2=80=99:
+block/blk-settings.c:649:33: error: passing argument 1 of =E2=80=98blk_queu=
+e_dma_alignment=E2=80=99 from incompatible pointer type [-Werror=3Dincompat=
+ible-pointer-types]
+  649 |         blk_queue_dma_alignment(t, t->logical_block_size - 1);
+      |                                 ^
+      |                                 |
+      |                                 struct queue_limits *
+In file included from block/blk-settings.c:9:
+./include/linux/blkdev.h:956:37: note: expected =E2=80=98struct request_que=
+ue *=E2=80=99 but argument is of type =E2=80=98struct queue_limits *=E2=80=
+=99
+  956 | extern void blk_queue_dma_alignment(struct request_queue *, int);
+
+I didn't find obvious way to get a request_queue pointer, which corresponds=
+ to struct queue_limits *t.
