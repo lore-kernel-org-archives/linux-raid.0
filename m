@@ -2,159 +2,85 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05549C433FE
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Nov 2022 04:57:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 416AEC4167B
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Nov 2022 08:36:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229534AbiKBE5D (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Nov 2022 00:57:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54610 "EHLO
+        id S230363AbiKBIgT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Nov 2022 04:36:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbiKBE5B (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Nov 2022 00:57:01 -0400
-Received: from hermod.demsh.org (hermod.demsh.org [45.140.147.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D14112754;
-        Tue,  1 Nov 2022 21:56:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=demsh.org; s=022020;
-        t=1667365015;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wfWIIDD9CBtF28Mqs8I/NJkhL1FFYUKOzBxv2/nTM/Q=;
-        b=jnJf2zB95abymLK0B8TgMZVBkbH8B7Sj8CwWHLbhZ+lmWbqM6o06tpQKP1JoDiMjKOasT7
-        CXrjEG4ODtqaIN4Vhszj0w/XXFmFthd7NJqEI9mpyvHbQRRNms/rCAfAAKAixc7k4P4f8e
-        6Dd2V+/lR15y6BjwGNba+oNhsdtEBQM8z7RTg7PyJtJVtjbgvkERqqnDKlAYdzhjLvkyaQ
-        BH73MzoQCLXeFoFDSDZLz2H5FNsMJPCHpHj5WeMPUYf9VDDmCEPrZTcVjrtRYYdFHK+/JJ
-        tKCUfiAhtn4Nr9nKSP7CAoIZU309HFXmLHGQyLyY+h6lZl161hWlqp5bJKNxUw==
-Received: from xps.demsh.org (algiz.demsh.org [94.103.82.47])
-        by hermod.demsh.org (OpenSMTPD) with ESMTPSA id d6ea86f8 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO) auth=yes user=me;
-        Wed, 2 Nov 2022 04:56:55 +0000 (UTC)
-Date:   Wed, 2 Nov 2022 07:57:03 +0300
-From:   Dmitrii Tcvetkov <me@demsh.org>
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [bisected] RAID1 direct IO redirecting sector loop since 6.0
-Message-ID: <20221102075703.63ec7876@xps.demsh.org>
-In-Reply-To: <20221102010826.12dcb4bb@xps.demsh.org>
-References: <20221101001558.648ee024@xps.demsh.org>
-        <Y2FVzdcro8HCfODK@kbusch-mbp>
-        <20221101235144.06a3dbd3@xps.demsh.org>
-        <Y2GNHEtDnoybz+fW@kbusch-mbp>
-        <20221102010826.12dcb4bb@xps.demsh.org>
+        with ESMTP id S230370AbiKBIgS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Nov 2022 04:36:18 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB3E4A19C
+        for <linux-raid@vger.kernel.org>; Wed,  2 Nov 2022 01:36:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1667378176; x=1698914176;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=bYlwifW0Mbf4qoLgWiHILATST/ATlQpBevUtzCE7akA=;
+  b=NtFZ2PRS28AuwNRDLuCE2a3l02NHUHwJKgcrn1cDoh4DByAs7zFYDCgX
+   /7N0Rph6LAQueCFuRQ5LICja5DPI52mS85U6YzFP+0w322z1SllynldbX
+   F68aNEN7YSTzREZYhP/isYuOXY4NtGH94yn56OoQWPefT7Mteps+yShSg
+   ysCA/KW4PU+aP8kZAaL8ILcnMRrzZio149Jn1jGfQ69rwQGOEj/69aVk8
+   uGim2fQ2o2dYGV6FQP+3hQKUSFH68Z9jjQszVedYdRMGden7yrcrhsLCE
+   f3xfUX0Ms9ecUm5oVDn93f1Y0qJdj54bZlkbx/VeTVdyKCE7lZ5DJxURR
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10518"; a="309345185"
+X-IronPort-AV: E=Sophos;i="5.95,232,1661842800"; 
+   d="scan'208";a="309345185"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2022 01:36:10 -0700
+X-IronPort-AV: E=McAfee;i="6500,9779,10518"; a="585316964"
+X-IronPort-AV: E=Sophos;i="5.95,232,1661842800"; 
+   d="scan'208";a="585316964"
+Received: from mkusiak-mobl.ger.corp.intel.com (HELO [10.213.5.202]) ([10.213.5.202])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2022 01:36:08 -0700
+Message-ID: <8ad61603-7b45-9c05-e422-1e77675d6836@linux.intel.com>
+Date:   Wed, 2 Nov 2022 09:35:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH] Manage: Block unsafe member failing
+Content-Language: pl
+To:     Jes Sorensen <jes@trained-monkey.org>,
+        Mateusz Kusiak <mateusz.kusiak@intel.com>,
+        linux-raid@vger.kernel.org
+Cc:     colyli@suse.de
+References: <20220818094721.8969-1-mateusz.kusiak@intel.com>
+ <a914b695-9b6d-fd45-97d4-ca5b98f1d1f3@trained-monkey.org>
+From:   "Kusiak, Mateusz" <mateusz.kusiak@linux.intel.com>
+In-Reply-To: <a914b695-9b6d-fd45-97d4-ca5b98f1d1f3@trained-monkey.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 2 Nov 2022 01:08:26 +0300
-Dmitrii Tcvetkov <me@demsh.org> wrote:
+We have noticed that this patch introduced a regression, unwanted
+behavior regarding matrix raid.
+We're working on a fix, this in no.1 on our list. We'll post changes soon.
 
-> On Tue, 1 Nov 2022 15:18:20 -0600
-> Keith Busch <kbusch@kernel.org> wrote:
-> > Oh shoot, sorry about that! Should have been this:
-> > 
-> > @@ -703,6 +702,7 @@ void disk_stack_limits(struct gendisk *disk,
-> > struct block_device *bdev, pr_notice("%s: Warning: Device %pg is
-> > misaligned\n", disk->disk_name, bdev);
-> > 
-> > +       blk_queue_dma_alignment(t, queue_logical_block_size(t) - 1);
-> >         disk_update_readahead(disk);
-> >  }
-> >  EXPORT_SYMBOL(disk_stack_limits);
+Thanks,
+Mateusz
+
+On 08/09/2022 18:53, Jes Sorensen wrote:
+> On 8/18/22 05:47, Mateusz Kusiak wrote:
+>> Kernel may or may not block mdadm from removing member device if it
+>> will cause arrays failed state. It depends on raid personality
+>> implementation in kernel.
+>> Add verification on requested removal path (#mdadm --set-faulty
+>> command).
+>>
+>> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
+>> ---
+>>  Manage.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>>  1 file changed, 52 insertions(+), 1 deletion(-)
 > 
-> This didn't change behaviour, second guest still hangs.
-
-Managed to write a program in C, which allows to reproduce this without
-Qemu.
-
-# cat test.c
-#define _GNU_SOURCE
-
-#include <stdlib.h>
-#include <unistd.h>                    
-#include <stdio.h>    
-#include <fcntl.h>    
-#include <string.h>   
-#include <errno.h>    
-#include <pthread.h>  
-                                               
-#define THREADCOUNT 8 
-#define PATHLIMIT 256 
-#define BUFSIZE 4096
-                                               
-#define LV1 "/dev/lvmraid/zfs"
-#define LV2 "/dev/lvmraid/wrk"           
-                                                                                               
-struct params {  
-  char path[PATHLIMIT];
-  char buffer[BUFSIZE];
-};   
-                                               
-                                               
-struct params alloc_params(char *path) {     
-  struct params out;
-                                                                                               
-  if (strlen(path) >= PATHLIMIT) {
-    printf("supplied path too long\n");
-    abort();
-  }
-                                               
-  strncpy(&out.path[0], path, PATHLIMIT);
-  memset(&out.buffer, 0, BUFSIZE);
-  return out;
-}
-
-void *worker(void *data) {
-  struct params *p = (struct params *) data;
-  int counter = 0;
-  ssize_t n = 0;
-   
-  int fd = open(p->path, O_RDONLY|O_DIRECT|O_CLOEXEC);
-  if (fd == -1) return NULL;
-   
-  while (counter < 2048) {
-    pread(fd, p->buffer, BUFSIZE, 0);
-    counter++;
-  }
-
-  close(fd);
-  return NULL;
-}
-
-int main(void) {
-  struct params parray[THREADCOUNT] = {
-    alloc_params(LV1),
-    alloc_params(LV1),
-    alloc_params(LV1),
-    alloc_params(LV1),
-    alloc_params(LV2),
-    alloc_params(LV2),
-    alloc_params(LV2),
-    alloc_params(LV2),
-  };
-  pthread_t threads[THREADCOUNT];
-
-  for (int i = 0; i < THREADCOUNT; i++) {
-    int ret = pthread_create(&threads[i], NULL, worker, (void *)
-  &parray[i]); if (ret!=0) {
-      printf("failed to create thread: %d", ret);
-      abort();
-    }
-  }
-  for (int i = 0; i < THREADCOUNT; i++) {
-    int ret = pthread_join(threads[i], NULL);
-    if(ret!=0) {
-      printf("failed to join thread: %d", ret); 
-      abort();
-    }
-  }
-   
-  return 0;
-}
-
-# gcc -O2 -pthread test.c
-# for i in $(seq 1 64); do ./a.out;done
+> Applied!
+> 
+> Thanks,
+> Jes
+> 
+> 
