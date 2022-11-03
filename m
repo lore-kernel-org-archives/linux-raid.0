@@ -2,226 +2,170 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD94C433FE
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Nov 2022 02:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F803C4332F
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Nov 2022 03:48:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230233AbiKCC4e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Nov 2022 22:56:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43666 "EHLO
+        id S230030AbiKCDsD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Nov 2022 23:48:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229700AbiKCC41 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Nov 2022 22:56:27 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9322111C24
-        for <linux-raid@vger.kernel.org>; Wed,  2 Nov 2022 19:55:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667444103;
+        with ESMTP id S229591AbiKCDsB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Nov 2022 23:48:01 -0400
+Received: from out0.migadu.com (out0.migadu.com [IPv6:2001:41d0:2:267::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1A1214D1C
+        for <linux-raid@vger.kernel.org>; Wed,  2 Nov 2022 20:47:59 -0700 (PDT)
+Subject: Re: A crash caused by the commit
+ 0dd84b319352bb8ba64752d4e45396d8b13e6018
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1667447277;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=5zyjl1/Az4cjueiclTlyNHpic+UVxLY5HMkl3WcABaI=;
-        b=EYC/SZHguYCWPGC0ezwtcaJTbWszYPjnq7X0lcGRvUpOVCEchl5TAW5kHkhfn16zKSwbod
-        j6krD+Fy2FUV8DJ0HAoqLgf02iAjlZpCaTyhaLuk6WEa+R68tc77yDIZDBPoFoCxV41vjr
-        +kunz2HqVQ9zCkcT/XF3XJZW/gkwhu4=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-496-zdroqmjoPtmFoNkuo8DMoQ-1; Wed, 02 Nov 2022 22:55:02 -0400
-X-MC-Unique: zdroqmjoPtmFoNkuo8DMoQ-1
-Received: by mail-pl1-f198.google.com with SMTP id e13-20020a17090301cd00b001871e6f8714so520654plh.14
-        for <linux-raid@vger.kernel.org>; Wed, 02 Nov 2022 19:55:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5zyjl1/Az4cjueiclTlyNHpic+UVxLY5HMkl3WcABaI=;
-        b=TqRnGR/UKInnsIJFgYEYs4oOC4q3ayyWAW1KldMQntkj9OKBQcrixEwCu2m5KfuFM3
-         1NIaBVnOccZ+9hBOt2sIP/CtpLYuZ3bGE65D/0dc/Jqwx+QmMpBBIXJKC7Zq+8RHpOLI
-         mn14LpIIW7EStx1eSDn8V49NzgG1l/2UhwEi1umNa/1v4Thzx2nXxwC2175t4M6XnA6N
-         B9m92/N0fWYwdWStnLEaZolNC9eNB/RvrtgyjpMOowH+5u59zYwvq+ul34wfooUd0M3D
-         ZfRkuMPIjbFJbFKgnU6qms5Kwn223SJ79egbZvvh/C1eZeBdyzf30h0s1DwtV9jNO438
-         xT6g==
-X-Gm-Message-State: ACrzQf1DEOvr/xlSgnfA2tR3xxuWY0iEJuoEM/L6X4F3IvXfNal/c8S6
-        8my08SIQmJeuliXJO2eRljFWItZTPFIoQq+YbzCt+YH1A60xLRQvUbPwWDg1UXQCFGNnJszjeEY
-        he66Dip5fdznhkvEkiPdIrA6GRLcIoeABWxm23Q==
-X-Received: by 2002:a17:902:e5d1:b0:187:3593:a86f with SMTP id u17-20020a170902e5d100b001873593a86fmr12714045plf.15.1667444100828;
-        Wed, 02 Nov 2022 19:55:00 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM6LdBxEdReWpRU375dn7R7bM55PRRXdkNnFr9LvY0yMc3hXLxSN6DFHSM/OIUGs+swoc6FUGvhs4E8Y0DffIvY=
-X-Received: by 2002:a17:902:e5d1:b0:187:3593:a86f with SMTP id
- u17-20020a170902e5d100b001873593a86fmr12714019plf.15.1667444100491; Wed, 02
- Nov 2022 19:55:00 -0700 (PDT)
+        bh=12Uj50v1VBOOvweUjOuQMb2OyBKbRPzEgXDLoxpLcQw=;
+        b=amjJtxyBOstRilsdbTV+bjCu59/T+Ki5GSs4Mm/Zp3CRx9LuvUYDUdiwLf17z7rbd0mHmX
+        UHvbIBOMvBu+mLHP+y+TsxLZPZwqNohtbBpnnLIIgnbfzKhbW1Y9bZEfF2MFIXjj3kJdTX
+        eBYu0bYPkkHZLjDYCUQ5XAEml3VEQ10=
+To:     Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>
+Cc:     Zdenek Kabelac <zkabelac@redhat.com>, linux-raid@vger.kernel.org,
+        dm-devel@redhat.com
+References: <alpine.LRH.2.21.2211021214390.25745@file01.intranet.prod.int.rdu2.redhat.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <78646e88-2457-81e1-e3e7-cf66b67ba923@linux.dev>
+Date:   Thu, 3 Nov 2022 11:47:53 +0800
 MIME-Version: 1.0
-References: <984d4620-e53f-0d1f-c61a-0485ea79e3f6@rechte.fr>
-In-Reply-To: <984d4620-e53f-0d1f-c61a-0485ea79e3f6@rechte.fr>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Thu, 3 Nov 2022 10:54:49 +0800
-Message-ID: <CALTww2-dKxDzTo6svQm+8wyo5UiY6v+amjoKjbhHQ4dVvDO67w@mail.gmail.com>
-Subject: Re: mdadm udev rule does not start mdmonitor systemd unit.
-To:     =?UTF-8?B?TWFyYyBSZWNodMOp?= <marc4@rechte.fr>
-Cc:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <alpine.LRH.2.21.2211021214390.25745@file01.intranet.prod.int.rdu2.redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Nov 1, 2022 at 8:27 PM Marc Recht=C3=A9 <marc4@rechte.fr> wrote:
->
-> Hello,
->
-> I have a udev rule and a md127 device with the properties as following.
->
-> The mdmonitor service is not started (no trace in systemd journal).
-> However I can manually start the service.
->
-> I just noticed that SYSTEMD_READY porperty is 0 which could explain this
-> behaviour (according to man systemd.device) ?
+Hi,
 
-Hi Marc
+On 11/3/22 12:27 AM, Mikulas Patocka wrote:
+> Hi
+>
+> There's a crash in the test shell/lvchange-rebuild-raid.sh when running
+> the lvm testsuite. It can be reproduced by running "make check_local
+> T=shell/lvchange-rebuild-raid.sh" in a loop.
 
-For raid device, SYSTEMD_READY will be 1 when the change event happens.
-And for lvm volume, SYSTEMD_READY will be 1 when the add event happens.
-So you need to notice about his in your udev rule.
+I have problem to run the cmd (not sure what I missed), it would be 
+better if
+the relevant cmds are extracted from the script then I can reproduce it with
+those cmds directly.
 
->
-> I don't know how to further debug.
+[root@localhost lvm2]# git log | head -1
+commit 36a923926c2c27c1a8a5ac262387d2a4d3e620f8
+[root@localhost lvm2]# make check_local T=shell/lvchange-rebuild-raid.sh
+make -C libdm device-mapper
+[...]
+make -C daemons
+make[1]: Nothing to be done for 'all'.
+make -C test check_local
+VERBOSE=0 ./lib/runner \
+         --testdir . --outdir results \
+         --flavours ndev-vanilla --only shell/lvchange-rebuild-raid.sh 
+--skip @
+running 1 tests
+###      running: [ndev-vanilla] shell/lvchange-rebuild-raid.sh 0
+| [ 0:00] lib/inittest: line 133: 
+/tmp/LVMTEST317948.iCoLwmDhZW/dev/testnull: Permission denied
+| [ 0:00] Filesystem does support devices in 
+/tmp/LVMTEST317948.iCoLwmDhZW/dev (mounted with nodev?)
+| [ 0:00] ## - /root/lvm2/test/shell/lvchange-rebuild-raid.sh:16
+| [ 0:00] ## 1 STACKTRACE() called from lib/inittest:134
+| [ 0:00] ## 2 source() called from 
+/root/lvm2/test/shell/lvchange-rebuild-raid.sh:16
+| [ 0:00] ## teardown....ok
+###       failed: [ndev-vanilla] shell/lvchange-rebuild-raid.sh
 
-You can add systemd.log_level=3Ddebug udev.log-priority=3Ddebug to your boo=
-t conf
-file. For example,
-/boot/loader/entries/xxx-4.18.0-416.el8.x86_64.conf. My environment
-is rhel. Maybe it's different on your system.
+### 1 tests: 0 passed, 0 skipped, 0 timed out, 0 warned, 1 failed
+make[1]: *** [Makefile:137: check_local] Error 1
+make: *** [Makefile:89: check_local] Error 2
 
-Then you can add some printf logs into your udev rule. I did in this
-way, something
-like this:
+And line 16 is this,
 
-ENV{SYSTEMD_READY}=3D=3D"0", GOTO=3D"test_end"
-SUBSYSTEM=3D=3D"block", ACTION=3D=3D"add", RUN{program}+=3D"/usr/bin/echo
-mdadm-test-add-SYSTEMD_READY"
-SUBSYSTEM=3D=3D"block", ACTION=3D=3D"change", RUN{program}+=3D"/usr/bin/ech=
-o
-mdadm-test-change-SYSTEMD_READY"
+[root@localhost lvm2]# head -16 
+/root/lvm2/test/shell/lvchange-rebuild-raid.sh | tail -1
+. lib/inittest
 
-You can check the logs by journalctl command. So you can know which
-rule runs in your udev rule.
+For "lvchange --rebuild" action, I guess it relates to CTR_FLAG_REBUILD flag
+which is check from two paths.
 
-Regards
-Xiao
->
-> Thanks
->
-> # udevadm info --query=3Dproperty --name=3D/dev/md127
->
-> DEVPATH=3D/devices/virtual/block/md127
-> DEVNAME=3D/dev/md127
-> DEVTYPE=3Ddisk
-> DISKSEQ=3D6
-> MAJOR=3D9
-> MINOR=3D127
-> SUBSYSTEM=3Dblock
-> USEC_INITIALIZED=3D5129215
-> ID_IGNORE_DISKSEQ=3D1
-> MD_LEVEL=3Draid1
-> MD_DEVICES=3D2
-> MD_METADATA=3D1.2
-> MD_UUID=3D800ee577:652e6fdc:79f6768e:dea2f7ea
-> MD_DEVNAME=3DSysRAID1Array1
-> MD_NAME=3Dlinux2:SysRAID1Array1
-> ID_FS_UUID=3Dx94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
-> ID_FS_UUID_ENC=3Dx94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
-> ID_FS_VERSION=3DLVM2 001
-> ID_FS_TYPE=3DLVM2_member
-> ID_FS_USAGE=3Draid
-> SYSTEMD_WANTS=3Dmdmonitor.service
-> SYSTEMD_READY=3D0
-> UDISKS_MD_LEVEL=3Draid1
-> UDISKS_MD_DEVICES=3D2
-> UDISKS_MD_METADATA=3D1.2
-> UDISKS_MD_UUID=3D800ee577:652e6fdc:79f6768e:dea2f7ea
-> UDISKS_MD_DEVNAME=3DSysRAID1Array1
-> UDISKS_MD_NAME=3Dlinux2:SysRAID1Array1
-> UDISKS_MD_DEVICE_dev_nvme0n1p2_ROLE=3D0
-> UDISKS_MD_DEVICE_dev_nvme0n1p2_DEV=3D/dev/nvme0n1p2
-> UDISKS_MD_DEVICE_dev_nvme1n1p2_ROLE=3D1
-> UDISKS_MD_DEVICE_dev_nvme1n1p2_DEV=3D/dev/nvme1n1p2
-> DEVLINKS=3D/dev/md/SysRAID1Array1
-> /dev/disk/by-id/md-name-linux2:SysRAID1Array1
-> /dev/disk/by-id/lvm-pv-uuid-x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
-> /dev/disk/by-id/md-uuid-800ee577:652e6fdc:79f6768e:dea2f7ea
-> TAGS=3D:systemd:
-> CURRENT_TAGS=3D:systemd:
->
-> # cat /usr/lib/udev/rules.d/63-md-raid-arrays.rules
-> # do not edit this file, it will be overwritten on update
->
-> SUBSYSTEM!=3D"block", GOTO=3D"md_end"
->
-> # handle md arrays
-> ACTION!=3D"add|change", GOTO=3D"md_end"
-> KERNEL!=3D"md*", GOTO=3D"md_end"
->
-> # partitions have no md/{array_state,metadata_version}, but should not
-> # for that reason be ignored.
-> ENV{DEVTYPE}=3D=3D"partition", GOTO=3D"md_ignore_state"
->
-> # container devices have a metadata version of e.g. 'external:ddf' and
-> # never leave state 'inactive'
-> ATTR{md/metadata_version}=3D=3D"external:[A-Za-z]*",
-> ATTR{md/array_state}=3D=3D"inactive", GOTO=3D"md_ignore_state"
-> TEST!=3D"md/array_state", ENV{SYSTEMD_READY}=3D"0", GOTO=3D"md_end"
-> ATTR{md/array_state}=3D=3D"clear*|inactive", ENV{SYSTEMD_READY}=3D"0",
-> GOTO=3D"md_end"
-> ATTR{md/sync_action}=3D=3D"reshape", ENV{RESHAPE_ACTIVE}=3D"yes"
-> LABEL=3D"md_ignore_state"
->
-> IMPORT{program}=3D"/usr/bin/mdadm --detail --no-devices --export $devnode=
-"
-> ENV{DEVTYPE}=3D=3D"disk", ENV{MD_NAME}=3D=3D"?*",
-> SYMLINK+=3D"disk/by-id/md-name-$env{MD_NAME}",
-> OPTIONS+=3D"string_escape=3Dreplace"
-> ENV{DEVTYPE}=3D=3D"disk", ENV{MD_UUID}=3D=3D"?*",
-> SYMLINK+=3D"disk/by-id/md-uuid-$env{MD_UUID}"
-> ENV{DEVTYPE}=3D=3D"disk", ENV{MD_DEVNAME}=3D=3D"?*", SYMLINK+=3D"md/$env{=
-MD_DEVNAME}"
-> ENV{DEVTYPE}=3D=3D"partition", ENV{MD_NAME}=3D=3D"?*",
-> SYMLINK+=3D"disk/by-id/md-name-$env{MD_NAME}-part%n",
-> OPTIONS+=3D"string_escape=3Dreplace"
-> ENV{DEVTYPE}=3D=3D"partition", ENV{MD_UUID}=3D=3D"?*",
-> SYMLINK+=3D"disk/by-id/md-uuid-$env{MD_UUID}-part%n"
-> ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[^0-9]",
-> SYMLINK+=3D"md/$env{MD_DEVNAME}%n"
-> ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[0-9]",
-> SYMLINK+=3D"md/$env{MD_DEVNAME}p%n"
->
-> IMPORT{builtin}=3D"blkid"
-> OPTIONS+=3D"link_priority=3D100"
-> OPTIONS+=3D"watch"
-> ENV{ID_FS_USAGE}=3D=3D"filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=3D=
-=3D"?*",
-> SYMLINK+=3D"disk/by-uuid/$env{ID_FS_UUID_ENC}"
-> ENV{ID_FS_USAGE}=3D=3D"filesystem|other", ENV{ID_PART_ENTRY_UUID}=3D=3D"?=
-*",
-> SYMLINK+=3D"disk/by-partuuid/$env{ID_PART_ENTRY_UUID}"
-> ENV{ID_FS_USAGE}=3D=3D"filesystem|other", ENV{ID_FS_LABEL_ENC}=3D=3D"?*",
-> SYMLINK+=3D"disk/by-label/$env{ID_FS_LABEL_ENC}"
->
-> ENV{MD_LEVEL}=3D=3D"raid[1-9]*", ENV{SYSTEMD_WANTS}+=3D"mdmonitor.service=
-"
->
-> # Tell systemd to run mdmon for our container, if we need it.
-> ENV{MD_LEVEL}=3D=3D"raid[1-9]*", ENV{MD_CONTAINER}=3D=3D"?*",
-> PROGRAM=3D"/usr/bin/readlink $env{MD_CONTAINER}", ENV{MD_MON_THIS}=3D"%c"
-> ENV{MD_MON_THIS}=3D=3D"?*", PROGRAM=3D"/usr/bin/basename $env{MD_MON_THIS=
-}",
-> ENV{SYSTEMD_WANTS}+=3D"mdmon@%c.service"
-> ENV{RESHAPE_ACTIVE}=3D=3D"yes", PROGRAM=3D"/usr/bin/basename
-> $env{MD_MON_THIS}", ENV{SYSTEMD_WANTS}+=3D"mdadm-grow-continue@%c.service=
-"
->
-> LABEL=3D"md_end"
->
->
+1. raid_ctr -> parse_raid_params
+                    -> analyse_superblocks -> super_validate -> 
+super_init_validation
 
+2. raid_status which might invoked by ioctls (DM_DEV_WAIT_CMD and
+     DM_TABLE_STATUS_CMD) from lvm
+
+Since the commit you mentioned the behavior of raid_dtr, then I think 
+the crash
+is caused by path 2, please correct me if my understanding is wrong.
+
+> The crash happens in the kernel 6.0 and 6.1-rc3, but not in 5.19.
+>
+> I bisected the crash and it is caused by the commit
+> 0dd84b319352bb8ba64752d4e45396d8b13e6018.
+>
+> I uploaded my .config here (it's 12-core virtual machine):
+> https://people.redhat.com/~mpatocka/testcases/md-crash-config/config.txt
+>
+> Mikulas
+>
+> [   78.478417] BUG: kernel NULL pointer dereference, address: 0000000000000000
+> [   78.479166] #PF: supervisor write access in kernel mode
+> [   78.479671] #PF: error_code(0x0002) - not-present page
+> [   78.480171] PGD 11557f0067 P4D 11557f0067 PUD 0
+> [   78.480626] Oops: 0002 [#1] PREEMPT SMP
+> [   78.481001] CPU: 0 PID: 73 Comm: kworker/0:1 Not tainted 6.1.0-rc3 #5
+> [   78.481661] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-2 04/01/2014
+> [   78.482471] Workqueue: kdelayd flush_expired_bios [dm_delay]
+> [   78.483021] RIP: 0010:mempool_free+0x47/0x80
+> [   78.483455] Code: 48 89 ef 5b 5d ff e0 f3 c3 48 89 f7 e8 32 45 3f 00 48 63 53 08 48 89 c6 3b 53 04 7d 2d 48 8b 43 10 8d 4a 01 48 89 df 89 4b 08 <48> 89 2c d0 e8 b0 45 3f 00 48 8d 7b 30 5b 5d 31 c9 ba 01 00 00 00
+> [   78.485220] RSP: 0018:ffff88910036bda8 EFLAGS: 00010093
+> [   78.485719] RAX: 0000000000000000 RBX: ffff8891037b65d8 RCX: 0000000000000001
+> [   78.486404] RDX: 0000000000000000 RSI: 0000000000000202 RDI: ffff8891037b65d8
+> [   78.487080] RBP: ffff8891447ba240 R08: 0000000000012908 R09: 00000000003d0900
+> [   78.487764] R10: 0000000000000000 R11: 0000000000173544 R12: ffff889101a14000
+> [   78.488451] R13: ffff8891562ac300 R14: ffff889102b41440 R15: ffffe8ffffa00d05
+> [   78.489146] FS:  0000000000000000(0000) GS:ffff88942fa00000(0000) knlGS:0000000000000000
+> [   78.489913] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   78.490474] CR2: 0000000000000000 CR3: 0000001102e99000 CR4: 00000000000006b0
+> [   78.491165] Call Trace:
+> [   78.491429]  <TASK>
+> [   78.491640]  clone_endio+0xf4/0x1c0 [dm_mod]
+> [   78.492072]  clone_endio+0xf4/0x1c0 [dm_mod]
+
+The clone_endio belongs to "clone" target_type.
+
+> [   78.492505]  __submit_bio+0x76/0x120
+> [   78.492859]  submit_bio_noacct_nocheck+0xb6/0x2a0
+> [   78.493325]  flush_expired_bios+0x28/0x2f [dm_delay]
+
+This is "delay" target_type. Could you shed light on how the two targets
+connect with dm-raid? And I have shallow knowledge about dm ...
+
+> [   78.493808]  process_one_work+0x1b4/0x300
+> [   78.494211]  worker_thread+0x45/0x3e0
+> [   78.494570]  ? rescuer_thread+0x380/0x380
+> [   78.494957]  kthread+0xc2/0x100
+> [   78.495279]  ? kthread_complete_and_exit+0x20/0x20
+> [   78.495743]  ret_from_fork+0x1f/0x30
+> [   78.496096]  </TASK>
+> [   78.496326] Modules linked in: brd dm_delay dm_raid dm_mod af_packet uvesafb cfbfillrect cfbimgblt cn cfbcopyarea fb font fbdev tun autofs4 binfmt_misc configfs ipv6 virtio_rng virtio_balloon rng_core virtio_net pcspkr net_failover failover qemu_fw_cfg button mousedev raid10 raid456 libcrc32c async_raid6_recov async_memcpy async_pq raid6_pq async_xor xor async_tx raid1 raid0 md_mod sd_mod t10_pi crc64_rocksoft crc64 virtio_scsi scsi_mod evdev psmouse bsg scsi_common [last unloaded: brd]
+> [   78.500425] CR2: 0000000000000000
+> [   78.500752] ---[ end trace 0000000000000000 ]---
+> [   78.501214] RIP: 0010:mempool_free+0x47/0x80
+
+BTW, is the mempool_free from endio -> dec_count -> complete_io?
+And io which caused the crash is from dm_io -> async_io / sync_io
+  -> dispatch_io, seems dm-raid1 can call it instead of dm-raid, so I
+suppose the io is for mirror image.
+
+Thanks,
+Guoqing
