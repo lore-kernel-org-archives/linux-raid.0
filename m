@@ -2,113 +2,156 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DEFC433FE
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Nov 2022 07:29:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B267C4332F
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Nov 2022 08:14:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230320AbiKCH3I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Nov 2022 03:29:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34776 "EHLO
+        id S230047AbiKCIOf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Nov 2022 04:14:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229579AbiKCH3F (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Nov 2022 03:29:05 -0400
-Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28E85F20
-        for <linux-raid@vger.kernel.org>; Thu,  3 Nov 2022 00:29:00 -0700 (PDT)
-Subject: Re: A crash caused by the commit
- 0dd84b319352bb8ba64752d4e45396d8b13e6018
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1667460539;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tNtYgFp1n3m3WLZXm8byzgyXJ+1sDyl5a2XeleXHEFY=;
-        b=VhNouYBSpjkcRuVxWSok69lo/TCr6Gff8+afOC3EetAmGvPdYljd4bYfItYRglp2ouRFfH
-        GSGTKQM+JP2DEVHMz4woo0DNFIDke7tL9VWlZZ8I5TdOqSIeAsL0SH5EpyWobAiswFyt3M
-        yV2pLAi8oJQwwOi8wme+uHEfybYXIT4=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-To:     Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>
-Cc:     Zdenek Kabelac <zkabelac@redhat.com>, linux-raid@vger.kernel.org,
-        dm-devel@redhat.com
-References: <alpine.LRH.2.21.2211021214390.25745@file01.intranet.prod.int.rdu2.redhat.com>
- <78646e88-2457-81e1-e3e7-cf66b67ba923@linux.dev>
-Message-ID: <ba8e67d8-b18b-13ba-2883-6ca6c6520ef2@linux.dev>
-Date:   Thu, 3 Nov 2022 15:28:55 +0800
+        with ESMTP id S229551AbiKCIOc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Nov 2022 04:14:32 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B54220B
+        for <linux-raid@vger.kernel.org>; Thu,  3 Nov 2022 01:14:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1667463270; x=1698999270;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=SeCttNpTstnKQvKtWtVmBOOp0ND4bULXc7u7/CLzMnU=;
+  b=BuaCooTlDP8ub9egMLMM3Xur8USqTbd07GXV2sq/N0MRS80VqdVbnOjj
+   TQ2D3CmlorR6kMPzQsJRIrRUtmV2cCq7PPDAQz4MuigkVztFl38TqtyEE
+   XDixvqeneo+daHrNdXB2dkA7WwMcjHEhWUzJqT/I3StelKY/+0NgQKoih
+   KJAkAfiGQuEdszrYXVehuod/pbmtSRNdGrPpGSffbyW0hPOhXJ2di3zbN
+   FbCoA2eJyRTg5RKTyhIROetP67L4X3PL1aINcr61GvJtP4k9PpUY7IDIc
+   NkjzyloOajk+fSE6prYIY4mQwlD8rlG2NwCyShPbgb8e2P/DzPqu65Jgj
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10519"; a="289330172"
+X-IronPort-AV: E=Sophos;i="5.95,235,1661842800"; 
+   d="scan'208";a="289330172"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2022 01:14:30 -0700
+X-IronPort-AV: E=McAfee;i="6500,9779,10519"; a="667881689"
+X-IronPort-AV: E=Sophos;i="5.95,235,1661842800"; 
+   d="scan'208";a="667881689"
+Received: from ktanska-mobl1.ger.corp.intel.com (HELO intel.linux.com) ([10.237.140.83])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2022 01:14:17 -0700
+Date:   Thu, 3 Nov 2022 09:14:15 +0100
+From:   Kinga Tanska <kinga.tanska@linux.intel.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Coly Li <colyli@suse.de>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Jonmichael Hands <jm@chia.net>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+Subject: Re: [PATCH mdadm v4 0/7] Write Zeroes option for Creating Arrays
+Message-ID: <20221103091415.00000b8c@intel.linux.com>
+In-Reply-To: <20221007201037.20263-1-logang@deltatee.com>
+References: <20221007201037.20263-1-logang@deltatee.com>
+X-Mailer: Claws Mail 3.19.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-In-Reply-To: <78646e88-2457-81e1-e3e7-cf66b67ba923@linux.dev>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Fri,  7 Oct 2022 14:10:30 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
+> Hi,
+> 
+> This is the next iteration of the patchset that added the discard
+> option to mdadm. Per feedback from Martin, it's more desirable
+> to use the write-zeroes functionality than rely on devices to zero
+> the data on a discard request. This is because standards typically
+> only require the device to do the best effort to discard data and
+> may not actually discard (and thus zero) it all in some circumstances.
+> 
+> This version of the patch set adds the --write-zeroes option which
+> will imply --assume-clean and write zeros to the data region in
+> each disk before starting the array. This can take some time so
+> each disk is done in parallel in its own fork. To make the forking
+> code easier to understand this patch set also starts with some
+> cleanup of the existing Create code.
+> 
+> We tested write-zeroes requests on a number of modern nvme drives of
+> various manufacturers and found most are not as optimized as the
+> discard path. A couple drives that were tested did not support
+> write-zeroes at all but still performed similarly with the kernel
+> falling back to writing zero pages. Typically we see it take on the
+> order of one minute per 100GB of data zeroed.
+> 
+> One reason write-zeroes is slower than discard is that today's NVMe
+> devices only allow about 2MB to be zeroed in one command where as
+> the entire drive can typically be discarded in one command. Partly,
+> this is a limitation of the spec as there are only 16 bits avalaible
+> in the write-zeros command size but drives still don't max this out.
+> Hopefully, in the future this will all be optimized a bit more
+> and this work will be able to take advantage of that.
+> 
+> Logan
+> 
+> --
+> 
+> Changes since v3:
+>    * Store the pid in a local variable instead of the mdinfo struct
+>     (per Mariusz and Xiao)
+> 
+> Changes since v2:
+> 
+>    * Use write-zeroes instead of discard to zero the disks (per
+>      Martin)
+>    * Due to the time required to zero the disks, each disk is
+>      now done in parallel with separate forks of the process.
+>    * In order to add the forking some refactoring was done on the
+>      Create() function to make it easier to understand
+>    * Added a pr_info() call so that some prints can be done
+>      to stdout instead of stdour (per Mariusz)
+>    * Added KIB_TO_BYTES and SEC_TO_BYTES helpers (per Mariusz)
+>    * Added a test to the mdadm test suite to test the option
+>      works.
+>    * Fixed up how the size and offset are calculated with some
+>      great information from Xiao.
+> 
+> Changes since v1:
+> 
+>    * Discard the data in the devices later in the create process
+>      while they are already open. This requires treating the
+>      s.discard option the same as the s.assume_clean option.
+>      Per Mariusz.
+>    * A couple other minor cleanup changes from Mariusz.
+> 
+> 
+> *** BLURB HERE ***
+> 
+> Logan Gunthorpe (7):
+>   Create: goto abort_locked instead of return 1 in error path
+>   Create: remove safe_mode_delay local variable
+>   Create: Factor out add_disks() helpers
+>   mdadm: Introduce pr_info()
+>   mdadm: Add --write-zeros option for Create
+>   tests/00raid5-zero: Introduce test to exercise --write-zeros.
+>   manpage: Add --write-zeroes option to manpage
+> 
+>  Create.c           | 479
+> ++++++++++++++++++++++++++++----------------- ReadMe.c           |
+> 2 + mdadm.8.in         |  16 ++
+>  mdadm.c            |   9 +
+>  mdadm.h            |   7 +
+>  tests/00raid5-zero |  12 ++
+>  6 files changed, 350 insertions(+), 175 deletions(-)
+>  create mode 100644 tests/00raid5-zero
+> 
+> 
+> base-commit: 8b668d4aa3305af5963162b7499b128bd71f8f29
+> --
+> 2.30.2
 
-On 11/3/22 11:47 AM, Guoqing Jiang wrote:
->> [   78.491429] <TASK>
->> [   78.491640]  clone_endio+0xf4/0x1c0 [dm_mod]
->> [   78.492072]  clone_endio+0xf4/0x1c0 [dm_mod]
->
-> The clone_endio belongs to "clone" target_type.
-
-Hmm, could be the "clone_endio" from dm.c instead of dm-clone-target.c.
-
->
->> [   78.492505] __submit_bio+0x76/0x120
->> [   78.492859]  submit_bio_noacct_nocheck+0xb6/0x2a0
->> [   78.493325]  flush_expired_bios+0x28/0x2f [dm_delay]
->
-> This is "delay" target_type. Could you shed light on how the two targets
-> connect with dm-raid? And I have shallow knowledge about dm ...
->
->> [   78.493808] process_one_work+0x1b4/0x300
->> [   78.494211]  worker_thread+0x45/0x3e0
->> [   78.494570]  ? rescuer_thread+0x380/0x380
->> [   78.494957]  kthread+0xc2/0x100
->> [   78.495279]  ? kthread_complete_and_exit+0x20/0x20
->> [   78.495743]  ret_from_fork+0x1f/0x30
->> [   78.496096]  </TASK>
->> [   78.496326] Modules linked in: brd dm_delay dm_raid dm_mod 
->> af_packet uvesafb cfbfillrect cfbimgblt cn cfbcopyarea fb font fbdev 
->> tun autofs4 binfmt_misc configfs ipv6 virtio_rng virtio_balloon 
->> rng_core virtio_net pcspkr net_failover failover qemu_fw_cfg button 
->> mousedev raid10 raid456 libcrc32c async_raid6_recov async_memcpy 
->> async_pq raid6_pq async_xor xor async_tx raid1 raid0 md_mod sd_mod 
->> t10_pi crc64_rocksoft crc64 virtio_scsi scsi_mod evdev psmouse bsg 
->> scsi_common [last unloaded: brd]
->> [   78.500425] CR2: 0000000000000000
->> [   78.500752] ---[ end trace 0000000000000000 ]---
->> [   78.501214] RIP: 0010:mempool_free+0x47/0x80
->
-> BTW, is the mempool_free from endio -> dec_count -> complete_io?
-
-I guess it is "mempool_free(io, &io->client->pool)", and the pool is 
-freed by
-dm_io_client_destroy, and seems dm-raid is not responsible for either create
-pool or destroy pool.
-
-> And io which caused the crash is from dm_io -> async_io / sync_io
->  -> dispatch_io, seems dm-raid1 can call it instead of dm-raid, so I
-> suppose the io is for mirror image. 
-
-The io should be from another path (dm_submit_bio -> 
-dm_split_and_process_bio
--> __split_and_process_bio -> __map_bio which sets "bi_end_io = 
-clone_endio").
-
-My guess is, there is racy condition between "lvchange --rebuild" and 
-raid_dtr since
-it was reproduced by running cmd in loop.
-
-Anyway, we can revert the mentioned commit and go back to Neil's 
-solution [1],
-but I'd like to reproduce it and learn DM a bit.
-
-[1]. 
-https://lore.kernel.org/linux-raid/a6657e08-b6a7-358b-2d2a-0ac37d49d23a@linux.dev/T/#m95ac225cab7409f66c295772483d091084a6d470
-
-Thanks,
-Guoqing
+Acked-by: Kinga Tanska <kinga.tanska@linux.intel.com>
