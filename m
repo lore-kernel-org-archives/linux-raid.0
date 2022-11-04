@@ -2,81 +2,99 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CB3CC433FE
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Nov 2022 18:53:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C36FC4332F
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Nov 2022 01:23:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230366AbiKCSx3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Nov 2022 14:53:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43858 "EHLO
+        id S229600AbiKDBXs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Nov 2022 21:23:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbiKCSx1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Nov 2022 14:53:27 -0400
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE2149FEF;
-        Thu,  3 Nov 2022 11:53:24 -0700 (PDT)
-Received: by mail-qt1-f172.google.com with SMTP id hh9so1798029qtb.13;
-        Thu, 03 Nov 2022 11:53:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=e3P3zdhy8GKexWx3vyrC2poycFZmbZATTV4uCKdeI44=;
-        b=BkmpreiOCbLX+dtUWJ+2YdF9+bdOs8FJkLKV/MOd138mAPNSrWqt2OisXMxL0B49gA
-         Xkj9B+giyvQh4Vp/LghlyHW3gU8ruEist71r5kXjp0kXPDlFe4l+bhO0TfCYLv5Zslr/
-         fPAwLT3SJ0lAJJvMPMOjMmE25nKsBIT1Ai6d95zcfZ0Vhn6Eu2MuTW59aDuUR5sok7KP
-         PDrvjus151I2wZ8rFkbM5Md0piP2VR1tgQD/3wztWYW3UazR0kMaiSF7pK8oChyBbidc
-         jYruMe3giJsXWjhDSWniiz5vl2nf/38WUtelp8IR2eemPPDaco0nlQXgI9z6wdMX9AeM
-         SrYQ==
-X-Gm-Message-State: ACrzQf0ihpYA6saMeAKUgr2ERNhOWhUmRqaySke5GELgHX+Ax34aUHZz
-        cM14/O7ivZcvSlQlHaXOk3tz+UqzdaKabkOAt+A=
-X-Google-Smtp-Source: AMsMyM4QSySjm+ZEB/jau7CJMJJfWL1+5ZQtQRrNl6i66knX97g4Qv73Gu/6SVigeCoz4CyrTFJzPtEC8KPqj3i61Aw=
-X-Received: by 2002:a05:622a:1a25:b0:39c:b862:7318 with SMTP id
- f37-20020a05622a1a2500b0039cb8627318mr26133393qtb.147.1667501603818; Thu, 03
- Nov 2022 11:53:23 -0700 (PDT)
-MIME-Version: 1.0
-References: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
-In-Reply-To: <20221018215755.33566-1-giulio.benetti@benettiengineering.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Thu, 3 Nov 2022 19:53:12 +0100
-Message-ID: <CAJZ5v0hRBd8OEg1CJUQGhb6_59j-+-zZTid8kmMV9nUk2CF3EA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ACPI: scan: substitute empty_zero_page with helper ZERO_PAGE(0)
-To:     Giulio Benetti <giulio.benetti@benettiengineering.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-raid@vger.kernel.org,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>, Mark Brown <broonie@kernel.org>,
+        with ESMTP id S229461AbiKDBXr (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Nov 2022 21:23:47 -0400
+Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A3D61C430
+        for <linux-raid@vger.kernel.org>; Thu,  3 Nov 2022 18:23:45 -0700 (PDT)
+Subject: Re: A crash caused by the commit
+ 0dd84b319352bb8ba64752d4e45396d8b13e6018
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1667525024;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=BoNyCOvp4wOyvdRK9Qx3zIhzal0leGRWe+NgclsHfvg=;
+        b=D5BIPaVtsyS28tMNHYM7IIg8g8QedXtgXaPgZ9lRvq0vmFmnRyA16ImeXylGkJbW91vnoh
+        CVCh5mckXkiiB/GE3jDy0BUQ3jhI+fqmGJc3C3Hik24QN3IZkHD9iSYllcB9C8uMkStefL
+        OCNtKXQTq3m2jYwV1t/+IdYmJd07AbY=
+To:     Heming Zhao <heming.zhao@suse.com>,
+        Mikulas Patocka <mpatocka@redhat.com>,
         Song Liu <song@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     Zdenek Kabelac <zkabelac@redhat.com>, linux-raid@vger.kernel.org,
+        dm-devel@redhat.com
+References: <alpine.LRH.2.21.2211021214390.25745@file01.intranet.prod.int.rdu2.redhat.com>
+ <78646e88-2457-81e1-e3e7-cf66b67ba923@linux.dev>
+ <11a466f0-ecfe-c1e2-d967-2d648ce65bcb@suse.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <c31fdd20-c736-5d65-e82e-338e7ed1571c@linux.dev>
+Date:   Fri, 4 Nov 2022 09:23:40 +0800
+MIME-Version: 1.0
+In-Reply-To: <11a466f0-ecfe-c1e2-d967-2d648ce65bcb@suse.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Oct 18, 2022 at 11:59 PM Giulio Benetti
-<giulio.benetti@benettiengineering.com> wrote:
->
-> Not all zero page implementations use empty_zero_page global pointer so
-> let's substitute empty_zero_page occurence with helper ZERO_PAGE(0).
->
-> Signed-off-by: Giulio Benetti <giulio.benetti@benettiengineering.com>
-> ---
->  drivers/acpi/scan.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 558664d169fc..4d2d274cc8ad 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -30,7 +30,7 @@ extern struct acpi_device *acpi_root;
->  #define ACPI_BUS_HID                   "LNXSYBUS"
->  #define ACPI_BUS_DEVICE_NAME           "System Bus"
->
-> -#define INVALID_ACPI_HANDLE    ((acpi_handle)empty_zero_page)
-> +#define INVALID_ACPI_HANDLE    ((acpi_handle)ZERO_PAGE(0))
->
->  static const char *dummy_hid = "device";
->
-> --
 
-Applied as 6.2 material, thanks!
+
+On 11/3/22 10:46 PM, Heming Zhao wrote:
+> On 11/3/22 11:47 AM, Guoqing Jiang wrote:
+>> Hi,
+>>
+>> On 11/3/22 12:27 AM, Mikulas Patocka wrote:
+>>> Hi
+>>>
+>>> There's a crash in the test shell/lvchange-rebuild-raid.sh when running
+>>> the lvm testsuite. It can be reproduced by running "make check_local
+>>> T=shell/lvchange-rebuild-raid.sh" in a loop.
+>>
+>> I have problem to run the cmd (not sure what I missed), it would be 
+>> better if
+>> the relevant cmds are extracted from the script then I can reproduce 
+>> it with
+>> those cmds directly.
+>>
+>> [root@localhost lvm2]# git log | head -1
+>> commit 36a923926c2c27c1a8a5ac262387d2a4d3e620f8
+>> [root@localhost lvm2]# make check_local T=shell/lvchange-rebuild-raid.sh
+>> make -C libdm device-mapper
+>> [...]
+>> make -C daemons
+>> make[1]: Nothing to be done for 'all'.
+>> make -C test check_local
+>> VERBOSE=0 ./lib/runner \
+>>          --testdir . --outdir results \
+>>          --flavours ndev-vanilla --only 
+>> shell/lvchange-rebuild-raid.sh --skip @
+>> running 1 tests
+>> ###      running: [ndev-vanilla] shell/lvchange-rebuild-raid.sh 0
+>> | [ 0:00] lib/inittest: line 133: 
+>> /tmp/LVMTEST317948.iCoLwmDhZW/dev/testnull: Permission denied
+>> | [ 0:00] Filesystem does support devices in 
+>> /tmp/LVMTEST317948.iCoLwmDhZW/dev (mounted with nodev?)
+>
+> I didn't read other mails in this thread, only for above issue.
+> If you use opensuse, systemd service tmp.mount uses nodev option to 
+> mount tmpfs on /tmp.
+> From my experience, there are two methods to fix(work around):
+> 1. systemctl disable tmp.mount && systemctl mask tmp.mount && reboot
+> 2. mv /usr/lib/systemd/system/tmp.mount /root/ && reboot
+
+I am using centos similar system, I can try leap later. Appreciate for 
+the tips, Heming.
+
+Thanks,
+Guoqing
