@@ -2,165 +2,107 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5318FC433FE
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Nov 2022 17:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8931C433FE
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Nov 2022 17:51:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230147AbiKDRuk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Nov 2022 13:50:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56486 "EHLO
+        id S230290AbiKDRv3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Nov 2022 13:51:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229637AbiKDRui (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Nov 2022 13:50:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1801042F67
-        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 10:50:37 -0700 (PDT)
+        with ESMTP id S230375AbiKDRv1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Nov 2022 13:51:27 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F19332065
+        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 10:51:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AAF96622E0
-        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 17:50:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 103A0C433D6
-        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 17:50:36 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 74C69CE2D56
+        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 17:51:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1BF6C433D7
+        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 17:51:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667584236;
-        bh=v71ZQwF5x7TKcH2a0J28ot0LklZ5lA0d2eRm4wkSfLs=;
+        s=k20201202; t=1667584282;
+        bh=Pv88Ag5LxVD6hxIZWA46GgLLFvmX9lZoqyQU8mY3LHE=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=qHK887u/Y8I54n41gMLybTgxBZqEz+4oTiPJyLUemCrCj5HLvhQhuEPgUD2Mtsmu1
-         4kWBWa2QXnpCh0XjYLyNiNlnZqcAUdqlxx/ptDGoXz7xj9ja9I53Zn1gHPq46rmaMt
-         uIsStFhkRcRYq991Q4qM1Mp8GSOlXkq/4Y501cTcx+LebqTHbLGg2pEJh9g9IyNVIf
-         TFADzrmfIVoeAZYq/fVsdib/Xce/lMiK6L9w0mqHoN3ai9ufwNE1SaOb/W57YeesvW
-         yqrRmqRjjwL9tSQnPF+T+YWRQBGXGvnhqrThcp85Dqi30xSf3C/RnxULM/2UlyGDoi
-         nurkI5pdIEQZQ==
-Received: by mail-ej1-f51.google.com with SMTP id q9so15353466ejd.0
-        for <linux-raid@vger.kernel.org>; Fri, 04 Nov 2022 10:50:35 -0700 (PDT)
-X-Gm-Message-State: ACrzQf201747unDAb5rxcvE2as0YygOEhH5wlwjkHiIhv9sMiztklOUJ
-        L0w4jPTiz6+r1yL4OQkwZSsF+0yceZuxDFaES6c=
-X-Google-Smtp-Source: AMsMyM62Qv2Wl7952HqRFeanWcWZas4ThKfuW+3zPazg8oXPvzo+/wH0pQO8Aw7QrDQuHp3tCGjMPiM4tbhNy5Tx9xk=
+        b=J6WZb5gZJzspwLm9o/fca4xVPkFitl65RJF7krXrfPx/CYdaRZK9HHhIwv61wz6e8
+         STh+6PpnIMbulRtfnaPSUlOo1P2Vs2gzpRKAcd6J+efkz1yYi7MX4QVKBejn/5joI6
+         jOTQ1MdaPwjLoauVh+nXSLhamyJFcxIBYP1fiRKMkZ1MNS2pkgctBo0I9HGQNlaLLP
+         eRiH9+H6C2w9d9L1ImHYB8NZJdmBgy1WqDBjSXmpgy0fHWQi9hHozRFpcBjML46jSe
+         U/dju53hH1++s6EUa+q9RCVqmsKLxnBiXI9MBTvxqgkthfAAxJ6RzWbrv6cj2q6Mlf
+         bYxNMA+7fgoAQ==
+Received: by mail-ej1-f43.google.com with SMTP id f27so15273515eje.1
+        for <linux-raid@vger.kernel.org>; Fri, 04 Nov 2022 10:51:22 -0700 (PDT)
+X-Gm-Message-State: ACrzQf10440naSS6dT3x4If4nsL9i2FEyNQxUlhXat20Li0HIgEX1epN
+        k5su5f1cTTsBTFONlP5LFULknV2rSmze6OdxvS0=
+X-Google-Smtp-Source: AMsMyM4FQoE08GPVS1+lTsk+o0TMNS0jA8MWHR3CnFnNlqplZrUn8mIRhAHLhWbv6HyaZSAtjBIhv+d1HkfbWTda1Fc=
 X-Received: by 2002:a17:906:eec1:b0:782:6384:76be with SMTP id
- wu1-20020a170906eec100b00782638476bemr35481328ejb.756.1667584234107; Fri, 04
- Nov 2022 10:50:34 -0700 (PDT)
+ wu1-20020a170906eec100b00782638476bemr35484081ejb.756.1667584281029; Fri, 04
+ Nov 2022 10:51:21 -0700 (PDT)
 MIME-Version: 1.0
-References: <CADb4QcMhTKGCAem1OpDn-qRbjunQOiZj1XNgUBnw2r3A4dB6Gg@mail.gmail.com>
-In-Reply-To: <CADb4QcMhTKGCAem1OpDn-qRbjunQOiZj1XNgUBnw2r3A4dB6Gg@mail.gmail.com>
+References: <20221102020730.23815-1-xni@redhat.com> <CAFj5m9K8DiVz+KEOpO9NzYgjT=86NaFUOcZmL7eV0_5ni8_BQw@mail.gmail.com>
+In-Reply-To: <CAFj5m9K8DiVz+KEOpO9NzYgjT=86NaFUOcZmL7eV0_5ni8_BQw@mail.gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 4 Nov 2022 10:50:22 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5Td747dLoJuPHHNX+KHCfZ_+xq=dHQFNDW43k+6_o97Q@mail.gmail.com>
-Message-ID: <CAPhsuW5Td747dLoJuPHHNX+KHCfZ_+xq=dHQFNDW43k+6_o97Q@mail.gmail.com>
-Subject: Re: [PATCH v2 1/1] md/raid1: stop mdx_raid1 thread when raid1 array
- run failed
-To:     jiang li <jiang.li1388@gmail.com>
-Cc:     linux-raid@vger.kernel.org
+Date:   Fri, 4 Nov 2022 10:51:09 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7v_BtKgXozRGejpki5ofz84EFXPC021B5auOW_ZCaUEA@mail.gmail.com>
+Message-ID: <CAPhsuW7v_BtKgXozRGejpki5ofz84EFXPC021B5auOW_ZCaUEA@mail.gmail.com>
+Subject: Re: [PATCH V2 1/1] md/raid0, raid10: Don't set discard sectors for
+ request queue
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Xiao Ni <xni@redhat.com>, yi.zhang@redhat.com, ncroxon@redhat.com,
+        linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-A few more logistical issues.
-
-On Wed, Nov 2, 2022 at 7:40 AM jiang li <jiang.li1388@gmail.com> wrote:
+On Tue, Nov 1, 2022 at 7:16 PM Ming Lei <ming.lei@redhat.com> wrote:
 >
-> fail run raid1 array when we assemble array with the inactive disk only,
-> but the mdx_raid1 thread were not stop, Even if the associated resources
-> have been released. it will caused a NULL dereference when we do poweroff.
+> On Wed, Nov 2, 2022 at 10:07 AM Xiao Ni <xni@redhat.com> wrote:
+> >
+> > It should use disk_stack_limits to get a proper max_discard_sectors
+> > rather than setting a value by stack drivers.
+> >
+> > And there is a bug. If all member disks are rotational devices,
+> > raid0/raid10 set max_discard_sectors. So the member devices are
+> > not ssd/nvme, but raid0/raid10 export the wrong value. It reports
+> > warning messages in function __blkdev_issue_discard when mkfs.xfs
+> > like this:
+> >
+> > [ 4616.022599] ------------[ cut here ]------------
+> > [ 4616.027779] WARNING: CPU: 4 PID: 99634 at block/blk-lib.c:50 __blkdev_issue_discard+0x16a/0x1a0
+> > [ 4616.140663] RIP: 0010:__blkdev_issue_discard+0x16a/0x1a0
+> > [ 4616.146601] Code: 24 4c 89 20 31 c0 e9 fe fe ff ff c1 e8 09 8d 48 ff 4c 89 f0 4c 09 e8 48 85 c1 0f 84 55 ff ff ff b8 ea ff ff ff e9 df fe ff ff <0f> 0b 48 8d 74 24 08 e8 ea d6 00 00 48 c7 c6 20 1e 89 ab 48 c7 c7
+> > [ 4616.167567] RSP: 0018:ffffaab88cbffca8 EFLAGS: 00010246
+> > [ 4616.173406] RAX: ffff9ba1f9e44678 RBX: 0000000000000000 RCX: ffff9ba1c9792080
+> > [ 4616.181376] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff9ba1c9792080
+> > [ 4616.189345] RBP: 0000000000000cc0 R08: ffffaab88cbffd10 R09: 0000000000000000
+> > [ 4616.197317] R10: 0000000000000012 R11: 0000000000000000 R12: 0000000000000000
+> > [ 4616.205288] R13: 0000000000400000 R14: 0000000000000cc0 R15: ffff9ba1c9792080
+> > [ 4616.213259] FS:  00007f9a5534e980(0000) GS:ffff9ba1b7c80000(0000) knlGS:0000000000000000
+> > [ 4616.222298] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > [ 4616.228719] CR2: 000055a390a4c518 CR3: 0000000123e40006 CR4: 00000000001706e0
+> > [ 4616.236689] Call Trace:
+> > [ 4616.239428]  blkdev_issue_discard+0x52/0xb0
+> > [ 4616.244108]  blkdev_common_ioctl+0x43c/0xa00
+> > [ 4616.248883]  blkdev_ioctl+0x116/0x280
+> > [ 4616.252977]  __x64_sys_ioctl+0x8a/0xc0
+> > [ 4616.257163]  do_syscall_64+0x5c/0x90
+> > [ 4616.261164]  ? handle_mm_fault+0xc5/0x2a0
+> > [ 4616.265652]  ? do_user_addr_fault+0x1d8/0x690
+> > [ 4616.270527]  ? do_syscall_64+0x69/0x90
+> > [ 4616.274717]  ? exc_page_fault+0x62/0x150
+> > [ 4616.279097]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> > [ 4616.284748] RIP: 0033:0x7f9a55398c6b
+> >
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > Reported-by: Yi Zhang <yi.zhang@redhat.com>
 >
-> This causes the following Oops:
->     [  287.587787] BUG: kernel NULL pointer dereference, address: 0000000000000070
->     [  287.594762] #PF: supervisor read access in kernel mode
->     [  287.599912] #PF: error_code(0x0000) - not-present page
->     [  287.605061] PGD 0 P4D 0
->     [  287.607612] Oops: 0000 [#1] SMP NOPTI
->     [  287.611287] CPU: 3 PID: 5265 Comm: md0_raid1 Tainted: G     U            5.10.146 #0
->     [  287.619029] Hardware name: xxxxxxx/To be filled by O.E.M, BIOS 5.19 06/16/2022
->     [  287.626775] RIP: 0010:md_check_recovery+0x57/0x500 [md_mod]
->     [  287.632357] Code: fe 01 00 00 48 83 bb 10 03 00 00 00 74 08 48 89 ......
->     [  287.651118] RSP: 0018:ffffc90000433d78 EFLAGS: 00010202
->     [  287.656347] RAX: 0000000000000000 RBX: ffff888105986800 RCX: 0000000000000000
->     [  287.663491] RDX: ffffc90000433bb0 RSI: 00000000ffffefff RDI: ffff888105986800
->     [  287.670634] RBP: ffffc90000433da0 R08: 0000000000000000 R09: c0000000ffffefff
->     [  287.677771] R10: 0000000000000001 R11: ffffc90000433ba8 R12: ffff888105986800
->     [  287.684907] R13: 0000000000000000 R14: fffffffffffffe00 R15: ffff888100b6b500
->     [  287.692052] FS:  0000000000000000(0000) GS:ffff888277f80000(0000) knlGS:0000000000000000
->     [  287.700149] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->     [  287.705897] CR2: 0000000000000070 CR3: 000000000320a000 CR4: 0000000000350ee0
->     [  287.713033] Call Trace:
->     [  287.715498]  raid1d+0x6c/0xbbb [raid1]
->     [  287.719256]  ? __schedule+0x1ff/0x760
->     [  287.722930]  ? schedule+0x3b/0xb0
->     [  287.726260]  ? schedule_timeout+0x1ed/0x290
->     [  287.730456]  ? __switch_to+0x11f/0x400
->     [  287.734219]  md_thread+0xe9/0x140 [md_mod]
->     [  287.738328]  ? md_thread+0xe9/0x140 [md_mod]
->     [  287.742601]  ? wait_woken+0x80/0x80
->     [  287.746097]  ? md_register_thread+0xe0/0xe0 [md_mod]
->     [  287.751064]  kthread+0x11a/0x140
->     [  287.754300]  ? kthread_park+0x90/0x90
->     [  287.757974]  ret_from_fork+0x1f/0x30
->
-> In fact, when raid1 array run fail, we need to do
-> md_unregister_thread() before raid1_free().
->
-> Signed-off-by: lijiang <lijiang@ugreen.com>
+> Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
-Please put your proper full name here.
-
-Also, your patch somehow didn't make through the mail list, so we don't
-see it in lore (https://lore.kernel.org/linux-raid/) or
-patchwork (https://patchwork.kernel.org/project/linux-raid/list/). I don't
-really know why though.
+Applied to md-next.
 
 Thanks,
 Song
 
-> ---
-> The following steps can be used to reproduce the problem:
-> mdadm --create /dev/md0 --level=1  --raid-devices=2 /dev/sd[a-b]
-> mdadm -A /dev/md0 /dev/sd[a-b]
-> mkfs.ext4  /dev/md0
-> mount /dev/md0   /mnt/md0
 >
-> mdadm -S /dev/md0
->
-> mdadm -A /dev/md0 /dev/sda   --run
-> mount /dev/md0   /mnt/md0
-> #Store a certain amount of data, so that the rebuilding will not be completed in a short time
-> dd if=/dev/urandom of=/mnt/md0/test.db bs=1M count=40960
->
-> mdadm --add /dev/md0 /dev/sdb
-> sleep 1
-> #when the array were rebuilding, we stop the array.
-> umount /dev/md0
-> mdadm -S  /dev/md0
->
-> #assemble array with the sdb only in --run insist mode:
-> mdadm -A /dev/md0 /dev/sdb  --run
->
-> #md run fail with kernel message as follow:
-> [  850.593441] md: md0 stopped.
-> [  850.672071] md: pers->run() failed ...
-> [  850.686913] md: md0 stopped.
->
-> #we can see the md0_raid1 thread were not stop:
-> $ps -ef | grep raid1
-> root      5672     2  0 Oct31 ?        00:00:04 [md0_raid1]
->
-> #now, do poweroff can reproduce the problem.
->
->  drivers/md/raid1.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 05d8438cfec8..58f705f42948 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -3159,6 +3159,7 @@ static int raid1_run(struct mddev *mddev)
->          * RAID1 needs at least one disk in active
->          */
->         if (conf->raid_disks - mddev->degraded < 1) {
-> +               md_unregister_thread(&conf->thread);
->                 ret = -EINVAL;
->                 goto abort;
->         }
-> --
-> 2.17.1
