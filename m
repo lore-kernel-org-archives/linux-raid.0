@@ -2,158 +2,165 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7051C43217
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Nov 2022 15:19:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5318FC433FE
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Nov 2022 17:50:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232487AbiKDPT2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Nov 2022 11:19:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60210 "EHLO
+        id S230147AbiKDRuk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Nov 2022 13:50:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232392AbiKDPTW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Nov 2022 11:19:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF2219585
-        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 08:18:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667575104;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/3Emx964qE4HALN/piAaGa3Aj8/+sF9ota+IP7QVzDA=;
-        b=PVZn55N9Z2uKvZFijZRMYqmStsjYv/mbN+YmkHPA98bV5ci1tdlD1cgEDgUq0dYj44w3mm
-        /G8foR+0cEjXCkMQmsHaOd0TpeWaShpUvMKXaOMQGPSobWHK2wQqy/uZGrGIqgG8Hplkdk
-        ecVjmoVMP0CqY9yEbP1xdQupHvMwa+E=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-595-AdRE4qjBPfm8N1f29waT6A-1; Fri, 04 Nov 2022 11:18:22 -0400
-X-MC-Unique: AdRE4qjBPfm8N1f29waT6A-1
-Received: by mail-pf1-f198.google.com with SMTP id cw4-20020a056a00450400b00561ec04e77aso2611802pfb.12
-        for <linux-raid@vger.kernel.org>; Fri, 04 Nov 2022 08:18:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/3Emx964qE4HALN/piAaGa3Aj8/+sF9ota+IP7QVzDA=;
-        b=00AXhxciq5zY2PuysQ/moBS3rIB8HM6nDo+eNvCtrfPRA9VO+9rhK8JYb3sqxj+dAX
-         MlJ6vYIRLFCqLqCqsrn3bPJU8Ak3c+y39YsF1sUE1P3i1cJRu+kZ6cwQdzK/pyrHh3PW
-         M1JYrOTD2OZYl491mBnYqU6q9jQykAmLDuWlXkKOoPM9kTW6sOf/sUs9SgHzyR4IKXqB
-         SUVKKVop9pk+lMTFYtZXSEKd6elNXLyfwpk3oHAJgduH9kRoreXgLNgR2X+tDRLHW0Iz
-         HvHr7KHA+1u+BAAnaNMbKuvWkfd53TteEVQMCdtXWeSzwXSJhXO6F9c/qWxCUDRyuT9F
-         fkhA==
-X-Gm-Message-State: ACrzQf2PyGZy2vxmZ9flOfqjiA0aQ8n+O7Mg0MIckPwIvP+50Aeqf9LN
-        7rt54adgqaFegTXNEU5SB9DDTNT7ISCimO4qFAP7PdEDzq4uw02H4gsj00gG24H+TQ9HIHGZ4DX
-        vOEJRSa7RyThwFEW5+gkQqH8JkUgy2KjGZcqteQ==
-X-Received: by 2002:a17:902:da82:b0:186:ee5a:47c7 with SMTP id j2-20020a170902da8200b00186ee5a47c7mr36394697plx.82.1667575101851;
-        Fri, 04 Nov 2022 08:18:21 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM5bL8EYaAoAE9Jtgs/T/s7qCSO5P84GoMtpgEPZ9/i9XWkv3n+6iLAc50+11huhaYdtpC3GKVnQwvLzzzafgxg=
-X-Received: by 2002:a17:902:da82:b0:186:ee5a:47c7 with SMTP id
- j2-20020a170902da8200b00186ee5a47c7mr36394671plx.82.1667575101527; Fri, 04
- Nov 2022 08:18:21 -0700 (PDT)
+        with ESMTP id S229637AbiKDRui (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Nov 2022 13:50:38 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1801042F67
+        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 10:50:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AAF96622E0
+        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 17:50:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 103A0C433D6
+        for <linux-raid@vger.kernel.org>; Fri,  4 Nov 2022 17:50:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667584236;
+        bh=v71ZQwF5x7TKcH2a0J28ot0LklZ5lA0d2eRm4wkSfLs=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=qHK887u/Y8I54n41gMLybTgxBZqEz+4oTiPJyLUemCrCj5HLvhQhuEPgUD2Mtsmu1
+         4kWBWa2QXnpCh0XjYLyNiNlnZqcAUdqlxx/ptDGoXz7xj9ja9I53Zn1gHPq46rmaMt
+         uIsStFhkRcRYq991Q4qM1Mp8GSOlXkq/4Y501cTcx+LebqTHbLGg2pEJh9g9IyNVIf
+         TFADzrmfIVoeAZYq/fVsdib/Xce/lMiK6L9w0mqHoN3ai9ufwNE1SaOb/W57YeesvW
+         yqrRmqRjjwL9tSQnPF+T+YWRQBGXGvnhqrThcp85Dqi30xSf3C/RnxULM/2UlyGDoi
+         nurkI5pdIEQZQ==
+Received: by mail-ej1-f51.google.com with SMTP id q9so15353466ejd.0
+        for <linux-raid@vger.kernel.org>; Fri, 04 Nov 2022 10:50:35 -0700 (PDT)
+X-Gm-Message-State: ACrzQf201747unDAb5rxcvE2as0YygOEhH5wlwjkHiIhv9sMiztklOUJ
+        L0w4jPTiz6+r1yL4OQkwZSsF+0yceZuxDFaES6c=
+X-Google-Smtp-Source: AMsMyM62Qv2Wl7952HqRFeanWcWZas4ThKfuW+3zPazg8oXPvzo+/wH0pQO8Aw7QrDQuHp3tCGjMPiM4tbhNy5Tx9xk=
+X-Received: by 2002:a17:906:eec1:b0:782:6384:76be with SMTP id
+ wu1-20020a170906eec100b00782638476bemr35481328ejb.756.1667584234107; Fri, 04
+ Nov 2022 10:50:34 -0700 (PDT)
 MIME-Version: 1.0
-References: <alpine.LRH.2.21.2211021214390.25745@file01.intranet.prod.int.rdu2.redhat.com>
- <78646e88-2457-81e1-e3e7-cf66b67ba923@linux.dev> <11a466f0-ecfe-c1e2-d967-2d648ce65bcb@suse.com>
- <c31fdd20-c736-5d65-e82e-338e7ed1571c@linux.dev> <2f0551c6-44f9-0969-cb8f-c12c4fb44eff@redhat.com>
-In-Reply-To: <2f0551c6-44f9-0969-cb8f-c12c4fb44eff@redhat.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Fri, 4 Nov 2022 23:18:10 +0800
-Message-ID: <CALTww2-q0xbMSf2FW9TBkSOeoHuOffQvFyJN5MbLGtx=AF3q1w@mail.gmail.com>
-Subject: Re: [dm-devel] A crash caused by the commit 0dd84b319352bb8ba64752d4e45396d8b13e6018
-To:     Zdenek Kabelac <zkabelac@redhat.com>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Heming Zhao <heming.zhao@suse.com>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        dm-devel@redhat.com
+References: <CADb4QcMhTKGCAem1OpDn-qRbjunQOiZj1XNgUBnw2r3A4dB6Gg@mail.gmail.com>
+In-Reply-To: <CADb4QcMhTKGCAem1OpDn-qRbjunQOiZj1XNgUBnw2r3A4dB6Gg@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 4 Nov 2022 10:50:22 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5Td747dLoJuPHHNX+KHCfZ_+xq=dHQFNDW43k+6_o97Q@mail.gmail.com>
+Message-ID: <CAPhsuW5Td747dLoJuPHHNX+KHCfZ_+xq=dHQFNDW43k+6_o97Q@mail.gmail.com>
+Subject: Re: [PATCH v2 1/1] md/raid1: stop mdx_raid1 thread when raid1 array
+ run failed
+To:     jiang li <jiang.li1388@gmail.com>
+Cc:     linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Nov 4, 2022 at 7:10 PM Zdenek Kabelac <zkabelac@redhat.com> wrote:
->
-> Dne 04. 11. 22 v 2:23 Guoqing Jiang napsal(a):
-> >
-> >
-> > On 11/3/22 10:46 PM, Heming Zhao wrote:
-> >> On 11/3/22 11:47 AM, Guoqing Jiang wrote:
-> >>> Hi,
-> >>>
-> >>> On 11/3/22 12:27 AM, Mikulas Patocka wrote:
-> >>>> Hi
-> >>>>
-> >>>> There's a crash in the test shell/lvchange-rebuild-raid.sh when running
-> >>>> the lvm testsuite. It can be reproduced by running "make check_local
-> >>>> T=shell/lvchange-rebuild-raid.sh" in a loop.
-> >>>
-> >>> I have problem to run the cmd (not sure what I missed), it would be better if
-> >>> the relevant cmds are extracted from the script then I can reproduce it with
-> >>> those cmds directly.
-> >>>
-> >>> [root@localhost lvm2]# git log | head -1
-> >>> commit 36a923926c2c27c1a8a5ac262387d2a4d3e620f8
-> >>> [root@localhost lvm2]# make check_local T=shell/lvchange-rebuild-raid.sh
-> >>> make -C libdm device-mapper
-> >>> [...]
-> >>> make -C daemons
-> >>> make[1]: Nothing to be done for 'all'.
-> >>> make -C test check_local
-> >>> VERBOSE=0 ./lib/runner \
-> >>>          --testdir . --outdir results \
-> >>>          --flavours ndev-vanilla --only shell/lvchange-rebuild-raid.sh
-> >>> --skip @
-> >>> running 1 tests
-> >>> ###      running: [ndev-vanilla] shell/lvchange-rebuild-raid.sh 0
-> >>> | [ 0:00] lib/inittest: line 133:
-> >>> /tmp/LVMTEST317948.iCoLwmDhZW/dev/testnull: Permission denied
-> >>> | [ 0:00] Filesystem does support devices in
-> >>> /tmp/LVMTEST317948.iCoLwmDhZW/dev (mounted with nodev?)
-> >>
-> >> I didn't read other mails in this thread, only for above issue.
-> >> If you use opensuse, systemd service tmp.mount uses nodev option to mount
-> >> tmpfs on /tmp.
-> >> From my experience, there are two methods to fix(work around):
-> >> 1. systemctl disable tmp.mount && systemctl mask tmp.mount && reboot
-> >> 2. mv /usr/lib/systemd/system/tmp.mount /root/ && reboot
-> >
-> > I am using centos similar system, I can try leap later. Appreciate for the
-> > tips, Heming.
->
->
-> You can always redirect default /tmp dir to some other place/filesystem that
-> allows you to create /dev nodes. Eventually for 'brave men'  you can let lvm2
-> test suite to play directly with your /dev dir.  Normally nothing bad should
-> happen, but we tend to prefer more controled '/dev' managed for a test.
->
-> Here are two envvars to play with:
->
->
-> make check_local T=shell/lvchange-rebuild-raid.sh LVM_TEST_DIR=/myhomefsdir
-> LVM_TEST_DEVDIR=/dev
->
-> LVM_TEST_DIR for setting of dir where test creates all its files
->
-> LVM_TEST_DEVDIR  you can explicitly tell to keep using system's /dev
-> (instead of dir created within tmpdir)
+Hi,
 
-Hi Zdenek
+A few more logistical issues.
 
-I tried this command and the test was skipped. Does it need to add
-more options for
-the command?
+On Wed, Nov 2, 2022 at 7:40 AM jiang li <jiang.li1388@gmail.com> wrote:
+>
+> fail run raid1 array when we assemble array with the inactive disk only,
+> but the mdx_raid1 thread were not stop, Even if the associated resources
+> have been released. it will caused a NULL dereference when we do poweroff.
+>
+> This causes the following Oops:
+>     [  287.587787] BUG: kernel NULL pointer dereference, address: 0000000000000070
+>     [  287.594762] #PF: supervisor read access in kernel mode
+>     [  287.599912] #PF: error_code(0x0000) - not-present page
+>     [  287.605061] PGD 0 P4D 0
+>     [  287.607612] Oops: 0000 [#1] SMP NOPTI
+>     [  287.611287] CPU: 3 PID: 5265 Comm: md0_raid1 Tainted: G     U            5.10.146 #0
+>     [  287.619029] Hardware name: xxxxxxx/To be filled by O.E.M, BIOS 5.19 06/16/2022
+>     [  287.626775] RIP: 0010:md_check_recovery+0x57/0x500 [md_mod]
+>     [  287.632357] Code: fe 01 00 00 48 83 bb 10 03 00 00 00 74 08 48 89 ......
+>     [  287.651118] RSP: 0018:ffffc90000433d78 EFLAGS: 00010202
+>     [  287.656347] RAX: 0000000000000000 RBX: ffff888105986800 RCX: 0000000000000000
+>     [  287.663491] RDX: ffffc90000433bb0 RSI: 00000000ffffefff RDI: ffff888105986800
+>     [  287.670634] RBP: ffffc90000433da0 R08: 0000000000000000 R09: c0000000ffffefff
+>     [  287.677771] R10: 0000000000000001 R11: ffffc90000433ba8 R12: ffff888105986800
+>     [  287.684907] R13: 0000000000000000 R14: fffffffffffffe00 R15: ffff888100b6b500
+>     [  287.692052] FS:  0000000000000000(0000) GS:ffff888277f80000(0000) knlGS:0000000000000000
+>     [  287.700149] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>     [  287.705897] CR2: 0000000000000070 CR3: 000000000320a000 CR4: 0000000000350ee0
+>     [  287.713033] Call Trace:
+>     [  287.715498]  raid1d+0x6c/0xbbb [raid1]
+>     [  287.719256]  ? __schedule+0x1ff/0x760
+>     [  287.722930]  ? schedule+0x3b/0xb0
+>     [  287.726260]  ? schedule_timeout+0x1ed/0x290
+>     [  287.730456]  ? __switch_to+0x11f/0x400
+>     [  287.734219]  md_thread+0xe9/0x140 [md_mod]
+>     [  287.738328]  ? md_thread+0xe9/0x140 [md_mod]
+>     [  287.742601]  ? wait_woken+0x80/0x80
+>     [  287.746097]  ? md_register_thread+0xe0/0xe0 [md_mod]
+>     [  287.751064]  kthread+0x11a/0x140
+>     [  287.754300]  ? kthread_park+0x90/0x90
+>     [  287.757974]  ret_from_fork+0x1f/0x30
+>
+> In fact, when raid1 array run fail, we need to do
+> md_unregister_thread() before raid1_free().
+>
+> Signed-off-by: lijiang <lijiang@ugreen.com>
 
-make check_local T=shell/lvchange-rebuild-raid.sh
-LVM_TEST_DIR=/root/test  LVM_TEST_DEVDIR=/dev
+Please put your proper full name here.
 
-VERBOSE=0 ./lib/runner \
---testdir . --outdir results \
---flavours ndev-vanilla --only shell/lvchange-rebuild-raid.sh --skip @
-running 1 tests
-###      skipped: [ndev-vanilla] shell/lvchange-rebuild-raid.sh 0
+Also, your patch somehow didn't make through the mail list, so we don't
+see it in lore (https://lore.kernel.org/linux-raid/) or
+patchwork (https://patchwork.kernel.org/project/linux-raid/list/). I don't
+really know why though.
 
-### 1 tests: 0 passed, 1 skipped, 0 timed out, 0 warned, 0 failed
+Thanks,
+Song
 
-Regards
-Xiao
-
+> ---
+> The following steps can be used to reproduce the problem:
+> mdadm --create /dev/md0 --level=1  --raid-devices=2 /dev/sd[a-b]
+> mdadm -A /dev/md0 /dev/sd[a-b]
+> mkfs.ext4  /dev/md0
+> mount /dev/md0   /mnt/md0
+>
+> mdadm -S /dev/md0
+>
+> mdadm -A /dev/md0 /dev/sda   --run
+> mount /dev/md0   /mnt/md0
+> #Store a certain amount of data, so that the rebuilding will not be completed in a short time
+> dd if=/dev/urandom of=/mnt/md0/test.db bs=1M count=40960
+>
+> mdadm --add /dev/md0 /dev/sdb
+> sleep 1
+> #when the array were rebuilding, we stop the array.
+> umount /dev/md0
+> mdadm -S  /dev/md0
+>
+> #assemble array with the sdb only in --run insist mode:
+> mdadm -A /dev/md0 /dev/sdb  --run
+>
+> #md run fail with kernel message as follow:
+> [  850.593441] md: md0 stopped.
+> [  850.672071] md: pers->run() failed ...
+> [  850.686913] md: md0 stopped.
+>
+> #we can see the md0_raid1 thread were not stop:
+> $ps -ef | grep raid1
+> root      5672     2  0 Oct31 ?        00:00:04 [md0_raid1]
+>
+> #now, do poweroff can reproduce the problem.
+>
+>  drivers/md/raid1.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 05d8438cfec8..58f705f42948 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -3159,6 +3159,7 @@ static int raid1_run(struct mddev *mddev)
+>          * RAID1 needs at least one disk in active
+>          */
+>         if (conf->raid_disks - mddev->degraded < 1) {
+> +               md_unregister_thread(&conf->thread);
+>                 ret = -EINVAL;
+>                 goto abort;
+>         }
+> --
+> 2.17.1
