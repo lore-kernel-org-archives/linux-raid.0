@@ -2,48 +2,48 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9301BC4332F
-	for <linux-raid@archiver.kernel.org>; Sun,  6 Nov 2022 09:45:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7EF5C433FE
+	for <linux-raid@archiver.kernel.org>; Sun,  6 Nov 2022 12:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229821AbiKFJpH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 6 Nov 2022 04:45:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51894 "EHLO
+        id S229910AbiKFM33 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 6 Nov 2022 07:29:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229682AbiKFJpG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 6 Nov 2022 04:45:06 -0500
-X-Greylist: delayed 1202 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 06 Nov 2022 01:45:04 PST
-Received: from 8.mo575.mail-out.ovh.net (8.mo575.mail-out.ovh.net [46.105.74.219])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12B1BC76A
-        for <linux-raid@vger.kernel.org>; Sun,  6 Nov 2022 01:45:03 -0800 (PST)
-Received: from player772.ha.ovh.net (unknown [10.110.208.245])
-        by mo575.mail-out.ovh.net (Postfix) with ESMTP id B709223A10
-        for <linux-raid@vger.kernel.org>; Sun,  6 Nov 2022 09:06:51 +0000 (UTC)
+        with ESMTP id S229741AbiKFM32 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 6 Nov 2022 07:29:28 -0500
+X-Greylist: delayed 12602 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 06 Nov 2022 04:29:26 PST
+Received: from 15.mo561.mail-out.ovh.net (15.mo561.mail-out.ovh.net [87.98.150.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EC58E94
+        for <linux-raid@vger.kernel.org>; Sun,  6 Nov 2022 04:29:26 -0800 (PST)
+Received: from player690.ha.ovh.net (unknown [10.111.172.186])
+        by mo561.mail-out.ovh.net (Postfix) with ESMTP id 7BB2F23D59
+        for <linux-raid@vger.kernel.org>; Sun,  6 Nov 2022 08:51:05 +0000 (UTC)
 Received: from rechte.fr (82-65-133-131.subs.proxad.net [82.65.133.131])
         (Authenticated sender: marc4@rechte.fr)
-        by player772.ha.ovh.net (Postfix) with ESMTPSA id 7442F30784C7A;
-        Sun,  6 Nov 2022 09:06:50 +0000 (UTC)
-Authentication-Results: garm.ovh; auth=pass (GARM-98R00286f29ea8-6141-4b6f-af06-41b3a28f698f,
+        by player690.ha.ovh.net (Postfix) with ESMTPSA id 0A4DC30517555;
+        Sun,  6 Nov 2022 08:51:03 +0000 (UTC)
+Authentication-Results: garm.ovh; auth=pass (GARM-110S0047c7b9ebb-d9af-473c-8235-9a47c11578d9,
                     6D2D3BFE2A90E32C99406D564E491920D64DA061) smtp.auth=marc4@rechte.fr
 X-OVh-ClientIp: 82.65.133.131
-Message-ID: <c696ebe0-5555-5b91-808c-3e90c1fcf281@rechte.fr>
-Date:   Sun, 6 Nov 2022 10:06:50 +0100
+Message-ID: <3466aa97-597e-0c8e-42df-eaf2e947348f@rechte.fr>
+Date:   Sun, 6 Nov 2022 09:51:03 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.4.1
-From:   =?UTF-8?Q?Marc_Recht=c3=a9?= <marc4@rechte.fr>
 Subject: Re: mdadm udev rule does not start mdmonitor systemd unit.
 To:     Xiao Ni <xni@redhat.com>
 Cc:     linux-raid@vger.kernel.org
 References: <984d4620-e53f-0d1f-c61a-0485ea79e3f6@rechte.fr>
  <CALTww2-dKxDzTo6svQm+8wyo5UiY6v+amjoKjbhHQ4dVvDO67w@mail.gmail.com>
 Content-Language: en-US
+From:   =?UTF-8?Q?Marc_Recht=c3=a9?= <marc4@rechte.fr>
 In-Reply-To: <CALTww2-dKxDzTo6svQm+8wyo5UiY6v+amjoKjbhHQ4dVvDO67w@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 8731072304711277754
+X-Ovh-Tracer-Id: 8464796975422971066
 X-VR-SPAMSTATE: OK
 X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvgedrvdehgdduvddtucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkfffgggfhffuvfevfhgjtgfgsehtkeertddtfeejnecuhfhrohhmpeforghrtgcutfgvtghhthoruceomhgrrhgtgeesrhgvtghhthgvrdhfrheqnecuggftrfgrthhtvghrnhepkeehfffffeffhfetgfegudetkeevudethfehtdejjeefhfejteeukeevieegffefnecukfhppeduvdejrddtrddtrddupdekvddrieehrddufeefrddufedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepuddvjedrtddrtddruddpmhgrihhlfhhrohhmpeeomhgrrhgtgeesrhgvtghhthgvrdhfrheqpdhnsggprhgtphhtthhopedupdhrtghpthhtoheplhhinhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhgpdfovfetjfhoshhtpehmohehjeehpdhmohguvgepshhmthhpohhuth
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvgedrvdehgdduudejucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkfffgggfuffvvehfhfgjtgfgsehtkeertddtfeejnecuhfhrohhmpeforghrtgcutfgvtghhthoruceomhgrrhgtgeesrhgvtghhthgvrdhfrheqnecuggftrfgrthhtvghrnhepteevfeetfeelgfegieehtdfffefhkeefieffjefgkedtfeduteduudfgkeegkedunecukfhppeduvdejrddtrddtrddupdekvddrieehrddufeefrddufedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepuddvjedrtddrtddruddpmhgrihhlfhhrohhmpeeomhgrrhgtgeesrhgvtghhthgvrdhfrheqpdhnsggprhgtphhtthhopedupdhrtghpthhtoheplhhinhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhgpdfovfetjfhoshhtpehmohehiedupdhmohguvgepshhmthhpohhuth
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -66,8 +66,7 @@ Le 03/11/2022 à 03:54, Xiao Ni a écrit :
 > So you need to notice about his in your udev rule.
 >
 >> I don't know how to further debug.
-> You can add systemd.log_level=debug udev.log-priority=debug to your 
-> boot conf
+> You can add systemd.log_level=debug udev.log-priority=debug to your boot conf
 > file. For example,
 > /boot/loader/entries/xxx-4.18.0-416.el8.x86_64.conf. My environment
 > is rhel. Maybe it's different on your system.
@@ -159,8 +158,7 @@ Le 03/11/2022 à 03:54, Xiao Ni a écrit :
 >> OPTIONS+="string_escape=replace"
 >> ENV{DEVTYPE}=="disk", ENV{MD_UUID}=="?*",
 >> SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
->> ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", 
->> SYMLINK+="md/$env{MD_DEVNAME}"
+>> ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", SYMLINK+="md/$env{MD_DEVNAME}"
 >> ENV{DEVTYPE}=="partition", ENV{MD_NAME}=="?*",
 >> SYMLINK+="disk/by-id/md-name-$env{MD_NAME}-part%n",
 >> OPTIONS+="string_escape=replace"
@@ -286,18 +284,5 @@ $env{MD_MON_THIS}", ENV{SYSTEMD_WANTS}+="mdadm-grow-continue@%c.service"
 
 LABEL="md_end"
 
-
-OK, I may have a clue. In 69-dm-lvm.rules we have:
-
-# MD device:
-LABEL="next"
-KERNEL!="md[0-9]*", GOTO="next"
-IMPORT{db}="LVM_MD_PV_ACTIVATED"
-ACTION=="add", ENV{LVM_MD_PV_ACTIVATED}=="1", GOTO="lvm_scan"
-ACTION=="change", ENV{LVM_MD_PV_ACTIVATED}!="1", TEST=="md/array_state", 
-ENV{LVM_MD_PV_ACTIVATED}="1", GOTO="lvm_scan"
-ACTION=="add", KERNEL=="md[0-9]*p[0-9]*", GOTO="lvm_scan"
-ENV{LVM_MD_PV_ACTIVATED}!="1", ENV{SYSTEMD_READY}="0"
-GOTO="lvm_end"
 
 
