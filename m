@@ -2,150 +2,302 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC384C433FE
-	for <linux-raid@archiver.kernel.org>; Sat,  5 Nov 2022 22:34:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9301BC4332F
+	for <linux-raid@archiver.kernel.org>; Sun,  6 Nov 2022 09:45:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229992AbiKEWeQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 5 Nov 2022 18:34:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47940 "EHLO
+        id S229821AbiKFJpH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 6 Nov 2022 04:45:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229607AbiKEWeP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 5 Nov 2022 18:34:15 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D758A11154
-        for <linux-raid@vger.kernel.org>; Sat,  5 Nov 2022 15:34:13 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7B8FF1F37C;
-        Sat,  5 Nov 2022 22:34:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1667687652; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6/IBun3eEoGw1C80XiwUaEKaky/xKSAd5oZts/sTyQ4=;
-        b=BKPC7h47sd2H7fPhqhbQ1TtDwjlbvWUQzcmeOxT5qsTPQvYhrSuWxmQx3nRhNlzQVgVLAI
-        qXrjkTXPi94vYZlUHErd43BAiDCHOe/JcCou1W6bX8FAnjFcZ08xspit06zkRCGeu7JgYd
-        7jppqVwlmEX5PBO4I9RyoVHCcBicytg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1667687652;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6/IBun3eEoGw1C80XiwUaEKaky/xKSAd5oZts/sTyQ4=;
-        b=/sPFWZB9yGBpazM/9uco8Hm1PEqvIvzYUjW7Ldg5rV1HjO0Z7W2QiQRO/Suh6HsT0bE1ay
-        ZZ5PT5qYpKSE7HAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 71D6413AD7;
-        Sat,  5 Nov 2022 22:34:10 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id PTeoCuLkZmNUdAAAMHmgww
-        (envelope-from <neilb@suse.de>); Sat, 05 Nov 2022 22:34:10 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229682AbiKFJpG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 6 Nov 2022 04:45:06 -0500
+X-Greylist: delayed 1202 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 06 Nov 2022 01:45:04 PST
+Received: from 8.mo575.mail-out.ovh.net (8.mo575.mail-out.ovh.net [46.105.74.219])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12B1BC76A
+        for <linux-raid@vger.kernel.org>; Sun,  6 Nov 2022 01:45:03 -0800 (PST)
+Received: from player772.ha.ovh.net (unknown [10.110.208.245])
+        by mo575.mail-out.ovh.net (Postfix) with ESMTP id B709223A10
+        for <linux-raid@vger.kernel.org>; Sun,  6 Nov 2022 09:06:51 +0000 (UTC)
+Received: from rechte.fr (82-65-133-131.subs.proxad.net [82.65.133.131])
+        (Authenticated sender: marc4@rechte.fr)
+        by player772.ha.ovh.net (Postfix) with ESMTPSA id 7442F30784C7A;
+        Sun,  6 Nov 2022 09:06:50 +0000 (UTC)
+Authentication-Results: garm.ovh; auth=pass (GARM-98R00286f29ea8-6141-4b6f-af06-41b3a28f698f,
+                    6D2D3BFE2A90E32C99406D564E491920D64DA061) smtp.auth=marc4@rechte.fr
+X-OVh-ClientIp: 82.65.133.131
+Message-ID: <c696ebe0-5555-5b91-808c-3e90c1fcf281@rechte.fr>
+Date:   Sun, 6 Nov 2022 10:06:50 +0100
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Mikulas Patocka" <mpatocka@redhat.com>
-Cc:     "Song Liu" <song@kernel.org>,
-        "Guoqing Jiang" <guoqing.jiang@linux.dev>,
-        "Zdenek Kabelac" <zkabelac@redhat.com>, linux-raid@vger.kernel.org,
-        dm-devel@redhat.com
-Subject: Re: [dm-devel] [PATCH] md: fix a crash in mempool_free
-In-reply-to: =?utf-8?q?=3Calpine=2ELRH=2E2=2E21=2E2211040941112=2E19553=40fi?=
- =?utf-8?q?le01=2Eintranet=2Eprod=2Eint=2Erdu2=2Eredhat=2Ecom=3E?=
-References: =?utf-8?q?=3Calpine=2ELRH=2E2=2E21=2E2211031121070=2E18305=40fil?=
- =?utf-8?q?e01=2Eintranet=2Eprod=2Eint=2Erdu2=2Eredhat=2Ecom=3E=2C?=
- <166753684502.19313.12105294223332649758@noble.neil.brown.name>, 
- =?utf-8?q?=3Calpine=2ELRH=2E2=2E21=2E2211040941112=2E19553=40file01=2Eintra?=
- =?utf-8?q?net=2Eprod=2Eint=2Erdu2=2Eredhat=2Ecom=3E?=
-Date:   Sun, 06 Nov 2022 09:34:04 +1100
-Message-id: <166768764482.19313.4863003667431957512@noble.neil.brown.name>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+From:   =?UTF-8?Q?Marc_Recht=c3=a9?= <marc4@rechte.fr>
+Subject: Re: mdadm udev rule does not start mdmonitor systemd unit.
+To:     Xiao Ni <xni@redhat.com>
+Cc:     linux-raid@vger.kernel.org
+References: <984d4620-e53f-0d1f-c61a-0485ea79e3f6@rechte.fr>
+ <CALTww2-dKxDzTo6svQm+8wyo5UiY6v+amjoKjbhHQ4dVvDO67w@mail.gmail.com>
+Content-Language: en-US
+In-Reply-To: <CALTww2-dKxDzTo6svQm+8wyo5UiY6v+amjoKjbhHQ4dVvDO67w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Ovh-Tracer-Id: 8731072304711277754
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvgedrvdehgdduvddtucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkfffgggfhffuvfevfhgjtgfgsehtkeertddtfeejnecuhfhrohhmpeforghrtgcutfgvtghhthoruceomhgrrhgtgeesrhgvtghhthgvrdhfrheqnecuggftrfgrthhtvghrnhepkeehfffffeffhfetgfegudetkeevudethfehtdejjeefhfejteeukeevieegffefnecukfhppeduvdejrddtrddtrddupdekvddrieehrddufeefrddufedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepuddvjedrtddrtddruddpmhgrihhlfhhrohhmpeeomhgrrhgtgeesrhgvtghhthgvrdhfrheqpdhnsggprhgtphhtthhopedupdhrtghpthhtoheplhhinhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhgpdfovfetjfhoshhtpehmohehjeehpdhmohguvgepshhmthhpohhuth
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, 05 Nov 2022, Mikulas Patocka wrote:
-> 
-> On Fri, 4 Nov 2022, NeilBrown wrote:
-> 
-> > > ---
-> > >  drivers/md/md.c |    6 ++++--
-> > >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > > 
-> > > Index: linux-2.6/drivers/md/md.c
-> > > ===================================================================
-> > > --- linux-2.6.orig/drivers/md/md.c	2022-11-03 15:29:02.000000000 +0100
-> > > +++ linux-2.6/drivers/md/md.c	2022-11-03 15:33:17.000000000 +0100
-> > > @@ -509,13 +509,14 @@ static void md_end_flush(struct bio *bio
-> > >  	struct md_rdev *rdev = bio->bi_private;
-> > >  	struct mddev *mddev = rdev->mddev;
-> > >  
-> > > +	bio_put(bio);
-> > > +
-> > >  	rdev_dec_pending(rdev, mddev);
-> > >  
-> > >  	if (atomic_dec_and_test(&mddev->flush_pending)) {
-> > >  		/* The pre-request flush has finished */
-> > >  		queue_work(md_wq, &mddev->flush_work);
-> > >  	}
-> > > -	bio_put(bio);
-> > >  }
-> > >  
-> > >  static void md_submit_flush_data(struct work_struct *ws);
-> > > @@ -913,10 +914,11 @@ static void super_written(struct bio *bi
-> > >  	} else
-> > >  		clear_bit(LastDev, &rdev->flags);
-> > >  
-> > > +	bio_put(bio);
-> > > +
-> > >  	if (atomic_dec_and_test(&mddev->pending_writes))
-> > >  		wake_up(&mddev->sb_wait);
-> > >  	rdev_dec_pending(rdev, mddev);
-> > > -	bio_put(bio);
-> > >  }
-> > 
-> > Thanks. I think this is a clear improvement.
-> > I think it would be a little better if the rdev_dec_pending were also
-> > move up.
-> > Then both code fragments would be:
-> >   bio_put ; rdev_dec_pending ; atomic_dec_and_test
-> > 
-> > Thanks,
-> > NeilBrown
-> 
-> Yes, I'll send a second patch that moves rdev_dec_pending up too.
-> 
-> BTW. even this is theoretically incorrect:
-> 
-> > >     if (atomic_dec_and_test(&mddev->pending_writes))
-> > >             wake_up(&mddev->sb_wait);
-> 
-> Suppose that you execute atomic_dec_and_test and then there's a context 
-> switch to a process that destroys the md device and then there's a context 
-> switch back and you call "wake_up(&mddev->sb_wait)" on freed memory.
-> 
-> I think that we should use wait_var_event/wake_up_var instead of sb_wait. 
-> That will use preallocated hashed wait queues.
-> 
+Le 03/11/2022 à 03:54, Xiao Ni a écrit :
+> On Tue, Nov 1, 2022 at 8:27 PM Marc Rechté <marc4@rechte.fr> wrote:
+>> Hello,
+>>
+>> I have a udev rule and a md127 device with the properties as following.
+>>
+>> The mdmonitor service is not started (no trace in systemd journal).
+>> However I can manually start the service.
+>>
+>> I just noticed that SYSTEMD_READY porperty is 0 which could explain this
+>> behaviour (according to man systemd.device) ?
+> Hi Marc
+>
+> For raid device, SYSTEMD_READY will be 1 when the change event happens.
+> And for lvm volume, SYSTEMD_READY will be 1 when the add event happens.
+> So you need to notice about his in your udev rule.
+>
+>> I don't know how to further debug.
+> You can add systemd.log_level=debug udev.log-priority=debug to your 
+> boot conf
+> file. For example,
+> /boot/loader/entries/xxx-4.18.0-416.el8.x86_64.conf. My environment
+> is rhel. Maybe it's different on your system.
+>
+> Then you can add some printf logs into your udev rule. I did in this
+> way, something
+> like this:
+>
+> ENV{SYSTEMD_READY}=="0", GOTO="test_end"
+> SUBSYSTEM=="block", ACTION=="add", RUN{program}+="/usr/bin/echo
+> mdadm-test-add-SYSTEMD_READY"
+> SUBSYSTEM=="block", ACTION=="change", RUN{program}+="/usr/bin/echo
+> mdadm-test-change-SYSTEMD_READY"
+>
+> You can check the logs by journalctl command. So you can know which
+> rule runs in your udev rule.
+>
+> Regards
+> Xiao
+>> Thanks
+>>
+>> # udevadm info --query=property --name=/dev/md127
+>>
+>> DEVPATH=/devices/virtual/block/md127
+>> DEVNAME=/dev/md127
+>> DEVTYPE=disk
+>> DISKSEQ=6
+>> MAJOR=9
+>> MINOR=127
+>> SUBSYSTEM=block
+>> USEC_INITIALIZED=5129215
+>> ID_IGNORE_DISKSEQ=1
+>> MD_LEVEL=raid1
+>> MD_DEVICES=2
+>> MD_METADATA=1.2
+>> MD_UUID=800ee577:652e6fdc:79f6768e:dea2f7ea
+>> MD_DEVNAME=SysRAID1Array1
+>> MD_NAME=linux2:SysRAID1Array1
+>> ID_FS_UUID=x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
+>> ID_FS_UUID_ENC=x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
+>> ID_FS_VERSION=LVM2 001
+>> ID_FS_TYPE=LVM2_member
+>> ID_FS_USAGE=raid
+>> SYSTEMD_WANTS=mdmonitor.service
+>> SYSTEMD_READY=0
+>> UDISKS_MD_LEVEL=raid1
+>> UDISKS_MD_DEVICES=2
+>> UDISKS_MD_METADATA=1.2
+>> UDISKS_MD_UUID=800ee577:652e6fdc:79f6768e:dea2f7ea
+>> UDISKS_MD_DEVNAME=SysRAID1Array1
+>> UDISKS_MD_NAME=linux2:SysRAID1Array1
+>> UDISKS_MD_DEVICE_dev_nvme0n1p2_ROLE=0
+>> UDISKS_MD_DEVICE_dev_nvme0n1p2_DEV=/dev/nvme0n1p2
+>> UDISKS_MD_DEVICE_dev_nvme1n1p2_ROLE=1
+>> UDISKS_MD_DEVICE_dev_nvme1n1p2_DEV=/dev/nvme1n1p2
+>> DEVLINKS=/dev/md/SysRAID1Array1
+>> /dev/disk/by-id/md-name-linux2:SysRAID1Array1
+>> /dev/disk/by-id/lvm-pv-uuid-x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
+>> /dev/disk/by-id/md-uuid-800ee577:652e6fdc:79f6768e:dea2f7ea
+>> TAGS=:systemd:
+>> CURRENT_TAGS=:systemd:
+>>
+>> # cat /usr/lib/udev/rules.d/63-md-raid-arrays.rules
+>> # do not edit this file, it will be overwritten on update
+>>
+>> SUBSYSTEM!="block", GOTO="md_end"
+>>
+>> # handle md arrays
+>> ACTION!="add|change", GOTO="md_end"
+>> KERNEL!="md*", GOTO="md_end"
+>>
+>> # partitions have no md/{array_state,metadata_version}, but should not
+>> # for that reason be ignored.
+>> ENV{DEVTYPE}=="partition", GOTO="md_ignore_state"
+>>
+>> # container devices have a metadata version of e.g. 'external:ddf' and
+>> # never leave state 'inactive'
+>> ATTR{md/metadata_version}=="external:[A-Za-z]*",
+>> ATTR{md/array_state}=="inactive", GOTO="md_ignore_state"
+>> TEST!="md/array_state", ENV{SYSTEMD_READY}="0", GOTO="md_end"
+>> ATTR{md/array_state}=="clear*|inactive", ENV{SYSTEMD_READY}="0",
+>> GOTO="md_end"
+>> ATTR{md/sync_action}=="reshape", ENV{RESHAPE_ACTIVE}="yes"
+>> LABEL="md_ignore_state"
+>>
+>> IMPORT{program}="/usr/bin/mdadm --detail --no-devices --export $devnode"
+>> ENV{DEVTYPE}=="disk", ENV{MD_NAME}=="?*",
+>> SYMLINK+="disk/by-id/md-name-$env{MD_NAME}",
+>> OPTIONS+="string_escape=replace"
+>> ENV{DEVTYPE}=="disk", ENV{MD_UUID}=="?*",
+>> SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
+>> ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", 
+>> SYMLINK+="md/$env{MD_DEVNAME}"
+>> ENV{DEVTYPE}=="partition", ENV{MD_NAME}=="?*",
+>> SYMLINK+="disk/by-id/md-name-$env{MD_NAME}-part%n",
+>> OPTIONS+="string_escape=replace"
+>> ENV{DEVTYPE}=="partition", ENV{MD_UUID}=="?*",
+>> SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}-part%n"
+>> ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[^0-9]",
+>> SYMLINK+="md/$env{MD_DEVNAME}%n"
+>> ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[0-9]",
+>> SYMLINK+="md/$env{MD_DEVNAME}p%n"
+>>
+>> IMPORT{builtin}="blkid"
+>> OPTIONS+="link_priority=100"
+>> OPTIONS+="watch"
+>> ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*",
+>> SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
+>> ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_PART_ENTRY_UUID}=="?*",
+>> SYMLINK+="disk/by-partuuid/$env{ID_PART_ENTRY_UUID}"
+>> ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*",
+>> SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
+>>
+>> ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="mdmonitor.service"
+>>
+>> # Tell systemd to run mdmon for our container, if we need it.
+>> ENV{MD_LEVEL}=="raid[1-9]*", ENV{MD_CONTAINER}=="?*",
+>> PROGRAM="/usr/bin/readlink $env{MD_CONTAINER}", ENV{MD_MON_THIS}="%c"
+>> ENV{MD_MON_THIS}=="?*", PROGRAM="/usr/bin/basename $env{MD_MON_THIS}",
+>> ENV{SYSTEMD_WANTS}+="mdmon@%c.service"
+>> ENV{RESHAPE_ACTIVE}=="yes", PROGRAM="/usr/bin/basename
+>> $env{MD_MON_THIS}", ENV{SYSTEMD_WANTS}+="mdadm-grow-continue@%c.service"
+>>
+>> LABEL="md_end"
+>>
+>>
+Hello Xiao,
 
-I agree there is a potential problem.  Using wait_var_event is an
-approach that could work.
-An alternate would be to change that code to
+Thanks for the tips.
 
-  if (atomic_dec_and_lock(&mddev->pending_writes, &mddev->lock)) {
-           wake_up(&mddev->sb_wait);
-           spin_unlock(&mddev->lock);
-  }
+It appears that SYSTEMD_READY == 1 when entering the add/change event, 
+but it seems it is reset to 0 while processing the rules.
 
-As __md_stop() takes mddev->lock, it would not be able to get to the
-'free' until after the lock was dropped.
+Following is modified rule with debug info. Relevant journal entries:
 
-Thanks,
-NeilBrown
+md127: '/usr/bin/echo mdadm-test-add-SYSTEMD_READY'(out) 
+'mdadm-test-add-SYSTEMD_READY'
+
+...
+
+md127: '/usr/bin/udevadm info --query=property --name=/dev/md127'(out) 
+'SYSTEMD_READY=0'
+
+
+$ cat 63-md-raid-arrays.rules
+
+# do not edit this file, it will be overwritten on update
+
+SUBSYSTEM!="block", GOTO="md_end"
+
+# handle md arrays
+ACTION!="add|change", GOTO="md_end"
+KERNEL!="md*", GOTO="md_end"
+
+ENV{SYSTEMD_READY}=="0", GOTO="md_test"
+RUN{program}+="/usr/bin/echo mdadm-test-add-SYSTEMD_READY"
+LABEL="md_test"
+
+
+# partitions have no md/{array_state,metadata_version}, but should not
+# for that reason be ignored.
+ENV{DEVTYPE}=="partition", GOTO="md_ignore_state"
+
+# container devices have a metadata version of e.g. 'external:ddf' and
+# never leave state 'inactive'
+ATTR{md/metadata_version}=="external:[A-Za-z]*", 
+ATTR{md/array_state}=="inactive", GOTO="md_ignore_state"
+TEST!="md/array_state", ENV{SYSTEMD_READY}="0", GOTO="md_end"
+ATTR{md/array_state}=="clear*|inactive", ENV{SYSTEMD_READY}="0", 
+GOTO="md_end"
+ATTR{md/sync_action}=="reshape", ENV{RESHAPE_ACTIVE}="yes"
+LABEL="md_ignore_state"
+
+IMPORT{program}="/usr/bin/mdadm --detail --no-devices --export $devnode"
+ENV{DEVTYPE}=="disk", ENV{MD_NAME}=="?*", 
+SYMLINK+="disk/by-id/md-name-$env{MD_NAME}", 
+OPTIONS+="string_escape=replace"
+ENV{DEVTYPE}=="disk", ENV{MD_UUID}=="?*", 
+SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
+ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", TAG+="systemd", 
+SYMLINK+="md/$env{MD_DEVNAME}"
+ENV{DEVTYPE}=="partition", ENV{MD_NAME}=="?*", 
+SYMLINK+="disk/by-id/md-name-$env{MD_NAME}-part%n", 
+OPTIONS+="string_escape=replace"
+ENV{DEVTYPE}=="partition", ENV{MD_UUID}=="?*", 
+SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}-part%n"
+ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[^0-9]", 
+SYMLINK+="md/$env{MD_DEVNAME}%n"
+ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[0-9]", 
+SYMLINK+="md/$env{MD_DEVNAME}p%n"
+
+
+IMPORT{builtin}="blkid"
+OPTIONS+="link_priority=100"
+OPTIONS+="watch"
+ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", 
+SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
+ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_PART_ENTRY_UUID}=="?*", 
+SYMLINK+="disk/by-partuuid/$env{ID_PART_ENTRY_UUID}"
+ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", 
+SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
+
+ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="mdmonitor.service"
+ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="hello.service"
+
+#RUN{program}+="/usr/bin/echo SYSTEMD_READY = $env(SYSTEMD_READY)"
+RUN{program}+="/usr/bin/udevadm info --query=property --name=/dev/md127"
+
+# Tell systemd to run mdmon for our container, if we need it.
+ENV{MD_LEVEL}=="raid[1-9]*", ENV{MD_CONTAINER}=="?*", 
+PROGRAM="/usr/bin/readlink $env{MD_CONTAINER}", ENV{MD_MON_THIS}="%c"
+ENV{MD_MON_THIS}=="?*", PROGRAM="/usr/bin/basename $env{MD_MON_THIS}", 
+ENV{SYSTEMD_WANTS}+="mdmon@%c.service"
+ENV{RESHAPE_ACTIVE}=="yes", PROGRAM="/usr/bin/basename 
+$env{MD_MON_THIS}", ENV{SYSTEMD_WANTS}+="mdadm-grow-continue@%c.service"
+
+LABEL="md_end"
+
+
+OK, I may have a clue. In 69-dm-lvm.rules we have:
+
+# MD device:
+LABEL="next"
+KERNEL!="md[0-9]*", GOTO="next"
+IMPORT{db}="LVM_MD_PV_ACTIVATED"
+ACTION=="add", ENV{LVM_MD_PV_ACTIVATED}=="1", GOTO="lvm_scan"
+ACTION=="change", ENV{LVM_MD_PV_ACTIVATED}!="1", TEST=="md/array_state", 
+ENV{LVM_MD_PV_ACTIVATED}="1", GOTO="lvm_scan"
+ACTION=="add", KERNEL=="md[0-9]*p[0-9]*", GOTO="lvm_scan"
+ENV{LVM_MD_PV_ACTIVATED}!="1", ENV{SYSTEMD_READY}="0"
+GOTO="lvm_end"
+
+
