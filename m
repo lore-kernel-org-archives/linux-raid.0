@@ -2,257 +2,302 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91FFDC4332F
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Nov 2022 09:33:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE511C4332F
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Nov 2022 11:13:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231466AbiKGJdF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Nov 2022 04:33:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58024 "EHLO
+        id S231194AbiKGLNk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Nov 2022 06:13:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230502AbiKGJdE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Nov 2022 04:33:04 -0500
-Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B9EBE58
-        for <linux-raid@vger.kernel.org>; Mon,  7 Nov 2022 01:33:01 -0800 (PST)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1667813579;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=grRm51fJYQow8zvkKIcsTmPNXLCcX5WSgYbGqQK4PYI=;
-        b=WqOTRwL2maGdfzAMNV68BgplA7bj8tGZia81++KyZ6kI/KuXMt3B2bdTAfEO5SLga6PU5W
-        byhpIOINOSxMSzTD0BpX0QNVJJzePtSZbk3qK+/0K1EypW2ZUGkOLbWM4xeT/5/6YZBHLJ
-        tOBdnV4wYCcbLG/KKf5qj5ltfEV5GzY=
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Subject: Re: A crash caused by the commit
- 0dd84b319352bb8ba64752d4e45396d8b13e6018
-To:     Mikulas Patocka <mpatocka@redhat.com>
-Cc:     Zdenek Kabelac <zkabelac@redhat.com>, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org, dm-devel@redhat.com,
-        Neil Brown <neilb@suse.de>
-References: <alpine.LRH.2.21.2211021214390.25745@file01.intranet.prod.int.rdu2.redhat.com>
- <78646e88-2457-81e1-e3e7-cf66b67ba923@linux.dev>
- <alpine.LRH.2.21.2211030851090.10884@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.21.2211031018030.18305@file01.intranet.prod.int.rdu2.redhat.com>
- <5dd07779-5c09-4c75-6e34-392e4c05c3c8@linux.dev>
- <alpine.LRH.2.21.2211040909470.19553@file01.intranet.prod.int.rdu2.redhat.com>
-Message-ID: <beba4872-9cee-03e7-f147-1a7c6e84e9a4@linux.dev>
-Date:   Mon, 7 Nov 2022 17:32:55 +0800
+        with ESMTP id S230430AbiKGLNj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Nov 2022 06:13:39 -0500
+X-Greylist: delayed 6599 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Nov 2022 03:13:37 PST
+Received: from 9.mo582.mail-out.ovh.net (9.mo582.mail-out.ovh.net [87.98.171.146])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2862D60DE
+        for <linux-raid@vger.kernel.org>; Mon,  7 Nov 2022 03:13:36 -0800 (PST)
+Received: from player762.ha.ovh.net (unknown [10.109.146.166])
+        by mo582.mail-out.ovh.net (Postfix) with ESMTP id 4507325C74
+        for <linux-raid@vger.kernel.org>; Mon,  7 Nov 2022 08:48:03 +0000 (UTC)
+Received: from rechte.fr (82-65-133-131.subs.proxad.net [82.65.133.131])
+        (Authenticated sender: marc4@rechte.fr)
+        by player762.ha.ovh.net (Postfix) with ESMTPSA id E1369306A25D5;
+        Mon,  7 Nov 2022 08:48:01 +0000 (UTC)
+Authentication-Results: garm.ovh; auth=pass (GARM-102R004d4fdc872-29a0-4bfc-8641-437f1bd0c072,
+                    233BEDCF0A6AB236F00FCFAF2CAD15A8BC7BF000) smtp.auth=marc4@rechte.fr
+X-OVh-ClientIp: 82.65.133.131
+Message-ID: <411fac2e-43b9-2fe9-05e3-d57c535595e3@rechte.fr>
+Date:   Mon, 7 Nov 2022 09:48:01 +0100
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.21.2211040909470.19553@file01.intranet.prod.int.rdu2.redhat.com>
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+Subject: Re: mdadm udev rule does not start mdmonitor systemd unit.
+To:     Xiao Ni <xni@redhat.com>
+Cc:     linux-raid@vger.kernel.org
+References: <984d4620-e53f-0d1f-c61a-0485ea79e3f6@rechte.fr>
+ <CALTww2-dKxDzTo6svQm+8wyo5UiY6v+amjoKjbhHQ4dVvDO67w@mail.gmail.com>
+ <3466aa97-597e-0c8e-42df-eaf2e947348f@rechte.fr>
+ <CALTww2_ug4Je4niEhqOHa6AS5cETRAK_qTJz+D6pP1Yr9ZjEBA@mail.gmail.com>
 Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
+From:   =?UTF-8?Q?Marc_Recht=c3=a9?= <marc4@rechte.fr>
+In-Reply-To: <CALTww2_ug4Je4niEhqOHa6AS5cETRAK_qTJz+D6pP1Yr9ZjEBA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Ovh-Tracer-Id: 14286262447125896378
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvgedrvdejgdduvdegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkfffgggfuffvvehfhfgjtgfgsehtkeertddtfeejnecuhfhrohhmpeforghrtgcutfgvtghhthoruceomhgrrhgtgeesrhgvtghhthgvrdhfrheqnecuggftrfgrthhtvghrnhepteevfeetfeelgfegieehtdfffefhkeefieffjefgkedtfeduteduudfgkeegkedunecukfhppeduvdejrddtrddtrddupdekvddrieehrddufeefrddufedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepuddvjedrtddrtddruddpmhgrihhlfhhrohhmpeeomhgrrhgtgeesrhgvtghhthgvrdhfrheqpdhnsggprhgtphhtthhopedupdhrtghpthhtoheplhhinhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhgpdfovfetjfhoshhtpehmohehkedvpdhmohguvgepshhmthhpohhuth
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 11/4/22 9:40 PM, Mikulas Patocka wrote:
-> On Fri, 4 Nov 2022, Guoqing Jiang wrote:
->
->> On 11/3/22 11:20 PM, Mikulas Patocka wrote:
->>> On Thu, 3 Nov 2022, Mikulas Patocka wrote:
->>>
->>>>> BTW, is the mempool_free from endio -> dec_count -> complete_io?
->>>>> And io which caused the crash is from dm_io -> async_io / sync_io
->>>>>   �-> dispatch_io, seems dm-raid1 can call it instead of dm-raid, so I
->>>>> suppose the io is for mirror image.
->>>>>
->>>>> Thanks,
->>>>> Guoqing
->>>> I presume that the bug is caused by destruction of a bio set while bio
->>>> from that set was in progress. When the bio finishes and an attempt is
->>>> made to free the bio, a crash happens when the code tries to free the bio
->>>> into a destroyed mempool.
+Le 07/11/2022 à 09:30, Xiao Ni a écrit :
+> On Sun, Nov 6, 2022 at 4:51 PM Marc Rechté <marc4@rechte.fr> wrote:
+>> Le 03/11/2022 à 03:54, Xiao Ni a écrit :
+>>> On Tue, Nov 1, 2022 at 8:27 PM Marc Rechté <marc4@rechte.fr> wrote:
+>>>> Hello,
 >>>>
->>>> I can do more testing to validate this theory.
+>>>> I have a udev rule and a md127 device with the properties as following.
 >>>>
->>>> Mikulas
->>> When I disable tail-call optimizations with "-fno-optimize-sibling-calls",
->>> I get this stacktrace:
->> Just curious, is the option used for compile kernel or lvm?
-> I used it to compile the kernel. I set
-> export KCFLAGS="-march=barcelona -fno-optimize-sibling-calls"
-> and recompiled the kernel.
-
-Thanks for the sharing!
-
->> BTW, this trace is different from previous one, and it is more
->> understandable to me, thanks.
->>
->>> [  200.105367] Call Trace:
->>> [  200.105611]  <TASK>
->>> [  200.105825]  dump_stack_lvl+0x33/0x42
->>> [  200.106196]  dump_stack+0xc/0xd
->>> [  200.106516]  mempool_free.cold+0x22/0x32
->>> [  200.106921]  bio_free+0x49/0x60
->>> [  200.107239]  bio_put+0x95/0x100
->>> [  200.107567]  super_written+0x4f/0x120 [md_mod]
->>> [  200.108020]  bio_endio+0xe8/0x100
->>> [  200.108359]  __dm_io_complete+0x1e9/0x300 [dm_mod]
->>> [  200.108847]  clone_endio+0xf4/0x1c0 [dm_mod]
->>> [  200.109288]  bio_endio+0xe8/0x100
->>> [  200.109621]  __dm_io_complete+0x1e9/0x300 [dm_mod]
->>> [  200.110102]  clone_endio+0xf4/0x1c0 [dm_mod]
->> Assume the above from this chain.
->>
->> clone_endio -> dm_io_dec_pending -> __dm_io_dec_pending -> dm_io_complete
->> -> __dm_io_complete -> bio_endio
->>
->>> [  200.110543]  bio_endio+0xe8/0x100
->>> [  200.110877]  brd_submit_bio+0xf8/0x123 [brd]
->>> [  200.111310]  __submit_bio+0x7a/0x120
->>> [  200.111670]  submit_bio_noacct_nocheck+0xb6/0x2a0
->>> [  200.112138]  submit_bio_noacct+0x12e/0x3e0
->>> [  200.112551]  dm_submit_bio_remap+0x46/0xa0 [dm_mod]
->>> [  200.113036]  flush_expired_bios+0x28/0x2f [dm_delay]
->> Was flush_expired_bios triggered by the path?
->>
->> __dm_destroy or __dm_suspend -> suspend_targets -> delay_presuspend
->> -> del_timer_sync(&dc->delay_timer) -> handle_delayed_timer
-> No - del_timer_sync doesn't call handle_delayed_timer.
->
-> The timer was set by "mod_timer(&dc->delay_timer, expires);". When the
-> time expires, it calls handle_delayed_timer. handle_delayed_timer calls
-> "queue_work(dc->kdelayd_wq, &dc->flush_expired_bios);" - this submits a
-> work item that calls "flush_expired_bios" and triggers this stacktrace.
-
-Ok, so the queue_timeout which sets expire timer is called by delay_map
--> delay_bio or flush_delayed_bios, and in either way the bio is originated
-from delayed_bios list.
-
->>> [  200.113536]  process_one_work+0x1b4/0x320
->>> [  200.113943]  worker_thread+0x45/0x3e0
->>> [  200.114319]  ? rescuer_thread+0x380/0x380
->>> [  200.114714]  kthread+0xc2/0x100
->>> [  200.115035]  ? kthread_complete_and_exit+0x20/0x20
->>> [  200.115517]  ret_from_fork+0x1f/0x30
->>> [  200.115874]  </TASK>
+>>>> The mdmonitor service is not started (no trace in systemd journal).
+>>>> However I can manually start the service.
+>>>>
+>>>> I just noticed that SYSTEMD_READY porperty is 0 which could explain this
+>>>> behaviour (according to man systemd.device) ?
+>>> Hi Marc
 >>>
->>> The function super_written is obviously buggy, because it first wakes up a
->>> process and then calls bio_put(bio) - so the woken-up process is racing
->>> with bio_put(bio) and the result is that we attempt to free a bio into a
->>> destroyed bio set.
->> Does it mean the woken-up process destroyed the bio set?
-> Yes.
+>>> For raid device, SYSTEMD_READY will be 1 when the change event happens.
+>>> And for lvm volume, SYSTEMD_READY will be 1 when the add event happens.
+>>> So you need to notice about his in your udev rule.
+>>>
+>>>> I don't know how to further debug.
+>>> You can add systemd.log_level=debug udev.log-priority=debug to your boot conf
+>>> file. For example,
+>>> /boot/loader/entries/xxx-4.18.0-416.el8.x86_64.conf. My environment
+>>> is rhel. Maybe it's different on your system.
+>>>
+>>> Then you can add some printf logs into your udev rule. I did in this
+>>> way, something
+>>> like this:
+>>>
+>>> ENV{SYSTEMD_READY}=="0", GOTO="test_end"
+>>> SUBSYSTEM=="block", ACTION=="add", RUN{program}+="/usr/bin/echo
+>>> mdadm-test-add-SYSTEMD_READY"
+>>> SUBSYSTEM=="block", ACTION=="change", RUN{program}+="/usr/bin/echo
+>>> mdadm-test-change-SYSTEMD_READY"
+>>>
+>>> You can check the logs by journalctl command. So you can know which
+>>> rule runs in your udev rule.
+>>>
+>>> Regards
+>>> Xiao
+>>>> Thanks
+>>>>
+>>>> # udevadm info --query=property --name=/dev/md127
+>>>>
+>>>> DEVPATH=/devices/virtual/block/md127
+>>>> DEVNAME=/dev/md127
+>>>> DEVTYPE=disk
+>>>> DISKSEQ=6
+>>>> MAJOR=9
+>>>> MINOR=127
+>>>> SUBSYSTEM=block
+>>>> USEC_INITIALIZED=5129215
+>>>> ID_IGNORE_DISKSEQ=1
+>>>> MD_LEVEL=raid1
+>>>> MD_DEVICES=2
+>>>> MD_METADATA=1.2
+>>>> MD_UUID=800ee577:652e6fdc:79f6768e:dea2f7ea
+>>>> MD_DEVNAME=SysRAID1Array1
+>>>> MD_NAME=linux2:SysRAID1Array1
+>>>> ID_FS_UUID=x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
+>>>> ID_FS_UUID_ENC=x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
+>>>> ID_FS_VERSION=LVM2 001
+>>>> ID_FS_TYPE=LVM2_member
+>>>> ID_FS_USAGE=raid
+>>>> SYSTEMD_WANTS=mdmonitor.service
+>>>> SYSTEMD_READY=0
+>>>> UDISKS_MD_LEVEL=raid1
+>>>> UDISKS_MD_DEVICES=2
+>>>> UDISKS_MD_METADATA=1.2
+>>>> UDISKS_MD_UUID=800ee577:652e6fdc:79f6768e:dea2f7ea
+>>>> UDISKS_MD_DEVNAME=SysRAID1Array1
+>>>> UDISKS_MD_NAME=linux2:SysRAID1Array1
+>>>> UDISKS_MD_DEVICE_dev_nvme0n1p2_ROLE=0
+>>>> UDISKS_MD_DEVICE_dev_nvme0n1p2_DEV=/dev/nvme0n1p2
+>>>> UDISKS_MD_DEVICE_dev_nvme1n1p2_ROLE=1
+>>>> UDISKS_MD_DEVICE_dev_nvme1n1p2_DEV=/dev/nvme1n1p2
+>>>> DEVLINKS=/dev/md/SysRAID1Array1
+>>>> /dev/disk/by-id/md-name-linux2:SysRAID1Array1
+>>>> /dev/disk/by-id/lvm-pv-uuid-x94VGG-7hfP-rn1c-MR53-q6to-QPZR-73eAdq
+>>>> /dev/disk/by-id/md-uuid-800ee577:652e6fdc:79f6768e:dea2f7ea
+>>>> TAGS=:systemd:
+>>>> CURRENT_TAGS=:systemd:
+>>>>
+>>>> # cat /usr/lib/udev/rules.d/63-md-raid-arrays.rules
+>>>> # do not edit this file, it will be overwritten on update
+>>>>
+>>>> SUBSYSTEM!="block", GOTO="md_end"
+>>>>
+>>>> # handle md arrays
+>>>> ACTION!="add|change", GOTO="md_end"
+>>>> KERNEL!="md*", GOTO="md_end"
+>>>>
+>>>> # partitions have no md/{array_state,metadata_version}, but should not
+>>>> # for that reason be ignored.
+>>>> ENV{DEVTYPE}=="partition", GOTO="md_ignore_state"
+>>>>
+>>>> # container devices have a metadata version of e.g. 'external:ddf' and
+>>>> # never leave state 'inactive'
+>>>> ATTR{md/metadata_version}=="external:[A-Za-z]*",
+>>>> ATTR{md/array_state}=="inactive", GOTO="md_ignore_state"
+>>>> TEST!="md/array_state", ENV{SYSTEMD_READY}="0", GOTO="md_end"
+>>>> ATTR{md/array_state}=="clear*|inactive", ENV{SYSTEMD_READY}="0",
+>>>> GOTO="md_end"
+>>>> ATTR{md/sync_action}=="reshape", ENV{RESHAPE_ACTIVE}="yes"
+>>>> LABEL="md_ignore_state"
+>>>>
+>>>> IMPORT{program}="/usr/bin/mdadm --detail --no-devices --export $devnode"
+>>>> ENV{DEVTYPE}=="disk", ENV{MD_NAME}=="?*",
+>>>> SYMLINK+="disk/by-id/md-name-$env{MD_NAME}",
+>>>> OPTIONS+="string_escape=replace"
+>>>> ENV{DEVTYPE}=="disk", ENV{MD_UUID}=="?*",
+>>>> SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
+>>>> ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", SYMLINK+="md/$env{MD_DEVNAME}"
+>>>> ENV{DEVTYPE}=="partition", ENV{MD_NAME}=="?*",
+>>>> SYMLINK+="disk/by-id/md-name-$env{MD_NAME}-part%n",
+>>>> OPTIONS+="string_escape=replace"
+>>>> ENV{DEVTYPE}=="partition", ENV{MD_UUID}=="?*",
+>>>> SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}-part%n"
+>>>> ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[^0-9]",
+>>>> SYMLINK+="md/$env{MD_DEVNAME}%n"
+>>>> ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[0-9]",
+>>>> SYMLINK+="md/$env{MD_DEVNAME}p%n"
+>>>>
+>>>> IMPORT{builtin}="blkid"
+>>>> OPTIONS+="link_priority=100"
+>>>> OPTIONS+="watch"
+>>>> ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*",
+>>>> SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
+>>>> ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_PART_ENTRY_UUID}=="?*",
+>>>> SYMLINK+="disk/by-partuuid/$env{ID_PART_ENTRY_UUID}"
+>>>> ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*",
+>>>> SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
+>>>>
+>>>> ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="mdmonitor.service"
+>>>>
+>>>> # Tell systemd to run mdmon for our container, if we need it.
+>>>> ENV{MD_LEVEL}=="raid[1-9]*", ENV{MD_CONTAINER}=="?*",
+>>>> PROGRAM="/usr/bin/readlink $env{MD_CONTAINER}", ENV{MD_MON_THIS}="%c"
+>>>> ENV{MD_MON_THIS}=="?*", PROGRAM="/usr/bin/basename $env{MD_MON_THIS}",
+>>>> ENV{SYSTEMD_WANTS}+="mdmon@%c.service"
+>>>> ENV{RESHAPE_ACTIVE}=="yes", PROGRAM="/usr/bin/basename
+>>>> $env{MD_MON_THIS}", ENV{SYSTEMD_WANTS}+="mdadm-grow-continue@%c.service"
+>>>>
+>>>> LABEL="md_end"
+>>>>
+>>>>
+>> Hello Xiao,
+>>
+>> Thanks for the tips.
+>>
+>> It appears that SYSTEMD_READY == 1 when entering the add/change event,
+>> but it seems it is reset to 0 while processing the rules.
+>>
+>> Following is modified rule with debug info. Relevant journal entries:
+>>
+>> md127: '/usr/bin/echo mdadm-test-add-SYSTEMD_READY'(out)
+>> 'mdadm-test-add-SYSTEMD_READY'
+> You see the log in your test. From the following udev rule, it only can handle
+> add/change events. And SYSTEMD_READY is 1, it doesn't go to the md_test
+> label. And the log appears. So it doesn't reset to 0, right?
 >
->> The io for super write is allocated from sync_set, and the bio set is
->> mostly destroyed in md_free_disk or md_stop, I assume md_stop is more
->> relevant here as it is called by dm-raid.
-> Yes.
+> Regards
+> Xiao
 >
->> So I guess the problem is, raid_dtr is called while in flight (or
->> expired) bio still not completed,
-> When device mapper calls raid_dtr, there are no external bios in progress
-> (this is guaranteed by dm design). However, the bio that writes the
-> superblock is still in progress and it races with the md_stop. I am not an
-> expert in md, so I don't know if this is OK or not.
+>> ...
+>>
+>> md127: '/usr/bin/udevadm info --query=property --name=/dev/md127'(out)
+>> 'SYSTEMD_READY=0'
+>>
+>>
+>> $ cat 63-md-raid-arrays.rules
+>>
+>> # do not edit this file, it will be overwritten on update
+>>
+>> SUBSYSTEM!="block", GOTO="md_end"
+>>
+>> # handle md arrays
+>> ACTION!="add|change", GOTO="md_end"
+>> KERNEL!="md*", GOTO="md_end"
+>>
+>> ENV{SYSTEMD_READY}=="0", GOTO="md_test"
+>> RUN{program}+="/usr/bin/echo mdadm-test-add-SYSTEMD_READY"
+>> LABEL="md_test"
+>>
+>>
+>> # partitions have no md/{array_state,metadata_version}, but should not
+>> # for that reason be ignored.
+>> ENV{DEVTYPE}=="partition", GOTO="md_ignore_state"
+>>
+>> # container devices have a metadata version of e.g. 'external:ddf' and
+>> # never leave state 'inactive'
+>> ATTR{md/metadata_version}=="external:[A-Za-z]*",
+>> ATTR{md/array_state}=="inactive", GOTO="md_ignore_state"
+>> TEST!="md/array_state", ENV{SYSTEMD_READY}="0", GOTO="md_end"
+>> ATTR{md/array_state}=="clear*|inactive", ENV{SYSTEMD_READY}="0",
+>> GOTO="md_end"
+>> ATTR{md/sync_action}=="reshape", ENV{RESHAPE_ACTIVE}="yes"
+>> LABEL="md_ignore_state"
+>>
+>> IMPORT{program}="/usr/bin/mdadm --detail --no-devices --export $devnode"
+>> ENV{DEVTYPE}=="disk", ENV{MD_NAME}=="?*",
+>> SYMLINK+="disk/by-id/md-name-$env{MD_NAME}",
+>> OPTIONS+="string_escape=replace"
+>> ENV{DEVTYPE}=="disk", ENV{MD_UUID}=="?*",
+>> SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
+>> ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", TAG+="systemd",
+>> SYMLINK+="md/$env{MD_DEVNAME}"
+>> ENV{DEVTYPE}=="partition", ENV{MD_NAME}=="?*",
+>> SYMLINK+="disk/by-id/md-name-$env{MD_NAME}-part%n",
+>> OPTIONS+="string_escape=replace"
+>> ENV{DEVTYPE}=="partition", ENV{MD_UUID}=="?*",
+>> SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}-part%n"
+>> ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[^0-9]",
+>> SYMLINK+="md/$env{MD_DEVNAME}%n"
+>> ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[0-9]",
+>> SYMLINK+="md/$env{MD_DEVNAME}p%n"
+>>
+>>
+>> IMPORT{builtin}="blkid"
+>> OPTIONS+="link_priority=100"
+>> OPTIONS+="watch"
+>> ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*",
+>> SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
+>> ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_PART_ENTRY_UUID}=="?*",
+>> SYMLINK+="disk/by-partuuid/$env{ID_PART_ENTRY_UUID}"
+>> ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*",
+>> SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
+>>
+>> ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="mdmonitor.service"
+>> ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="hello.service"
+>>
+>> #RUN{program}+="/usr/bin/echo SYSTEMD_READY = $env(SYSTEMD_READY)"
+>> RUN{program}+="/usr/bin/udevadm info --query=property --name=/dev/md127"
+>>
+>> # Tell systemd to run mdmon for our container, if we need it.
+>> ENV{MD_LEVEL}=="raid[1-9]*", ENV{MD_CONTAINER}=="?*",
+>> PROGRAM="/usr/bin/readlink $env{MD_CONTAINER}", ENV{MD_MON_THIS}="%c"
+>> ENV{MD_MON_THIS}=="?*", PROGRAM="/usr/bin/basename $env{MD_MON_THIS}",
+>> ENV{SYSTEMD_WANTS}+="mdmon@%c.service"
+>> ENV{RESHAPE_ACTIVE}=="yes", PROGRAM="/usr/bin/basename
+>> $env{MD_MON_THIS}", ENV{SYSTEMD_WANTS}+="mdadm-grow-continue@%c.service"
+>>
+>> LABEL="md_end"
+>>
+>>
+>>
+Please see my second message, where I think this is because of a 
+conflicting rule in 69-dm-lvm.rules:49 which later resets it:
 
-For md raid, I think the same situation can't happen given the bioset 
-can only
-be destroyed from disk_release, and block layer guarantees all bios 
-happen to
-array should be finished before release disk.
+ENV{LVM_MD_PV_ACTIVATED}!="1", ENV{SYSTEMD_READY}="0"
 
-Also I believe dm can guarantee all bio happened to dm should be 
-finished before
-dtr, but the bio in the call trace was issued to md layer instead of 
-inside dm, not
-sure how dm handle this case correctly.
-
-And super write bio is kind of special, it happens mostly when the 
-configuration
-of array is changed, e.g. size,� disk member, but seems mddev_detach is not
-capable to guarantee the completion of super write bio, which means when the
-path (md_stop -> __md_stop) destroys bioset, the super write bio could 
-still exist.
-Maybe it is necessary to check pending_writes for super write io in md_stop
-before bioset_exit.
-
-> maybe lvm issues cmd to call dm_table_destroy and dm was in the progress
-> of suspend or destroy. Just my $0.02.
->
->>> When I fix super_written, there are no longer any crashes. I'm posting a
->>> patch in the next email.
->> IIRC, the code existed for a long time, I'd suggest try with mdadm test
->> suite first with the change. Cc Neil too.
-> I get an error when attempting to run the testsuite:
-> [debian:/usr/src/git/mdadm]# ./test
-> Testing on linux-6.1.0-rc3 kernel
-> /usr/src/git/mdadm/tests/00createnames... FAILED - see
-> /var/tmp/00createnames.log and /var/tmp/fail00createnames.log for details
->
-> [debian:/usr/src/git/mdadm]# cat /var/tmp/00createnames.log
-> + . /usr/src/git/mdadm/tests/00createnames
-> ++ set -x -e
-> ++ _create /dev/md/name
-> ++ local DEVNAME=/dev/md/name
-> ++ local NAME=
-> ++ [[ -z '' ]]
-> ++ mdadm -CR /dev/md/name -l0 -n 1 /dev/loop0 --force
-> ++ rm -f /var/tmp/stderr
-> ++ case $* in
-> ++ case $* in
-> ++ for args in $*
-> ++ [[ -CR =~ /dev/ ]]
-> ++ for args in $*
-> ++ [[ /dev/md/name =~ /dev/ ]]
-> ++ [[ /dev/md/name =~ md ]]
-> ++ for args in $*
-> ++ [[ -l0 =~ /dev/ ]]
-> ++ for args in $*
-> ++ [[ -n =~ /dev/ ]]
-> ++ for args in $*
-> ++ [[ 1 =~ /dev/ ]]
-> ++ for args in $*
-> ++ [[ /dev/loop0 =~ /dev/ ]]
-> ++ [[ /dev/loop0 =~ md ]]
-> ++ /usr/src/git/mdadm/mdadm --zero /dev/loop0
-> mdadm: Unrecognised md component device - /dev/loop0
-> ++ for args in $*
-> ++ [[ --force =~ /dev/ ]]
-> ++ /usr/src/git/mdadm/mdadm --quiet -CR /dev/md/name -l0 -n 1 /dev/loop0
-> --force --auto=yes
-> ++ rv=1
-> ++ case $* in
-> ++ cat /var/tmp/stderr
-> mdadm: unexpected failure opening /dev/md127
-> ++ return 1
-> ++ [[ 1 != \0 ]]
-> ++ echo 'Cannot create device.'
-> Cannot create device.
-> ++ exit 1
-> mdadm: unexpected failure opening /dev/md127
->
-> [debian:/usr/src/git/mdadm]# cat /var/tmp/fail00createnames.log
-> ## debian.vm: saving dmesg.
-> ## debian.vm: saving proc mdstat.
-> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-> unused devices: <none>
-> ## debian.vm: no array assembled!
-> ## debian.vm: saving dmesg.
-> ## debian.vm: saving proc mdstat.
-> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-> unused devices: <none>
-> ## debian.vm: no array assembled!
-> ## debian.vm: saving dmesg.
-> ## debian.vm: saving proc mdstat.
-> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-> unused devices: <none>
-> ## debian.vm: no array assembled!
-> ## debian.vm: saving dmesg.
-> ## debian.vm: saving proc mdstat.
-> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-> unused devices: <none>
-> ## debian.vm: no array assembled!
-
-I guess the problem is that loop module was not loaded, but I didn't
-have experience with debian.
-
-Thanks,
-Guoqing
