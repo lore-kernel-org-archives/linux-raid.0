@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE980C4332F
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Nov 2022 23:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDEC9C433FE
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Nov 2022 23:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233023AbiKPXuV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 16 Nov 2022 18:50:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41856 "EHLO
+        id S238722AbiKPXuX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Nov 2022 18:50:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234881AbiKPXuQ (ORCPT
+        with ESMTP id S234704AbiKPXuQ (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Nov 2022 18:50:16 -0500
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ADFD31229
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D17831FB9
         for <linux-raid@vger.kernel.org>; Wed, 16 Nov 2022 15:50:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=fsT4GyZraUULLUCSqNPFpxDD29UsbWsjXCW1JwNTiNU=; b=VVXkauRoa9FKUq7qtVH3i5VYNL
-        3O0ONQ6ISHg5I37Sk82Lewdayhzk/ze82K70sNa1c659LWNMRaFIqCy5xxUTtVij7vhqELrQKvW1a
-        ybxyOBHdt5FNzIxGP8Ldk1bgKz/xhyvfLYEobVEUw8WIveEwIYAAV7MRier8jwMwuiEToESSa5wgg
-        EgnP0CNAiYx7CqbT5OKPh5f+/l1wIdx4exgpQSxU9HPGM5+RPNDa62l4bQocVMEvlgEXCnvlBXXjp
-        lIEHcQga6m9i3I6D5tcfHgN2A59Sfe0HwK+/X76k5RYpQBhR2kspKKIpsF+7TvJ7WQjW1ELFB3r1z
-        w1m7Pw0Q==;
+        bh=Vs88+o17X8gJhTh4HNSRTOQqoUl4H5167igPUxm1Fns=; b=t4wpjJk1/fMb3BwHXqdRzJE80f
+        6E4upnBwOR0lwyyFgAHyvHltjs7vitjsmR1ZJXVmU9cwsV4yCQRG5UpdgpSN4JgKP6yb47GF+AwJl
+        vbWC0UR5nHWdUn7ICQJRlkSJV+7i63Hh0lAQPQLGCuyp9TNqFsd6kp7FkG7x/c0pkv1fMYFg82O74
+        0JCs0+QvZh2S5aKA2AYB61UrxNZ3LFqQfsUWD3z4BNVXR3XY92ju96gY9NCzkkRPhxA7UhHQopLjR
+        fezzrlIMyIEG0p9CZn0qSpCBbyUTKy8dhIR81wiRaAUmrfLgF55AdUjDDvFjt5b7VtCE4Hy6KVxeD
+        MNQubGjg==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ovSAX-0043zO-Hp; Wed, 16 Nov 2022 16:50:14 -0700
+        id 1ovSAW-0043zW-Rz; Wed, 16 Nov 2022 16:50:14 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ovSAX-000KnU-0I; Wed, 16 Nov 2022 16:50:13 -0700
+        id 1ovSAW-000KnO-OT; Wed, 16 Nov 2022 16:50:12 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>
 Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, Xiao Ni <xni@redhat.com>,
@@ -43,8 +43,8 @@ Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, Xiao Ni <xni@redhat.com>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>,
         Kinga Tanska <kinga.tanska@linux.intel.com>
-Date:   Wed, 16 Nov 2022 16:50:08 -0700
-Message-Id: <20221116235009.79875-7-logang@deltatee.com>
+Date:   Wed, 16 Nov 2022 16:50:06 -0700
+Message-Id: <20221116235009.79875-5-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20221116235009.79875-1-logang@deltatee.com>
 References: <20221116235009.79875-1-logang@deltatee.com>
@@ -53,44 +53,72 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-raid@vger.kernel.org, jes@trained-monkey.org, guoqing.jiang@linux.dev, xni@redhat.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, mariusz.tkaczyk@linux.intel.com, kinga.tanska@linux.intel.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH mdadm v5 6/7] tests/00raid5-zero: Introduce test to exercise --write-zeros.
+Subject: [PATCH mdadm v5 4/7] mdadm: Introduce pr_info()
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Attempt to create a raid5 array with --write-zeros. If it is successful
-check the array to ensure it is in sync.
+Feedback was given to avoid informational pr_err() calls that print
+to stderr, even though that's done all through out the code.
 
-If it is unsuccessful and an unsupported error is printed, skip the
-test.
+Using printf() directly doesn't maintain the same format (an "mdadm"
+prefix on every line.
+
+So introduce pr_info() which prints to stdout with the same format
+and use it for a couple informational pr_err() calls in Create().
+
+Future work can make this call used in more cases.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Acked-by: Kinga Tanska <kinga.tanska@linux.intel.com>
 ---
- tests/00raid5-zero | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
- create mode 100644 tests/00raid5-zero
+ Create.c | 7 ++++---
+ mdadm.h  | 2 ++
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/tests/00raid5-zero b/tests/00raid5-zero
-new file mode 100644
-index 000000000000..7d0f05a12539
---- /dev/null
-+++ b/tests/00raid5-zero
-@@ -0,0 +1,12 @@
+diff --git a/Create.c b/Create.c
+index 6a0446644e04..4acda30c5256 100644
+--- a/Create.c
++++ b/Create.c
+@@ -984,11 +984,12 @@ int Create(struct supertype *st, char *mddev,
+ 
+ 			mdi = sysfs_read(-1, devnm, GET_VERSION);
+ 
+-			pr_err("Creating array inside %s container %s\n",
++			pr_info("Creating array inside %s container %s\n",
+ 				mdi?mdi->text_version:"managed", devnm);
+ 			sysfs_free(mdi);
+ 		} else
+-			pr_err("Defaulting to version %s metadata\n", info.text_version);
++			pr_info("Defaulting to version %s metadata\n",
++				info.text_version);
+ 	}
+ 
+ 	map_update(&map, fd2devnm(mdfd), info.text_version,
+@@ -1145,7 +1146,7 @@ int Create(struct supertype *st, char *mddev,
+ 			ioctl(mdfd, RESTART_ARRAY_RW, NULL);
+ 		}
+ 		if (c->verbose >= 0)
+-			pr_err("array %s started.\n", mddev);
++			pr_info("array %s started.\n", mddev);
+ 		if (st->ss->external && st->container_devnm[0]) {
+ 			if (need_mdmon)
+ 				start_mdmon(st->container_devnm);
+diff --git a/mdadm.h b/mdadm.h
+index 3673494e560b..18c24915e94c 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1798,6 +1798,8 @@ static inline int xasprintf(char **strp, const char *fmt, ...) {
+ #endif
+ #define cont_err(fmt ...) fprintf(stderr, "       " fmt)
+ 
++#define pr_info(fmt, args...) printf("%s: "fmt, Name, ##args)
 +
-+if mdadm -CfR $md0 -l 5 -n3 $dev0 $dev1 $dev2 --write-zeroes ; then
-+  check nosync
-+  echo check > /sys/block/md0/md/sync_action;
-+  check wait
-+elif grep "zeroing [^ ]* failed: Operation not supported" \
-+     $targetdir/stderr; then
-+  echo "write-zeros not supported, skipping"
-+else
-+  echo >&2 "ERROR: mdadm return failure without not supported message"
-+  exit 1
-+fi
+ void *xmalloc(size_t len);
+ void *xrealloc(void *ptr, size_t len);
+ void *xcalloc(size_t num, size_t size);
 -- 
 2.30.2
 
