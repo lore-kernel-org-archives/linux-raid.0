@@ -2,168 +2,113 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28557C4332F
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Nov 2022 07:44:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E87AC4332F
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Nov 2022 17:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232406AbiKOHoE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Nov 2022 02:44:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55270 "EHLO
+        id S230343AbiKPRLc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Nov 2022 12:11:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231908AbiKOHoD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Nov 2022 02:44:03 -0500
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F3601C92F
-        for <linux-raid@vger.kernel.org>; Mon, 14 Nov 2022 23:44:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668498242; x=1700034242;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=j/B98LwtyISS2z4Frzkh3MkvOvXTkV9akHGsTmRC+rw=;
-  b=UH2zdjRIYuwgSnabL0tvvk1fqIAzZBaDpWoUjuGtiFcv7HQXMsp2xpvH
-   31/Y81bbOV+9lOPb6A01C6b4cenwkPnNU7U67FIMaMjzIzZPBJSSFJXFi
-   Zigi+Vae7BP9eGbzqPr6TU4yAI5GUhxumk/jEFdXCG9BE3OGE/5c+X5eH
-   54hSIP779cM9IOZ6vm3SwSEU870Re8wAUg2JJYBnWA+pEZNTMp7xWOoRZ
-   3j0/iEhCFFmxgwh9cmccVRHz44JUztIcqR8u3jATaGYTFkuMcRR/ukT9g
-   kRXfYed0+kyI5Nbjgd4aPt8bzMmB+lYzmyg1KBHCQzTQpoElfRUS+315y
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10531"; a="299712119"
-X-IronPort-AV: E=Sophos;i="5.96,165,1665471600"; 
-   d="scan'208";a="299712119"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2022 23:44:01 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10531"; a="638849023"
-X-IronPort-AV: E=Sophos;i="5.96,165,1665471600"; 
-   d="scan'208";a="638849023"
-Received: from lkp-server01.sh.intel.com (HELO ebd99836cbe0) ([10.239.97.150])
-  by orsmga002.jf.intel.com with ESMTP; 14 Nov 2022 23:44:00 -0800
-Received: from kbuild by ebd99836cbe0 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1ouqbv-0001B8-2O;
-        Tue, 15 Nov 2022 07:43:59 +0000
-Date:   Tue, 15 Nov 2022 15:43:07 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- b611ad14006e5be2170d9e8e611bf49dff288911
-Message-ID: <6373430b.8VO3mBIC8FbdZhzZ%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S233866AbiKPRLb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Nov 2022 12:11:31 -0500
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4454B1B799
+        for <linux-raid@vger.kernel.org>; Wed, 16 Nov 2022 09:11:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=haaCO7u2ZIBPd3iQXY6lIJf1r+Csco2Tj9bM6hteOOE=; b=A/owxefMmYlrSEJDrai+YTJnE3
+        gs4MCI54PpuYkkVFmV/2SzMQD0KqEbjbx3cskKuBbMgGJ0SphE0Y2rBVWmipYzze9VA0XCFQQsNnQ
+        5xnleNiML9zqXTa9koxC2Wz9uoYuHUjrMSHhe6aOqpZGMgK3B47izGP94FKVfs8zHsIGq9kwuxrNH
+        Wj3islVZbmijTobofGHWlkqFkh3+/i3oWDDkZ/sr89zDQkyVTx5l2xt65N3E2y32ACvhfFem6XDlr
+        JhOn2Gek8A/ffPCPuBn/4ypE8+egmEtdKY7WOMtf0tRWC7TdWj2ccEX0HUYsnWHqoRv9j2ZXApViq
+        xwtuhTZg==;
+Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([70.73.163.230] helo=[192.168.11.155])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1ovLwW-003zAv-F4; Wed, 16 Nov 2022 10:11:22 -0700
+Message-ID: <716b86e4-e7eb-8d07-c1cb-962c10537ea3@deltatee.com>
+Date:   Wed, 16 Nov 2022 10:11:17 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Content-Language: en-US
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org,
+        Jes Sorensen <jes@trained-monkey.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Coly Li <colyli@suse.de>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Jonmichael Hands <jm@chia.net>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>
+References: <20221007201037.20263-1-logang@deltatee.com>
+ <CALTww28HQUPbB647oP9WKvkLX=9PqZv+9am-884zZVM923H-KA@mail.gmail.com>
+ <8ee5368c-1808-d2bc-9ad2-2f8332d2704e@deltatee.com>
+ <yq15ygo4jkv.fsf@ca-mkp.ca.oracle.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <yq15ygo4jkv.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 70.73.163.230
+X-SA-Exim-Rcpt-To: martin.petersen@oracle.com, xni@redhat.com, linux-raid@vger.kernel.org, jes@trained-monkey.org, guoqing.jiang@linux.dev, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH mdadm v4 0/7] Write Zeroes option for Creating Arrays
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: b611ad14006e5be2170d9e8e611bf49dff288911  md/raid1: stop mdx_raid1 thread when raid1 array run failed
+Sorry a little late responding to this.
 
-elapsed time: 722m
+On 2022-10-12 19:33, Martin K. Petersen wrote:
+> 
+> Logan,
+> 
+>> 2) We could split up the fallocate call into multiple calls to zero
+>> the entire disk. This would allow a quicker ctrl-c to occur, however
+>> it's not clear what the best size would be to split it into. Even
+>> zeroing 1GB can take a few seconds,
+> 
+> FWIW, we default to 32MB per request in SCSI unless the device
+> explicitly advertises wanting something larger.
+> 
+>> (with NVMe, discard only requires a single command to handle the
+>> entire disk
+> 
+> In NVMe there's a limit of 64K blocks per range and 256 ranges per
+> request. So 8GB or 64GB per request for discard depending on the block
+> size. So presumably it will take several operations to deallocate an
+> entire drive.
+> 
+>> where as write-zeroes requires a minimum of one command per 2MB of
+>> data to zero).
+> 
+> 32MB for 512-byte blocks and 256MB for 4096-byte blocks. Which matches
+> how it currently works for SCSI devices.
 
-configs tested: 92
-configs skipped: 3
+The 2MB I was referring to was the typical maximum we see on real
+devices. We tested a number of NVMe drives from a number of different
+vendors and found most to be a maximum of 2MB, some devices had 512KB.
+Which is unfortunate.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+>> I was hoping write-zeroes could be made faster in the future, at least
+>> for NVMe.
+> 
+> Deallocate had a bit of a head start and vendors are still catching up
+> in the zeroing department. Some drives do support using Deallocate for
+> zeroing and we quirk those in the driver so they should perform OK with
+> your change.
 
-gcc tested configs:
-arc                                 defconfig
-alpha                               defconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-s390                             allmodconfig
-powerpc                           allnoconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-s390                             allyesconfig
-x86_64                          rhel-8.3-func
-x86_64                    rhel-8.3-kselftests
-x86_64                               rhel-8.3
-x86_64                           rhel-8.3-syz
-x86_64                         rhel-8.3-kunit
-x86_64                           rhel-8.3-kvm
-x86_64                              defconfig
-arc                  randconfig-r043-20221114
-x86_64               randconfig-a002-20221114
-i386                                defconfig
-x86_64               randconfig-a001-20221114
-x86_64               randconfig-a003-20221114
-x86_64                           allyesconfig
-ia64                             allmodconfig
-alpha                            allyesconfig
-i386                             allyesconfig
-i386                 randconfig-a001-20221114
-arc                              allyesconfig
-i386                 randconfig-a004-20221114
-i386                 randconfig-a002-20221114
-i386                 randconfig-a005-20221114
-i386                 randconfig-a006-20221114
-i386                 randconfig-a003-20221114
-m68k                             allmodconfig
-x86_64                            allnoconfig
-s390                                defconfig
-sh                               allmodconfig
-parisc                generic-32bit_defconfig
-sh                     magicpanelr2_defconfig
-mips                           gcw0_defconfig
-xtensa                         virt_defconfig
-sh                            shmin_defconfig
-xtensa                              defconfig
-mips                        vocore2_defconfig
-m68k                             allyesconfig
-arm                           sunxi_defconfig
-arm                               allnoconfig
-loongarch                 loongson3_defconfig
-arc                         haps_hs_defconfig
-arm64                            allyesconfig
-arm                                 defconfig
-arm                              allyesconfig
-mips                  decstation_64_defconfig
-powerpc                    sam440ep_defconfig
-sh                            hp6xx_defconfig
-sparc64                          alldefconfig
-powerpc                     stx_gp3_defconfig
-sh                           sh2007_defconfig
-loongarch                        allmodconfig
-i386                          randconfig-a012
-i386                          randconfig-a014
-i386                          randconfig-a016
-sh                               j2_defconfig
-arm                           stm32_defconfig
-parisc                           alldefconfig
-arm                         assabet_defconfig
-arc                               allnoconfig
-x86_64               randconfig-a005-20221114
-x86_64               randconfig-a004-20221114
-x86_64               randconfig-a006-20221114
-i386                 randconfig-c001-20221114
+Yeah, my hope is that larger zeroing requests can be supported which
+will be handled performantly by deallocating the device. So I don't want
+mdadm to slow this down by splitting the request to the kernel into a
+number of smaller requests. But this seems to be the only way forward
+because the request is uninterruptible and we don't want to hang the
+user for several minutes.
 
-clang tested configs:
-x86_64               randconfig-a014-20221114
-x86_64               randconfig-a012-20221114
-hexagon              randconfig-r045-20221114
-x86_64               randconfig-a016-20221114
-x86_64               randconfig-a015-20221114
-hexagon              randconfig-r041-20221114
-x86_64               randconfig-a013-20221114
-x86_64               randconfig-a011-20221114
-s390                 randconfig-r044-20221114
-riscv                randconfig-r042-20221114
-i386                 randconfig-a011-20221114
-i386                 randconfig-a014-20221114
-i386                 randconfig-a013-20221114
-i386                 randconfig-a012-20221114
-i386                 randconfig-a015-20221114
-arm                        multi_v5_defconfig
-arm                       aspeed_g4_defconfig
-powerpc                     kmeter1_defconfig
-hexagon              randconfig-r041-20221115
-hexagon              randconfig-r045-20221115
-i386                 randconfig-a016-20221114
-x86_64               randconfig-k001-20221114
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Logan
