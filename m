@@ -2,395 +2,333 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E076C433FE
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Nov 2022 23:50:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D26BEC433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Nov 2022 02:04:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238854AbiKPXu1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 16 Nov 2022 18:50:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41858 "EHLO
+        id S234166AbiKQCEI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Nov 2022 21:04:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237359AbiKPXuR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Nov 2022 18:50:17 -0500
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60CC324F16
-        for <linux-raid@vger.kernel.org>; Wed, 16 Nov 2022 15:50:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=0qvuAlawolcCLxr5rOJ2frNjI+CYZR0rofieicqHXsE=; b=WyyrIyCe3dksDPNqbbCeGGYU7G
-        iSLlae4CUAyQH3k3VAX85UKINht2ud8CfNNlUD7o4fwAZf9Vlx/J+yfTbkQIReVtG6SK6tVkgRMKy
-        fqEW6SsOAzV2Ir4cBWnPCXtDz3z4BUltJUE3dwYGa69sFp4CTLs0QuqXcWU8pBjkzgosxGb+qbarv
-        FU5qbPGRZM/VvnOLv0tThEbYKIcnzWIQEJx3TzEuuCO0Spe+itTNNCD5TvXadK14TA+MtJ4sUGuHU
-        Sk8G2roS9kttu4PzBaRxAGmcTqpWjYYZZrRAXqFBX9IaH1AxMKqdHn38Mkwz/vs7WpgvI69xlR5Uo
-        Q74wzNXw==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1ovSAY-0043zQ-6M; Wed, 16 Nov 2022 16:50:15 -0700
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1ovSAW-000KnR-SW; Wed, 16 Nov 2022 16:50:12 -0700
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, Xiao Ni <xni@redhat.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Kinga Tanska <kinga.tanska@linux.intel.com>
-Date:   Wed, 16 Nov 2022 16:50:07 -0700
-Message-Id: <20221116235009.79875-6-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20221116235009.79875-1-logang@deltatee.com>
-References: <20221116235009.79875-1-logang@deltatee.com>
+        with ESMTP id S229939AbiKQCEF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Nov 2022 21:04:05 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 481B968C56
+        for <linux-raid@vger.kernel.org>; Wed, 16 Nov 2022 18:03:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1668650587;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=gPXkUvMETer0t8fF4J5e6kLMYI2ixOxHy4nNLDlDFLQ=;
+        b=T3UWftOjw/BqSH+fAIPI5QQ7pNsxTfS5pjb1A9yTcDvdFJ2rImeZ9D8FffZ2oBgbiUXK/D
+        HNimqSiKYIQB4yI2gPFetSizVweug7FG487f9yXRMckYeHATPfsZ3qhRSVfwPG3yKP3qrZ
+        hRb7BJARaS3Zbv5oHpDPcsnkjn/vYTE=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-551-a1T1PwP0Pd6TH3dPcj130A-1; Wed, 16 Nov 2022 21:03:06 -0500
+X-MC-Unique: a1T1PwP0Pd6TH3dPcj130A-1
+Received: by mail-pf1-f198.google.com with SMTP id u18-20020a627912000000b0056d93d8b8bdso259397pfc.16
+        for <linux-raid@vger.kernel.org>; Wed, 16 Nov 2022 18:03:05 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=gPXkUvMETer0t8fF4J5e6kLMYI2ixOxHy4nNLDlDFLQ=;
+        b=ba967p3MbuZbUU7lNysI+I4F5G0vwM4I6xYQyYfkdOBHuFyEX4ZMYNHgCSNZuayCh2
+         C9ILKPb0JaDkhrJvxbcUec8aqHQ6xBsQGrIxe36JN/eHdYEeL8VYDgEXSrQpEddopYQE
+         vx3u6fpRwOtuPpWC0ziLlMDZgAvojx3NWGupoyROwE+xfvgAkNAlTrS3TQNTQG0pBFMN
+         Vq3GEa1zKlbovuCjkJPsxkn5toX4x7r06cntT1FlCyQR4nx8wEXKiDB7OElxjimdxfPt
+         KsL6ohw3uHL4V0j2GPrUC90Gj9vbwrZT5ASmFXqX5knK9aIYwflLT0CHEAUF8UTOTBBs
+         v0dA==
+X-Gm-Message-State: ANoB5pmoGdwe0+gfTp0YhClOez+TK/sxXMZZd91/lO52fQm6cyH9QMDz
+        BMAS9WynPqdioQoN1mQJtdpAtzLkXtv19xL3uG3bdde3TbODiZo85UsxnAYQh/s9nDsEvq5fanu
+        Wn0rdbnZH7EMAJeW2uvs6K4/mAKzDP2KQc03YZg==
+X-Received: by 2002:a17:90b:2309:b0:214:149b:cedd with SMTP id mt9-20020a17090b230900b00214149bceddmr555210pjb.143.1668650584056;
+        Wed, 16 Nov 2022 18:03:04 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf6FjPTFFXjHSfKur/um7jGT06FAdhp/gNJAbi22xB2s52FPACgXyWmVQVR0Gtfa09z3IWwXida3L6JpMZ2uBkk=
+X-Received: by 2002:a17:90b:2309:b0:214:149b:cedd with SMTP id
+ mt9-20020a17090b230900b00214149bceddmr555178pjb.143.1668650583650; Wed, 16
+ Nov 2022 18:03:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-raid@vger.kernel.org, jes@trained-monkey.org, guoqing.jiang@linux.dev, xni@redhat.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, mariusz.tkaczyk@linux.intel.com, kinga.tanska@linux.intel.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH mdadm v5 5/7] mdadm: Add --write-zeros option for Create
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+References: <20221024064836.12731-1-xni@redhat.com> <CAPhsuW7-VaWT1SkuT-Tj_2jGgjso3NJ2hN6v8xUgdCHq3NON_g@mail.gmail.com>
+ <CALTww28dJes9MSw5S0bS+zqa6vLGsw1AMeqi5UKHwOkbgKMhQw@mail.gmail.com>
+In-Reply-To: <CALTww28dJes9MSw5S0bS+zqa6vLGsw1AMeqi5UKHwOkbgKMhQw@mail.gmail.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Thu, 17 Nov 2022 10:02:52 +0800
+Message-ID: <CALTww2_=vEpbCWHrVchYnoS=ohZUsVUr+6F=TERCQgBKNa=XYg@mail.gmail.com>
+Subject: Re: [PATCH V2 1/1] Add mddev->io_acct_cnt for raid0_quiesce
+To:     Song Liu <song@kernel.org>
+Cc:     guoqing.jiang@linux.dev, linux-raid@vger.kernel.org,
+        ffan@redhat.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Add the --write-zeros option for Create which will send a write zeros
-request to all the disks before assembling the array. After zeroing
-the array, the disks will be in a known clean state and the initial
-sync may be skipped.
+Hi Song
 
-Writing zeroes is best used when there is a hardware offload method
-to zero the data. But even still, zeroing can take several minutes on
-a large device. Because of this, all disks are zeroed in parallel using
-their own forked process and a message is printed to the user. The main
-process will proceed only after all the zeroing processes have completed
-successfully.
+The performance is good.  Please check the result below.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Acked-by: Kinga Tanska <kinga.tanska@linux.intel.com>
----
- Create.c | 173 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- ReadMe.c |   2 +
- mdadm.c  |   9 +++
- mdadm.h  |   5 ++
- 4 files changed, 187 insertions(+), 2 deletions(-)
+And for the patch itself, do you think we should add a smp_mb
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4d0139cae8b5..3696e3825e27 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8650,9 +8650,11 @@ static void md_end_io_acct(struct bio *bio)
+        bio_put(bio);
+        bio_endio(orig_bio);
 
-diff --git a/Create.c b/Create.c
-index 4acda30c5256..11636efbb12b 100644
---- a/Create.c
-+++ b/Create.c
-@@ -26,6 +26,10 @@
- #include	"md_u.h"
- #include	"md_p.h"
- #include	<ctype.h>
-+#include	<fcntl.h>
-+#include	<signal.h>
-+#include	<sys/signalfd.h>
-+#include	<sys/wait.h>
- 
- static int round_size_and_verify(unsigned long long *size, int chunk)
- {
-@@ -91,9 +95,146 @@ int default_layout(struct supertype *st, int level, int verbose)
- 	return layout;
+-       if (atomic_dec_and_test(&mddev->io_acct_cnt))
++       if (atomic_dec_and_test(&mddev->io_acct_cnt)) {
++               smp_mb();
+                if (unlikely(test_bit(MD_QUIESCE, &mddev->flags)))
+                        wake_up(&mddev->wait_io_acct);
++       }
  }
- 
-+static pid_t write_zeroes_fork(int fd, struct shape *s, struct supertype *st,
-+			       struct mddev_dev *dv)
-+
-+{
-+	const unsigned long long req_size = 1 << 30;
-+	unsigned long long offset_bytes, size_bytes, sz;
-+	sigset_t sigset;
-+	int ret = 0;
-+	pid_t pid;
-+
-+	size_bytes = KIB_TO_BYTES(s->size);
-+
-+	/*
-+	 * If size_bytes is zero, this is a zoned raid array where
-+	 * each disk is of a different size and uses its full
-+	 * disk. Thus zero the entire disk.
-+	 */
-+	if (!size_bytes && !get_dev_size(fd, dv->devname, &size_bytes))
-+		return -1;
-+
-+	if (dv->data_offset != INVALID_SECTORS)
-+		offset_bytes = SEC_TO_BYTES(dv->data_offset);
-+	else
-+		offset_bytes = SEC_TO_BYTES(st->data_offset);
-+
-+	pr_info("zeroing data from %lld to %lld on: %s\n",
-+		offset_bytes, size_bytes, dv->devname);
-+
-+	pid = fork();
-+	if (pid < 0) {
-+		pr_err("Could not fork to zero disks: %m\n");
-+		return pid;
-+	} else if (pid != 0) {
-+		return pid;
-+	}
-+
-+	sigemptyset(&sigset);
-+	sigaddset(&sigset, SIGINT);
-+	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
-+
-+	while (size_bytes) {
-+		/*
-+		 * Split requests to the kernel into 1GB chunks seeing the
-+		 * fallocate() call is not interruptible and blocking a
-+		 * ctrl-c for several minutes is not desirable.
-+		 *
-+		 * 1GB is chosen as a compromise: the user may still have
-+		 * to wait several seconds if they ctrl-c on devices that
-+		 * zero slowly, but will reduce the number of requests
-+		 * required and thus the overhead on devices that perform
-+		 * better.
-+		 */
-+		sz = size_bytes;
-+		if (sz >= req_size)
-+			sz = req_size;
-+
-+		if (fallocate(fd, FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE,
-+			      offset_bytes, sz)) {
-+			pr_err("zeroing %s failed: %m\n", dv->devname);
-+			ret = 1;
-+			break;
-+		}
-+
-+		offset_bytes += sz;
-+		size_bytes -= sz;
-+	}
-+
-+	exit(ret);
-+}
-+
-+static int wait_for_zero_forks(int *zero_pids, int count)
-+{
-+	int wstatus, ret = 0, i, sfd, wait_count = 0;
-+	struct signalfd_siginfo fdsi;
-+	bool interrupted;
-+	sigset_t sigset;
-+	ssize_t s;
-+
-+	for (i = 0; i < count; i++)
-+		if (zero_pids[i])
-+			wait_count++;
-+	if (!wait_count)
-+		return 0;
-+
-+	sigemptyset(&sigset);
-+	sigaddset(&sigset, SIGINT);
-+	sigaddset(&sigset, SIGCHLD);
-+	sigprocmask(SIG_BLOCK, &sigset, NULL);
-+
-+	sfd = signalfd(-1, &sigset, 0);
-+	if (sfd < 0) {
-+		pr_err("Unable to create signalfd: %m");
-+		return 1;
-+	}
-+
-+	while (1) {
-+		s = read(sfd, &fdsi, sizeof(fdsi));
-+		if (s != sizeof(fdsi)) {
-+			pr_err("Invalid signalfd read: %m");
-+			close(sfd);
-+			return 1;
-+		}
-+
-+		if (fdsi.ssi_signo == SIGINT) {
-+			printf("\n");
-+			pr_info("Interrupting zeroing processes, please wait...\n");
-+			interrupted = true;
-+		} else if (fdsi.ssi_signo == SIGCHLD) {
-+			if (!--wait_count)
-+				break;
-+		}
-+	}
-+
-+	close(sfd);
-+
-+	for (i = 0; i < count; i++) {
-+		if (!zero_pids[i])
-+			continue;
-+
-+		waitpid(zero_pids[i], &wstatus, 0);
-+		zero_pids[i] = 0;
-+		if (!WIFEXITED(wstatus) || WEXITSTATUS(wstatus))
-+			ret = 1;
-+	}
-+
-+	if (interrupted)
-+		return 1;
-+
-+	if (ret)
-+		pr_err("zeroing failed!\n");
-+	else
-+		pr_info("zeroing finished\n");
-+
-+	return ret;
-+}
-+
- static int add_disk_to_super(int mdfd, struct shape *s, struct context *c,
- 		struct supertype *st, struct mddev_dev *dv,
--		struct mdinfo *info, int have_container, int major_num)
-+		struct mdinfo *info, int have_container, int major_num,
-+		int *zero_pid)
- {
- 	dev_t rdev;
- 	int fd;
-@@ -148,6 +289,14 @@ static int add_disk_to_super(int mdfd, struct shape *s, struct context *c,
- 	}
- 	st->ss->getinfo_super(st, info, NULL);
- 
-+	if (fd >= 0 && s->write_zeroes) {
-+		*zero_pid = write_zeroes_fork(fd, s, st, dv);
-+		if (*zero_pid <= 0) {
-+			ioctl(mdfd, STOP_ARRAY, NULL);
-+			return 1;
-+		}
-+	}
-+
- 	if (have_container && c->verbose > 0)
- 		pr_err("Using %s for device %d\n",
- 		       map_dev(info->disk.major, info->disk.minor, 0),
-@@ -224,10 +373,23 @@ static int add_disks(int mdfd, struct mdinfo *info, struct shape *s,
- {
- 	struct mddev_dev *moved_disk = NULL;
- 	int pass, raid_disk_num, dnum;
-+	int zero_pids[total_slots];
- 	struct mddev_dev *dv;
- 	struct mdinfo *infos;
-+	sigset_t sigset, orig_sigset;
- 	int ret = 0;
- 
-+	/*
-+	 * Block SIGINT so the main thread will always wait for the
-+	 * zeroing processes when being interrupted. Otherwise the
-+	 * zeroing processes will finish their work in the background
-+	 * keeping the disk busy.
-+	 */
-+	sigemptyset(&sigset);
-+	sigaddset(&sigset, SIGINT);
-+	sigprocmask(SIG_BLOCK, &sigset, &orig_sigset);
-+	memset(zero_pids, 0, sizeof(zero_pids));
-+
- 	infos = xmalloc(sizeof(*infos) * total_slots);
- 	enable_fds(total_slots);
- 	for (pass = 1; pass <= 2; pass++) {
-@@ -261,7 +423,7 @@ static int add_disks(int mdfd, struct mdinfo *info, struct shape *s,
- 
- 				ret = add_disk_to_super(mdfd, s, c, st, dv,
- 						&infos[dnum], have_container,
--						major_num);
-+						major_num, &zero_pids[dnum]);
- 				if (ret)
- 					goto out;
- 
-@@ -287,6 +449,10 @@ static int add_disks(int mdfd, struct mdinfo *info, struct shape *s,
- 		}
- 
- 		if (pass == 1) {
-+			ret = wait_for_zero_forks(zero_pids, total_slots);
-+			if (ret)
-+				goto out;
-+
- 			ret = update_metadata(mdfd, s, st, map, info,
- 					      chosen_name);
- 			if (ret)
-@@ -295,7 +461,10 @@ static int add_disks(int mdfd, struct mdinfo *info, struct shape *s,
- 	}
- 
- out:
-+	if (ret)
-+		wait_for_zero_forks(zero_pids, total_slots);
- 	free(infos);
-+	sigprocmask(SIG_SETMASK, &orig_sigset, NULL);
- 	return ret;
+
+ /*
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 9d4831ca802c..1818f79bfdf7 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -757,6 +757,7 @@ static void raid0_quiesce(struct mddev *mddev, int quiesce)
+         * to member disks to avoid memory alloc and performance decrease
+         */
+        set_bit(MD_QUIESCE, &mddev->flags);
++       smp_mb();
+        wait_event(mddev->wait_io_acct, !atomic_read(&mddev->io_acct_cnt));
+        clear_bit(MD_QUIESCE, &mddev->flags);
  }
- 
-diff --git a/ReadMe.c b/ReadMe.c
-index 50a5e36d05fc..9424bfc3eeca 100644
---- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -138,6 +138,7 @@ struct option long_options[] = {
-     {"size",	  1, 0, 'z'},
-     {"auto",	  1, 0, Auto}, /* also for --assemble */
-     {"assume-clean",0,0, AssumeClean },
-+    {"write-zeroes",0,0, WriteZeroes },
-     {"metadata",  1, 0, 'e'}, /* superblock format */
-     {"bitmap",	  1, 0, Bitmap},
-     {"bitmap-chunk", 1, 0, BitmapChunk},
-@@ -390,6 +391,7 @@ char Help_create[] =
- "  --write-journal=      : Specify journal device for RAID-4/5/6 array\n"
- "  --consistency-policy= : Specify the policy that determines how the array\n"
- "                     -k : maintains consistency in case of unexpected shutdown.\n"
-+"  --write-zeroes        : Write zeroes to the disks before creating. This will bypass initial sync.\n"
- "\n"
- ;
- 
-diff --git a/mdadm.c b/mdadm.c
-index 972adb524dfb..141838bd394f 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -602,6 +602,10 @@ int main(int argc, char *argv[])
- 			s.assume_clean = 1;
- 			continue;
- 
-+		case O(CREATE, WriteZeroes):
-+			s.write_zeroes = 1;
-+			continue;
-+
- 		case O(GROW,'n'):
- 		case O(CREATE,'n'):
- 		case O(BUILD,'n'): /* number of raid disks */
-@@ -1306,6 +1310,11 @@ int main(int argc, char *argv[])
- 		}
- 	}
- 
-+	if (s.write_zeroes && !s.assume_clean) {
-+		pr_info("Disk zeroing requested, setting --assume-clean to skip resync\n");
-+		s.assume_clean = 1;
-+	}
-+
- 	if (!mode && devs_found) {
- 		mode = MISC;
- 		devmode = 'Q';
-diff --git a/mdadm.h b/mdadm.h
-index 18c24915e94c..82e920fb523a 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -273,6 +273,9 @@ static inline void __put_unaligned32(__u32 val, void *p)
- 
- #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
- 
-+#define KIB_TO_BYTES(x)	((x) << 10)
-+#define SEC_TO_BYTES(x)	((x) << 9)
-+
- extern const char Name[];
- 
- struct md_bb_entry {
-@@ -433,6 +436,7 @@ extern char Version[], Usage[], Help[], OptionHelp[],
-  */
- enum special_options {
- 	AssumeClean = 300,
-+	WriteZeroes,
- 	BitmapChunk,
- 	WriteBehind,
- 	ReAdd,
-@@ -593,6 +597,7 @@ struct shape {
- 	int	bitmap_chunk;
- 	char	*bitmap_file;
- 	int	assume_clean;
-+	bool	write_zeroes;
- 	int	write_behind;
- 	unsigned long long size;
- 	unsigned long long data_offset;
--- 
-2.30.2
+
+Test result:
+
+                          without patch    with patch
+psync read          100MB/s           101MB/s         job:1 bs:4k
+                           1015MB/s         1016MB/s       job:1 bs:128k
+                           1359MB/s         1358MB/s       job:1 bs:256k
+                           1394MB/s         1393MB/s       job:40 bs:4k
+                           4959MB/s         4873MB/s       job:40 bs:128k
+                           6166MB/s         6157MB/s       job:40 bs:256k
+
+                          without patch      with patch
+psync write          286MB/s           275MB/s        job:1 bs:4k
+                            1810MB/s         1808MB/s      job:1 bs:128k
+                            1814MB/s         1814MB/s      job:1 bs:256k
+                            1802MB/s         1801MB/s      job:40 bs:4k
+                            1814MB/s         1814MB/s      job:40 bs:128k
+                            1814MB/s         1814MB/s      job:40 bs:256k
+
+                          without patch
+psync randread    39.3MB/s           39.7MB/s      job:1 bs:4k
+                             791MB/s            783MB/s       job:1 bs:128k
+                            1183MiB/s          1217MB/s     job:1 bs:256k
+                            1183MiB/s          1235MB/s     job:40 bs:4k
+                            3768MB/s          3705MB/s     job:40 bs:128k
+                            4410MB/s           4418MB/s     job:40 bs:256k
+
+                          without patch
+psync randwrite.   281MB/s            272MB/s       job:1 bs:4k
+                            1708MB/s           1706MB/s     job:1 bs:128k
+                            1658MB/s           1644MB/s     job:1 bs:256k
+                           1796MB/s            1796MB/s     job:40 bs:4k
+                           1818MB/s            1818MB/s     job:40 bs:128k
+                           1820MB/s            1820MB/s     job:40 bs:256k
+
+depth:128         without patch       with patch
+aio read             1294MB/s            1270MB/s      job:1 bs:4k depth:128
+                          3956MB/s            4000MB/s     job:1
+bs:128k depth:128
+                          3955MB/s            4000MB/s     job:1
+bs:256k depth:128
+
+aio write            1255MB/s             1241MB/s       job:1 bs:4k depth:128
+                         1813MB/s             1814MB/s       job:1
+bs:128k depth:128
+                         1814MB/s             1814MB/s       job:1
+bs:256k depth:128
+
+aio randread     1112MB/s             1117MB/s        job:1 bs:4k depth:128
+                         3875MB/s             3975MB/s       job:1
+bs:128k depth:128
+                         4284MB/s             4407MB/s       job:1
+bs:256k depth:128
+
+aio randwrite    1080MB/s             1172MB/s       job:1 bs:4k depth:128
+                        1814MB/s             1814MB/s       job:1
+bs:128k depth:128
+                        1816MB/s             1817MB/s       job:1
+bs:256k depth:128
+
+Best Regards
+Xiao
+
+On Tue, Nov 15, 2022 at 7:18 AM Xiao Ni <xni@redhat.com> wrote:
+>
+> Hi Song
+>
+> I'll do a performance test today and give the test result.
+>
+> Regards
+> Xiao
+>
+> On Tue, Nov 15, 2022 at 2:14 AM Song Liu <song@kernel.org> wrote:
+> >
+> > Hi Xiao,
+> >
+> > On Sun, Oct 23, 2022 at 11:48 PM Xiao Ni <xni@redhat.com> wrote:
+> > >
+> > > It has added io_acct_set for raid0/raid5 io accounting and it needs to
+> > > alloc md_io_acct in the i/o path. They are free when the bios come back
+> > > from member disks. Now we don't have a method to monitor if those bios
+> > > are all come back. In the takeover process, it needs to free the raid0
+> > > memory resource including the memory pool for md_io_acct. But maybe some
+> > > bios are still not returned. When those bios are returned, it can cause
+> > > panic bcause of introducing NULL pointer or invalid address.
+> > >
+> > > This patch adds io_acct_cnt. So when stopping raid0, it can use this
+> > > to wait until all bios come back.
+> >
+> > I am very sorry to bring this up late. Have you tested the performance
+> > impact of this change? I am afraid this may introduce some visible
+> > performance regression for very high speed arrays.
+> >
+> > Thanks,
+> > Song
+> >
+> >
+> > >
+> > > Reported-by: Fine Fan <ffan@redhat.com>
+> > > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > > ---
+> > > V2: Move struct mddev* to the start of struct mddev_io_acct
+> > >  drivers/md/md.c    | 13 ++++++++++++-
+> > >  drivers/md/md.h    | 11 ++++++++---
+> > >  drivers/md/raid0.c |  6 ++++++
+> > >  3 files changed, 26 insertions(+), 4 deletions(-)
+> > >
+> > > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > > index 6f3b2c1cb6cd..208f69849054 100644
+> > > --- a/drivers/md/md.c
+> > > +++ b/drivers/md/md.c
+> > > @@ -685,6 +685,7 @@ void mddev_init(struct mddev *mddev)
+> > >         atomic_set(&mddev->flush_pending, 0);
+> > >         init_waitqueue_head(&mddev->sb_wait);
+> > >         init_waitqueue_head(&mddev->recovery_wait);
+> > > +       init_waitqueue_head(&mddev->wait_io_acct);
+> > >         mddev->reshape_position = MaxSector;
+> > >         mddev->reshape_backwards = 0;
+> > >         mddev->last_sync_action = "none";
+> > > @@ -8618,15 +8619,18 @@ int acct_bioset_init(struct mddev *mddev)
+> > >  {
+> > >         int err = 0;
+> > >
+> > > -       if (!bioset_initialized(&mddev->io_acct_set))
+> > > +       if (!bioset_initialized(&mddev->io_acct_set)) {
+> > > +               atomic_set(&mddev->io_acct_cnt, 0);
+> > >                 err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
+> > >                         offsetof(struct md_io_acct, bio_clone), 0);
+> > > +       }
+> > >         return err;
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(acct_bioset_init);
+> > >
+> > >  void acct_bioset_exit(struct mddev *mddev)
+> > >  {
+> > > +       WARN_ON(atomic_read(&mddev->io_acct_cnt) != 0);
+> > >         bioset_exit(&mddev->io_acct_set);
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(acct_bioset_exit);
+> > > @@ -8635,12 +8639,17 @@ static void md_end_io_acct(struct bio *bio)
+> > >  {
+> > >         struct md_io_acct *md_io_acct = bio->bi_private;
+> > >         struct bio *orig_bio = md_io_acct->orig_bio;
+> > > +       struct mddev *mddev = md_io_acct->mddev;
+> > >
+> > >         orig_bio->bi_status = bio->bi_status;
+> > >
+> > >         bio_end_io_acct(orig_bio, md_io_acct->start_time);
+> > >         bio_put(bio);
+> > >         bio_endio(orig_bio);
+> > > +
+> > > +       if (atomic_dec_and_test(&mddev->io_acct_cnt))
+> > > +               if (unlikely(test_bit(MD_QUIESCE, &mddev->flags)))
+> > > +                       wake_up(&mddev->wait_io_acct);
+> > >  }
+> > >
+> > >  /*
+> > > @@ -8660,6 +8669,8 @@ void md_account_bio(struct mddev *mddev, struct bio **bio)
+> > >         md_io_acct = container_of(clone, struct md_io_acct, bio_clone);
+> > >         md_io_acct->orig_bio = *bio;
+> > >         md_io_acct->start_time = bio_start_io_acct(*bio);
+> > > +       md_io_acct->mddev = mddev;
+> > > +       atomic_inc(&mddev->io_acct_cnt);
+> > >
+> > >         clone->bi_end_io = md_end_io_acct;
+> > >         clone->bi_private = md_io_acct;
+> > > diff --git a/drivers/md/md.h b/drivers/md/md.h
+> > > index b4e2d8b87b61..a7c89ed53be5 100644
+> > > --- a/drivers/md/md.h
+> > > +++ b/drivers/md/md.h
+> > > @@ -255,6 +255,7 @@ struct md_cluster_info;
+> > >   *                array is ready yet.
+> > >   * @MD_BROKEN: This is used to stop writes and mark array as failed.
+> > >   * @MD_DELETED: This device is being deleted
+> > > + * @MD_QUIESCE: This device is being quiesced. Now only raid0 use this flag
+> > >   *
+> > >   * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
+> > >   */
+> > > @@ -272,6 +273,7 @@ enum mddev_flags {
+> > >         MD_NOT_READY,
+> > >         MD_BROKEN,
+> > >         MD_DELETED,
+> > > +       MD_QUIESCE,
+> > >  };
+> > >
+> > >  enum mddev_sb_flags {
+> > > @@ -513,6 +515,8 @@ struct mddev {
+> > >                                                    * metadata and bitmap writes
+> > >                                                    */
+> > >         struct bio_set                  io_acct_set; /* for raid0 and raid5 io accounting */
+> > > +       atomic_t                        io_acct_cnt;
+> > > +       wait_queue_head_t               wait_io_acct;
+> > >
+> > >         /* Generic flush handling.
+> > >          * The last to finish preflush schedules a worker to submit
+> > > @@ -710,9 +714,10 @@ struct md_thread {
+> > >  };
+> > >
+> > >  struct md_io_acct {
+> > > -       struct bio *orig_bio;
+> > > -       unsigned long start_time;
+> > > -       struct bio bio_clone;
+> > > +       struct mddev    *mddev;
+> > > +       struct bio      *orig_bio;
+> > > +       unsigned long   start_time;
+> > > +       struct bio      bio_clone;
+> > >  };
+> > >
+> > >  #define THREAD_WAKEUP  0
+> > > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> > > index 857c49399c28..aced0ad8cdab 100644
+> > > --- a/drivers/md/raid0.c
+> > > +++ b/drivers/md/raid0.c
+> > > @@ -754,6 +754,12 @@ static void *raid0_takeover(struct mddev *mddev)
+> > >
+> > >  static void raid0_quiesce(struct mddev *mddev, int quiesce)
+> > >  {
+> > > +       /* It doesn't use a separate struct to count how many bios are submitted
+> > > +        * to member disks to avoid memory alloc and performance decrease
+> > > +        */
+> > > +       set_bit(MD_QUIESCE, &mddev->flags);
+> > > +       wait_event(mddev->wait_io_acct, !atomic_read(&mddev->io_acct_cnt));
+> > > +       clear_bit(MD_QUIESCE, &mddev->flags);
+> > >  }
+> > >
+> > >  static struct md_personality raid0_personality=
+> > > --
+> > > 2.32.0 (Apple Git-132)
+> > >
+> >
 
