@@ -2,76 +2,62 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBEB2C4332F
-	for <linux-raid@archiver.kernel.org>; Mon, 21 Nov 2022 16:46:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9994C43219
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Nov 2022 09:41:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229633AbiKUQqU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 21 Nov 2022 11:46:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40920 "EHLO
+        id S233356AbiKVJlP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Nov 2022 04:41:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229572AbiKUQqT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Nov 2022 11:46:19 -0500
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5E948B85B
-        for <linux-raid@vger.kernel.org>; Mon, 21 Nov 2022 08:46:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=rxH+rcMH365LmnYKgb8IKsJHoPv7z6XELCmxRYmICxw=; b=Baxmd+VJUfg/uX/JnIEVdNfW1G
-        isgQY6Pw5jNAcM5UZrnoTq6YYbwyARbGqbyVeb78VeU2Z6hO2CSsMd32IZhjscXE9gE9IbVbdKQDn
-        erb/Qp+zr1cHJp9hAYoV1sahcK9TCe1FKLxrfUxjXLX2kcf+eoOFfkwD15A2nRMIArp5m1gEeRGFH
-        7TL/kLypcksiy+J308Kkrvf8Z65okykhesks1ht9BXi5qGAr6cBu9DXZ/xGatv2s4Zmlb24gmtKmM
-        u/NCdNkIHiPIRgwfjdOIvtsz/foN9ye1nFBfKK3Lq8WypUrP8fVY4FSyj63/3AQfkeuwZzmGXoc0H
-        79sHExDg==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1ox9vy-007pwU-JN; Mon, 21 Nov 2022 09:46:15 -0700
-Message-ID: <6318dccf-0cb4-58ab-91b4-04d027b1c9bc@deltatee.com>
-Date:   Mon, 21 Nov 2022 09:46:11 -0700
+        with ESMTP id S233335AbiKVJlM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Nov 2022 04:41:12 -0500
+X-Greylist: delayed 2729 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 22 Nov 2022 01:41:09 PST
+Received: from mail.axisfairfi.com (mail.axisfairfi.com [94.177.230.134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B44CA51C30
+        for <linux-raid@vger.kernel.org>; Tue, 22 Nov 2022 01:41:08 -0800 (PST)
+Received: by mail.axisfairfi.com (Postfix, from userid 1001)
+        id CA38382545; Tue, 22 Nov 2022 08:55:37 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=axisfairfi.com;
+        s=mail; t=1669107338;
+        bh=0BgaW9t8GFER5QecxVkFsHrVi3gO/4V5KAZgJaiRYBs=;
+        h=Date:From:To:Subject:From;
+        b=f29lvN3T+8WJZhJ+k4ZCbLQURgjgy6mbcFovqq4PzUSZcYGbd06fvnERfOemdxO+u
+         CGdyPGyYKuwrm1an1/0bB2RplVSrvVwzbGEew1rVcRawsKs/I40CF7dX+k6IO/ZApI
+         +LeV7kXo1MVf/zHFzBIbj4ehZCgeesj5we+iZMH9wrtUYCBay984oklIwJWJlSpHWr
+         u/FgDA8PDEBg/3hTWBcbhrGjHq9MOhGR97SkmMLj7nx+P5zLQ+XGP0E9cLnTiK9GXZ
+         5RFEBrv8jUribGYNsJP+e5P+LFoqN7pfFLT9xPS2iSC/dQZWR4J5NTIXLi3P06kwqr
+         7DqKzHx1Zpeow==
+Received: by mail.axisfairfi.com for <linux-raid@vger.kernel.org>; Tue, 22 Nov 2022 08:55:34 GMT
+Message-ID: <20221122074500-0.1.d.n2d.0.whheocr06n@axisfairfi.com>
+Date:   Tue, 22 Nov 2022 08:55:34 GMT
+From:   "Zbynek Spacek" <zbynek.spacek@axisfairfi.com>
+To:     <linux-raid@vger.kernel.org>
+Subject: Silikonmischungen
+X-Mailer: mail.axisfairfi.com
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Content-Language: en-CA
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Kinga Tanska <kinga.tanska@linux.intel.com>
-References: <20221116235009.79875-1-logang@deltatee.com>
- <20221116235009.79875-6-logang@deltatee.com>
- <CALTww2-e+K66J=hekxyc7rC7=yMrP-uiJPDgQWtiPuZSV29tYg@mail.gmail.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <CALTww2-e+K66J=hekxyc7rC7=yMrP-uiJPDgQWtiPuZSV29tYg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: xni@redhat.com, linux-raid@vger.kernel.org, jes@trained-monkey.org, guoqing.jiang@linux.dev, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, kinga.tanska@linux.intel.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH mdadm v5 5/7] mdadm: Add --write-zeros option for Create
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Good morning,
+
+do you need intermediates for processing, plastics (e.g. rubber) or silic=
+one mixtures?
+
+We provide a wide range of silicone rubbers with various properties, sili=
+cone mixtures from renowned manufacturers such as Wacker, Elastosil LR an=
+d dyes, stabilizers, primers and anti-adhesive additives.
+
+We also produce technical silicone compounds with increased resistance to=
+ oils, resistant to high temperatures and water vapor, conductive and man=
+y more.
+
+We provide fast order fulfillment, timely deliveries and cost optimizatio=
+n.
+
+Can I introduce what we can offer you?
 
 
-On 2022-11-21 08:00, Xiao Ni wrote:
-> Hi Logan
-> 
-> I did a test, but it always fails to create the raid device.
-> Maybe it's better to init interrupted to false?
-
-Oops, yes, my mistake. I'll send an updated patch later this week.
-
-Thanks,
-
-Logan
+Zbynek Spacek
