@@ -2,79 +2,75 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF61C4332F
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Nov 2022 13:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D9DCC4332F
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Nov 2022 14:23:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229853AbiKYN4f (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Nov 2022 08:56:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51926 "EHLO
+        id S229558AbiKYOXk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 25 Nov 2022 09:23:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229569AbiKYN4e (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Nov 2022 08:56:34 -0500
-X-Greylist: delayed 1189 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 25 Nov 2022 05:56:33 PST
-Received: from www18.qth.com (www18.qth.com [69.16.238.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1329B21E
-        for <linux-raid@vger.kernel.org>; Fri, 25 Nov 2022 05:56:32 -0800 (PST)
-Received: from [73.207.192.158] (port=50702 helo=jpo)
-        by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.95)
-        (envelope-from <davidtg@justpickone.org>)
-        id 1oyYso-0007nH-FJ;
-        Fri, 25 Nov 2022 07:36:42 -0600
-Date:   Fri, 25 Nov 2022 13:36:40 +0000
-From:   David T-G <davidtg@justpickone.org>
-To:     Wol <antlists@youngman.org.uk>
-Cc:     Linux RAID list <linux-raid@vger.kernel.org>
-Subject: and dm-integrity, too (was "Re: how do i fix these RAID5 arrays?")
-Message-ID: <20221125133640.GI19721@jpo>
-References: <20221123220736.GD19721@jpo>
- <20221124032821.628cd042@nvm>
- <CAAMCDedMhATuEPx8yFzAwxf5zS7CXFhz6702rmUCg7pXQX4qSA@mail.gmail.com>
- <20221124212007.GF19721@jpo>
- <a0eae02e-8d6e-39ad-19a0-574d92891687@youngman.org.uk>
+        with ESMTP id S229529AbiKYOXk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Nov 2022 09:23:40 -0500
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A264286D9
+        for <linux-raid@vger.kernel.org>; Fri, 25 Nov 2022 06:23:38 -0800 (PST)
+Received: from host86-138-24-20.range86-138.btcentralplus.com ([86.138.24.20] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1oyZc9-0001b4-3E;
+        Fri, 25 Nov 2022 14:23:37 +0000
+Message-ID: <008f8ea9-5c01-dc69-8d35-787b8a286378@youngman.org.uk>
+Date:   Fri, 25 Nov 2022 14:23:36 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a0eae02e-8d6e-39ad-19a0-574d92891687@youngman.org.uk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - www18.qth.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - justpickone.org
-X-Get-Message-Sender-Via: www18.qth.com: authenticated_id: dmail@justpickone.org
-X-Authenticated-Sender: www18.qth.com: dmail@justpickone.org
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: about linear and about RAID10 (was "Re: how do i fix these RAID5
+ arrays?")
+Content-Language: en-GB
+To:     David T-G <davidtg-robot@justpickone.org>,
+        Linux RAID list <linux-raid@vger.kernel.org>
+References: <20221123220736.GD19721@jpo> <20221124032821.628cd042@nvm>
+ <20221124211019.GE19721@jpo>
+ <512a4cdd-9013-e158-7c77-7409cd0dc3a1@youngman.org.uk>
+ <20221125133050.GH19721@jpo>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <20221125133050.GH19721@jpo>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Wol, et al --
+On 25/11/2022 13:30, David T-G wrote:
+> % Either version (10, or 1+0), gives you get the speed of striping, and the
+> % safety of a mirror. 10, however, can use an odd number of disks, and disks
+> % of random sizes.
+> 
+> That's still magic to me 😄  Mirroring (but not doubling up the
+> redundancy) on an odd number of disks?!?
 
-...and then Wol said...
-...
-% 
-% (Note also I've got dm-integrity in there too, but that's me.)
-% 
-% https://raid.wiki.kernel.org/index.php/System2020
+Disk:     a   b   c
 
-I read *so* much of this and so much more trying to recover a different
-array after a couple of drive failures.  I never got overlays and integrity
-to work :-(  The latter is another thing on the "future enhancements" list!
+Stripe:   1   1   2
+           2   3   3
+           4   4   5
+           5   6   6
 
+and so on.
 
-% 
-% Cheers,
-% Wol
+I was trying to work out how I'd smear them a lot more randomly, but it 
+was a nightmare. Iirc, no matter how many drives you have, (for two 
+copies) it seems that drive a is only mirrored to drives b and c, for 
+any value of a. So if you lose drive a, and then either b or c, you are 
+guaranteed to lose half a drive of contents.
 
+It also means that replacing a failed drive will hammer just two drives 
+to replace it and not touch the others. I wanted to try and spread stuff 
+far more evenly so it read from all the other drives, not just two. 
+Okay, it increases the risk that you will lose *some* data to a double 
+failure, but reduces the *amount* of data at risk (and also reduces the 
+risk of a double failure!). Because if the first failure *provokes* the 
+second, data loss is pretty much guaranteed.
 
-HAND
-
-:-D
--- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
-
+Cheers,
+Wol
