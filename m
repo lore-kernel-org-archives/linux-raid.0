@@ -2,82 +2,69 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5F0CC4332F
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Nov 2022 19:50:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C89CC4332F
+	for <linux-raid@archiver.kernel.org>; Sat, 26 Nov 2022 19:18:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229789AbiKYTuz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Nov 2022 14:50:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32830 "EHLO
+        id S229625AbiKZTSz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 26 Nov 2022 14:18:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229514AbiKYTuy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Nov 2022 14:50:54 -0500
-Received: from www18.qth.com (www18.qth.com [69.16.238.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC7A554B3C
-        for <linux-raid@vger.kernel.org>; Fri, 25 Nov 2022 11:50:53 -0800 (PST)
-Received: from [73.207.192.158] (port=51146 helo=jpo)
-        by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.95)
-        (envelope-from <davidtg-robot@justpickone.org>)
-        id 1oyeiv-0003S2-HU
-        for linux-raid@vger.kernel.org;
-        Fri, 25 Nov 2022 13:50:53 -0600
-Date:   Fri, 25 Nov 2022 19:50:51 +0000
-From:   David T-G <davidtg-robot@justpickone.org>
-To:     Linux RAID list <linux-raid@vger.kernel.org>
-Subject: Re: about linear and about RAID10
-Message-ID: <20221125195051.GL19721@jpo>
-References: <20221123220736.GD19721@jpo>
- <20221124032821.628cd042@nvm>
- <20221124211019.GE19721@jpo>
- <512a4cdd-9013-e158-7c77-7409cd0dc3a1@youngman.org.uk>
- <20221125133050.GH19721@jpo>
- <008f8ea9-5c01-dc69-8d35-787b8a286378@youngman.org.uk>
+        with ESMTP id S229616AbiKZTSv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 26 Nov 2022 14:18:51 -0500
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75EE1F584
+        for <linux-raid@vger.kernel.org>; Sat, 26 Nov 2022 11:18:49 -0800 (PST)
+Received: from host86-138-24-20.range86-138.btcentralplus.com ([86.138.24.20] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1oya1K-000Bjf-8X;
+        Fri, 25 Nov 2022 14:49:38 +0000
+Message-ID: <f58964da-4ded-61a8-bd6a-e2391557b38a@youngman.org.uk>
+Date:   Fri, 25 Nov 2022 14:49:38 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <008f8ea9-5c01-dc69-8d35-787b8a286378@youngman.org.uk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - www18.qth.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - justpickone.org
-X-Get-Message-Sender-Via: www18.qth.com: authenticated_id: dmail@justpickone.org
-X-Authenticated-Sender: www18.qth.com: dmail@justpickone.org
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: how do i fix these RAID5 arrays?
+Content-Language: en-GB
+To:     David T-G <davidtg-robot@justpickone.org>,
+        Linux RAID list <linux-raid@vger.kernel.org>
+References: <20221123220736.GD19721@jpo> <20221124032821.628cd042@nvm>
+ <20221124211019.GE19721@jpo>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <20221124211019.GE19721@jpo>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Wol, et al --
+On 24/11/2022 21:10, David T-G wrote:
+> I don't want to try BtrFS.  That's another area where I have no experience,
+> but from what I've seen and read I really don't want to go there yet.
 
-...and then Wols Lists said...
-% On 25/11/2022 13:30, David T-G wrote:
-% > 
-% > That's still magic to me ????  Mirroring (but not doubling up the
-% > redundancy) on an odd number of disks?!?
-% 
-% Disk:     a   b   c
-% 
-% Stripe:   1   1   2
-%           2   3   3
-%           4   4   5
-%           5   6   6
-% 
-% and so on.
-[snip]
+Btrfs ...
 
-Ahhhhh...  Thanks.  I was stuck in my symmetrical head and totally
-overlooked a staggered layout.  Of course!
+It's a good idea, and provided you don't do anything esoteric it's been 
+solid for years.
 
+It used to have a terrible reputation for surviving a disk full - at a 
+guess it needs some disk space to shuffle its btree to recover space - 
+and a disk-full situation borked the garbage collection.
 
-Have a great evening
+Raid-1 (mirroring) by default only mirrors the directories, the data 
+isn't mirrored so you can easily still lose that ... (they call that 
+user misconfiguration, I call it developer arrogance ...)
 
-:-D
--- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
+Parity raid is still borken...
 
+At the end of the day, if you want to protect your data, DON'T rely on 
+the filesystem. There are far too many cases where the developers have 
+made decisions that protect the file system (and hence computer uptime) 
+at the expense of the data IN the filesystem. I don't give a monkeys if 
+the filesystem protects itself to enable a crashed computer to reboot 
+ten seconds faster, if the consequence of that change is my computer is 
+out of action for a day while I have to restore a backup to re-instate 
+the integrity of my data !!!
+
+Cheers,
+Wol
