@@ -2,27 +2,27 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD034C4332F
-	for <linux-raid@archiver.kernel.org>; Sun, 27 Nov 2022 22:08:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E77ABC4332F
+	for <linux-raid@archiver.kernel.org>; Sun, 27 Nov 2022 22:11:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229619AbiK0WIe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 27 Nov 2022 17:08:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46070 "EHLO
+        id S229563AbiK0WLe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 27 Nov 2022 17:11:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229555AbiK0WId (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Nov 2022 17:08:33 -0500
+        with ESMTP id S229533AbiK0WLd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Nov 2022 17:11:33 -0500
 Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3083E1BD
-        for <linux-raid@vger.kernel.org>; Sun, 27 Nov 2022 14:08:31 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D467565EE
+        for <linux-raid@vger.kernel.org>; Sun, 27 Nov 2022 14:11:32 -0800 (PST)
 Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+         key-exchange X25519 server-signature ECDSA (P-256))
         (No client certificate requested)
         (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4NL2mY1PM3zXLf;
-        Sun, 27 Nov 2022 23:08:24 +0100 (CET)
-Message-ID: <5ae1729b-d084-384c-04ff-165b9e3298f9@thelounge.net>
-Date:   Sun, 27 Nov 2022 23:08:23 +0100
+        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4NL2r00zgRzXLf;
+        Sun, 27 Nov 2022 23:11:28 +0100 (CET)
+Message-ID: <5834d66a-21b8-767f-0dea-927dc749b83a@thelounge.net>
+Date:   Sun, 27 Nov 2022 23:11:27 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.5.0
@@ -52,32 +52,17 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 Am 27.11.22 um 23:05 schrieb Wol:
-> On 27/11/2022 18:21, Reindl Harald wrote:
->>> If the array is 99% full, MD or ZFS/BTRFS have
->>> same behaviour, in terms of reliability.
->>> If the array is 0% full, as well
->>
->> you completly miss the point!
->>
->> if your mdadm-array is built with 6 TB drivres wehn you replace a 
->> drive you need to sync 6 TB no matter if 10 MB or 5 TB are actually used
-> 
-> And you are also completely missing the point!
-> 
-> When mdadm creates an array - IF IT SUPPORTED TRIM - you could tell it 
-> "this is a blank array, don't bother initialising it". So it would 
-> initialise an internal bitmap to say "all these stripes are empty"
+> And no, you are COMPLETELY WRONG in assuming that the only block layers 
+> that implement trim is hardware. 
 
-you could - but it don't
+from a layered point of view my vmware vmdk-disk supporting trim still 
+are hardware
 
-> tldr - there is no reason why mdadm couldn't implement trim, and if it 
-> did, then it would know how much of the array needed to be sync'd and 
-> how much didn't need bothering with
+> Any block layer that wants to can 
+> implement trim - there is no reason whatsoever why mdadm couldn't. I 
+> never said it had, I said I wish it did
 
-who the hell cares about what it *could*?
-it simply don't and that's state of play
+but when it comes to reality nobody cares what you wish when i outline 
+the differences in the real world
 
-that's the difference between a filesystem on top of mdadm versus a 
-filesystem which implements RAID on it's own
-
-that's the whole point: what things actually do
+in the real world mdadm don't anything you wish but what it does
