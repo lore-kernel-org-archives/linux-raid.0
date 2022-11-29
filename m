@@ -2,59 +2,66 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9281FC433FE
-	for <linux-raid@archiver.kernel.org>; Tue, 29 Nov 2022 22:22:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F84C4321E
+	for <linux-raid@archiver.kernel.org>; Tue, 29 Nov 2022 22:56:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236177AbiK2WWs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 29 Nov 2022 17:22:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50772 "EHLO
+        id S236138AbiK2W4O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 29 Nov 2022 17:56:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236132AbiK2WWr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 29 Nov 2022 17:22:47 -0500
-Received: from len.romanrm.net (len.romanrm.net [91.121.86.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8414D13D46
-        for <linux-raid@vger.kernel.org>; Tue, 29 Nov 2022 14:22:45 -0800 (PST)
-Received: from nvm (nvm2.home.romanrm.net [IPv6:fd39::4a:3cff:fe57:d6b5])
-        by len.romanrm.net (Postfix) with SMTP id 1ECD040165;
-        Tue, 29 Nov 2022 22:22:41 +0000 (UTC)
-Date:   Wed, 30 Nov 2022 03:22:40 +0500
-From:   Roman Mamedov <rm@romanrm.net>
-To:     Jani Partanen <jiipee@sotapeli.fi>
-Cc:     David T-G <davidtg-robot@justpickone.org>,
-        Linux RAID list <linux-raid@vger.kernel.org>
-Subject: Re: md RAID0 can be grown (was "Re: how do i fix these RAID5
- arrays?")
-Message-ID: <20221130032240.06da2435@nvm>
-In-Reply-To: <ab803396-fb7f-50b6-9aa8-2803aa526fe4@sotapeli.fi>
-References: <20221123220736.GD19721@jpo>
-        <20221124032821.628cd042@nvm>
-        <20221124211019.GE19721@jpo>
-        <512a4cdd-9013-e158-7c77-7409cd0dc3a1@youngman.org.uk>
-        <CAAMCDecPXmZsxaAPcSOOY4S7_ieRZC8O_u7LjLLH-t8L-6+21Q@mail.gmail.com>
-        <20221125132259.GG19721@jpo>
-        <CAAMCDed1-4zFgHMS760dO1pThtkrn8K+FMuG-QQ+9W-FE0iq9Q@mail.gmail.com>
-        <20221125194932.GK19721@jpo>
-        <20221128142422.GM19721@jpo>
-        <ab803396-fb7f-50b6-9aa8-2803aa526fe4@sotapeli.fi>
+        with ESMTP id S234423AbiK2W4N (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 29 Nov 2022 17:56:13 -0500
+X-Greylist: delayed 397 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 29 Nov 2022 14:56:09 PST
+Received: from hoggar.fisica.ufpr.br (hoggar.fisica.ufpr.br [IPv6:2801:82:80ff:7fff::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB3B1E9
+        for <linux-raid@vger.kernel.org>; Tue, 29 Nov 2022 14:56:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=fisica.ufpr.br;
+        s=201705; t=1669762167;
+        bh=BWWmYY6FcGvubWpHVpTYKST0ESEORjvSzm7Wv7QYrjI=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=FI2yVBDg/H6KBze72DZZaHDG7YXP8d+At7tMueAqPM/EKV6SyUzToIdQ+I85zFBQ8
+         2pOMj5fX1fDU7HIEkOZNbyZpOdHFhgKgi8BJwKISTqGxfEDLoFKWQFg9iC0QIwgsf4
+         hvHUj8moIxDyQiEVaoqw0H1y32JcfcxlR6ZVYSzD/PqodGQhGnB4YiAlxyAlpPtvbl
+         E8Kf3xwHrstsx9MgzuM/d/R4AQCKsULFywN314Bm0xcg5B0FsU8IaVkcIkgCfa1Ce8
+         D1OnNDvSofJHdkfiSFG9GFIHMhnL5ZcvDXblBWuEm9iCQSzQp1M5/4Itkyp6z54Xm6
+         qWMh42cZE1wdw==
+Received: by hoggar.fisica.ufpr.br (Postfix, from userid 577)
+        id 4BE3B3620280; Tue, 29 Nov 2022 19:49:27 -0300 (-03)
+Date:   Tue, 29 Nov 2022 19:49:27 -0300
+From:   Carlos Carvalho <carlos@fisica.ufpr.br>
+To:     linux-raid@vger.kernel.org
+Subject: Re: Fwd: Recover RAID5
+Message-ID: <Y4aMd76c2vo5Wvd2@fisica.ufpr.br>
+References: <CAA0v=OA8LS0s7G8CHK_0oL=nh49_H4G26-r85GgZLOAtbb3WOg@mail.gmail.com>
+ <CAA0v=OANGnih6sxB6TTdynA0BbSOhyaMpfvW2O1KSSTws76AtQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <CAA0v=OANGnih6sxB6TTdynA0BbSOhyaMpfvW2O1KSSTws76AtQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 29 Nov 2022 23:17:15 +0200
-Jani Partanen <jiipee@sotapeli.fi> wrote:
+Samuel Lopes (samuelblopes@gmail.com) wrote on Mon, Nov 28, 2022 at 08:33:31PM -03:
+> Then I run:
+> 
+> mdadm -v --create /dev/md5 --level=5 --chunk=512K --metadata=1.2
+> --layout=left-symmetric --data-offset=262144s --raid-devices=6
+> /dev/sdn1 /dev/sdj1 /dev/sdl1 /dev/sdm1 /dev/sdo1 /dev/sdr1
+> --assume-clean
+> 
+> I'm not sure about the data-offset but that value makes the array size
+> match the old --detail output
 
-> joined example 1TB and 2TB together with md linear so I could add that as 
-> member to other 3TB raid5 pool.
+Well... You'd have to know it exactly. It's strange it's needed, shouldn't be
+unless de original command used it. The mdadm versions should also be the same.
 
-I realize you describe a past setup, but as a fun tip, you could have used md
-RAID0 for this: with different sized devices it would automatically stripe the
-first 1TB of both disks, and then continue with the tail of 2TB drive as-is.
-This would provide some linear speed benefit for the most part of the device,
-with no change in reliability in this scheme compared to md linear.
+You can try to compare the the output of mdadm -E of the disks you know are
+good and the new/failed ones to see if there are differences.
 
--- 
-With respect,
-Roman
+Besides this the only suggestion I have is to try different values of
+data-offset (starting without this option) to see if any of them makes the
+array mountable. Even so the risk of corruption is high, you should fsck.
+
+If you want high reliability the whole installation process is bad, starting
+from raid5 use. Next time don't do this way...
