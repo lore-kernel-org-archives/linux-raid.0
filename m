@@ -2,71 +2,154 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ABEFC43217
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Dec 2022 19:59:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E24D9C47088
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Dec 2022 07:13:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231375AbiLAT7m (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 1 Dec 2022 14:59:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54922 "EHLO
+        id S231924AbiLBHN1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Dec 2022 02:13:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231252AbiLAT7V (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Dec 2022 14:59:21 -0500
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0FDA1789E
-        for <linux-raid@vger.kernel.org>; Thu,  1 Dec 2022 11:58:35 -0800 (PST)
-Received: by mail-pl1-x62b.google.com with SMTP id jn7so2636242plb.13
-        for <linux-raid@vger.kernel.org>; Thu, 01 Dec 2022 11:58:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=bq+cOWmPgTXC5pwruhO47YHph7K/2Z8ctl7GQmiISGA=;
-        b=YK1i8LDjuJfxpA7vRElmWC4tHou2pxMcenSPEPxiSCY1cBlblvucLhKQ4ggfYNbT7k
-         R5up2Q7dvVmBrOXexmokt2iMYkJ+UK8SdEqiaxfHg50y7ofXnsC1S3VJnJ13s7I0EGjD
-         LU9XTOQmrPYCrkQlZ+loK9qOxO4Hrz2MsmuyLULalnJ/jteHWaqSdEBWE5uoLLTvaiYx
-         OHWYc2ir7nnd4mEkVUQBr9usi48dZ0z/NLZ4jtHwEtxLfzSf/E/TLpSf+uIayfgSnyQP
-         JmrFIl4gMYD410WjqSAIxyZbyl1QjZbgSgFOUn2kzzNoM2hCYpxZQZnkBr6m+nDyflSE
-         /l7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=bq+cOWmPgTXC5pwruhO47YHph7K/2Z8ctl7GQmiISGA=;
-        b=qjtHEWoUefeeh8hU/uiJJ95Ow/96E8rHK8IPnXK8mJXCxRbDxqpiWAyHDEOm5T2eUA
-         hA3zIdsCNA5QgWErpqNkHsmNdEF8RneLdvhJTxOqckEcl4tTYfiikffw4a35z/3Eb0lP
-         C35H/FAUWVGQOaSaaxXTjGYPrd2O2rx1aP9j/spjFSdSYgmTDIw04Sb79jpJ6xacmika
-         JkI6thVksO0ue1ol6SBOJwhyMdEBR8gbaYAQfkoR8jl5/w1xsuDPN6ABk2FnJh2N9k90
-         lO6fcRGKo4SaR5sKoFQu+VaeykzseouBUIHk6CeNF/wyOfS/ymZTfqwdPF560CaAYa4V
-         cB5w==
-X-Gm-Message-State: ANoB5pmgeZcZ7bM7gJINIe8SMyrNmhGzv7iOSmC1NF76ELhso9aMFeyi
-        eCkSlwEnbiUAioNCRODUk1P2757ELPgW6C2HzF2MfGCGzX0=
-X-Google-Smtp-Source: AA0mqf7OaB1wVNXO0IGvScDR0xm8gc0ZLGuY16IkcjFEN7RHq7ZcrKLBWzXdg8UTfazfdMJWDkYVnM2z9ttuZzk5x5k=
-X-Received: by 2002:a17:902:bcc7:b0:188:5c52:83e1 with SMTP id
- o7-20020a170902bcc700b001885c5283e1mr53275109pls.128.1669924714910; Thu, 01
- Dec 2022 11:58:34 -0800 (PST)
+        with ESMTP id S230447AbiLBHNZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Dec 2022 02:13:25 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63FDF60B50;
+        Thu,  1 Dec 2022 23:13:23 -0800 (PST)
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 806591FDB2;
+        Fri,  2 Dec 2022 07:13:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1669965201; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=p8xc9/NvQfEQJ4e4z6/baVfh/lD5CFR3fcc+Q0PHSQI=;
+        b=ybjOTPvRHpXwAhn3vINNm69twJGz58PGyPK1sd3JJZbdDiPz2XdYP0ZhZwebDY3UWbwKVN
+        wDbUB5l15WW/8w+/RXjEQ/x1eSgM/aHnw1oZfWYT+5bACHpQI3sPlbXhA4JfNpeIOUAKNi
+        wP2uRuN6cIXW9o6qJboZbFKuFHljxrc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1669965201;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=p8xc9/NvQfEQJ4e4z6/baVfh/lD5CFR3fcc+Q0PHSQI=;
+        b=pNHg4CJKoV+kTyzOXNJhCE1t7cDzJtp0kSAmdAcNEpT9EoHNSazpnSisumGDH/FUhyIQ0d
+        rahTJqu09ovnd6Ag==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id F18E013644;
+        Fri,  2 Dec 2022 07:13:20 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id D8OZOZCliWPifwAAGKfGzw
+        (envelope-from <hare@suse.de>); Fri, 02 Dec 2022 07:13:20 +0000
+Message-ID: <ab4f15be-2e4a-0a5c-8d36-051b3808be2f@suse.de>
+Date:   Fri, 2 Dec 2022 08:13:21 +0100
 MIME-Version: 1.0
-From:   Samuel Lopes <samuelblopes@gmail.com>
-Date:   Thu, 1 Dec 2022 19:56:39 +0000
-Message-ID: <CAA0v=ODquQnpPAO+0nakgR0JO6N5=9qy0mxkRZ+7vKfWggqKdQ@mail.gmail.com>
-Subject: Re: Fwd: Recover RAID5
-To:     linux-raid@vger.kernel.org, carlos@fisica.ufpr.br
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [PATCH 0/6] block: add support for REQ_OP_VERIFY
+Content-Language: en-US
+To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Matthew Wilcox <willy@infradead.org>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "kbusch@kernel.org" <kbusch@kernel.org>, "hch@lst.de" <hch@lst.de>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "javier@javigon.com" <javier@javigon.com>,
+        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
+        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "jlayton@kernel.org" <jlayton@kernel.org>,
+        "idryomov@gmail.com" <idryomov@gmail.com>,
+        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
+        "ebiggers@google.com" <ebiggers@google.com>,
+        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
+References: <20220630091406.19624-1-kch@nvidia.com>
+ <YsXJdXnXsMtaC8DJ@casper.infradead.org>
+ <d14fe396-b39b-6b3e-ae74-eb6a8b64e379@nvidia.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <d14fe396-b39b-6b3e-ae74-eb6a8b64e379@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Carlos, thank you for your reply.
+On 12/1/22 19:12, Chaitanya Kulkarni wrote:
+> On 7/6/22 10:42, Matthew Wilcox wrote:
+>> On Thu, Jun 30, 2022 at 02:14:00AM -0700, Chaitanya Kulkarni wrote:
+>>> This adds support for the REQ_OP_VERIFY. In this version we add
+>>
+>> IMO, VERIFY is a useless command.  The history of storage is full of
+>> devices which simply lie.  Since there's no way for the host to check if
+>> the device did any work, cheap devices may simply implement it as a NOOP.
+> 
+> In past few months at various storage conferences I've talked to
+> different people to address your comment where device being
+> a liar verify implementation or even implementing NOOP.
+> 
+> With all do respect this is not true.
+> 
+[ .. ]
 
-Unless I'm missing something the mdadm -E of each disk shows only my
-last attempted information.
+Be careful to not fall into the copy-offload trap.
+The arguments given do pretty much mirror the discussion we had during 
+designing and implementing copy offload.
 
-To make things worse this is a 4y old array and I added/removed
-several disks with different mdadm versions so from what I have been
-reading it seems each disk can have a different data-offset value
-(correct?).
+Turns out that the major benefit for any of these 'advanced' commands is 
+not so much functionality but rather performance.
+If the functionality provided by the command is _slower_ as when the 
+host would be doing is manually there hardly is a point even calling 
+that functionality; we've learned that the hard way with copy offload, 
+and I guess the same it true for 'verify'.
+Thing is, none of the command will _tell_ you how long that command will 
+take; you just have to issue it and wait for it to complete.
+(Remember TRIM? And device which took minutes to complete it?)
 
-Also, is there a way to know what was the default data-offset for
-different versions of mdadm?
+For copy offload we only recently added a bit telling the application 
+whether it's worth calling it, or if we should rather do it the old 
+fashioned way.
 
-Regards,
-Samuel
+But all of the above discussion has nothing to do with the 
+implementation. Why should we disallow an implementation for a 
+functionality which is present in hardware?
+How could we figure out the actual usability if we don't test?
+Where is the innovation?
+
+We need room for experimenting; if it turns out to be useless we can 
+always disable or remove it later. But we shouldn't bar implementations 
+because hardware _might_ be faulty.
+
+I do see at least two topics for the next LSF:
+
+- Implementation of REQ_OP_VERIFY
+- Innovation rules for the kernel
+...
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
+
