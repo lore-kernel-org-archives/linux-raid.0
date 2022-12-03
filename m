@@ -2,45 +2,45 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BEFFC352A1
-	for <linux-raid@archiver.kernel.org>; Sat,  3 Dec 2022 18:04:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11412C352A1
+	for <linux-raid@archiver.kernel.org>; Sat,  3 Dec 2022 18:27:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbiLCSE3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 3 Dec 2022 13:04:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41190 "EHLO
+        id S229778AbiLCS1Z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 3 Dec 2022 13:27:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbiLCSE2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 3 Dec 2022 13:04:28 -0500
+        with ESMTP id S229542AbiLCS1Y (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 3 Dec 2022 13:27:24 -0500
 Received: from www18.qth.com (www18.qth.com [69.16.238.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF5931FFA2
-        for <linux-raid@vger.kernel.org>; Sat,  3 Dec 2022 10:04:27 -0800 (PST)
-Received: from [73.207.192.158] (port=34930 helo=jpo)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 926521DF00
+        for <linux-raid@vger.kernel.org>; Sat,  3 Dec 2022 10:27:23 -0800 (PST)
+Received: from [73.207.192.158] (port=34980 helo=jpo)
         by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <davidtg-robot@justpickone.org>)
-        id 1p1WsF-00051B-7i
+        id 1p1XER-0008T6-4h
         for linux-raid@vger.kernel.org;
-        Sat, 03 Dec 2022 12:04:27 -0600
-Date:   Sat, 3 Dec 2022 18:04:25 +0000
+        Sat, 03 Dec 2022 12:27:22 -0600
+Date:   Sat, 3 Dec 2022 18:27:21 +0000
 From:   David T-G <davidtg-robot@justpickone.org>
 To:     Linux RAID list <linux-raid@vger.kernel.org>
-Subject: batches and serial numbers (was "Re: md vs LVM and VMs and ...")
-Message-ID: <20221203180425.GU19721@jpo>
+Subject: Re: about linear and about RAID10
+Message-ID: <20221203182721.GV19721@jpo>
 Reply-To: Linux RAID list <linux-raid@vger.kernel.org>
-References: <20221124211019.GE19721@jpo>
+References: <20221124032821.628cd042@nvm>
+ <20221124211019.GE19721@jpo>
  <512a4cdd-9013-e158-7c77-7409cd0dc3a1@youngman.org.uk>
- <CAAMCDecPXmZsxaAPcSOOY4S7_ieRZC8O_u7LjLLH-t8L-6+21Q@mail.gmail.com>
- <20221125132259.GG19721@jpo>
- <CAAMCDed1-4zFgHMS760dO1pThtkrn8K+FMuG-QQ+9W-FE0iq9Q@mail.gmail.com>
- <20221125194932.GK19721@jpo>
- <20221128142422.GM19721@jpo>
- <ab803396-fb7f-50b6-9aa8-2803aa526fe4@sotapeli.fi>
- <20221203054130.GP19721@jpo>
- <1e419d58-46d8-affa-36dc-ef8c14760305@youngman.org.uk>
+ <20221125133050.GH19721@jpo>
+ <CAAMCDee6cyM5Uw6DitWtBL3W8NbW7j0DZcUp8A2CXWZbYceXeA@mail.gmail.com>
+ <20221128144630.GN19721@jpo>
+ <548f5325-0c3b-1642-2b08-ae7b637b3ad3@thelounge.net>
+ <25477.7682.651953.966662@quad.stoffel.home>
+ <20221203055816.GT19721@jpo>
+ <dad4a4d4-70bb-f09b-c2fc-05dc2d21f8bb@youngman.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1e419d58-46d8-affa-36dc-ef8c14760305@youngman.org.uk>
+In-Reply-To: <dad4a4d4-70bb-f09b-c2fc-05dc2d21f8bb@youngman.org.uk>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
 X-AntiAbuse: Primary Hostname - www18.qth.com
@@ -59,59 +59,87 @@ X-Mailing-List: linux-raid@vger.kernel.org
 Anthony, et al --
 
 ...and then Wols Lists said...
-% On 03/12/2022 05:41, David T-G wrote:
+% On 03/12/2022 05:58, David T-G wrote:
 % > 
-% > The good news here is that I don't mix disk sizes; all of these are not
-% > only the same size but, for the foreseeable future, the exact same model.
+% > I've finally convinced The Boss to spring for additional disks so that I
+% > can mirror, so our two servers both have SSD mirroring; yay.  The web
+% > server doesn't need much space, so it has a pair of 4T HDDs mirrored as
+% > well ... but as RAID10 since I thought that that was cool.  Ah, well.
 % 
-% From the exact same batch? That's BAD news actually.
+% Raid 10 across two drives? Do I read you right? So you can easily add a 3rd
+% drive to get 6TB of usable storage, but raid 10 x 2 drives = raid 1 ...
 
-I don't know about the same batch.  I got three together, so maybe, and
-then I recently added a fourth.
+Thanks for the aa/bb/cc non-symmetrical layout help recently.  I think I
+see where you're going here.  But that isn't what I have in this case.
 
-  diskfarm:~ # for D in /dev/sd[bcdk] ; do printf "$D\t" ; smartctl -i $D | grep Serial ; done
-  /dev/sdb        Serial Number:    61U0A0HQFBKG
-  /dev/sdc        Serial Number:    61U0A0BEFBKG
-  /dev/sdd        Serial Number:    61U0A007FBKG
-  /dev/sdk        Serial Number:    91C0A03ZFBKG
+Each disk is sliced into two large partitions that take up about half:
 
-How close is too close for SNs?  Anyone have a magic decoder ring?
+  davidtg@jpo:~> for D in /dev/sd[bc] ; do sudo parted $D u GiB p free | grep GiB ; done
+  Disk /dev/sdb: 3726GiB
+          0.00GiB  0.00GiB  0.00GiB  Free Space
+   1      0.00GiB  1863GiB  1863GiB               Raid1-1
+   2      1863GiB  3726GiB  1863GiB               Raid1-2
+   4      3726GiB  3726GiB  0.00GiB  ext2         Seag4000-ZDHB2X37-ext2
+  Disk /dev/sdc: 3726GiB
+          0.00GiB  0.00GiB  0.00GiB  Free Space
+   1      0.00GiB  1863GiB  1863GiB               Raid1-2
+   2      1863GiB  3726GiB  1863GiB               Raid1-1
+   4      3726GiB  3726GiB  0.00GiB               Seag4000-ZDHBKZTG-ext2
 
-I seriously think I'm going to be asking for another -- plus the
-corresponding offsite external drive -- for Christmas, so we'll be
-even more homogeneous as time goes on and maybe sooner than later.
+The two halves of each disk are then mirrored across -- BUT in an "X"
+layout.  Note that b1 pairs with c2 and c1 pairs with b2.
+
+  davidtg@jpo:~> sudo mdadm -D /dev/md/md4[12] | egrep '/dev/.d|Level'
+  /dev/md/md41:
+          Raid Level : raid1
+         0       8       17        0      active sync   /dev/sdb1
+         1       8       34        1      active sync   /dev/sdc2
+  /dev/md/md42:
+          Raid Level : raid1
+         0       8       18        0      active sync   /dev/sdb2
+         1       8       33        1      active sync   /dev/sdc1
+
+Finally, the mirrors are striped together (perhaps that should have been
+a linear instead) to make the final device.
+
+  davidtg@jpo:~> sudo mdadm -D /dev/md/40 | egrep '/dev/.d|Level'
+  /dev/md/40:
+          Raid Level : raid0
+         0       9       41        0      active sync   /dev/md/md41
+         1       9       42        1      active sync   /dev/md/md42
+
+  davidtg@jpo:~> sudo parted /dev/md40 u GiB p free | grep GiB
+  Disk /dev/md40: 3726GiB
+	  0.00GiB  0.00GiB  0.00GiB  Free Space
+   1      0.00GiB  3726GiB  3726GiB  xfs          4TRaid10md
+   4      3726GiB  3726GiB  0.00GiB  ext2         4TRaid10md-ntfs
+
+The theory was that each disk would hold half of the total in the first
+half of its space and that md would be clever enough to ask the proper
+disk for the sector to keep the head in that short run.  Writes cover the
+whole disk one way or another, of course, but reads should require less
+head movement and be quicker.
+
+Or that's how I understood it in the very many RAID wiki pages and other
+docs I read :-)
 
 
 % 
-% Now that disk sizes have been standardised (and the number of actual
-% factories/manufacturers seriously reduced), it should be that a 1TB drive is
-% a 1TB drive is a 1TB drive. Decimal, that is, not binary. So there
-% *shouldn't* be any problems swapping one random drive out for another.
+...
+% should just replay the lost writes, and you're back in business. So - if
+% your aim is speed of recovery - there's no point splitting the disk into
 
-That would be nice.  But it just feels so ... WRONG! :-)  I don't want
-to have to sweat different numbers of sectors or different caches or
-different speeds that will just make hiccups.  I'm not yet sold on
-going multi-vendor all together ...  [In different arrays or machines,
-certainly, but not when they're supposed to be identical members.]
+[Not here; that's the RAID5 system with big disks.]
 
 
-% 
-% But if all your drives are the same make, model(, and batch), there is a not
-% insignificant risk they will all share the same defects, and fail at the
-% same time. It's accepted the risk is small, but it's there.
+% slices. There are good reasons for doing it, but that isn't one of them!
 
-What is the problem?  Is it the manufacturer's firmware?  Is it the day
-they were made?  If I order a Tosh, a Seag, and a WD all on the same day
-then it sounds like I'm [much more] likely to get clones made at the same
-time in those few factories.  But I couldn't just buy a drive a quarter
-and wait nearly a year to get up and running; I had to start somewhere ...
-
-
-% 
-% It's why my raid is composed of a Seagate Barracuda 3TB (slap wrist, don't
-% use Barracudas!), 2 x 4TB Seagate Ironwolves, and 1 Toshiba 8TB N300.
-
-These are Tosh X300s, FWIW.  Like 'em so far!
+How about speed of read?  That was the goal here.  I don't foresee adding
+more disks here, although I do actually have one more internal SATA port
+and so, maybe, yeah, I might go to a three-disk RAID10 somehow.  But this
+server isn't meant to have a lot of content.  [If I can ever find my old
+SATA daughter card, though, I could hang some of those leftover <2T disks
+on it and shoehorn in more archive disks :-]
 
 
 % 
@@ -119,7 +147,7 @@ These are Tosh X300s, FWIW.  Like 'em so far!
 % Wol
 
 
-HAND
+Thanks again & HAND
 
 :-D
 -- 
