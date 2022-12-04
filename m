@@ -2,75 +2,88 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99912C4332F
-	for <linux-raid@archiver.kernel.org>; Sun,  4 Dec 2022 13:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA8BCC4708D
+	for <linux-raid@archiver.kernel.org>; Sun,  4 Dec 2022 20:30:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230071AbiLDNyR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 4 Dec 2022 08:54:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54998 "EHLO
+        id S230381AbiLDUaG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 4 Dec 2022 15:30:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229996AbiLDNyQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 4 Dec 2022 08:54:16 -0500
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFDBC13F1D
-        for <linux-raid@vger.kernel.org>; Sun,  4 Dec 2022 05:54:13 -0800 (PST)
-Received: from host86-138-24-20.range86-138.btcentralplus.com ([86.138.24.20] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1p1pRb-0001pf-ES
-        for linux-raid@vger.kernel.org;
-        Sun, 04 Dec 2022 13:54:11 +0000
-Message-ID: <86410eab-5a5a-8f9b-7b67-c9ecd10ae128@youngman.org.uk>
-Date:   Sun, 4 Dec 2022 13:54:11 +0000
+        with ESMTP id S230209AbiLDUaA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 4 Dec 2022 15:30:00 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FB061403A;
+        Sun,  4 Dec 2022 12:29:59 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id EA72EB80B94;
+        Sun,  4 Dec 2022 20:29:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDF49C433D6;
+        Sun,  4 Dec 2022 20:29:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1670185796;
+        bh=7pr8hVZJ6Hx+FhaG0oa2FI+IrcOdsDHZDzij5USkQBU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=MFvp8AzxAXsyTBEEXEMbXnCLpf+zYijfGRBH4KHkeeX2G2mBh37L/+578ilVGPD2l
+         PoVAvjiI26kfkHkt8OMgVk4Gcs/8dC5RSBWLzBHfqNYgo5G0NBWpG0J+R7pMesASJ7
+         cvXULRwUdPgnjgPO+WBWoIUGv+y34BnD1BPDy2U3s9U22/QodgTeLHge8CCx2NzKcF
+         LUxs/vaZBRj3PAH644643/uG7BM0fmwvDKbjvZsv307Hx5MsEsRI3Ru/J+oAqoXXcv
+         ngbINzNer5vFsz2CdyEfCVtl2K0roS/mneQVhFN8E1djrf9eboEcFlTQVLvmyoWPs+
+         8inCg7btm82Uw==
+Date:   Sun, 4 Dec 2022 20:29:44 +0000
+From:   Keith Busch <kbusch@kernel.org>
+To:     Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier@javigon.com>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        Matthew Wilcox <willy@infradead.org>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        axboe@kernel.dk, djwong@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        Johannes.Thumshirn@wdc.com, bvanassche@acm.org,
+        dongli.zhang@oracle.com, jefflexu@linux.alibaba.com,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, jack@suse.com,
+        tytso@mit.edu, adilger.kernel@dilger.ca, jlayton@kernel.org,
+        idryomov@gmail.com, danil.kipnis@cloud.ionos.com,
+        ebiggers@google.com, jinpu.wang@cloud.ionos.com
+Subject: Re: [PATCH 0/6] block: add support for REQ_OP_VERIFY
+Message-ID: <Y40DOJ+7WlqIwkbD@kbusch-mbp>
+References: <Y4oSiPH0ENFktioQ@kbusch-mbp.dhcp.thefacebook.com>
+ <4F15C752-AE73-4F10-B5DD-C37353782111@javigon.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: batches and serial numbers
-Content-Language: en-GB
-To:     Linux RAID list <linux-raid@vger.kernel.org>
-References: <CAAMCDecPXmZsxaAPcSOOY4S7_ieRZC8O_u7LjLLH-t8L-6+21Q@mail.gmail.com>
- <20221125132259.GG19721@jpo>
- <CAAMCDed1-4zFgHMS760dO1pThtkrn8K+FMuG-QQ+9W-FE0iq9Q@mail.gmail.com>
- <20221125194932.GK19721@jpo> <20221128142422.GM19721@jpo>
- <ab803396-fb7f-50b6-9aa8-2803aa526fe4@sotapeli.fi>
- <20221203054130.GP19721@jpo>
- <1e419d58-46d8-affa-36dc-ef8c14760305@youngman.org.uk>
- <20221203180425.GU19721@jpo>
- <38fdcd1b-2122-1f06-8dfe-5b2f8ffa8670@youngman.org.uk>
- <20221204024711.GE19721@jpo>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <20221204024711.GE19721@jpo>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4F15C752-AE73-4F10-B5DD-C37353782111@javigon.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 04/12/2022 02:47, David T-G wrote:
-> % like 'em, but they're not good in raid. And the BarraCudas even less so!
-> % I've got a nasty feeling your X300s are the same!
+On Sat, Dec 03, 2022 at 07:19:17AM +0300, Javier González wrote:
 > 
-> They have been good to me so far.  I was originally going to get N300s,
-> but I couldn't at the time, and the X300s read as the same for everything
-> I could find.  Does your N300 have ERC with a short timeout enabled by
-> default?
+> > On 2 Dec 2022, at 17.58, Keith Busch <kbusch@kernel.org> wrote:
+> > 
+> > ﻿On Fri, Dec 02, 2022 at 08:16:30AM +0100, Hannes Reinecke wrote:
+> >>> On 12/1/22 20:39, Matthew Wilcox wrote:
+> >>> On Thu, Dec 01, 2022 at 06:12:46PM +0000, Chaitanya Kulkarni wrote:
+> >>>> So nobody can get away with a lie.
+> >>> 
+> >>> And yet devices do exist which lie.  I'm not surprised that vendors
+> >>> vehemently claim that they don't, or "nobody would get away with it".
+> >>> But, of course, they do.  And there's no way for us to find out if
+> >>> they're lying!
+> >>> 
+> >> But we'll never be able to figure that out unless we try.
+> >> 
+> >> Once we've tried we will have proof either way.
+> > 
+> > As long as the protocols don't provide proof-of-work, trying this
+> > doesn't really prove anything with respect to this concern.
+> 
+> Is this something we should bring to NVMe? Seems like the main disagreement can be addressed there. 
 
-Well, Phil Turmell (one of the best recovery guys here) has N300s as his 
-"go to" drives. I trust his judgement :-)
-
-When I did my search on X300s, they come over as being "fast 
-high-performance desktop drives". And manufacturers have pretty much 
-deleted ERC from desktop drives!
-
-Given that these are CMR, though, I guess Toshiba thought "high 
-performance, we need ERC to prevent disk hangs".
-
-Whereas Barracudas were good desktop workhorse drives, and the 
-BarraCudas are aimed at the same market. The BarraCudas are SMR, and 
-presumably come with a big enough cache to guarantee decent desktop 
-performance, but they aren't aimed at the performance market.
-
-Good to know the X300s aren't going to drop people in it ...
-
-Cheers,
-Wol
+Yeah, proof for the host appears to require a new feature, so we'd need
+to bring this to the TWG. I can draft a TPAR if there's interest and
+have ideas on how the feature could be implemented, but I currently
+don't have enough skin in this game to sponser it.
