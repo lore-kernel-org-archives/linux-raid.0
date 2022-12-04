@@ -2,47 +2,45 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65818C352A1
-	for <linux-raid@archiver.kernel.org>; Sun,  4 Dec 2022 02:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 018C6C352A1
+	for <linux-raid@archiver.kernel.org>; Sun,  4 Dec 2022 02:53:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229502AbiLDCrQ convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 3 Dec 2022 21:47:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55762 "EHLO
+        id S229630AbiLDCxV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 3 Dec 2022 21:53:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229934AbiLDCrO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 3 Dec 2022 21:47:14 -0500
+        with ESMTP id S229472AbiLDCxU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 3 Dec 2022 21:53:20 -0500
 Received: from www18.qth.com (www18.qth.com [69.16.238.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67CA21D0EB
-        for <linux-raid@vger.kernel.org>; Sat,  3 Dec 2022 18:47:13 -0800 (PST)
-Received: from [73.207.192.158] (port=35540 helo=jpo)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FF231401B
+        for <linux-raid@vger.kernel.org>; Sat,  3 Dec 2022 18:53:18 -0800 (PST)
+Received: from [73.207.192.158] (port=35544 helo=jpo)
         by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.95)
         (envelope-from <davidtg-robot@justpickone.org>)
-        id 1p1f28-0008Rt-T5
+        id 1p1f81-0002n0-QI
         for linux-raid@vger.kernel.org;
-        Sat, 03 Dec 2022 20:47:12 -0600
-Date:   Sun, 4 Dec 2022 02:47:11 +0000
+        Sat, 03 Dec 2022 20:53:17 -0600
+Date:   Sun, 4 Dec 2022 02:53:16 +0000
 From:   David T-G <davidtg-robot@justpickone.org>
 To:     Linux RAID list <linux-raid@vger.kernel.org>
-Subject: Re: batches and serial numbers
-Message-ID: <20221204024711.GE19721@jpo>
+Subject: Re: about linear and about RAID10
+Message-ID: <20221204025316.GF19721@jpo>
 Reply-To: Linux RAID list <linux-raid@vger.kernel.org>
-References: <CAAMCDecPXmZsxaAPcSOOY4S7_ieRZC8O_u7LjLLH-t8L-6+21Q@mail.gmail.com>
- <20221125132259.GG19721@jpo>
- <CAAMCDed1-4zFgHMS760dO1pThtkrn8K+FMuG-QQ+9W-FE0iq9Q@mail.gmail.com>
- <20221125194932.GK19721@jpo>
- <20221128142422.GM19721@jpo>
- <ab803396-fb7f-50b6-9aa8-2803aa526fe4@sotapeli.fi>
- <20221203054130.GP19721@jpo>
- <1e419d58-46d8-affa-36dc-ef8c14760305@youngman.org.uk>
- <20221203180425.GU19721@jpo>
- <38fdcd1b-2122-1f06-8dfe-5b2f8ffa8670@youngman.org.uk>
+References: <512a4cdd-9013-e158-7c77-7409cd0dc3a1@youngman.org.uk>
+ <20221125133050.GH19721@jpo>
+ <CAAMCDee6cyM5Uw6DitWtBL3W8NbW7j0DZcUp8A2CXWZbYceXeA@mail.gmail.com>
+ <20221128144630.GN19721@jpo>
+ <548f5325-0c3b-1642-2b08-ae7b637b3ad3@thelounge.net>
+ <25477.7682.651953.966662@quad.stoffel.home>
+ <20221203055816.GT19721@jpo>
+ <dad4a4d4-70bb-f09b-c2fc-05dc2d21f8bb@youngman.org.uk>
+ <20221203182721.GV19721@jpo>
+ <dfbbb68c-6563-a56b-d4de-dc932cd40005@youngman.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8BIT
-In-Reply-To: <38fdcd1b-2122-1f06-8dfe-5b2f8ffa8670@youngman.org.uk>
+In-Reply-To: <dfbbb68c-6563-a56b-d4de-dc932cd40005@youngman.org.uk>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
 X-AntiAbuse: Primary Hostname - www18.qth.com
@@ -58,101 +56,46 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Wol --
+Wol, et al --
 
-...and then Wols Lists said...
-% On 03/12/2022 18:04, David T-G wrote:
-% > % It's why my raid is composed of a Seagate Barracuda 3TB (slap wrist, don't
-% > % use Barracudas!), 2 x 4TB Seagate Ironwolves, and 1 Toshiba 8TB N300.
+Just a couple of quick notes ...
+
+
+...and then Wol said...
+% On 03/12/2022 18:27, David T-G wrote:
 % > 
-% > These are Tosh X300s, FWIW.  Like 'em so far!
-% 
-% OUCH !!!
-% 
-% https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
+% > ...and then Wols Lists said...
+% > % On 03/12/2022 05:58, David T-G wrote:
+% > % >
+...
+% > Or that's how I understood it in the very many RAID wiki pages and other
+% > docs I read :-)
+% > 
+% Hmm ... so being pedantic about terminology that's a definite raid-1+0, not
+% linux-raid-10.
 
-No, I'm familiar.
-
-
-% 
-% Do the X300s have ERC, and what's the timeout? Barracudas are nice drives, I
-
-Yep and good.
-
-  diskfarm:~ # /usr/local/bin/smartctl-disks-timeout.sh 
-  Drive timeouts: sda Y ; sdb Y ; sdc Y ; sdd Y ; sde Y ; sdf 180 ; sdg 180 ; sdh Y ; sdi 180 ; sdj Y ; sdk Y ; sdl 180 ; sdm Y ; 
-
-I'll append my little enhancement of your script after my sig in case you
-find the tweaks interesting.
+OK.  I'll try rereading the wiki pages and see where I went wrong.
+Perhaps they can be clarified.
 
 
-% like 'em, but they're not good in raid. And the BarraCudas even less so!
-% I've got a nasty feeling your X300s are the same!
+...
+% it to a true raid-10. You said you had plenty of spare 2TBs, so --replace
+% one of your 4TBs onto a pair of 2TBs, then --replace one of your raid-0's
 
-They have been good to me so far.  I was originally going to get N300s,
-but I couldn't at the time, and the X300s read as the same for everything
-I could find.  Does your N300 have ERC with a short timeout enabled by
-default?
+Er, no.  I have plenty of "less-than-two-terabyte" drives.  They are all
+used as one-off drives for archiving content.  1T here, 750G there, and
+so on all as second copies for an ~18T external archive disk.  But, no, I
+don't have perfect lovely half-size disks waiting to bring into play (or
+they would be holding archive content! :-)
 
-
-% 
-% I said it's easy to get slices kicked out due to misconfiguration - that's
-% exactly what happens with Barracudas, and I suspect your X300s suffer the
-% exact same problem ...
-
-Well, perhaps.  I'd love to have been able to pin it down, but I never
-saw any errors and, perhaps because it was too late by then, couldn't
-track them down with additional help from folks here.
+Sorry for any confusion.
 
 
-% 
-% Read up, and come back if you've got any problems. The fix is that script,
-% but it means if anything goes wrong you're going to be cursing "that damn
-% slow computer".
-
-*grin*
-
-
-% 
-% Cheers,
-% Wol
-
-
-Thanks again & HANW
+HANW
 
 :-D
 -- 
 David T-G
 See http://justpickone.org/davidtg/email/
 See http://justpickone.org/davidtg/tofu.txt
-
-######################################################################
-
-#!/bin/sh
-
-# set timeouts manually where needed
-
-CRED='[31m'
-CYLO='[33m'
-CGRN='[32m'
-CBLU='[34m'
-CBLK='[0m'
-
-# set the timeouts on the local drives
-printf "${CBLU}Drive timeouts${CBLK}: "
-for DISK in sda sdb sdc sdd sde sdf sdg sdh	# a-d on mobo ; e-h on card
-# do i want to apply this to USB drives that show up? hmmm...
-do
-  printf "$DISK "
-  smartctl -q errorsonly -l scterc,70,70 /dev/$DISK
-  if [ 4 -eq $? ]
-  then
-    echo 180 > /sys/block/$DISK/device/timeout
-    printf "${CYLO}180"
-  else
-    printf "${CGRN}Y"
-  fi
-  printf "${CBLK} ; "
-done
-echo ''
 
