@@ -2,104 +2,133 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8B31C352A1
-	for <linux-raid@archiver.kernel.org>; Wed,  7 Dec 2022 17:08:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C473C47089
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Dec 2022 17:22:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229691AbiLGRI4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 7 Dec 2022 12:08:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50638 "EHLO
+        id S229591AbiLGRWV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 7 Dec 2022 12:22:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229627AbiLGRIz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Dec 2022 12:08:55 -0500
-Received: from mail-io1-xd2c.google.com (mail-io1-xd2c.google.com [IPv6:2607:f8b0:4864:20::d2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E33368688
-        for <linux-raid@vger.kernel.org>; Wed,  7 Dec 2022 09:08:53 -0800 (PST)
-Received: by mail-io1-xd2c.google.com with SMTP id g20so5015908iob.2
-        for <linux-raid@vger.kernel.org>; Wed, 07 Dec 2022 09:08:53 -0800 (PST)
+        with ESMTP id S229663AbiLGRWN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Dec 2022 12:22:13 -0500
+Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2157B101DE
+        for <linux-raid@vger.kernel.org>; Wed,  7 Dec 2022 09:22:13 -0800 (PST)
+Received: by mail-io1-xd32.google.com with SMTP id n188so12181101iof.8
+        for <linux-raid@vger.kernel.org>; Wed, 07 Dec 2022 09:22:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=+r3z2TzChBc0Vs/D1sJ6f4Z6Cq8sqK5Sifftb2ph/uA=;
-        b=sqgK4uVgdukFxIDxOvSAAyQFpMopVm99bZ5YD2B/lQFb1XglqtMEdjzv4zSPvnedAj
-         PlIMswBqc8UYikh4BdgySLaWBAmwPQLCA+DlUrsRTHy+/Y4trGeyfTrXAjWjIXqmWBgX
-         hTw2LZQ0rDXoDM9eo98BrRubaVVwABlt9qLRJHkrq14N5qdMHboXlGZVVHnZrW3foxss
-         cYd/kgCu+72av+pycZz+zetKRaKEH7IpVSwk9xgVJsZMOfSPMFagEGeyCzFLMIh9/Jhd
-         GCY129UD4jcHF5FgAomHtHxC6KVv+ObkjnkDwWHBHgewjgg/JqQUNZeIdPzgrsE+ubKz
-         hDYQ==
+        bh=EpTDLOhW0V3+1aR8vlaV9Hai3rR7JGPJvFehDEM1z0k=;
+        b=WuLBfeGFwu+0r21caxzCY0+TP72iv0Vmz6j4f2nARaTkZ6MmLakC7hya4ycSRvqMDI
+         SuzvbugdfQlsXrJGaT4MBJtrovZDXTkclAPuy4ARX/NXLtySpWY43xZIWrBasgcQugq8
+         vQhfZ35UxQngr2AbHjR8VvqDdM2S7bawB1nbVd8IAIAtAJ6QIM0groms0cVRZmf/5hJ5
+         gYRuWN4pmn37QJI13DuMnWpuKPm3dQxH/KlZ9pWGQ70mwlSqfH7NoBL0xtcoQk0ex4xM
+         qbmg7ziYNHJJjBjTSvOZVicehGzE9TQ8n7q/GwtauEdZJAs9Wa7FXxqQQfBLwFZUidsz
+         /Q3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+r3z2TzChBc0Vs/D1sJ6f4Z6Cq8sqK5Sifftb2ph/uA=;
-        b=Zy5BN6jJ0TDQaVfP7dB7sTcsDSni6IoX91UKaVdpXw9QsuwwB39uKG2/E1VOv36XiN
-         lUh0lpgWl2CUxaop6sJowq7fgj/3p2Hh3vbAvj03c+ziz5wIj+pVIHH8aTADskkYZLR0
-         72eF0qoh9s+yzS+A9oV0l3rztLTn59bwGgtqz/lYWjfbLinhV3Z7P4PUgnXf+Olm+IeD
-         171m95mdvDbOEYFtn0N3QMF2JFyVTtYa40Ublk8WLT4y1IYL3b1bqVMgMy12SVFHrEKE
-         bfZ5PqlZ5xFRpL5NUYBpeiaYHraxfLfP+whgZHZ+oIC1lbo0PXbJ2z/sN3HxreqepgZ/
-         CDMg==
-X-Gm-Message-State: ANoB5pn3EL8CKWXAPxuNEfq0+axQS2CrpXXeHspLnovKf4kWlByBIGBm
-        6IQblxmYqwDxeBMxtPBgnmH5kA==
-X-Google-Smtp-Source: AA0mqf7yLejbRNfqMUu3ilEvsYdDj7YhVkPipELjA6VqWKNVXZJlTdAqiTcfQmriCKmlYB7qULxDWg==
-X-Received: by 2002:a05:6638:1124:b0:38a:171a:dee with SMTP id f4-20020a056638112400b0038a171a0deemr12454949jar.292.1670432932906;
-        Wed, 07 Dec 2022 09:08:52 -0800 (PST)
+        bh=EpTDLOhW0V3+1aR8vlaV9Hai3rR7JGPJvFehDEM1z0k=;
+        b=dhbVrxl19/Ww4tzQ/xVef+PDWt1XF70/b5UaM8HGqjZkudL/tlpCHdZhS4hxri7J35
+         3DbG3ObCzKz5S8aRDD/BC5e5jkgL8ecN/Z6Ta/JXMxsZlgeKiD2lIRac+dy5RxIwyq71
+         WNHMUAbUqDFEMGsjrNMudvtrQxNpwztzuYhTx/vtcyUG6icCk30dwfnO4Ylmw9p0dbE2
+         ce5sURngp1VZn9gFuJ5IAf8Wibb7EQJBy9wxmN/M9CQ8wBMxehBPNGc0V8E90ZlMBzic
+         U3gCf1S8psxsf5vzmvJ+xiZfx6LbbAQfVzllM6Y07A8H1XYfaVTZzCfp8+iWTedhhk/2
+         ZA7w==
+X-Gm-Message-State: ANoB5pl8PSizmCLftpf4Z96DMkWAnHK4HUZxhucYIK1R7s108Bh2gedi
+        NenUGSYqRlQL0sflqZXlOz/bAQ==
+X-Google-Smtp-Source: AA0mqf7/gBf7/XEEClF7Gq7hMc0QmhQHunFYc2f4SCWfcKxA9tFoQkk2RXV+JEDjVFWOG2u7WxQZig==
+X-Received: by 2002:a05:6602:4296:b0:6e0:1464:a7d7 with SMTP id cd22-20020a056602429600b006e01464a7d7mr5843517iob.60.1670433732410;
+        Wed, 07 Dec 2022 09:22:12 -0800 (PST)
 Received: from [192.168.1.94] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id o27-20020a02a1db000000b0038a0c2ae99bsm7327723jah.18.2022.12.07.09.08.51
+        by smtp.gmail.com with ESMTPSA id q34-20020a056638346200b0038a44dbbd8fsm3597816jav.123.2022.12.07.09.22.10
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Dec 2022 09:08:52 -0800 (PST)
-Message-ID: <eaf4f9a8-dfc6-402e-4a1a-732034d1512d@kernel.dk>
-Date:   Wed, 7 Dec 2022 10:08:50 -0700
+        Wed, 07 Dec 2022 09:22:11 -0800 (PST)
+Message-ID: <b8deb6fa-8a09-c1af-278f-24e66afe367d@kernel.dk>
+Date:   Wed, 7 Dec 2022 10:22:09 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
  Thunderbird/102.5.1
 Subject: Re: [RFC] block: Change the granularity of io ticks from ms to ns
-To:     Gulam Mohamed <gulam.mohamed@oracle.com>,
-        linux-block@vger.kernel.org
-Cc:     philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
-        christoph.boehmwalder@linbit.com, minchan@kernel.org,
-        ngupta@vflare.org, senozhatsky@chromium.org, colyli@suse.de,
-        kent.overstreet@gmail.com, agk@redhat.com, snitzer@kernel.org,
-        dm-devel@redhat.com, song@kernel.org, dan.j.williams@intel.com,
-        vishal.l.verma@intel.com, dave.jiang@intel.com,
-        ira.weiny@intel.com, junxiao.bi@oracle.com,
+Content-Language: en-US
+To:     Yu Kuai <yukuai1@huaweicloud.com>, Ming Lei <ming.lei@redhat.com>
+Cc:     Gulam Mohamed <gulam.mohamed@oracle.com>,
+        linux-block@vger.kernel.org, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, christoph.boehmwalder@linbit.com,
+        minchan@kernel.org, ngupta@vflare.org, senozhatsky@chromium.org,
+        colyli@suse.de, kent.overstreet@gmail.com, agk@redhat.com,
+        snitzer@kernel.org, dm-devel@redhat.com, song@kernel.org,
+        dan.j.williams@intel.com, vishal.l.verma@intel.com,
+        dave.jiang@intel.com, ira.weiny@intel.com, junxiao.bi@oracle.com,
         martin.petersen@oracle.com, kch@nvidia.com,
         drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org,
         linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        nvdimm@lists.linux.dev, konrad.wilk@oracle.com
+        nvdimm@lists.linux.dev, konrad.wilk@oracle.com,
+        "yukuai (C)" <yukuai3@huawei.com>
 References: <20221206181536.13333-1-gulam.mohamed@oracle.com>
-Content-Language: en-US
+ <936a498b-19fe-36d5-ff32-817f153e57e3@huaweicloud.com>
+ <Y5AFX4sxLRLV4uSt@T590>
+ <aadfc6d2-ad04-279c-a1d6-7f634d0b2c99@huaweicloud.com>
 From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20221206181536.13333-1-gulam.mohamed@oracle.com>
+In-Reply-To: <aadfc6d2-ad04-279c-a1d6-7f634d0b2c99@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/6/22 11:15?AM, Gulam Mohamed wrote:
-> Use ktime to change the granularity of IO accounting in block layer from
-> milli-seconds to nano-seconds to get the proper latency values for the
-> devices whose latency is in micro-seconds. After changing the granularity
-> to nano-seconds the iostat command, which was showing incorrect values for
-> %util, is now showing correct values.
+On 12/7/22 6:09 AM, Yu Kuai wrote:
+> Hi,
 > 
-> We did not work on the patch to drop the logic for
-> STAT_PRECISE_TIMESTAMPS yet. Will do it if this patch is ok.
+> 在 2022/12/07 11:15, Ming Lei 写道:
+>> On Wed, Dec 07, 2022 at 10:19:08AM +0800, Yu Kuai wrote:
+>>> Hi,
+>>>
+>>> 在 2022/12/07 2:15, Gulam Mohamed 写道:
+>>>> Use ktime to change the granularity of IO accounting in block layer from
+>>>> milli-seconds to nano-seconds to get the proper latency values for the
+>>>> devices whose latency is in micro-seconds. After changing the granularity
+>>>> to nano-seconds the iostat command, which was showing incorrect values for
+>>>> %util, is now showing correct values.
+>>>
+>>> This patch didn't correct the counting of io_ticks, just make the
+>>> error accounting from jiffies(ms) to ns. The problem that util can be
+>>> smaller or larger still exist.
+>>
+>> Agree.
+>>
+>>>
+>>> However, I think this change make sense consider that error margin is
+>>> much smaller, and performance overhead should be minimum.
+>>>
+>>> Hi, Ming, how do you think?
+>>
+>> I remembered that ktime_get() has non-negligible overhead, is there any
+>> test data(iops/cpu utilization) when running fio or t/io_uring on
+>> null_blk with this patch?
 > 
-> The iostat command was run after starting the fio with following command
-> on an NVME disk. For the same fio command, the iostat %util was showing
-> ~100% for the disks whose latencies are in the range of microseconds.
-> With the kernel changes (granularity to nano-seconds), the %util was
-> showing correct values. Following are the details of the test and their
-> output:
+> Yes, testing with null_blk is necessary, we don't want any performance
+> regression.
 
-As mentioned, this will most likely have a substantial performance
-impact. I'd test it, but your patch is nowhere near applying to the
-current block tree. Please resend it against for-6.2/block so it can
-get tested.
+null_blk is fine as a substitute, but I'd much rather run this on my
+test bench with actual IO and devices.
+
+> BTW, I thought it's fine because it's already used for tracking io
+> latency.
+
+Reading a nsec timestamp is a LOT more expensive than reading jiffies,
+which is essentially free. If you look at the amount of work that's
+gone into minimizing ktime_get() for the fast path in the IO stack,
+then that's a testament to that.
+
+So that's a very bad assumption, and definitely wrong.
 
 -- 
 Jens Axboe
+
 
