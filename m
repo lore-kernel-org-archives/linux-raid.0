@@ -2,87 +2,106 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE671C4332F
-	for <linux-raid@archiver.kernel.org>; Mon, 12 Dec 2022 07:05:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE9A6C4332F
+	for <linux-raid@archiver.kernel.org>; Mon, 12 Dec 2022 09:24:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231288AbiLLHFf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 12 Dec 2022 02:05:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47420 "EHLO
+        id S231576AbiLLJY2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 12 Dec 2022 04:24:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229647AbiLLHFe (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 12 Dec 2022 02:05:34 -0500
-Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F0C3F60D9
-        for <linux-raid@vger.kernel.org>; Sun, 11 Dec 2022 23:05:32 -0800 (PST)
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id B34DE616CA;
-        Mon, 12 Dec 2022 18:05:30 +1100 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id 9xwViZEeBFYF; Mon, 12 Dec 2022 18:05:30 +1100 (AEDT)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 85CC761646;
-        Mon, 12 Dec 2022 18:05:30 +1100 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id 6EE8D680272; Mon, 12 Dec 2022 18:05:30 +1100 (AEDT)
-Date:   Mon, 12 Dec 2022 18:05:30 +1100
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     Wols Lists <antlists@youngman.org.uk>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: Is it possible to restart --add?
-Message-ID: <20221212070530.GA138951@onthe.net.au>
-References: <20221210195945.GA34756@onthe.net.au>
- <d4e4611f-4764-c66a-0bc9-b8dbcbfae39e@youngman.org.uk>
+        with ESMTP id S231889AbiLLJXv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 12 Dec 2022 04:23:51 -0500
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0EFE5FCB
+        for <linux-raid@vger.kernel.org>; Mon, 12 Dec 2022 01:23:49 -0800 (PST)
+Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NVx4D34YWz15NJy;
+        Mon, 12 Dec 2022 17:22:52 +0800 (CST)
+Received: from [10.174.177.197] (10.174.177.197) by
+ kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Mon, 12 Dec 2022 17:23:47 +0800
+From:   lixiaokeng <lixiaokeng@huawei.com>
+Subject: [PATCH] Fix NULL difference in super_by_fd
+To:     <jes@trained-monkey.org>, <linux-raid@vger.kernel.org>
+CC:     linfeilong <linfeilong@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
+        Wu Guanghao <wuguanghao3@huawei.com>
+Message-ID: <4dc03371-2b6f-a606-6e57-13fb774daa2d@huawei.com>
+Date:   Mon, 12 Dec 2022 17:23:46 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <d4e4611f-4764-c66a-0bc9-b8dbcbfae39e@youngman.org.uk>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.177.197]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600010.china.huawei.com (7.193.23.86)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sun, Dec 11, 2022 at 01:55:54PM +0000, Wols Lists wrote:
-> On 10/12/2022 19:59, Chris Dunlop wrote:
->> Hi,
->>
->> When replacing a failed disk with a new one using --add, is it 
->> possible to restart a partially-complete --add, e.g. after a reboot?
->>
->> I have a raid-6 with a failed disk, and used --add to add a new disk 
->> as a replacement. From /proc/mdstat, "finish" told me it would take 
->> around 24 hours to complete the add.
->>
->> The machine was rebooted some hours into the add, and on restart the 
->> md was missing the new disk (and the failed disk). I tried to 
->> --re-add the new disk again, but mdadm told me it's "not possible":
->>
->> mdadm: --re-add for /dev/sdh1 to /dev/md0 is not possible
->>
->> I ended up --add'ing the disk again, so the 24 hours to complete 
->> started again.
->>
->> Is this expected, and/or is there a way to restart the --add rather 
->> than starting from the beginning again?
->
-> Raid is supposed to be robust, so this surprises me. When it rebooted 
-> it should have known it was part-way through a rebuild. Was it a 
-> controlled reboot, or a crash and restart?
+When we create 100 partitions(major is 259 not 254) in a raid device,
+mdadm may coredump:
 
-Controlled reboot.
+Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p3'.
+Program terminated with signal SIGSEGV, Segmentation fault.
+#0  __strlen_sse2 ()
+    at ../sysdeps/x86_64/multiarch/strlen-vec.S:126
+126		movdqu	(%rax), %xmm4
+(gdb) bt
+#0  __strlen_sse2 ()
+    at ../sysdeps/x86_64/multiarch/strlen-vec.S:126
+#1  0x00007f1944659139 in __strcpy_chk (
+    dest=dest@entry=0x55ea8d7c23ac "", src=0x0,
+    destlen=destlen@entry=32) at strcpy_chk.c:28
+#2  0x000055ea8d10b66d in strcpy (__src=<optimized out>,
+    __dest=0x55ea8d7c23ac "")
+    at /usr/include/bits/string_fortified.h:79
+#3  super_by_fd (fd=fd@entry=3,
+    subarrayp=subarrayp@entry=0x7ffe6a1dff08) at util.c:1289
+#4  0x000055ea8d11b3a6 in Detail (
+    dev=0x7ffe6a1e2f22 "/dev/md1p3", c=0x7ffe6a1e1700)
+    at Detail.c:101
+#5  0x000055ea8d101e61 in misc_list (c=<optimized out>,
+    ss=<optimized out>, dump_directory=<optimized out>,
+    ident=<optimized out>, devlist=<optimized out>)
+    at mdadm.c:1959
+#6  main (argc=<optimized out>, argv=<optimized out>)
+    at mdadm.c:1629
 
-> What I would expect is that the array would be rebuilt including sdh1, 
-> and the rebuild would just carry on. So I suspect that whatever went 
-> wrong, it was a bit further back than that - somehow md forgot that 
-> sdh1 was now part of the array.
+The direct cause is fd2devnm return NULL. Here add a check.
 
-Yes, I was expecting that the --add would be periodically recording it's 
-current "synced to" block or offset so on restart it would be able to pick 
-up where it left off (or a little before).
+Signed-off-by:Lixiaokeng<lixiaokeng@huawei.com>
+Signed-off-by:Wuguanghao<wuguanghao3@huawei.com>
+---
+ util.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-> Weird.
+diff --git a/util.c b/util.c
+index 26ffdcea..843bfc6d 100644
+--- a/util.c
++++ b/util.c
+@@ -1177,6 +1177,7 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
+ 	int i;
+ 	char *subarray = NULL;
+ 	char container[32] = "";
++	char *devnm = NULL;
 
-Yup.
+ 	sra = sysfs_read(fd, NULL, GET_VERSION);
 
-Tks,
+@@ -1222,7 +1223,10 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
+ 		if (subarrayp)
+ 			*subarrayp = subarray;
+ 		strcpy(st->container_devnm, container);
+-		strcpy(st->devnm, fd2devnm(fd));
++		if (devnm = fd2devnm(fd))
++			strcpy(st->devnm, devnm);
++		else
++			st->devnm[0] = '\0';
+ 	} else
+ 		free(subarray);
 
-Chris
+-- 
