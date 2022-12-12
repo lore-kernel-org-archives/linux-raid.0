@@ -2,72 +2,78 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C1CFC4332F
-	for <linux-raid@archiver.kernel.org>; Sun, 11 Dec 2022 13:56:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45A7AC4332F
+	for <linux-raid@archiver.kernel.org>; Mon, 12 Dec 2022 06:30:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229918AbiLKNz7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 11 Dec 2022 08:55:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35902 "EHLO
+        id S231321AbiLLGab (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 12 Dec 2022 01:30:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbiLKNz6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 11 Dec 2022 08:55:58 -0500
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9587EBE0F
-        for <linux-raid@vger.kernel.org>; Sun, 11 Dec 2022 05:55:56 -0800 (PST)
-Received: from host86-138-24-20.range86-138.btcentralplus.com ([86.138.24.20] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1p4Mo6-0006PD-CS;
-        Sun, 11 Dec 2022 13:55:55 +0000
-Message-ID: <d4e4611f-4764-c66a-0bc9-b8dbcbfae39e@youngman.org.uk>
-Date:   Sun, 11 Dec 2022 13:55:54 +0000
+        with ESMTP id S229697AbiLLGaa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 12 Dec 2022 01:30:30 -0500
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0E07B1EA;
+        Sun, 11 Dec 2022 22:30:28 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 70C1268AA6; Mon, 12 Dec 2022 07:30:18 +0100 (CET)
+Date:   Mon, 12 Dec 2022 07:30:17 +0100
+From:   "hch@lst.de" <hch@lst.de>
+To:     Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Clay Mayers <Clay.Mayers@kioxia.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Matthew Wilcox <willy@infradead.org>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "djwong@kernel.org" <djwong@kernel.org>, "hch@lst.de" <hch@lst.de>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "javier@javigon.com" <javier@javigon.com>,
+        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
+        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "jlayton@kernel.org" <jlayton@kernel.org>,
+        "idryomov@gmail.com" <idryomov@gmail.com>,
+        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
+        "ebiggers@google.com" <ebiggers@google.com>,
+        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
+Subject: Re: [PATCH 0/6] block: add support for REQ_OP_VERIFY
+Message-ID: <20221212063017.GA9290@lst.de>
+References: <20220630091406.19624-1-kch@nvidia.com> <YsXJdXnXsMtaC8DJ@casper.infradead.org> <d14fe396-b39b-6b3e-ae74-eb6a8b64e379@nvidia.com> <Y4kC9NIXevPlji+j@casper.infradead.org> <72a51a83-c25a-ef52-55fb-2b73aec70305@suse.de> <Y4oSiPH0ENFktioQ@kbusch-mbp.dhcp.thefacebook.com> <f68009b7cc744c02ad69d68fd7e61751@kioxia.com> <yq14ju5gvfh.fsf@ca-mkp.ca.oracle.com> <Y5SEWnNUpgKxOB/W@fisica.ufpr.br>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: Is it possible to restart --add?
-Content-Language: en-GB
-To:     Chris Dunlop <chris@onthe.net.au>, linux-raid@vger.kernel.org
-References: <20221210195945.GA34756@onthe.net.au>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <20221210195945.GA34756@onthe.net.au>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y5SEWnNUpgKxOB/W@fisica.ufpr.br>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 10/12/2022 19:59, Chris Dunlop wrote:
-> Hi,
+On Sat, Dec 10, 2022 at 10:06:34AM -0300, Carlos Carvalho wrote:
+> Certainly we have. Currently admins have to periodically run full block range
+> checks in redundant arrays to detect bad blocks and correct them while
+> redundancy is available. Otherwise when a disk fails and you try to reconstruct
+> the replacement you hit another block in the remaining disks that's bad and you
+> cannot complete the reconstruction and have data loss. These checks are a
+> burden because they have HIGH overhead, significantly reducing bandwidth for
+> the normal use of the array.
 > 
-> When replacing a failed disk with a new one using --add, is it possible 
-> to restart a partially-complete --add, e.g. after a reboot?
-> 
-> I have a raid-6 with a failed disk, and used --add to add a new disk as 
-> a replacement. From /proc/mdstat, "finish" told me it would take around 
-> 24 hours to complete the add.
-> 
-> The machine was rebooted some hours into the add, and on restart the md 
-> was missing the new disk (and the failed disk). I tried to --re-add the 
-> new disk again, but mdadm told me it's "not possible":
-> 
-> mdadm: --re-add for /dev/sdh1 to /dev/md0 is not possible
-> 
-> I ended up --add'ing the disk again, so the 24 hours to complete started 
-> again.
-> 
-> Is this expected, and/or is there a way to restart the --add rather than 
-> starting from the beginning again?
-> 
-Raid is supposed to be robust, so this surprises me. When it rebooted it 
-should have known it was part-way through a rebuild. Was it a controlled 
-reboot, or a crash and restart?
+> If there was a standard interface for getting the list of bad blocks that the
+> firmware secretly knows the kernel could implement the repair continuosly, with
+> logs etc. That'd really be a relief for admins and, specially, users.
 
-What I would expect is that the array would be rebuilt including sdh1, 
-and the rebuild would just carry on. So I suspect that whatever went 
-wrong, it was a bit further back than that - somehow md forgot that sdh1 
-was now part of the array.
-
-Weird.
-
-Cheers,
-Wol
+Both SCSI and NVMe can do this through the GET LBA STATUS command -
+in SCSI this was a later addition abusing the command, and in NVMe
+only the abuse survived.  NVMe also has a log page an AEN associated
+for it, I'd have to spend more time reading SBC to remember if SCSI
+also has a notification mechanism of some sort.
