@@ -2,25 +2,25 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4848EC4332F
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Dec 2022 01:19:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97329C4332F
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Dec 2022 03:08:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237668AbiLNBTG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 13 Dec 2022 20:19:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45202 "EHLO
+        id S236946AbiLNDIf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 13 Dec 2022 22:08:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236705AbiLNBTF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Dec 2022 20:19:05 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90EFC1C129
-        for <linux-raid@vger.kernel.org>; Tue, 13 Dec 2022 17:19:04 -0800 (PST)
+        with ESMTP id S235771AbiLNDIe (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Dec 2022 22:08:34 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5D6D2F4
+        for <linux-raid@vger.kernel.org>; Tue, 13 Dec 2022 19:08:32 -0800 (PST)
 Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NWy8r5zcWzJpK8;
-        Wed, 14 Dec 2022 09:15:24 +0800 (CST)
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NX0ZP646PzqT6Z;
+        Wed, 14 Dec 2022 11:04:13 +0800 (CST)
 Received: from [10.174.177.197] (10.174.177.197) by
  kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Wed, 14 Dec 2022 09:19:02 +0800
+ 15.1.2375.34; Wed, 14 Dec 2022 11:08:30 +0800
 Subject: Re: [PATCH] Fix NULL difference in super_by_fd
 To:     Jes Sorensen <jes@trained-monkey.org>, <linux-raid@vger.kernel.org>
 CC:     linfeilong <linfeilong@huawei.com>,
@@ -29,8 +29,8 @@ CC:     linfeilong <linfeilong@huawei.com>,
 References: <4dc03371-2b6f-a606-6e57-13fb774daa2d@huawei.com>
  <ee7a182c-88e4-16b4-f6f4-9efae1fef6d1@trained-monkey.org>
 From:   lixiaokeng <lixiaokeng@huawei.com>
-Message-ID: <5b4ebd8e-1e69-5e68-42aa-78011548a408@huawei.com>
-Date:   Wed, 14 Dec 2022 09:19:01 +0800
+Message-ID: <2dc4bad7-3fb3-0869-fb84-f047e9d7a9dc@huawei.com>
+Date:   Wed, 14 Dec 2022 11:08:29 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
@@ -39,7 +39,7 @@ Content-Type: text/plain; charset="utf-8"
 Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.174.177.197]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
  kwepemm600010.china.huawei.com (7.193.23.86)
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -113,12 +113,14 @@ On 2022/12/13 23:30, Jes Sorensen wrote:
 > incomplete 'st' entry, which could cause unexpected behavior. I think
 > the right way to handle this is to fail properly and return NULL from
 > super_by_fd(), after cleaning up properly.
+
+Here is another question: Should devid2devnm() be modifed?
+Becasue the major of MD partition may not be 254(mdp).
+
 > 
 > Cheers,
 > Jes
 > 
-Thanks for reply, I will change my patch and send it again.
-
 > 
 > .
 > 
