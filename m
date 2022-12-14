@@ -2,118 +2,123 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4589BC10F1D
-	for <linux-raid@archiver.kernel.org>; Tue, 13 Dec 2022 15:49:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4848EC4332F
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Dec 2022 01:19:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236378AbiLMPt1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 13 Dec 2022 10:49:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44352 "EHLO
+        id S237668AbiLNBTG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 13 Dec 2022 20:19:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236236AbiLMPsl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Dec 2022 10:48:41 -0500
-X-Greylist: delayed 910 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 13 Dec 2022 07:46:23 PST
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EC66240A1
-        for <linux-raid@vger.kernel.org>; Tue, 13 Dec 2022 07:46:22 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1670945454; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=C7YZGck/8s2Ro7qye7a5rNVvvJ016YSmkDHcgLNJti79HJFPjpB3QPs+SVr2TwhIJoyEhP5gzDabsSFznrue1+O0NhoTIfCPp8l2FJ2UniGsoj1RZTHNlRXLuAGqmFNc5ucPvx5HrHh0/6EZem2Qm32ImHW9ShYYMaJHa8zSnik=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1670945454; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=R56Pb29CZPqMkjxVnMXriivMDr1RsfRLxyzbzPkn7fA=; 
-        b=Upgy6NZKR8BAY1Vtp+jJWgrw/4ngoOEAqLzGhDrErhlc9aXXXf2Js3RWzgdA7Xxn+UgYoK7ksMlr1Ay+EaTLlOO4ocH68JDqc0pjjYXDXPdsH+bHm+MzI3bQN8SI6gy3YIX6ctTMVfo4ij4dLpMgrdcgHZryQqsNyZvzb/LIkko=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.78] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 1670945452211475.75156322358646; Tue, 13 Dec 2022 16:30:52 +0100 (CET)
-Message-ID: <ee7a182c-88e4-16b4-f6f4-9efae1fef6d1@trained-monkey.org>
-Date:   Tue, 13 Dec 2022 10:30:50 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.1
+        with ESMTP id S236705AbiLNBTF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Dec 2022 20:19:05 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90EFC1C129
+        for <linux-raid@vger.kernel.org>; Tue, 13 Dec 2022 17:19:04 -0800 (PST)
+Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NWy8r5zcWzJpK8;
+        Wed, 14 Dec 2022 09:15:24 +0800 (CST)
+Received: from [10.174.177.197] (10.174.177.197) by
+ kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Wed, 14 Dec 2022 09:19:02 +0800
 Subject: Re: [PATCH] Fix NULL difference in super_by_fd
-Content-Language: en-US
-To:     lixiaokeng <lixiaokeng@huawei.com>, linux-raid@vger.kernel.org
-Cc:     linfeilong <linfeilong@huawei.com>,
+To:     Jes Sorensen <jes@trained-monkey.org>, <linux-raid@vger.kernel.org>
+CC:     linfeilong <linfeilong@huawei.com>,
         "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
         Wu Guanghao <wuguanghao3@huawei.com>
 References: <4dc03371-2b6f-a606-6e57-13fb774daa2d@huawei.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <4dc03371-2b6f-a606-6e57-13fb774daa2d@huawei.com>
-Content-Type: text/plain; charset=UTF-8
+ <ee7a182c-88e4-16b4-f6f4-9efae1fef6d1@trained-monkey.org>
+From:   lixiaokeng <lixiaokeng@huawei.com>
+Message-ID: <5b4ebd8e-1e69-5e68-42aa-78011548a408@huawei.com>
+Date:   Wed, 14 Dec 2022 09:19:01 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <ee7a182c-88e4-16b4-f6f4-9efae1fef6d1@trained-monkey.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+X-Originating-IP: [10.174.177.197]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemm600010.china.huawei.com (7.193.23.86)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/12/22 04:23, lixiaokeng wrote:
-> When we create 100 partitions(major is 259 not 254) in a raid device,
-> mdadm may coredump:
-> 
-> Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p3'.
-> Program terminated with signal SIGSEGV, Segmentation fault.
-> #0  __strlen_sse2 ()
->     at ../sysdeps/x86_64/multiarch/strlen-vec.S:126
-> 126		movdqu	(%rax), %xmm4
-> (gdb) bt
-> #0  __strlen_sse2 ()
->     at ../sysdeps/x86_64/multiarch/strlen-vec.S:126
-> #1  0x00007f1944659139 in __strcpy_chk (
->     dest=dest@entry=0x55ea8d7c23ac "", src=0x0,
->     destlen=destlen@entry=32) at strcpy_chk.c:28
-> #2  0x000055ea8d10b66d in strcpy (__src=<optimized out>,
->     __dest=0x55ea8d7c23ac "")
->     at /usr/include/bits/string_fortified.h:79
-> #3  super_by_fd (fd=fd@entry=3,
->     subarrayp=subarrayp@entry=0x7ffe6a1dff08) at util.c:1289
-> #4  0x000055ea8d11b3a6 in Detail (
->     dev=0x7ffe6a1e2f22 "/dev/md1p3", c=0x7ffe6a1e1700)
->     at Detail.c:101
-> #5  0x000055ea8d101e61 in misc_list (c=<optimized out>,
->     ss=<optimized out>, dump_directory=<optimized out>,
->     ident=<optimized out>, devlist=<optimized out>)
->     at mdadm.c:1959
-> #6  main (argc=<optimized out>, argv=<optimized out>)
->     at mdadm.c:1629
-> 
-> The direct cause is fd2devnm return NULL. Here add a check.
-> 
-> Signed-off-by:Lixiaokeng<lixiaokeng@huawei.com>
-> Signed-off-by:Wuguanghao<wuguanghao3@huawei.com>
-> ---
->  util.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/util.c b/util.c
-> index 26ffdcea..843bfc6d 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1177,6 +1177,7 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
->  	int i;
->  	char *subarray = NULL;
->  	char container[32] = "";
-> +	char *devnm = NULL;
-> 
->  	sra = sysfs_read(fd, NULL, GET_VERSION);
-> 
-> @@ -1222,7 +1223,10 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
->  		if (subarrayp)
->  			*subarrayp = subarray;
->  		strcpy(st->container_devnm, container);
-> -		strcpy(st->devnm, fd2devnm(fd));
-> +		if (devnm = fd2devnm(fd))
-> +			strcpy(st->devnm, devnm);
-> +		else
-> +			st->devnm[0] = '\0';
-
-I don't think this is the correct fix. You end up returning an
-incomplete 'st' entry, which could cause unexpected behavior. I think
-the right way to handle this is to fail properly and return NULL from
-super_by_fd(), after cleaning up properly.
-
-Cheers,
-Jes
 
 
+On 2022/12/13 23:30, Jes Sorensen wrote:
+> On 12/12/22 04:23, lixiaokeng wrote:
+>> When we create 100 partitions(major is 259 not 254) in a raid device,
+>> mdadm may coredump:
+>>
+>> Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p3'.
+>> Program terminated with signal SIGSEGV, Segmentation fault.
+>> #0  __strlen_sse2 ()
+>>     at ../sysdeps/x86_64/multiarch/strlen-vec.S:126
+>> 126		movdqu	(%rax), %xmm4
+>> (gdb) bt
+>> #0  __strlen_sse2 ()
+>>     at ../sysdeps/x86_64/multiarch/strlen-vec.S:126
+>> #1  0x00007f1944659139 in __strcpy_chk (
+>>     dest=dest@entry=0x55ea8d7c23ac "", src=0x0,
+>>     destlen=destlen@entry=32) at strcpy_chk.c:28
+>> #2  0x000055ea8d10b66d in strcpy (__src=<optimized out>,
+>>     __dest=0x55ea8d7c23ac "")
+>>     at /usr/include/bits/string_fortified.h:79
+>> #3  super_by_fd (fd=fd@entry=3,
+>>     subarrayp=subarrayp@entry=0x7ffe6a1dff08) at util.c:1289
+>> #4  0x000055ea8d11b3a6 in Detail (
+>>     dev=0x7ffe6a1e2f22 "/dev/md1p3", c=0x7ffe6a1e1700)
+>>     at Detail.c:101
+>> #5  0x000055ea8d101e61 in misc_list (c=<optimized out>,
+>>     ss=<optimized out>, dump_directory=<optimized out>,
+>>     ident=<optimized out>, devlist=<optimized out>)
+>>     at mdadm.c:1959
+>> #6  main (argc=<optimized out>, argv=<optimized out>)
+>>     at mdadm.c:1629
+>>
+>> The direct cause is fd2devnm return NULL. Here add a check.
+>>
+>> Signed-off-by:Lixiaokeng<lixiaokeng@huawei.com>
+>> Signed-off-by:Wuguanghao<wuguanghao3@huawei.com>
+>> ---
+>>  util.c | 6 +++++-
+>>  1 file changed, 5 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/util.c b/util.c
+>> index 26ffdcea..843bfc6d 100644
+>> --- a/util.c
+>> +++ b/util.c
+>> @@ -1177,6 +1177,7 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
+>>  	int i;
+>>  	char *subarray = NULL;
+>>  	char container[32] = "";
+>> +	char *devnm = NULL;
+>>
+>>  	sra = sysfs_read(fd, NULL, GET_VERSION);
+>>
+>> @@ -1222,7 +1223,10 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
+>>  		if (subarrayp)
+>>  			*subarrayp = subarray;
+>>  		strcpy(st->container_devnm, container);
+>> -		strcpy(st->devnm, fd2devnm(fd));
+>> +		if (devnm = fd2devnm(fd))
+>> +			strcpy(st->devnm, devnm);
+>> +		else
+>> +			st->devnm[0] = '\0';
+> 
+> I don't think this is the correct fix. You end up returning an
+> incomplete 'st' entry, which could cause unexpected behavior. I think
+> the right way to handle this is to fail properly and return NULL from
+> super_by_fd(), after cleaning up properly.
+> 
+> Cheers,
+> Jes
+> 
+Thanks for reply, I will change my patch and send it again.
+
+> 
+> .
+> 
