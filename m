@@ -2,111 +2,67 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D1BC4332F
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Dec 2022 07:55:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B878FC4332F
+	for <linux-raid@archiver.kernel.org>; Thu, 15 Dec 2022 11:50:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237557AbiLNHzR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Dec 2022 02:55:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60676 "EHLO
+        id S229637AbiLOLug (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 15 Dec 2022 06:50:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237348AbiLNHzP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Dec 2022 02:55:15 -0500
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71A3F1145B
-        for <linux-raid@vger.kernel.org>; Tue, 13 Dec 2022 23:55:13 -0800 (PST)
-Received: from [192.168.0.2] (ip5f5aefcc.dynamic.kabel-deutschland.de [95.90.239.204])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 2FE0E60027FC1;
-        Wed, 14 Dec 2022 08:55:10 +0100 (CET)
-Message-ID: <b9a7c2ef-0475-540a-83ef-afb0e2608517@molgen.mpg.de>
-Date:   Wed, 14 Dec 2022 08:55:09 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
+        with ESMTP id S229562AbiLOLuf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Dec 2022 06:50:35 -0500
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF16629CB0
+        for <linux-raid@vger.kernel.org>; Thu, 15 Dec 2022 03:50:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1671105034; x=1702641034;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=diw2kwnueiH4nQLzIDy2MwakKk/7TWik5mKL+OMxSJM=;
+  b=Y+DAWQL7ONqt3tPTBdorPY94o5qTER3Fe7BR5kP+3ZQedN2Zw5Br0gRT
+   l4SOq+JAMhkHmWfWcXh3affkzCYDLY7Z8N58nBilyb/FEOCuknObqIf3Y
+   lVixOlbZ47jcCcGszuynnBcCy0j5X5+Pch/RjrMIV49jp2g2jB0Zet37W
+   u0SCZk2An+0Hucu3KbPpi32ICiklajz/60vgiMZhHllT/iZ76/0Wvnc38
+   dLuz12tTZx4CAww1WqtcoClE4KPJCoJ9r3VksB89dq7ZSuhNTEyV/dEHS
+   aBCVAMEUJmXHn2spCRYpCZSXyLUXFXn9hDFAP26/yhK+bgIXGzzGxZrDK
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10561"; a="298335372"
+X-IronPort-AV: E=Sophos;i="5.96,247,1665471600"; 
+   d="scan'208";a="298335372"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Dec 2022 03:50:34 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10561"; a="627160544"
+X-IronPort-AV: E=Sophos;i="5.96,247,1665471600"; 
+   d="scan'208";a="627160544"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.41.164])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Dec 2022 03:50:32 -0800
+Date:   Thu, 15 Dec 2022 12:50:27 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     lixiaokeng <lixiaokeng@huawei.com>
+Cc:     Jes Sorensen <jes@trained-monkey.org>,
+        <linux-raid@vger.kernel.org>, linfeilong <linfeilong@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
+        Wu Guanghao <wuguanghao3@huawei.com>
 Subject: Re: [PATCH V2] Fix NULL dereference in super_by_fd
-To:     lixiaokeng@huawei.com
-Cc:     Jes Sorensen <jes@trained-monkey.org>, linfeilong@huawei.com,
-        liuzhiqiang26@huawei.com, Wu Guanghao <wuguanghao3@huawei.com>,
-        linux-raid@vger.kernel.org
-References: <c2cb8668-afc8-459a-9c91-9b0002fbeaa0@huawei.com>
-Content-Language: en-US
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
+Message-ID: <20221215125027.00002a45@linux.intel.com>
 In-Reply-To: <c2cb8668-afc8-459a-9c91-9b0002fbeaa0@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <c2cb8668-afc8-459a-9c91-9b0002fbeaa0@huawei.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear lixiaokeng,
+On Wed, 14 Dec 2022 11:17:41 +0800
+lixiaokeng <lixiaokeng@huawei.com> wrote:
 
+> strcpy(st->devnm, devnm);
 
-Thank you for your patch. I found a few style issues.
+Hi,
+Please use strncpy or snprintf here.
 
-Am 14.12.22 um 04:17 schrieb lixiaokeng:
-> When we create 100 partitions(major is 259 not 254) in a raid device,
-
-Please add a space before the (.
-
-> mdadm may coredump:
-> 
-> Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p3'.
-> Program terminated with signal SIGSEGV, Segmentation fault.
-> #0  __strlen_sse2 ()
->      at ../sysdeps/x86_64/multiarch/strlen-vec.S:126
-> 126		movdqu	(%rax), %xmm4
-> (gdb) bt
-> #0  __strlen_sse2 ()
->      at ../sysdeps/x86_64/multiarch/strlen-vec.S:126
-> #1  0x00007f1944659139 in __strcpy_chk (
->      dest=dest@entry=0x55ea8d7c23ac "", src=0x0,
->      destlen=destlen@entry=32) at strcpy_chk.c:28
-> #2  0x000055ea8d10b66d in strcpy (__src=<optimized out>,
->      __dest=0x55ea8d7c23ac "")
->      at /usr/include/bits/string_fortified.h:79
-> #3  super_by_fd (fd=fd@entry=3,
->      subarrayp=subarrayp@entry=0x7ffe6a1dff08) at util.c:1289
-> #4  0x000055ea8d11b3a6 in Detail (
->      dev=0x7ffe6a1e2f22 "/dev/md1p3", c=0x7ffe6a1e1700)
->      at Detail.c:101
-> #5  0x000055ea8d101e61 in misc_list (c=<optimized out>,
->      ss=<optimized out>, dump_directory=<optimized out>,
->      ident=<optimized out>, devlist=<optimized out>)
->      at mdadm.c:1959
-> #6  main (argc=<optimized out>, argv=<optimized out>)
->      at mdadm.c:1629
-
-Please do not wrap the pasted lines.
-
-> The direct cause is fd2devnm return NULL. Here add a check.
-
-… returning NULL, so add a check.
-
-> Signed-off-by:Lixiaokeng<lixiaokeng@huawei.com>
-> Signed-off-by:Wuguanghao<wuguanghao3@huawei.com>
-
-Please add a space after the colon, and before the <. Also, is 
-Lixiaokeng your name, or could it be written Li Xiao Keng? Please use 
-that format – `git config --global user.name "…"`.
-
-     git commit --amend --author="Li Xiao Keng <lixiaokeng@huawei.com>"
-
-> ---
-
-As this is the second iteration (version 2) of the patch, it’s common, 
-that you add a note, what the difference between this and the previous 
-versions are.
-
->   mapfile.c | 4 ++++
->   util.c    | 7 ++++++-
->   2 files changed, 10 insertions(+), 1 deletion(-)
-
-[…]
-
-
-Kind regards,
-
-Paul
+Thanks,
+Mariusz
