@@ -2,45 +2,45 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21A2BC4167B
-	for <linux-raid@archiver.kernel.org>; Sun, 18 Dec 2022 17:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B710FC54E76
+	for <linux-raid@archiver.kernel.org>; Sun, 18 Dec 2022 17:08:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233271AbiLRRDm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 18 Dec 2022 12:03:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45046 "EHLO
+        id S233350AbiLRRID (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 18 Dec 2022 12:08:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233369AbiLRRCi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Dec 2022 12:02:38 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D19E315FD2;
-        Sun, 18 Dec 2022 08:21:06 -0800 (PST)
+        with ESMTP id S233301AbiLRRGN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Dec 2022 12:06:13 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF15813CD7;
+        Sun, 18 Dec 2022 08:22:28 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 88D2EB803F1;
-        Sun, 18 Dec 2022 16:21:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A33A0C433D2;
-        Sun, 18 Dec 2022 16:21:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8933B60DB4;
+        Sun, 18 Dec 2022 16:22:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52283C43396;
+        Sun, 18 Dec 2022 16:22:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671380464;
-        bh=uT0YmWr4/lUhW267+4TnSWcFDE4Uny0pj1pF42wAsS4=;
+        s=k20201202; t=1671380548;
+        bh=M1Rv4ePsvtWaW4+sBTVXzWFT21qk4HkDaNMH+tQ+aGk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kitj5TrspLPbIU4rcXaqi+9guMd9mHgbBXkk1onWUv6mUdVHeovh913iPzrevDHsl
-         PmZLyM5yDQ8u9dJfGNnpuexeXBYccyjadNvcFNEWTeDgm4Fx/E9X0oqbzlQqCLoDrJ
-         VAatvjnxpCbWN9SXCKz/SkMXmM+dfXPTLiOJrVVhDjULTl0Zkuvi/EA0Gkf8KFl2qJ
-         bQEXDP+P6IDEUC5BMR2yrLT25atglFskc/VZxKndNVkl4j/9ubXmd9Kj18QjRCLQN4
-         Q/0yzU+oye6RJ1h9fbFdhGB4KepH6TcVGXL8NNPoKdkfZOCbup/8yYBfg8ra05Z3IC
-         aa8FJjeBblQnQ==
+        b=fXG9t2tIpXyRmERwDiql3l3dElxs6Pfaw3Zrc0Hb8/fA3rHPmLEWGGCf05ddlK4lR
+         60knEuM4Y6RU7kwYBGCoUd8Nfi6l2zhQunTabXxgKaqKLVvNa9lyMfZIRwhVkmxMso
+         MvTRDh8XyOhOLYP3z8/mxr5M259uTGfw/9iVsNiVxo/g59hcFryZdoeEmQKgKMz3jO
+         DwApwbh/BTuMbdlwVEUGbHAptEGLE2TDTkusglAVO5wrZWeZpaYlQyKjfOIm1uvpI+
+         BDv3uxsl0+Mo5eaFgMztJD8OMGi0D6+0W25kCTTNlx5z4cQKX2A96yQ7YKyBnFXk7f
+         H88DOxSyodHoQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Jiang Li <jiang.li@ugreen.com>, Song Liu <song@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 16/26] md/raid1: stop mdx_raid1 thread when raid1 array run failed
-Date:   Sun, 18 Dec 2022 11:20:06 -0500
-Message-Id: <20221218162016.934280-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 14/23] md/raid1: stop mdx_raid1 thread when raid1 array run failed
+Date:   Sun, 18 Dec 2022 11:21:40 -0500
+Message-Id: <20221218162149.935047-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221218162016.934280-1-sashal@kernel.org>
-References: <20221218162016.934280-1-sashal@kernel.org>
+In-Reply-To: <20221218162149.935047-1-sashal@kernel.org>
+References: <20221218162149.935047-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -101,10 +101,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 876d3e1339d1..0f8b1fb3d051 100644
+index daa478e0b856..28f78199de3b 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -3110,6 +3110,7 @@ static int raid1_run(struct mddev *mddev)
+@@ -3105,6 +3105,7 @@ static int raid1_run(struct mddev *mddev)
  	 * RAID1 needs at least one disk in active
  	 */
  	if (conf->raid_disks - mddev->degraded < 1) {
