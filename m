@@ -2,116 +2,280 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D66ECC10F1E
-	for <linux-raid@archiver.kernel.org>; Sun, 18 Dec 2022 17:13:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 144D8C4332F
+	for <linux-raid@archiver.kernel.org>; Sun, 18 Dec 2022 18:31:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233671AbiLRRLy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 18 Dec 2022 12:11:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33108 "EHLO
+        id S230511AbiLRSbt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 18 Dec 2022 13:31:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233603AbiLRRJx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Dec 2022 12:09:53 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48C88D110;
-        Sun, 18 Dec 2022 08:23:37 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D917660DD3;
-        Sun, 18 Dec 2022 16:23:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96477C43398;
-        Sun, 18 Dec 2022 16:23:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671380616;
-        bh=BqdPaVWKMpZ1kLGgzJcmbLQf8fxK01/2L5tJhjkYxc4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WCqGyX7i79UxTxFniXpR96zLzBbU0qBmnvhIi/HDk0qWCfdGAI3zqy9eGsIbytyDp
-         MsTNenlZbL9fV1EaTDFLakYuoNK91txitjyBPA2a1hzyDE5Kv7PRsEUUsqDS6tNS3R
-         NiLPkLY56TtLFOytWXTZ5/MGtTaQSaHsaJS4dFdwFZ9D/LsVzT0+T67n66IBLJ85Jb
-         /f7YexlB0rLuAhry5woq6G+Qar17IX08nGGDUWGcGS2VykZ+2iv2w0PBI+iWRBUYmp
-         gGwq7l/MZJhQtUstET0KT5BneqawIIKfJ2Bk2MQHYXwMHTnD2vqDTNJZvgPUnAJjLQ
-         2pJl+gsEG9YGg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jiang Li <jiang.li@ugreen.com>, Song Liu <song@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 12/20] md/raid1: stop mdx_raid1 thread when raid1 array run failed
-Date:   Sun, 18 Dec 2022 11:22:57 -0500
-Message-Id: <20221218162305.935724-12-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221218162305.935724-1-sashal@kernel.org>
-References: <20221218162305.935724-1-sashal@kernel.org>
+        with ESMTP id S230522AbiLRSa5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Dec 2022 13:30:57 -0500
+X-Greylist: delayed 596 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 18 Dec 2022 10:28:25 PST
+Received: from mail.aperture-lab.de (mail.aperture-lab.de [IPv6:2a01:4f8:c2c:665b::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2266FE9
+        for <linux-raid@vger.kernel.org>; Sun, 18 Dec 2022 10:28:24 -0800 (PST)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 1C2A13F980
+        for <linux-raid@vger.kernel.org>; Sun, 18 Dec 2022 19:18:25 +0100 (CET)
+Date:   Sun, 18 Dec 2022 19:18:23 +0100
+From:   Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
+To:     linux-raid@vger.kernel.org
+Subject: RAID6 recovery, event count mismatch
+Message-ID: <Y59Zby6E3qvf7QVE@sellars>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+X-Last-TLS-Session-Version: TLSv1.3
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Jiang Li <jiang.li@ugreen.com>
+Hi,
 
-[ Upstream commit b611ad14006e5be2170d9e8e611bf49dff288911 ]
+I recently had a disk failure in my Linux RAID6 array with 6
+devices. The badblocks tool confirmed some broken sectors. I tried
+to remove the faulty drive but that seems to have caused more
+issues (2.5" inch "low power" drives connected via USB-SATA
+adapters over an externally powered USB hub to a Pi 4... which
+ran fine for more than a year now, but seems to be prone to
+physical disk reconnects).
 
-fail run raid1 array when we assemble array with the inactive disk only,
-but the mdx_raid1 thread were not stop, Even if the associated resources
-have been released. it will caused a NULL dereference when we do poweroff.
+I removed the faulty drive, rebooted the whole system and the
+RAID is now inactive. The event count is a little old on 3 of 5
+disks, off by 3 to 7 events).
 
-This causes the following Oops:
-    [  287.587787] BUG: kernel NULL pointer dereference, address: 0000000000000070
-    [  287.594762] #PF: supervisor read access in kernel mode
-    [  287.599912] #PF: error_code(0x0000) - not-present page
-    [  287.605061] PGD 0 P4D 0
-    [  287.607612] Oops: 0000 [#1] SMP NOPTI
-    [  287.611287] CPU: 3 PID: 5265 Comm: md0_raid1 Tainted: G     U            5.10.146 #0
-    [  287.619029] Hardware name: xxxxxxx/To be filled by O.E.M, BIOS 5.19 06/16/2022
-    [  287.626775] RIP: 0010:md_check_recovery+0x57/0x500 [md_mod]
-    [  287.632357] Code: fe 01 00 00 48 83 bb 10 03 00 00 00 74 08 48 89 ......
-    [  287.651118] RSP: 0018:ffffc90000433d78 EFLAGS: 00010202
-    [  287.656347] RAX: 0000000000000000 RBX: ffff888105986800 RCX: 0000000000000000
-    [  287.663491] RDX: ffffc90000433bb0 RSI: 00000000ffffefff RDI: ffff888105986800
-    [  287.670634] RBP: ffffc90000433da0 R08: 0000000000000000 R09: c0000000ffffefff
-    [  287.677771] R10: 0000000000000001 R11: ffffc90000433ba8 R12: ffff888105986800
-    [  287.684907] R13: 0000000000000000 R14: fffffffffffffe00 R15: ffff888100b6b500
-    [  287.692052] FS:  0000000000000000(0000) GS:ffff888277f80000(0000) knlGS:0000000000000000
-    [  287.700149] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-    [  287.705897] CR2: 0000000000000070 CR3: 000000000320a000 CR4: 0000000000350ee0
-    [  287.713033] Call Trace:
-    [  287.715498]  raid1d+0x6c/0xbbb [raid1]
-    [  287.719256]  ? __schedule+0x1ff/0x760
-    [  287.722930]  ? schedule+0x3b/0xb0
-    [  287.726260]  ? schedule_timeout+0x1ed/0x290
-    [  287.730456]  ? __switch_to+0x11f/0x400
-    [  287.734219]  md_thread+0xe9/0x140 [md_mod]
-    [  287.738328]  ? md_thread+0xe9/0x140 [md_mod]
-    [  287.742601]  ? wait_woken+0x80/0x80
-    [  287.746097]  ? md_register_thread+0xe0/0xe0 [md_mod]
-    [  287.751064]  kthread+0x11a/0x140
-    [  287.754300]  ? kthread_park+0x90/0x90
-    [  287.757974]  ret_from_fork+0x1f/0x30
 
-In fact, when raid1 array run fail, we need to do
-md_unregister_thread() before raid1_free().
+Question 1)
 
-Signed-off-by: Jiang Li <jiang.li@ugreen.com>
-Signed-off-by: Song Liu <song@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/md/raid1.c | 1 +
- 1 file changed, 1 insertion(+)
+Is it safe and still recommended to use the command that is
+suggested here?
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 8a50da4f148f..26ae749184da 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2964,6 +2964,7 @@ static int raid1_run(struct mddev *mddev)
- 	 * RAID1 needs at least one disk in active
- 	 */
- 	if (conf->raid_disks - mddev->degraded < 1) {
-+		md_unregister_thread(&conf->thread);
- 		ret = -EINVAL;
- 		goto abort;
- 	}
--- 
-2.35.1
+https://raid.wiki.kernel.org/index.php/RAID_Recovery#Trying_to_assemble_using_--force
+-> "mdadm /dev/mdX --assemble --force <list of devices>"
 
+Or should I do a forced --re-add of the three devices that have
+the lower even counts and a "Device Role : spare"?
+
+Question 2)
+
+If a forced re-add/assemble works and a RAID check / rebuilt runs
+through fine, is everything fine again then? Or are there additional
+steps I should follow to ensure the data and filesystems are
+not corrupted? (below I'm using LVM with normal and thinly
+provisioned volumes with LXD for containers, and other than that
+volumes are formatted with ext4)
+
+Question 3)
+
+Would the "new" Linux RAID write journal feature with a dedicated
+SSD have prevented such an inconsistency?
+
+Question 4)
+
+"mdadm -D /dev/md127" says "Raid Level : raid0", which is wrong
+and luckily the disks themselves each individually still know
+it's a raid6 according to mdadm. Is this just a displaying bug
+of mdadm and nothing to worry about?
+
+System/OS:
+
+$ uname -a
+Linux treehouse 5.18.9-v8+ #4 SMP PREEMPT Mon Jul 11 02:47:28 CEST 2022 aarch64 GNU/Linux
+$ mdadm --version
+mdadm - v4.1 - 2018-10-01
+$ cat /etc/debian_version
+11.5
+-> Debian bullseye
+
+
+More detailed mdadm output below.
+
+Regards, Linus
+
+
+==========
+
+$ cat /proc/mdstat 
+Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md127 : inactive dm-13[6](S) dm-12[5](S) dm-11[3](S) dm-10[2](S) dm-9[0](S)
+      9762371240 blocks super 1.2
+       
+unused devices: <none>
+
+$ mdadm -D /dev/md127
+/dev/md127:
+           Version : 1.2
+        Raid Level : raid0
+     Total Devices : 5
+       Persistence : Superblock is persistent
+
+             State : inactive
+   Working Devices : 5
+
+              Name : treehouse:raid  (local to host treehouse)
+              UUID : cc2852b8:aca4bdf8:761739d6:0ca5c3bb
+            Events : 2554495
+
+    Number   Major   Minor   RaidDevice
+
+       -     254       13        -        /dev/dm-13
+       -     254       11        -        /dev/dm-11
+       -     254       12        -        /dev/dm-12
+       -     254       10        -        /dev/dm-10
+       -     254        9        -        /dev/dm-9
+
+$ mdadm -E /dev/dm-9
+/dev/dm-9:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : cc2852b8:aca4bdf8:761739d6:0ca5c3bb
+           Name : treehouse:raid  (local to host treehouse)
+  Creation Time : Mon Jan 29 02:48:26 2018
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 3904948496 (1862.02 GiB 1999.33 GB)
+     Array Size : 7809878016 (7448.08 GiB 7997.32 GB)
+  Used Dev Size : 3904939008 (1862.02 GiB 1999.33 GB)
+    Data Offset : 252928 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=252840 sectors, after=9488 sectors
+          State : clean
+    Device UUID : 5fa00c38:e4069502:d4013eeb:08801a9b
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Nov 26 09:59:17 2022
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 1a214e3c - correct
+         Events : 2554492
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : spare
+   Array State : ...A.A ('A' == active, '.' == missing, 'R' == replacing)
+$ mdadm -E /dev/dm-10
+/dev/dm-10:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : cc2852b8:aca4bdf8:761739d6:0ca5c3bb
+           Name : treehouse:raid  (local to host treehouse)
+  Creation Time : Mon Jan 29 02:48:26 2018
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 3904948496 (1862.02 GiB 1999.33 GB)
+     Array Size : 7809878016 (7448.08 GiB 7997.32 GB)
+  Used Dev Size : 3904939008 (1862.02 GiB 1999.33 GB)
+    Data Offset : 252928 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=252840 sectors, after=9488 sectors
+          State : clean
+    Device UUID : 7edd1414:e610975a:fbe4a253:7ff9d404
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Nov 26 09:35:16 2022
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 204aec57 - correct
+         Events : 2554488
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : spare
+   Array State : ...A.A ('A' == active, '.' == missing, 'R' == replacing)
+$ mdadm -E /dev/dm-11
+/dev/dm-11:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : cc2852b8:aca4bdf8:761739d6:0ca5c3bb
+           Name : treehouse:raid  (local to host treehouse)
+  Creation Time : Mon Jan 29 02:48:26 2018
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 3904948496 (1862.02 GiB 1999.33 GB)
+     Array Size : 7809878016 (7448.08 GiB 7997.32 GB)
+  Used Dev Size : 3904939008 (1862.02 GiB 1999.33 GB)
+    Data Offset : 252928 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=252840 sectors, after=9488 sectors
+          State : clean
+    Device UUID : e8620025:d7cfec3d:a580f07d:9b7b5e11
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Nov 26 09:47:17 2022
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 4b64514b - correct
+         Events : 2554490
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : spare
+   Array State : ...A.A ('A' == active, '.' == missing, 'R' == replacing)
+$ mdadm -E /dev/dm-12
+/dev/dm-12:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : cc2852b8:aca4bdf8:761739d6:0ca5c3bb
+           Name : treehouse:raid  (local to host treehouse)
+  Creation Time : Mon Jan 29 02:48:26 2018
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 3904948496 (1862.02 GiB 1999.33 GB)
+     Array Size : 7809878016 (7448.08 GiB 7997.32 GB)
+  Used Dev Size : 3904939008 (1862.02 GiB 1999.33 GB)
+    Data Offset : 252928 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=252840 sectors, after=9488 sectors
+          State : clean
+    Device UUID : 02cd8021:ece5f701:777c1d5e:1f19449a
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sun Dec  4 00:57:01 2022
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 750b7a8f - correct
+         Events : 2554495
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : ...A.A ('A' == active, '.' == missing, 'R' == replacing)
+$ mdadm -E /dev/dm-13
+/dev/dm-13:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : cc2852b8:aca4bdf8:761739d6:0ca5c3bb
+           Name : treehouse:raid  (local to host treehouse)
+  Creation Time : Mon Jan 29 02:48:26 2018
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 3904948496 (1862.02 GiB 1999.33 GB)
+     Array Size : 7809878016 (7448.08 GiB 7997.32 GB)
+  Used Dev Size : 3904939008 (1862.02 GiB 1999.33 GB)
+    Data Offset : 252928 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=252848 sectors, after=9488 sectors
+          State : clean
+    Device UUID : c7e94388:5d5020e9:51fe2079:9f6a989d
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sun Dec  4 00:57:01 2022
+  Bad Block Log : 512 entries available at offset 16 sectors
+       Checksum : e14ed4e9 - correct
+         Events : 2554495
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 5
+   Array State : ...A.A ('A' == active, '.' == missing, 'R' == replacing)
