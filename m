@@ -2,45 +2,45 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 796CBC46467
-	for <linux-raid@archiver.kernel.org>; Sun, 18 Dec 2022 16:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 708AEC4332F
+	for <linux-raid@archiver.kernel.org>; Sun, 18 Dec 2022 17:03:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232615AbiLRQ5v (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 18 Dec 2022 11:57:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35710 "EHLO
+        id S233254AbiLRRDh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 18 Dec 2022 12:03:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232212AbiLRQ4M (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Dec 2022 11:56:12 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E34991C42C;
-        Sun, 18 Dec 2022 08:19:28 -0800 (PST)
+        with ESMTP id S233363AbiLRRCh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 18 Dec 2022 12:02:37 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FC0C18E35;
+        Sun, 18 Dec 2022 08:21:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0B28FB80BE8;
-        Sun, 18 Dec 2022 16:19:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00E5BC43396;
-        Sun, 18 Dec 2022 16:19:24 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id A00EACE0BAF;
+        Sun, 18 Dec 2022 16:21:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BAE9C433F0;
+        Sun, 18 Dec 2022 16:21:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671380365;
-        bh=Ko6/640VBB5Gg6vXBhjRMu3F8V++ZSUxGdmOE7tMPdA=;
+        s=k20201202; t=1671380462;
+        bh=KZFU1leGzQQD6HVHzCIQHyBf69zaJo1yZHVmC8bGzM0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AFW3zodHFwGxwymlyUaY+5hewl5/4PF1Veuh5RyIOmgcJeeok/6Qv6kM59h31Fm5i
-         uKKjh9Av2WYzCC68+gNM7gLG7FX3R3y/s6HrdiA5Pj056Jp9uWUXLRSJJXFZsYYQqy
-         3uOYpVTJuoFA8cRq+MKy69UQn85zfeVb/FSprTc905+gQNf8EolQvYJfbNO5129Epd
-         8Y1/ud2431FCHdEehRooT0ps7VGDXeHnCEy/psyZB9xRq5VEtWtSz96yJR4dMQ8sX8
-         RurZguDAG/kyftTJQiWLxMuYy0TAXIQ756ImQEl1xBKimdP1q+Tt0QFn36ViVu4e+L
-         6QKkLll6UFFRQ==
+        b=Fk+E9rYbR7GkdJFVe3f5XLrdrfgYuanpp5fGnB1VaLlDHGUTg2EEhOBODs9LLyx53
+         rqTx/HY2TH78RLaMK887hiSu1tFO6R/oSwXOSEaxbzg7pkucJAEpwmFX1JmwaL8oQp
+         FRBRAp8kCS/zDq4pujGhpQj5Ftmg+xJStexwwtKEkjdFaZ7eCGd8TH6jngwR32yBTT
+         QIvHxgSMrBoGs1tAPKt9usxOJWdU02xDz6/EMe9Z1vvpRHbJV49cmjIOa54gPk34XG
+         vcxghhF2qITSJbS1kdAJ/aABbpwrGiSwZXj672W7zk6M8O+7wbVSV6t2AmoaCsLHDo
+         xpCykArahbzpg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Li Zhong <floridsleeves@gmail.com>, Song Liu <song@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 17/30] drivers/md/md-bitmap: check the return value of md_bitmap_get_counter()
-Date:   Sun, 18 Dec 2022 11:18:22 -0500
-Message-Id: <20221218161836.933697-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 15/26] drivers/md/md-bitmap: check the return value of md_bitmap_get_counter()
+Date:   Sun, 18 Dec 2022 11:20:05 -0500
+Message-Id: <20221218162016.934280-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221218161836.933697-1-sashal@kernel.org>
-References: <20221218161836.933697-1-sashal@kernel.org>
+In-Reply-To: <20221218162016.934280-1-sashal@kernel.org>
+References: <20221218162016.934280-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -66,10 +66,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 15 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index a95e20c3d0d4..72c30c99b29d 100644
+index 7cf9d34ce20e..157a1735d7b7 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -2200,20 +2200,23 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
+@@ -2191,20 +2191,23 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
  
  		if (set) {
  			bmc_new = md_bitmap_get_counter(&bitmap->counts, block, &new_blocks, 1);
