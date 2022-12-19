@@ -2,62 +2,62 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9447AC4167B
-	for <linux-raid@archiver.kernel.org>; Mon, 19 Dec 2022 16:08:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90025C4332F
+	for <linux-raid@archiver.kernel.org>; Mon, 19 Dec 2022 16:38:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231572AbiLSQIG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 19 Dec 2022 11:08:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47714 "EHLO
+        id S232060AbiLSQii (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 19 Dec 2022 11:38:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231968AbiLSQH7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Dec 2022 11:07:59 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FF5CDF0E
-        for <linux-raid@vger.kernel.org>; Mon, 19 Dec 2022 08:07:58 -0800 (PST)
+        with ESMTP id S229794AbiLSQih (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Dec 2022 11:38:37 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AF222603
+        for <linux-raid@vger.kernel.org>; Mon, 19 Dec 2022 08:38:36 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 51764227DB;
-        Mon, 19 Dec 2022 16:07:57 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 5561A340CA;
+        Mon, 19 Dec 2022 16:38:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1671466077; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1671467915; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=0mo19j+48JSBItjyI0lClLEokej/XNZZ4cmaD5eykrU=;
-        b=r4OZ7J+K2HBRwNWqfzIvohLgMMnZbTadxAP/8UaAoXkCnXhzNVozwkvCuijVvPXifakXcJ
-        xthKqetWpgmsJMpsJ8m569lGAe9EUvjsDr5oDeP6n4i195RYtRMDzp8KwoFLYT8JTvd7yq
-        bXiQP58RmeeoN1TzxnBC/+VbSejYjnc=
+        bh=bTew9MJ/PR+p3aJhshsLcsC4kpjK17gfm1Hbq3/a4gU=;
+        b=Ug2sjQt0N+f6XNsTYu/d+4VfYduB1R3Yf7okABRFpEKKhuO1fYXgxJiv91PHn/BSyuB6Tz
+        pDeLneF+z9vGwDsF2NqBJh/bLJGnnfPmW+S7yZpYkBXc57NbqjQ1glLU+iPwx1IQWTp2xX
+        RHkMvhuIebprOOj8zOoShKKlKXXca1g=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1671466077;
+        s=susede2_ed25519; t=1671467915;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=0mo19j+48JSBItjyI0lClLEokej/XNZZ4cmaD5eykrU=;
-        b=eN1KNdoulwCFi3JVtv6qup+y6YXa/h7D5XI2BwX934Z/MoUHTyseDa+TcQ4rhuuIoUO2Ig
-        BiRhyTnkVrmLoFBQ==
+        bh=bTew9MJ/PR+p3aJhshsLcsC4kpjK17gfm1Hbq3/a4gU=;
+        b=Z47ikBFwDbQDqqYgrhT8d+wGqJ9E/oYsfTXTyxptlcIEWrvlNYGwSUnM2m2SAzA7YccIeL
+        rXl4GzJMqKC0fGBw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 85FE413910;
-        Mon, 19 Dec 2022 16:07:56 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 84CD113498;
+        Mon, 19 Dec 2022 16:38:34 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 9dT1FFyMoGO4aAAAMHmgww
-        (envelope-from <colyli@suse.de>); Mon, 19 Dec 2022 16:07:56 +0000
+        id FVjgFIqToGPgcgAAMHmgww
+        (envelope-from <colyli@suse.de>); Mon, 19 Dec 2022 16:38:34 +0000
 Content-Type: text/plain;
         charset=utf-8
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.300.101.1.3\))
 Subject: Re: [PATCH 1/2] Monitor: block if monitor modes are combined.
 From:   Coly Li <colyli@suse.de>
 In-Reply-To: <20221219095835.686-2-blazej.kucman@intel.com>
-Date:   Tue, 20 Dec 2022 00:07:44 +0800
+Date:   Tue, 20 Dec 2022 00:38:22 +0800
 Cc:     linux-raid <linux-raid@vger.kernel.org>, jes@trained-monkey.org
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <93D41FA4-A000-4E1C-AB81-30D7D8FCDA98@suse.de>
+Message-Id: <E9061743-07A7-4AD9-9BBF-28BA1B8A57E4@suse.de>
 References: <20221219095835.686-1-blazej.kucman@intel.com>
  <20221219095835.686-2-blazej.kucman@intel.com>
 To:     Blazej Kucman <blazej.kucman@intel.com>
@@ -77,15 +77,17 @@ combined.
 > Signed-off-by: Blazej Kucman <blazej.kucman@intel.com>
 > Change-Id: Ic2b90662dbd297e8e2c8e88194155d65110ef517
 
+
 I guess Change-ID is unnecessary for mdadm upstream?
 
 Otherwise, it is fine to me,
 
-Acked-by: Coly Li <colyli@suse.de <mailto:colyli@suse.de>>
+Acked-by: Coly Li <colyli@suse.de>
 
 Thanks.
 
 Coly Li
+
 
 
 > ---
