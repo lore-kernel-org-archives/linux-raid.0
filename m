@@ -2,92 +2,188 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB73DC4332F
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Dec 2022 01:46:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 536EBC4332F
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Dec 2022 10:20:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232678AbiLTBqi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 19 Dec 2022 20:46:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46282 "EHLO
+        id S233299AbiLTKUW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Dec 2022 05:20:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233132AbiLTBqH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Dec 2022 20:46:07 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5439C774
-        for <linux-raid@vger.kernel.org>; Mon, 19 Dec 2022 17:35:36 -0800 (PST)
-Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NbfJ16jNfzRq7K;
-        Tue, 20 Dec 2022 09:34:25 +0800 (CST)
-Received: from [10.174.177.197] (10.174.177.197) by
- kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Tue, 20 Dec 2022 09:35:34 +0800
-Subject: Re: [PATCH V2] Fix NULL dereference in super_by_fd
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-CC:     Jes Sorensen <jes@trained-monkey.org>,
-        <linux-raid@vger.kernel.org>, linfeilong <linfeilong@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
-        Wu Guanghao <wuguanghao3@huawei.com>
-References: <c2cb8668-afc8-459a-9c91-9b0002fbeaa0@huawei.com>
- <20221215125027.00002a45@linux.intel.com>
- <59f29da7-2d07-febd-fc7b-e194bdf3ced8@huawei.com>
- <20221219140845.000030c2@linux.intel.com>
-From:   lixiaokeng <lixiaokeng@huawei.com>
-Message-ID: <4589f5de-8343-79fb-6b14-731c26399b8c@huawei.com>
-Date:   Tue, 20 Dec 2022 09:35:33 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S230180AbiLTKUU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Dec 2022 05:20:20 -0500
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6194DC16
+        for <linux-raid@vger.kernel.org>; Tue, 20 Dec 2022 02:20:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1671531619; x=1703067619;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=48lR1yjMqmTyHvaWzl9mbRnkO6ev80Kvf3CmQ09doAE=;
+  b=mnXzOP8AkGYvbK3Z0KQ/qKPiqQtSAaGa9XsWT0FDF9XPnUOgIq0WqOx0
+   Z2C2w32/WNXlev6elAfgKeh532+klpa6AZLF0oun62wTj3bYhLaAF0rET
+   qxtscUZ5TRdMDAl2WGbbiJ/F+sV27sKOmQ2cke9FeV7RUtaXzpAY4jCX2
+   k7zjfUd9Lt8garlJxU0VG0HyAy5wqugbLbYVlMMoPduIc0QDyzk6xgtRh
+   TsyEDMu4dNqT67ellRE96HBiceREZL/jvtNbNzlqzM4JqagPszy1q5LYm
+   SHPQn9jT6KYV8tzr2o2/Myfk5/MXuwQqvjjKwHHUnTs0mpsPE3go8RH1s
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10566"; a="307260872"
+X-IronPort-AV: E=Sophos;i="5.96,259,1665471600"; 
+   d="scan'208";a="307260872"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2022 02:20:17 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10566"; a="714368959"
+X-IronPort-AV: E=Sophos;i="5.96,259,1665471600"; 
+   d="scan'208";a="714368959"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
+  by fmsmga008.fm.intel.com with ESMTP; 20 Dec 2022 02:20:14 -0800
+From:   Kinga Tanska <kinga.tanska@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org, colyli@suse.de, xni@redhat.com
+Subject: [PATCH] incremental, manage: do not verify if remove is safe
+Date:   Tue, 20 Dec 2022 04:21:51 +0100
+Message-Id: <20221220032151.12067-1-kinga.tanska@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <20221219140845.000030c2@linux.intel.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.197]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemm600010.china.huawei.com (7.193.23.86)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Function is_remove_safe() was introduced to verify if removing
+member device won't cause failed state of the array. This
+verification should be used only with set-faulty command. Add
+special mode indicating that Incremental removal was executed.
+If this mode is used do not execute is_remove_safe() routine.
 
+Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+---
+ Incremental.c |  2 +-
+ Manage.c      | 79 +++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 49 insertions(+), 32 deletions(-)
 
-On 2022/12/19 21:08, Mariusz Tkaczyk wrote:
-> On Mon, 19 Dec 2022 19:50:52 +0800
-> lixiaokeng <lixiaokeng@huawei.com> wrote:
-> 
->> On 2022/12/15 19:50, Mariusz Tkaczyk wrote:
->>> On Wed, 14 Dec 2022 11:17:41 +0800
->>> lixiaokeng <lixiaokeng@huawei.com> wrote:
->>>   
->>>> strcpy(st->devnm, devnm);  
->>>
->>> Hi,
->>> Please use strncpy or snprintf here.  
->>
->> Thanks for your advice, but the length of devnm is not
->> a defined value. I will keep it as the old codes.
-> 
-> Supertype devnm is a array defined to be 32.
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/mdadm.h#n1256
-> 
-> 32 should be changed to MD_NAME_MAX - you can use this define.
-> I traveled fd2devnm and I can see that at the end devid2devnm returns:
-> static char devnm[32]
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/lib.c#n123
-> 
-> For that reason usage of strcpy in this case seems to be safe, unless we change
-> something deeper. My recommendation comes from general safe development rules-
-> we know dest buffer size so we can esnure that it will be ended properly by
-> '\0', whatever comes to write from fd2devnm().
-> 
-> Thanks,
-> Mariusz
-> 
-> 
-Thanks, I understand it. I will modify the patch as V4.
+diff --git a/Incremental.c b/Incremental.c
+index 5a5f4c4c..bccfdeb9 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -1744,7 +1744,7 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
+ 
+ 	memset(&devlist, 0, sizeof(devlist));
+ 	devlist.devname = devname;
+-	devlist.disposition = 'f';
++	devlist.disposition = 'I';
+ 	/* for a container, we must fail each member array */
+ 	if (ent->metadata_version &&
+ 	    strncmp(ent->metadata_version, "external:", 9) == 0) {
+diff --git a/Manage.c b/Manage.c
+index b1d0e630..9d85237c 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -1329,38 +1329,54 @@ bool is_remove_safe(mdu_array_info_t *array, const int fd, char *devname, const
+ 	return is_enough;
+ }
+ 
++/**
++ * Manage_subdevs() - Execute operation depending on devmode.
++ *
++ * @devname: name of the device.
++ * @fd: file descriptor.
++ * @devlist: list of sub-devices to manage.
++ * @verbose: verbose level.
++ * @test: test flag.
++ * @update: type of update.
++ * @force: force flag.
++ *
++ * This function executes operation defined by devmode
++ * for each dev from devlist.
++ * Devmode can be:
++ * 'a' - add the device
++ * 'S' - add the device as a spare - don't try re-add
++ * 'j' - add the device as a journal device
++ * 'A' - re-add the device
++ * 'r' - remove the device: HOT_REMOVE_DISK
++ *       device can be 'faulty' or 'detached' in which case all
++ *       matching devices are removed.
++ * 'f' - set the device faulty SET_DISK_FAULTY
++ *       device can be 'detached' in which case any device that
++ *       is inaccessible will be marked faulty.
++ * 'I' - remove device by using incremental fail
++ *       which is executed when device is removed surprisingly.
++ * 'R' - mark this device as wanting replacement.
++ * 'W' - this device is added if necessary and activated as
++ *       a replacement for a previous 'R' device.
++ * -----
++ * 'w' - 'W' will be changed to 'w' when it is paired with
++ *       a 'R' device.  If a 'W' is found while walking the list
++ *       it must be unpaired, and is an error.
++ * 'M' - this is created by a 'missing' target.  It is a slight
++ *       variant on 'A'
++ * 'F' - Another variant of 'A', where the device was faulty
++ *       so must be removed from the array first.
++ * 'c' - confirm the device as found (for clustered environments)
++ *
++ * For 'f' and 'r', the device can also be a kernel-internal
++ * name such as 'sdb'.
++ *
++ * Return: 0 on success, otherwise 1 or 2.
++ */
+ int Manage_subdevs(char *devname, int fd,
+ 		   struct mddev_dev *devlist, int verbose, int test,
+ 		   char *update, int force)
+ {
+-	/* Do something to each dev.
+-	 * devmode can be
+-	 *  'a' - add the device
+-	 *  'S' - add the device as a spare - don't try re-add
+-	 *  'j' - add the device as a journal device
+-	 *  'A' - re-add the device
+-	 *  'r' - remove the device: HOT_REMOVE_DISK
+-	 *        device can be 'faulty' or 'detached' in which case all
+-	 *	  matching devices are removed.
+-	 *  'f' - set the device faulty SET_DISK_FAULTY
+-	 *        device can be 'detached' in which case any device that
+-	 *	  is inaccessible will be marked faulty.
+-	 *  'R' - mark this device as wanting replacement.
+-	 *  'W' - this device is added if necessary and activated as
+-	 *        a replacement for a previous 'R' device.
+-	 * -----
+-	 *  'w' - 'W' will be changed to 'w' when it is paired with
+-	 *        a 'R' device.  If a 'W' is found while walking the list
+-	 *        it must be unpaired, and is an error.
+-	 *  'M' - this is created by a 'missing' target.  It is a slight
+-	 *        variant on 'A'
+-	 *  'F' - Another variant of 'A', where the device was faulty
+-	 *        so must be removed from the array first.
+-	 *  'c' - confirm the device as found (for clustered environments)
+-	 *
+-	 * For 'f' and 'r', the device can also be a kernel-internal
+-	 * name such as 'sdb'.
+-	 */
+ 	mdu_array_info_t array;
+ 	unsigned long long array_size;
+ 	struct mddev_dev *dv;
+@@ -1496,8 +1512,9 @@ int Manage_subdevs(char *devname, int fd,
+ 			/* Assume this is a kernel-internal name like 'sda1' */
+ 			int found = 0;
+ 			char dname[55];
+-			if (dv->disposition != 'r' && dv->disposition != 'f') {
+-				pr_err("%s only meaningful with -r or -f, not -%c\n",
++			if (dv->disposition != 'r' && dv->disposition != 'f' &&
++			    dv->disposition != 'I') {
++				pr_err("%s only meaningful with -r, -f or -I, not -%c\n",
+ 					dv->devname, dv->disposition);
+ 				goto abort;
+ 			}
+@@ -1649,7 +1666,7 @@ int Manage_subdevs(char *devname, int fd,
+ 					close(sysfd);
+ 				goto abort;
+ 			}
+-
++		case 'I': /* incremental fail */
+ 			if ((sysfd >= 0 && write(sysfd, "faulty", 6) != 6) ||
+ 			    (sysfd < 0 && ioctl(fd, SET_DISK_FAULTY,
+ 						rdev))) {
+-- 
+2.26.2
 
-Regards,
-Li Xiaokeng
-
-> .
-> 
