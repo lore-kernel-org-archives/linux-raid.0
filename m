@@ -2,100 +2,89 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1FAFC4332F
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Dec 2022 12:06:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31540C4332F
+	for <linux-raid@archiver.kernel.org>; Wed, 21 Dec 2022 12:53:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229532AbiLUMGM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 21 Dec 2022 07:06:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54150 "EHLO
+        id S231986AbiLUMxA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 21 Dec 2022 07:53:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229491AbiLUMGL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Dec 2022 07:06:11 -0500
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BD6E1C932
-        for <linux-raid@vger.kernel.org>; Wed, 21 Dec 2022 04:06:07 -0800 (PST)
+        with ESMTP id S229596AbiLUMw6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Dec 2022 07:52:58 -0500
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E31E02330F
+        for <linux-raid@vger.kernel.org>; Wed, 21 Dec 2022 04:52:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1671624367; x=1703160367;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=HkRB755wP03wHlZby3HQx4ttXZbVCrDJ8cEkHZ/a8I8=;
-  b=T8jOMoorU2Cu9epxJPgUrCvyeslL6O3glJKdKG03Wqys4h2RMmCZ+2m2
-   Gg4mNjgr6lAuEtbGRuoGtIJRCW5GcNuHTVG0OOkwXDmXv2QiJvAn2aaNV
-   LJkOgizNgCPA1qyphICAC8ngTcgANxfiCKVBh86xxd+uykVb082XwAqij
-   jx76Ty5B7bRyBVVg0cE6i1c1bSPG/3tVL+jcqzRbYY548put1DvzkyWBM
-   Suo9CR8+7I3SU4xD8+ZabYRDf810aUWV/UKIfCEhWUwPSBfhyqaP+sg+y
-   LbyZ8+IXDHK4//UH3W/fnrMPlGbLczmq0drg1yHAO9QOMf1IHTleZ7pW3
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10567"; a="307536489"
+  t=1671627177; x=1703163177;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=xXhGB685zT7K+zLs++6cC0rbfQ2HoZ87FtjTFaLyVuk=;
+  b=dKHXCb3zaxWwbJXtDTutyBINzuZcVHCVjWaWvZH9IkbycH+mrvAeHNjA
+   bmEpUM8N3w7jNe+JjMRKqE1NEmEkJcfQ7q0jDKqCxyq71U9FAiEwgFocE
+   S9OH/3INhyQQQhcm5847xoLd+Ppgb0EP/QX2+T33zDvYkbdzVOHP9h9nD
+   MBxHdOh0CbtDmbao/j7j1gdj4vka8u7bOr6En5ykWjkq1xu8tIyHoKfmF
+   WeMSrIzGJeBKQMuXJO0XUL6hehY1QtipRlsGwFUaz6eXpskAMcZ9tG/04
+   XQl6uirgK/+o/d//m8s0N99DispBK1MajijA9D8hqETP3NmFbpu11mlIL
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10567"; a="382088189"
 X-IronPort-AV: E=Sophos;i="5.96,262,1665471600"; 
-   d="scan'208";a="307536489"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Dec 2022 04:05:56 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10567"; a="653492640"
+   d="scan'208";a="382088189"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Dec 2022 04:52:57 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10567"; a="719937912"
 X-IronPort-AV: E=Sophos;i="5.96,262,1665471600"; 
-   d="scan'208";a="653492640"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.62.71])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Dec 2022 04:05:53 -0800
-Date:   Wed, 21 Dec 2022 13:05:48 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Li Xiao Keng <lixiaokeng@huawei.com>, Coly Li <colyli@suse.de>
-Cc:     Jes Sorensen <jes@trained-monkey.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        <linux-raid@vger.kernel.org>, linfeilong <linfeilong@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
-        Wu Guanghao <wuguanghao3@huawei.com>
-Subject: Re: [PATCH V4] Fix NULL dereference in super_by_fd
-Message-ID: <20221221130548.000071e8@linux.intel.com>
-In-Reply-To: <1dabb70e-ca1a-bd45-182a-ddaa95821f86@huawei.com>
-References: <1dabb70e-ca1a-bd45-182a-ddaa95821f86@huawei.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+   d="scan'208";a="719937912"
+Received: from linux-myjy.igk.intel.com ([10.102.108.92])
+  by fmsmga004.fm.intel.com with ESMTP; 21 Dec 2022 04:52:56 -0800
+From:   Blazej Kucman <blazej.kucman@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org, colyli@suse.de
+Subject: [PATCH V2] Grow: fix possible memory leak
+Date:   Wed, 21 Dec 2022 13:52:54 +0100
+Message-Id: <20221221125254.17932-1-blazej.kucman@intel.com>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 21 Dec 2022 17:37:52 +0800
-Li Xiao Keng <lixiaokeng@huawei.com> wrote:
+In function Grow_addbitmap, struct mdinfo
+may be allocated but is not freed
+in few exit paths. Add free 'mdi' variable
+in missing exit paths to avoid possible memory leak.
 
-> When we create 100 partitions (major is 259 not 254) in a raid device,
-> mdadm may coredump:
-> 
-> Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p7'.
-> Program terminated with signal SIGSEGV, Segmentation fault.
-> #0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
-> 74		VPCMPEQ	(%rdi), %ymm0, %ymm1
-> (gdb) bt
-> #0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
-> #1  0x00007fbb9a7e4139 in __strcpy_chk (dest=dest@entry=0x55d55d6a13ac "",
-> src=0x0, destlen=destlen@entry=32) at strcpy_chk.c:28 #2  0x000055d55ba1766d
-> in strcpy (__src=<optimized out>, __dest=0x55d55d6a13ac "") at
-> /usr/include/bits/string_fortified.h:79 #3  super_by_fd (fd=fd@entry=3,
-> subarrayp=subarrayp@entry=0x7fff44dfcc48) at util.c:1289 #4
-> 0x000055d55ba273a6 in Detail (dev=0x7fff44dfef0b "/dev/md1p7",
-> c=0x7fff44dfe440) at Detail.c:101 #5  0x000055d55ba0de61 in misc_list
-> (c=<optimized out>, ss=<optimized out>, dump_directory=<optimized out>,
-> ident=<optimized out>, devlist=<optimized out>) at mdadm.c:1959 #6  main
-> (argc=<optimized out>, argv=<optimized out>) at mdadm.c:1629
-> 
-> The direct cause is fd2devnm returning NULL, so add a check.
-> 
-> V1->V2: When fd2devnm return NULL, super_by_fd return NULL but not an
-> incomplete 'st' entry. At the same time, add a check in map_by_devnm
-> to avoid coredump.
-> 
-> V2->V3: Fix style issues.
-> V3->V4: Change strcpy() to strncpy().
-> 
-> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
-> Signed-off-by: Wu Guang Hao <wuguanghao3@huawei.com>
+Signed-off-by: Blazej Kucman <blazej.kucman@intel.com>
+---
+ Grow.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/Grow.c b/Grow.c
+index e362403a..b73ec2ae 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -432,6 +432,7 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 			if (((disk.state & (1 << MD_DISK_WRITEMOSTLY)) == 0) &&
+ 			   (strcmp(s->bitmap_file, "clustered") == 0)) {
+ 				pr_err("%s disks marked write-mostly are not supported with clustered bitmap\n",devname);
++				free(mdi);
+ 				return 1;
+ 			}
+ 			fd2 = dev_open(dv, O_RDWR);
+@@ -453,8 +454,10 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 				pr_err("failed to load super-block.\n");
+ 			}
+ 			close(fd2);
+-			if (rv)
++			if (rv) {
++				free(mdi);
+ 				return 1;
++			}
+ 		}
+ 		if (offset_setable) {
+ 			st->ss->getinfo_super(st, mdi, NULL);
+-- 
+2.35.3
 
-Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-
-Coly could you please take a look?
-
-Thanks,
-Mariusz
