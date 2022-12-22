@@ -1,126 +1,116 @@
-Return-Path: <linux-raid-owner@kernel.org>
+Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37E71C4332F
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Dec 2022 17:09:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB42AC4332F
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Dec 2022 08:18:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232763AbiLURJK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 21 Dec 2022 12:09:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51560 "EHLO
+        id S230417AbiLVISL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 22 Dec 2022 03:18:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229620AbiLURJJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Dec 2022 12:09:09 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F29AB1903D;
-        Wed, 21 Dec 2022 09:09:07 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AAD79B81BDA;
-        Wed, 21 Dec 2022 17:09:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27BB4C433EF;
-        Wed, 21 Dec 2022 17:09:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671642545;
-        bh=HexWrl21jQsZiZHSJmWAZU7Ngb+sLT1anzFCUeX4EtU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=eb1rcmPIHP+2ixTURffKrMR/B0JPZHtcCp3fI8SsDi38mfPsBeBn0wkQMfGl+WqEc
-         EReXnaFgZ6dxXAFvqCA5sYZNrexaFNulst4/5VC+IhK9+dfLk0UscsoR2tDUYSthbK
-         M4awtawpM9cIjyVwb0fPcZxSuIVWiCKFWpscUxYYw2MSmsOB4vNbHTgLNgsVg+ooik
-         IcZ0YCbfl7H/IYiAM1B0U1uRfO4Z6VB3TpHQliDUvIPcxYjy+60I9d91p27S1yfLIO
-         tRRPvOOuFj9CY1ZxFso107+OjTh+UkYETvwPmtbFTmvdvXK3YHpMmeqkNjJnsQImXu
-         4WTH7RLaXi4MA==
-Date:   Wed, 21 Dec 2022 10:09:00 -0700
-From:   Keith Busch <kbusch@kernel.org>
-To:     Gulam Mohamed <gulam.mohamed@oracle.com>
-Cc:     linux-block@vger.kernel.org, axboe@kernel.dk,
-        philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
-        christoph.boehmwalder@linbit.com, minchan@kernel.org,
-        ngupta@vflare.org, senozhatsky@chromium.org, colyli@suse.de,
-        kent.overstreet@gmail.com, agk@redhat.com, snitzer@kernel.org,
-        dm-devel@redhat.com, song@kernel.org, dan.j.williams@intel.com,
-        vishal.l.verma@intel.com, dave.jiang@intel.com,
-        ira.weiny@intel.com, junxiao.bi@oracle.com,
-        martin.petersen@oracle.com, kch@nvidia.com,
-        drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        nvdimm@lists.linux.dev, konrad.wilk@oracle.com, joe.jin@oracle.com,
-        rajesh.sivaramasubramaniom@oracle.com, shminderjit.singh@oracle.com
-Subject: Re: [PATCH for-6.2/block V3 2/2] block: Change the granularity of io
- ticks from ms to ns
-Message-ID: <Y6M9rJbw3ZMvOeDr@kbusch-mbp.dhcp.thefacebook.com>
-References: <20221221040506.1174644-1-gulam.mohamed@oracle.com>
- <20221221040506.1174644-2-gulam.mohamed@oracle.com>
+        with ESMTP id S229567AbiLVISJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Dec 2022 03:18:09 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC75F10067
+        for <linux-raid@vger.kernel.org>; Thu, 22 Dec 2022 00:17:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1671697040;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=R79QPZKIRetvP7dENpcF1leEO2IFk9biokbxnaVlMZI=;
+        b=Bts3hCs53y19cd1+6L28ADzGACAorTSGkd3KCqsu3sUKMcKw0jn3PiYZHWohaT/jvjhRK4
+        ZSpc0xhHOOdXHTIOiZcT1TB7G+9eS6AOhbI9BspBzKTMHnCXfoPmtrNg91n7EgyNbIvDy0
+        k9ddLpWTf4jno64nDDFTLgMiv1Ef9uI=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-299-JyiUlNfYOwixijemGH_nuA-1; Thu, 22 Dec 2022 03:17:19 -0500
+X-MC-Unique: JyiUlNfYOwixijemGH_nuA-1
+Received: by mail-pj1-f70.google.com with SMTP id z4-20020a17090ab10400b002195a146546so2767243pjq.9
+        for <linux-raid@vger.kernel.org>; Thu, 22 Dec 2022 00:17:19 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=R79QPZKIRetvP7dENpcF1leEO2IFk9biokbxnaVlMZI=;
+        b=yDAiRZQ0pfUA1yu0qYk/YuQwc6qAYMgA5qAwSw0OBfHrjzgk1HyUORxJII96Gg+uS0
+         XxPGNb3N20IkhAoC+c5pWUh5sIizKzQn1qmO9/wZlkCy2F+X3uMbWLc3QtsOGDylNHaR
+         4QOHWtUWa7fP1ZQ6SdEagUpWdv36/fGB72xJhY5paNkfJk0/s3uvMlH80dGW+aZNRqOx
+         jWuTIJWLQdPYLBnA1JIUTiIfrz8IYxZmVT55yuHXFUga1NJag+EhSoZGle1Hnc3IHgvn
+         d/5qWURw8mjT6ZDz7h26vFiVSVcxvIp6O3dLjZzNt+gcG46BlUFTqvJTEhBCqPn/Li5h
+         nRaw==
+X-Gm-Message-State: AFqh2kqryqF8nn3P/XwJZd89IhhIB5ZwBLB/Od6iHGzD8aoE094doD0L
+        tE2Ba6J9JUreq3i8Sndqcnwa1h/YcW3+ozkkfqf8CP/3MaUt4LNMNyJ7bcSUxE30LFx0LrYIL35
+        2o6Hj0uNwwn9LTsKACAiDq4eoIgqGe6i8eR3kFw==
+X-Received: by 2002:a63:4041:0:b0:478:bc19:a510 with SMTP id n62-20020a634041000000b00478bc19a510mr283553pga.288.1671697038617;
+        Thu, 22 Dec 2022 00:17:18 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXvuVJFNkTvkMcer5fCvVb9SyXK9/6SGy5DwYObkAe4h2J3fNScCvPEjB4DK2adxkmMP0Q3hUmkHr3OiWoTzyT4=
+X-Received: by 2002:a63:4041:0:b0:478:bc19:a510 with SMTP id
+ n62-20020a634041000000b00478bc19a510mr283550pga.288.1671697038385; Thu, 22
+ Dec 2022 00:17:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221221040506.1174644-2-gulam.mohamed@oracle.com>
+References: <20221221063846.20710-1-kinga.tanska@intel.com>
+In-Reply-To: <20221221063846.20710-1-kinga.tanska@intel.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Thu, 22 Dec 2022 16:17:07 +0800
+Message-ID: <CALTww2-yT8QKUzJ0hagehsAy4Hp2+eMfxk-iW9FiZQz3TeGOSA@mail.gmail.com>
+Subject: Re: [PATCH v2 0/2] Incremental mode: remove safety verification
+To:     Kinga Tanska <kinga.tanska@intel.com>
+Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org, colyli@suse.de
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Dec 21, 2022 at 04:05:06AM +0000, Gulam Mohamed wrote:
-> +u64  blk_get_iostat_ticks(struct request_queue *q)
-> +{
-> +       return (blk_queue_precise_io_stat(q) ? ktime_get_ns() : jiffies);
-> +}
-> +EXPORT_SYMBOL_GPL(blk_get_iostat_ticks);
-> +
->  void update_io_ticks(struct block_device *part, u64 now, bool end)
->  {
->  	u64 stamp;
-> @@ -968,20 +980,26 @@ EXPORT_SYMBOL(bdev_start_io_acct);
->  u64 bio_start_io_acct(struct bio *bio)
->  {
->  	return bdev_start_io_acct(bio->bi_bdev, bio_sectors(bio),
-> -				  bio_op(bio), jiffies);
-> +				  bio_op(bio),
-> +				  blk_get_iostat_ticks(bio->bi_bdev->bd_queue));
->  }
->  EXPORT_SYMBOL_GPL(bio_start_io_acct);
->  
->  void bdev_end_io_acct(struct block_device *bdev, enum req_op op,
->  		      u64 start_time)
->  {
-> +	u64 now;
-> +	u64 duration;
-> +	struct request_queue *q = bdev_get_queue(bdev);
->  	const int sgrp = op_stat_group(op);
-> -	u64 now = READ_ONCE(jiffies);
-> -	u64 duration = (unsigned long)now -(unsigned long) start_time;
-> +	now = blk_get_iostat_ticks(q);;
+Hi Kinga
 
-I don't think you can rely on the blk_queue_precise_io_stat() flag in
-the completion side. The user can toggle this with data in flight, which
-means the completion may use different tick units than the start. I
-think you'll need to add a flag to the request in the start accounting
-side to know which method to use for the completion.
+For the series, it's ok for me.
 
-> @@ -951,6 +951,7 @@ ssize_t part_stat_show(struct device *dev,
->  	struct request_queue *q = bdev_get_queue(bdev);
->  	struct disk_stats stat;
->  	unsigned int inflight;
-> +	u64 stat_ioticks;
->  
->  	if (queue_is_mq(q))
->  		inflight = blk_mq_in_flight(q, bdev);
-> @@ -959,10 +960,13 @@ ssize_t part_stat_show(struct device *dev,
->  
->  	if (inflight) {
->  		part_stat_lock();
-> -		update_io_ticks(bdev, jiffies, true);
-> +		update_io_ticks(bdev, blk_get_iostat_ticks(q), true);
->  		part_stat_unlock();
->  	}
->  	part_stat_read_all(bdev, &stat);
-> +	stat_ioticks = (blk_queue_precise_io_stat(q) ?
-> +				div_u64(stat.io_ticks, NSEC_PER_MSEC) :
-> +				jiffies_to_msecs(stat.io_ticks));
+Do you want to fix another regression problem? Now we can't set a
+member disk as faulty when
+array is active.
 
+The original patch is used to make sure the admin doesn't remove the
+disk and the raid can't work.
+So it doesn't need to check the array state. How about
 
-With the user able to change the precision at will, I think these
-io_ticks need to have a consistent unit size. Mixing jiffies and nsecs
-is going to create garbage stats output. Could existing io_ticks using
-jiffies be converted to jiffies_to_nsecs() so that you only have one
-unit to consider?
+diff --git a/Manage.c b/Manage.c
+index 9d85237ceab5..eee25fd8cda0 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -1322,8 +1322,7 @@ bool is_remove_safe(mdu_array_info_t *array,
+const int fd, char *devname, const
+        sysfs_free(mdi);
+
+        bool is_enough = enough(array->level, array->raid_disks,
+-                               array->layout, (array->state & 1),
+-                               avail);
++                               array->layout, 1, avail);
+
+        free(avail);
+        return is_enough;
+
+Regards
+Xiao
+
+On Wed, Dec 21, 2022 at 9:37 PM Kinga Tanska <kinga.tanska@intel.com> wrote:
+>
+> Changes in incremental mode. Removing verification
+> if remove is safe, when this mode is triggered. Also
+> moving commit description to obey kernel coding style.
+>
+> Kinga Tanska (2):
+>   incremental, manage: do not verify if remove is safe
+>   manage: move comment with function description
+>
+>  Incremental.c |  2 +-
+>  Manage.c      | 79 +++++++++++++++++++++++++++++++--------------------
+>  2 files changed, 49 insertions(+), 32 deletions(-)
+>
+> --
+> 2.26.2
+>
+
