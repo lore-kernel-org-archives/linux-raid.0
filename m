@@ -2,87 +2,162 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87F7EC4332F
-	for <linux-raid@archiver.kernel.org>; Wed, 28 Dec 2022 08:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D583C4167B
+	for <linux-raid@archiver.kernel.org>; Wed, 28 Dec 2022 14:30:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230260AbiL1INv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 28 Dec 2022 03:13:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38622 "EHLO
+        id S229822AbiL1OaF convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 28 Dec 2022 09:30:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229526AbiL1INt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Dec 2022 03:13:49 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 976A4E023
-        for <linux-raid@vger.kernel.org>; Wed, 28 Dec 2022 00:13:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1672215186;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=tiSlI/KQkcq0MsJq8rmpcWYA5eJbp01k9jHB2F7SCU4=;
-        b=NKXaPzTd+3rEKBJAudHGEtPwMhVhB9HJOZEJw3Mp28xTqHRKM7cDI7HY/oxsW0EjCxRd0T
-        cTr4YsIDuKEGSC3+JQx+KEL7QNFAaiB4WMZnud2Dhfb/R1f+2U1s0+NaiOymULV44YVZRC
-        +TZwyk8VBMkGS0LiNlPl05hW6kl2ITc=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-597-r_xWEy0tMzCHKPZ3cNZKVw-1; Wed, 28 Dec 2022 03:13:01 -0500
-X-MC-Unique: r_xWEy0tMzCHKPZ3cNZKVw-1
-Received: by mail-pj1-f72.google.com with SMTP id v17-20020a17090abb9100b002239a73bc6eso12206494pjr.1
-        for <linux-raid@vger.kernel.org>; Wed, 28 Dec 2022 00:13:01 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tiSlI/KQkcq0MsJq8rmpcWYA5eJbp01k9jHB2F7SCU4=;
-        b=vvaCWw2UCAsgaE0q+Z0tGuDGLBS++zlnDIgvD/LsCKQfUpyvbo19QCVhcWZ0j8Afr1
-         a/2joK5NwNwBWMQiQa3MKe4OYiaF3nA7AtKp9lRUepCFSDlAEqn0USaFyx7Zk2cSDYbb
-         gsh6SihZACdP3SzVj2sE+M378y3xReiSa551easyjOhC1htHmFvfb6tMrRRkRm9pGsqt
-         8lu2cErfXs8j0NjT769vssPZgbCBmZxPZVGgdSehF5X8rtwDXaoTbP5JADUXHgnt0VCN
-         4MfwLDH37ujo3ZATsoeMH6mHG4vT6S63Rv2DfvB5hgVrimNzdX0JcKQOhE+a/6GvJilK
-         EOhA==
-X-Gm-Message-State: AFqh2krS3sMVVrVxm7nggUmf3jJdDDk0VXPgzVM6aeilKxBru9ecnjoH
-        kPwlNT1WoUpaU/df4ttT61VZUrmQnFZTAHDgwYgvpr+lj2F64iWN1UXQjP5TPzYangavl0ozX6M
-        bOQQeDMrMZvX7udOkNIVVFYCRnWkyIsF4F96R2g==
-X-Received: by 2002:a63:4c2:0:b0:478:b499:e789 with SMTP id 185-20020a6304c2000000b00478b499e789mr1530494pge.157.1672215180233;
-        Wed, 28 Dec 2022 00:13:00 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXsPFNzjZlAz6h8h23yksF4Ze0JhPAOHPe8Cw2qiDWiI4bXDnG/utVWu3KQAgf6UXcX8aNywFrwlQwIOHFALGMc=
-X-Received: by 2002:a63:4c2:0:b0:478:b499:e789 with SMTP id
- 185-20020a6304c2000000b00478b499e789mr1530493pge.157.1672215179920; Wed, 28
- Dec 2022 00:12:59 -0800 (PST)
+        with ESMTP id S229603AbiL1OaE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Dec 2022 09:30:04 -0500
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 302C0E0E6
+        for <linux-raid@vger.kernel.org>; Wed, 28 Dec 2022 06:30:01 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1672237788; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=d4dWIojNCPfqOl4vzx3SxyQ7Kihe95NcM0QWNL7Ll4Yu/0LhvZ6+QC2kFYSSUj2VXb2jipgh8DxZ8HEKP7q0Q0eMFI2lgKPBm3ec11q9Wr9kgM7sH4DOoI25btwfnOKAw8BI48hkNAIfP2PcGjrOLcYC2BM69WlD92Kq/iSdw0A=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1672237788; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=cwkxQ+e/wITfVSqJ8wHPd8gHMSQJIyj2jwOsqIjQ2OA=; 
+        b=PpyhtUqntYdLAJ+QTpnL8isYhYq49PB60AoPuI9FDY9V1qTZsxq7DWuDRjXsvOwIA/DJ9pkOjVHH1mfnjyQhyEW3kESzSMJBwaps0zcEpAM/4tBSHi6IPEy4IRVzlDoiE4PtWrfn2Nz/d9U3tK2A1JcWq2s+SuEhXVfSInxQapA=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.78] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1672237784829607.2900100413004; Wed, 28 Dec 2022 15:29:44 +0100 (CET)
+Date:   Wed, 28 Dec 2022 09:29:42 -0500
 MIME-Version: 1.0
-References: <20221227055044.18168-1-kinga.tanska@intel.com>
-In-Reply-To: <20221227055044.18168-1-kinga.tanska@intel.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 28 Dec 2022 16:12:48 +0800
-Message-ID: <CALTww28cLYY8KbuzmOaVbDOty3TYOaBG-ggVFQriLN-Xuva9Hw@mail.gmail.com>
-Subject: Re: [PATCH v3 0/3] Incremental mode: remove safety verification
-To:     Kinga Tanska <kinga.tanska@intel.com>
-Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org, colyli@suse.de
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.1
+Subject: Re: [PATCH 06/10] super1: refactor the code for enum
+Content-Language: en-US
+To:     "Kusiak, Mateusz" <mateusz.kusiak@linux.intel.com>,
+        Coly Li <colyli@suse.de>,
+        Mateusz Kusiak <mateusz.kusiak@intel.com>
+Cc:     linux-raid@vger.kernel.org
+References: <20220818145621.21982-1-mateusz.kusiak@intel.com>
+ <20220818145621.21982-7-mateusz.kusiak@intel.com>
+ <79C06B27-C8DD-4E87-9C40-72160D26C641@suse.de>
+ <0d8322fc-f457-ed65-811e-adc90b6a4970@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <e81aaac9-5f16-31ff-fbb6-78c8645e408d@trained-monkey.org>
+In-Reply-To: <0d8322fc-f457-ed65-811e-adc90b6a4970@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Dec 27, 2022 at 8:49 PM Kinga Tanska <kinga.tanska@intel.com> wrote:
->
-> Changes in incremental mode. Removing verification
-> if remove is safe, when this mode is triggered. Also
-> moving commit description to obey kernel coding style.
->
-> Kinga Tanska (3):
->   Manage: do not check array state when drive is removed
->   incremental, manage: do not verify if remove is safe
->   manage: move comment with function description
->
->  Incremental.c |  2 +-
->  Manage.c      | 82 ++++++++++++++++++++++++++++++---------------------
->  2 files changed, 50 insertions(+), 34 deletions(-)
->
-> --
-> 2.26.2
->
+On 9/22/22 07:21, Kusiak, Mateusz wrote:
+> On 14/09/2022 17:03, Coly Li wrote:
+>>
+>>
+>>> 2022年8月18日 22:56，Mateusz Kusiak <mateusz.kusiak@intel.com> 写道：
+>>>
+>>> It prepares update_super1 for change context->update to enum.
+>>> Change if else statements into switch.
+>>>
+>>> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
+>>> ---
+>>> super1.c | 149 ++++++++++++++++++++++++++++++++-----------------------
+>>> 1 file changed, 87 insertions(+), 62 deletions(-)
+>>>
+>>> diff --git a/super1.c b/super1.c
+>>> index 71af860c..6c81c1b9 100644
+>>> --- a/super1.c
+>>> +++ b/super1.c
+>>> @@ -1212,30 +1212,53 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>>> 	int rv = 0;
+>>> 	struct mdp_superblock_1 *sb = st->sb;
+>>> 	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
+>>> +	enum update_opt update_enum = map_name(update_options, update);
+>>>
+>>> -	if (strcmp(update, "homehost") == 0 &&
+>>> -	    homehost) {
+>>> -		/* Note that 'homehost' is special as it is really
+>>> +	if (update_enum == UOPT_HOMEHOST && homehost) {
+>>> +		/*
+>>> +		 * Note that 'homehost' is special as it is really
+>>> 		 * a "name" update.
+>>> 		 */
+>>> 		char *c;
+>>> -		update = "name";
+>>> +		update_enum = UOPT_NAME;
+>>> 		c = strchr(sb->set_name, ':');
+>>> 		if (c)
+>>> -			strncpy(info->name, c+1, 31 - (c-sb->set_name));
+>>> +			snprintf(info->name, sizeof(info->name), "%s", c+1);
+>>> 		else
+>>> -			strncpy(info->name, sb->set_name, 32);
+>>> -		info->name[32] = 0;
+>>> +			snprintf(info->name, sizeof(info->name), "%s", sb->set_name);
+>>> 	}
+>>>
+>>> -	if (strcmp(update, "force-one")==0) {
+>>> +	switch (update_enum) {
+>>> +	case UOPT_NAME:
+>>> +		if (!info->name[0])
+>>> +			snprintf(info->name, sizeof(info->name), "%d", info->array.md_minor);
+>>> +		memset(sb->set_name, 0, sizeof(sb->set_name));
+>>> +		int namelen;
+>>> +
+>>
+>> The above variable ’namelen’ might be declared at beginning of this code block.
+> 
+> I'll fix this in v2.
 
-Acked-by: Xiao Ni <xni@redhat.com>
+Hi Mateusz,
+
+Did you ever post a v2 of this?
+
+Thanks,
+Jes
+
+
+>>> +		namelen = strnlen(homehost, MD_NAME_MAX) + 1 + strnlen(info->name, MD_NAME_MAX);
+>>> +		if (homehost &&
+>>> +		    strchr(info->name, ':') == NULL &&
+>>> +		    namelen < MD_NAME_MAX) {
+>>> +			strcpy(sb->set_name, homehost);
+>>> +			strcat(sb->set_name, ":");
+>>> +			strcat(sb->set_name, info->name);
+>>> +		} else {
+>>> +			namelen = min((int)strnlen(info->name, MD_NAME_MAX),
+>>> +				      (int)sizeof(sb->set_name) - 1);
+>>> +			memcpy(sb->set_name, info->name, namelen);
+>>> +			memset(&sb->set_name[namelen], '\0',
+>>> +			       sizeof(sb->set_name) - namelen);
+>>> +		}
+>>> +		break;
+>>>
+>> [snipped]
+>>> @@ -1569,32 +1589,37 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>>> 			}
+>>> 		done:;
+>>> 		}
+>>> -	} else if (strcmp(update, "_reshape_progress") == 0)
+>>> +		break;
+>>> +	case UOPT_SPEC__RESHAPE_PROGRESS:
+>>> 		sb->reshape_position = __cpu_to_le64(info->reshape_progress);
+>>> -	else if (strcmp(update, "writemostly") == 0)
+>>> -		sb->devflags |= WriteMostly1;
+>>> -	else if (strcmp(update, "readwrite") == 0)
+>>> +		break;
+>>> +	case UOPT_SPEC_READWRITE:
+>>> 		sb->devflags &= ~WriteMostly1;
+>>> -	else if (strcmp(update, "failfast") == 0)
+>>
+>> Writemostly-setting is removed here, is it on purpose ?
+> 
+> No, thanks for noticing! I'll add this in v2.
+>>
+>> [snip]
+>>
+>> Thanks.
+>>
+>> Coly Li
+
 
