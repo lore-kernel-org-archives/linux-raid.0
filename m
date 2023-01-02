@@ -2,337 +2,132 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78761C4167B
-	for <linux-raid@archiver.kernel.org>; Mon,  2 Jan 2023 08:38:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 082F0C4167B
+	for <linux-raid@archiver.kernel.org>; Mon,  2 Jan 2023 08:46:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231923AbjABIi1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 2 Jan 2023 03:38:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51984 "EHLO
+        id S229923AbjABIqm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 2 Jan 2023 03:46:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231636AbjABIiT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Jan 2023 03:38:19 -0500
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C635113F
-        for <linux-raid@vger.kernel.org>; Mon,  2 Jan 2023 00:38:18 -0800 (PST)
+        with ESMTP id S229582AbjABIqk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Jan 2023 03:46:40 -0500
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B8B7D94
+        for <linux-raid@vger.kernel.org>; Mon,  2 Jan 2023 00:46:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1672648698; x=1704184698;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=eJ0o74pO556OtEpQAjpMVygstEKdG9bJHmBpseFp4K0=;
-  b=Omlyf3+Q3RszRUnnVNzLHTXayrD7YiCdT8wKk/PfQhq7E39Fd5xTCNbK
-   NUHLQa1KJL8pl97BbyqS91WsM3RfgTJMdJbRIv0P3SjhWSpYeyc3uolYH
-   eZKku9kex/Fdu6OIzNH7zdTE8qYQ5/yAnr9mQyRuh8c7ZTYB6LHL08Ysg
-   /bxOwrDSdY53+zy8K1QPEOP6OwLTGNNlpwTbw2RULUujFUalqbsBOU5Hy
-   MI/TMxA/zcNqlmdO5Ff58t70TqC17rZ1wBWJmIk2zGj5GikEDxfcRmZ7S
-   0FhIoqcNoeVV4GlJAW0BwqhYV0zL9eKwKIZZGf0cmTkvjKD9Hp6L4jh64
+  t=1672649200; x=1704185200;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ZD2oeSABUsSRJi/rjXttjPQ96LHnnKOQn/tz5Wt03js=;
+  b=IAnfsYAS3wce/iO3AMck6nUKAKifkuh8qGbXtJ+YqVIQGQ39CP6m6xUq
+   tPXJvw4Lh8zrPdeyg2Bop11ViaEWddcmW7x/+Ffoj5zcVwDm4air/UGYD
+   IciKHpHFk2j2Zvp7qlpFB7VbT3PTCNe2D6Geyl2YrGp1YE421+lYteJ0f
+   l694ZTN+c18eaIy9/S2BgYXjRneMgu+mZ8a/zMbSzCz7pzMZ8Zx77vzPf
+   hoI7REiwG88BJ+wytcoLtk1VbZzbzMMjSutEp6FwtJrp8UGr5kI2UYAKT
+   yfZaKs3aZ4+Du5t9U64qEEGYxmOLvd+h/Lqhu8nCjCtlU2duVqB+EtMot
    A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10577"; a="322685424"
+X-IronPort-AV: E=McAfee;i="6500,9779,10577"; a="309222353"
 X-IronPort-AV: E=Sophos;i="5.96,293,1665471600"; 
-   d="scan'208";a="322685424"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jan 2023 00:38:17 -0800
+   d="scan'208";a="309222353"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jan 2023 00:46:39 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10577"; a="647864756"
+X-IronPort-AV: E=McAfee;i="6500,9779,10577"; a="983243915"
 X-IronPort-AV: E=Sophos;i="5.96,293,1665471600"; 
-   d="scan'208";a="647864756"
+   d="scan'208";a="983243915"
 Received: from unknown (HELO DESKTOP-QODMV9C.igk.intel.com.com) ([10.102.109.29])
-  by orsmga007.jf.intel.com with ESMTP; 02 Jan 2023 00:38:15 -0800
+  by fmsmga005.fm.intel.com with ESMTP; 02 Jan 2023 00:46:38 -0800
 From:   Mateusz Kusiak <mateusz.kusiak@intel.com>
 To:     linux-raid@vger.kernel.org
 Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH v2 10/10] Change char* to enum in context->update & refactor code
-Date:   Mon,  2 Jan 2023 09:35:24 +0100
-Message-Id: <20230102083524.28893-11-mateusz.kusiak@intel.com>
+Subject: [PATCH 1/2] mdmon: fix segfault
+Date:   Mon,  2 Jan 2023 09:46:21 +0100
+Message-Id: <20230102084622.29154-1-mateusz.kusiak@intel.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20230102083524.28893-1-mateusz.kusiak@intel.com>
-References: <20230102083524.28893-1-mateusz.kusiak@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Storing update option in string is bad for frequent comparisons and
-error prone.
-Replace char array with enum so already existing enum is passed around
-instead of string.
-Adapt code to changes.
+Mdmon crashes if stat2devnm returns null.
+Use open_mddev to check if device is mddevice and get name using
+fd2devnm.
+Refactor container name handling.
 
 Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 ---
- Assemble.c | 40 +++++++++++++++++-----------------------
- mdadm.c    | 52 +++++++++++++++++++---------------------------------
- mdadm.h    |  2 +-
- 3 files changed, 37 insertions(+), 57 deletions(-)
+ Makefile |  2 +-
+ mdmon.c  | 26 ++++++++++++--------------
+ 2 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index dba910cd..49804941 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -135,17 +135,17 @@ static int ident_matches(struct mddev_ident *ident,
- 			 struct mdinfo *content,
- 			 struct supertype *tst,
- 			 char *homehost, int require_homehost,
--			 char *update, char *devname)
-+			 enum update_opt update, char *devname)
- {
+diff --git a/Makefile b/Makefile
+index ec1f99ed..5eac1a4e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -160,7 +160,7 @@ SRCS =  $(patsubst %.o,%.c,$(OBJS))
  
--	if (ident->uuid_set && (!update || strcmp(update, "uuid")!= 0) &&
-+	if (ident->uuid_set && update != UOPT_UUID &&
- 	    same_uuid(content->uuid, ident->uuid, tst->ss->swapuuid)==0 &&
- 	    memcmp(content->uuid, uuid_zero, sizeof(int[4])) != 0) {
- 		if (devname)
- 			pr_err("%s has wrong uuid.\n", devname);
- 		return 0;
- 	}
--	if (ident->name[0] && (!update || strcmp(update, "name")!= 0) &&
-+	if (ident->name[0] && update != UOPT_NAME &&
- 	    name_matches(content->name, ident->name, homehost, require_homehost)==0) {
- 		if (devname)
- 			pr_err("%s has wrong name.\n", devname);
-@@ -648,11 +648,10 @@ static int load_devices(struct devs *devices, char *devmap,
- 			int err;
- 			fstat(mdfd, &stb2);
+ INCL = mdadm.h part.h bitmap.h
  
--			if (strcmp(c->update, "uuid") == 0 && !ident->uuid_set)
-+			if (c->update == UOPT_UUID && !ident->uuid_set)
- 				random_uuid((__u8 *)ident->uuid);
- 
--			if (strcmp(c->update, "ppl") == 0 &&
--			    ident->bitmap_fd >= 0) {
-+			if (c->update == UOPT_PPL && ident->bitmap_fd >= 0) {
- 				pr_err("PPL is not compatible with bitmap\n");
- 				close(mdfd);
- 				free(devices);
-@@ -684,34 +683,30 @@ static int load_devices(struct devs *devices, char *devmap,
- 			strcpy(content->name, ident->name);
- 			content->array.md_minor = minor(stb2.st_rdev);
- 
--			if (strcmp(c->update, "byteorder") == 0)
-+			if (c->update == UOPT_BYTEORDER)
- 				err = 0;
--			else if (strcmp(c->update, "home-cluster") == 0) {
-+			else if (c->update == UOPT_HOME_CLUSTER) {
- 				tst->cluster_name = c->homecluster;
- 				err = tst->ss->write_bitmap(tst, dfd, NameUpdate);
--			} else if (strcmp(c->update, "nodes") == 0) {
-+			} else if (c->update == UOPT_NODES) {
- 				tst->nodes = c->nodes;
- 				err = tst->ss->write_bitmap(tst, dfd, NodeNumUpdate);
--			} else if (strcmp(c->update, "revert-reshape") == 0 &&
--				   c->invalid_backup)
-+			} else if (c->update == UOPT_REVERT_RESHAPE && c->invalid_backup)
- 				err = tst->ss->update_super(tst, content,
- 							    UOPT_SPEC_REVERT_RESHAPE_NOBACKUP,
- 							    devname, c->verbose,
- 							    ident->uuid_set,
- 							    c->homehost);
- 			else
--				/*
--				 * Mapping is temporary, will be removed in this patchset
--				 */
- 				err = tst->ss->update_super(tst, content,
--							    map_name(update_options, c->update),
-+							    c->update,
- 							    devname, c->verbose,
- 							    ident->uuid_set,
- 							    c->homehost);
- 			if (err < 0) {
- 				if (err == -1)
- 					pr_err("--update=%s not understood for %s metadata\n",
--					       c->update, tst->ss->name);
-+					       map_num(update_options, c->update), tst->ss->name);
- 				tst->ss->free_super(tst);
- 				free(tst);
- 				close(mdfd);
-@@ -721,7 +716,7 @@ static int load_devices(struct devs *devices, char *devmap,
- 				*stp = st;
- 				return -1;
- 			}
--			if (strcmp(c->update, "uuid")==0 &&
-+			if (c->update == UOPT_UUID &&
- 			    !ident->uuid_set) {
- 				ident->uuid_set = 1;
- 				memcpy(ident->uuid, content->uuid, 16);
-@@ -730,7 +725,7 @@ static int load_devices(struct devs *devices, char *devmap,
- 				pr_err("Could not re-write superblock on %s.\n",
- 				       devname);
- 
--			if (strcmp(c->update, "uuid")==0 &&
-+			if (c->update == UOPT_UUID &&
- 			    ident->bitmap_fd >= 0 && !bitmap_done) {
- 				if (bitmap_update_uuid(ident->bitmap_fd,
- 						       content->uuid,
-@@ -1188,8 +1183,7 @@ static int start_array(int mdfd,
- 				pr_err("%s: Need a backup file to complete reshape of this array.\n",
- 				       mddev);
- 				pr_err("Please provided one with \"--backup-file=...\"\n");
--				if (c->update &&
--				    strcmp(c->update, "revert-reshape") == 0)
-+				if (c->update == UOPT_REVERT_RESHAPE)
- 					pr_err("(Don't specify --update=revert-reshape again, that part succeeded.)\n");
- 				return 1;
- 			}
-@@ -1487,7 +1481,7 @@ try_again:
- 	 */
- 	if (map_lock(&map))
- 		pr_err("failed to get exclusive lock on mapfile - continue anyway...\n");
--	if (c->update && strcmp(c->update,"uuid") == 0)
-+	if (c->update == UOPT_UUID)
- 		mp = NULL;
- 	else
- 		mp = map_by_uuid(&map, content->uuid);
-@@ -1634,7 +1628,7 @@ try_again:
- 		goto out;
+-MON_OBJS = mdmon.o monitor.o managemon.o uuid.o util.o maps.o mdstat.o sysfs.o \
++MON_OBJS = mdmon.o monitor.o managemon.o uuid.o util.o maps.o mdstat.o sysfs.o config.o mapfile.o mdopen.o\
+ 	policy.o lib.o \
+ 	Kill.o sg_io.o dlink.o ReadMe.o super-intel.o \
+ 	super-mbr.o super-gpt.o \
+diff --git a/mdmon.c b/mdmon.c
+index e9d035eb..ecf52dc8 100644
+--- a/mdmon.c
++++ b/mdmon.c
+@@ -363,14 +363,14 @@ int main(int argc, char *argv[])
  	}
  
--	if (c->update && strcmp(c->update, "byteorder")==0)
-+	if (c->update == UOPT_BYTEORDER)
- 		st->minor_version = 90;
- 
- 	st->ss->getinfo_super(st, content, NULL);
-@@ -1902,7 +1896,7 @@ try_again:
- 	/* First, fill in the map, so that udev can find our name
- 	 * as soon as we become active.
- 	 */
--	if (c->update && strcmp(c->update, "metadata")==0) {
-+	if (c->update == UOPT_METADATA) {
- 		content->array.major_version = 1;
- 		content->array.minor_version = 0;
- 		strcpy(content->text_version, "1.0");
-diff --git a/mdadm.c b/mdadm.c
-index d06e2820..57e8e6fa 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -724,13 +724,12 @@ int main(int argc, char *argv[])
- 
- 		case O(ASSEMBLE,'U'): /* update the superblock */
- 		case O(MISC,'U'): {
--			enum update_opt updateopt = map_name(update_options, c.update);
- 			enum update_opt print_mode = UOPT_HELP;
- 			const char *error_addon = "update option";
- 
- 			if (c.update) {
- 				pr_err("Can only update one aspect of superblock, both %s and %s given.\n",
--					c.update, optarg);
-+					map_num(update_options, c.update), optarg);
- 				exit(2);
- 			}
- 			if (mode == MISC && !c.subarray) {
-@@ -738,20 +737,20 @@ int main(int argc, char *argv[])
- 				exit(2);
- 			}
- 
--			c.update = optarg;
-+			c.update = map_name(update_options, optarg);
- 
- 			if (devmode == UpdateSubarray) {
- 				print_mode = UOPT_SUBARRAY_ONLY;
- 				error_addon = "update-subarray option";
- 
--				if (updateopt > UOPT_SUBARRAY_ONLY && updateopt < UOPT_HELP)
--					updateopt = UOPT_UNDEFINED;
-+				if (c.update > UOPT_SUBARRAY_ONLY && c.update < UOPT_HELP)
-+					c.update = UOPT_UNDEFINED;
- 			}
- 
--			switch (updateopt) {
-+			switch (c.update) {
- 			case UOPT_UNDEFINED:
- 				pr_err("'--update=%s' is invalid %s. ",
--					c.update, error_addon);
-+					optarg, error_addon);
- 				outf = stderr;
- 			case UOPT_HELP:
- 				if (!outf)
-@@ -776,14 +775,14 @@ int main(int argc, char *argv[])
- 			}
- 			if (c.update) {
- 				pr_err("Can only update one aspect of superblock, both %s and %s given.\n",
--					c.update, optarg);
-+					map_num(update_options, c.update), optarg);
- 				exit(2);
- 			}
--			c.update = optarg;
--			if (strcmp(c.update, "devicesize") != 0 &&
--			    strcmp(c.update, "bbl") != 0 &&
--			    strcmp(c.update, "force-no-bbl") != 0 &&
--			    strcmp(c.update, "no-bbl") != 0) {
-+			c.update = map_name(update_options, optarg);
-+			if (c.update != UOPT_DEVICESIZE &&
-+			    c.update != UOPT_BBL &&
-+			    c.update != UOPT_NO_BBL &&
-+			    c.update != UOPT_FORCE_NO_BBL) {
- 				pr_err("only 'devicesize', 'bbl', 'no-bbl', and 'force-no-bbl' can be updated with --re-add\n");
- 				exit(2);
- 			}
-@@ -1357,7 +1356,7 @@ int main(int argc, char *argv[])
- 		}
+ 	if (all == 0 && container_name == NULL) {
+-		if (argv[optind])
+-			container_name = argv[optind];
++		if (argv[optind]) {
++			container_name = get_md_name(argv[optind]);
++			if (!container_name)
++				container_name = argv[optind];
++		}
  	}
  
--	if (c.update && strcmp(c.update, "nodes") == 0 && c.nodes == 0) {
-+	if (c.update && c.update == UOPT_NODES && c.nodes == 0) {
- 		pr_err("Please specify nodes number with --nodes\n");
- 		exit(1);
+-	if (container_name == NULL)
+-		usage();
+-
+-	if (argc - optind > 1)
++	if (container_name == NULL || argc - optind > 1)
+ 		usage();
+ 
+ 	if (strcmp(container_name, "/proc/mdstat") == 0)
+@@ -402,21 +402,19 @@ int main(int argc, char *argv[])
+ 		free_mdstat(mdstat);
+ 
+ 		return status;
+-	} else if (strncmp(container_name, "md", 2) == 0) {
+-		int id = devnm2devid(container_name);
+-		if (id)
+-			devnm = container_name;
+ 	} else {
+-		struct stat st;
++		int mdfd = open_mddev(container_name, 1);
+ 
+-		if (stat(container_name, &st) == 0)
+-			devnm = xstrdup(stat2devnm(&st));
++		if (mdfd < 0)
++			return 1;
++		devnm = fd2devnm(mdfd);
++		close(mdfd);
  	}
-@@ -1402,22 +1401,10 @@ int main(int argc, char *argv[])
- 		/* readonly, add/remove, readwrite, runstop */
- 		if (c.readonly > 0)
- 			rv = Manage_ro(devlist->devname, mdfd, c.readonly);
--		if (!rv && devs_found > 1) {
--			/*
--			 * This is temporary and will be removed in next patches
--			 * Null c.update will cause segfault
--			 */
--			if (c.update)
--				rv = Manage_subdevs(devlist->devname, mdfd,
--						devlist->next, c.verbose, c.test,
--						map_name(update_options, c.update),
--						c.force);
--			else
--				rv = Manage_subdevs(devlist->devname, mdfd,
--						devlist->next, c.verbose, c.test,
--						UOPT_UNDEFINED,
--						c.force);
--		}
-+		if (!rv && devs_found > 1)
-+			rv = Manage_subdevs(devlist->devname, mdfd,
-+					    devlist->next, c.verbose,
-+					    c.test, c.update, c.force);
- 		if (!rv && c.readonly < 0)
- 			rv = Manage_ro(devlist->devname, mdfd, c.readonly);
- 		if (!rv && c.runstop > 0)
-@@ -1937,14 +1924,13 @@ static int misc_list(struct mddev_dev *devlist,
- 			rv |= Kill_subarray(dv->devname, c->subarray, c->verbose);
- 			continue;
- 		case UpdateSubarray:
--			if (c->update == NULL) {
-+			if (!c->update) {
- 				pr_err("-U/--update must be specified with --update-subarray\n");
- 				rv |= 1;
- 				continue;
- 			}
- 			rv |= Update_subarray(dv->devname, c->subarray,
--					      map_name(update_options, c->update),
--					      ident, c->verbose);
-+					      c->update, ident, c->verbose);
- 			continue;
- 		case Dump:
- 			rv |= Dump_metadata(dv->devname, dump_directory, c, ss);
-diff --git a/mdadm.h b/mdadm.h
-index 924f4b63..13f8b4cb 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -616,7 +616,7 @@ struct context {
- 	int	export;
- 	int	test;
- 	char	*subarray;
--	char	*update;
-+	enum	update_opt update;
- 	int	scan;
- 	int	SparcAdjust;
- 	int	autof;
+ 
+ 	if (!devnm) {
+ 		pr_err("%s is not a valid md device name\n",
+ 			container_name);
+-		exit(1);
++		return 1;
+ 	}
+ 	return mdmon(devnm, dofork && do_fork(), takeover);
+ }
 -- 
 2.26.2
 
