@@ -2,48 +2,48 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F3A4C4167B
-	for <linux-raid@archiver.kernel.org>; Mon,  2 Jan 2023 08:37:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EF27C4167B
+	for <linux-raid@archiver.kernel.org>; Mon,  2 Jan 2023 08:37:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230172AbjABIhq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 2 Jan 2023 03:37:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51828 "EHLO
+        id S231730AbjABIhx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 2 Jan 2023 03:37:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231691AbjABIhn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Jan 2023 03:37:43 -0500
+        with ESMTP id S231484AbjABIhs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Jan 2023 03:37:48 -0500
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5775113A
-        for <linux-raid@vger.kernel.org>; Mon,  2 Jan 2023 00:37:38 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ED22DB3
+        for <linux-raid@vger.kernel.org>; Mon,  2 Jan 2023 00:37:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1672648658; x=1704184658;
+  t=1672648667; x=1704184667;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=VpZ2Dd05Q37igq+JmBSPgEPZDQCDbdv+y+e5YvjWD2w=;
-  b=bEqJmc5GCQNG3mxMR7cqCeovEJ21ruwfeXekY18yLX2EBY5k1035YFtI
-   PKcr5srurU6YxBAgbw41eU7w8WXM0U9NaxuMwVauWBry/HWmwzvk/OXMw
-   oUCtu52RS4cZczC9eSvzlBMpjKzX1NvR5LO78olumlXyfbh0eWll8w1a7
-   4s7Lzj7xJVmVmNAeF+TRGx2RD3G/zg/Fl/iUv0R3bObIgrJsM3jT3MvDb
-   Xr132AYXMt9YCFYa88RqDRhJoJ2O02osTwDffToSKej4h0ahFLgQTvYa9
-   z+5iwj6Na0z8u9RLSD/v3xrWSW9YSXNodf+gfA3l0mk7timVXAxJN3jNf
+  bh=1RxpVkp0eY5PDYgROYCnRQnkHzkNUBdIOp0LYiz186k=;
+  b=Q8aMRE+QJMq1yR5QmqGEGxFua9lVvJ/nj6AJqXgf4i/Q12rMgQHgjFNd
+   f0zA2U1ozZkAuB8tovwXBpZAY/XLfB3M85jv/oFhx5a5VZdx6SeNAyZ9h
+   9yVnOKzwF05wthxFvSeCbJWgD7ua+pEgFEBjVFf1by2gEy8POaTjfXvxO
+   7oXlf1pdDI7k/ATTShVf6bm8/hzp80uL5qrantOzkKjVJ+QARRCcH1aJ4
+   CdF/P5klCXyB7sGEczeXNoA2yXfs+J7FBpr1OzsdV2+3+Q8PqBfyeWBxY
+   yjkT9dDLHHrc4OdLf6ddjJ78cRjgH936HWsFrfYJCqNA3iMj04P09olUm
    g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10577"; a="322685341"
+X-IronPort-AV: E=McAfee;i="6500,9779,10577"; a="322685356"
 X-IronPort-AV: E=Sophos;i="5.96,293,1665471600"; 
-   d="scan'208";a="322685341"
+   d="scan'208";a="322685356"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jan 2023 00:37:37 -0800
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jan 2023 00:37:45 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10577"; a="647864641"
+X-IronPort-AV: E=McAfee;i="6500,9779,10577"; a="647864650"
 X-IronPort-AV: E=Sophos;i="5.96,293,1665471600"; 
-   d="scan'208";a="647864641"
+   d="scan'208";a="647864650"
 Received: from unknown (HELO DESKTOP-QODMV9C.igk.intel.com.com) ([10.102.109.29])
-  by orsmga007.jf.intel.com with ESMTP; 02 Jan 2023 00:37:35 -0800
+  by orsmga007.jf.intel.com with ESMTP; 02 Jan 2023 00:37:43 -0800
 From:   Mateusz Kusiak <mateusz.kusiak@intel.com>
 To:     linux-raid@vger.kernel.org
 Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH v2 05/10] super0: refactor the code for enum
-Date:   Mon,  2 Jan 2023 09:35:19 +0100
-Message-Id: <20230102083524.28893-6-mateusz.kusiak@intel.com>
+Subject: [PATCH v2 06/10] super1: refactor the code for enum
+Date:   Mon,  2 Jan 2023 09:35:20 +0100
+Message-Id: <20230102083524.28893-7-mateusz.kusiak@intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20230102083524.28893-1-mateusz.kusiak@intel.com>
 References: <20230102083524.28893-1-mateusz.kusiak@intel.com>
@@ -53,209 +53,299 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-It prepares update_super0 for change context->update to enum.
-Change if else statements to switch.
+It prepares update_super1 for change context->update to enum.
+Change if else statements into switch.
 
 Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 ---
- super0.c | 102 ++++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 63 insertions(+), 39 deletions(-)
+ super1.c | 152 +++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 91 insertions(+), 61 deletions(-)
 
-diff --git a/super0.c b/super0.c
-index 93876e2e..d9f5bff4 100644
---- a/super0.c
-+++ b/super0.c
-@@ -502,19 +502,39 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
+diff --git a/super1.c b/super1.c
+index 0b505a7e..b0a97016 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1218,30 +1218,55 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
  	int rv = 0;
- 	int uuid[4];
- 	mdp_super_t *sb = st->sb;
+ 	struct mdp_superblock_1 *sb = st->sb;
+ 	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
 +	enum update_opt update_enum = map_name(update_options, update);
  
 -	if (strcmp(update, "homehost") == 0 &&
 -	    homehost) {
--		/* note that 'homehost' is special as it is really
+-		/* Note that 'homehost' is special as it is really
 +	if (update_enum == UOPT_HOMEHOST && homehost) {
 +		/*
-+		 * note that 'homehost' is special as it is really
- 		 * a "uuid" update.
++		 * Note that 'homehost' is special as it is really
+ 		 * a "name" update.
  		 */
- 		uuid_set = 0;
--		update = "uuid";
-+		update_enum = UOPT_UUID;
- 		info->uuid[0] = sb->set_uuid0;
- 		info->uuid[1] = sb->set_uuid1;
+ 		char *c;
+-		update = "name";
++		update_enum = UOPT_NAME;
+ 		c = strchr(sb->set_name, ':');
+ 		if (c)
+-			strncpy(info->name, c+1, 31 - (c-sb->set_name));
++			snprintf(info->name, sizeof(info->name), "%s", c+1);
+ 		else
+-			strncpy(info->name, sb->set_name, 32);
+-		info->name[32] = 0;
++			snprintf(info->name, sizeof(info->name), "%s", sb->set_name);
  	}
  
--	if (strcmp(update, "sparc2.2")==0 ) {
+-	if (strcmp(update, "force-one")==0) {
 +	switch (update_enum) {
-+	case UOPT_UUID:
-+		if (!uuid_set && homehost) {
-+			char buf[20];
-+			memcpy(info->uuid+2,
-+			       sha1_buffer(homehost, strlen(homehost), buf),
-+			       8);
++	case UOPT_NAME: {
++		int namelen;
++
++		if (!info->name[0])
++			snprintf(info->name, sizeof(info->name), "%d", info->array.md_minor);
++		memset(sb->set_name, 0, sizeof(sb->set_name));
++
++		namelen = strnlen(homehost, MD_NAME_MAX) + 1 + strnlen(info->name, MD_NAME_MAX);
++		if (homehost &&
++		    strchr(info->name, ':') == NULL &&
++		    namelen < MD_NAME_MAX) {
++			strcpy(sb->set_name, homehost);
++			strcat(sb->set_name, ":");
++			strcat(sb->set_name, info->name);
++		} else {
++			namelen = min((int)strnlen(info->name, MD_NAME_MAX),
++				      (int)sizeof(sb->set_name) - 1);
++			memcpy(sb->set_name, info->name, namelen);
++			memset(&sb->set_name[namelen], '\0',
++			       sizeof(sb->set_name) - namelen);
 +		}
-+		sb->set_uuid0 = info->uuid[0];
-+		sb->set_uuid1 = info->uuid[1];
-+		sb->set_uuid2 = info->uuid[2];
-+		sb->set_uuid3 = info->uuid[3];
-+		if (sb->state & (1<<MD_SB_BITMAP_PRESENT)) {
-+			struct bitmap_super_s *bm;
-+			bm = (struct bitmap_super_s *)(sb+1);
-+			uuid_from_super0(st, uuid);
-+			memcpy(bm->uuid, uuid, 16);
-+		}
-+		break;
-+	case UOPT_SPARC22: {
- 		/* 2.2 sparc put the events in the wrong place
- 		 * So we copy the tail of the superblock
- 		 * up 4 bytes before continuing
-@@ -527,12 +547,15 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 		if (verbose >= 0)
- 			pr_err("adjusting superblock of %s for 2.2/sparc compatibility.\n",
- 			       devname);
--	} else if (strcmp(update, "super-minor") ==0) {
 +		break;
 +	}
-+	case UOPT_SUPER_MINOR:
- 		sb->md_minor = info->array.md_minor;
- 		if (verbose > 0)
- 			pr_err("updating superblock of %s with minor number %d\n",
- 				devname, info->array.md_minor);
--	} else if (strcmp(update, "summaries") == 0) {
-+		break;
-+	case UOPT_SUMMARIES: {
- 		unsigned int i;
- 		/* set nr_disks, active_disks, working_disks,
- 		 * failed_disks, spare_disks based on disks[]
-@@ -559,7 +582,9 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 					sb->spare_disks++;
- 			} else if (i >= sb->raid_disks && sb->disks[i].number == 0)
- 				sb->disks[i].state = 0;
--	} else if (strcmp(update, "force-one")==0) {
-+		break;
-+	}
-+	case UOPT_SPEC_FORCE_ONE: {
- 		/* Not enough devices for a working array, so
- 		 * bring this one up-to-date.
++	case UOPT_SPEC_FORCE_ONE:
+ 		/* Not enough devices for a working array,
+ 		 * so bring this one up-to-date
  		 */
-@@ -569,7 +594,9 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 		if (sb->events_hi != ehi ||
- 		    sb->events_lo != elo)
+ 		if (sb->events != __cpu_to_le64(info->events))
  			rv = 1;
+ 		sb->events = __cpu_to_le64(info->events);
 -	} else if (strcmp(update, "force-array")==0) {
 +		break;
-+	}
 +	case UOPT_SPEC_FORCE_ARRAY:
- 		/* degraded array and 'force' requested, so
- 		 * maybe need to mark it 'clean'
+ 		/* Degraded array and 'force' requests to
+ 		 * maybe need to mark it 'clean'.
  		 */
-@@ -579,7 +606,8 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 			sb->state |= (1 << MD_SB_CLEAN);
- 			rv = 1;
+@@ -1254,7 +1279,8 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 				rv = 1;
+ 			sb->resync_offset = MaxSector;
  		}
 -	} else if (strcmp(update, "assemble")==0) {
 +		break;
 +	case UOPT_SPEC_ASSEMBLE: {
  		int d = info->disk.number;
- 		int wonly = sb->disks[d].state & (1<<MD_DISK_WRITEMOSTLY);
- 		int failfast = sb->disks[d].state & (1<<MD_DISK_FAILFAST);
-@@ -609,7 +637,9 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 			sb->reshape_position = info->reshape_progress;
+ 		int want;
+ 		if (info->disk.state & (1<<MD_DISK_ACTIVE))
+@@ -1287,7 +1313,9 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 				__cpu_to_le64(info->reshape_progress);
  			rv = 1;
  		}
 -	} else if (strcmp(update, "linear-grow-new") == 0) {
 +		break;
 +	}
-+	case UOPT_SPEC_LINEAR_GROW_NEW:
- 		memset(&sb->disks[info->disk.number], 0, sizeof(sb->disks[0]));
- 		sb->disks[info->disk.number].number = info->disk.number;
- 		sb->disks[info->disk.number].major = info->disk.major;
-@@ -617,7 +647,8 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 		sb->disks[info->disk.number].raid_disk = info->disk.raid_disk;
- 		sb->disks[info->disk.number].state = info->disk.state;
- 		sb->this_disk = sb->disks[info->disk.number];
++	case UOPT_SPEC_LINEAR_GROW_NEW: {
+ 		int i;
+ 		int fd;
+ 		int max = __le32_to_cpu(sb->max_dev);
+@@ -1330,7 +1358,9 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 					ds - __le64_to_cpu(sb->data_offset));
+ 			}
+ 		}
 -	} else if (strcmp(update, "linear-grow-update") == 0) {
 +		break;
-+	case UOPT_SPEC_LINEAR_GROW_UPDATE:
- 		sb->raid_disks = info->array.raid_disks;
- 		sb->nr_disks = info->array.nr_disks;
- 		sb->active_disks = info->array.active_disks;
-@@ -628,29 +659,15 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 		sb->disks[info->disk.number].minor = info->disk.minor;
- 		sb->disks[info->disk.number].raid_disk = info->disk.raid_disk;
- 		sb->disks[info->disk.number].state = info->disk.state;
++	}
++	case UOPT_SPEC_LINEAR_GROW_UPDATE: {
+ 		int max = __le32_to_cpu(sb->max_dev);
+ 		int i = info->disk.number;
+ 		if (max > MAX_DEVS || i > MAX_DEVS)
+@@ -1342,19 +1372,20 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
+ 		sb->dev_roles[info->disk.number] =
+ 			__cpu_to_le16(info->disk.raid_disk);
 -	} else if (strcmp(update, "resync") == 0) {
 -		/* make sure resync happens */
-+		break;
-+	case UOPT_RESYNC:
-+		/*
-+		 * make sure resync happens
-+		 */
- 		sb->state &= ~(1<<MD_SB_CLEAN);
- 		sb->recovery_cp = 0;
+-		sb->resync_offset = 0ULL;
 -	} else if (strcmp(update, "uuid") == 0) {
--		if (!uuid_set && homehost) {
--			char buf[20];
--			char *hash = sha1_buffer(homehost,
--						 strlen(homehost),
--						 buf);
--			memcpy(info->uuid+2, hash, 8);
--		}
--		sb->set_uuid0 = info->uuid[0];
--		sb->set_uuid1 = info->uuid[1];
--		sb->set_uuid2 = info->uuid[2];
--		sb->set_uuid3 = info->uuid[3];
--		if (sb->state & (1<<MD_SB_BITMAP_PRESENT)) {
--			struct bitmap_super_s *bm;
--			bm = (struct bitmap_super_s*)(sb+1);
--			uuid_from_super0(st, uuid);
--			memcpy(bm->uuid, uuid, 16);
--		}
--	} else if (strcmp(update, "metadata") == 0) {
 +		break;
-+	case UOPT_METADATA:
- 		/* Create some v1.0 metadata to match ours but make the
- 		 * ctime bigger.  Also update info->array.*_version.
- 		 * We need to arrange that store_super writes out
-@@ -670,7 +687,8 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 			uuid_from_super0(st, info->uuid);
- 			st->other = super1_make_v0(st, info, st->sb);
- 		}
--	} else if (strcmp(update, "revert-reshape") == 0) {
-+		break;
-+	case UOPT_REVERT_RESHAPE:
- 		rv = -2;
- 		if (sb->minor_version <= 90)
- 			pr_err("No active reshape to revert on %s\n",
-@@ -702,16 +720,22 @@ static int update_super0(struct supertype *st, struct mdinfo *info,
- 			sb->new_chunk = sb->chunk_size;
- 			sb->chunk_size = tmp;
- 		}
++	}
++	case UOPT_UUID:
+ 		copy_uuid(sb->set_uuid, info->uuid, super1.swapuuid);
+ 
+ 		if (__le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET)
+ 			memcpy(bms->uuid, sb->set_uuid, 16);
 -	} else if (strcmp(update, "no-bitmap") == 0) {
 +		break;
 +	case UOPT_NO_BITMAP:
- 		sb->state &= ~(1<<MD_SB_BITMAP_PRESENT);
--	} else if (strcmp(update, "_reshape_progress")==0)
+ 		sb->feature_map &= ~__cpu_to_le32(MD_FEATURE_BITMAP_OFFSET);
+ 		if (bms->version == BITMAP_MAJOR_CLUSTERED && !IsBitmapDirty(devname))
+ 			sb->resync_offset = MaxSector;
+-	} else if (strcmp(update, "bbl") == 0) {
++		break;
++	case UOPT_BBL: {
+ 		/* only possible if there is room after the bitmap, or if
+ 		 * there is no bitmap
+ 		 */
+@@ -1383,14 +1414,12 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 				bb_offset = bitmap_offset + bm_sectors;
+ 			while (bb_offset < (long)sb_offset + 8 + 32*2 &&
+ 			       bb_offset + 8+8 <= (long)data_offset)
+-				/* too close to bitmap, and room to grow */
+ 				bb_offset += 8;
+ 			if (bb_offset + 8 <= (long)data_offset) {
+ 				sb->bblog_size = __cpu_to_le16(8);
+ 				sb->bblog_offset = __cpu_to_le32(bb_offset);
+ 			}
+ 		} else {
+-			/* 1.0 - Put bbl just before super block */
+ 			if (bm_sectors && bitmap_offset < 0)
+ 				space = -bitmap_offset - bm_sectors;
+ 			else
+@@ -1401,7 +1430,9 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 				sb->bblog_offset = __cpu_to_le32((unsigned)-8);
+ 			}
+ 		}
+-	} else if (strcmp(update, "no-bbl") == 0) {
++		break;
++	}
++	case UOPT_NO_BBL:
+ 		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BAD_BLOCKS))
+ 			pr_err("Cannot remove active bbl from %s\n",devname);
+ 		else {
+@@ -1409,12 +1440,14 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 			sb->bblog_shift = 0;
+ 			sb->bblog_offset = 0;
+ 		}
+-	} else if (strcmp(update, "force-no-bbl") == 0) {
++		break;
++	case UOPT_FORCE_NO_BBL:
+ 		sb->feature_map &= ~ __cpu_to_le32(MD_FEATURE_BAD_BLOCKS);
+ 		sb->bblog_size = 0;
+ 		sb->bblog_shift = 0;
+ 		sb->bblog_offset = 0;
+-	} else if (strcmp(update, "ppl") == 0) {
++		break;
++	case UOPT_PPL: {
+ 		unsigned long long sb_offset = __le64_to_cpu(sb->super_offset);
+ 		unsigned long long data_offset = __le64_to_cpu(sb->data_offset);
+ 		unsigned long long data_size = __le64_to_cpu(sb->data_size);
+@@ -1464,37 +1497,26 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		sb->ppl.offset = __cpu_to_le16(offset);
+ 		sb->ppl.size = __cpu_to_le16(space);
+ 		sb->feature_map |= __cpu_to_le32(MD_FEATURE_PPL);
+-	} else if (strcmp(update, "no-ppl") == 0) {
++		break;
++	}
++	case UOPT_NO_PPL:
+ 		sb->feature_map &= ~__cpu_to_le32(MD_FEATURE_PPL |
+ 						   MD_FEATURE_MUTLIPLE_PPLS);
+-	} else if (strcmp(update, "name") == 0) {
+-		if (info->name[0] == 0)
+-			sprintf(info->name, "%d", info->array.md_minor);
+-		memset(sb->set_name, 0, sizeof(sb->set_name));
+-		if (homehost &&
+-		    strchr(info->name, ':') == NULL &&
+-		    strlen(homehost)+1+strlen(info->name) < 32) {
+-			strcpy(sb->set_name, homehost);
+-			strcat(sb->set_name, ":");
+-			strcat(sb->set_name, info->name);
+-		} else {
+-			int namelen;
+-
+-			namelen = min((int)strlen(info->name),
+-				      (int)sizeof(sb->set_name) - 1);
+-			memcpy(sb->set_name, info->name, namelen);
+-			memset(&sb->set_name[namelen], '\0',
+-			       sizeof(sb->set_name) - namelen);
+-		}
+-	} else if (strcmp(update, "devicesize") == 0 &&
+-		   __le64_to_cpu(sb->super_offset) <
+-		   __le64_to_cpu(sb->data_offset)) {
+-		/* set data_size to device size less data_offset */
++		break;
++	case UOPT_DEVICESIZE:
++		if (__le64_to_cpu(sb->super_offset) >=
++		    __le64_to_cpu(sb->data_offset))
++			break;
++		/*
++		 * set data_size to device size less data_offset
++		 */
+ 		struct misc_dev_info *misc = (struct misc_dev_info*)
+ 			(st->sb + MAX_SB_SIZE + BM_SUPER_SIZE);
+ 		sb->data_size = __cpu_to_le64(
+ 			misc->device_size - __le64_to_cpu(sb->data_offset));
+-	} else if (strncmp(update, "revert-reshape", 14) == 0) {
++		break;
++	case UOPT_SPEC_REVERT_RESHAPE_NOBACKUP:
++	case UOPT_REVERT_RESHAPE:
+ 		rv = -2;
+ 		if (!(sb->feature_map &
+ 		      __cpu_to_le32(MD_FEATURE_RESHAPE_ACTIVE)))
+@@ -1512,7 +1534,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 			 * If that couldn't happen, the "-nobackup" version
+ 			 * will be used.
+ 			 */
+-			if (strcmp(update, "revert-reshape-nobackup") == 0 &&
++			if (update_enum == UOPT_SPEC_REVERT_RESHAPE_NOBACKUP &&
+ 			    sb->reshape_position == 0 &&
+ 			    (__le32_to_cpu(sb->delta_disks) > 0 ||
+ 			     (__le32_to_cpu(sb->delta_disks) == 0 &&
+@@ -1575,32 +1597,40 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 			}
+ 		done:;
+ 		}
+-	} else if (strcmp(update, "_reshape_progress") == 0)
 +		break;
 +	case UOPT_SPEC__RESHAPE_PROGRESS:
- 		sb->reshape_position = info->reshape_progress;
--	else if (strcmp(update, "writemostly")==0)
+ 		sb->reshape_position = __cpu_to_le64(info->reshape_progress);
+-	else if (strcmp(update, "writemostly") == 0)
 +		break;
 +	case UOPT_SPEC_WRITEMOSTLY:
- 		sb->state |= (1<<MD_DISK_WRITEMOSTLY);
--	else if (strcmp(update, "readwrite")==0)
+ 		sb->devflags |= WriteMostly1;
+-	else if (strcmp(update, "readwrite") == 0)
 +		break;
 +	case UOPT_SPEC_READWRITE:
- 		sb->state &= ~(1<<MD_DISK_WRITEMOSTLY);
--	else
+ 		sb->devflags &= ~WriteMostly1;
+-	else if (strcmp(update, "failfast") == 0)
++		break;
++	case UOPT_SPEC_FAILFAST:
+ 		sb->devflags |= FailFast1;
+-	else if (strcmp(update, "nofailfast") == 0)
++		break;
++	case UOPT_SPEC_NOFAILFAST:
+ 		sb->devflags &= ~FailFast1;
+-	else if (strcmp(update, "layout-original") == 0 ||
+-		 strcmp(update, "layout-alternate") == 0 ||
+-		 strcmp(update, "layout-unspecified") == 0) {
++		break;
++	case UOPT_LAYOUT_ORIGINAL:
++	case UOPT_LAYOUT_ALTERNATE:
++	case UOPT_LAYOUT_UNSPECIFIED:
+ 		if (__le32_to_cpu(sb->level) != 0) {
+ 			pr_err("%s: %s only supported for RAID0\n",
+-			       devname?:"", update);
++			       devname ?: "", map_num(update_options, update_enum));
+ 			rv = -1;
+-		} else if (strcmp(update, "layout-unspecified") == 0) {
++		} else if (update_enum == UOPT_LAYOUT_UNSPECIFIED) {
+ 			sb->feature_map &= ~__cpu_to_le32(MD_FEATURE_RAID0_LAYOUT);
+ 			sb->layout = 0;
+ 		} else {
+ 			sb->feature_map |= __cpu_to_le32(MD_FEATURE_RAID0_LAYOUT);
+-			sb->layout = __cpu_to_le32(update[7] == 'o' ? 1 : 2);
++			sb->layout = __cpu_to_le32(update_enum == UOPT_LAYOUT_ORIGINAL ? 1 : 2);
+ 		}
+-	} else
 +		break;
 +	default:
  		rv = -1;
 +	}
  
- 	sb->sb_csum = calc_sb0_csum(sb);
- 	return rv;
+ 	sb->sb_csum = calc_sb_1_csum(sb);
+ 
 -- 
 2.26.2
 
