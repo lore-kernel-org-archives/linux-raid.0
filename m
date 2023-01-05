@@ -2,74 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC62AC46467
-	for <linux-raid@archiver.kernel.org>; Wed,  4 Jan 2023 23:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81ED3C54E76
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Jan 2023 00:41:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231171AbjADXjJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 4 Jan 2023 18:39:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45472 "EHLO
+        id S234739AbjAEAlB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 4 Jan 2023 19:41:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230233AbjADXjI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 4 Jan 2023 18:39:08 -0500
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AC2F42E0B
-        for <linux-raid@vger.kernel.org>; Wed,  4 Jan 2023 15:39:06 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1672875530; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=fBtI5iMbTXdIpVyQGTJTCuyFkxdM4mnYCk+jamaDuMce5ZDGb9jWctGjrvp/ah7X8FOS5Dktl5B8N4HhmLc4sWt32C1Y/mrafutcUdOHzr9T8DhtwNmVRcvcE2l0LjLECbk7TLoTG4bo/+iFYPe9gmO1yY+LhltN2gkKM0bickI=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1672875530; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=raFaAdK0whXkw/kHcwmRbB4l0DFR17Hl+Befc7hXl2o=; 
-        b=BM/P4OHvDo1FORSLjWbgX2pOPZSWIxdKopt/5LKv0CnSVv9VxAZtx+er8t55lc5MsllEYRdZ47Ogvjv/JPbHKKsdI903LrlNDOleg7hyEhnlJE1hsLIL5z/XHrHVapzWDzET1TMHrGrlcK/T1FMZw12LrPlxJog/AZc8BeCUGfY=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 1672875527802549.9313216156378; Thu, 5 Jan 2023 00:38:47 +0100 (CET)
-Message-ID: <a61b4f7e-aded-c40f-c6ee-966e64142c8b@trained-monkey.org>
-Date:   Wed, 4 Jan 2023 18:38:45 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.1
-Subject: Re: [PATCH v2 1/1] mdadm/udev: Don't handle change event on raw
- devices
-Content-Language: en-US
-To:     Xiao Ni <xni@redhat.com>
-Cc:     pmenzel@molgen.mpg.de, ncroxon@redhat.com,
+        with ESMTP id S240571AbjAEAil (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 4 Jan 2023 19:38:41 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56ED4B20;
+        Wed,  4 Jan 2023 16:38:18 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0C290B81989;
+        Thu,  5 Jan 2023 00:38:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8816FC43444;
+        Thu,  5 Jan 2023 00:38:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1672879095;
+        bh=N9C4ScMyf0Ff65FqkFOqtz+P3Cu1Uumu82YuwHajmao=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=SwFKD1T6G4ejo9ZbVyeOcrmDfP36+30OXCgwhYl8yB/n7JgLwi1gpT7ZUvxyz7q3R
+         OHIfrpJuYyDvFa061ymVzU6pRhP5yV1HHHo9Ax0m/HmOn83FwvmyH4CnWS/+F5EZha
+         6/JylXXmWnMTB48IvHOPTht6n9H6t1+NaZ46JSMA2FS3bl5hRSzSj7+2rBmtQBip1P
+         dh4HPGsLRLkI8py7PtoKyfJcyqLjh37n7DknnlHjqxRu03YL0OUqZAcaGfypUYlp6m
+         tBvHaC4xkSIz61OIbS5mPKwm46Ek6+RAwGtV5eiggdA2pSHmdMvGIxu5oFKqEXAbj3
+         jFZt12oWJYGrQ==
+Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
+        id CF0515C1C98; Wed,  4 Jan 2023 16:38:14 -0800 (PST)
+From:   "Paul E. McKenney" <paulmck@kernel.org>
+To:     rcu@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, kernel-team@meta.com,
+        rostedt@goodmis.org, "Paul E. McKenney" <paulmck@kernel.org>,
+        Song Liu <song@kernel.org>, Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
         linux-raid@vger.kernel.org
-References: <20230104162920.18172-1-xni@redhat.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20230104162920.18172-1-xni@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Subject: [PATCH rcu 14/27] drivers/md: Remove "select SRCU"
+Date:   Wed,  4 Jan 2023 16:38:00 -0800
+Message-Id: <20230105003813.1770367-14-paulmck@kernel.org>
+X-Mailer: git-send-email 2.31.1.189.g2e36527f23
+In-Reply-To: <20230105003759.GA1769545@paulmck-ThinkPad-P17-Gen-1>
+References: <20230105003759.GA1769545@paulmck-ThinkPad-P17-Gen-1>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 1/4/23 11:29, Xiao Ni wrote:
-> The raw devices are ready when add event happpens and the raid
-> can be assembled. So there is no need to handle change events.
-> And it can cause some inconvenient problems.
-> 
-> For example, the OS is installed on md0(/root) and md1(/home).
-> md0 and md1 are created on partitions. When it wants to re-install
-> OS, anaconda can't clear the storage configure. It deletes one
-> partition and does some jobs. The change event happens. Now
-> the raid device is assembled again. It can't delete the other
-> partitions.
-> 
-> So in this patch, we don't handle change event on raw devices
-> anymore.
-> 
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->  udev-md-raid-assembly.rules | 8 ++++++++
->  1 file changed, 8 insertions(+)
+Now that the SRCU Kconfig option is unconditionally selected, there is
+no longer any point in selecting it.  Therefore, remove the "select SRCU"
+Kconfig statements.
 
-Applied!
+Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
+Cc: Song Liu <song@kernel.org>
+Cc: Alasdair Kergon <agk@redhat.com>
+Cc: Mike Snitzer <snitzer@kernel.org>
+Cc: <dm-devel@redhat.com>
+Cc: <linux-raid@vger.kernel.org>
+---
+ drivers/md/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks,
-Jes
-
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 998a5cfdbc4e9..5f1e2593fad7e 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -6,7 +6,6 @@
+ menuconfig MD
+ 	bool "Multiple devices driver support (RAID and LVM)"
+ 	depends on BLOCK
+-	select SRCU
+ 	help
+ 	  Support multiple physical spindles through a single logical device.
+ 	  Required for RAID and logical volume management.
+-- 
+2.31.1.189.g2e36527f23
 
