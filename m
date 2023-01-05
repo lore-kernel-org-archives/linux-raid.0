@@ -2,93 +2,66 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC98C46467
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Jan 2023 00:49:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB21C54EBC
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Jan 2023 03:40:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231215AbjAEAt1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 4 Jan 2023 19:49:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52334 "EHLO
+        id S229554AbjAEDjj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 4 Jan 2023 22:39:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbjAEAsH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 4 Jan 2023 19:48:07 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7805230576;
-        Wed,  4 Jan 2023 16:45:06 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 592ECB81716;
-        Thu,  5 Jan 2023 00:44:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D286C433EF;
-        Thu,  5 Jan 2023 00:44:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672879474;
-        bh=WH4x6VZKnbwZlnPEWcHvQT9ihrLtRVqakgjvyj7uwNI=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=f6g9ioP2ZK+RKiubpiaLTESRzMdvdQyEeSmjcOTYqjnHOqbHQFu5fNU+Ti1xMl+7g
-         wLhV+Mdav4WV+IswAu0GaQYKMR5EXACs2E1qhIRA2yr7eKa470X1IgWGSSEZqcYSSz
-         axrDrCP5KY8EPubHhqg+O6DLorDamc3caADmXp7hcRXpr71RZnTirbJdT6NhTf3HxV
-         MnFnUigvZTqKwBEJswhwOq3V9ssOXk6+EScDX16Ou/mx9rJiHCXD0wQe5/3XwIS/bw
-         DcGiJ2pqmUQFT3CwKYPMkFHil381Mc0Ajw8T6FHvYKkYAWNK6QcMqcTceLRuKz3J0W
-         6rZmQacc5W/qQ==
-Received: by mail-lf1-f43.google.com with SMTP id g13so52904014lfv.7;
-        Wed, 04 Jan 2023 16:44:33 -0800 (PST)
-X-Gm-Message-State: AFqh2kq0wFXF19rL0Kiekb7JR88RBY7e3Xtjx2ftrxvH4f0oarQP5+/O
-        wIvd+q1L0vh8Hp5ZnYNBg3aJu4+Ke2xgZSLITpw=
-X-Google-Smtp-Source: AMrXdXtprpsBrqI3b3IFTlFhxNSRfwqsK8W3eL1jzaanesPzAA6Cg+EmGpeS+vdg9VSSspb9DeFkw6mWAHBLV8d6UoM=
-X-Received: by 2002:a19:640f:0:b0:4b6:e71d:94a6 with SMTP id
- y15-20020a19640f000000b004b6e71d94a6mr3543316lfb.476.1672879472160; Wed, 04
- Jan 2023 16:44:32 -0800 (PST)
+        with ESMTP id S229486AbjAEDjG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 4 Jan 2023 22:39:06 -0500
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF9604435D
+        for <linux-raid@vger.kernel.org>; Wed,  4 Jan 2023 19:39:05 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1672889935; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=YI3VdA26uv81WdNzusm3tHExPF6erLyh6tytubJewjKX6ShFJeKh8rT3w8sciDtJmPcFZp+2C6Ra6PYzRnQ3JoSHxIJMmXma+ss3WxyeC+mZvUhrDjrka5AsyMYgSjk8fLWxAq7BGG+hlDrySwQQMFI44O5IJKuWVShSZLUI+ik=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1672889935; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=wZXsns39eI3FNN3VuoGd+DNO0fvGiI2eEtrNDFoWgCM=; 
+        b=Y3jkFz+VyhwsX2SH1XB51SAdUD0sSu0DVnEi92SaxDU1pohHofPpp1j4rfzkI40aV3V1Ou3VUuglHLKlzNWKpIoAyBAEvOVln2eQkRRgoDydgeeWHidz5NH4Y5IlvdLru68q7J9EJwh7GUbC5YsN8ZZD0K91y8eO4/KclPKdWGk=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1672889933224569.2849081697298; Thu, 5 Jan 2023 04:38:53 +0100 (CET)
+Message-ID: <f4d3ac0f-a565-4314-0f94-757830179ec9@trained-monkey.org>
+Date:   Wed, 4 Jan 2023 22:38:50 -0500
 MIME-Version: 1.0
-References: <20230105003759.GA1769545@paulmck-ThinkPad-P17-Gen-1> <20230105003813.1770367-14-paulmck@kernel.org>
-In-Reply-To: <20230105003813.1770367-14-paulmck@kernel.org>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 4 Jan 2023 16:44:19 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6g4g_02iK3YwpkRQMwr8DBQSdVWnrOx0oYdaNWAWcX5g@mail.gmail.com>
-Message-ID: <CAPhsuW6g4g_02iK3YwpkRQMwr8DBQSdVWnrOx0oYdaNWAWcX5g@mail.gmail.com>
-Subject: Re: [PATCH rcu 14/27] drivers/md: Remove "select SRCU"
-To:     "Paul E. McKenney" <paulmck@kernel.org>
-Cc:     rcu@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-team@meta.com, rostedt@goodmis.org,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.1
+Subject: Re: [PATCH v3 0/3] Incremental mode: remove safety verification
+Content-Language: en-US
+To:     Kinga Tanska <kinga.tanska@intel.com>, linux-raid@vger.kernel.org
+Cc:     colyli@suse.de, xni@redhat.com
+References: <20221227055044.18168-1-kinga.tanska@intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20221227055044.18168-1-kinga.tanska@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jan 4, 2023 at 4:38 PM Paul E. McKenney <paulmck@kernel.org> wrote:
->
-> Now that the SRCU Kconfig option is unconditionally selected, there is
-> no longer any point in selecting it.  Therefore, remove the "select SRCU"
-> Kconfig statements.
->
-> Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
-> Cc: Song Liu <song@kernel.org>
-> Cc: Alasdair Kergon <agk@redhat.com>
-> Cc: Mike Snitzer <snitzer@kernel.org>
-> Cc: <dm-devel@redhat.com>
-> Cc: <linux-raid@vger.kernel.org>
+On 12/27/22 00:50, Kinga Tanska wrote:
+> Changes in incremental mode. Removing verification
+> if remove is safe, when this mode is triggered. Also
+> moving commit description to obey kernel coding style.
+> 
+> Kinga Tanska (3):
+>   Manage: do not check array state when drive is removed
+>   incremental, manage: do not verify if remove is safe
+>   manage: move comment with function description
+> 
+>  Incremental.c |  2 +-
+>  Manage.c      | 82 ++++++++++++++++++++++++++++++---------------------
+>  2 files changed, 50 insertions(+), 34 deletions(-)
+> 
 
-Acked-by: Song Liu <song@kernel.org>
+Applied 1+2, 3 fails to apply for me.
 
-> ---
->  drivers/md/Kconfig | 1 -
->  1 file changed, 1 deletion(-)
->
-> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-> index 998a5cfdbc4e9..5f1e2593fad7e 100644
-> --- a/drivers/md/Kconfig
-> +++ b/drivers/md/Kconfig
-> @@ -6,7 +6,6 @@
->  menuconfig MD
->         bool "Multiple devices driver support (RAID and LVM)"
->         depends on BLOCK
-> -       select SRCU
->         help
->           Support multiple physical spindles through a single logical device.
->           Required for RAID and logical volume management.
-> --
-> 2.31.1.189.g2e36527f23
->
+Thanks,
+Jes
+
