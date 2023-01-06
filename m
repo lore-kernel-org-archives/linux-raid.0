@@ -2,82 +2,97 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 525E0C4708E
-	for <linux-raid@archiver.kernel.org>; Fri,  6 Jan 2023 01:02:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 138FFC3DA7A
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Jan 2023 07:07:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236337AbjAFBCP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 Jan 2023 20:02:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57496 "EHLO
+        id S229516AbjAFHHl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 6 Jan 2023 02:07:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232117AbjAFBB6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Jan 2023 20:01:58 -0500
-Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A73353734
-        for <linux-raid@vger.kernel.org>; Thu,  5 Jan 2023 17:01:57 -0800 (PST)
-Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.stoffel.org (Postfix) with ESMTPSA id 3302B2920D;
-        Thu,  5 Jan 2023 20:01:56 -0500 (EST)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-        id 9DE40A823C; Thu,  5 Jan 2023 20:01:55 -0500 (EST)
+        with ESMTP id S229437AbjAFHHk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 6 Jan 2023 02:07:40 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BC2A6E0C9
+        for <linux-raid@vger.kernel.org>; Thu,  5 Jan 2023 23:07:38 -0800 (PST)
+Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NpDrv619NznV95;
+        Fri,  6 Jan 2023 15:06:07 +0800 (CST)
+Received: from [10.174.177.197] (10.174.177.197) by
+ kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Fri, 6 Jan 2023 15:07:35 +0800
+Subject: Re: [PATCH V4] Fix NULL dereference in super_by_fd
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Coly Li <colyli@suse.de>
+CC:     Jes Sorensen <jes@trained-monkey.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        <linux-raid@vger.kernel.org>, linfeilong <linfeilong@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
+        Wu Guanghao <wuguanghao3@huawei.com>
+References: <1dabb70e-ca1a-bd45-182a-ddaa95821f86@huawei.com>
+ <20221221130548.000071e8@linux.intel.com>
+From:   Li Xiao Keng <lixiaokeng@huawei.com>
+Message-ID: <98968834-e6ee-530a-ebd0-7dba00ac1c78@huawei.com>
+Date:   Fri, 6 Jan 2023 15:07:35 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20221221130548.000071e8@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
-Message-ID: <25527.29443.610761.668848@quad.stoffel.home>
-Date:   Thu, 5 Jan 2023 20:01:55 -0500
-From:   "John Stoffel" <john@stoffel.org>
-To:     Liam Zeng <zqwliam@gmail.com>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: [bug] Hi, need your help about raid1 causing kernel panic!
-In-Reply-To: <CAMmbgcZADtyYp0xsu7qtiXL7hNZNex-OumCf+QFj81ZF9ZfYsw@mail.gmail.com>
-References: <CAMmbgcZADtyYp0xsu7qtiXL7hNZNex-OumCf+QFj81ZF9ZfYsw@mail.gmail.com>
-X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
+X-Originating-IP: [10.174.177.197]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemm600010.china.huawei.com (7.193.23.86)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
->>>>> "Liam" == Liam Zeng <zqwliam@gmail.com> writes:
+ping
 
-> Hope you kindly forgive my troubles. I have worked with a bug for
-> several days, and I really need your help, even a kind
-> encouragement.
-
-You need to provide more details.  What is your disk setup, what is
-your OS base, etc.  
-
-> here's some informations
-> kernel version: 5.10.107
-
-Is this is a vendor kernel or your own self-compiled one?  And if so,
-can you move to the latest 6.x kernel instead?  
-
-> cpu arch: arm64
-
-> the system install on /dev/md9, which make up of raid1 of two disks;
-
-More details on this setup.  Type of disks, their connectivity to the
-system, etc. 
-
-> the bug: every time I transfer files (50G file, using samba or ftp),
-> the system will break down.
-
-Does it break if you copy the file on the system?  Do you have enough
-disk space to copy a 10g file from one directory to another on the
-same RAID1 setup?  
-
-Which filesystem are you using?
-
-> I have not modified any code of md.
-
-Good to know.
-
-> And the attachment is the log.
-
-Sorry, I'm not going to bother decoding it.  Just attach it as plain
-text instead please.  
-
-
-> I would appreciate any reply!
-> [DELETED ATTACHMENT kernel_panic_log, Untyped binary data]
+On 2022/12/21 20:05, Mariusz Tkaczyk wrote:
+> On Wed, 21 Dec 2022 17:37:52 +0800
+> Li Xiao Keng <lixiaokeng@huawei.com> wrote:
+> 
+>> When we create 100 partitions (major is 259 not 254) in a raid device,
+>> mdadm may coredump:
+>>
+>> Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p7'.
+>> Program terminated with signal SIGSEGV, Segmentation fault.
+>> #0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
+>> 74		VPCMPEQ	(%rdi), %ymm0, %ymm1
+>> (gdb) bt
+>> #0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
+>> #1  0x00007fbb9a7e4139 in __strcpy_chk (dest=dest@entry=0x55d55d6a13ac "",
+>> src=0x0, destlen=destlen@entry=32) at strcpy_chk.c:28 #2  0x000055d55ba1766d
+>> in strcpy (__src=<optimized out>, __dest=0x55d55d6a13ac "") at
+>> /usr/include/bits/string_fortified.h:79 #3  super_by_fd (fd=fd@entry=3,
+>> subarrayp=subarrayp@entry=0x7fff44dfcc48) at util.c:1289 #4
+>> 0x000055d55ba273a6 in Detail (dev=0x7fff44dfef0b "/dev/md1p7",
+>> c=0x7fff44dfe440) at Detail.c:101 #5  0x000055d55ba0de61 in misc_list
+>> (c=<optimized out>, ss=<optimized out>, dump_directory=<optimized out>,
+>> ident=<optimized out>, devlist=<optimized out>) at mdadm.c:1959 #6  main
+>> (argc=<optimized out>, argv=<optimized out>) at mdadm.c:1629
+>>
+>> The direct cause is fd2devnm returning NULL, so add a check.
+>>
+>> V1->V2: When fd2devnm return NULL, super_by_fd return NULL but not an
+>> incomplete 'st' entry. At the same time, add a check in map_by_devnm
+>> to avoid coredump.
+>>
+>> V2->V3: Fix style issues.
+>> V3->V4: Change strcpy() to strncpy().
+>>
+>> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
+>> Signed-off-by: Wu Guang Hao <wuguanghao3@huawei.com>
+> 
+> 
+> Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> 
+> Coly could you please take a look?
+> 
+> Thanks,
+> Mariusz
+> .
+> 
