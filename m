@@ -2,103 +2,106 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AADCC54EBE
-	for <linux-raid@archiver.kernel.org>; Sun,  8 Jan 2023 22:20:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BBECC5479D
+	for <linux-raid@archiver.kernel.org>; Mon,  9 Jan 2023 10:52:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233986AbjAHWUe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 8 Jan 2023 17:20:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56396 "EHLO
+        id S234111AbjAIKwC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 9 Jan 2023 05:52:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231336AbjAHWUc (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 8 Jan 2023 17:20:32 -0500
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8559611147
-        for <linux-raid@vger.kernel.org>; Sun,  8 Jan 2023 14:20:30 -0800 (PST)
-Received: from host86-138-24-20.range86-138.btcentralplus.com ([86.138.24.20] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antmbox@youngman.org.uk>)
-        id 1pEe1j-0007mK-7t;
-        Sun, 08 Jan 2023 22:20:27 +0000
-Message-ID: <7ef4bb85-2d0f-8f1a-7fb7-336142acf405@youngman.org.uk>
-Date:   Sun, 8 Jan 2023 22:20:27 +0000
+        with ESMTP id S234750AbjAIKvm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 Jan 2023 05:51:42 -0500
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8616D64D3
+        for <linux-raid@vger.kernel.org>; Mon,  9 Jan 2023 02:51:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1673261500; x=1704797500;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=NE8NacTS9oMk8TmWRT0ADxuKO1/BIPewmr6eewzRm2I=;
+  b=Kx5ApqzI+mJdD4JOuwH1PFUq9AlXneUP+On1NrBtSPCoF6NT5oPo+MOI
+   Md3UizIZ0VgmLpg0y3bddN9ggbAvqKudigWyxqIRGQYWuC8D/ZAUi7Vyw
+   7nSKrf6X3e8zciVIvqR86sKdSBW/C5Cw366vPju5+Tsk39+XJjxjl9SlG
+   vhtXGHNHYcOQ1RQOoILkB8H28oO9VdbzylYrbKFMoq+ov1Poyuvqfwt/V
+   9aqwltPy19tiIrqJO3kAaGpXmAc0MWtsh5wS6/v4YyOfEe5UOFXt3zxVV
+   knHwpQt2NFBAp1BD1LkYuaNJwvilOM950+pBAltXNa1Yn1hXfZcSR5eSm
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10584"; a="385145825"
+X-IronPort-AV: E=Sophos;i="5.96,311,1665471600"; 
+   d="scan'208";a="385145825"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2023 02:51:22 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10584"; a="764271562"
+X-IronPort-AV: E=Sophos;i="5.96,311,1665471600"; 
+   d="scan'208";a="764271562"
+Received: from bachaue1-mobl1.ger.corp.intel.com (HELO localhost) ([10.252.51.235])
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2023 02:51:21 -0800
+Date:   Mon, 9 Jan 2023 11:51:16 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Jes Sorensen <jes@trained-monkey.org>
+Cc:     colyli@suse.de, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 2/3] mdadm: refactor ident->name handling
+Message-ID: <20230109115116.00005862@linux.intel.com>
+In-Reply-To: <20221229103931.00006ff0@linux.intel.com>
+References: <20221221115019.26276-1-mariusz.tkaczyk@linux.intel.com>
+        <20221221115019.26276-3-mariusz.tkaczyk@linux.intel.com>
+        <bef57069-acdb-3a2f-b691-2c438c4247fb@trained-monkey.org>
+        <20221229103931.00006ff0@linux.intel.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: Parity distribution when adding disks to md-raid6
-To:     boscabeag <boscabeag@protonmail.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-References: <A73A8YRNkUS11zoz7eEaNfvnfZqyj6-vP-7mvI6_FFLdSETs_g6CFYgIL_PyV0F8AE6cXMomd7SznnsQDGQqwLuSJFMi8EbxGzxibvYjZ2s=@protonmail.com>
-Content-Language: en-GB
-From:   anthony <antmbox@youngman.org.uk>
-In-Reply-To: <A73A8YRNkUS11zoz7eEaNfvnfZqyj6-vP-7mvI6_FFLdSETs_g6CFYgIL_PyV0F8AE6cXMomd7SznnsQDGQqwLuSJFMi8EbxGzxibvYjZ2s=@protonmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 08/01/2023 20:13, boscabeag wrote:
-> I'm replacing the drives in my home NAS and can't fully populate it all at one.  I can start with 4 drives, and create a raid 6 array.  When I add drives #5 and #6, will the parity chunks remain on the first four devices or will the resync process distribute them over the entire array, just like it would if I created the array with all devices?  Is there anything I should do (with mdadm) to an array after adding devices that's not just at the md level not the fs level?
+On Thu, 29 Dec 2022 10:39:31 +0100
+Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
 
-Does that mean your NAS takes six drives in total, and you can only 
-replace a couple at a time?
+> On Wed, 28 Dec 2022 10:07:22 -0500
+> Jes Sorensen <jes@trained-monkey.org> wrote:
+> 
+> > On 12/21/22 06:50, Mariusz Tkaczyk wrote:  
+> > > Move duplicated code for both config.c and mdadm.c to new functions.
+> > > Add error enum in mdadm.h. Use MD_NAME_MAX instead hardcoded value
+> > > in mddev_ident. Use secure functions.
+> > > 
+> > > In next patch POSIX validation is added.
+> > > 
+> > > Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>    
+> > 
+> > Hi Mariusz,
+> > 
+> > I appreciate the work to consolidate duplicate code. However, I am not a
+> > fan of new typedefs, in addition you return status_t codes in functions
+> > changed to return error_t, which is inconsistent.  
+> 
+> Hi Jes,
+> Indeed, initially I named it as error_t and I forgot to update that part.
+> I'm surprised that compiler didn't catch it. Thanks!
+> 
+> About typedef, I did it same for IMSM already:
+> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/super-intel.c#n376
+> I can change that but I wanted to define a common solution propagated later to
+> other mdadm parts.
+> 
+> > 
+> > I would prefer if we move towards standard POSIX error codes instead of
+> > trying to invent new ones.
+> >   
+> 
+> The POSIX errors are defined for communication with kernel space and
+> unfortunately they are not detailed enough. For example "undefined" or
+> just "general_error" statuses are not available.
+> https://man7.org/linux/man-pages/man3/errno.3.html
+> It the approach I proposed we are free to create exact errors we need.
+> Later we can create a map of error values to string and create dedicated
+> error print functions.
+> 
 
-I think you need to give us rather more detail if you want better 
-advice, but I'm *GUESSING* you're trying to move from a non-raid setup. 
-I'm trying to think of a way that will avoid hammering the disks, but at 
-the end of the day if they're newish then it really doesn't matter.
+Hi Jes,
+Should I drop this enum in v2?
 
-Okay. I'll assume you have two drives, you want to merge them in a raid, 
-and you've bought four more drives to make a big raid and double your 
-storage.
-
-First things first. Your new four-drive raid-6 will be SMALLER than your 
-two original drives combined. If they aren't full, that won't matter, as 
-the difference isn't much, but you need to be aware of it.
-
-And if you're going from two non-raided disks, I'd be inclined to go via 
-raid 5. it'll avoid hammering the disks quite so much, and you're not 
-losing redundancy you didn't have ... just try and make sure you have a 
-backup (which you should have, anyway).
-
-Okay. So we create your 4-disk raid - 5 or 6. Once that's done, what I'd 
-do is take whichever disk is the fullest, and simply dd it onto the raid 
-device. It might be a lot of disk, but it's a straightforward stream and 
-shouldn't hammer the system too much. Once complete, your raid partition 
-will be a copy of the disk partition.
-
-Now grow the filesystem, and just copy the second disk across. 
-Hopefully, you've got a simple clean setup (unlike mine, with hard links 
-everywhere...)
-
-Now I guess you're adding the existing disks into the array. Just add 
-and resize the array in one hit, upgrading from raid 5 to 6 if 
-appropriate at the same time. The rebuild will splurge the data and 
-parity across all the drives - that's what raid 5 or 6 is - so that's 
-the answer to that question of yours. The reason I suggested starting 
-with a raid 5 is the calculation of the first parity is simple, 
-calculating the second is more complicated so you've deferred that cost 
-until this point.
-
-Lastly, because you've grown the array to 4 data disks, the array size 
-is less than the space available. You need to increase the size of the 
-array, and then the filesystem (assuming you want to).
-
-Personally, if I was doing this, I'd've stuck lvm on the raid, and then 
-kept the two disks as separate lvm partitions. That would mean that I'd 
-had to go the raid-5 route, as there just wouldn't be enough space on 
-the raid otherwise. And then you've got roughly half your new disk space 
-spare to grow your partitions, take snapshots, whatever, all the stuff 
-lvm makes possible.
-
-Hopefully this has given you a bunch of ideas. And made it clear why we 
-need more detail if you want good advice - pretty much all of this is 
-guesswork as to what you're trying to do ...
-
-If you haven't found this already ...
-https://raid.wiki.kernel.org/index.php/Linux_Raid
-and especially
-https://raid.wiki.kernel.org/index.php/Converting_an_existing_system
-
-Cheers,
-Wol
+Thanks,
+Mariusz
