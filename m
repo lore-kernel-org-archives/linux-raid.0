@@ -2,106 +2,131 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BBECC5479D
-	for <linux-raid@archiver.kernel.org>; Mon,  9 Jan 2023 10:52:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FC65C54EBD
+	for <linux-raid@archiver.kernel.org>; Tue, 10 Jan 2023 01:46:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234111AbjAIKwC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 9 Jan 2023 05:52:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59874 "EHLO
+        id S230001AbjAJBqY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 9 Jan 2023 20:46:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234750AbjAIKvm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 Jan 2023 05:51:42 -0500
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8616D64D3
-        for <linux-raid@vger.kernel.org>; Mon,  9 Jan 2023 02:51:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1673261500; x=1704797500;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=NE8NacTS9oMk8TmWRT0ADxuKO1/BIPewmr6eewzRm2I=;
-  b=Kx5ApqzI+mJdD4JOuwH1PFUq9AlXneUP+On1NrBtSPCoF6NT5oPo+MOI
-   Md3UizIZ0VgmLpg0y3bddN9ggbAvqKudigWyxqIRGQYWuC8D/ZAUi7Vyw
-   7nSKrf6X3e8zciVIvqR86sKdSBW/C5Cw366vPju5+Tsk39+XJjxjl9SlG
-   vhtXGHNHYcOQ1RQOoILkB8H28oO9VdbzylYrbKFMoq+ov1Poyuvqfwt/V
-   9aqwltPy19tiIrqJO3kAaGpXmAc0MWtsh5wS6/v4YyOfEe5UOFXt3zxVV
-   knHwpQt2NFBAp1BD1LkYuaNJwvilOM950+pBAltXNa1Yn1hXfZcSR5eSm
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10584"; a="385145825"
-X-IronPort-AV: E=Sophos;i="5.96,311,1665471600"; 
-   d="scan'208";a="385145825"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2023 02:51:22 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10584"; a="764271562"
-X-IronPort-AV: E=Sophos;i="5.96,311,1665471600"; 
-   d="scan'208";a="764271562"
-Received: from bachaue1-mobl1.ger.corp.intel.com (HELO localhost) ([10.252.51.235])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2023 02:51:21 -0800
-Date:   Mon, 9 Jan 2023 11:51:16 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Jes Sorensen <jes@trained-monkey.org>
-Cc:     colyli@suse.de, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 2/3] mdadm: refactor ident->name handling
-Message-ID: <20230109115116.00005862@linux.intel.com>
-In-Reply-To: <20221229103931.00006ff0@linux.intel.com>
-References: <20221221115019.26276-1-mariusz.tkaczyk@linux.intel.com>
-        <20221221115019.26276-3-mariusz.tkaczyk@linux.intel.com>
-        <bef57069-acdb-3a2f-b691-2c438c4247fb@trained-monkey.org>
-        <20221229103931.00006ff0@linux.intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229739AbjAJBqU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 Jan 2023 20:46:20 -0500
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5A5562C5
+        for <linux-raid@vger.kernel.org>; Mon,  9 Jan 2023 17:46:19 -0800 (PST)
+Received: by mail-pg1-x52b.google.com with SMTP id s67so7192289pgs.3
+        for <linux-raid@vger.kernel.org>; Mon, 09 Jan 2023 17:46:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=S6cfU45YJ2QEpPTYd3cowb7WGu7MzBSs0rIz44/7hvE=;
+        b=T0ru+Bqm/WHpt9NYCuvnTlvLZL5VoK++rrIQdHgdnb0/hzdDe82gNSEteZm8HYMcjX
+         4ULBC7XDolafQmJWc+AKzZjGhiEAqCv/J9mPReIt9C9C+Jf75BAx/uIxwXpIA3S+UQPL
+         KVJYPt64sV5mOgLepN9aRcNDTZISotQx9/za7dkrFSemlO4xK8imcrOZGC7NuU3cMHG3
+         gKaIUFuYnqsXmWi0qRLct6Hh+nT+qHXr4uaDsh476EsH9P94oEjs4qMXm2wsbY9W/Z8Z
+         P638VZNKn3u9LdnCOHXjNcVL6p1Xdw6NPaWTbTW5Vez1+FlvuG9TX/F6S6Kd1q+zzamz
+         +4qQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=S6cfU45YJ2QEpPTYd3cowb7WGu7MzBSs0rIz44/7hvE=;
+        b=H7lBokG/8lGBwmdD4itwJCu2eqEQg0uvNWQnpNqJ0cVl/2XHoWHAwphpeh9W7C2yzJ
+         8fTs/6JNrWkfaH+HdHmCvL0wxs9XvUYo5VVF6rA+ILjSdf1mLealtVN3KWPjVTRF9TLI
+         IOzV4gTT8/Lpk4w4RwPaZrN08bi0Fe8dt9C+A1jGRxtaQJd+Wx62f03A6hV1w9p3wyFP
+         rvJRG/1VYvwRWRigteV7jb/8J51y2KoX5qYWfkGOprY2U3TFF5XbnjYNybQGwCJh5lzL
+         LKNwjrUOSqV77isY2sMA0ljyar9i6vmTejJ/7e3EzxdVG6IVuN1BHXBf+MDnvA7xvkoZ
+         lB7w==
+X-Gm-Message-State: AFqh2komD0Iia/XP2PTo6e/Nnsv8GowgJxe/nJgVOegsd8ywF6gpgg/A
+        BUkqCStIB8VwIKHOeghxuGYvGYImN/hhFA==
+X-Google-Smtp-Source: AMrXdXs0s99Yja/pMH4c8SWGfdmc4SIK0bmKy0qVuL+sbsl951fUziWsVlwZyIaUCsFYjdWrI05u5g==
+X-Received: by 2002:aa7:8043:0:b0:573:487d:e852 with SMTP id y3-20020aa78043000000b00573487de852mr75951349pfm.4.1673315178786;
+        Mon, 09 Jan 2023 17:46:18 -0800 (PST)
+Received: from AHUANG12-3ZHH9X.lenovo.com (220-143-163-101.dynamic-ip.hinet.net. [220.143.163.101])
+        by smtp.gmail.com with ESMTPSA id y127-20020a623285000000b0058abddad316sm19286pfy.209.2023.01.09.17.46.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Jan 2023 17:46:18 -0800 (PST)
+From:   Adrian Huang <adrianhuang0701@gmail.com>
+To:     linux-raid@vger.kernel.org
+Cc:     Song Liu <song@kernel.org>,
+        Adrian Huang <adrianhuang0701@gmail.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Adrian Huang <ahuang12@lenovo.com>
+Subject: [PATCH 1/1] md: fix incorrect declaration about claim_rdev in md_import_device
+Date:   Tue, 10 Jan 2023 09:45:12 +0800
+Message-Id: <20230110014512.19233-1-adrianhuang0701@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 29 Dec 2022 10:39:31 +0100
-Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
+From: Adrian Huang <ahuang12@lenovo.com>
 
-> On Wed, 28 Dec 2022 10:07:22 -0500
-> Jes Sorensen <jes@trained-monkey.org> wrote:
-> 
-> > On 12/21/22 06:50, Mariusz Tkaczyk wrote:  
-> > > Move duplicated code for both config.c and mdadm.c to new functions.
-> > > Add error enum in mdadm.h. Use MD_NAME_MAX instead hardcoded value
-> > > in mddev_ident. Use secure functions.
-> > > 
-> > > In next patch POSIX validation is added.
-> > > 
-> > > Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>    
-> > 
-> > Hi Mariusz,
-> > 
-> > I appreciate the work to consolidate duplicate code. However, I am not a
-> > fan of new typedefs, in addition you return status_t codes in functions
-> > changed to return error_t, which is inconsistent.  
-> 
-> Hi Jes,
-> Indeed, initially I named it as error_t and I forgot to update that part.
-> I'm surprised that compiler didn't catch it. Thanks!
-> 
-> About typedef, I did it same for IMSM already:
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/super-intel.c#n376
-> I can change that but I wanted to define a common solution propagated later to
-> other mdadm parts.
-> 
-> > 
-> > I would prefer if we move towards standard POSIX error codes instead of
-> > trying to invent new ones.
-> >   
-> 
-> The POSIX errors are defined for communication with kernel space and
-> unfortunately they are not detailed enough. For example "undefined" or
-> just "general_error" statuses are not available.
-> https://man7.org/linux/man-pages/man3/errno.3.html
-> It the approach I proposed we are free to create exact errors we need.
-> Later we can create a map of error values to string and create dedicated
-> error print functions.
-> 
+Commit fb541ca4c365 ("md: remove lock_bdev / unlock_bdev") removes
+wrappers for blkdev_get/blkdev_put. However, the uninitialized local
+static variable of pointer type 'claim_rdev' in md_import_device()
+is NULL, which leads to the following warning call trace:
 
-Hi Jes,
-Should I drop this enum in v2?
+  WARNING: CPU: 22 PID: 1037 at block/bdev.c:577 bd_prepare_to_claim+0x131/0x150
+  CPU: 22 PID: 1037 Comm: mdadm Not tainted 6.2.0-rc3+ #69
+  ..
+  RIP: 0010:bd_prepare_to_claim+0x131/0x150
+  ..
+  Call Trace:
+   <TASK>
+   ? _raw_spin_unlock+0x15/0x30
+   ? iput+0x6a/0x220
+   blkdev_get_by_dev.part.0+0x4b/0x300
+   md_import_device+0x126/0x1d0
+   new_dev_store+0x184/0x240
+   md_attr_store+0x80/0xf0
+   kernfs_fop_write_iter+0x128/0x1c0
+   vfs_write+0x2be/0x3c0
+   ksys_write+0x5f/0xe0
+   do_syscall_64+0x38/0x90
+   entry_SYSCALL_64_after_hwframe+0x72/0xdc
 
-Thanks,
-Mariusz
+It turns out the md device cannot be used:
+
+  md: could not open device unknown-block(259,0).
+  md: md127 stopped.
+
+Fix the issue by declaring the local static variable of struct type
+and passing the pointer of the variable to blkdev_get_by_dev().
+
+Fixes: fb541ca4c365 ("md: remove lock_bdev / unlock_bdev")
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Adrian Huang <ahuang12@lenovo.com>
+---
+ drivers/md/md.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8af639296b3c..02b0240e7c71 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3644,7 +3644,7 @@ EXPORT_SYMBOL_GPL(md_rdev_init);
+  */
+ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int super_minor)
+ {
+-	static struct md_rdev *claim_rdev; /* just for claiming the bdev */
++	static struct md_rdev claim_rdev; /* just for claiming the bdev */
+ 	struct md_rdev *rdev;
+ 	sector_t size;
+ 	int err;
+@@ -3662,7 +3662,7 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
+ 
+ 	rdev->bdev = blkdev_get_by_dev(newdev,
+ 			FMODE_READ | FMODE_WRITE | FMODE_EXCL,
+-			super_format == -2 ? claim_rdev : rdev);
++			super_format == -2 ? &claim_rdev : rdev);
+ 	if (IS_ERR(rdev->bdev)) {
+ 		pr_warn("md: could not open device unknown-block(%u,%u).\n",
+ 			MAJOR(newdev), MINOR(newdev));
+-- 
+2.25.1
+
