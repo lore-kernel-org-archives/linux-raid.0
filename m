@@ -2,83 +2,164 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8280C63797
-	for <linux-raid@archiver.kernel.org>; Fri, 13 Jan 2023 00:11:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E6F4C54EBD
+	for <linux-raid@archiver.kernel.org>; Fri, 13 Jan 2023 07:19:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240331AbjAMALo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 12 Jan 2023 19:11:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56398 "EHLO
+        id S240475AbjAMHTx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 Jan 2023 02:19:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240146AbjAMALk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 Jan 2023 19:11:40 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8428A5B16C;
-        Thu, 12 Jan 2023 16:11:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C53E621EB;
-        Fri, 13 Jan 2023 00:11:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4808FC43446;
-        Fri, 13 Jan 2023 00:11:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673568695;
-        bh=LyGbrGRKlgQUG/6dRhmrOxWQZAI+7ZeRlrySnO8o+wY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CGz2fCFBpFPtDlfqbl722O++VKcLg5CZhk3XeXgsvT10C/Lk0VXQ2IByAiFnnOpSy
-         gWUmtwgJqL3dAN8LS0BuxIXt59+wTDaQQdeyV1GBG3ENjo3tXaDCIn5qVz8HFOXqxT
-         wH4kyN6ceuuw5zV579pwfsPQMxsu3zUyaJTWU1AD3DnSM9InxH6rmgStmHdokViarP
-         +3+2hvcSjhPoGeD4M9gClP/w/MylYUL7F6i+aLgIyrJCWFZ2JsSq1xX90lJeoIpHKp
-         xjq40rF/U6aF+RMYUIeYJN5cZr/RQovux3mXIcMUCw0JxX1AKmpFTX8KjTo1EmUtvj
-         OJGYcub5PB5ww==
-Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
-        id A0E425C118F; Thu, 12 Jan 2023 16:11:34 -0800 (PST)
-From:   "Paul E. McKenney" <paulmck@kernel.org>
-To:     rcu@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, kernel-team@meta.com,
-        rostedt@goodmis.org, "Paul E. McKenney" <paulmck@kernel.org>,
-        Song Liu <song@kernel.org>, Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        linux-raid@vger.kernel.org, John Ogness <john.ogness@linutronix.de>
-Subject: [PATCH rcu v2 06/20] drivers/md: Remove "select SRCU"
-Date:   Thu, 12 Jan 2023 16:11:18 -0800
-Message-Id: <20230113001132.3375334-6-paulmck@kernel.org>
-X-Mailer: git-send-email 2.31.1.189.g2e36527f23
-In-Reply-To: <20230113001103.GA3374173@paulmck-ThinkPad-P17-Gen-1>
-References: <20230113001103.GA3374173@paulmck-ThinkPad-P17-Gen-1>
+        with ESMTP id S235583AbjAMHT1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 Jan 2023 02:19:27 -0500
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0178C7458C
+        for <linux-raid@vger.kernel.org>; Thu, 12 Jan 2023 23:04:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1673593454; x=1705129454;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=FD4Ac1WjZjenQ+T9nMzr6uGAbnUMELXCt1nrNi59xRU=;
+  b=I8Jj7fabB7oGPscNJpZyHcJpm+Ceu7nUG+Ck6xH7cXTXtXm3diKpPUmv
+   xg8ogm/8p+dRRctgcfWR80F3OjBtkIhuXt3PwEJkuxdGGGpUk1N1heD2s
+   KXLQxTez/R4JZ3gIVqseWcVgXCKvMccYetjhjv1SDr/fvQNG0kwYNoJrC
+   39TdlE+vq3pKmfvKx+X64kUJ+uBBGH/qgUCPgfPSGb7fsxVaMRGu1+MYV
+   oPueT6tMqJIDJyMKL8bNoMadrzOw1BEyiDyuV1SkSWr4vNlTeydLfaIc4
+   U3DKjNoKzL6NxJQsjglENoH2/JXI4c20dak5prPhLCKgsX1nFB2GtoNDw
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10588"; a="322632774"
+X-IronPort-AV: E=Sophos;i="5.97,213,1669104000"; 
+   d="scan'208";a="322632774"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2023 23:04:13 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10588"; a="721424135"
+X-IronPort-AV: E=Sophos;i="5.97,213,1669104000"; 
+   d="scan'208";a="721424135"
+Received: from lkp-server02.sh.intel.com (HELO f1920e93ebb5) ([10.239.97.151])
+  by fmsmga008.fm.intel.com with ESMTP; 12 Jan 2023 23:04:12 -0800
+Received: from kbuild by f1920e93ebb5 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pGE6l-000ArS-1Y;
+        Fri, 13 Jan 2023 07:04:11 +0000
+Date:   Fri, 13 Jan 2023 15:04:06 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ b0907cadabcae6f1248f37a32a6e777f9ff6d4aa
+Message-ID: <63c10266.pQ0AyASRdk3GX7JS%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Now that the SRCU Kconfig option is unconditionally selected, there is
-no longer any point in selecting it.  Therefore, remove the "select SRCU"
-Kconfig statements.
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+branch HEAD: b0907cadabcae6f1248f37a32a6e777f9ff6d4aa  md: fix incorrect declaration about claim_rdev in md_import_device
 
-Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
-Cc: Song Liu <song@kernel.org>
-Cc: Alasdair Kergon <agk@redhat.com>
-Cc: Mike Snitzer <snitzer@kernel.org>
-Cc: <dm-devel@redhat.com>
-Cc: <linux-raid@vger.kernel.org>
-Reviewed-by: John Ogness <john.ogness@linutronix.de>
----
- drivers/md/Kconfig | 1 -
- 1 file changed, 1 deletion(-)
+elapsed time: 725m
 
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index 998a5cfdbc4e9..5f1e2593fad7e 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -6,7 +6,6 @@
- menuconfig MD
- 	bool "Multiple devices driver support (RAID and LVM)"
- 	depends on BLOCK
--	select SRCU
- 	help
- 	  Support multiple physical spindles through a single logical device.
- 	  Required for RAID and logical volume management.
+configs tested: 88
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+x86_64                            allnoconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                          rhel-8.3-func
+x86_64                    rhel-8.3-kselftests
+ia64                             allmodconfig
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                               rhel-8.3
+m68k                             allyesconfig
+m68k                             allmodconfig
+arc                              allyesconfig
+alpha                            allyesconfig
+riscv                randconfig-r042-20230112
+s390                 randconfig-r044-20230112
+arc                  randconfig-r043-20230112
+nios2                            allyesconfig
+nios2                               defconfig
+parisc                              defconfig
+parisc64                            defconfig
+parisc                           allyesconfig
+i386                             allyesconfig
+i386                                defconfig
+x86_64                           rhel-8.3-kvm
+x86_64                           rhel-8.3-syz
+x86_64                           rhel-8.3-bpf
+x86_64                         rhel-8.3-kunit
+arm                      integrator_defconfig
+sh                           se7721_defconfig
+m68k                          atari_defconfig
+arc                          axs103_defconfig
+m68k                       bvme6000_defconfig
+arc                                 defconfig
+alpha                               defconfig
+x86_64                        randconfig-a011
+x86_64                        randconfig-a013
+x86_64                        randconfig-a015
+s390                             allmodconfig
+s390                                defconfig
+i386                          randconfig-a012
+i386                          randconfig-a014
+i386                          randconfig-a016
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+riscv                             allnoconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+s390                             allyesconfig
+sparc                               defconfig
+xtensa                           allyesconfig
+csky                                defconfig
+sparc                            allyesconfig
+x86_64                                  kexec
+arm                          pxa3xx_defconfig
+sh                         ap325rxa_defconfig
+sh                         microdev_defconfig
+powerpc                           allnoconfig
+sh                               allmodconfig
+powerpc                          allmodconfig
+mips                             allyesconfig
+arm                           h3600_defconfig
+arm                               allnoconfig
+alpha                            alldefconfig
+arc                              alldefconfig
+sparc                       sparc64_defconfig
+sh                        apsh4ad0a_defconfig
+arm64                            allyesconfig
+arm                                 defconfig
+arm                              allyesconfig
+arm                        realview_defconfig
+mips                            ar7_defconfig
+arm                            zeus_defconfig
+arc                            hsdk_defconfig
+
+clang tested configs:
+i386                          randconfig-a002
+i386                          randconfig-a006
+i386                          randconfig-a004
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+x86_64                        randconfig-a001
+x86_64                        randconfig-k001
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+powerpc                      walnut_defconfig
+s390                             alldefconfig
+mips                       rbtx49xx_defconfig
+x86_64                          rhel-8.3-rust
+
 -- 
-2.31.1.189.g2e36527f23
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
