@@ -2,65 +2,83 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 666BAC54EBE
-	for <linux-raid@archiver.kernel.org>; Thu, 12 Jan 2023 19:12:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8280C63797
+	for <linux-raid@archiver.kernel.org>; Fri, 13 Jan 2023 00:11:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240362AbjALTMn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 12 Jan 2023 14:12:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40322 "EHLO
+        id S240331AbjAMALo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 12 Jan 2023 19:11:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240403AbjALTLx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 Jan 2023 14:11:53 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B9FA14011
-        for <linux-raid@vger.kernel.org>; Thu, 12 Jan 2023 10:58:20 -0800 (PST)
+        with ESMTP id S240146AbjAMALk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 Jan 2023 19:11:40 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8428A5B16C;
+        Thu, 12 Jan 2023 16:11:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id A51CACE1FA8
-        for <linux-raid@vger.kernel.org>; Thu, 12 Jan 2023 18:58:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4FB5C433F1
-        for <linux-raid@vger.kernel.org>; Thu, 12 Jan 2023 18:58:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C53E621EB;
+        Fri, 13 Jan 2023 00:11:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4808FC43446;
+        Fri, 13 Jan 2023 00:11:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673549896;
-        bh=GOTGac7jzkBq9m9manlIDsXasTqD7aG5YTFCBPqfMag=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=sdaMyuRAyB6vuO3qv3Q/MMO1g4nOBCIRwiZazh/hWCExBD0N866Dknei6/PZiOpfu
-         QfnTSLW+B/5GDGLbQjM0tVLE2X+o62RvVq5X+Pl5Zmw/U1ZjhfrTt0S75G6Kr9KTmB
-         7FQ7bSYBZXV6t9HjHO3JT2MVIvycgTH7aY8LQxWNBYygbHbjRZ5ckcrWbY3XxUfm6k
-         OfWtk9W7Z5M9IRBrmzUXuea2yOWKo9SDPZi9FsLU0zc8dBhJYeHKBy9/ROhgwN+7TM
-         TTrXnwiPMdbezL152GXTrPNNnPMnJB1AF2D3uY/YdJ66E3HezVh+Bv0TXQG25/a7Kk
-         fuf81/0j3qrLg==
-Received: by mail-lj1-f170.google.com with SMTP id f20so20325443lja.4
-        for <linux-raid@vger.kernel.org>; Thu, 12 Jan 2023 10:58:16 -0800 (PST)
-X-Gm-Message-State: AFqh2kphAJS/N6TcPNcb87hhSUEeBYbvPBWSJnLVo6OIOTL2gpGYwPv6
-        CUyAaLebbW4hUjAUKtkG/2GJhG61PdR/AAecMSw=
-X-Google-Smtp-Source: AMrXdXvXv5wjVpFK2yPNzbHNE0k565FUduol1nlcLwY0ipVvS8314wNwpVeD1IZAtx9b9xZDQeVoD3qPgfGKsMh1/vg=
-X-Received: by 2002:a2e:9382:0:b0:284:b05a:9e82 with SMTP id
- g2-20020a2e9382000000b00284b05a9e82mr1118632ljh.479.1673549894840; Thu, 12
- Jan 2023 10:58:14 -0800 (PST)
+        s=k20201202; t=1673568695;
+        bh=LyGbrGRKlgQUG/6dRhmrOxWQZAI+7ZeRlrySnO8o+wY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=CGz2fCFBpFPtDlfqbl722O++VKcLg5CZhk3XeXgsvT10C/Lk0VXQ2IByAiFnnOpSy
+         gWUmtwgJqL3dAN8LS0BuxIXt59+wTDaQQdeyV1GBG3ENjo3tXaDCIn5qVz8HFOXqxT
+         wH4kyN6ceuuw5zV579pwfsPQMxsu3zUyaJTWU1AD3DnSM9InxH6rmgStmHdokViarP
+         +3+2hvcSjhPoGeD4M9gClP/w/MylYUL7F6i+aLgIyrJCWFZ2JsSq1xX90lJeoIpHKp
+         xjq40rF/U6aF+RMYUIeYJN5cZr/RQovux3mXIcMUCw0JxX1AKmpFTX8KjTo1EmUtvj
+         OJGYcub5PB5ww==
+Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
+        id A0E425C118F; Thu, 12 Jan 2023 16:11:34 -0800 (PST)
+From:   "Paul E. McKenney" <paulmck@kernel.org>
+To:     rcu@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, kernel-team@meta.com,
+        rostedt@goodmis.org, "Paul E. McKenney" <paulmck@kernel.org>,
+        Song Liu <song@kernel.org>, Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        linux-raid@vger.kernel.org, John Ogness <john.ogness@linutronix.de>
+Subject: [PATCH rcu v2 06/20] drivers/md: Remove "select SRCU"
+Date:   Thu, 12 Jan 2023 16:11:18 -0800
+Message-Id: <20230113001132.3375334-6-paulmck@kernel.org>
+X-Mailer: git-send-email 2.31.1.189.g2e36527f23
+In-Reply-To: <20230113001103.GA3374173@paulmck-ThinkPad-P17-Gen-1>
+References: <20230113001103.GA3374173@paulmck-ThinkPad-P17-Gen-1>
 MIME-Version: 1.0
-References: <20230110014512.19233-1-adrianhuang0701@gmail.com> <20230110064800.GA10262@lst.de>
-In-Reply-To: <20230110064800.GA10262@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Thu, 12 Jan 2023 10:58:02 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4qy42YikvoxsMMBz+wohhEzAfGbDB6VJak+gg_H09ocA@mail.gmail.com>
-Message-ID: <CAPhsuW4qy42YikvoxsMMBz+wohhEzAfGbDB6VJak+gg_H09ocA@mail.gmail.com>
-Subject: Re: [PATCH 1/1] md: fix incorrect declaration about claim_rdev in md_import_device
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Adrian Huang <adrianhuang0701@gmail.com>,
-        linux-raid@vger.kernel.org, Adrian Huang <ahuang12@lenovo.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jan 9, 2023 at 10:48 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> Looks good:
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Now that the SRCU Kconfig option is unconditionally selected, there is
+no longer any point in selecting it.  Therefore, remove the "select SRCU"
+Kconfig statements.
 
-Applied to md-fixes. Thanks!
+Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
+Cc: Song Liu <song@kernel.org>
+Cc: Alasdair Kergon <agk@redhat.com>
+Cc: Mike Snitzer <snitzer@kernel.org>
+Cc: <dm-devel@redhat.com>
+Cc: <linux-raid@vger.kernel.org>
+Reviewed-by: John Ogness <john.ogness@linutronix.de>
+---
+ drivers/md/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-Song
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 998a5cfdbc4e9..5f1e2593fad7e 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -6,7 +6,6 @@
+ menuconfig MD
+ 	bool "Multiple devices driver support (RAID and LVM)"
+ 	depends on BLOCK
+-	select SRCU
+ 	help
+ 	  Support multiple physical spindles through a single logical device.
+ 	  Required for RAID and logical volume management.
+-- 
+2.31.1.189.g2e36527f23
+
