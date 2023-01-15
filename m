@@ -2,97 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 165B2C63797
-	for <linux-raid@archiver.kernel.org>; Sun, 15 Jan 2023 17:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF3C0C46467
+	for <linux-raid@archiver.kernel.org>; Sun, 15 Jan 2023 21:26:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231276AbjAORaS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 15 Jan 2023 12:30:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57526 "EHLO
+        id S231482AbjAOV0M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 15 Jan 2023 16:26:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230359AbjAORaQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 15 Jan 2023 12:30:16 -0500
-X-Greylist: delayed 302 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 15 Jan 2023 09:30:15 PST
-Received: from mout.perfora.net (mout.perfora.net [74.208.4.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65FC7CC21
-        for <linux-raid@vger.kernel.org>; Sun, 15 Jan 2023 09:30:15 -0800 (PST)
-Received: from [192.168.1.7] ([72.94.51.172]) by mrelay.perfora.net
- (mreueus003 [74.208.5.2]) with ESMTPSA (Nemesis) id 0Ln8sF-1onoH73Bpl-00hMQ8
- for <linux-raid@vger.kernel.org>; Sun, 15 Jan 2023 18:25:12 +0100
-Subject: Re: Transferring an existing system from non-RAID disks to RAID1
- disks in the same computer
-From:   H <agents@meddatainc.com>
-To:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
-References: <273d1fc9-853f-a8fa-bb47-2883ba217820@meddatainc.com>
-Message-ID: <deafcb4a-ed1c-d0b3-c9f9-c0a99867bb7a@meddatainc.com>
-Date:   Sun, 15 Jan 2023 12:25:11 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        with ESMTP id S231570AbjAOV0K (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 15 Jan 2023 16:26:10 -0500
+Received: from mail-40138.protonmail.ch (mail-40138.protonmail.ch [185.70.40.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B17DF525F
+        for <linux-raid@vger.kernel.org>; Sun, 15 Jan 2023 13:26:05 -0800 (PST)
+Date:   Sun, 15 Jan 2023 21:25:55 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+        s=protonmail3; t=1673817963; x=1674077163;
+        bh=z52wRE5BfrX4psGZSy1OMgsG0tg4MlMR1aZ24YeN4qo=;
+        h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+         Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+         Message-ID:BIMI-Selector;
+        b=S6PlT90cuOsL1bdowU0XFxDnjWS/o72tVBD4qo25r+GlrwUv5spAhAO85MUKycLqe
+         uNVcyy4cmh/mb//eLTzNSJJTO1o1/6BJqb2fDA4JEQdrfoB7CFHQGY5Yv4VuiZo07e
+         PgDH/pQcMr72K7woyxHxAcG6LenrjTEzkQAnDySOz2ql6iSYGnP0YMIQVEeeR1nBP0
+         uTVzxsb3MZ/cywcPTady3sD7toCNbZPEGgMQNKMbXS9oyK26xiP1MnWUCNT+uT4FnM
+         DDm5WsAH7uLv0vh6UoGy7W2JULkyCCwCWJW1AdLQSI31eaIVJ6Ep9iB7GDWEgvWN/J
+         2HdwLRRWteazg==
+To:     anthony <antmbox@youngman.org.uk>
+From:   boscabeag <boscabeag@protonmail.com>
+Cc:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: Re: Parity distribution when adding disks to md-raid6
+Message-ID: <moIqP54ll6VYnb_ngZT_xyboobMPrU3-h5c5-J6WUPVBsFvt40THsGFwYdOObavZ3OF2StdVWZpNOTTnVbldJXK8u-gVxSpRgnBFCGkoqvg=@protonmail.com>
+In-Reply-To: <7ef4bb85-2d0f-8f1a-7fb7-336142acf405@youngman.org.uk>
+References: <A73A8YRNkUS11zoz7eEaNfvnfZqyj6-vP-7mvI6_FFLdSETs_g6CFYgIL_PyV0F8AE6cXMomd7SznnsQDGQqwLuSJFMi8EbxGzxibvYjZ2s=@protonmail.com> <7ef4bb85-2d0f-8f1a-7fb7-336142acf405@youngman.org.uk>
+Feedback-ID: 42495234:user:proton
 MIME-Version: 1.0
-In-Reply-To: <273d1fc9-853f-a8fa-bb47-2883ba217820@meddatainc.com>
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Provags-ID: V03:K1:8DfzIAxgMI4QQBVeTOtySsRzMHgXC71XViDayIhgAP3F0BwRb4N
- QB6h7IIn9X0ofOaaVjb7opj0DVx8+cm1VrE3XQNVFYYQxWAih5aar0BdJhtWxLsraYr+ele
- n+oMdQD9XSaCXZioShN8jsv1cpLMzBaUywx35+VgZg7gPEbKuaMuyccwQZxfKoM1X5Co5a+
- 0TzMw+yd9hz+Vl69CV9LQ==
-UI-OutboundReport: notjunk:1;M01:P0:F2lPmNmHFUs=;9DAPPRfgc5QZVm2lC/am+i1pTPc
- JwzGn5mzxZgbhkiBX7YwruvUkWYFa1iRnhKWRtDu8WgrUoIQSZKpvbMGF278Fpf2WcaSRorE0
- FhnF+PKvv7f2ZGHE0gBG1P2ILoocRR5s7rY5eu56FapWLX6U41CH68mRYJXsZcTmSmgfHOfRC
- udboitybM8+jeO2HmvwT8FoYzMEM6yNSUYfue3XouVLJ9uX2IZQBFgNTegTYvR1UJ0P1unsaK
- Om7vox7EGM0oY/vL7YN+RIZMQKwyMP1ImOSic224ro70Ot2H7rFem4BqkpJoppdy2KP/J5/V+
- 5iSXzm/Nz7faVw10vE1s1qL4iys4hxyekAsCFFhrufgpfipnym50yV0RJ3agYUSs/g2NJWXg9
- mVPLDnuMSUzp+Q2qc+z+MPfHCgoUFwtGjP5xnJMDUPW5bL/+HojeXgBndJ3FTcJIwj/+n8tTI
- LsvKYxgJp1CF6hFWG0WiL93dnodrZuZZsA0RivOtJLRWj/gLcgx6rLYZpu6ST0i9eTg3bFnbe
- eO5uMBEXZLQ21jwZL9N+5lH7AD2Pk8+Sz0szEYtG7q+Yn43Py/rzsY19yRx5pHvgFkwQsBQ2u
- pQYFIxRVcTGnw7LINqoD2AD33sTtm/GrXQnlO3rcnZVgmZAAJmU3ICNugyFzDWvoP0wooCfHC
- TtuSteolDXgX5f/r2p2YccLhAx4wc8sqG/3PXdSi3w==
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 01/14/2023 10:12 PM, H wrote:
-> I need to transfer an existing CentOS 7 non-RAID setup using one single SSD to a mdadm RAID1 using two much larger SSDs. All three disks exist in the same computer at the same time. Both the existing SSD and the new ones use LVM and LUKS and the objective is to preserve the OS, all other installed software and data etc. Thus no new installation should be needed.
->
-> Since all disks, partitions, LUKS etc have their unique UUIDs I have not figured out how to do this and could use help and advice.
->
-> In preparation for the above, I have:
->
-> - Used rsync with the flags -aAXHv to copy all files on the existing SSD to an external harddisk for backup.
->
-> - Partitioned the new SSDs as desired, including LVM and LUKS. My configuration uses one RAID1 for /boot, another RAID1 partition for /boot/efi, and a third one for the rest which also uses LVM and LUKS. I actually used a DVD image of Centos 7 (minimal installation) to accomplish this which also completed the minimal installation of the OS on the new disks. It boots as expected and the RAID partitions seem to work as expected.
->
-> Since I want to actually move my existing installation from the existing SSDs, I am not sure whether I should just use rsync to copy everything from the old SSD to the new larger ones. However, I expect that to also transfer all OS files using the old, now incorrect UUIDs, to the new disks after which nothing will work, thus I have not yet done that. I could erase the minimal installation of the OS on the new disks before rsyncing but have not yet done so.
->
-> I fully expect to have to do some manual editing of files but am not quite sure of all the files I would need to edit after such a copy. I have some knowledge of linux but could use some help and advice. For instance, I expect that /etc/fstab and /etc/crypttab would need to be edited reflecting the UUIDs of the new disks, partitions and LUKS, but which other files? Grub2 would also need to be edited I would think.
->
-> The only good thing is that since both the old disk and the new disks are in the same computer, no other hardware will change.
->
-> Is there another, better (read: simpler) way of accomplishing this transfer?
->
-> Finally, since I do have a backup of the old SSD and there is nothing of value on the new mdadm RAID1 disks, except the partition information, I do have, if necessary, the luxury of multiple tries. What I cannot do, however, is to make any modifications to the existing old SSD since I cannot afford not being able to go back to the old SSD if necessary.
->
-> Thanks.
->
->
-Upon further thinking, I am wondering if the process below would work? As stated above, I have two working disk setups in the same computer and depending on the order of disks in the BIOS I can boot any of the two setups.
+On Sunday, January 8th, 2023 at 22:20, anthony <antmbox@youngman.org.uk> wr=
+ote:
 
-My existing setup uses one disk and no RAID (obviously), LUKS and LVM for everything but /boot and /boot/efi, total of three partitions. The OS is Centos 7 and I have made a complete backup to an external harddisk using rsync ("BACKUP1").
+> I'm GUESSING you're trying to move from a non-raid setup.
 
-The new one uses two disks, RAID1, LUKS and LVM for everything but /boot and /boot/efi, total of four partitions (swap has its own partition - not sure why I made it that way). A minimal installation of Centos 7 was made to this setup and is working. In other words, UUIDs of disks, partitions and LUKS are already configured and working.
+First of all, thank you for taking the time to respond.
 
-So, I am now thinking the following might work:
+But no, I really am just asking about how and when the parity chunks get di=
+stributed across a new device when a md-raid6 group is grown.
 
-- Make a rsync backup of the new disks to the external harddisk ("BACKUP2").
+There was a time when some raid systems (not naming names, and if I remembe=
+r correctly) would NOT re-distribute parity chunks on a grown group.  If th=
+e group was built with devices A, B, C, & D, then the parity chunks would r=
+emain on those four devices, and added devices E & F, etc. would only ever =
+have data chunks, since the placement of parity chunks in a stripe was only=
+ done at initial group creation time, even if the stripe was extended to ad=
+ditional devices.
 
-- Delete all files from the new disks except from /boot and /boot/efi.
+I'm not questioning that growing a md-raid group works and is fully functio=
+nal.  This is very much a "what happens behind the curtain" question.
 
-- Copy all files from all partitions except /boot and /boot/efi from BACKUP1 to the new disks. In other words, everything except /boot and /boot/efi will now be overwritten.
+I don't know how md-raid6 works at this low and internal level, hence the q=
+uestion.
 
-- I would expect this system not to boot since both /etc/fstab and /etc/crypttab on the new disks contain the UUIDs from the old system.
+Does the re-sync triggered by the grow re-write the entirety of all stripes=
+ and some P & Q chunks get moved to the new device?
 
-- Copy just /etc/fstab and /etc/crypttab from BACKUP2 to the new disks. This should update the new disks with the previously created UUIDs from when doing the minimal installation of CentOS 7.
+If the re-sync does change some P & Q chunks to data chunks to place those =
+parity chunks on the new device, is the layout identical to what it would b=
+e if the group was created with all devices instead of being grown?
 
-What do you think?
+Does it happen when a stripe is re-written through normal activity?  this i=
+mplies if a stripe never gets any write activity, it will never re-layout t=
+he location of its P & Q chunks.
 
+Does it happen at all?  And the new devices only ever have data chunks like=
+ what I remember from older systems?
 
+Thank you!
