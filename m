@@ -2,86 +2,142 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94657C38159
-	for <linux-raid@archiver.kernel.org>; Wed, 18 Jan 2023 00:10:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D3B2C6379F
+	for <linux-raid@archiver.kernel.org>; Wed, 18 Jan 2023 01:07:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229633AbjARAKx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 17 Jan 2023 19:10:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52786 "EHLO
+        id S229663AbjARBHS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 17 Jan 2023 20:07:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229632AbjARAKY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 17 Jan 2023 19:10:24 -0500
-Received: from smtp-delay1.nerim.net (mailhost-s4-m3.internext.fr [78.40.49.203])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 49708367EF
-        for <linux-raid@vger.kernel.org>; Tue, 17 Jan 2023 15:26:45 -0800 (PST)
-Received: from maiev.nerim.net (smtp-152-tuesday.nerim.net [194.79.134.152])
-        by smtp-delay1.nerim.net (Postfix) with ESMTP id 0BA6DC7AC8
-        for <linux-raid@vger.kernel.org>; Wed, 18 Jan 2023 00:26:44 +0100 (CET)
-Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
-        by maiev.nerim.net (Postfix) with ESMTP id A77632E012;
-        Wed, 18 Jan 2023 00:26:34 +0100 (CET)
-Message-ID: <162b3fc0-b5ee-f4e2-7f02-2e95cc20047b@plouf.fr.eu.org>
-Date:   Wed, 18 Jan 2023 00:26:32 +0100
+        with ESMTP id S229821AbjARBGt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 17 Jan 2023 20:06:49 -0500
+X-Greylist: delayed 151 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 17 Jan 2023 16:56:28 PST
+Received: from resqmta-h1p-028595.sys.comcast.net (resqmta-h1p-028595.sys.comcast.net [IPv6:2001:558:fd02:2446::3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9618647435
+        for <linux-raid@vger.kernel.org>; Tue, 17 Jan 2023 16:56:28 -0800 (PST)
+Received: from resomta-h1p-028516.sys.comcast.net ([96.102.179.207])
+        by resqmta-h1p-028595.sys.comcast.net with ESMTP
+        id HwOgpsb9l92y9HwiDpmmSL; Wed, 18 Jan 2023 00:53:57 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=comcastmailservice.net; s=20211018a; t=1674003237;
+        bh=KT/2r5iU7ZHBf9ncZ+N12cQMmJ5YDBsDmN2iBqHI2M8=;
+        h=Received:Received:From:To:Subject:Date:Message-Id:MIME-Version:
+         Xfinity-Spam-Result;
+        b=XkVv3Cmp/t1GuOH5LOrQQFhbZUSaEfiBmN38E7Ve0AGCrkZ1Y+oolUM+DqJsVMaHU
+         i2eGs00npgVoiffPIN1+BmqWo+zp15dL1oDyaMFeqbV3g33lIFy9i8BUAHLWuu3jys
+         rheDmJxpylzwNuvFLAO5T/NE0SMFID3pikWT1BQ+zOUKxyzSls7cX7XetMSDV7vKvi
+         U87OvMQi2NesGx/aYvu9JaPxDwfGZ59yKOiHHOk+9BV5oa1yb4m0SP/TFx7BlAJQX7
+         ZC3gs7loKQiaKIcrh1uKRjyXvcbIHug3v5j7KhT1Nn0hCMcCY3EDcOvd4smomTWrwJ
+         OUXdVFD/Q5rSg==
+Received: from jderrick-mobl4.amr.corp.intel.com ([71.205.181.50])
+        by resomta-h1p-028516.sys.comcast.net with ESMTPA
+        id HwhkpTnG4xvJwHwhppmO0a; Wed, 18 Jan 2023 00:53:35 +0000
+X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvhedruddtjedgvdekucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgggfestdekredtredttdenucfhrhhomheplfhonhgrthhhrghnucffvghrrhhitghkuceojhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvqeenucggtffrrghtthgvrhhnpedvtdejiefgueelteevudevhfdvjedvhfdtgfehjeeitdevueektdegtedttdehvdenucfkphepjedurddvtdehrddukedurdehtdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehjuggvrhhrihgtkhdqmhhosghlgedrrghmrhdrtghorhhprdhinhhtvghlrdgtohhmpdhinhgvthepjedurddvtdehrddukedurdehtddpmhgrihhlfhhrohhmpehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvhdpnhgspghrtghpthhtohepgedprhgtphhtthhopehsohhngheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohepshhushhhmhgrrdhkrghlrghkohhtrgesihhnthgvlhdrtghomhdprhgtphhtthhopehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugi
+ druggvvh
+X-Xfinity-VMeta: sc=-100.00;st=legit
+From:   Jonathan Derrick <jonathan.derrick@linux.dev>
+To:     Song Liu <song@kernel.org>, <linux-raid@vger.kernel.org>
+Cc:     Sushma Kalakota <sushma.kalakota@intel.com>,
+        Jon Derrick <jonathan.derrick@linux.dev>
+Subject: [PATCH] md: Use optimal I/O size for last bitmap page
+Date:   Tue, 17 Jan 2023 17:53:19 -0700
+Message-Id: <20230118005319.147-1-jonathan.derrick@linux.dev>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: What does TRIM/discard in RAID do ?
-Content-Language: en-US
-To:     Reindl Harald <h.reindl@thelounge.net>,
-        Wols Lists <antlists@youngman.org.uk>,
-        linux-raid <linux-raid@vger.kernel.org>
-References: <f8531fc8-6928-5300-b43e-1cad0a4ab03b@plouf.fr.eu.org>
- <dbca2904-1200-a81f-cc6d-300e8def6a96@thelounge.net>
- <2d0a1dad-1961-78df-4c89-e404537c1350@plouf.fr.eu.org>
- <61723f2a-8447-c694-f0b2-1b2b538aa5d0@thelounge.net>
- <68262873-6ceb-f28a-0dae-67d373af7d1f@youngman.org.uk>
- <28fe352b-1391-0227-5a1d-a3122c5e2e78@thelounge.net>
- <f7b9c725-d807-87c1-0fbd-774c18eeb8dc@thelounge.net>
-From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
-Organization: Plouf !
-In-Reply-To: <f7b9c725-d807-87c1-0fbd-774c18eeb8dc@thelounge.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 15/01/2023 at 17:01, Reindl Harald wrote:
-> 
-> 
-> Am 15.01.23 um 16:52 schrieb Reindl Harald:
-> 
-> in such implementations you have to consider
-> 
-> * re-add of devices
+From: Jon Derrick <jonathan.derrick@linux.dev>
 
-Not affected. Use the event count and the write-intent bitmap as usual.
+If the bitmap space has enough room, size the I/O for the last bitmap
+page write to the optimal I/O size for the storage device. The expanded
+write is checked that it won't overrun the data or metadata.
 
-> * file-systems with no trim-support
+This change helps increase performance by preventing unnecessary
+device-side read-mod-writes due to non-atomic write unit sizes.
 
-Not affected. An device does not need TRIM support to know which blocks 
-have been written and contain valid data.
+Ex biosnoop log. Device lba size 512, optimal size 4k:
+Before:
+Time        Process        PID     Device      LBA        Size      Lat
+0.843734    md0_raid10     5267    nvme0n1   W 24         3584      1.17
+0.843933    md0_raid10     5267    nvme1n1   W 24         3584      1.36
+0.843968    md0_raid10     5267    nvme1n1   W 14207939968 4096      0.01
+0.843979    md0_raid10     5267    nvme0n1   W 14207939968 4096      0.02
 
-> * raw-device usage like for "apache trafficserver"
+After:
+Time        Process        PID     Device      LBA        Size      Lat
+18.374244   md0_raid10     6559    nvme0n1   W 24         4096      0.01
+18.374253   md0_raid10     6559    nvme1n1   W 24         4096      0.01
+18.374300   md0_raid10     6559    nvme0n1   W 11020272296 4096      0.01
+18.374306   md0_raid10     6559    nvme1n1   W 11020272296 4096      0.02
 
-Not affected.
+Signed-off-by: Jon Derrick <jonathan.derrick@linux.dev>
+---
+ drivers/md/md-bitmap.c | 27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
-> * power-outage
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index e7cc6ba1b657..569297ea9b99 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -220,6 +220,7 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+ 	rdev = NULL;
+ 	while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
+ 		int size = PAGE_SIZE;
++		int optimal_size = PAGE_SIZE;
+ 		loff_t offset = mddev->bitmap_info.offset;
+ 
+ 		bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
+@@ -228,9 +229,14 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+ 			int last_page_size = store->bytes & (PAGE_SIZE-1);
+ 			if (last_page_size == 0)
+ 				last_page_size = PAGE_SIZE;
+-			size = roundup(last_page_size,
+-				       bdev_logical_block_size(bdev));
++			size = roundup(last_page_size, bdev_logical_block_size(bdev));
++			if (bdev_io_opt(bdev) > bdev_logical_block_size(bdev))
++				optimal_size = roundup(last_page_size, bdev_io_opt(bdev));
++			else
++				optimal_size = size;
+ 		}
++
++
+ 		/* Just make sure we aren't corrupting data or
+ 		 * metadata
+ 		 */
+@@ -246,9 +252,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+ 				goto bad_alignment;
+ 		} else if (offset < 0) {
+ 			/* DATA  BITMAP METADATA  */
+-			if (offset
+-			    + (long)(page->index * (PAGE_SIZE/512))
+-			    + size/512 > 0)
++			loff_t off = offset + (long)(page->index * (PAGE_SIZE/512));
++			if (size != optimal_size &&
++			    off + optimal_size/512 <= 0)
++				size = optimal_size;
++			else if (off + size/512 > 0)
+ 				/* bitmap runs in to metadata */
+ 				goto bad_alignment;
+ 			if (rdev->data_offset + mddev->dev_sectors
+@@ -257,10 +265,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+ 				goto bad_alignment;
+ 		} else if (rdev->sb_start < rdev->data_offset) {
+ 			/* METADATA BITMAP DATA */
+-			if (rdev->sb_start
+-			    + offset
+-			    + page->index*(PAGE_SIZE/512) + size/512
+-			    > rdev->data_offset)
++			loff_t off = rdev->sb_start + offset + page->index*(PAGE_SIZE/512);
++			if (size != optimal_size &&
++			    off + optimal_size/512 <= rdev->data_offset)
++				size = optimal_size;
++			else if (off + size/512 > rdev->data_offset)
+ 				/* bitmap runs in to data */
+ 				goto bad_alignment;
+ 		} else {
+-- 
+2.27.0
 
-Same as other live metadata such as the write-intent bitmap and the 
-event count, I guess.
-
-> * drive replacements
-
-That's precisely a  use case when a valid/discard bitmap would be useful.
-
-> god beware pass a wrong discard reuqest to the underlying device
-
-The valid/discard bitmap would be only for internal use only and not 
-affect TRIM/discard pass-through.
-
-> however, that's all not part of the topic "What does TRIM/discard in 
-> RAID do"
-
-Do not pretend to be naive. I intended the topic to go to this direction 
-from the start, and you knew where it was going when you replied.
