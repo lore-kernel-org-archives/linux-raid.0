@@ -2,75 +2,70 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60EF5C38142
-	for <linux-raid@archiver.kernel.org>; Thu, 19 Jan 2023 17:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67889C004D4
+	for <linux-raid@archiver.kernel.org>; Thu, 19 Jan 2023 18:44:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230213AbjASRkP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 Jan 2023 12:40:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46886 "EHLO
+        id S230316AbjASSoK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 19 Jan 2023 13:44:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230021AbjASRkK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 12:40:10 -0500
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DB8A5421A
-        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 09:40:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=cFFhbfQAhvp7r5+sgqB6O4FAQoii1cwjUZUchw/hxvs=; b=qU8jIlMQ3a7+yxefb7yFA9/h7d
-        T5ldxiM9o0X17Mvw5wmaM4x5/y8s5CyIcY8sxI9FDVzOJ3SSr6L4k8+s5DCl6nZNWYPrdx6+qpsZU
-        bwLrBpX95yuBYYPFE5amBH0GeJfAtvJUOewuZse8KFDTq4HoTUHP+QDpQJ9+bwdDqRkiL6ohAl2uK
-        143Fj2lJqE20cYZkE2nhBljwZl58rjkaZuEAkB6kWtDiOBlNbFvSRZwhDAz9ZDJFKx2LBa6DXrEkV
-        fLLA5AuO11UDvHVpQIPdsVPug3lXn206ySzJZsFR4r5qxt4dW+9mfSERr2/Iuz8HzvCXNmq95o8pP
-        c+rfujUA==;
-Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1pIYtK-001gfz-Ek; Thu, 19 Jan 2023 10:39:59 -0700
-Message-ID: <753b5edc-9a34-dce3-051d-514f8d43f3cd@deltatee.com>
-Date:   Thu, 19 Jan 2023 10:39:54 -0700
+        with ESMTP id S230326AbjASSoH (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 13:44:07 -0500
+Received: from mallaury.nerim.net (smtp-104-thursday.noc.nerim.net [178.132.17.104])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 02947792B4
+        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 10:44:03 -0800 (PST)
+Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
+        by mallaury.nerim.net (Postfix) with ESMTP id C4A9FDB17D;
+        Thu, 19 Jan 2023 19:43:56 +0100 (CET)
+Message-ID: <b4af98c2-c621-f2c0-1f55-d7fcf4959871@plouf.fr.eu.org>
+Date:   Thu, 19 Jan 2023 19:43:53 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
-Content-Language: en-CA
-To:     Xiao Ni <xni@redhat.com>, Jes Sorensen <jes@trained-monkey.org>
-Cc:     linux-raid@vger.kernel.org,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-References: <20221123190954.95391-1-logang@deltatee.com>
- <CALTww2_veP=bkpz5Z03VjmF=0dH-D9WqD2+K5A9cBiK5Pb-USg@mail.gmail.com>
- <85822a83-f4cc-b699-d589-b6c5590b3f98@redhat.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <85822a83-f4cc-b699-d589-b6c5590b3f98@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: What does TRIM/discard in RAID do ?
+Content-Language: en-US
+To:     Reindl Harald <h.reindl@thelounge.net>,
+        Wols Lists <antlists@youngman.org.uk>,
+        linux-raid <linux-raid@vger.kernel.org>
+References: <f8531fc8-6928-5300-b43e-1cad0a4ab03b@plouf.fr.eu.org>
+ <dbca2904-1200-a81f-cc6d-300e8def6a96@thelounge.net>
+ <2d0a1dad-1961-78df-4c89-e404537c1350@plouf.fr.eu.org>
+ <61723f2a-8447-c694-f0b2-1b2b538aa5d0@thelounge.net>
+ <68262873-6ceb-f28a-0dae-67d373af7d1f@youngman.org.uk>
+ <28fe352b-1391-0227-5a1d-a3122c5e2e78@thelounge.net>
+ <f7b9c725-d807-87c1-0fbd-774c18eeb8dc@thelounge.net>
+ <162b3fc0-b5ee-f4e2-7f02-2e95cc20047b@plouf.fr.eu.org>
+ <964b05d3-4782-55be-1487-613fd9c5019f@thelounge.net>
+From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
+Organization: Plouf !
+In-Reply-To: <964b05d3-4782-55be-1487-613fd9c5019f@thelounge.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 24.64.144.200
-X-SA-Exim-Rcpt-To: xni@redhat.com, jes@trained-monkey.org, linux-raid@vger.kernel.org, guoqing.jiang@linux.dev, mariusz.tkaczyk@linux.intel.com, colyli@suse.de, chaitanyak@nvidia.com, jm@chia.net, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH mdadm v6 0/7] Write Zeroes option for Creating Arrays
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 2023-01-06 00:53, Xiao Ni wrote:
-> Hi Jes
+On 18/01/2023 at 10:57, Reindl Harald wrote:
+> Am 18.01.23 um 00:26 schrieb Pascal Hambourg:
+>>>
+>>> in such implementations you have to consider
+>>
+>>> * file-systems with no trim-support
+>>
+>> Not affected. A device does not need TRIM support to know which 
+>> blocks have been written and contain valid data
 > 
-> Just a reminder about this series of patches.
+> well, fstrim/discard don't do anything on a HDD at the FS layer
 
-Any progress on this? Should I resend it? I haven't heard much feedback
-in a while.
+(Hard disks with SMR technology may support TRIM to avoid useless 
+read-modify-write operations, but SMR is not recommended for RAID so it 
+is a bit out-topic.)
 
-Thanks,
+Not sure I get your point. How is a filesystem with no TRIM support 
+related with a hard disk with no TRIM support ?
 
-Logan
+Currently the RAID layer does TRIM/discard pass-through only, so it 
+returns the status of the underlying devices. If it stored information 
+about which blocks contain valid data, I guess it would have to 
+advertise TRIM/discard support for itself regardless of the underlying 
+devices.
