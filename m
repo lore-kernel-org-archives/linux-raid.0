@@ -2,48 +2,48 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE2DC004D4
-	for <linux-raid@archiver.kernel.org>; Thu, 19 Jan 2023 13:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A32FC46467
+	for <linux-raid@archiver.kernel.org>; Thu, 19 Jan 2023 13:55:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231290AbjASNzI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 Jan 2023 08:55:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54976 "EHLO
+        id S231287AbjASNzK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 19 Jan 2023 08:55:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231251AbjASNyn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 08:54:43 -0500
+        with ESMTP id S229853AbjASNyo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 08:54:44 -0500
 Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CEF64AA6F
-        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 05:54:41 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71E9E8A61
+        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 05:54:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674136481; x=1705672481;
+  t=1674136483; x=1705672483;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=WUsyg9qsnyj3x8L5Ogryf+dV+gm/kiGNSULjzcg7TYg=;
-  b=dIb5XxqitM3xoeR8uVb5cLYx1bxrtmns1Jxs8sV08OYJTIFTJP82AFCr
-   NZMwZuxi+PHReycgyYU1Wgwd8IdEEgObW7kpN8RnKRn0R83JXBknNdj6i
-   s8cYnS7kjkkFtDYIuXcv3Xhw5b5vuoKNwGmafXaWm8slidqSf3A2VqqbD
-   vn7XGm7hMOPE1AH+top7Rr1l4k8VecG/EsBZO8M46TP4ibxs0IuYPiPwr
-   NN3ufdYLQsZyfmKS2X11d6DgIe8R8UbeMIvIIFO3MERQgfxrcLAbqS9UB
-   q3E7tv7EfYRMmdMJmhiz/IUpFebTtcQEUiIRQwjKVkm8GCSSJtY4Id2nc
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="305657214"
+  bh=7udgSe1LCUiERyHtBy2M6ATbrZ2Irt5GRczTELGVdyM=;
+  b=AYw0HA+tsxq0WkGnltUxJ8h2vYiNTshFxva/pVvyvIJWwtbAaf3q7MbA
+   /rCjm+wrstL9q2rWFncwQEjzkdJqVR19CmtHrGwArLl8/N6Gft/u0DdYB
+   2i6I8TwbdcBkSg6Cwv0OkqCXklBEkBn7vCSZtaUln30qf9ZZQyVoSwYPC
+   vhy2LUwWWkJGADOlSw9O/uEjuhDyM+1bTFtDrbIhdqDrm39GoyBEC7QfI
+   3eJxQayJYYbq2GcZ8eYG1TX+T01f7ED6J8a0AaqAruuplcnHVdidc7iMQ
+   0iDe0lYZjQe4j0nrd1bIZAs2/zJ6LfPNUgrTia3nCpArBz2QVpR8FX5Wj
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="305657221"
 X-IronPort-AV: E=Sophos;i="5.97,229,1669104000"; 
-   d="scan'208";a="305657214"
+   d="scan'208";a="305657221"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 05:54:41 -0800
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 05:54:43 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="905520388"
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="905520394"
 X-IronPort-AV: E=Sophos;i="5.97,229,1669104000"; 
-   d="scan'208";a="905520388"
+   d="scan'208";a="905520394"
 Received: from unknown (HELO localhost.elements.local) ([10.102.104.85])
-  by fmsmga006.fm.intel.com with ESMTP; 19 Jan 2023 05:54:40 -0800
+  by fmsmga006.fm.intel.com with ESMTP; 19 Jan 2023 05:54:42 -0800
 From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
 To:     linux-raid@vger.kernel.org
 Cc:     jes@trained-monkey.org
-Subject: [PATCH v2 2/8] Mdmonitor: Pass events to alert() using enums instead of strings
-Date:   Thu, 19 Jan 2023 14:35:40 +0100
-Message-Id: <20230119133546.13334-2-mateusz.grzonka@intel.com>
+Subject: [PATCH v2 4/8] Add helpers to determine whether directories or files are soft links
+Date:   Thu, 19 Jan 2023 14:35:42 +0100
+Message-Id: <20230119133546.13334-4-mateusz.grzonka@intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20230119133546.13334-1-mateusz.grzonka@intel.com>
 References: <20230119133546.13334-1-mateusz.grzonka@intel.com>
@@ -53,308 +53,78 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Add events enum, and mapping_t struct, that maps them to strings, so
-that enums are passed around instead of strings.
-
 Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
 ---
- Monitor.c | 136 +++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 83 insertions(+), 53 deletions(-)
+ mdadm.h |  2 ++
+ util.c  | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+)
 
-diff --git a/Monitor.c b/Monitor.c
-index 9ef4dab8..029e9efd 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -32,6 +32,8 @@
- #include	<libudev.h>
- #endif
+diff --git a/mdadm.h b/mdadm.h
+index 13f8b4cb..1674ce13 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1777,6 +1777,8 @@ extern void set_dlm_hooks(void);
+ #define MSEC_TO_NSEC(msec) ((msec) * 1000000)
+ #define USEC_TO_NSEC(usec) ((usec) * 1000)
+ extern void sleep_for(unsigned int sec, long nsec, bool wake_after_interrupt);
++extern bool is_directory(const char *path);
++extern bool is_file(const char *path);
  
-+#define EVENT_NAME_MAX 32
-+
- struct state {
- 	char devname[MD_NAME_MAX + sizeof("/dev/md/")];	/* length of "/dev/md/" + device name + terminating byte*/
- 	char devnm[MD_NAME_MAX];	/* to sync with mdstat info */
-@@ -65,10 +67,43 @@ struct alert_info {
- 	int dosyslog;
- 	int test;
- } info;
-+
-+enum event {
-+	EVENT_SPARE_ACTIVE = 0,
-+	EVENT_NEW_ARRAY,
-+	EVENT_MOVE_SPARE,
-+	EVENT_TEST_MESSAGE,
-+	EVENT_REBUILD_STARTED,
-+	EVENT_REBUILD,
-+	EVENT_REBUILD_FINISHED,
-+	EVENT_SPARES_MISSING,
-+	EVENT_DEVICE_DISAPPEARED,
-+	EVENT_FAIL,
-+	EVENT_FAIL_SPARE,
-+	EVENT_DEGRADED_ARRAY,
-+	EVENT_UNKNOWN
-+};
-+
-+mapping_t events_map[] = {
-+	{"SpareActive", EVENT_SPARE_ACTIVE},
-+	{"NewArray", EVENT_NEW_ARRAY},
-+	{"MoveSpare", EVENT_MOVE_SPARE},
-+	{"TestMessage", EVENT_TEST_MESSAGE},
-+	{"RebuildStarted", EVENT_REBUILD_STARTED},
-+	{"Rebuild", EVENT_REBUILD},
-+	{"RebuildFinished", EVENT_REBUILD_FINISHED},
-+	{"SparesMissing", EVENT_SPARES_MISSING},
-+	{"DeviceDisappeared", EVENT_DEVICE_DISAPPEARED},
-+	{"Fail", EVENT_FAIL},
-+	{"FailSpare", EVENT_FAIL_SPARE},
-+	{"DegradedArray", EVENT_DEGRADED_ARRAY},
-+	{NULL, EVENT_UNKNOWN}
-+};
-+
- static int make_daemon(char *pidfile);
- static int check_one_sharer(int scan);
- static void write_autorebuild_pid(void);
--static void alert(const char *event, const char *dev, const char *disc);
-+static void alert(const enum event event_enum, const unsigned int progress, const char *dev, const char *disc);
- static int check_array(struct state *st, struct mdstat_ent *mdstat, int increments, char *prefer);
- static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist);
- static void try_spare_migration(struct state *statelist);
-@@ -415,7 +450,7 @@ static void write_autorebuild_pid()
- 	}
- }
- 
--static void execute_alert_cmd(const char *event, const char *dev, const char *disc)
-+static void execute_alert_cmd(const char *event_name, const char *dev, const char *disc)
- {
- 	int pid = fork();
- 
-@@ -427,12 +462,12 @@ static void execute_alert_cmd(const char *event, const char *dev, const char *di
- 		pr_err("Cannot fork to execute alert command");
- 		break;
- 	case 0:
--		execl(info.alert_cmd, info.alert_cmd, event, dev, disc, NULL);
-+		execl(info.alert_cmd, info.alert_cmd, event_name, dev, disc, NULL);
- 		exit(2);
- 	}
- }
- 
--static void send_event_email(const char *event, const char *dev, const char *disc)
-+static void send_event_email(const char *event_name, const char *dev, const char *disc)
- {
- 	FILE *mp, *mdstat;
- 	char buf[BUFSIZ];
-@@ -450,9 +485,9 @@ static void send_event_email(const char *event, const char *dev, const char *dis
- 	else
- 		fprintf(mp, "From: %s monitoring <root>\n", Name);
- 	fprintf(mp, "To: %s\n", info.mailaddr);
--	fprintf(mp, "Subject: %s event on %s:%s\n\n", event, dev, info.hostname);
-+	fprintf(mp, "Subject: %s event on %s:%s\n\n", event_name, dev, info.hostname);
- 	fprintf(mp, "This is an automatically generated mail message. \n");
--	fprintf(mp, "A %s event had been detected on md device %s.\n\n", event, dev);
-+	fprintf(mp, "A %s event had been detected on md device %s.\n\n", event_name, dev);
- 
- 	if (disc && disc[0] != ' ')
- 		fprintf(mp,
-@@ -474,20 +509,20 @@ static void send_event_email(const char *event, const char *dev, const char *dis
- 	pclose(mp);
- }
- 
--static void log_event_to_syslog(const char *event, const char *dev, const char *disc)
-+static void log_event_to_syslog(const enum event event_enum, const char *event_name, const char *dev, const char *disc)
- {
- 	int priority;
- 	/* Log at a different severity depending on the event.
- 	 *
- 	 * These are the critical events:  */
--	if (strncmp(event, "Fail", 4) == 0 ||
--		strncmp(event, "Degrade", 7) == 0 ||
--		strncmp(event, "DeviceDisappeared", 17) == 0)
-+	if (event_enum == EVENT_FAIL ||
-+	    event_enum == EVENT_DEGRADED_ARRAY ||
-+	    event_enum == EVENT_DEVICE_DISAPPEARED)
- 		priority = LOG_CRIT;
- 	/* Good to know about, but are not failures: */
--	else if (strncmp(event, "Rebuild", 7) == 0 ||
--			strncmp(event, "MoveSpare", 9) == 0 ||
--			strncmp(event, "Spares", 6) != 0)
-+	else if (event_enum == EVENT_REBUILD ||
-+		 event_enum == EVENT_MOVE_SPARE ||
-+		 event_enum == EVENT_SPARES_MISSING)
- 		priority = LOG_WARNING;
- 	/* Everything else: */
- 	else
-@@ -495,33 +530,37 @@ static void log_event_to_syslog(const char *event, const char *dev, const char *
- 
- 	if (disc && disc[0] != ' ')
- 		syslog(priority,
--			"%s event detected on md device %s, component device %s", event, dev, disc);
-+		       "%s event detected on md device %s, component device %s",
-+		       event_name, dev, disc);
- 	else if (disc)
--		syslog(priority, "%s event detected on md device %s: %s", event, dev, disc);
-+		syslog(priority, "%s event detected on md device %s: %s", event_name, dev, disc);
- 	else
--		syslog(priority, "%s event detected on md device %s", event, dev);
-+		syslog(priority, "%s event detected on md device %s", event_name, dev);
- }
- 
--static void alert(const char *event, const char *dev, const char *disc)
-+static void alert(const enum event event_enum, const unsigned int progress, const char *dev, const char *disc)
- {
--	if (!info.alert_cmd && !info.mailaddr && !info.dosyslog) {
--		time_t now = time(0);
-+	char event_name[EVENT_NAME_MAX];
- 
--		printf("%1.15s: %s on %s %s\n", ctime(&now) + 4,
--		       event, dev, disc?disc:"unknown device");
-+	if (event_enum == EVENT_REBUILD) {
-+		snprintf(event_name, sizeof(event_name), "%s%02d",
-+			 map_num_s(events_map, EVENT_REBUILD), progress);
-+	} else {
-+		snprintf(event_name, sizeof(event_name), "%s", map_num_s(events_map, event_enum));
- 	}
-+
- 	if (info.alert_cmd)
--		execute_alert_cmd(event, dev, disc);
-+		execute_alert_cmd(event_name, dev, disc);
- 
--	if (info.mailaddr && (strncmp(event, "Fail", 4) == 0 ||
--			       strncmp(event, "Test", 4) == 0 ||
--			       strncmp(event, "Spares", 6) == 0 ||
--			       strncmp(event, "Degrade", 7) == 0)) {
--		send_event_email(event, dev, disc);
-+	if (info.mailaddr && (event_enum == EVENT_FAIL ||
-+			      event_enum == EVENT_TEST_MESSAGE ||
-+			      event_enum == EVENT_SPARES_MISSING ||
-+			      event_enum == EVENT_DEGRADED_ARRAY)) {
-+		send_event_email(event_name, dev, disc);
- 	}
- 
- 	if (info.dosyslog)
--		log_event_to_syslog(event, dev, disc);
-+		log_event_to_syslog(event_enum, event_name, dev, disc);
- }
- 
- static int check_array(struct state *st, struct mdstat_ent *mdstat,
-@@ -546,7 +585,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 	unsigned long redundancy_only_flags = 0;
- 
- 	if (info.test)
--		alert("TestMessage", dev, NULL);
-+		alert(EVENT_TEST_MESSAGE, 0, dev, NULL);
- 
- 	retval = 0;
- 
-@@ -595,7 +634,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 	 */
- 	if (sra->array.level == 0 || sra->array.level == -1) {
- 		if (!st->err && !st->from_config)
--			alert("DeviceDisappeared", dev, " Wrong-Level");
-+			alert(EVENT_DEVICE_DISAPPEARED, 0, dev, " Wrong-Level");
- 		st->err++;
- 		goto out;
- 	}
-@@ -612,7 +651,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 		st->percent = RESYNC_NONE;
- 		new_array = 1;
- 		if (!is_container)
--			alert("NewArray", st->devname, NULL);
-+			alert(EVENT_NEW_ARRAY, 0, st->devname, NULL);
- 	}
- 
- 	if (st->utime == array.utime && st->failed == sra->array.failed_disks &&
-@@ -625,29 +664,20 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 	}
- 	if (st->utime == 0 && /* new array */
- 	    mse->pattern && strchr(mse->pattern, '_') /* degraded */)
--		alert("DegradedArray", dev, NULL);
-+		alert(EVENT_DEGRADED_ARRAY, 0, dev, NULL);
- 
- 	if (st->utime == 0 && /* new array */ st->expected_spares > 0 &&
- 	    sra->array.spare_disks < st->expected_spares)
--		alert("SparesMissing", dev, NULL);
-+		alert(EVENT_SPARES_MISSING, 0, dev, NULL);
- 	if (st->percent < 0 && st->percent != RESYNC_UNKNOWN &&
- 	    mse->percent >= 0)
--		alert("RebuildStarted", dev, NULL);
-+		alert(EVENT_REBUILD_STARTED, 0, dev, NULL);
- 	if (st->percent >= 0 && mse->percent >= 0 &&
- 	    (mse->percent / increments) > (st->percent / increments)) {
--		char percentalert[18];
--		/*
--		 * "RebuildNN" (10 chars) or "RebuildStarted" (15 chars)
--		 */
--
- 		if((mse->percent / increments) == 0)
--			snprintf(percentalert, sizeof(percentalert),
--				 "RebuildStarted");
-+			alert(EVENT_REBUILD_STARTED, 0, dev, NULL);
- 		else
--			snprintf(percentalert, sizeof(percentalert),
--				 "Rebuild%02d", mse->percent);
--
--		alert(percentalert, dev, NULL);
-+			alert(EVENT_REBUILD, mse->percent, dev, NULL);
- 	}
- 
- 	if (mse->percent == RESYNC_NONE && st->percent >= 0) {
-@@ -660,9 +690,9 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 			snprintf(cnt, sizeof(cnt),
- 				 " mismatches found: %d (on raid level %d)",
- 				 sra->mismatch_cnt, sra->array.level);
--			alert("RebuildFinished", dev, cnt);
-+			alert(EVENT_REBUILD_FINISHED, 0, dev, cnt);
- 		} else
--			alert("RebuildFinished", dev, NULL);
-+			alert(EVENT_REBUILD_FINISHED, 0, dev, NULL);
- 	}
- 	st->percent = mse->percent;
- 
-@@ -716,14 +746,14 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 		change = newstate ^ st->devstate[i];
- 		if (st->utime && change && !st->err && !new_array) {
- 			if ((st->devstate[i]&change) & (1 << MD_DISK_SYNC))
--				alert("Fail", dev, dv);
-+				alert(EVENT_FAIL, 0, dev, dv);
- 			else if ((newstate & (1 << MD_DISK_FAULTY)) &&
- 				 (disc.major || disc.minor) &&
- 				 st->devid[i] == makedev(disc.major,
- 							 disc.minor))
--				alert("FailSpare", dev, dv);
-+				alert(EVENT_FAIL_SPARE, 0, dev, dv);
- 			else if ((newstate&change) & (1 << MD_DISK_SYNC))
--				alert("SpareActive", dev, dv);
-+				alert(EVENT_SPARE_ACTIVE, 0, dev, dv);
+ #define _ROUND_UP(val, base)	(((val) + (base) - 1) & ~(base - 1))
+ #define ROUND_UP(val, base)	_ROUND_UP(val, (typeof(val))(base))
+diff --git a/util.c b/util.c
+index 9cd89fa4..5afb7c08 100644
+--- a/util.c
++++ b/util.c
+@@ -2396,3 +2396,48 @@ void sleep_for(unsigned int sec, long nsec, bool wake_after_interrupt)
  		}
- 		st->devstate[i] = newstate;
- 		st->devid[i] = makedev(disc.major, disc.minor);
-@@ -747,7 +777,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 
-  disappeared:
- 	if (!st->err && !is_container)
--		alert("DeviceDisappeared", dev, NULL);
-+		alert(EVENT_DEVICE_DISAPPEARED, 0, dev, NULL);
- 	st->err++;
- 	goto out;
+ 	} while (!wake_after_interrupt && errno == EINTR);
  }
-@@ -806,7 +836,7 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist)
- 				st->parent_devnm[0] = 0;
- 			*statelist = st;
- 			if (info.test)
--				alert("TestMessage", st->devname, NULL);
-+				alert(EVENT_TEST_MESSAGE, 0, st->devname, NULL);
- 			new_found = 1;
- 		}
- 	return new_found;
-@@ -1029,7 +1059,7 @@ static void try_spare_migration(struct state *statelist)
- 				if (devid > 0 &&
- 				    move_spare(from->devname, to->devname,
- 					       devid)) {
--					alert("MoveSpare", to->devname, from->devname);
-+					alert(EVENT_MOVE_SPARE, 0, to->devname, from->devname);
- 					break;
- 				}
- 			}
++
++/* is_directory() - Checks if directory provided by path is indeed a regular directory.
++ * @path: directory path to be checked
++ *
++ * Doesn't accept symlinks.
++ *
++ * Return: true if is a directory, false if not
++ */
++bool is_directory(const char *path)
++{
++	struct stat st;
++
++	if (lstat(path, &st) != 0) {
++		pr_err("%s: %s\n", strerror(errno), path);
++		return false;
++	}
++
++	if (!S_ISDIR(st.st_mode))
++		return false;
++
++	return true;
++}
++
++/*
++ * is_file() - Checks if file provided by path is indeed a regular file.
++ * @path: file path to be checked
++ *
++ * Doesn't accept symlinks.
++ *
++ * Return: true if is  a file, false if not
++ */
++bool is_file(const char *path)
++{
++	struct stat st;
++
++	if (lstat(path, &st) != 0) {
++		pr_err("%s: %s\n", strerror(errno), path);
++		return false;
++	}
++
++	if (!S_ISREG(st.st_mode))
++		return false;
++
++	return true;
++}
 -- 
 2.26.2
 
