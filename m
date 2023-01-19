@@ -2,81 +2,65 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95951C46467
-	for <linux-raid@archiver.kernel.org>; Thu, 19 Jan 2023 13:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58C32C00A5A
+	for <linux-raid@archiver.kernel.org>; Thu, 19 Jan 2023 16:13:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229737AbjASN6I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 Jan 2023 08:58:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56878 "EHLO
+        id S230356AbjASQNG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 19 Jan 2023 11:13:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229983AbjASN6C (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 08:58:02 -0500
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03BD7469B
-        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 05:58:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674136681; x=1705672681;
-  h=message-id:date:mime-version:subject:to:references:cc:
-   from:in-reply-to:content-transfer-encoding;
-  bh=QXC3inXwEwpOMSYZcVbWYNe0vrQUfhsEZVWutQs7cSg=;
-  b=ag0aZEsUrD+V6XbF3uu+yMKcSvdUckpI8iTUevLi6/YjpE6B1EyQmGAC
-   bgFc38ZpwPkZr9R1ggqLGdr4BPO5uV5ZWR+EV4USwIT0lM0Nz3VzsUiPL
-   tSb59IUcvaLZoQTZSbkF5mD5tNNXt88BRcaBcMX6td88YCXU1s1wrqNh3
-   GuIuvGveCHeRoWFOeq5Fie+zBFSxTfOXpctXVnlfnpxYHB6BZofkYLJNd
-   8tOsTb90LgBEuSxwMPa8D2zNbw8qasUKZn9kbx4y+WkXOZ++UKmZsK2kR
-   +tH5mkYEEo0eS9dHrObP7OPv0dczkcaD5wFb72XM1YLe6wFdckaXiJGYq
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="322975964"
-X-IronPort-AV: E=Sophos;i="5.97,229,1669104000"; 
-   d="scan'208";a="322975964"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 05:58:00 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="662115632"
-X-IronPort-AV: E=Sophos;i="5.97,229,1669104000"; 
-   d="scan'208";a="662115632"
-Received: from mgrzonka-mobl.ger.corp.intel.com (HELO [10.249.146.149]) ([10.249.146.149])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 05:57:59 -0800
-Message-ID: <b0bb803e-18b3-2e7b-e644-fd981559be06@linux.intel.com>
-Date:   Thu, 19 Jan 2023 14:57:46 +0100
+        with ESMTP id S229971AbjASQMx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 11:12:53 -0500
+Received: from mail-yw1-x1130.google.com (mail-yw1-x1130.google.com [IPv6:2607:f8b0:4864:20::1130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DDAF1738
+        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 08:12:40 -0800 (PST)
+Received: by mail-yw1-x1130.google.com with SMTP id 00721157ae682-4a263c4ddbaso34804737b3.0
+        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 08:12:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=0c2KwWfrLbprAq2rCQdTT/yzTRvuDYOR9r174GzEEn4=;
+        b=mnFuGo6llnwnIAGx2uyaREupU1SbNq1X4nz+cgwYTeDJHk738Hf8D/VEpcTvPmjAiI
+         uRTN8KAAKUUV4DitLj1bh8s0X33SY8iF8dPwUz4d+Qamffd1/zSJstHcgEUn4j1ang/z
+         w2lthBLeoUPXQ5silBi6HtvwqrqOilOwgxSYX9+YgayansBGvK+me/x4QsWEtXb3+Qfz
+         bzyi5sgM6peXzckqPdSDV2RpFh+FPIvqlx67ceFK2r9+N5oDRqxriBIi2s7gzDjhfveL
+         YWxDNy9/yRfLm5QBqIn4ptj5Nw7QFw3ctyk0cdguvdURgNiyFNQq8EoB+NhyQqB+gO8V
+         G3nQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0c2KwWfrLbprAq2rCQdTT/yzTRvuDYOR9r174GzEEn4=;
+        b=soPBA1LkAQ50xaf9i/Hnh7NJ42pAiycej9VwHCu7P7i5Ez0BBqAKOznqoXHA9DuKkz
+         cC6dQx0Q1U/Pij82ZTlvlk/G1B8soX2GeRFIV5IsoLvAOG4bW7x9CCkFquzFIOCfeZ0V
+         yYTmcMkMWVq4EmLKdSOAQSM/vIpjJ67Nuxe2gsApUhaAtVh6mwc/1jG/7/gQ8POKIcLE
+         h4heB87XOLVOdaoowdDhdRnnF1QRHOfF86n1JrxEQ0fN/5fEtc4mCPV8gZp2fAYSZdyX
+         LlbzKPA5Hu1mOwBFtsaiKd8KYVZrvqCJMXqIauj82BaQkUU3HKlIDPJM6VeeobV+or5u
+         WzIQ==
+X-Gm-Message-State: AFqh2kprRnez9EH5m8SNF8/18n6sYauEQdFWjvqNMNyvh3ygPBMPzB2s
+        uPsir0LZ8WN3I8mq2ah/+eY1+Q3yORUz221P0gzuuylrGKs=
+X-Google-Smtp-Source: AMrXdXsvflZ0ZInWhZo0O5peJGJ75T0hSf9votdbqkiVbRZcJUXISHvyjui4JATgLidMxl+jdahPBqqkFsK/ho6SNTk=
+X-Received: by 2002:a0d:f286:0:b0:4dd:a57f:292 with SMTP id
+ b128-20020a0df286000000b004dda57f0292mr1522089ywf.501.1674144759365; Thu, 19
+ Jan 2023 08:12:39 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH 2/9] Mdmonitor: Make alert_info global
-Content-Language: en-US
-To:     Jes Sorensen <jes@trained-monkey.org>
-References: <20220907125657.12192-1-mateusz.grzonka@intel.com>
- <20220907125657.12192-3-mateusz.grzonka@intel.com>
- <6e8c91f1-28f1-c594-4881-0d1546fcb1a2@trained-monkey.org>
-Cc:     linux-raid@vger.kernel.org
-From:   "Grzonka, Mateusz" <mateusz.grzonka@linux.intel.com>
-In-Reply-To: <6e8c91f1-28f1-c594-4881-0d1546fcb1a2@trained-monkey.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From:   o1bigtenor <o1bigtenor@gmail.com>
+Date:   Thu, 19 Jan 2023 10:12:03 -0600
+Message-ID: <CAPpdf599Vr2tEgpmURTbK09uesM6PYYof1ngCFkvAUmcHnowVA@mail.gmail.com>
+Subject: Question on sdds
+To:     Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/28/2022 3:49 PM, Jes Sorensen wrote:
-> On 9/7/22 08:56, Mateusz Grzonka wrote:
->> Move information about --test flag and hostname into alert_info.
->>
->> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
-> 
-> Hi Mateusz,
-> 
-> This one no longer applies, any chance you can do an update?
-> 
-> Thanks,
-> Jes
-> 
+Greetings
 
-Hi Jes,
-I fixed some problems with comments, and rebased the series.
+There is smartmontools for testing the health of hdds.
 
-Unfortunately got some problems while sending them.
-All patches marked as v2 are the correct ones.
-Sorry for inconvenience.
+Is there something comparable for sdds?
+(Thinking this includes nvme, sdds, usb sticks, m2 listed drives
+(is that in this group) or any similar.)
 
-Thanks,
-Mateusz
+TIA
