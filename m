@@ -2,70 +2,101 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67889C004D4
-	for <linux-raid@archiver.kernel.org>; Thu, 19 Jan 2023 18:44:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66293C004D4
+	for <linux-raid@archiver.kernel.org>; Fri, 20 Jan 2023 02:51:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230316AbjASSoK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 Jan 2023 13:44:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60422 "EHLO
+        id S229528AbjATCvL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 19 Jan 2023 21:51:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230326AbjASSoH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 13:44:07 -0500
-Received: from mallaury.nerim.net (smtp-104-thursday.noc.nerim.net [178.132.17.104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 02947792B4
-        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 10:44:03 -0800 (PST)
-Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
-        by mallaury.nerim.net (Postfix) with ESMTP id C4A9FDB17D;
-        Thu, 19 Jan 2023 19:43:56 +0100 (CET)
-Message-ID: <b4af98c2-c621-f2c0-1f55-d7fcf4959871@plouf.fr.eu.org>
-Date:   Thu, 19 Jan 2023 19:43:53 +0100
+        with ESMTP id S229453AbjATCvK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 21:51:10 -0500
+X-Greylist: delayed 149 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 19 Jan 2023 18:51:08 PST
+Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B15AD12A
+        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 18:51:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To
+        :Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=N6fEQ30ll9ZCJDtvXOUcJADFq+0WligXdr3xeVt+ytw=; b=Na60wU8ORzPAn5nMja4la9Hd+5
+        Xfa36w9GZEKHHrBi5cB74RHWF43TEZMwNV333BZRs+55sKrqYUfiPqcgy85sybrBL8iPWWh3+Jdl7
+        m6BeoK1D71wG6VVJeIqvL6qUssYzKjCfG3ct5yixRBvIiKuwqgROR62tx8BLhCPww+4Fd3gXnVTAW
+        Lv15wubQCsJmeYBSJK1fJqro8svyfSPlCRSyh9deFfxgzcKQip4V6YbNY9x/4nnVZ2SVOYE94xEdJ
+        BwmSGEOvi+gs43uJYkq+4Vdw64Rsmg+APWxd23cTUcjj+UzzCfhtuIQp29QWSLZPLiyRwOu3sceZQ
+        g/CF+hXw==;
+Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1pIhUf-0002QH-83; Fri, 20 Jan 2023 02:51:05 +0000
+Message-ID: <963bb7eb-7ce2-c887-ca5c-d0359290841b@turmel.org>
+Date:   Thu, 19 Jan 2023 21:51:05 -0500
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: What does TRIM/discard in RAID do ?
+ Thunderbird/102.4.2
+Subject: Re: Transferring an existing system from non-RAID disks to RAID1
+ disks in the same computer
 Content-Language: en-US
-To:     Reindl Harald <h.reindl@thelounge.net>,
-        Wols Lists <antlists@youngman.org.uk>,
-        linux-raid <linux-raid@vger.kernel.org>
-References: <f8531fc8-6928-5300-b43e-1cad0a4ab03b@plouf.fr.eu.org>
- <dbca2904-1200-a81f-cc6d-300e8def6a96@thelounge.net>
- <2d0a1dad-1961-78df-4c89-e404537c1350@plouf.fr.eu.org>
- <61723f2a-8447-c694-f0b2-1b2b538aa5d0@thelounge.net>
- <68262873-6ceb-f28a-0dae-67d373af7d1f@youngman.org.uk>
- <28fe352b-1391-0227-5a1d-a3122c5e2e78@thelounge.net>
- <f7b9c725-d807-87c1-0fbd-774c18eeb8dc@thelounge.net>
- <162b3fc0-b5ee-f4e2-7f02-2e95cc20047b@plouf.fr.eu.org>
- <964b05d3-4782-55be-1487-613fd9c5019f@thelounge.net>
-From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
-Organization: Plouf !
-In-Reply-To: <964b05d3-4782-55be-1487-613fd9c5019f@thelounge.net>
+To:     Pascal Hambourg <pascal@plouf.fr.eu.org>,
+        H <agents@meddatainc.com>,
+        Linux RAID Mailing List <linux-raid@vger.kernel.org>
+References: <273d1fc9-853f-a8fa-bb47-2883ba217820@meddatainc.com>
+ <3c124633-6b69-c97c-30f2-02f70141ac1a@plouf.fr.eu.org>
+From:   Phil Turmel <philip@turmel.org>
+In-Reply-To: <3c124633-6b69-c97c-30f2-02f70141ac1a@plouf.fr.eu.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 18/01/2023 at 10:57, Reindl Harald wrote:
-> Am 18.01.23 um 00:26 schrieb Pascal Hambourg:
->>>
->>> in such implementations you have to consider
->>
->>> * file-systems with no trim-support
->>
->> Not affected. A device does not need TRIM support to know which 
->> blocks have been written and contain valid data
+On 1/15/23 06:31, Pascal Hambourg wrote:
+> On 15/01/2023 at 04:12, H wrote:
+>> I need to transfer an existing CentOS 7 non-RAID setup using one 
+>> single SSD to a mdadm RAID1 using two much larger SSDs. All three 
+>> disks exist in the same computer at the same time. Both the existing 
+>> SSD and the new ones use LVM and LUKS and the objective is to preserve 
+>> the OS, all other installed software and data etc. Thus no new 
+>> installation should be needed.
+> (...)
+>> What I cannot do, however, is to make any modifications to the 
+>> existing old SSD since I cannot afford not being able to go back to 
+>> the old SSD if necessary.
 > 
-> well, fstrim/discard don't do anything on a HDD at the FS layer
+> Too bad. Without that constraint, I would use pvmove to transparently 
+> move LVM data from the old drive to the new ones.
+> 
+> Create EFI partitions on both new drives. Using RAID1 with metadata 1.0 
+> (superblock at the end) with EFI partitions is a hack (corruption may 
+> happen if the UEFI firmware or anything outside Linux RAID writes to any 
+> of them).
+> Create the RAID arrays for LVM and /boot.
+> Create and open the new LUKS device in the RAID array with cryptsetup.
+> Add the related line it in /etc/crypttab.
+> Add the new encrypted device to the existing LVM volume group.
+> Move away data from the old encrypted device to the new one with pvmove.
+> Remove the old encrypted volume from the volume group with vgreduce.
+> Delete the related line from /etc/crypttab.
+> Copy data from the old /boot partition to the new /boot RAID array with 
+> rsync, cp or so.
+> Mount the new /boot RAID array and the EFI partitions on /boot, 
+> /boot/efi and /boot/efi2 instead of the old partitions.
+> Update /etc/fstab accordingly. Add the "nofail" option to the /boot/efi* 
+> lines.
+> Update the initramfs if it includes information from crypttab or fstab. 
+> Make sure it includes RAID support.
+> Run update-grub or grub-mkconfig to update grub.cfg.
+> Reinstall GRUB on each EFI partition with grub-install.
+> If CentOS system configuration manager or GRUB package supports multiple 
+> EFI partitions, you can use that instead of reinstalling GRUB by hand.
 
-(Hard disks with SMR technology may support TRIM to avoid useless 
-read-modify-write operations, but SMR is not recommended for RAID so it 
-is a bit out-topic.)
+FWIW, except for the raid of the EFI partitions, this is what I would 
+do.  With the sweet benefit of no downtime.  Even the root fs can be 
+moved this way, while running.
 
-Not sure I get your point. How is a filesystem with no TRIM support 
-related with a hard disk with no TRIM support ?
+{ I have, in fact, done similar upgrades to running systems. }
 
-Currently the RAID layer does TRIM/discard pass-through only, so it 
-returns the status of the underlying devices. If it stored information 
-about which blocks contain valid data, I guess it would have to 
-advertise TRIM/discard support for itself regardless of the underlying 
-devices.
+Phil
