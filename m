@@ -2,78 +2,98 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64F60C004D4
-	for <linux-raid@archiver.kernel.org>; Fri, 20 Jan 2023 02:58:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 660EAC05027
+	for <linux-raid@archiver.kernel.org>; Fri, 20 Jan 2023 17:19:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229654AbjATC6g (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 Jan 2023 21:58:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53168 "EHLO
+        id S229969AbjATRTF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 20 Jan 2023 12:19:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjATC6f (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Jan 2023 21:58:35 -0500
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F05A59D0
-        for <linux-raid@vger.kernel.org>; Thu, 19 Jan 2023 18:58:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To
-        :Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=P9C21OWwtcXow7rFt4uZknHc835fHfInJvd/XRZKD+8=; b=pp5zL+hDDrRMGGiKhSWmSKNnw+
-        XN6U3m84MfxYuVvnjlM/UiGoUOnhb5JWF14rfLHN1/y8L1wzi6Wfr6zU9PjUUdqHEcIW3yaXNjau/
-        8yqsEYbSCLSUexYGWpNCtvh8NspFxkCyHVSYpH6RCv1V9CB7lsxKXlJOqvlPdelR/9UTmGeRgdday
-        m8gn2X+M1n+HTyI0mM+FjSNWc7Z6IHNMBdAYUHz43bSEHaEo4Yj/Z1O04DCoPjBGpGdcS9H4VC3fN
-        RiwLU1gnOTCQInRXfgvftbOpzM3lM58LJmfKI6q0udIQT3qwvvjeVVju16evuJjQ79dIuqHqhMEjw
-        rCYXlW6A==;
-Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1pIhSB-0002Pb-47; Fri, 20 Jan 2023 02:48:31 +0000
-Message-ID: <5d2a537e-79bf-18df-6288-cc3a54834147@turmel.org>
-Date:   Thu, 19 Jan 2023 21:48:30 -0500
+        with ESMTP id S229943AbjATRTE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 20 Jan 2023 12:19:04 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9243A7DFB4
+        for <linux-raid@vger.kernel.org>; Fri, 20 Jan 2023 09:18:49 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4D2E6B82941
+        for <linux-raid@vger.kernel.org>; Fri, 20 Jan 2023 17:18:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBB6BC433EF
+        for <linux-raid@vger.kernel.org>; Fri, 20 Jan 2023 17:18:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674235127;
+        bh=9p9UsSpPmRTSNopCN2sjOWf+SId2ZcoPGPpaMslYbJQ=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=kI0OBM2CuSAHSTIaex+7QNwx5b4MNGjEVUoCqYZJ6GhyOVO6KSZOo10VGFMTjbxKB
+         PYtMsfcCa/FSobKBZyUgucepY+Q59l03pHpPpaHhzA0HsoUyDWGfxSxF9gmrNnIsCP
+         amy0mhRvCUuPA7pUtjkiulfqbTLoj4GqK9fJtWcnzkJrL+QqUZUJANnYqgI+vnD79S
+         tpaJAak9Rj8XSdF4QOoq2y6Z2WV4WvBYNu5bN5+pUVa2c5V3O/NEa8heKTL2wNJByI
+         JR/+s+OS9Fc9LO4HC/C7SB+bsIjbeb7/8eiKQoIbSVbwCHhmHdd2ZcO336JHPFfIq/
+         MQ/mm39YKVmWA==
+Received: by mail-lf1-f48.google.com with SMTP id x40so9047768lfu.12
+        for <linux-raid@vger.kernel.org>; Fri, 20 Jan 2023 09:18:46 -0800 (PST)
+X-Gm-Message-State: AFqh2kodFpir2/vFmEZ18aVTxT75xwPWUR9ye5nc1z6aHE4LnyKHo66d
+        o/6QtXJnnrpj5ltXRO/yOufrR4gZXcYgCRHTXwo=
+X-Google-Smtp-Source: AMrXdXuOANlCbv+0F/200Uyt+bYg+j1hCzLkElx8sGdke2HOhbOz8ZAD3Cvwfwit+w0OWqjd5x310BvcJm0uCwxh7aE=
+X-Received: by 2002:ac2:48b7:0:b0:4b6:e71d:94a6 with SMTP id
+ u23-20020ac248b7000000b004b6e71d94a6mr1205526lfg.476.1674235124981; Fri, 20
+ Jan 2023 09:18:44 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: Transferring an existing system from non-RAID disks to RAID1
- disks in the same computer
-To:     Wols Lists <antlists@youngman.org.uk>,
-        Reindl Harald <h.reindl@thelounge.net>,
-        H <agents@meddatainc.com>,
-        Linux RAID Mailing List <linux-raid@vger.kernel.org>
-References: <273d1fc9-853f-a8fa-bb47-2883ba217820@meddatainc.com>
- <37a150cb-286b-4137-bb72-08e2de21c851@youngman.org.uk>
- <9aab4088-3ba3-3c7c-4254-a0d829b06066@thelounge.net>
- <d9a4dea4-c15d-453d-9a60-4694e31147b1@youngman.org.uk>
-Content-Language: en-US
-From:   Phil Turmel <philip@turmel.org>
-In-Reply-To: <d9a4dea4-c15d-453d-9a60-4694e31147b1@youngman.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20230118093008.67170-1-xni@redhat.com>
+In-Reply-To: <20230118093008.67170-1-xni@redhat.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 20 Jan 2023 09:18:32 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7b2MNX-8vTb5Gr3smKxzjiYW3qfckX1FQMt9K_K82XiQ@mail.gmail.com>
+Message-ID: <CAPhsuW7b2MNX-8vTb5Gr3smKxzjiYW3qfckX1FQMt9K_K82XiQ@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Change some counters to percpu type
+To:     Xiao Ni <xni@redhat.com>
+Cc:     linux-raid@vger.kernel.org, ming.lei@redhat.com,
+        ncroxon@redhat.com, heinzm@redhat.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 1/15/23 04:20, Wols Lists wrote:
+On Wed, Jan 18, 2023 at 1:30 AM Xiao Ni <xni@redhat.com> wrote:
+>
+> Hi all
+>
+> There are two main changes in the patch set.
+>
+> The first is to change ->active_io to percpu(patch02). The second
+> one is adding a counter for io_acct(patch03).
+>
 
-> IF YOU CAN GUARANTEE that /boot/efi is only ever modified inside linux, 
-> then raid it. Why not? Personally, I'm not sure that guarantee holds.
+Hi Xiao,
 
-Your EFI bios can write to these partitions, too, under operator control.
+If I understand correctly,
 
-> If you do raid it, then you MUST use the 1.0 superblock, otherwise it 
-> will be inaccessible outside of linux. Seeing as the system needs it 
-> before linux boots, that's your classic catch-22.
+> Xiao Ni (4):
+>   Factor out is_md_suspended helper
+>   Change active_io to percpu
 
-I recommend *not* using any raid on your EFI partitions.  Make them all 
-separate, so your BIOS can tell that they are distinct filesystems (raid 
-would duplicate the FS UUID/label/CRC).
+Patch 1 and 2 are performance optimization?
 
-When separate, you can use efibootmgr to make the extra one(s) fallback 
-boot devices.
+>   Add mddev->io_acct_cnt for raid0_quiesce
+>   Free writes_pending in md_stop
 
-Use a hook in initramfs-tools to make /boot/efi[2..N] match /boot/efi 
-whenever kernels get installed/modified.
+And patch 3 and 4 fixes two issues?
 
-Phil
+It is probably better to send them as 3 separate patches (sets).
+
+Also, please provide more information on why we need these
+changes.
+
+Thanks,
+Song
+
+>
+>  drivers/md/md.c    | 69 ++++++++++++++++++++++++++++++++++------------
+>  drivers/md/md.h    | 11 +++++---
+>  drivers/md/raid0.c |  6 ++++
+>  3 files changed, 65 insertions(+), 21 deletions(-)
+>
+> --
+> 2.32.0 (Apple Git-132)
+>
