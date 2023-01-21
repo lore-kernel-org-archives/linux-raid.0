@@ -2,30 +2,34 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5FDEC004D4
-	for <linux-raid@archiver.kernel.org>; Sat, 21 Jan 2023 18:32:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD2CEC004D4
+	for <linux-raid@archiver.kernel.org>; Sat, 21 Jan 2023 18:39:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229751AbjAUScc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 21 Jan 2023 13:32:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43130 "EHLO
+        id S229527AbjAUSjK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 21 Jan 2023 13:39:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229686AbjAUScb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 21 Jan 2023 13:32:31 -0500
-Received: from mallaury.nerim.net (smtp-106-saturday.noc.nerim.net [178.132.17.106])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4A0551DB89
-        for <linux-raid@vger.kernel.org>; Sat, 21 Jan 2023 10:32:28 -0800 (PST)
-Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
-        by mallaury.nerim.net (Postfix) with ESMTP id B3586DB17D;
-        Sat, 21 Jan 2023 19:32:20 +0100 (CET)
-Message-ID: <c48da91f-122f-b827-471b-4fcace5679c0@plouf.fr.eu.org>
-Date:   Sat, 21 Jan 2023 19:32:14 +0100
+        with ESMTP id S229493AbjAUSjJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 21 Jan 2023 13:39:09 -0500
+Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DE4E1F5D7
+        for <linux-raid@vger.kernel.org>; Sat, 21 Jan 2023 10:39:08 -0800 (PST)
+Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: h.reindl@thelounge.net)
+        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4NzlWY1wVYzXL7;
+        Sat, 21 Jan 2023 19:39:05 +0100 (CET)
+Message-ID: <19a04b8a-c314-becd-f272-1323160f346f@thelounge.net>
+Date:   Sat, 21 Jan 2023 19:39:05 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
 Subject: Re: Transferring an existing system from non-RAID disks to RAID1
  disks in the same computer
-Content-Language: en-US
-To:     Wols Lists <antlists@youngman.org.uk>,
+To:     Pascal Hambourg <pascal@plouf.fr.eu.org>,
+        Wols Lists <antlists@youngman.org.uk>,
         Linux RAID Mailing List <linux-raid@vger.kernel.org>
 References: <273d1fc9-853f-a8fa-bb47-2883ba217820@meddatainc.com>
  <3c124633-6b69-c97c-30f2-02f70141ac1a@plouf.fr.eu.org>
@@ -38,49 +42,31 @@ References: <273d1fc9-853f-a8fa-bb47-2883ba217820@meddatainc.com>
  <81f7f74f-259e-35e6-985d-3678e2b3c02e@youngman.org.uk>
  <ea1c9fda-32a2-e19c-5718-c164f0ae3b4f@plouf.fr.eu.org>
  <0a3e3d16-e73b-ce13-2cd4-4234e03af022@youngman.org.uk>
-From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
-Organization: Plouf !
-In-Reply-To: <0a3e3d16-e73b-ce13-2cd4-4234e03af022@youngman.org.uk>
+ <c48da91f-122f-b827-471b-4fcace5679c0@plouf.fr.eu.org>
+Content-Language: en-US
+From:   Reindl Harald <h.reindl@thelounge.net>
+Organization: the lounge interactive design
+In-Reply-To: <c48da91f-122f-b827-471b-4fcace5679c0@plouf.fr.eu.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 21/01/2023 at 16:21, Wols Lists wrote:
-> On 21/01/2023 14:33, Pascal Hambourg wrote:
->> On 21/01/2023 at 15:04, Wols Lists wrote:
->>> On 21/01/2023 13:32, Pascal Hambourg wrote:
->>>> Back on topic, if you mean Windows+Linux dual boot, it seems 
->>>> unlikely to me that this can be achieved with Linux software RAID, 
->>>> because Windows does not support it and Windows software RAID 
->>>> usually works on whole drives.
->>>> If you mean Linux dual-boot, you do not need multiple boot loaders, 
->>>> one single boot loader can boot all Linux systems.
->>>
->>> Given that this all started with *MIRRORING* EFI partitions, I think 
->>> you've lost the thread ...
->>>
->>> I'm fully in agreement that - if we want to keep our EFI partitions 
->>> in sync - then doing so when the partition is updated is the best 
->>> TIME (not place) to do it. (Which is why mirroring makes sense.)
->>>
->>> It's just that - as soon as you bring multiple OSes (of any sort) 
->>> into it - this ceases to be a practical solution.
->>
->> It depends if you mean "mirroring" with rsync or with RAID.
->> Also, it depends what the OS sorts are. With only Linux systems all 
->> using EFI partitions in RAID1, it might work.
->>
->>> THERE'S TOO MANY WAYS TO SKIN THIS CAT and trying to automate it will 
->>> in almost all cases lead to tears :-(
->>
->> This is why I claim that the only universal solution is that each OS 
->> supports multiple EFI partitions natively when writing any file in an 
->> EFI partition. Mirroring is a dead end.
-> 
-> Is that one EFI per OS, or multiple identical EFI? :-)
 
-Neither. Multiple possibly not identical EFI partitions.
-Mirroring with one EFI partition per OS does not make much sense.
-And it would not be universal if it required identical partitions.
+
+Am 21.01.23 um 19:32 schrieb Pascal Hambourg:
+> On 21/01/2023 at 16:21, Wols Lists wrote:
+>> Is that one EFI per OS, or multiple identical EFI? :-)
+> 
+> Neither. Multiple possibly not identical EFI partitions
+
+is completly off-topic BTW
+
+> Mirroring with one EFI partition per OS does not make much sense.
+> And it would not be universal if it required identical partitions.
+
+and how do you expect the UEFI smell which one is suppsoed to be booted 
+from?
+
+you can't fix the design-errors of UEFI
