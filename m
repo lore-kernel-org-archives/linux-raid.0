@@ -2,94 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25687C38142
-	for <linux-raid@archiver.kernel.org>; Sun, 22 Jan 2023 08:53:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F928C25B4E
+	for <linux-raid@archiver.kernel.org>; Sun, 22 Jan 2023 09:04:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229843AbjAVIxD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 22 Jan 2023 03:53:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59822 "EHLO
+        id S229861AbjAVJEK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 22 Jan 2023 04:04:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbjAVIxC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 22 Jan 2023 03:53:02 -0500
+        with ESMTP id S229815AbjAVJEJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 22 Jan 2023 04:04:09 -0500
 Received: from mallaury.nerim.net (smtp-100-sunday.noc.nerim.net [178.132.17.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9D552EB59
-        for <linux-raid@vger.kernel.org>; Sun, 22 Jan 2023 00:52:58 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6C04F113F7
+        for <linux-raid@vger.kernel.org>; Sun, 22 Jan 2023 01:04:07 -0800 (PST)
 Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
-        by mallaury.nerim.net (Postfix) with ESMTP id 323FCDB17D;
-        Sun, 22 Jan 2023 09:52:48 +0100 (CET)
-Message-ID: <b5e7c1bc-0dec-1676-8613-aad2869227e7@plouf.fr.eu.org>
-Date:   Sun, 22 Jan 2023 09:52:47 +0100
+        by mallaury.nerim.net (Postfix) with ESMTP id DAC2DDB180;
+        Sun, 22 Jan 2023 10:04:05 +0100 (CET)
+Message-ID: <88dd4c81-03fe-b4e0-182f-b232592c6068@plouf.fr.eu.org>
+Date:   Sun, 22 Jan 2023 10:04:05 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
 Subject: Re: Transferring an existing system from non-RAID disks to RAID1
  disks in the same computer
-To:     H <agents@meddatainc.com>,
+Content-Language: en-US
+To:     Reindl Harald <h.reindl@thelounge.net>,
+        Wols Lists <antlists@youngman.org.uk>,
         Linux RAID Mailing List <linux-raid@vger.kernel.org>
 References: <273d1fc9-853f-a8fa-bb47-2883ba217820@meddatainc.com>
- <deafcb4a-ed1c-d0b3-c9f9-c0a99867bb7a@meddatainc.com>
- <3CEAC9AB-02FC-43BE-94CF-ED3ECFF6F4F7@meddatainc.com>
-Content-Language: en-US
+ <3c124633-6b69-c97c-30f2-02f70141ac1a@plouf.fr.eu.org>
+ <963bb7eb-7ce2-c887-ca5c-d0359290841b@turmel.org>
+ <4224103d-17b4-0635-9bb4-7f81b896ad07@plouf.fr.eu.org>
+ <d1a78f14-843a-e6f1-b909-67e091c5fa3f@youngman.org.uk>
+ <3a3d1de2-f02b-cd2a-7dd4-9d269bb0443e@plouf.fr.eu.org>
+ <d4988c81-21f5-9b71-18ed-6ce489b28667@youngman.org.uk>
+ <5030b2e0-b4af-c55f-b965-9e3aab6e5c39@plouf.fr.eu.org>
+ <81f7f74f-259e-35e6-985d-3678e2b3c02e@youngman.org.uk>
+ <ea1c9fda-32a2-e19c-5718-c164f0ae3b4f@plouf.fr.eu.org>
+ <0a3e3d16-e73b-ce13-2cd4-4234e03af022@youngman.org.uk>
+ <c48da91f-122f-b827-471b-4fcace5679c0@plouf.fr.eu.org>
+ <19a04b8a-c314-becd-f272-1323160f346f@thelounge.net>
+ <5dc67a57-1ebb-4ce5-80f3-bdc4f59a9510@plouf.fr.eu.org>
+ <2240c8d8-0ad3-46b3-1166-31ce35f900d9@thelounge.net>
+ <c2d7d60b-c21b-5e1b-5721-9362f459e37b@plouf.fr.eu.org>
+ <85f4ef15-dab7-5eb4-520c-338c94c9c61d@thelounge.net>
 From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
 Organization: Plouf !
-In-Reply-To: <3CEAC9AB-02FC-43BE-94CF-ED3ECFF6F4F7@meddatainc.com>
+In-Reply-To: <85f4ef15-dab7-5eb4-520c-338c94c9c61d@thelounge.net>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 22/01/2023 at 06:05, H wrote:
+On 21/01/2023 at 23:56, Reindl Harald wrote:
+> Am 21.01.23 um 23:43 schrieb Pascal Hambourg:
 >>
->> The new one uses two disks, RAID1, LUKS and LVM for everything but
->> /boot and /boot/efi, total of four partitions (swap has its own
->> partition - not sure why I made it that way). A minimal installation of
->> Centos 7 was made to this setup and is working. In other words, UUIDs
->> of disks, partitions and LUKS are already configured and working.
->>
->> So, I am now thinking the following might work:
->>
->> - Make a rsync backup of the new disks to the external harddisk
->> ("BACKUP2").
->>
->> - Delete all files from the new disks except from /boot and /boot/efi.
->>
->> - Copy all files from all partitions except /boot and /boot/efi from
->> BACKUP1 to the new disks. In other words, everything except /boot and
->> /boot/efi will now be overwritten.
->>
->> - I would expect this system not to boot since both /etc/fstab and
->> /etc/crypttab on the new disks contain the UUIDs from the old system.
->>
->> - Copy just /etc/fstab and /etc/crypttab from BACKUP2 to the new disks.
->> This should update the new disks with the previously created UUIDs from
->> when doing the minimal installation of CentOS 7.
->>
->> What do you think?
-
-There are caveats:
-- The kernel versions must be the same in the old and new systems so 
-that kernel images in /boot and kernel modules in /lib/modules match.
-- Make sure that mdadm is installed in the old system. For now it is 
-included in the initramfs generated by the new system but if mdadm is 
-not installed in the old system, newer initramfs generated by the old 
-system will fail to mount the root filesystem.
-
-> I am happy to share that my plan as outlined below worked. I now have
-> /boot, /boot/efi and / on separate RAID partitions with the latter
-> managed by LVM and encrypted.  All data from the old disk is now on
-> the new setup and everything seems to be working.
+>> RAID provides redundancy while the system is running 
 > 
-> However, going back to the issue of /boot/efi possibly not being
-> duplicated by CentOS, would not mdadm take care of that automatically?
-> How can I check?
+> RAID provides redundancy for devices - no matter if something is running
 
-Is really /boot/efi on RAID ? You can check with "lsblk".
-If it is, can you post the output of
+RAID alone does not provide boot redundancy.
+If a drive fails, the system will continue to run until shutdown. But it 
+won't boot if the boot area was only set up on the failed disk.
 
-cat /proc/mdstat
-fdisk -l
-blkid
-efibootmgr -v
+>> For boot redundancy, the boot loader must be installed on each disk
+> 
+> so what
 
-PS: Your lines are too long.
+So that the system can still boot after whichever drive failed.
+
+>> With EFI boot, it means there must be an EFI partition on each disk. 
+>> But EFI partitions do not need to be identical as long as any of them 
+>> can boot the system
+> 
+> so what - the topic is "Transferring an existing system from non-RAID 
+> disks to RAID1 disks in the same computer"
+
+People who install the system on RAID usually expect boot redundancy.
+
+(trim off-topic rant)
