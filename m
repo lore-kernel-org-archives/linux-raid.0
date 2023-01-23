@@ -2,71 +2,134 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42732C54E94
-	for <linux-raid@archiver.kernel.org>; Mon, 23 Jan 2023 04:24:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 042B3C38142
+	for <linux-raid@archiver.kernel.org>; Mon, 23 Jan 2023 13:18:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231302AbjAWEYG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 22 Jan 2023 23:24:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44298 "EHLO
+        id S231572AbjAWNS1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 23 Jan 2023 08:18:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230168AbjAWEYE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 22 Jan 2023 23:24:04 -0500
-X-Greylist: delayed 2379 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 22 Jan 2023 20:24:02 PST
-Received: from ns3.fnarfbargle.com (ns3.fnarfbargle.com [103.4.19.87])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FC021042A
-        for <linux-raid@vger.kernel.org>; Sun, 22 Jan 2023 20:24:02 -0800 (PST)
-Received: from [10.8.0.1] (helo=srv.home)
-        by ns3.fnarfbargle.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <lists2009@fnarfbargle.com>)
-        id 1pJnko-000144-A0; Mon, 23 Jan 2023 13:44:18 +1000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=fnarfbargle.com; s=mail; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:To:Subject:MIME-Version:Date:Message-ID:Sender:
-        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Q9C308uCyaEfyeroxdILom36r3V8Fbs3reh4HuwCftk=; b=s2wdsBaXgZO/iSKoZ1wv50puIP
-        HDKC+sTLXxldU9G5deIhBXI/C9HqDIi/yuUyORhSqvvOzRLEeHrqaJ4C488BllzQKfBRMlPd5W8H2
-        u+WeMLpH94wpykBLbci0r6HBMao6Rgf2iGVkSFMQdiCsxdKllqQU81zmpFlL2iV7Xgec=;
-Message-ID: <112ee700-9111-0e5f-29d5-150255be874f@fnarfbargle.com>
-Date:   Mon, 23 Jan 2023 11:44:17 +0800
+        with ESMTP id S230484AbjAWNS0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 23 Jan 2023 08:18:26 -0500
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1427211EBB
+        for <linux-raid@vger.kernel.org>; Mon, 23 Jan 2023 05:18:23 -0800 (PST)
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 1E25660027FD2;
+        Mon, 23 Jan 2023 14:18:20 +0100 (CET)
+Message-ID: <2480c4f0-dd0a-764e-6f04-d70dfb018501@molgen.mpg.de>
+Date:   Mon, 23 Jan 2023 14:18:19 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: Transferring an existing system from non-RAID disks to RAID1
- disks in the same computer
-Content-Language: en-AU
-To:     H <agents@meddatainc.com>,
-        Linux RAID Mailing List <linux-raid@vger.kernel.org>
-References: <273d1fc9-853f-a8fa-bb47-2883ba217820@meddatainc.com>
- <deafcb4a-ed1c-d0b3-c9f9-c0a99867bb7a@meddatainc.com>
- <3CEAC9AB-02FC-43BE-94CF-ED3ECFF6F4F7@meddatainc.com>
-From:   Brad Campbell <lists2009@fnarfbargle.com>
-In-Reply-To: <3CEAC9AB-02FC-43BE-94CF-ED3ECFF6F4F7@meddatainc.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH 1/2] md: Factor out is_md_suspended helper
+To:     Xiao Ni <xni@redhat.com>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org, ming.lei@redhat.com,
+        ncroxon@redhat.com, heinzm@redhat.com
+References: <20230121013937.97576-1-xni@redhat.com>
+ <20230121013937.97576-2-xni@redhat.com>
+Content-Language: en-US
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20230121013937.97576-2-xni@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 22/1/23 13:05, H wrote:
+Dear Xiao,
 
-> I am happy to share that my plan as outlined below worked. I now have /boot, /boot/efi and / on separate RAID partitions with the latter managed by LVM and encrypted.  All data from the old disk is now on the new setup and everything seems to be working.
+
+Thank you for the patch.
+
+Am 21.01.23 um 02:39 schrieb Xiao Ni:
+> This helper function will be used in next patch. It's easy for
+> understanding.
 > 
-> However, going back to the issue of /boot/efi possibly not being duplicated by CentOS, would not mdadm take care of that automatically? How can I check?
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>   drivers/md/md.c | 17 ++++++++++++-----
+>   1 file changed, 12 insertions(+), 5 deletions(-)
 > 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 775f1dde190a..d3627aad981a 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -380,6 +380,13 @@ EXPORT_SYMBOL_GPL(md_new_event);
+>   static LIST_HEAD(all_mddevs);
+>   static DEFINE_SPINLOCK(all_mddevs_lock);
+>   
+> +static bool is_md_suspended(struct mddev *mddev)
+> +{
+> +	if (mddev->suspended)
+> +		return true;
+> +	else
+> +		return false;
+
+suspended seems to be an integer, so this could be written as:
+
+     return !!mddev->suspended;
+
+or
+
+     return (mddev->suspended) ? true : false;
 
 
-Well, this one has sparked a bit of an argument.
+Kind regards,
 
-I do the same. /boot and EFI are on RAID-1 0.90 partitions (ext4 and FAT32 respectively) and everything else is encrypted.
+Paul
 
-I use rEFInd as a bootloader. It *can* write to the EFI partition to record preferences and settings which can see the RAID out of sync, but it's rare I see that.
-In practice this doesn't cause an issue and if the monthly raid check indicates a mismatch I just correct it with a "repair".
 
-In my case the RAID for EFI is for availability.
-If I drop a disk the system will still boot regardless of the settings in the partition, and as rEFInd reads its config file from /boot there is no need to write to EFI at all save for upgrading the bootloader.
-
-Regards,
-Brad
+> +}
+>   /* Rather than calling directly into the personality make_request function,
+>    * IO requests come here first so that we can check if the device is
+>    * being suspended pending a reconfiguration.
+> @@ -389,7 +396,7 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
+>    */
+>   static bool is_suspended(struct mddev *mddev, struct bio *bio)
+>   {
+> -	if (mddev->suspended)
+> +	if (is_md_suspended(mddev))
+>   		return true;
+>   	if (bio_data_dir(bio) != WRITE)
+>   		return false;
+> @@ -434,7 +441,7 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
+>   		goto check_suspended;
+>   	}
+>   
+> -	if (atomic_dec_and_test(&mddev->active_io) && mddev->suspended)
+> +	if (atomic_dec_and_test(&mddev->active_io) && is_md_suspended(mddev))
+>   		wake_up(&mddev->sb_wait);
+>   }
+>   EXPORT_SYMBOL(md_handle_request);
+> @@ -6217,7 +6224,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
+>   static void mddev_detach(struct mddev *mddev)
+>   {
+>   	md_bitmap_wait_behind_writes(mddev);
+> -	if (mddev->pers && mddev->pers->quiesce && !mddev->suspended) {
+> +	if (mddev->pers && mddev->pers->quiesce && !is_md_suspended(mddev)) {
+>   		mddev->pers->quiesce(mddev, 1);
+>   		mddev->pers->quiesce(mddev, 0);
+>   	}
+> @@ -8529,7 +8536,7 @@ bool md_write_start(struct mddev *mddev, struct bio *bi)
+>   		return true;
+>   	wait_event(mddev->sb_wait,
+>   		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
+> -		   mddev->suspended);
+> +		   is_md_suspended(mddev));
+>   	if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
+>   		percpu_ref_put(&mddev->writes_pending);
+>   		return false;
+> @@ -9257,7 +9264,7 @@ void md_check_recovery(struct mddev *mddev)
+>   		wake_up(&mddev->sb_wait);
+>   	}
+>   
+> -	if (mddev->suspended)
+> +	if (is_md_suspended(mddev))
+>   		return;
+>   
+>   	if (mddev->bitmap)
