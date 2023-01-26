@@ -2,440 +2,162 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60AD1C25B4E
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Jan 2023 14:07:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A5EAC27C76
+	for <linux-raid@archiver.kernel.org>; Thu, 26 Jan 2023 02:17:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233090AbjAXOHy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 24 Jan 2023 09:07:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45382 "EHLO
+        id S234993AbjAZCRF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 25 Jan 2023 21:17:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233967AbjAXOHx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 24 Jan 2023 09:07:53 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC1272942F
-        for <linux-raid@vger.kernel.org>; Tue, 24 Jan 2023 06:06:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1674569213;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=BJ8F5TngKPojOlGsdqi4nx7smy2E7/8+bokHr9VxWAY=;
-        b=D1Fqr7MHfJXSDwynMtR8Mo12K6XXYIJDB95CrVPFXJeToVlFJbF1rxFTSI/dvZ8BWBFXG/
-        n7XxLUyPAhqB2ynhpbJ4m+tznJn36yNtv+V5mbqAKDO+CqNnehy2UFZuWJZ7ETQH7k6ENp
-        2RqlqGbId50fjuK4oASLRjOwb+u5aVc=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-668-09m3n2xNMMekUmFjUB_uRA-1; Tue, 24 Jan 2023 09:06:46 -0500
-X-MC-Unique: 09m3n2xNMMekUmFjUB_uRA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B183B3811F2C;
-        Tue, 24 Jan 2023 14:06:45 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A40F340C2004;
-        Tue, 24 Jan 2023 14:06:45 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 30OE6jhd010122;
-        Tue, 24 Jan 2023 09:06:45 -0500
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 30OE6jqW010118;
-        Tue, 24 Jan 2023 09:06:45 -0500
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Tue, 24 Jan 2023 09:06:45 -0500 (EST)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     Song Liu <song@kernel.org>
-cc:     linux-raid@vger.kernel.org, dm-devel@redhat.com
-Subject: [PATCH] md: use preallocated hashed wait queues instead of
- mddev->sb_wait
-Message-ID: <alpine.LRH.2.21.2301240858250.9655@file01.intranet.prod.int.rdu2.redhat.com>
-User-Agent: Alpine 2.21 (LRH 202 2017-01-01)
+        with ESMTP id S229472AbjAZCRE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 25 Jan 2023 21:17:04 -0500
+Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6952936452
+        for <linux-raid@vger.kernel.org>; Wed, 25 Jan 2023 18:17:03 -0800 (PST)
+Received: by mail-il1-x131.google.com with SMTP id m8so301411ili.7
+        for <linux-raid@vger.kernel.org>; Wed, 25 Jan 2023 18:17:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=fsZ8NejK7CK6suhjdmVNf0jcnc8NL5fZC4QUdx4jx+I=;
+        b=qJVezncqrhLdHBlmSpeXa9iqnlOdbEMOY9tJNg0ktGe0dcjTPuoB+Tr/d4Pbbt0kF5
+         z/yLS9L55nEAXNjDL2xr2ZlVMZDzHzF5pDXftG4SIKXGqnAKdbZk+alS8dLYBU+TOPbi
+         hN5EhGaGZswn/7dKjpkXhR1RViqVQXHN9izmYGvJWAyOVe8GRezxz9On5q5oKEve3QYM
+         FKP7O9wX7nXFFh2pRl3TrPW4peVDO/a+kmcafIlXpf5usKnaAMAzy76hpNSftg9kRacg
+         umxCKIvB6R1BqTVPC0rIG1Sx/xgSL/lCleW4+zhBdp62SBwLbn8cpCZ0lqzdsju7gZNN
+         178A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fsZ8NejK7CK6suhjdmVNf0jcnc8NL5fZC4QUdx4jx+I=;
+        b=xFc/AvAfvQT3n1TFjsmBI1yDVCaRGvN9myhW91mk4bE5KycAAAWo5f2QilRbI1t/eQ
+         QCDoupgq20CKMjSOD67/GbVErZRJBU+nVCb24F3V3Y5NbgdHEMUOMARA/I1crn3Nf9v8
+         LvlZFNLQFuFG9knCid+SdcybBqwAUVh5Z6lkjrQvmmJU0HienHibKTNzQis1PNzpq35M
+         Bppv164GXWnjpjDQgUzwKFV8JjN0L5N3LzMg+WtIuLy/Ge5D7+C5IMJvwORSVZkXpfKZ
+         4EyI4hNqlCzDz3OZs64ysGgafM15pACD2U33bhCzbNSCpOH0AshOkZ1UnKxW4i/laKD3
+         vmQA==
+X-Gm-Message-State: AO0yUKX7AtzXtta4rDDhdLV/scnWp/ULtDWuy/MH3V1fAOoNzfX8VbHl
+        DI8OmgcgOMv8sYRiHOXAfsb07wyjEeOajQ==
+X-Google-Smtp-Source: AK7set911oM/JWah1jGFgPnq1/dozn6bnbOd119scKV3dxVtEIHUX1OzT+78NQhj1ppLc+IwMpEw8Q==
+X-Received: by 2002:a05:6e02:1c0f:b0:310:a3c6:f421 with SMTP id l15-20020a056e021c0f00b00310a3c6f421mr3383930ilh.8.1674699421943;
+        Wed, 25 Jan 2023 18:17:01 -0800 (PST)
+Received: from jump.. (135-23-64-249.cpe.pppoe.ca. [135.23.64.249])
+        by smtp.gmail.com with ESMTPSA id g68-20020a025b47000000b003a52f4285d1sm47661jab.157.2023.01.25.18.17.00
+        for <linux-raid@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Jan 2023 18:17:01 -0800 (PST)
+From:   Kevin Friedberg <kev.friedberg@gmail.com>
+To:     linux-raid@vger.kernel.org
+Subject: [PATCH] treat AHCI controllers under VMD as part of VMD
+Date:   Wed, 25 Jan 2023 21:16:59 -0500
+Message-Id: <20230126021659.3801-1-kev.friedberg@gmail.com>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-There's a theoretical race condition in md.
+Detect when a SATA controller has been mapped under Intel Alderlake RST
+VMD and list it as part of the domain, instead of independently, so that
+it can use the VMD controller's RAID capabilities.
 
-super_written calls:
-	if (atomic_dec_and_test(&mddev->pending_writes))
-		wake_up(&mddev->sb_wait);
-
-If the process is rescheduled just after atomic_dec_and_test and before 
-wake_up, it may happen that the mddev structure is freed (because 
-mddev->pending_writes is zero) and on scheduling back, 
-wake_up(&mddev->sb_wait) would access freed memory.
-
-Fix this bug by using an array of preallocated wait_queues, so that the
-wait queue exist even after mddev was freed.
-
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-
+Signed-off-by: Kevin Friedberg <kev.friedberg@gmail.com>
 ---
- drivers/md/md.c          |   56 ++++++++++++++++++++++++++---------------------
- drivers/md/md.h          |   10 +++++++-
- drivers/md/raid10.c      |    4 +--
- drivers/md/raid5-cache.c |    6 ++---
- drivers/md/raid5.c       |    8 +++---
- 5 files changed, 49 insertions(+), 35 deletions(-)
+ platform-intel.c | 15 +++++++++------
+ super-intel.c    | 25 ++++++++++++++++++++++++-
+ 2 files changed, 33 insertions(+), 7 deletions(-)
 
-Index: linux-2.6/drivers/md/md.c
-===================================================================
---- linux-2.6.orig/drivers/md/md.c
-+++ linux-2.6/drivers/md/md.c
-@@ -89,6 +89,9 @@ static struct workqueue_struct *md_wq;
- static struct workqueue_struct *md_misc_wq;
- static struct workqueue_struct *md_rdev_misc_wq;
+diff --git a/platform-intel.c b/platform-intel.c
+index 757f0b1b..859bf743 100644
+--- a/platform-intel.c
++++ b/platform-intel.c
+@@ -64,10 +64,12 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
  
-+wait_queue_head_t md_sb_wait_table[MD_SB_WAIT_TABLE_SIZE];
-+EXPORT_SYMBOL(md_sb_wait_table);
+ 	if (strcmp(driver, "isci") == 0)
+ 		type = SYS_DEV_SAS;
+-	else if (strcmp(driver, "ahci") == 0)
++	else if (strcmp(driver, "ahci") == 0) {
++		/* if looking for sata devs, ignore vmd */
++		vmd = find_driver_devices("pci", "vmd");
+ 		type = SYS_DEV_SATA;
+-	else if (strcmp(driver, "nvme") == 0) {
+-		/* if looking for nvme devs, first look for vmd */
++	} else if (strcmp(driver, "nvme") == 0) {
++		/* if looking for nvme devs, also look for vmd */
+ 		vmd = find_driver_devices("pci", "vmd");
+ 		type = SYS_DEV_NVME;
+ 	} else if (strcmp(driver, "vmd") == 0)
+@@ -104,8 +106,8 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
+ 		sprintf(path, "/sys/bus/%s/drivers/%s/%s",
+ 			bus, driver, de->d_name);
+ 
+-		/* if searching for nvme - skip vmd connected one */
+-		if (type == SYS_DEV_NVME) {
++		/* if searching for nvme or ahci - skip vmd connected one */
++		if (type == SYS_DEV_NVME || type == SYS_DEV_SATA) {
+ 			struct sys_dev *dev;
+ 			char *rp = realpath(path, NULL);
+ 			for (dev = vmd; dev; dev = dev->next) {
+@@ -166,7 +168,8 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
+ 	}
+ 	closedir(driver_dir);
+ 
+-	if (vmd) {
++	/* VMD adopts multiple types but should only be listed once */
++	if (vmd && type == SYS_DEV_NVME) {
+ 		if (list)
+ 			list->next = vmd;
+ 		else
+diff --git a/super-intel.c b/super-intel.c
+index 89fac626..4ef8f0d8 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2680,6 +2680,8 @@ static void print_imsm_capability_export(const struct imsm_orom *orom)
+ 	printf("IMSM_MAX_VOLUMES_PER_CONTROLLER=%d\n",orom->vphba);
+ }
+ 
++#define PCI_CLASS_AHCI_CNTRL "0x010601"
 +
- static int remove_and_add_spares(struct mddev *mddev,
- 				 struct md_rdev *this);
- static void mddev_detach(struct mddev *mddev);
-@@ -415,7 +418,7 @@ check_suspended:
- 			return;
- 		}
- 		for (;;) {
--			prepare_to_wait(&mddev->sb_wait, &__wait,
-+			prepare_to_wait(md_sb_wait(mddev), &__wait,
- 					TASK_UNINTERRUPTIBLE);
- 			if (!is_suspended(mddev, bio))
- 				break;
-@@ -423,19 +426,19 @@ check_suspended:
- 			schedule();
- 			rcu_read_lock();
- 		}
--		finish_wait(&mddev->sb_wait, &__wait);
-+		finish_wait(md_sb_wait(mddev), &__wait);
- 	}
- 	atomic_inc(&mddev->active_io);
- 	rcu_read_unlock();
- 
- 	if (!mddev->pers->make_request(mddev, bio)) {
- 		atomic_dec(&mddev->active_io);
--		wake_up(&mddev->sb_wait);
-+		wake_up_all(md_sb_wait(mddev));
- 		goto check_suspended;
- 	}
- 
- 	if (atomic_dec_and_test(&mddev->active_io) && mddev->suspended)
--		wake_up(&mddev->sb_wait);
-+		wake_up_all(md_sb_wait(mddev));
- }
- EXPORT_SYMBOL(md_handle_request);
- 
-@@ -484,13 +487,13 @@ void mddev_suspend(struct mddev *mddev)
- 	if (mddev->suspended++)
- 		return;
- 	synchronize_rcu();
--	wake_up(&mddev->sb_wait);
-+	wake_up_all(md_sb_wait(mddev));
- 	set_bit(MD_ALLOW_SB_UPDATE, &mddev->flags);
- 	smp_mb__after_atomic();
--	wait_event(mddev->sb_wait, atomic_read(&mddev->active_io) == 0);
-+	wait_event(*md_sb_wait(mddev), atomic_read(&mddev->active_io) == 0);
- 	mddev->pers->quiesce(mddev, 1);
- 	clear_bit_unlock(MD_ALLOW_SB_UPDATE, &mddev->flags);
--	wait_event(mddev->sb_wait, !test_bit(MD_UPDATING_SB, &mddev->flags));
-+	wait_event(*md_sb_wait(mddev), !test_bit(MD_UPDATING_SB, &mddev->flags));
- 
- 	del_timer_sync(&mddev->safemode_timer);
- 	/* restrict memory reclaim I/O during raid array is suspend */
-@@ -505,7 +508,7 @@ void mddev_resume(struct mddev *mddev)
- 	lockdep_assert_held(&mddev->reconfig_mutex);
- 	if (--mddev->suspended)
- 		return;
--	wake_up(&mddev->sb_wait);
-+	wake_up_all(md_sb_wait(mddev));
- 	mddev->pers->quiesce(mddev, 0);
- 
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-@@ -585,7 +588,7 @@ static void md_submit_flush_data(struct
- 	mddev->prev_flush_start = mddev->start_flush;
- 	mddev->flush_bio = NULL;
- 	spin_unlock_irq(&mddev->lock);
--	wake_up(&mddev->sb_wait);
-+	wake_up_all(md_sb_wait(mddev));
- 
- 	if (bio->bi_iter.bi_size == 0) {
- 		/* an empty barrier - all done */
-@@ -609,7 +612,7 @@ bool md_flush_request(struct mddev *mdde
- 	/* flush requests wait until ongoing flush completes,
- 	 * hence coalescing all the pending requests.
- 	 */
--	wait_event_lock_irq(mddev->sb_wait,
-+	wait_event_lock_irq(*md_sb_wait(mddev),
- 			    !mddev->flush_bio ||
- 			    ktime_before(req_start, mddev->prev_flush_start),
- 			    mddev->lock);
-@@ -686,7 +689,6 @@ void mddev_init(struct mddev *mddev)
- 	atomic_set(&mddev->active_io, 0);
- 	spin_lock_init(&mddev->lock);
- 	atomic_set(&mddev->flush_pending, 0);
--	init_waitqueue_head(&mddev->sb_wait);
- 	init_waitqueue_head(&mddev->recovery_wait);
- 	mddev->reshape_position = MaxSector;
- 	mddev->reshape_backwards = 0;
-@@ -828,7 +830,7 @@ void mddev_unlock(struct mddev *mddev)
- 	 */
- 	spin_lock(&pers_lock);
- 	md_wakeup_thread(mddev->thread);
--	wake_up(&mddev->sb_wait);
-+	wake_up_all(md_sb_wait(mddev));
- 	spin_unlock(&pers_lock);
- }
- EXPORT_SYMBOL_GPL(mddev_unlock);
-@@ -933,7 +935,7 @@ static void super_written(struct bio *bi
- 	rdev_dec_pending(rdev, mddev);
- 
- 	if (atomic_dec_and_test(&mddev->pending_writes))
--		wake_up(&mddev->sb_wait);
-+		wake_up_all(md_sb_wait(mddev));
- }
- 
- void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
-@@ -977,7 +979,7 @@ void md_super_write(struct mddev *mddev,
- int md_super_wait(struct mddev *mddev)
+ static int detail_platform_imsm(int verbose, int enumerate_only, char *controller_path)
  {
- 	/* wait for all superblock writes that were scheduled to complete */
--	wait_event(mddev->sb_wait, atomic_read(&mddev->pending_writes)==0);
-+	wait_event(*md_sb_wait(mddev), atomic_read(&mddev->pending_writes)==0);
- 	if (test_and_clear_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags))
- 		return -EAGAIN;
- 	return 0;
-@@ -2681,7 +2683,7 @@ repeat:
- 				wake_up(&rdev->blocked_wait);
- 			}
- 		}
--		wake_up(&mddev->sb_wait);
-+		wake_up_all(md_sb_wait(mddev));
- 		return;
- 	}
- 
-@@ -2791,7 +2793,7 @@ rewrite:
- 			       BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_CLEAN)))
- 		/* have to write it out again */
- 		goto repeat;
--	wake_up(&mddev->sb_wait);
-+	wake_up_all(md_sb_wait(mddev));
- 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
- 		sysfs_notify_dirent_safe(mddev->sysfs_completed);
- 
-@@ -4383,7 +4385,7 @@ array_state_store(struct mddev *mddev, c
- 			restart_array(mddev);
- 			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
- 			md_wakeup_thread(mddev->thread);
--			wake_up(&mddev->sb_wait);
-+			wake_up_all(md_sb_wait(mddev));
- 		} else /* st == clean */ {
- 			restart_array(mddev);
- 			if (!set_in_sync(mddev))
-@@ -4456,7 +4458,7 @@ array_state_store(struct mddev *mddev, c
- 			if (err)
- 				break;
- 			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
--			wake_up(&mddev->sb_wait);
-+			wake_up_all(md_sb_wait(mddev));
- 			err = 0;
- 		} else {
- 			mddev->ro = MD_RDWR;
-@@ -6283,7 +6285,7 @@ static int md_set_readonly(struct mddev
- 	mddev_unlock(mddev);
- 	wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
- 					  &mddev->recovery));
--	wait_event(mddev->sb_wait,
-+	wait_event(*md_sb_wait(mddev),
- 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
- 	mddev_lock_nointr(mddev);
- 
-@@ -7564,7 +7566,7 @@ static int md_ioctl(struct block_device
- 
- 	if (cmd == HOT_REMOVE_DISK)
- 		/* need to ensure recovery thread has run */
--		wait_event_interruptible_timeout(mddev->sb_wait,
-+		wait_event_interruptible_timeout(*md_sb_wait(mddev),
- 						 !test_bit(MD_RECOVERY_NEEDED,
- 							   &mddev->recovery),
- 						 msecs_to_jiffies(5000));
-@@ -7669,7 +7671,7 @@ static int md_ioctl(struct block_device
- 		 */
- 		if (test_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags)) {
- 			mddev_unlock(mddev);
--			wait_event(mddev->sb_wait,
-+			wait_event(*md_sb_wait(mddev),
- 				   !test_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags) &&
- 				   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
- 			mddev_lock_nointr(mddev);
-@@ -8529,7 +8531,7 @@ bool md_write_start(struct mddev *mddev,
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
- 	if (!mddev->has_superblocks)
- 		return true;
--	wait_event(mddev->sb_wait,
-+	wait_event(*md_sb_wait(mddev),
- 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
- 		   mddev->suspended);
- 	if (test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)) {
-@@ -8674,7 +8676,7 @@ void md_allow_write(struct mddev *mddev)
- 		md_update_sb(mddev, 0);
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
- 		/* wait for the dirty state to be recorded in the metadata */
--		wait_event(mddev->sb_wait,
-+		wait_event(*md_sb_wait(mddev),
- 			   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
- 	} else
- 		spin_unlock(&mddev->lock);
-@@ -9256,7 +9258,7 @@ void md_check_recovery(struct mddev *mdd
- 		if (test_bit(MD_ALLOW_SB_UPDATE, &mddev->flags))
- 			md_update_sb(mddev, 0);
- 		clear_bit_unlock(MD_UPDATING_SB, &mddev->flags);
--		wake_up(&mddev->sb_wait);
-+		wake_up_all(md_sb_wait(mddev));
- 	}
- 
- 	if (mddev->suspended)
-@@ -9420,7 +9422,7 @@ void md_check_recovery(struct mddev *mdd
- 					sysfs_notify_dirent_safe(mddev->sysfs_action);
- 		}
- 	unlock:
--		wake_up(&mddev->sb_wait);
-+		wake_up_all(md_sb_wait(mddev));
- 		mddev_unlock(mddev);
- 	}
- }
-@@ -9608,6 +9610,10 @@ static void md_geninit(void)
- static int __init md_init(void)
- {
- 	int ret = -ENOMEM;
-+	int i;
+ 	/* There are two components to imsm platform support, the ahci SATA
+@@ -2752,11 +2754,32 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
+ 			for (hba = list; hba; hba = hba->next) {
+ 				if (hba->type == SYS_DEV_VMD) {
+ 					char buf[PATH_MAX];
++					struct dirent *ent;
++					DIR *dir;
 +
-+	for (i = 0; i < MD_SB_WAIT_TABLE_SIZE; i++)
-+		init_waitqueue_head(md_sb_wait_table + i);
- 
- 	md_wq = alloc_workqueue("md", WQ_MEM_RECLAIM, 0);
- 	if (!md_wq)
-Index: linux-2.6/drivers/md/md.h
-===================================================================
---- linux-2.6.orig/drivers/md/md.h
-+++ linux-2.6/drivers/md/md.h
-@@ -466,7 +466,6 @@ struct mddev {
- 	 *   setting MD_RECOVERY_RUNNING (which interacts with resync_{min,max})
- 	 */
- 	spinlock_t			lock;
--	wait_queue_head_t		sb_wait;	/* for waiting on superblock updates */
- 	atomic_t			pending_writes;	/* number of active superblock writes */
- 
- 	unsigned int			safemode;	/* if set, update "clean" superblock
-@@ -584,6 +583,15 @@ static inline void md_sync_acct_bio(stru
- 	md_sync_acct(bio->bi_bdev, nr_sectors);
- }
- 
-+#define MD_SB_WAIT_TABLE_BITS	8
-+#define MD_SB_WAIT_TABLE_SIZE	(1U << MD_SB_WAIT_TABLE_BITS)
-+extern wait_queue_head_t md_sb_wait_table[MD_SB_WAIT_TABLE_SIZE];
+ 					printf(" I/O Controller : %s (%s)\n",
+ 						vmd_domain_to_controller(hba, buf), get_sys_dev_type(hba->type));
++					dir = opendir(hba->path);
++					for (ent = readdir(dir); ent; ent = readdir(dir)) {
++						char ent_path[PATH_MAX];
 +
-+static inline wait_queue_head_t *md_sb_wait(struct mddev *md)
-+{
-+	return md_sb_wait_table + hash_long((unsigned long)md, MD_SB_WAIT_TABLE_BITS);
-+}
++						sprintf(ent_path, "%s/%s", hba->path, ent->d_name);
++						devpath_to_char(ent_path, "class", buf, sizeof(buf), 0);
++						if (strcmp(buf, PCI_CLASS_AHCI_CNTRL) == 0) {
++							host_base = ahci_get_port_count(ent_path, &port_count);
++							if (ahci_enumerate_ports(ent_path, port_count, host_base, verbose)) {
++								if (verbose > 0)
++								pr_err("failed to enumerate ports on VMD SATA controller at %s.\n",
++									hba->pci_id);
++								result |= 2;
++							}
++						}
++					}
++					closedir(dir);
 +
- struct md_personality
- {
- 	char *name;
-Index: linux-2.6/drivers/md/raid10.c
-===================================================================
---- linux-2.6.orig/drivers/md/raid10.c
-+++ linux-2.6/drivers/md/raid10.c
-@@ -1446,7 +1446,7 @@ static void raid10_write_request(struct
- 			return;
- 		}
- 		raid10_log(conf->mddev, "wait reshape metadata");
--		wait_event(mddev->sb_wait,
-+		wait_event(*md_sb_wait(mddev),
- 			   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
- 
- 		conf->reshape_safe = mddev->reshape_position;
-@@ -4876,7 +4876,7 @@ static sector_t reshape_request(struct m
- 		conf->reshape_checkpoint = jiffies;
- 		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
- 		md_wakeup_thread(mddev->thread);
--		wait_event(mddev->sb_wait, mddev->sb_flags == 0 ||
-+		wait_event(*md_sb_wait(mddev), mddev->sb_flags == 0 ||
- 			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
- 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
- 			allow_barrier(conf);
-Index: linux-2.6/drivers/md/raid5-cache.c
-===================================================================
---- linux-2.6.orig/drivers/md/raid5-cache.c
-+++ linux-2.6/drivers/md/raid5-cache.c
-@@ -691,7 +691,7 @@ static void r5c_disable_writeback_async(
- 		mdname(mddev));
- 
- 	/* wait superblock change before suspend */
--	wait_event(mddev->sb_wait,
-+	wait_event(*md_sb_wait(mddev),
- 		   conf->log == NULL ||
- 		   (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) &&
- 		    (locked = mddev_trylock(mddev))));
-@@ -1581,7 +1581,7 @@ void r5l_quiesce(struct r5l_log *log, in
- 	if (quiesce) {
- 		/* make sure r5l_write_super_and_discard_space exits */
- 		mddev = log->rdev->mddev;
--		wake_up(&mddev->sb_wait);
-+		wake_up_all(md_sb_wait(mddev));
- 		kthread_park(log->reclaim_thread->tsk);
- 		r5l_wake_reclaim(log, MaxSector);
- 		r5l_do_reclaim(log);
-@@ -3165,7 +3165,7 @@ void r5l_exit_log(struct r5conf *conf)
- 	struct r5l_log *log = conf->log;
- 
- 	/* Ensure disable_writeback_work wakes up and exits */
--	wake_up(&conf->mddev->sb_wait);
-+	wake_up_all(md_sb_wait(conf->mddev));
- 	flush_work(&log->disable_writeback_work);
- 	md_unregister_thread(&log->reclaim_thread);
- 
-Index: linux-2.6/drivers/md/raid5.c
-===================================================================
---- linux-2.6.orig/drivers/md/raid5.c
-+++ linux-2.6/drivers/md/raid5.c
-@@ -6346,7 +6346,7 @@ static sector_t reshape_request(struct m
- 		conf->reshape_checkpoint = jiffies;
- 		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
- 		md_wakeup_thread(mddev->thread);
--		wait_event(mddev->sb_wait, mddev->sb_flags == 0 ||
-+		wait_event(*md_sb_wait(mddev), mddev->sb_flags == 0 ||
- 			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
- 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
- 			return 0;
-@@ -6454,7 +6454,7 @@ finish:
- 		conf->reshape_checkpoint = jiffies;
- 		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
- 		md_wakeup_thread(mddev->thread);
--		wait_event(mddev->sb_wait,
-+		wait_event(*md_sb_wait(mddev),
- 			   !test_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags)
- 			   || test_bit(MD_RECOVERY_INTR, &mddev->recovery));
- 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
-@@ -6703,7 +6703,7 @@ static void raid5_do_work(struct work_st
- 		if (!batch_size && !released)
- 			break;
- 		handled += batch_size;
--		wait_event_lock_irq(mddev->sb_wait,
-+		wait_event_lock_irq(*md_sb_wait(mddev),
- 			!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags),
- 			conf->device_lock);
- 	}
-@@ -6792,7 +6792,7 @@ static void raid5d(struct md_thread *thr
- 			continue;
- 		}
- 
--		wait_event_lock_irq(mddev->sb_wait,
-+		wait_event_lock_irq(*md_sb_wait(mddev),
- 			!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags),
- 			conf->device_lock);
- 	}
+ 					if (print_nvme_info(hba)) {
+ 						if (verbose > 0)
+-							pr_err("failed to get devices attached to VMD domain.\n");
++							pr_err("failed to get NVMe devices attached to VMD domain.\n");
+ 						result |= 2;
+ 					}
+ 				}
+-- 
+2.39.0
 
