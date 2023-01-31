@@ -2,61 +2,61 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 282C8C636D3
-	for <linux-raid@archiver.kernel.org>; Tue, 31 Jan 2023 03:14:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF493C636D3
+	for <linux-raid@archiver.kernel.org>; Tue, 31 Jan 2023 03:18:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229533AbjAaDOu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 Jan 2023 22:14:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43132 "EHLO
+        id S229634AbjAaDSn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 Jan 2023 22:18:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230025AbjAaDOq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 Jan 2023 22:14:46 -0500
+        with ESMTP id S229536AbjAaDSm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 Jan 2023 22:18:42 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E78B138644
-        for <linux-raid@vger.kernel.org>; Mon, 30 Jan 2023 19:13:28 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18EFAA5EB
+        for <linux-raid@vger.kernel.org>; Mon, 30 Jan 2023 19:17:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675134801;
+        s=mimecast20190719; t=1675135074;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=mOCanwJBT5m5ofwbdgziDuDgquiPRTHSacBMicyLkZE=;
-        b=PA5QDJ+chlXKf+c76SlmUDdUyP/7gMFyCQS8tW1mVkbtHa65+0tYmmf/V+j0hBEeCIWcGE
-        /wJ1LGJ2vU7/AuoOUMix08Nf6mumMSSIIFqHnlwb5fL8/m3bBKO/mrwQ9pApMq9kDi0ByJ
-        DS66krL8ZhoiUL5EFNgIlSOVap6k0jQ=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=ofkMXoQbnzo0LmXDJYtau1EBxkN0Axt3uwhU1ClYTcA=;
+        b=ECKFEPgK0bWlvvU5RpE3gaqmGAPg28z0VNjSUbPa3BXUSnct6qt9mH6Jy43gJHZZwzvKNt
+        ffenBX/nIusGa7xGBCwzE3HbZSReWXDBzvkxQUnqozp6hwYNEiZ8izc0iwS88uW7u1nPOm
+        PU72AYaSzTK6+ykjcI5dHQhUsPKx2aU=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-70-YvFBjvV2N-K1AXAGhTUNiw-1; Mon, 30 Jan 2023 22:13:19 -0500
-X-MC-Unique: YvFBjvV2N-K1AXAGhTUNiw-1
-Received: by mail-pl1-f197.google.com with SMTP id f8-20020a170902ce8800b00190c6518e21so7521877plg.1
-        for <linux-raid@vger.kernel.org>; Mon, 30 Jan 2023 19:13:19 -0800 (PST)
+ us-mta-670-wngNk-6ONkeZc-rLY3Tj8Q-1; Mon, 30 Jan 2023 22:17:52 -0500
+X-MC-Unique: wngNk-6ONkeZc-rLY3Tj8Q-1
+Received: by mail-pl1-f200.google.com with SMTP id x6-20020a1709029a4600b0019747acb19cso1603382plv.5
+        for <linux-raid@vger.kernel.org>; Mon, 30 Jan 2023 19:17:51 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=mOCanwJBT5m5ofwbdgziDuDgquiPRTHSacBMicyLkZE=;
-        b=2dA3wFXCAK+7bPsCGgTWck0LtGR/wczr6qJg314kZCPV4heA+xjpcUKcT4sFp43Vdg
-         pDu5vhulzgxLyxLjKLtDSZoIFeBBLhcZzvH5b78n/QVl+IsPJrpTU5vhec+0FcnExRwG
-         RSciRbEnFcxqNE5ox96c50lMc9Iryd6Nf9Pz2wHwjWKWVWP9xHfIWHGY4ZA9/Zlj7mtk
-         rlHg58RcBXW8RgGhNlukarCdmG81A3NfM6dyQB31EzYkO5K1I0IPpsBHR9hzADZxRdC/
-         +ukqjg6wa3WHXjU3hqglcJO2syVMjWedS9U/Kvinh67e1dJHNDLAAIdv29XLu4dYWmS3
-         gFGw==
-X-Gm-Message-State: AO0yUKXuP29ifVpkyV92PzQrn67Q1JetXp/KoxnqOa7vAqb/Y5/SodIk
-        4J15xXu18RmCW95vK4IkYz5dcwpsuC9+HBhu1IDrsJgg/7cWmV10S7LRqN2EVC2u2/k+bo3+yom
-        tQ2aklshWOtNsxg8E3PAjaaViTnPnp/4DGSheeg==
-X-Received: by 2002:a17:902:e9c4:b0:196:6b0d:752b with SMTP id 4-20020a170902e9c400b001966b0d752bmr1385650plk.19.1675134798509;
-        Mon, 30 Jan 2023 19:13:18 -0800 (PST)
-X-Google-Smtp-Source: AK7set8EwH0bWF+QgCx5fzqph3ftumSZOYoaI+K3umE4wm9XYHjxHXz0PlZmqED4hPDq1ImMR8gZJgKcWlBfwXTF/bU=
-X-Received: by 2002:a17:902:e9c4:b0:196:6b0d:752b with SMTP id
- 4-20020a170902e9c400b001966b0d752bmr1385644plk.19.1675134797965; Mon, 30 Jan
- 2023 19:13:17 -0800 (PST)
+        bh=ofkMXoQbnzo0LmXDJYtau1EBxkN0Axt3uwhU1ClYTcA=;
+        b=Sis8+cr4u7bqc62sjWiI0cwBmlEPmOfDOc3Dajx8UmOu0cT1ojNbPRt4UAItXYkbZz
+         NVq8QuIBiLRtrYNmkuG55ojhMokljTt5y9kAgm/vgFOgiLxuKBiXt3V5zlaMuatEiXg5
+         wU+kgTsp66jpe3TYwb5WTk55j+MvUacB2rtbwNUv/pihouKXilxk8G6pkrdf+6L8Hcpb
+         5XnpMeGlx6ZKMZL/oKoSqXHtXCKNjwWzqSB8I4bipiEI2XTwUdabN7L8zDweQbCiPway
+         kHptYYTutQ/bY7WwdbdQuwQolWr5Vs3uy/zZfIdsAtGnumCwPUPiQk+6CIrxmzYuPswA
+         ZLxA==
+X-Gm-Message-State: AO0yUKXCvNLCyXAn3LiImNj2JKDmIjzm4gZLTS5rzOSiPtwczLq27Qkg
+        peQn83P+WQdtdb9b5AT/WGOzxirQ1OpQrobnA3t4H3jygubHBK1hQ015DF3m3c8ZQw+m8Ns4oFG
+        WlBxC2cs7pnZszfYpOCO0AvWn3+4iE59XoCRfsA==
+X-Received: by 2002:a17:90a:bd8c:b0:22c:9f9:8ecb with SMTP id z12-20020a17090abd8c00b0022c09f98ecbmr3070333pjr.77.1675135070599;
+        Mon, 30 Jan 2023 19:17:50 -0800 (PST)
+X-Google-Smtp-Source: AK7set9lQTdMoGqa3B4EBp9GbL57iMCjy3dpiO35qGjetEUa48mZPBCpa+BWIj27dnOMI3+Ym2f+5PUkqRWRBnACpXE=
+X-Received: by 2002:a17:90a:bd8c:b0:22c:9f9:8ecb with SMTP id
+ z12-20020a17090abd8c00b0022c09f98ecbmr3070328pjr.77.1675135070169; Mon, 30
+ Jan 2023 19:17:50 -0800 (PST)
 MIME-Version: 1.0
 References: <alpine.LRH.2.21.2301240858250.9655@file01.intranet.prod.int.rdu2.redhat.com>
 In-Reply-To: <alpine.LRH.2.21.2301240858250.9655@file01.intranet.prod.int.rdu2.redhat.com>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 31 Jan 2023 11:13:05 +0800
-Message-ID: <CALTww29HCK0ujvQAJrp8ouQ8pr33f1e78pX9QW3oarO4j_Voyg@mail.gmail.com>
+Date:   Tue, 31 Jan 2023 11:17:38 +0800
+Message-ID: <CALTww2-nWYcDPHTLCcsijQ=pGH0-AmAHD9eCPqZfeVFaAgd9ig@mail.gmail.com>
 Subject: Re: [dm-devel] [PATCH] md: use preallocated hashed wait queues
  instead of mddev->sb_wait
 To:     Mikulas Patocka <mpatocka@redhat.com>
@@ -66,28 +66,6 @@ Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
-
-Hi Mikulas
-
-Can we fix this by this:
-
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -929,10 +929,10 @@ static void super_written(struct bio *bio)
-
-        bio_put(bio);
-
--       rdev_dec_pending(rdev, mddev);
--
-        if (atomic_dec_and_test(&mddev->pending_writes))
-                wake_up(&mddev->sb_wait);
-+
-+       rdev_dec_pending(rdev, mddev);
- }
-
-Regards
-Xiao
-
 
 On Tue, Jan 24, 2023 at 10:06 PM Mikulas Patocka <mpatocka@redhat.com> wrote:
 >
@@ -101,6 +79,12 @@ On Tue, Jan 24, 2023 at 10:06 PM Mikulas Patocka <mpatocka@redhat.com> wrote:
 > wake_up, it may happen that the mddev structure is freed (because
 > mddev->pending_writes is zero) and on scheduling back,
 > wake_up(&mddev->sb_wait) would access freed memory.
+
+And super_written is in soft irq context, can it be rescheduled out?
+
+Regards
+Xiao
+
 >
 > Fix this bug by using an array of preallocated wait_queues, so that the
 > wait queue exist even after mddev was freed.
