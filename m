@@ -2,87 +2,99 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C4BDC05027
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Feb 2023 07:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A657C38142
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Feb 2023 07:31:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231857AbjBAHZq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Feb 2023 02:25:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58168 "EHLO
+        id S231877AbjBAHbB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Feb 2023 02:31:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231478AbjBAHZp (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Feb 2023 02:25:45 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF27A34010
-        for <linux-raid@vger.kernel.org>; Tue, 31 Jan 2023 23:25:44 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 95CD1B820AA
-        for <linux-raid@vger.kernel.org>; Wed,  1 Feb 2023 07:25:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B32CC433D2
-        for <linux-raid@vger.kernel.org>; Wed,  1 Feb 2023 07:25:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675236342;
-        bh=gfkJtar/+P/CwVZlbyu8CrwDVfRagTeJEeuLlaQgqkM=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=VWpS1kQHy3Ax2aeDES2bs0guRZ/sZpR4XAW8sqqPMcH5+2Z/ZkC1wEyd9APQ6Wsde
-         apJshFqMnVYso2COY5gNzl86Rqmbws0ng/swr7h5o/k+tQNRSxRpXfU3vQP0ngcu2e
-         HEJtmO+rYpuZYtmh+OIM8q7pdLJe5DRi8DYLI8e2A4uAzSHydCBFrHuGPAOeNSTJp7
-         L/IfWy2Ie9YoH+pVxJkJmPgbY4MC5YZKXyJCEEevqYMTchLiVuy6BLODImnKQ8kz2R
-         KUHwXsv6hfPBGc+chgGQRR5fRIFns/fCd4vjqEgMBVz3MI2d78MG6SKJIjUhnKEe6W
-         q9KDDaS23X58w==
-Received: by mail-lf1-f42.google.com with SMTP id cf42so27937914lfb.1
-        for <linux-raid@vger.kernel.org>; Tue, 31 Jan 2023 23:25:42 -0800 (PST)
-X-Gm-Message-State: AO0yUKW43LLOtISbbc3Pao2DXbawlkNTY2PhNxqQYTSrrwoBSul7t4JG
-        bgbZeeEYoYg1jgkUhlJAF+sz9pvwW1SLsfcnru4=
-X-Google-Smtp-Source: AK7set+oF3Pae3IVmH3CY3j2aLCxdY7Vc4XvJwzGPLHZ9dSwe+AC5jQKDfE3cAchCRHrAZ6m4hgy1pyeh8konloSmz8=
-X-Received: by 2002:ac2:5441:0:b0:4d8:7740:47d2 with SMTP id
- d1-20020ac25441000000b004d8774047d2mr168332lfn.87.1675236340355; Tue, 31 Jan
- 2023 23:25:40 -0800 (PST)
+        with ESMTP id S231874AbjBAHa7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Feb 2023 02:30:59 -0500
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B018026594
+        for <linux-raid@vger.kernel.org>; Tue, 31 Jan 2023 23:30:58 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4P6D9T5PH9z4f3l20
+        for <linux-raid@vger.kernel.org>; Wed,  1 Feb 2023 15:30:53 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.124.27])
+        by APP4 (Coremail) with SMTP id gCh0CgD3rLAsFdpjmf4tCw--.37890S4;
+        Wed, 01 Feb 2023 15:30:54 +0800 (CST)
+From:   Hou Tao <houtao@huaweicloud.com>
+To:     linux-raid@vger.kernel.org
+Cc:     Song Liu <song@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Logan Gunthorpe <logang@deltatee.com>, houtao1@huawei.com
+Subject: [PATCH v2] md: use MD_RESYNC_* whenever possible
+Date:   Wed,  1 Feb 2023 15:59:20 +0800
+Message-Id: <20230201075920.444720-1-houtao@huaweicloud.com>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-References: <20230121014810.97838-1-xni@redhat.com>
-In-Reply-To: <20230121014810.97838-1-xni@redhat.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 31 Jan 2023 23:25:28 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW7zW8U3gbHmMQo-U8qJav0cK8wf0nkSXRwPUKMXxO0_Bw@mail.gmail.com>
-Message-ID: <CAPhsuW7zW8U3gbHmMQo-U8qJav0cK8wf0nkSXRwPUKMXxO0_Bw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] md: Free writes_pending in md_stop
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid@vger.kernel.org, ming.lei@redhat.com,
-        ncroxon@redhat.com, heinzm@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgD3rLAsFdpjmf4tCw--.37890S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF45Cw18Xw1UJryxGryrtFb_yoW8Xr15p3
+        yxuFZIgr45Zr45Xa1UXF1v9a4FqryIyFWDtrW7u3ZxCw1fGr4DGry5Ga45XFn09as5Ar43
+        X345KF45u3WxWw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCj
+        c4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4
+        CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1x
+        MIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6r
+        W3Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUv
+        cSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
+X-CM-SenderInfo: xkrx3t3r6k3tpzhluzxrxghudrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Jan 20, 2023 at 5:48 PM Xiao Ni <xni@redhat.com> wrote:
->
-> dm raid calls md_stop to stop the raid device. It needs to
-> free the writes_pending here.
->
-> Signed-off-by: Xiao Ni <xni@redhat.com>
+From: Hou Tao <houtao1@huawei.com>
 
-Applied to md-next.
+Just replace magic numbers by MD_RESYNC_* enumerations.
 
-Thanks,
-Song
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+v2: rebased on md-next
+v1: https://lore.kernel.org/linux-raid/025148b5-f213-86a8-2c1d-ac76c52f7165@huaweicloud.com
 
-> ---
->  drivers/md/md.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 100c1327e90b..0e9f870e348a 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6267,6 +6267,7 @@ void md_stop(struct mddev *mddev)
->          */
->         __md_stop_writes(mddev);
->         __md_stop(mddev);
-> +       percpu_ref_exit(&mddev->writes_pending);
->         percpu_ref_exit(&mddev->active_io);
->         bioset_exit(&mddev->bio_set);
->         bioset_exit(&mddev->sync_set);
-> --
-> 2.32.0 (Apple Git-132)
->
+ drivers/md/md.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index da6370835c47..a1635fe82e3d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6166,7 +6166,7 @@ static void md_clean(struct mddev *mddev)
+ 	mddev->new_level = LEVEL_NONE;
+ 	mddev->new_layout = 0;
+ 	mddev->new_chunk_sectors = 0;
+-	mddev->curr_resync = 0;
++	mddev->curr_resync = MD_RESYNC_NONE;
+ 	atomic64_set(&mddev->resync_mismatches, 0);
+ 	mddev->suspend_lo = mddev->suspend_hi = 0;
+ 	mddev->sync_speed_min = mddev->sync_speed_max = 0;
+@@ -8895,7 +8895,7 @@ void md_do_sync(struct md_thread *thread)
+ 	atomic_set(&mddev->recovery_active, 0);
+ 	last_check = 0;
+ 
+-	if (j>2) {
++	if (j >= MD_RESYNC_ACTIVE) {
+ 		pr_debug("md: resuming %s of %s from checkpoint.\n",
+ 			 desc, mdname(mddev));
+ 		mddev->curr_resync = j;
+@@ -8967,7 +8967,7 @@ void md_do_sync(struct md_thread *thread)
+ 		if (j > max_sectors)
+ 			/* when skipping, extra large numbers can be returned. */
+ 			j = max_sectors;
+-		if (j > 2)
++		if (j >= MD_RESYNC_ACTIVE)
+ 			mddev->curr_resync = j;
+ 		mddev->curr_mark_cnt = io_sectors;
+ 		if (last_check == 0)
+-- 
+2.29.2
+
