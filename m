@@ -2,90 +2,67 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20E58C38142
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Feb 2023 16:36:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF493C05027
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Feb 2023 16:58:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232453AbjBAQgU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Feb 2023 11:36:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41250 "EHLO
+        id S231719AbjBAQ6P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Feb 2023 11:58:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232449AbjBAQgH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Feb 2023 11:36:07 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0884A7B406
-        for <linux-raid@vger.kernel.org>; Wed,  1 Feb 2023 08:35:47 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 992B8B821D4
-        for <linux-raid@vger.kernel.org>; Wed,  1 Feb 2023 16:35:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5158CC433EF
-        for <linux-raid@vger.kernel.org>; Wed,  1 Feb 2023 16:35:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675269345;
-        bh=iX0rvDotfBf1+15Lm+h21EAWkxtym6gQvSTGB6PJa9I=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Ycw76S7CVnK/D4iW6CQNzofQmOF5wpj2KrRa/jGjLjaBnE5ej/wJe2busE3PwZ8hJ
-         s7qD4640Ey9+RXA4E0ALd+Y+AcAW3rwJRDSCECVTH+tnP8eVNWs6tZi78gK7ezVsHJ
-         HkV2zR028kp00eKBjyAF4OhrXvdDRj4yL4M4YC6/ix2NpO8OfkLKdMGulbAS8BGntq
-         dbEL1McePUOdUYs6Pd3ARZg9D1c/5XoYBGqpd78LK/4EobvABJI+fJlJJctfq8aoRj
-         j1kvYPdsfahCtdIuBgqA0IEuBq6cPzH3G9yxI9KyMH8nElONcSPSZfyKt9cCp5eW5J
-         2Uo1Q3k6XnUew==
-Received: by mail-lf1-f41.google.com with SMTP id u12so19558447lfq.0
-        for <linux-raid@vger.kernel.org>; Wed, 01 Feb 2023 08:35:45 -0800 (PST)
-X-Gm-Message-State: AO0yUKWF+k0cugoz6c+Ogci+bF8In18k4L/3jTjvot3hgFTNeCNNZFcn
-        vo09nVHF3lrWwlC06eLT4iO8DBFi9wjIp+EutD4=
-X-Google-Smtp-Source: AK7set9wNIc9S127qbu4DXYxJEirumoSg+EGbMfN7XI7BNN9tp8BJPgXemao0cD9J5wWQY/CPcRUoUG7nPhvXwO7HJw=
-X-Received: by 2002:ac2:5441:0:b0:4d8:7740:47d2 with SMTP id
- d1-20020ac25441000000b004d8774047d2mr439561lfn.87.1675269343393; Wed, 01 Feb
- 2023 08:35:43 -0800 (PST)
+        with ESMTP id S231594AbjBAQ6I (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Feb 2023 11:58:08 -0500
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDD2B2069E
+        for <linux-raid@vger.kernel.org>; Wed,  1 Feb 2023 08:58:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=8fpwLYPK+8eqd62BRG88BDVBzjrBW5JmeMCcWALFYSs=; b=QfzWZu+7hy1gcHprulUKq2hDok
+        Cq9JtrxG88RdPLjmR6NoRFf2HyCvs0chGywguLMs7vlkAppyr+lbKZfXv30bWUYdduUQ8UKaKkd2P
+        hFZqrDbAcDmwiIgrIe/jpoHcSww1dcs76xHXcXBybECbhG9+2sOxQKgaqbzxlIX+C13sFF8msKdFB
+        Ux1zBwJSGzUEj7HGn9kWWf+3HP9OrKamJcMwTtwl/RCzesAhzlKnxtlQmgTotM/4Hu5XNBG+FwV60
+        1CyHGTcoEyjd8K6ABrRLhm4uwkommhFghibun7armwjwiBIe3lp4ANYB65SHMh5dDOtgZ3E2i8p3Y
+        IMlUyAaA==;
+Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([70.73.163.230] helo=[192.168.11.155])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1pNGQt-001fB0-Kw; Wed, 01 Feb 2023 09:58:04 -0700
+Message-ID: <4637a244-dd94-3180-c945-fcf6558dc2a3@deltatee.com>
+Date:   Wed, 1 Feb 2023 09:58:01 -0700
 MIME-Version: 1.0
-References: <20230131070719.1702279-1-houtao@huaweicloud.com>
-In-Reply-To: <20230131070719.1702279-1-houtao@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 1 Feb 2023 08:35:30 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4s9U3FVZOh7NJGZAnWACVeJgWUNd=bZVtjg4B+h+ox1Q@mail.gmail.com>
-Message-ID: <CAPhsuW4s9U3FVZOh7NJGZAnWACVeJgWUNd=bZVtjg4B+h+ox1Q@mail.gmail.com>
-Subject: Re: [PATCH] md: don't update recovery_cp when curr_resync is ACTIVE
-To:     Hou Tao <houtao@huaweicloud.com>
-Cc:     linux-raid@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>, houtao1@huawei.com,
-        linan122@huawei.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Content-Language: en-US
+To:     Hou Tao <houtao@huaweicloud.com>, linux-raid@vger.kernel.org
+Cc:     Song Liu <song@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        houtao1@huawei.com
+References: <20230201075920.444720-1-houtao@huaweicloud.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20230201075920.444720-1-houtao@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 70.73.163.230
+X-SA-Exim-Rcpt-To: houtao@huaweicloud.com, linux-raid@vger.kernel.org, song@kernel.org, axboe@kernel.dk, houtao1@huawei.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v2] md: use MD_RESYNC_* whenever possible
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jan 30, 2023 at 10:39 PM Hou Tao <houtao@huaweicloud.com> wrote:
->
+
+
+On 2023-02-01 00:59, Hou Tao wrote:
 > From: Hou Tao <houtao1@huawei.com>
->
-> Don't update recovery_cp when curr_resync is MD_RESYNC_ACTIVE, otherwise
-> md may skip the resync of the first 3 sectors if the resync procedure is
-> interrupted before the first calling of ->sync_request() as shown below:
->
-> md_do_sync thread          control thread
->   // setup resync
->   mddev->recovery_cp = 0
->   j = 0
->   mddev->curr_resync = MD_RESYNC_ACTIVE
->
->                              // e.g., set array as idle
->                              set_bit(MD_RECOVERY_INTR, &&mddev_recovery)
->   // resync loop
->   // check INTR before calling sync_request
->   !test_bit(MD_RECOVERY_INTR, &mddev->recovery
->
->   // resync interrupted
->   // update recovery_cp from 0 to 3
->   // the resync of three 3 sectors will be skipped
->   mddev->recovery_cp = 3
->
-> Fixes: eac58d08d493 ("md: Use enum for overloaded magic numbers used by mddev->curr_resync")
+> 
+> Just replace magic numbers by MD_RESYNC_* enumerations.
+> 
 > Signed-off-by: Hou Tao <houtao1@huawei.com>
 
-By the way, how did you find this issue? Is it from users/production?
-Or just from reading the code?
+Looks good to me. Thanks
 
-Thanks,
-Song
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+
+Logan
