@@ -2,87 +2,161 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2719C05027
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Feb 2023 18:53:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43E19C64EC4
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Feb 2023 18:56:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232056AbjBBSxU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 2 Feb 2023 13:53:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36128 "EHLO
+        id S233076AbjBBS4V (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 2 Feb 2023 13:56:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233055AbjBBSxD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Feb 2023 13:53:03 -0500
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 697EA86A6
-        for <linux-raid@vger.kernel.org>; Thu,  2 Feb 2023 10:53:00 -0800 (PST)
-Received: from host81-147-105-30.range81-147.btcentralplus.com ([81.147.105.30] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1pNehd-00055w-BU;
-        Thu, 02 Feb 2023 18:52:57 +0000
-Message-ID: <894cb7f7-eb13-69e8-8cd8-0f71dc34e489@youngman.org.uk>
-Date:   Thu, 2 Feb 2023 18:52:56 +0000
+        with ESMTP id S231635AbjBBS4T (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Feb 2023 13:56:19 -0500
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8494F10254;
+        Thu,  2 Feb 2023 10:56:15 -0800 (PST)
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 312HIFVv002326;
+        Thu, 2 Feb 2023 18:55:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=YS8OxqX6Xa4ReQhYwflKc5aSv/9TMKB2gRMMZTEJZEM=;
+ b=CFDCGulP3P9Xe+2FAp6xgIgRdBQw74UWN3jgGISv3dFzGsARHrCHm0mKBX/ELGDgttez
+ O2meJewgXXM7+teNdX1OhLZrAIM2aVkDVTHAidhbq037PYHO8U582Sv4uDmN9nO7C+H0
+ Ct6DdO3veQD6OKh6pBbNXbO7fmZB2GLhEks2HUnbj9M40HZLiGUM/0/PZYRpNZFTZABc
+ KUw69DyK4MX540GbhWsmE2ikKCZ2qfXEtoCa6lzKc4HwYnA/+A4P1qpvOVXru7Rg7Eu5
+ s6n0B3YDRpfXh9P9tepOpIUV6KxgO+ZDzTxLDiaQq2Q5zExlYDSpXCevnb+PR2ZAq65+ Hg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ngeuff37e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Feb 2023 18:55:15 +0000
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 312InxkL010732;
+        Thu, 2 Feb 2023 18:55:14 GMT
+Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ngeuff36u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Feb 2023 18:55:14 +0000
+Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
+        by ppma03wdc.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 312IQsak007753;
+        Thu, 2 Feb 2023 18:55:12 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([9.208.130.102])
+        by ppma03wdc.us.ibm.com (PPS) with ESMTPS id 3ncvtf51nu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Feb 2023 18:55:12 +0000
+Received: from b03ledav001.gho.boulder.ibm.com ([9.17.130.232])
+        by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 312ItBP011600580
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 2 Feb 2023 18:55:12 GMT
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 90C1C6E050;
+        Thu,  2 Feb 2023 18:57:22 +0000 (GMT)
+Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A3D826E04E;
+        Thu,  2 Feb 2023 18:57:16 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.211.110.248])
+        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Thu,  2 Feb 2023 18:57:15 +0000 (GMT)
+Message-ID: <ac6270fe1dba1b3398dc2b830cf9bda5c89a7a3d.camel@linux.ibm.com>
+Subject: Re: [dm-devel] [PATCH 0/9] Documentation: correct lots of spelling
+ errors (series 2)
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Jonathan Corbet <corbet@lwn.net>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        linux-kernel@vger.kernel.org
+Cc:     nvdimm@lists.linux.dev, linux-doc@vger.kernel.org,
+        Song Liu <song@kernel.org>, dm-devel@redhat.com,
+        netdev@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>,
+        sparclinux@vger.kernel.org,
+        Neeraj Upadhyay <quic_neeraju@quicinc.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Dave Jiang <dave.jiang@intel.com>, linux-scsi@vger.kernel.org,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        linux-media@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Josh Triplett <josh@joshtriplett.org>,
+        linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+        Jiri Pirko <jiri@nvidia.com>, cgroups@vger.kernel.org,
+        Dan Williams <dan.j.williams@intel.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        linux-hwmon@vger.kernel.org, rcu@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-mm@kvack.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Date:   Thu, 02 Feb 2023 13:54:33 -0500
+In-Reply-To: <87o7qbvra9.fsf@meer.lwn.net>
+References: <20230129231053.20863-1-rdunlap@infradead.org>
+         <875yckvt1b.fsf@meer.lwn.net>
+         <a2c560bb-3b5c-ca56-c5c2-93081999281d@infradead.org>
+         <8540c721-6bb9-3542-d9bd-940b59d3a7a4@acm.org>
+         <87o7qbvra9.fsf@meer.lwn.net>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: how to know a hard drive will mix well
-To:     David T-G <davidtg-robot@justpickone.org>,
-        Linux RAID list <linux-raid@vger.kernel.org>
-References: <20230202124306.GH25616@jpo>
-Content-Language: en-GB
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <20230202124306.GH25616@jpo>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: rINHRxV1D64-5YqYmvXoiq9bBKTirX1e
+X-Proofpoint-ORIG-GUID: eZPeQqFlkdhx5p58topJeC6q8R4gRCuD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
+ definitions=2023-02-02_12,2023-02-02_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 bulkscore=0 phishscore=0 spamscore=0 clxscore=1011
+ suspectscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2212070000 definitions=main-2302020166
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 02/02/2023 12:43, David T-G wrote:
-> Hi, all --
+On Thu, 2023-02-02 at 11:46 -0700, Jonathan Corbet wrote:
+> Bart Van Assche <bvanassche@acm.org> writes:
 > 
-> I have
+> > On 2/2/23 10:33, Randy Dunlap wrote:
+> > > On 2/2/23 10:09, Jonathan Corbet wrote:
+> > > > Randy Dunlap <rdunlap@infradead.org> writes:
+> > > > >   [PATCH 6/9] Documentation: scsi/ChangeLog*: correct
+> > > > > spelling
+> > > > >   [PATCH 7/9] Documentation: scsi: correct spelling
+> > > > 
+> > > > I've left these for the SCSI folks for now.  Do we *really*
+> > > > want to be
+> > > > fixing spelling in ChangeLog files from almost 20 years ago?
+> > > 
+> > > That's why I made it a separate patch -- so the SCSI folks can
+> > > decide that...
+> > 
+> > How about removing the Documentation/scsi/ChangeLog.* files? I'm
+> > not sure these changelogs are still useful since these duplicate
+> > information that is already available in the output of git log
+> > ${driver_directory}.
 > 
->    diskfarm:~ # mdadm -D /dev/md51 | egrep /dev/
->    /dev/md51:
-> 	 0     259        9        0      active sync   /dev/sdb51
-> 	 1     259        2        1      active sync   /dev/sdc51
-> 	 3     259       16        2      active sync   /dev/sdd51
-> 	 4     259       23        3      active sync   /dev/sdj51
-> 
-> Toshiba X300 10T
-> 
->    diskfarm:~ # smartctl -i /dev/sdb | egrep '(Model|Number|Version):'
->    Device Model:     TOSHIBA HDWR11A
->    Serial Number:    61U0A0HQFBKG
->    Firmware Version: 0603
-> 
-> drives in my disk farm, and it's about time to grow again.  As I
-> shopped around, I stumbled over a WD Red Plus 12T WD120EFBX drive at
-> just $10 more, and who wouldn't want an extra 2T for ten bucks?  So I'm
-> contemplating rolling in a different model.  But how do I know that it
-> will fit well into the mix?
-> 
-> The X300 is a 7200rpm 256Mcache 6G/sec CMR drive.  The Red Plus is also
-> listed as a 7200rpm* 256Mcache 6G/sec CMR drive.  They certainly sound
-> equivalent.  What else do I need to consider, and where else do I need
-> to look to learn?
+> Actually, the information in those files mostly predates the git era,
+> so you won't find it that way.  I *still* question their value,
+> though...
 
-I don't trust WD. That said, a lot of people do. I've got two 4TB 
-Ironwolves, one 3TB Barracuda (slap wrist!), and one 8TB X300.
+In the pre-source control days they were the answer to the GPLv2
+Section 2 requirement to " carry prominent notices stating that you
+changed the files and the date of any change." 
 
-So mixing drives isn't a problem - just take a look at the Ironwolf - 
-that might give you extra capacity too.
-> 
-> * The spec actually says "7200 RPM Class".  Does that mean not really
-> 7200rpm?  That wouldn't surprise me in this modern day and age, and if
-> the X300 also isn't really then that also wouldn't.
-> 
-> 
-Drives now are "Constant Head Speed" not constant rpm. I'm guessing, 
-that what it means is that for the inner tracks it spins at 7200, and as 
-the heads move out, the rpms slow down to keep the speed the head is 
-going over the platter constant.
+If you remove the files you may run afoul of the GPLv2 Section 1
+requirement to "keep intact all the notices that refer to this
+License".  Of course, nowadays we assume the source control does this
+for us, so people rarely think of these requirements, but for files
+that predate source control I think you need to consider the licence
+implications.
 
-Cheers,
-Wol
+James
+
 
