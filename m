@@ -2,118 +2,139 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26054C61DA4
-	for <linux-raid@archiver.kernel.org>; Fri,  3 Feb 2023 03:17:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C503C61DA4
+	for <linux-raid@archiver.kernel.org>; Fri,  3 Feb 2023 05:14:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231438AbjBCDRn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 2 Feb 2023 22:17:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45622 "EHLO
+        id S229698AbjBCFOm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 3 Feb 2023 00:14:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230196AbjBCDRm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Feb 2023 22:17:42 -0500
-Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 883A576A2
-        for <linux-raid@vger.kernel.org>; Thu,  2 Feb 2023 19:16:55 -0800 (PST)
-Received: by mail-qv1-f53.google.com with SMTP id jf11so2223464qvb.4
-        for <linux-raid@vger.kernel.org>; Thu, 02 Feb 2023 19:16:55 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=chy9YyvhK7mXtGQ0tGQeB7OCTzTRKLRhbvbjGLVTm2I=;
-        b=gs7T/e3FLLDsscCzlPDGj2pXZiJb3R05RV9K/3DqBES++pQk/tYRe2BukxdniL7pDg
-         8NREHlEUfu0PgDb4jI+awzRsh0rnH93XJXuWte6bJgFBHdH0uROTSmmfLowvLLNI14wN
-         oW1gcx53PnWfOkQMBUDZQEmtBGN51YPOoZi2/FoYLOvrbv4hsj6t6Eakb6EOr6pE+AZz
-         VkZa2bN8MBGiPtyIDttoVdlK1SVVgnCVgpAAaTxkNmKoX/OgETJENqONsm9gOy94OgkL
-         gaEMXcvceVTBRww4ifbAkfneXTksXAVlJdHlD8cYRVw/+L/qBLwkOU5ZFuUeHvjkAYaZ
-         9ngQ==
-X-Gm-Message-State: AO0yUKU5v+r7MVxm3kPTOMZXuSySg+CT1/AtkudVNS3T/PWxBnHURKnd
-        Ogh+qfkrIP/7rOA0GNR1J6jo
-X-Google-Smtp-Source: AK7set/2v3K4VImtWp4wHlaBIXTCJSzpiCix8tANg3EljgK7D+Bw6KwYPu2AFz6rnlkQQv5scx+9Zg==
-X-Received: by 2002:a0c:e9c9:0:b0:537:6f8c:2c2c with SMTP id q9-20020a0ce9c9000000b005376f8c2c2cmr12293368qvo.41.1675394214581;
-        Thu, 02 Feb 2023 19:16:54 -0800 (PST)
-Received: from localhost (pool-68-160-166-30.bstnma.fios.verizon.net. [68.160.166.30])
-        by smtp.gmail.com with ESMTPSA id ea7-20020a05620a488700b007290be5557bsm1000464qkb.38.2023.02.02.19.16.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Feb 2023 19:16:54 -0800 (PST)
-Date:   Thu, 2 Feb 2023 22:16:53 -0500
-From:   Mike Snitzer <snitzer@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-raid@vger.kernel.org, dm-devel@redhat.com
-Subject: Re: block: remove submit_bio_noacct
-Message-ID: <Y9x8pagVnO7Xtnbn@redhat.com>
-References: <20230202181423.2910619-1-hch@lst.de>
- <Y9xqvF6nTptzHwpv@redhat.com>
+        with ESMTP id S229602AbjBCFOl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Feb 2023 00:14:41 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01B3F62788
+        for <linux-raid@vger.kernel.org>; Thu,  2 Feb 2023 21:13:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675401232;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=N5jE5M455v1oJbLDQ/5zpgqk3Vbko40nQbeAjt+p/ro=;
+        b=G/2786a1Qasrs0pvOA8hVi2b9lCBOfZIbLBSCZtu+PCAxAYswiF7aazIiDKBwXS9rEeVkv
+        ACyTpJ+6UlKlWymItz1vvDf6e15RrvFkUYvAzlkeBkWXzJ83u5ixNvW6oHoObygkigeDJl
+        S5AE9ezuYUXs1tnVZHuy9Lh4+jWKE5E=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-629-tO-_GW1bM4CERH86aE9hvA-1; Fri, 03 Feb 2023 00:13:49 -0500
+X-MC-Unique: tO-_GW1bM4CERH86aE9hvA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 900972A59547;
+        Fri,  3 Feb 2023 05:13:49 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-13-42.pek2.redhat.com [10.72.13.42])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0474553AA;
+        Fri,  3 Feb 2023 05:13:46 +0000 (UTC)
+From:   Xiao Ni <xni@redhat.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, ming.lei@redhat.com,
+        ncroxon@redhat.com, heinzm@redhat.com
+Subject: [PATCH 1/1] md: Increase active_io to count acct_io
+Date:   Fri,  3 Feb 2023 13:13:44 +0800
+Message-Id: <20230203051344.19328-1-xni@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y9xqvF6nTptzHwpv@redhat.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Feb 02 2023 at  9:00P -0500,
-Mike Snitzer <snitzer@kernel.org> wrote:
+It has added io_acct_set for raid0/raid5 io accounting and it needs to
+alloc md_io_acct in the i/o path. They are free when the bios come back
+from member disks. Now we don't have a method to monitor if those bios
+are all come back. In the takeover process, it needs to free the raid0
+memory resource including the memory pool for md_io_acct. But maybe some
+bios are still not returned. When those bios are returned, it can cause
+panic bcause of introducing NULL pointer or invalid address.
 
-> On Thu, Feb 02 2023 at  1:14P -0500,
-> Christoph Hellwig <hch@lst.de> wrote:
-> 
-> > The current usage of submit_bio vs submit_bio_noacct which skips the
-> > VM events and task account is a bit unclear.  It seems to be mostly
-> > intended for sending on bios received by stacking drivers, but also
-> > seems to be used for stacking drivers newly generated metadata
-> > sometimes.
-> 
-> Your lack of confidence conveyed in the above shook me a little bit
-> considering so much of this code is attributed to you -- I mostly got
-> past that, but I am a bit concerned about one aspect of the
-> submit_bio() change (2nd to last comment inlined below).
-> 
-> > Remove the separate API and just skip the accounting if submit_bio
-> > is called recursively.  This gets us an accounting behavior that
-> > is very similar (but not quite identical) to the current one, while
-> > simplifying the API and code base.
-> 
-> Can you elaborate on the "but not quite identical"? This patch is
-> pretty mechanical, just folding code and renaming.. but you obviously
-> saw subtle differences.  Likely worth callign those out precisely.
-> 
-> How have you tested this patch?  Seems like I should throw all the lvm
-> and DM tests at it.
-> 
+[ 6973.767999] RIP: 0010:mempool_free+0x52/0x80
+[ 6973.786098] Call Trace:
+[ 6973.786549]  md_end_io_acct+0x31/0x40
+[ 6973.787227]  blk_update_request+0x224/0x380
+[ 6973.787994]  blk_mq_end_request+0x1a/0x130
+[ 6973.788739]  blk_complete_reqs+0x35/0x50
+[ 6973.789456]  __do_softirq+0xd7/0x2c8
+[ 6973.790114]  ? sort_range+0x20/0x20
+[ 6973.790763]  run_ksoftirqd+0x2a/0x40
+[ 6973.791400]  smpboot_thread_fn+0xb5/0x150
+[ 6973.792114]  kthread+0x10b/0x130
+[ 6973.792724]  ? set_kthread_struct+0x50/0x50
+[ 6973.793491]  ret_from_fork+0x1f/0x40
 
-...
+This patch trys to use ->active_io to count acct_io. The regression
+tests have passed. And I did takeover from raid0 to raid5 and from
+raid5 to raid0 while I/O is happening. This patch works well.
 
-> > @@ -716,6 +712,27 @@ void submit_bio_noacct(struct bio *bio)
-> >  
-> >  	might_sleep();
-> >  
-> > +	/*
-> > +	 * We only want one ->submit_bio to be active at a time, else stack
-> > +	 * usage with stacked devices could be a problem.  Use current->bio_list
-> > +	 * to collect a list of requests submited by a ->submit_bio method while
-> > +	 * it is active, and then process them after it returned.
-> > +	 */
-> > +	if (current->bio_list) {
-> > +		bio_list_add(&current->bio_list[0], bio);
-> > +		return;
-> > +	}
-> 
-> It seems pretty aggressive to queue the bio to current->bio_list so
-> early. Before this patch, that didn't happen until the very end
-> (meaning all the negative checks of submit_bio_noacct were done before
-> doing the bio_list_add() due to recursion). This is my primary concern
-> with this patch. Is that the biggest aspect of your "not quite
-> identical" comment in the patch header?
-> 
-> In practice this will manifest as delaying the negative checks, until
-> returning from active submit_bio, but they will still happen.
+Reported-by: Fine Fan <ffan@redhat.com>
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ drivers/md/md.c | 6 ++++++
+ drivers/md/md.h | 7 ++++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-Actually, I don't think those checks are done at all now.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index da6370835c47..7f06eb953488 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8627,12 +8627,15 @@ static void md_end_io_acct(struct bio *bio)
+ {
+ 	struct md_io_acct *md_io_acct = bio->bi_private;
+ 	struct bio *orig_bio = md_io_acct->orig_bio;
++	struct mddev *mddev = md_io_acct->mddev;
+ 
+ 	orig_bio->bi_status = bio->bi_status;
+ 
+ 	bio_end_io_acct(orig_bio, md_io_acct->start_time);
+ 	bio_put(bio);
+ 	bio_endio(orig_bio);
++
++	percpu_ref_put(&mddev->active_io);
+ }
+ 
+ /*
+@@ -8648,10 +8651,13 @@ void md_account_bio(struct mddev *mddev, struct bio **bio)
+ 	if (!blk_queue_io_stat(bdev->bd_disk->queue))
+ 		return;
+ 
++	percpu_ref_get(&mddev->active_io);
++
+ 	clone = bio_alloc_clone(bdev, *bio, GFP_NOIO, &mddev->io_acct_set);
+ 	md_io_acct = container_of(clone, struct md_io_acct, bio_clone);
+ 	md_io_acct->orig_bio = *bio;
+ 	md_io_acct->start_time = bio_start_io_acct(*bio);
++	md_io_acct->mddev = mddev;
+ 
+ 	clone->bi_end_io = md_end_io_acct;
+ 	clone->bi_private = md_io_acct;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 6335cb86e52e..e148e3c83b0d 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -710,9 +710,10 @@ struct md_thread {
+ };
+ 
+ struct md_io_acct {
+-	struct bio *orig_bio;
+-	unsigned long start_time;
+-	struct bio bio_clone;
++	struct mddev	*mddev;
++	struct bio	*orig_bio;
++	unsigned long	start_time;
++	struct bio	bio_clone;
+ };
+ 
+ #define THREAD_WAKEUP  0
+-- 
+2.32.0 (Apple Git-132)
 
-Unless I'm missing something, this seems like it needs proper
-justification and a lot of review and testing.
-
-So why do this change?
