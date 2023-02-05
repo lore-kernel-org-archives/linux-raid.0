@@ -2,136 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CEC1C61DA4
-	for <linux-raid@archiver.kernel.org>; Sun,  5 Feb 2023 02:01:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C99DC636CD
+	for <linux-raid@archiver.kernel.org>; Sun,  5 Feb 2023 04:04:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230240AbjBECBK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 4 Feb 2023 21:01:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42516 "EHLO
+        id S229663AbjBEEE2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 4 Feb 2023 23:04:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjBECBH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Feb 2023 21:01:07 -0500
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1E0721A3D
-        for <linux-raid@vger.kernel.org>; Sat,  4 Feb 2023 18:01:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1675562466; x=1707098466;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=2nG9e/QK/X0LhxYAnhihPwov07FWWmpWn5TumjcxcIw=;
-  b=g67OLD0ewskXgAw53wR1EwJ0smajnxco1OnEyYeQKGta6p179x9V5e9G
-   7lPXjeVc4ljFvW4vR0T8Cc3PxqOsz/dQQxoc6HAZ4Kr3iejCGs74yk9zd
-   aRvWlTtbclqTgBONTfgLGTtr9sauyUDsmKCgKM+PCA40dfeuUcZqivSUf
-   lWlKjYIM6twn0jGO92QSG/0EO1Ssp2rd0pGZWGeMu3aHya4wo2Jp0rOGd
-   BY/9ZfixRMoJ6Av17ovYZReHtmyD+56k+nwxouOAi/BuYYoP04PMeQHna
-   mDhNLDnebvthU/Fyps3mVJTJJ2LrohLRxd3uOlk5DKBqGUhdv/IaqRV8f
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10611"; a="312668943"
-X-IronPort-AV: E=Sophos;i="5.97,274,1669104000"; 
-   d="scan'208";a="312668943"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2023 18:01:06 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10611"; a="668059001"
-X-IronPort-AV: E=Sophos;i="5.97,274,1669104000"; 
-   d="scan'208";a="668059001"
-Received: from lkp-server01.sh.intel.com (HELO 4455601a8d94) ([10.239.97.150])
-  by fmsmga007.fm.intel.com with ESMTP; 04 Feb 2023 18:01:04 -0800
-Received: from kbuild by 4455601a8d94 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pOUL1-0001ei-2I;
-        Sun, 05 Feb 2023 02:01:03 +0000
-Date:   Sun, 05 Feb 2023 10:00:10 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:new_module_alloc_build_test] BUILD SUCCESS
- 9e278a4880d5bee01bab987f06b709da7d532e93
-Message-ID: <63df0daa.eKYOEelTitBUzF+e%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229478AbjBEEE1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Feb 2023 23:04:27 -0500
+Received: from www18.qth.com (www18.qth.com [69.16.238.59])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C113B1EFE2
+        for <linux-raid@vger.kernel.org>; Sat,  4 Feb 2023 20:04:25 -0800 (PST)
+Received: from [73.207.192.158] (port=47110 helo=jpo)
+        by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.95)
+        (envelope-from <davidtg-robot@justpickone.org>)
+        id 1pOWGN-0006ry-Lh
+        for linux-raid@vger.kernel.org;
+        Sat, 04 Feb 2023 22:04:23 -0600
+Date:   Sun, 5 Feb 2023 04:04:18 +0000
+From:   David Thorburn-Gundlach <davidtg-robot@justpickone.org>
+To:     Linux RAID list <linux-raid@vger.kernel.org>
+Subject: throughput testing (was "Re: how to know a hard drive will mix well")
+Message-ID: <20230205040418.GK25616@jpo>
+References: <20230202124306.GH25616@jpo>
+ <CAAMCDedK==A1q-S97=MZGL2Wv_COC4DCGqh__2atSOHk2YBWAg@mail.gmail.com>
+ <20230204022019.GI25616@jpo>
+ <CAAMCDeerQZyrUG2FAn-y1MA-grb+zDotAYrJvBykqDBhFmAfeQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <CAAMCDeerQZyrUG2FAn-y1MA-grb+zDotAYrJvBykqDBhFmAfeQ@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - www18.qth.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - justpickone.org
+X-Get-Message-Sender-Via: www18.qth.com: authenticated_id: dmail@justpickone.org
+X-Authenticated-Sender: www18.qth.com: dmail@justpickone.org
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git new_module_alloc_build_test
-branch HEAD: 9e278a4880d5bee01bab987f06b709da7d532e93  module: replace module_layout with module_memory
+Roger, et al --
 
-elapsed time: 1618m
+...and then Roger Heflin said...
+% On Fri, Feb 3, 2023 at 8:22 PM David Thorburn-Gundlach <
+% davidtg-robot@justpickone.org> wrote:
+% >
+% > % not notice it, unless you are running your array right at the limit.
+% >
+% > Hmmph.  I'm not entirely sure I'm not anyway, but it is just a little PC
+% > mobo running primary and daughtercard SATA ports.  A Real Server (tm) is
+% > far, far beyond the current horizon :-)
+% 
+% It does not take much of a motherboard/cpu to service a bunch of spinning
+% disks.
+% 
+...
+% About the only major thing that makes any difference is making sure that
+% whatever card is running the sata ports does not have a bottleneck.
+[snip]
 
-configs tested: 60
-configs skipped: 2
+Thanks!  It'll be a bit before I can play, but I'll do some reading and
+work some tests.  Stay tuned :-)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
 
-gcc tested configs:
-powerpc                           allnoconfig
-x86_64                            allnoconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-arc                                 defconfig
-s390                             allmodconfig
-alpha                               defconfig
-ia64                             allmodconfig
-s390                                defconfig
-sh                               allmodconfig
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-s390                             allyesconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-x86_64                        randconfig-a006
-m68k                             allyesconfig
-m68k                             allmodconfig
-arc                              allyesconfig
-alpha                            allyesconfig
-x86_64                           rhel-8.3-syz
-x86_64                         rhel-8.3-kunit
-x86_64                           rhel-8.3-kvm
-x86_64                           rhel-8.3-bpf
-x86_64                              defconfig
-arc                  randconfig-r043-20230204
-x86_64                               rhel-8.3
-s390                 randconfig-r044-20230204
-riscv                randconfig-r042-20230204
-x86_64                           allyesconfig
-i386                          randconfig-a001
-i386                          randconfig-a003
-i386                          randconfig-a005
-x86_64                          rhel-8.3-func
-x86_64                    rhel-8.3-kselftests
-x86_64                        randconfig-a013
-x86_64                        randconfig-a011
-x86_64                        randconfig-a015
-i386                                defconfig
-i386                             allyesconfig
-i386                          randconfig-a014
-i386                          randconfig-a012
-i386                          randconfig-a016
-arm                                 defconfig
+HAND
 
-clang tested configs:
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-x86_64                        randconfig-a005
-hexagon              randconfig-r041-20230204
-arm                  randconfig-r046-20230204
-hexagon              randconfig-r045-20230204
-i386                          randconfig-a002
-i386                          randconfig-a004
-i386                          randconfig-a006
-x86_64                          rhel-8.3-rust
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-i386                          randconfig-a013
-i386                          randconfig-a011
-i386                          randconfig-a015
-
+:-D
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+David T-G
+See http://justpickone.org/davidtg/email/
+See http://justpickone.org/davidtg/tofu.txt
+
