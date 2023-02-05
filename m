@@ -2,82 +2,90 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C99DC636CD
-	for <linux-raid@archiver.kernel.org>; Sun,  5 Feb 2023 04:04:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 197D6C636CD
+	for <linux-raid@archiver.kernel.org>; Sun,  5 Feb 2023 06:23:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229663AbjBEEE2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 4 Feb 2023 23:04:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59286 "EHLO
+        id S229479AbjBEGXU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 5 Feb 2023 01:23:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbjBEEE1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Feb 2023 23:04:27 -0500
-Received: from www18.qth.com (www18.qth.com [69.16.238.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C113B1EFE2
-        for <linux-raid@vger.kernel.org>; Sat,  4 Feb 2023 20:04:25 -0800 (PST)
-Received: from [73.207.192.158] (port=47110 helo=jpo)
-        by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.95)
-        (envelope-from <davidtg-robot@justpickone.org>)
-        id 1pOWGN-0006ry-Lh
-        for linux-raid@vger.kernel.org;
-        Sat, 04 Feb 2023 22:04:23 -0600
-Date:   Sun, 5 Feb 2023 04:04:18 +0000
-From:   David Thorburn-Gundlach <davidtg-robot@justpickone.org>
-To:     Linux RAID list <linux-raid@vger.kernel.org>
-Subject: throughput testing (was "Re: how to know a hard drive will mix well")
-Message-ID: <20230205040418.GK25616@jpo>
-References: <20230202124306.GH25616@jpo>
- <CAAMCDedK==A1q-S97=MZGL2Wv_COC4DCGqh__2atSOHk2YBWAg@mail.gmail.com>
- <20230204022019.GI25616@jpo>
- <CAAMCDeerQZyrUG2FAn-y1MA-grb+zDotAYrJvBykqDBhFmAfeQ@mail.gmail.com>
+        with ESMTP id S229447AbjBEGXS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 5 Feb 2023 01:23:18 -0500
+Received: from mail-vs1-xe2e.google.com (mail-vs1-xe2e.google.com [IPv6:2607:f8b0:4864:20::e2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 495CE1C305
+        for <linux-raid@vger.kernel.org>; Sat,  4 Feb 2023 22:23:17 -0800 (PST)
+Received: by mail-vs1-xe2e.google.com with SMTP id 187so9574151vsv.10
+        for <linux-raid@vger.kernel.org>; Sat, 04 Feb 2023 22:23:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=J965TV4QdB+aEIXqWJkUBs+LHQXtQO7JlrKUqHntLU0=;
+        b=f6PiveBBw+xe1whLOXijn7aOY8gQtY5KKhYejFen+5V60D7vUD6ApKsnPRIL5YSugM
+         3nT+Ux5LBkIuNLAIFIgChqqFrFMR87tNh0GmIhe5J+UuZila5372LnYyp118vvf/gSAm
+         h0LB04qOQ3q5anALgERzfrIbz8z61VBWqkZ00F5/E/J7y4jBkIXVtycchYE19FeboP8R
+         PP6QBKnViawE4q4bpS5Zq7DhNUrmF3zlpnsHyxvzLwReST0U3Im+9SFdOw5cLwoaSvLH
+         jmdH3Y/z8gF2Ux+c28GDYQohVDMN5d9ARtZ8CE3j7439yEfFmNPEYoLSQomrK8uKacNk
+         T51A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=J965TV4QdB+aEIXqWJkUBs+LHQXtQO7JlrKUqHntLU0=;
+        b=uvaxkVz6ZCJM6PSKkEXzkfI8QYjDGQn/d+XjrkEKovtu5+Ogt+9pEcpbYxM83Eaa+j
+         EztZqdRYZ2vZWI85DiDteV+EOvDTJ4vc7XdcmbxFcrwHB9rk+VSl20DH8yYUDc/w2zGx
+         jpIC/yB019enLtOdGFRqP7SMb0+EW+bIh3/pg68aDgylLfOA/nrS9t1QXXAae09MEJVs
+         uywpnlvbXfxZ5QlyBMOAYrTfm+wvHEeBhnJNSJZpuwP2S1kY/ON/4Ab+OR9REQR7coJy
+         qGEEjIiUlTKNOLCeUf7KigdCLenc9mwG2m+SS6it7TsOBGepEnONOyoxCcOF7nn3ZUrC
+         p7Hw==
+X-Gm-Message-State: AO0yUKUav0DMQ8hI9HqftDURGqrcKS58+VGFrKsEBbYtvSizxuNuM/60
+        DFOW/4zyhhMGcGRbhSCL3u2hCliLBPxii8QnxNoKZe7bTqZRDw==
+X-Google-Smtp-Source: AK7set+uao4QWMbxhasqJngpO2X1/OLVZwBDWmOag161UJ6Se/+GaY4meiZzFFGCS30q+gl+cWVLC7BBJfGVOHQhMgM=
+X-Received: by 2002:a67:fad7:0:b0:3f2:e3cf:522e with SMTP id
+ g23-20020a67fad7000000b003f2e3cf522emr2472393vsq.67.1675578196120; Sat, 04
+ Feb 2023 22:23:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAAMCDeerQZyrUG2FAn-y1MA-grb+zDotAYrJvBykqDBhFmAfeQ@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - www18.qth.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - justpickone.org
-X-Get-Message-Sender-Via: www18.qth.com: authenticated_id: dmail@justpickone.org
-X-Authenticated-Sender: www18.qth.com: dmail@justpickone.org
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+References: <20230126021659.3801-1-kev.friedberg@gmail.com> <20230201095421.000033f0@linux.intel.com>
+In-Reply-To: <20230201095421.000033f0@linux.intel.com>
+From:   Kevin Friedberg <kev.friedberg@gmail.com>
+Date:   Sun, 5 Feb 2023 01:23:04 -0500
+Message-ID: <CAEJbB42309TzwmbpJKrgjX-7Q8JRUN+1W4i3NDUsxfrn6L=_Jg@mail.gmail.com>
+Subject: Re: [PATCH] treat AHCI controllers under VMD as part of VMD
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Roger, et al --
+Thank you!  Three weeks in it's stable for me (and I do have a backup
+just in case). But that's just on my system and having this properly
+tested, validated and hopefully merged would be much better.  This is
+actually my first time working in C at this level, so any feedback is
+appreciated.
 
-...and then Roger Heflin said...
-% On Fri, Feb 3, 2023 at 8:22 PM David Thorburn-Gundlach <
-% davidtg-robot@justpickone.org> wrote:
-% >
-% > % not notice it, unless you are running your array right at the limit.
-% >
-% > Hmmph.  I'm not entirely sure I'm not anyway, but it is just a little PC
-% > mobo running primary and daughtercard SATA ports.  A Real Server (tm) is
-% > far, far beyond the current horizon :-)
-% 
-% It does not take much of a motherboard/cpu to service a bunch of spinning
-% disks.
-% 
-...
-% About the only major thing that makes any difference is making sure that
-% whatever card is running the sata ports does not have a bottleneck.
-[snip]
+Cheers,
+Kevin
 
-Thanks!  It'll be a bit before I can play, but I'll do some reading and
-work some tests.  Stay tuned :-)
-
-
-HAND
-
-:-D
--- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
-
+On Wed, Feb 1, 2023 at 3:54 AM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> Hi Kevin,
+> Thank you for the patch. Please be aware that the RST is not officially
+> supported on Linux. You are going to enable RST suppport using VROC Linux
+> stack. You are using it at your own risk.
+> Intel will review your patch and will run regression, it could take around
+> month (sorry, we are getting back our labs now).
+>
+> Thanks,
+> Mariusz
+>
+> On Wed, 25 Jan 2023 21:16:59 -0500
+> Kevin Friedberg <kev.friedberg@gmail.com> wrote:
+>
+> > Detect when a SATA controller has been mapped under Intel Alderlake RST
+> > VMD and list it as part of the domain, instead of independently, so that
+> > it can use the VMD controller's RAID capabilities.
+> >
+> > Signed-off-by: Kevin Friedberg <kev.friedberg@gmail.com>
