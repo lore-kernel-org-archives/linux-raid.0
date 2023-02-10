@@ -2,150 +2,157 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FFC5C636CD
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Feb 2023 10:17:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17638C636CD
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Feb 2023 10:28:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231817AbjBJKR1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Feb 2023 05:17:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39044 "EHLO
+        id S231935AbjBJK2e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Feb 2023 05:28:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231345AbjBJKR0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Feb 2023 05:17:26 -0500
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC8A46CC63
-        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 02:17:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1676024244; x=1707560244;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=SKqw+eF3tXj/FppGX0R+Bg2oQaPLdh5JrDjENKxZ2eo=;
-  b=FsrPQiUFqXqoXPP3oB0gB78vzuVP/cyKtTUsdBk+I3/uecTsn9VdDEf8
-   PrMbbv2vyNMEyNvBQY3Tii13Fozqg88Le2fFzafXfwiKhEVYn4YlQFBpL
-   NBmZl4AEs3PSsZdeJ/Yy3LP74IyQRz3FcLyGOukK+Y6c6nxtMIo9pfvGb
-   Gx1kCjlMeDATeBOD6i1GnDpmmDeK6yIbGF2w+Fj8XRCTHwK/81oFAa14C
-   JTA7BqUiUvBBFER1EYjPguVDQSbA5svVY3/39+c3gB7Z9/vcwtzj6vB/V
-   uJJLvQ6brG34CKx+wMtH5z6dABT69ivwXKe45pWMPEtMhZ1rp3lc4SajY
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10616"; a="394990355"
-X-IronPort-AV: E=Sophos;i="5.97,286,1669104000"; 
-   d="scan'208";a="394990355"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2023 02:17:24 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10616"; a="996913618"
-X-IronPort-AV: E=Sophos;i="5.97,286,1669104000"; 
-   d="scan'208";a="996913618"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.49.23])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2023 02:17:23 -0800
-Date:   Fri, 10 Feb 2023 11:17:18 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Kevin Friedberg <kev.friedberg@gmail.com>,
-        linux-raid@vger.kernel.org
-Subject: Re: [PATCH] treat AHCI controllers under VMD as part of VMD
-Message-ID: <20230210111718.00003c87@linux.intel.com>
-In-Reply-To: <CALTww2_yqAMN-_XmS7ib-utkty903evi=ynyGtFksjXKCwGLJQ@mail.gmail.com>
-References: <20230126021659.3801-1-kev.friedberg@gmail.com>
-        <20230207094423.00001a30@linux.intel.com>
-        <CALTww2_yqAMN-_XmS7ib-utkty903evi=ynyGtFksjXKCwGLJQ@mail.gmail.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229740AbjBJK2d (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Feb 2023 05:28:33 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04A1528856
+        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 02:28:32 -0800 (PST)
+Received: from kwepemi500002.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PCqfG6lfYzHtcn;
+        Fri, 10 Feb 2023 18:26:46 +0800 (CST)
+Received: from [10.174.179.167] (10.174.179.167) by
+ kwepemi500002.china.huawei.com (7.221.188.171) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Fri, 10 Feb 2023 18:28:29 +0800
+Message-ID: <ef9c2ae2-2102-c1ad-5113-39809afe5934@huawei.com>
+Date:   Fri, 10 Feb 2023 18:28:28 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.3
+Content-Language: en-US
+To:     Jes Sorensen <jes@trained-monkey.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        <linux-raid@vger.kernel.org>
+CC:     linfeilong <linfeilong@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
+        Wu Guanghao <wuguanghao3@huawei.com>, <lixiaokeng@huawei.com>
+From:   miaoguanqin <miaoguanqin@huawei.com>
+Subject: [PATCH] Fix memory leak for function Manage_subdevs Manage_add Kill
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.167]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500002.china.huawei.com (7.221.188.171)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 9 Feb 2023 08:39:21 +0800
-Xiao Ni <xni@redhat.com> wrote:
+When we excute mdadm,we found some memory leak.
+The function call stack is as follows:
+#0 in xcalloc
+#1 in guess_super_type
+#2 in guess_super
+#3 in Kill
+#4 in misc_list
+#5 in main
 
-> On Tue, Feb 7, 2023 at 4:46 PM Mariusz Tkaczyk
-> <mariusz.tkaczyk@linux.intel.com> wrote:
-> >
-> > Hi Kevin,
-> > I found time to take a look into it closer. I think that it is not complete
-> > solution. Please see my comments.
-> >
-> > On Wed, 25 Jan 2023 21:16:59 -0500
-> > Kevin Friedberg <kev.friedberg@gmail.com> wrote:
-> >  
-> > > Detect when a SATA controller has been mapped under Intel Alderlake RST
-> > > VMD and list it as part of the domain, instead of independently, so that
-> > > it can use the VMD controller's RAID capabilities.
-> > >
-> > > Signed-off-by: Kevin Friedberg <kev.friedberg@gmail.com>
-> > > ---
-> > >  platform-intel.c | 15 +++++++++------
-> > >  super-intel.c    | 25 ++++++++++++++++++++++++-
-> > >  2 files changed, 33 insertions(+), 7 deletions(-)
-> > >
-> > > diff --git a/platform-intel.c b/platform-intel.c
-> > > index 757f0b1b..859bf743 100644
-> > > --- a/platform-intel.c
-> > > +++ b/platform-intel.c
-> > > @@ -64,10 +64,12 @@ struct sys_dev *find_driver_devices(const char *bus,
-> > > const char *driver)
-> > >       if (strcmp(driver, "isci") == 0)
-> > >               type = SYS_DEV_SAS;
-> > > -     else if (strcmp(driver, "ahci") == 0)
-> > > +     else if (strcmp(driver, "ahci") == 0) {
-> > > +             /* if looking for sata devs, ignore vmd */
-> > > +             vmd = find_driver_devices("pci", "vmd");
-> > >               type = SYS_DEV_SATA;
-> > > -     else if (strcmp(driver, "nvme") == 0) {
-> > > -             /* if looking for nvme devs, first look for vmd */
-> > > +     } else if (strcmp(driver, "nvme") == 0) {
-> > > +             /* if looking for nvme devs, also look for vmd */
-> > >               vmd = find_driver_devices("pci", "vmd");
-> > >               type = SYS_DEV_NVME;
-> > >       } else if (strcmp(driver, "vmd") == 0)
-> > > @@ -104,8 +106,8 @@ struct sys_dev *find_driver_devices(const char *bus,
-> > > const char *driver) sprintf(path, "/sys/bus/%s/drivers/%s/%s",
-> > >                       bus, driver, de->d_name);
-> > >
-> > > -             /* if searching for nvme - skip vmd connected one */
-> > > -             if (type == SYS_DEV_NVME) {
-> > > +             /* if searching for nvme or ahci - skip vmd connected one */
-> > > +             if (type == SYS_DEV_NVME || type == SYS_DEV_SATA) {
-> > >                       struct sys_dev *dev;
-> > >                       char *rp = realpath(path, NULL);
-> > >                       for (dev = vmd; dev; dev = dev->next) {
-> > > @@ -166,7 +168,8 @@ struct sys_dev *find_driver_devices(const char *bus,
-> > > const char *driver) }
-> > >       closedir(driver_dir);
-> > >
-> > > -     if (vmd) {
-> > > +     /* VMD adopts multiple types but should only be listed once */
-> > > +     if (vmd && type == SYS_DEV_NVME) {
-> > >               if (list)
-> > >                       list->next = vmd;
-> > >               else  
-> >
-> > The SATA behind VMD deserves own type, let say SYS_DEV_SATA_VMD. We cannot
-> > use SYS_DEV_VMD because it will allow to use NVME devices behind VMD in
-> > SATA Raid array. It means that if you have them connected, like:
-> > VMD___ NVME0
-> >     |_ NVME1
-> >     |_ SATA___SATA0
-> >            |__SATA1
-> > You will be able to mix SATA and NVME drives together in RAID. Mdmonitor
-> > could mix them too (if appropriate policy is set). That is not allowed from
-> > at least VROC requirements PoV.  
-> 
-> 
-> Hi Mariusz
-> 
-> Through the description of VMD
-> (https://www.chipict.com/intel_vmd_vroc/), it looks like VMD only
-> supports pcie nvme devices. Can it also connect sata devices?
-> 
-> And what's PoV?
-> 
-Hi Xiao,
-Not directly, there must be SATA controller behind VMD.
-In VROC on server platforms we don't use that. So far I know, the reason is to
-have only one driver to handle all RST devices but it could be only part of
-story.
+#0 in __interceptor_posix_memalign
+#1 in init_super1
+#2 in Kill
+#3 in misc_list
+#4 in main
 
-Thanks,
-Mariusz
+#0 in __interceptor_calloc
+#1 in xcalloc
+#2 in match_metadata_desc1
+#3 in super_by_fd
+#4 in Manage_subdevs
+#5 in main
+
+#0 in __interceptor_calloc
+#1 in xcalloc
+#2 in dup_super
+#3 in Manage_add
+#4 in Manage_subdevs
+#5 in main
+
+We fix these memory leak based on code logic.
+
+Signed-off-by: miaoguanqin <miaoguanqin@huawei.com>
+---
+  Kill.c   | 12 ++++++++++--
+  Manage.c |  9 ++++++++-
+  2 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/Kill.c b/Kill.c
+index d4767e2..d1207cf 100644
+--- a/Kill.c
++++ b/Kill.c
+@@ -40,7 +40,8 @@ int Kill(char *dev, struct supertype *st, int force, 
+int verbose, int noexcl)
+  	 *  2 - failed to open the device.
+  	 *  4 - failed to find a superblock.
+  	 */
+-
++	
++	int flags = 0;
+  	int fd, rv = 0;
+
+  	if (force)
+@@ -52,8 +53,10 @@ int Kill(char *dev, struct supertype *st, int force, 
+int verbose, int noexcl)
+  				dev);
+  		return 2;
+  	}
+-	if (st == NULL)
++	if (st == NULL) {
+  		st = guess_super(fd);
++		flags = 1;
++	}
+  	if (st == NULL || st->ss->init_super == NULL) {
+  		if (verbose >= 0)
+  			pr_err("Unrecognised md component device - %s\n", dev);
+@@ -77,6 +80,11 @@ int Kill(char *dev, struct supertype *st, int force, 
+int verbose, int noexcl)
+  			rv = 0;
+  		}
+  	}
++	if (flags == 1 && st) {
++		if (st->sb)
++			free(st->sb);
++		free(st);
++	}
+  	close(fd);
+  	return rv;
+  }
+diff --git a/Manage.c b/Manage.c
+index ffe55f8..15635eb 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -819,9 +819,14 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+  						    rdev, update, devname,
+  						    verbose, array);
+  				dev_st->ss->free_super(dev_st);
+-				if (rv)
++				if (rv){
++					if (dev_st)
++						free(dev_st);
+  					return rv;
++				}
+  			}
++			if (dev_st)
++				free(dev_st);
+  		}
+  		if (dv->disposition == 'M') {
+  			if (verbose > 0)
+@@ -1649,6 +1654,8 @@ int Manage_subdevs(char *devname, int fd,
+  			break;
+  		}
+  	}
++	if (tst)
++		free(tst);
+  	if (frozen > 0)
+  		sysfs_set_str(&info, NULL, "sync_action","idle");
+  	if (test && count == 0)
+-- 
+2.33.0
+
