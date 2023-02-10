@@ -2,138 +2,62 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA5DC636D3
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Feb 2023 20:43:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A254C636D4
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Feb 2023 02:10:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229589AbjBIUnW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Feb 2023 15:43:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43202 "EHLO
+        id S229892AbjBJCKm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Feb 2023 21:10:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjBIUnV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Feb 2023 15:43:21 -0500
-X-Greylist: delayed 321 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 09 Feb 2023 12:43:19 PST
-Received: from out-143.mta0.migadu.com (out-143.mta0.migadu.com [91.218.175.143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42ABD28872
-        for <linux-raid@vger.kernel.org>; Thu,  9 Feb 2023 12:43:19 -0800 (PST)
-Message-ID: <80812f87-a743-2deb-3d43-d07fcc4ce895@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1675975076;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bxxeSPSM923KHOZO5Pv+lzzWLRahvIbdF1/jFL5+ByY=;
-        b=GbIWQZmzDC+TareZHyu0qcapU5sbhKJfOsyFWtBSOlIA01rPUhENzd9diSmFBSvjQ8AkwN
-        j7o7QsDD0dT7MIUGq2bK5/pb+RSTegoQdJw9NvoKFmRUwfyPYmR+pDIILTClMLq6gV17hR
-        uB8T/JcMU3V6ama33JGiz8fWVV78u64=
-Date:   Thu, 9 Feb 2023 13:37:49 -0700
+        with ESMTP id S229695AbjBJCKl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Feb 2023 21:10:41 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 099096E9B6
+        for <linux-raid@vger.kernel.org>; Thu,  9 Feb 2023 18:10:39 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PCcdj6LtXz4f3m6x
+        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 10:10:33 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgCH77KZp+VjID1TDQ--.15159S3;
+        Fri, 10 Feb 2023 10:10:36 +0800 (CST)
+Message-ID: <639bcf6e-b8b1-e002-a61f-93ec7ad04bbd@huaweicloud.com>
+Date:   Fri, 10 Feb 2023 10:10:33 +0800
 MIME-Version: 1.0
-Subject: Re: [PATCH] md: Use optimal I/O size for last bitmap page
-To:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
-Cc:     Sushma Kalakota <sushma.kalakota@intel.com>
-References: <20230118005319.147-1-jonathan.derrick@linux.dev>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Jonathan Derrick <jonathan.derrick@linux.dev>
-In-Reply-To: <20230118005319.147-1-jonathan.derrick@linux.dev>
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+From:   Li Nan <linan666@huaweicloud.com>
+To:     david.sloan@eideticom.com
+Subject: =?UTF-8?Q?question_about_5e8daf906f89_=28=22md=3a_Flush_workqueue_m?=
+ =?UTF-8?B?ZF9yZGV2X21pc2Nfd3EgaW4gbWRfYWxsb2MoKeKAnSk=?=
+Cc:     linux-raid@vger.kernel.org, yangerkun@huawei.com,
+        yukuai@huawei.com, song@kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+X-CM-TRANSID: gCh0CgCH77KZp+VjID1TDQ--.15159S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUY27kC6x804xWl14x267AKxVWUJVW8JwAF
+        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
+        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
+        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
+        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY
+        6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr
+        0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxG
+        rwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
+        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
+        b7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
+        vE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI
+        42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxh
+        VjvjDU0xZFpf9x07URwZ7UUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Song,
+Hi,
+Commit log says there is race condition in md_rdev_misc_wq, but I find 
+nothing wrong with it. Could you tell me how to trigger the bug?
 
-Any thoughts on this?
+Thansks,
+nan.
 
-On 1/17/2023 5:53 PM, Jonathan Derrick wrote:
-> From: Jon Derrick <jonathan.derrick@linux.dev>
-> 
-> If the bitmap space has enough room, size the I/O for the last bitmap
-> page write to the optimal I/O size for the storage device. The expanded
-> write is checked that it won't overrun the data or metadata.
-> 
-> This change helps increase performance by preventing unnecessary
-> device-side read-mod-writes due to non-atomic write unit sizes.
-> 
-> Ex biosnoop log. Device lba size 512, optimal size 4k:
-> Before:
-> Time        Process        PID     Device      LBA        Size      Lat
-> 0.843734    md0_raid10     5267    nvme0n1   W 24         3584      1.17
-> 0.843933    md0_raid10     5267    nvme1n1   W 24         3584      1.36
-> 0.843968    md0_raid10     5267    nvme1n1   W 14207939968 4096      0.01
-> 0.843979    md0_raid10     5267    nvme0n1   W 14207939968 4096      0.02
-> 
-> After:
-> Time        Process        PID     Device      LBA        Size      Lat
-> 18.374244   md0_raid10     6559    nvme0n1   W 24         4096      0.01
-> 18.374253   md0_raid10     6559    nvme1n1   W 24         4096      0.01
-> 18.374300   md0_raid10     6559    nvme0n1   W 11020272296 4096      0.01
-> 18.374306   md0_raid10     6559    nvme1n1   W 11020272296 4096      0.02
-> 
-> Signed-off-by: Jon Derrick <jonathan.derrick@linux.dev>
-> ---
->  drivers/md/md-bitmap.c | 27 ++++++++++++++++++---------
->  1 file changed, 18 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index e7cc6ba1b657..569297ea9b99 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -220,6 +220,7 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->  	rdev = NULL;
->  	while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
->  		int size = PAGE_SIZE;
-> +		int optimal_size = PAGE_SIZE;
->  		loff_t offset = mddev->bitmap_info.offset;
->  
->  		bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
-> @@ -228,9 +229,14 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->  			int last_page_size = store->bytes & (PAGE_SIZE-1);
->  			if (last_page_size == 0)
->  				last_page_size = PAGE_SIZE;
-> -			size = roundup(last_page_size,
-> -				       bdev_logical_block_size(bdev));
-> +			size = roundup(last_page_size, bdev_logical_block_size(bdev));
-> +			if (bdev_io_opt(bdev) > bdev_logical_block_size(bdev))
-> +				optimal_size = roundup(last_page_size, bdev_io_opt(bdev));
-> +			else
-> +				optimal_size = size;
->  		}
-> +
-> +
->  		/* Just make sure we aren't corrupting data or
->  		 * metadata
->  		 */
-> @@ -246,9 +252,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->  				goto bad_alignment;
->  		} else if (offset < 0) {
->  			/* DATA  BITMAP METADATA  */
-> -			if (offset
-> -			    + (long)(page->index * (PAGE_SIZE/512))
-> -			    + size/512 > 0)
-> +			loff_t off = offset + (long)(page->index * (PAGE_SIZE/512));
-> +			if (size != optimal_size &&
-> +			    off + optimal_size/512 <= 0)
-> +				size = optimal_size;
-> +			else if (off + size/512 > 0)
->  				/* bitmap runs in to metadata */
->  				goto bad_alignment;
->  			if (rdev->data_offset + mddev->dev_sectors
-> @@ -257,10 +265,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->  				goto bad_alignment;
->  		} else if (rdev->sb_start < rdev->data_offset) {
->  			/* METADATA BITMAP DATA */
-> -			if (rdev->sb_start
-> -			    + offset
-> -			    + page->index*(PAGE_SIZE/512) + size/512
-> -			    > rdev->data_offset)
-> +			loff_t off = rdev->sb_start + offset + page->index*(PAGE_SIZE/512);
-> +			if (size != optimal_size &&
-> +			    off + optimal_size/512 <= rdev->data_offset)
-> +				size = optimal_size;
-> +			else if (off + size/512 > rdev->data_offset)
->  				/* bitmap runs in to data */
->  				goto bad_alignment;
->  		} else {
