@@ -2,62 +2,139 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A254C636D4
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Feb 2023 02:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B0EC05027
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Feb 2023 10:01:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229892AbjBJCKm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Feb 2023 21:10:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52498 "EHLO
+        id S231628AbjBJKBi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Feb 2023 05:01:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229695AbjBJCKl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Feb 2023 21:10:41 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 099096E9B6
-        for <linux-raid@vger.kernel.org>; Thu,  9 Feb 2023 18:10:39 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PCcdj6LtXz4f3m6x
-        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 10:10:33 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgCH77KZp+VjID1TDQ--.15159S3;
-        Fri, 10 Feb 2023 10:10:36 +0800 (CST)
-Message-ID: <639bcf6e-b8b1-e002-a61f-93ec7ad04bbd@huaweicloud.com>
-Date:   Fri, 10 Feb 2023 10:10:33 +0800
+        with ESMTP id S231810AbjBJKBf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Feb 2023 05:01:35 -0500
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E9077AE06
+        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 02:01:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1676023295; x=1707559295;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=8QSfBML25jKxNVM9ZuCSjj+OmS3HqKyqJ2KfDpkN5y4=;
+  b=RROnZAugGOgYTOqiQp9Lb3QcnGk11OHrJZawDIw/bV7owlSeBlKc3MiT
+   mC/WprYjzi90RPblD5QZbgApkZG33bYCS/uWFo8WvlvbjUCrd2xQXXuNx
+   KnIbjF0FmfFTQU+7mAD3QCg6q4LPKDoCjEe7FTc3US546AOUSgWyAmguv
+   wJy9NvNnW9cV0swDwBCyiyPM0TRLeV+p6XwJ6Rt2aAWrXmSwXpC4yZzvy
+   MPVwtBZx04jYorK9qh4dimp2QKpUUiA1DH65IS9J7llwnKtpP2DOmS4CM
+   MOxN2Rd4GVrT6h0eVYUXhdBS96LprakT4GrQjUCVBtd2VZ19Bz4Hu2P/2
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10616"; a="394988036"
+X-IronPort-AV: E=Sophos;i="5.97,286,1669104000"; 
+   d="scan'208";a="394988036"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2023 02:01:34 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10616"; a="996911120"
+X-IronPort-AV: E=Sophos;i="5.97,286,1669104000"; 
+   d="scan'208";a="996911120"
+Received: from lkp-server01.sh.intel.com (HELO 4455601a8d94) ([10.239.97.150])
+  by fmsmga005.fm.intel.com with ESMTP; 10 Feb 2023 02:01:33 -0800
+Received: from kbuild by 4455601a8d94 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pQQDk-0005jp-0c;
+        Fri, 10 Feb 2023 10:01:32 +0000
+Date:   Fri, 10 Feb 2023 18:01:01 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 76fed01420bb8b0e282745a4945925b25751d42b
+Message-ID: <63e615dd.dZoNA7xphqQ4vuJ+%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-From:   Li Nan <linan666@huaweicloud.com>
-To:     david.sloan@eideticom.com
-Subject: =?UTF-8?Q?question_about_5e8daf906f89_=28=22md=3a_Flush_workqueue_m?=
- =?UTF-8?B?ZF9yZGV2X21pc2Nfd3EgaW4gbWRfYWxsb2MoKeKAnSk=?=
-Cc:     linux-raid@vger.kernel.org, yangerkun@huawei.com,
-        yukuai@huawei.com, song@kernel.org
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID: gCh0CgCH77KZp+VjID1TDQ--.15159S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUY27kC6x804xWl14x267AKxVWUJVW8JwAF
-        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY
-        6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr
-        0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxG
-        rwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-        b7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-        vE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI
-        42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxh
-        VjvjDU0xZFpf9x07URwZ7UUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-Commit log says there is race condition in md_rdev_misc_wq, but I find 
-nothing wrong with it. Could you tell me how to trigger the bug?
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 76fed01420bb8b0e282745a4945925b25751d42b  md: account io_acct_set usage with active_io
 
-Thansks,
-nan.
+elapsed time: 2035m
 
+configs tested: 63
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+x86_64                            allnoconfig
+powerpc                           allnoconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+sh                               allmodconfig
+arc                                 defconfig
+s390                             allmodconfig
+x86_64                              defconfig
+mips                             allyesconfig
+m68k                             allmodconfig
+alpha                               defconfig
+alpha                            allyesconfig
+s390                                defconfig
+x86_64                               rhel-8.3
+x86_64                           rhel-8.3-bpf
+powerpc                          allmodconfig
+m68k                             allyesconfig
+arm                                 defconfig
+x86_64                           rhel-8.3-syz
+s390                             allyesconfig
+x86_64                           allyesconfig
+arc                              allyesconfig
+x86_64                        randconfig-a006
+i386                          randconfig-a014
+i386                          randconfig-a012
+i386                          randconfig-a016
+i386                          randconfig-a001
+i386                          randconfig-a003
+i386                          randconfig-a005
+x86_64                           rhel-8.3-kvm
+x86_64                         rhel-8.3-kunit
+i386                                defconfig
+x86_64                          rhel-8.3-func
+x86_64                    rhel-8.3-kselftests
+arm64                            allyesconfig
+arm                              allyesconfig
+i386                             allyesconfig
+ia64                             allmodconfig
+loongarch                         allnoconfig
+arm64                               defconfig
+arm                              allmodconfig
+nios2                               defconfig
+parisc                              defconfig
+parisc64                            defconfig
+csky                                defconfig
+sparc                               defconfig
+x86_64                                  kexec
+m68k                                defconfig
+i386                              debian-10.3
+loongarch                           defconfig
+mips                             allmodconfig
+riscv                             allnoconfig
+riscv                            allmodconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+ia64                                defconfig
+
+clang tested configs:
+i386                          randconfig-a013
+i386                          randconfig-a011
+i386                          randconfig-a015
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+x86_64                        randconfig-a016
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
