@@ -2,157 +2,167 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17638C636CD
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Feb 2023 10:28:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7970C05027
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Feb 2023 17:33:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231935AbjBJK2e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Feb 2023 05:28:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44360 "EHLO
+        id S231881AbjBJRdN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Feb 2023 12:33:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229740AbjBJK2d (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Feb 2023 05:28:33 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04A1528856
-        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 02:28:32 -0800 (PST)
-Received: from kwepemi500002.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PCqfG6lfYzHtcn;
-        Fri, 10 Feb 2023 18:26:46 +0800 (CST)
-Received: from [10.174.179.167] (10.174.179.167) by
- kwepemi500002.china.huawei.com (7.221.188.171) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Fri, 10 Feb 2023 18:28:29 +0800
-Message-ID: <ef9c2ae2-2102-c1ad-5113-39809afe5934@huawei.com>
-Date:   Fri, 10 Feb 2023 18:28:28 +0800
+        with ESMTP id S233003AbjBJRc5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Feb 2023 12:32:57 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B37B795E4
+        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 09:32:55 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2FC8BB824BF
+        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 17:32:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F12F5C433D2
+        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 17:32:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1676050373;
+        bh=uR+un5xT0wIT5naOrWtLnGT74dgskOqkzlPUth4zSoA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Bf0lwHoPR4jHz5n/d8WWHRpCOeZJt1gbz+EQJisCvDZk7oOF903IciqPfy97a+7xp
+         Wocmbw4rG3FcVZLkBhQykGW2axleBMgnADUFRHdRhmXk6JnRIcCKBhm67E9qwHRiv5
+         co/jpx5Ec4XsXGFB/hlPoCmPi6QV0TwDk0XHYUUusRTYtYDMr9tHemGpWD0zM+RwVE
+         bN8tjqdyjwl9lLJ7BR4GueFJ73KnO8UooJSVBoDJXnh4ih2FInwEljJdY2WjYeVDjW
+         7stO412Ezfgvjxa39BnaKkeITzgmVjEggt83Pj7FjRwRLQK0DX076JQbn/JdEuwOw2
+         C9rj4LVL+kgFQ==
+Received: by mail-lf1-f41.google.com with SMTP id bi36so9388623lfb.8
+        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 09:32:52 -0800 (PST)
+X-Gm-Message-State: AO0yUKVyNN9McHZIEyk0qN4IEC/7upyXE9Inlb3XpTZ4SADVKyXP/P/m
+        zzqTV88s6YuUGz+8fGkEFn+hu28EMMdq4OKXzU0=
+X-Google-Smtp-Source: AK7set9aCv6UIvsrm+d6cDV5jte5U3PiU44Wdmavrqt5z2GCRLSXG4EDCK+a+OeE3BvXAYU021J/a9OrtNEdy1BDjpE=
+X-Received: by 2002:ac2:4e4c:0:b0:4cc:a1e3:c04b with SMTP id
+ f12-20020ac24e4c000000b004cca1e3c04bmr2931294lfr.15.1676050370953; Fri, 10
+ Feb 2023 09:32:50 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-Content-Language: en-US
-To:     Jes Sorensen <jes@trained-monkey.org>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        <linux-raid@vger.kernel.org>
-CC:     linfeilong <linfeilong@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
-        Wu Guanghao <wuguanghao3@huawei.com>, <lixiaokeng@huawei.com>
-From:   miaoguanqin <miaoguanqin@huawei.com>
-Subject: [PATCH] Fix memory leak for function Manage_subdevs Manage_add Kill
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.167]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500002.china.huawei.com (7.221.188.171)
-X-CFilter-Loop: Reflected
+References: <20230118005319.147-1-jonathan.derrick@linux.dev> <80812f87-a743-2deb-3d43-d07fcc4ce895@linux.dev>
+In-Reply-To: <80812f87-a743-2deb-3d43-d07fcc4ce895@linux.dev>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 10 Feb 2023 09:32:38 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW65Qai4Dq-wzrcMbCR-s7J9astse1K8U8TwoAuxD4FyzQ@mail.gmail.com>
+Message-ID: <CAPhsuW65Qai4Dq-wzrcMbCR-s7J9astse1K8U8TwoAuxD4FyzQ@mail.gmail.com>
+Subject: Re: [PATCH] md: Use optimal I/O size for last bitmap page
+To:     Jonathan Derrick <jonathan.derrick@linux.dev>
+Cc:     linux-raid@vger.kernel.org,
+        Sushma Kalakota <sushma.kalakota@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-When we excute mdadm,we found some memory leak.
-The function call stack is as follows:
-#0 in xcalloc
-#1 in guess_super_type
-#2 in guess_super
-#3 in Kill
-#4 in misc_list
-#5 in main
+Hi Jonathan,
 
-#0 in __interceptor_posix_memalign
-#1 in init_super1
-#2 in Kill
-#3 in misc_list
-#4 in main
+On Thu, Feb 9, 2023 at 12:38 PM Jonathan Derrick
+<jonathan.derrick@linux.dev> wrote:
+>
+> Hi Song,
+>
+> Any thoughts on this?
 
-#0 in __interceptor_calloc
-#1 in xcalloc
-#2 in match_metadata_desc1
-#3 in super_by_fd
-#4 in Manage_subdevs
-#5 in main
+I am really sorry that I missed this patch.
 
-#0 in __interceptor_calloc
-#1 in xcalloc
-#2 in dup_super
-#3 in Manage_add
-#4 in Manage_subdevs
-#5 in main
+>
+> On 1/17/2023 5:53 PM, Jonathan Derrick wrote:
+> > From: Jon Derrick <jonathan.derrick@linux.dev>
+> >
+> > If the bitmap space has enough room, size the I/O for the last bitmap
+> > page write to the optimal I/O size for the storage device. The expanded
+> > write is checked that it won't overrun the data or metadata.
+> >
+> > This change helps increase performance by preventing unnecessary
+> > device-side read-mod-writes due to non-atomic write unit sizes.
+> >
+> > Ex biosnoop log. Device lba size 512, optimal size 4k:
+> > Before:
+> > Time        Process        PID     Device      LBA        Size      Lat
+> > 0.843734    md0_raid10     5267    nvme0n1   W 24         3584      1.17
+> > 0.843933    md0_raid10     5267    nvme1n1   W 24         3584      1.36
+> > 0.843968    md0_raid10     5267    nvme1n1   W 14207939968 4096      0.01
+> > 0.843979    md0_raid10     5267    nvme0n1   W 14207939968 4096      0.02
+> >
+> > After:
+> > Time        Process        PID     Device      LBA        Size      Lat
+> > 18.374244   md0_raid10     6559    nvme0n1   W 24         4096      0.01
+> > 18.374253   md0_raid10     6559    nvme1n1   W 24         4096      0.01
+> > 18.374300   md0_raid10     6559    nvme0n1   W 11020272296 4096      0.01
+> > 18.374306   md0_raid10     6559    nvme1n1   W 11020272296 4096      0.02
 
-We fix these memory leak based on code logic.
+Do we see significant improvements from io benchmarks?
 
-Signed-off-by: miaoguanqin <miaoguanqin@huawei.com>
----
-  Kill.c   | 12 ++++++++++--
-  Manage.c |  9 ++++++++-
-  2 files changed, 18 insertions(+), 3 deletions(-)
+IIUC, fewer future HDDs will use 512B LBA size.We probably don't need
+such optimizations in the future.
 
-diff --git a/Kill.c b/Kill.c
-index d4767e2..d1207cf 100644
---- a/Kill.c
-+++ b/Kill.c
-@@ -40,7 +40,8 @@ int Kill(char *dev, struct supertype *st, int force, 
-int verbose, int noexcl)
-  	 *  2 - failed to open the device.
-  	 *  4 - failed to find a superblock.
-  	 */
--
-+	
-+	int flags = 0;
-  	int fd, rv = 0;
+Thanks,
+Song
 
-  	if (force)
-@@ -52,8 +53,10 @@ int Kill(char *dev, struct supertype *st, int force, 
-int verbose, int noexcl)
-  				dev);
-  		return 2;
-  	}
--	if (st == NULL)
-+	if (st == NULL) {
-  		st = guess_super(fd);
-+		flags = 1;
-+	}
-  	if (st == NULL || st->ss->init_super == NULL) {
-  		if (verbose >= 0)
-  			pr_err("Unrecognised md component device - %s\n", dev);
-@@ -77,6 +80,11 @@ int Kill(char *dev, struct supertype *st, int force, 
-int verbose, int noexcl)
-  			rv = 0;
-  		}
-  	}
-+	if (flags == 1 && st) {
-+		if (st->sb)
-+			free(st->sb);
-+		free(st);
-+	}
-  	close(fd);
-  	return rv;
-  }
-diff --git a/Manage.c b/Manage.c
-index ffe55f8..15635eb 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -819,9 +819,14 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
-  						    rdev, update, devname,
-  						    verbose, array);
-  				dev_st->ss->free_super(dev_st);
--				if (rv)
-+				if (rv){
-+					if (dev_st)
-+						free(dev_st);
-  					return rv;
-+				}
-  			}
-+			if (dev_st)
-+				free(dev_st);
-  		}
-  		if (dv->disposition == 'M') {
-  			if (verbose > 0)
-@@ -1649,6 +1654,8 @@ int Manage_subdevs(char *devname, int fd,
-  			break;
-  		}
-  	}
-+	if (tst)
-+		free(tst);
-  	if (frozen > 0)
-  		sysfs_set_str(&info, NULL, "sync_action","idle");
-  	if (test && count == 0)
--- 
-2.33.0
-
+> >
+> > Signed-off-by: Jon Derrick <jonathan.derrick@linux.dev>
+> > ---
+> >  drivers/md/md-bitmap.c | 27 ++++++++++++++++++---------
+> >  1 file changed, 18 insertions(+), 9 deletions(-)
+> >
+> > diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> > index e7cc6ba1b657..569297ea9b99 100644
+> > --- a/drivers/md/md-bitmap.c
+> > +++ b/drivers/md/md-bitmap.c
+> > @@ -220,6 +220,7 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+> >       rdev = NULL;
+> >       while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
+> >               int size = PAGE_SIZE;
+> > +             int optimal_size = PAGE_SIZE;
+> >               loff_t offset = mddev->bitmap_info.offset;
+> >
+> >               bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
+> > @@ -228,9 +229,14 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+> >                       int last_page_size = store->bytes & (PAGE_SIZE-1);
+> >                       if (last_page_size == 0)
+> >                               last_page_size = PAGE_SIZE;
+> > -                     size = roundup(last_page_size,
+> > -                                    bdev_logical_block_size(bdev));
+> > +                     size = roundup(last_page_size, bdev_logical_block_size(bdev));
+> > +                     if (bdev_io_opt(bdev) > bdev_logical_block_size(bdev))
+> > +                             optimal_size = roundup(last_page_size, bdev_io_opt(bdev));
+> > +                     else
+> > +                             optimal_size = size;
+> >               }
+> > +
+> > +
+> >               /* Just make sure we aren't corrupting data or
+> >                * metadata
+> >                */
+> > @@ -246,9 +252,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+> >                               goto bad_alignment;
+> >               } else if (offset < 0) {
+> >                       /* DATA  BITMAP METADATA  */
+> > -                     if (offset
+> > -                         + (long)(page->index * (PAGE_SIZE/512))
+> > -                         + size/512 > 0)
+> > +                     loff_t off = offset + (long)(page->index * (PAGE_SIZE/512));
+> > +                     if (size != optimal_size &&
+> > +                         off + optimal_size/512 <= 0)
+> > +                             size = optimal_size;
+> > +                     else if (off + size/512 > 0)
+> >                               /* bitmap runs in to metadata */
+> >                               goto bad_alignment;
+> >                       if (rdev->data_offset + mddev->dev_sectors
+> > @@ -257,10 +265,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+> >                               goto bad_alignment;
+> >               } else if (rdev->sb_start < rdev->data_offset) {
+> >                       /* METADATA BITMAP DATA */
+> > -                     if (rdev->sb_start
+> > -                         + offset
+> > -                         + page->index*(PAGE_SIZE/512) + size/512
+> > -                         > rdev->data_offset)
+> > +                     loff_t off = rdev->sb_start + offset + page->index*(PAGE_SIZE/512);
+> > +                     if (size != optimal_size &&
+> > +                         off + optimal_size/512 <= rdev->data_offset)
+> > +                             size = optimal_size;
+> > +                     else if (off + size/512 > rdev->data_offset)
+> >                               /* bitmap runs in to data */
+> >                               goto bad_alignment;
+> >               } else {
