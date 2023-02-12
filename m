@@ -2,167 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7970C05027
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Feb 2023 17:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32295C636D3
+	for <linux-raid@archiver.kernel.org>; Sun, 12 Feb 2023 20:33:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231881AbjBJRdN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Feb 2023 12:33:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42020 "EHLO
+        id S229503AbjBLUdv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 12 Feb 2023 15:33:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233003AbjBJRc5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Feb 2023 12:32:57 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B37B795E4
-        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 09:32:55 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2FC8BB824BF
-        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 17:32:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F12F5C433D2
-        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 17:32:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676050373;
-        bh=uR+un5xT0wIT5naOrWtLnGT74dgskOqkzlPUth4zSoA=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Bf0lwHoPR4jHz5n/d8WWHRpCOeZJt1gbz+EQJisCvDZk7oOF903IciqPfy97a+7xp
-         Wocmbw4rG3FcVZLkBhQykGW2axleBMgnADUFRHdRhmXk6JnRIcCKBhm67E9qwHRiv5
-         co/jpx5Ec4XsXGFB/hlPoCmPi6QV0TwDk0XHYUUusRTYtYDMr9tHemGpWD0zM+RwVE
-         bN8tjqdyjwl9lLJ7BR4GueFJ73KnO8UooJSVBoDJXnh4ih2FInwEljJdY2WjYeVDjW
-         7stO412Ezfgvjxa39BnaKkeITzgmVjEggt83Pj7FjRwRLQK0DX076JQbn/JdEuwOw2
-         C9rj4LVL+kgFQ==
-Received: by mail-lf1-f41.google.com with SMTP id bi36so9388623lfb.8
-        for <linux-raid@vger.kernel.org>; Fri, 10 Feb 2023 09:32:52 -0800 (PST)
-X-Gm-Message-State: AO0yUKVyNN9McHZIEyk0qN4IEC/7upyXE9Inlb3XpTZ4SADVKyXP/P/m
-        zzqTV88s6YuUGz+8fGkEFn+hu28EMMdq4OKXzU0=
-X-Google-Smtp-Source: AK7set9aCv6UIvsrm+d6cDV5jte5U3PiU44Wdmavrqt5z2GCRLSXG4EDCK+a+OeE3BvXAYU021J/a9OrtNEdy1BDjpE=
-X-Received: by 2002:ac2:4e4c:0:b0:4cc:a1e3:c04b with SMTP id
- f12-20020ac24e4c000000b004cca1e3c04bmr2931294lfr.15.1676050370953; Fri, 10
- Feb 2023 09:32:50 -0800 (PST)
+        with ESMTP id S229479AbjBLUdu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 12 Feb 2023 15:33:50 -0500
+X-Greylist: delayed 905 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 12 Feb 2023 12:33:47 PST
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E377EE3A6
+        for <linux-raid@vger.kernel.org>; Sun, 12 Feb 2023 12:33:47 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1676233113; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=IHlPDJNCtlI7GD06kiCAXEJ8GBh8QVsOaO8eHb0Ym4YRZYOkkEOSmNRVqGln46uG9mD+WQ7D/uQqDn7usalI7LZZCLtitApUs6h83HI1FMLXVz8MPx60I8WVL9OpX17ghVKYUifKktxA/7UKiiBs8zA62cv5E/6kga5LQzPY0oo=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1676233113; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=3dDoK3JxzSnP0SwUlUFZSU1H60w9rvGIAS9g4Hbld/k=; 
+        b=QInz81H5NLAzS4tArDO82ZQ29Wf8U9WogyhzqKvcFAYcqGSUbuyqJNsftUx+96ujKEXOOKfiO23R0J+xj5rvPXA1swD4UK8l7q09FZYMm7fHUTN7W/NqV8ZjyxjZaEleedmOdSfFBTu5ngrfNkDwOSUg2/QbajOKVj7iqXbJqmg=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1676233109636636.9212403163242; Sun, 12 Feb 2023 21:18:29 +0100 (CET)
+Message-ID: <1f799f15-78f3-db4e-2d59-c31480e787fd@trained-monkey.org>
+Date:   Sun, 12 Feb 2023 15:18:27 -0500
 MIME-Version: 1.0
-References: <20230118005319.147-1-jonathan.derrick@linux.dev> <80812f87-a743-2deb-3d43-d07fcc4ce895@linux.dev>
-In-Reply-To: <80812f87-a743-2deb-3d43-d07fcc4ce895@linux.dev>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 10 Feb 2023 09:32:38 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW65Qai4Dq-wzrcMbCR-s7J9astse1K8U8TwoAuxD4FyzQ@mail.gmail.com>
-Message-ID: <CAPhsuW65Qai4Dq-wzrcMbCR-s7J9astse1K8U8TwoAuxD4FyzQ@mail.gmail.com>
-Subject: Re: [PATCH] md: Use optimal I/O size for last bitmap page
-To:     Jonathan Derrick <jonathan.derrick@linux.dev>
-Cc:     linux-raid@vger.kernel.org,
-        Sushma Kalakota <sushma.kalakota@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH] Revert "mdadm/systemd: remove KillMode=none from service
+ file"
+Content-Language: en-US
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org, colyli@suse.de
+References: <20230202075631.18092-1-mariusz.tkaczyk@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20230202075631.18092-1-mariusz.tkaczyk@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jonathan,
+On 2/2/23 02:56, Mariusz Tkaczyk wrote:
+> This reverts commit 52c67fcdd6dadc4138ecad73e65599551804d445.
+> 
+> The functionality is marked as deprecated but we don't have alternative
+> solution yet. Shutdown hangs if OS is installed on external array:
+> 
+> task:umount state:D stack: 0 pid: 6285 ppid: flags:0x00004084
+> Call Trace:
+> __schedule+0x2d1/0x830
+> ? finish_wait+0x80/0x80
+> schedule+0x35/0xa0
+> md_write_start+0x14b/0x220
+> ? finish_wait+0x80/0x80
+> raid1_make_request+0x3c/0x90 [raid1]
+> md_handle_request+0x128/0x1b0
+> md_make_request+0x5b/0xb0
+> generic_make_request_no_check+0x202/0x330
+> submit_bio+0x3c/0x160
+> 
+> Use it until new solution is implemented.
+> 
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> ---
+>  systemd/mdadm-grow-continue@.service | 1 +
+>  systemd/mdmon@.service               | 1 +
+>  2 files changed, 2 insertions(+)
 
-On Thu, Feb 9, 2023 at 12:38 PM Jonathan Derrick
-<jonathan.derrick@linux.dev> wrote:
->
-> Hi Song,
->
-> Any thoughts on this?
+Applied!
 
-I am really sorry that I missed this patch.
+Sorry for taking so long.
 
->
-> On 1/17/2023 5:53 PM, Jonathan Derrick wrote:
-> > From: Jon Derrick <jonathan.derrick@linux.dev>
-> >
-> > If the bitmap space has enough room, size the I/O for the last bitmap
-> > page write to the optimal I/O size for the storage device. The expanded
-> > write is checked that it won't overrun the data or metadata.
-> >
-> > This change helps increase performance by preventing unnecessary
-> > device-side read-mod-writes due to non-atomic write unit sizes.
-> >
-> > Ex biosnoop log. Device lba size 512, optimal size 4k:
-> > Before:
-> > Time        Process        PID     Device      LBA        Size      Lat
-> > 0.843734    md0_raid10     5267    nvme0n1   W 24         3584      1.17
-> > 0.843933    md0_raid10     5267    nvme1n1   W 24         3584      1.36
-> > 0.843968    md0_raid10     5267    nvme1n1   W 14207939968 4096      0.01
-> > 0.843979    md0_raid10     5267    nvme0n1   W 14207939968 4096      0.02
-> >
-> > After:
-> > Time        Process        PID     Device      LBA        Size      Lat
-> > 18.374244   md0_raid10     6559    nvme0n1   W 24         4096      0.01
-> > 18.374253   md0_raid10     6559    nvme1n1   W 24         4096      0.01
-> > 18.374300   md0_raid10     6559    nvme0n1   W 11020272296 4096      0.01
-> > 18.374306   md0_raid10     6559    nvme1n1   W 11020272296 4096      0.02
+Best regards,
+Jes
 
-Do we see significant improvements from io benchmarks?
-
-IIUC, fewer future HDDs will use 512B LBA size.We probably don't need
-such optimizations in the future.
-
-Thanks,
-Song
-
-> >
-> > Signed-off-by: Jon Derrick <jonathan.derrick@linux.dev>
-> > ---
-> >  drivers/md/md-bitmap.c | 27 ++++++++++++++++++---------
-> >  1 file changed, 18 insertions(+), 9 deletions(-)
-> >
-> > diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> > index e7cc6ba1b657..569297ea9b99 100644
-> > --- a/drivers/md/md-bitmap.c
-> > +++ b/drivers/md/md-bitmap.c
-> > @@ -220,6 +220,7 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
-> >       rdev = NULL;
-> >       while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
-> >               int size = PAGE_SIZE;
-> > +             int optimal_size = PAGE_SIZE;
-> >               loff_t offset = mddev->bitmap_info.offset;
-> >
-> >               bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
-> > @@ -228,9 +229,14 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
-> >                       int last_page_size = store->bytes & (PAGE_SIZE-1);
-> >                       if (last_page_size == 0)
-> >                               last_page_size = PAGE_SIZE;
-> > -                     size = roundup(last_page_size,
-> > -                                    bdev_logical_block_size(bdev));
-> > +                     size = roundup(last_page_size, bdev_logical_block_size(bdev));
-> > +                     if (bdev_io_opt(bdev) > bdev_logical_block_size(bdev))
-> > +                             optimal_size = roundup(last_page_size, bdev_io_opt(bdev));
-> > +                     else
-> > +                             optimal_size = size;
-> >               }
-> > +
-> > +
-> >               /* Just make sure we aren't corrupting data or
-> >                * metadata
-> >                */
-> > @@ -246,9 +252,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
-> >                               goto bad_alignment;
-> >               } else if (offset < 0) {
-> >                       /* DATA  BITMAP METADATA  */
-> > -                     if (offset
-> > -                         + (long)(page->index * (PAGE_SIZE/512))
-> > -                         + size/512 > 0)
-> > +                     loff_t off = offset + (long)(page->index * (PAGE_SIZE/512));
-> > +                     if (size != optimal_size &&
-> > +                         off + optimal_size/512 <= 0)
-> > +                             size = optimal_size;
-> > +                     else if (off + size/512 > 0)
-> >                               /* bitmap runs in to metadata */
-> >                               goto bad_alignment;
-> >                       if (rdev->data_offset + mddev->dev_sectors
-> > @@ -257,10 +265,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
-> >                               goto bad_alignment;
-> >               } else if (rdev->sb_start < rdev->data_offset) {
-> >                       /* METADATA BITMAP DATA */
-> > -                     if (rdev->sb_start
-> > -                         + offset
-> > -                         + page->index*(PAGE_SIZE/512) + size/512
-> > -                         > rdev->data_offset)
-> > +                     loff_t off = rdev->sb_start + offset + page->index*(PAGE_SIZE/512);
-> > +                     if (size != optimal_size &&
-> > +                         off + optimal_size/512 <= rdev->data_offset)
-> > +                             size = optimal_size;
-> > +                     else if (off + size/512 > rdev->data_offset)
-> >                               /* bitmap runs in to data */
-> >                               goto bad_alignment;
-> >               } else {
