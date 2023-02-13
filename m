@@ -2,82 +2,96 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32295C636D3
-	for <linux-raid@archiver.kernel.org>; Sun, 12 Feb 2023 20:33:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9303C636D7
+	for <linux-raid@archiver.kernel.org>; Mon, 13 Feb 2023 03:07:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229503AbjBLUdv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 12 Feb 2023 15:33:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40508 "EHLO
+        id S229556AbjBMDHU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 12 Feb 2023 22:07:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229479AbjBLUdu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 12 Feb 2023 15:33:50 -0500
-X-Greylist: delayed 905 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 12 Feb 2023 12:33:47 PST
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E377EE3A6
-        for <linux-raid@vger.kernel.org>; Sun, 12 Feb 2023 12:33:47 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1676233113; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=IHlPDJNCtlI7GD06kiCAXEJ8GBh8QVsOaO8eHb0Ym4YRZYOkkEOSmNRVqGln46uG9mD+WQ7D/uQqDn7usalI7LZZCLtitApUs6h83HI1FMLXVz8MPx60I8WVL9OpX17ghVKYUifKktxA/7UKiiBs8zA62cv5E/6kga5LQzPY0oo=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1676233113; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=3dDoK3JxzSnP0SwUlUFZSU1H60w9rvGIAS9g4Hbld/k=; 
-        b=QInz81H5NLAzS4tArDO82ZQ29Wf8U9WogyhzqKvcFAYcqGSUbuyqJNsftUx+96ujKEXOOKfiO23R0J+xj5rvPXA1swD4UK8l7q09FZYMm7fHUTN7W/NqV8ZjyxjZaEleedmOdSfFBTu5ngrfNkDwOSUg2/QbajOKVj7iqXbJqmg=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 1676233109636636.9212403163242; Sun, 12 Feb 2023 21:18:29 +0100 (CET)
-Message-ID: <1f799f15-78f3-db4e-2d59-c31480e787fd@trained-monkey.org>
-Date:   Sun, 12 Feb 2023 15:18:27 -0500
+        with ESMTP id S229576AbjBMDHT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 12 Feb 2023 22:07:19 -0500
+Received: from mail-vs1-xe30.google.com (mail-vs1-xe30.google.com [IPv6:2607:f8b0:4864:20::e30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C02B49ED7;
+        Sun, 12 Feb 2023 19:07:17 -0800 (PST)
+Received: by mail-vs1-xe30.google.com with SMTP id h10so1657390vsu.11;
+        Sun, 12 Feb 2023 19:07:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=kcHnI96zNjfQlLYDodJwKwSlXVI5y4LSVOx8M0TZ8ZU=;
+        b=K8g777QIwrLgN+pFUq/PZMZ/+GWhoFo9rfesTPx1SqpoegLAlgdTVtd/dbX/6tC93b
+         KPnWn0ig86IlPq/7dvzTaHb2v5WqAhborapk+r+F777pHrrdX6KRE3ZVz8kCIkcUePFv
+         UkU4XrOPpNBsVzc/ZhFQeGq+MlI0rpjez0cAYw+57Adcl+KLVtiyvjUCm7UeJVN3YDTY
+         7jXvsNfha33LcNHeZ+Bg11ipscl7H7p7IgXw6SQQjDoQSdiMLKGNimllZ0iJURkQilGj
+         CztYuleQjtiWvUQudWoZd+ro0m0NFzreUrRXga2K4KKGRVSba50XopmeikUU+WQAMkAX
+         mx+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=kcHnI96zNjfQlLYDodJwKwSlXVI5y4LSVOx8M0TZ8ZU=;
+        b=KhQuFRbDlNi/78V+QZqORqztndro4jUpNJs+5QcQKcgHBQakyFTZzewwggmk5nrvMM
+         UkzV8FgU4gY52Sigs24oef3Z1l/LrGa6hvwov2+oOA2uEoucINzIab4OHG2eIBAxI4iG
+         G+LSoykghvO9ylpHr9WuXThv70clRymK0uJsgpYlt7AIjw+zTJfdrJKLTC+bwDcxZSB1
+         y05J9wihbodinpp+6kNsciXFEi6Ip81qLAMgmC+2RSOu6NGZ/bVQsQN/+lf23PQ5h6na
+         o0zsyGU9kNtxX/i88kknVW2JDSDUfSAyvT7zra1iMHWxQU8X3ata0XG39bq2oHMI1Ot/
+         0Rxg==
+X-Gm-Message-State: AO0yUKUtfE0opfwZHdGfUQRbzFFUe0agaOgbSirXXCKgOXDg4QdVRZgI
+        KgBBxBPGWWYbhTXuB8ZUPwXD95N0zQX8dBAIzMM=
+X-Google-Smtp-Source: AK7set8iEjeN78Q7+12/hG2Oj6DiGKxWZmsCx8JOLarTr8A1PYmgakLmXoZmHMsilJeX5BhTiaU0vJWHNrlWguub4Xw=
+X-Received: by 2002:a05:6102:a22:b0:412:317f:e15f with SMTP id
+ 2-20020a0561020a2200b00412317fe15fmr32440vsb.29.1676257636873; Sun, 12 Feb
+ 2023 19:07:16 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] Revert "mdadm/systemd: remove KillMode=none from service
- file"
-Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org, colyli@suse.de
-References: <20230202075631.18092-1-mariusz.tkaczyk@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20230202075631.18092-1-mariusz.tkaczyk@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+From:   Kyle Sanderson <kyle.leet@gmail.com>
+Date:   Sun, 12 Feb 2023 19:07:05 -0800
+Message-ID: <CACsaVZJvXpCt37nQOoe8qd1EPUpfdMM1HwHk9tVO8HdU_Azhhw@mail.gmail.com>
+Subject: RAID4 with no striping mode request
+To:     device-mapper development <dm-devel@redhat.com>,
+        linux-raid@vger.kernel.org
+Cc:     Song Liu <song@kernel.org>,
+        Linux-Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2/2/23 02:56, Mariusz Tkaczyk wrote:
-> This reverts commit 52c67fcdd6dadc4138ecad73e65599551804d445.
-> 
-> The functionality is marked as deprecated but we don't have alternative
-> solution yet. Shutdown hangs if OS is installed on external array:
-> 
-> task:umount state:D stack: 0 pid: 6285 ppid: flags:0x00004084
-> Call Trace:
-> __schedule+0x2d1/0x830
-> ? finish_wait+0x80/0x80
-> schedule+0x35/0xa0
-> md_write_start+0x14b/0x220
-> ? finish_wait+0x80/0x80
-> raid1_make_request+0x3c/0x90 [raid1]
-> md_handle_request+0x128/0x1b0
-> md_make_request+0x5b/0xb0
-> generic_make_request_no_check+0x202/0x330
-> submit_bio+0x3c/0x160
-> 
-> Use it until new solution is implemented.
-> 
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> ---
->  systemd/mdadm-grow-continue@.service | 1 +
->  systemd/mdmon@.service               | 1 +
->  2 files changed, 2 insertions(+)
+hi DM and Linux-RAID,
 
-Applied!
+There have been multiple proprietary solutions (some nearly 20 years
+old now) with a number of (userspace) bugs that are becoming untenable
+for me as an end user. Basically how they work is a closed MD module
+(typically administered through DM) that uses RAID4 for a dedicated
+parity disk across multiple other disks.
 
-Sorry for taking so long.
+As there is no striping, the maximum size of the protected data is the
+size of the parity disk (so a set of 4+8+12+16 disks can be protected
+by a single dedicated 16 disk).When a block is written on any disk,
+the parity bit is read from the parity disk again, and updated
+depending on the existing + new bit value (so writing disk + parity
+disk spun up). Additionally, if enough disks are already spun up, the
+parity information can be recalculated from all of the spinning disks,
+resulting in a single write to the parity disk (without a read on the
+parity, doubling throughput). Finally any of the data disks can be
+moved around within the array without impacting parity as the layout
+has not changed. I don't necessarily need all of these features, just
+the ability to remove a disk and still access the data that was on
+there by spinning up every other disk until the rebuild is complete is
+important.
 
-Best regards,
-Jes
+The benefit of this can be the data disks are all zoned, and you can
+have a fast parity disk and still maintain excellent performance in
+the array (limited only by the speed of the disk in question +
+parity). Additionally, should 2 disks fail, you've either lost the
+parity and data disk, or 2 data disks with the parity and other disks
+not lost.
 
+I was reading through the DM and MD code and it looks like everything
+may already be there to do this, just needs (significant) stubs to be
+added to support this mode (or new code). Snapraid is a friendly (and
+respectable) implementation of this. Unraid and Synology SHR compete
+in this space, as well as other NAS and enterprise SAN providers.
+
+Kyle.
