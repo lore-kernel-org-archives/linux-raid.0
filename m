@@ -2,89 +2,110 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA7CC05027
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Feb 2023 18:38:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA858C05027
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Feb 2023 22:28:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232814AbjBNSiQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Feb 2023 13:38:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35590 "EHLO
+        id S232447AbjBNW2t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Feb 2023 17:28:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229686AbjBNSiO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Feb 2023 13:38:14 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4747629411;
-        Tue, 14 Feb 2023 10:38:13 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CF57961838;
-        Tue, 14 Feb 2023 18:38:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A869C433EF;
-        Tue, 14 Feb 2023 18:38:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676399892;
-        bh=zt9X2BlD/QOFBvRUFyEoYRvv/imLE4lhcxhq2FsN23c=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=c2AxS9jdnAKlYBFm3nSbGQDuJ0oGooeAZsCyLpqVsNLok/afypKqCjByA/SahuY5Y
-         S9fNSdimTPh/1S3wd0K69PKmTBTltQ/M5tQhKn+dKEoOcaazHFoPmcCFYaV3cOsD19
-         Z13ioOcCI8ZaAwkvWDXi1Ji55Wkh4783uSCfm9CX+wWiWF2mr9gIA3lZfbd71xx7tV
-         pDV0kGrcqSiCQAuINQpz/v/ozifElLMSzPqU+zIAVx6/LzY+wiTsgGwiQ3ck7+bRK7
-         2TH4gMeHX3xsLCu0rIDXgf0ur8W6Cpw+xWDiQWkLp2Hz3sijjiAvbFQVQ0v9NaqH+i
-         YUHR4tVDCkzuQ==
-Received: by mail-lj1-f172.google.com with SMTP id a9so19409929ljr.13;
-        Tue, 14 Feb 2023 10:38:12 -0800 (PST)
-X-Gm-Message-State: AO0yUKV2fNlydsD2xJxS4suhMfA6WNxKb6DiDh76Q443V0P2yKYOZtfS
-        UwPYsgkTzbtTRbmM3aocfVCr8BMVLp/eyShSxxw=
-X-Google-Smtp-Source: AK7set+CEG1WyNimA3QHERrbdHXEAIa/PyvekCI7ilROesupJOlW3Q4HK3XV52LdR4NIHD6WF+TSUEv1MtZSJfbRjm4=
-X-Received: by 2002:a2e:a36a:0:b0:292:8597:6142 with SMTP id
- i10-20020a2ea36a000000b0029285976142mr495470ljn.5.1676399890282; Tue, 14 Feb
- 2023 10:38:10 -0800 (PST)
+        with ESMTP id S229454AbjBNW2s (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Feb 2023 17:28:48 -0500
+Received: from mail-vs1-xe2d.google.com (mail-vs1-xe2d.google.com [IPv6:2607:f8b0:4864:20::e2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48EE5265B5;
+        Tue, 14 Feb 2023 14:28:47 -0800 (PST)
+Received: by mail-vs1-xe2d.google.com with SMTP id d66so18033020vsd.9;
+        Tue, 14 Feb 2023 14:28:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1676413726;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=plqHRAI8Pfx3LpYamylhfhBOqt+fLpnOArGMZObrn2U=;
+        b=jT58V1SM8NDSjV4vkW9fRK0Lqw/waIGvOwskkhzhojXB82nrKvVMJQGwzBvI3iHRFL
+         gry/nNrTImt2DSKPWAfL1clGjA0Mo68DXH9pL8NgqRv9i0gz3oPvr/NJYUZK0wsRsvXf
+         fvTRBgNmVQYTKaoB6StOVR2k6AfxHpfL78Rv2uuAplNVFxgddeelRhg7ZPcT5cJjasDu
+         mAd5JYO/HvyYYv0IF0Um3T93uuTzfuB01XJggWYCRJObpPWDNchJLI+wyKWSv47pgIML
+         xCnQJWmxlLOqsxMSGH7NBsJBr/+YLxk8Mi3ldhRTDqI2gR+GRwzPcwMOArwauThEKALS
+         z7+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1676413726;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=plqHRAI8Pfx3LpYamylhfhBOqt+fLpnOArGMZObrn2U=;
+        b=Ll0Wn6wfYt4RPafxzF+FbCE/iY6+5l6GKgoeC90pzdYwPqI7rBPPsrXsI4eSVkjcZz
+         TuvGbAj5tOYhekX1yUuI1XzeDZ+pXvGRIHm3U5H3neUDHTI4d0fPqq54chVTKF21utWo
+         662YZMt5P2im1wpro741y0kpL2+mUVa9Z5DRwrYMF/Tu+1vdY2tJLwErymhwA1LHkZbA
+         0Xp/PAVXL0SUliy9DywdgpJWFpW80wFyGaJP7316d3BJC98QS2qV7RhkdjSQxFaScCAg
+         AFMiaoDgduFSuTmIFRSZaXeW1TAmohuxuhZhRQ4OAQUKsXsQTDgrrW3rFrMjHd7Q5zQY
+         HP2A==
+X-Gm-Message-State: AO0yUKXYezB+hk2zSBRtvdNu6DkvIW+aDk7hY3g6vW7/SKvprsDOGQZY
+        2zd5m9szTdzVr1FlN4FRWH3JP11uejgt6XotKsGY2vwFMd0=
+X-Google-Smtp-Source: AK7set/44hMy5ENsS6Z0/yejw8yOcoTBn/fVLjtxEYcM/BoKHwiJZY7crwQgI4SNayyqUDqO7Ab9vCsO4V6WthLRU8c=
+X-Received: by 2002:a67:e0cf:0:b0:3fc:3a9e:3203 with SMTP id
+ m15-20020a67e0cf000000b003fc3a9e3203mr73221vsl.84.1676413726415; Tue, 14 Feb
+ 2023 14:28:46 -0800 (PST)
 MIME-Version: 1.0
 References: <CACsaVZJvXpCt37nQOoe8qd1EPUpfdMM1HwHk9tVO8HdU_Azhhw@mail.gmail.com>
  <25578.37401.314298.238192@quad.stoffel.home> <CACsaVZJ-5y7U5xqwL9bof69EKbTk+wrHWFcBFYyP_BwVSt+CNA@mail.gmail.com>
-In-Reply-To: <CACsaVZJ-5y7U5xqwL9bof69EKbTk+wrHWFcBFYyP_BwVSt+CNA@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 14 Feb 2023 10:37:58 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4XPqY18k4DB2YXqaNgABp3HYYQtS7u0bGfjBcTgkpXkQ@mail.gmail.com>
-Message-ID: <CAPhsuW4XPqY18k4DB2YXqaNgABp3HYYQtS7u0bGfjBcTgkpXkQ@mail.gmail.com>
-Subject: Re: RAID4 with no striping mode request
-To:     Kyle Sanderson <kyle.leet@gmail.com>
-Cc:     John Stoffel <john@stoffel.org>,
+ <CAM23Vxr8LkkcVDFfW1=qEYGgo7JG1qx62eWSV4WOw4_MnD+TZA@mail.gmail.com>
+In-Reply-To: <CAM23Vxr8LkkcVDFfW1=qEYGgo7JG1qx62eWSV4WOw4_MnD+TZA@mail.gmail.com>
+From:   Roger Heflin <rogerheflin@gmail.com>
+Date:   Tue, 14 Feb 2023 16:28:36 -0600
+Message-ID: <CAAMCDeeHxMBoVkNYAyssjgjo4=FYd2NonS-mqC7OUEL89B9Cig@mail.gmail.com>
+Subject: Re: [dm-devel] RAID4 with no striping mode request
+To:     Heinz Mauelshagen <heinzm@redhat.com>
+Cc:     Kyle Sanderson <kyle.leet@gmail.com>, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>,
         device-mapper development <dm-devel@redhat.com>,
-        linux-raid@vger.kernel.org,
+        John Stoffel <john@stoffel.org>,
         Linux-Kernel <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Kyle,
-
-On Mon, Feb 13, 2023 at 1:12 PM Kyle Sanderson <kyle.leet@gmail.com> wrote:
+On Tue, Feb 14, 2023 at 3:27 PM Heinz Mauelshagen <heinzm@redhat.com> wrote:
 >
-[...]
 
-> >
-> > > The benefit of this can be the data disks are all zoned, and you can
-> > > have a fast parity disk and still maintain excellent performance in
-> > > the array (limited only by the speed of the disk in question +
-> > > parity). Additionally, should 2 disks fail, you've either lost the
-> > > parity and data disk, or 2 data disks with the parity and other disks
-> > > not lost.
+>
+>
+> ...which is RAID1 plus a parity disk which seems superfluous as you achieve (N-1)
+> resilience against single device failures already without the later.
+>
+> What would you need such parity disk for?
+>
+> Heinz
+>
 
-I think I understand the high level idea here. But I think we need a lot more
-details on how to implement this, and what the system would look like.
-Also, I don't quite follow why the data disks can be zoned devices and
-still maintain excellent performance.
+I thought that at first too, but threw that idea out as it did not
+make much sense.
 
-> > > I was reading through the DM and MD code and it looks like everything
-> > > may already be there to do this, just needs (significant) stubs to be
-> > > added to support this mode (or new code). Snapraid is a friendly (and
-> > > respectable) implementation of this. Unraid and Synology SHR compete
-> > > in this space, as well as other NAS and enterprise SAN providers.
+What he appears to want is 8 linear non-striped data disks + a parity disk.
 
-Assume we figure out all the details. I will be happy to review patches in
-MD code. But I won't be able to develop this feature myself.
+Such that you can lose any one data disk and parity can rebuild that
+disk.  And if you lose several data diskis, then you have intact
+non-striped data for the remaining disks.
 
-Thanks,
-Song
+It would almost seem that you would need to put a separate filesystem
+on each data disk/section (or have a filesystem that is redundant
+enough to survive) otherwise losing an entire data disk would leave
+the filesystem in a mess..
+
+So N filesystems + a parity disk for the data on the N separate
+filesystems.   And each write needs you to read the data from the disk
+you are writing to, and the parity and recalculate the new parity and
+write out the data and new parity.
+
+If the parity disk was an SSD it would be fast enough, but if parity
+was an SSD I would expect it to get used up/burned out from all of
+parity being re-written for each write on each disk unless you bought
+an expensive high-write ssd.
+
+The only advantage of the setup is that if you lose too many disks you
+still have some data.
+
+It is not clear to me that it would be any cheaper if parity needs to
+be a normal ssd's (since ssds are about 4x the price/gb and high-write
+ones are even more) than a classic bunch of mirrors, or even say a 4
+disks raid6 where you can lose any 2 and still have data.
