@@ -2,98 +2,66 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B0E1C636D4
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Feb 2023 03:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CB47C05027
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Feb 2023 06:41:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231286AbjBNDT1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Feb 2023 22:19:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54216 "EHLO
+        id S231676AbjBNGlZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Feb 2023 01:41:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229936AbjBNDT0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Feb 2023 22:19:26 -0500
-Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DD2F4694;
-        Mon, 13 Feb 2023 19:19:26 -0800 (PST)
-From:   =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=weissschuh.net;
-        s=mail; t=1676344764;
-        bh=/j6gYMkWQlw3NcQ1X0C8XkJ0pAG5hrhzDMoF3CPWPq4=;
-        h=From:Date:Subject:To:Cc:From;
-        b=Uy6Aov4R9l4UUO0iiwFR9AHOn+xr2EJEWsvfuEBWWYOspGztYXlLgMXOt+5NOjUb6
-         B3vJyLq2QuFBqSPJcEtiHght6itypsj8p1Rt1JvdDn5V6xAMKxuE5fc13tJ9lvp3zl
-         X96UJMFExdwj392iJW1hIYyFUwyyNuRs8ciwqJmM=
-Date:   Tue, 14 Feb 2023 03:19:22 +0000
-Subject: [PATCH] md: make kobj_type structures constant
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20230214-kobj_type-md-v1-1-d6853f707f11@weissschuh.net>
-X-B4-Tracking: v=1; b=H4sIALn96mMC/x2NWwqDMBAAryL73QVNLAGvIlKSuNb1ESWxRRHv7
- uLnDAxzQqLIlKDKToj058RLECheGfjehi8ht8KgcqVzVZQ4Lm74bMdKOLdotTfG6LcpfQeSOJs
- IXbTB9xKF3zSJXCN1vD+PurmuGwztvLFzAAAA
-To:     Song Liu <song@kernel.org>
+        with ESMTP id S229853AbjBNGlR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Feb 2023 01:41:17 -0500
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C16471E2BD;
+        Mon, 13 Feb 2023 22:40:59 -0800 (PST)
+X-UUID: 820583598d9d482faa57c8e4fa60c22f-20230214
+X-UUID: 820583598d9d482faa57c8e4fa60c22f-20230214
+Received: from mail.kylinos.cn [(39.156.73.10)] by mailgw
+        (envelope-from <yijiangshan@kylinos.cn>)
+        (Generic MTA)
+        with ESMTP id 458980073; Tue, 14 Feb 2023 14:41:00 +0800
+Received: from mail.kylinos.cn (localhost [127.0.0.1])
+        by mail.kylinos.cn (NSMail) with SMTP id 4E0ECE009413;
+        Tue, 14 Feb 2023 14:40:55 +0800 (CST)
+X-ns-mid: postfix-63EB2CF7-1129417
+Received: from localhost.localdomain (unknown [172.20.125.154])
+        by mail.kylinos.cn (NSMail) with ESMTPA id 603BAE009413;
+        Tue, 14 Feb 2023 14:40:54 +0800 (CST)
+From:   Jiangshan Yi <yijiangshan@kylinos.cn>
+To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-X-Mailer: b4 0.12.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1676344762; l=1569;
- i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=/j6gYMkWQlw3NcQ1X0C8XkJ0pAG5hrhzDMoF3CPWPq4=;
- b=bsFcY3wtN3ALz/fXXkg2f+AZItfYpqAJ3W8jA8TNC9MDF/AEAN0Xnb41ix9R9DZ6GfTA26Uqe
- Eq1kH03/ec0DTJlhXmcbaD6Yg23DDDSEgNuGo2RD1n/poVDpR5D4SmP
-X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
- pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
+        13667453960@163.com, Jiangshan Yi <yijiangshan@kylinos.cn>
+Subject: [PATCH] md/raid10: Fix typo in comment (replacment -> replacement)
+Date:   Tue, 14 Feb 2023 14:40:13 +0800
+Message-Id: <20230214064013.2373851-1-yijiangshan@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Since commit ee6d3dd4ed48 ("driver core: make kobj_type constant.")
-the driver core allows the usage of const struct kobj_type.
+Replace replacment with replacement.
 
-Take advantage of this to constify the structure definitions to prevent
-modification at runtime.
-
-Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
+Signed-off-by: Jiangshan Yi <yijiangshan@kylinos.cn>
 ---
- drivers/md/md.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/md/raid10.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 02b0240e7c71..091c1d6f0b87 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -78,7 +78,7 @@
- static LIST_HEAD(pers_list);
- static DEFINE_SPINLOCK(pers_lock);
- 
--static struct kobj_type md_ktype;
-+static const struct kobj_type md_ktype;
- 
- struct md_cluster_operations *md_cluster_ops;
- EXPORT_SYMBOL(md_cluster_ops);
-@@ -3600,7 +3600,7 @@ static const struct sysfs_ops rdev_sysfs_ops = {
- 	.show		= rdev_attr_show,
- 	.store		= rdev_attr_store,
- };
--static struct kobj_type rdev_ktype = {
-+static const struct kobj_type rdev_ktype = {
- 	.release	= rdev_free,
- 	.sysfs_ops	= &rdev_sysfs_ops,
- 	.default_groups	= rdev_default_groups,
-@@ -5558,7 +5558,7 @@ static const struct sysfs_ops md_sysfs_ops = {
- 	.show	= md_attr_show,
- 	.store	= md_attr_store,
- };
--static struct kobj_type md_ktype = {
-+static const struct kobj_type md_ktype = {
- 	.release	= md_kobj_release,
- 	.sysfs_ops	= &md_sysfs_ops,
- 	.default_groups	= md_attr_groups,
-
----
-base-commit: f6feea56f66d34259c4222fa02e8171c4f2673d1
-change-id: 20230214-kobj_type-md-a3c7773574cf
-
-Best regards,
--- 
-Thomas Weißschuh <linux@weissschuh.net>
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 6c66357f92f5..7b264add0d52 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1626,7 +1626,7 @@ static void raid10_end_discard_request(struct bio *=
+bio)
+ 		/*
+ 		 * raid10_remove_disk uses smp_mb to make sure rdev is set to
+ 		 * replacement before setting replacement to NULL. It can read
+-		 * rdev first without barrier protect even replacment is NULL
++		 * rdev first without barrier protect even replacement is NULL
+ 		 */
+ 		smp_rmb();
+ 		rdev =3D conf->mirrors[dev].rdev;
+--=20
+2.27.0
 
