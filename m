@@ -2,116 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C6CFC6379F
-	for <linux-raid@archiver.kernel.org>; Tue, 21 Feb 2023 13:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2E38C636D7
+	for <linux-raid@archiver.kernel.org>; Tue, 21 Feb 2023 14:39:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234073AbjBUNbw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 21 Feb 2023 08:31:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48324 "EHLO
+        id S234459AbjBUOjl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 21 Feb 2023 09:39:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233863AbjBUNbm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Feb 2023 08:31:42 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F4E129146;
-        Tue, 21 Feb 2023 05:31:40 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PLgDQ2VZ6z4f3nTR;
-        Tue, 21 Feb 2023 21:31:34 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgBnFCK2x_RjDVvKDg--.7628S4;
-        Tue, 21 Feb 2023 21:31:36 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, xni@redhat.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH] md: fix null-ptr-deference in md_free_disk()
-Date:   Tue, 21 Feb 2023 21:55:06 +0800
-Message-Id: <20230221135506.296074-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S234069AbjBUOjk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Feb 2023 09:39:40 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CE7426CC4
+        for <linux-raid@vger.kernel.org>; Tue, 21 Feb 2023 06:39:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=GWn3F0Pmj7x9LoFlYiF4eGyQOPMZAnNI75Rw2QbmCtQ=; b=wbMqQ1ZKOqnXEsx5ViP/XqvDUh
+        7dP1hcMlSttOy2jUM9IZSe6HpPmttq9/BkfcsGH+aAjFPHgW4+lPngN/N/DogPMnckv7tTX9nPoSi
+        Mgs2Zpzs1a8+l1pbNdHpL4BalnvNLB8nsPS2pCeJAw2XOGd+Vd7JPymFYYX/HofdVYTpGtfe5KZOp
+        +vb1PTSKu1glOtesIGt3Txo9QsST6BWyAPV4W26z94ofosrqq/BPPMKrxC9/cX7jsYviUiGuIPdhe
+        Db3FEcRZc7XwqdVPPC9k1RpOWLWL0/hdsLtMgD5d5HRux2GT4FhnKc5Vxzl9xzaRxTiMgtpotkzqa
+        2hQWacYg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pUTnp-008WOo-0Y; Tue, 21 Feb 2023 14:39:33 +0000
+Date:   Tue, 21 Feb 2023 06:39:32 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jonathan Derrick <jonathan.derrick@linux.dev>
+Cc:     Xiao Ni <xni@redhat.com>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, Paul Menzel <pmenzel@molgen.mpg.de>,
+        Sushma Kalakota <sushma.kalakota@intel.com>
+Subject: Re: [PATCH v2] md: Use optimal I/O size for last bitmap page
+Message-ID: <Y/TXpGDtWVlfwPF4@infradead.org>
+References: <20230217183139.106-1-jonathan.derrick@linux.dev>
+ <CALTww2-3t-Tyjh1yAZhM+6Rwgh7t2=EFk1hOpvnTuiN91yyfDg@mail.gmail.com>
+ <fd88c91e-f501-005d-3eb2-98a019d3db9e@linux.dev>
+ <CALTww28rr6FdO=-E7G=MM7hT5QszpTc6hQH9grQ+aiuUixtY5A@mail.gmail.com>
+ <df22867d-8349-6bf7-c597-432222277bcc@linux.dev>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgBnFCK2x_RjDVvKDg--.7628S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7tw15AFykZw18Kr4kKw17ZFb_yoW8ZFW7pa
-        yxWas8Kr48XrW5Kw47Xr109as5Xa1qyFy8Kryfur1fAa1Sk390q3WakF109F98GrWrAwn8
-        W3WFqa90qF1DCw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
-        rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
-        vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IY
-        x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
-        xKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
-        67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <df22867d-8349-6bf7-c597-432222277bcc@linux.dev>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Tue, Feb 21, 2023 at 12:34:51AM -0700, Jonathan Derrick wrote:
+> You can force it with something like this:
 
-If md_run() failed after 'acitive_io' is initialized, then
-percpu_ref_exit() is called in error path, however, later md_free_disk()
-will call percpu_ref_exit() again, which lead to following
-null-ptr-deference:
-
-BUG: kernel NULL pointer dereference, address: 0000000000000038
-Oops: 0000 [#1] PREEMPT SMP
-CPU: 41 PID: 585 Comm: kworker/41:1 Not tainted 6.2.0-rc8-next-20230220 #1452
-Workqueue: md_misc mddev_delayed_delete
-RIP: 0010:free_percpu+0x110/0x630
-Call Trace:
- <TASK>
- __percpu_ref_exit+0x44/0x70
- percpu_ref_exit+0x16/0x90
- md_free_disk+0x2f/0x80
- disk_release+0x101/0x180
- device_release+0x84/0x110
- kobject_put+0x12a/0x380
- kobject_put+0x160/0x380
- mddev_delayed_delete+0x19/0x30
- process_one_work+0x269/0x680
- worker_thread+0x266/0x640
- kthread+0x151/0x1b0
- ret_from_fork+0x1f/0x30
-
-Since freeing mddev will exit 'active_io' unconditionally, fix the
-problem by removing exiting 'active_io' from error path, this way
-it will be delayed to free mddev.
-
-Fixes: 72adae23a72c ("md: Change active_io to percpu")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 927a43db5dfb..77124679b3fd 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5851,7 +5851,7 @@ int md_run(struct mddev *mddev)
- 	if (!bioset_initialized(&mddev->bio_set)) {
- 		err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
- 		if (err)
--			goto exit_active_io;
-+			return err;
- 	}
- 	if (!bioset_initialized(&mddev->sync_set)) {
- 		err = bioset_init(&mddev->sync_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
-@@ -6039,8 +6039,6 @@ int md_run(struct mddev *mddev)
- 	bioset_exit(&mddev->sync_set);
- exit_bio_set:
- 	bioset_exit(&mddev->bio_set);
--exit_active_io:
--	percpu_ref_exit(&mddev->active_io);
- 	return err;
- }
- EXPORT_SYMBOL_GPL(md_run);
--- 
-2.31.1
-
+Also scsi_debug lets you set the optimal I/O size using the
+opt_blks parameter.
