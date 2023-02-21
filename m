@@ -2,252 +2,116 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9000EC6379F
-	for <linux-raid@archiver.kernel.org>; Tue, 21 Feb 2023 07:34:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C6CFC6379F
+	for <linux-raid@archiver.kernel.org>; Tue, 21 Feb 2023 13:31:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233655AbjBUHe7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 21 Feb 2023 02:34:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34740 "EHLO
+        id S234073AbjBUNbw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 21 Feb 2023 08:31:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232650AbjBUHe6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Feb 2023 02:34:58 -0500
-Received: from out-32.mta0.migadu.com (out-32.mta0.migadu.com [91.218.175.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F650233E1
-        for <linux-raid@vger.kernel.org>; Mon, 20 Feb 2023 23:34:56 -0800 (PST)
-Message-ID: <df22867d-8349-6bf7-c597-432222277bcc@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1676964894;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NGq455lBEnFdOKJw5qivqRl3NHgpC5XA3OzFqqrB4tk=;
-        b=J6LI8+e7qtfvbRRElamASm4ZRFnRK3jVw7Ye7Z1pfFjYUJfLFIqdlcW7Fsd0lnJETJw5Se
-        2mxMwD+TlG8MCkRsnNhBEFLf5muhr/AKJQZK6na1d2c284v2YnVpWc1X/nql6hL8hHj8PB
-        KSMxgyHJtG0toSWXIHRTOgXYOVsglEM=
-Date:   Tue, 21 Feb 2023 00:34:51 -0700
+        with ESMTP id S233863AbjBUNbm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Feb 2023 08:31:42 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F4E129146;
+        Tue, 21 Feb 2023 05:31:40 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PLgDQ2VZ6z4f3nTR;
+        Tue, 21 Feb 2023 21:31:34 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgBnFCK2x_RjDVvKDg--.7628S4;
+        Tue, 21 Feb 2023 21:31:36 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org, xni@redhat.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH] md: fix null-ptr-deference in md_free_disk()
+Date:   Tue, 21 Feb 2023 21:55:06 +0800
+Message-Id: <20230221135506.296074-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] md: Use optimal I/O size for last bitmap page
-Content-Language: en-US
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Sushma Kalakota <sushma.kalakota@intel.com>
-References: <20230217183139.106-1-jonathan.derrick@linux.dev>
- <CALTww2-3t-Tyjh1yAZhM+6Rwgh7t2=EFk1hOpvnTuiN91yyfDg@mail.gmail.com>
- <fd88c91e-f501-005d-3eb2-98a019d3db9e@linux.dev>
- <CALTww28rr6FdO=-E7G=MM7hT5QszpTc6hQH9grQ+aiuUixtY5A@mail.gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Jonathan Derrick <jonathan.derrick@linux.dev>
-In-Reply-To: <CALTww28rr6FdO=-E7G=MM7hT5QszpTc6hQH9grQ+aiuUixtY5A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgBnFCK2x_RjDVvKDg--.7628S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7tw15AFykZw18Kr4kKw17ZFb_yoW8ZFW7pa
+        yxWas8Kr48XrW5Kw47Xr109as5Xa1qyFy8Kryfur1fAa1Sk390q3WakF109F98GrWrAwn8
+        W3WFqa90qF1DCw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
+        rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
+        vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IY
+        x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
+        xKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
+        67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+From: Yu Kuai <yukuai3@huawei.com>
 
+If md_run() failed after 'acitive_io' is initialized, then
+percpu_ref_exit() is called in error path, however, later md_free_disk()
+will call percpu_ref_exit() again, which lead to following
+null-ptr-deference:
 
-On 2/20/2023 10:35 PM, Xiao Ni wrote:
-> On Tue, Feb 21, 2023 at 11:31 AM Jonathan Derrick
-> <jonathan.derrick@linux.dev> wrote:
->>
->>
->>
->> On 2/20/2023 7:38 PM, Xiao Ni wrote:
->>> On Sat, Feb 18, 2023 at 2:36 AM Jonathan Derrick
->>> <jonathan.derrick@linux.dev> wrote:
->>>>
->>>> From: Jon Derrick <jonathan.derrick@linux.dev>
->>>>
->>>> If the bitmap space has enough room, size the I/O for the last bitmap
->>>> page write to the optimal I/O size for the storage device. The expanded
->>>> write is checked that it won't overrun the data or metadata.
->>>>
->>>> This change helps increase performance by preventing unnecessary
->>>> device-side read-mod-writes due to non-atomic write unit sizes.
->>>
->>> Hi Jonathan
->>>
->>> Thanks for your patch.
->>>
->>> Could you explain more about the how the optimal io size can affect
->>> the device-side read-mod-writes?
->>
->> The effects of device-side read-mod-writes are a device-specific implementation detail.
->> This is not something expected to be universal as its an abstracted detail.
->>
->> However the NVMe spec allows the storage namespace to provide implementation
->> hints about its underlying media.
->>
->> Both NPWA and NOWS are used in the NVMe driver, where NOWS provides the
->> optimal_io hint:
->>
->> Per NVMe Command Set 1.0b, Figure 97
->> Namespace Preferred Write Alignment (NPWA): This field indicates the recommended
->> write alignment in logical blocks for this namespace
->>
->> Namespace Optimal Write Size (NOWS): This field indicates the size in logical blocks
->> for optimal write performance for this namespace.
->>
->> Per 5.8.2.1 Improved I/O examples (non-normative)
->> When constructing write operations, the host should minimally construct writes
->> that meet the recommendations of NPWG and NPWA, but may achieve optimal write
->> performance by constructing writes that meet the recommendation of NOWS.
->>
->>
->> It then makes sense that an NVMe drive would provide optimal io size hints
->> that matches its underlying media unit size, such that sub-4k writes might
->> invoke a device-side read-mod-write whereas 4k writes become atomic.
-> 
-> Thanks very much for the detailed explanation.
-> 
-> If I want to try it myself, it must use nvme disks that have 4k
-> optimal_io_size, right?
-> I tried to check in many environments with this command:
-> cat /sys/block/nvme4n1/queue/optimal_io_size (it shows 0)
-> 
-> So I need to find a machine that is optimal_io_size is 4096, right?
-> 
-You can force it with something like this:
+BUG: kernel NULL pointer dereference, address: 0000000000000038
+Oops: 0000 [#1] PREEMPT SMP
+CPU: 41 PID: 585 Comm: kworker/41:1 Not tainted 6.2.0-rc8-next-20230220 #1452
+Workqueue: md_misc mddev_delayed_delete
+RIP: 0010:free_percpu+0x110/0x630
+Call Trace:
+ <TASK>
+ __percpu_ref_exit+0x44/0x70
+ percpu_ref_exit+0x16/0x90
+ md_free_disk+0x2f/0x80
+ disk_release+0x101/0x180
+ device_release+0x84/0x110
+ kobject_put+0x12a/0x380
+ kobject_put+0x160/0x380
+ mddev_delayed_delete+0x19/0x30
+ process_one_work+0x269/0x680
+ worker_thread+0x266/0x640
+ kthread+0x151/0x1b0
+ ret_from_fork+0x1f/0x30
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index d307ae4d8a57..9c349ad54352 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -1901,6 +1901,8 @@ static void nvme_update_disk_info(struct gendisk *disk,
-                /* NOWS = Namespace Optimal Write Size */
-                io_opt = bs * (1 + le16_to_cpu(id->nows));
-        }
-+       phys_bs = 4096;
-+       io_opt = 4096;
+Since freeing mddev will exit 'active_io' unconditionally, fix the
+problem by removing exiting 'active_io' from error path, this way
+it will be delayed to free mddev.
 
-        blk_queue_logical_block_size(disk->queue, bs);
-        /*
+Fixes: 72adae23a72c ("md: Change active_io to percpu")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 927a43db5dfb..77124679b3fd 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5851,7 +5851,7 @@ int md_run(struct mddev *mddev)
+ 	if (!bioset_initialized(&mddev->bio_set)) {
+ 		err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+ 		if (err)
+-			goto exit_active_io;
++			return err;
+ 	}
+ 	if (!bioset_initialized(&mddev->sync_set)) {
+ 		err = bioset_init(&mddev->sync_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+@@ -6039,8 +6039,6 @@ int md_run(struct mddev *mddev)
+ 	bioset_exit(&mddev->sync_set);
+ exit_bio_set:
+ 	bioset_exit(&mddev->bio_set);
+-exit_active_io:
+-	percpu_ref_exit(&mddev->active_io);
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(md_run);
+-- 
+2.31.1
 
-
-> Regards
-> Xiao
->>
->>>
->>> Regards
->>> Xiao
->>>>
->>>> Example Intel/Solidigm P5520
->>>> Raid10, Chunk-size 64M, bitmap-size 57228 bits
->>>>
->>>> $ mdadm --create /dev/md0 --level=10 --raid-devices=4 /dev/nvme{0,1,2,3}n1 --assume-clean --bitmap=internal --bitmap-chunk=64M
->>>> $ fio --name=test --direct=1 --filename=/dev/md0 --rw=randwrite --bs=4k --runtime=60
->>>>
->>>> Without patch:
->>>>   write: IOPS=1676, BW=6708KiB/s (6869kB/s)(393MiB/60001msec); 0 zone resets
->>>>
->>>> With patch:
->>>>   write: IOPS=15.7k, BW=61.4MiB/s (64.4MB/s)(3683MiB/60001msec); 0 zone resets
->>>>
->>>> Biosnoop:
->>>> Without patch:
->>>> Time        Process        PID     Device      LBA        Size      Lat
->>>> 1.410377    md0_raid10     6900    nvme0n1   W 16         4096      0.02
->>>> 1.410387    md0_raid10     6900    nvme2n1   W 16         4096      0.02
->>>> 1.410374    md0_raid10     6900    nvme3n1   W 16         4096      0.01
->>>> 1.410381    md0_raid10     6900    nvme1n1   W 16         4096      0.02
->>>> 1.410411    md0_raid10     6900    nvme1n1   W 115346512  4096      0.01
->>>> 1.410418    md0_raid10     6900    nvme0n1   W 115346512  4096      0.02
->>>> 1.410915    md0_raid10     6900    nvme2n1   W 24         3584      0.43
->>>> 1.410935    md0_raid10     6900    nvme3n1   W 24         3584      0.45
->>>> 1.411124    md0_raid10     6900    nvme1n1   W 24         3584      0.64
->>>> 1.411147    md0_raid10     6900    nvme0n1   W 24         3584      0.66
->>>> 1.411176    md0_raid10     6900    nvme3n1   W 2019022184 4096      0.01
->>>> 1.411189    md0_raid10     6900    nvme2n1   W 2019022184 4096      0.02
->>>>
->>>> With patch:
->>>> Time        Process        PID     Device      LBA        Size      Lat
->>>> 5.747193    md0_raid10     727     nvme0n1   W 16         4096      0.01
->>>> 5.747192    md0_raid10     727     nvme1n1   W 16         4096      0.02
->>>> 5.747195    md0_raid10     727     nvme3n1   W 16         4096      0.01
->>>> 5.747202    md0_raid10     727     nvme2n1   W 16         4096      0.02
->>>> 5.747229    md0_raid10     727     nvme3n1   W 1196223704 4096      0.02
->>>> 5.747224    md0_raid10     727     nvme0n1   W 1196223704 4096      0.01
->>>> 5.747279    md0_raid10     727     nvme0n1   W 24         4096      0.01
->>>> 5.747279    md0_raid10     727     nvme1n1   W 24         4096      0.02
->>>> 5.747284    md0_raid10     727     nvme3n1   W 24         4096      0.02
->>>> 5.747291    md0_raid10     727     nvme2n1   W 24         4096      0.02
->>>> 5.747314    md0_raid10     727     nvme2n1   W 2234636712 4096      0.01
->>>> 5.747317    md0_raid10     727     nvme1n1   W 2234636712 4096      0.02
->>>>
->>>> Signed-off-by: Jon Derrick <jonathan.derrick@linux.dev>
->>>> ---
->>>> v1->v2: Add more information to commit message
->>>>
->>>>  drivers/md/md-bitmap.c | 27 ++++++++++++++++++---------
->>>>  1 file changed, 18 insertions(+), 9 deletions(-)
->>>>
->>>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
->>>> index e7cc6ba1b657..569297ea9b99 100644
->>>> --- a/drivers/md/md-bitmap.c
->>>> +++ b/drivers/md/md-bitmap.c
->>>> @@ -220,6 +220,7 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->>>>         rdev = NULL;
->>>>         while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
->>>>                 int size = PAGE_SIZE;
->>>> +               int optimal_size = PAGE_SIZE;
->>>>                 loff_t offset = mddev->bitmap_info.offset;
->>>>
->>>>                 bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
->>>> @@ -228,9 +229,14 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->>>>                         int last_page_size = store->bytes & (PAGE_SIZE-1);
->>>>                         if (last_page_size == 0)
->>>>                                 last_page_size = PAGE_SIZE;
->>>> -                       size = roundup(last_page_size,
->>>> -                                      bdev_logical_block_size(bdev));
->>>> +                       size = roundup(last_page_size, bdev_logical_block_size(bdev));
->>>> +                       if (bdev_io_opt(bdev) > bdev_logical_block_size(bdev))
->>>> +                               optimal_size = roundup(last_page_size, bdev_io_opt(bdev));
->>>> +                       else
->>>> +                               optimal_size = size;
->>>>                 }
->>>> +
->>>> +
->>>>                 /* Just make sure we aren't corrupting data or
->>>>                  * metadata
->>>>                  */
->>>> @@ -246,9 +252,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->>>>                                 goto bad_alignment;
->>>>                 } else if (offset < 0) {
->>>>                         /* DATA  BITMAP METADATA  */
->>>> -                       if (offset
->>>> -                           + (long)(page->index * (PAGE_SIZE/512))
->>>> -                           + size/512 > 0)
->>>> +                       loff_t off = offset + (long)(page->index * (PAGE_SIZE/512));
->>>> +                       if (size != optimal_size &&
->>>> +                           off + optimal_size/512 <= 0)
->>>> +                               size = optimal_size;
->>>> +                       else if (off + size/512 > 0)
->>>>                                 /* bitmap runs in to metadata */
->>>>                                 goto bad_alignment;
->>>>                         if (rdev->data_offset + mddev->dev_sectors
->>>> @@ -257,10 +265,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->>>>                                 goto bad_alignment;
->>>>                 } else if (rdev->sb_start < rdev->data_offset) {
->>>>                         /* METADATA BITMAP DATA */
->>>> -                       if (rdev->sb_start
->>>> -                           + offset
->>>> -                           + page->index*(PAGE_SIZE/512) + size/512
->>>> -                           > rdev->data_offset)
->>>> +                       loff_t off = rdev->sb_start + offset + page->index*(PAGE_SIZE/512);
->>>> +                       if (size != optimal_size &&
->>>> +                           off + optimal_size/512 <= rdev->data_offset)
->>>> +                               size = optimal_size;
->>>> +                       else if (off + size/512 > rdev->data_offset)
->>>>                                 /* bitmap runs in to data */
->>>>                                 goto bad_alignment;
->>>>                 } else {
->>>> --
->>>> 2.27.0
->>>>
->>>
->>
-> 
