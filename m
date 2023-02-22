@@ -2,163 +2,131 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9323C64ED6
-	for <linux-raid@archiver.kernel.org>; Wed, 22 Feb 2023 03:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D90C61DA4
+	for <linux-raid@archiver.kernel.org>; Wed, 22 Feb 2023 04:00:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231330AbjBVDqj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 21 Feb 2023 22:46:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36638 "EHLO
+        id S229586AbjBVEAR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 21 Feb 2023 23:00:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231196AbjBVDqi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Feb 2023 22:46:38 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0D8F2CC46;
-        Tue, 21 Feb 2023 19:46:35 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PM2Bs3YJHz4f3wYF;
-        Wed, 22 Feb 2023 11:46:29 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgA35CEVkPVjUibtDg--.64292S5;
-        Wed, 22 Feb 2023 11:46:31 +0800 (CST)
-From:   linan666@huaweicloud.com
-To:     song@kernel.org, ncroxon@redhat.com, vmayatskikh@digitalocean.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        guoqing.jiang@linux.dev, logang@deltatee.com, axboe@kernel.dk,
-        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com
-Subject: [PATCH 1/2] md/raid10: fix taks hung in raid10d
-Date:   Wed, 22 Feb 2023 12:09:59 +0800
-Message-Id: <20230222041000.3341651-2-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230222041000.3341651-1-linan666@huaweicloud.com>
-References: <20230222041000.3341651-1-linan666@huaweicloud.com>
+        with ESMTP id S229546AbjBVEAP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Feb 2023 23:00:15 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4A31311DE
+        for <linux-raid@vger.kernel.org>; Tue, 21 Feb 2023 19:59:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1677038366;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=xBkjQCGV7p/3sYFnO7HyEL3fl8bOYDO2YOFFwrGDyZ4=;
+        b=DUjSO8uZbL/rKypd+1HVsI7e47fDiVC6zWUw9ds2o/Zl7Ao2bayXdcA6q4Df6P5tl2y2Ev
+        yvjfOvmGnsen29dluAnbFBCJhVcL1gdfAMMvRSoA4Sm/RDSVcawWiwuFLJQmO5hyb3mOUW
+        MeBO7kLPxuJbAaC8nY1Y0HcvyZrt2+g=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-655-2mhfDB6hNP6tyXT_ol7iYw-1; Tue, 21 Feb 2023 22:59:22 -0500
+X-MC-Unique: 2mhfDB6hNP6tyXT_ol7iYw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C9711185A7A4;
+        Wed, 22 Feb 2023 03:59:21 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-12-116.pek2.redhat.com [10.72.12.116])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 691CF440D9;
+        Wed, 22 Feb 2023 03:59:18 +0000 (UTC)
+From:   Xiao Ni <xni@redhat.com>
+To:     song@kernel.org
+Cc:     yukuai1@huaweicloud.com, linux-raid@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com, heinzm@redhat.com,
+        ncroxon@redhat.com
+Subject: [PATCH 1/1] md: Free resources in __md_stop
+Date:   Wed, 22 Feb 2023 11:59:16 +0800
+Message-Id: <20230222035916.83647-1-xni@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgA35CEVkPVjUibtDg--.64292S5
-X-Coremail-Antispam: 1UD129KBjvJXoWxZr1UtF1xurWrCr1xJw1UWrg_yoW5Aw4fp3
-        yfGrn3Ary5Ga4ayF1DtF1DC34F93yfJFW3CFZ3W34xZ3WDZFZ3JFWDXFWY9ryDZr95Zay5
-        XFZFy3yYkF47tFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPEb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-        A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        WxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-        GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64
-        xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j
-        6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2
-        kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_
-        Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17
-        CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0
-        I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I
-        8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73
-        UjIFyTuYvjxUc6wZUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Li Nan <linan122@huawei.com>
+If md_run() fails after ->active_io is initialized, then percpu_ref_exit
+is called in error path. However, later md_free_disk will call
+percpu_ref_exit again which leads to a panic because of null pointer
+dereference. It can also trigger this bug when resources are initialized
+but are freed in error path, then will be freed again in md_free_disk.
 
-commit fe630de009d0 ("md/raid10: avoid deadlock on recovery.") allowed
-normal io and sync io to exist at the same time. Task hung will occur as
-below:
+BUG: kernel NULL pointer dereference, address: 0000000000000038
+Oops: 0000 [#1] PREEMPT SMP
+Workqueue: md_misc mddev_delayed_delete
+RIP: 0010:free_percpu+0x110/0x630
+Call Trace:
+ <TASK>
+ __percpu_ref_exit+0x44/0x70
+ percpu_ref_exit+0x16/0x90
+ md_free_disk+0x2f/0x80
+ disk_release+0x101/0x180
+ device_release+0x84/0x110
+ kobject_put+0x12a/0x380
+ kobject_put+0x160/0x380
+ mddev_delayed_delete+0x19/0x30
+ process_one_work+0x269/0x680
+ worker_thread+0x266/0x640
+ kthread+0x151/0x1b0
+ ret_from_fork+0x1f/0x30
 
-T1                      T2		T3		T4
-raid10d
- handle_read_error
-  allow_barrier
-   conf->nr_pending--
-    -> 0
-                        //submit sync io
-                        raid10_sync_request
-                         raise_barrier
-			  ->will not be blocked
-			  ...
-			//submit to drivers
-  raid10_read_request
-   wait_barrier
-    conf->nr_pending++
-     -> 1
-					//retry read fail
-					raid10_end_read_request
-					 reschedule_retry
-					  add to retry_list
-					  conf->nr_queued++
-					   -> 1
-							//sync io fail
-							end_sync_read
-							 __end_sync_read
-							  reschedule_retry
-							   add to retry_list
-					                    conf->nr_queued++
-							     -> 2
- ...
- handle_read_error
- get form retry_list
- conf->nr_queued--
-  freeze_array
-   wait nr_pending == nr_queued+1
-        ->1	      ->2
-   //task hung
+For creating raid device, md raid calls do_md_run->md_run, dm raid calls
+md_run. We alloc those memory in md_run. For stopping raid device, md raid
+calls do_md_stop->__md_stop, dm raid calls md_stop->__md_stop. So we can
+free those memory resources in __md_stop.
 
-retry read and sync io will be added to retry_list(nr_queued->2) if they
-fails. raid10d() called handle_read_error() and hung in freeze_array().
-nr_queued will not decrease because raid10d is blocked, nr_pending will
-not increase because conf->barrier is not released.
-
-Fix it by moving allow_barrier() after raid10_read_request().
-raise_barrier() will wait for nr_waiting to become 0. Therefore, sync io
-and regular io will not be issued at the same time.
-
-We also removed the check of nr_queued. It can be 0 but don't need to be
-blocked. MD_RECOVERY_RUNNING always is set after this patch, because all
-sync io is waitting in raise_barrier(), remove it, too.
-
-Fixes: fe630de009d0 ("md/raid10: avoid deadlock on recovery.")
-Signed-off-by: Li Nan <linan122@huawei.com>
+Fixes: 72adae23a72c ("md: Change active_io to percpu")
+Reported-and-tested-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Xiao Ni <xni@redhat.com>
 ---
- drivers/md/raid10.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ drivers/md/md.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 6c66357f92f5..db9ee3b637d6 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -995,11 +995,15 @@ static bool stop_waiting_barrier(struct r10conf *conf)
- 	    (!bio_list_empty(&bio_list[0]) || !bio_list_empty(&bio_list[1])))
- 		return true;
- 
--	/* move on if recovery thread is blocked by us */
--	if (conf->mddev->thread->tsk == current &&
--	    test_bit(MD_RECOVERY_RUNNING, &conf->mddev->recovery) &&
--	    conf->nr_queued > 0)
-+	/*
-+	 * move on if io is issued from raid10d(), nr_pending is not released
-+	 * from original io(see handle_read_error()). All raise barrier is
-+	 * blocked until this io is done.
-+	 */
-+	if (conf->mddev->thread->tsk == current) {
-+		WARN_ON_ONCE(atomic_read(&conf->nr_pending) == 0);
- 		return true;
-+	}
- 
- 	return false;
- }
-@@ -2978,9 +2982,13 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
- 		md_error(mddev, rdev);
- 
- 	rdev_dec_pending(rdev, mddev);
--	allow_barrier(conf);
- 	r10_bio->state = 0;
- 	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
-+	/*
-+	 * allow_barrier after re-submit to ensure no sync io
-+	 * can be issued while regular io pending.
-+	 */
-+	allow_barrier(conf);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 927a43db5dfb..f5480778e2f7 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6256,6 +6256,11 @@ static void __md_stop(struct mddev *mddev)
+ 		mddev->to_remove = &md_redundancy_group;
+ 	module_put(pers->owner);
+ 	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++
++	percpu_ref_exit(&mddev->writes_pending);
++	percpu_ref_exit(&mddev->active_io);
++	bioset_exit(&mddev->bio_set);
++	bioset_exit(&mddev->sync_set);
  }
  
- static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+ void md_stop(struct mddev *mddev)
+@@ -6265,10 +6270,6 @@ void md_stop(struct mddev *mddev)
+ 	 */
+ 	__md_stop_writes(mddev);
+ 	__md_stop(mddev);
+-	percpu_ref_exit(&mddev->writes_pending);
+-	percpu_ref_exit(&mddev->active_io);
+-	bioset_exit(&mddev->bio_set);
+-	bioset_exit(&mddev->sync_set);
+ }
+ 
+ EXPORT_SYMBOL_GPL(md_stop);
+@@ -7839,11 +7840,6 @@ static void md_free_disk(struct gendisk *disk)
+ {
+ 	struct mddev *mddev = disk->private_data;
+ 
+-	percpu_ref_exit(&mddev->writes_pending);
+-	percpu_ref_exit(&mddev->active_io);
+-	bioset_exit(&mddev->bio_set);
+-	bioset_exit(&mddev->sync_set);
+-
+ 	mddev_free(mddev);
+ }
+ 
 -- 
-2.31.1
+2.32.0 (Apple Git-132)
 
