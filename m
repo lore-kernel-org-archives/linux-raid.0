@@ -2,214 +2,150 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 725F5C61DA4
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Feb 2023 19:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73169C64ED6
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Feb 2023 23:19:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229528AbjBWTxO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Feb 2023 14:53:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48344 "EHLO
+        id S229441AbjBWXT3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Feb 2023 18:19:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbjBWTxK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Feb 2023 14:53:10 -0500
-Received: from resqmta-c1p-024060.sys.comcast.net (resqmta-c1p-024060.sys.comcast.net [IPv6:2001:558:fd00:56::3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75FCF1A65A
-        for <linux-raid@vger.kernel.org>; Thu, 23 Feb 2023 11:53:08 -0800 (PST)
-Received: from resomta-c1p-023265.sys.comcast.net ([96.102.18.226])
-        by resqmta-c1p-024060.sys.comcast.net with ESMTP
-        id VBEMpK2x5GVzzVHeNp88qS; Thu, 23 Feb 2023 19:53:07 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=comcastmailservice.net; s=20211018a; t=1677181987;
-        bh=nx2nvCbLG7WVk68wLc2U+to+uc3WhXG1tRVRgU7Jcjs=;
-        h=Received:Received:From:To:Subject:Date:Message-Id:MIME-Version:
-         Xfinity-Spam-Result;
-        b=h+/tmA5EgUmUvc0el+TdE3Y8JBHSvrT0UTWMCY7DRHrTec6mh8tGoz0AMzFPsjKKS
-         v3DG3+DD6PtRMBH7BjGB4RwKaDaTLnZvdaXWMk4Rff8wAZhnI3g679Wz/IGQhKlxf6
-         nNBxluPL1fJQN2WOTpDQI0p3Aj+hNx8qons5Ct1aMpbTMV59bicXk0slrjRcrwJhni
-         9/m7klK3xavsEeKMFBfLtM54ar0wC5dE3k0IGbpQlJtp9BS0gMl/fH4EenzAVxTlWQ
-         ib2ycnRd3i8IlHpblSE7jkddsLafPCrDPF8NRipV1j3ScDKXdo/T3XoJ8T2s3Y4l4l
-         rSwggt4ret9Pw==
-Received: from jderrick-mobl4.amr.corp.intel.com ([71.205.181.50])
-        by resomta-c1p-023265.sys.comcast.net with ESMTPA
-        id VHdspbaW8XNRJVHe3pbD6H; Thu, 23 Feb 2023 19:52:47 +0000
-X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvhedrudekuddguddvjecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucevohhmtggrshhtqdftvghsihdpqfgfvfdppffquffrtefokffrnecuuegrihhlohhuthemuceftddunecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkffojghfggfgsedtkeertdertddtnecuhfhrohhmpeflohhnrghthhgrnhcuffgvrhhrihgtkhcuoehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvheqnecuggftrfgrthhtvghrnheptdetleejfffgffevhefhteevfeeuvdehveffffehtdejuedvvefgfedttdehfedtnecukfhppeejuddrvddthedrudekuddrhedtnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehhvghlohepjhguvghrrhhitghkqdhmohgslhegrdgrmhhrrdgtohhrphdrihhnthgvlhdrtghomhdpihhnvghtpeejuddrvddthedrudekuddrhedtpdhmrghilhhfrhhomhepjhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvpdhnsggprhgtphhtthhopeelpdhrtghpthhtohepshhonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhrrghiugesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhrdhrvghinhgulhesthhhvghlohhunhhgvgdrnhgvthdprhgtphhtthhopeignhhisehrvgguhhgrthdrtghomhdprhgtphhtthhope
- hhtghhsehlshhtrdguvgdprhgtphhtthhopehhtghhsehinhhfrhgruggvrggurdhorhhg
-X-Xfinity-VMeta: sc=-100.00;st=legit
-From:   Jonathan Derrick <jonathan.derrick@linux.dev>
-To:     Song Liu <song@kernel.org>, <linux-raid@vger.kernel.org>
-Cc:     Reindl Harald <h.reindl@thelounge.net>, Xiao Ni <xni@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christoph Hellwig <hch@infradead.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Sushma Kalakota <sushma.kalakota@intel.com>,
-        Jon Derrick <jonathan.derrick@linux.dev>
-Subject: [PATCH v4 1/3] md: Move sb writer loop to its own function
-Date:   Thu, 23 Feb 2023 12:52:23 -0700
-Message-Id: <20230223195225.534-2-jonathan.derrick@linux.dev>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230223195225.534-1-jonathan.derrick@linux.dev>
-References: <20230223195225.534-1-jonathan.derrick@linux.dev>
+        with ESMTP id S229379AbjBWXT2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Feb 2023 18:19:28 -0500
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4880B5507F
+        for <linux-raid@vger.kernel.org>; Thu, 23 Feb 2023 15:19:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1677194367; x=1708730367;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=nipzcrSE78w09fZd7eabz8ZqVvIRrcrHvctj9YTzoKA=;
+  b=nmc0gEGWpbIfRgTGxYTlq6zeeiw6saU1CUY1js45dtw/oEpPoSP9StQh
+   LxFOKcfVBHZRtlDESGpwolFyyEbLqP03CTDZ2E91dLsvui9D96H5f1rNh
+   ORIWiJU9fWSSmUkq+YkRIH8s9GMhvqdguvlC21LIzF3GekPSokRkt9nbm
+   wfSgg8W+a7ClbfgRpd3I+9z+ZumIinRBUqDWMVGIwatK0LrRwAqTNA4RM
+   omz+y74in950Hdo6qB7sthHMkdpBNqSC24nd4cLCkNQHEkfNGMohmNpkh
+   I9GVLVOfP09xHALXUHo8UwplkwJQuu6epXUAbUvsH6aAiYAun9Y9yIUdr
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10630"; a="333356168"
+X-IronPort-AV: E=Sophos;i="5.97,322,1669104000"; 
+   d="scan'208";a="333356168"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2023 15:19:26 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10630"; a="736582927"
+X-IronPort-AV: E=Sophos;i="5.97,322,1669104000"; 
+   d="scan'208";a="736582927"
+Received: from lkp-server01.sh.intel.com (HELO 3895f5c55ead) ([10.239.97.150])
+  by fmsmga008.fm.intel.com with ESMTP; 23 Feb 2023 15:19:25 -0800
+Received: from kbuild by 3895f5c55ead with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pVKs0-0001td-2m;
+        Thu, 23 Feb 2023 23:19:24 +0000
+Date:   Fri, 24 Feb 2023 07:18:40 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ 6e95cefc15299684b031ea5cbb8cdf627c069d66
+Message-ID: <63f7f450.9AE91KhIHVfZfBVH%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Jon Derrick <jonathan.derrick@linux.dev>
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+branch HEAD: 6e95cefc15299684b031ea5cbb8cdf627c069d66  md: Free resources in __md_stop
 
-Preparatory patch for optimal I/O size calculation. Move the sb writer
-loop routine into its own function for clarity.
+elapsed time: 848m
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jon Derrick <jonathan.derrick@linux.dev>
----
- drivers/md/md-bitmap.c | 124 +++++++++++++++++++++--------------------
- 1 file changed, 64 insertions(+), 60 deletions(-)
+configs tested: 74
+configs skipped: 3
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index e7cc6ba1b657..2d161d24c51c 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -209,76 +209,80 @@ static struct md_rdev *next_active_rdev(struct md_rdev *rdev, struct mddev *mdde
- 	return NULL;
- }
- 
--static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
-+static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
-+			   struct page *page)
- {
--	struct md_rdev *rdev;
- 	struct block_device *bdev;
- 	struct mddev *mddev = bitmap->mddev;
- 	struct bitmap_storage *store = &bitmap->storage;
-+	loff_t offset = mddev->bitmap_info.offset;
-+	int size = PAGE_SIZE;
-+
-+	bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
-+	if (page->index == store->file_pages - 1) {
-+		int last_page_size = store->bytes & (PAGE_SIZE - 1);
-+
-+		if (last_page_size == 0)
-+			last_page_size = PAGE_SIZE;
-+		size = roundup(last_page_size,
-+			       bdev_logical_block_size(bdev));
-+	}
-+
-+	/* Just make sure we aren't corrupting data or metadata */
-+	if (mddev->external) {
-+		/* Bitmap could be anywhere. */
-+		if (rdev->sb_start + offset
-+		    + (page->index * (PAGE_SIZE / SECTOR_SIZE))
-+		    > rdev->data_offset &&
-+		    rdev->sb_start + offset
-+		    < (rdev->data_offset + mddev->dev_sectors
-+		     + (PAGE_SIZE / SECTOR_SIZE)))
-+			return -EINVAL;
-+	} else if (offset < 0) {
-+		/* DATA  BITMAP METADATA  */
-+		if (offset
-+		    + (long)(page->index * (PAGE_SIZE / SECTOR_SIZE))
-+		    + size / SECTOR_SIZE > 0)
-+			/* bitmap runs in to metadata */
-+			return -EINVAL;
-+
-+		if (rdev->data_offset + mddev->dev_sectors
-+		    > rdev->sb_start + offset)
-+			/* data runs in to bitmap */
-+			return -EINVAL;
-+	} else if (rdev->sb_start < rdev->data_offset) {
-+		/* METADATA BITMAP DATA */
-+		if (rdev->sb_start + offset
-+		    + page->index * (PAGE_SIZE / SECTOR_SIZE)
-+		    + size / SECTOR_SIZE > rdev->data_offset)
-+			/* bitmap runs in to data */
-+			return -EINVAL;
-+	} else {
-+		/* DATA METADATA BITMAP - no problems */
-+	}
- 
--restart:
--	rdev = NULL;
--	while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
--		int size = PAGE_SIZE;
--		loff_t offset = mddev->bitmap_info.offset;
-+	md_super_write(mddev, rdev,
-+		       rdev->sb_start + offset
-+		       + page->index * (PAGE_SIZE / SECTOR_SIZE),
-+		       size, page);
-+	return 0;
-+}
- 
--		bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
-+static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
-+{
-+	struct md_rdev *rdev;
-+	struct mddev *mddev = bitmap->mddev;
-+	int ret;
- 
--		if (page->index == store->file_pages-1) {
--			int last_page_size = store->bytes & (PAGE_SIZE-1);
--			if (last_page_size == 0)
--				last_page_size = PAGE_SIZE;
--			size = roundup(last_page_size,
--				       bdev_logical_block_size(bdev));
--		}
--		/* Just make sure we aren't corrupting data or
--		 * metadata
--		 */
--		if (mddev->external) {
--			/* Bitmap could be anywhere. */
--			if (rdev->sb_start + offset + (page->index
--						       * (PAGE_SIZE/512))
--			    > rdev->data_offset
--			    &&
--			    rdev->sb_start + offset
--			    < (rdev->data_offset + mddev->dev_sectors
--			     + (PAGE_SIZE/512)))
--				goto bad_alignment;
--		} else if (offset < 0) {
--			/* DATA  BITMAP METADATA  */
--			if (offset
--			    + (long)(page->index * (PAGE_SIZE/512))
--			    + size/512 > 0)
--				/* bitmap runs in to metadata */
--				goto bad_alignment;
--			if (rdev->data_offset + mddev->dev_sectors
--			    > rdev->sb_start + offset)
--				/* data runs in to bitmap */
--				goto bad_alignment;
--		} else if (rdev->sb_start < rdev->data_offset) {
--			/* METADATA BITMAP DATA */
--			if (rdev->sb_start
--			    + offset
--			    + page->index*(PAGE_SIZE/512) + size/512
--			    > rdev->data_offset)
--				/* bitmap runs in to data */
--				goto bad_alignment;
--		} else {
--			/* DATA METADATA BITMAP - no problems */
-+	do {
-+		while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
-+			ret = __write_sb_page(rdev, bitmap, page);
-+			if (ret)
-+				return ret;
- 		}
--		md_super_write(mddev, rdev,
--			       rdev->sb_start + offset
--			       + page->index * (PAGE_SIZE/512),
--			       size,
--			       page);
--	}
-+	} while (wait && md_super_wait(mddev) < 0);
- 
--	if (wait && md_super_wait(mddev) < 0)
--		goto restart;
- 	return 0;
--
-- bad_alignment:
--	return -EINVAL;
- }
- 
- static void md_bitmap_file_kick(struct bitmap *bitmap);
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+alpha                            allyesconfig
+alpha                               defconfig
+arc                              allyesconfig
+arc                                 defconfig
+arc                  randconfig-r043-20230222
+arm                              allmodconfig
+arm                              allyesconfig
+arm                                 defconfig
+arm                  randconfig-r046-20230222
+arm64                            allyesconfig
+arm64                               defconfig
+csky                                defconfig
+i386                             allyesconfig
+i386                              debian-10.3
+i386                                defconfig
+i386                          randconfig-a001
+i386                          randconfig-a003
+i386                          randconfig-a005
+i386                          randconfig-a012
+i386                          randconfig-a014
+i386                          randconfig-a016
+ia64                             allmodconfig
+ia64                                defconfig
+loongarch                        allmodconfig
+loongarch                         allnoconfig
+loongarch                           defconfig
+m68k                             allmodconfig
+m68k                                defconfig
+mips                             allmodconfig
+mips                             allyesconfig
+nios2                               defconfig
+parisc                              defconfig
+parisc64                            defconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+riscv                            allmodconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+s390                             allmodconfig
+s390                             allyesconfig
+s390                                defconfig
+sh                               allmodconfig
+sparc                               defconfig
+um                             i386_defconfig
+um                           x86_64_defconfig
+x86_64                            allnoconfig
+x86_64                           allyesconfig
+x86_64                              defconfig
+x86_64                                  kexec
+x86_64                        randconfig-a002
+x86_64                        randconfig-a004
+x86_64                        randconfig-a006
+x86_64                        randconfig-a011
+x86_64                        randconfig-a013
+x86_64                        randconfig-a015
+x86_64                               rhel-8.3
+
+clang tested configs:
+hexagon              randconfig-r041-20230222
+hexagon              randconfig-r045-20230222
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+i386                          randconfig-a011
+i386                          randconfig-a013
+i386                          randconfig-a015
+riscv                randconfig-r042-20230222
+s390                 randconfig-r044-20230222
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+x86_64                        randconfig-a005
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+x86_64                        randconfig-k001
+
 -- 
-2.27.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
