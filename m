@@ -2,72 +2,81 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0D2C636D6
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Feb 2023 18:24:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BFF1C61DA4
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Feb 2023 19:53:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229480AbjBWSYL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Feb 2023 13:24:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38954 "EHLO
+        id S229498AbjBWTxL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Feb 2023 14:53:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231342AbjBWSYJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Feb 2023 13:24:09 -0500
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E1CD4A1E4
-        for <linux-raid@vger.kernel.org>; Thu, 23 Feb 2023 10:24:01 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1677176634; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=PIIH//S7pZWyDXu6v1p46Y0ffMRZpj1S0cOX7DKalXbgaJQvxASG/x3KbKh6f3zn+rpLmn8+J4tdPaNIVubyOnn/puZUZedrqpsZrcC0+CAYqlaWYR+AiQtDC/q97sGgKJHDn7jJe5mpcwt5KPnt+HYhlEki3ZDuKwDr/j8IX/E=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1677176634; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=0Mxwjv8xv0TE/kbDb/tB/6xoLFzkvdTeROSxfjdffxk=; 
-        b=Jd3HvQDPHaoEKvmsI1C3lR5kpqhyNKTpF/G4wQ3R4LZ9CMo0fcQx5Uk94AqB7+Wr/CGCo7e2ElPKwSoe9+xzAawKHjdGYX7VK5zsUXKj7Rk/AaxSVvfDbH5uL68CLNCKLXYimgrHckTk75iZ3B6jx0suSGSDJin1rbJH40tTn6g=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 167717663173938.761650107313244; Thu, 23 Feb 2023 19:23:51 +0100 (CET)
-Message-ID: <dc887716-1b95-709d-07b1-fe0c6ddbcfe0@trained-monkey.org>
-Date:   Thu, 23 Feb 2023 13:23:49 -0500
+        with ESMTP id S229462AbjBWTxJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Feb 2023 14:53:09 -0500
+Received: from resqmta-c1p-023462.sys.comcast.net (resqmta-c1p-023462.sys.comcast.net [IPv6:2001:558:fd00:56::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 754491A4A6
+        for <linux-raid@vger.kernel.org>; Thu, 23 Feb 2023 11:53:08 -0800 (PST)
+Received: from resomta-c1p-023265.sys.comcast.net ([96.102.18.226])
+        by resqmta-c1p-023462.sys.comcast.net with ESMTP
+        id VB4NpOR26tHQ1VHeNpKz5E; Thu, 23 Feb 2023 19:53:07 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=comcastmailservice.net; s=20211018a; t=1677181987;
+        bh=/KtCWZMEnb8H9/lPIWUEVFepLUvNEjoX6IxfE6FFsDw=;
+        h=Received:Received:From:To:Subject:Date:Message-Id:MIME-Version:
+         Xfinity-Spam-Result;
+        b=Gr3M5wOWWWbz8jDWFnT4fVxt/LiC34j0bUvgEN6oZAzXEExEdPH+qkJrE0b3tNx1b
+         vfKyGZyFEWLLFnrs6/oPMsPg9VoBgnFB3dOuDsQY/SgL1f1Ru9Bmst6JNYVP9G4kwI
+         YmxvThMxGUhm2HvjGgGNMvfdDv6qt7m/iei4vHerpsTuhkQGL0BQQa7+RF+nWsVBRO
+         +Z85P0tzHz/Fr5z72XadVwq6yIH4miuLQIgq0BycNgjdvh/S5MkM0A7tvx253b9v6Z
+         N/769C/Ic1SHlGRg8iW66G4t6AWeX/x8/H9dyQCkMFUd3QCJ2qA/NXKpXf1q/E+/Ol
+         zJWhfoOMAOUmg==
+Received: from jderrick-mobl4.amr.corp.intel.com ([71.205.181.50])
+        by resomta-c1p-023265.sys.comcast.net with ESMTPA
+        id VHdspbaW8XNRJVHdxpbD5p; Thu, 23 Feb 2023 19:52:46 +0000
+X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvhedrudekuddguddvjecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucevohhmtggrshhtqdftvghsihdpqfgfvfdppffquffrtefokffrnecuuegrihhlohhuthemuceftddunecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkffoggfgsedtkeertdertddtnecuhfhrohhmpeflohhnrghthhgrnhcuffgvrhhrihgtkhcuoehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvheqnecuggftrfgrthhtvghrnhepvddtjeeigfeuleetveduvefhvdejvdfhtdfgheejiedtveeukedtgeettddthedvnecukfhppeejuddrvddthedrudekuddrhedtnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehhvghlohepjhguvghrrhhitghkqdhmohgslhegrdgrmhhrrdgtohhrphdrihhnthgvlhdrtghomhdpihhnvghtpeejuddrvddthedrudekuddrhedtpdhmrghilhhfrhhomhepjhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvpdhnsggprhgtphhtthhopeelpdhrtghpthhtohepshhonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhrrghiugesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhrdhrvghinhgulhesthhhvghlohhunhhgvgdrnhgvthdprhgtphhtthhopeignhhisehrvgguhhgrthdrtghomhdprhgtphhtthhopehhtg
+ hhsehlshhtrdguvgdprhgtphhtthhopehhtghhsehinhhfrhgruggvrggurdhorhhg
+X-Xfinity-VMeta: sc=-100.00;st=legit
+From:   Jonathan Derrick <jonathan.derrick@linux.dev>
+To:     Song Liu <song@kernel.org>, <linux-raid@vger.kernel.org>
+Cc:     Reindl Harald <h.reindl@thelounge.net>, Xiao Ni <xni@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Christoph Hellwig <hch@infradead.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Sushma Kalakota <sushma.kalakota@intel.com>,
+        Jon Derrick <jonathan.derrick@linux.dev>
+Subject: [PATCH v4 0/3] md/bitmap: Optimal last page size
+Date:   Thu, 23 Feb 2023 12:52:22 -0700
+Message-Id: <20230223195225.534-1-jonathan.derrick@linux.dev>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] Grow: fix can't change bitmap type from none to
- clustered.
-Content-Language: en-US
-To:     Heming Zhao <heming.zhao@suse.com>, linux-raid@vger.kernel.org,
-        ncroxon@redhat.com
-Cc:     colyli@suse.de
-References: <20230223143939.3817-1-heming.zhao@suse.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20230223143939.3817-1-heming.zhao@suse.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2/23/23 09:39, Heming Zhao wrote:
-> Commit a042210648ed ("disallow create or grow clustered bitmap with
-> writemostly set") introduced this bug. We should use 'true' logic not
-> '== 0' to deny setting up clustered array under WRITEMOSTLY condition.
-> 
-> How to trigger
-> 
-> ```
-> ~/mdadm # ./mdadm -Ss && ./mdadm --zero-superblock /dev/sd{a,b}
-> ~/mdadm # ./mdadm -C /dev/md0 -l mirror -b clustered -e 1.2 -n 2 \
-> /dev/sda /dev/sdb --assume-clean
-> mdadm: array /dev/md0 started.
-> ~/mdadm # ./mdadm --grow /dev/md0 --bitmap=none
-> ~/mdadm # ./mdadm --grow /dev/md0 --bitmap=clustered
-> mdadm: /dev/md0 disks marked write-mostly are not supported with clustered bitmap
-> ```
-> 
-> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
+From: Jon Derrick <jonathan.derrick@linux.dev>
 
-Applied!
+Currently the last bitmap page write will size itself down to the logical block
+size. This could cause less performance for devices which have atomic write
+units larger than the block size, such as many NVMe devices with 4kB write
+units and 512B block sizes. There is usually a large amount of space after the
+bitmap and using the optimal I/O size could favor speed over size.
 
-Thanks,
-Jes
+This was tested on an Intel/Solidigm P5520 drive with lba format 512B,
+optimal I/O size of 4kB, resulting in a > 10x IOPS increase.
+
+See patch 3 log for results.
+
+v3->v4: Fixed reviewers concerns
+v2->v3: Prep patch added and types fixed
+Added helpers for optimal I/O sizes
+
+Jon Derrick (3):
+  md: Move sb writer loop to its own function
+  md: Fix types in sb writer
+  md: Use optimal I/O size for last bitmap page
+
+ drivers/md/md-bitmap.c | 142 ++++++++++++++++++++++++-----------------
+ 1 file changed, 82 insertions(+), 60 deletions(-)
+
+-- 
+2.27.0
 
