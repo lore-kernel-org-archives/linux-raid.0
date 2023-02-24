@@ -2,101 +2,88 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83C8BC61DA4
-	for <linux-raid@archiver.kernel.org>; Fri, 24 Feb 2023 01:02:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02779C64ED6
+	for <linux-raid@archiver.kernel.org>; Fri, 24 Feb 2023 02:11:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229506AbjBXBC6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Feb 2023 20:02:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50248 "EHLO
+        id S229689AbjBXCLV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Feb 2023 21:11:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbjBXBC5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Feb 2023 20:02:57 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 129F316323
-        for <linux-raid@vger.kernel.org>; Thu, 23 Feb 2023 17:02:54 -0800 (PST)
-Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.54])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4PNBMW5rS5zKmLf;
-        Fri, 24 Feb 2023 08:57:59 +0800 (CST)
-Received: from [10.174.177.197] (10.174.177.197) by
- kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Fri, 24 Feb 2023 09:02:52 +0800
+        with ESMTP id S229445AbjBXCLU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Feb 2023 21:11:20 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A49805E844
+        for <linux-raid@vger.kernel.org>; Thu, 23 Feb 2023 18:11:18 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 5692C5CE3B;
+        Fri, 24 Feb 2023 02:11:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1677204677; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=p7mETbhBTjBSUBik/hFNQVh6YB/2TUcMIN8qo/ngQ68=;
+        b=1V7frcV94dS6u9SkpHr41yP90JNvIQAYkOPBgM7Girc1r0JtCKLzjMDB2Rdn34zuEjYCs2
+        uIB69iTyempMwDtVJShTnUrGQX2AMNt796+QgIdeWcG2ad1naRwQE3DnXnBblOEdsfgO5K
+        FOvVeEEYovRmBSEFCDTl17zVFGiwX58=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1677204677;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=p7mETbhBTjBSUBik/hFNQVh6YB/2TUcMIN8qo/ngQ68=;
+        b=2FjJ1BK3hXEfscQEhSZPnYklV2FNHO3H26mQXy3IMol3rAcVsJiDxK3XyAa7XhwXIdNIt3
+        iYdS3Q+O9prK16Cg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 802071391B;
+        Fri, 24 Feb 2023 02:11:15 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id wtuzE8Mc+GPBdQAAMHmgww
+        (envelope-from <colyli@suse.de>); Fri, 24 Feb 2023 02:11:15 +0000
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.300.101.1.3\))
 Subject: Re: [PATCH V4] Fix NULL dereference in super_by_fd
-From:   Li Xiao Keng <lixiaokeng@huawei.com>
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>
-CC:     Jes Sorensen <jes@trained-monkey.org>,
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <a4a44d2e-c4a5-4545-16cc-fae51dd37a3d@huawei.com>
+Date:   Fri, 24 Feb 2023 10:11:02 +0800
+Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Jes Sorensen <jes@trained-monkey.org>,
         Paul Menzel <pmenzel@molgen.mpg.de>,
-        <linux-raid@vger.kernel.org>, linfeilong <linfeilong@huawei.com>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linfeilong <linfeilong@huawei.com>,
         "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
         Wu Guanghao <wuguanghao3@huawei.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <168C2F9D-956A-40CE-AE32-56609BA2FD07@suse.de>
 References: <1dabb70e-ca1a-bd45-182a-ddaa95821f86@huawei.com>
  <20221221130548.000071e8@linux.intel.com>
  <98968834-e6ee-530a-ebd0-7dba00ac1c78@huawei.com>
-Message-ID: <a4a44d2e-c4a5-4545-16cc-fae51dd37a3d@huawei.com>
-Date:   Fri, 24 Feb 2023 09:02:51 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <98968834-e6ee-530a-ebd0-7dba00ac1c78@huawei.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.197]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm600010.china.huawei.com (7.193.23.86)
-X-CFilter-Loop: Reflected
+ <a4a44d2e-c4a5-4545-16cc-fae51dd37a3d@huawei.com>
+To:     Li Xiao Keng <lixiaokeng@huawei.com>
+X-Mailer: Apple Mail (2.3731.300.101.1.3)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-ping
 
-On 2023/1/6 15:07, Li Xiao Keng wrote:
+
+> 2023=E5=B9=B42=E6=9C=8824=E6=97=A5 09:02=EF=BC=8CLi Xiao Keng =
+<lixiaokeng@huawei.com> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
 > ping
-> 
-> On 2022/12/21 20:05, Mariusz Tkaczyk wrote:
->> On Wed, 21 Dec 2022 17:37:52 +0800
->> Li Xiao Keng <lixiaokeng@huawei.com> wrote:
->>
->>> When we create 100 partitions (major is 259 not 254) in a raid device,
->>> mdadm may coredump:
->>>
->>> Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p7'.
->>> Program terminated with signal SIGSEGV, Segmentation fault.
->>> #0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
->>> 74		VPCMPEQ	(%rdi), %ymm0, %ymm1
->>> (gdb) bt
->>> #0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
->>> #1  0x00007fbb9a7e4139 in __strcpy_chk (dest=dest@entry=0x55d55d6a13ac "",
->>> src=0x0, destlen=destlen@entry=32) at strcpy_chk.c:28 #2  0x000055d55ba1766d
->>> in strcpy (__src=<optimized out>, __dest=0x55d55d6a13ac "") at
->>> /usr/include/bits/string_fortified.h:79 #3  super_by_fd (fd=fd@entry=3,
->>> subarrayp=subarrayp@entry=0x7fff44dfcc48) at util.c:1289 #4
->>> 0x000055d55ba273a6 in Detail (dev=0x7fff44dfef0b "/dev/md1p7",
->>> c=0x7fff44dfe440) at Detail.c:101 #5  0x000055d55ba0de61 in misc_list
->>> (c=<optimized out>, ss=<optimized out>, dump_directory=<optimized out>,
->>> ident=<optimized out>, devlist=<optimized out>) at mdadm.c:1959 #6  main
->>> (argc=<optimized out>, argv=<optimized out>) at mdadm.c:1629
->>>
->>> The direct cause is fd2devnm returning NULL, so add a check.
->>>
->>> V1->V2: When fd2devnm return NULL, super_by_fd return NULL but not an
->>> incomplete 'st' entry. At the same time, add a check in map_by_devnm
->>> to avoid coredump.
->>>
->>> V2->V3: Fix style issues.
->>> V3->V4: Change strcpy() to strncpy().
->>>
->>> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
->>> Signed-off-by: Wu Guang Hao <wuguanghao3@huawei.com>
->>
->>
->> Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
->>
->> Coly could you please take a look?
->>
->> Thanks,
->> Mariusz
->> .
->>
+
+Copied. I will take a look soon.
+
+Thanks for reminding.
+
+Coly Li
+
