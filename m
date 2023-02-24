@@ -2,75 +2,105 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B596C64ED6
-	for <linux-raid@archiver.kernel.org>; Fri, 24 Feb 2023 02:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A64D4C677F1
+	for <linux-raid@archiver.kernel.org>; Fri, 24 Feb 2023 06:24:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229580AbjBXCL5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Feb 2023 21:11:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37442 "EHLO
+        id S229541AbjBXGX4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 24 Feb 2023 01:23:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjBXCL4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Feb 2023 21:11:56 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 403175E84A
-        for <linux-raid@vger.kernel.org>; Thu, 23 Feb 2023 18:11:55 -0800 (PST)
-Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PNCxr5qL6znWSm;
-        Fri, 24 Feb 2023 10:09:20 +0800 (CST)
-Received: from [10.174.176.117] (10.174.176.117) by
- dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Fri, 24 Feb 2023 10:11:52 +0800
-Subject: =?UTF-8?Q?Re=3a_question_about_5e8daf906f89_=28=22md=3a_Flush_workq?=
- =?UTF-8?B?dWV1ZSBtZF9yZGV2X21pc2Nfd3EgaW4gbWRfYWxsb2MoKeKAnSk=?=
-To:     <david.sloan@eideticom.com>, Logan Gunthorpe <logang@deltatee.com>
-CC:     <linux-raid@vger.kernel.org>, <yangerkun@huawei.com>,
-        <yukuai@huawei.com>, <song@kernel.org>,
-        Li Nan <linan666@huaweicloud.com>
-References: <639bcf6e-b8b1-e002-a61f-93ec7ad04bbd@huaweicloud.com>
-From:   Hou Tao <houtao1@huawei.com>
-Message-ID: <bd26c2c9-9ab6-71e0-b73f-c0ed9a81f4a0@huawei.com>
-Date:   Fri, 24 Feb 2023 10:11:52 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        with ESMTP id S229452AbjBXGXz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 24 Feb 2023 01:23:55 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED04C25E0C;
+        Thu, 23 Feb 2023 22:23:52 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PNKbR0w0qz4f3l92;
+        Fri, 24 Feb 2023 14:23:47 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.124.27])
+        by APP4 (Coremail) with SMTP id gCh0CgBXwLPzV_hjqVfcEA--.64482S4;
+        Fri, 24 Feb 2023 14:23:49 +0800 (CST)
+From:   Hou Tao <houtao@huaweicloud.com>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org
+Cc:     linux-raid@vger.kernel.org,
+        David Sloan <david.sloan@eideticom.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Song Liu <song@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Sasha Levin <sashal@kernel.org>, houtao1@huawei.com
+Subject: [PATCH 5.10] md: Flush workqueue md_rdev_misc_wq in md_alloc()
+Date:   Fri, 24 Feb 2023 14:52:09 +0800
+Message-Id: <20230224065209.3170104-1-houtao@huaweicloud.com>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-In-Reply-To: <639bcf6e-b8b1-e002-a61f-93ec7ad04bbd@huaweicloud.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [10.174.176.117]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpeml500025.china.huawei.com (7.185.36.35)
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBXwLPzV_hjqVfcEA--.64482S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar15Aw1UZr1rXF1kWr1rJFb_yoW8Xr18pr
+        WS9ay5tr18JFW8Ka1UXF1xu3s8uw1qk397uF1fur43Zr1DArn5Jw1xK3WrXFyDCr95ZryY
+        vF4UuF95Z3W8A3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUgKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCj
+        c4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4
+        CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1x
+        MIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJV
+        Cq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBI
+        daVFxhVjvjDU0xZFpf9x07UWE__UUUUU=
+X-CM-SenderInfo: xkrx3t3r6k3tpzhluzxrxghudrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: David Sloan <david.sloan@eideticom.com>
 
-On 2/10/2023 10:10 AM, Li Nan wrote:
-> Hi,
-> Commit log says there is race condition in md_rdev_misc_wq, but I find nothing
-> wrong with it. Could you tell me how to trigger the bug?
->
-> Thansks,
-> nan.
->
-We want to back-port commit 5e8daf906f89 ("md: Flush workqueue md_rdev_misc_wq
-in md_alloc()") into v5.10 LTS, but only judging from its commit message, we
-don't know whether it is a good candidate or not. According to my understanding,
-the commit tries to wait for the deletion and the release of rdev kobject. The
-release of rdev kobject will call rdev_free() to free the allocated memory and
-it will not being related with any race, so I think the race mentioned in commit
-message must be related with the deletion of rdev kobject. Because the parent of
-rdev kobject is mddev and rdev kobject must have been acquired one reference of
-mddev kobject, so if the deletion of rdev kobject doesn't completes,
-md_kobj_release() and its callee del_gendisk() will be not called, right ? If
-the previous created mddev has not already called del_gendisk(), the current
-creation of mddev with the same name will fail in add_disk() or kobject_add(). I
-think this is the mentioned race in the commit message, right ? If that is the
-case, v5.10 LTS also have the same race problem. We will try to reproduce the
-problem and post it to v5.10 LTS.
->
-> .
+commit 5e8daf906f890560df430d30617c692a794acb73 upstream.
+
+A race condition still exists when removing and re-creating md devices
+in test cases. However, it is only seen on some setups.
+
+The race condition was tracked down to a reference still being held
+to the kobject by the rdev in the md_rdev_misc_wq which will be released
+in rdev_delayed_delete().
+
+md_alloc() waits for previous deletions by waiting on the md_misc_wq,
+but the md_rdev_misc_wq may still be holding a reference to a recently
+removed device.
+
+To fix this, also flush the md_rdev_misc_wq in md_alloc().
+
+Signed-off-by: David Sloan <david.sloan@eideticom.com>
+[logang@deltatee.com: rewrote commit message]
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Song Liu <song@kernel.org>
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+Hi Greg,
+
+We found the problem also exists on v5.10, so could you please pick it up
+for v5.10 ?
+
+Thanks.
+
+ drivers/md/md.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3038e7ecb7e1..c0b34637bd66 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5683,6 +5683,7 @@ static int md_alloc(dev_t dev, char *name)
+ 	 * completely removed (mddev_delayed_delete).
+ 	 */
+ 	flush_workqueue(md_misc_wq);
++	flush_workqueue(md_rdev_misc_wq);
+ 
+ 	mutex_lock(&disks_mutex);
+ 	error = -EEXIST;
+-- 
+2.29.2
 
