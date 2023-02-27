@@ -2,151 +2,132 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40706C7EE2F
-	for <linux-raid@archiver.kernel.org>; Fri, 24 Feb 2023 18:36:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 377B6C64ED6
+	for <linux-raid@archiver.kernel.org>; Mon, 27 Feb 2023 00:16:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229836AbjBXSgk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 24 Feb 2023 13:36:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35164 "EHLO
+        id S229735AbjB0AQH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 26 Feb 2023 19:16:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229832AbjBXSgi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 24 Feb 2023 13:36:38 -0500
-Received: from resqmta-h1p-028591.sys.comcast.net (resqmta-h1p-028591.sys.comcast.net [IPv6:2001:558:fd02:2446::9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DE4D6C52D
-        for <linux-raid@vger.kernel.org>; Fri, 24 Feb 2023 10:36:37 -0800 (PST)
-Received: from resomta-h1p-027911.sys.comcast.net ([96.102.179.202])
-        by resqmta-h1p-028591.sys.comcast.net with ESMTP
-        id VX6dpz14qGC5dVctRpKfHM; Fri, 24 Feb 2023 18:34:05 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=comcastmailservice.net; s=20211018a; t=1677263645;
-        bh=5Z0w+ugex+J+O+Uy6m1Y4yEW69xQp3sPnb0QS7Al950=;
-        h=Received:Received:From:To:Subject:Date:Message-Id:MIME-Version:
-         Xfinity-Spam-Result;
-        b=Wk4VaX/enhWV84ZBtNVkaNwZR7+cq4t/JOl62MQNIMCzqcRQDqPSlkf7Y5PcbJ8QN
-         n3A4MLm6HJ/nAh9rwWXRJjtpgeIcI+wP7NBQW8UtyWgNHlCFpbQpl0e3NKjhaekxl+
-         dmnUn9H7RT3BtoRTnbt6QXnqGBKHm1Zgvy64f3P5aEPGAtXWtFtB2KZ2T/0EG6Bf7U
-         e0wixWhx+Xp+RMEJVhjfmQMVeXW2360++WpFDYUgx9QSAI65fIPk+IjYwNE6VVGTIL
-         xs+j3CIsYsh8QjgcaNlVVumCJl80Geq+N8z8Ma3N3uq7kOkFw7EthHc+YRb6xZT5I9
-         c7+0cyFFdyNYw==
-Received: from jderrick-mobl4.amr.corp.intel.com ([71.205.181.50])
-        by resomta-h1p-027911.sys.comcast.net with ESMTPA
-        id VcsvpymQMN2puVct8pamiL; Fri, 24 Feb 2023 18:33:46 +0000
-X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvhedrudekfedguddtlecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucevohhmtggrshhtqdftvghsihdpqfgfvfdppffquffrtefokffrnecuuegrihhlohhuthemuceftddunecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkffojghfggfgsedtkeertdertddtnecuhfhrohhmpeflohhnrghthhgrnhcuffgvrhhrihgtkhcuoehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvheqnecuggftrfgrthhtvghrnheptdetleejfffgffevhefhteevfeeuvdehveffffehtdejuedvvefgfedttdehfedtnecukfhppeejuddrvddthedrudekuddrhedtnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehhvghlohepjhguvghrrhhitghkqdhmohgslhegrdgrmhhrrdgtohhrphdrihhnthgvlhdrtghomhdpihhnvghtpeejuddrvddthedrudekuddrhedtpdhmrghilhhfrhhomhepjhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvpdhnsggprhgtphhtthhopeelpdhrtghpthhtohepshhonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhrrghiugesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhrdhrvghinhgulhesthhhvghlohhunhhgvgdrnhgvthdprhgtphhtthhopeignhhisehrvgguhhgrthdrtghomhdprhgtphhtthhope
- hhtghhsehlshhtrdguvgdprhgtphhtthhopehhtghhsehinhhfrhgruggvrggurdhorhhg
-X-Xfinity-VMeta: sc=-100.00;st=legit
-From:   Jonathan Derrick <jonathan.derrick@linux.dev>
-To:     Song Liu <song@kernel.org>, <linux-raid@vger.kernel.org>
-Cc:     Reindl Harald <h.reindl@thelounge.net>, Xiao Ni <xni@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christoph Hellwig <hch@infradead.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Sushma Kalakota <sushma.kalakota@intel.com>,
-        Jon Derrick <jonathan.derrick@linux.dev>
-Subject: [PATCH v5 2/3] md: Fix types in sb writer
-Date:   Fri, 24 Feb 2023 11:33:22 -0700
-Message-Id: <20230224183323.638-3-jonathan.derrick@linux.dev>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230224183323.638-1-jonathan.derrick@linux.dev>
-References: <20230224183323.638-1-jonathan.derrick@linux.dev>
+        with ESMTP id S229470AbjB0AQG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 26 Feb 2023 19:16:06 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 369F615554
+        for <linux-raid@vger.kernel.org>; Sun, 26 Feb 2023 16:15:59 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id C05F61F8D7;
+        Mon, 27 Feb 2023 00:15:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1677456957; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Psue0GUxz2Hf3DaFntJazFuxRNgFNDIcENslsqrnnMc=;
+        b=U3Y7WMDfIQqhV0qXSVsDWwD+K8cIAMr2WhU9biWywVnVyvg6k/uYaSKoyTWypCjPfZxbqd
+        dMedzzetTRwj1TE9UbHz1U2FRrKn+xWtoh1AuA9dAg1n+25xS9D75/ewNnESiP7HKzit1h
+        8pXDFk/S4lCwqtr/rw/LmHObt9+zU4I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1677456957;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Psue0GUxz2Hf3DaFntJazFuxRNgFNDIcENslsqrnnMc=;
+        b=S+VlNBTdB9kmx5MR0W0HXkHuHR06wjz25Ado8nzJSGctzAbqhAh6p8djdX/Nf1c5FSTyTO
+        RITCE65pqcOkfeAg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 38CCE13912;
+        Mon, 27 Feb 2023 00:15:55 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id K4r7Njv2+2OndQAAMHmgww
+        (envelope-from <neilb@suse.de>); Mon, 27 Feb 2023 00:15:55 +0000
+Subject: [PATCH 0/6] Assorted patches relating to mdmon
+From:   NeilBrown <neilb@suse.de>
+To:     Jes Sorensen <jes@trained-monkey.org>
+Cc:     linux-raid@vger.kernel.org, Martin Wilck <martin.wilck@suse.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Date:   Mon, 27 Feb 2023 11:13:07 +1100
+Message-ID: <167745586347.16565.4353184078424535907.stgit@noble.brown>
+User-Agent: StGit/1.5
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Jon Derrick <jonathan.derrick@linux.dev>
+mdmon is a root-storage daemon is the sense defined by systemd
+documentation, but it does not follow the practice that systemd
+recommends.  Specifically it is run from the root filesystem when
+possible.  The instance started in the initrd hands-over to a root-fs
+based instance, which then hands-over to an initrd-based instance
+started by dracut at shutdown.
 
-Page->index is a pgoff_t and multiplying could cause overflows on a
-32-bit architecture. In the sb writer, this is used to calculate and
-verify the sector being used, and is multiplied by a sector value. Using
-sector_t will cast it to a u64 type and is the more appropriate type for
-the unit. Additionally, the integer size unit is converted to a sector
-unit in later calculations, and is now corrected to be an unsigned type.
+Part of the reason that we ignore systemd advise is that mdmon needs
+access to the filesystem - specifically /dev and /sys - which is not
+available in the initrd context after switchroot.  We could possibly
+change mdmon to work in the systemd-preferred way by splitting mdmon
+into two processes instead of just having 2 threads.  The "monitor"
+process could running entirely in the initrd context, the "manager"
+process could safely run in the root-fs context, passing newly opened
+file descriptors to the monitor over a unix-domain socket.
 
-Finally, clean up the calculations using variable aliases to improve
-readabiliy.
+But we aren't there yet and may never be.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jon Derrick <jonathan.derrick@linux.dev>
+For now, mdmon doesn't work correctly.  There is no mechanism to ensure
+a new instance starts after switchroot.  Until recently the initrd
+instance of the systemd mdmon unit would be stopped at switchroot time
+because udev would temporarily forget about md devices.  This would
+allow the "udevadm trigger" process to start a new instance.  udev was
+recently fixed:
+
+Commit: 7ec624147a41 ("udevadm: cleanup-db: don't delete information for kept db entries")
+
+so now the attempt to start mdmon via "udevadm trigger" does nothing as
+mdmon already has an active unit.
+
+The net result is that mdmon continues running in the initrd mount
+namespace and so cannot access new devices.  Adding a device to a root
+md array that depends on mdmon will no longer work.
+
+We want the initrd instance of mdmon to continue running until the
+root-fs based instance starts, and that really requires we have two
+different systemd units.  This series achieves this in the final patch by
+using a different instance name inside or initrd and outside.
+"initrd-mdfoo" and "mdfoo".
+
+Other patches in the series are mostly clean-ups and minor improvements
+in related code.
+
+NeilBrown
+
+
+
 ---
- drivers/md/md-bitmap.c | 35 ++++++++++++++---------------------
- 1 file changed, 14 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index cdc61e65abae..bf250a5e3a86 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -215,12 +215,13 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
- 	struct block_device *bdev;
- 	struct mddev *mddev = bitmap->mddev;
- 	struct bitmap_storage *store = &bitmap->storage;
--	loff_t offset = mddev->bitmap_info.offset;
--	int size = PAGE_SIZE;
-+	sector_t offset = mddev->bitmap_info.offset;
-+	sector_t ps, sboff, doff;
-+	unsigned int size = PAGE_SIZE;
- 
- 	bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
- 	if (page->index == store->file_pages - 1) {
--		int last_page_size = store->bytes & (PAGE_SIZE - 1);
-+		unsigned int last_page_size = store->bytes & (PAGE_SIZE - 1);
- 
- 		if (last_page_size == 0)
- 			last_page_size = PAGE_SIZE;
-@@ -228,43 +229,35 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
- 			       bdev_logical_block_size(bdev));
- 	}
- 
-+	ps = page->index * PAGE_SIZE / SECTOR_SIZE;
-+	sboff = rdev->sb_start + offset;
-+	doff = rdev->data_offset;
-+
- 	/* Just make sure we aren't corrupting data or metadata */
- 	if (mddev->external) {
- 		/* Bitmap could be anywhere. */
--		if (rdev->sb_start + offset
--		    + (page->index * (PAGE_SIZE / SECTOR_SIZE))
--		    > rdev->data_offset &&
--		    rdev->sb_start + offset
--		    < (rdev->data_offset + mddev->dev_sectors
--		     + (PAGE_SIZE / SECTOR_SIZE)))
-+		if (sboff + ps > doff &&
-+		    sboff < (doff + mddev->dev_sectors + PAGE_SIZE / SECTOR_SIZE))
- 			return -EINVAL;
- 	} else if (offset < 0) {
- 		/* DATA  BITMAP METADATA  */
--		if (offset
--		    + (long)(page->index * (PAGE_SIZE / SECTOR_SIZE))
--		    + size / SECTOR_SIZE > 0)
-+		if (offset + ps + size / SECTOR_SIZE > 0)
- 			/* bitmap runs in to metadata */
- 			return -EINVAL;
- 
--		if (rdev->data_offset + mddev->dev_sectors
--		    > rdev->sb_start + offset)
-+		if (doff + mddev->dev_sectors > sboff)
- 			/* data runs in to bitmap */
- 			return -EINVAL;
- 	} else if (rdev->sb_start < rdev->data_offset) {
- 		/* METADATA BITMAP DATA */
--		if (rdev->sb_start + offset
--		    + page->index * (PAGE_SIZE / SECTOR_SIZE)
--		    + size / SECTOR_SIZE > rdev->data_offset)
-+		if (sboff + ps + size / SECTOR_SIZE > doff)
- 			/* bitmap runs in to data */
- 			return -EINVAL;
- 	} else {
- 		/* DATA METADATA BITMAP - no problems */
- 	}
- 
--	md_super_write(mddev, rdev,
--		       rdev->sb_start + offset
--		       + page->index * (PAGE_SIZE / SECTOR_SIZE),
--		       size, page);
-+	md_super_write(mddev, rdev, sboff + ps, (int) size, page);
- 	return 0;
- }
- 
--- 
-2.27.0
+NeilBrown (6):
+      Use existence of /etc/initrd-release to detect initrd.
+      Improvements for IMSM_NO_PLATFORM testing.
+      mdmon: don't test both 'all' and 'container_name'.
+      mdmon: change systemd unit file to use --foreground
+      mdmon: Remove need for KillMode=none
+      mdmon improvements for switchroot
+
+
+ Grow.c                    |  4 ++--
+ mdadm.h                   |  4 +++-
+ mdmon.c                   | 21 ++++++++++++-------
+ super-intel.c             | 43 ++++++++++++++++++++++++++++++++++++---
+ systemd/mdmon@.service    | 15 +++++++-------
+ udev-md-raid-arrays.rules |  3 ++-
+ util.c                    | 17 +++++-----------
+ 7 files changed, 74 insertions(+), 33 deletions(-)
+
+--
+Signature
 
