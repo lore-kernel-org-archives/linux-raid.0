@@ -2,91 +2,80 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D852C64ED6
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 17:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3577CC64ED6
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 18:37:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229635AbjB1R3V (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Feb 2023 12:29:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50590 "EHLO
+        id S229736AbjB1ShO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Feb 2023 13:37:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbjB1R3U (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 12:29:20 -0500
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 642C4CDCF
-        for <linux-raid@vger.kernel.org>; Tue, 28 Feb 2023 09:29:17 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1677605327; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=jMVLPMoFvV8zC2uBhWILCb1XXJ8i2xne62JekW1Gyi72KCiM0JBSdf7sl80WtHVlW3RiKShTEp3d9JHOnJUrrhEQkXAYQZmzNpDZ5rw8D7GZU7AxWzwLwmUCrVFMmejRYPvMRYLTihkMiGdpQgmj0JDFj76j3/1xtN2hzu8wotY=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1677605327; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=vt5d8xCwK0qX3iI3fweLfG6ivpO+wGRn7hWPCNCBnGE=; 
-        b=S6jREyE2ORLFQl3pI6HPRwrmC623Ck1LweLc88MbpFXoE8krFZREE5f1PTIGlFG9Yq3IVy9ugG7p1K8HT/pUuHyZyMWl1Kzpmn3cANRTuRYDe37plzgJicYIsZ71N6IBVdEIVRh8iNYb0NX9FyIlFdj7UM77aNOnN1ZO18nmoTc=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 1677605323881671.9669098247343; Tue, 28 Feb 2023 18:28:43 +0100 (CET)
-Message-ID: <4ab31e8b-652f-5bff-abc9-323fcff32b09@trained-monkey.org>
-Date:   Tue, 28 Feb 2023 12:28:41 -0500
+        with ESMTP id S229486AbjB1ShN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 13:37:13 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71A2221282;
+        Tue, 28 Feb 2023 10:37:12 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 06DFE6118E;
+        Tue, 28 Feb 2023 18:37:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13068C433D2;
+        Tue, 28 Feb 2023 18:37:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1677609431;
+        bh=/2ELY2OZYoU6WOXq1kS0fZXyn+tWm/ZcDfrOXIJDgRg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WCHgwVcNNRLclKgc6e18ePCpDWuRoICzi5Y/ibXo19Kw6K9yQ+FGjNYHqt0U9817I
+         kgJ/DrNhiLt2ZD4cUdiiK4cK4YQTILtzaklgJdF/PlLdNIXaMi0loroltuq18hXvNW
+         tvwUup6G52ya53hsBC4OhWdYblbIKFDoXfkFGwAM=
+Date:   Tue, 28 Feb 2023 19:37:08 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Hou Tao <houtao@huaweicloud.com>
+Cc:     stable@vger.kernel.org, linux-raid@vger.kernel.org,
+        David Sloan <david.sloan@eideticom.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Song Liu <song@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Sasha Levin <sashal@kernel.org>, houtao1@huawei.com
+Subject: Re: [PATCH 5.10] md: Flush workqueue md_rdev_misc_wq in md_alloc()
+Message-ID: <Y/5J1KXCvSPuJs4C@kroah.com>
+References: <20230224065209.3170104-1-houtao@huaweicloud.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH V5] Fix NULL dereference in super_by_fd
-Content-Language: en-US
-To:     Li Xiao Keng <lixiaokeng@huawei.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>, linux-raid@vger.kernel.org
-Cc:     linfeilong <linfeilong@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
-        Wu Guanghao <wuguanghao3@huawei.com>
-References: <e9b040d6-e01b-7113-aed0-95071bd0aa26@huawei.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <e9b040d6-e01b-7113-aed0-95071bd0aa26@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230224065209.3170104-1-houtao@huaweicloud.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2/26/23 22:12, Li Xiao Keng wrote:
-> When we create 100 partitions (major is 259 not 254) in a raid device,
-> mdadm may coredump:
+On Fri, Feb 24, 2023 at 02:52:09PM +0800, Hou Tao wrote:
+> From: David Sloan <david.sloan@eideticom.com>
 > 
-> Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p7'.
-> Program terminated with signal SIGSEGV, Segmentation fault.
-> #0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
-> 74		VPCMPEQ	(%rdi), %ymm0, %ymm1
-> (gdb) bt
-> #0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
-> #1  0x00007fbb9a7e4139 in __strcpy_chk (dest=dest@entry=0x55d55d6a13ac "", src=0x0, destlen=destlen@entry=32) at strcpy_chk.c:28
-> #2  0x000055d55ba1766d in strcpy (__src=<optimized out>, __dest=0x55d55d6a13ac "") at /usr/include/bits/string_fortified.h:79
-> #3  super_by_fd (fd=fd@entry=3, subarrayp=subarrayp@entry=0x7fff44dfcc48) at util.c:1289
-> #4  0x000055d55ba273a6 in Detail (dev=0x7fff44dfef0b "/dev/md1p7", c=0x7fff44dfe440) at Detail.c:101
-> #5  0x000055d55ba0de61 in misc_list (c=<optimized out>, ss=<optimized out>, dump_directory=<optimized out>, ident=<optimized out>, devlist=<optimized out>) at mdadm.c:1959
-> #6  main (argc=<optimized out>, argv=<optimized out>) at mdadm.c:1629
+> commit 5e8daf906f890560df430d30617c692a794acb73 upstream.
 > 
-> The direct cause is fd2devnm returning NULL, so add a check.
+> A race condition still exists when removing and re-creating md devices
+> in test cases. However, it is only seen on some setups.
 > 
-> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
-> Signed-off-by: Wu Guang Hao <wuguanghao3@huawei.com>
+> The race condition was tracked down to a reference still being held
+> to the kobject by the rdev in the md_rdev_misc_wq which will be released
+> in rdev_delayed_delete().
+> 
+> md_alloc() waits for previous deletions by waiting on the md_misc_wq,
+> but the md_rdev_misc_wq may still be holding a reference to a recently
+> removed device.
+> 
+> To fix this, also flush the md_rdev_misc_wq in md_alloc().
+> 
+> Signed-off-by: David Sloan <david.sloan@eideticom.com>
+> [logang@deltatee.com: rewrote commit message]
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Signed-off-by: Song Liu <song@kernel.org>
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
 > ---
-> V1->V2: When fd2devnm return NULL, super_by_fd return NULL but not an
-> incomplete 'st' entry. At the same time, add a check in map_by_devnm
-> to avoid coredump.
+> Hi Greg,
 > 
-> V2->V3: Fix style issues.
-> V3->V4: Change strcpy() to strncpy().
-> V4->V5: Move changelog to the location after '---'
-> 
->  mapfile.c | 4 ++++
->  util.c    | 7 ++++++-
->  2 files changed, 10 insertions(+), 1 deletion(-)
->
+> We found the problem also exists on v5.10, so could you please pick it up
+> for v5.10 ?
 
-Applied!
+Now queued up, thanks.
 
-Thanks,
-Jes
-
-
+greg k-h
