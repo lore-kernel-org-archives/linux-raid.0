@@ -2,71 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA3FAC64ED6
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 08:57:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D852C64ED6
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 17:29:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229689AbjB1I5K (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Feb 2023 03:57:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40640 "EHLO
+        id S229635AbjB1R3V (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Feb 2023 12:29:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229880AbjB1I5H (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 03:57:07 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D705313531
-        for <linux-raid@vger.kernel.org>; Tue, 28 Feb 2023 00:57:05 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 9175121A5F;
-        Tue, 28 Feb 2023 08:57:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1677574624; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UUIxMHyHNIE40I+SxXw7jwyIHHWhoqk2qO8FVrZTRyc=;
-        b=IX7rUqp4+QHsJYEop484K19Kj2Y9OV6IUTBWdj9kcQcLaGahRJlTY8Id2zcxvJA/5hI/rB
-        Lkzk1Kf/wbJPep7M0hW53FUy/PMEciCpMj/WgZgGEBMRn2W5xMKkzuaLEPpiz1I7NyucYl
-        /vpYWzm5M0Oq1jVN6/brXy6dtdJ0kLA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1677574624;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UUIxMHyHNIE40I+SxXw7jwyIHHWhoqk2qO8FVrZTRyc=;
-        b=OrwbljuzDFfdKpeW5lfrmQJMR2wGWbQJsGi5kABF1GDNMmrxWY48rBd4R78uwnEDzkLPtz
-        ct+4DBlQYGb6OqDw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9F31B13440;
-        Tue, 28 Feb 2023 08:57:02 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 1WxeG97B/WPjJQAAMHmgww
-        (envelope-from <colyli@suse.de>); Tue, 28 Feb 2023 08:57:02 +0000
-Date:   Tue, 28 Feb 2023 16:56:57 +0800
-From:   Coly Li <colyli@suse.de>
-To:     Li Xiao Keng <lixiaokeng@huawei.com>
-Cc:     Jes Sorensen <jes@trained-monkey.org>,
+        with ESMTP id S229533AbjB1R3U (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 12:29:20 -0500
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 642C4CDCF
+        for <linux-raid@vger.kernel.org>; Tue, 28 Feb 2023 09:29:17 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1677605327; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=jMVLPMoFvV8zC2uBhWILCb1XXJ8i2xne62JekW1Gyi72KCiM0JBSdf7sl80WtHVlW3RiKShTEp3d9JHOnJUrrhEQkXAYQZmzNpDZ5rw8D7GZU7AxWzwLwmUCrVFMmejRYPvMRYLTihkMiGdpQgmj0JDFj76j3/1xtN2hzu8wotY=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1677605327; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=vt5d8xCwK0qX3iI3fweLfG6ivpO+wGRn7hWPCNCBnGE=; 
+        b=S6jREyE2ORLFQl3pI6HPRwrmC623Ck1LweLc88MbpFXoE8krFZREE5f1PTIGlFG9Yq3IVy9ugG7p1K8HT/pUuHyZyMWl1Kzpmn3cANRTuRYDe37plzgJicYIsZ71N6IBVdEIVRh8iNYb0NX9FyIlFdj7UM77aNOnN1ZO18nmoTc=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1677605323881671.9669098247343; Tue, 28 Feb 2023 18:28:43 +0100 (CET)
+Message-ID: <4ab31e8b-652f-5bff-abc9-323fcff32b09@trained-monkey.org>
+Date:   Tue, 28 Feb 2023 12:28:41 -0500
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH V5] Fix NULL dereference in super_by_fd
+Content-Language: en-US
+To:     Li Xiao Keng <lixiaokeng@huawei.com>,
         Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        linux-raid@vger.kernel.org, linfeilong <linfeilong@huawei.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>, linux-raid@vger.kernel.org
+Cc:     linfeilong <linfeilong@huawei.com>,
         "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
         Wu Guanghao <wuguanghao3@huawei.com>
-Subject: Re: [PATCH V5] Fix NULL dereference in super_by_fd
-Message-ID: <Y/3B2e73RUq0UhxQ@enigma.lan>
 References: <e9b040d6-e01b-7113-aed0-95071bd0aa26@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+From:   Jes Sorensen <jes@trained-monkey.org>
 In-Reply-To: <e9b040d6-e01b-7113-aed0-95071bd0aa26@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Feb 27, 2023 at 11:12:07AM +0800, Li Xiao Keng wrote:
+On 2/26/23 22:12, Li Xiao Keng wrote:
 > When we create 100 partitions (major is 259 not 254) in a raid device,
 > mdadm may coredump:
 > 
@@ -87,17 +70,6 @@ On Mon, Feb 27, 2023 at 11:12:07AM +0800, Li Xiao Keng wrote:
 > 
 > Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
 > Signed-off-by: Wu Guang Hao <wuguanghao3@huawei.com>
-
-Acked-by: Coly Li <colyli@suse.de>
-
-
-Please forget the previous email, MacOS Mail client "intelligently" extends my email address which is not called for.
-
-Thanks.
-
-Coly Li
-
-
 > ---
 > V1->V2: When fd2devnm return NULL, super_by_fd return NULL but not an
 > incomplete 'st' entry. At the same time, add a check in map_by_devnm
@@ -110,49 +82,11 @@ Coly Li
 >  mapfile.c | 4 ++++
 >  util.c    | 7 ++++++-
 >  2 files changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mapfile.c b/mapfile.c
-> index 8d7acb3..f72fe0d 100644
-> --- a/mapfile.c
-> +++ b/mapfile.c
-> @@ -292,6 +292,10 @@ struct map_ent *map_by_uuid(struct map_ent **map, int uuid[4])
->  struct map_ent *map_by_devnm(struct map_ent **map, char *devnm)
->  {
->  	struct map_ent *mp;
-> +
-> +	if (!devnm)
-> +		return NULL;
-> +
->  	if (!*map)
->  		map_read(map);
-> 
-> diff --git a/util.c b/util.c
-> index 64dd409..3a84ee3 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1241,6 +1241,11 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
->  	int i;
->  	char *subarray = NULL;
->  	char container[32] = "";
-> +	char *devnm = NULL;
-> +
-> +	devnm = fd2devnm(fd);
-> +	if (!devnm)
-> +		return NULL;
-> 
->  	sra = sysfs_read(fd, NULL, GET_VERSION);
-> 
-> @@ -1286,7 +1291,7 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
->  		if (subarrayp)
->  			*subarrayp = subarray;
->  		strcpy(st->container_devnm, container);
-> -		strcpy(st->devnm, fd2devnm(fd));
-> +		strncpy(st->devnm, devnm, MD_NAME_MAX - 1);
->  	} else
->  		free(subarray);
-> 
-> -- 
-> 1.8.3.1
+>
 
--- 
-Coly Li
+Applied!
+
+Thanks,
+Jes
+
+
