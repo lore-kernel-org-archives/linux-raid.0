@@ -2,122 +2,173 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D91DDC7EE23
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Feb 2023 03:12:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F036C64ED6
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 08:51:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230003AbjB0DMT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 26 Feb 2023 22:12:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49638 "EHLO
+        id S231251AbjB1Ivv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Feb 2023 03:51:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229846AbjB0DMQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 26 Feb 2023 22:12:16 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A72D12840
-        for <linux-raid@vger.kernel.org>; Sun, 26 Feb 2023 19:12:13 -0800 (PST)
-Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PQ57w27VDznWb7;
-        Mon, 27 Feb 2023 11:09:32 +0800 (CST)
-Received: from [10.174.177.197] (10.174.177.197) by
- kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Mon, 27 Feb 2023 11:12:08 +0800
-To:     Jes Sorensen <jes@trained-monkey.org>,
+        with ESMTP id S231184AbjB1IvY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 03:51:24 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B19014991
+        for <linux-raid@vger.kernel.org>; Tue, 28 Feb 2023 00:51:08 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 3CE3021A5E;
+        Tue, 28 Feb 2023 08:51:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1677574267; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=sA73CX/FHC3XvwaGmuCBURMAtSLXLvuI7yR3A0GoZaU=;
+        b=VmpotNYMH1bngdyKXfMy+rbiwqw+FFSxpUWjpC1Q4liqseXs4lmJyjk0rQfnWgYOjSWk/p
+        GvtNGipp5dCLRANyvrtcDMfvvkTwYzKmDcz+7R18UT+7K5SauE6WR+4BfR0e1Lh1ANBHlC
+        YqoaSpThL6J/2wHL4tWuEevVsnaWA58=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1677574267;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=sA73CX/FHC3XvwaGmuCBURMAtSLXLvuI7yR3A0GoZaU=;
+        b=ZaRs0+Pe6KY0gyFe+DBCSIGglQI1C3dNhvFcEHBry2e7EiS/s3i77CKRr/OPAwmhIMdjWj
+        2+LuIT5Ns4DPDtCQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 685A813440;
+        Tue, 28 Feb 2023 08:51:05 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id dfLEDXnA/WMTIwAAMHmgww
+        (envelope-from <colyli@suse.de>); Tue, 28 Feb 2023 08:51:05 +0000
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.300.101.1.3\))
+Subject: Re: [PATCH V5] Fix NULL dereference in super_by_fd
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <e9b040d6-e01b-7113-aed0-95071bd0aa26@huawei.com>
+Date:   Tue, 28 Feb 2023 16:50:52 +0800
+Cc:     Jes Sorensen <jes@trained-monkey.org>,
         Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
         Paul Menzel <pmenzel@molgen.mpg.de>,
-        <linux-raid@vger.kernel.org>
-CC:     linfeilong <linfeilong@huawei.com>,
+        linux-raid@vger.kernel.org, linfeilong <linfeilong@huawei.com>,
         "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
         Wu Guanghao <wuguanghao3@huawei.com>
-From:   Li Xiao Keng <lixiaokeng@huawei.com>
-Subject: [PATCH V5] Fix NULL dereference in super_by_fd
-Message-ID: <e9b040d6-e01b-7113-aed0-95071bd0aa26@huawei.com>
-Date:   Mon, 27 Feb 2023 11:12:07 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.197]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemm600010.china.huawei.com (7.193.23.86)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <147F494E-39C9-49B6-B7B4-8E6A26588BAF@suse.de>
+References: <e9b040d6-e01b-7113-aed0-95071bd0aa26@huawei.com>
+To:     Li Xiao Keng <lixiaokeng@huawei.com>
+X-Mailer: Apple Mail (2.3731.300.101.1.3)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-When we create 100 partitions (major is 259 not 254) in a raid device,
-mdadm may coredump:
 
-Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p7'.
-Program terminated with signal SIGSEGV, Segmentation fault.
-#0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
-74		VPCMPEQ	(%rdi), %ymm0, %ymm1
-(gdb) bt
-#0  __strlen_avx2_rtm () at ../sysdeps/x86_64/multiarch/strlen-avx2.S:74
-#1  0x00007fbb9a7e4139 in __strcpy_chk (dest=dest@entry=0x55d55d6a13ac "", src=0x0, destlen=destlen@entry=32) at strcpy_chk.c:28
-#2  0x000055d55ba1766d in strcpy (__src=<optimized out>, __dest=0x55d55d6a13ac "") at /usr/include/bits/string_fortified.h:79
-#3  super_by_fd (fd=fd@entry=3, subarrayp=subarrayp@entry=0x7fff44dfcc48) at util.c:1289
-#4  0x000055d55ba273a6 in Detail (dev=0x7fff44dfef0b "/dev/md1p7", c=0x7fff44dfe440) at Detail.c:101
-#5  0x000055d55ba0de61 in misc_list (c=<optimized out>, ss=<optimized out>, dump_directory=<optimized out>, ident=<optimized out>, devlist=<optimized out>) at mdadm.c:1959
-#6  main (argc=<optimized out>, argv=<optimized out>) at mdadm.c:1629
 
-The direct cause is fd2devnm returning NULL, so add a check.
+> 2023=E5=B9=B42=E6=9C=8827=E6=97=A5 11:12=EF=BC=8CLi Xiao Keng =
+<lixiaokeng@huawei.com> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> When we create 100 partitions (major is 259 not 254) in a raid device,
+> mdadm may coredump:
+>=20
+> Core was generated by `/usr/sbin/mdadm --detail --export /dev/md1p7'.
+> Program terminated with signal SIGSEGV, Segmentation fault.
+> #0  __strlen_avx2_rtm () at =
+../sysdeps/x86_64/multiarch/strlen-avx2.S:74
+> 74 VPCMPEQ (%rdi), %ymm0, %ymm1
+> (gdb) bt
+> #0  __strlen_avx2_rtm () at =
+../sysdeps/x86_64/multiarch/strlen-avx2.S:74
+> #1  0x00007fbb9a7e4139 in __strcpy_chk (dest=3Ddest@entry=3D0x55d55d6a13=
+ac "", src=3D0x0, destlen=3Ddestlen@entry=3D32) at strcpy_chk.c:28
+> #2  0x000055d55ba1766d in strcpy (__src=3D<optimized out>, =
+__dest=3D0x55d55d6a13ac "") at /usr/include/bits/string_fortified.h:79
+> #3  super_by_fd (fd=3Dfd@entry=3D3, =
+subarrayp=3Dsubarrayp@entry=3D0x7fff44dfcc48) at util.c:1289
+> #4  0x000055d55ba273a6 in Detail (dev=3D0x7fff44dfef0b "/dev/md1p7", =
+c=3D0x7fff44dfe440) at Detail.c:101
+> #5  0x000055d55ba0de61 in misc_list (c=3D<optimized out>, =
+ss=3D<optimized out>, dump_directory=3D<optimized out>, ident=3D<optimized=
+ out>, devlist=3D<optimized out>) at mdadm.c:1959
+> #6  main (argc=3D<optimized out>, argv=3D<optimized out>) at =
+mdadm.c:1629
+>=20
+> The direct cause is fd2devnm returning NULL, so add a check.
+>=20
+> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
+> Signed-off-by: Wu Guang Hao <wuguanghao3@huawei.com>
 
-Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
-Signed-off-by: Wu Guang Hao <wuguanghao3@huawei.com>
----
-V1->V2: When fd2devnm return NULL, super_by_fd return NULL but not an
-incomplete 'st' entry. At the same time, add a check in map_by_devnm
-to avoid coredump.
 
-V2->V3: Fix style issues.
-V3->V4: Change strcpy() to strncpy().
-V4->V5: Move changelog to the location after '---'
+Acked-by: Coly Li <colyli@suse.de <mailto:colyli@suse.de>>
 
- mapfile.c | 4 ++++
- util.c    | 7 ++++++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+Thanks.
 
-diff --git a/mapfile.c b/mapfile.c
-index 8d7acb3..f72fe0d 100644
---- a/mapfile.c
-+++ b/mapfile.c
-@@ -292,6 +292,10 @@ struct map_ent *map_by_uuid(struct map_ent **map, int uuid[4])
- struct map_ent *map_by_devnm(struct map_ent **map, char *devnm)
- {
- 	struct map_ent *mp;
-+
-+	if (!devnm)
-+		return NULL;
-+
- 	if (!*map)
- 		map_read(map);
+Coly Li
 
-diff --git a/util.c b/util.c
-index 64dd409..3a84ee3 100644
---- a/util.c
-+++ b/util.c
-@@ -1241,6 +1241,11 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
- 	int i;
- 	char *subarray = NULL;
- 	char container[32] = "";
-+	char *devnm = NULL;
-+
-+	devnm = fd2devnm(fd);
-+	if (!devnm)
-+		return NULL;
 
- 	sra = sysfs_read(fd, NULL, GET_VERSION);
+> ---
+> V1->V2: When fd2devnm return NULL, super_by_fd return NULL but not an
+> incomplete 'st' entry. At the same time, add a check in map_by_devnm
+> to avoid coredump.
+>=20
+> V2->V3: Fix style issues.
+> V3->V4: Change strcpy() to strncpy().
+> V4->V5: Move changelog to the location after '---'
+>=20
+> mapfile.c | 4 ++++
+> util.c    | 7 ++++++-
+> 2 files changed, 10 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/mapfile.c b/mapfile.c
+> index 8d7acb3..f72fe0d 100644
+> --- a/mapfile.c
+> +++ b/mapfile.c
+> @@ -292,6 +292,10 @@ struct map_ent *map_by_uuid(struct map_ent **map, =
+int uuid[4])
+> struct map_ent *map_by_devnm(struct map_ent **map, char *devnm)
+> {
+> struct map_ent *mp;
+> +
+> + if (!devnm)
+> + return NULL;
+> +
+> if (!*map)
+> map_read(map);
+>=20
+> diff --git a/util.c b/util.c
+> index 64dd409..3a84ee3 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -1241,6 +1241,11 @@ struct supertype *super_by_fd(int fd, char =
+**subarrayp)
+> int i;
+> char *subarray =3D NULL;
+> char container[32] =3D "";
+> + char *devnm =3D NULL;
+> +
+> + devnm =3D fd2devnm(fd);
+> + if (!devnm)
+> + return NULL;
+>=20
+> sra =3D sysfs_read(fd, NULL, GET_VERSION);
+>=20
+> @@ -1286,7 +1291,7 @@ struct supertype *super_by_fd(int fd, char =
+**subarrayp)
+> if (subarrayp)
+> *subarrayp =3D subarray;
+> strcpy(st->container_devnm, container);
+> - strcpy(st->devnm, fd2devnm(fd));
+> + strncpy(st->devnm, devnm, MD_NAME_MAX - 1);
+> } else
+> free(subarray);
+>=20
+> --=20
+> 1.8.3.1
 
-@@ -1286,7 +1291,7 @@ struct supertype *super_by_fd(int fd, char **subarrayp)
- 		if (subarrayp)
- 			*subarrayp = subarray;
- 		strcpy(st->container_devnm, container);
--		strcpy(st->devnm, fd2devnm(fd));
-+		strncpy(st->devnm, devnm, MD_NAME_MAX - 1);
- 	} else
- 		free(subarray);
-
--- 
-1.8.3.1
