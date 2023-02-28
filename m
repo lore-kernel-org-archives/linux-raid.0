@@ -2,80 +2,283 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3577CC64ED6
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 18:37:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E757C64ED6
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 18:46:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229736AbjB1ShO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Feb 2023 13:37:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39032 "EHLO
+        id S229811AbjB1SqB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Feb 2023 13:46:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbjB1ShN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 13:37:13 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71A2221282;
-        Tue, 28 Feb 2023 10:37:12 -0800 (PST)
+        with ESMTP id S229799AbjB1SqA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 13:46:00 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B38012BEF;
+        Tue, 28 Feb 2023 10:45:51 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 06DFE6118E;
-        Tue, 28 Feb 2023 18:37:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13068C433D2;
-        Tue, 28 Feb 2023 18:37:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1677609431;
-        bh=/2ELY2OZYoU6WOXq1kS0fZXyn+tWm/ZcDfrOXIJDgRg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=WCHgwVcNNRLclKgc6e18ePCpDWuRoICzi5Y/ibXo19Kw6K9yQ+FGjNYHqt0U9817I
-         kgJ/DrNhiLt2ZD4cUdiiK4cK4YQTILtzaklgJdF/PlLdNIXaMi0loroltuq18hXvNW
-         tvwUup6G52ya53hsBC4OhWdYblbIKFDoXfkFGwAM=
-Date:   Tue, 28 Feb 2023 19:37:08 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Hou Tao <houtao@huaweicloud.com>
-Cc:     stable@vger.kernel.org, linux-raid@vger.kernel.org,
-        David Sloan <david.sloan@eideticom.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Song Liu <song@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Sasha Levin <sashal@kernel.org>, houtao1@huawei.com
-Subject: Re: [PATCH 5.10] md: Flush workqueue md_rdev_misc_wq in md_alloc()
-Message-ID: <Y/5J1KXCvSPuJs4C@kroah.com>
-References: <20230224065209.3170104-1-houtao@huaweicloud.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AD4E361197;
+        Tue, 28 Feb 2023 18:45:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A03CC433D2;
+        Tue, 28 Feb 2023 18:45:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677609950;
+        bh=FmQEaDOhGkaMbppIny7kn16miS990t0lRYjdS47Sjts=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Wm+TphbLMbnlvEamXL9A9ZVCZ0axu96lP9IIXbAKTyJbx4+GHQkSCuTG3ednlh3dv
+         PO7e0eV/v70LKkrQF2kNiTImaTjpXLwYepSmjcNccWyuItg5MBOipV49oQ7q9bHZwq
+         JIhO15lBvJ308v8HwDfLacq+Zh6Hss9zNRv4hjvsskkqA8IFmZ1mr4LAJSVhkbfPKF
+         MRZYuKvOXbFX1LCIW2GKKq5z6hYYydfaqOm4sZnz4cpyKzGQZix19PdtkjJ+EqxBP3
+         YQApwHnNln6pc10yKafyrRo6qTQjkQuCn/TF6wUM3LHG3rD1h4oelggojCnTWaAxwj
+         SEjRvdw2TbGxg==
+Received: by mail-lj1-f178.google.com with SMTP id z5so11337605ljc.8;
+        Tue, 28 Feb 2023 10:45:50 -0800 (PST)
+X-Gm-Message-State: AO0yUKXQJRgeEyB1ehuobR0W+jIEgVhWHcLBB8ouLkTURLR/OAcyKgFI
+        mPG3WrvGIjxtQECoDg1YsTE4jGPRnEbewjjCsf0=
+X-Google-Smtp-Source: AK7set8h5brA6o2W+ky1Dj6uNEaOLA3H8Ainc97VUCEeBpWjeMPhOAY+5RsnjMgIU9k5ki6WMaFhqlvOOYt/r4/rMpI=
+X-Received: by 2002:a2e:a613:0:b0:294:6de5:e644 with SMTP id
+ v19-20020a2ea613000000b002946de5e644mr1146995ljp.5.1677609948071; Tue, 28 Feb
+ 2023 10:45:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230224065209.3170104-1-houtao@huaweicloud.com>
+References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
+In-Reply-To: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 28 Feb 2023 10:45:35 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW53cDdcXYAkc7fabx-ET+AKctG_dWMZ1iCA9csCq3TZfA@mail.gmail.com>
+Message-ID: <CAPhsuW53cDdcXYAkc7fabx-ET+AKctG_dWMZ1iCA9csCq3TZfA@mail.gmail.com>
+Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
+ can no longer assemble software raid0
+To:     Linux regressions mailing list <regressions@lists.linux.dev>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Nikolay Kichukov <hijacker@oldum.net>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Feb 24, 2023 at 02:52:09PM +0800, Hou Tao wrote:
-> From: David Sloan <david.sloan@eideticom.com>
-> 
-> commit 5e8daf906f890560df430d30617c692a794acb73 upstream.
-> 
-> A race condition still exists when removing and re-creating md devices
-> in test cases. However, it is only seen on some setups.
-> 
-> The race condition was tracked down to a reference still being held
-> to the kobject by the rdev in the md_rdev_misc_wq which will be released
-> in rdev_delayed_delete().
-> 
-> md_alloc() waits for previous deletions by waiting on the md_misc_wq,
-> but the md_rdev_misc_wq may still be holding a reference to a recently
-> removed device.
-> 
-> To fix this, also flush the md_rdev_misc_wq in md_alloc().
-> 
-> Signed-off-by: David Sloan <david.sloan@eideticom.com>
-> [logang@deltatee.com: rewrote commit message]
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Signed-off-by: Song Liu <song@kernel.org>
-> Signed-off-by: Hou Tao <houtao1@huawei.com>
-> ---
-> Hi Greg,
-> 
-> We found the problem also exists on v5.10, so could you please pick it up
-> for v5.10 ?
+Thanks for the report. I was on vacation last week. I will look into this soon.
 
-Now queued up, thanks.
+Thanks,
+Song
 
-greg k-h
+On Thu, Feb 23, 2023 at 8:06 AM Linux regression tracking (Thorsten
+Leemhuis) <regressions@leemhuis.info> wrote:
+>
+> Hi, this is your Linux kernel regression tracker.
+>
+> I noticed a regression report in bugzilla.kernel.org. As many (most?)
+> kernel developer don't keep an eye on it, I decided to forward it by
+> mail. Quoting from https://bugzilla.kernel.org/show_bug.cgi?id=217074 :
+>
+> > Hello,
+> > Installing a new kernel 6.1.12 does not allow assembly of raid0 device.
+> >
+> > Going back to previous working kernels: 5.15.65, 5.15.75 assembles the raid0 without any problems.
+> >
+> > Kernel command line parameters:
+> > ... ro kvm_amd.nested=0 kvm_amd.avic=1 kvm_amd.npt=1 raid0.default_layout=2
+> >
+> > mdadm assembly attempt fails with:
+> > 'mdadm: unexpected failure opening /dev/md<NR>'
+> >
+> > Tried with mdadm-4.1 and mdadm-4.2, but as it works with either versions of mdadm, I rule out the mdadm software.
+> >
+> > strace -f output, last few lines:
+> >
+> > mkdir("/run/mdadm", 0755)               = -1 EEXIST (File exists)
+> > openat(AT_FDCWD, "/run/mdadm/map.lock", O_RDWR|O_CREAT|O_TRUNC, 0600) = 3
+> > fcntl(3, F_GETFL)                       = 0x8002 (flags O_RDWR|O_LARGEFILE)
+> > flock(3, LOCK_EX)                       = 0
+> > newfstatat(3, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
+> > openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) = 4
+> > fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+> > newfstatat(4, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
+> > read(4, "", 4096)                       = 0
+> > close(4)                                = 0
+> > openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) = 4
+> > fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+> > newfstatat(4, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
+> > read(4, "", 4096)                       = 0
+> > close(4)                                = 0
+> > newfstatat(AT_FDCWD, "/dev/.udev", 0x7ffcd8243c90, 0) = -1 ENOENT (No such file or directory)
+> > newfstatat(AT_FDCWD, "/run/udev", {st_mode=S_IFDIR|0755, st_size=160, ...}, 0) = 0
+> > openat(AT_FDCWD, "/proc/mdstat", O_RDONLY) = 4
+> > fcntl(4, F_SETFD, FD_CLOEXEC)           = 0
+> > newfstatat(4, "", {st_mode=S_IFREG|0444, st_size=0, ...}, AT_EMPTY_PATH) = 0
+> > read(4, "Personalities : [raid1] [raid0] "..., 1024) = 56
+> > read(4, "", 1024)                       = 0
+> > close(4)                                = 0
+> > openat(AT_FDCWD, "/sys/block/md127/dev", O_RDONLY) = -1 ENOENT (No such file or directory)
+> > getpid()                                = 18351
+> > mknodat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9, 0x7f)) = 0
+> > openat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) = -1 ENXIO (No such device or address)
+> > unlink("/dev/.tmp.md.18351:9:127")      = 0
+> > getpid()                                = 18351
+> > mknodat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9, 0x7f)) = 0
+> > openat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) = -1 ENXIO (No such device or address)
+> > unlink("/tmp/.tmp.md.18351:9:127")      = 0
+> > write(2, "mdadm: unexpected failure openin"..., 45mdadm: unexpected failure opening /dev/md127
+> > ) = 45
+> > unlink("/run/mdadm/map.lock")           = 0
+> > close(3)                                = 0
+> > exit_group(1)                           = ?
+> > +++ exited with 1 +++
+> >
+> >
+> > Tried with kernel compiled with either CONFIG_DEVTMPFS_SAFE=y or CONFIG_DEVTMPFS_SAFE=n, fails the same way.
+> >
+> > The raid consists of 4 devices, here is mdstat contents:
+> >
+> > Personalities : [raid0]
+> > md127 : active raid0 sda[0] sdc[2] sdd[3] sdb[1]
+> >       2929769472 blocks super 1.2 512k chunks
+> >
+> > unused devices: <none>
+> >
+> >
+> > Examining the 4 block devices:
+> >
+> > gnusystem /var/log # mdadm --misc -E /dev/sda
+> > /dev/sda:
+> >           Magic : a92b4efc
+> >         Version : 1.2
+> >     Feature Map : 0x0
+> >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
+> >            Name : gnusystem:md0-store  (local to host gnusystem)
+> >   Creation Time : Wed Sep 29 22:28:09 2021
+> >      Raid Level : raid0
+> >    Raid Devices : 4
+> >
+> >  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
+> >     Data Offset : 264192 sectors
+> >    Super Offset : 8 sectors
+> >    Unused Space : before=264112 sectors, after=0 sectors
+> >           State : clean
+> >     Device UUID : 7f226c1c:23632b9d:e3d6c656:74522906
+> >
+> >     Update Time : Wed Sep 29 22:28:09 2021
+> >   Bad Block Log : 512 entries available at offset 8 sectors
+> >        Checksum : 51e99fb5 - correct
+> >          Events : 0
+> >
+> >      Chunk Size : 512K
+> >
+> >    Device Role : Active device 0
+> >    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+> > gnusystem /var/log # mdadm --misc -E /dev/sdb
+> > /dev/sdb:
+> >           Magic : a92b4efc
+> >         Version : 1.2
+> >     Feature Map : 0x0
+> >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
+> >            Name : gnusystem:md0-store  (local to host gnusystem)
+> >   Creation Time : Wed Sep 29 22:28:09 2021
+> >      Raid Level : raid0
+> >    Raid Devices : 4
+> >
+> >  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
+> >     Data Offset : 264192 sectors
+> >    Super Offset : 8 sectors
+> >    Unused Space : before=264112 sectors, after=0 sectors
+> >           State : clean
+> >     Device UUID : ed8795fe:c7e6719a:165db37e:32ec0894
+> >
+> >     Update Time : Wed Sep 29 22:28:09 2021
+> >   Bad Block Log : 512 entries available at offset 8 sectors
+> >        Checksum : 215db63b - correct
+> >          Events : 0
+> >
+> >      Chunk Size : 512K
+> >
+> >    Device Role : Active device 1
+> >    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+> > gnusystem /var/log # mdadm --misc -E /dev/sdc
+> > /dev/sdc:
+> >           Magic : a92b4efc
+> >         Version : 1.2
+> >     Feature Map : 0x0
+> >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
+> >            Name : gnusystem:md0-store  (local to host gnusystem)
+> >   Creation Time : Wed Sep 29 22:28:09 2021
+> >      Raid Level : raid0
+> >    Raid Devices : 4
+> >
+> >  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
+> >     Data Offset : 264192 sectors
+> >    Super Offset : 8 sectors
+> >    Unused Space : before=264112 sectors, after=0 sectors
+> >           State : clean
+> >     Device UUID : 3713dfff:d2e29aaf:3275039d:08b317bb
+> >
+> >     Update Time : Wed Sep 29 22:28:09 2021
+> >   Bad Block Log : 512 entries available at offset 8 sectors
+> >        Checksum : 42f70f03 - correct
+> >          Events : 0
+> >
+> >      Chunk Size : 512K
+> >
+> >    Device Role : Active device 2
+> >    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+> > gnusystem /var/log # mdadm --misc -E /dev/sdd
+> > /dev/sdd:
+> >           Magic : a92b4efc
+> >         Version : 1.2
+> >     Feature Map : 0x0
+> >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
+> >            Name : gnusystem:md0-store  (local to host gnusystem)
+> >   Creation Time : Wed Sep 29 22:28:09 2021
+> >      Raid Level : raid0
+> >    Raid Devices : 4
+> >
+> >  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
+> >     Data Offset : 264192 sectors
+> >    Super Offset : 8 sectors
+> >    Unused Space : before=264112 sectors, after=0 sectors
+> >           State : clean
+> >     Device UUID : 7da858ae:c0d6ca51:0ecaaaf0:280367cc
+> >
+> >     Update Time : Wed Sep 29 22:28:09 2021
+> >   Bad Block Log : 512 entries available at offset 8 sectors
+> >        Checksum : 32cf4ab4 - correct
+> >          Events : 0
+> >
+> >      Chunk Size : 512K
+> >
+> >    Device Role : Active device 3
+> >    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+> >
+> > If any more information is needed, let me know.
+>
+> See the ticket for details.
+>
+>
+> [TLDR for the rest of this mail: I'm adding this report to the list of
+> tracked Linux kernel regressions; the text you find below is based on a
+> few templates paragraphs you might have encountered already in similar
+> form.]
+>
+> BTW, let me use this mail to also add the report to the list of tracked
+> regressions to ensure it's doesn't fall through the cracks:
+>
+> #regzbot introduced: v5.15..v6.1.12
+> https://bugzilla.kernel.org/show_bug.cgi?id=217074
+> #regzbot title: block: md: raid0 no longer assembled
+> #regzbot ignore-activity
+>
+> This isn't a regression? This issue or a fix for it are already
+> discussed somewhere else? It was fixed already? You want to clarify when
+> the regression started to happen? Or point out I got the title or
+> something else totally wrong? Then just reply and tell me -- ideally
+> while also telling regzbot about it, as explained by the page listed in
+> the footer of this mail.
+>
+> Developers: When fixing the issue, remember to add 'Link:' tags pointing
+> to the report (e.g. the buzgzilla ticket and maybe this mail as well, if
+> this thread sees some discussion). See page linked in footer for details.
+>
+> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+> --
+> Everything you wanna know about Linux kernel regression tracking:
+> https://linux-regtracking.leemhuis.info/about/#tldr
+> If I did something stupid, please tell me, as explained on that page.
