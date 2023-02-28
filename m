@@ -2,283 +2,229 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E757C64ED6
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 18:46:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B9CBC64EC4
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Feb 2023 23:10:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229811AbjB1SqB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Feb 2023 13:46:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47136 "EHLO
+        id S229910AbjB1XKH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Feb 2023 18:10:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229799AbjB1SqA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 13:46:00 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B38012BEF;
-        Tue, 28 Feb 2023 10:45:51 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AD4E361197;
-        Tue, 28 Feb 2023 18:45:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A03CC433D2;
-        Tue, 28 Feb 2023 18:45:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677609950;
-        bh=FmQEaDOhGkaMbppIny7kn16miS990t0lRYjdS47Sjts=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Wm+TphbLMbnlvEamXL9A9ZVCZ0axu96lP9IIXbAKTyJbx4+GHQkSCuTG3ednlh3dv
-         PO7e0eV/v70LKkrQF2kNiTImaTjpXLwYepSmjcNccWyuItg5MBOipV49oQ7q9bHZwq
-         JIhO15lBvJ308v8HwDfLacq+Zh6Hss9zNRv4hjvsskkqA8IFmZ1mr4LAJSVhkbfPKF
-         MRZYuKvOXbFX1LCIW2GKKq5z6hYYydfaqOm4sZnz4cpyKzGQZix19PdtkjJ+EqxBP3
-         YQApwHnNln6pc10yKafyrRo6qTQjkQuCn/TF6wUM3LHG3rD1h4oelggojCnTWaAxwj
-         SEjRvdw2TbGxg==
-Received: by mail-lj1-f178.google.com with SMTP id z5so11337605ljc.8;
-        Tue, 28 Feb 2023 10:45:50 -0800 (PST)
-X-Gm-Message-State: AO0yUKXQJRgeEyB1ehuobR0W+jIEgVhWHcLBB8ouLkTURLR/OAcyKgFI
-        mPG3WrvGIjxtQECoDg1YsTE4jGPRnEbewjjCsf0=
-X-Google-Smtp-Source: AK7set8h5brA6o2W+ky1Dj6uNEaOLA3H8Ainc97VUCEeBpWjeMPhOAY+5RsnjMgIU9k5ki6WMaFhqlvOOYt/r4/rMpI=
-X-Received: by 2002:a2e:a613:0:b0:294:6de5:e644 with SMTP id
- v19-20020a2ea613000000b002946de5e644mr1146995ljp.5.1677609948071; Tue, 28 Feb
- 2023 10:45:48 -0800 (PST)
+        with ESMTP id S229849AbjB1XKG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 18:10:06 -0500
+Received: from out-7.mta0.migadu.com (out-7.mta0.migadu.com [91.218.175.7])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 327D112064
+        for <linux-raid@vger.kernel.org>; Tue, 28 Feb 2023 15:10:04 -0800 (PST)
+Message-ID: <2f2ba1cb-a053-7494-ce42-4670b66baacf@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1677625800;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=UMa415PWn7RwX/XXTQZc3rt12mI78ihDIzz3KEgT3v4=;
+        b=NiTaedqJzm8scLmaLrtXPxXvTbCMXePpkDq01TAiwXp3vfXNJu1CT/qPh6L/M6EQY4ey28
+        QXNTfw4+hLGYYbcjrhWIvuOykVkfzGg1HT1uzr+2fydDIJPXAc/XccbPmzywTTd5MFR9rB
+        YRQkPLkXdoGPz2dIJBfoHVyiec9Uyo8=
+Date:   Tue, 28 Feb 2023 16:09:56 -0700
 MIME-Version: 1.0
-References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
-In-Reply-To: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 28 Feb 2023 10:45:35 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW53cDdcXYAkc7fabx-ET+AKctG_dWMZ1iCA9csCq3TZfA@mail.gmail.com>
-Message-ID: <CAPhsuW53cDdcXYAkc7fabx-ET+AKctG_dWMZ1iCA9csCq3TZfA@mail.gmail.com>
-Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
- can no longer assemble software raid0
-To:     Linux regressions mailing list <regressions@lists.linux.dev>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Nikolay Kichukov <hijacker@oldum.net>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v5 3/3] md: Use optimal I/O size for last bitmap page
+Content-Language: en-US
+To:     Xiao Ni <xni@redhat.com>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Reindl Harald <h.reindl@thelounge.net>,
+        Christoph Hellwig <hch@lst.de>,
+        Christoph Hellwig <hch@infradead.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Sushma Kalakota <sushma.kalakota@intel.com>
+References: <20230224183323.638-1-jonathan.derrick@linux.dev>
+ <20230224183323.638-4-jonathan.derrick@linux.dev>
+ <CALTww2_P6TaV7C5i2k5sUeHOpnqTxjFB-ZA98Y2re+17J5d7Kw@mail.gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Jonathan Derrick <jonathan.derrick@linux.dev>
+In-Reply-To: <CALTww2_P6TaV7C5i2k5sUeHOpnqTxjFB-ZA98Y2re+17J5d7Kw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Thanks for the report. I was on vacation last week. I will look into this soon.
+Hi Xiao
 
-Thanks,
-Song
+On 2/26/2023 6:56 PM, Xiao Ni wrote:
+> Hi Jonathan
+> 
+> I did a test in my environment, but I didn't see such a big
+> performance difference.
+> 
+> The first environment:
+> All nvme devices have 512 logical size, 512 phy size, and 0 optimal size. Then
+> I used your way to rebuild the kernel
+> /sys/block/nvme0n1/queue/physical_block_size 512
+> /sys/block/nvme0n1/queue/optimal_io_size 4096
+> cat /sys/block/nvme0n1/queue/logical_block_size 512
+> 
+> without the patch set
+> write: IOPS=68.0k, BW=266MiB/s (279MB/s)(15.6GiB/60001msec); 0 zone resets
+> with the patch set
+> write: IOPS=69.1k, BW=270MiB/s (283MB/s)(15.8GiB/60001msec); 0 zone resets
+> 
+> The second environment:
+> The nvme devices' opt size are 4096. So I don't need to rebuild the kernel.
+> /sys/block/nvme0n1/queue/logical_block_size
+> /sys/block/nvme0n1/queue/physical_block_size
+> /sys/block/nvme0n1/queue/optimal_io_size
+> 
+> without the patch set
+> write: IOPS=51.6k, BW=202MiB/s (212MB/s)(11.8GiB/60001msec); 0 zone resets
+> with the patch set
+> write: IOPS=53.5k, BW=209MiB/s (219MB/s)(12.2GiB/60001msec); 0 zone resets
+> 
+Sounds like your devices may not have latency issues at sub-optimal sizes.
+Can you provide biosnoop traces with and without patches?
 
-On Thu, Feb 23, 2023 at 8:06 AM Linux regression tracking (Thorsten
-Leemhuis) <regressions@leemhuis.info> wrote:
->
-> Hi, this is your Linux kernel regression tracker.
->
-> I noticed a regression report in bugzilla.kernel.org. As many (most?)
-> kernel developer don't keep an eye on it, I decided to forward it by
-> mail. Quoting from https://bugzilla.kernel.org/show_bug.cgi?id=217074 :
->
-> > Hello,
-> > Installing a new kernel 6.1.12 does not allow assembly of raid0 device.
-> >
-> > Going back to previous working kernels: 5.15.65, 5.15.75 assembles the raid0 without any problems.
-> >
-> > Kernel command line parameters:
-> > ... ro kvm_amd.nested=0 kvm_amd.avic=1 kvm_amd.npt=1 raid0.default_layout=2
-> >
-> > mdadm assembly attempt fails with:
-> > 'mdadm: unexpected failure opening /dev/md<NR>'
-> >
-> > Tried with mdadm-4.1 and mdadm-4.2, but as it works with either versions of mdadm, I rule out the mdadm software.
-> >
-> > strace -f output, last few lines:
-> >
-> > mkdir("/run/mdadm", 0755)               = -1 EEXIST (File exists)
-> > openat(AT_FDCWD, "/run/mdadm/map.lock", O_RDWR|O_CREAT|O_TRUNC, 0600) = 3
-> > fcntl(3, F_GETFL)                       = 0x8002 (flags O_RDWR|O_LARGEFILE)
-> > flock(3, LOCK_EX)                       = 0
-> > newfstatat(3, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
-> > openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) = 4
-> > fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
-> > newfstatat(4, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
-> > read(4, "", 4096)                       = 0
-> > close(4)                                = 0
-> > openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) = 4
-> > fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
-> > newfstatat(4, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
-> > read(4, "", 4096)                       = 0
-> > close(4)                                = 0
-> > newfstatat(AT_FDCWD, "/dev/.udev", 0x7ffcd8243c90, 0) = -1 ENOENT (No such file or directory)
-> > newfstatat(AT_FDCWD, "/run/udev", {st_mode=S_IFDIR|0755, st_size=160, ...}, 0) = 0
-> > openat(AT_FDCWD, "/proc/mdstat", O_RDONLY) = 4
-> > fcntl(4, F_SETFD, FD_CLOEXEC)           = 0
-> > newfstatat(4, "", {st_mode=S_IFREG|0444, st_size=0, ...}, AT_EMPTY_PATH) = 0
-> > read(4, "Personalities : [raid1] [raid0] "..., 1024) = 56
-> > read(4, "", 1024)                       = 0
-> > close(4)                                = 0
-> > openat(AT_FDCWD, "/sys/block/md127/dev", O_RDONLY) = -1 ENOENT (No such file or directory)
-> > getpid()                                = 18351
-> > mknodat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9, 0x7f)) = 0
-> > openat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) = -1 ENXIO (No such device or address)
-> > unlink("/dev/.tmp.md.18351:9:127")      = 0
-> > getpid()                                = 18351
-> > mknodat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9, 0x7f)) = 0
-> > openat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) = -1 ENXIO (No such device or address)
-> > unlink("/tmp/.tmp.md.18351:9:127")      = 0
-> > write(2, "mdadm: unexpected failure openin"..., 45mdadm: unexpected failure opening /dev/md127
-> > ) = 45
-> > unlink("/run/mdadm/map.lock")           = 0
-> > close(3)                                = 0
-> > exit_group(1)                           = ?
-> > +++ exited with 1 +++
-> >
-> >
-> > Tried with kernel compiled with either CONFIG_DEVTMPFS_SAFE=y or CONFIG_DEVTMPFS_SAFE=n, fails the same way.
-> >
-> > The raid consists of 4 devices, here is mdstat contents:
-> >
-> > Personalities : [raid0]
-> > md127 : active raid0 sda[0] sdc[2] sdd[3] sdb[1]
-> >       2929769472 blocks super 1.2 512k chunks
-> >
-> > unused devices: <none>
-> >
-> >
-> > Examining the 4 block devices:
-> >
-> > gnusystem /var/log # mdadm --misc -E /dev/sda
-> > /dev/sda:
-> >           Magic : a92b4efc
-> >         Version : 1.2
-> >     Feature Map : 0x0
-> >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
-> >            Name : gnusystem:md0-store  (local to host gnusystem)
-> >   Creation Time : Wed Sep 29 22:28:09 2021
-> >      Raid Level : raid0
-> >    Raid Devices : 4
-> >
-> >  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
-> >     Data Offset : 264192 sectors
-> >    Super Offset : 8 sectors
-> >    Unused Space : before=264112 sectors, after=0 sectors
-> >           State : clean
-> >     Device UUID : 7f226c1c:23632b9d:e3d6c656:74522906
-> >
-> >     Update Time : Wed Sep 29 22:28:09 2021
-> >   Bad Block Log : 512 entries available at offset 8 sectors
-> >        Checksum : 51e99fb5 - correct
-> >          Events : 0
-> >
-> >      Chunk Size : 512K
-> >
-> >    Device Role : Active device 0
-> >    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-> > gnusystem /var/log # mdadm --misc -E /dev/sdb
-> > /dev/sdb:
-> >           Magic : a92b4efc
-> >         Version : 1.2
-> >     Feature Map : 0x0
-> >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
-> >            Name : gnusystem:md0-store  (local to host gnusystem)
-> >   Creation Time : Wed Sep 29 22:28:09 2021
-> >      Raid Level : raid0
-> >    Raid Devices : 4
-> >
-> >  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
-> >     Data Offset : 264192 sectors
-> >    Super Offset : 8 sectors
-> >    Unused Space : before=264112 sectors, after=0 sectors
-> >           State : clean
-> >     Device UUID : ed8795fe:c7e6719a:165db37e:32ec0894
-> >
-> >     Update Time : Wed Sep 29 22:28:09 2021
-> >   Bad Block Log : 512 entries available at offset 8 sectors
-> >        Checksum : 215db63b - correct
-> >          Events : 0
-> >
-> >      Chunk Size : 512K
-> >
-> >    Device Role : Active device 1
-> >    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-> > gnusystem /var/log # mdadm --misc -E /dev/sdc
-> > /dev/sdc:
-> >           Magic : a92b4efc
-> >         Version : 1.2
-> >     Feature Map : 0x0
-> >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
-> >            Name : gnusystem:md0-store  (local to host gnusystem)
-> >   Creation Time : Wed Sep 29 22:28:09 2021
-> >      Raid Level : raid0
-> >    Raid Devices : 4
-> >
-> >  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
-> >     Data Offset : 264192 sectors
-> >    Super Offset : 8 sectors
-> >    Unused Space : before=264112 sectors, after=0 sectors
-> >           State : clean
-> >     Device UUID : 3713dfff:d2e29aaf:3275039d:08b317bb
-> >
-> >     Update Time : Wed Sep 29 22:28:09 2021
-> >   Bad Block Log : 512 entries available at offset 8 sectors
-> >        Checksum : 42f70f03 - correct
-> >          Events : 0
-> >
-> >      Chunk Size : 512K
-> >
-> >    Device Role : Active device 2
-> >    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-> > gnusystem /var/log # mdadm --misc -E /dev/sdd
-> > /dev/sdd:
-> >           Magic : a92b4efc
-> >         Version : 1.2
-> >     Feature Map : 0x0
-> >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
-> >            Name : gnusystem:md0-store  (local to host gnusystem)
-> >   Creation Time : Wed Sep 29 22:28:09 2021
-> >      Raid Level : raid0
-> >    Raid Devices : 4
-> >
-> >  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
-> >     Data Offset : 264192 sectors
-> >    Super Offset : 8 sectors
-> >    Unused Space : before=264112 sectors, after=0 sectors
-> >           State : clean
-> >     Device UUID : 7da858ae:c0d6ca51:0ecaaaf0:280367cc
-> >
-> >     Update Time : Wed Sep 29 22:28:09 2021
-> >   Bad Block Log : 512 entries available at offset 8 sectors
-> >        Checksum : 32cf4ab4 - correct
-> >          Events : 0
-> >
-> >      Chunk Size : 512K
-> >
-> >    Device Role : Active device 3
-> >    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-> >
-> > If any more information is needed, let me know.
->
-> See the ticket for details.
->
->
-> [TLDR for the rest of this mail: I'm adding this report to the list of
-> tracked Linux kernel regressions; the text you find below is based on a
-> few templates paragraphs you might have encountered already in similar
-> form.]
->
-> BTW, let me use this mail to also add the report to the list of tracked
-> regressions to ensure it's doesn't fall through the cracks:
->
-> #regzbot introduced: v5.15..v6.1.12
-> https://bugzilla.kernel.org/show_bug.cgi?id=217074
-> #regzbot title: block: md: raid0 no longer assembled
-> #regzbot ignore-activity
->
-> This isn't a regression? This issue or a fix for it are already
-> discussed somewhere else? It was fixed already? You want to clarify when
-> the regression started to happen? Or point out I got the title or
-> something else totally wrong? Then just reply and tell me -- ideally
-> while also telling regzbot about it, as explained by the page listed in
-> the footer of this mail.
->
-> Developers: When fixing the issue, remember to add 'Link:' tags pointing
-> to the report (e.g. the buzgzilla ticket and maybe this mail as well, if
-> this thread sees some discussion). See page linked in footer for details.
->
-> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-> --
-> Everything you wanna know about Linux kernel regression tracking:
-> https://linux-regtracking.leemhuis.info/about/#tldr
-> If I did something stupid, please tell me, as explained on that page.
+Still, 'works fine for me' is generally not a reason to reject the patches.
+
+> Best Regards
+> Xiao
+> 
+> On Sat, Feb 25, 2023 at 2:34 AM Jonathan Derrick
+> <jonathan.derrick@linux.dev> wrote:
+>>
+>> From: Jon Derrick <jonathan.derrick@linux.dev>
+>>
+>> If the bitmap space has enough room, size the I/O for the last bitmap
+>> page write to the optimal I/O size for the storage device. The expanded
+>> write is checked that it won't overrun the data or metadata.
+>>
+>> The drive this was tested against has higher latencies when there are
+>> sub-4k writes due to device-side read-mod-writes of its atomic 4k write
+>> unit. This change helps increase performance by sizing the last bitmap
+>> page I/O for the device's preferred write unit, if it is given.
+>>
+>> Example Intel/Solidigm P5520
+>> Raid10, Chunk-size 64M, bitmap-size 57228 bits
+>>
+>> $ mdadm --create /dev/md0 --level=10 --raid-devices=4 /dev/nvme{0,1,2,3}n1
+>>         --assume-clean --bitmap=internal --bitmap-chunk=64M
+>> $ fio --name=test --direct=1 --filename=/dev/md0 --rw=randwrite --bs=4k --runtime=60
+>>
+>> Without patch:
+>>   write: IOPS=1676, BW=6708KiB/s (6869kB/s)(393MiB/60001msec); 0 zone resets
+>>
+>> With patch:
+>>   write: IOPS=15.7k, BW=61.4MiB/s (64.4MB/s)(3683MiB/60001msec); 0 zone resets
+>>
+>> Biosnoop:
+>> Without patch:
+>> Time        Process        PID     Device      LBA        Size      Lat
+>> 1.410377    md0_raid10     6900    nvme0n1   W 16         4096      0.02
+>> 1.410387    md0_raid10     6900    nvme2n1   W 16         4096      0.02
+>> 1.410374    md0_raid10     6900    nvme3n1   W 16         4096      0.01
+>> 1.410381    md0_raid10     6900    nvme1n1   W 16         4096      0.02
+>> 1.410411    md0_raid10     6900    nvme1n1   W 115346512  4096      0.01
+>> 1.410418    md0_raid10     6900    nvme0n1   W 115346512  4096      0.02
+>> 1.410915    md0_raid10     6900    nvme2n1   W 24         3584      0.43 <--
+>> 1.410935    md0_raid10     6900    nvme3n1   W 24         3584      0.45 <--
+>> 1.411124    md0_raid10     6900    nvme1n1   W 24         3584      0.64 <--
+>> 1.411147    md0_raid10     6900    nvme0n1   W 24         3584      0.66 <--
+>> 1.411176    md0_raid10     6900    nvme3n1   W 2019022184 4096      0.01
+>> 1.411189    md0_raid10     6900    nvme2n1   W 2019022184 4096      0.02
+>>
+>> With patch:
+>> Time        Process        PID     Device      LBA        Size      Lat
+>> 5.747193    md0_raid10     727     nvme0n1   W 16         4096      0.01
+>> 5.747192    md0_raid10     727     nvme1n1   W 16         4096      0.02
+>> 5.747195    md0_raid10     727     nvme3n1   W 16         4096      0.01
+>> 5.747202    md0_raid10     727     nvme2n1   W 16         4096      0.02
+>> 5.747229    md0_raid10     727     nvme3n1   W 1196223704 4096      0.02
+>> 5.747224    md0_raid10     727     nvme0n1   W 1196223704 4096      0.01
+>> 5.747279    md0_raid10     727     nvme0n1   W 24         4096      0.01 <--
+>> 5.747279    md0_raid10     727     nvme1n1   W 24         4096      0.02 <--
+>> 5.747284    md0_raid10     727     nvme3n1   W 24         4096      0.02 <--
+>> 5.747291    md0_raid10     727     nvme2n1   W 24         4096      0.02 <--
+>> 5.747314    md0_raid10     727     nvme2n1   W 2234636712 4096      0.01
+>> 5.747317    md0_raid10     727     nvme1n1   W 2234636712 4096      0.02
+>>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Signed-off-by: Jon Derrick <jonathan.derrick@linux.dev>
+>> ---
+>>  drivers/md/md-bitmap.c | 33 +++++++++++++++++++++++++++++----
+>>  1 file changed, 29 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+>> index bf250a5e3a86..920bb68156d2 100644
+>> --- a/drivers/md/md-bitmap.c
+>> +++ b/drivers/md/md-bitmap.c
+>> @@ -209,6 +209,28 @@ static struct md_rdev *next_active_rdev(struct md_rdev *rdev, struct mddev *mdde
+>>         return NULL;
+>>  }
+>>
+>> +static unsigned int optimal_io_size(struct block_device *bdev,
+>> +                                   unsigned int last_page_size,
+>> +                                   unsigned int io_size)
+>> +{
+>> +       if (bdev_io_opt(bdev) > bdev_logical_block_size(bdev))
+>> +               return roundup(last_page_size, bdev_io_opt(bdev));
+>> +       return io_size;
+>> +}
+>> +
+>> +static unsigned int bitmap_io_size(unsigned int io_size, unsigned int opt_size,
+>> +                                  sector_t start, sector_t boundary)
+>> +{
+>> +       if (io_size != opt_size &&
+>> +           start + opt_size / SECTOR_SIZE <= boundary)
+>> +               return opt_size;
+>> +       if (start + io_size / SECTOR_SIZE <= boundary)
+>> +               return io_size;
+>> +
+>> +       /* Overflows boundary */
+>> +       return 0;
+>> +}
+>> +
+>>  static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
+>>                            struct page *page)
+>>  {
+>> @@ -218,6 +240,7 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
+>>         sector_t offset = mddev->bitmap_info.offset;
+>>         sector_t ps, sboff, doff;
+>>         unsigned int size = PAGE_SIZE;
+>> +       unsigned int opt_size = PAGE_SIZE;
+>>
+>>         bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
+>>         if (page->index == store->file_pages - 1) {
+>> @@ -225,8 +248,8 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
+>>
+>>                 if (last_page_size == 0)
+>>                         last_page_size = PAGE_SIZE;
+>> -               size = roundup(last_page_size,
+>> -                              bdev_logical_block_size(bdev));
+>> +               size = roundup(last_page_size, bdev_logical_block_size(bdev));
+>> +               opt_size = optimal_io_size(bdev, last_page_size, size);
+>>         }
+>>
+>>         ps = page->index * PAGE_SIZE / SECTOR_SIZE;
+>> @@ -241,7 +264,8 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
+>>                         return -EINVAL;
+>>         } else if (offset < 0) {
+>>                 /* DATA  BITMAP METADATA  */
+>> -               if (offset + ps + size / SECTOR_SIZE > 0)
+>> +               size = bitmap_io_size(size, opt_size, offset + ps, 0);
+>> +               if (size == 0)
+>>                         /* bitmap runs in to metadata */
+>>                         return -EINVAL;
+>>
+>> @@ -250,7 +274,8 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
+>>                         return -EINVAL;
+>>         } else if (rdev->sb_start < rdev->data_offset) {
+>>                 /* METADATA BITMAP DATA */
+>> -               if (sboff + ps + size / SECTOR_SIZE > doff)
+>> +               size = bitmap_io_size(size, opt_size, sboff + ps, doff);
+>> +               if (size == 0)
+>>                         /* bitmap runs in to data */
+>>                         return -EINVAL;
+>>         } else {
+>> --
+>> 2.27.0
+>>
+> 
