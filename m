@@ -2,116 +2,133 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EDA6C64ED6
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Mar 2023 08:55:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7099DC64ED6
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Mar 2023 12:37:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229790AbjCAIzm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Mar 2023 03:55:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48656 "EHLO
+        id S229537AbjCAMha (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Mar 2023 07:37:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229629AbjCAIzl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Mar 2023 03:55:41 -0500
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8060F2384C
-        for <linux-raid@vger.kernel.org>; Wed,  1 Mar 2023 00:55:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677660940; x=1709196940;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=F9zPvRuhr5oYyssZe/8bIHAgitU/fxu7Ycg9KKcJyWM=;
-  b=PIEtFPMLClHpbxNXPfcQphhy4Y8dwOW+Kt5Wbcevo8mWpILQONJ6oOqY
-   oUTYlGniqs/clXW2fCiecViq1+gT0zMHSCGzQgPtsQP1jNEwEihKtgEK8
-   7VgFmFm17rua+uDne6uHrfNGA3l/jCq/Nj89uT6Zshc015GM/M1MQzitl
-   pvDB0I0TOammVxxtifJ6IQ8/6GS++7mQzADLNQp+Qra5EJ7Qmmqb02nNu
-   Yma8XkDFPipZDz5ytVfsP+eeZ6CmnPOyCbkXXnfINb8lGZBVSXwq4/ddD
-   35NvPZb3Gf6U+L/tYykOOvtjCX3rOgRkuGYhEBNXIi+cN1CfYPmRcWMaJ
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="318158704"
-X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="318158704"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 00:55:39 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="743340279"
-X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="743340279"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.57.49])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 00:55:33 -0800
-Date:   Wed, 1 Mar 2023 09:55:28 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Jes Sorensen <jes@trained-monkey.org>
-Cc:     NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org,
-        Martin Wilck <martin.wilck@suse.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Subject: Re: [PATCH 0/6] Assorted patches relating to mdmon
-Message-ID: <20230301095528.00000bb9@linux.intel.com>
-In-Reply-To: <167745586347.16565.4353184078424535907.stgit@noble.brown>
-References: <167745586347.16565.4353184078424535907.stgit@noble.brown>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229486AbjCAMh3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Mar 2023 07:37:29 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 131E53BD96
+        for <linux-raid@vger.kernel.org>; Wed,  1 Mar 2023 04:36:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1677674201;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cG2pa4UrXoO5ALV8j3GLD61cOT9QBopnZ8l+TAWLZTE=;
+        b=RtBZjGta2JeFr8dQ9WossBNG30pZg8+DHJB1ItvPfi/Ov9hPZF/IXQGEJx550tAAyqxmBj
+        FrzJYZ4QP/bwFs8DAngLuQURKrzuTsSY51kNW1XDa5wI1149kdoV+hVJXxFPCFkvD1VDgH
+        +GZUb2rwkKPIK5mZmQWC8XZcmdXBJ/M=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-358-Ab5aJ4e8OSKKVzz_Kq_KGA-1; Wed, 01 Mar 2023 07:36:40 -0500
+X-MC-Unique: Ab5aJ4e8OSKKVzz_Kq_KGA-1
+Received: by mail-pl1-f199.google.com with SMTP id x10-20020a170902ea8a00b0019cdb7d7f91so6883504plb.4
+        for <linux-raid@vger.kernel.org>; Wed, 01 Mar 2023 04:36:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cG2pa4UrXoO5ALV8j3GLD61cOT9QBopnZ8l+TAWLZTE=;
+        b=1JWvVa7UOSILB84304sj/lps0s5gFeAuOGi0OABdAmQGbV2jefDXDZlPpeaePNf+RK
+         jtiPl5TzJ6adrD1kOnK1FeAREON8Hsjw0k36Ih5bU+5g8dbncPipZmFPTHmzYkr1ucON
+         Xhs9lXl8ghT6Rtf4STRMw020bWe9CimeZ6FaMJNPpYMwUzcJTOxSspgCvfgSbeqN5O9c
+         0hMB8RORg0D1pDZRacOcsE/aakZkieXhk8056duWHmpNjKJmNTRiIchh4P9/Ymr/wKIF
+         M5H7H8BNUV/0CT9U62mjTn1E9F99W8Kv7xPwV2o6LraocUG7MbcCn/kW/JRvRBba/DnX
+         0Zvg==
+X-Gm-Message-State: AO0yUKUwAYNDaDDyW6Z5PcQmLiFPXIjacey5Hn32u0vMvrQZfZL10V3P
+        CZla2oV6u4ujGO6xTaT5zTgAgCmwsMQxIzIsbpZBP4SGSZVMkqpTIUGq2jKGJ/Yfe8DCf1Txch9
+        BzaEJuwmW9Ato3fXGc3glfgpUyJxY5Y8kyyrjTQ==
+X-Received: by 2002:a62:824c:0:b0:606:a48f:c211 with SMTP id w73-20020a62824c000000b00606a48fc211mr1218434pfd.1.1677674199035;
+        Wed, 01 Mar 2023 04:36:39 -0800 (PST)
+X-Google-Smtp-Source: AK7set+tN3APfkTreuZkVbUdk0UMqmZk/KT2A6RxKjx0l0Vx3jhPHm7qRhxAsvLLNBmqYxGl4kh2QcqUvtuMGOm4P5c=
+X-Received: by 2002:a62:824c:0:b0:606:a48f:c211 with SMTP id
+ w73-20020a62824c000000b00606a48fc211mr1218429pfd.1.1677674198697; Wed, 01 Mar
+ 2023 04:36:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20230224183323.638-1-jonathan.derrick@linux.dev>
+ <20230224183323.638-4-jonathan.derrick@linux.dev> <CALTww2_P6TaV7C5i2k5sUeHOpnqTxjFB-ZA98Y2re+17J5d7Kw@mail.gmail.com>
+ <2f2ba1cb-a053-7494-ce42-4670b66baacf@linux.dev>
+In-Reply-To: <2f2ba1cb-a053-7494-ce42-4670b66baacf@linux.dev>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 1 Mar 2023 20:36:27 +0800
+Message-ID: <CALTww2-ie0Y+0JMQAASKwDhAwcmD-aOuf=_J_GD95ATUi7w-3Q@mail.gmail.com>
+Subject: Re: [PATCH v5 3/3] md: Use optimal I/O size for last bitmap page
+To:     Jonathan Derrick <jonathan.derrick@linux.dev>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Reindl Harald <h.reindl@thelounge.net>,
+        Christoph Hellwig <hch@lst.de>,
+        Christoph Hellwig <hch@infradead.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Sushma Kalakota <sushma.kalakota@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, 27 Feb 2023 11:13:07 +1100
-NeilBrown <neilb@suse.de> wrote:
+On Wed, Mar 1, 2023 at 7:10=E2=80=AFAM Jonathan Derrick
+<jonathan.derrick@linux.dev> wrote:
+>
+> Hi Xiao
+>
+> On 2/26/2023 6:56 PM, Xiao Ni wrote:
+> > Hi Jonathan
+> >
+> > I did a test in my environment, but I didn't see such a big
+> > performance difference.
+> >
+> > The first environment:
+> > All nvme devices have 512 logical size, 512 phy size, and 0 optimal siz=
+e. Then
+> > I used your way to rebuild the kernel
+> > /sys/block/nvme0n1/queue/physical_block_size 512
+> > /sys/block/nvme0n1/queue/optimal_io_size 4096
+> > cat /sys/block/nvme0n1/queue/logical_block_size 512
+> >
+> > without the patch set
+> > write: IOPS=3D68.0k, BW=3D266MiB/s (279MB/s)(15.6GiB/60001msec); 0 zone=
+ resets
+> > with the patch set
+> > write: IOPS=3D69.1k, BW=3D270MiB/s (283MB/s)(15.8GiB/60001msec); 0 zone=
+ resets
+> >
+> > The second environment:
+> > The nvme devices' opt size are 4096. So I don't need to rebuild the ker=
+nel.
+> > /sys/block/nvme0n1/queue/logical_block_size
+> > /sys/block/nvme0n1/queue/physical_block_size
+> > /sys/block/nvme0n1/queue/optimal_io_size
+> >
+> > without the patch set
+> > write: IOPS=3D51.6k, BW=3D202MiB/s (212MB/s)(11.8GiB/60001msec); 0 zone=
+ resets
+> > with the patch set
+> > write: IOPS=3D53.5k, BW=3D209MiB/s (219MB/s)(12.2GiB/60001msec); 0 zone=
+ resets
+> >
+> Sounds like your devices may not have latency issues at sub-optimal sizes=
+.
+> Can you provide biosnoop traces with and without patches?
+>
+> Still, 'works fine for me' is generally not a reason to reject the patche=
+s.
 
-> mdmon is a root-storage daemon is the sense defined by systemd
-> documentation, but it does not follow the practice that systemd
-> recommends.  Specifically it is run from the root filesystem when
-> possible.  The instance started in the initrd hands-over to a root-fs
-> based instance, which then hands-over to an initrd-based instance
-> started by dracut at shutdown.
-> 
-> Part of the reason that we ignore systemd advise is that mdmon needs
-> access to the filesystem - specifically /dev and /sys - which is not
-> available in the initrd context after switchroot.  We could possibly
-> change mdmon to work in the systemd-preferred way by splitting mdmon
-> into two processes instead of just having 2 threads.  The "monitor"
-> process could running entirely in the initrd context, the "manager"
-> process could safely run in the root-fs context, passing newly opened
-> file descriptors to the monitor over a unix-domain socket.
-> 
-> But we aren't there yet and may never be.
-> 
-> For now, mdmon doesn't work correctly.  There is no mechanism to ensure
-> a new instance starts after switchroot.  Until recently the initrd
-> instance of the systemd mdmon unit would be stopped at switchroot time
-> because udev would temporarily forget about md devices.  This would
-> allow the "udevadm trigger" process to start a new instance.  udev was
-> recently fixed:
-> 
-> Commit: 7ec624147a41 ("udevadm: cleanup-db: don't delete information for kept
-> db entries")
-> 
-> so now the attempt to start mdmon via "udevadm trigger" does nothing as
-> mdmon already has an active unit.
-> 
-> The net result is that mdmon continues running in the initrd mount
-> namespace and so cannot access new devices.  Adding a device to a root
-> md array that depends on mdmon will no longer work.
-> 
-> We want the initrd instance of mdmon to continue running until the
-> root-fs based instance starts, and that really requires we have two
-> different systemd units.  This series achieves this in the final patch by
-> using a different instance name inside or initrd and outside.
-> "initrd-mdfoo" and "mdfoo".
-> 
-> Other patches in the series are mostly clean-ups and minor improvements
-> in related code.
-> 
-> NeilBrown
-> 
+Yes, I can. I tried to install the biosnoop in fedora38 but it failed.
+These are the rpm packages I've installed:
+bcc-tools-0.25.0-1.fc38.x86_64
+bcc-0.25.0-1.fc38.x86_64
+python3-bcc-0.25.0-1.fc38.noarch
 
-Hi Jes,
-The problem descried by Neil is critical for IMSM. I will test the patchset
-ASAP.
-Additionally, it resolves "KillMode=none" problem so we will be able to finally
-drop it.
+Are there other packages that I need to install?
 
-I will be back with results soon.
+Regards
+Xiao
 
-Thanks,
-Mariusz
