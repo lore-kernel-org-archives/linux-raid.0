@@ -2,90 +2,286 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0004C64EC4
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Mar 2023 02:10:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 199D7C64EC7
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Mar 2023 07:20:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229658AbjCACKv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Feb 2023 21:10:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60152 "EHLO
+        id S229701AbjCAHUK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Mar 2023 02:20:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbjCACKv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Feb 2023 21:10:51 -0500
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EE4B36098
-        for <linux-raid@vger.kernel.org>; Tue, 28 Feb 2023 18:10:45 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1677636633; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=T6OjTZCsbLZxIZYwko6vZtljq/4I4u6N6F3ad7uLZiMLOyFMsmq9dTl04ignaF8L5DlmXAjGi2KfNGHlcFTGeKae/goT5oJDNroxBCT7OSELrvPqCtgXHjzhqAAVNveihL/4YNhh/aEZtfnsa+w0ERSq7v9Y0GLDjYqOVr7A97E=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1677636633; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=3QgasSaw0lpkNjDM89AN91sE8KhZU7V+ELRyzrYzD1U=; 
-        b=eRTprACvpShVwDzrKikKF7O+v390SFw/8HZR74zs5sOuqIr5fF3V0KwoR8usfRbK7TeP2tGmf89klBimBq7MSLRzgw4k2ev/xZJDRo2zzbh2D8FHOt3LYOXFLvfbgZgR1KZAs/mHz5+d4oG0/UeBVfwwaXTxZBtqkwz2v66Qq+Q=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 167763663189674.83993661198724; Wed, 1 Mar 2023 03:10:31 +0100 (CET)
-Message-ID: <7aed97cf-6044-02d1-2404-16af4415002a@trained-monkey.org>
-Date:   Tue, 28 Feb 2023 21:10:29 -0500
+        with ESMTP id S229516AbjCAHUJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Mar 2023 02:20:09 -0500
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC2E931E06;
+        Tue, 28 Feb 2023 23:20:07 -0800 (PST)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1pXGkv-0007xR-TD; Wed, 01 Mar 2023 08:20:05 +0100
+Message-ID: <a16e5485-d2ea-115d-0cd3-f513eece2962@leemhuis.info>
+Date:   Wed, 1 Mar 2023 08:20:05 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] Grow: fix can't change bitmap type from none to
- clustered.
-Content-Language: en-US
-To:     Heming Zhao <heming.zhao@suse.com>, linux-raid@vger.kernel.org,
-        ncroxon@redhat.com
-Cc:     colyli@suse.de, pmenzel@molgen.mpg.de
-References: <20230223143939.3817-1-heming.zhao@suse.com>
- <dc887716-1b95-709d-07b1-fe0c6ddbcfe0@trained-monkey.org>
- <5e5b885a-b77c-0d5a-d41f-0cb3cd0d33d9@suse.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <5e5b885a-b77c-0d5a-d41f-0cb3cd0d33d9@suse.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
+ can no longer assemble software raid0
+Content-Language: en-US, de-DE
+To:     Song Liu <song@kernel.org>,
+        Linux regressions mailing list <regressions@lists.linux.dev>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Nikolay Kichukov <hijacker@oldum.net>
+References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
+ <CAPhsuW53cDdcXYAkc7fabx-ET+AKctG_dWMZ1iCA9csCq3TZfA@mail.gmail.com>
+From:   "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <CAPhsuW53cDdcXYAkc7fabx-ET+AKctG_dWMZ1iCA9csCq3TZfA@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1677655207;33599484;
+X-HE-SMSGID: 1pXGkv-0007xR-TD
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2/23/23 18:50, Heming Zhao wrote:
-> Hello Jes,
+On 28.02.23 19:45, Song Liu wrote:
+> Thanks for the report. I was on vacation last week.
+
+Welcome back, hope you enjoyed it.
+
+> I will look into this soon.
+
+Thx. In the bug report a workaround was found: enable
+BLOCK_LEGACY_AUTOLOAD. See also:
+
+https://lore.kernel.org/all/20221228165547.27502-1-anisse@astier.eu/
+
+I wonder if there is some constellation where that "default y" is not
+honored for some reason (maybe because the people already have it
+disabled in their .config). But well, not my area of expertise, maybe I
+shouldn't even have mentioned that thought.
+
+Ciao, Thorsten
+
+> On Thu, Feb 23, 2023 at 8:06 AM Linux regression tracking (Thorsten
+> Leemhuis) <regressions@leemhuis.info> wrote:
+>>
+>> Hi, this is your Linux kernel regression tracker.
+>>
+>> I noticed a regression report in bugzilla.kernel.org. As many (most?)
+>> kernel developer don't keep an eye on it, I decided to forward it by
+>> mail. Quoting from https://bugzilla.kernel.org/show_bug.cgi?id=217074 :
+>>
+>>> Hello,
+>>> Installing a new kernel 6.1.12 does not allow assembly of raid0 device.
+>>>
+>>> Going back to previous working kernels: 5.15.65, 5.15.75 assembles the raid0 without any problems.
+>>>
+>>> Kernel command line parameters:
+>>> ... ro kvm_amd.nested=0 kvm_amd.avic=1 kvm_amd.npt=1 raid0.default_layout=2
+>>>
+>>> mdadm assembly attempt fails with:
+>>> 'mdadm: unexpected failure opening /dev/md<NR>'
+>>>
+>>> Tried with mdadm-4.1 and mdadm-4.2, but as it works with either versions of mdadm, I rule out the mdadm software.
+>>>
+>>> strace -f output, last few lines:
+>>>
+>>> mkdir("/run/mdadm", 0755)               = -1 EEXIST (File exists)
+>>> openat(AT_FDCWD, "/run/mdadm/map.lock", O_RDWR|O_CREAT|O_TRUNC, 0600) = 3
+>>> fcntl(3, F_GETFL)                       = 0x8002 (flags O_RDWR|O_LARGEFILE)
+>>> flock(3, LOCK_EX)                       = 0
+>>> newfstatat(3, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
+>>> openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) = 4
+>>> fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+>>> newfstatat(4, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
+>>> read(4, "", 4096)                       = 0
+>>> close(4)                                = 0
+>>> openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) = 4
+>>> fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+>>> newfstatat(4, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
+>>> read(4, "", 4096)                       = 0
+>>> close(4)                                = 0
+>>> newfstatat(AT_FDCWD, "/dev/.udev", 0x7ffcd8243c90, 0) = -1 ENOENT (No such file or directory)
+>>> newfstatat(AT_FDCWD, "/run/udev", {st_mode=S_IFDIR|0755, st_size=160, ...}, 0) = 0
+>>> openat(AT_FDCWD, "/proc/mdstat", O_RDONLY) = 4
+>>> fcntl(4, F_SETFD, FD_CLOEXEC)           = 0
+>>> newfstatat(4, "", {st_mode=S_IFREG|0444, st_size=0, ...}, AT_EMPTY_PATH) = 0
+>>> read(4, "Personalities : [raid1] [raid0] "..., 1024) = 56
+>>> read(4, "", 1024)                       = 0
+>>> close(4)                                = 0
+>>> openat(AT_FDCWD, "/sys/block/md127/dev", O_RDONLY) = -1 ENOENT (No such file or directory)
+>>> getpid()                                = 18351
+>>> mknodat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9, 0x7f)) = 0
+>>> openat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) = -1 ENXIO (No such device or address)
+>>> unlink("/dev/.tmp.md.18351:9:127")      = 0
+>>> getpid()                                = 18351
+>>> mknodat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9, 0x7f)) = 0
+>>> openat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) = -1 ENXIO (No such device or address)
+>>> unlink("/tmp/.tmp.md.18351:9:127")      = 0
+>>> write(2, "mdadm: unexpected failure openin"..., 45mdadm: unexpected failure opening /dev/md127
+>>> ) = 45
+>>> unlink("/run/mdadm/map.lock")           = 0
+>>> close(3)                                = 0
+>>> exit_group(1)                           = ?
+>>> +++ exited with 1 +++
+>>>
+>>>
+>>> Tried with kernel compiled with either CONFIG_DEVTMPFS_SAFE=y or CONFIG_DEVTMPFS_SAFE=n, fails the same way.
+>>>
+>>> The raid consists of 4 devices, here is mdstat contents:
+>>>
+>>> Personalities : [raid0]
+>>> md127 : active raid0 sda[0] sdc[2] sdd[3] sdb[1]
+>>>       2929769472 blocks super 1.2 512k chunks
+>>>
+>>> unused devices: <none>
+>>>
+>>>
+>>> Examining the 4 block devices:
+>>>
+>>> gnusystem /var/log # mdadm --misc -E /dev/sda
+>>> /dev/sda:
+>>>           Magic : a92b4efc
+>>>         Version : 1.2
+>>>     Feature Map : 0x0
+>>>      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
+>>>            Name : gnusystem:md0-store  (local to host gnusystem)
+>>>   Creation Time : Wed Sep 29 22:28:09 2021
+>>>      Raid Level : raid0
+>>>    Raid Devices : 4
+>>>
+>>>  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
+>>>     Data Offset : 264192 sectors
+>>>    Super Offset : 8 sectors
+>>>    Unused Space : before=264112 sectors, after=0 sectors
+>>>           State : clean
+>>>     Device UUID : 7f226c1c:23632b9d:e3d6c656:74522906
+>>>
+>>>     Update Time : Wed Sep 29 22:28:09 2021
+>>>   Bad Block Log : 512 entries available at offset 8 sectors
+>>>        Checksum : 51e99fb5 - correct
+>>>          Events : 0
+>>>
+>>>      Chunk Size : 512K
+>>>
+>>>    Device Role : Active device 0
+>>>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+>>> gnusystem /var/log # mdadm --misc -E /dev/sdb
+>>> /dev/sdb:
+>>>           Magic : a92b4efc
+>>>         Version : 1.2
+>>>     Feature Map : 0x0
+>>>      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
+>>>            Name : gnusystem:md0-store  (local to host gnusystem)
+>>>   Creation Time : Wed Sep 29 22:28:09 2021
+>>>      Raid Level : raid0
+>>>    Raid Devices : 4
+>>>
+>>>  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
+>>>     Data Offset : 264192 sectors
+>>>    Super Offset : 8 sectors
+>>>    Unused Space : before=264112 sectors, after=0 sectors
+>>>           State : clean
+>>>     Device UUID : ed8795fe:c7e6719a:165db37e:32ec0894
+>>>
+>>>     Update Time : Wed Sep 29 22:28:09 2021
+>>>   Bad Block Log : 512 entries available at offset 8 sectors
+>>>        Checksum : 215db63b - correct
+>>>          Events : 0
+>>>
+>>>      Chunk Size : 512K
+>>>
+>>>    Device Role : Active device 1
+>>>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+>>> gnusystem /var/log # mdadm --misc -E /dev/sdc
+>>> /dev/sdc:
+>>>           Magic : a92b4efc
+>>>         Version : 1.2
+>>>     Feature Map : 0x0
+>>>      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
+>>>            Name : gnusystem:md0-store  (local to host gnusystem)
+>>>   Creation Time : Wed Sep 29 22:28:09 2021
+>>>      Raid Level : raid0
+>>>    Raid Devices : 4
+>>>
+>>>  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
+>>>     Data Offset : 264192 sectors
+>>>    Super Offset : 8 sectors
+>>>    Unused Space : before=264112 sectors, after=0 sectors
+>>>           State : clean
+>>>     Device UUID : 3713dfff:d2e29aaf:3275039d:08b317bb
+>>>
+>>>     Update Time : Wed Sep 29 22:28:09 2021
+>>>   Bad Block Log : 512 entries available at offset 8 sectors
+>>>        Checksum : 42f70f03 - correct
+>>>          Events : 0
+>>>
+>>>      Chunk Size : 512K
+>>>
+>>>    Device Role : Active device 2
+>>>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+>>> gnusystem /var/log # mdadm --misc -E /dev/sdd
+>>> /dev/sdd:
+>>>           Magic : a92b4efc
+>>>         Version : 1.2
+>>>     Feature Map : 0x0
+>>>      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
+>>>            Name : gnusystem:md0-store  (local to host gnusystem)
+>>>   Creation Time : Wed Sep 29 22:28:09 2021
+>>>      Raid Level : raid0
+>>>    Raid Devices : 4
+>>>
+>>>  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
+>>>     Data Offset : 264192 sectors
+>>>    Super Offset : 8 sectors
+>>>    Unused Space : before=264112 sectors, after=0 sectors
+>>>           State : clean
+>>>     Device UUID : 7da858ae:c0d6ca51:0ecaaaf0:280367cc
+>>>
+>>>     Update Time : Wed Sep 29 22:28:09 2021
+>>>   Bad Block Log : 512 entries available at offset 8 sectors
+>>>        Checksum : 32cf4ab4 - correct
+>>>          Events : 0
+>>>
+>>>      Chunk Size : 512K
+>>>
+>>>    Device Role : Active device 3
+>>>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+>>>
+>>> If any more information is needed, let me know.
+>>
+>> See the ticket for details.
+>>
+>>
+>> [TLDR for the rest of this mail: I'm adding this report to the list of
+>> tracked Linux kernel regressions; the text you find below is based on a
+>> few templates paragraphs you might have encountered already in similar
+>> form.]
+>>
+>> BTW, let me use this mail to also add the report to the list of tracked
+>> regressions to ensure it's doesn't fall through the cracks:
+>>
+>> #regzbot introduced: v5.15..v6.1.12
+>> https://bugzilla.kernel.org/show_bug.cgi?id=217074
+>> #regzbot title: block: md: raid0 no longer assembled
+>> #regzbot ignore-activity
+>>
+>> This isn't a regression? This issue or a fix for it are already
+>> discussed somewhere else? It was fixed already? You want to clarify when
+>> the regression started to happen? Or point out I got the title or
+>> something else totally wrong? Then just reply and tell me -- ideally
+>> while also telling regzbot about it, as explained by the page listed in
+>> the footer of this mail.
+>>
+>> Developers: When fixing the issue, remember to add 'Link:' tags pointing
+>> to the report (e.g. the buzgzilla ticket and maybe this mail as well, if
+>> this thread sees some discussion). See page linked in footer for details.
+>>
+>> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+>> --
+>> Everything you wanna know about Linux kernel regression tracking:
+>> https://linux-regtracking.leemhuis.info/about/#tldr
+>> If I did something stupid, please tell me, as explained on that page.
 > 
-> On 2/24/23 2:23 AM, Jes Sorensen wrote:
->> On 2/23/23 09:39, Heming Zhao wrote:
->>> Commit a042210648ed ("disallow create or grow clustered bitmap with
->>> writemostly set") introduced this bug. We should use 'true' logic not
->>> '== 0' to deny setting up clustered array under WRITEMOSTLY condition.
->>>
->>> How to trigger
->>>
->>> ```
->>> ~/mdadm # ./mdadm -Ss && ./mdadm --zero-superblock /dev/sd{a,b}
->>> ~/mdadm # ./mdadm -C /dev/md0 -l mirror -b clustered -e 1.2 -n 2 \
->>> /dev/sda /dev/sdb --assume-clean
->>> mdadm: array /dev/md0 started.
->>> ~/mdadm # ./mdadm --grow /dev/md0 --bitmap=none
->>> ~/mdadm # ./mdadm --grow /dev/md0 --bitmap=clustered
->>> mdadm: /dev/md0 disks marked write-mostly are not supported with
->>> clustered bitmap
->>> ```
->>>
->>> Signed-off-by: Heming Zhao <heming.zhao@suse.com>
->>
->> Applied!
->>
->> Thanks,
->> Jes
->>
 > 
-> With Paul Menzel comment, I will remove the dot/period in patch subject
-> then
-> send a v2.
-
-I already applied it. I don't think the dot is worth respinning the
-patch for.
-
-Thanks,
-Jes
-
