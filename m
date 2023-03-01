@@ -2,133 +2,191 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7099DC64ED6
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Mar 2023 12:37:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9F8C64ED6
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Mar 2023 13:50:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229537AbjCAMha (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Mar 2023 07:37:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40072 "EHLO
+        id S229620AbjCANuQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Mar 2023 08:50:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbjCAMh3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Mar 2023 07:37:29 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 131E53BD96
-        for <linux-raid@vger.kernel.org>; Wed,  1 Mar 2023 04:36:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1677674201;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=cG2pa4UrXoO5ALV8j3GLD61cOT9QBopnZ8l+TAWLZTE=;
-        b=RtBZjGta2JeFr8dQ9WossBNG30pZg8+DHJB1ItvPfi/Ov9hPZF/IXQGEJx550tAAyqxmBj
-        FrzJYZ4QP/bwFs8DAngLuQURKrzuTsSY51kNW1XDa5wI1149kdoV+hVJXxFPCFkvD1VDgH
-        +GZUb2rwkKPIK5mZmQWC8XZcmdXBJ/M=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-358-Ab5aJ4e8OSKKVzz_Kq_KGA-1; Wed, 01 Mar 2023 07:36:40 -0500
-X-MC-Unique: Ab5aJ4e8OSKKVzz_Kq_KGA-1
-Received: by mail-pl1-f199.google.com with SMTP id x10-20020a170902ea8a00b0019cdb7d7f91so6883504plb.4
-        for <linux-raid@vger.kernel.org>; Wed, 01 Mar 2023 04:36:39 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cG2pa4UrXoO5ALV8j3GLD61cOT9QBopnZ8l+TAWLZTE=;
-        b=1JWvVa7UOSILB84304sj/lps0s5gFeAuOGi0OABdAmQGbV2jefDXDZlPpeaePNf+RK
-         jtiPl5TzJ6adrD1kOnK1FeAREON8Hsjw0k36Ih5bU+5g8dbncPipZmFPTHmzYkr1ucON
-         Xhs9lXl8ghT6Rtf4STRMw020bWe9CimeZ6FaMJNPpYMwUzcJTOxSspgCvfgSbeqN5O9c
-         0hMB8RORg0D1pDZRacOcsE/aakZkieXhk8056duWHmpNjKJmNTRiIchh4P9/Ymr/wKIF
-         M5H7H8BNUV/0CT9U62mjTn1E9F99W8Kv7xPwV2o6LraocUG7MbcCn/kW/JRvRBba/DnX
-         0Zvg==
-X-Gm-Message-State: AO0yUKUwAYNDaDDyW6Z5PcQmLiFPXIjacey5Hn32u0vMvrQZfZL10V3P
-        CZla2oV6u4ujGO6xTaT5zTgAgCmwsMQxIzIsbpZBP4SGSZVMkqpTIUGq2jKGJ/Yfe8DCf1Txch9
-        BzaEJuwmW9Ato3fXGc3glfgpUyJxY5Y8kyyrjTQ==
-X-Received: by 2002:a62:824c:0:b0:606:a48f:c211 with SMTP id w73-20020a62824c000000b00606a48fc211mr1218434pfd.1.1677674199035;
-        Wed, 01 Mar 2023 04:36:39 -0800 (PST)
-X-Google-Smtp-Source: AK7set+tN3APfkTreuZkVbUdk0UMqmZk/KT2A6RxKjx0l0Vx3jhPHm7qRhxAsvLLNBmqYxGl4kh2QcqUvtuMGOm4P5c=
-X-Received: by 2002:a62:824c:0:b0:606:a48f:c211 with SMTP id
- w73-20020a62824c000000b00606a48fc211mr1218429pfd.1.1677674198697; Wed, 01 Mar
- 2023 04:36:38 -0800 (PST)
+        with ESMTP id S229586AbjCANuP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Mar 2023 08:50:15 -0500
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D28031E2E
+        for <linux-raid@vger.kernel.org>; Wed,  1 Mar 2023 05:50:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1677678614; x=1709214614;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=faPuqKhK+qMVMFMff/mA6oJ3xGc9j0kaIfJPjAdydIA=;
+  b=N0PAoelCYMvRTCvW+rmqDX8C+qU1+eCfh+7YUW+YfbtYHTJrN12Hq6Rf
+   sczT/PKEKOhrqhQz3CfDvN/FjHfVIFXsXgPpQDT3qRaP3nsOewnSxRgyC
+   e3akTfC5kY5710ABo7dgFkSDDb03/AirSNPF5TVsFRubxc5qLz8ZEzG0H
+   +1IUHyYKEdCZyV0wwb4OITz5oNyI9iurZIRgRE4NXsqk/oN4fXm9LV96C
+   aJ4t7i2n3JSshJ4oEqbbfhjURmVZAenqVQduAdRroN/NlW3fHDiwqZtmT
+   fnWo5+DDJcoz9touT3jistz3eSJSrYmNDZoEHu/eViCxl10OHnzyR7k50
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10636"; a="420671187"
+X-IronPort-AV: E=Sophos;i="5.98,225,1673942400"; 
+   d="scan'208";a="420671187"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 05:50:14 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10636"; a="798434459"
+X-IronPort-AV: E=Sophos;i="5.98,225,1673942400"; 
+   d="scan'208";a="798434459"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.57.49])
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 05:50:12 -0800
+Date:   Wed, 1 Mar 2023 14:50:07 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     NeilBrown <neilb@suse.de>
+Cc:     Jes Sorensen <jes@trained-monkey.org>, linux-raid@vger.kernel.org,
+        Martin Wilck <martin.wilck@suse.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Subject: Re: [PATCH 6/6] mdmon improvements for switchroot
+Message-ID: <20230301145007.00001f62@linux.intel.com>
+In-Reply-To: <167745678753.16565.5052083348539533042.stgit@noble.brown>
+References: <167745586347.16565.4353184078424535907.stgit@noble.brown>
+        <167745678753.16565.5052083348539533042.stgit@noble.brown>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-References: <20230224183323.638-1-jonathan.derrick@linux.dev>
- <20230224183323.638-4-jonathan.derrick@linux.dev> <CALTww2_P6TaV7C5i2k5sUeHOpnqTxjFB-ZA98Y2re+17J5d7Kw@mail.gmail.com>
- <2f2ba1cb-a053-7494-ce42-4670b66baacf@linux.dev>
-In-Reply-To: <2f2ba1cb-a053-7494-ce42-4670b66baacf@linux.dev>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 1 Mar 2023 20:36:27 +0800
-Message-ID: <CALTww2-ie0Y+0JMQAASKwDhAwcmD-aOuf=_J_GD95ATUi7w-3Q@mail.gmail.com>
-Subject: Re: [PATCH v5 3/3] md: Use optimal I/O size for last bitmap page
-To:     Jonathan Derrick <jonathan.derrick@linux.dev>
-Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Reindl Harald <h.reindl@thelounge.net>,
-        Christoph Hellwig <hch@lst.de>,
-        Christoph Hellwig <hch@infradead.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Sushma Kalakota <sushma.kalakota@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Mar 1, 2023 at 7:10=E2=80=AFAM Jonathan Derrick
-<jonathan.derrick@linux.dev> wrote:
->
-> Hi Xiao
->
-> On 2/26/2023 6:56 PM, Xiao Ni wrote:
-> > Hi Jonathan
-> >
-> > I did a test in my environment, but I didn't see such a big
-> > performance difference.
-> >
-> > The first environment:
-> > All nvme devices have 512 logical size, 512 phy size, and 0 optimal siz=
-e. Then
-> > I used your way to rebuild the kernel
-> > /sys/block/nvme0n1/queue/physical_block_size 512
-> > /sys/block/nvme0n1/queue/optimal_io_size 4096
-> > cat /sys/block/nvme0n1/queue/logical_block_size 512
-> >
-> > without the patch set
-> > write: IOPS=3D68.0k, BW=3D266MiB/s (279MB/s)(15.6GiB/60001msec); 0 zone=
- resets
-> > with the patch set
-> > write: IOPS=3D69.1k, BW=3D270MiB/s (283MB/s)(15.8GiB/60001msec); 0 zone=
- resets
-> >
-> > The second environment:
-> > The nvme devices' opt size are 4096. So I don't need to rebuild the ker=
-nel.
-> > /sys/block/nvme0n1/queue/logical_block_size
-> > /sys/block/nvme0n1/queue/physical_block_size
-> > /sys/block/nvme0n1/queue/optimal_io_size
-> >
-> > without the patch set
-> > write: IOPS=3D51.6k, BW=3D202MiB/s (212MB/s)(11.8GiB/60001msec); 0 zone=
- resets
-> > with the patch set
-> > write: IOPS=3D53.5k, BW=3D209MiB/s (219MB/s)(12.2GiB/60001msec); 0 zone=
- resets
-> >
-> Sounds like your devices may not have latency issues at sub-optimal sizes=
-.
-> Can you provide biosnoop traces with and without patches?
->
-> Still, 'works fine for me' is generally not a reason to reject the patche=
-s.
+Hi Neil,
+We found typo. We fixed that to test the change.
+Other comments are less important.
 
-Yes, I can. I tried to install the biosnoop in fedora38 but it failed.
-These are the rpm packages I've installed:
-bcc-tools-0.25.0-1.fc38.x86_64
-bcc-0.25.0-1.fc38.x86_64
-python3-bcc-0.25.0-1.fc38.noarch
+On Mon, 27 Feb 2023 11:13:07 +1100
+NeilBrown <neilb@suse.de> wrote:
 
-Are there other packages that I need to install?
+> We need a new mdmon@mdfoo instance to run in the root filesystem after
+> switch root, as /sys and /dev are removed from the initrd.
+> 
+> systemd will not start a new unit with the same name running while the
+> old unit is still active, and we want the two mdmon processes to overlap
+> in time to avoid any risk of deadlock which a write is attempted with no
+> mdmon running.
+> 
+> So we need a different unit name in the initrd than in the root.  Apart
+> from the name, everything else should be the same.
+> 
+> This is easily achieved using a different instance name as the
+> mdmon@.service unit file already supports multiple instances (for
+> different arrays).
+> 
+> So start "mdmon@mdfoo.service" from root, but
+> "mdmon@initrd-mdfoo.service" from the initrd.  udev can tell which
+> circumstance is the case by looking for /etc/initrd-release.
+> continue_from_systemd() is enhanced so that the "initrd-" prefix can be
+> requested.
+> 
+> Teach mdmon that a container name like "initrd/foo" should be treated
+> just like "foo".  Note that systemd passes the instance name
+> "initrd-foo" as "initrd/foo".
+> 
+> We don't need a similar machanism at shutdown because dracut runs
+> "mdmon --takeover --all" when appropriate.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.de>
 
-Regards
-Xiao
+> diff --git a/mdmon.c b/mdmon.c
+> index 6d37b17c3f53..25abdd71fb1e 100644
+> --- a/mdmon.c
+> +++ b/mdmon.c
+> @@ -368,7 +368,11 @@ int main(int argc, char *argv[])
+>  	}
+>  
+>  	if (!all && argv[optind]) {
+> -		container_name = get_md_name(argv[optind]);
+> +		static const char prefix[] = "initrd/";
+> +		container_name = argv[optind];
+> +		if (strncmp(container_name, prefix, sizeof(prefix)-1) == 0)
+> +			container_name += sizeof(prefix)-1;
+> +		container_name = get_md_name(container_name);
 
+"sizeof(prefix)-1" there should be spaces before and after operator.
+
+You are defining similar literals in 2 places:
+prefix[] = "initrd/"
+*prefix = in_initrd() ? "initrd-", "";
+
+When I see something like this, I need to ask why it is not globally defined
+because in the future we would need to define it for the firth and fourth time.
+I see the difference in last sign ('/' and '-'). We can omit that.
+I would like propose something like:
+
+in mdadm.h:
+#DEFINE MDMON_PREFIX "initrd"
+
+in mdmon, do not check last sign. whatever it is, we don't really care, just
+skip it. All we need to know is that it not belongs to container name.
+Hope it works correctly:
+	if (strncmp(container_name, MDMON_PREFIX, sizeof(prefix) - 1) == 0)
+		container_name += sizeof(MDMON_PREFIX);
+	
+And later in start_mdmon include '-' in snprintf:
+		 "%s@%s%s.service", service_name, MDMON_PREFIX"-" ?: "",
+
+I think that we don't need to pass whole char* value, we can use bool, the one
+possibility is "initrd" now. If that would be changed, we can use enum and maps
+interface:
+https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/maps.c
+
+This is lesson learned by code study, we needed to put big effort to correct
+similar case with reshapes because pointers become overkill through
+years:
+https://lore.kernel.org/linux-raid/20230102083524.28893-1-mateusz.kusiak@intel.com/
+
+It my my personal view so you are free to make decision. I will accept it but
+please note that mdadm is full of same literals (just find /dev/md or /dev/md/)
+so that is why I'm especially sensitive in that cases.
+
+> --git a/util.c b/util.c index 6b44662db7cd..1d433d1826b5 100644 --- a/util.c
+> +++ b/util.c @@ -1906,6 +1906,7 @@ int start_mdmon(char *devnm)
+>  	int len;
+>  	pid_t pid;
+>  	int status;
+> +	char *prefix = in_initrd() ? "initrd-", "";
+
+The most important thing:
+typo, should be in_initrd() ? "initrd-": "";
+
+>  	char pathbuf[1024];
+>  	char *paths[4] = {
+>  		pathbuf,
+> @@ -1916,7 +1917,7 @@ int start_mdmon(char *devnm)
+>  
+>  	if (check_env("MDADM_NO_MDMON"))
+>  		return 0;
+> -	if (continue_via_systemd(devnm, MDMON_SERVICE))
+> +	if (continue_via_systemd(devnm, MDMON_SERVICE, prefix))
+>  		return 0;
+>  
+>  	/* That failed, try running mdmon directly */
+> @@ -2187,7 +2188,7 @@ void manage_fork_fds(int close_all)
+>   *	1- if systemd service has been started
+>   *	0- otherwise
+>   */
+> -int continue_via_systemd(char *devnm, char *service_name)
+> +int continue_via_systemd(char *devnm, char *service_name, char *prefix)
+>  {
+>  	int pid, status;
+>  	char pathbuf[1024];
+> @@ -2199,7 +2200,7 @@ int continue_via_systemd(char *devnm, char
+> *service_name) case  0:
+>  		manage_fork_fds(1);
+>  		snprintf(pathbuf, sizeof(pathbuf),
+> -			 "%s@%s.service", service_name, devnm);
+> +			 "%s@%s%s.service", service_name, prefix ?: "",
+> devnm); status = execl("/usr/bin/systemctl", "systemctl", "restart",
+>  			       pathbuf, NULL);
+>  		status = execl("/bin/systemctl", "systemctl", "restart",
+> 
+> 
+
+Thanks,
+Mariusz
