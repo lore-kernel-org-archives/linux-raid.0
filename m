@@ -2,286 +2,116 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 199D7C64EC7
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Mar 2023 07:20:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EDA6C64ED6
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Mar 2023 08:55:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229701AbjCAHUK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Mar 2023 02:20:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57748 "EHLO
+        id S229790AbjCAIzm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Mar 2023 03:55:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbjCAHUJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Mar 2023 02:20:09 -0500
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC2E931E06;
-        Tue, 28 Feb 2023 23:20:07 -0800 (PST)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1pXGkv-0007xR-TD; Wed, 01 Mar 2023 08:20:05 +0100
-Message-ID: <a16e5485-d2ea-115d-0cd3-f513eece2962@leemhuis.info>
-Date:   Wed, 1 Mar 2023 08:20:05 +0100
+        with ESMTP id S229629AbjCAIzl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Mar 2023 03:55:41 -0500
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8060F2384C
+        for <linux-raid@vger.kernel.org>; Wed,  1 Mar 2023 00:55:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1677660940; x=1709196940;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=F9zPvRuhr5oYyssZe/8bIHAgitU/fxu7Ycg9KKcJyWM=;
+  b=PIEtFPMLClHpbxNXPfcQphhy4Y8dwOW+Kt5Wbcevo8mWpILQONJ6oOqY
+   oUTYlGniqs/clXW2fCiecViq1+gT0zMHSCGzQgPtsQP1jNEwEihKtgEK8
+   7VgFmFm17rua+uDne6uHrfNGA3l/jCq/Nj89uT6Zshc015GM/M1MQzitl
+   pvDB0I0TOammVxxtifJ6IQ8/6GS++7mQzADLNQp+Qra5EJ7Qmmqb02nNu
+   Yma8XkDFPipZDz5ytVfsP+eeZ6CmnPOyCbkXXnfINb8lGZBVSXwq4/ddD
+   35NvPZb3Gf6U+L/tYykOOvtjCX3rOgRkuGYhEBNXIi+cN1CfYPmRcWMaJ
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="318158704"
+X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
+   d="scan'208";a="318158704"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 00:55:39 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="743340279"
+X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
+   d="scan'208";a="743340279"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.57.49])
+  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 00:55:33 -0800
+Date:   Wed, 1 Mar 2023 09:55:28 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Jes Sorensen <jes@trained-monkey.org>
+Cc:     NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org,
+        Martin Wilck <martin.wilck@suse.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Subject: Re: [PATCH 0/6] Assorted patches relating to mdmon
+Message-ID: <20230301095528.00000bb9@linux.intel.com>
+In-Reply-To: <167745586347.16565.4353184078424535907.stgit@noble.brown>
+References: <167745586347.16565.4353184078424535907.stgit@noble.brown>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
- can no longer assemble software raid0
-Content-Language: en-US, de-DE
-To:     Song Liu <song@kernel.org>,
-        Linux regressions mailing list <regressions@lists.linux.dev>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Nikolay Kichukov <hijacker@oldum.net>
-References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
- <CAPhsuW53cDdcXYAkc7fabx-ET+AKctG_dWMZ1iCA9csCq3TZfA@mail.gmail.com>
-From:   "Linux regression tracking (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <CAPhsuW53cDdcXYAkc7fabx-ET+AKctG_dWMZ1iCA9csCq3TZfA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1677655207;33599484;
-X-HE-SMSGID: 1pXGkv-0007xR-TD
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 28.02.23 19:45, Song Liu wrote:
-> Thanks for the report. I was on vacation last week.
+On Mon, 27 Feb 2023 11:13:07 +1100
+NeilBrown <neilb@suse.de> wrote:
 
-Welcome back, hope you enjoyed it.
-
-> I will look into this soon.
-
-Thx. In the bug report a workaround was found: enable
-BLOCK_LEGACY_AUTOLOAD. See also:
-
-https://lore.kernel.org/all/20221228165547.27502-1-anisse@astier.eu/
-
-I wonder if there is some constellation where that "default y" is not
-honored for some reason (maybe because the people already have it
-disabled in their .config). But well, not my area of expertise, maybe I
-shouldn't even have mentioned that thought.
-
-Ciao, Thorsten
-
-> On Thu, Feb 23, 2023 at 8:06 AM Linux regression tracking (Thorsten
-> Leemhuis) <regressions@leemhuis.info> wrote:
->>
->> Hi, this is your Linux kernel regression tracker.
->>
->> I noticed a regression report in bugzilla.kernel.org. As many (most?)
->> kernel developer don't keep an eye on it, I decided to forward it by
->> mail. Quoting from https://bugzilla.kernel.org/show_bug.cgi?id=217074 :
->>
->>> Hello,
->>> Installing a new kernel 6.1.12 does not allow assembly of raid0 device.
->>>
->>> Going back to previous working kernels: 5.15.65, 5.15.75 assembles the raid0 without any problems.
->>>
->>> Kernel command line parameters:
->>> ... ro kvm_amd.nested=0 kvm_amd.avic=1 kvm_amd.npt=1 raid0.default_layout=2
->>>
->>> mdadm assembly attempt fails with:
->>> 'mdadm: unexpected failure opening /dev/md<NR>'
->>>
->>> Tried with mdadm-4.1 and mdadm-4.2, but as it works with either versions of mdadm, I rule out the mdadm software.
->>>
->>> strace -f output, last few lines:
->>>
->>> mkdir("/run/mdadm", 0755)               = -1 EEXIST (File exists)
->>> openat(AT_FDCWD, "/run/mdadm/map.lock", O_RDWR|O_CREAT|O_TRUNC, 0600) = 3
->>> fcntl(3, F_GETFL)                       = 0x8002 (flags O_RDWR|O_LARGEFILE)
->>> flock(3, LOCK_EX)                       = 0
->>> newfstatat(3, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
->>> openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) = 4
->>> fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
->>> newfstatat(4, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
->>> read(4, "", 4096)                       = 0
->>> close(4)                                = 0
->>> openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) = 4
->>> fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
->>> newfstatat(4, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
->>> read(4, "", 4096)                       = 0
->>> close(4)                                = 0
->>> newfstatat(AT_FDCWD, "/dev/.udev", 0x7ffcd8243c90, 0) = -1 ENOENT (No such file or directory)
->>> newfstatat(AT_FDCWD, "/run/udev", {st_mode=S_IFDIR|0755, st_size=160, ...}, 0) = 0
->>> openat(AT_FDCWD, "/proc/mdstat", O_RDONLY) = 4
->>> fcntl(4, F_SETFD, FD_CLOEXEC)           = 0
->>> newfstatat(4, "", {st_mode=S_IFREG|0444, st_size=0, ...}, AT_EMPTY_PATH) = 0
->>> read(4, "Personalities : [raid1] [raid0] "..., 1024) = 56
->>> read(4, "", 1024)                       = 0
->>> close(4)                                = 0
->>> openat(AT_FDCWD, "/sys/block/md127/dev", O_RDONLY) = -1 ENOENT (No such file or directory)
->>> getpid()                                = 18351
->>> mknodat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9, 0x7f)) = 0
->>> openat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) = -1 ENXIO (No such device or address)
->>> unlink("/dev/.tmp.md.18351:9:127")      = 0
->>> getpid()                                = 18351
->>> mknodat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9, 0x7f)) = 0
->>> openat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) = -1 ENXIO (No such device or address)
->>> unlink("/tmp/.tmp.md.18351:9:127")      = 0
->>> write(2, "mdadm: unexpected failure openin"..., 45mdadm: unexpected failure opening /dev/md127
->>> ) = 45
->>> unlink("/run/mdadm/map.lock")           = 0
->>> close(3)                                = 0
->>> exit_group(1)                           = ?
->>> +++ exited with 1 +++
->>>
->>>
->>> Tried with kernel compiled with either CONFIG_DEVTMPFS_SAFE=y or CONFIG_DEVTMPFS_SAFE=n, fails the same way.
->>>
->>> The raid consists of 4 devices, here is mdstat contents:
->>>
->>> Personalities : [raid0]
->>> md127 : active raid0 sda[0] sdc[2] sdd[3] sdb[1]
->>>       2929769472 blocks super 1.2 512k chunks
->>>
->>> unused devices: <none>
->>>
->>>
->>> Examining the 4 block devices:
->>>
->>> gnusystem /var/log # mdadm --misc -E /dev/sda
->>> /dev/sda:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x0
->>>      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
->>>            Name : gnusystem:md0-store  (local to host gnusystem)
->>>   Creation Time : Wed Sep 29 22:28:09 2021
->>>      Raid Level : raid0
->>>    Raid Devices : 4
->>>
->>>  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
->>>     Data Offset : 264192 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=264112 sectors, after=0 sectors
->>>           State : clean
->>>     Device UUID : 7f226c1c:23632b9d:e3d6c656:74522906
->>>
->>>     Update Time : Wed Sep 29 22:28:09 2021
->>>   Bad Block Log : 512 entries available at offset 8 sectors
->>>        Checksum : 51e99fb5 - correct
->>>          Events : 0
->>>
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 0
->>>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
->>> gnusystem /var/log # mdadm --misc -E /dev/sdb
->>> /dev/sdb:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x0
->>>      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
->>>            Name : gnusystem:md0-store  (local to host gnusystem)
->>>   Creation Time : Wed Sep 29 22:28:09 2021
->>>      Raid Level : raid0
->>>    Raid Devices : 4
->>>
->>>  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
->>>     Data Offset : 264192 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=264112 sectors, after=0 sectors
->>>           State : clean
->>>     Device UUID : ed8795fe:c7e6719a:165db37e:32ec0894
->>>
->>>     Update Time : Wed Sep 29 22:28:09 2021
->>>   Bad Block Log : 512 entries available at offset 8 sectors
->>>        Checksum : 215db63b - correct
->>>          Events : 0
->>>
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 1
->>>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
->>> gnusystem /var/log # mdadm --misc -E /dev/sdc
->>> /dev/sdc:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x0
->>>      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
->>>            Name : gnusystem:md0-store  (local to host gnusystem)
->>>   Creation Time : Wed Sep 29 22:28:09 2021
->>>      Raid Level : raid0
->>>    Raid Devices : 4
->>>
->>>  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
->>>     Data Offset : 264192 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=264112 sectors, after=0 sectors
->>>           State : clean
->>>     Device UUID : 3713dfff:d2e29aaf:3275039d:08b317bb
->>>
->>>     Update Time : Wed Sep 29 22:28:09 2021
->>>   Bad Block Log : 512 entries available at offset 8 sectors
->>>        Checksum : 42f70f03 - correct
->>>          Events : 0
->>>
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 2
->>>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
->>> gnusystem /var/log # mdadm --misc -E /dev/sdd
->>> /dev/sdd:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x0
->>>      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
->>>            Name : gnusystem:md0-store  (local to host gnusystem)
->>>   Creation Time : Wed Sep 29 22:28:09 2021
->>>      Raid Level : raid0
->>>    Raid Devices : 4
->>>
->>>  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
->>>     Data Offset : 264192 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=264112 sectors, after=0 sectors
->>>           State : clean
->>>     Device UUID : 7da858ae:c0d6ca51:0ecaaaf0:280367cc
->>>
->>>     Update Time : Wed Sep 29 22:28:09 2021
->>>   Bad Block Log : 512 entries available at offset 8 sectors
->>>        Checksum : 32cf4ab4 - correct
->>>          Events : 0
->>>
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 3
->>>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
->>>
->>> If any more information is needed, let me know.
->>
->> See the ticket for details.
->>
->>
->> [TLDR for the rest of this mail: I'm adding this report to the list of
->> tracked Linux kernel regressions; the text you find below is based on a
->> few templates paragraphs you might have encountered already in similar
->> form.]
->>
->> BTW, let me use this mail to also add the report to the list of tracked
->> regressions to ensure it's doesn't fall through the cracks:
->>
->> #regzbot introduced: v5.15..v6.1.12
->> https://bugzilla.kernel.org/show_bug.cgi?id=217074
->> #regzbot title: block: md: raid0 no longer assembled
->> #regzbot ignore-activity
->>
->> This isn't a regression? This issue or a fix for it are already
->> discussed somewhere else? It was fixed already? You want to clarify when
->> the regression started to happen? Or point out I got the title or
->> something else totally wrong? Then just reply and tell me -- ideally
->> while also telling regzbot about it, as explained by the page listed in
->> the footer of this mail.
->>
->> Developers: When fixing the issue, remember to add 'Link:' tags pointing
->> to the report (e.g. the buzgzilla ticket and maybe this mail as well, if
->> this thread sees some discussion). See page linked in footer for details.
->>
->> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
->> --
->> Everything you wanna know about Linux kernel regression tracking:
->> https://linux-regtracking.leemhuis.info/about/#tldr
->> If I did something stupid, please tell me, as explained on that page.
+> mdmon is a root-storage daemon is the sense defined by systemd
+> documentation, but it does not follow the practice that systemd
+> recommends.  Specifically it is run from the root filesystem when
+> possible.  The instance started in the initrd hands-over to a root-fs
+> based instance, which then hands-over to an initrd-based instance
+> started by dracut at shutdown.
 > 
+> Part of the reason that we ignore systemd advise is that mdmon needs
+> access to the filesystem - specifically /dev and /sys - which is not
+> available in the initrd context after switchroot.  We could possibly
+> change mdmon to work in the systemd-preferred way by splitting mdmon
+> into two processes instead of just having 2 threads.  The "monitor"
+> process could running entirely in the initrd context, the "manager"
+> process could safely run in the root-fs context, passing newly opened
+> file descriptors to the monitor over a unix-domain socket.
 > 
+> But we aren't there yet and may never be.
+> 
+> For now, mdmon doesn't work correctly.  There is no mechanism to ensure
+> a new instance starts after switchroot.  Until recently the initrd
+> instance of the systemd mdmon unit would be stopped at switchroot time
+> because udev would temporarily forget about md devices.  This would
+> allow the "udevadm trigger" process to start a new instance.  udev was
+> recently fixed:
+> 
+> Commit: 7ec624147a41 ("udevadm: cleanup-db: don't delete information for kept
+> db entries")
+> 
+> so now the attempt to start mdmon via "udevadm trigger" does nothing as
+> mdmon already has an active unit.
+> 
+> The net result is that mdmon continues running in the initrd mount
+> namespace and so cannot access new devices.  Adding a device to a root
+> md array that depends on mdmon will no longer work.
+> 
+> We want the initrd instance of mdmon to continue running until the
+> root-fs based instance starts, and that really requires we have two
+> different systemd units.  This series achieves this in the final patch by
+> using a different instance name inside or initrd and outside.
+> "initrd-mdfoo" and "mdfoo".
+> 
+> Other patches in the series are mostly clean-ups and minor improvements
+> in related code.
+> 
+> NeilBrown
+> 
+
+Hi Jes,
+The problem descried by Neil is critical for IMSM. I will test the patchset
+ASAP.
+Additionally, it resolves "KillMode=none" problem so we will be able to finally
+drop it.
+
+I will be back with results soon.
+
+Thanks,
+Mariusz
