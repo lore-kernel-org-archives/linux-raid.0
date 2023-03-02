@@ -2,92 +2,91 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15558C6FA8E
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Mar 2023 15:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7C0EC6FA8E
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Mar 2023 15:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229538AbjCBPxB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 2 Mar 2023 10:53:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52328 "EHLO
+        id S229494AbjCBP5l (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 2 Mar 2023 10:57:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjCBPw7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Mar 2023 10:52:59 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB03639280
-        for <linux-raid@vger.kernel.org>; Thu,  2 Mar 2023 07:52:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1677772333;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=cmCzTmxHV2uZj5pqTfuzTfxAnXBSwmjg8GrPIqmTNhY=;
-        b=EekR3C7oocjFD4NvW35sM2l5qMx9ZjRKUSYDuIExjs1K983mhPAlEsi/B1HlrKhO46x9cp
-        HaLlHXnRdGXX7v7AT8NS2u56Lg9hy9dSDVmwOJzOKy4H5Ub5RsNLnoOBuT+7B1fYKSBZu6
-        kLWVAta0R5Lx21regL72zVKCR6PAKXI=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-652-5RyxPDeXOuakWh0v500V7Q-1; Thu, 02 Mar 2023 10:52:11 -0500
-X-MC-Unique: 5RyxPDeXOuakWh0v500V7Q-1
-Received: by mail-pf1-f197.google.com with SMTP id z19-20020a056a001d9300b005d8fe305d8bso9012306pfw.22
-        for <linux-raid@vger.kernel.org>; Thu, 02 Mar 2023 07:52:11 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=cmCzTmxHV2uZj5pqTfuzTfxAnXBSwmjg8GrPIqmTNhY=;
-        b=3sfONm0k7dBHXMSptcFSJWL2RDV10k52bhKH1+6vZaiMlKoZ87d46RxkKJNc/8NAIC
-         YhlI3e46u9RpsAZLq2W/MXgODj7atGlvIKjufXcRKLVJxG2KA54M94meBU3T0r5tNrQM
-         Ziqon4Vg65O0ivxgHXNISlY/iFxLKe06zxTaesCVbv0hwNFUbsztT2VLrnVlA3iCjDy7
-         EVbqoY4Aj7gR+/NWwffyhfgj4nroC24I/dBR1whWBKpI1lh6umrnCVX2xo8sLQ1c0QRO
-         07AmfYYHKngpXLnDVvtfnuL1b3f2B7JC8D6lCNIU0XMGqDgccZwQAX84qI3dzeIbkkDL
-         kemQ==
-X-Gm-Message-State: AO0yUKUSp055O7wFShG6SBOCjNM3G0GWd5I2UWsCHAIXcDMMF8pP0eof
-        VexgaoWpzreGq2GExpyYDgbY3XY2dbfspDDdw4Y3Pw+Aa5w90bsTDdDiyslpb7m0mLYHTUbqRqD
-        0/FPwx4FlUyPkWf67lxIj8QzmgL5tH4irTKq5aQ==
-X-Received: by 2002:a17:902:7fc2:b0:19a:e96a:aff5 with SMTP id t2-20020a1709027fc200b0019ae96aaff5mr3990173plb.1.1677772330680;
-        Thu, 02 Mar 2023 07:52:10 -0800 (PST)
-X-Google-Smtp-Source: AK7set84bdlQzWmK+wk9IEBpzXcwddHUsETeO+nhg6uYIAugfoA5oA5scCMbTueParzRbW6+lSNz+U9/lTZeJMgMwDI=
-X-Received: by 2002:a17:902:7fc2:b0:19a:e96a:aff5 with SMTP id
- t2-20020a1709027fc200b0019ae96aaff5mr3990160plb.1.1677772330386; Thu, 02 Mar
- 2023 07:52:10 -0800 (PST)
+        with ESMTP id S229437AbjCBP5j (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Mar 2023 10:57:39 -0500
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE13A2385B
+        for <linux-raid@vger.kernel.org>; Thu,  2 Mar 2023 07:57:35 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1677772647; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=P54z9BdAKXTIJJk9x2L4VaD8PIkDJsoAfIirQDpeaT5Gk8+d1n/b32fIWfoD49sRNOfOJG1xUruCjk1skYST8FwSy9OptriGAP7ji+dPb3/qZggjdwrLQBeCHzuLQ/jgxNicvhs7yzrNW8BY+emvwVA3ZCG/nMHQsxoR+gJeLdU=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1677772647; h=Content-Type:Content-Transfer-Encoding:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=o+wNR85yhiXyHefI+qteVamBA2nm8YtweeeU3xfSet4=; 
+        b=S7brYBg8PLWHpkt3sTMAw2UNwPlmxeP84UGJTReRO+8DPYeiynLGb4G4NrwYU03ihASxSaeUCV23BVthe+iEvw1jgfQYtNP5Acmj7D4NORhyCF8tBc64O2l/UJykqw0npbf56KTNDDwPRNc3/lFZJVPzROf1DOMVuiBm4wZtUY0=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1677772645367747.1167110535843; Thu, 2 Mar 2023 16:57:25 +0100 (CET)
+Message-ID: <4d8054f4-5cd5-2b6a-4f6d-af33438fbe9a@trained-monkey.org>
+Date:   Thu, 2 Mar 2023 10:57:23 -0500
 MIME-Version: 1.0
-From:   Xiao Ni <xni@redhat.com>
-Date:   Thu, 2 Mar 2023 23:51:59 +0800
-Message-ID: <CALTww28pEdW+f1SaXrG7Umf8uA6fAc9io-WKb_W8mVxEzW8EzA@mail.gmail.com>
-Subject: The gendisk of raid can't be released
-To:     Christoph Hellwig <hch@infradead.org>, Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v3 8/8] udev: Move udev_block() and udev_unblock() into
+ udev.c
+Content-Language: en-US
+To:     Mateusz Grzonka <mateusz.grzonka@intel.com>,
+        linux-raid@vger.kernel.org,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+References: <20230202112706.14228-1-mateusz.grzonka@intel.com>
+ <20230202112706.14228-9-mateusz.grzonka@intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20230202112706.14228-9-mateusz.grzonka@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Christoph
+On 2/2/23 06:27, Mateusz Grzonka wrote:
+> Add kernel style comments and better error handling.
+> 
+> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+> ---
+>  Create.c |  1 +
+>  lib.c    | 29 -----------------------------
+>  mdadm.h  |  2 --
+>  mdopen.c | 12 ++++++------
+>  udev.c   | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  udev.h   |  2 ++
+>  6 files changed, 53 insertions(+), 37 deletions(-)
 
-There is a regression problem which is introduced by 84d7d462b16d
-(blk-cgroup: pin the gendisk in struct blkcg_gq).
+This breaks miserably for me on Fedora 36:
 
-The test commands below can reproduce this:
-mdadm -CR /dev/md0 -l10 -n4 /dev/nvme[0-3]n1 --assume-clean
-mdadm --stop /dev/md0
-mdadm -CR /dev/md0 -l10 -n4 /dev/nvme[0-3]n1 --assume-clean
-mdadm: Fail to create md0 when using
-/sys/module/md_mod/parameters/new_array, fallback to creation via node
-mdadm: unexpected failure opening /dev/md0
+[jes@jes-t490 mdadm.git]$ make
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-Wimplicit-fallthrough=0 -O2 -DSendmail=\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\"
+-DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\"
+-DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DNO_COROSYNC -DNO_DLM
+-DVERSION=\"4.2-94-g47c22f0\" -DVERS_DATE="\"2023-03-02\""
+-DUSE_PTHREADS  -pthread -Wl,-z,now -o mdmon mdmon.o monitor.o
+managemon.o uuid.o util.o maps.o mdstat.o sysfs.o config.o mapfile.o
+mdopen.o policy.o lib.o Kill.o sg_io.o dlink.o ReadMe.o super-intel.o
+super-mbr.o super-gpt.o super-ddf.o sha1.o crc32.o msg.o bitmap.o
+xmalloc.o platform-intel.o probe_roms.o crc32c.o -ldl -ludev
+/usr/bin/ld: mdopen.o: in function `find_free_devnm':
+mdopen.c:(.text+0x5f5): undefined reference to `udev_is_available'
+/usr/bin/ld: mdopen.o: in function `create_mddev':
+mdopen.c:(.text+0x6e6): undefined reference to `udev_is_available'
+/usr/bin/ld: mdopen.c:(.text+0x8db): undefined reference to `udev_block'
+/usr/bin/ld: mdopen.c:(.text+0x96f): undefined reference to
+`udev_is_available'
+/usr/bin/ld: mdopen.c:(.text+0xa84): undefined reference to `udev_block'
+/usr/bin/ld: mdopen.c:(.text+0xef5): undefined reference to `udev_block'
+/usr/bin/ld: mdopen.c:(.text+0x1106): undefined reference to `udev_unblock'
+/usr/bin/ld: mdopen.c:(.text+0x11ce): undefined reference to `udev_unblock'
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:220: mdmon] Error 1
 
-The reason is that the gendisk kobj can't be released, so md_free_disk
-can't be called. It looks like the patch mentioned above doesn't have
-problem. Before this patch, it didn't add the reference to the kobj of
-the gendisk. So all things work well. Now it adds the reference to
-the kobj of the gendisk in blkg_alloc, but it can't be decremented in
-blkg_release. After adding some debug logs, it only adds the reference
-of blkg->refcnt, but it doesn't call blkcg_rstat_flush which calls
-percpu_ref_put.
-
-So the patch 84d7d462b16d only exposes the reference problem in
-block cgroup.
-
-Best Regards
-Xiao
-
+Jes
