@@ -2,30 +2,30 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8E65C678D4
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Mar 2023 20:47:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D1E5C6FA8E
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Mar 2023 20:47:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229455AbjCBUqx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 2 Mar 2023 15:46:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43708 "EHLO
+        id S230120AbjCBUqu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 2 Mar 2023 15:46:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229864AbjCBUqu (ORCPT
+        with ESMTP id S229455AbjCBUqu (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Mar 2023 15:46:50 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6049843938;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EC8A43937;
         Thu,  2 Mar 2023 12:46:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=TtTbUH5PQh3QevctuMber+EjZGKoMVpZ7Bm0T6SOQ6g=; b=houTJrT5MUluykuM7s1Uc148K3
-        GhLI9ASwlgAnteOvFMS4cTsCdKtG82GtTT4Zcr9HncBDiN2PA/JjUo9peW7g1cx2BhR4//0t/yscv
-        5IpFo0vcRylXz5s7cE4j0GUn5BKxF1V3uGlaVF0kLGgZuReSbCP/VPJVjuNYboAkpG/PiDxNyDUra
-        cVS+I7dVkXOuXr7xnABfgxQLYK8/WfVd3pUiuNrtYXMwDKui183PRS9ebugKbOpGbY3Y5TBFq3kbQ
-        ndzN/NkOUhn281UgUQr5UWaEuzp2/EgEHwN9hb5K87XzVbBxcVXtt+E3QheP8aaBbeZpR/TXb+Prl
-        oswf6iaA==;
+        bh=dtfyNVshuDQIj+dlbLKUh3FrBpHjPuB+OiDl4kHMg0w=; b=y+/KNE5d+TW3hH8L9Iql5pMuDY
+        mtQ2q1980lq3pkwG/xQP1LmilCyPNzezGqF7q0DG5V7xsGEwDTYwL1JvJCDFTe/zRXH57HGHD5QW/
+        O8UeGtO2rrvC7q1JiYXTkhaSl2XwOkiMf9u7Bw475hl1I50DYfKypH7bafzPo/5auQO5nAWWpyMzo
+        gGUrJvFV6cuTyc3hE4lyn5hDmXOrOPtNk1IXXmXNQPVhLjpjwJ7GPmbWttNzvSv3PP/4O3nghH0oh
+        Q9RypKa5XuLJaNXMpBIQPO6xY6fjA5jHIzzVMBlTxnFZ6w8BOSv37SOKMsJSXJC05q7iNhPjFZil9
+        SHo+B+Mg==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pXpoc-003HXQ-HE; Thu, 02 Mar 2023 20:46:14 +0000
+        id 1pXpoc-003HXY-T5; Thu, 02 Mar 2023 20:46:14 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     ebiederm@xmission.com, keescook@chromium.org, yzaikin@google.com,
         jejb@linux.ibm.com, martin.petersen@oracle.com, minyard@acm.org,
@@ -43,9 +43,9 @@ Cc:     j.granados@samsung.com, zhangpeng362@huawei.com,
         linux-hyperv@vger.kernel.org,
         openipmi-developer@lists.sourceforge.net,
         linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 3/7] hv: simplify sysctl registration
-Date:   Thu,  2 Mar 2023 12:46:08 -0800
-Message-Id: <20230302204612.782387-4-mcgrof@kernel.org>
+Subject: [PATCH 7/7] xen: simplify sysctl registration for balloon
+Date:   Thu,  2 Mar 2023 12:46:12 -0800
+Message-Id: <20230302204612.782387-8-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20230302204612.782387-1-mcgrof@kernel.org>
 References: <20230302204612.782387-1-mcgrof@kernel.org>
@@ -57,43 +57,52 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 register_sysctl_table() is a deprecated compatibility wrapper.
-register_sysctl() can do the directory creation for you so just use
-that.
+register_sysctl_init() can do the directory creation for you so just
+use that.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/hv/vmbus_drv.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ drivers/xen/balloon.c | 20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index d24dd65b33d4..229353f1e9c2 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1460,15 +1460,6 @@ static struct ctl_table hv_ctl_table[] = {
- 	{}
+diff --git a/drivers/xen/balloon.c b/drivers/xen/balloon.c
+index 617a7f4f07a8..586a1673459e 100644
+--- a/drivers/xen/balloon.c
++++ b/drivers/xen/balloon.c
+@@ -97,24 +97,6 @@ static struct ctl_table balloon_table[] = {
+ 	{ }
  };
  
--static struct ctl_table hv_root_table[] = {
+-static struct ctl_table balloon_root[] = {
 -	{
--		.procname	= "kernel",
+-		.procname	= "balloon",
 -		.mode		= 0555,
--		.child		= hv_ctl_table
+-		.child		= balloon_table,
 -	},
--	{}
+-	{ }
 -};
 -
- /*
-  * vmbus_bus_init -Main vmbus driver initialization routine.
-  *
-@@ -1547,7 +1538,7 @@ static int vmbus_bus_init(void)
- 		 * message recording won't be available in isolated
- 		 * guests should the following registration fail.
- 		 */
--		hv_ctl_table_hdr = register_sysctl_table(hv_root_table);
-+		hv_ctl_table_hdr = register_sysctl("kernel", hv_ctl_table);
- 		if (!hv_ctl_table_hdr)
- 			pr_err("Hyper-V: sysctl table register error");
+-static struct ctl_table xen_root[] = {
+-	{
+-		.procname	= "xen",
+-		.mode		= 0555,
+-		.child		= balloon_root,
+-	},
+-	{ }
+-};
+-
+ #else
+ #define xen_hotplug_unpopulated 0
+ #endif
+@@ -747,7 +729,7 @@ static int __init balloon_init(void)
+ #ifdef CONFIG_XEN_BALLOON_MEMORY_HOTPLUG
+ 	set_online_page_callback(&xen_online_page);
+ 	register_memory_notifier(&xen_memory_nb);
+-	register_sysctl_table(xen_root);
++	register_sysctl_init("xen/balloon", balloon_table);
+ #endif
  
+ 	balloon_add_regions();
 -- 
 2.39.1
 
