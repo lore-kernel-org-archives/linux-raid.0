@@ -2,160 +2,171 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18CFEC7EE23
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Mar 2023 02:55:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E20F3C6FA8E
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Mar 2023 09:06:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229808AbjCBCzV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Mar 2023 21:55:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46958 "EHLO
+        id S229890AbjCBJGP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 2 Mar 2023 04:06:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229644AbjCBCzU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Mar 2023 21:55:20 -0500
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2051.outbound.protection.outlook.com [40.107.237.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A1CF4AFE6
-        for <linux-raid@vger.kernel.org>; Wed,  1 Mar 2023 18:55:10 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ig3Cb8M3QLIuL/fHgyxOTCNFbkhRuM+LWuOSumwpULd8vylTUL5XdNAeW0MoCL3zdmAOUzfU4/8hmE/pDg81VAw6Np2FgJE0Wx2WdaM6oo9zoR3P2aTWnd+8WlDycVZfXQPgVGdC04ZoawIlFkVgYGxxvQA6t67Q4sMYAduoPqJi7wCOo1k6I2fTC9qMmy0UvSYj3KvUSLet633+RAuk+Qk0QyR2AvplvKPaY4EEK0y+1bct/zvGyqYGV9C7xYQn64QDEI2JQ+Z6h72vTpy6lldrlZWz2NuvT2oqAmC+SfClENxo7MeaWVfu0uAB6vJ07U80zcUW5Y0CFLTlxid93g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=X/sINtcvGT96UtmxlohgGpajBF1ZqTEGk9ekg2EwWCU=;
- b=Q8vCRIjCBSoiBFimrgHTyWVNVDx6a8fUj3IQSBl47gbGO3XggnxMncS/8ykj7Rsls2Rsb3oCZVXbHfG3TLMVPxENbjURmhTUs6ErV1zxd1HjcBQgfCCQ+XZaIuPsa2GINR3pOeSxSuBsp/BFJMxNLhtDovcJPL8oiWzy3aLyN3LbFKXAdKwGpWWt2W+uMEjRfucoB9SP7QVCKkD1Iq6jA+qYMJCy08UsDS7GsTsPOZBYM9SknAcuaHkZvV4zmEd6wLP1s21CHTq6JBueYaMYJMHXivBt9iYbivQrE7mpOrqmQMhQgo933c72/jRBR5S1yj++wChb8mxxy4Ri3/VISQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=X/sINtcvGT96UtmxlohgGpajBF1ZqTEGk9ekg2EwWCU=;
- b=HwW4K7xuRol3DoHCnkQKPYUkptTdaPK0YPguAjnCtkRgXBOok8XS4rBFaeofZY3xdZi1vNluIvVUlzJUZCNiZyOMi79MIl1ejMDSUoojN4AA8rt2YkRI/Xs/YQopcm0g6kSXGtVouEpjZW2cCU1Xmte3m3ONDgjpLflVp4S8g9xlorB3I4JduN6OnD19peRAIlAveJLyMyUhlmVvQk8gQZ9E1YrbwRe/AxwLjkpFZMrYYRO87RBqohgsMsT3D7ZGVNGFJjbfn0LyPWqpJo6I4YfxRvSQh6+Dp7d+Eyh54LCttkU08+C27s/U2QYdvf7Fc7WNSBXlh46sWF6sAXOLWQ==
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
- by PH0PR12MB7959.namprd12.prod.outlook.com (2603:10b6:510:282::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6156.18; Thu, 2 Mar
- 2023 02:55:08 +0000
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::4aaa:495:78b4:1d7c]) by MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::4aaa:495:78b4:1d7c%3]) with mapi id 15.20.6134.026; Thu, 2 Mar 2023
- 02:55:08 +0000
-From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
-To:     Logan Gunthorpe <logang@deltatee.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        Jes Sorensen <jes@trained-monkey.org>
-CC:     Guoqing Jiang <guoqing.jiang@linux.dev>, Xiao Ni <xni@redhat.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>, Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>
-Subject: Re: [PATCH mdadm v7 0/7] Write Zeroes option for Creating Arrays
-Thread-Topic: [PATCH mdadm v7 0/7] Write Zeroes option for Creating Arrays
-Thread-Index: AQHZTH5CkDN5zbYSyUy+onHxdG1FZK7my9EA
-Date:   Thu, 2 Mar 2023 02:55:08 +0000
-Message-ID: <9e998cf6-cf3f-010e-4423-8a6ee2cca0f2@nvidia.com>
-References: <20230301204135.39230-1-logang@deltatee.com>
-In-Reply-To: <20230301204135.39230-1-logang@deltatee.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|PH0PR12MB7959:EE_
-x-ms-office365-filtering-correlation-id: e11601df-ade0-4dcd-5a38-08db1ac98885
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: M4Z0VyQhw5Bm9OYS3g+zo4gvEkqaMPzW6pxPx80wJ/xuieRDpnYQ24+rGbwZnFKBSvFW/Ode+pcVQ1PrP5tECGxlRq3Xa8U0oVuI+uvwdDaOBm2+b5aGfyzw9WYIhE7UZLi6aQ75Sy+MOdry4QTC6qzlKHtC0ERLYlUFWbRPEubxM0SYkp5UtuwZ+gIJpdbROe83MRuw0cpna7/ZJ9FHZzQpYXdWgAx+LXfnTgqg8T2eQt1ms1+gunTN929Naf7T4333HANf5215jKyYUd4wNnTPIfpu8DE6Ra++abeZq443Rzn/yVogWhGDIBtoD+AqQcogiHsYt4nTUmQFYHWmbNq0ubPh+xCjcXS+x4rOdP784MQB+r60VTZgHqe51dfNlnuU9HtDi6OZlxmxg5McQVdYyccUn/+Prt6zr8PH228Ls3/YG6r1MmIZKBq8Rc+bZ1XeIRvcHM/YPzYOF1hhY7r6vYLlzp/BnfvdyoobTkvGaRR2sDCENub0q+a5ygmhxUV1ukG1gMEvRn+PE0/+HpW9N+DIKCkb/c1ZUyitS4NXJtbbATGND8dyDUDIPg5qm9yYGYRwdx6Dz6OONZuTq96zHJ57NX66m9eZmQLj2J+Di+qEZjx7cX2dCnXGiaO0Nw/Y9i4kVkN4LlN1uAIVUteit4FA7e6Gbs1c0Mh9vuE9lVaMuN/+oOdFxhzB58xZ/0IOwelIofvjmgmG4D6HKV1/NKoKv6WzBvPRbWIrnYCaR+kCI7mzP0n3pVQAoXXGFbLk/mC6HHHTFg9DpetX9A==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(376002)(396003)(346002)(39860400002)(136003)(366004)(451199018)(122000001)(31686004)(8936002)(64756008)(66446008)(4326008)(66476007)(6512007)(8676002)(66556008)(38100700002)(41300700001)(53546011)(2616005)(38070700005)(7416002)(186003)(5660300002)(6486002)(110136005)(76116006)(54906003)(91956017)(71200400001)(31696002)(66946007)(6506007)(478600001)(86362001)(36756003)(316002)(83380400001)(2906002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?d2M3WVZuSXZ2bEt0TlFxeElWeXJRMDlDclNiNzRLN0o4RGFVb3hiYzNFOFZT?=
- =?utf-8?B?WTc1aGVEK01FRm5BTCsyVjBBbnpDVkw0S21EdkdBN09YRkhuSDUzcUVranJW?=
- =?utf-8?B?TmdCUHJ1ZEl4ZnJITGlyT2RxcCtnNUVJTG5DVGRBa2s1WHZTaUk3MUtXbGFW?=
- =?utf-8?B?OUJXdXNqYjY0VnhYcVl3NThzMm85NWxPY0pGcnU2bVFta0hvZ1ZCNllYSTZr?=
- =?utf-8?B?OTFDay9YRDZURkpuSGV2VDJzL3JGdnM5OGphU1BpMWkrSHZ6b29DRzdIV0My?=
- =?utf-8?B?WVlLbVl4cnp5OGxzWHhoVjZHbDJJWFQ5TWVmcFZweVF0ZUwwNWloT0JyOUsy?=
- =?utf-8?B?ZnlKT1MwSllwUFFudmtPU3Z1WVFneENuZXZuMy9NVmt1a3RxWkZ3b281bHQ0?=
- =?utf-8?B?MTgxalFXbm1ObnlmMWxLRkd0bk5DSU1jRkdXR2NtVXk0VE80Tnd0WVFyWjZi?=
- =?utf-8?B?N0cwLzNZZGlkeFZFRWp6dTV6a0I4RE5CYkhWVmdGUm1SUUdZcTNEeG9ZV0lx?=
- =?utf-8?B?N01KZjFyOENOeTVtWjB1eEpKNHoxZW03OE10Wk5JMXQvcURFL29kUWkvVTEy?=
- =?utf-8?B?YTRPL3c5ZG9Qd2lVYlFKbExoV2VwRmwxVmJBaVNVMldDbVZvNjI5UUxIeXl4?=
- =?utf-8?B?eVdYZmxra1FQdlJBU2c0WXgwWSs3dmNrTG0wYlRyblkvZnZ2SEJINkhXVkFR?=
- =?utf-8?B?ODkrOVJxWFVxa2NURC9jUjdwYnFGa3dTU2ZQYnVsREdnVFR4YlhiUGZzendU?=
- =?utf-8?B?aVpCZm52bTRlaVZwRi8yQTVsYmMzeVJlZGxJWlpBVzhSWGllVXRlcndRUFBH?=
- =?utf-8?B?MW5UcFRqTkI0bkUyelF2Qlp2dTdiaklmWGl4RWxtMkNqMG54ZDlIa1RGekMw?=
- =?utf-8?B?bGxuSTlIcXJQWUZZSDN6VTJNeXZ2cVh5K0pSWk12UmlBNnErNmNhZU5qM1Fp?=
- =?utf-8?B?VzNzUWRGWk82NElHY2pIWVFHQkxZSWZyK2lZc3FSZ0orUHRCblNJZHNPb0c5?=
- =?utf-8?B?SHk2M3VMdWVPZnhiTU80NmYrWlNpd1NqUW4xUzRHcVFUTmIvdXdubk9idUl2?=
- =?utf-8?B?WDNaMGF3Y3FXckt4UmtYUi9rV1V3QXV2RThBSkJqREtyTDN1UktXY0FTaXph?=
- =?utf-8?B?YjJLR2EzT1ZQRE1ta0pEZlhuUkVmcUpwRXFIUWtVK1hLQWloWmVOc3JqbzBC?=
- =?utf-8?B?OUFMd05JMnJGclBSQnhvemdhaldraGRiM1VjeWpQZHhMQ2FYTGl4MGc0YjNm?=
- =?utf-8?B?NVBzNlR0dmV6bm16M2ZXTnhkU0Y1RE1vM3BOZng0OXF6d25DZ3J3cDFLeVVz?=
- =?utf-8?B?MUt1eUcwVU56aCswNXZjYUlnRjFjS3VpVklqb2R1ZTk4SGtXQ1ZzQXhtOGh3?=
- =?utf-8?B?Ulh0dnVLTzd0RmdzUXF2UldIY0ZYbXE4NENDWjgwd3NtSU9IRUpjZW9UVEcr?=
- =?utf-8?B?QkFhRDI3c1AralRzUzh4czh6SDkyRFBJcGFWMXFxZXJKWFVyNEJTY0lveTY0?=
- =?utf-8?B?ekV0UEt3YnF1TGpvR004NEZpQmN4QjBzVjVkNWsyWjhvT1hKaUJnbmhGeWtS?=
- =?utf-8?B?REMvYUNUYmtSVUdsaEZOTUpOVU9QY2ZwdGU4MDNxM1hGYlRTMllJVWovUmFG?=
- =?utf-8?B?b0IvNEZkMTZ4ejVoV2pWV25HNDZXL3R6VW56b0NxM2ZydHhXRUNKdlo3dFVU?=
- =?utf-8?B?bkU4RkE3MDhubnpmeFZIbmZqSTNHNUVZaFZLSWtQYUtaT0gzY2F1SENLTXlM?=
- =?utf-8?B?TUF1N25XQ051RkRYR3J2eDhJQVBuU2w3ZnllZVczWFlzUGxCTGlxdHB6cGtz?=
- =?utf-8?B?UFNGL2NXMkdaeXAvbmJhcTk0Q0xwUm9UQUl0TkpxVUtLNmxOYXpDVmxRakFJ?=
- =?utf-8?B?aUhmWXNkMm40M2hXU3NDWkMyQ2tDdEV1MkwwSHNJd1h1MlhTaElEaWtBbUxF?=
- =?utf-8?B?L1hSaDc3aDNhK3NYcUpncm5TR0pXa2lGNzNPSDBRQW5nRUllNlhzVitvZGgy?=
- =?utf-8?B?VDBZVmk1L21lNGlUVjIrekRkUWh0bmVSZkJpdzdVMk1oUmVVN3RKajBDREZk?=
- =?utf-8?B?OW1aK1Iyc0J6UHhOZ2NEbnpSeFcyOWUxbFVKZVpndk1neVJ1YWxIMGJubk5y?=
- =?utf-8?B?ZUdEdkI1ZUlPNlhQRVZMcHNKNXY5a3pucXV4dCszWDEwZE1qN0toNE1UdzNT?=
- =?utf-8?Q?Ujw3a1lvgnj2o2LKebzVlmHHi88xWyakUdLUe3f7+oyP?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <250B42DC90A6A74EB01D10CA4B37AD0F@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S229831AbjCBJGN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Mar 2023 04:06:13 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AF303CE1A
+        for <linux-raid@vger.kernel.org>; Thu,  2 Mar 2023 01:05:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1677747921;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Mw0pUZ9sDjEHQUmwnqIdXyuQtiMbJo9Clo2s3e0AQHc=;
+        b=eFK3jJLFfkZ5KeOYm+cm5UHEU/4xtxCXRmZfWPSJUAq/QiTa7XwT04JRH6vJqT5zVbKb1t
+        M1Umx/5MZOQ6I4KYnekzS2mtHDI0sv+7XFMcQdWXMHN2lwGy0vnE9rcTObEc3zDBu+YyU3
+        FXbT1JJn8l/r76mMU+ATKFPabb/4cC0=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-453-KhVefKVENa6FOYYKtkOKhw-1; Thu, 02 Mar 2023 04:05:17 -0500
+X-MC-Unique: KhVefKVENa6FOYYKtkOKhw-1
+Received: by mail-pj1-f72.google.com with SMTP id i6-20020a17090a650600b002372da4819eso5830424pjj.0
+        for <linux-raid@vger.kernel.org>; Thu, 02 Mar 2023 01:05:17 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Mw0pUZ9sDjEHQUmwnqIdXyuQtiMbJo9Clo2s3e0AQHc=;
+        b=P4JekGpXN8fPFYC8r0s1Lpu5wIRs8yyjfT35kkWyXPniKgSGOgpV5R3RPTkSEHPatg
+         c0t2Xb9t/7/Fqhw9dvGoV33qgS5yy0lIB8TNVYWYRJtSYmlY4Re9oWN8d631Zo6k7J8B
+         ffhnkRluOFDxZKa9P2aynDrfiqE95XOpb7ayEqMRVg4rxbzj99533Cgo+RWo0u76Uurq
+         qWZ+f+4kI7ua+tkmgCi1RheENa157xoJXdFsLNQnZmH6k+ZUyfzKvAVDG5mqFfKONCVj
+         n+5x++cBm4p/8e7GHcmhvXqQGchkR6THi2+IrLoCAp7DzL1ipsZyMAs/C2G2H0KyBuau
+         y+Kg==
+X-Gm-Message-State: AO0yUKWl9Y+BnbgRFUvwXS8+oLMVEGh+zCzuW/7OUS4PlJuEM602hcrB
+        4q4ntfAvLytdbBDhr5NCELYgC/+xeN+rhlssCwMj7kvXULE14vn7YQHNuKMNypEnSbYD8flHHon
+        gjVhmrIliKy2fQihu+edHsktXt+qvOBoyLMLljkUzQvtwCPx/
+X-Received: by 2002:a17:90a:748b:b0:231:1dab:f8e with SMTP id p11-20020a17090a748b00b002311dab0f8emr3652666pjk.9.1677747916675;
+        Thu, 02 Mar 2023 01:05:16 -0800 (PST)
+X-Google-Smtp-Source: AK7set/a98r6yL1St5v0m74Iu3Pqvm7UKe8u/gYtRfAtIMZ5+XXRwwBSMcJjdhsIOq+m3QDJJwIs6t0OPRhBFQMyJa0=
+X-Received: by 2002:a17:90a:748b:b0:231:1dab:f8e with SMTP id
+ p11-20020a17090a748b00b002311dab0f8emr3652654pjk.9.1677747916364; Thu, 02 Mar
+ 2023 01:05:16 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e11601df-ade0-4dcd-5a38-08db1ac98885
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Mar 2023 02:55:08.3934
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: bBG1TywZWzFOIlxIsd+2WeFtc0QgTlvDjMW9OQ7sc41emWYQu4XjF0x7iT4Eg5v2YzuH9W6SR7mdvLpy6rC8pw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB7959
+References: <20230224183323.638-1-jonathan.derrick@linux.dev>
+ <20230224183323.638-4-jonathan.derrick@linux.dev> <CALTww2_P6TaV7C5i2k5sUeHOpnqTxjFB-ZA98Y2re+17J5d7Kw@mail.gmail.com>
+ <2f2ba1cb-a053-7494-ce42-4670b66baacf@linux.dev> <CALTww2-ie0Y+0JMQAASKwDhAwcmD-aOuf=_J_GD95ATUi7w-3Q@mail.gmail.com>
+ <b109f953-fd46-6037-c976-f1690cb4ff8b@linux.dev>
+In-Reply-To: <b109f953-fd46-6037-c976-f1690cb4ff8b@linux.dev>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Thu, 2 Mar 2023 17:05:05 +0800
+Message-ID: <CALTww2_dN+B74qPc3X=JofOmAd78rVv6wRWiifSUdU97_Ghqqg@mail.gmail.com>
+Subject: Re: [PATCH v5 3/3] md: Use optimal I/O size for last bitmap page
+To:     Jonathan Derrick <jonathan.derrick@linux.dev>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Reindl Harald <h.reindl@thelounge.net>,
+        Christoph Hellwig <hch@lst.de>,
+        Christoph Hellwig <hch@infradead.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Sushma Kalakota <sushma.kalakota@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-T24gMy8xLzIwMjMgMTI6NDEgUE0sIExvZ2FuIEd1bnRob3JwZSB3cm90ZToNCj4gSGksDQo+IA0K
-PiBUaGlzIGlzIHRoZSBuZXh0IGl0ZXJhdGlvbiBvZiB0aGUgcGF0Y2hzZXQgdG8gYWRkIGEgemVy
-b2luZyBvcHRpb24NCj4gd2hpY2ggYnlwYXNzZXMgdGhlIGluaXRhbCBzeW5jIGZvciBhcnJheXMu
-IFRoaXMgdmVyc2lvbiBvZiB0aGUgcGF0Y2gNCj4gaGFzIHNvbWUgbWlub3IgY2xlYW51cCBhbmQg
-Y29sbGVjdGVkIGEgbnVtYmVyIG9mIHJldmlldyBhbmQgYWNrIHRhZ3MuDQo+IA0KPiBUaGlzIHBh
-dGNoIHNldCBhZGRzIHRoZSAtLXdyaXRlLXplcm9lcyBvcHRpb24gd2hpY2ggd2lsbCBpbXBseQ0K
-PiAtLWFzc3VtZS1jbGVhbiBhbmQgd3JpdGUgemVyb3MgdG8gdGhlIGRhdGEgcmVnaW9uIGluIGVh
-Y2ggZGlzayBiZWZvcmUNCj4gc3RhcnRpbmcgdGhlIGFycmF5LiBUaGlzIGNhbiB0YWtlIHNvbWUg
-dGltZSBzbyBlYWNoIGRpc2sgaXMgZG9uZSBpbg0KPiBwYXJhbGxlbCBpbiBpdHMgb3duIGZvcmsu
-IFRvIG1ha2UgdGhlIGZvcmtpbmcgY29kZSBlYXNpZXIgdG8NCj4gdW5kZXJzdGFuZCB0aGlzIHBh
-dGNoIHNldCBhbHNvIHN0YXJ0cyB3aXRoIHNvbWUgY2xlYW51cCBvZiB0aGUNCj4gZXhpc3Rpbmcg
-Q3JlYXRlIGNvZGUuDQo+IA0KPiBXZSB0ZXN0ZWQgd3JpdGUtemVyb2VzIHJlcXVlc3RzIG9uIGEg
-bnVtYmVyIG9mIG1vZGVybiBudm1lIGRyaXZlcyBvZg0KPiB2YXJpb3VzIG1hbnVmYWN0dXJlcnMg
-YW5kIGZvdW5kIG1vc3QgYXJlIG5vdCBhcyBvcHRpbWl6ZWQgYXMgdGhlDQo+IGRpc2NhcmQgcGF0
-aC4gQSBjb3VwbGUgZHJpdmVzIHRoYXQgd2VyZSB0ZXN0ZWQgZGlkIG5vdCBzdXBwb3J0DQo+IHdy
-aXRlLXplcm9lcyBhdCBhbGwgYnV0IHN0aWxsIHBlcmZvcm1lZCBzaW1pbGFybHkgd2l0aCB0aGUg
-a2VybmVsDQo+IGZhbGxpbmcgYmFjayB0byB3cml0aW5nIHplcm8gcGFnZXMuIFR5cGljYWxseSB3
-ZSBzZWUgaXQgdGFrZSBvbiB0aGUNCj4gb3JkZXIgb2Ygb25lIG1pbnV0ZSBwZXIgMTAwR0Igb2Yg
-ZGF0YSB6ZXJvZWQuDQo+IA0KPiBPbmUgcmVhc29uIHdyaXRlLXplcm9lcyBpcyBzbG93ZXIgdGhh
-biBkaXNjYXJkIGlzIHRoYXQgdG9kYXkncyBOVk1lDQo+IGRldmljZXMgb25seSBhbGxvdyBhYm91
-dCAyTUIgdG8gYmUgemVyb2VkIGluIG9uZSBjb21tYW5kIHdoZXJlIGFzDQo+IHRoZSBlbnRpcmUg
-ZHJpdmUgY2FuIHR5cGljYWxseSBiZSBkaXNjYXJkZWQgaW4gb25lIGNvbW1hbmQuIFBhcnRseSwN
-Cj4gdGhpcyBpcyBhIGxpbWl0YXRpb24gb2YgdGhlIHNwZWMgYXMgdGhlcmUgYXJlIG9ubHkgMTYg
-Yml0cyBhdmFsYWlibGUNCg0KJ3MvYXZhbGFpYmxlL2F2YWlsYWJsZS9nJw0KDQo+IGluIHRoZSB3
-cml0ZS16ZXJvcyBjb21tYW5kIHNpemUgYnV0IGRyaXZlcyBzdGlsbCBkb24ndCBtYXggdGhpcyBv
-dXQuDQo+IEhvcGVmdWxseSwgaW4gdGhlIGZ1dHVyZSB0aGlzIHdpbGwgYWxsIGJlIG9wdGltaXpl
-ZCBhIGJpdCBtb3JlDQo+IGFuZCB0aGlzIHdvcmsgd2lsbCBiZSBhYmxlIHRvIHRha2UgYWR2YW50
-YWdlIG9mIHRoYXQuDQo+IA0KPiBMb2dhbg0KPiANCj4gLS0NCj4gDQo+DQoNCkJhc2VkIG9uIGVh
-cmxpZXIgZGlzY3Vzc2lvbiBhbmQgZmVlZGJhY2sgZnJvbSBNYXJ0aW4gdGhpcw0Kd2hvbGUgc2Vy
-aWVzIGxvb2tzIGdvb2QgdG8gbWUuDQoNClJldmlld2VkLWJ5OiBDaGFpdGFueWEgS3Vsa2Fybmkg
-PGtjaEBudmlkaWEuY29tPg0KDQotY2sNCg0KDQo=
+On Thu, Mar 2, 2023 at 1:57=E2=80=AFAM Jonathan Derrick
+<jonathan.derrick@linux.dev> wrote:
+>
+>
+>
+> On 3/1/2023 5:36 AM, Xiao Ni wrote:
+> > On Wed, Mar 1, 2023 at 7:10=E2=80=AFAM Jonathan Derrick
+> > <jonathan.derrick@linux.dev> wrote:
+> >>
+> >> Hi Xiao
+> >>
+> >> On 2/26/2023 6:56 PM, Xiao Ni wrote:
+> >>> Hi Jonathan
+> >>>
+> >>> I did a test in my environment, but I didn't see such a big
+> >>> performance difference.
+> >>>
+> >>> The first environment:
+> >>> All nvme devices have 512 logical size, 512 phy size, and 0 optimal s=
+ize. Then
+> >>> I used your way to rebuild the kernel
+> >>> /sys/block/nvme0n1/queue/physical_block_size 512
+> >>> /sys/block/nvme0n1/queue/optimal_io_size 4096
+> >>> cat /sys/block/nvme0n1/queue/logical_block_size 512
+> >>>
+> >>> without the patch set
+> >>> write: IOPS=3D68.0k, BW=3D266MiB/s (279MB/s)(15.6GiB/60001msec); 0 zo=
+ne resets
+> >>> with the patch set
+> >>> write: IOPS=3D69.1k, BW=3D270MiB/s (283MB/s)(15.8GiB/60001msec); 0 zo=
+ne resets
+> >>>
+> >>> The second environment:
+> >>> The nvme devices' opt size are 4096. So I don't need to rebuild the k=
+ernel.
+> >>> /sys/block/nvme0n1/queue/logical_block_size
+> >>> /sys/block/nvme0n1/queue/physical_block_size
+> >>> /sys/block/nvme0n1/queue/optimal_io_size
+> >>>
+> >>> without the patch set
+> >>> write: IOPS=3D51.6k, BW=3D202MiB/s (212MB/s)(11.8GiB/60001msec); 0 zo=
+ne resets
+> >>> with the patch set
+> >>> write: IOPS=3D53.5k, BW=3D209MiB/s (219MB/s)(12.2GiB/60001msec); 0 zo=
+ne resets
+> >>>
+> >> Sounds like your devices may not have latency issues at sub-optimal si=
+zes.
+> >> Can you provide biosnoop traces with and without patches?
+> >>
+> >> Still, 'works fine for me' is generally not a reason to reject the pat=
+ches.
+> >
+> > Yes, I can. I tried to install the biosnoop in fedora38 but it failed.
+> > These are the rpm packages I've installed:
+> > bcc-tools-0.25.0-1.fc38.x86_64
+> > bcc-0.25.0-1.fc38.x86_64
+> > python3-bcc-0.25.0-1.fc38.noarch
+> >
+> > Are there other packages that I need to install?
+> >
+> I've had issues with the packaged versions as well
+>
+> Best to install from source:
+> https://github.com/iovisor/bcc/
+> https://github.com/iovisor/bcc/blob/master/INSTALL.md#fedora---source
+>
+Hi Jonathan
+
+I did a test without modifying phys_size and opt_size. And I picked up a pa=
+rt
+of the result:
+
+0.172142    md0_raid10     2094    nvme1n1   W 1225496264 4096      0.01
+0.172145    md0_raid10     2094    nvme0n1   W 1225496264 4096      0.01
+0.172161    md0_raid10     2094    nvme3n1   W 16         4096      0.01
+0.172164    md0_raid10     2094    nvme2n1   W 16         4096      0.01
+0.172166    md0_raid10     2094    nvme1n1   W 16         4096      0.01
+0.172168    md0_raid10     2094    nvme0n1   W 16         4096      0.01
+0.172178    md0_raid10     2094    nvme3n1   W 633254624  4096      0.01
+0.172180    md0_raid10     2094    nvme2n1   W 633254624  4096      0.01
+0.172196    md0_raid10     2094    nvme3n1   W 16         4096      0.01
+0.172199    md0_raid10     2094    nvme2n1   W 16         4096      0.01
+0.172201    md0_raid10     2094    nvme1n1   W 16         4096      0.01
+0.172203    md0_raid10     2094    nvme0n1   W 16         4096      0.01
+0.172213    md0_raid10     2094    nvme3n1   W 1060251672 4096      0.01
+0.172215    md0_raid10     2094    nvme2n1   W 1060251672 4096      0.01
+
+The last column always shows 0.01. Is that the reason I can't see the
+performance
+improvement? What do you think if I use ssd or hdds?
+
+Best Regards
+Xiao
+
