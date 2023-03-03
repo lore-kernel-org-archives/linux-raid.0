@@ -2,144 +2,139 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F43C64EC4
-	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 12:04:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EE27C64EC4
+	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 14:13:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230389AbjCCMEU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 3 Mar 2023 07:04:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52848 "EHLO
+        id S230484AbjCCON3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 3 Mar 2023 09:13:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229925AbjCCMES (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Mar 2023 07:04:18 -0500
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41151768D
-        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 04:04:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677845057; x=1709381057;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=sBZdgMWbEy0igevUcfagRh/lmUV1GKYPzBj9Es4YVwI=;
-  b=LJo47j0sc30HfnOT0h4oke1vpGgQhYislQ/fZOgvMSCP0GE8Mm9eYGIL
-   LRbIObFyLaPMHkXavKnZBG5SzcbcLaZbtpub4WXxczon9tIgg9kib78Kk
-   0LKhJVQH/FD3oZOBUObxJ7IR5WpyNhIBmnUFfNr0gOJA865DTYLO81aCS
-   mCGL1zcf8so1M4Tg4Li2zrGWcM7P+C+C/mem/v51i1aCyZ0ZJl1LpANb5
-   Rnz3Tb8/mfVz3dpsIOfIARAignTWxKXzt7AkVjmHDDUXqbH8lNvaP5jZD
-   UCGcxJ26hHFiqFWCPDqrsmbsqelHYQJdveDO2uO0O7U7NHhDNxDjRdDdn
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10637"; a="337343600"
-X-IronPort-AV: E=Sophos;i="5.98,230,1673942400"; 
-   d="scan'208";a="337343600"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2023 04:04:16 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10637"; a="764398158"
-X-IronPort-AV: E=Sophos;i="5.98,230,1673942400"; 
-   d="scan'208";a="764398158"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.32.104])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2023 04:04:15 -0800
-Date:   Fri, 3 Mar 2023 13:04:10 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Jes Sorensen <jes@trained-monkey.org>
-Cc:     colyli@suse.de, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 2/3] mdadm: refactor ident->name handling
-Message-ID: <20230303130410.000043e0@linux.intel.com>
-In-Reply-To: <0017b6dc-b0c0-7d4e-4765-fcc429b41862@trained-monkey.org>
-References: <20221221115019.26276-1-mariusz.tkaczyk@linux.intel.com>
-        <20221221115019.26276-3-mariusz.tkaczyk@linux.intel.com>
-        <bef57069-acdb-3a2f-b691-2c438c4247fb@trained-monkey.org>
-        <20221229103931.00006ff0@linux.intel.com>
-        <0017b6dc-b0c0-7d4e-4765-fcc429b41862@trained-monkey.org>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S230227AbjCCON2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Mar 2023 09:13:28 -0500
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FD1D12059
+        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 06:13:27 -0800 (PST)
+Received: by mail-ed1-x52f.google.com with SMTP id u9so10944422edd.2
+        for <linux-raid@vger.kernel.org>; Fri, 03 Mar 2023 06:13:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1677852806;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=qF9ypWXd9I+kfFlKAtdMHAbqnAvmJ5qXaJx1ob41Ihc=;
+        b=PeuthebnzoVV4jqVN488cL9G+p4svCin/4Ku3gruJhr4ZsTuJIHjag3g8bJCJDPz/+
+         hk1ZzFBGGH5qeusEIyGjofyphNPC3pxIjpWUqOu5EA1w8wUOgT1923l/CWfsl+kk5APk
+         yTVssTbz75u+klF8F5SMi4JuX9fMPYllltu1KPFmfXPsxgs4gHMwnVo4miip0nd9HeOp
+         QxC5nb24g88IiJrpKXH4VwE9DILoGMvQPGtrkMETb8CH4eV1SAA3pi8SBYFZwceAD3CE
+         YiSO6hbBY7YV730S65ygrpK+DhtgrJnRnemU80SzNnuUD2SFsz6T4tUS6aUQpdR+3Zr1
+         4zAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1677852806;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qF9ypWXd9I+kfFlKAtdMHAbqnAvmJ5qXaJx1ob41Ihc=;
+        b=JgJi1mzgRexmH0SBLRhozdNF4YDUwA4i8cwZbHI4DzM33a5RnJf7a/Lfk+rgXirU+J
+         iX9QrCs3bUNDqXhQzD4akWJSXxr6PZDHmFXGXW9J6Dr5bCgCx3qt1Ut3deDgY5lY8MEQ
+         g4WPUJ5HYnxdr+4LzX8WRU60fX5UM+nZJo7YDk6iF1sXvQVdiSmu0UbsJJtez7RIshbv
+         MMi3FOM5BMbEGPeuZ4Y/KLk2oUzsD3YtNYN0NDDUtUEDxViV1nBjGiE2KpwdZkbE3aIj
+         2fNvehJq3Lm/XbvXFr33V1Uqm4fOsdd3P8GSTKdNFy3YBjXHA0FuIeD+R4GyWU08fGEl
+         Mmtg==
+X-Gm-Message-State: AO0yUKWQoqAa4AcYfUAcNJSBB+4HoxsHMgHCX9YbGkfXni/t2PsY0mTN
+        FAW2WPbOpo/pE0MoW0hW2Cw=
+X-Google-Smtp-Source: AK7set/qBh8tkRrTWX1Y8p0kGV+un+HEdBzI5+eKe3deX1XpfghiWN644zcvuwlz/kpTjVWhR3SApQ==
+X-Received: by 2002:a17:906:33d1:b0:8b1:7ae8:ba79 with SMTP id w17-20020a17090633d100b008b17ae8ba79mr1676145eja.30.1677852806042;
+        Fri, 03 Mar 2023 06:13:26 -0800 (PST)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id h17-20020a17090634d100b008ee5356801dsm986944ejb.187.2023.03.03.06.13.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Mar 2023 06:13:25 -0800 (PST)
+Date:   Fri, 3 Mar 2023 17:13:22 +0300
+From:   Dan Carpenter <error27@gmail.com>
+To:     neilb@suse.de
+Cc:     linux-raid@vger.kernel.org, cip-dev <cip-dev@lists.cip-project.org>
+Subject: [bug report] md: range check slot number when manually adding a
+ spare.
+Message-ID: <e664f254-90a0-42df-8fc8-ad808f6dedeb@kili.mountain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 2 Mar 2023 09:52:31 -0500
-Jes Sorensen <jes@trained-monkey.org> wrote:
+[ Ancient code, but you're still at the same email address...  -dan ]
 
-> On 12/29/22 04:39, Mariusz Tkaczyk wrote:
-> 
-> Hi Mariusz,
-> 
-> Apologies for the slow response on this one.
-> 
-> > On Wed, 28 Dec 2022 10:07:22 -0500
-> > Jes Sorensen <jes@trained-monkey.org> wrote:  
-> 
-> >> I appreciate the work to consolidate duplicate code. However, I am not a
-> >> fan of new typedefs, in addition you return status_t codes in functions
-> >> changed to return error_t, which is inconsistent.  
-> > 
-> > Hi Jes,
-> > Indeed, initially I named it as error_t and I forgot to update that part.
-> > I'm surprised that compiler didn't catch it. Thanks!
-> > 
-> > About typedef, I did it same for IMSM already:
-> > https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/super-intel.c#n376
-> > I can change that but I wanted to define a common solution propagated later
-> > to other mdadm parts.  
-> 
-> I am really on the fence on this one. I'd very much like to see us get
-> away from the nasty 0/1/2 error codes we currently have all over the
-> place, but I am also vary of reinventing the wheel.
-> 
-> I must admit I missed it in super-intel.c
-> 
-> >> I would prefer if we move towards standard POSIX error codes instead of
-> >> trying to invent new ones.
-> >>  
-> > 
-> > The POSIX errors are defined for communication with kernel space and
-> > unfortunately they are not detailed enough. For example "undefined" or
-> > just "general_error" statuses are not available.
-> > https://man7.org/linux/man-pages/man3/errno.3.html
-> > It the approach I proposed we are free to create exact errors we need.
-> > Later we can create a map of error values to string and create dedicated
-> > error print functions.  
-> 
-> I agree that POSIX codes aren't perfect, however at least for the
-> current errors I see reported in this patch -EINVAL or -E2BIG ought to
-> cover. If you think there are many cases where we cannot map well to
-> POSIX, then I would be OK with it, but I would prefer to go straight to
-> a global error code space rather than one per subsystem.
-> 
-> Thoughts?
-> 
-Hi Jes,
+Hello NeilBrown,
 
-I was in this place with ledmon project:
-https://github.com/intel/ledmon/blob/master/src/status.h
+The patch ba1b41b6b4e3: "md: range check slot number when manually
+adding a spare." from Jan 14, 2011, leads to the following Smatch
+static checker warning:
 
-Yeah, it seems to be overhead to maintain error enum per each subsystem yet, you
-are right here. I don't plan huge code reactor to make those enums common used.
-If we don't plan mdadm library, then there is no need to handle define multiple
-enums. It has real sense if we want to hide some statuses from library user
-inside our code.
+drivers/md/md.c:3170 slot_store() warn: no lower bound on 'slot'
+drivers/md/md.c:3172 slot_store() warn: no lower bound on 'slot'
+drivers/md/md.c:3190 slot_store() warn: no lower bound on 'slot'
 
-I would like to handle internal error definitions because I think that mdadm
-deserves flexibility to define status what it needs. In general case we needs
-just *error* but when it comes to more advanced flows I can see multiple
-meaningful statuses we need to differentiate. The goal here is to make errors
-straightforward.
+drivers/md/md.c
+    3117 static ssize_t
+    3118 slot_store(struct md_rdev *rdev, const char *buf, size_t len)
+    3119 {
+    3120         int slot;
+    3121         int err;
+    3122 
+    3123         if (test_bit(Journal, &rdev->flags))
+    3124                 return -EBUSY;
+    3125         if (strncmp(buf, "none", 4)==0)
+    3126                 slot = -1;
+    3127         else {
+    3128                 err = kstrtouint(buf, 10, (unsigned int *)&slot);
 
-I don't consider it as reinventing the wheel because the software is free
-to define error handlers as it wants. There are no restrictions and POSIX codes
-are not a solution. POSIX codes are available to us because we need to
-understand kernel error codes and we need to handle them and react
-appropriately.
+slot comes from the user.
 
-Simply, I would like to have error possibly the best self described and the
-error enum allows me to achieve that. It also forces developers to
-follow the statuses we have there because if something like that is defined,
-there is high probability that maintainer will ask developer to use this enum
-in new function and use meaningful error codes respectively.
+    3129                 if (err < 0)
+    3130                         return err;
+    3131         }
+    3132         if (rdev->mddev->pers && slot == -1) {
+    3133                 /* Setting 'slot' on an active array requires also
+    3134                  * updating the 'rd%d' link, and communicating
+    3135                  * with the personality with ->hot_*_disk.
+    3136                  * For now we only support removing
+    3137                  * failed/spare devices.  This normally happens automatically,
+    3138                  * but not when the metadata is externally managed.
+    3139                  */
+    3140                 if (rdev->raid_disk == -1)
+    3141                         return -EEXIST;
+    3142                 /* personality does all needed checks */
+    3143                 if (rdev->mddev->pers->hot_remove_disk == NULL)
+    3144                         return -EINVAL;
+    3145                 clear_bit(Blocked, &rdev->flags);
+    3146                 remove_and_add_spares(rdev->mddev, rdev);
+    3147                 if (rdev->raid_disk >= 0)
+    3148                         return -EBUSY;
+    3149                 set_bit(MD_RECOVERY_NEEDED, &rdev->mddev->recovery);
+    3150                 md_wakeup_thread(rdev->mddev->thread);
+    3151         } else if (rdev->mddev->pers) {
+    3152                 /* Activating a spare .. or possibly reactivating
+    3153                  * if we ever get bitmaps working here.
+    3154                  */
+    3155                 int err;
+    3156 
+    3157                 if (rdev->raid_disk != -1)
+    3158                         return -EBUSY;
+    3159 
+    3160                 if (test_bit(MD_RECOVERY_RUNNING, &rdev->mddev->recovery))
+    3161                         return -EBUSY;
+    3162 
+    3163                 if (rdev->mddev->pers->hot_add_disk == NULL)
+    3164                         return -EINVAL;
+    3165 
+    3166                 if (slot >= rdev->mddev->raid_disks &&
+    3167                     slot >= rdev->mddev->raid_disks + rdev->mddev->delta_disks)
+    3168                         return -ENOSPC;
 
-I would like to add this enum to mdadm.h but I will avoid to adding more enum
-in the future if there is no need to. Let me know if that works for you.
+-1 is valid, but should this check if slot < -1?
 
-Thanks for discussion!
-Mariusz
+    3169 
+--> 3170                 rdev->raid_disk = slot;
+
+
+regards,
+dan carpenter
