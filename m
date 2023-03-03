@@ -2,106 +2,83 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFAFBC7EE2D
-	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 16:10:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37684C7EE2D
+	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 16:21:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231201AbjCCQKE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 3 Mar 2023 11:10:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50628 "EHLO
+        id S229916AbjCCQVq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 3 Mar 2023 11:21:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229766AbjCCQKD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Mar 2023 11:10:03 -0500
-Received: from mail-vs1-xe32.google.com (mail-vs1-xe32.google.com [IPv6:2607:f8b0:4864:20::e32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A210559F3
-        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 08:10:02 -0800 (PST)
-Received: by mail-vs1-xe32.google.com with SMTP id d7so2843677vsj.2
-        for <linux-raid@vger.kernel.org>; Fri, 03 Mar 2023 08:10:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1677859801;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YbMp3DLztwglwPUt7HBJ0cjsz/tRxK7DzxpYTAHxTog=;
-        b=ML28dBIVhIA+sQYhd7Ehdi/7U3cqkApmAI5j55/z0qQLa4iBLtB4Hbq7BUgrvtgpgC
-         7dQe9+OsP1ycEo32weVZmNEDylAn5H3JShAGOlmFlT8HYEj9sh6kxp7cFK+CKYJ52pD9
-         8wPJ0nDVK2iY6QtBVOiKmA8egpAk2K6qj78SSz3dLrMuaBeAe/9RUXw8ExZmP1VyDEle
-         beP9qOf1QarYvlEvd8/+QapZcS9Y57NZoq3GytItD1p3FCOanu2JoTdb+tfqhswl0Y+L
-         JABWh127WijAIZRDMvg7k3kufvj34BQwWRB2c2z38e9a+UjXQ1ludMMjt11NzcDNAd6T
-         Ijzw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677859801;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YbMp3DLztwglwPUt7HBJ0cjsz/tRxK7DzxpYTAHxTog=;
-        b=ImsuE7M/fPMAzUWTMNIAwOTF6oxgKr7vUXnT3XY8vYkyChDHKranj0IDURLzsOVDrn
-         zMjXkQfOgMTkF/eSIDt3Hj4DBhx/InXAgGcWJte7oHQ+cs/45BDU63R2FDYhT8iAQYd1
-         ciqCx++XYHW6OHXmINdvBV+/l4B5f7R6Su67jeYcgBpaE2QVy2Uy3SjTvoccFWXv5cN1
-         iXNeqOnz0K84b5PmFRkJuyVPUdAoV4GOhIPeIEMbC8e9AzE9f7dMF8eY74LAla8jAUFq
-         pO4Y4Z9jcYX0gTBUbSSfqOIJQINRc7vi7r+8gUe7cjLz/EGbZyBIp3iclt6Xpvhl6PWl
-         h4xg==
-X-Gm-Message-State: AO0yUKW7+IbQTW1DGsqiTQSedKlfwZywkFcTzV/PkdwTA97//DNpuxEE
-        uHmaq7cSMTAnvb/xXdk58e4DXvfqVIu8MvfYksmwoVYZ6uQqlQ==
-X-Google-Smtp-Source: AK7set/1VwKLUlBky/Xz3u03Fq/tfM1z2EQ9+cmAIzD/zrnvIPqvhN8xJSU/dqKxLimr8CajcPXD4j4xRewi2fyte24=
-X-Received: by 2002:a05:6102:21ae:b0:412:364c:68be with SMTP id
- i14-20020a05610221ae00b00412364c68bemr1482986vsb.7.1677859801578; Fri, 03 Mar
- 2023 08:10:01 -0800 (PST)
+        with ESMTP id S229890AbjCCQVp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Mar 2023 11:21:45 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FDA7EF8F
+        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 08:21:40 -0800 (PST)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 2CDE822CE0;
+        Fri,  3 Mar 2023 16:21:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1677860499; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=MaC8vukfPtFma9hLti/ldnwZtMVnCXfpspOfTd0mCCo=;
+        b=QWK7RfBzpou/aztKuQU20x27WDYUJHq/5jF1bvCtBdR/XzOOuJGwIAGXbeAISPyd5kD7cr
+        /JVqMRtuz2Z7hQITz6YlytjOFODDzHLTZfIuwiiB30/6foWg+LbsV9xcvG3+97ktCY6edj
+        250aK4fvy4lLfcyt0xVLKc2JCUXyObI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1677860499;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=MaC8vukfPtFma9hLti/ldnwZtMVnCXfpspOfTd0mCCo=;
+        b=z/MLtnHzdF7r5nNCH6jPRp560+B02trh2gCPlHjLMeC9pKfD9zL9GBR/koJDDoBwFBOq16
+        r3XjM7J/v8tahwDQ==
+Received: from localhost.localdomain (unknown [10.163.16.22])
+        by relay2.suse.de (Postfix) with ESMTP id 4D6372C141;
+        Fri,  3 Mar 2023 16:21:37 +0000 (UTC)
+From:   Coly Li <colyli@suse.de>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
+        pmenzel@molgen.mpg.de, Coly Li <colyli@suse.de>
+Subject: [PATCH v2 0/6] rebased patch set from Wu Guanghao 
+Date:   Sat,  4 Mar 2023 00:21:29 +0800
+Message-Id: <20230303162135.45831-1-colyli@suse.de>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-References: <e664f254-90a0-42df-8fc8-ad808f6dedeb@kili.mountain>
-In-Reply-To: <e664f254-90a0-42df-8fc8-ad808f6dedeb@kili.mountain>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Fri, 3 Mar 2023 10:09:50 -0600
-Message-ID: <CAAMCDedsGtWcwe4KY9SgdciXoHYeM+YO4U7v-QCRnL5PqQTs9A@mail.gmail.com>
-Subject: Re: [bug report] md: range check slot number when manually adding a spare.
-To:     Dan Carpenter <error27@gmail.com>
-Cc:     neilb@suse.de, linux-raid@vger.kernel.org,
-        cip-dev <cip-dev@lists.cip-project.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Mar 3, 2023 at 8:31=E2=80=AFAM Dan Carpenter <error27@gmail.com> wr=
-ote:
->
-> [ Ancient code, but you're still at the same email address...  -dan ]
->
-> Hello NeilBrown,
->
-> The patch ba1b41b6b4e3: "md: range check slot number when manually
-> adding a spare." from Jan 14, 2011, leads to the following Smatch
-> static checker warning:
->
-> drivers/md/md.c:3170 slot_store() warn: no lower bound on 'slot'
-> drivers/md/md.c:3172 slot_store() warn: no lower bound on 'slot'
-> drivers/md/md.c:3190 slot_store() warn: no lower bound on 'slot'
->
-> drivers/md/md.c
->     3117 static ssize_t
->     3118 slot_store(struct md_rdev *rdev, const char *buf, size_t len)
->     3119 {
->     3120         int slot;
->     3121         int err;
->     3122
->     3123         if (test_bit(Journal, &rdev->flags))
->     3124                 return -EBUSY;
->     3125         if (strncmp(buf, "none", 4)=3D=3D0)
->     3126                 slot =3D -1;
->     3127         else {
->     3128                 err =3D kstrtouint(buf, 10, (unsigned int *)&slo=
-t);
->
-> slot comes from the user.
->
->     3129                 if (err < 0)
->     3130                         return err;
->     3131         }
+This is the rebased patch set from Wu Guanghao, all the patches can
+be applied on top of commit 0a07dea8d3b78 ("Mdmonitor: Refactor
+check_one_sharer() for better error handling") from the mdadm tree.
 
-kstrtouint is string to unsigned int, it has this code:
+The patch from me is to solve conflict for the first patch of Guanghao.
+In order to make the commit logs to be more understandable, I recompose
+some patch subjects or commit logs.
 
-if (tmp !=3D (unsigned int)tmp)
-return -ERANGE;
+The V2 series only changes the patch subject of mine by the suggestion
+from Paul Menzel. And nothing more changed from V1.
 
-And so will not return a negative number without an error, so 0 is the
-lower limit as enforced by the function.
+Thank you in advance for taking them.
+
+Coly Li
+---
+Coly Li (1):
+  util.c: reorder code lines in parse_layout_faulty()
+
+Wu Guanghao (5):
+  util.c: fix memleak in parse_layout_faulty()
+  Detail.c: fix memleak in Detail()
+  isuper-intel.c: fix double free in load_imsm_mpb()
+  super-intel.c: fix memleak in find_disk_attached_hba()
+  super-ddf.c: fix memleak in get_vd_num_of_subarray()
+
+ Detail.c      |  1 +
+ super-ddf.c   |  9 +++++++--
+ super-intel.c |  5 +++--
+ util.c        | 11 ++++++++---
+ 4 files changed, 19 insertions(+), 7 deletions(-)
+
+-- 
+2.39.2
+
