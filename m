@@ -2,129 +2,144 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95EAFC64EC4
-	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 10:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F43C64EC4
+	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 12:04:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229804AbjCCKf0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 3 Mar 2023 05:35:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47494 "EHLO
+        id S230389AbjCCMEU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 3 Mar 2023 07:04:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbjCCKfZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Mar 2023 05:35:25 -0500
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B1232CFD5
-        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 02:35:24 -0800 (PST)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id A1D0661CC40F9;
-        Fri,  3 Mar 2023 11:35:21 +0100 (CET)
-Message-ID: <a4929e12-a2da-be8f-7d24-9f7ae4abed59@molgen.mpg.de>
-Date:   Fri, 3 Mar 2023 11:35:21 +0100
+        with ESMTP id S229925AbjCCMES (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Mar 2023 07:04:18 -0500
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41151768D
+        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 04:04:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1677845057; x=1709381057;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=sBZdgMWbEy0igevUcfagRh/lmUV1GKYPzBj9Es4YVwI=;
+  b=LJo47j0sc30HfnOT0h4oke1vpGgQhYislQ/fZOgvMSCP0GE8Mm9eYGIL
+   LRbIObFyLaPMHkXavKnZBG5SzcbcLaZbtpub4WXxczon9tIgg9kib78Kk
+   0LKhJVQH/FD3oZOBUObxJ7IR5WpyNhIBmnUFfNr0gOJA865DTYLO81aCS
+   mCGL1zcf8so1M4Tg4Li2zrGWcM7P+C+C/mem/v51i1aCyZ0ZJl1LpANb5
+   Rnz3Tb8/mfVz3dpsIOfIARAignTWxKXzt7AkVjmHDDUXqbH8lNvaP5jZD
+   UCGcxJ26hHFiqFWCPDqrsmbsqelHYQJdveDO2uO0O7U7NHhDNxDjRdDdn
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10637"; a="337343600"
+X-IronPort-AV: E=Sophos;i="5.98,230,1673942400"; 
+   d="scan'208";a="337343600"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2023 04:04:16 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10637"; a="764398158"
+X-IronPort-AV: E=Sophos;i="5.98,230,1673942400"; 
+   d="scan'208";a="764398158"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.32.104])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2023 04:04:15 -0800
+Date:   Fri, 3 Mar 2023 13:04:10 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Jes Sorensen <jes@trained-monkey.org>
+Cc:     colyli@suse.de, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 2/3] mdadm: refactor ident->name handling
+Message-ID: <20230303130410.000043e0@linux.intel.com>
+In-Reply-To: <0017b6dc-b0c0-7d4e-4765-fcc429b41862@trained-monkey.org>
+References: <20221221115019.26276-1-mariusz.tkaczyk@linux.intel.com>
+        <20221221115019.26276-3-mariusz.tkaczyk@linux.intel.com>
+        <bef57069-acdb-3a2f-b691-2c438c4247fb@trained-monkey.org>
+        <20221229103931.00006ff0@linux.intel.com>
+        <0017b6dc-b0c0-7d4e-4765-fcc429b41862@trained-monkey.org>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH mdadm v7 4/7] mdadm: Introduce pr_info()
-Content-Language: en-US
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-raid@vger.kernel.org, Jes Sorensen <jes@trained-monkey.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Coly Li <colyli@suse.de>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Jonmichael Hands <jm@chia.net>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Kinga Tanska <kinga.tanska@linux.intel.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>
-References: <20230301204135.39230-1-logang@deltatee.com>
- <20230301204135.39230-5-logang@deltatee.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20230301204135.39230-5-logang@deltatee.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Logan,
+On Thu, 2 Mar 2023 09:52:31 -0500
+Jes Sorensen <jes@trained-monkey.org> wrote:
 
-
-Am 01.03.23 um 21:41 schrieb Logan Gunthorpe:
-> Feedback was given to avoid informational pr_err() calls that print
-> to stderr, even though that's done all through out the code.
+> On 12/29/22 04:39, Mariusz Tkaczyk wrote:
 > 
-> Using printf() directly doesn't maintain the same format (an "mdadm"
-> prefix on every line.
-
-Just a nit, that the closing ) is missing.
-
-In the summary you could use: Introduce and use pr_info()
-
-> So introduce pr_info() which prints to stdout with the same format
-> and use it for a couple informational pr_err() calls in Create().
+> Hi Mariusz,
 > 
-> Future work can make this call used in more cases.
+> Apologies for the slow response on this one.
 > 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Acked-by: Kinga Tanska <kinga.tanska@linux.intel.com>
-> Reviewed-by: Xiao Ni <xni@redhat.com>
-> Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
-> Acked-by: Coly Li <colyli@suse.de>
-> ---
->   Create.c | 7 ++++---
->   mdadm.h  | 2 ++
->   2 files changed, 6 insertions(+), 3 deletions(-)
+> > On Wed, 28 Dec 2022 10:07:22 -0500
+> > Jes Sorensen <jes@trained-monkey.org> wrote:  
 > 
-> diff --git a/Create.c b/Create.c
-> index 6a0446644e04..4acda30c5256 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -984,11 +984,12 @@ int Create(struct supertype *st, char *mddev,
->   
->   			mdi = sysfs_read(-1, devnm, GET_VERSION);
->   
-> -			pr_err("Creating array inside %s container %s\n",
-> +			pr_info("Creating array inside %s container %s\n",
->   				mdi?mdi->text_version:"managed", devnm);
->   			sysfs_free(mdi);
->   		} else
-> -			pr_err("Defaulting to version %s metadata\n", info.text_version);
-> +			pr_info("Defaulting to version %s metadata\n",
-> +				info.text_version);
->   	}
->   
->   	map_update(&map, fd2devnm(mdfd), info.text_version,
-> @@ -1145,7 +1146,7 @@ int Create(struct supertype *st, char *mddev,
->   			ioctl(mdfd, RESTART_ARRAY_RW, NULL);
->   		}
->   		if (c->verbose >= 0)
-> -			pr_err("array %s started.\n", mddev);
-> +			pr_info("array %s started.\n", mddev);
->   		if (st->ss->external && st->container_devnm[0]) {
->   			if (need_mdmon)
->   				start_mdmon(st->container_devnm);
-> diff --git a/mdadm.h b/mdadm.h
-> index 13f8b4cb5a6b..8bd65fba1887 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1852,6 +1852,8 @@ static inline int xasprintf(char **strp, const char *fmt, ...) {
->   #endif
->   #define cont_err(fmt ...) fprintf(stderr, "       " fmt)
->   
-> +#define pr_info(fmt, args...) printf("%s: "fmt, Name, ##args)
-> +
->   void *xmalloc(size_t len);
->   void *xrealloc(void *ptr, size_t len);
->   void *xcalloc(size_t num, size_t size);
+> >> I appreciate the work to consolidate duplicate code. However, I am not a
+> >> fan of new typedefs, in addition you return status_t codes in functions
+> >> changed to return error_t, which is inconsistent.  
+> > 
+> > Hi Jes,
+> > Indeed, initially I named it as error_t and I forgot to update that part.
+> > I'm surprised that compiler didn't catch it. Thanks!
+> > 
+> > About typedef, I did it same for IMSM already:
+> > https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/super-intel.c#n376
+> > I can change that but I wanted to define a common solution propagated later
+> > to other mdadm parts.  
+> 
+> I am really on the fence on this one. I'd very much like to see us get
+> away from the nasty 0/1/2 error codes we currently have all over the
+> place, but I am also vary of reinventing the wheel.
+> 
+> I must admit I missed it in super-intel.c
+> 
+> >> I would prefer if we move towards standard POSIX error codes instead of
+> >> trying to invent new ones.
+> >>  
+> > 
+> > The POSIX errors are defined for communication with kernel space and
+> > unfortunately they are not detailed enough. For example "undefined" or
+> > just "general_error" statuses are not available.
+> > https://man7.org/linux/man-pages/man3/errno.3.html
+> > It the approach I proposed we are free to create exact errors we need.
+> > Later we can create a map of error values to string and create dedicated
+> > error print functions.  
+> 
+> I agree that POSIX codes aren't perfect, however at least for the
+> current errors I see reported in this patch -EINVAL or -E2BIG ought to
+> cover. If you think there are many cases where we cannot map well to
+> POSIX, then I would be OK with it, but I would prefer to go straight to
+> a global error code space rather than one per subsystem.
+> 
+> Thoughts?
+> 
+Hi Jes,
 
-Acked-by: Paul Menzel <pmenzel@molgen.mpg.de>
+I was in this place with ledmon project:
+https://github.com/intel/ledmon/blob/master/src/status.h
 
+Yeah, it seems to be overhead to maintain error enum per each subsystem yet, you
+are right here. I don't plan huge code reactor to make those enums common used.
+If we don't plan mdadm library, then there is no need to handle define multiple
+enums. It has real sense if we want to hide some statuses from library user
+inside our code.
 
-Kind regards,
+I would like to handle internal error definitions because I think that mdadm
+deserves flexibility to define status what it needs. In general case we needs
+just *error* but when it comes to more advanced flows I can see multiple
+meaningful statuses we need to differentiate. The goal here is to make errors
+straightforward.
 
-Paul
+I don't consider it as reinventing the wheel because the software is free
+to define error handlers as it wants. There are no restrictions and POSIX codes
+are not a solution. POSIX codes are available to us because we need to
+understand kernel error codes and we need to handle them and react
+appropriately.
+
+Simply, I would like to have error possibly the best self described and the
+error enum allows me to achieve that. It also forces developers to
+follow the statuses we have there because if something like that is defined,
+there is high probability that maintainer will ask developer to use this enum
+in new function and use meaningful error codes respectively.
+
+I would like to add this enum to mdadm.h but I will avoid to adding more enum
+in the future if there is no need to. Let me know if that works for you.
+
+Thanks for discussion!
+Mariusz
