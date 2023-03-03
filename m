@@ -2,192 +2,216 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A699DC7EE30
-	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 01:00:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BDBBC6FA8E
+	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 01:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229810AbjCCBAE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 2 Mar 2023 20:00:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44534 "EHLO
+        id S229538AbjCCB4l (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 2 Mar 2023 20:56:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbjCCBAD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Mar 2023 20:00:03 -0500
-Received: from BN3PR00CU001-vft-obe.outbound.protection.outlook.com (mail-eastus2azon11020026.outbound.protection.outlook.com [52.101.56.26])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 856F7241DA;
-        Thu,  2 Mar 2023 17:00:01 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AuvQ9CDuHTMoZoDb9rs1DRZD52BGA2lguPZ0TBoSd6InI4TRNTWQYv306bTWu8JaofJ9ALgDDCpx5MQV+F9V0R/aDN0T4sdhUxGJpwTq+Qy/6+fQ1pII3YOALF7R9JNwRQSl6cTCIG1mOzBevY4Dq5wXVy7WMN52ZFT5JKtsflH+AZXAS4u0Y0c+skSVPDuK5noB87ZonlrRe8Gx596LC/5bWOCJoeBEAsH70F2Yew+umsSwnIHQ4N1s1R0kaEHVBuKEz9HqjXa0bahlIZqw23dFMNMUvLM5cTNCj3uAtVf8yQqX8PkJKKT/OLKq1tJrYHRSgAqwVspHcaNOkKxqeA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=hcwaIoYuY8LkEKc/K8Y1d7YqRltWlySlqVn09ozurWo=;
- b=KTN6sLYr7jCChpiimVQRmeG2pwlp5F1YONzPfwqk82Bo5gP1hIN0ts/5vmbyLbbquIrmOlG+OAAmFY/CWH+jNmOzSYJE4fLLH6KpJIZb7HeqhrYmICTHqU9e1VIz/m1/mbD13u3Y1QknMA6ft0MJyeiU4vpb8xGjb0bC1CsMsUrRYDIgaDJdzpIuNA8f7IOcoQXb3vhAARofFUUYjUSmcEld+fYhxjQYxcRSBqHog/G4m3E/USZntIZ5gGJ1FM/LdpM3piFFMUfihHzYlZD1u+Ae8oaXt4OQ9JKCuB8Fez1VYUlxDabRUGJDItRZQUJhPDb77bi4tGv2VN2halZT1g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hcwaIoYuY8LkEKc/K8Y1d7YqRltWlySlqVn09ozurWo=;
- b=LVLreJfQLFqKH8U4sGCDkzsfz9neFxkUuGRsl8DqLSj5AdVo39uRPljKiJo6tsjJFw2vbLB13JkI6SygMLOlOIOde47WEuuV3jRXazucmOfm3tvv7yeo/KrapIm8f9ro7ykPzvUr0gdOGV13GBqg3DqzAa+Hu/imBrVtt+xRz7w=
-Received: from BYAPR21MB1688.namprd21.prod.outlook.com (2603:10b6:a02:bf::26)
- by DS0PR21MB3862.namprd21.prod.outlook.com (2603:10b6:8:117::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.7; Fri, 3 Mar
- 2023 00:59:58 +0000
-Received: from BYAPR21MB1688.namprd21.prod.outlook.com
- ([fe80::629a:b75a:482e:2d4a]) by BYAPR21MB1688.namprd21.prod.outlook.com
- ([fe80::629a:b75a:482e:2d4a%5]) with mapi id 15.20.6178.007; Fri, 3 Mar 2023
- 00:59:58 +0000
-From:   "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-To:     Luis Chamberlain <mcgrof@kernel.org>,
-        "ebiederm@xmission.com" <ebiederm@xmission.com>,
-        "keescook@chromium.org" <keescook@chromium.org>,
-        "yzaikin@google.com" <yzaikin@google.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "minyard@acm.org" <minyard@acm.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "robinmholt@gmail.com" <robinmholt@gmail.com>,
-        "steve.wahl@hpe.com" <steve.wahl@hpe.com>,
-        "mike.travis@hpe.com" <mike.travis@hpe.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "jirislaby@kernel.org" <jirislaby@kernel.org>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "oleksandr_tyshchenko@epam.com" <oleksandr_tyshchenko@epam.com>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
-CC:     "j.granados@samsung.com" <j.granados@samsung.com>,
-        "zhangpeng362@huawei.com" <zhangpeng362@huawei.com>,
-        "tangmeng@uniontech.com" <tangmeng@uniontech.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "nixiaoming@huawei.com" <nixiaoming@huawei.com>,
-        "sujiaxun@uniontech.com" <sujiaxun@uniontech.com>,
-        "patches@lists.linux.dev" <patches@lists.linux.dev>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "apparmor@lists.ubuntu.com" <apparmor@lists.ubuntu.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "openipmi-developer@lists.sourceforge.net" 
-        <openipmi-developer@lists.sourceforge.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 3/7] hv: simplify sysctl registration
-Thread-Topic: [PATCH 3/7] hv: simplify sysctl registration
-Thread-Index: AQHZTUghmT7Wxm+Iike4T3P5qQULMa7oPC4w
-Date:   Fri, 3 Mar 2023 00:59:57 +0000
-Message-ID: <BYAPR21MB16886A06B7D3DBC4A10EF984D7B39@BYAPR21MB1688.namprd21.prod.outlook.com>
-References: <20230302204612.782387-1-mcgrof@kernel.org>
- <20230302204612.782387-4-mcgrof@kernel.org>
-In-Reply-To: <20230302204612.782387-4-mcgrof@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=fe1c164e-92ed-4e67-a49a-a1d27905e5b8;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2023-03-03T00:59:14Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BYAPR21MB1688:EE_|DS0PR21MB3862:EE_
-x-ms-office365-filtering-correlation-id: 498f5fa7-384d-434b-9bdb-08db1b829bfa
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 7luQdAIeYd5DgNZR0tGfR/9z4g/rMl+7zsncSixc5P0tSF2YznjxdKfNk2/XxD6P036DDuO+gCtuwUmxbimpR8Hpem3XHlv1oO+q1bTUM++rxQ2Ii0LEyz+wROLz/N31ouX7S+QTBuysw34y//aFm1YSLoWrjxlvUANhsy7vCei2qokx36c8iT9FDc0QOhdfkY6eZnUmehOfKTyLJFT/3kKh9dHiGM4pjos2Ycs+7PoXzYd4vBgmZjNbhCoixf8eO4mvM0aoPPiG8lkSITXpn7g3PeihGrs18A1AaYrr6JZ5DbZguaOTuJyt64npXPPPGaJyQJHLeAkEQoo8u0ixrNJ/3y2AR5pilPKj4vpAPUzlTXny3EYcWxg7dXnCTfuGsTA96I/uT92bCZv9TKH7PHLQSg/R5Rl+O/uTMULQ4u3rrVFgYD/EwNLTLMjNSy4vJZKcdSP2opAl0Gg8jgRMTXGs4vQ0KJiJ4PlMepgeg6UyUIgyBj8sEaNFBYuF3Y8zgyv2koCiTKmyeaVAt53oHJKOacAn/ovwnom5kyHaGxVEOEc3iv07s0V6i/fTN7s7TFZS7NzQV1L1tvprKry8SRyziTKBs0eb53aus1kwmqo4eIwwAV19RdCPtQDZTQy3BNuM58c+t/8DFDlvUQtQMkrToH27wp3tA9Dr7fgwgR9WZsyCqyuI0XCZ08XcToSrwxNaZJMRaUByugMqUm0yULNghWDvejHn2mTPf5aCueS/QolYN9ganhHiO9jg9rz2mmUVK5eu4VItO+bNagQV4Q==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR21MB1688.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(346002)(136003)(366004)(396003)(39860400002)(376002)(451199018)(7696005)(86362001)(6506007)(66446008)(316002)(64756008)(55016003)(4326008)(66556008)(66476007)(8676002)(921005)(54906003)(110136005)(83380400001)(2906002)(122000001)(33656002)(26005)(82960400001)(9686003)(186003)(7416002)(7406005)(82950400001)(76116006)(52536014)(66946007)(8936002)(38070700005)(5660300002)(38100700002)(71200400001)(478600001)(10290500003)(41300700001)(8990500004);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Ajsq1TcVBn/ZLc3bc9sjhQmJ5VdDc49BQXeKLlNu5Xi4zQAjIAs7HTggdJef?=
- =?us-ascii?Q?d5lH3GhjyhYxRc39AEP4URGZq7GKgXxA0Vn4MfAje8V8ivdT+ZfFDUrCsW8e?=
- =?us-ascii?Q?7sSfq9xxnM5qq2U5oWNasrF8qnie2hbZ9LpmEyHusy2WOFiDLWD50Sv+Hva6?=
- =?us-ascii?Q?7bzMLasCQrRBrKzM0gqZP+5YiMjeIRb32uFOM2irqfBfj4cL/0imWLRD5Hq/?=
- =?us-ascii?Q?PE3A2tX/La/Kd+gdJHdQjFs6lHOjqVNANhP+Nf4GmBF3EphSt6mXbN0ou2OR?=
- =?us-ascii?Q?GN0bKnVDlbdI/H3V7D0Qrq7qhKlacE02BwZvPuDqZf3EPjJ3qGOIOL3PaTea?=
- =?us-ascii?Q?9CAI6za1+0JsolWIG9jauZtMVgB7taUYltoQ07FE5QD5Yoe7jLJlXV7/FrBf?=
- =?us-ascii?Q?B0qNP1LMdyYJ2Bm/HMHl1GniNGQyZeEja54IzlVTEbdZJtPKq4PW+LSod1n/?=
- =?us-ascii?Q?knyIGVPGr1AMLjwjl+iJ5VLtrMtyIUpvgIl99P0e9BnaV24LZhLdhxKxJObN?=
- =?us-ascii?Q?B2JFSUp2CDvw4j1aG9i2QSbrcWbDH/whvqtCspG4ader+UMxN78zbApssmDz?=
- =?us-ascii?Q?ZG7ebyOnon0A93z8ClnmaECKcl+VQ4LKYbQcYeP1Xx75vxArx5WZNvHwvK1B?=
- =?us-ascii?Q?2ucIk51ZHwGtB2AXNCQFUZJ2Hvk6hkOg4WQSni29h9mQinYPDkjl9JRoTQxH?=
- =?us-ascii?Q?bsnD10sd5jpQwKEhmZCVTBx9YxnP+jRSZw0qWanrhKjaskv+maKFjYWWqKM8?=
- =?us-ascii?Q?PkBWNrhxbuLQ6i2tAQUpUrYpfXvOA7vCQywuqiyDlLSzR1cxLNkQ6p69eIu6?=
- =?us-ascii?Q?L+sS1uH2rSjrmBTohd7P1VuG8yRUFAL6OIKGTjOxn2c69hkUajhOPHEYTSAi?=
- =?us-ascii?Q?I6AhrBAnCIAgCFUvvsqP1uJ+NYWUTCVh7Gw2cgIVvtHS608v4+Nq3DIzyJ9f?=
- =?us-ascii?Q?87oU27P4cZPjozZG+mNGMcVq9M87ha+n2HuHGDe0RT4e2z/alPMT11LjpFnd?=
- =?us-ascii?Q?rCL+i+0TFLZuvhZZodEYpL4SZq+13/lm4fwaJh5p+QUzd4MBdAJaeBgFXmnA?=
- =?us-ascii?Q?46/n8wKY4PeVwhJldIxHJaDUWERBY4Z/3bZzPu3GCgKfPc+rzxsDNxt2JqaX?=
- =?us-ascii?Q?xsSks+hYmF41SwWMsf9ztHnOFCaED+W9nbQmlLKOoF1ULbXQ3Ee1Ea/kiKTx?=
- =?us-ascii?Q?8woDr1xYwd2gTqZAPOzgJTAKNV62vXparryLddhI89Zg4SJG6zczb53yJLCK?=
- =?us-ascii?Q?lXCuuDSpxZTiNk32qLOshIDxnSq3K6NRONByvmZK/Fqqo2OP59MsPIWkm03n?=
- =?us-ascii?Q?etWje6b76FuXRvDJi3d0lEZddit+VzjvMQhN9+aVDzlTTcXG6P4FyoI/Erqa?=
- =?us-ascii?Q?fmywD0gRJZ3hCzj0VnIEcr2W7q0SxvBdus0yHywgex4Bwxt8Ck+uNvlEmPCf?=
- =?us-ascii?Q?h3l2DVTr8A7wwKI3o8mk8HKewLClpYeqn+UoCvfe9psUV3Jm8nfGAjWPMDMm?=
- =?us-ascii?Q?aUJmbyXPOiXE6GKni1hIF2P3q1GIaDJ2dI0vtmw+UatAnjSvGXOivH4M8MfZ?=
- =?us-ascii?Q?9MUBFg4n3Vtg7x+s7/ShI2o3Aq7UpkhH4aG6XPDeJQFbNvUphiZ1RzE/mv5l?=
- =?us-ascii?Q?xg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S229453AbjCCB4k (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Mar 2023 20:56:40 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A3DEC64C
+        for <linux-raid@vger.kernel.org>; Thu,  2 Mar 2023 17:55:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1677808544;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=feXk126w3cOzJ3erpwPyZouPQvPN1ll4MKvmydA5vo0=;
+        b=EC8m+cfv5NjbgTDbd1wm0kJB1fl/ArkBNWXcFEYQzi+RQwU82i3jNzTtVFylH4seywkJc+
+        hVxCIXRffjgML7/zw5UgbC8wbIY/b4lrdu3hPaPC1mGjjq/FvDYUpIboJaR6OiwQdx+lhN
+        PHn2Nm1Yok0LhnG0SkbcuTtc70a+XY8=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-28-w_hr99oDNrWmAIQWrhqFAg-1; Thu, 02 Mar 2023 20:55:43 -0500
+X-MC-Unique: w_hr99oDNrWmAIQWrhqFAg-1
+Received: by mail-pl1-f198.google.com with SMTP id l10-20020a17090270ca00b0019caa6e6bd1so600267plt.2
+        for <linux-raid@vger.kernel.org>; Thu, 02 Mar 2023 17:55:43 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1677808542;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=feXk126w3cOzJ3erpwPyZouPQvPN1ll4MKvmydA5vo0=;
+        b=af3jHB3KNv3RKoF/bJmMKRM66/N44YEw5NMrhQamKsL9dL4Xn5GgmdQj3uhu+wAxMn
+         1Srz/kifurQXtg9N44Q9IkpdLpluBENYSMY0iBBWudqEKTzlTxeU1UGUm+gV0XSOyc7T
+         GiN3mdGEykQw2j4jqZ3wogv9uPK8KbxQ7JlCCxx6Uhogyds24OeAWZZpFC8ytgTyaY6s
+         o+kA1LN4F/gElxfrKfzMsARMlzS7amep44GD8yZeqrayjeJntmvcRgzyf5wS1byLGZdp
+         CITN3uImZgJrD4VKRGL4bxFYLbswr25ReS0y2wahkF7lHjhrb67c7daXR4y/tZQ4x4pU
+         D4mg==
+X-Gm-Message-State: AO0yUKX6xaadyJ09INlKfeCvOjPYP0s7D1g30PP0aZuCdJqZv1njENQE
+        +DhfD2sJ8Jjwjlie6AHa1b0fMKI8iizIjUwtCSJ4Vzu33rl9KDqQlvfOSvuZCA78HV6sTlqOOgV
+        bVE5bIT/udUi3xJIWJV7CwBSvGHRT/N2J2TLNyg==
+X-Received: by 2002:a17:903:428b:b0:19a:8751:4dfc with SMTP id ju11-20020a170903428b00b0019a87514dfcmr127121plb.1.1677808542035;
+        Thu, 02 Mar 2023 17:55:42 -0800 (PST)
+X-Google-Smtp-Source: AK7set9cypB5SyYDXK7XOxiuv19kTWSxg1q0sjKu7oH4vGVwqahn2arkmI2uHzf22KO/5hLGwtcT4UDNxVBXeCsoJUI=
+X-Received: by 2002:a17:903:428b:b0:19a:8751:4dfc with SMTP id
+ ju11-20020a170903428b00b0019a87514dfcmr127113plb.1.1677808541761; Thu, 02 Mar
+ 2023 17:55:41 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR21MB1688.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 498f5fa7-384d-434b-9bdb-08db1b829bfa
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Mar 2023 00:59:57.9023
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: DcXel5WdWBH6prBf0eyu02o+jyHBBZnK9EZRtDBaMLWw1+SzlPHPmquDTa7XuodbaT1BylXcJcvDRudky5c3L+jqQLrpSx9i6f8CZkASXtM=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR21MB3862
+References: <20230224183323.638-1-jonathan.derrick@linux.dev>
+ <20230224183323.638-4-jonathan.derrick@linux.dev> <CALTww2_P6TaV7C5i2k5sUeHOpnqTxjFB-ZA98Y2re+17J5d7Kw@mail.gmail.com>
+ <2f2ba1cb-a053-7494-ce42-4670b66baacf@linux.dev> <CALTww2-ie0Y+0JMQAASKwDhAwcmD-aOuf=_J_GD95ATUi7w-3Q@mail.gmail.com>
+ <b109f953-fd46-6037-c976-f1690cb4ff8b@linux.dev> <CALTww2_dN+B74qPc3X=JofOmAd78rVv6wRWiifSUdU97_Ghqqg@mail.gmail.com>
+ <1a010a9c-cbe6-0756-647f-3a9affde2f17@linux.dev>
+In-Reply-To: <1a010a9c-cbe6-0756-647f-3a9affde2f17@linux.dev>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Fri, 3 Mar 2023 09:55:30 +0800
+Message-ID: <CALTww29Y=FWe2C4-+1WhQF2uKr1MCjhviBs1m4X2Z-gw4WUo=g@mail.gmail.com>
+Subject: Re: [PATCH v5 3/3] md: Use optimal I/O size for last bitmap page
+To:     Jonathan Derrick <jonathan.derrick@linux.dev>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Reindl Harald <h.reindl@thelounge.net>,
+        Christoph Hellwig <hch@lst.de>,
+        Christoph Hellwig <hch@infradead.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Sushma Kalakota <sushma.kalakota@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Luis Chamberlain <mcgrof@infradead.org> On Behalf Of Luis Chamberlain=
- Sent: Thursday, March 2, 2023 12:46 PM
+On Fri, Mar 3, 2023 at 1:18=E2=80=AFAM Jonathan Derrick
+<jonathan.derrick@linux.dev> wrote:
 >
-> register_sysctl_table() is a deprecated compatibility wrapper.
-> register_sysctl() can do the directory creation for you so just use
-> that.
->=20
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---
->  drivers/hv/vmbus_drv.c | 11 +----------
->  1 file changed, 1 insertion(+), 10 deletions(-)
->=20
-> diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-> index d24dd65b33d4..229353f1e9c2 100644
-> --- a/drivers/hv/vmbus_drv.c
-> +++ b/drivers/hv/vmbus_drv.c
-> @@ -1460,15 +1460,6 @@ static struct ctl_table hv_ctl_table[] =3D {
->  	{}
->  };
->=20
-> -static struct ctl_table hv_root_table[] =3D {
-> -	{
-> -		.procname	=3D "kernel",
-> -		.mode		=3D 0555,
-> -		.child		=3D hv_ctl_table
-> -	},
-> -	{}
-> -};
-> -
->  /*
->   * vmbus_bus_init -Main vmbus driver initialization routine.
->   *
-> @@ -1547,7 +1538,7 @@ static int vmbus_bus_init(void)
->  		 * message recording won't be available in isolated
->  		 * guests should the following registration fail.
->  		 */
-> -		hv_ctl_table_hdr =3D register_sysctl_table(hv_root_table);
-> +		hv_ctl_table_hdr =3D register_sysctl("kernel", hv_ctl_table);
->  		if (!hv_ctl_table_hdr)
->  			pr_err("Hyper-V: sysctl table register error");
->=20
-> --
-> 2.39.1
+>
+>
+> On 3/2/2023 2:05 AM, Xiao Ni wrote:
+> > On Thu, Mar 2, 2023 at 1:57=E2=80=AFAM Jonathan Derrick
+> > <jonathan.derrick@linux.dev> wrote:
+> >>
+> >>
+> >>
+> >> On 3/1/2023 5:36 AM, Xiao Ni wrote:
+> >>> On Wed, Mar 1, 2023 at 7:10=E2=80=AFAM Jonathan Derrick
+> >>> <jonathan.derrick@linux.dev> wrote:
+> >>>>
+> >>>> Hi Xiao
+> >>>>
+> >>>> On 2/26/2023 6:56 PM, Xiao Ni wrote:
+> >>>>> Hi Jonathan
+> >>>>>
+> >>>>> I did a test in my environment, but I didn't see such a big
+> >>>>> performance difference.
+> >>>>>
+> >>>>> The first environment:
+> >>>>> All nvme devices have 512 logical size, 512 phy size, and 0 optimal=
+ size. Then
+> >>>>> I used your way to rebuild the kernel
+> >>>>> /sys/block/nvme0n1/queue/physical_block_size 512
+> >>>>> /sys/block/nvme0n1/queue/optimal_io_size 4096
+> >>>>> cat /sys/block/nvme0n1/queue/logical_block_size 512
+> >>>>>
+> >>>>> without the patch set
+> >>>>> write: IOPS=3D68.0k, BW=3D266MiB/s (279MB/s)(15.6GiB/60001msec); 0 =
+zone resets
+> >>>>> with the patch set
+> >>>>> write: IOPS=3D69.1k, BW=3D270MiB/s (283MB/s)(15.8GiB/60001msec); 0 =
+zone resets
+> >>>>>
+> >>>>> The second environment:
+> >>>>> The nvme devices' opt size are 4096. So I don't need to rebuild the=
+ kernel.
+> >>>>> /sys/block/nvme0n1/queue/logical_block_size
+> >>>>> /sys/block/nvme0n1/queue/physical_block_size
+> >>>>> /sys/block/nvme0n1/queue/optimal_io_size
+> >>>>>
+> >>>>> without the patch set
+> >>>>> write: IOPS=3D51.6k, BW=3D202MiB/s (212MB/s)(11.8GiB/60001msec); 0 =
+zone resets
+> >>>>> with the patch set
+> >>>>> write: IOPS=3D53.5k, BW=3D209MiB/s (219MB/s)(12.2GiB/60001msec); 0 =
+zone resets
+> >>>>>
+> >>>> Sounds like your devices may not have latency issues at sub-optimal =
+sizes.
+> >>>> Can you provide biosnoop traces with and without patches?
+> >>>>
+> >>>> Still, 'works fine for me' is generally not a reason to reject the p=
+atches.
+> >>>
+> >>> Yes, I can. I tried to install the biosnoop in fedora38 but it failed=
+.
+> >>> These are the rpm packages I've installed:
+> >>> bcc-tools-0.25.0-1.fc38.x86_64
+> >>> bcc-0.25.0-1.fc38.x86_64
+> >>> python3-bcc-0.25.0-1.fc38.noarch
+> >>>
+> >>> Are there other packages that I need to install?
+> >>>
+> >> I've had issues with the packaged versions as well
+> >>
+> >> Best to install from source:
+> >> https://github.com/iovisor/bcc/
+> >> https://github.com/iovisor/bcc/blob/master/INSTALL.md#fedora---source
+> >>
+> > Hi Jonathan
+> >
+> > I did a test without modifying phys_size and opt_size. And I picked up =
+a part
+> > of the result:
+> >
+> > 0.172142    md0_raid10     2094    nvme1n1   W 1225496264 4096      0.0=
+1
+> > 0.172145    md0_raid10     2094    nvme0n1   W 1225496264 4096      0.0=
+1
+> > 0.172161    md0_raid10     2094    nvme3n1   W 16         4096      0.0=
+1
+> > 0.172164    md0_raid10     2094    nvme2n1   W 16         4096      0.0=
+1
+> > 0.172166    md0_raid10     2094    nvme1n1   W 16         4096      0.0=
+1
+> > 0.172168    md0_raid10     2094    nvme0n1   W 16         4096      0.0=
+1
+> > 0.172178    md0_raid10     2094    nvme3n1   W 633254624  4096      0.0=
+1
+> > 0.172180    md0_raid10     2094    nvme2n1   W 633254624  4096      0.0=
+1
+> > 0.172196    md0_raid10     2094    nvme3n1   W 16         4096      0.0=
+1
+> > 0.172199    md0_raid10     2094    nvme2n1   W 16         4096      0.0=
+1
+> > 0.172201    md0_raid10     2094    nvme1n1   W 16         4096      0.0=
+1
+> > 0.172203    md0_raid10     2094    nvme0n1   W 16         4096      0.0=
+1
+> > 0.172213    md0_raid10     2094    nvme3n1   W 1060251672 4096      0.0=
+1
+> > 0.172215    md0_raid10     2094    nvme2n1   W 1060251672 4096      0.0=
+1
+> >
+> > The last column always shows 0.01. Is that the reason I can't see the
+> > performance
+> > improvement? What do you think if I use ssd or hdds?
+> Try reducing your mdadm's --bitmap-chunk first. In above logs, only LBA 1=
+6 is
+> being used, and that's the first bitmap page (and seemingly also the last=
+). You
+> want to configure it such that you have more bitmap pages. Reducing the
+> --bitmap-chunk parameter should create more bitmap pages, and you may run=
+ into
+> the scenario predicted by the patch.
+>
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Finally, I can see the performance improvement. It's cool. Thanks for this.
+
+The raid with 64MB bitmap size
+write: IOPS=3D58.4k, BW=3D228MiB/s (239MB/s)(13.4GiB/60001msec); 0 zone
+resets (without patch)
+write: IOPS=3D69.3k, BW=3D271MiB/s (284MB/s)(252MiB/931msec); 0 zone
+resets (with patch)
+
+The raid with 8MB bitmap size
+write: IOPS=3D11.6k, BW=3D45.4MiB/s (47.6MB/s)(2724MiB/60002msec); 0 zone
+resets (without patch)
+write: IOPS=3D43.7k, BW=3D171MiB/s (179MB/s)(10.0GiB/60001msec); 0 zone
+resets (with patch)
+
+Best Regards
+Xiao
+
