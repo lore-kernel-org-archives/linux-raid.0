@@ -2,115 +2,87 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B6EC6FA8E
-	for <linux-raid@archiver.kernel.org>; Sat,  4 Mar 2023 07:55:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CC07C678D5
+	for <linux-raid@archiver.kernel.org>; Sat,  4 Mar 2023 08:19:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229595AbjCDHzY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 4 Mar 2023 02:55:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55520 "EHLO
+        id S229601AbjCDITp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 4 Mar 2023 03:19:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjCDHzX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Mar 2023 02:55:23 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CED4B18AAE
-        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 23:55:22 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 428261F8A3;
-        Sat,  4 Mar 2023 07:55:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1677916521; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=p8D4n8biQulGbckft04SGMlSJwP89zJObA2T8t92i8M=;
-        b=I1NEHNiI2pvosx1ZjYWFPw+738ONtUbzeZUZWXdSAnwPVzQAPL7d6S1MrjZ0XGH+z4k/My
-        h0tM3Lkox2emOBPAwwNrDSPCQRpBf/qw+rxsyZloQG8iUoh/oeB2cZLkdxs9OTliug2r+F
-        9pm6CBWCip6Y0odkEHBOKU+cGvBUiBs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1677916521;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=p8D4n8biQulGbckft04SGMlSJwP89zJObA2T8t92i8M=;
-        b=H7x8A76P0Gr05FrCmYms6TocFJUiXh9si49+sV3iiNkgO0jkqf9BkGriJpgdzvfSJ2F+23
-        iCqC8/N3mSVuV6DQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1F70D13901;
-        Sat,  4 Mar 2023 07:55:20 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id HlVtOmj5AmQaFQAAMHmgww
-        (envelope-from <hare@suse.de>); Sat, 04 Mar 2023 07:55:20 +0000
-Message-ID: <d8b4cbdd-b47f-3456-232a-b784a4c7f325@suse.de>
-Date:   Sat, 4 Mar 2023 08:55:19 +0100
+        with ESMTP id S229484AbjCDITo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Mar 2023 03:19:44 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5E5019B9;
+        Sat,  4 Mar 2023 00:19:42 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PTHnP4wvTz4f3jJC;
+        Sat,  4 Mar 2023 16:19:37 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgBH9CEa_wJkuElDEQ--.64117S4;
+        Sat, 04 Mar 2023 16:19:39 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next] raid10: don't BUG_ON() in raise_barrier()
+Date:   Sat,  4 Mar 2023 16:42:56 +0800
+Message-Id: <20230304084256.2827825-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: Why isn't the "Support Intel AHCI remapped NVMe devices" in
- mainline?
-Content-Language: en-US
-To:     Michael Fritscher <michael@fritscher.net>,
-        "David F." <df7729@gmail.com>, Andrew R <junkbustr@gmail.com>
-Cc:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-References: <CAGRSmLsh0aqJMuFzMMhm6fYjsCL-MNXR=t04cGj9FNvG0EENTQ@mail.gmail.com>
- <CAB-xnyD+iWsbuemirPyHqEG9DnbBb1unjj6D-21ZmBbjp9eAmA@mail.gmail.com>
- <CAGRSmLs1nVWHVEv5FXzDCbsC7otzsVr_HceXXruKDO228zM5Eg@mail.gmail.com>
- <d78d528f-d0fa-c04c-6bdd-0b48fc159671@fritscher.net>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <d78d528f-d0fa-c04c-6bdd-0b48fc159671@fritscher.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgBH9CEa_wJkuElDEQ--.64117S4
+X-Coremail-Antispam: 1UD129KBjvdXoWrKryrGFyrXF48tF47Gw45ZFb_yoWkGFcE93
+        WfuasxZr1xJrnrKw12kFn2vrWIga1kXF1xuF4rKr13AF98ZFWkC3Wjqas5Jwn5Jay2vr17
+        ZF92va4UAr4DWjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbz8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
+        rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
+        vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IY
+        x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26c
+        xKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
+        14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUF9a9DUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/3/23 23:39, Michael Fritscher wrote:
-> Good evening,
-> 
-> you mean https://lkml.org/lkml/2019/6/20/27 /
-> https://lore.kernel.org/linux-pci/20190620061038.GA20564@lst.de/T/ ,
-> right? And yes, I have this problem as well. On a Toshiba z20t-c, and
-> this device has no option to switch this off. And even if has, there is
-> the problem that this device has no "normal" NVMe driver in the uefi it
-> seems, so it could not boot from...
-> 
-As you might have glanced from the documentation, this is one of the 
-really bad mess-ups.
-This particular feature was one of the first attempts by Intel to get 
-software RAID to work with NVMe without having to change Windows.
-What they did here was to 'hide' the NVMe device behind an AHCI device, 
-essentially turning the AHCI PCI device into a combo with shared 
-registers and shared interrupts.
-The resulting NVMe device is in violation of the spec, making it 
-questionable whether we should modify our implementation for a 
-non-compliant device.
-To make matters worse Intel has since come up with similar (but 
-different) technologies; RSTe/VMD is one of the examples.
-And Windows has meanwhile learned to handle NVMe, so the entire
-rationale for this piece of .... has gone.
-Making it even more questionable whether we should support it.
+From: Yu Kuai <yukuai3@huawei.com>
 
-The only way I see how we could support it would be by writing an PCI 
-driver which splits the AHCI driver into two PCI virtual functions, the
-first being a 'normal' AHCI' device and the other one being the NVMe.
-Not sure if that's possible, though (one possible would have to ask 
-Bjorn Helgaas), but that seems to be the best option.
-Except from ditching the NVMe in that device, of course :-)
+If raise_barrier() is called the first time in raid10_sync_request(), which
+means the first non-normal io is handled, raise_barrier() should wait for
+all dispatched normal io to be done. This ensures that normal io won't
+starve.
 
-Cheers,
+However, BUG_ON() if this is broken is too aggressive. This patch replace
+BUG_ON() with WARN and fall back to not force.
 
-Hannes
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/raid10.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 4f8edb6ea3e2..a8b5fecef136 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -952,7 +952,9 @@ static void flush_pending_writes(struct r10conf *conf)
+ static void raise_barrier(struct r10conf *conf, int force)
+ {
+ 	write_seqlock_irq(&conf->resync_lock);
+-	BUG_ON(force && !conf->barrier);
++
++	if (WARN_ON_ONCE(force && !conf->barrier))
++		force = false;
+ 
+ 	/* Wait until no block IO is waiting (unless 'force') */
+ 	wait_event_barrier(conf, force || !conf->nr_waiting);
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+2.31.1
 
