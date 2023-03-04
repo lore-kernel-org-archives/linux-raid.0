@@ -2,108 +2,115 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BC2C678D5
-	for <linux-raid@archiver.kernel.org>; Sat,  4 Mar 2023 06:39:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B6EC6FA8E
+	for <linux-raid@archiver.kernel.org>; Sat,  4 Mar 2023 07:55:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229616AbjCDGjB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 4 Mar 2023 01:39:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42578 "EHLO
+        id S229595AbjCDHzY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 4 Mar 2023 02:55:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbjCDGjA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Mar 2023 01:39:00 -0500
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F5F911656;
-        Fri,  3 Mar 2023 22:38:59 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PTFYB2lhtz4f3jJ2;
-        Sat,  4 Mar 2023 14:38:54 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgCnUyF_5wJkKh8_EQ--.5411S4;
-        Sat, 04 Mar 2023 14:38:56 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next] md: fix soft lockup in status_resync
-Date:   Sat,  4 Mar 2023 15:02:13 +0800
-Message-Id: <20230304070213.1137011-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229437AbjCDHzX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Mar 2023 02:55:23 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CED4B18AAE
+        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 23:55:22 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 428261F8A3;
+        Sat,  4 Mar 2023 07:55:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1677916521; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=p8D4n8biQulGbckft04SGMlSJwP89zJObA2T8t92i8M=;
+        b=I1NEHNiI2pvosx1ZjYWFPw+738ONtUbzeZUZWXdSAnwPVzQAPL7d6S1MrjZ0XGH+z4k/My
+        h0tM3Lkox2emOBPAwwNrDSPCQRpBf/qw+rxsyZloQG8iUoh/oeB2cZLkdxs9OTliug2r+F
+        9pm6CBWCip6Y0odkEHBOKU+cGvBUiBs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1677916521;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=p8D4n8biQulGbckft04SGMlSJwP89zJObA2T8t92i8M=;
+        b=H7x8A76P0Gr05FrCmYms6TocFJUiXh9si49+sV3iiNkgO0jkqf9BkGriJpgdzvfSJ2F+23
+        iCqC8/N3mSVuV6DQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1F70D13901;
+        Sat,  4 Mar 2023 07:55:20 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id HlVtOmj5AmQaFQAAMHmgww
+        (envelope-from <hare@suse.de>); Sat, 04 Mar 2023 07:55:20 +0000
+Message-ID: <d8b4cbdd-b47f-3456-232a-b784a4c7f325@suse.de>
+Date:   Sat, 4 Mar 2023 08:55:19 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: Why isn't the "Support Intel AHCI remapped NVMe devices" in
+ mainline?
+Content-Language: en-US
+To:     Michael Fritscher <michael@fritscher.net>,
+        "David F." <df7729@gmail.com>, Andrew R <junkbustr@gmail.com>
+Cc:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+References: <CAGRSmLsh0aqJMuFzMMhm6fYjsCL-MNXR=t04cGj9FNvG0EENTQ@mail.gmail.com>
+ <CAB-xnyD+iWsbuemirPyHqEG9DnbBb1unjj6D-21ZmBbjp9eAmA@mail.gmail.com>
+ <CAGRSmLs1nVWHVEv5FXzDCbsC7otzsVr_HceXXruKDO228zM5Eg@mail.gmail.com>
+ <d78d528f-d0fa-c04c-6bdd-0b48fc159671@fritscher.net>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <d78d528f-d0fa-c04c-6bdd-0b48fc159671@fritscher.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCnUyF_5wJkKh8_EQ--.5411S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7tw4UXryrCry7tFW3Ar1DWrg_yoW8Aryrpa
-        93ZFWxArW5tFWxJrZxJF1UXa4rAa4FyFZrKF4Uuw43ZF1fCr1jyr1UCF4DWrykWFykJrW0
-        qa4Fyr98WF1UZ3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyv14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-        jxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-        1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48J
-        MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwV
-        AFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv2
-        0xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4
-        v20xvaj40_Gr0_Zr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AK
-        xVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VU1a9aPUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 3/3/23 23:39, Michael Fritscher wrote:
+> Good evening,
+> 
+> you mean https://lkml.org/lkml/2019/6/20/27 /
+> https://lore.kernel.org/linux-pci/20190620061038.GA20564@lst.de/T/ ,
+> right? And yes, I have this problem as well. On a Toshiba z20t-c, and
+> this device has no option to switch this off. And even if has, there is
+> the problem that this device has no "normal" NVMe driver in the uefi it
+> seems, so it could not boot from...
+> 
+As you might have glanced from the documentation, this is one of the 
+really bad mess-ups.
+This particular feature was one of the first attempts by Intel to get 
+software RAID to work with NVMe without having to change Windows.
+What they did here was to 'hide' the NVMe device behind an AHCI device, 
+essentially turning the AHCI PCI device into a combo with shared 
+registers and shared interrupts.
+The resulting NVMe device is in violation of the spec, making it 
+questionable whether we should modify our implementation for a 
+non-compliant device.
+To make matters worse Intel has since come up with similar (but 
+different) technologies; RSTe/VMD is one of the examples.
+And Windows has meanwhile learned to handle NVMe, so the entire
+rationale for this piece of .... has gone.
+Making it even more questionable whether we should support it.
 
-status_resync() will calculate 'curr_resync - recovery_active' to show
-user a progress bar like following:
+The only way I see how we could support it would be by writing an PCI 
+driver which splits the AHCI driver into two PCI virtual functions, the
+first being a 'normal' AHCI' device and the other one being the NVMe.
+Not sure if that's possible, though (one possible would have to ask 
+Bjorn Helgaas), but that seems to be the best option.
+Except from ditching the NVMe in that device, of course :-)
 
-[============>........]  resync = 61.4%
+Cheers,
 
-'curr_resync' and 'recovery_active' is updated in md_do_sync(), and
-status_resync() can read them concurrently, hence it's possible that
-'curr_resync - recovery_active' can overflow to a huge number. In this
-case status_resync() will be stuck in the loop to print a large amount
-of '=', which will end up soft lockup.
-
-Fix the problem by setting 'resync' to MD_RESYNC_ACTIVE in this case,
-this way resync in progress will be reported to user.
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 927a43db5dfb..ee405e793fc7 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8029,16 +8029,16 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
- 	} else if (resync > max_sectors) {
- 		resync = max_sectors;
- 	} else {
--		resync -= atomic_read(&mddev->recovery_active);
--		if (resync < MD_RESYNC_ACTIVE) {
--			/*
--			 * Resync has started, but the subtraction has
--			 * yielded one of the special values. Force it
--			 * to active to ensure the status reports an
--			 * active resync.
--			 */
-+		res = atomic_read(&mddev->recovery_active);
-+		/*
-+		 * Resync has started, but the subtraction has overflowed or
-+		 * yielded one of the special values. Force it to active to
-+		 * ensure the status reports an active resync.
-+		 */
-+		if (resync < res || resync - res < MD_RESYNC_ACTIVE)
- 			resync = MD_RESYNC_ACTIVE;
--		}
-+		else
-+			resync -= res;
- 	}
- 
- 	if (resync == MD_RESYNC_NONE) {
+Hannes
 -- 
-2.31.1
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
