@@ -2,87 +2,103 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CC07C678D5
-	for <linux-raid@archiver.kernel.org>; Sat,  4 Mar 2023 08:19:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15EA4C678D5
+	for <linux-raid@archiver.kernel.org>; Sat,  4 Mar 2023 21:36:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229601AbjCDITp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 4 Mar 2023 03:19:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40826 "EHLO
+        id S229581AbjCDVgW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 4 Mar 2023 16:36:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbjCDITo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Mar 2023 03:19:44 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5E5019B9;
-        Sat,  4 Mar 2023 00:19:42 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PTHnP4wvTz4f3jJC;
-        Sat,  4 Mar 2023 16:19:37 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgBH9CEa_wJkuElDEQ--.64117S4;
-        Sat, 04 Mar 2023 16:19:39 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next] raid10: don't BUG_ON() in raise_barrier()
-Date:   Sat,  4 Mar 2023 16:42:56 +0800
-Message-Id: <20230304084256.2827825-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229484AbjCDVgM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Mar 2023 16:36:12 -0500
+Received: from z1.octopuce.fr (z1.octopuce.fr [91.194.60.127])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D02A21ABCA
+        for <linux-raid@vger.kernel.org>; Sat,  4 Mar 2023 13:36:09 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by z1.octopuce.fr (Postfix) with ESMTP id 592F73E747D
+        for <linux-raid@vger.kernel.org>; Sat,  4 Mar 2023 22:36:07 +0100 (CET)
+Received: from z1.octopuce.fr ([127.0.0.1])
+        by localhost (z1.octopuce.fr [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id F2jNr02ZxttQ for <linux-raid@vger.kernel.org>;
+        Sat,  4 Mar 2023 22:36:03 +0100 (CET)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by z1.octopuce.fr (Postfix) with ESMTP id 797FB3E85A1
+        for <linux-raid@vger.kernel.org>; Sat,  4 Mar 2023 22:36:03 +0100 (CET)
+X-Virus-Scanned: amavisd-new at z1.octopuce.fr
+Received: from z1.octopuce.fr ([127.0.0.1])
+        by localhost (z1.octopuce.fr [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id xz0zgqs180fe for <linux-raid@vger.kernel.org>;
+        Sat,  4 Mar 2023 22:36:03 +0100 (CET)
+Received: from z1.octopuce.fr (z1.octopuce.fr [91.194.60.127])
+        by z1.octopuce.fr (Postfix) with ESMTP id 62F173E747D
+        for <linux-raid@vger.kernel.org>; Sat,  4 Mar 2023 22:36:03 +0100 (CET)
+Date:   Sat, 4 Mar 2023 22:36:02 +0100 (CET)
+From:   Benjamin Sonntag <benjamin@octopuce.fr>
+To:     linux-raid <linux-raid@vger.kernel.org>
+Message-ID: <1132955858.4035.1677965762570.JavaMail.zimbra@z1.octopuce.fr>
+Subject: Bug in reshape+discard?
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgBH9CEa_wJkuElDEQ--.64117S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrKryrGFyrXF48tF47Gw45ZFb_yoWkGFcE93
-        WfuasxZr1xJrnrKw12kFn2vrWIga1kXF1xuF4rKr13AF98ZFWkC3Wjqas5Jwn5Jay2vr17
-        ZF92va4UAr4DWjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbz8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
-        rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
-        vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IY
-        x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26c
-        xKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-        14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUF9a9DUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [91.194.60.127]
+X-Mailer: Zimbra 8.8.15_GA_4508 (ZimbraWebClient - GC110 (Linux)/8.8.15_GA_4508)
+Thread-Index: uVOhLhXuRp5A2TLdgxkLllkRS4D85g==
+Thread-Topic: Bug in reshape+discard?
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
 
-If raise_barrier() is called the first time in raid10_sync_request(), which
-means the first non-normal io is handled, raise_barrier() should wait for
-all dispatched normal io to be done. This ensures that normal io won't
-starve.
+Hi everyone, 
 
-However, BUG_ON() if this is broken is too aggressive. This patch replace
-BUG_ON() with WARN and fall back to not force.
+I think we found a bug in the mdadm code here at Octopuce. I'm reporting it here, please tell me if that's not the right place to report it, or if you need any other information. 
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid10.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+This bug "hangs" processes in the Device-busy (D) state forever, until we reboot. It has been tested on both a debian 5.10 an 6.0 Linux kernel 
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 4f8edb6ea3e2..a8b5fecef136 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -952,7 +952,9 @@ static void flush_pending_writes(struct r10conf *conf)
- static void raise_barrier(struct r10conf *conf, int force)
- {
- 	write_seqlock_irq(&conf->resync_lock);
--	BUG_ON(force && !conf->barrier);
-+
-+	if (WARN_ON_ONCE(force && !conf->barrier))
-+		force = false;
- 
- 	/* Wait until no block IO is waiting (unless 'force') */
- 	wait_event_barrier(conf, force || !conf->nr_waiting);
--- 
-2.31.1
+How to trigger the bug: 
+
+- create a raid5 or raid6 block device using mdadm 
+mdadm --create /dev/md0 -l 5 -n 3 /dev/sd{a,b,c}2 
+
+- create a partition on it and mount it USING DISCARD/TRIM (important) (the underlying device must support trim) 
+mkfs.ext4 /dev/md0 
+mount /dev/md0 /mnt -o discard 
+
+- create a few files 
+for i in $( seq 1 1000 ) ; do dd if=/dev/zero of=/mnt/$i bs=10M count=1 ; done 
+
+- expand the raid by adding a new drive
+mdadm --add /dev/md0 /dev/sdd2 
+mdadm --grow /dev/md0 -n 4 
+
+- the last command will start a "reshape" operation on md0 
+- DURING THE RESHAPE (it's important) erase some file (it goes fine) 
+rm /mnt/* -rf 
+
+- THEN, still during the reshape (important) try to sync or fsync 
+sync 
+
+- the sync process get stuck in the D state. no way to kill it until reboot 
+(in fact, any process that does sync during the reshape after some files were deleted will get stuck, such as mariadbd or rsyslog...) 
+
+- If you don't mount with discard your partition, the 'sync' works properly 
+
+
+An easy way to circumvent this problem: 
+
+- before reshaping, remount without discard 
+mount /mnt -o remount,nodiscard 
+
+- after the reshaping ends, remount with discard 
+mount /mnt -o remount,discard 
+
+
+We don't really know how to start searching for a solution, since it requires knowing the internal of MD & Discard pretty well :/ (and I'm definitely not a kernel coder ;) ) 
+
+thanks for your help on this issue, 
+
+cheers, 
+
+Benjamin Sonntag 
+Octopuce, Paris. 
 
