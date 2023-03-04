@@ -2,94 +2,111 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9C8C61DA4
-	for <linux-raid@archiver.kernel.org>; Fri,  3 Mar 2023 23:05:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D55A2C678D5
+	for <linux-raid@archiver.kernel.org>; Sat,  4 Mar 2023 06:38:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233068AbjCCXFx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 3 Mar 2023 18:05:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38616 "EHLO
+        id S229589AbjCDGi1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 4 Mar 2023 01:38:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233396AbjCCXFj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 3 Mar 2023 18:05:39 -0500
-X-Greylist: delayed 1475 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 03 Mar 2023 15:05:22 PST
-Received: from mail.mifritscher.de (mifritscher.de [188.40.170.105])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E564EB46
-        for <linux-raid@vger.kernel.org>; Fri,  3 Mar 2023 15:05:22 -0800 (PST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by mail.mifritscher.de (Postfix) with ESMTP id 896693AB370;
-        Fri,  3 Mar 2023 23:39:27 +0100 (CET)
-X-Virus-Scanned: Debian amavisd-new at mifritscher.vserverkompetenz.de
-Received: from mail.mifritscher.de ([127.0.0.1])
-        by localhost (mail.mifritscher.vserverkompetenz.de [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id rODCEFyH-Uiw; Fri,  3 Mar 2023 23:39:26 +0100 (CET)
-Received: from [192.168.99.235] (ppp-93-104-110-173.dynamic.mnet-online.de [93.104.110.173])
-        by mail.mifritscher.de (Postfix) with ESMTPSA id B4EA63A1D97;
-        Fri,  3 Mar 2023 23:39:26 +0100 (CET)
-Message-ID: <d78d528f-d0fa-c04c-6bdd-0b48fc159671@fritscher.net>
-Date:   Fri, 3 Mar 2023 23:39:26 +0100
+        with ESMTP id S229476AbjCDGi0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Mar 2023 01:38:26 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59CEE11650;
+        Fri,  3 Mar 2023 22:38:23 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PTFXS3YB6z4f3jM6;
+        Sat,  4 Mar 2023 14:38:16 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgCnUyFY5wJkPRg_EQ--.5366S4;
+        Sat, 04 Mar 2023 14:38:18 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org, jgq516@gmail.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next] raid10: fix leak of io accounting
+Date:   Sat,  4 Mar 2023 15:01:33 +0800
+Message-Id: <20230304070133.1134975-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: Why isn't the "Support Intel AHCI remapped NVMe devices" in
- mainline?
-Content-Language: de-DE
-To:     "David F." <df7729@gmail.com>, Andrew R <junkbustr@gmail.com>
-Cc:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-References: <CAGRSmLsh0aqJMuFzMMhm6fYjsCL-MNXR=t04cGj9FNvG0EENTQ@mail.gmail.com>
- <CAB-xnyD+iWsbuemirPyHqEG9DnbBb1unjj6D-21ZmBbjp9eAmA@mail.gmail.com>
- <CAGRSmLs1nVWHVEv5FXzDCbsC7otzsVr_HceXXruKDO228zM5Eg@mail.gmail.com>
-From:   Michael Fritscher <michael@fritscher.net>
-In-Reply-To: <CAGRSmLs1nVWHVEv5FXzDCbsC7otzsVr_HceXXruKDO228zM5Eg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgCnUyFY5wJkPRg_EQ--.5366S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uF1kCFW8ZFWxKr1UXF1kZrb_yoW8urWDp3
+        yDKas0vrW5J3y5uw4DJFWDC3Zay39rtay2yrWxAw13Jwn7Xr95GF18XF4agrn8ZFZ5urnx
+        Z3Z0vrsrXF47tFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUym14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48J
+        MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwV
+        AFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv2
+        0xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4
+        v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
+        14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Good evening,
+From: Yu Kuai <yukuai3@huawei.com>
 
-you mean https://lkml.org/lkml/2019/6/20/27 /
-https://lore.kernel.org/linux-pci/20190620061038.GA20564@lst.de/T/ ,
-right? And yes, I have this problem as well. On a Toshiba z20t-c, and
-this device has no option to switch this off. And even if has, there is
-the problem that this device has no "normal" NVMe driver in the uefi it
-seems, so it could not boot from...
+handle_read_error() will resumit r10_bio by raid10_read_request(), which
+will call bio_start_io_acct() again, while bio_end_io_acct() will only
+be called once.
 
-Best regards,
-Michael Fritscher
+Fix the problem by don't account io again from handle_read_error().
 
-Am 31.12.19 um 18:26 schrieb David F.:
-> Was actually referring to the "Intel AHCI remapped NVMe devices Patch"
-> that exists but now out of date because of updates to NVMe/PCI driver.
-> The latest was based on 5.2 I believe.
-> 
-> On Sun, Dec 15, 2019 at 7:57 AM Andrew R <junkbustr@gmail.com> wrote:
->>
->>
->> On Fri, Dec 13, 2019, 20:15 David F. <df7729@gmail.com> wrote:
->>>
->>> Hi,
->>>
->>> Despite not liking what Intel did, there isn't any reason Linux
->>> shouldn't support these devices in RAID mode..   The main support
->>> issues with our Linux based product is now this problem with no hard
->>> drives listed in Linux.   Get a couple everyday.  Some people can't
->>> change to AHCI mode, such as some Lenovo machines.
->>>
->>> If the patch simply adds support for this mode without affecting
->>> anything when not in that mode then why wouldn't you mainline it?
->>> This problem is widespread.
->>>
->>> TIA
->>
->>
->> Not sure if this is your issue, but had a similar issue with an HP machine that I bought with mirrored 512gb NVME drives configured from the factory. They were configured with the Intel Rapidstore embedded raid on the motherboard. In this configuration, the drives are not detected by the kernel.
->>
->> I had to go into the RAID configuration menu in the bios and release the drives from the raid (deleting Windows) at which point Linux could see the drives.
->>
->> In my particular case I was not installing Linux on this machine but was using Linux to create image backups of the Windows install using imaging tools from the Clonezilla distro.
->>
->> After destroying the RAID, I used the HP system recovery to create a base install and then setup drive mirroring in Windows Disk Manager (*not* Storage Spaces!). NB this requires Windows Professional...
->>
->> HTH.
+Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/raid10.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 6c66357f92f5..4f8edb6ea3e2 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1173,7 +1173,7 @@ static bool regular_request_wait(struct mddev *mddev, struct r10conf *conf,
+ }
+ 
+ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+-				struct r10bio *r10_bio)
++				struct r10bio *r10_bio, bool handle_error)
+ {
+ 	struct r10conf *conf = mddev->private;
+ 	struct bio *read_bio;
+@@ -1244,7 +1244,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	}
+ 	slot = r10_bio->read_slot;
+ 
+-	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
++	if (!handle_error && blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+ 		r10_bio->start_time = bio_start_io_acct(bio);
+ 	read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
+ 
+@@ -1578,7 +1578,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
+ 			conf->geo.raid_disks);
+ 
+ 	if (bio_data_dir(bio) == READ)
+-		raid10_read_request(mddev, bio, r10_bio);
++		raid10_read_request(mddev, bio, r10_bio, false);
+ 	else
+ 		raid10_write_request(mddev, bio, r10_bio);
+ }
+@@ -2980,7 +2980,7 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
+ 	rdev_dec_pending(rdev, mddev);
+ 	allow_barrier(conf);
+ 	r10_bio->state = 0;
+-	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
++	raid10_read_request(mddev, r10_bio->master_bio, r10_bio, true);
+ }
+ 
+ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+-- 
+2.31.1
 
