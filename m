@@ -2,351 +2,235 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C83C61DA4
-	for <linux-raid@archiver.kernel.org>; Sun,  5 Mar 2023 21:21:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FC97C6FA8E
+	for <linux-raid@archiver.kernel.org>; Sun,  5 Mar 2023 22:11:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229854AbjCEVVT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 5 Mar 2023 16:21:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37800 "EHLO
+        id S229634AbjCEWLB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 5 Mar 2023 17:11:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229500AbjCEVVS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 5 Mar 2023 16:21:18 -0500
+        with ESMTP id S229539AbjCEWLA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 5 Mar 2023 17:11:00 -0500
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA1CD15544;
-        Sun,  5 Mar 2023 13:21:16 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8D2F15CBA
+        for <linux-raid@vger.kernel.org>; Sun,  5 Mar 2023 14:10:58 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 61F5B21FAF;
-        Sun,  5 Mar 2023 21:21:14 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id A23E322660;
+        Sun,  5 Mar 2023 22:10:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1678051274; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1678054257; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=u4gM2e1hvx3P1eYfrzQECAbOZCd7xfdmYJhFl7mp5Gk=;
-        b=LcZnzMi8AjyhcTayHMk70NBNMBYPNB3M1tvFy6g2g3O9RN0cpPQMHEi3NFYpxZL4dbpYX8
-        66yNsR3uvEVkdCWCobI6W1OuILH8kDX1RbS7zhKy9w4U6mVM1YEVIvrEySIwIoAuiD+cWv
-        uwBf10KfM1uZKbgZc6vvdyUEtGEa3co=
+        bh=L+mzJK4M0h6G1Nyk2eoY3DZjZjOVxvb89az4FZl+Xqs=;
+        b=BCTXrz1ndLt5wPySXrZZwAj0gV/dhNZdezaJFQQ68mJ9e9fQL1DuTdUlrU2+4+GLoqxVAP
+        LZwn8NqFk4wWHzoJCb6GWNE/j8V++dTUxSU9uTl8mrIXRqhq9LIfWV/X7se2qOjitTj7B6
+        9mx7OicCHbgF/gcd+IfG20Owe72wfNw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1678051274;
+        s=susede2_ed25519; t=1678054257;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=u4gM2e1hvx3P1eYfrzQECAbOZCd7xfdmYJhFl7mp5Gk=;
-        b=+tXhIjPH21fw/WYZ5bHqcimc5/O64xDzsviPj0dP6+mFoD8GdTwBcBUY68+vdgEfNSH57c
-        p/P6m1BEOHue7WCw==
+        bh=L+mzJK4M0h6G1Nyk2eoY3DZjZjOVxvb89az4FZl+Xqs=;
+        b=ZGzFYhdqQ972ZfXCmk06V7vHOaniCuc5DWjMdXIflu8vFN2Um6wEOTfYtXKamWK0GsNR3t
+        j8l+kKWbrbZJgDAQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2B06313440;
-        Sun,  5 Mar 2023 21:21:11 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id CECBB1339E;
+        Sun,  5 Mar 2023 22:10:55 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id WPVHM8cHBWR/BAAAMHmgww
-        (envelope-from <neilb@suse.de>); Sun, 05 Mar 2023 21:21:11 +0000
+        id 3V+mIG8TBWRTEgAAMHmgww
+        (envelope-from <neilb@suse.de>); Sun, 05 Mar 2023 22:10:55 +0000
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 From:   "NeilBrown" <neilb@suse.de>
-To:     "Song Liu" <song@kernel.org>
-Cc:     "Linux regressions mailing list" <regressions@lists.linux.dev>,
-        Jes.Sorensen@gmail.com, "linux-raid" <linux-raid@vger.kernel.org>,
-        "LKML" <linux-kernel@vger.kernel.org>,
-        "Nikolay Kichukov" <hijacker@oldum.net>
-Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
- can no longer assemble software raid0
-In-reply-to: <CAPhsuW7ZWthh0PZt71hQh1_51C0yMSpOqWYJKc_+VzzTmW_r5A@mail.gmail.com>
-References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>,
- <CAPhsuW7ZWthh0PZt71hQh1_51C0yMSpOqWYJKc_+VzzTmW_r5A@mail.gmail.com>
-Date:   Mon, 06 Mar 2023 08:21:07 +1100
-Message-id: <167805126796.8008.3635368722810568057@noble.neil.brown.name>
+To:     "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>
+Cc:     "Jes Sorensen" <jes@trained-monkey.org>,
+        linux-raid@vger.kernel.org, "Martin Wilck" <martin.wilck@suse.com>,
+        "Mariusz Tkaczyk" <mariusz.tkaczyk@intel.com>
+Subject: Re: [PATCH 6/6] mdmon improvements for switchroot
+In-reply-to: <20230301145007.00001f62@linux.intel.com>
+References: <167745586347.16565.4353184078424535907.stgit@noble.brown>,
+ <167745678753.16565.5052083348539533042.stgit@noble.brown>,
+ <20230301145007.00001f62@linux.intel.com>
+Date:   Mon, 06 Mar 2023 09:10:52 +1100
+Message-id: <167805425265.8008.9491232789224466676@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, 04 Mar 2023, Song Liu wrote:
-> + Jes.
+On Thu, 02 Mar 2023, Mariusz Tkaczyk wrote:
+> Hi Neil,
+> We found typo. We fixed that to test the change.
+> Other comments are less important.
 >=20
-> It appeared to me that we can assemble the array if we have any of the
-> following:
-> 1. Enable CONFIG_BLOCK_LEGACY_AUTOLOAD;
-> 2. Have a valid /etc/mdadm.conf;
-> 3. Update mdadm to handle this case. (I tried some ugly hacks, which worked=
- but
->     weren't clean).
+> On Mon, 27 Feb 2023 11:13:07 +1100
+> NeilBrown <neilb@suse.de> wrote:
 >=20
-> Since we eventually would like to get rid of CONFIG_BLOCK_LEGACY_AUTOLOAD, I
-> think we need mdadm to handle this properly. But the logistics might
-> be complicated, as
-> mdadm are shipped separately.
+> > We need a new mdmon@mdfoo instance to run in the root filesystem after
+> > switch root, as /sys and /dev are removed from the initrd.
+> >=20
+> > systemd will not start a new unit with the same name running while the
+> > old unit is still active, and we want the two mdmon processes to overlap
+> > in time to avoid any risk of deadlock which a write is attempted with no
+> > mdmon running.
+> >=20
+> > So we need a different unit name in the initrd than in the root.  Apart
+> > from the name, everything else should be the same.
+> >=20
+> > This is easily achieved using a different instance name as the
+> > mdmon@.service unit file already supports multiple instances (for
+> > different arrays).
+> >=20
+> > So start "mdmon@mdfoo.service" from root, but
+> > "mdmon@initrd-mdfoo.service" from the initrd.  udev can tell which
+> > circumstance is the case by looking for /etc/initrd-release.
+> > continue_from_systemd() is enhanced so that the "initrd-" prefix can be
+> > requested.
+> >=20
+> > Teach mdmon that a container name like "initrd/foo" should be treated
+> > just like "foo".  Note that systemd passes the instance name
+> > "initrd-foo" as "initrd/foo".
+> >=20
+> > We don't need a similar machanism at shutdown because dracut runs
+> > "mdmon --takeover --all" when appropriate.
+> >=20
+> > Signed-off-by: NeilBrown <neilb@suse.de>
 >=20
-> Jes, what do you think about this? AFAICT, we need to update the logic in
-> mdopen.c:create_mddev().
+> > diff --git a/mdmon.c b/mdmon.c
+> > index 6d37b17c3f53..25abdd71fb1e 100644
+> > --- a/mdmon.c
+> > +++ b/mdmon.c
+> > @@ -368,7 +368,11 @@ int main(int argc, char *argv[])
+> >  	}
+> > =20
+> >  	if (!all && argv[optind]) {
+> > -		container_name =3D get_md_name(argv[optind]);
+> > +		static const char prefix[] =3D "initrd/";
+> > +		container_name =3D argv[optind];
+> > +		if (strncmp(container_name, prefix, sizeof(prefix)-1) =3D=3D 0)
+> > +			container_name +=3D sizeof(prefix)-1;
+> > +		container_name =3D get_md_name(container_name);
+>=20
+> "sizeof(prefix)-1" there should be spaces before and after operator.
+>=20
+> You are defining similar literals in 2 places:
+> prefix[] =3D "initrd/"
+> *prefix =3D in_initrd() ? "initrd-", "";
+>=20
+> When I see something like this, I need to ask why it is not globally defined
+> because in the future we would need to define it for the firth and fourth t=
+ime.
+> I see the difference in last sign ('/' and '-'). We can omit that.
+> I would like propose something like:
+>=20
+> in mdadm.h:
+> #DEFINE MDMON_PREFIX "initrd"
 
-mdadm already handles this, but only if=20
-   CREATE names=3Dyes
-is present in /etc/mdadm.conf
+To my mind this is "premature optimisation".  I think it makes the core
+harder to read.  If it makes the code easier to maintain then it might
+be worth the cost.  I don't think it does.
+>=20
+> in mdmon, do not check last sign. whatever it is, we don't really care, just
+> skip it. All we need to know is that it not belongs to container name.
+> Hope it works correctly:
+> 	if (strncmp(container_name, MDMON_PREFIX, sizeof(prefix) - 1) =3D=3D 0)
+> 		container_name +=3D sizeof(MDMON_PREFIX);
+> =09
+> And later in start_mdmon include '-' in snprintf:
+> 		 "%s@%s%s.service", service_name, MDMON_PREFIX"-" ?: "",
+>=20
+> I think that we don't need to pass whole char* value, we can use bool, the =
+one
+> possibility is "initrd" now. If that would be changed, we can use enum and =
+maps
+> interface:
+> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/maps.c
 
-Maybe we should flip the default for the next mdadm release, and patch
-the kernel (with a stable backport) to select BLOCK_LEGACY_AUTOLOAD if
-BLK_DEV_MD=3Dm=20
-Then revert that - say - 6 months after the new mdadm is released.
+Passing bools makes the calling code hard to read.  "What does that
+"true" or "false" mean??".  Sometimes it really is best, but I think
+passing the string "initrd" makes more sense to the reader than passing "true=
+".
 
+Passing enums is better than simple bools - and has the benefit of
+spelling out the meaning of NULL.  These still feel a bit clumsy to me
+so I would only use them when there is a clear benefit.
+
+>=20
+> This is lesson learned by code study, we needed to put big effort to correct
+> similar case with reshapes because pointers become overkill through
+> years:
+> https://lore.kernel.org/linux-raid/20230102083524.28893-1-mateusz.kusiak@in=
+tel.com/
+>=20
+> It my my personal view so you are free to make decision. I will accept it b=
+ut
+> please note that mdadm is full of same literals (just find /dev/md or /dev/=
+md/)
+> so that is why I'm especially sensitive in that cases.
+>=20
+> > --git a/util.c b/util.c index 6b44662db7cd..1d433d1826b5 100644 --- a/uti=
+l.c
+> > +++ b/util.c @@ -1906,6 +1906,7 @@ int start_mdmon(char *devnm)
+> >  	int len;
+> >  	pid_t pid;
+> >  	int status;
+> > +	char *prefix =3D in_initrd() ? "initrd-", "";
+>=20
+> The most important thing:
+> typo, should be in_initrd() ? "initrd-": "";
+
+Certainly - thanks for catching that!
+
+Jes - should I resent the whole series, or just this patch, or will you
+edit before applying?
+
+Thanks,
 NeilBrown
 
-
+>=20
+> >  	char pathbuf[1024];
+> >  	char *paths[4] =3D {
+> >  		pathbuf,
+> > @@ -1916,7 +1917,7 @@ int start_mdmon(char *devnm)
+> > =20
+> >  	if (check_env("MDADM_NO_MDMON"))
+> >  		return 0;
+> > -	if (continue_via_systemd(devnm, MDMON_SERVICE))
+> > +	if (continue_via_systemd(devnm, MDMON_SERVICE, prefix))
+> >  		return 0;
+> > =20
+> >  	/* That failed, try running mdmon directly */
+> > @@ -2187,7 +2188,7 @@ void manage_fork_fds(int close_all)
+> >   *	1- if systemd service has been started
+> >   *	0- otherwise
+> >   */
+> > -int continue_via_systemd(char *devnm, char *service_name)
+> > +int continue_via_systemd(char *devnm, char *service_name, char *prefix)
+> >  {
+> >  	int pid, status;
+> >  	char pathbuf[1024];
+> > @@ -2199,7 +2200,7 @@ int continue_via_systemd(char *devnm, char
+> > *service_name) case  0:
+> >  		manage_fork_fds(1);
+> >  		snprintf(pathbuf, sizeof(pathbuf),
+> > -			 "%s@%s.service", service_name, devnm);
+> > +			 "%s@%s%s.service", service_name, prefix ?: "",
+> > devnm); status =3D execl("/usr/bin/systemctl", "systemctl", "restart",
+> >  			       pathbuf, NULL);
+> >  		status =3D execl("/bin/systemctl", "systemctl", "restart",
+> >=20
+> >=20
 >=20
 > Thanks,
-> Song
->=20
->=20
-> On Thu, Feb 23, 2023 at 8:06 AM Linux regression tracking (Thorsten
-> Leemhuis) <regressions@leemhuis.info> wrote:
-> >
-> > Hi, this is your Linux kernel regression tracker.
-> >
-> > I noticed a regression report in bugzilla.kernel.org. As many (most?)
-> > kernel developer don't keep an eye on it, I decided to forward it by
-> > mail. Quoting from https://bugzilla.kernel.org/show_bug.cgi?id=3D217074 :
-> >
-> > > Hello,
-> > > Installing a new kernel 6.1.12 does not allow assembly of raid0 device.
-> > >
-> > > Going back to previous working kernels: 5.15.65, 5.15.75 assembles the =
-raid0 without any problems.
-> > >
-> > > Kernel command line parameters:
-> > > ... ro kvm_amd.nested=3D0 kvm_amd.avic=3D1 kvm_amd.npt=3D1 raid0.defaul=
-t_layout=3D2
-> > >
-> > > mdadm assembly attempt fails with:
-> > > 'mdadm: unexpected failure opening /dev/md<NR>'
-> > >
-> > > Tried with mdadm-4.1 and mdadm-4.2, but as it works with either version=
-s of mdadm, I rule out the mdadm software.
-> > >
-> > > strace -f output, last few lines:
-> > >
-> > > mkdir("/run/mdadm", 0755)               =3D -1 EEXIST (File exists)
-> > > openat(AT_FDCWD, "/run/mdadm/map.lock", O_RDWR|O_CREAT|O_TRUNC, 0600) =
-=3D 3
-> > > fcntl(3, F_GETFL)                       =3D 0x8002 (flags O_RDWR|O_LARG=
-EFILE)
-> > > flock(3, LOCK_EX)                       =3D 0
-> > > newfstatat(3, "", {st_mode=3DS_IFREG|0600, st_size=3D0, ...}, AT_EMPTY_=
-PATH) =3D 0
-> > > openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) =3D 4
-> > > fcntl(4, F_GETFL)                       =3D 0x8000 (flags O_RDONLY|O_LA=
-RGEFILE)
-> > > newfstatat(4, "", {st_mode=3DS_IFREG|0600, st_size=3D0, ...}, AT_EMPTY_=
-PATH) =3D 0
-> > > read(4, "", 4096)                       =3D 0
-> > > close(4)                                =3D 0
-> > > openat(AT_FDCWD, "/run/mdadm/map", O_RDONLY) =3D 4
-> > > fcntl(4, F_GETFL)                       =3D 0x8000 (flags O_RDONLY|O_LA=
-RGEFILE)
-> > > newfstatat(4, "", {st_mode=3DS_IFREG|0600, st_size=3D0, ...}, AT_EMPTY_=
-PATH) =3D 0
-> > > read(4, "", 4096)                       =3D 0
-> > > close(4)                                =3D 0
-> > > newfstatat(AT_FDCWD, "/dev/.udev", 0x7ffcd8243c90, 0) =3D -1 ENOENT (No=
- such file or directory)
-> > > newfstatat(AT_FDCWD, "/run/udev", {st_mode=3DS_IFDIR|0755, st_size=3D16=
-0, ...}, 0) =3D 0
-> > > openat(AT_FDCWD, "/proc/mdstat", O_RDONLY) =3D 4
-> > > fcntl(4, F_SETFD, FD_CLOEXEC)           =3D 0
-> > > newfstatat(4, "", {st_mode=3DS_IFREG|0444, st_size=3D0, ...}, AT_EMPTY_=
-PATH) =3D 0
-> > > read(4, "Personalities : [raid1] [raid0] "..., 1024) =3D 56
-> > > read(4, "", 1024)                       =3D 0
-> > > close(4)                                =3D 0
-> > > openat(AT_FDCWD, "/sys/block/md127/dev", O_RDONLY) =3D -1 ENOENT (No su=
-ch file or directory)
-> > > getpid()                                =3D 18351
-> > > mknodat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9=
-, 0x7f)) =3D 0
-> > > openat(AT_FDCWD, "/dev/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) =
-=3D -1 ENXIO (No such device or address)
-> > > unlink("/dev/.tmp.md.18351:9:127")      =3D 0
-> > > getpid()                                =3D 18351
-> > > mknodat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", S_IFBLK|0600, makedev(0x9=
-, 0x7f)) =3D 0
-> > > openat(AT_FDCWD, "/tmp/.tmp.md.18351:9:127", O_RDWR|O_EXCL|O_DIRECT) =
-=3D -1 ENXIO (No such device or address)
-> > > unlink("/tmp/.tmp.md.18351:9:127")      =3D 0
-> > > write(2, "mdadm: unexpected failure openin"..., 45mdadm: unexpected fai=
-lure opening /dev/md127
-> > > ) =3D 45
-> > > unlink("/run/mdadm/map.lock")           =3D 0
-> > > close(3)                                =3D 0
-> > > exit_group(1)                           =3D ?
-> > > +++ exited with 1 +++
-> > >
-> > >
-> > > Tried with kernel compiled with either CONFIG_DEVTMPFS_SAFE=3Dy or CONF=
-IG_DEVTMPFS_SAFE=3Dn, fails the same way.
-> > >
-> > > The raid consists of 4 devices, here is mdstat contents:
-> > >
-> > > Personalities : [raid0]
-> > > md127 : active raid0 sda[0] sdc[2] sdd[3] sdb[1]
-> > >       2929769472 blocks super 1.2 512k chunks
-> > >
-> > > unused devices: <none>
-> > >
-> > >
-> > > Examining the 4 block devices:
-> > >
-> > > gnusystem /var/log # mdadm --misc -E /dev/sda
-> > > /dev/sda:
-> > >           Magic : a92b4efc
-> > >         Version : 1.2
-> > >     Feature Map : 0x0
-> > >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
-> > >            Name : gnusystem:md0-store  (local to host gnusystem)
-> > >   Creation Time : Wed Sep 29 22:28:09 2021
-> > >      Raid Level : raid0
-> > >    Raid Devices : 4
-> > >
-> > >  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
-> > >     Data Offset : 264192 sectors
-> > >    Super Offset : 8 sectors
-> > >    Unused Space : before=3D264112 sectors, after=3D0 sectors
-> > >           State : clean
-> > >     Device UUID : 7f226c1c:23632b9d:e3d6c656:74522906
-> > >
-> > >     Update Time : Wed Sep 29 22:28:09 2021
-> > >   Bad Block Log : 512 entries available at offset 8 sectors
-> > >        Checksum : 51e99fb5 - correct
-> > >          Events : 0
-> > >
-> > >      Chunk Size : 512K
-> > >
-> > >    Device Role : Active device 0
-> > >    Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> > > gnusystem /var/log # mdadm --misc -E /dev/sdb
-> > > /dev/sdb:
-> > >           Magic : a92b4efc
-> > >         Version : 1.2
-> > >     Feature Map : 0x0
-> > >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
-> > >            Name : gnusystem:md0-store  (local to host gnusystem)
-> > >   Creation Time : Wed Sep 29 22:28:09 2021
-> > >      Raid Level : raid0
-> > >    Raid Devices : 4
-> > >
-> > >  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
-> > >     Data Offset : 264192 sectors
-> > >    Super Offset : 8 sectors
-> > >    Unused Space : before=3D264112 sectors, after=3D0 sectors
-> > >           State : clean
-> > >     Device UUID : ed8795fe:c7e6719a:165db37e:32ec0894
-> > >
-> > >     Update Time : Wed Sep 29 22:28:09 2021
-> > >   Bad Block Log : 512 entries available at offset 8 sectors
-> > >        Checksum : 215db63b - correct
-> > >          Events : 0
-> > >
-> > >      Chunk Size : 512K
-> > >
-> > >    Device Role : Active device 1
-> > >    Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> > > gnusystem /var/log # mdadm --misc -E /dev/sdc
-> > > /dev/sdc:
-> > >           Magic : a92b4efc
-> > >         Version : 1.2
-> > >     Feature Map : 0x0
-> > >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
-> > >            Name : gnusystem:md0-store  (local to host gnusystem)
-> > >   Creation Time : Wed Sep 29 22:28:09 2021
-> > >      Raid Level : raid0
-> > >    Raid Devices : 4
-> > >
-> > >  Avail Dev Size : 976508976 sectors (465.64 GiB 499.97 GB)
-> > >     Data Offset : 264192 sectors
-> > >    Super Offset : 8 sectors
-> > >    Unused Space : before=3D264112 sectors, after=3D0 sectors
-> > >           State : clean
-> > >     Device UUID : 3713dfff:d2e29aaf:3275039d:08b317bb
-> > >
-> > >     Update Time : Wed Sep 29 22:28:09 2021
-> > >   Bad Block Log : 512 entries available at offset 8 sectors
-> > >        Checksum : 42f70f03 - correct
-> > >          Events : 0
-> > >
-> > >      Chunk Size : 512K
-> > >
-> > >    Device Role : Active device 2
-> > >    Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> > > gnusystem /var/log # mdadm --misc -E /dev/sdd
-> > > /dev/sdd:
-> > >           Magic : a92b4efc
-> > >         Version : 1.2
-> > >     Feature Map : 0x0
-> > >      Array UUID : bb710ce6:edd5d68d:a0a0a405:edd99547
-> > >            Name : gnusystem:md0-store  (local to host gnusystem)
-> > >   Creation Time : Wed Sep 29 22:28:09 2021
-> > >      Raid Level : raid0
-> > >    Raid Devices : 4
-> > >
-> > >  Avail Dev Size : 1953260976 sectors (931.39 GiB 1000.07 GB)
-> > >     Data Offset : 264192 sectors
-> > >    Super Offset : 8 sectors
-> > >    Unused Space : before=3D264112 sectors, after=3D0 sectors
-> > >           State : clean
-> > >     Device UUID : 7da858ae:c0d6ca51:0ecaaaf0:280367cc
-> > >
-> > >     Update Time : Wed Sep 29 22:28:09 2021
-> > >   Bad Block Log : 512 entries available at offset 8 sectors
-> > >        Checksum : 32cf4ab4 - correct
-> > >          Events : 0
-> > >
-> > >      Chunk Size : 512K
-> > >
-> > >    Device Role : Active device 3
-> > >    Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> > >
-> > > If any more information is needed, let me know.
-> >
-> > See the ticket for details.
-> >
-> >
-> > [TLDR for the rest of this mail: I'm adding this report to the list of
-> > tracked Linux kernel regressions; the text you find below is based on a
-> > few templates paragraphs you might have encountered already in similar
-> > form.]
-> >
-> > BTW, let me use this mail to also add the report to the list of tracked
-> > regressions to ensure it's doesn't fall through the cracks:
-> >
-> > #regzbot introduced: v5.15..v6.1.12
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D217074
-> > #regzbot title: block: md: raid0 no longer assembled
-> > #regzbot ignore-activity
-> >
-> > This isn't a regression? This issue or a fix for it are already
-> > discussed somewhere else? It was fixed already? You want to clarify when
-> > the regression started to happen? Or point out I got the title or
-> > something else totally wrong? Then just reply and tell me -- ideally
-> > while also telling regzbot about it, as explained by the page listed in
-> > the footer of this mail.
-> >
-> > Developers: When fixing the issue, remember to add 'Link:' tags pointing
-> > to the report (e.g. the buzgzilla ticket and maybe this mail as well, if
-> > this thread sees some discussion). See page linked in footer for details.
-> >
-> > Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-> > --
-> > Everything you wanna know about Linux kernel regression tracking:
-> > https://linux-regtracking.leemhuis.info/about/#tldr
-> > If I did something stupid, please tell me, as explained on that page.
+> Mariusz
 >=20
 
