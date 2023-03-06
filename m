@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 656BAC61DA4
-	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 21:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0070C61DA4
+	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 21:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230075AbjCFV3e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 6 Mar 2023 16:29:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52266 "EHLO
+        id S230006AbjCFV3i (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 6 Mar 2023 16:29:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230035AbjCFV3B (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 16:29:01 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AAEC2E807
-        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 13:28:10 -0800 (PST)
+        with ESMTP id S230083AbjCFV3C (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 16:29:02 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C514436698
+        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 13:28:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678138089;
+        s=mimecast20190719; t=1678138091;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=VteZq37fhUy5+24F6OoVk0V2jlPvViM+dI94kv0BkY0=;
-        b=L/lC6/uerVvNrtxMyJlg8OaoXAiuU1mLvqNG5bwnJVnlVEmgrVmi5BqaCDartNfQb1RRlG
-        nNxC+q3SixATBFYiXtegv2s7yA6ch4j3Fm/YM7vfn4OmZpfu1A7KIGnkl65aaNbw95dTvO
-        SzZn/dRyDP9rjPQZ6Vl8HBHBnmAirAk=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=O4GlzpdNdgKEUc4K1S8siOM463GeVxJmMdoirKnxo4M=;
+        b=VzRsK70NvFZVcc0Faiv75JMvNRD4H/mfYeyzTOpGmjV0ctQQQBDLXQGnLDpUye/LRl5GI8
+        XCEQHBhOSxcOotPcuiNGyrApX4dr1c82fP04+uDLs+vNQOqw5tqvqAV+zCYWAQj1Q1N6Ns
+        viFgUK4Zi7aH9Lh/on25vJUcTS65KPE=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-551-N4Vidc3iPnWlNe4DOuAuzg-1; Mon, 06 Mar 2023 16:28:08 -0500
-X-MC-Unique: N4Vidc3iPnWlNe4DOuAuzg-1
+ us-mta-280-KWKvGeRVNAmQ-NBY-ZWcFw-1; Mon, 06 Mar 2023 16:28:09 -0500
+X-MC-Unique: KWKvGeRVNAmQ-NBY-ZWcFw-1
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C52463C1022E
-        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 21:28:07 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4828F802D2F
+        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 21:28:09 +0000 (UTC)
 Received: from o.redhat.com (unknown [10.39.192.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0D28740C83B6;
-        Mon,  6 Mar 2023 21:28:06 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0BC43400DFA1;
+        Mon,  6 Mar 2023 21:28:07 +0000 (UTC)
 From:   heinzm@redhat.com
 To:     linux-raid@vger.kernel.org
 Cc:     ncroxon@redhat.com, xni@redhat.com, dkeefe@redhat.com
-Subject: [PATCH 09/34] md: else should follow close curly brace [ERROR]
-Date:   Mon,  6 Mar 2023 22:27:32 +0100
-Message-Id: <79fbe388f2044498cc63bfdf3138318a6ceb5f5a.1678136717.git.heinzm@redhat.com>
+Subject: [PATCH 10/34] md: remove trailing whitespace [ERROR]
+Date:   Mon,  6 Mar 2023 22:27:33 +0100
+Message-Id: <17ce00f49d8ba635c410c62998ef57bddb0a4dff.1678136717.git.heinzm@redhat.com>
 In-Reply-To: <cover.1678136717.git.heinzm@redhat.com>
 References: <cover.1678136717.git.heinzm@redhat.com>
 MIME-Version: 1.0
@@ -56,38 +56,69 @@ From: Heinz Mauelshagen <heinzm@redhat.com>
 
 Signed-off-by: heinzm <heinzm@redhat.com>
 ---
- drivers/md/md-cluster.c | 3 +--
- drivers/md/md.c         | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/md/md.c | 37 +++++++++++++++++++------------------
+ 1 file changed, 19 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 9bcf816b80a1..760b3ba37854 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -548,8 +548,7 @@ static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
- 		set_bit(ClusterRemove, &rdev->flags);
- 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 		md_wakeup_thread(mddev->thread);
--	}
--	else
-+	} else
- 		pr_warn("%s: %d Could not find disk(%d) to REMOVE\n",
- 			__func__, __LINE__, le32_to_cpu(msg->raid_slot));
- 	rcu_read_unlock();
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9dc1df40c52d..ff4699babdd6 100644
+index ff4699babdd6..132979e597dd 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9694,8 +9694,7 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 					rdev2->bdev);
- 				md_kick_rdev_from_array(rdev2);
- 				continue;
--			}
--			else
-+			} else
- 				clear_bit(Candidate, &rdev2->flags);
- 		}
+@@ -2156,28 +2156,29 @@ super_1_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
+ 		max_sectors = bdev_nr_sectors(rdev->bdev) - rdev->data_offset;
+ 		if (!num_sectors || num_sectors > max_sectors)
+ 			num_sectors = max_sectors;
+-	} else if (rdev->mddev->bitmap_info.offset) {
+-		/* minor version 0 with bitmap we can't move */
+-		return 0;
+ 	} else {
+-		/* minor version 0; superblock after data */
+-		sector_t sb_start, bm_space;
+-		sector_t dev_size = bdev_nr_sectors(rdev->bdev);
++		if (!rdev->mddev->bitmap_info.offset) {
++			/* minor version 0; superblock after data */
++			sector_t sb_start, bm_space;
++			sector_t dev_size = bdev_nr_sectors(rdev->bdev);
  
+-		/* 8K is for superblock */
+-		sb_start = dev_size - 8*2;
+-		sb_start &= ~(sector_t)(4*2 - 1);
++			/* 8K is for superblock */
++			sb_start = dev_size - 8*2;
++			sb_start &= ~(sector_t)(4*2 - 1);
+ 
+-		bm_space = super_1_choose_bm_space(dev_size);
++			bm_space = super_1_choose_bm_space(dev_size);
+ 
+-		/* Space that can be used to store date needs to decrease
+-		 * superblock bitmap space and bad block space(4K)
+-		 */
+-		max_sectors = sb_start - bm_space - 4*2;
++			/* Space that can be used to store date needs to decrease
++			 * superblock bitmap space and bad block space(4K)
++			 */
++			max_sectors = sb_start - bm_space - 4*2;
+ 
+-		if (!num_sectors || num_sectors > max_sectors)
+-			num_sectors = max_sectors;
+-		rdev->sb_start = sb_start;
++			if (!num_sectors || num_sectors > max_sectors)
++				num_sectors = max_sectors;
++			rdev->sb_start = sb_start;
++		} else
++			/* minor version 0 with bitmap we can't move */
++			return 0;
+ 	}
+ 	sb = page_address(rdev->sb_page);
+ 	sb->data_size = cpu_to_le64(num_sectors);
+@@ -4608,7 +4609,7 @@ bitmap_store(struct mddev *mddev, const char *buf, size_t len)
+ 			if (buf == end)
+ 				break;
+ 		}
+-		if (*end && !isspace(*end)) 
++		if (*end && !isspace(*end))
+ 			break;
+ 		md_bitmap_dirty_bits(mddev->bitmap, chunk, end_chunk);
+ 		buf = skip_spaces(end);
 -- 
 2.39.2
 
