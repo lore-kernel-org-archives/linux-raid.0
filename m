@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AC49C64EC4
-	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 21:29:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 656BAC61DA4
+	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 21:29:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbjCFV3c (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 6 Mar 2023 16:29:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52256 "EHLO
+        id S230075AbjCFV3e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 6 Mar 2023 16:29:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230025AbjCFV26 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 16:28:58 -0500
+        with ESMTP id S230035AbjCFV3B (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 16:29:01 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D35426589
-        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 13:28:08 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AAEC2E807
+        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 13:28:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678138087;
+        s=mimecast20190719; t=1678138089;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=F+DzmMLOoRoEzNcgs9SyKQpcswOawUDYafoDOg6uQeQ=;
-        b=Yrmd8IbWdcdfIPDZv+kPoIw01QB6SGEmSTsgufot0htTZK7qg0XgI4W8ZNoNU+u0SeUbLE
-        2GBJw2kQWN3hi7S3juD75YPyKlWEs9DjwRwPe9nc68FtA8Fwxge4xwG9/t6x2F3oAiC02D
-        xhRDlL6k3MMGOS3yE2VhtN6T1ZmRODI=
+        bh=VteZq37fhUy5+24F6OoVk0V2jlPvViM+dI94kv0BkY0=;
+        b=L/lC6/uerVvNrtxMyJlg8OaoXAiuU1mLvqNG5bwnJVnlVEmgrVmi5BqaCDartNfQb1RRlG
+        nNxC+q3SixATBFYiXtegv2s7yA6ch4j3Fm/YM7vfn4OmZpfu1A7KIGnkl65aaNbw95dTvO
+        SzZn/dRyDP9rjPQZ6Vl8HBHBnmAirAk=
 Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
  [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-319-BDd9RW0hMwy2BAp9CH5_zw-1; Mon, 06 Mar 2023 16:28:06 -0500
-X-MC-Unique: BDd9RW0hMwy2BAp9CH5_zw-1
+ us-mta-551-N4Vidc3iPnWlNe4DOuAuzg-1; Mon, 06 Mar 2023 16:28:08 -0500
+X-MC-Unique: N4Vidc3iPnWlNe4DOuAuzg-1
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C84C1380611F
-        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 21:28:05 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C52463C1022E
+        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 21:28:07 +0000 (UTC)
 Received: from o.redhat.com (unknown [10.39.192.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1285E40B40E4;
-        Mon,  6 Mar 2023 21:28:04 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0D28740C83B6;
+        Mon,  6 Mar 2023 21:28:06 +0000 (UTC)
 From:   heinzm@redhat.com
 To:     linux-raid@vger.kernel.org
 Cc:     ncroxon@redhat.com, xni@redhat.com, dkeefe@redhat.com
-Subject: [PATCH 07/34] md: consistent spacing around operators [ERROR]
-Date:   Mon,  6 Mar 2023 22:27:30 +0100
-Message-Id: <ccd10a2449c109e29d8b2ba4b41424dd882caf74.1678136717.git.heinzm@redhat.com>
+Subject: [PATCH 09/34] md: else should follow close curly brace [ERROR]
+Date:   Mon,  6 Mar 2023 22:27:32 +0100
+Message-Id: <79fbe388f2044498cc63bfdf3138318a6ceb5f5a.1678136717.git.heinzm@redhat.com>
 In-Reply-To: <cover.1678136717.git.heinzm@redhat.com>
 References: <cover.1678136717.git.heinzm@redhat.com>
 MIME-Version: 1.0
@@ -56,42 +56,38 @@ From: Heinz Mauelshagen <heinzm@redhat.com>
 
 Signed-off-by: heinzm <heinzm@redhat.com>
 ---
- drivers/md/md.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/md/md-cluster.c | 3 +--
+ drivers/md/md.c         | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 9bcf816b80a1..760b3ba37854 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -548,8 +548,7 @@ static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
+ 		set_bit(ClusterRemove, &rdev->flags);
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 		md_wakeup_thread(mddev->thread);
+-	}
+-	else
++	} else
+ 		pr_warn("%s: %d Could not find disk(%d) to REMOVE\n",
+ 			__func__, __LINE__, le32_to_cpu(msg->raid_slot));
+ 	rcu_read_unlock();
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 24e55e2cf4db..e6ff0da6ebb6 100644
+index 9dc1df40c52d..ff4699babdd6 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -111,7 +111,7 @@ static bool md_is_rdwr(struct mddev *mddev)
-  */
- #define MD_DEFAULT_MAX_CORRECTED_READ_ERRORS 20
- /* Default safemode delay: 200 msec */
--#define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 +1)
-+#define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 + 1)
- /*
-  * Current RAID-1,4,5 parallel reconstruction 'guaranteed speed limit'
-  * is 1000 KB/sec, so the extra system load does not show up that much.
-@@ -1460,7 +1460,7 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
- 		sb->cp_events_hi = (mddev->events>>32);
- 		sb->cp_events_lo = (u32)mddev->events;
- 		if (mddev->recovery_cp == MaxSector)
--			sb->state = (1<< MD_SB_CLEAN);
-+			sb->state = (1<<MD_SB_CLEAN);
- 	} else
- 		sb->recovery_cp = 0;
+@@ -9694,8 +9694,7 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
+ 					rdev2->bdev);
+ 				md_kick_rdev_from_array(rdev2);
+ 				continue;
+-			}
+-			else
++			} else
+ 				clear_bit(Candidate, &rdev2->flags);
+ 		}
  
-@@ -9011,8 +9011,8 @@ void md_do_sync(struct md_thread *thread)
- 		cond_resched();
- 
- 		recovery_done = io_sectors - atomic_read(&mddev->recovery_active);
--		currspeed = ((unsigned long)(recovery_done - mddev->resync_mark_cnt))/2
--			/((jiffies-mddev->resync_mark)/HZ +1) +1;
-+		currspeed = ((unsigned long)(recovery_done - mddev->resync_mark_cnt)) / 2
-+			    / ((jiffies-mddev->resync_mark)/HZ + 1) + 1;
- 
- 		if (currspeed > speed_min(mddev)) {
- 			if (currspeed > speed_max(mddev)) {
 -- 
 2.39.2
 
