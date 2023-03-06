@@ -2,76 +2,98 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7876C61DA4
-	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 15:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD73C64EC4
+	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 17:51:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230171AbjCFP1N (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 6 Mar 2023 10:27:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47232 "EHLO
+        id S230129AbjCFRvT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 6 Mar 2023 12:51:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229869AbjCFP1L (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 10:27:11 -0500
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F090340CB;
-        Mon,  6 Mar 2023 07:27:10 -0800 (PST)
-Received: by mail-wr1-f52.google.com with SMTP id j2so9210391wrh.9;
-        Mon, 06 Mar 2023 07:27:10 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678116429;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WjzbTdN7CLD76LwUYgSQFGlrkv+uCLMJlqFIMmRORpA=;
-        b=2EUxB7rhuYb6ii74TXs9YxpCJfySTXuBhpC00xi2g2Tl/LKcr0u9Gh6OjOA8oldIWm
-         Lw703w6B1qzrGyPBhPf8iBBgv1HVPnMh9jfcg3j0t3OUzrKpwzLv1dqjaisbRwHAYGSW
-         wYNLJ4gQQcUb4/vmh7WEEIcloNRTZsKn+wBCQOnSApgMEs2UHBk0eWUKqtz8OXuZGKuA
-         BzvEFRHctI0x1VBvTC81BQkLNFM+tdLdQiJ6zp2kSI/3aGe8368MDS740BPhLgQ12qXj
-         0FpHtsTrpwiDjoTE3C6nL7fusulh7SN/6ulOjc7FvCvckC1B9086DLwqq7hFqptf6eOQ
-         WrcA==
-X-Gm-Message-State: AO0yUKWGBHuyX1P1LV1bgoz7eY99SoIykUcj0mjyVRYY4DrF42RVupL4
-        0loLf8b2rTaDprlKZq3BqsQ=
-X-Google-Smtp-Source: AK7set8sLVDUwT8GQGScn0gVSp+FOGcmG6WKTOjmYMNL/6orgxuEwPFL/9jsyQwuVKKF6cXajJRglg==
-X-Received: by 2002:adf:eb4b:0:b0:2c6:e744:cf71 with SMTP id u11-20020adfeb4b000000b002c6e744cf71mr6185222wrn.52.1678116429360;
-        Mon, 06 Mar 2023 07:27:09 -0800 (PST)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id r1-20020a056000014100b002c5534db60bsm10414947wrx.71.2023.03.06.07.27.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Mar 2023 07:27:08 -0800 (PST)
-Date:   Mon, 6 Mar 2023 15:27:03 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     ebiederm@xmission.com, keescook@chromium.org, yzaikin@google.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, minyard@acm.org,
-        kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, song@kernel.org, robinmholt@gmail.com,
-        steve.wahl@hpe.com, mike.travis@hpe.com, arnd@arndb.de,
-        gregkh@linuxfoundation.org, jirislaby@kernel.org, jgross@suse.com,
-        sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
-        xen-devel@lists.xenproject.org, j.granados@samsung.com,
-        zhangpeng362@huawei.com, tangmeng@uniontech.com,
-        willy@infradead.org, nixiaoming@huawei.com, sujiaxun@uniontech.com,
-        patches@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        apparmor@lists.ubuntu.com, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] hv: simplify sysctl registration
-Message-ID: <ZAYGR4DFQrjZVpC5@liuwe-devbox-debian-v2>
-References: <20230302204612.782387-1-mcgrof@kernel.org>
- <20230302204612.782387-4-mcgrof@kernel.org>
+        with ESMTP id S229964AbjCFRvR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 12:51:17 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 523366A06F;
+        Mon,  6 Mar 2023 09:50:47 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AF3766108D;
+        Mon,  6 Mar 2023 17:48:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 244E6C433A0;
+        Mon,  6 Mar 2023 17:48:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678124929;
+        bh=p+285oYfxGT6oBTqHONjb6ZZM55PJciuUnjkNQRO/l8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=mLukCiu6l58LxMHAFOYSqQ4tDWy7q06yDh7VqDDp6QPQEu+lL8E2cmYL2RViflJMl
+         HBscU23mm//Dr/O3xDo/uCvbaCP1w2RRDHfiQaKnvYBPn24+sQeWtLkGA6kYYrQZC8
+         420Av6Crf12BbjSeH5z/C99Q20K6JTHpOgAwaeYLG1EeASUMNePxPHzOcs3dLfZ6xe
+         Cjf5beR8XB3IgiqtB4IX6LpDWjnhnUVWQRGtZspfftRWxUbgOeo81ecwU7LKEZNTiD
+         29ZYgnmooHENwAexUIstb8rtfNEjvSTZ3lp7ai8Rt+fZ0oFF6Wa0Rh5JQxgVGPC36Y
+         ZY4benJ/1LLBQ==
+Received: by mail-lf1-f42.google.com with SMTP id k14so13858269lfj.7;
+        Mon, 06 Mar 2023 09:48:49 -0800 (PST)
+X-Gm-Message-State: AO0yUKWeQBU/XCS59KOf0/JflZA73iJfy3c3AnLqlllLvbt36v1t+C8E
+        DLdXjnA3w0Nk3VylKDyM7upMfN72d79eZby96So=
+X-Google-Smtp-Source: AK7set96s98VtUg4tvq8jDeVcoN4cW8Y4Vt0icc1TFcZ9YMAnc7rz9TIMDGuN7rDsHZUSneArEil7nQkSsY+3mQdkcE=
+X-Received: by 2002:ac2:5ece:0:b0:4dd:a74d:aca3 with SMTP id
+ d14-20020ac25ece000000b004dda74daca3mr3592321lfq.3.1678124927094; Mon, 06 Mar
+ 2023 09:48:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230302204612.782387-4-mcgrof@kernel.org>
+References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
+ <CAPhsuW7ZWthh0PZt71hQh1_51C0yMSpOqWYJKc_+VzzTmW_r5A@mail.gmail.com> <167805126796.8008.3635368722810568057@noble.neil.brown.name>
+In-Reply-To: <167805126796.8008.3635368722810568057@noble.neil.brown.name>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 6 Mar 2023 09:48:34 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW64R2ze1AYZhEmQcGf0cKBjjX=4EZZowD+=Cr=VPg1QYg@mail.gmail.com>
+Message-ID: <CAPhsuW64R2ze1AYZhEmQcGf0cKBjjX=4EZZowD+=Cr=VPg1QYg@mail.gmail.com>
+Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
+ can no longer assemble software raid0
+To:     NeilBrown <neilb@suse.de>
+Cc:     Linux regressions mailing list <regressions@lists.linux.dev>,
+        Jes.Sorensen@gmail.com, linux-raid <linux-raid@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Nikolay Kichukov <hijacker@oldum.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Mar 02, 2023 at 12:46:08PM -0800, Luis Chamberlain wrote:
-> register_sysctl_table() is a deprecated compatibility wrapper.
-> register_sysctl() can do the directory creation for you so just use
-> that.
-> 
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+On Sun, Mar 5, 2023 at 1:21=E2=80=AFPM NeilBrown <neilb@suse.de> wrote:
+>
+> On Sat, 04 Mar 2023, Song Liu wrote:
+> > + Jes.
+> >
+> > It appeared to me that we can assemble the array if we have any of the
+> > following:
+> > 1. Enable CONFIG_BLOCK_LEGACY_AUTOLOAD;
+> > 2. Have a valid /etc/mdadm.conf;
+> > 3. Update mdadm to handle this case. (I tried some ugly hacks, which wo=
+rked but
+> >     weren't clean).
+> >
+> > Since we eventually would like to get rid of CONFIG_BLOCK_LEGACY_AUTOLO=
+AD, I
+> > think we need mdadm to handle this properly. But the logistics might
+> > be complicated, as
+> > mdadm are shipped separately.
+> >
+> > Jes, what do you think about this? AFAICT, we need to update the logic =
+in
+> > mdopen.c:create_mddev().
+>
+> mdadm already handles this, but only if
+>    CREATE names=3Dyes
+> is present in /etc/mdadm.conf
+>
+> Maybe we should flip the default for the next mdadm release, and patch
+> the kernel (with a stable backport) to select BLOCK_LEGACY_AUTOLOAD if
+> BLK_DEV_MD=3Dm
+> Then revert that - say - 6 months after the new mdadm is released.
 
-Reviewed-by: Wei Liu <wei.liu@kernel.org>
+I like this idea. I guess we also need to select BLOCK_LEGACY_AUTOLOAD
+if BLK_DEV_MD=3Dy?
+
+Thanks,
+Song
