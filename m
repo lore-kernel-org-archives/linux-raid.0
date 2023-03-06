@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF04FC64EC4
-	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 21:29:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC9F4C61DA4
+	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 21:29:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230085AbjCFV3D (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 6 Mar 2023 16:29:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52260 "EHLO
+        id S230119AbjCFV3S (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 6 Mar 2023 16:29:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230018AbjCFV2z (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 16:28:55 -0500
+        with ESMTP id S229686AbjCFV25 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 16:28:57 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15CA21F4BA
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EB04298CE
         for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 13:28:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678138086;
+        s=mimecast20190719; t=1678138085;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=eEfpw9QamGHyb/jcUBaxmQ/IrLQ7kWg6t/wGAmfwvDY=;
-        b=SNoikir97Kk9mGu+4beSsakOxtiKr4T5wojkfesiBpLtG5nje0hzxaBur+L8LTuQWe+87X
-        KjUcSsvxSsy6Ghp4V43UHDw9zh7cF0rhNujqEeJCQPScubncC4bWltrPDpPuxK2Hla8tNJ
-        qP7q4sSStsfqQtvRRdkZ/T9dGEDvPx4=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=V79xxj0yJFNR7580OLy2ZxJq6stifnVYtPHWblk1Eh8=;
+        b=b8QSCBHtV2ziCLIn6spykvzvHhwyyDdoPJFT3jsR9tNNCrNslk8s2yqnGb/RszZ/UEx1rD
+        J9WVgJDzKX76Ha5k1uvpUbmeIhRW6M6CzZ7/FBx4KoS6D2NuMJ1YhaB0DFQK/BZHj1G+ls
+        s1P3XFtxhWVd0Ig9+tQjR52igoSn4IY=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-332-6ysETEcZNG23xBVqoTgl0A-1; Mon, 06 Mar 2023 16:28:05 -0500
-X-MC-Unique: 6ysETEcZNG23xBVqoTgl0A-1
+ us-mta-166-qB951-IZO1mzv1i5n9MlDQ-1; Mon, 06 Mar 2023 16:28:04 -0500
+X-MC-Unique: qB951-IZO1mzv1i5n9MlDQ-1
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CC964101AA78
-        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 21:28:04 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CE6A929DD9A1
+        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 21:28:03 +0000 (UTC)
 Received: from o.redhat.com (unknown [10.39.192.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1531540C83B6;
-        Mon,  6 Mar 2023 21:28:03 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 16A6E400DFA1;
+        Mon,  6 Mar 2023 21:28:02 +0000 (UTC)
 From:   heinzm@redhat.com
 To:     linux-raid@vger.kernel.org
 Cc:     ncroxon@redhat.com, xni@redhat.com, dkeefe@redhat.com
-Subject: [PATCH 06/34] md: move trailing statements to next line [ERROR]
-Date:   Mon,  6 Mar 2023 22:27:29 +0100
-Message-Id: <12a6970ce1bf7489aa67a3c6d70438a48b8f8987.1678136717.git.heinzm@redhat.com>
+Subject: [PATCH 05/34] md: correct code indent [ERROR]
+Date:   Mon,  6 Mar 2023 22:27:28 +0100
+Message-Id: <643f0250f60db01b4d0df97e17892376bcc6fe3c.1678136717.git.heinzm@redhat.com>
 In-Reply-To: <cover.1678136717.git.heinzm@redhat.com>
 References: <cover.1678136717.git.heinzm@redhat.com>
 MIME-Version: 1.0
@@ -54,250 +54,159 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Heinz Mauelshagen <heinzm@redhat.com>
 
-Also, add curly braces where appropriate.
-
 Signed-off-by: heinzm <heinzm@redhat.com>
 ---
- drivers/md/md-autodetect.c |  3 +-
- drivers/md/md-faulty.c     | 10 +++++--
- drivers/md/md.c            | 20 ++++++++-----
- drivers/md/md.h            |  3 +-
- drivers/md/raid10.c        | 11 ++++----
- drivers/md/raid5.c         | 57 +++++++++++++++++++++-----------------
- 6 files changed, 61 insertions(+), 43 deletions(-)
+ drivers/md/md.c          | 18 +++++++-----------
+ drivers/md/md.h          |  9 +++++----
+ drivers/md/raid1.c       |  5 ++---
+ drivers/md/raid10.c      |  9 ++++-----
+ drivers/md/raid5.c       |  2 +-
+ include/linux/raid/xor.h |  6 +++---
+ 6 files changed, 22 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
-index 46090cdd02ba..e8acb3021094 100644
---- a/drivers/md/md-autodetect.c
-+++ b/drivers/md/md-autodetect.c
-@@ -237,7 +237,8 @@ static int __init raid_setup(char *str)
- 		int wlen;
- 		if (comma)
- 			wlen = (comma-str)-pos;
--		else	wlen = (len-1)-pos;
-+		else
-+			wlen = (len-1)-pos;
- 
- 		if (!strncmp(str, "noautodetect", wlen))
- 			raid_noautodetect = 1;
-diff --git a/drivers/md/md-faulty.c b/drivers/md/md-faulty.c
-index 8493432a732e..33cb00115777 100644
---- a/drivers/md/md-faulty.c
-+++ b/drivers/md/md-faulty.c
-@@ -125,10 +125,12 @@ static void add_sector(struct faulty_conf *conf, sector_t start, int mode)
- {
- 	int i;
- 	int n = conf->nfaults;
--	for (i = 0; i < conf->nfaults; i++)
-+	for (i = 0; i < conf->nfaults; i++) {
- 		if (conf->faults[i] == start) {
- 			switch (mode) {
--			case NoPersist: conf->modes[i] = mode; return;
-+			case NoPersist:
-+				conf->modes[i] = mode;
-+				return;
- 			case WritePersistent:
- 				if (conf->modes[i] == ReadPersistent ||
- 				    conf->modes[i] == ReadFixable)
-@@ -152,6 +154,7 @@ static void add_sector(struct faulty_conf *conf, sector_t start, int mode)
- 			}
- 		} else if (conf->modes[i] == NoPersist)
- 			n = i;
-+	}
- 
- 	if (n >= MaxFault)
- 		return;
-@@ -271,7 +274,8 @@ static int faulty_reshape(struct mddev *mddev)
- 		}
- 	} else if (mode < Modes) {
- 		conf->period[mode] = count;
--		if (!count) count++;
-+		if (!count)
-+			count++;
- 		atomic_set(&conf->counters[mode], count);
- 	} else
- 		return -EINVAL;
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f8d44832339e..24e55e2cf4db 100644
+index 315b0810dbdd..f8d44832339e 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -1634,7 +1634,8 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 	 * and it is safe to read 4k, so we do that
- 	 */
- 	ret = read_disk_sb(rdev, 4096);
--	if (ret) return ret;
-+	if (ret)
-+		return ret;
+@@ -27,12 +27,11 @@
+    Errors, Warnings, etc.
+    Please use:
+      pr_crit() for error conditions that risk data loss
+-     pr_err() for error conditions that are unexpected, like an IO error
+-         or internal inconsistency
++     pr_err()  for error conditions that are unexpected, like an IO error or internal inconsistency
+      pr_warn() for error conditions that could have been predicated, like
+-         adding a device to an array when it has incompatible metadata
++	       adding a device to an array when it has incompatible metadata
+      pr_info() for every interesting, very rare events, like an array starting
+-         or stopping, or resync starting or stopping
++	       for stopping, or resync starting or stopping
+      pr_debug() for everything else.
  
- 	sb = page_address(rdev->sb_page);
- 
-@@ -4599,13 +4600,16 @@ bitmap_store(struct mddev *mddev, const char *buf, size_t len)
- 	/* buf should be <chunk> <chunk> ... or <chunk>-<chunk> ... (range) */
- 	while (*buf) {
- 		chunk = end_chunk = simple_strtoul(buf, &end, 0);
--		if (buf == end) break;
-+		if (buf == end)
-+			break;
- 		if (*end == '-') { /* range */
- 			buf = end + 1;
- 			end_chunk = simple_strtoul(buf, &end, 0);
--			if (buf == end) break;
-+			if (buf == end)
-+				break;
- 		}
--		if (*end && !isspace(*end)) break;
-+		if (*end && !isspace(*end)) 
-+			break;
- 		md_bitmap_dirty_bits(mddev->bitmap, chunk, end_chunk);
- 		buf = skip_spaces(end);
+ */
+@@ -3249,9 +3248,8 @@ static ssize_t new_offset_store(struct md_rdev *rdev,
+ 		;
+ 	else if (new_offset > rdev->data_offset) {
+ 		/* must not push array size beyond rdev_sectors */
+-		if (new_offset - rdev->data_offset
+-		    + mddev->dev_sectors > rdev->sectors)
+-				return -E2BIG;
++		if (new_offset - rdev->data_offset + mddev->dev_sectors > rdev->sectors)
++			return -E2BIG;
  	}
-@@ -4975,7 +4979,8 @@ sync_speed_show(struct mddev *mddev, char *page)
- 		return sprintf(page, "none\n");
- 	resync = mddev->curr_mark_cnt - atomic_read(&mddev->recovery_active);
- 	dt = (jiffies - mddev->resync_mark) / HZ;
--	if (!dt) dt++;
-+	if (!dt)
-+		dt++;
- 	db = resync - mddev->resync_mark_cnt;
- 	return sprintf(page, "%lu\n", db/dt/2); /* K/sec */
- }
-@@ -7525,7 +7530,7 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
- 	case RAID_VERSION:
- 		err = get_version(argp);
- 		goto out;
--	default:;
-+	default:
- 	}
+ 	/* Metadata worries about other space details. */
  
- 	/*
-@@ -8117,7 +8122,8 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
- 	 *   The '+1' avoids division by zero if db is very small.
- 	 */
- 	dt = ((jiffies - mddev->resync_mark) / HZ);
--	if (!dt) dt++;
-+	if (!dt)
-+		dt++;
- 
- 	curr_mark_cnt = mddev->curr_mark_cnt;
- 	recovery_active = atomic_read(&mddev->recovery_active);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 9408cfbd92db..a885bbcebe2d 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -720,7 +720,8 @@ struct md_io_acct {
- 
- static inline void safe_put_page(struct page *p)
- {
--	if (p) put_page(p);
-+	if (p)
-+		put_page(p);
- }
- 
- extern int register_md_personality(struct md_personality *p);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a26a3764b234..7a15f794b839 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3335,11 +3335,12 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 			if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
- 				md_bitmap_end_sync(mddev->bitmap, mddev->curr_resync,
- 						   &sync_blocks, 1);
--			else for (i = 0; i < conf->geo.raid_disks; i++) {
--				sector_t sect =
--					raid10_find_virt(conf, mddev->curr_resync, i);
--				md_bitmap_end_sync(mddev->bitmap, sect,
--						   &sync_blocks, 1);
-+			else {
-+				for (i = 0; i < conf->geo.raid_disks; i++) {
-+					sector_t sect =
-+					   raid10_find_virt(conf, mddev->curr_resync, i);
-+					md_bitmap_end_sync(mddev->bitmap, sect, &sync_blocks, 1);
-+				}
+@@ -5824,10 +5822,8 @@ int md_run(struct mddev *mddev)
+ 			/* Nothing to check */;
+ 		} else if (rdev->data_offset < rdev->sb_start) {
+ 			if (mddev->dev_sectors &&
+-			    rdev->data_offset + mddev->dev_sectors
+-			    > rdev->sb_start) {
+-				pr_warn("md: %s: data overlaps metadata\n",
+-					mdname(mddev));
++			    rdev->data_offset + mddev->dev_sectors > rdev->sb_start) {
++				pr_warn("md: %s: data overlaps metadata\n", mdname(mddev));
+ 				return -EINVAL;
  			}
  		} else {
- 			/* completed sync */
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 45f8ada8814e..9408cfbd92db 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -1,9 +1,10 @@
+ /* SPDX-License-Identifier: GPL-2.0-or-later */
+ /*
+-   md.h : kernel internal structure of the Linux MD driver
+-          Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman
+-
+-*/
++ * md.h : kernel internal structure of the Linux MD driver
++ *
++ *	Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman
++ *
++ */
+ 
+ #ifndef _MD_MD_H
+ #define _MD_MD_H
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 415b1dd55baa..809a46dbbaef 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1324,12 +1324,11 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	read_bio->bi_opf = op | do_sync;
+ 	if (test_bit(FailFast, &mirror->rdev->flags) &&
+ 	    test_bit(R1BIO_FailFast, &r1_bio->state))
+-	        read_bio->bi_opf |= MD_FAILFAST;
++		read_bio->bi_opf |= MD_FAILFAST;
+ 	read_bio->bi_private = r1_bio;
+ 
+ 	if (mddev->gendisk)
+-	        trace_block_bio_remap(read_bio, disk_devt(mddev->gendisk),
+-				      r1_bio->sector);
++		trace_block_bio_remap(read_bio, disk_devt(mddev->gendisk), r1_bio->sector);
+ 
+ 	submit_bio_noacct(read_bio);
+ }
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index cdc2f2557966..a26a3764b234 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1257,12 +1257,11 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	read_bio->bi_opf = op | do_sync;
+ 	if (test_bit(FailFast, &rdev->flags) &&
+ 	    test_bit(R10BIO_FailFast, &r10_bio->state))
+-	        read_bio->bi_opf |= MD_FAILFAST;
++		read_bio->bi_opf |= MD_FAILFAST;
+ 	read_bio->bi_private = r10_bio;
+ 
+ 	if (mddev->gendisk)
+-	        trace_block_bio_remap(read_bio, disk_devt(mddev->gendisk),
+-	                              r10_bio->sector);
++		trace_block_bio_remap(read_bio, disk_devt(mddev->gendisk), r10_bio->sector);
+ 	submit_bio_noacct(read_bio);
+ 	return;
+ }
+@@ -4448,8 +4447,8 @@ static int raid10_check_reshape(struct mddev *mddev)
+ 		return -EINVAL;
+ 
+ 	if (mddev->array_sectors & geo.chunk_mask)
+-			/* not factor of array size */
+-			return -EINVAL;
++		/* not factor of array size */
++		return -EINVAL;
+ 
+ 	if (!enough(conf, -1))
+ 		return -EINVAL;
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1d5db89acb8d..00151c850a35 100644
+index 73060e4124b4..1d5db89acb8d 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3215,7 +3215,8 @@ sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous)
- 	if (i == sh->pd_idx)
- 		return 0;
- 	switch (conf->level) {
--	case 4: break;
-+	case 4:
-+		break;
- 	case 5:
- 		switch (algorithm) {
- 		case ALGORITHM_LEFT_ASYMMETRIC:
-@@ -3712,7 +3713,8 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
- 			sh->dev[i].page = sh->dev[i].orig_page;
+@@ -4145,7 +4145,7 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+ 			sh = list_first_entry(&sh->batch_list,
+ 					      struct stripe_head, batch_list);
+ 			if (sh != head_sh)
+-					goto unhash;
++				goto unhash;
  		}
+ 		sh = head_sh;
  
--		if (bi) bitmap_end = 1;
-+		if (bi)
-+			bitmap_end = 1;
- 		while (bi && bi->bi_iter.bi_sector <
- 		       sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) {
- 			struct bio *bi2 = r5_next_bio(conf, bi, sh->dev[i].sector);
-@@ -4202,30 +4204,33 @@ static int handle_stripe_dirtying(struct r5conf *conf,
- 		pr_debug("force RCW rmw_level=%u, recovery_cp=%llu sh->sector=%llu\n",
- 			 conf->rmw_level, (unsigned long long)recovery_cp,
- 			 (unsigned long long)sh->sector);
--	} else for (i = disks; i--; ) {
--		/* would I have to read this buffer for read_modify_write */
--		struct r5dev *dev = &sh->dev[i];
--		if (((dev->towrite && !delay_towrite(conf, dev, s)) ||
--		     i == sh->pd_idx || i == sh->qd_idx ||
--		     test_bit(R5_InJournal, &dev->flags)) &&
--		    !test_bit(R5_LOCKED, &dev->flags) &&
--		    !(uptodate_for_rmw(dev) ||
--		      test_bit(R5_Wantcompute, &dev->flags))) {
--			if (test_bit(R5_Insync, &dev->flags))
--				rmw++;
--			else
--				rmw += 2*disks;  /* cannot read it */
--		}
--		/* Would I have to read this buffer for reconstruct_write */
--		if (!test_bit(R5_OVERWRITE, &dev->flags) &&
--		    i != sh->pd_idx && i != sh->qd_idx &&
--		    !test_bit(R5_LOCKED, &dev->flags) &&
--		    !(test_bit(R5_UPTODATE, &dev->flags) ||
--		      test_bit(R5_Wantcompute, &dev->flags))) {
--			if (test_bit(R5_Insync, &dev->flags))
--				rcw++;
--			else
--				rcw += 2*disks;
-+	} else {
-+		for (i = disks; i--; ) {
-+			/* would I have to read this buffer for read_modify_write */
-+			struct r5dev *dev = &sh->dev[i];
-+			if (((dev->towrite && !delay_towrite(conf, dev, s)) ||
-+			     i == sh->pd_idx || i == sh->qd_idx ||
-+			     test_bit(R5_InJournal, &dev->flags)) &&
-+			    !test_bit(R5_LOCKED, &dev->flags) &&
-+			    !(uptodate_for_rmw(dev) ||
-+			      test_bit(R5_Wantcompute, &dev->flags))) {
-+				if (test_bit(R5_Insync, &dev->flags))
-+					rmw++;
-+				else
-+					rmw += 2*disks;  /* cannot read it */
-+			}
-+
-+			/* Would I have to read this buffer for reconstruct_write */
-+			if (!test_bit(R5_OVERWRITE, &dev->flags) &&
-+			    i != sh->pd_idx && i != sh->qd_idx &&
-+			    !test_bit(R5_LOCKED, &dev->flags) &&
-+			    !(test_bit(R5_UPTODATE, &dev->flags) ||
-+			      test_bit(R5_Wantcompute, &dev->flags))) {
-+				if (test_bit(R5_Insync, &dev->flags))
-+					rcw++;
-+				else
-+					rcw += 2*disks;
-+			}
- 		}
- 	}
+diff --git a/include/linux/raid/xor.h b/include/linux/raid/xor.h
+index 1827a54790d7..231f467935a9 100644
+--- a/include/linux/raid/xor.h
++++ b/include/linux/raid/xor.h
+@@ -8,9 +8,9 @@ extern void xor_blocks(unsigned int count, unsigned int bytes,
+ 	void *dest, void **srcs);
  
+ struct xor_block_template {
+-        struct xor_block_template *next;
+-        const char *name;
+-        int speed;
++	struct xor_block_template *next;
++	const char *name;
++	int speed;
+ 	void (*do_2)(unsigned long, unsigned long *__restrict,
+ 		     const unsigned long *__restrict);
+ 	void (*do_3)(unsigned long, unsigned long *__restrict,
 -- 
 2.39.2
 
