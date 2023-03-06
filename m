@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74360C64EC4
-	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 21:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ED46C61DA4
+	for <linux-raid@archiver.kernel.org>; Mon,  6 Mar 2023 21:29:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230173AbjCFV3p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 6 Mar 2023 16:29:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52854 "EHLO
+        id S230177AbjCFV3q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 6 Mar 2023 16:29:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229897AbjCFV3P (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 16:29:15 -0500
+        with ESMTP id S229717AbjCFV3L (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 16:29:11 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B476630D1
-        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 13:28:19 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C91AE46097
+        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 13:28:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678138099;
+        s=mimecast20190719; t=1678138097;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=LCGuROQ/Kb1G9JfeQNfTp0LsTsDyLGp+Sz8iQSLeyvo=;
-        b=VjJBjt1KYDnYJ+HNClXIkTLjG++ab2ZkNcCF6CZfeYJRT85oWQ0ptxxMmuGnviEjp7FRnY
-        84wTLavXaRpTDxvTV2Fz3lcNvhSj1GkOgG58zczOy3CPapxcheGZEdShBi8IYWPVoRMBuN
-        nEhP/HP4yF2KOzVyHaOYx+RvQ4sV7/I=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=loruWx+IofCSbiLRR0IdR2DFgCl8R6FSWFgPINy/p2A=;
+        b=ERJ1Q1ZjGFXcaCD20D++sFTccAQ+Tw3FGkbkf825371A/9g3WR0AJk3E3pZn4jws8zXa41
+        glGYlpYYxSDO9GdycgcZQiztCEGxHEmOT7JywM8MmmjwvuMcZ91N89Y8lsJEKSkFVx4rrI
+        8evj07ZIVdQXdekCd0mALHjU5IdUxtw=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-548-tJTq4wY4PIGp5Xy8KzF3gg-1; Mon, 06 Mar 2023 16:28:17 -0500
-X-MC-Unique: tJTq4wY4PIGp5Xy8KzF3gg-1
+ us-mta-584-StXZ-MJdNI6AdwtaEjOzdA-1; Mon, 06 Mar 2023 16:28:16 -0500
+X-MC-Unique: StXZ-MJdNI6AdwtaEjOzdA-1
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 7D4CD29DD981
-        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 21:28:17 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 7EDAE802C18
+        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 21:28:16 +0000 (UTC)
 Received: from o.redhat.com (unknown [10.39.192.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B9F9740AE20A;
-        Mon,  6 Mar 2023 21:28:16 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BB88240B40E4;
+        Mon,  6 Mar 2023 21:28:15 +0000 (UTC)
 From:   heinzm@redhat.com
 To:     linux-raid@vger.kernel.org
 Cc:     ncroxon@redhat.com, xni@redhat.com, dkeefe@redhat.com
-Subject: [PATCH 18/34] md: avoid redundant braces in single line statements [WARNING]
-Date:   Mon,  6 Mar 2023 22:27:41 +0100
-Message-Id: <258d52b52c0e1e202c0e5b3e128e5967ffd5f8a1.1678136717.git.heinzm@redhat.com>
+Subject: [PATCH 17/34] md: add missing function identifier names to function definition arguments [WARNING]
+Date:   Mon,  6 Mar 2023 22:27:40 +0100
+Message-Id: <4971d9e404b4cdb6b6803d6f2866e9f5f291113e.1678136717.git.heinzm@redhat.com>
 In-Reply-To: <cover.1678136717.git.heinzm@redhat.com>
 References: <cover.1678136717.git.heinzm@redhat.com>
 MIME-Version: 1.0
@@ -56,56 +56,91 @@ From: Heinz Mauelshagen <heinzm@redhat.com>
 
 Signed-off-by: heinzm <heinzm@redhat.com>
 ---
- drivers/md/md-bitmap.c  | 3 +--
- drivers/md/md-cluster.c | 3 +--
- drivers/md/raid5.c      | 3 +--
- 3 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/md/md.c          |  4 ++--
+ include/linux/raid/pq.h  |  8 ++++----
+ include/linux/raid/xor.h | 28 ++++++++++++++--------------
+ 3 files changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 9f1e25927d13..65e77a7e3656 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2173,9 +2173,8 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 				unsigned long k;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e63543c98ba6..dbdd0288ddd2 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2878,8 +2878,8 @@ static int cmd_match(const char *cmd, const char *str)
  
- 				/* deallocate the page memory */
--				for (k = 0; k < page; k++) {
-+				for (k = 0; k < page; k++)
- 					kfree(new_bp[k].map);
--				}
- 				kfree(new_bp);
+ struct rdev_sysfs_entry {
+ 	struct attribute attr;
+-	ssize_t (*show)(struct md_rdev *, char *);
+-	ssize_t (*store)(struct md_rdev *, const char *, size_t);
++	ssize_t (*show)(struct md_rdev *rdev, char *buf);
++	ssize_t (*store)(struct md_rdev *rdev, const char *buf, size_t sz);
+ };
  
- 				/* restore some fields from old_counts */
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 7ad5e1a97638..762160e81ce8 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -1531,9 +1531,8 @@ static void unlock_all_bitmaps(struct mddev *mddev)
- 	/* release other node's bitmap lock if they are existed */
- 	if (cinfo->other_bitmap_lockres) {
- 		for (i = 0; i < mddev->bitmap_info.nodes - 1; i++) {
--			if (cinfo->other_bitmap_lockres[i]) {
-+			if (cinfo->other_bitmap_lockres[i])
- 				lockres_free(cinfo->other_bitmap_lockres[i]);
--			}
- 		}
- 		kfree(cinfo->other_bitmap_lockres);
- 		cinfo->other_bitmap_lockres = NULL;
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 08a0ee77cacb..f834c497b8fe 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4109,9 +4109,8 @@ static void handle_stripe_clean_event(struct r5conf *conf,
- 				pr_debug("Return write for disc %d\n", i);
- 				if (test_and_clear_bit(R5_Discard, &dev->flags))
- 					clear_bit(R5_UPTODATE, &dev->flags);
--				if (test_and_clear_bit(R5_SkipCopy, &dev->flags)) {
-+				if (test_and_clear_bit(R5_SkipCopy, &dev->flags))
- 					WARN_ON(test_bit(R5_UPTODATE, &dev->flags));
--				}
- 				do_endio = true;
+ static ssize_t
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index 7fa2bef58ff3..41c525e4c959 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -70,8 +70,8 @@ extern const char raid6_empty_zero_page[PAGE_SIZE];
  
- returnbi:
+ /* Routine choices */
+ struct raid6_calls {
+-	void (*gen_syndrome)(int, size_t, void **);
+-	void (*xor_syndrome)(int, int, int, size_t, void **);
++	void (*gen_syndrome)(int disks, size_t bytes, void **ptrs);
++	void (*xor_syndrome)(int disks, int start, int stop, size_t bytes, void **ptrs);
+ 	int  (*valid)(void);	/* Returns 1 if this routine set is usable */
+ 	const char *name;	/* Name of this routine set */
+ 	int priority;		/* Relative priority ranking if non-zero */
+@@ -111,8 +111,8 @@ extern const struct raid6_calls raid6_vpermxor4;
+ extern const struct raid6_calls raid6_vpermxor8;
+ 
+ struct raid6_recov_calls {
+-	void (*data2)(int, size_t, int, int, void **);
+-	void (*datap)(int, size_t, int, void **);
++	void (*data2)(int disks, size_t bytes, int faila, int failb, void **ptrs);
++	void (*datap)(int disks, size_t bytes, int faila, void **ptrs);
+ 	int  (*valid)(void);
+ 	const char *name;
+ 	int priority;
+diff --git a/include/linux/raid/xor.h b/include/linux/raid/xor.h
+index 231f467935a9..1630b0681099 100644
+--- a/include/linux/raid/xor.h
++++ b/include/linux/raid/xor.h
+@@ -11,20 +11,20 @@ struct xor_block_template {
+ 	struct xor_block_template *next;
+ 	const char *name;
+ 	int speed;
+-	void (*do_2)(unsigned long, unsigned long *__restrict,
+-		     const unsigned long *__restrict);
+-	void (*do_3)(unsigned long, unsigned long *__restrict,
+-		     const unsigned long *__restrict,
+-		     const unsigned long *__restrict);
+-	void (*do_4)(unsigned long, unsigned long *__restrict,
+-		     const unsigned long *__restrict,
+-		     const unsigned long *__restrict,
+-		     const unsigned long *__restrict);
+-	void (*do_5)(unsigned long, unsigned long *__restrict,
+-		     const unsigned long *__restrict,
+-		     const unsigned long *__restrict,
+-		     const unsigned long *__restrict,
+-		     const unsigned long *__restrict);
++	void (*do_2)(unsigned long bytes, unsigned long *__restrict p1,
++		     const unsigned long *__restrict p2);
++	void (*do_3)(unsigned long bytes, unsigned long *__restrict p1,
++		     const unsigned long *__restrict p2,
++		     const unsigned long *__restrict p3);
++	void (*do_4)(unsigned long bytes, unsigned long *__restrict p1,
++		     const unsigned long *__restrict p2,
++		     const unsigned long *__restrict p3,
++		     const unsigned long *__restrict p4);
++	void (*do_5)(unsigned long bytes, unsigned long *__restrict p1,
++		     const unsigned long *__restrict p2,
++		     const unsigned long *__restrict p3,
++		     const unsigned long *__restrict p4,
++		     const unsigned long *__restrict p5);
+ };
+ 
+ #endif
 -- 
 2.39.2
 
