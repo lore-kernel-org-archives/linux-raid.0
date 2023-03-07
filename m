@@ -2,104 +2,118 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4279EC61DA4
-	for <linux-raid@archiver.kernel.org>; Tue,  7 Mar 2023 01:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B658C64EC4
+	for <linux-raid@archiver.kernel.org>; Tue,  7 Mar 2023 02:04:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229627AbjCGB1y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 6 Mar 2023 20:27:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54534 "EHLO
+        id S229692AbjCGCEm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 6 Mar 2023 21:04:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229565AbjCGB1x (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 20:27:53 -0500
-X-Greylist: delayed 543 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 06 Mar 2023 17:27:51 PST
-Received: from out-63.mta1.migadu.com (out-63.mta1.migadu.com [IPv6:2001:41d0:203:375::3f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A23F4BE91
-        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 17:27:51 -0800 (PST)
-Message-ID: <5be00f6c-22ee-1af3-c5ed-d92863d7f442@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1678151926;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=crFIcr4bgnXNaqnGbvggQbdpzUCxWPHITHXV68P7xMA=;
-        b=FfAnxY/pW51zaWcTY11csqBns/HNsKTBYvHCrv64bP4E1I2TzCWcc3ESG6k89MdKPxkx+C
-        kWNiK3pyaezBEZFogCxvUhV5Xrna/WhHQTw1X65z/gLQx8w209VpDLdj4NISqdj56kH6Gd
-        7v5Opvgu4myBRQxWGIl7XNykS+9Xp48=
-Date:   Tue, 7 Mar 2023 09:18:42 +0800
+        with ESMTP id S229545AbjCGCEk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 21:04:40 -0500
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2648849895;
+        Mon,  6 Mar 2023 18:04:30 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PVzK53Zz8z4f3l1d;
+        Tue,  7 Mar 2023 10:04:25 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgA35CGpmwZktHvlEQ--.51526S4;
+        Tue, 07 Mar 2023 10:04:27 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org, neilb@suse.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next] radi10: fix leak of 'r10bio->remaining' for recovery
+Date:   Tue,  7 Mar 2023 10:27:39 +0800
+Message-Id: <20230307022739.2656920-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Subject: Re: [PATCH 00/34] address various checkpatch.pl requirements
-To:     heinzm@redhat.com, linux-raid@vger.kernel.org
-Cc:     ncroxon@redhat.com, xni@redhat.com, dkeefe@redhat.com
-References: <cover.1678136717.git.heinzm@redhat.com>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-In-Reply-To: <cover.1678136717.git.heinzm@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgA35CGpmwZktHvlEQ--.51526S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxJry7Jw4kXry7KFy3Zw47Arb_yoW8uFWxpF
+        ZIkFWFyryUG3W7Cr4DJ3yDAa4Fk3ykWrW3AF42g3yfAw1avrWv9a1UJrW5Wrn8uFWSg34U
+        Xrn8Wr4DAFZrtFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+        AvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+From: Yu Kuai <yukuai3@huawei.com>
 
+raid10_sync_request() will add 'r10bio->remaining' for both rdev and
+replacement rdev. However, if the read io failed,
+recovery_request_write() will return without issuring the write io, in
+this case, end_sync_request() is only called once and 'remaining' is
+leaked, which will cause io hang.
 
-On 3/7/23 05:27, heinzm@redhat.com wrote:
-> From: heinzm <heinzm@redhat.com>
->
-> This patch series addresses checkpatch.pl reuirements.
->
-> It is grouped into patches addressing errors first then warnings.
-> Each patch fixes flaws in one semantical respect (e.g. fix spaces).
->
-> Series passed upstream regression tests succesfully.
->
-> Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
-> Reviewed-by: Nigel Croxon <ncroxon@redhat.com>
-> Reviewed-by: Xiao Ni <xni@redhat.com>
-> Tested-by: Nigel Croxon <ncroxon@redhat.com>
-> Tested-by: Xiao Ni <xni@redhat.com>
->
-> Heinz Mauelshagen (34):
->    md: fix required/prohibited spaces [ERROR]
->    md: fix 'foo*' and 'foo * bar' [ERROR]
->    md: fix EXPORT_SYMBOL() to follow its functions immediately [ERROR]
->    md: adjust braces on functions/structures [ERROR]
->    md: correct code indent [ERROR]
->    md: move trailing statements to next line [ERROR]
->    md: consistent spacing around operators [ERROR]
->    md: don't initialize statics/globals to 0/false [ERROR]
->    md: else should follow close curly brace [ERROR]
->    md: remove trailing whitespace [ERROR]
->    md: do not use assignment in if condition [ERROR]
->    md: add missing blank line after declaration [WARNING]
->    md: space prohibited between function and opening parenthesis [WARNING]
->    md: prefer seq_put[cs]() to seq_printf() |WARNING]
->    md: avoid multiple line dereference [WARNING}
->    md: fix block comments [WARNING]
->    md: add missing function identifier names to function definition arguments [WARNING]
->    md: avoid redundant braces in single line statements [WARNING]
->    md: place constant on the right side of a test [WARNING]
->    md: avoid pointless filenames in files [WARNING]
->    md: avoid useless else after break or return [WARNING]
->    md: don't indent labels [WARNING]
->    md: fix code indent for conditional statements [WARNING]
->    md: prefer octal permissions [WARNING]
->    md: remove bogus IS_ENABLED() macro [WARNING]
->    md autodetect: correct placement of __initdata [WARNING]
->    md: prefer using "%s...", __func__ [WARNING]
->    md pq: adjust __attribute__ [WARNING]
->    md: prefer 'unsigned int' [WARNING]
->    md: prefer kmap_local_page() instead of deprecated kmap_atomic() [WARNING]
->    md raid5: prefer 'int' instead of 'signed' [WARNING]
->    md: prefer kvmalloc_array() with multiply [WARNING]
->    md: avoid splitting quoted strings [WARNING]
->    md: avoid return in void functions [WARNING]
+Fix the probleming by decreasing 'remaining' according to if 'bio' and
+'repl_bio' is valid.
 
-Most of them do have empty log ...
+Fixes: 24afd80d99f8 ("md/raid10: handle recovery of replacement devices.")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/raid10.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-And I don't think it makes sense to run checkpatch on old code.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a8b5fecef136..f7002a1aa9cf 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2611,11 +2611,22 @@ static void recovery_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ {
+ 	struct r10conf *conf = mddev->private;
+ 	int d;
+-	struct bio *wbio, *wbio2;
++	struct bio *wbio = r10_bio->devs[1].bio;
++	struct bio *wbio2 = r10_bio->devs[1].repl_bio;
++
++	/* Need to test wbio2->bi_end_io before we call
++	 * submit_bio_noacct as if the former is NULL,
++	 * the latter is free to free wbio2.
++	 */
++	if (wbio2 && !wbio2->bi_end_io)
++		wbio2 = NULL;
+ 
+ 	if (!test_bit(R10BIO_Uptodate, &r10_bio->state)) {
+ 		fix_recovery_read_error(r10_bio);
+-		end_sync_request(r10_bio);
++		if (wbio->bi_end_io)
++			end_sync_request(r10_bio);
++		if (wbio2)
++			end_sync_request(r10_bio);
+ 		return;
+ 	}
+ 
+@@ -2624,14 +2635,6 @@ static void recovery_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	 * and submit the write request
+ 	 */
+ 	d = r10_bio->devs[1].devnum;
+-	wbio = r10_bio->devs[1].bio;
+-	wbio2 = r10_bio->devs[1].repl_bio;
+-	/* Need to test wbio2->bi_end_io before we call
+-	 * submit_bio_noacct as if the former is NULL,
+-	 * the latter is free to free wbio2.
+-	 */
+-	if (wbio2 && !wbio2->bi_end_io)
+-		wbio2 = NULL;
+ 	if (wbio->bi_end_io) {
+ 		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+ 		md_sync_acct(conf->mirrors[d].rdev->bdev, bio_sectors(wbio));
+-- 
+2.31.1
 
-Thanks,
-Guoqing
