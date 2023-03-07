@@ -2,118 +2,73 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B658C64EC4
-	for <linux-raid@archiver.kernel.org>; Tue,  7 Mar 2023 02:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39DF9C61DA4
+	for <linux-raid@archiver.kernel.org>; Tue,  7 Mar 2023 03:05:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229692AbjCGCEm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 6 Mar 2023 21:04:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34968 "EHLO
+        id S229894AbjCGDFK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 6 Mar 2023 22:05:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229545AbjCGCEk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 21:04:40 -0500
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2648849895;
-        Mon,  6 Mar 2023 18:04:30 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PVzK53Zz8z4f3l1d;
-        Tue,  7 Mar 2023 10:04:25 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgA35CGpmwZktHvlEQ--.51526S4;
-        Tue, 07 Mar 2023 10:04:27 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, neilb@suse.de
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next] radi10: fix leak of 'r10bio->remaining' for recovery
-Date:   Tue,  7 Mar 2023 10:27:39 +0800
-Message-Id: <20230307022739.2656920-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S230176AbjCGDFJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 6 Mar 2023 22:05:09 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD37743936
+        for <linux-raid@vger.kernel.org>; Mon,  6 Mar 2023 19:04:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1678158260;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=qQwG7mlsTIMwFYTr6+mvh+Zolyv8vO7M45n2Q/6JnuE=;
+        b=cw4yUXLzTld44/g9WiCBNlpUoNlD+MeOormGmPNHMVoqMGwvQHQ5ndAIhTwwT8e/gmCN6h
+        PIpk/hiZNRDEctvgEPtc/AZz3LGPII0nKt2SuD9XkRRf5arJKLqc4rSF0HByrpusxRvst+
+        EQwt/nXqOKLvLsTqtPCbYOrzz+TyOQA=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-596-UkZjAo01Pz2yz6yR9idSXA-1; Mon, 06 Mar 2023 22:04:19 -0500
+X-MC-Unique: UkZjAo01Pz2yz6yR9idSXA-1
+Received: by mail-pl1-f199.google.com with SMTP id ju20-20020a170903429400b0019ea5ea044aso5237128plb.21
+        for <linux-raid@vger.kernel.org>; Mon, 06 Mar 2023 19:04:19 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678158258;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=qQwG7mlsTIMwFYTr6+mvh+Zolyv8vO7M45n2Q/6JnuE=;
+        b=sFGefxxhmXcmcX41fHp+j7RUQqGzWC+yjWqTSsAy/HF2v8NpXBtUvydS1xuMqfgwdH
+         pzsCzIxRWdNRlcDR9L1WWKf0DKEzIcZ0tI7rAvbAksz/eX4sP/BmvEkWqWFgX6T99yxU
+         8ard2sI0BGBCIdAk/Ys1LH/BOJ90dl1QPhcf6KphURPbc2UKGFGWPbO80WCheev/LOjW
+         BQq+NBCGiW+vTDEs9vx0Pj+6NCRjcx0umrG83WbWrvCyd4/CpDAFeRSALB65wQAALogA
+         sX4okTcrqLi/H4YX3bTKkugaonTsBAVgKA2fWvfFE30nJY2V42c5AuftISIo8P69/EMy
+         eVCQ==
+X-Gm-Message-State: AO0yUKUND26JkhwLNfMVzDNwGdsoglo59ENmX6vBqDRBSfCn9MQzgp4A
+        9Dd4fiZanz5T7vkDs7zDtELBN2d7LwDns0IGtpNCpAZdoFwIwjbIDWo7yJB+n3zZN61LMafsHxc
+        pDK/TE7j0e82DbuCxGs120JKxdAFxck3ilsUTY66RgGUO6dFFkdw=
+X-Received: by 2002:a63:ac53:0:b0:503:7be2:19a7 with SMTP id z19-20020a63ac53000000b005037be219a7mr4732542pgn.1.1678158258088;
+        Mon, 06 Mar 2023 19:04:18 -0800 (PST)
+X-Google-Smtp-Source: AK7set8ldKcrwWoNOfZMcNpHBIax4h88/A4WFrVKkAQded4pmhOo8O6plHFa5o8qyO787il6cbCr84GZ1kT5HNtbszo=
+X-Received: by 2002:a63:ac53:0:b0:503:7be2:19a7 with SMTP id
+ z19-20020a63ac53000000b005037be219a7mr4732539pgn.1.1678158257811; Mon, 06 Mar
+ 2023 19:04:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgA35CGpmwZktHvlEQ--.51526S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxJry7Jw4kXry7KFy3Zw47Arb_yoW8uFWxpF
-        ZIkFWFyryUG3W7Cr4DJ3yDAa4Fk3ykWrW3AF42g3yfAw1avrWv9a1UJrW5Wrn8uFWSg34U
-        Xrn8Wr4DAFZrtFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
-        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-        AvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+From:   Xiao Ni <xni@redhat.com>
+Date:   Tue, 7 Mar 2023 11:04:06 +0800
+Message-ID: <CALTww2-1B08z+BgPKqoBMnGQ-PhB9Yr=bA7YR7HyzGX0K127MQ@mail.gmail.com>
+Subject: What's the usage of md-autodetect.c
+To:     linux-raid <linux-raid@vger.kernel.org>
+Cc:     Nigel Croxon <ncroxon@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From the code of md-autodetect.c, it looks like it's used to create
+the raid device
+during boot. Now we use udev rules to assemble the raid. Do we still need it?
+What's the usage of md-autodetect?
 
-raid10_sync_request() will add 'r10bio->remaining' for both rdev and
-replacement rdev. However, if the read io failed,
-recovery_request_write() will return without issuring the write io, in
-this case, end_sync_request() is only called once and 'remaining' is
-leaked, which will cause io hang.
+And in Kconfig, it depends on md-raid as Y when building a kernel. If we change
+the default to M, md-autodetect will not work anymore, right?
 
-Fix the probleming by decreasing 'remaining' according to if 'bio' and
-'repl_bio' is valid.
-
-Fixes: 24afd80d99f8 ("md/raid10: handle recovery of replacement devices.")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid10.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a8b5fecef136..f7002a1aa9cf 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2611,11 +2611,22 @@ static void recovery_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- {
- 	struct r10conf *conf = mddev->private;
- 	int d;
--	struct bio *wbio, *wbio2;
-+	struct bio *wbio = r10_bio->devs[1].bio;
-+	struct bio *wbio2 = r10_bio->devs[1].repl_bio;
-+
-+	/* Need to test wbio2->bi_end_io before we call
-+	 * submit_bio_noacct as if the former is NULL,
-+	 * the latter is free to free wbio2.
-+	 */
-+	if (wbio2 && !wbio2->bi_end_io)
-+		wbio2 = NULL;
- 
- 	if (!test_bit(R10BIO_Uptodate, &r10_bio->state)) {
- 		fix_recovery_read_error(r10_bio);
--		end_sync_request(r10_bio);
-+		if (wbio->bi_end_io)
-+			end_sync_request(r10_bio);
-+		if (wbio2)
-+			end_sync_request(r10_bio);
- 		return;
- 	}
- 
-@@ -2624,14 +2635,6 @@ static void recovery_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 	 * and submit the write request
- 	 */
- 	d = r10_bio->devs[1].devnum;
--	wbio = r10_bio->devs[1].bio;
--	wbio2 = r10_bio->devs[1].repl_bio;
--	/* Need to test wbio2->bi_end_io before we call
--	 * submit_bio_noacct as if the former is NULL,
--	 * the latter is free to free wbio2.
--	 */
--	if (wbio2 && !wbio2->bi_end_io)
--		wbio2 = NULL;
- 	if (wbio->bi_end_io) {
- 		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
- 		md_sync_acct(conf->mirrors[d].rdev->bdev, bio_sectors(wbio));
--- 
-2.31.1
+Best Regards
+Xiao
 
