@@ -2,110 +2,148 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA39FC678D5
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Mar 2023 08:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FB6BC64EC4
+	for <linux-raid@archiver.kernel.org>; Wed,  8 Mar 2023 08:56:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230022AbjCHIlb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 8 Mar 2023 03:41:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46150 "EHLO
+        id S229967AbjCHIz7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 8 Mar 2023 03:55:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230021AbjCHIlT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Mar 2023 03:41:19 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F2DE1815A
-        for <linux-raid@vger.kernel.org>; Wed,  8 Mar 2023 00:40:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678264829;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=gRzyUthiIO0er7RoHF+tKWGqVY5kdXGUdm2P7FDwAsw=;
-        b=WgkLXOXdgUVMHdbsnRDILodYOJ96A+4P2NluEESJeZOsB7yA9EYAcbQRtDUQ/wqufHZW0i
-        5v45MTdSqGo+aqry9faC+yzVdhzsaT7iFDTh/7FhIg1SqoIzRnZSz77LhuNFXRy7oB/3iv
-        y6pJGDE+BHvjxY5IC696covIegXk3Q4=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-64-vRg06fGoNAORPtZvN62ldw-1; Wed, 08 Mar 2023 03:40:27 -0500
-X-MC-Unique: vRg06fGoNAORPtZvN62ldw-1
-Received: by mail-pj1-f70.google.com with SMTP id m9-20020a17090a7f8900b0023769205928so727910pjl.6
-        for <linux-raid@vger.kernel.org>; Wed, 08 Mar 2023 00:40:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678264826;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gRzyUthiIO0er7RoHF+tKWGqVY5kdXGUdm2P7FDwAsw=;
-        b=DW175KGE+CoJ6/zKodkDmanvgO1f9VA0rOjbBZWxAZBnwppg0gQ9ZrGjEFICAS93Du
-         MAF4ZfqWRAfn1Qg6qvfkkLjkI1IfIfUhhjN9lTsncCmHrL6Zk1DvqfKUZC5LKclYRBfQ
-         y+82atI1+M7tCAVEPaimEeIKG2/4wncVf/Nobq3ASAGtPiWTXgN07JRDpV/pZWUK5Bxj
-         I91qp3HA7K/3EUs91Ol+DW8s6huDcr7QfsJQIxuz6kaTz1Gys8lNmlN2yd0LIKnM6IhU
-         RauRsVdPgxCwgnEs4TuLw1YC2i7ButsMQIo7oBuM2B7hLXiaoSkgnoh17oLEGKIVnpRP
-         ki8g==
-X-Gm-Message-State: AO0yUKXEx483ZMWGuonZ8t5FYavvbUL/bqJEx+qjtx6/Zd9wfVOLGcGN
-        92KMjMootqgNJUovtYntX8Wd8S9ghl6mXx4kXL8+ZfbHyOQeZw285nReTi9x0hkQoCKNRUfnUGy
-        53JOtQOxIrjz/ttLnanzXwHcdBLk3OX7GSXzo9ZuvuryK/HE3
-X-Received: by 2002:a17:902:efc3:b0:19a:6b55:a44d with SMTP id ja3-20020a170902efc300b0019a6b55a44dmr9197895plb.1.1678264826468;
-        Wed, 08 Mar 2023 00:40:26 -0800 (PST)
-X-Google-Smtp-Source: AK7set9YotYbtz0nLUxdfuTMJyJ9gHNXjh45JT2Yyci/KUYlumPbCWXDuyHTZ+OyQTXCyMyZTmYzZKkYZi0L1mz5V5E=
-X-Received: by 2002:a17:902:efc3:b0:19a:6b55:a44d with SMTP id
- ja3-20020a170902efc300b0019a6b55a44dmr9197888plb.1.1678264826182; Wed, 08 Mar
- 2023 00:40:26 -0800 (PST)
+        with ESMTP id S229629AbjCHIz5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Mar 2023 03:55:57 -0500
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FFDE98842;
+        Wed,  8 Mar 2023 00:55:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1678265756; x=1709801756;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=v0FORj2NWSyCCoGql/X/Kg/LiWaknEsTJEy6ke6X/Fk=;
+  b=YqPsQfysKLW0HwBv4X8b+sMPh0NDH+7wzDNVO3MQA4x3l1fEAAAq+i/5
+   MRwA+q8dnZhGq0H0dYLsTSBGMtCddefvfEyFx2sEDrCInbue7q9v6jxEr
+   rvwt40Ud7DdtMdmnPZ8pNLj17Nd500WhyxB9wam6GLe4XDVUpHngvQ4GV
+   BmE12EKPlInD2haCzuIRwsPTPpt8HnxYMwaWJMc+vvY2E72JmBv4D9kcz
+   pmolITqAvOsR+yif/iDDi6uctlCyaqJfK1huumcP/dJNAzxiauegSnoXa
+   8c3rwtDpbFOClV0qhjOMFgi+4hM9ZDycmcDatx7RPEd4ricwS7VtWqmtd
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10642"; a="400930509"
+X-IronPort-AV: E=Sophos;i="5.98,243,1673942400"; 
+   d="scan'208";a="400930509"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2023 00:55:56 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10642"; a="670246262"
+X-IronPort-AV: E=Sophos;i="5.98,243,1673942400"; 
+   d="scan'208";a="670246262"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.59.114])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2023 00:55:47 -0800
+Date:   Wed, 8 Mar 2023 09:55:42 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     "NeilBrown" <neilb@suse.de>
+Cc:     "Song Liu" <song@kernel.org>,
+        "Linux regressions mailing list" <regressions@lists.linux.dev>,
+        Jes.Sorensen@gmail.com, "linux-raid" <linux-raid@vger.kernel.org>,
+        "LKML" <linux-kernel@vger.kernel.org>,
+        "Nikolay Kichukov" <hijacker@oldum.net>
+Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from
+ 5.15.x can no longer assemble software raid0
+Message-ID: <20230308095542.00001bba@linux.intel.com>
+In-Reply-To: <167822843274.8008.1142380266687607670@noble.neil.brown.name>
+References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
+        <CAPhsuW7ZWthh0PZt71hQh1_51C0yMSpOqWYJKc_+VzzTmW_r5A@mail.gmail.com>
+        <167805126796.8008.3635368722810568057@noble.neil.brown.name>
+        <20230307095258.00001cb3@linux.intel.com>
+        <167822843274.8008.1142380266687607670@noble.neil.brown.name>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-References: <CALTww2-1B08z+BgPKqoBMnGQ-PhB9Yr=bA7YR7HyzGX0K127MQ@mail.gmail.com>
- <2b52d846-054b-6265-21dc-b091b39b0ee9@demonlair.co.uk> <CALTww2-7O2Fj3E8gmLDb_XPb0NGARqvHXp3oJaDMeWFue_=yGQ@mail.gmail.com>
- <5d1fb871-80b7-a82a-25b5-14b156eec802@youngman.org.uk>
-In-Reply-To: <5d1fb871-80b7-a82a-25b5-14b156eec802@youngman.org.uk>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 8 Mar 2023 16:40:14 +0800
-Message-ID: <CALTww2_OP0YnvsxYW=LFA8B13nQo35gzsxLnWjLTZkrTZVB-kA@mail.gmail.com>
-Subject: Re: What's the usage of md-autodetect.c
-To:     Wols Lists <antlists@youngman.org.uk>
-Cc:     Geoff Back <geoff@demonlair.co.uk>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Nigel Croxon <ncroxon@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Mar 8, 2023 at 4:16=E2=80=AFPM Wols Lists <antlists@youngman.org.uk=
-> wrote:
->
-> On 08/03/2023 02:40, Xiao Ni wrote:
-> >> (IIRC) get built if CONFIG_MD is set to M.  Changing the default for
-> >> CONFIG_MD should not have any impact on this so long as the ability to
-> >> set CONFIG_MD=3Dy does not get disabled (which would also be a regress=
-ion).
-> > I'm a little confused here. If I understand right, for the os that
->
-> > doesn't use initrd
-> > and we still have the ability to set CONFIG_MD=3Dy, so we can set it to
-> > y and rebuild
-> > the kernel. So the raid1 can be assembled by md auto-detect, right?
-> >
-> Bear in mind that - iirc - in order for the kernel to auto-assemble a rai=
-d-1
->
-> (a) it has to be superblock 0.9
-> (b) superblock 0.9 is deprecated
->
-> So the functionality is still used, still "supported", but we make no
-> promises ...
->
-> If it breaks, I'm sure people will scream and fix it, but from our point
-> of view it's "if it ain't broke don't touch it".
->
-> Cheers,
-> Wol
->
+On Wed, 08 Mar 2023 09:33:52 +1100
+"NeilBrown" <neilb@suse.de> wrote:
 
-Hi Wol
+> On Tue, 07 Mar 2023, Mariusz Tkaczyk wrote:
+> > On Mon, 06 Mar 2023 08:21:07 +1100
+> > "NeilBrown" <neilb@suse.de> wrote:
+> >   
+> > > On Sat, 04 Mar 2023, Song Liu wrote:  
+> > > > + Jes.
+> > > > 
+> > > > It appeared to me that we can assemble the array if we have any of the
+> > > > following:
+> > > > 1. Enable CONFIG_BLOCK_LEGACY_AUTOLOAD;
+> > > > 2. Have a valid /etc/mdadm.conf;
+> > > > 3. Update mdadm to handle this case. (I tried some ugly hacks, which
+> > > > worked but weren't clean).
+> > > > 
+> > > > Since we eventually would like to get rid of
+> > > > CONFIG_BLOCK_LEGACY_AUTOLOAD, I think we need mdadm to handle this
+> > > > properly. But the logistics might be complicated, as
+> > > > mdadm are shipped separately.
+> > > > 
+> > > > Jes, what do you think about this? AFAICT, we need to update the logic
+> > > > in mdopen.c:create_mddev().    
+> > > 
+> > > mdadm already handles this, but only if 
+> > >    CREATE names=yes
+> > > is present in /etc/mdadm.conf  
+> > 
+> > Hi,
+> > 
+> > "CREATE names=yes" enforces creation of /dev/md_name arrays instead of
+> > /dev/mdXXX. It is a large change for users, too aggressive IMO. It will
+> > destroy many setups.
+> > 
+> > To resolve it, we need is to use create_named_array() but respect old naming
+> > convention. We already have find_free_devnm(), and we are able to keep
+> > consistency because we can create 'mdXXX':
+> > 
+> > /sys/module/md_mod/parameters # echo md125 > new_array
+> > 
+> > /sys/module/md_mod/parameters # ll /sys/block/md125
+> > lrwxrwxrwx 1 root root 0 Mar  7 10:54 /sys/block/md125 ->
+> > ../devices/virtual/block/md125
+> > 
+> > That will require adjustments in mdadm, but I think that we can keep
+> > names the same way. I created the test for verification of base creation
+> > flows, we can use it to avoid regression:
+> > https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/tests/00createnames
+> > 
+> > Thoughts?  
+> 
+> Yes, that is probably sensible.
+> 
+> It would be nice to have a way to expose the "names=yes" functionality
+> more obviously.  I think people would generally prefer it (/proc/mdstat
+> becomes more meaningful) but I agree that forcing it on people is the
+> the best approach.
+> 
+> Maybe a super-block flag that enables it for that array, and we start
+> setting that flag when creating new arrays?
+> 
 
-Thanks for the information.
+That is controversial. I don't feel that using metadata to resolve Linux issue
+is as a good way. It will work for native for sure but for IMSM it is not such
+simple.
 
-Regards
-Xiao
+I think that we can handle it by config file.
+When we set "ARRAY /dev/mdXXX" then it is honored. I'm familiar with such
+cases, that works. In such case link may or may not be generated so far I
+remember but... nobody cares if array name is meaningful and we can fix that
+too. It seems to not be a big deal.
 
+I would like to propose doing same for 'names'.
+If there is no config or name is set to "/dev/md/name" it should work as now.
+So, if someone would need backward compatibility we can add flag to --detail
+and --examine breifs forces that, let say --use-link-as-name. By default
+"ARRAY /dev/md_name" entry will be generated.
+
+My PoV is based on IMSM, there may be small differences between IMSM and native
+but I think that it applies everywhere.
+
+Thanks,
+Mariusz
