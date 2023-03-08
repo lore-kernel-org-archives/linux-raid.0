@@ -2,149 +2,73 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EDFAC678D5
-	for <linux-raid@archiver.kernel.org>; Tue,  7 Mar 2023 22:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51026C678D5
+	for <linux-raid@archiver.kernel.org>; Wed,  8 Mar 2023 01:37:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231769AbjCGWgP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 7 Mar 2023 17:36:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40784 "EHLO
+        id S229627AbjCHBhO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 7 Mar 2023 20:37:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231748AbjCGWfq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Mar 2023 17:35:46 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D72C7B2570;
-        Tue,  7 Mar 2023 14:34:54 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 434BF21A19;
-        Tue,  7 Mar 2023 22:33:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1678228438; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S229456AbjCHBhN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Mar 2023 20:37:13 -0500
+X-Greylist: delayed 381 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 07 Mar 2023 17:37:10 PST
+Received: from out-50.mta0.migadu.com (out-50.mta0.migadu.com [IPv6:2001:41d0:1004:224b::32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08B4259E73
+        for <linux-raid@vger.kernel.org>; Tue,  7 Mar 2023 17:37:09 -0800 (PST)
+Message-ID: <777de4f2-1b5d-aded-620d-4c14102a551f@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1678239013;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=MX+2KpqT8wrCqyg7j0dP+wq52LnT6AyIVkSxEYwnFa8=;
-        b=SSBWxDam7wOMnt7TF0pQLTpDz6cVUcjH4zfaXE84D6yczhNPEpnCNC2Uw3+ivHmi6wGK92
-        3xIFlD7ccw6c+bztZE+fbhx79TxDDLGCQW4LdhH1hjNIUR5syrqiZ9J45Q2IS6u8kxMUDz
-        mOeVX8CZxtJ+1IFKqxGOkoPWugbJHhw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1678228438;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=MX+2KpqT8wrCqyg7j0dP+wq52LnT6AyIVkSxEYwnFa8=;
-        b=qnPLRNUlptwMcZkRvHJNVydHAdcCorh/vpKqdZx7AhnBbWklvsD0c6RYBynY7oBv+9TzC6
-        lzcRhv6HHWRQ8JDg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D0A7113440;
-        Tue,  7 Mar 2023 22:33:55 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id b3I6IdO7B2T3AwAAMHmgww
-        (envelope-from <neilb@suse.de>); Tue, 07 Mar 2023 22:33:55 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        bh=3XrhP9BkNWIV/d0B6E1/teteVpRVYuR+HkxqrXYg+Nw=;
+        b=Gv/IwiiWgpR9b9oS0xV7rY04lTIgNUa4zKx7R8diSjhXWaUkW9JPDJKve2phCdVNoHa4YO
+        qP4jNCG5u4e9yZD0cQ8g+d4tCawsirNncHu1/9ZDh/FY5TSWKWR+yKNvFCeqK702NleCKI
+        at+b2MZICagh631798WkxuguUqrkRnI=
+Date:   Wed, 8 Mar 2023 09:30:08 +0800
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>
-Cc:     "Song Liu" <song@kernel.org>,
-        "Linux regressions mailing list" <regressions@lists.linux.dev>,
-        Jes.Sorensen@gmail.com, "linux-raid" <linux-raid@vger.kernel.org>,
-        "LKML" <linux-kernel@vger.kernel.org>,
-        "Nikolay Kichukov" <hijacker@oldum.net>
-Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
- can no longer assemble software raid0
-In-reply-to: <20230307095258.00001cb3@linux.intel.com>
-References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>,
- <CAPhsuW7ZWthh0PZt71hQh1_51C0yMSpOqWYJKc_+VzzTmW_r5A@mail.gmail.com>,
- <167805126796.8008.3635368722810568057@noble.neil.brown.name>,
- <20230307095258.00001cb3@linux.intel.com>
-Date:   Wed, 08 Mar 2023 09:33:52 +1100
-Message-id: <167822843274.8008.1142380266687607670@noble.neil.brown.name>
+Subject: Re: [PATCH 00/34] address various checkpatch.pl requirements
+Content-Language: en-US
+To:     Heinz Mauelshagen <heinzm@redhat.com>
+Cc:     linux-raid@vger.kernel.org, ncroxon@redhat.com, xni@redhat.com,
+        dkeefe@redhat.com
+References: <cover.1678136717.git.heinzm@redhat.com>
+ <5be00f6c-22ee-1af3-c5ed-d92863d7f442@linux.dev>
+ <CAM23Vxqf-XMdoobeEyyk1MC=PzkWM=5w88jM8R-joxrrT82ukw@mail.gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+In-Reply-To: <CAM23Vxqf-XMdoobeEyyk1MC=PzkWM=5w88jM8R-joxrrT82ukw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 07 Mar 2023, Mariusz Tkaczyk wrote:
-> On Mon, 06 Mar 2023 08:21:07 +1100
-> "NeilBrown" <neilb@suse.de> wrote:
->=20
-> > On Sat, 04 Mar 2023, Song Liu wrote:
-> > > + Jes.
-> > >=20
-> > > It appeared to me that we can assemble the array if we have any of the
-> > > following:
-> > > 1. Enable CONFIG_BLOCK_LEGACY_AUTOLOAD;
-> > > 2. Have a valid /etc/mdadm.conf;
-> > > 3. Update mdadm to handle this case. (I tried some ugly hacks, which wo=
-rked
-> > > but weren't clean).
-> > >=20
-> > > Since we eventually would like to get rid of CONFIG_BLOCK_LEGACY_AUTOLO=
-AD, I
-> > > think we need mdadm to handle this properly. But the logistics might
-> > > be complicated, as
-> > > mdadm are shipped separately.
-> > >=20
-> > > Jes, what do you think about this? AFAICT, we need to update the logic =
-in
-> > > mdopen.c:create_mddev(). =20
-> >=20
-> > mdadm already handles this, but only if=20
-> >    CREATE names=3Dyes
-> > is present in /etc/mdadm.conf
->=20
-> Hi,
->=20
-> "CREATE names=3Dyes" enforces creation of /dev/md_name arrays instead of
-> /dev/mdXXX. It is a large change for users, too aggressive IMO. It will des=
-troy
-> many setups.
->=20
-> To resolve it, we need is to use create_named_array() but respect old naming
-> convention. We already have find_free_devnm(), and we are able to keep
-> consistency because we can create 'mdXXX':
->=20
-> /sys/module/md_mod/parameters # echo md125 > new_array
->=20
-> /sys/module/md_mod/parameters # ll /sys/block/md125
-> lrwxrwxrwx 1 root root 0 Mar  7 10:54 /sys/block/md125 ->
-> ../devices/virtual/block/md125
->=20
-> That will require adjustments in mdadm, but I think that we can keep
-> names the same way. I created the test for verification of base creation fl=
-ows,
-> we can use it to avoid regression:
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/tests/00createnam=
-es
->=20
-> Thoughts?
-
-Yes, that is probably sensible.
-
-It would be nice to have a way to expose the "names=3Dyes" functionality
-more obviously.  I think people would generally prefer it (/proc/mdstat
-becomes more meaningful) but I agree that forcing it on people is the
-the best approach.
-
-Maybe a super-block flag that enables it for that array, and we start
-setting that flag when creating new arrays?
-
-NeilBrown
 
 
->=20
-> BTW. I wanted to get rid of this legacy "create_on_open" from mdadm anyway =
-but
-> never had time to. If you agree, I can proceed with fixing it.
->=20
-> Thanks,
-> Mariusz
->=20
+On 3/8/23 01:22, Heinz Mauelshagen wrote:
+> As the MD RAID  subsystem is in active maintenance receiving
+> functional enhancements still, it is
+> hardly old in general,
 
+I might use the inappropriate word, let's say the 'existing' code.
+And I am not against use checkpatch (all the new patches
+should be checked by it I believe).
+
+> profits from coding (style) enhancements and
+> adoption of current APIs.
+
+This kind of patchset can also bring troubles, eg, people works
+for downstream kernel need more effort to backport fix patches
+due to conflict, I assume stable kernel could be affected as well.
+
+A more sensible way might be fix coding style issue while the
+adjacent code need to be changed because of new feature or bug
+etc. Anyway, just my 0.02$.
+
+BTW, pls don't top reply if possible.
+
+Thanks,
+Guoqing
