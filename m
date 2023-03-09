@@ -2,51 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C024C61DA4
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Mar 2023 12:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C02EEC61DA4
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Mar 2023 12:37:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230108AbjCIMei (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Mar 2023 07:34:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56216 "EHLO
+        id S230243AbjCIMhP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Mar 2023 07:37:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229948AbjCIMeh (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Mar 2023 07:34:37 -0500
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8D84DF731;
-        Thu,  9 Mar 2023 04:34:34 -0800 (PST)
+        with ESMTP id S229846AbjCIMhO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Mar 2023 07:37:14 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23F671F93B;
+        Thu,  9 Mar 2023 04:37:13 -0800 (PST)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PXTC92ZbSz4f3jXl;
-        Thu,  9 Mar 2023 20:34:29 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PXTGC1hNyz4f3jLX;
+        Thu,  9 Mar 2023 20:37:07 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgCnUyFV0glkVzJ2Eg--.21303S4;
-        Thu, 09 Mar 2023 20:34:31 +0800 (CST)
+        by APP3 (Coremail) with SMTP id _Ch0CgC3YiD00glknU12Eg--.40988S4;
+        Thu, 09 Mar 2023 20:37:08 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     guoqing.jiang@linux.dev, song@kernel.org, jgq516@gmail.com
+To:     song@kernel.org, guoqing.jiang@linux.dev, shli@fb.com,
+        neilb@suse.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -v2] md/raid10: Don't call bio_start_io_acct twice for bio which experienced read error
-Date:   Thu,  9 Mar 2023 20:57:39 +0800
-Message-Id: <20230309125739.4158665-1-yukuai1@huaweicloud.com>
+Subject: [PATCH] md/raid10: fix memleak for 'conf->bio_split'
+Date:   Thu,  9 Mar 2023 21:00:18 +0800
+Message-Id: <20230309130018.4167300-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCnUyFV0glkVzJ2Eg--.21303S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxJr4xtw1DWrWDGw18KF1kAFb_yoW8uw1xp3
-        yDKas0vrW5Jay5ua1DtFWDC3Zay39rtay2yFWxAw13XwnFqr95CF18XF4Ygrn5ZFZ5urnx
-        Z3Z0vrsrXF47tFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: _Ch0CgC3YiD00glknU12Eg--.40988S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7CrWxGw4UXF43tF48uw18Grg_yoW8Kr1fpa
+        nxK345Kr47Za9xJryDJFWDua4Yqr1xtayUCry7Aw4rXF4ftrZ2y3W0yrWxWryUuay2gry3
+        tFW5KFWruFn8Gr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUv014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
         1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
         JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
         CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
-        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-        AvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7Cj
-        xVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+        Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+        0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_
+        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VU1
+        a9aPUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -55,59 +57,87 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-handle_read_error() will resubmit r10_bio by raid10_read_request(), which
-will call bio_start_io_acct() again, while bio_end_io_acct() will only
-be called once.
+In the error path of raid10_run(), 'conf' need be freed, however,
+'conf->bio_split' is missed and memory will be leaked.
 
-Fix the problem by don't account io again from handle_read_error().
+Since there are 3 places to free 'conf', factor out a helper to fix the
+problem.
 
-Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
+Fixes: fc9977dd069e ("md/raid10: simplify the splitting of requests.")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 ---
- drivers/md/raid10.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/md/raid10.c | 37 +++++++++++++++++--------------------
+ 1 file changed, 17 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 6c66357f92f5..4f8edb6ea3e2 100644
+index f7002a1aa9cf..bdfa02e8fe7e 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1173,7 +1173,7 @@ static bool regular_request_wait(struct mddev *mddev, struct r10conf *conf,
+@@ -4009,6 +4009,20 @@ static int setup_geo(struct geom *geo, struct mddev *mddev, enum geo_type new)
+ 	return nc*fc;
  }
  
- static void raid10_read_request(struct mddev *mddev, struct bio *bio,
--				struct r10bio *r10_bio)
-+				struct r10bio *r10_bio, bool handle_error)
++static void raid10_free_conf(struct r10conf *conf)
++{
++	if (!conf)
++		return;
++
++	mempool_exit(&conf->r10bio_pool);
++	kfree(conf->mirrors);
++	kfree(conf->mirrors_old);
++	kfree(conf->mirrors_new);
++	safe_put_page(conf->tmppage);
++	bioset_exit(&conf->bio_split);
++	kfree(conf);
++}
++
+ static struct r10conf *setup_conf(struct mddev *mddev)
  {
- 	struct r10conf *conf = mddev->private;
- 	struct bio *read_bio;
-@@ -1244,7 +1244,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
- 	}
- 	slot = r10_bio->read_slot;
+ 	struct r10conf *conf = NULL;
+@@ -4091,13 +4105,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 	return conf;
  
--	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
-+	if (!handle_error && blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
- 		r10_bio->start_time = bio_start_io_acct(bio);
- 	read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
- 
-@@ -1578,7 +1578,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
- 			conf->geo.raid_disks);
- 
- 	if (bio_data_dir(bio) == READ)
--		raid10_read_request(mddev, bio, r10_bio);
-+		raid10_read_request(mddev, bio, r10_bio, false);
- 	else
- 		raid10_write_request(mddev, bio, r10_bio);
- }
-@@ -2980,7 +2980,7 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
- 	rdev_dec_pending(rdev, mddev);
- 	allow_barrier(conf);
- 	r10_bio->state = 0;
--	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
-+	raid10_read_request(mddev, r10_bio->master_bio, r10_bio, true);
+  out:
+-	if (conf) {
+-		mempool_exit(&conf->r10bio_pool);
+-		kfree(conf->mirrors);
+-		safe_put_page(conf->tmppage);
+-		bioset_exit(&conf->bio_split);
+-		kfree(conf);
+-	}
++	raid10_free_conf(conf);
+ 	return ERR_PTR(err);
  }
  
- static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+@@ -4288,10 +4296,7 @@ static int raid10_run(struct mddev *mddev)
+ 
+ out_free_conf:
+ 	md_unregister_thread(&mddev->thread);
+-	mempool_exit(&conf->r10bio_pool);
+-	safe_put_page(conf->tmppage);
+-	kfree(conf->mirrors);
+-	kfree(conf);
++	raid10_free_conf(conf);
+ 	mddev->private = NULL;
+ out:
+ 	return -EIO;
+@@ -4299,15 +4304,7 @@ static int raid10_run(struct mddev *mddev)
+ 
+ static void raid10_free(struct mddev *mddev, void *priv)
+ {
+-	struct r10conf *conf = priv;
+-
+-	mempool_exit(&conf->r10bio_pool);
+-	safe_put_page(conf->tmppage);
+-	kfree(conf->mirrors);
+-	kfree(conf->mirrors_old);
+-	kfree(conf->mirrors_new);
+-	bioset_exit(&conf->bio_split);
+-	kfree(conf);
++	raid10_free_conf(priv);
+ }
+ 
+ static void raid10_quiesce(struct mddev *mddev, int quiesce)
 -- 
 2.31.1
 
