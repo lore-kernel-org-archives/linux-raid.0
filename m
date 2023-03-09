@@ -2,121 +2,83 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EDADC64EC4
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Mar 2023 15:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D411C74A44
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Mar 2023 22:20:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230504AbjCIP5S (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Mar 2023 10:57:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39094 "EHLO
+        id S231191AbjCIWUY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Mar 2023 17:20:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230388AbjCIP5R (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Mar 2023 10:57:17 -0500
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85EC7F0FC7
-        for <linux-raid@vger.kernel.org>; Thu,  9 Mar 2023 07:57:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678377436; x=1709913436;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=iHr+xR7Kiw4CaiIIhFfs9RtJpTR8iTtMPjBAAHbA+wc=;
-  b=GQP+enXAEt1yVU/8tKod118JrKAARLZ7rV6xyKEhuVjVp6YTKhEp3zbZ
-   QRLSFjD21M6bhr7tH+c1OFhPG/KZri5Q2k7hsPEGxYVdeNXT+83wz6Ngu
-   rN0GfLRmmcwlc+S6KEPTSibFzx3VrwFWtZaImC2gQjMZ4k7uYQcVKP8fo
-   NriutRjESYzlHdvMqyt5NZvkMbYLYeYxLq3kjCSdB1iJ/7klHro0SCdVi
-   0BBP3qCg6gSaW0D1phjvN6CcZ3lVG03mmNgcaZZFH5F1cd+Qh3Rt1wB38
-   Yu7H3N3jMiMo56Av9Il5yg0aZ4WhAiJiYltOTPKZ27xo7uouXm//jn1cG
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10644"; a="422748579"
-X-IronPort-AV: E=Sophos;i="5.98,246,1673942400"; 
-   d="scan'208";a="422748579"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2023 07:57:15 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10644"; a="654796364"
-X-IronPort-AV: E=Sophos;i="5.98,246,1673942400"; 
-   d="scan'208";a="654796364"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.46.155])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2023 07:57:13 -0800
-Date:   Thu, 9 Mar 2023 16:57:08 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     miaoguanqin <miaoguanqin@huawei.com>
-Cc:     Jes Sorensen <jes@trained-monkey.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        <linux-raid@vger.kernel.org>, linfeilong <linfeilong@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
-        Wu Guanghao <wuguanghao3@huawei.com>, <lixiaokeng@huawei.com>
-Subject: Re: [PATCH] Create /dev/md/x link when md device is created
-Message-ID: <20230309165708.0000372c@linux.intel.com>
-In-Reply-To: <f4aabc6f-22c1-3bf3-aef4-709051266f6c@huawei.com>
-References: <f4aabc6f-22c1-3bf3-aef4-709051266f6c@huawei.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229910AbjCIWUW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Mar 2023 17:20:22 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2CCEF8F20;
+        Thu,  9 Mar 2023 14:19:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=jK36Zpm8T2on+df54b6OGLN8ramQR+T+L8HPs8R5yHE=; b=MQBnApNDuji9teSFgOuyjM3C/p
+        Lgjgf584li4FUT3/bLPnV5yqTuo2UTXDrn/714v2Ip8g3XpbRRwZD7nJgpfEz6h2qyYzLRoVFAzS5
+        tMd/9xsj+xvHf9pg1aj6/tfQOstrhGZ+G1zt8z2KHggdwT/JzAOm9MQzVoQv6izhooEbpCzv0yw5r
+        tM+8qfELGYvw7DcEBgzyGxOP+nBEwfiCipPOReirB45OyXkLojYq6dLPJAZ2LdHzds1OUB+inU0LV
+        2hzU4mCm7TVY5QLhVwYJxgZVITHlU54t7YIlOR63U6xiYpBenGFdRnv1EDD5XMZzQjyOtadrDKozg
+        W7Wm31lw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1paOao-00C8rx-Vc; Thu, 09 Mar 2023 22:18:34 +0000
+Date:   Thu, 9 Mar 2023 14:18:34 -0800
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     ebiederm@xmission.com, keescook@chromium.org, yzaikin@google.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, minyard@acm.org,
+        kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, song@kernel.org, robinmholt@gmail.com,
+        steve.wahl@hpe.com, mike.travis@hpe.com, arnd@arndb.de,
+        gregkh@linuxfoundation.org, jirislaby@kernel.org, jgross@suse.com,
+        sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
+        xen-devel@lists.xenproject.org
+Cc:     j.granados@samsung.com, zhangpeng362@huawei.com,
+        tangmeng@uniontech.com, willy@infradead.org, nixiaoming@huawei.com,
+        sujiaxun@uniontech.com, patches@lists.linux.dev,
+        linux-fsdevel@vger.kernel.org, apparmor@lists.ubuntu.com,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-hyperv@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/7] sysctl: slowly deprecate register_sysctl_table()
+Message-ID: <ZApbOilWsw9Sk/k4@bombadil.infradead.org>
+References: <20230302204612.782387-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230302204612.782387-1-mcgrof@kernel.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 9 Mar 2023 22:47:27 +0800
-miaoguanqin <miaoguanqin@huawei.com> wrote:
+On Thu, Mar 02, 2023 at 12:46:05PM -0800, Luis Chamberlain wrote:
+> I'm happy to take these via sysctl-next [0] but since
+> I don' think register_sysctl_table() will be nuked on v6.4 I think
+> it's fine for each of these to go into each respective tree. I can
+> pick up last stragglers on sysctl-next. If you want me to take this
+> via sysctl-next too, just let me know and I'm happy to do that. Either
+> way works.
 
-> After the /dev/mdx is created,we can see that /dev/mdx file is
-> created.When we reboot machines,we found /dev/md/x will be created,
-> and map file will be rebuild and changed.
-> 
-> During RAID rebuild after the reboot, we found /dev/md/x is created
-> with high priority. To consistent behavior, we think that /dev/md/x
-> should also be created when creating devices.
-> 
-> We modified the logic for creating /dev/mdx,creating /dev/md/x at
-> the same time.
-> 
-> Signed-off-by: miaoguanqin <miaoguanqin@huawei.com>
-> Signed-off-by: Lixiaokeng <lixiaokeng@huawei.com>
-> ---
->   mdopen.c | 11 ++++++-----
->   1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/mdopen.c b/mdopen.c
-> index 98c54e4..d128396 100644
-> --- a/mdopen.c
-> +++ b/mdopen.c
-> @@ -373,11 +373,12 @@ int create_mddev(char *dev, char *name, int autof, 
-> int trustworthy,
-> 
->   	sprintf(devname, "/dev/%s", devnm);
-> 
-> -	if (dev && dev[0] == '/')
-> -		strcpy(chosen, dev);
-> -	else if (cname[0] == 0)
-> -		strcpy(chosen, devname);
-> -
-> +	if (strncmp(chosen, "/dev/md/", 8) != 0) {
-> +		if (dev && dev[0] == '/')
-> +			strcpy(chosen, dev);
-> +		else if (cname[0] == 0)
-> +			strcpy(chosen, devname);
-> +	}
->   	/* We have a device number and name.
->   	 * If we cannot detect udev, we need to make
->   	 * devices and links ourselves.
+As I noted I've dropped the following already-picked-up patches from
+my queue:
 
-Hi miaoguanqin,
+ipmi: simplify sysctl registration
+sgi-xp: simplify sysctl registration
+tty: simplify sysctl registration
 
-Could you please share command used to create? If you are using:
-#mdadm --create /dev/mdX
+I've taken the rest now through sysctl-next:
 
-Then it is know issue (at least for me). Please use:
-#mdadm --create /dev/md/X
+scsi: simplify sysctl registration with register_sysctl()
+hv: simplify sysctl registration
+md: simplify sysctl registration
+xen: simplify sysctl registration for balloon
 
-I know that the interface is not consistent but I don't see you solution are
-good fix. The create_mddev() is over complicated. Did you run this test:
-https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/tests/00createnames
+If a maintainer would prefer to take one on through their
+tree fine by me too, just let me know and I'll drop the patch.
 
-I think that it didn't passed- so we could have a regression.
-
-BTW. I believe that "miaoguanqin" it is your real name, why lowercase?
-
-Thanks,
-Mariusz
+  Luis
