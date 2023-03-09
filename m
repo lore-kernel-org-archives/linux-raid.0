@@ -2,142 +2,90 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C02EEC61DA4
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Mar 2023 12:37:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9965AC64EC4
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Mar 2023 14:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230243AbjCIMhP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Mar 2023 07:37:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58542 "EHLO
+        id S231953AbjCIOuZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Mar 2023 09:50:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229846AbjCIMhO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Mar 2023 07:37:14 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23F671F93B;
-        Thu,  9 Mar 2023 04:37:13 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PXTGC1hNyz4f3jLX;
-        Thu,  9 Mar 2023 20:37:07 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgC3YiD00glknU12Eg--.40988S4;
-        Thu, 09 Mar 2023 20:37:08 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, guoqing.jiang@linux.dev, shli@fb.com,
-        neilb@suse.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH] md/raid10: fix memleak for 'conf->bio_split'
-Date:   Thu,  9 Mar 2023 21:00:18 +0800
-Message-Id: <20230309130018.4167300-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S232284AbjCIOuD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Mar 2023 09:50:03 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE21A53D88
+        for <linux-raid@vger.kernel.org>; Thu,  9 Mar 2023 06:48:07 -0800 (PST)
+Received: from kwepemi500002.china.huawei.com (unknown [172.30.72.57])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4PXX8R6zdwzKmYl;
+        Thu,  9 Mar 2023 22:47:19 +0800 (CST)
+Received: from [10.174.179.167] (10.174.179.167) by
+ kwepemi500002.china.huawei.com (7.221.188.171) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.21; Thu, 9 Mar 2023 22:47:27 +0800
+Message-ID: <f4aabc6f-22c1-3bf3-aef4-709051266f6c@huawei.com>
+Date:   Thu, 9 Mar 2023 22:47:27 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgC3YiD00glknU12Eg--.40988S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7CrWxGw4UXF43tF48uw18Grg_yoW8Kr1fpa
-        nxK345Kr47Za9xJryDJFWDua4Yqr1xtayUCry7Aw4rXF4ftrZ2y3W0yrWxWryUuay2gry3
-        tFW5KFWruFn8Gr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUv014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-        Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-        0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_
-        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VU1
-        a9aPUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.3
+Content-Language: en-US
+To:     Jes Sorensen <jes@trained-monkey.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        <linux-raid@vger.kernel.org>
+CC:     linfeilong <linfeilong@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
+        Wu Guanghao <wuguanghao3@huawei.com>, <lixiaokeng@huawei.com>
+From:   miaoguanqin <miaoguanqin@huawei.com>
+Subject: [PATCH] Create /dev/md/x link when md device is created
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.167]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500002.china.huawei.com (7.221.188.171)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+After the /dev/mdx is created,we can see that /dev/mdx file is
+created.When we reboot machines,we found /dev/md/x will be created,
+and map file will be rebuild and changed.
 
-In the error path of raid10_run(), 'conf' need be freed, however,
-'conf->bio_split' is missed and memory will be leaked.
+During RAID rebuild after the reboot, we found /dev/md/x is created
+with high priority. To consistent behavior, we think that /dev/md/x
+should also be created when creating devices.
 
-Since there are 3 places to free 'conf', factor out a helper to fix the
-problem.
+We modified the logic for creating /dev/mdx,creating /dev/md/x at
+the same time.
 
-Fixes: fc9977dd069e ("md/raid10: simplify the splitting of requests.")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: miaoguanqin <miaoguanqin@huawei.com>
+Signed-off-by: Lixiaokeng <lixiaokeng@huawei.com>
 ---
- drivers/md/raid10.c | 37 +++++++++++++++++--------------------
- 1 file changed, 17 insertions(+), 20 deletions(-)
+  mdopen.c | 11 ++++++-----
+  1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index f7002a1aa9cf..bdfa02e8fe7e 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4009,6 +4009,20 @@ static int setup_geo(struct geom *geo, struct mddev *mddev, enum geo_type new)
- 	return nc*fc;
- }
- 
-+static void raid10_free_conf(struct r10conf *conf)
-+{
-+	if (!conf)
-+		return;
-+
-+	mempool_exit(&conf->r10bio_pool);
-+	kfree(conf->mirrors);
-+	kfree(conf->mirrors_old);
-+	kfree(conf->mirrors_new);
-+	safe_put_page(conf->tmppage);
-+	bioset_exit(&conf->bio_split);
-+	kfree(conf);
-+}
-+
- static struct r10conf *setup_conf(struct mddev *mddev)
- {
- 	struct r10conf *conf = NULL;
-@@ -4091,13 +4105,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	return conf;
- 
-  out:
--	if (conf) {
--		mempool_exit(&conf->r10bio_pool);
--		kfree(conf->mirrors);
--		safe_put_page(conf->tmppage);
--		bioset_exit(&conf->bio_split);
--		kfree(conf);
--	}
-+	raid10_free_conf(conf);
- 	return ERR_PTR(err);
- }
- 
-@@ -4288,10 +4296,7 @@ static int raid10_run(struct mddev *mddev)
- 
- out_free_conf:
- 	md_unregister_thread(&mddev->thread);
--	mempool_exit(&conf->r10bio_pool);
--	safe_put_page(conf->tmppage);
--	kfree(conf->mirrors);
--	kfree(conf);
-+	raid10_free_conf(conf);
- 	mddev->private = NULL;
- out:
- 	return -EIO;
-@@ -4299,15 +4304,7 @@ static int raid10_run(struct mddev *mddev)
- 
- static void raid10_free(struct mddev *mddev, void *priv)
- {
--	struct r10conf *conf = priv;
+diff --git a/mdopen.c b/mdopen.c
+index 98c54e4..d128396 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -373,11 +373,12 @@ int create_mddev(char *dev, char *name, int autof, 
+int trustworthy,
+
+  	sprintf(devname, "/dev/%s", devnm);
+
+-	if (dev && dev[0] == '/')
+-		strcpy(chosen, dev);
+-	else if (cname[0] == 0)
+-		strcpy(chosen, devname);
 -
--	mempool_exit(&conf->r10bio_pool);
--	safe_put_page(conf->tmppage);
--	kfree(conf->mirrors);
--	kfree(conf->mirrors_old);
--	kfree(conf->mirrors_new);
--	bioset_exit(&conf->bio_split);
--	kfree(conf);
-+	raid10_free_conf(priv);
- }
- 
- static void raid10_quiesce(struct mddev *mddev, int quiesce)
++	if (strncmp(chosen, "/dev/md/", 8) != 0) {
++		if (dev && dev[0] == '/')
++			strcpy(chosen, dev);
++		else if (cname[0] == 0)
++			strcpy(chosen, devname);
++	}
+  	/* We have a device number and name.
+  	 * If we cannot detect udev, we need to make
+  	 * devices and links ourselves.
 -- 
-2.31.1
+2.33.0
 
