@@ -2,94 +2,91 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F948C678D5
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Mar 2023 19:35:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B14C61DA4
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Mar 2023 06:36:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbjCHTfI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 8 Mar 2023 14:35:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58654 "EHLO
+        id S230058AbjCIGg5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Mar 2023 01:36:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229496AbjCHTfH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Mar 2023 14:35:07 -0500
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05855BA876
-        for <linux-raid@vger.kernel.org>; Wed,  8 Mar 2023 11:35:04 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1678304095; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=YSf+5LaGMFfAzYFRwHYaZaPendRrN97cvyAG2qeMeTZT6C0JKpKHFtmqDoBPT6r1FpXd4tmxhgY1MTC01zDq4kfIDQp9VnTfo3hN9vkvo5Q/2J5+OyLj4iYOsrw86O7W+zGJDZ3uuWZRmodicK3kVO4gpbkhBPp9GBU4pTd3uag=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1678304095; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=6RZ/GylOLxz/r3nFJ+256JFsDEgwb6LIWbMz7Vy+nhg=; 
-        b=CcUoBOvTw2pYCisXDn3QLhKyMf6fCTguIMcdy7JlRebFd2Yj4UjJBp/ox6E6U+ef3r2FB5zAhy8ARK4uslit+5uK99eTMu5+nkzRZMXnOVgmuiglp596xfmPSceAJFg/7GUykZNepvAU0u/16SJYH1mNPq+/U3b/94731lQ1lLU=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 167830409311478.87253504624277; Wed, 8 Mar 2023 20:34:53 +0100 (CET)
-Message-ID: <9accf1a9-190c-de9a-a4bc-86fda00735dc@trained-monkey.org>
-Date:   Wed, 8 Mar 2023 14:34:51 -0500
+        with ESMTP id S230063AbjCIGgz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Mar 2023 01:36:55 -0500
+Received: from out-35.mta1.migadu.com (out-35.mta1.migadu.com [IPv6:2001:41d0:203:375::23])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E8D2B9C2
+        for <linux-raid@vger.kernel.org>; Wed,  8 Mar 2023 22:36:50 -0800 (PST)
+Message-ID: <a2551c50-feea-bcbe-00ed-802456b5a19f@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1678343803;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=oflCArd3KsWDijJ2FL/2wrJj33OV+66NpTMchMFSx0I=;
+        b=rYuJ1a7okcyGLqyvNVBEaHxC7Sm9kdYqTKTop9wNMpGCpzjTB7CevmH6nMIdu30tDxzdft
+        TIBx63a/DB/6Ydak3v+yIj3QF8+XzPOcDHkMLBHndLEBpRCknw1J2ZgFUMnYImEBftG4/N
+        6SGxPD8BoG6OUL/4+nAXUmQEfxEsqbA=
+Date:   Thu, 9 Mar 2023 14:36:35 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH] mdadm reshape hangs on external grow chunk
+Subject: Re: [PATCH -next] raid10: fix leak of io accounting
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+References: <20230304070133.1134975-1-yukuai1@huaweicloud.com>
 Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Kinga Tanska <kinga.tanska@linux.intel.com>
-Cc:     Nigel Croxon <ncroxon@redhat.com>, linux-raid@vger.kernel.org,
-        mariusz.tkaczyk@intel.com, kinga.tanska@intel.com
-References: <20220923142635.470305-1-ncroxon@redhat.com>
- <20220929113521.000012af@intel.linux.com>
- <20221117150525.00002743@linux.intel.com>
- <20230201143709.00001086@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20230201143709.00001086@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+In-Reply-To: <20230304070133.1134975-1-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2/1/23 08:37, Mariusz Tkaczyk wrote:
-> Hi Nigel,
-> Ping?
+Hi,
 
-..... crickets ..... I'll close this one in patchwork if we don't hear
-anything soon.
+What do you mean 'leak' here?
+
+On 3/4/23 15:01, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> handle_read_error() will resumit r10_bio by raid10_read_request(), which
+> will call bio_start_io_acct() again, while bio_end_io_acct() will only
+> be called once.
+>
+> Fix the problem by don't account io again from handle_read_error().
+
+My understanding is it caused inaccurate io stats for bio which had a read
+error.
+
+> Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   drivers/md/raid10.c | 8 ++++----
+>   1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 6c66357f92f5..4f8edb6ea3e2 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1173,7 +1173,7 @@ static bool regular_request_wait(struct mddev *mddev, struct r10conf *conf,
+>   }
+>   
+>   static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+> -				struct r10bio *r10_bio)
+> +				struct r10bio *r10_bio, bool handle_error)
+>   {
+>   	struct r10conf *conf = mddev->private;
+>   	struct bio *read_bio;
+> @@ -1244,7 +1244,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+>   	}
+>   	slot = r10_bio->read_slot;
+>   
+> -	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+> +	if (!handle_error && blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+>   		r10_bio->start_time = bio_start_io_acct(bio);
+
+I think a simpler way is just check R10BIO_ReadError here.
 
 Thanks,
-Jes
-
-> Thanks,
-> Mariusz
-> 
-> On Thu, 17 Nov 2022 15:07:41 +0100
-> Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
->> On Thu, 29 Sep 2022 11:35:21 +0200
->> Kinga Tanska <kinga.tanska@linux.intel.com> wrote:
->>
->>> On Fri, 23 Sep 2022 10:26:35 -0400
->>> Nigel Croxon <ncroxon@redhat.com> wrote:
->>>   
->>>> After creating a raid array on top of a imsm container. Try to
->>>> grow the chunk size and the reshape will hang with zero progress.
->>>> The reason is the computation of sync_max_to_set value:
->>>
->>> Hi Nigel,
->>>
->>> I was trying to retest with your patch but still have the defect. I
->>> analyzed it and found another reason, which causes this defect. In
->>> validate_geometry_imsm function freesize and super is being checked and
->>> return 1 if any of those is NULL. In my opinion 0 shall be returned
->>> here, because it is an error and reshape should be stopped here. I will
->>> prepare proper patch and send to review immediately.
->>>   
->> Hi Nigel,
->> I agree with Kinga.
->> https://patchwork.kernel.org/project/linux-raid/patch/20221028025117.27048-1-kinga.tanska@intel.com/
->> Could you please retest the proposed patch on your side and provide feedback?
->>
->> Thanks,
->> Mariusz
-> 
-
+Guoqing
