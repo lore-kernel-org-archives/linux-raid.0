@@ -2,55 +2,55 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C688C6FD19
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Mar 2023 07:40:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A45C64EC4
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Mar 2023 07:40:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230289AbjCJHkX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Mar 2023 02:40:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34050 "EHLO
+        id S230319AbjCJHkY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Mar 2023 02:40:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230353AbjCJHjt (ORCPT
+        with ESMTP id S230336AbjCJHjt (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Mar 2023 02:39:49 -0500
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5682FFCBD9;
-        Thu,  9 Mar 2023 23:39:38 -0800 (PST)
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3952F4D93;
+        Thu,  9 Mar 2023 23:39:37 -0800 (PST)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PXycP4PsBz4f3jq3;
-        Fri, 10 Mar 2023 15:39:33 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PXycN3vqNz4f3knk;
+        Fri, 10 Mar 2023 15:39:32 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgDn4R+03gpkwSimEg--.34063S7;
-        Fri, 10 Mar 2023 15:39:35 +0800 (CST)
+        by APP3 (Coremail) with SMTP id _Ch0CgDn4R+03gpkwSimEg--.34063S5;
+        Fri, 10 Mar 2023 15:39:34 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     guoqing.jiang@linux.dev, song@kernel.org, jgq516@gmail.com,
         neilb@suse.de, shli@fb.com, lzhong@suse.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH v2 3/6] md/raid10: don't BUG_ON() in raise_barrier()
-Date:   Fri, 10 Mar 2023 15:38:52 +0800
-Message-Id: <20230310073855.1337560-4-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 1/6] md/raid10: don't call bio_start_io_acct twice for bio which experienced read error
+Date:   Fri, 10 Mar 2023 15:38:50 +0800
+Message-Id: <20230310073855.1337560-2-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
 References: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDn4R+03gpkwSimEg--.34063S7
-X-Coremail-Antispam: 1UD129KBjvdXoWrKryrGFyrXF48tF47Gw45ZFb_yoWkGFcE93
-        WfuasxZr1xJrnrKw12kFn2vrWIga1kXF1xuF4rKr13AF98ZFWkC3Wjqas5Jwn5Jay2vr17
-        ZF92va4UAr4DWjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb6AFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWwA2048vs2IY02
-        0Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
-        wVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
-        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
-        v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
-        Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
-        0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
-        JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
-        AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbJ73DUUUUU=
+X-CM-TRANSID: _Ch0CgDn4R+03gpkwSimEg--.34063S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7uF1kCFW8ZFWxtr45Aw1UJrb_yoW8uw17p3
+        yDKas0vrW5J3yUua1DtFWDC3Zay39rtay2yrWxAw13XwnFqr95CF18XF4Ygrn5ZFZ5urnx
+        Z3Z0vrsrXF47tFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
+        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU4T5dUUUUU
         =
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
@@ -60,34 +60,59 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-If raise_barrier() is called the first time in raid10_sync_request(), which
-means the first non-normal io is handled, raise_barrier() should wait for
-all dispatched normal io to be done. This ensures that normal io won't
-starve.
+handle_read_error() will resumit r10_bio by raid10_read_request(), which
+will call bio_start_io_acct() again, while bio_end_io_acct() will only
+be called once.
 
-However, BUG_ON() if this is broken is too aggressive. This patch replace
-BUG_ON() with WARN and fall back to not force.
+Fix the problem by don't account io again from handle_read_error().
 
+Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 ---
- drivers/md/raid10.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/md/raid10.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 4f8edb6ea3e2..a8b5fecef136 100644
+index 6c66357f92f5..4f8edb6ea3e2 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -952,7 +952,9 @@ static void flush_pending_writes(struct r10conf *conf)
- static void raise_barrier(struct r10conf *conf, int force)
- {
- 	write_seqlock_irq(&conf->resync_lock);
--	BUG_ON(force && !conf->barrier);
-+
-+	if (WARN_ON_ONCE(force && !conf->barrier))
-+		force = false;
+@@ -1173,7 +1173,7 @@ static bool regular_request_wait(struct mddev *mddev, struct r10conf *conf,
+ }
  
- 	/* Wait until no block IO is waiting (unless 'force') */
- 	wait_event_barrier(conf, force || !conf->nr_waiting);
+ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+-				struct r10bio *r10_bio)
++				struct r10bio *r10_bio, bool handle_error)
+ {
+ 	struct r10conf *conf = mddev->private;
+ 	struct bio *read_bio;
+@@ -1244,7 +1244,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	}
+ 	slot = r10_bio->read_slot;
+ 
+-	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
++	if (!handle_error && blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+ 		r10_bio->start_time = bio_start_io_acct(bio);
+ 	read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
+ 
+@@ -1578,7 +1578,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
+ 			conf->geo.raid_disks);
+ 
+ 	if (bio_data_dir(bio) == READ)
+-		raid10_read_request(mddev, bio, r10_bio);
++		raid10_read_request(mddev, bio, r10_bio, false);
+ 	else
+ 		raid10_write_request(mddev, bio, r10_bio);
+ }
+@@ -2980,7 +2980,7 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
+ 	rdev_dec_pending(rdev, mddev);
+ 	allow_barrier(conf);
+ 	r10_bio->state = 0;
+-	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
++	raid10_read_request(mddev, r10_bio->master_bio, r10_bio, true);
+ }
+ 
+ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
 -- 
 2.31.1
 
