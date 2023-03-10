@@ -2,56 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F93C64EC4
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Mar 2023 07:40:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C23C6FD1C
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Mar 2023 07:40:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230258AbjCJHkR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Mar 2023 02:40:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34078 "EHLO
+        id S230263AbjCJHkT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Mar 2023 02:40:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230363AbjCJHjv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Mar 2023 02:39:51 -0500
+        with ESMTP id S230361AbjCJHju (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Mar 2023 02:39:50 -0500
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00925F8E46;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56237F9ED4;
         Thu,  9 Mar 2023 23:39:38 -0800 (PST)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PXycQ3n94z4f3jqn;
-        Fri, 10 Mar 2023 15:39:34 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PXycP1wcVz4f3nTY;
+        Fri, 10 Mar 2023 15:39:33 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgDn4R+03gpkwSimEg--.34063S9;
-        Fri, 10 Mar 2023 15:39:36 +0800 (CST)
+        by APP3 (Coremail) with SMTP id _Ch0CgDn4R+03gpkwSimEg--.34063S6;
+        Fri, 10 Mar 2023 15:39:34 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     guoqing.jiang@linux.dev, song@kernel.org, jgq516@gmail.com,
         neilb@suse.de, shli@fb.com, lzhong@suse.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH v2 5/6] md/raid10: fix memleak for 'conf->bio_split'
-Date:   Fri, 10 Mar 2023 15:38:54 +0800
-Message-Id: <20230310073855.1337560-6-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 2/6] md: fix soft lockup in status_resync
+Date:   Fri, 10 Mar 2023 15:38:51 +0800
+Message-Id: <20230310073855.1337560-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
 References: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDn4R+03gpkwSimEg--.34063S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7CrWxGw4UXF43tF48uw18Grg_yoW8Kr1fpa
-        nxK345Kr47Za9xJryDJFWDua4Yqr1xtayUCry7Aw4rXF4ftrZ2y3W0yrWxWryUuay2gry3
-        tFW5KFWruFn8Gr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-        kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-        wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-        W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
-        UUUUU
+X-CM-TRANSID: _Ch0CgDn4R+03gpkwSimEg--.34063S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7tw4UXryrCry7tFW3Xw1xAFb_yoW8Aryrpa
+        93ZFWxArWFvFWxJrZxJr1UZa4rAa4FyrZrKF4Uuw43ZF1fCr1jyr1UCF4DWrykWF95Jryj
+        qa4Fyr98CF1UZ3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
+        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUHbyAUUUUU
+        =
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -60,87 +60,55 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-In the error path of raid10_run(), 'conf' need be freed, however,
-'conf->bio_split' is missed and memory will be leaked.
+status_resync() will calculate 'curr_resync - recovery_active' to show
+user a progress bar like following:
 
-Since there are 3 places to free 'conf', factor out a helper to fix the
-problem.
+[============>........]  resync = 61.4%
 
-Fixes: fc9977dd069e ("md/raid10: simplify the splitting of requests.")
+'curr_resync' and 'recovery_active' is updated in md_do_sync(), and
+status_resync() can read them concurrently, hence it's possible that
+'curr_resync - recovery_active' can overflow to a huge number. In this
+case status_resync() will be stuck in the loop to print a large amount
+of '=', which will end up soft lockup.
+
+Fix the problem by setting 'resync' to MD_RESYNC_ACTIVE in this case,
+this way resync in progress will be reported to user.
+
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid10.c | 37 +++++++++++++++++--------------------
- 1 file changed, 17 insertions(+), 20 deletions(-)
+ drivers/md/md.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index f7002a1aa9cf..bdfa02e8fe7e 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4009,6 +4009,20 @@ static int setup_geo(struct geom *geo, struct mddev *mddev, enum geo_type new)
- 	return nc*fc;
- }
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 546b1b81eb28..98970bbe32bf 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8009,16 +8009,16 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
+ 	} else if (resync > max_sectors) {
+ 		resync = max_sectors;
+ 	} else {
+-		resync -= atomic_read(&mddev->recovery_active);
+-		if (resync < MD_RESYNC_ACTIVE) {
+-			/*
+-			 * Resync has started, but the subtraction has
+-			 * yielded one of the special values. Force it
+-			 * to active to ensure the status reports an
+-			 * active resync.
+-			 */
++		res = atomic_read(&mddev->recovery_active);
++		/*
++		 * Resync has started, but the subtraction has overflowed or
++		 * yielded one of the special values. Force it to active to
++		 * ensure the status reports an active resync.
++		 */
++		if (resync < res || resync - res < MD_RESYNC_ACTIVE)
+ 			resync = MD_RESYNC_ACTIVE;
+-		}
++		else
++			resync -= res;
+ 	}
  
-+static void raid10_free_conf(struct r10conf *conf)
-+{
-+	if (!conf)
-+		return;
-+
-+	mempool_exit(&conf->r10bio_pool);
-+	kfree(conf->mirrors);
-+	kfree(conf->mirrors_old);
-+	kfree(conf->mirrors_new);
-+	safe_put_page(conf->tmppage);
-+	bioset_exit(&conf->bio_split);
-+	kfree(conf);
-+}
-+
- static struct r10conf *setup_conf(struct mddev *mddev)
- {
- 	struct r10conf *conf = NULL;
-@@ -4091,13 +4105,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	return conf;
- 
-  out:
--	if (conf) {
--		mempool_exit(&conf->r10bio_pool);
--		kfree(conf->mirrors);
--		safe_put_page(conf->tmppage);
--		bioset_exit(&conf->bio_split);
--		kfree(conf);
--	}
-+	raid10_free_conf(conf);
- 	return ERR_PTR(err);
- }
- 
-@@ -4288,10 +4296,7 @@ static int raid10_run(struct mddev *mddev)
- 
- out_free_conf:
- 	md_unregister_thread(&mddev->thread);
--	mempool_exit(&conf->r10bio_pool);
--	safe_put_page(conf->tmppage);
--	kfree(conf->mirrors);
--	kfree(conf);
-+	raid10_free_conf(conf);
- 	mddev->private = NULL;
- out:
- 	return -EIO;
-@@ -4299,15 +4304,7 @@ static int raid10_run(struct mddev *mddev)
- 
- static void raid10_free(struct mddev *mddev, void *priv)
- {
--	struct r10conf *conf = priv;
--
--	mempool_exit(&conf->r10bio_pool);
--	safe_put_page(conf->tmppage);
--	kfree(conf->mirrors);
--	kfree(conf->mirrors_old);
--	kfree(conf->mirrors_new);
--	bioset_exit(&conf->bio_split);
--	kfree(conf);
-+	raid10_free_conf(priv);
- }
- 
- static void raid10_quiesce(struct mddev *mddev, int quiesce)
+ 	if (resync == MD_RESYNC_NONE) {
 -- 
 2.31.1
 
