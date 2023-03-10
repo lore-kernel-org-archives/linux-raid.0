@@ -2,79 +2,80 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F2ADC6FD19
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Mar 2023 07:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18FC7C6FA99
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Mar 2023 14:43:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230350AbjCJHkZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Mar 2023 02:40:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33578 "EHLO
+        id S232909AbjCJOnw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Mar 2023 09:43:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230338AbjCJHjt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Mar 2023 02:39:49 -0500
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56111F8656;
-        Thu,  9 Mar 2023 23:39:38 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PXycN2cnDz4f3nTN;
-        Fri, 10 Mar 2023 15:39:32 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgDn4R+03gpkwSimEg--.34063S4;
-        Fri, 10 Mar 2023 15:39:33 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     guoqing.jiang@linux.dev, song@kernel.org, jgq516@gmail.com,
-        neilb@suse.de, shli@fb.com, lzhong@suse.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH v2 0/6] md/raid10: several simple obvious bugfix
-Date:   Fri, 10 Mar 2023 15:38:49 +0800
-Message-Id: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S232933AbjCJOnd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Mar 2023 09:43:33 -0500
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EAABD13C7
+        for <linux-raid@vger.kernel.org>; Fri, 10 Mar 2023 06:43:26 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1678459397; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=fp4Dpq2sffM/HHVswHM7H0igryXw8UvVFTkmI1MSwB+5JFNpEG+Ugj4BCbry/ruuBUcM7DuKiJxsCbE6lnl6swUKlOJTDd46YbdBqyJRm3cszPj4maQ784n2/siLpUm8+FSsY/QNvw5BXoenmIWCl/Kfwwi6dCsimzlxBcNEObw=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1678459397; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=xZt8RGeS8fIpgpZkhCcxmqzsmTv2eRogBjqb33r0Bj0=; 
+        b=DvDaoN/j9OCXP53vgih5ntYHiilZvQEy/lwWRoLtFTj+d3/lEGwqXhY3ExCl5YbKEOKuHNb1m7xZtsABORuDDg611WT+HyWglHw6NgShdsGo4o0Hwtncpgok2l71BTcVfRkltXKy6BiUPxBdQA6eBBcAwKVjN5ob21ER5x/p7mA=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1678459394332800.980885178361; Fri, 10 Mar 2023 15:43:14 +0100 (CET)
+Message-ID: <3f1f7b12-397a-d363-d075-e074c0913e64@trained-monkey.org>
+Date:   Fri, 10 Mar 2023 09:43:11 -0500
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDn4R+03gpkwSimEg--.34063S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrtr1UKr18KrykGr4xAw13urg_yoW3Cwc_Ka
-        ykAFW5tr42qFZ3ta43Cr18ury7XFs0vryxXF18KFWDZ343ur1UCr18Xr4Sqr4rZrs0qFn8
-        JrW8tryIvrsFyjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbxkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-        n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
-        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
-        AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
-        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb
-        XdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 2/3] mdadm: refactor ident->name handling
+Content-Language: en-US
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     colyli@suse.de, linux-raid@vger.kernel.org
+References: <20221221115019.26276-1-mariusz.tkaczyk@linux.intel.com>
+ <20221221115019.26276-3-mariusz.tkaczyk@linux.intel.com>
+ <bef57069-acdb-3a2f-b691-2c438c4247fb@trained-monkey.org>
+ <20221229103931.00006ff0@linux.intel.com>
+ <0017b6dc-b0c0-7d4e-4765-fcc429b41862@trained-monkey.org>
+ <20230303130410.000043e0@linux.intel.com>
+ <824b2eca-cada-43b2-be8f-100676654bb2@trained-monkey.org>
+ <20230309090207.00002769@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20230309090207.00002769@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 3/9/23 03:02, Mariusz Tkaczyk wrote:
+> On Wed, 8 Mar 2023 14:04:12 -0500
+>> Maybe it would be worth starting the enum outside the range of the
+>> regular errno so they can overlap? Not sure if it adds any value, just a
+>> thought.
+>>
+> I see no value either.
+> What if someone will add new error definition to errno? Should we change our
+> enum start then? I think that nobody will notice it until issue but it is
+> unlikely too. For that reason I think that it is pointless from the beggining
+> because we are defnining rule which won't be honored later.
+> 
+> I think that we can just to redefine errno codes in enum if they are needed. We
+> are free to change particular enum constant value to make room for errno
+> compatible codes if there will be need to. That should be safe if some code
+> does not have ugly trick like calling external function and comparing it with
+> enum constant:
+> 
+> */ let's say that SUCCESS is 0 */
+> if (strncmp(arg, arg1, arg2) == ENUM_STATUS_SUCCESS)
+> 
+> but it is our job to catch it on review so we are safe here, right? :)
 
-We're running many tests for raid10 currently, and we found a lot of
-problems already. This patchset is the first part for some simple and
-obvious problems. Most of the patches were sent separately already, but
-I think a patchset is better for review.
+Fair enough
 
-Yu Kuai (6):
-  md/raid10: don't call bio_start_io_acct twice for bio which
-    experienced read error
-  md: fix soft lockup in status_resync
-  md/raid10: don't BUG_ON() in raise_barrier()
-  md/radi10: fix leak of 'r10bio->remaining' for recovery
-  md/raid10: fix memleak for 'conf->bio_split'
-  md/raid10: fix memleak of md thread
-
- drivers/md/md.c     | 18 +++++------
- drivers/md/raid10.c | 78 +++++++++++++++++++++++----------------------
- 2 files changed, 49 insertions(+), 47 deletions(-)
-
--- 
-2.31.1
+Jes
 
