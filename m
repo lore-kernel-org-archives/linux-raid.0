@@ -2,80 +2,108 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18FC7C6FA99
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Mar 2023 14:43:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D36C74A5B
+	for <linux-raid@archiver.kernel.org>; Sat, 11 Mar 2023 09:32:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232909AbjCJOnw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Mar 2023 09:43:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35098 "EHLO
+        id S230094AbjCKJcf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 11 Mar 2023 04:32:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232933AbjCJOnd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Mar 2023 09:43:33 -0500
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EAABD13C7
-        for <linux-raid@vger.kernel.org>; Fri, 10 Mar 2023 06:43:26 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1678459397; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=fp4Dpq2sffM/HHVswHM7H0igryXw8UvVFTkmI1MSwB+5JFNpEG+Ugj4BCbry/ruuBUcM7DuKiJxsCbE6lnl6swUKlOJTDd46YbdBqyJRm3cszPj4maQ784n2/siLpUm8+FSsY/QNvw5BXoenmIWCl/Kfwwi6dCsimzlxBcNEObw=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1678459397; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=xZt8RGeS8fIpgpZkhCcxmqzsmTv2eRogBjqb33r0Bj0=; 
-        b=DvDaoN/j9OCXP53vgih5ntYHiilZvQEy/lwWRoLtFTj+d3/lEGwqXhY3ExCl5YbKEOKuHNb1m7xZtsABORuDDg611WT+HyWglHw6NgShdsGo4o0Hwtncpgok2l71BTcVfRkltXKy6BiUPxBdQA6eBBcAwKVjN5ob21ER5x/p7mA=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 1678459394332800.980885178361; Fri, 10 Mar 2023 15:43:14 +0100 (CET)
-Message-ID: <3f1f7b12-397a-d363-d075-e074c0913e64@trained-monkey.org>
-Date:   Fri, 10 Mar 2023 09:43:11 -0500
+        with ESMTP id S229901AbjCKJcd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 11 Mar 2023 04:32:33 -0500
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D39EDCA45;
+        Sat, 11 Mar 2023 01:32:32 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PYd4C6SlSz4f3jHj;
+        Sat, 11 Mar 2023 17:32:27 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgC3YiCqSgxkFn3mEg--.16173S7;
+        Sat, 11 Mar 2023 17:32:29 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     agk@redhat.com, snitzer@kernel.org, song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next 3/5] md: use md_thread api to wake up sync_thread
+Date:   Sat, 11 Mar 2023 17:31:46 +0800
+Message-Id: <20230311093148.2595222-4-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
+References: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 2/3] mdadm: refactor ident->name handling
-Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     colyli@suse.de, linux-raid@vger.kernel.org
-References: <20221221115019.26276-1-mariusz.tkaczyk@linux.intel.com>
- <20221221115019.26276-3-mariusz.tkaczyk@linux.intel.com>
- <bef57069-acdb-3a2f-b691-2c438c4247fb@trained-monkey.org>
- <20221229103931.00006ff0@linux.intel.com>
- <0017b6dc-b0c0-7d4e-4765-fcc429b41862@trained-monkey.org>
- <20230303130410.000043e0@linux.intel.com>
- <824b2eca-cada-43b2-be8f-100676654bb2@trained-monkey.org>
- <20230309090207.00002769@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20230309090207.00002769@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgC3YiCqSgxkFn3mEg--.16173S7
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar47Jw4rGw13JFWkXw4rAFb_yoW8WFy7pa
+        yxAF95ur10yry3ZFZxJa4qva4rXF10q342vry7ua1rJw15tw45tFy3ury8AryvvayfAw45
+        Zw1rtFWxuFs29r7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9v14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
+        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
+        026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
+        JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
+        v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
+        j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JV
+        W8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbJ73DUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/9/23 03:02, Mariusz Tkaczyk wrote:
-> On Wed, 8 Mar 2023 14:04:12 -0500
->> Maybe it would be worth starting the enum outside the range of the
->> regular errno so they can overlap? Not sure if it adds any value, just a
->> thought.
->>
-> I see no value either.
-> What if someone will add new error definition to errno? Should we change our
-> enum start then? I think that nobody will notice it until issue but it is
-> unlikely too. For that reason I think that it is pointless from the beggining
-> because we are defnining rule which won't be honored later.
-> 
-> I think that we can just to redefine errno codes in enum if they are needed. We
-> are free to change particular enum constant value to make room for errno
-> compatible codes if there will be need to. That should be safe if some code
-> does not have ugly trick like calling external function and comparing it with
-> enum constant:
-> 
-> */ let's say that SUCCESS is 0 */
-> if (strncmp(arg, arg1, arg2) == ENUM_STATUS_SUCCESS)
-> 
-> but it is our job to catch it on review so we are safe here, right? :)
+From: Yu Kuai <yukuai3@huawei.com>
 
-Fair enough
+Instead of wake_up_process() directly, convert to use
+md_wakeup_thread().
 
-Jes
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 97e87df4ee43..4ecfd0508afb 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6267,10 +6267,12 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+ 	}
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-	if (mddev->sync_thread)
+-		/* Thread might be blocked waiting for metadata update
+-		 * which will now never happen */
+-		wake_up_process(mddev->sync_thread->tsk);
++
++	/*
++	 * Thread might be blocked waiting for metadata update
++	 * which will now never happen
++	 */
++	md_wakeup_thread(&mddev->sync_thread, mddev);
+ 
+ 	if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
+ 		return -EBUSY;
+@@ -6331,10 +6333,12 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 	}
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-	if (mddev->sync_thread)
+-		/* Thread might be blocked waiting for metadata update
+-		 * which will now never happen */
+-		wake_up_process(mddev->sync_thread->tsk);
++
++	/*
++	 * Thread might be blocked waiting for metadata update
++	 * which will now never happen
++	 */
++	md_wakeup_thread(&mddev->sync_thread, mddev);
+ 
+ 	mddev_unlock(mddev);
+ 	wait_event(resync_wait, (mddev->sync_thread == NULL &&
+-- 
+2.31.1
 
