@@ -2,222 +2,162 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5019C6FD19
-	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 21:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59898C61DA4
+	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 22:08:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229897AbjCMVvU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 17:51:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46466 "EHLO
+        id S230149AbjCMWI6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 18:08:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230014AbjCMVvS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 17:51:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 711978C51F
-        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 14:51:10 -0700 (PDT)
+        with ESMTP id S230104AbjCMWIz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 18:08:55 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A584883EB;
+        Mon, 13 Mar 2023 15:08:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 05D3E6150D
-        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 21:51:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63B71C433EF
-        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 21:51:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 56FD4B81183;
+        Mon, 13 Mar 2023 22:08:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F969C433A0;
+        Mon, 13 Mar 2023 22:08:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678744269;
-        bh=x+H2FT1undjTsiDMgWK1bNaWcdBo9zMwiYDkNjngaLo=;
+        s=k20201202; t=1678745331;
+        bh=SWV5CxSdZlMxBr3D3J2SYdYdv4+nJ0WW4BhKp3O2LiI=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=LDMbxt6zFUZ7rnO9NLkwKxNr+VE5RoCjoAJYsMZHRMmTQSg+3QVm3RkCvj9YRB10a
-         RBOLUo7o7whLI8H0hJ+wRe5mdUp2mmIeIqrL/epqAOgUOBMkrjBiCP60zIr4Gnr9uf
-         OHQjStAAEgR37/PHbjPKyjyq06M+B9MkYCqsmUMMEECdXm2US1E9TsTtVxg1KKkgR+
-         uR0LBaAA+x7p907kAZgM7Hza2DIqoZRyLgMW4sYvJLKlePAnDqUQbBUgi2sPMFEz9x
-         vP9XytBLPbb72w1odD/fSMDng6vgRLOz+EA7dQiNXipxkZT51E4ZmWSnVOkFl13fwi
-         qcxAZYZ3pdhDA==
-Received: by mail-lf1-f52.google.com with SMTP id r27so17512929lfe.10
-        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 14:51:09 -0700 (PDT)
-X-Gm-Message-State: AO0yUKUgfJi7Qu0C3XuWWr9d0EIt7a0Njn3d1G+UgjBUerfZLuT5uys4
-        vy/Rry+AbDB51G9Pw/NghWo09Pasc6kVCfx24po=
-X-Google-Smtp-Source: AK7set+4ncZW/BtGhu2TKnBYUPqQ1NMjRZBW+d1XhCyQ2BCt5NkuxspxnIoG9UPZKIG5elw0ipkSqzRmglY8eGkuBjA=
-X-Received: by 2002:a19:7613:0:b0:4d5:ca32:6ed5 with SMTP id
- c19-20020a197613000000b004d5ca326ed5mr11534lff.3.1678744267381; Mon, 13 Mar
- 2023 14:51:07 -0700 (PDT)
+        b=Jo6lOD9szmrNyztaUkAdI2ZbrEbEEVG5ZMWLcI0Y2K64G4oNdR3dvONtMagdQ64ly
+         hsXqSBmN50wz0BTiY70a4gitJaIcvp/y3tc9ZK3XR3uRWwC48UHKda3L0FZJz8n0NY
+         vzZYzPccHClkrer++2YHNhQW/TQaoLaDLa+/ddy4jtDyUscmZXxIcYv9kQYk1JFS6J
+         FysHmKuGo89n9KCKCJlHeA8KHoaxpPj+mnZdpBxNgj9MnNcaf794M4WZ3FRUExXSIM
+         Td/AukBFInNB6/z6BWxiiaxMseQjiGN2rTwi5NreEkTkBfkAfUu5Dmquvie392LNy/
+         E+JmvGIkRuLuQ==
+Received: by mail-lj1-f169.google.com with SMTP id h9so14164572ljq.2;
+        Mon, 13 Mar 2023 15:08:51 -0700 (PDT)
+X-Gm-Message-State: AO0yUKV1fZhQlx9sVR6bKYCLGz7IbxbDdO20ZCD5J7YINbt6rs+WwPse
+        gsM7nnaUvertz8BLYCEyGYrTTXtpLjqLUb4yolw=
+X-Google-Smtp-Source: AK7set96vUjS/9oDgH6PlJqErw79LuRXgMyp/tFDb0v8wZwibYQ0wDi1/zLKG3u8/igklSblHxN2QHYWCGTsKwyFD6o=
+X-Received: by 2002:a2e:b5a5:0:b0:295:93eb:e790 with SMTP id
+ f5-20020a2eb5a5000000b0029593ebe790mr10958769ljn.5.1678745328994; Mon, 13 Mar
+ 2023 15:08:48 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230306130317.3418-1-mariusz.tkaczyk@linux.intel.com>
-In-Reply-To: <20230306130317.3418-1-mariusz.tkaczyk@linux.intel.com>
+References: <20230310073855.1337560-1-yukuai1@huaweicloud.com> <20230310073855.1337560-2-yukuai1@huaweicloud.com>
+In-Reply-To: <20230310073855.1337560-2-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Mar 2023 14:50:54 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7AUASschZ=xoE=QhuWAb4UsE3RFOiZZsbKQfOKbTVkgg@mail.gmail.com>
-Message-ID: <CAPhsuW7AUASschZ=xoE=QhuWAb4UsE3RFOiZZsbKQfOKbTVkgg@mail.gmail.com>
-Subject: Re: [PATCH] raid0, linear, md: add error_handlers
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org, guoqing.jiang@linux.dev, xni@redhat.com
+Date:   Mon, 13 Mar 2023 15:08:36 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
+Message-ID: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
+Subject: Re: [PATCH v2 1/6] md/raid10: don't call bio_start_io_acct twice for
+ bio which experienced read error
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     guoqing.jiang@linux.dev, jgq516@gmail.com, neilb@suse.de,
+        shli@fb.com, lzhong@suse.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Mar 6, 2023 at 5:03=E2=80=AFAM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
+On Thu, Mar 9, 2023 at 11:39=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
 >
-> After the commit 9631abdbf406c("md: Set MD_BROKEN for RAID1 and RAID10")
-> MD_BROKEN must be set if array is failed because state_store() checks it.
-> If it is set then -EBUSY is returned to userspace.
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> For raid0 and linear MD_BROKEN is not set by error_handler(). As a result
-> mdadm is unable to trigger clean-up actions. It is a regression.
+> handle_read_error() will resumit r10_bio by raid10_read_request(), which
+> will call bio_start_io_acct() again, while bio_end_io_acct() will only
+> be called once.
 >
-> This patch adds appropriate error_handler for raid0 and linear. The
-> error handler sets MD_BROKEN for this device.
+> Fix the problem by don't account io again from handle_read_error().
 >
-> Reviewed-by: Xiao Ni <xni@redhat.com>
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 
-Applied to md-next.
+I would rather keep same argument lists for raid10_read_request
+and raid10_write_request. How about we do something like this
+instead?
+
+diff --git i/drivers/md/raid10.c w/drivers/md/raid10.c
+index 6b39e6c7ada3..13f33a8a8fe8 100644
+--- i/drivers/md/raid10.c
++++ w/drivers/md/raid10.c
+@@ -1248,7 +1248,8 @@ static void raid10_read_request(struct mddev
+*mddev, struct bio *bio,
+        }
+        slot =3D r10_bio->read_slot;
+
+-       if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
++       if (!r10_bio->start_time &&
++           blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+                r10_bio->start_time =3D bio_start_io_acct(bio);
+        read_bio =3D bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set)=
+;
+
+@@ -1578,6 +1579,7 @@ static void __make_request(struct mddev *mddev,
+struct bio *bio, int sectors)
+        r10_bio->sector =3D bio->bi_iter.bi_sector;
+        r10_bio->state =3D 0;
+        r10_bio->read_slot =3D -1;
++       r10_bio->start_time =3D 0;
+        memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
+                        conf->geo.raid_disks);
 
 Thanks,
 Song
 
 > ---
+>  drivers/md/raid10.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 >
-> We decided to drop this patch. Xiao determined that there is a regression
-> so bringing it back. I can implement it differently to avoid
-> error_handlers() if you still see them as overhead.
->
-> https://lore.kernel.org/linux-raid/CAPhsuW4ZkqRQpW7UA45m_EB_sGcxL84RAg2JS=
-5ZcZ8seGwMj+g@mail.gmail.com/
->
->  drivers/md/md-linear.c | 14 +++++++++++++-
->  drivers/md/md.c        |  3 +++
->  drivers/md/md.h        | 10 ++--------
->  drivers/md/raid0.c     | 14 +++++++++++++-
->  4 files changed, 31 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-> index 6e7797b4e738..4eb72b9dd933 100644
-> --- a/drivers/md/md-linear.c
-> +++ b/drivers/md/md-linear.c
-> @@ -223,7 +223,8 @@ static bool linear_make_request(struct mddev *mddev, =
-struct bio *bio)
->                      bio_sector < start_sector))
->                 goto out_of_bounds;
->
-> -       if (unlikely(is_mddev_broken(tmp_dev->rdev, "linear"))) {
-> +       if (unlikely(is_rdev_broken(tmp_dev->rdev))) {
-> +               md_error(mddev, tmp_dev->rdev);
->                 bio_io_error(bio);
->                 return true;
->         }
-> @@ -270,6 +271,16 @@ static void linear_status (struct seq_file *seq, str=
-uct mddev *mddev)
->         seq_printf(seq, " %dk rounding", mddev->chunk_sectors / 2);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 6c66357f92f5..4f8edb6ea3e2 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1173,7 +1173,7 @@ static bool regular_request_wait(struct mddev *mdde=
+v, struct r10conf *conf,
 >  }
 >
-> +static void linear_error(struct mddev *mddev, struct md_rdev *rdev)
-> +{
-> +       if (!test_and_set_bit(MD_BROKEN, &mddev->flags)) {
-> +               char *md_name =3D mdname(mddev);
-> +
-> +               pr_crit("md/linear%s: Disk failure on %pg detected, faili=
-ng array.\n",
-> +                       md_name, rdev->bdev);
-> +       }
-> +}
-> +
->  static void linear_quiesce(struct mddev *mddev, int state)
+>  static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+> -                               struct r10bio *r10_bio)
+> +                               struct r10bio *r10_bio, bool handle_error=
+)
 >  {
->  }
-> @@ -286,6 +297,7 @@ static struct md_personality linear_personality =3D
->         .hot_add_disk   =3D linear_add,
->         .size           =3D linear_size,
->         .quiesce        =3D linear_quiesce,
-> +       .error_handler  =3D linear_error,
->  };
->
->  static int __init linear_init (void)
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 927a43db5dfb..d95cf47ff924 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7974,6 +7974,9 @@ void md_error(struct mddev *mddev, struct md_rdev *=
-rdev)
->                 return;
->         mddev->pers->error_handler(mddev, rdev);
->
-> +       if (mddev->pers->level =3D=3D 0 || mddev->pers->level =3D=3D LEVE=
-L_LINEAR)
-> +               return;
-> +
->         if (mddev->degraded && !test_bit(MD_BROKEN, &mddev->flags))
->                 set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->         sysfs_notify_dirent_safe(rdev->sysfs_state);
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index e148e3c83b0d..fd8f260ed5f8 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -790,15 +790,9 @@ extern void mddev_destroy_serial_pool(struct mddev *=
-mddev, struct md_rdev *rdev,
->  struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
->  struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev);
->
-> -static inline bool is_mddev_broken(struct md_rdev *rdev, const char *md_=
-type)
-> +static inline bool is_rdev_broken(struct md_rdev *rdev)
->  {
-> -       if (!disk_live(rdev->bdev->bd_disk)) {
-> -               if (!test_and_set_bit(MD_BROKEN, &rdev->mddev->flags))
-> -                       pr_warn("md: %s: %s array has a missing/failed me=
-mber\n",
-> -                               mdname(rdev->mddev), md_type);
-> -               return true;
-> -       }
-> -       return false;
-> +       return !disk_live(rdev->bdev->bd_disk);
->  }
->
->  static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *=
-mddev)
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index b536befd8898..f8ee9a95e25d 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -569,8 +569,9 @@ static bool raid0_make_request(struct mddev *mddev, s=
-truct bio *bio)
->                 return true;
+>         struct r10conf *conf =3D mddev->private;
+>         struct bio *read_bio;
+> @@ -1244,7 +1244,7 @@ static void raid10_read_request(struct mddev *mddev=
+, struct bio *bio,
 >         }
+>         slot =3D r10_bio->read_slot;
 >
-> -       if (unlikely(is_mddev_broken(tmp_dev, "raid0"))) {
-> +       if (unlikely(is_rdev_broken(tmp_dev))) {
->                 bio_io_error(bio);
-> +               md_error(mddev, tmp_dev);
->                 return true;
->         }
+> -       if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+> +       if (!handle_error && blk_queue_io_stat(bio->bi_bdev->bd_disk->que=
+ue))
+>                 r10_bio->start_time =3D bio_start_io_acct(bio);
+>         read_bio =3D bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_se=
+t);
 >
-> @@ -592,6 +593,16 @@ static void raid0_status(struct seq_file *seq, struc=
-t mddev *mddev)
->         return;
+> @@ -1578,7 +1578,7 @@ static void __make_request(struct mddev *mddev, str=
+uct bio *bio, int sectors)
+>                         conf->geo.raid_disks);
+>
+>         if (bio_data_dir(bio) =3D=3D READ)
+> -               raid10_read_request(mddev, bio, r10_bio);
+> +               raid10_read_request(mddev, bio, r10_bio, false);
+>         else
+>                 raid10_write_request(mddev, bio, r10_bio);
+>  }
+> @@ -2980,7 +2980,7 @@ static void handle_read_error(struct mddev *mddev, =
+struct r10bio *r10_bio)
+>         rdev_dec_pending(rdev, mddev);
+>         allow_barrier(conf);
+>         r10_bio->state =3D 0;
+> -       raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
+> +       raid10_read_request(mddev, r10_bio->master_bio, r10_bio, true);
 >  }
 >
-> +static void raid0_error(struct mddev *mddev, struct md_rdev *rdev)
-> +{
-> +       if (!test_and_set_bit(MD_BROKEN, &mddev->flags)) {
-> +               char *md_name =3D mdname(mddev);
-> +
-> +               pr_crit("md/raid0%s: Disk failure on %pg detected, failin=
-g array.\n",
-> +                       md_name, rdev->bdev);
-> +       }
-> +}
-> +
->  static void *raid0_takeover_raid45(struct mddev *mddev)
->  {
->         struct md_rdev *rdev;
-> @@ -767,6 +778,7 @@ static struct md_personality raid0_personality=3D
->         .size           =3D raid0_size,
->         .takeover       =3D raid0_takeover,
->         .quiesce        =3D raid0_quiesce,
-> +       .error_handler  =3D raid0_error,
->  };
->
->  static int __init raid0_init (void)
+>  static void handle_write_completed(struct r10conf *conf, struct r10bio *=
+r10_bio)
 > --
-> 2.26.2
+> 2.31.1
 >
