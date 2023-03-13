@@ -2,52 +2,51 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59898C61DA4
-	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 22:08:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F4105C6FD19
+	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 22:25:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230149AbjCMWI6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 18:08:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43280 "EHLO
+        id S229707AbjCMWZG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 18:25:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230104AbjCMWIz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 18:08:55 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A584883EB;
-        Mon, 13 Mar 2023 15:08:53 -0700 (PDT)
+        with ESMTP id S230131AbjCMWY6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 18:24:58 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E28D2637E8;
+        Mon, 13 Mar 2023 15:24:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 56FD4B81183;
-        Mon, 13 Mar 2023 22:08:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F969C433A0;
-        Mon, 13 Mar 2023 22:08:51 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8215661520;
+        Mon, 13 Mar 2023 22:24:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5BB9C4339B;
+        Mon, 13 Mar 2023 22:24:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678745331;
-        bh=SWV5CxSdZlMxBr3D3J2SYdYdv4+nJ0WW4BhKp3O2LiI=;
+        s=k20201202; t=1678746295;
+        bh=NvFiLiJrQH6NUVzgS1QQsUP1+Drn7VRsdLOWQ3FKSjM=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Jo6lOD9szmrNyztaUkAdI2ZbrEbEEVG5ZMWLcI0Y2K64G4oNdR3dvONtMagdQ64ly
-         hsXqSBmN50wz0BTiY70a4gitJaIcvp/y3tc9ZK3XR3uRWwC48UHKda3L0FZJz8n0NY
-         vzZYzPccHClkrer++2YHNhQW/TQaoLaDLa+/ddy4jtDyUscmZXxIcYv9kQYk1JFS6J
-         FysHmKuGo89n9KCKCJlHeA8KHoaxpPj+mnZdpBxNgj9MnNcaf794M4WZ3FRUExXSIM
-         Td/AukBFInNB6/z6BWxiiaxMseQjiGN2rTwi5NreEkTkBfkAfUu5Dmquvie392LNy/
-         E+JmvGIkRuLuQ==
-Received: by mail-lj1-f169.google.com with SMTP id h9so14164572ljq.2;
-        Mon, 13 Mar 2023 15:08:51 -0700 (PDT)
-X-Gm-Message-State: AO0yUKV1fZhQlx9sVR6bKYCLGz7IbxbDdO20ZCD5J7YINbt6rs+WwPse
-        gsM7nnaUvertz8BLYCEyGYrTTXtpLjqLUb4yolw=
-X-Google-Smtp-Source: AK7set96vUjS/9oDgH6PlJqErw79LuRXgMyp/tFDb0v8wZwibYQ0wDi1/zLKG3u8/igklSblHxN2QHYWCGTsKwyFD6o=
-X-Received: by 2002:a2e:b5a5:0:b0:295:93eb:e790 with SMTP id
- f5-20020a2eb5a5000000b0029593ebe790mr10958769ljn.5.1678745328994; Mon, 13 Mar
- 2023 15:08:48 -0700 (PDT)
+        b=AJqX7M2k7RdSnIDmu5DnNXY4xcDzaL5VwJNFMhCcpOS+/eqOQrgkr1OrZ8wAxFVpM
+         lJvviDrh5aMn5CzpF4V3zDYPZ3XFKe+DNetz6O6QiEw/3iQ+z1qj0HdkG/PSYCNf7I
+         KATTv5AMRD2AA0PlX4IOMxl4zzWypaIosxTzxEbmbf2w/2D+j7w33tCKToTw5AmlxH
+         KqogK2FwitL3SwgtcM9EmLLfvAOfGmhTqeR4LDjS7PbZq7fCw0nVjD0WmQ/hASAKR0
+         TwInxibj02Gl57kl/lLSmO1xjzJ0zRWyl4SKUR6O+OT10T3J2ChhNNL2mc4KM0uuth
+         lrZnQy09nKmsg==
+Received: by mail-lf1-f54.google.com with SMTP id n2so17587215lfb.12;
+        Mon, 13 Mar 2023 15:24:55 -0700 (PDT)
+X-Gm-Message-State: AO0yUKV/NclZG7kcAOql+wcf5drQTRH342+ik/pWXNoiYtN33ZPEeLPc
+        sylaULPRWkqOtb+do7tTgAOJmKfLQhiDjNtGiao=
+X-Google-Smtp-Source: AK7set+SFmA1qMTjX2b1JzjqoC3XjTjjiAL8tiyvErio3S2pUEaGFKVWgpBdNILikN6wbQY0GNSrUcjZa6aP7YTNeNw=
+X-Received: by 2002:a05:6512:3e06:b0:4d8:86c2:75ea with SMTP id
+ i6-20020a0565123e0600b004d886c275eamr54985lfv.3.1678746293916; Mon, 13 Mar
+ 2023 15:24:53 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230310073855.1337560-1-yukuai1@huaweicloud.com> <20230310073855.1337560-2-yukuai1@huaweicloud.com>
-In-Reply-To: <20230310073855.1337560-2-yukuai1@huaweicloud.com>
+References: <20230310073855.1337560-1-yukuai1@huaweicloud.com> <20230310073855.1337560-3-yukuai1@huaweicloud.com>
+In-Reply-To: <20230310073855.1337560-3-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Mar 2023 15:08:36 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
-Message-ID: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/6] md/raid10: don't call bio_start_io_acct twice for
- bio which experienced read error
+Date:   Mon, 13 Mar 2023 15:24:41 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6eYdWgGyZjnXcT4yY4y-pcy3eEzc8uanStNz9aEGeGLg@mail.gmail.com>
+Message-ID: <CAPhsuW6eYdWgGyZjnXcT4yY4y-pcy3eEzc8uanStNz9aEGeGLg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/6] md: fix soft lockup in status_resync
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     guoqing.jiang@linux.dev, jgq516@gmail.com, neilb@suse.de,
         shli@fb.com, lzhong@suse.com, linux-raid@vger.kernel.org,
@@ -64,100 +63,64 @@ rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> handle_read_error() will resumit r10_bio by raid10_read_request(), which
-> will call bio_start_io_acct() again, while bio_end_io_acct() will only
-> be called once.
+> status_resync() will calculate 'curr_resync - recovery_active' to show
+> user a progress bar like following:
 >
-> Fix the problem by don't account io again from handle_read_error().
+> [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>........]  resync =3D 61.4%
 >
-> Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
+> 'curr_resync' and 'recovery_active' is updated in md_do_sync(), and
+> status_resync() can read them concurrently, hence it's possible that
+> 'curr_resync - recovery_active' can overflow to a huge number. In this
+> case status_resync() will be stuck in the loop to print a large amount
+> of '=3D', which will end up soft lockup.
+>
+> Fix the problem by setting 'resync' to MD_RESYNC_ACTIVE in this case,
+> this way resync in progress will be reported to user.
+>
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 
-I would rather keep same argument lists for raid10_read_request
-and raid10_write_request. How about we do something like this
-instead?
-
-diff --git i/drivers/md/raid10.c w/drivers/md/raid10.c
-index 6b39e6c7ada3..13f33a8a8fe8 100644
---- i/drivers/md/raid10.c
-+++ w/drivers/md/raid10.c
-@@ -1248,7 +1248,8 @@ static void raid10_read_request(struct mddev
-*mddev, struct bio *bio,
-        }
-        slot =3D r10_bio->read_slot;
-
--       if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
-+       if (!r10_bio->start_time &&
-+           blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
-                r10_bio->start_time =3D bio_start_io_acct(bio);
-        read_bio =3D bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set)=
-;
-
-@@ -1578,6 +1579,7 @@ static void __make_request(struct mddev *mddev,
-struct bio *bio, int sectors)
-        r10_bio->sector =3D bio->bi_iter.bi_sector;
-        r10_bio->state =3D 0;
-        r10_bio->read_slot =3D -1;
-+       r10_bio->start_time =3D 0;
-        memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
-                        conf->geo.raid_disks);
+Looks good. Applied to md-next.
 
 Thanks,
 Song
 
 > ---
->  drivers/md/raid10.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/md/md.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
 >
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 6c66357f92f5..4f8edb6ea3e2 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1173,7 +1173,7 @@ static bool regular_request_wait(struct mddev *mdde=
-v, struct r10conf *conf,
->  }
->
->  static void raid10_read_request(struct mddev *mddev, struct bio *bio,
-> -                               struct r10bio *r10_bio)
-> +                               struct r10bio *r10_bio, bool handle_error=
-)
->  {
->         struct r10conf *conf =3D mddev->private;
->         struct bio *read_bio;
-> @@ -1244,7 +1244,7 @@ static void raid10_read_request(struct mddev *mddev=
-, struct bio *bio,
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 546b1b81eb28..98970bbe32bf 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8009,16 +8009,16 @@ static int status_resync(struct seq_file *seq, st=
+ruct mddev *mddev)
+>         } else if (resync > max_sectors) {
+>                 resync =3D max_sectors;
+>         } else {
+> -               resync -=3D atomic_read(&mddev->recovery_active);
+> -               if (resync < MD_RESYNC_ACTIVE) {
+> -                       /*
+> -                        * Resync has started, but the subtraction has
+> -                        * yielded one of the special values. Force it
+> -                        * to active to ensure the status reports an
+> -                        * active resync.
+> -                        */
+> +               res =3D atomic_read(&mddev->recovery_active);
+> +               /*
+> +                * Resync has started, but the subtraction has overflowed=
+ or
+> +                * yielded one of the special values. Force it to active =
+to
+> +                * ensure the status reports an active resync.
+> +                */
+> +               if (resync < res || resync - res < MD_RESYNC_ACTIVE)
+>                         resync =3D MD_RESYNC_ACTIVE;
+> -               }
+> +               else
+> +                       resync -=3D res;
 >         }
->         slot =3D r10_bio->read_slot;
 >
-> -       if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
-> +       if (!handle_error && blk_queue_io_stat(bio->bi_bdev->bd_disk->que=
-ue))
->                 r10_bio->start_time =3D bio_start_io_acct(bio);
->         read_bio =3D bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_se=
-t);
->
-> @@ -1578,7 +1578,7 @@ static void __make_request(struct mddev *mddev, str=
-uct bio *bio, int sectors)
->                         conf->geo.raid_disks);
->
->         if (bio_data_dir(bio) =3D=3D READ)
-> -               raid10_read_request(mddev, bio, r10_bio);
-> +               raid10_read_request(mddev, bio, r10_bio, false);
->         else
->                 raid10_write_request(mddev, bio, r10_bio);
->  }
-> @@ -2980,7 +2980,7 @@ static void handle_read_error(struct mddev *mddev, =
-struct r10bio *r10_bio)
->         rdev_dec_pending(rdev, mddev);
->         allow_barrier(conf);
->         r10_bio->state =3D 0;
-> -       raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
-> +       raid10_read_request(mddev, r10_bio->master_bio, r10_bio, true);
->  }
->
->  static void handle_write_completed(struct r10conf *conf, struct r10bio *=
-r10_bio)
+>         if (resync =3D=3D MD_RESYNC_NONE) {
 > --
 > 2.31.1
 >
