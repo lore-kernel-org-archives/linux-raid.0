@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4105C6FD19
-	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 22:25:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7264FC61DA4
+	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 22:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229707AbjCMWZG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 18:25:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40408 "EHLO
+        id S229847AbjCMWhZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 18:37:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230131AbjCMWY6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 18:24:58 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E28D2637E8;
-        Mon, 13 Mar 2023 15:24:56 -0700 (PDT)
+        with ESMTP id S229534AbjCMWhZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 18:37:25 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46ECA29162;
+        Mon, 13 Mar 2023 15:37:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8215661520;
-        Mon, 13 Mar 2023 22:24:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5BB9C4339B;
-        Mon, 13 Mar 2023 22:24:55 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id EAC4AB81200;
+        Mon, 13 Mar 2023 22:37:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E765C433D2;
+        Mon, 13 Mar 2023 22:37:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678746295;
-        bh=NvFiLiJrQH6NUVzgS1QQsUP1+Drn7VRsdLOWQ3FKSjM=;
+        s=k20201202; t=1678747041;
+        bh=I3cnzXH6XK+PRyojyJ6xi8CNN4Myy7ggWdjA5SYU4bM=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=AJqX7M2k7RdSnIDmu5DnNXY4xcDzaL5VwJNFMhCcpOS+/eqOQrgkr1OrZ8wAxFVpM
-         lJvviDrh5aMn5CzpF4V3zDYPZ3XFKe+DNetz6O6QiEw/3iQ+z1qj0HdkG/PSYCNf7I
-         KATTv5AMRD2AA0PlX4IOMxl4zzWypaIosxTzxEbmbf2w/2D+j7w33tCKToTw5AmlxH
-         KqogK2FwitL3SwgtcM9EmLLfvAOfGmhTqeR4LDjS7PbZq7fCw0nVjD0WmQ/hASAKR0
-         TwInxibj02Gl57kl/lLSmO1xjzJ0zRWyl4SKUR6O+OT10T3J2ChhNNL2mc4KM0uuth
-         lrZnQy09nKmsg==
-Received: by mail-lf1-f54.google.com with SMTP id n2so17587215lfb.12;
-        Mon, 13 Mar 2023 15:24:55 -0700 (PDT)
-X-Gm-Message-State: AO0yUKV/NclZG7kcAOql+wcf5drQTRH342+ik/pWXNoiYtN33ZPEeLPc
-        sylaULPRWkqOtb+do7tTgAOJmKfLQhiDjNtGiao=
-X-Google-Smtp-Source: AK7set+SFmA1qMTjX2b1JzjqoC3XjTjjiAL8tiyvErio3S2pUEaGFKVWgpBdNILikN6wbQY0GNSrUcjZa6aP7YTNeNw=
-X-Received: by 2002:a05:6512:3e06:b0:4d8:86c2:75ea with SMTP id
- i6-20020a0565123e0600b004d886c275eamr54985lfv.3.1678746293916; Mon, 13 Mar
- 2023 15:24:53 -0700 (PDT)
+        b=JBHkSJewjrKNmwVUmzDlvKGAOSZprXxoUtbBgVQDgr+KhcM9qbsIqvWVqluEiYFKt
+         1eqDyBP7R+iP68yUEgbVCsm+CgAdU4UV9NXVIZNy2NmX5wBjlHfsPwHyB2GlsxDgFt
+         4Ao5+lHdL/uoUVEIINW7kU52iO+tEaHLc4ikHPcw6w2DqI0BDvC47fQUNmRhyQ7YJH
+         Wfm4ShBao53X/w39wGKj4uzW1gBf2tnyzIayWhgnsmyPtiT4H6MZE6Sx/GMk+GwJlv
+         dM2vzoznRFJK1JKe7IqYC2ZMX7b7VXFaJELQ4c2vD6eO8C8m77yzO3MUD05Hpn6NFK
+         XZUipsuccROjw==
+Received: by mail-lf1-f43.google.com with SMTP id i28so17706570lfv.0;
+        Mon, 13 Mar 2023 15:37:21 -0700 (PDT)
+X-Gm-Message-State: AO0yUKWYAJAxNX4Xh8t5YKvvjHDBWGA8/ORBE7vBZ/l08TiGbsqjVZLH
+        HBAecw6ArThFMQOQKu+qgX0BlADd++zLUueIvDo=
+X-Google-Smtp-Source: AK7set/AogiBkiTjDOK+hkoKhlCVV2O5BpzgGEV7N8M7vaqO+c66thbMbZWjyBmI2GQTpxtOqAr2qbCA+3siX8VP+Dk=
+X-Received: by 2002:ac2:5623:0:b0:4dd:a058:f08f with SMTP id
+ b3-20020ac25623000000b004dda058f08fmr51578lff.3.1678747039699; Mon, 13 Mar
+ 2023 15:37:19 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230310073855.1337560-1-yukuai1@huaweicloud.com> <20230310073855.1337560-3-yukuai1@huaweicloud.com>
-In-Reply-To: <20230310073855.1337560-3-yukuai1@huaweicloud.com>
+References: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Mar 2023 15:24:41 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6eYdWgGyZjnXcT4yY4y-pcy3eEzc8uanStNz9aEGeGLg@mail.gmail.com>
-Message-ID: <CAPhsuW6eYdWgGyZjnXcT4yY4y-pcy3eEzc8uanStNz9aEGeGLg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/6] md: fix soft lockup in status_resync
+Date:   Mon, 13 Mar 2023 15:37:07 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4x9KScK4DZPMMWi4vpGLWMq5pdzqOKR4L0zNYWfjK1Ow@mail.gmail.com>
+Message-ID: <CAPhsuW4x9KScK4DZPMMWi4vpGLWMq5pdzqOKR4L0zNYWfjK1Ow@mail.gmail.com>
+Subject: Re: [PATCH v2 0/6] md/raid10: several simple obvious bugfix
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     guoqing.jiang@linux.dev, jgq516@gmail.com, neilb@suse.de,
         shli@fb.com, lzhong@suse.com, linux-raid@vger.kernel.org,
@@ -63,64 +63,29 @@ rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> status_resync() will calculate 'curr_resync - recovery_active' to show
-> user a progress bar like following:
+> We're running many tests for raid10 currently, and we found a lot of
+> problems already. This patchset is the first part for some simple and
+> obvious problems. Most of the patches were sent separately already, but
+> I think a patchset is better for review.
 >
-> [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>........]  resync =3D 61.4%
->
-> 'curr_resync' and 'recovery_active' is updated in md_do_sync(), and
-> status_resync() can read them concurrently, hence it's possible that
-> 'curr_resync - recovery_active' can overflow to a huge number. In this
-> case status_resync() will be stuck in the loop to print a large amount
-> of '=3D', which will end up soft lockup.
->
-> Fix the problem by setting 'resync' to MD_RESYNC_ACTIVE in this case,
-> this way resync in progress will be reported to user.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Yu Kuai (6):
+>   md/raid10: don't call bio_start_io_acct twice for bio which
+>     experienced read error
+>   md: fix soft lockup in status_resync
+>   md/raid10: don't BUG_ON() in raise_barrier()
+>   md/radi10: fix leak of 'r10bio->remaining' for recovery
+>   md/raid10: fix memleak for 'conf->bio_split'
+>   md/raid10: fix memleak of md thread
 
-Looks good. Applied to md-next.
+Applied 2/6 to 6/6 to md-next. Thanks!
 
-Thanks,
 Song
 
-> ---
->  drivers/md/md.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 546b1b81eb28..98970bbe32bf 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8009,16 +8009,16 @@ static int status_resync(struct seq_file *seq, st=
-ruct mddev *mddev)
->         } else if (resync > max_sectors) {
->                 resync =3D max_sectors;
->         } else {
-> -               resync -=3D atomic_read(&mddev->recovery_active);
-> -               if (resync < MD_RESYNC_ACTIVE) {
-> -                       /*
-> -                        * Resync has started, but the subtraction has
-> -                        * yielded one of the special values. Force it
-> -                        * to active to ensure the status reports an
-> -                        * active resync.
-> -                        */
-> +               res =3D atomic_read(&mddev->recovery_active);
-> +               /*
-> +                * Resync has started, but the subtraction has overflowed=
- or
-> +                * yielded one of the special values. Force it to active =
-to
-> +                * ensure the status reports an active resync.
-> +                */
-> +               if (resync < res || resync - res < MD_RESYNC_ACTIVE)
->                         resync =3D MD_RESYNC_ACTIVE;
-> -               }
-> +               else
-> +                       resync -=3D res;
->         }
+>  drivers/md/md.c     | 18 +++++------
+>  drivers/md/raid10.c | 78 +++++++++++++++++++++++----------------------
+>  2 files changed, 49 insertions(+), 47 deletions(-)
 >
->         if (resync =3D=3D MD_RESYNC_NONE) {
 > --
 > 2.31.1
 >
