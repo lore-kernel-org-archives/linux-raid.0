@@ -2,153 +2,85 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD92C6FD19
-	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 20:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8691CC7618D
+	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 20:54:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230053AbjCMUfj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 16:35:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60644 "EHLO
+        id S229797AbjCMUyb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 16:54:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229621AbjCMUfi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 16:35:38 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75170113C0;
-        Mon, 13 Mar 2023 13:35:37 -0700 (PDT)
+        with ESMTP id S230203AbjCMUy1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 16:54:27 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B58D1EBDE;
+        Mon, 13 Mar 2023 13:54:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E0F4BB815A6;
-        Mon, 13 Mar 2023 20:35:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B90C4339B;
-        Mon, 13 Mar 2023 20:35:34 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 5E371CE1255;
+        Mon, 13 Mar 2023 20:54:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0729C433A0;
+        Mon, 13 Mar 2023 20:54:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678739734;
-        bh=u7u+NHhCXMgf5hsXTGJG85AoJ3MaLd/lr/vsQ9l3jxQ=;
+        s=k20201202; t=1678740851;
+        bh=MYQwf6KctSJtumO6fsN6jX588zERPrdiWZ6qfszos7Y=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=KeSZuAw2+a0jpZKTX3Nv2MHuotqWgQeqMxPO0aiFt7O42tDhJ7d89Q6iO5coRl+nc
-         GPRahWs5h7mR9AZkrG5SyeqtuozYVXytgMkIo8P6khnxR3Q/Twi6pLTstiUt+RqPWy
-         H6UYikQPHa8BJaXYxecyM5bLVaQJOfLOy4waMxZfrN1XF8+N84Gpe623K7mAeO2geL
-         qSEixu8gKdHBk4MvhCr6By6FtGuAU7fdkHJ8POfTQu/KGZdtg+z7OX/0Z0UW5sLr6N
-         6/v79jy7S0WhfYR1sBjZm1EjPkj6hYkLpyaOKtegJ8t3UmjZuUlaWsqRmSwtyeIZYF
-         mz5OEDpNiQUCg==
-Received: by mail-lj1-f179.google.com with SMTP id b10so13967169ljr.0;
-        Mon, 13 Mar 2023 13:35:34 -0700 (PDT)
-X-Gm-Message-State: AO0yUKX4hkXg4vohz47tFebaKf3eqc+TJsFIDpi30lUTHuonMRO5j32x
-        q1zVjOSFLG0Qo8AsLJgD3gT77v1BXGzvn6xTvk0=
-X-Google-Smtp-Source: AK7set//DFzr7HN1kkaxrWEfPY3wK6bwu6fBSdC6GQNzmN5iHlcln8ZyZm1IPfou1H+Puy+htM1NrinKzbpdWOAFo5U=
-X-Received: by 2002:a2e:aaa3:0:b0:295:a64f:9d50 with SMTP id
- bj35-20020a2eaaa3000000b00295a64f9d50mr11100414ljb.5.1678739732443; Mon, 13
- Mar 2023 13:35:32 -0700 (PDT)
+        b=iBSbapGqwp8hBDUKZcR/Q9mACab2zERCWP3GJQlq8JrhyKumag7ZvUxKId2gMvJ7B
+         rUYs5S7osbU8QTLTFH3pljUTCiZlVv3zCOS95eVrgzHFimjmL8lN3rcaEcJx5Wk9k8
+         3O50Q9ID5GqzQKVDpPTOWUmzsjlOmlsChFF7l7Jsx6OofjtE6Qesq5mNbqt0uJ0FIp
+         wADjqdbpnXQ5TVbxNDs03yJb1pcCwCQKLObdrNqif0l0ql12ujIEU3p/vqe+fittKi
+         9reOUe32e2aaG4WCS2hMaO2wjdkmjfks7n1h8mFqaGervcgpmKVuCmAksrgwpoQrE/
+         eN5QYtrGQVQPQ==
+Received: by mail-lj1-f179.google.com with SMTP id a32so13979662ljq.1;
+        Mon, 13 Mar 2023 13:54:11 -0700 (PDT)
+X-Gm-Message-State: AO0yUKU/9SMIIOmdQ21qRrvRyqIz3baq75CuR+3sBtuQB4y9DJB307nB
+        lvtOVDq0YAiK4REMgTtMKDvxIJ5KmXczPdYF3Ew=
+X-Google-Smtp-Source: AK7set8voxXRtH8vVN1V5tbROqFwZrqKBW38Q3v0EZhY8X8NnrFii2tWlewgif51uEYXY24GXAoEJNswk44K0+EK4Xk=
+X-Received: by 2002:a2e:b5a5:0:b0:295:93eb:e790 with SMTP id
+ f5-20020a2eb5a5000000b0029593ebe790mr10899913ljn.5.1678740849649; Mon, 13 Mar
+ 2023 13:54:09 -0700 (PDT)
 MIME-Version: 1.0
-References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
- <CAPhsuW7ZWthh0PZt71hQh1_51C0yMSpOqWYJKc_+VzzTmW_r5A@mail.gmail.com>
- <167805126796.8008.3635368722810568057@noble.neil.brown.name>
- <CAPhsuW64R2ze1AYZhEmQcGf0cKBjjX=4EZZowD+=Cr=VPg1QYg@mail.gmail.com> <167814210165.8008.4497120634222267375@noble.neil.brown.name>
-In-Reply-To: <167814210165.8008.4497120634222267375@noble.neil.brown.name>
+References: <20230222041000.3341651-1-linan666@huaweicloud.com> <66c29a8a-9888-8ebc-d4cc-9cfea750a0fc@huaweicloud.com>
+In-Reply-To: <66c29a8a-9888-8ebc-d4cc-9cfea750a0fc@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Mar 2023 13:35:20 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4oAsp=8dBcf_mmpp-bG_+wTHAZzvtRSn3x1QU0N3irXA@mail.gmail.com>
-Message-ID: <CAPhsuW4oAsp=8dBcf_mmpp-bG_+wTHAZzvtRSn3x1QU0N3irXA@mail.gmail.com>
-Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
- can no longer assemble software raid0
-To:     NeilBrown <neilb@suse.de>
-Cc:     Linux regressions mailing list <regressions@lists.linux.dev>,
-        Jes.Sorensen@gmail.com, linux-raid <linux-raid@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Nikolay Kichukov <hijacker@oldum.net>
+Date:   Mon, 13 Mar 2023 13:53:56 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6w8g+1++RWy0RT5D0kfTU5X6pDy8iDttmwFwcfXRGofQ@mail.gmail.com>
+Message-ID: <CAPhsuW6w8g+1++RWy0RT5D0kfTU5X6pDy8iDttmwFwcfXRGofQ@mail.gmail.com>
+Subject: Re: [PATCH 0/2] md/raid10: random bugfix
+To:     Li Nan <linan666@huaweicloud.com>
+Cc:     ncroxon@redhat.com, vmayatskikh@digitalocean.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com, neilb@suse.de
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Mar 6, 2023 at 2:35=E2=80=AFPM NeilBrown <neilb@suse.de> wrote:
+On Mon, Mar 13, 2023 at 5:00=E2=80=AFAM Li Nan <linan666@huaweicloud.com> w=
+rote:
 >
-> On Tue, 07 Mar 2023, Song Liu wrote:
-> > On Sun, Mar 5, 2023 at 1:21=E2=80=AFPM NeilBrown <neilb@suse.de> wrote:
-> > >
-> > > On Sat, 04 Mar 2023, Song Liu wrote:
-> > > > + Jes.
-> > > >
-> > > > It appeared to me that we can assemble the array if we have any of =
-the
-> > > > following:
-> > > > 1. Enable CONFIG_BLOCK_LEGACY_AUTOLOAD;
-> > > > 2. Have a valid /etc/mdadm.conf;
-> > > > 3. Update mdadm to handle this case. (I tried some ugly hacks, whic=
-h worked but
-> > > >     weren't clean).
-> > > >
-> > > > Since we eventually would like to get rid of CONFIG_BLOCK_LEGACY_AU=
-TOLOAD, I
-> > > > think we need mdadm to handle this properly. But the logistics migh=
-t
-> > > > be complicated, as
-> > > > mdadm are shipped separately.
-> > > >
-> > > > Jes, what do you think about this? AFAICT, we need to update the lo=
-gic in
-> > > > mdopen.c:create_mddev().
-> > >
-> > > mdadm already handles this, but only if
-> > >    CREATE names=3Dyes
-> > > is present in /etc/mdadm.conf
-> > >
-> > > Maybe we should flip the default for the next mdadm release, and patc=
-h
-> > > the kernel (with a stable backport) to select BLOCK_LEGACY_AUTOLOAD i=
-f
-> > > BLK_DEV_MD=3Dm
-> > > Then revert that - say - 6 months after the new mdadm is released.
-> >
-> > I like this idea. I guess we also need to select BLOCK_LEGACY_AUTOLOAD
-> > if BLK_DEV_MD=3Dy?
+> Hi,
 >
-> Yes of course - sorry.
->
-> Something like the following.
+> friendly ping ...
 >
 > Thanks,
-> NeilBrown
+> Nan
 
-Thanks Neil!
+Sorry for the delay. Applied the set to md-next (as these are not urgent).
 
-I applied this to md-fixes.
-
+Thanks,
 Song
 
 >
->
-> From: NeilBrown <neilb@suse.de>
-> Subject: md: select BLOCK_LEGACY_AUTOLOAD
->
-> When BLOCK_LEGACY_AUTOLOAD is not enable, mdadm is not able to
-> activate new arrays unless "CREATE names=3Dyes" appears in
-> mdadm.conf
->
-> As this is a regression we need to always enable BLOCK_LEGACY_AUTOLOAD
-> for when MD is selected - at least until mdadm is updated and the
-> updates widely available.
->
-> Fixes: fbdee71bb5d8 ("block: deprecate autoloading based on dev_t")
-> Signed-off-by: NeilBrown <neilb@suse.de>
->
-> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-> index 998a5cfdbc4e..662d219c39bf 100644
-> --- a/drivers/md/Kconfig
-> +++ b/drivers/md/Kconfig
-> @@ -16,6 +16,10 @@ if MD
->
->  config BLK_DEV_MD
->         tristate "RAID support"
->         select BLOCK_HOLDER_DEPRECATED if SYSFS
-> +       # BLOCK_LEGACY_AUTOLOAD requirement should be removed
-> +       # after relevant mdadm enhancements - to make "names=3Dyes"
-> +       # the default - are widely available.
-> +       select BLOCK_LEGACY_AUTOLOAD
->         help
->           This driver lets you combine several hard disk partitions into =
-one
->           logical block device. This can be used to simply append one
->
+> =E5=9C=A8 2023/2/22 12:09, linan666@huaweicloud.com =E5=86=99=E9=81=93:
+> > From: Li Nan <linan122@huawei.com>
+> >
+> > Li Nan (2):
+> >    md/raid10: fix taks hung in raid10d
+> >    md/raid10: fix null-ptr-deref in raid10_sync_request
+> >
+> >   drivers/md/raid10.c | 26 +++++++++++++++++---------
+> >   1 file changed, 17 insertions(+), 9 deletions(-)
+> >
 >
