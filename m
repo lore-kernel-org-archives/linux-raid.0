@@ -2,115 +2,88 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CFFEC6FD19
-	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 21:13:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C599C6FD19
+	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 21:21:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230105AbjCMVNE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 17:13:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43762 "EHLO
+        id S229571AbjCMVVD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 17:21:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230139AbjCMVNC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 17:13:02 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AEB88E3C0;
-        Mon, 13 Mar 2023 14:12:18 -0700 (PDT)
+        with ESMTP id S229536AbjCMVVB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 17:21:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D8822196F
+        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 14:20:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D9D92B8149C;
-        Mon, 13 Mar 2023 21:12:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0BFEC433EF;
-        Mon, 13 Mar 2023 21:12:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 38434614D0
+        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 21:20:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C993C4339B
+        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 21:20:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678741935;
-        bh=zYJBShYkwWSVXL8WyRJR97m9GVSH3Xk1/B+RUVJG3cQ=;
+        s=k20201202; t=1678742457;
+        bh=gbrlD5ZXRF+macjCokztYLr/E9n8obE4+J/loo8DVk4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=JH9S+RlT/DdfAYGtquoWHeApkus/ituRl3F76d67/bmm+2TIYoq11R3N+ZsINz5sP
-         Qw/mya8wO6vSqrR6VOLvR0dg67GkB1PoZTmqtD9A7nSoeTDRwgC0b4znGUHUnDt90t
-         ihgIlqEhh1oUbQ5OJ0LaRPtSircIA3B7oIfftIeV0j82TPELDYuoGvpjD0HVEbFYUu
-         rXeuuzEI+C3iLrtPCfu6FCNam6Me1DM4jL1qzUNSSbBcHHoY6oqE4dGvYrVTOQx//S
-         ztZ0Zi11M+tFVDGDbuLGe2mrQZd85GKmkbgKSeX+CvNnBba00ZFPWj6cKNAEMMfg1n
-         DI3Je75lf9HdA==
-Received: by mail-lf1-f50.google.com with SMTP id x17so1306459lfu.5;
-        Mon, 13 Mar 2023 14:12:15 -0700 (PDT)
-X-Gm-Message-State: AO0yUKUtYTUvqaUfr3DO8MN9eCdEzzoNq42eNlHltb8e9Y4sQ42o/8un
-        HhkkYcRqawS9i0YiCI3BK+4qvNfT5DUiJXKE+cM=
-X-Google-Smtp-Source: AK7set+DjQ1xvcDa5hV1VdH/Pr6Am7QIxL7TaTlkKoBpFB2dZDT/hkUK+3eGTF4IGCtolqIuEmueTFud7NHOOva8TTQ=
-X-Received: by 2002:ac2:5927:0:b0:4db:1a0d:f261 with SMTP id
- v7-20020ac25927000000b004db1a0df261mr10797689lfi.3.1678741933628; Mon, 13 Mar
- 2023 14:12:13 -0700 (PDT)
+        b=QoVTF4ZVKceYUEyxVdOXuea0Tgo70wA3yaYLvmBHfnfqImFq5Gi2fX7CR4SoFL61j
+         K2nWXX0Lp0rwwKt2SlHoKXrJQfpFVhKFzhDt4QesX6pP3mlLXMAKph8ytQMAdsBr5F
+         A/snv/l8qWh2WbLMB6+muB2wImTzAA7VGZWWNhBZO6PZk6Uc9gJCTDioIgr7OXKDlY
+         sHJ3a5xT1iFfFdgQ/JR+Hd9PaCx/uN0pvHbNJvH4X2xFLix3ys5kfZytZwLr/Hh23e
+         G1XfPf9PbokHykVGj5nPULv5uEDp5I+KGWB8qPnB4Dd5iOOp0drf82J9rc0oezuAzT
+         QnlhZfVgy+hjw==
+Received: by mail-lf1-f41.google.com with SMTP id n2so17423011lfb.12
+        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 14:20:57 -0700 (PDT)
+X-Gm-Message-State: AO0yUKV6ISR4Y/f3407j54SQvI9TCdrnvlQxNAZwr3rk3jmVNLfv+B3R
+        JWWW28goVvyjIsmcz9WHfKFCaEAVO25KrBLcbyM=
+X-Google-Smtp-Source: AK7set+TJx6kU9GaQo/25SotjB00dmJQ5XAaeAMcCnm4nS3+55WGXhUn3ZmSgdVWObCLqKxdcgPUfXCEkdHAa1VlR7I=
+X-Received: by 2002:a19:e019:0:b0:4d8:86c2:75ea with SMTP id
+ x25-20020a19e019000000b004d886c275eamr5725922lfg.3.1678742455670; Mon, 13 Mar
+ 2023 14:20:55 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230214-kobj_type-md-v1-1-d6853f707f11@weissschuh.net>
-In-Reply-To: <20230214-kobj_type-md-v1-1-d6853f707f11@weissschuh.net>
+References: <cover.1678136717.git.heinzm@redhat.com> <5be00f6c-22ee-1af3-c5ed-d92863d7f442@linux.dev>
+ <CAM23Vxqf-XMdoobeEyyk1MC=PzkWM=5w88jM8R-joxrrT82ukw@mail.gmail.com> <777de4f2-1b5d-aded-620d-4c14102a551f@linux.dev>
+In-Reply-To: <777de4f2-1b5d-aded-620d-4c14102a551f@linux.dev>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Mar 2023 14:12:01 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5atxr8iFS-=scHjhXo19We4Rnms+XU80c9aKANQL1k1g@mail.gmail.com>
-Message-ID: <CAPhsuW5atxr8iFS-=scHjhXo19We4Rnms+XU80c9aKANQL1k1g@mail.gmail.com>
-Subject: Re: [PATCH] md: make kobj_type structures constant
-To:     =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Mon, 13 Mar 2023 14:20:43 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW403CvtNqALpBMi-SWOaPULybUF3xPSQa7e54+0pm74bA@mail.gmail.com>
+Message-ID: <CAPhsuW403CvtNqALpBMi-SWOaPULybUF3xPSQa7e54+0pm74bA@mail.gmail.com>
+Subject: Re: [PATCH 00/34] address various checkpatch.pl requirements
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     Heinz Mauelshagen <heinzm@redhat.com>, linux-raid@vger.kernel.org,
+        ncroxon@redhat.com, xni@redhat.com, dkeefe@redhat.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Feb 13, 2023 at 7:19=E2=80=AFPM Thomas Wei=C3=9Fschuh <linux@weisss=
-chuh.net> wrote:
+On Tue, Mar 7, 2023 at 5:37=E2=80=AFPM Guoqing Jiang <guoqing.jiang@linux.d=
+ev> wrote:
 >
-> Since commit ee6d3dd4ed48 ("driver core: make kobj_type constant.")
-> the driver core allows the usage of const struct kobj_type.
 >
-> Take advantage of this to constify the structure definitions to prevent
-> modification at runtime.
 >
-> Signed-off-by: Thomas Wei=C3=9Fschuh <linux@weissschuh.net>
+> On 3/8/23 01:22, Heinz Mauelshagen wrote:
+> > As the MD RAID  subsystem is in active maintenance receiving
+> > functional enhancements still, it is
+> > hardly old in general,
+>
+> I might use the inappropriate word, let's say the 'existing' code.
+> And I am not against use checkpatch (all the new patches
+> should be checked by it I believe).
+>
+> > profits from coding (style) enhancements and
+> > adoption of current APIs.
+>
+> This kind of patchset can also bring troubles, eg, people works
+> for downstream kernel need more effort to backport fix patches
+> due to conflict, I assume stable kernel could be affected as well.
+>
+> A more sensible way might be fix coding style issue while the
+> adjacent code need to be changed because of new feature or bug
+> etc. Anyway, just my 0.02$.
 
-Applied to md-next. Thanks!
+Agreed. These 1032 insertions(+) will make git-blame harder for
+little benefit in style.
 
+Thanks,
 Song
-
-> ---
->  drivers/md/md.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 02b0240e7c71..091c1d6f0b87 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -78,7 +78,7 @@
->  static LIST_HEAD(pers_list);
->  static DEFINE_SPINLOCK(pers_lock);
->
-> -static struct kobj_type md_ktype;
-> +static const struct kobj_type md_ktype;
->
->  struct md_cluster_operations *md_cluster_ops;
->  EXPORT_SYMBOL(md_cluster_ops);
-> @@ -3600,7 +3600,7 @@ static const struct sysfs_ops rdev_sysfs_ops =3D {
->         .show           =3D rdev_attr_show,
->         .store          =3D rdev_attr_store,
->  };
-> -static struct kobj_type rdev_ktype =3D {
-> +static const struct kobj_type rdev_ktype =3D {
->         .release        =3D rdev_free,
->         .sysfs_ops      =3D &rdev_sysfs_ops,
->         .default_groups =3D rdev_default_groups,
-> @@ -5558,7 +5558,7 @@ static const struct sysfs_ops md_sysfs_ops =3D {
->         .show   =3D md_attr_show,
->         .store  =3D md_attr_store,
->  };
-> -static struct kobj_type md_ktype =3D {
-> +static const struct kobj_type md_ktype =3D {
->         .release        =3D md_kobj_release,
->         .sysfs_ops      =3D &md_sysfs_ops,
->         .default_groups =3D md_attr_groups,
->
-> ---
-> base-commit: f6feea56f66d34259c4222fa02e8171c4f2673d1
-> change-id: 20230214-kobj_type-md-a3c7773574cf
->
-> Best regards,
-> --
-> Thomas Wei=C3=9Fschuh <linux@weissschuh.net>
->
