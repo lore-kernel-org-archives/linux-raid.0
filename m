@@ -2,98 +2,153 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA1CFC61DA4
-	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 20:26:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD92C6FD19
+	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 20:35:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229616AbjCMU00 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 16:26:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44006 "EHLO
+        id S230053AbjCMUfj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 16:35:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbjCMU0Y (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 16:26:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECDE9898F0
-        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 13:26:21 -0700 (PDT)
+        with ESMTP id S229621AbjCMUfi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 16:35:38 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75170113C0;
+        Mon, 13 Mar 2023 13:35:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8500D614AC
-        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 20:26:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E163EC433EF
-        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 20:26:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E0F4BB815A6;
+        Mon, 13 Mar 2023 20:35:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B90C4339B;
+        Mon, 13 Mar 2023 20:35:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678739180;
-        bh=CChvX4srwvz9SOzvuxaHpE51RKp2mlTbHVuGFE8OUs0=;
+        s=k20201202; t=1678739734;
+        bh=u7u+NHhCXMgf5hsXTGJG85AoJ3MaLd/lr/vsQ9l3jxQ=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=V6k3M6vt9chUX5lwfSJhuWYBiUPGPZn2KLw+AI/glzpX93xf0n2gX3fM/78JbqiC7
-         8/PKGKns8ITUwQ9e1UMZPPQ08F1mKxj9RJ62wsXG7bOSgkFKe8RoCOYFsK8PdHwNdR
-         ZpD3i4oT/aCaMvOyRLuKUTY/VE8mZOAg9tvVDCSZTTXYTno+bo5McogM8YXWA3xBX1
-         7d9V0yOgTL3WTYvd8pzcE8V9KZYFkXfZuLzIRxJp39zYhWQQTFlqGGfcCIOkunOU58
-         K9gZvKx8ZrC/+hii3EYaY1SW3uc74o3D3HZZ5KGOHmX3IW4GN7mU/fOEMctHPEQZz5
-         I5RfJzioktOrw==
-Received: by mail-lf1-f44.google.com with SMTP id bp27so7007367lfb.6
-        for <linux-raid@vger.kernel.org>; Mon, 13 Mar 2023 13:26:20 -0700 (PDT)
-X-Gm-Message-State: AO0yUKWdz3TbvTVE+Df6WR9oQpyOzFIB39s7R32VhGNnVvKxApYbg/nm
-        OD7mgb+GlHcPYrbcB0HxPH+/qRWP+R4PTV0aoMo=
-X-Google-Smtp-Source: AK7set8t5bZewnVmueC4ZYDMXq322Y71ytRkscf5juGm7ZoAXqQ5pfORoD710Q3YIM4vzyzH6BQYq1izrhuZhtDK2sM=
-X-Received: by 2002:ac2:5ece:0:b0:4dd:a74d:aca3 with SMTP id
- d14-20020ac25ece000000b004dda74daca3mr11218933lfq.3.1678739178947; Mon, 13
- Mar 2023 13:26:18 -0700 (PDT)
+        b=KeSZuAw2+a0jpZKTX3Nv2MHuotqWgQeqMxPO0aiFt7O42tDhJ7d89Q6iO5coRl+nc
+         GPRahWs5h7mR9AZkrG5SyeqtuozYVXytgMkIo8P6khnxR3Q/Twi6pLTstiUt+RqPWy
+         H6UYikQPHa8BJaXYxecyM5bLVaQJOfLOy4waMxZfrN1XF8+N84Gpe623K7mAeO2geL
+         qSEixu8gKdHBk4MvhCr6By6FtGuAU7fdkHJ8POfTQu/KGZdtg+z7OX/0Z0UW5sLr6N
+         6/v79jy7S0WhfYR1sBjZm1EjPkj6hYkLpyaOKtegJ8t3UmjZuUlaWsqRmSwtyeIZYF
+         mz5OEDpNiQUCg==
+Received: by mail-lj1-f179.google.com with SMTP id b10so13967169ljr.0;
+        Mon, 13 Mar 2023 13:35:34 -0700 (PDT)
+X-Gm-Message-State: AO0yUKX4hkXg4vohz47tFebaKf3eqc+TJsFIDpi30lUTHuonMRO5j32x
+        q1zVjOSFLG0Qo8AsLJgD3gT77v1BXGzvn6xTvk0=
+X-Google-Smtp-Source: AK7set//DFzr7HN1kkaxrWEfPY3wK6bwu6fBSdC6GQNzmN5iHlcln8ZyZm1IPfou1H+Puy+htM1NrinKzbpdWOAFo5U=
+X-Received: by 2002:a2e:aaa3:0:b0:295:a64f:9d50 with SMTP id
+ bj35-20020a2eaaa3000000b00295a64f9d50mr11100414ljb.5.1678739732443; Mon, 13
+ Mar 2023 13:35:32 -0700 (PDT)
 MIME-Version: 1.0
-References: <167805578596.8008.14753053536858832084@noble.neil.brown.name>
-In-Reply-To: <167805578596.8008.14753053536858832084@noble.neil.brown.name>
+References: <a13cd3b5-cc41-bf2f-c8ac-e031ad0d5dd7@leemhuis.info>
+ <CAPhsuW7ZWthh0PZt71hQh1_51C0yMSpOqWYJKc_+VzzTmW_r5A@mail.gmail.com>
+ <167805126796.8008.3635368722810568057@noble.neil.brown.name>
+ <CAPhsuW64R2ze1AYZhEmQcGf0cKBjjX=4EZZowD+=Cr=VPg1QYg@mail.gmail.com> <167814210165.8008.4497120634222267375@noble.neil.brown.name>
+In-Reply-To: <167814210165.8008.4497120634222267375@noble.neil.brown.name>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Mar 2023 13:26:06 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW71w8eWhB4+C+QS=2GU2oZV8sS464PTvFhnrqORqftQGg@mail.gmail.com>
-Message-ID: <CAPhsuW71w8eWhB4+C+QS=2GU2oZV8sS464PTvFhnrqORqftQGg@mail.gmail.com>
-Subject: Re: [PATCH] md: avoid signed overflow in slot_store()
+Date:   Mon, 13 Mar 2023 13:35:20 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4oAsp=8dBcf_mmpp-bG_+wTHAZzvtRSn3x1QU0N3irXA@mail.gmail.com>
+Message-ID: <CAPhsuW4oAsp=8dBcf_mmpp-bG_+wTHAZzvtRSn3x1QU0N3irXA@mail.gmail.com>
+Subject: Re: [regression] Bug 217074 - upgrading to kernel 6.1.12 from 5.15.x
+ can no longer assemble software raid0
 To:     NeilBrown <neilb@suse.de>
-Cc:     Dan Carpenter <error27@gmail.com>, linux-raid@vger.kernel.org
+Cc:     Linux regressions mailing list <regressions@lists.linux.dev>,
+        Jes.Sorensen@gmail.com, linux-raid <linux-raid@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Nikolay Kichukov <hijacker@oldum.net>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sun, Mar 5, 2023 at 2:36=E2=80=AFPM NeilBrown <neilb@suse.de> wrote:
+On Mon, Mar 6, 2023 at 2:35=E2=80=AFPM NeilBrown <neilb@suse.de> wrote:
 >
+> On Tue, 07 Mar 2023, Song Liu wrote:
+> > On Sun, Mar 5, 2023 at 1:21=E2=80=AFPM NeilBrown <neilb@suse.de> wrote:
+> > >
+> > > On Sat, 04 Mar 2023, Song Liu wrote:
+> > > > + Jes.
+> > > >
+> > > > It appeared to me that we can assemble the array if we have any of =
+the
+> > > > following:
+> > > > 1. Enable CONFIG_BLOCK_LEGACY_AUTOLOAD;
+> > > > 2. Have a valid /etc/mdadm.conf;
+> > > > 3. Update mdadm to handle this case. (I tried some ugly hacks, whic=
+h worked but
+> > > >     weren't clean).
+> > > >
+> > > > Since we eventually would like to get rid of CONFIG_BLOCK_LEGACY_AU=
+TOLOAD, I
+> > > > think we need mdadm to handle this properly. But the logistics migh=
+t
+> > > > be complicated, as
+> > > > mdadm are shipped separately.
+> > > >
+> > > > Jes, what do you think about this? AFAICT, we need to update the lo=
+gic in
+> > > > mdopen.c:create_mddev().
+> > >
+> > > mdadm already handles this, but only if
+> > >    CREATE names=3Dyes
+> > > is present in /etc/mdadm.conf
+> > >
+> > > Maybe we should flip the default for the next mdadm release, and patc=
+h
+> > > the kernel (with a stable backport) to select BLOCK_LEGACY_AUTOLOAD i=
+f
+> > > BLK_DEV_MD=3Dm
+> > > Then revert that - say - 6 months after the new mdadm is released.
+> >
+> > I like this idea. I guess we also need to select BLOCK_LEGACY_AUTOLOAD
+> > if BLK_DEV_MD=3Dy?
 >
-> slot_store() uses kstrtouint() to get a slot number, but stores the
-> result in an "int" variable (by casting a pointer).
-> This can result in a negative slot number if the unsigned int value is
-> very large.
+> Yes of course - sorry.
 >
-> A negative number means that the slot is empty, but setting a negative
-> slot number this way will not remove the device from the array.  I don't
-> think this is a serious problem, but it could cause confusion and it is
-> best to fix it.
+> Something like the following.
 >
-> Reported-by: Dan Carpenter <error27@gmail.com>
-> Signed-off-by: NeilBrown <neilb@suse.de>
+> Thanks,
+> NeilBrown
 
-Applied to md-fixes. Thanks!
+Thanks Neil!
+
+I applied this to md-fixes.
 
 Song
 
-> ---
->  drivers/md/md.c | 3 +++
->  1 file changed, 3 insertions(+)
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 02b0240e7c71..d4bfa35fb20a 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3131,6 +3131,9 @@ slot_store(struct md_rdev *rdev, const char *buf, s=
-ize_t len)
->                 err =3D kstrtouint(buf, 10, (unsigned int *)&slot);
->                 if (err < 0)
->                         return err;
-> +               if (slot < 0)
-> +                       /* overflow */
-> +                       return -ENOSPC;
->         }
->         if (rdev->mddev->pers && slot =3D=3D -1) {
->                 /* Setting 'slot' on an active array requires also
-> --
-> 2.39.2
+>
+> From: NeilBrown <neilb@suse.de>
+> Subject: md: select BLOCK_LEGACY_AUTOLOAD
+>
+> When BLOCK_LEGACY_AUTOLOAD is not enable, mdadm is not able to
+> activate new arrays unless "CREATE names=3Dyes" appears in
+> mdadm.conf
+>
+> As this is a regression we need to always enable BLOCK_LEGACY_AUTOLOAD
+> for when MD is selected - at least until mdadm is updated and the
+> updates widely available.
+>
+> Fixes: fbdee71bb5d8 ("block: deprecate autoloading based on dev_t")
+> Signed-off-by: NeilBrown <neilb@suse.de>
+>
+> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+> index 998a5cfdbc4e..662d219c39bf 100644
+> --- a/drivers/md/Kconfig
+> +++ b/drivers/md/Kconfig
+> @@ -16,6 +16,10 @@ if MD
+>
+>  config BLK_DEV_MD
+>         tristate "RAID support"
+>         select BLOCK_HOLDER_DEPRECATED if SYSFS
+> +       # BLOCK_LEGACY_AUTOLOAD requirement should be removed
+> +       # after relevant mdadm enhancements - to make "names=3Dyes"
+> +       # the default - are widely available.
+> +       select BLOCK_LEGACY_AUTOLOAD
+>         help
+>           This driver lets you combine several hard disk partitions into =
+one
+>           logical block device. This can be used to simply append one
+>
 >
