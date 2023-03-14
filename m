@@ -2,90 +2,100 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7264FC61DA4
-	for <linux-raid@archiver.kernel.org>; Mon, 13 Mar 2023 22:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6625EC61DA4
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 00:06:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229847AbjCMWhZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 18:37:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56208 "EHLO
+        id S230220AbjCNAGe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 20:06:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbjCMWhZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 18:37:25 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46ECA29162;
-        Mon, 13 Mar 2023 15:37:24 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229638AbjCNAGd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 20:06:33 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 193518ABF5;
+        Mon, 13 Mar 2023 17:06:33 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EAC4AB81200;
-        Mon, 13 Mar 2023 22:37:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E765C433D2;
-        Mon, 13 Mar 2023 22:37:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678747041;
-        bh=I3cnzXH6XK+PRyojyJ6xi8CNN4Myy7ggWdjA5SYU4bM=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=JBHkSJewjrKNmwVUmzDlvKGAOSZprXxoUtbBgVQDgr+KhcM9qbsIqvWVqluEiYFKt
-         1eqDyBP7R+iP68yUEgbVCsm+CgAdU4UV9NXVIZNy2NmX5wBjlHfsPwHyB2GlsxDgFt
-         4Ao5+lHdL/uoUVEIINW7kU52iO+tEaHLc4ikHPcw6w2DqI0BDvC47fQUNmRhyQ7YJH
-         Wfm4ShBao53X/w39wGKj4uzW1gBf2tnyzIayWhgnsmyPtiT4H6MZE6Sx/GMk+GwJlv
-         dM2vzoznRFJK1JKe7IqYC2ZMX7b7VXFaJELQ4c2vD6eO8C8m77yzO3MUD05Hpn6NFK
-         XZUipsuccROjw==
-Received: by mail-lf1-f43.google.com with SMTP id i28so17706570lfv.0;
-        Mon, 13 Mar 2023 15:37:21 -0700 (PDT)
-X-Gm-Message-State: AO0yUKWYAJAxNX4Xh8t5YKvvjHDBWGA8/ORBE7vBZ/l08TiGbsqjVZLH
-        HBAecw6ArThFMQOQKu+qgX0BlADd++zLUueIvDo=
-X-Google-Smtp-Source: AK7set/AogiBkiTjDOK+hkoKhlCVV2O5BpzgGEV7N8M7vaqO+c66thbMbZWjyBmI2GQTpxtOqAr2qbCA+3siX8VP+Dk=
-X-Received: by 2002:ac2:5623:0:b0:4dd:a058:f08f with SMTP id
- b3-20020ac25623000000b004dda058f08fmr51578lff.3.1678747039699; Mon, 13 Mar
- 2023 15:37:19 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Mar 2023 15:37:07 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4x9KScK4DZPMMWi4vpGLWMq5pdzqOKR4L0zNYWfjK1Ow@mail.gmail.com>
-Message-ID: <CAPhsuW4x9KScK4DZPMMWi4vpGLWMq5pdzqOKR4L0zNYWfjK1Ow@mail.gmail.com>
-Subject: Re: [PATCH v2 0/6] md/raid10: several simple obvious bugfix
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     guoqing.jiang@linux.dev, jgq516@gmail.com, neilb@suse.de,
-        shli@fb.com, lzhong@suse.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
+        by smtp-out1.suse.de (Postfix) with ESMTPS id B2F19229D2;
+        Tue, 14 Mar 2023 00:06:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1678752391; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=IPlAhnHZI1/4kHDq0dvU4vpeu5ilx6uAt/un6KbOR/s=;
+        b=nRdCMirlRiU+GSor//GA1fKYBhQAGJJ05d6LvtCuznLaMnPHwNfzIp/cQVXaLTuqi04vjG
+        AspOnM1iNVObgSwv6CJJCnZvSHsNSiBgYKFSMFXYvpNGBCiIndwzgcvvKkUkVk/Zuw7UjV
+        x/0Ct9VhL7pYbnBtbu81zEDi2F5cjIk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1678752391;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=IPlAhnHZI1/4kHDq0dvU4vpeu5ilx6uAt/un6KbOR/s=;
+        b=QB8GmDsmLLVzTdUVS6UkHXLoaDRFha5HvjKOIXSDq8tgrkBdygpmgcUgGZCTHtk3Sm+Frn
+        /0pDHH9mJlG6xfCw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6481613A1B;
+        Tue, 14 Mar 2023 00:06:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id wsN0B4W6D2SOagAAMHmgww
+        (envelope-from <neilb@suse.de>); Tue, 14 Mar 2023 00:06:29 +0000
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+From:   "NeilBrown" <neilb@suse.de>
+Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        "Song Liu" <song@kernel.org>,
+        "Linux regressions mailing list" <regressions@lists.linux.dev>,
+        "linux-raid" <linux-raid@vger.kernel.org>,
+        "LKML" <linux-kernel@vger.kernel.org>,
+        "Nikolay Kichukov" <hijacker@oldum.net>
+To:     Jes Sorensen <jes@trained-monkey.org>
+Subject: [PATCH - mdadm] mdopen: always try create_named_array()
+Date:   Tue, 14 Mar 2023 11:06:25 +1100
+Message-id: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Mar 9, 2023 at 11:39=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> We're running many tests for raid10 currently, and we found a lot of
-> problems already. This patchset is the first part for some simple and
-> obvious problems. Most of the patches were sent separately already, but
-> I think a patchset is better for review.
->
-> Yu Kuai (6):
->   md/raid10: don't call bio_start_io_acct twice for bio which
->     experienced read error
->   md: fix soft lockup in status_resync
->   md/raid10: don't BUG_ON() in raise_barrier()
->   md/radi10: fix leak of 'r10bio->remaining' for recovery
->   md/raid10: fix memleak for 'conf->bio_split'
->   md/raid10: fix memleak of md thread
 
-Applied 2/6 to 6/6 to md-next. Thanks!
+mdopen() will use create_named_array() to ask the kernel to create the
+given md array, but only if it is given a number or name.
+If it is NOT given a name and is required to choose one itself using
+find_free_devnm() it does NOT use create_named_array().
 
-Song
+On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result in
+failure to assemble an array.  This can particularly seen when the
+"name" of the array begins with a host name different to the name of the
+host running the command.
 
->
->  drivers/md/md.c     | 18 +++++------
->  drivers/md/raid10.c | 78 +++++++++++++++++++++++----------------------
->  2 files changed, 49 insertions(+), 47 deletions(-)
->
-> --
-> 2.31.1
->
+So add the missing call to create_named_array().
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D217074
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ mdopen.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/mdopen.c b/mdopen.c
+index d18c931996d2..810f79a3d19a 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -370,6 +370,7 @@ int create_mddev(char *dev, char *name, int autof, int tr=
+ustworthy,
+ 		}
+ 		if (block_udev)
+ 			udev_block(devnm);
++		create_named_array(devnm);
+ 	}
+=20
+ 	sprintf(devname, "/dev/%s", devnm);
+--=20
+2.39.2
+
