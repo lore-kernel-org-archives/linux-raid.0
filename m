@@ -2,100 +2,98 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6625EC61DA4
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 00:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9223CC61DA4
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 00:43:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230220AbjCNAGe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 20:06:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35532 "EHLO
+        id S229638AbjCNAn6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 20:43:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbjCNAGd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 20:06:33 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 193518ABF5;
-        Mon, 13 Mar 2023 17:06:33 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229548AbjCNAnn (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 20:43:43 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07A6765C40;
+        Mon, 13 Mar 2023 17:43:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id B2F19229D2;
-        Tue, 14 Mar 2023 00:06:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1678752391; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=IPlAhnHZI1/4kHDq0dvU4vpeu5ilx6uAt/un6KbOR/s=;
-        b=nRdCMirlRiU+GSor//GA1fKYBhQAGJJ05d6LvtCuznLaMnPHwNfzIp/cQVXaLTuqi04vjG
-        AspOnM1iNVObgSwv6CJJCnZvSHsNSiBgYKFSMFXYvpNGBCiIndwzgcvvKkUkVk/Zuw7UjV
-        x/0Ct9VhL7pYbnBtbu81zEDi2F5cjIk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1678752391;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=IPlAhnHZI1/4kHDq0dvU4vpeu5ilx6uAt/un6KbOR/s=;
-        b=QB8GmDsmLLVzTdUVS6UkHXLoaDRFha5HvjKOIXSDq8tgrkBdygpmgcUgGZCTHtk3Sm+Frn
-        /0pDHH9mJlG6xfCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6481613A1B;
-        Tue, 14 Mar 2023 00:06:29 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id wsN0B4W6D2SOagAAMHmgww
-        (envelope-from <neilb@suse.de>); Tue, 14 Mar 2023 00:06:29 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        by ams.source.kernel.org (Postfix) with ESMTPS id 32109B816D9;
+        Tue, 14 Mar 2023 00:42:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBDBFC4339C;
+        Tue, 14 Mar 2023 00:42:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678754571;
+        bh=aP1kWzeFR2N4AdJC9C5+mL2TVxDe/IY9no0xXZaHp5Q=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=mjdzEtDKeW6VCE4SYht1PGtz42WoaYnTZrfJoBhDoG0B43L3zF858dAmnze3Cqc6x
+         eqhRmw+ZDvSJ0fM/XRi8DYnyn+vHIYiXMngKYCAnHaz8Q863lkzXqbEmfhevd4rcID
+         V+bfGUpkRjfdNLWKhA1/F3x2YUa7AH02qsy8rSKZ8xjejGSjGqj/mQMUmFvDG7mZsN
+         d430AmJwRfIPwvBFVDkjohvAyhyc5qEweCA1jeJaQPVRJolfiWkXhY44AZTwvOyCv9
+         RlzEIBiNHqog89BDBRLl30kY3DFbhyPfuQK20qTU+O8IuHLfGCHfvjUz/ftYbDv6sF
+         aU9YXvJBKXVRQ==
+Received: by mail-lf1-f46.google.com with SMTP id d36so17925081lfv.8;
+        Mon, 13 Mar 2023 17:42:50 -0700 (PDT)
+X-Gm-Message-State: AO0yUKXlkBl7OfJv481aCU9rtqclJVdguQTaeQB/1nahL9G6QenfCscB
+        FFxAYMjTTldWKNzxY4nFIKQ7C+/lNNw8ejk0+zA=
+X-Google-Smtp-Source: AK7set9Fu5cm3TR1FI95fKslcaie7BK6VR4qAOHSeumRUn02yLDo51sD0TAlZDLf2UBuwriaL9oVxZUC1BjuVJWFk6w=
+X-Received: by 2002:ac2:4c84:0:b0:4d5:ca32:9bd7 with SMTP id
+ d4-20020ac24c84000000b004d5ca329bd7mr141768lfl.3.1678754568986; Mon, 13 Mar
+ 2023 17:42:48 -0700 (PDT)
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        "Song Liu" <song@kernel.org>,
-        "Linux regressions mailing list" <regressions@lists.linux.dev>,
-        "linux-raid" <linux-raid@vger.kernel.org>,
-        "LKML" <linux-kernel@vger.kernel.org>,
-        "Nikolay Kichukov" <hijacker@oldum.net>
-To:     Jes Sorensen <jes@trained-monkey.org>
-Subject: [PATCH - mdadm] mdopen: always try create_named_array()
-Date:   Tue, 14 Mar 2023 11:06:25 +1100
-Message-id: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
+References: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 13 Mar 2023 17:42:36 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7dTMBfb=ncQQE7m7vE_fL6dy4mSFCprGsvH8LsGLe1pQ@mail.gmail.com>
+Message-ID: <CAPhsuW7dTMBfb=ncQQE7m7vE_fL6dy4mSFCprGsvH8LsGLe1pQ@mail.gmail.com>
+Subject: Re: [PATCH -next 0/5] md: fix uaf for sync_thread
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     agk@redhat.com, snitzer@kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Sat, Mar 11, 2023 at 1:32=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Our test reports a uaf for 'mddev->sync_thread':
+>
+> T1                      T2
+> md_start_sync
+>  md_register_thread
+>                         raid1d
+>                          md_check_recovery
+>                           md_reap_sync_thread
+>                            md_unregister_thread
+>                             kfree
+>
+>  md_wakeup_thread
+>   wake_up
+>   ->sync_thread was freed
+>
+> Currently, a global spinlock 'pers_lock' is borrowed to protect
+> 'mddev->thread', this problem can be fixed likewise, however, there might
+> be similar problem for other md_thread, and I really don't like the idea =
+to
+> borrow a global lock.
+>
+> This patchset do some refactor, and then use a disk level spinlock to
+> protect md_thread in relevant apis.
+>
+> Yu Kuai (5):
+>   md: pass a md_thread pointer to md_register_thread()
+>   md: refactor md_wakeup_thread()
+>   md: use md_thread api to wake up sync_thread
+>   md: pass a mddev to md_unregister_thread()
+>   md: protect md_thread with a new disk level spin lock
 
-mdopen() will use create_named_array() to ask the kernel to create the
-given md array, but only if it is given a number or name.
-If it is NOT given a name and is required to choose one itself using
-find_free_devnm() it does NOT use create_named_array().
+Applied to md-next.
 
-On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result in
-failure to assemble an array.  This can particularly seen when the
-"name" of the array begins with a host name different to the name of the
-host running the command.
-
-So add the missing call to create_named_array().
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D217074
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- mdopen.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/mdopen.c b/mdopen.c
-index d18c931996d2..810f79a3d19a 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -370,6 +370,7 @@ int create_mddev(char *dev, char *name, int autof, int tr=
-ustworthy,
- 		}
- 		if (block_udev)
- 			udev_block(devnm);
-+		create_named_array(devnm);
- 	}
-=20
- 	sprintf(devname, "/dev/%s", devnm);
---=20
-2.39.2
-
+Thanks,
+Song
