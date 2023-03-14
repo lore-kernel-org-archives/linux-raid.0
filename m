@@ -2,164 +2,103 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6C0AC74A44
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 20:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 333D5C05027
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 20:43:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbjCNUIh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Mar 2023 16:08:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49856 "EHLO
+        id S229473AbjCNUnL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Mar 2023 16:43:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230252AbjCNUIg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 16:08:36 -0400
+        with ESMTP id S229881AbjCNUnJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 16:43:09 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ABF94347C;
-        Tue, 14 Mar 2023 13:08:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 676DAD50A
+        for <linux-raid@vger.kernel.org>; Tue, 14 Mar 2023 13:43:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D8A9FB81BAA;
-        Tue, 14 Mar 2023 20:08:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70F6CC4339E;
-        Tue, 14 Mar 2023 20:08:31 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 20FA7B81B97
+        for <linux-raid@vger.kernel.org>; Tue, 14 Mar 2023 20:43:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C71A1C433D2
+        for <linux-raid@vger.kernel.org>; Tue, 14 Mar 2023 20:43:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678824511;
-        bh=1H8RN7X2BWD74bdgCSk+rZiFjxzqLdqAP9jkAoyRA4Y=;
+        s=k20201202; t=1678826585;
+        bh=LF/BcKlq932gR/+J4nbVkPRjLBOB7F9T/8KpydMdIS4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=tGd6Asikuix6tFlw3YdxD3dOn+8Sz37bn0tVJtCxfSfIN02I03L5Ui0iM792V/Z8a
-         15V++N3Nn5jClIcpZengGY0zbcc4pSTCoPSAP6pKiA6aJ9nBkuXoPIjR28KsxCYj19
-         IgvS40Al1HNzpizIRXQsjR3xIsu5j2H8dgzLIWDCk0LfhbUFYe+GXdY3u93Tw72//v
-         JYxcpL+PtpQLHCpBw+8GoY/Yzh58KM7vhidSndzDYD6UM/LsBHyOcA5Cb3KwXURLZX
-         /um8EmjCTaxWDPYK1grCV9Id00oITKwnYYcdKzggnaejnzKK2OP5iiKHNO9opuBSEo
-         j2Am4lxeDRaMA==
-Received: by mail-lf1-f45.google.com with SMTP id d36so21547631lfv.8;
-        Tue, 14 Mar 2023 13:08:31 -0700 (PDT)
-X-Gm-Message-State: AO0yUKUvgX5rLzwK1jvcDyYXS+jsJFve0hWPli4NUuBBz/plubAWLNk6
-        BUVIMjoo0Rs6LZGhtVwHfOa4/8WsA3LZoPZGgHk=
-X-Google-Smtp-Source: AK7set+VFhcRPDJ56g9Frs1WNAWoq6Vrpr0EkOm7zHNRmDP1j9cS+y+n4vhii7lrzREs8qioVa6uUPCyU0D96AFOeLw=
-X-Received: by 2002:ac2:46ee:0:b0:4d5:ca42:e43a with SMTP id
- q14-20020ac246ee000000b004d5ca42e43amr1130928lfo.3.1678824509381; Tue, 14 Mar
- 2023 13:08:29 -0700 (PDT)
+        b=LmfrU7snExyjSF/RDaSoEvVsoaR+9hO6Zq0kCeO2VXIrWzz4ITi7WmLd54chilSVF
+         2EO6Cob8/FdPaaEIWgBq+y118iQUdJyrmth27JwmkQzZn1a6sJnnJ54Dk5YCYklSMH
+         oUIHJKWkNJbmEBdGP72km/6Qpwz1rTiHv+awdoPUVwzxofdHoyR2dZ+f8Utm6PLB3L
+         haWa+rf2u3s6gw4H0CTkeANkhzQbsusRdB2zkGwyLIxxxId9h3RTI1srKAaOejPkyC
+         1FgB4l52r7pNMM0YDiQ369WaLI08Aj8DzA0M+XvT+sgPhQpKYQQBJJqcG+WvMVim8a
+         yd3v2OMEMdm1w==
+Received: by mail-lj1-f169.google.com with SMTP id t14so17327383ljd.5
+        for <linux-raid@vger.kernel.org>; Tue, 14 Mar 2023 13:43:05 -0700 (PDT)
+X-Gm-Message-State: AO0yUKXz/k95/qerd6LvaG42+pUbZ/fAQ+ti9boO/3c82HOnPRgJIVVk
+        y+zF9vUDUuJe0uNwHK+khN/kTgpgfr5KjY6zQC0=
+X-Google-Smtp-Source: AK7set/pR1GvBhoORUih3tIQer/iLPPLFUwVfSnhsSFqctW0D9zLpt+yNrP2IJtaxRQhMp/BGXIHgTXi84v4JeJhu6E=
+X-Received: by 2002:a2e:8e29:0:b0:295:a64f:9d50 with SMTP id
+ r9-20020a2e8e29000000b00295a64f9d50mr132842ljk.5.1678826583775; Tue, 14 Mar
+ 2023 13:43:03 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
- <20230311093148.2595222-6-yukuai1@huaweicloud.com> <69e04735-b3f6-2d82-9920-eac330a69792@huawei.com>
- <CAPhsuW67eNSJqtrmok14AUsRRvYKbZn=jFxDtzWLECEEQ2J=WA@mail.gmail.com>
-In-Reply-To: <CAPhsuW67eNSJqtrmok14AUsRRvYKbZn=jFxDtzWLECEEQ2J=WA@mail.gmail.com>
+References: <cover.1678136717.git.heinzm@redhat.com> <5be00f6c-22ee-1af3-c5ed-d92863d7f442@linux.dev>
+ <CAM23Vxqf-XMdoobeEyyk1MC=PzkWM=5w88jM8R-joxrrT82ukw@mail.gmail.com>
+ <777de4f2-1b5d-aded-620d-4c14102a551f@linux.dev> <CAPhsuW403CvtNqALpBMi-SWOaPULybUF3xPSQa7e54+0pm74bA@mail.gmail.com>
+ <CAM23Vxpzbt50iyJWQPxDnf51iO1E+cgQJnLFfKCZ3o5Xtro5aQ@mail.gmail.com>
+In-Reply-To: <CAM23Vxpzbt50iyJWQPxDnf51iO1E+cgQJnLFfKCZ3o5Xtro5aQ@mail.gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 14 Mar 2023 13:08:16 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4nNJLuPff9trbsKYsBSQGtBC++Zo1Y3JQHphX2j4kMVw@mail.gmail.com>
-Message-ID: <CAPhsuW4nNJLuPff9trbsKYsBSQGtBC++Zo1Y3JQHphX2j4kMVw@mail.gmail.com>
-Subject: Re: [PATCH -next 5/5] md: protect md_thread with a new disk level
- spin lock
-To:     Yu Kuai <yukuai3@huawei.com>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>, agk@redhat.com,
-        snitzer@kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com
+Date:   Tue, 14 Mar 2023 13:42:51 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW50UrR7SDkfC=rj=2DrA2nX64vEnHQ7SHVo3aWgJpFPXw@mail.gmail.com>
+Message-ID: <CAPhsuW50UrR7SDkfC=rj=2DrA2nX64vEnHQ7SHVo3aWgJpFPXw@mail.gmail.com>
+Subject: Re: [PATCH 00/34] address various checkpatch.pl requirements
+To:     Heinz Mauelshagen <heinzm@redhat.com>
+Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+        linux-raid@vger.kernel.org, ncroxon@redhat.com, xni@redhat.com,
+        dkeefe@redhat.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Mar 14, 2023 at 9:58=E2=80=AFAM Song Liu <song@kernel.org> wrote:
+On Tue, Mar 14, 2023 at 11:03=E2=80=AFAM Heinz Mauelshagen <heinzm@redhat.c=
+om> wrote:
 >
-> On Tue, Mar 14, 2023 at 3:54=E2=80=AFAM Yu Kuai <yukuai3@huawei.com> wrot=
-e:
-> >
-> > Hi, song!
-> >
-> > =E5=9C=A8 2023/03/11 17:31, Yu Kuai =E5=86=99=E9=81=93:
-> > > From: Yu Kuai <yukuai3@huawei.com>
-> > >
-> > > Our test reports a uaf for 'mddev->sync_thread':
-> > >
-> > > T1                      T2
-> > > md_start_sync
-> > >   md_register_thread
-> > >                       raid1d
-> > >                        md_check_recovery
-> > >                         md_reap_sync_thread
-> > >                          md_unregister_thread
-> > >                           kfree
-> > >
-> > >   md_wakeup_thread
-> > >    wake_up
-> > >    ->sync_thread was freed
-> > >
-> > > Currently, a global spinlock 'pers_lock' is borrowed to protect
-> > > 'mddev->thread', this problem can be fixed likewise, however, there m=
-ight
-> > > be similar problem for other md_thread, and I really don't like the i=
-dea to
-> > > borrow a global lock.
-> > >
-> > > This patch use a disk level spinlock to protect md_thread in relevant=
- apis.
-> > >
-> > > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> > > ---
-> > >   drivers/md/md.c | 23 ++++++++++-------------
-> > >   drivers/md/md.h |  1 +
-> > >   2 files changed, 11 insertions(+), 13 deletions(-)
-> > >
-> > > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > > index ab9299187cfe..a952978884a5 100644
-> > > --- a/drivers/md/md.c
-> > > +++ b/drivers/md/md.c
-> > > @@ -663,6 +663,7 @@ void mddev_init(struct mddev *mddev)
-> > >       atomic_set(&mddev->active, 1);
-> > >       atomic_set(&mddev->openers, 0);
-> > >       spin_lock_init(&mddev->lock);
-> > > +     spin_lock_init(&mddev->thread_lock);
-> > >       atomic_set(&mddev->flush_pending, 0);
-> > >       init_waitqueue_head(&mddev->sb_wait);
-> > >       init_waitqueue_head(&mddev->recovery_wait);
-> > > @@ -801,13 +802,8 @@ void mddev_unlock(struct mddev *mddev)
-> > >       } else
-> > >               mutex_unlock(&mddev->reconfig_mutex);
-> > >
-> > > -     /* As we've dropped the mutex we need a spinlock to
-> > > -      * make sure the thread doesn't disappear
-> > > -      */
-> > > -     spin_lock(&pers_lock);
-> > >       md_wakeup_thread(&mddev->thread, mddev);
-> > >       wake_up(&mddev->sb_wait);
-> > > -     spin_unlock(&pers_lock);
-> > >   }
-> > >   EXPORT_SYMBOL_GPL(mddev_unlock);
-> > >
-> > > @@ -7895,13 +7891,16 @@ static int md_thread(void *arg)
-> > >
-> > >   void md_wakeup_thread(struct md_thread **threadp, struct mddev *mdd=
-ev)
-> > >   {
-> > > -     struct md_thread *thread =3D *threadp;
-> > > +     struct md_thread *thread;
-> > >
-> > > +     spin_lock(&mddev->thread_lock);
-> > > +     thread =3D *threadp;
-> > >       if (thread) {
-> > >               pr_debug("md: waking up MD thread %s.\n", thread->tsk->=
-comm);
-> > >               set_bit(THREAD_WAKEUP, &thread->flags);
-> > >               wake_up(&thread->wqueue);
-> > >       }
-> > > +     spin_unlock(&mddev->thread_lock);
-> >
-> > I just found that md_wakeup_thread can be called from irq context:
-> >
-> > md_safemode_timeout
-> >   md_wakeup_thread
-> >
-> > And I need to use irq safe spinlock apis here.
-> >
-> > Can you drop this verion from md-next? I'll send a new version after I
-> > verified that there are no new regression, at least for mdadm tests.
+> On Mon, Mar 13, 2023 at 10:21=E2=80=AFPM Song Liu <song@kernel.org> wrote=
+:
+>>
+>> On Tue, Mar 7, 2023 at 5:37=E2=80=AFPM Guoqing Jiang <guoqing.jiang@linu=
+x.dev> wrote:
+>> >
+>> >
+>> >
+>> > On 3/8/23 01:22, Heinz Mauelshagen wrote:
+>> > > As the MD RAID  subsystem is in active maintenance receiving
+>> > > functional enhancements still, it is
+>> > > hardly old in general,
+>> >
+>> > I might use the inappropriate word, let's say the 'existing' code.
+>> > And I am not against use checkpatch (all the new patches
+>> > should be checked by it I believe).
+>> >
+>> > > profits from coding (style) enhancements and
+>> > > adoption of current APIs.
+>> >
+>> > This kind of patchset can also bring troubles, eg, people works
+>> > for downstream kernel need more effort to backport fix patches
+>> > due to conflict, I assume stable kernel could be affected as well.
+>> >
+>> > A more sensible way might be fix coding style issue while the
+>> > adjacent code need to be changed because of new feature or bug
+>> > etc. Anyway, just my 0.02$.
+>>
+>> Agreed. These 1032 insertions(+) will make git-blame harder for
+>> little benefit in style.
 >
-> I will drop it from md-next. Please send a new version.
+>
+> If you reject taking style benefits, at least take deprecated function pa=
+tch #30 (kmap_local_page/kunmap_local).
 
-To clarify: I dropped the whole set from md-next. Please resend the set
-after fixing the issue.
+Could you please resend this patch alone on top of md-next?
 
 Thanks,
 Song
