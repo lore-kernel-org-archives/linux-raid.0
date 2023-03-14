@@ -2,101 +2,107 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA8A1C6FD1D
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 01:24:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA4BC74A44
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 07:35:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229879AbjCNBXq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 21:23:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40208 "EHLO
+        id S229826AbjCNHfR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Mar 2023 03:35:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229666AbjCNBXp (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 21:23:45 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55F3822133;
-        Mon, 13 Mar 2023 18:23:44 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PbG4r1Qjtz4f3jJ8;
-        Tue, 14 Mar 2023 09:23:40 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgDX0R+czA9kpWOGEw--.55929S4;
-        Tue, 14 Mar 2023 09:23:41 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, guoqing.jiang@linux.dev, jgq516@gmail.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH v3] md/raid10: don't call bio_start_io_acct twice for bio which experienced read error
-Date:   Tue, 14 Mar 2023 09:22:58 +0800
-Message-Id: <20230314012258.2395894-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
-References: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
+        with ESMTP id S229573AbjCNHfQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 03:35:16 -0400
+Received: from out-32.mta0.migadu.com (out-32.mta0.migadu.com [IPv6:2001:41d0:1004:224b::20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43FE57EA26
+        for <linux-raid@vger.kernel.org>; Tue, 14 Mar 2023 00:35:15 -0700 (PDT)
+Message-ID: <af276fee-83ef-9ea1-9cac-780b8ec4d36c@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1678779309;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=edTL1ChsFLgLp+9Mx158bJIu0pMvObDSKpDy9vl1sV4=;
+        b=nQNsxHPmKx6VtUcwYs2j8QYlLBChciqk12ca27qhGTt/i7Gtf8fMNJ6ZXdNPjOli119aeT
+        aGegS/eRPxxwkpn3UFkawZaPHiQMtJxzQK84uR3WOs9nom8kqQZprz9McvMce2cKzO3HzG
+        5j5GflqYin/YEFI0WULy+c4Q//Tfb5Y=
+Date:   Tue, 14 Mar 2023 15:35:08 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDX0R+czA9kpWOGEw--.55929S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7uF1kCFW8ZFWxKry7XF4fXwb_yoW8XF4Dp3
-        yDGF9YvFW5Jw4j9FWDtrWDWFnYyayvgrW2yrWxAw13Z3Wjvr98ta18WFWagrn8XFZ3u342
-        vFn09rsrGrsFyFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
-        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8V
-        AvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Subject: Re: Bug in reshape+discard?
+To:     Benjamin Sonntag <benjamin@octopuce.fr>,
+        linux-raid <linux-raid@vger.kernel.org>
+References: <1132955858.4035.1677965762570.JavaMail.zimbra@z1.octopuce.fr>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+In-Reply-To: <1132955858.4035.1677965762570.JavaMail.zimbra@z1.octopuce.fr>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hi,
 
-handle_read_error() will resumit r10_bio by raid10_read_request(), which
-will call bio_start_io_acct() again, while bio_end_io_acct() will only
-be called once.
+On 3/5/23 05:36, Benjamin Sonntag wrote:
+> Hi everyone,
+>
+> I think we found a bug in the mdadm code here at Octopuce.
 
-Fix the problem by don't account io again from handle_read_error().
+Probably something wrong inside md raid.
 
-Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
-Suggested-by: Song Liu <song@kernel.org>
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
-Changes in v3:
- - use r10_bo->start_time instead of adding a new paramater.
-Changes in v3:
- - Change the patch title
+> I'm reporting it here, please tell me if that's not the right place to report it, or if you need any other information.
+>
+> This bug "hangs" processes in the Device-busy (D) state forever, until we reboot. It has been tested on both a debian 5.10 an 6.0 Linux kernel
 
- drivers/md/raid10.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Do you mean it happened on both kernel versions? Could you share
+relevant stacks by "cat /proc/${pid of D state process}/stack''?
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 6c66357f92f5..3483fdf796ec 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1244,7 +1244,8 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
- 	}
- 	slot = r10_bio->read_slot;
- 
--	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
-+	if (!r10_bio->start_time &&
-+	    blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
- 		r10_bio->start_time = bio_start_io_acct(bio);
- 	read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
- 
-@@ -1574,6 +1575,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
- 	r10_bio->sector = bio->bi_iter.bi_sector;
- 	r10_bio->state = 0;
- 	r10_bio->read_slot = -1;
-+	r10_bio->start_time = 0;
- 	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
- 			conf->geo.raid_disks);
- 
--- 
-2.31.1
+> How to trigger the bug:
+>
+> - create a raid5 or raid6 block device using mdadm
+> mdadm --create /dev/md0 -l 5 -n 3 /dev/sd{a,b,c}2
+>
+> - create a partition on it and mount it USING DISCARD/TRIM (important) (the underlying device must support trim)
+> mkfs.ext4 /dev/md0
+> mount /dev/md0 /mnt -o discard
+>
+> - create a few files
+> for i in $( seq 1 1000 ) ; do dd if=/dev/zero of=/mnt/$i bs=10M count=1 ; done
+>
+> - expand the raid by adding a new drive
+> mdadm --add /dev/md0 /dev/sdd2
+> mdadm --grow /dev/md0 -n 4
+>
+> - the last command will start a "reshape" operation on md0
+> - DURING THE RESHAPE (it's important) erase some file (it goes fine)
+> rm /mnt/* -rf
+>
+> - THEN, still during the reshape (important) try to sync or fsync
+> sync
+>
+> - the sync process get stuck in the D state. no way to kill it until reboot
+> (in fact, any process that does sync during the reshape after some files were deleted will get stuck, such as mariadbd or rsyslog...)
+>
+> - If you don't mount with discard your partition, the 'sync' works properly
+>
+>
+> An easy way to circumvent this problem:
+>
+> - before reshaping, remount without discard
+> mount /mnt -o remount,nodiscard
+>
+> - after the reshaping ends, remount with discard
+> mount /mnt -o remount,discard
+>
+>
+> We don't really know how to start searching for a solution, since it requires knowing the internal of MD & Discard pretty well :/ (and I'm definitely not a kernel coder ;) )
+>
+> thanks for your help on this issue,
 
+Assume reshape + discard works with previous kernel version, maybe
+you can try to bisect kernel tree to see which commit might caused
+the bug.
+
+Thanks,
+Guoqing
