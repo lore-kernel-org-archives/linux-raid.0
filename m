@@ -2,51 +2,52 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC0AC6FD1F
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 16:59:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6C0AC74A44
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 20:08:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229705AbjCNQ7G (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Mar 2023 12:59:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47764 "EHLO
+        id S230051AbjCNUIh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Mar 2023 16:08:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229582AbjCNQ7G (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 12:59:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAA716A1F5;
-        Tue, 14 Mar 2023 09:59:04 -0700 (PDT)
+        with ESMTP id S230252AbjCNUIg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 16:08:36 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ABF94347C;
+        Tue, 14 Mar 2023 13:08:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 645ED61864;
-        Tue, 14 Mar 2023 16:59:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6242C4339B;
-        Tue, 14 Mar 2023 16:59:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D8A9FB81BAA;
+        Tue, 14 Mar 2023 20:08:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70F6CC4339E;
+        Tue, 14 Mar 2023 20:08:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678813143;
-        bh=0iRXseBaBW3dOM2E5gQSiIHz/gPiUsuvdyPPVZrDdSI=;
+        s=k20201202; t=1678824511;
+        bh=1H8RN7X2BWD74bdgCSk+rZiFjxzqLdqAP9jkAoyRA4Y=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=GyQ3+HTIduF2/5OGLd/5o91I9/ONCFkkufOl+RMUuImql61WyeTwfKbjszGZ/FMPs
-         xBVYEDWxynKUopwTrlAGz6sm/2balrfSw2/V2J1FpBMK+g22NFqNIJLw+7TSrHxmmu
-         5ziENesTXMrfsYGDsQZKSG4tqfLyRzE4gb1Y105zWjTGwSxyq+0Qpz26JDueL9urD1
-         LNybLR4w4JBtl8W0INkMjaW+Yt1hhwoEY7Wc6LY3QF4Lbt5Jqncwv9HS59JxEXrZr3
-         OKurB1Pry5cOPiouY103vyLAvh6jtXIwOivIjnHn9JG6zXnIo37FkH84rhdmTVgujb
-         AqkkAgpirBn5Q==
-Received: by mail-lf1-f52.google.com with SMTP id x17so4756599lfu.5;
-        Tue, 14 Mar 2023 09:59:03 -0700 (PDT)
-X-Gm-Message-State: AO0yUKUoYA159tlPm5BReATm5kPD8ispH/xTnBT/txOdJmh+fzn06wmu
-        KbmhgeoB/4OJDIHrbuQFgTz52QEuNXDi6ZmbUso=
-X-Google-Smtp-Source: AK7set88LvcW/9k/fiKDKFmIEXq4h0Xa5PH3Jc4UMa6M0DvmNIegcEUnCPSAP+RgeTSpqA3BizmaAWn9z1HiJpXWH2E=
-X-Received: by 2002:ac2:50cf:0:b0:4dd:a74d:aca3 with SMTP id
- h15-20020ac250cf000000b004dda74daca3mr1005658lfm.3.1678813141872; Tue, 14 Mar
- 2023 09:59:01 -0700 (PDT)
+        b=tGd6Asikuix6tFlw3YdxD3dOn+8Sz37bn0tVJtCxfSfIN02I03L5Ui0iM792V/Z8a
+         15V++N3Nn5jClIcpZengGY0zbcc4pSTCoPSAP6pKiA6aJ9nBkuXoPIjR28KsxCYj19
+         IgvS40Al1HNzpizIRXQsjR3xIsu5j2H8dgzLIWDCk0LfhbUFYe+GXdY3u93Tw72//v
+         JYxcpL+PtpQLHCpBw+8GoY/Yzh58KM7vhidSndzDYD6UM/LsBHyOcA5Cb3KwXURLZX
+         /um8EmjCTaxWDPYK1grCV9Id00oITKwnYYcdKzggnaejnzKK2OP5iiKHNO9opuBSEo
+         j2Am4lxeDRaMA==
+Received: by mail-lf1-f45.google.com with SMTP id d36so21547631lfv.8;
+        Tue, 14 Mar 2023 13:08:31 -0700 (PDT)
+X-Gm-Message-State: AO0yUKUvgX5rLzwK1jvcDyYXS+jsJFve0hWPli4NUuBBz/plubAWLNk6
+        BUVIMjoo0Rs6LZGhtVwHfOa4/8WsA3LZoPZGgHk=
+X-Google-Smtp-Source: AK7set+VFhcRPDJ56g9Frs1WNAWoq6Vrpr0EkOm7zHNRmDP1j9cS+y+n4vhii7lrzREs8qioVa6uUPCyU0D96AFOeLw=
+X-Received: by 2002:ac2:46ee:0:b0:4d5:ca42:e43a with SMTP id
+ q14-20020ac246ee000000b004d5ca42e43amr1130928lfo.3.1678824509381; Tue, 14 Mar
+ 2023 13:08:29 -0700 (PDT)
 MIME-Version: 1.0
 References: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
  <20230311093148.2595222-6-yukuai1@huaweicloud.com> <69e04735-b3f6-2d82-9920-eac330a69792@huawei.com>
-In-Reply-To: <69e04735-b3f6-2d82-9920-eac330a69792@huawei.com>
+ <CAPhsuW67eNSJqtrmok14AUsRRvYKbZn=jFxDtzWLECEEQ2J=WA@mail.gmail.com>
+In-Reply-To: <CAPhsuW67eNSJqtrmok14AUsRRvYKbZn=jFxDtzWLECEEQ2J=WA@mail.gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 14 Mar 2023 09:58:49 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW67eNSJqtrmok14AUsRRvYKbZn=jFxDtzWLECEEQ2J=WA@mail.gmail.com>
-Message-ID: <CAPhsuW67eNSJqtrmok14AUsRRvYKbZn=jFxDtzWLECEEQ2J=WA@mail.gmail.com>
+Date:   Tue, 14 Mar 2023 13:08:16 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4nNJLuPff9trbsKYsBSQGtBC++Zo1Y3JQHphX2j4kMVw@mail.gmail.com>
+Message-ID: <CAPhsuW4nNJLuPff9trbsKYsBSQGtBC++Zo1Y3JQHphX2j4kMVw@mail.gmail.com>
 Subject: Re: [PATCH -next 5/5] md: protect md_thread with a new disk level
  spin lock
 To:     Yu Kuai <yukuai3@huawei.com>
@@ -60,99 +61,105 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Mar 14, 2023 at 3:54=E2=80=AFAM Yu Kuai <yukuai3@huawei.com> wrote:
+On Tue, Mar 14, 2023 at 9:58=E2=80=AFAM Song Liu <song@kernel.org> wrote:
 >
-> Hi, song!
->
-> =E5=9C=A8 2023/03/11 17:31, Yu Kuai =E5=86=99=E9=81=93:
-> > From: Yu Kuai <yukuai3@huawei.com>
+> On Tue, Mar 14, 2023 at 3:54=E2=80=AFAM Yu Kuai <yukuai3@huawei.com> wrot=
+e:
 > >
-> > Our test reports a uaf for 'mddev->sync_thread':
+> > Hi, song!
 > >
-> > T1                      T2
-> > md_start_sync
-> >   md_register_thread
-> >                       raid1d
-> >                        md_check_recovery
-> >                         md_reap_sync_thread
-> >                          md_unregister_thread
-> >                           kfree
+> > =E5=9C=A8 2023/03/11 17:31, Yu Kuai =E5=86=99=E9=81=93:
+> > > From: Yu Kuai <yukuai3@huawei.com>
+> > >
+> > > Our test reports a uaf for 'mddev->sync_thread':
+> > >
+> > > T1                      T2
+> > > md_start_sync
+> > >   md_register_thread
+> > >                       raid1d
+> > >                        md_check_recovery
+> > >                         md_reap_sync_thread
+> > >                          md_unregister_thread
+> > >                           kfree
+> > >
+> > >   md_wakeup_thread
+> > >    wake_up
+> > >    ->sync_thread was freed
+> > >
+> > > Currently, a global spinlock 'pers_lock' is borrowed to protect
+> > > 'mddev->thread', this problem can be fixed likewise, however, there m=
+ight
+> > > be similar problem for other md_thread, and I really don't like the i=
+dea to
+> > > borrow a global lock.
+> > >
+> > > This patch use a disk level spinlock to protect md_thread in relevant=
+ apis.
+> > >
+> > > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> > > ---
+> > >   drivers/md/md.c | 23 ++++++++++-------------
+> > >   drivers/md/md.h |  1 +
+> > >   2 files changed, 11 insertions(+), 13 deletions(-)
+> > >
+> > > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > > index ab9299187cfe..a952978884a5 100644
+> > > --- a/drivers/md/md.c
+> > > +++ b/drivers/md/md.c
+> > > @@ -663,6 +663,7 @@ void mddev_init(struct mddev *mddev)
+> > >       atomic_set(&mddev->active, 1);
+> > >       atomic_set(&mddev->openers, 0);
+> > >       spin_lock_init(&mddev->lock);
+> > > +     spin_lock_init(&mddev->thread_lock);
+> > >       atomic_set(&mddev->flush_pending, 0);
+> > >       init_waitqueue_head(&mddev->sb_wait);
+> > >       init_waitqueue_head(&mddev->recovery_wait);
+> > > @@ -801,13 +802,8 @@ void mddev_unlock(struct mddev *mddev)
+> > >       } else
+> > >               mutex_unlock(&mddev->reconfig_mutex);
+> > >
+> > > -     /* As we've dropped the mutex we need a spinlock to
+> > > -      * make sure the thread doesn't disappear
+> > > -      */
+> > > -     spin_lock(&pers_lock);
+> > >       md_wakeup_thread(&mddev->thread, mddev);
+> > >       wake_up(&mddev->sb_wait);
+> > > -     spin_unlock(&pers_lock);
+> > >   }
+> > >   EXPORT_SYMBOL_GPL(mddev_unlock);
+> > >
+> > > @@ -7895,13 +7891,16 @@ static int md_thread(void *arg)
+> > >
+> > >   void md_wakeup_thread(struct md_thread **threadp, struct mddev *mdd=
+ev)
+> > >   {
+> > > -     struct md_thread *thread =3D *threadp;
+> > > +     struct md_thread *thread;
+> > >
+> > > +     spin_lock(&mddev->thread_lock);
+> > > +     thread =3D *threadp;
+> > >       if (thread) {
+> > >               pr_debug("md: waking up MD thread %s.\n", thread->tsk->=
+comm);
+> > >               set_bit(THREAD_WAKEUP, &thread->flags);
+> > >               wake_up(&thread->wqueue);
+> > >       }
+> > > +     spin_unlock(&mddev->thread_lock);
 > >
+> > I just found that md_wakeup_thread can be called from irq context:
+> >
+> > md_safemode_timeout
 > >   md_wakeup_thread
-> >    wake_up
-> >    ->sync_thread was freed
 > >
-> > Currently, a global spinlock 'pers_lock' is borrowed to protect
-> > 'mddev->thread', this problem can be fixed likewise, however, there mig=
-ht
-> > be similar problem for other md_thread, and I really don't like the ide=
-a to
-> > borrow a global lock.
+> > And I need to use irq safe spinlock apis here.
 > >
-> > This patch use a disk level spinlock to protect md_thread in relevant a=
-pis.
-> >
-> > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> > ---
-> >   drivers/md/md.c | 23 ++++++++++-------------
-> >   drivers/md/md.h |  1 +
-> >   2 files changed, 11 insertions(+), 13 deletions(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index ab9299187cfe..a952978884a5 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -663,6 +663,7 @@ void mddev_init(struct mddev *mddev)
-> >       atomic_set(&mddev->active, 1);
-> >       atomic_set(&mddev->openers, 0);
-> >       spin_lock_init(&mddev->lock);
-> > +     spin_lock_init(&mddev->thread_lock);
-> >       atomic_set(&mddev->flush_pending, 0);
-> >       init_waitqueue_head(&mddev->sb_wait);
-> >       init_waitqueue_head(&mddev->recovery_wait);
-> > @@ -801,13 +802,8 @@ void mddev_unlock(struct mddev *mddev)
-> >       } else
-> >               mutex_unlock(&mddev->reconfig_mutex);
-> >
-> > -     /* As we've dropped the mutex we need a spinlock to
-> > -      * make sure the thread doesn't disappear
-> > -      */
-> > -     spin_lock(&pers_lock);
-> >       md_wakeup_thread(&mddev->thread, mddev);
-> >       wake_up(&mddev->sb_wait);
-> > -     spin_unlock(&pers_lock);
-> >   }
-> >   EXPORT_SYMBOL_GPL(mddev_unlock);
-> >
-> > @@ -7895,13 +7891,16 @@ static int md_thread(void *arg)
-> >
-> >   void md_wakeup_thread(struct md_thread **threadp, struct mddev *mddev=
-)
-> >   {
-> > -     struct md_thread *thread =3D *threadp;
-> > +     struct md_thread *thread;
-> >
-> > +     spin_lock(&mddev->thread_lock);
-> > +     thread =3D *threadp;
-> >       if (thread) {
-> >               pr_debug("md: waking up MD thread %s.\n", thread->tsk->co=
-mm);
-> >               set_bit(THREAD_WAKEUP, &thread->flags);
-> >               wake_up(&thread->wqueue);
-> >       }
-> > +     spin_unlock(&mddev->thread_lock);
+> > Can you drop this verion from md-next? I'll send a new version after I
+> > verified that there are no new regression, at least for mdadm tests.
 >
-> I just found that md_wakeup_thread can be called from irq context:
->
-> md_safemode_timeout
->   md_wakeup_thread
->
-> And I need to use irq safe spinlock apis here.
->
-> Can you drop this verion from md-next? I'll send a new version after I
-> verified that there are no new regression, at least for mdadm tests.
+> I will drop it from md-next. Please send a new version.
 
-I will drop it from md-next. Please send a new version.
+To clarify: I dropped the whole set from md-next. Please resend the set
+after fixing the issue.
 
 Thanks,
 Song
