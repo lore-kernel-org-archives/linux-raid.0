@@ -2,112 +2,182 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A59C6FD1D
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 10:16:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9E34C6FD1D
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 10:55:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229842AbjCNKQk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Mar 2023 06:16:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39914 "EHLO
+        id S230094AbjCNKzG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Mar 2023 06:55:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230319AbjCNKQY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 06:16:24 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E539F66D26
-        for <linux-raid@vger.kernel.org>; Tue, 14 Mar 2023 03:15:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678788939; x=1710324939;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=g60jSxQll0A7P8/+8Y/Ke216w5oCZw8ZaRepH1DIdjQ=;
-  b=IhbDArVQ/DWzFFZeZYoJl/H3R47nuvtO7w2pK3ZLXzHgSvq3hE/cmBRO
-   3lq+se3AP916dptvmBwtuyZJM8OI8gmgdX9cZ9VaE3eMrbdl0i/oNSYH0
-   UARy13YDbUqEH/wgWdS7/2vlqJ/KvBttHkZJNqoQOCI/h7P69xa+KqPh7
-   RvgYYBgSoiTiIwxXwiAe+nCe6vPwaP8ft7Z6xia1JyDqOI1Fy0ETY02HE
-   On6/1dMUe8nrXNCaPmI2HKbC5rJcJIEDXqTlcyB2a8tV7/OYET299P5My
-   wtDX+sxGZ1rj6H7RerrJ3t7BxWbwM1/wqSYZz153RiJ2r3oD9Z/Q7JJeP
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10648"; a="317771659"
-X-IronPort-AV: E=Sophos;i="5.98,259,1673942400"; 
-   d="scan'208";a="317771659"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 03:15:31 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10648"; a="853121752"
-X-IronPort-AV: E=Sophos;i="5.98,259,1673942400"; 
-   d="scan'208";a="853121752"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga005.jf.intel.com with ESMTP; 14 Mar 2023 03:15:30 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pc1gn-0006oa-2B;
-        Tue, 14 Mar 2023 10:15:29 +0000
-Date:   Tue, 14 Mar 2023 18:14:35 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Yu Kuai <yukuai3@huawei.com>
-Cc:     oe-kbuild-all@lists.linux.dev, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Subject: [song-md:md-next 15/18] drivers/md/md-cluster.c:425:63: error:
- 'mddev' undeclared
-Message-ID: <202303141841.7hUZnSGb-lkp@intel.com>
+        with ESMTP id S230238AbjCNKyz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 06:54:55 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 236F610AA6;
+        Tue, 14 Mar 2023 03:54:31 -0700 (PDT)
+Received: from kwepemm600009.china.huawei.com (unknown [172.30.72.57])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4PbVlC4kLBzKn3l;
+        Tue, 14 Mar 2023 18:54:15 +0800 (CST)
+Received: from [10.174.176.73] (10.174.176.73) by
+ kwepemm600009.china.huawei.com (7.193.23.164) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.21; Tue, 14 Mar 2023 18:54:28 +0800
+Subject: Re: [PATCH -next 5/5] md: protect md_thread with a new disk level
+ spin lock
+To:     Yu Kuai <yukuai1@huaweicloud.com>, <agk@redhat.com>,
+        <snitzer@kernel.org>, <song@kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <yi.zhang@huawei.com>, <yangerkun@huawei.com>
+References: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
+ <20230311093148.2595222-6-yukuai1@huaweicloud.com>
+From:   Yu Kuai <yukuai3@huawei.com>
+Message-ID: <69e04735-b3f6-2d82-9920-eac330a69792@huawei.com>
+Date:   Tue, 14 Mar 2023 18:54:27 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20230311093148.2595222-6-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.176.73]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600009.china.huawei.com (7.193.23.164)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-head:   ec7246c9455e83f452055cec9c39bd54e72217a4
-commit: 48b34bba06372e5f6645716b57394db28fa7260c [15/18] md: refactor md_wakeup_thread()
-config: m68k-allyesconfig (https://download.01.org/0day-ci/archive/20230314/202303141841.7hUZnSGb-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=48b34bba06372e5f6645716b57394db28fa7260c
-        git remote add song-md git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git
-        git fetch --no-tags song-md md-next
-        git checkout 48b34bba06372e5f6645716b57394db28fa7260c
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=m68k olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash drivers/
+Hi, song!
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303141841.7hUZnSGb-lkp@intel.com/
+ÔÚ 2023/03/11 17:31, Yu Kuai Ð´µÀ:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Our test reports a uaf for 'mddev->sync_thread':
+> 
+> T1                      T2
+> md_start_sync
+>   md_register_thread
+> 			raid1d
+> 			 md_check_recovery
+> 			  md_reap_sync_thread
+> 			   md_unregister_thread
+> 			    kfree
+> 
+>   md_wakeup_thread
+>    wake_up
+>    ->sync_thread was freed
+> 
+> Currently, a global spinlock 'pers_lock' is borrowed to protect
+> 'mddev->thread', this problem can be fixed likewise, however, there might
+> be similar problem for other md_thread, and I really don't like the idea to
+> borrow a global lock.
+> 
+> This patch use a disk level spinlock to protect md_thread in relevant apis.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   drivers/md/md.c | 23 ++++++++++-------------
+>   drivers/md/md.h |  1 +
+>   2 files changed, 11 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index ab9299187cfe..a952978884a5 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -663,6 +663,7 @@ void mddev_init(struct mddev *mddev)
+>   	atomic_set(&mddev->active, 1);
+>   	atomic_set(&mddev->openers, 0);
+>   	spin_lock_init(&mddev->lock);
+> +	spin_lock_init(&mddev->thread_lock);
+>   	atomic_set(&mddev->flush_pending, 0);
+>   	init_waitqueue_head(&mddev->sb_wait);
+>   	init_waitqueue_head(&mddev->recovery_wait);
+> @@ -801,13 +802,8 @@ void mddev_unlock(struct mddev *mddev)
+>   	} else
+>   		mutex_unlock(&mddev->reconfig_mutex);
+>   
+> -	/* As we've dropped the mutex we need a spinlock to
+> -	 * make sure the thread doesn't disappear
+> -	 */
+> -	spin_lock(&pers_lock);
+>   	md_wakeup_thread(&mddev->thread, mddev);
+>   	wake_up(&mddev->sb_wait);
+> -	spin_unlock(&pers_lock);
+>   }
+>   EXPORT_SYMBOL_GPL(mddev_unlock);
+>   
+> @@ -7895,13 +7891,16 @@ static int md_thread(void *arg)
+>   
+>   void md_wakeup_thread(struct md_thread **threadp, struct mddev *mddev)
+>   {
+> -	struct md_thread *thread = *threadp;
+> +	struct md_thread *thread;
+>   
+> +	spin_lock(&mddev->thread_lock);
+> +	thread = *threadp;
+>   	if (thread) {
+>   		pr_debug("md: waking up MD thread %s.\n", thread->tsk->comm);
+>   		set_bit(THREAD_WAKEUP, &thread->flags);
+>   		wake_up(&thread->wqueue);
+>   	}
+> +	spin_unlock(&mddev->thread_lock);
 
-All errors (new ones prefixed by >>):
+I just found that md_wakeup_thread can be called from irq context:
 
-   drivers/md/md-cluster.c: In function 'ack_bast':
->> drivers/md/md-cluster.c:425:63: error: 'mddev' undeclared (first use in this function)
-     425 |                         md_wakeup_thread(&cinfo->recv_thread, mddev);
-         |                                                               ^~~~~
-   drivers/md/md-cluster.c:425:63: note: each undeclared identifier is reported only once for each function it appears in
+md_safemode_timeout
+  md_wakeup_thread
 
+And I need to use irq safe spinlock apis here.
 
-vim +/mddev +425 drivers/md/md-cluster.c
+Can you drop this verion from md-next? I'll send a new version after I
+verified that there are no new regression, at least for mdadm tests.
 
-   412	
-   413	/*
-   414	 * The BAST function for the ack lock resource
-   415	 * This function wakes up the receive thread in
-   416	 * order to receive and process the message.
-   417	 */
-   418	static void ack_bast(void *arg, int mode)
-   419	{
-   420		struct dlm_lock_resource *res = arg;
-   421		struct md_cluster_info *cinfo = res->mddev->cluster_info;
-   422	
-   423		if (mode == DLM_LOCK_EX) {
-   424			if (test_bit(MD_CLUSTER_ALREADY_IN_CLUSTER, &cinfo->state))
- > 425				md_wakeup_thread(&cinfo->recv_thread, mddev);
-   426			else
-   427				set_bit(MD_CLUSTER_PENDING_RECV_EVENT, &cinfo->state);
-   428		}
-   429	}
-   430	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Thanks,
+Kuai
+>   }
+>   EXPORT_SYMBOL(md_wakeup_thread);
+>   
+> @@ -7929,7 +7928,9 @@ int md_register_thread(struct md_thread **threadp,
+>   		return err;
+>   	}
+>   
+> +	spin_lock(&mddev->thread_lock);
+>   	*threadp = thread;
+> +	spin_unlock(&mddev->thread_lock);
+>   	return 0;
+>   }
+>   EXPORT_SYMBOL(md_register_thread);
+> @@ -7938,18 +7939,14 @@ void md_unregister_thread(struct md_thread **threadp, struct mddev *mddev)
+>   {
+>   	struct md_thread *thread;
+>   
+> -	/*
+> -	 * Locking ensures that mddev_unlock does not wake_up a
+> -	 * non-existent thread
+> -	 */
+> -	spin_lock(&pers_lock);
+> +	spin_lock(&mddev->thread_lock);
+>   	thread = *threadp;
+>   	if (!thread) {
+> -		spin_unlock(&pers_lock);
+> +		spin_unlock(&mddev->thread_lock);
+>   		return;
+>   	}
+>   	*threadp = NULL;
+> -	spin_unlock(&pers_lock);
+> +	spin_unlock(&mddev->thread_lock);
+>   
+>   	pr_debug("interrupting MD-thread pid %d\n", task_pid_nr(thread->tsk));
+>   	kthread_stop(thread->tsk);
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 8f4137ad2dde..ca182d21dd8d 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -367,6 +367,7 @@ struct mddev {
+>   	int				new_chunk_sectors;
+>   	int				reshape_backwards;
+>   
+> +	spinlock_t			thread_lock;
+>   	struct md_thread		*thread;	/* management thread */
+>   	struct md_thread		*sync_thread;	/* doing resync or reconstruct */
+>   
+> 
