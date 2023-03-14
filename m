@@ -2,116 +2,101 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 092E4C6FD19
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 01:17:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA8A1C6FD1D
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 01:24:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229969AbjCNBQp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 21:16:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56488 "EHLO
+        id S229879AbjCNBXq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 21:23:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229537AbjCNBQo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 21:16:44 -0400
+        with ESMTP id S229666AbjCNBXp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 21:23:45 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86B214A1ED;
-        Mon, 13 Mar 2023 18:16:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55F3822133;
+        Mon, 13 Mar 2023 18:23:44 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PbFwj06XMz4f3m6t;
-        Tue, 14 Mar 2023 09:16:37 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgCnUyH0yg9k1BaGEw--.43581S3;
-        Tue, 14 Mar 2023 09:16:38 +0800 (CST)
-Subject: Re: [PATCH v2 1/6] md/raid10: don't call bio_start_io_acct twice for
- bio which experienced read error
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     guoqing.jiang@linux.dev, jgq516@gmail.com, neilb@suse.de,
-        shli@fb.com, lzhong@suse.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
- <20230310073855.1337560-2-yukuai1@huaweicloud.com>
- <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PbG4r1Qjtz4f3jJ8;
+        Tue, 14 Mar 2023 09:23:40 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgDX0R+czA9kpWOGEw--.55929S4;
+        Tue, 14 Mar 2023 09:23:41 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6f6172df-7953-078e-1310-eccf0ca4f47b@huaweicloud.com>
-Date:   Tue, 14 Mar 2023 09:16:36 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
+To:     song@kernel.org, guoqing.jiang@linux.dev, jgq516@gmail.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH v3] md/raid10: don't call bio_start_io_acct twice for bio which experienced read error
+Date:   Tue, 14 Mar 2023 09:22:58 +0800
+Message-Id: <20230314012258.2395894-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 In-Reply-To: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+References: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
+MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCnUyH0yg9k1BaGEw--.43581S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF4UKr1UZr4rWF43CF17Jrb_yoW8AF13p3
-        ykGFyYvFZ8JayDuw47J34UZrnavayUWrW2yrWfAw13Xw17ZF95JF18GFW0grn5XF95u342
-        v3Wq9rWDGr4DtFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: _Ch0CgDX0R+czA9kpWOGEw--.55929S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uF1kCFW8ZFWxKry7XF4fXwb_yoW8XF4Dp3
+        yDGF9YvFW5Jw4j9FWDtrWDWFnYyayvgrW2yrWxAw13Z3Wjvr98ta18WFWagrn8XFZ3u342
+        vFn09rsrGrsFyFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
         1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
         JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
         CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
         2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8V
+        AvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: Yu Kuai <yukuai3@huawei.com>
 
-在 2023/03/14 6:08, Song Liu 写道:
-> On Thu, Mar 9, 2023 at 11:39 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> handle_read_error() will resumit r10_bio by raid10_read_request(), which
->> will call bio_start_io_acct() again, while bio_end_io_acct() will only
->> be called once.
->>
->> Fix the problem by don't account io again from handle_read_error().
->>
->> Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
-> 
-> I would rather keep same argument lists for raid10_read_request
-> and raid10_write_request. How about we do something like this
-> instead?
-> 
-> diff --git i/drivers/md/raid10.c w/drivers/md/raid10.c
-> index 6b39e6c7ada3..13f33a8a8fe8 100644
-> --- i/drivers/md/raid10.c
-> +++ w/drivers/md/raid10.c
-> @@ -1248,7 +1248,8 @@ static void raid10_read_request(struct mddev
-> *mddev, struct bio *bio,
->          }
->          slot = r10_bio->read_slot;
-> 
-> -       if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
-> +       if (!r10_bio->start_time &&
-> +           blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
->                  r10_bio->start_time = bio_start_io_acct(bio);
->          read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
-> 
-> @@ -1578,6 +1579,7 @@ static void __make_request(struct mddev *mddev,
-> struct bio *bio, int sectors)
->          r10_bio->sector = bio->bi_iter.bi_sector;
->          r10_bio->state = 0;
->          r10_bio->read_slot = -1;
-> +       r10_bio->start_time = 0;
->          memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
->                          conf->geo.raid_disks);
-> 
-> Thanks,
-> Song
+handle_read_error() will resumit r10_bio by raid10_read_request(), which
+will call bio_start_io_acct() again, while bio_end_io_acct() will only
+be called once.
 
-Of course, this looks better. I'll send a new verison for this patch.
+Fix the problem by don't account io again from handle_read_error().
 
-Thanks,
-Kuai
+Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
+Suggested-by: Song Liu <song@kernel.org>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+Changes in v3:
+ - use r10_bo->start_time instead of adding a new paramater.
+Changes in v3:
+ - Change the patch title
+
+ drivers/md/raid10.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 6c66357f92f5..3483fdf796ec 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1244,7 +1244,8 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	}
+ 	slot = r10_bio->read_slot;
+ 
+-	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
++	if (!r10_bio->start_time &&
++	    blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+ 		r10_bio->start_time = bio_start_io_acct(bio);
+ 	read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
+ 
+@@ -1574,6 +1575,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
+ 	r10_bio->sector = bio->bi_iter.bi_sector;
+ 	r10_bio->state = 0;
+ 	r10_bio->read_slot = -1;
++	r10_bio->start_time = 0;
+ 	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
+ 			conf->geo.raid_disks);
+ 
+-- 
+2.31.1
 
