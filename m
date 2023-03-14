@@ -2,98 +2,116 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9223CC61DA4
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 00:43:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 092E4C6FD19
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 01:17:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229638AbjCNAn6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Mar 2023 20:43:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38586 "EHLO
+        id S229969AbjCNBQp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Mar 2023 21:16:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbjCNAnn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 20:43:43 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07A6765C40;
-        Mon, 13 Mar 2023 17:43:12 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 32109B816D9;
-        Tue, 14 Mar 2023 00:42:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBDBFC4339C;
-        Tue, 14 Mar 2023 00:42:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678754571;
-        bh=aP1kWzeFR2N4AdJC9C5+mL2TVxDe/IY9no0xXZaHp5Q=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=mjdzEtDKeW6VCE4SYht1PGtz42WoaYnTZrfJoBhDoG0B43L3zF858dAmnze3Cqc6x
-         eqhRmw+ZDvSJ0fM/XRi8DYnyn+vHIYiXMngKYCAnHaz8Q863lkzXqbEmfhevd4rcID
-         V+bfGUpkRjfdNLWKhA1/F3x2YUa7AH02qsy8rSKZ8xjejGSjGqj/mQMUmFvDG7mZsN
-         d430AmJwRfIPwvBFVDkjohvAyhyc5qEweCA1jeJaQPVRJolfiWkXhY44AZTwvOyCv9
-         RlzEIBiNHqog89BDBRLl30kY3DFbhyPfuQK20qTU+O8IuHLfGCHfvjUz/ftYbDv6sF
-         aU9YXvJBKXVRQ==
-Received: by mail-lf1-f46.google.com with SMTP id d36so17925081lfv.8;
-        Mon, 13 Mar 2023 17:42:50 -0700 (PDT)
-X-Gm-Message-State: AO0yUKXlkBl7OfJv481aCU9rtqclJVdguQTaeQB/1nahL9G6QenfCscB
-        FFxAYMjTTldWKNzxY4nFIKQ7C+/lNNw8ejk0+zA=
-X-Google-Smtp-Source: AK7set9Fu5cm3TR1FI95fKslcaie7BK6VR4qAOHSeumRUn02yLDo51sD0TAlZDLf2UBuwriaL9oVxZUC1BjuVJWFk6w=
-X-Received: by 2002:ac2:4c84:0:b0:4d5:ca32:9bd7 with SMTP id
- d4-20020ac24c84000000b004d5ca329bd7mr141768lfl.3.1678754568986; Mon, 13 Mar
- 2023 17:42:48 -0700 (PDT)
+        with ESMTP id S229537AbjCNBQo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Mar 2023 21:16:44 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86B214A1ED;
+        Mon, 13 Mar 2023 18:16:42 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PbFwj06XMz4f3m6t;
+        Tue, 14 Mar 2023 09:16:37 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgCnUyH0yg9k1BaGEw--.43581S3;
+        Tue, 14 Mar 2023 09:16:38 +0800 (CST)
+Subject: Re: [PATCH v2 1/6] md/raid10: don't call bio_start_io_acct twice for
+ bio which experienced read error
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     guoqing.jiang@linux.dev, jgq516@gmail.com, neilb@suse.de,
+        shli@fb.com, lzhong@suse.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230310073855.1337560-1-yukuai1@huaweicloud.com>
+ <20230310073855.1337560-2-yukuai1@huaweicloud.com>
+ <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <6f6172df-7953-078e-1310-eccf0ca4f47b@huaweicloud.com>
+Date:   Tue, 14 Mar 2023 09:16:36 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230311093148.2595222-1-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Mar 2023 17:42:36 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7dTMBfb=ncQQE7m7vE_fL6dy4mSFCprGsvH8LsGLe1pQ@mail.gmail.com>
-Message-ID: <CAPhsuW7dTMBfb=ncQQE7m7vE_fL6dy4mSFCprGsvH8LsGLe1pQ@mail.gmail.com>
-Subject: Re: [PATCH -next 0/5] md: fix uaf for sync_thread
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     agk@redhat.com, snitzer@kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CAPhsuW5nw0tgVmm-iB++_x2K=dBNSyHNtfpLyKBArn6YZVoteA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgCnUyH0yg9k1BaGEw--.43581S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF4UKr1UZr4rWF43CF17Jrb_yoW8AF13p3
+        ykGFyYvFZ8JayDuw47J34UZrnavayUWrW2yrWfAw13Xw17ZF95JF18GFW0grn5XF95u342
+        v3Wq9rWDGr4DtFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, Mar 11, 2023 at 1:32=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Our test reports a uaf for 'mddev->sync_thread':
->
-> T1                      T2
-> md_start_sync
->  md_register_thread
->                         raid1d
->                          md_check_recovery
->                           md_reap_sync_thread
->                            md_unregister_thread
->                             kfree
->
->  md_wakeup_thread
->   wake_up
->   ->sync_thread was freed
->
-> Currently, a global spinlock 'pers_lock' is borrowed to protect
-> 'mddev->thread', this problem can be fixed likewise, however, there might
-> be similar problem for other md_thread, and I really don't like the idea =
-to
-> borrow a global lock.
->
-> This patchset do some refactor, and then use a disk level spinlock to
-> protect md_thread in relevant apis.
->
-> Yu Kuai (5):
->   md: pass a md_thread pointer to md_register_thread()
->   md: refactor md_wakeup_thread()
->   md: use md_thread api to wake up sync_thread
->   md: pass a mddev to md_unregister_thread()
->   md: protect md_thread with a new disk level spin lock
+Hi,
 
-Applied to md-next.
+在 2023/03/14 6:08, Song Liu 写道:
+> On Thu, Mar 9, 2023 at 11:39 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> handle_read_error() will resumit r10_bio by raid10_read_request(), which
+>> will call bio_start_io_acct() again, while bio_end_io_acct() will only
+>> be called once.
+>>
+>> Fix the problem by don't account io again from handle_read_error().
+>>
+>> Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
+> 
+> I would rather keep same argument lists for raid10_read_request
+> and raid10_write_request. How about we do something like this
+> instead?
+> 
+> diff --git i/drivers/md/raid10.c w/drivers/md/raid10.c
+> index 6b39e6c7ada3..13f33a8a8fe8 100644
+> --- i/drivers/md/raid10.c
+> +++ w/drivers/md/raid10.c
+> @@ -1248,7 +1248,8 @@ static void raid10_read_request(struct mddev
+> *mddev, struct bio *bio,
+>          }
+>          slot = r10_bio->read_slot;
+> 
+> -       if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+> +       if (!r10_bio->start_time &&
+> +           blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+>                  r10_bio->start_time = bio_start_io_acct(bio);
+>          read_bio = bio_alloc_clone(rdev->bdev, bio, gfp, &mddev->bio_set);
+> 
+> @@ -1578,6 +1579,7 @@ static void __make_request(struct mddev *mddev,
+> struct bio *bio, int sectors)
+>          r10_bio->sector = bio->bi_iter.bi_sector;
+>          r10_bio->state = 0;
+>          r10_bio->read_slot = -1;
+> +       r10_bio->start_time = 0;
+>          memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
+>                          conf->geo.raid_disks);
+> 
+> Thanks,
+> Song
+
+Of course, this looks better. I'll send a new verison for this patch.
 
 Thanks,
-Song
+Kuai
+
