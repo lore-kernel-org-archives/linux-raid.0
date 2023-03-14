@@ -2,205 +2,112 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD5AC6FD1F
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 08:59:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C468AC6FD1C
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Mar 2023 09:11:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230460AbjCNI7t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Mar 2023 04:59:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53448 "EHLO
+        id S230454AbjCNJLt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Mar 2023 05:11:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230291AbjCNI7g (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 04:59:36 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABC5794F71
-        for <linux-raid@vger.kernel.org>; Tue, 14 Mar 2023 01:59:28 -0700 (PDT)
+        with ESMTP id S230186AbjCNJLg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Mar 2023 05:11:36 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBAED99C16;
+        Tue, 14 Mar 2023 02:11:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678784368; x=1710320368;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=bMVEpUPtXUPVwr+Vm47hgG3Yz4dL9dvS3nBpaOpt9JM=;
-  b=HakYAUputCMSVK9GA6YSlE/T1z5heM9n3LJVbaq0MCWmyl7uP56UGQdH
-   edjWTdN88i1ShBaw/HNDoIGaB5D+V3Vl0uXoa/hjb0NhdMPidmJqhwyYG
-   jgsgVS2HvMlRGYEot/F2yBs/4XI73+xdLoBJT8vqrV7C3a0cn9ESEB3wO
-   AMsi3t9TntIWyJ8LYPHrxy7MVt3G5ANLRF+q/xoy46tJ/J+1AjtrrLa/o
-   qlkYMbeXz2Pyr/LPfahJa6p3yz2xDYxR096oqhO4TwjzDclA+3jxIxgza
-   bmJ0IV5ORzVLViO7LC67y1qW8UEwEgHUXpiftSgdPsA6VeVTZ7Kd9lArF
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10648"; a="317756299"
+  t=1678785081; x=1710321081;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=WQVGzguMektICAtYLmM/lI9Il8wjM/11GOkoaszAIec=;
+  b=ljrl56em+YKFU758HNg552Vsd5Oaz99DUFANE8D7vQLxW9ZJFhUk066a
+   gTWuuPirnoeywoyiWpWvfTtqVjWmzLDi5lyOvskqubGwQOhYsZNlT435S
+   Hkl4w9NHDzpXQQLeHdgkRjdrn7qgo0QDJlMkAWwxTHWLJ40UqN7n3Xa0g
+   HBuHtoE8BLPMQD7FDbirTPLCGhx10+gfEThRA8OcJV5Zrl49ToXfYbC5s
+   7ksfKYkElK0GQchqHV/KyBFSvKskDIh0hgojm/SZcZs293y2Lvo1q7dbB
+   OhoE0yo6sBNwuG/LBKOWlXRhast1Td3EotypwRni00em5Jf2lRd760WZ+
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10648"; a="334853029"
 X-IronPort-AV: E=Sophos;i="5.98,259,1673942400"; 
-   d="scan'208";a="317756299"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 01:59:28 -0700
+   d="scan'208";a="334853029"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 02:11:21 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10648"; a="747922784"
+X-IronPort-AV: E=McAfee;i="6500,9779,10648"; a="628977176"
 X-IronPort-AV: E=Sophos;i="5.98,259,1673942400"; 
-   d="scan'208";a="747922784"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 14 Mar 2023 01:59:27 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pc0VC-0006ji-1m;
-        Tue, 14 Mar 2023 08:59:26 +0000
-Date:   Tue, 14 Mar 2023 16:59:13 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-fixes] BUILD SUCCESS
- f6bb5176318186880ff2f16ad65f519b70f04686
-Message-ID: <64103761.+jZ9z4qxWHf5PGps%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+   d="scan'208";a="628977176"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.32.139])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 02:11:18 -0700
+Date:   Tue, 14 Mar 2023 10:11:13 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     "NeilBrown" <neilb@suse.de>
+Cc:     Jes Sorensen <jes@trained-monkey.org>,
+        "Song Liu" <song@kernel.org>,
+        "Linux regressions mailing list" <regressions@lists.linux.dev>,
+        "linux-raid" <linux-raid@vger.kernel.org>,
+        "LKML" <linux-kernel@vger.kernel.org>,
+        "Nikolay Kichukov" <hijacker@oldum.net>
+Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
+Message-ID: <20230314101113.000001fa@linux.intel.com>
+In-Reply-To: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
+References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
-branch HEAD: f6bb5176318186880ff2f16ad65f519b70f04686  Subject: md: select BLOCK_LEGACY_AUTOLOAD
+On Tue, 14 Mar 2023 11:06:25 +1100
+"NeilBrown" <neilb@suse.de> wrote:
 
-elapsed time: 724m
+> mdopen() will use create_named_array() to ask the kernel to create the
+> given md array, but only if it is given a number or name.
+> If it is NOT given a name and is required to choose one itself using
+> find_free_devnm() it does NOT use create_named_array().
+> 
+> On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result in
+> failure to assemble an array.  This can particularly seen when the
+> "name" of the array begins with a host name different to the name of the
+> host running the command.
+> 
+> So add the missing call to create_named_array().
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=217074
+> Signed-off-by: NeilBrown <neilb@suse.de>
+> ---
+>  mdopen.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/mdopen.c b/mdopen.c
+> index d18c931996d2..810f79a3d19a 100644
+> --- a/mdopen.c
+> +++ b/mdopen.c
+> @@ -370,6 +370,7 @@ int create_mddev(char *dev, char *name, int autof, int
+> trustworthy, }
+>  		if (block_udev)
+>  			udev_block(devnm);
+> +		create_named_array(devnm);
+>  	}
+>  
+>  	sprintf(devname, "/dev/%s", devnm);
 
-configs tested: 131
-configs skipped: 11
+Hi Neil,
+Thanks for handling that. I didn't have time to get into this topic yet.
+I trust you and I believe that it is a good fix but I cannot verify it by
+standard code review- the code is to complex. Could you please add test for it
+to prove it works this way at least for following cases?
+- mdadm -CR /dev/md/name
+- mdadm -CR name
+- mdadm -CR /dev/md_name
+- mdadm -CR /dev/mdX, where X is a number.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+You can disable creation via open temporarily by changing value in
+/sys/module/md_mod/parameters/new_array that should be enough for verification.
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r006-20230313   gcc  
-alpha                randconfig-r016-20230312   gcc  
-alpha                randconfig-r034-20230313   gcc  
-alpha                randconfig-r035-20230313   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r001-20230313   gcc  
-arc                  randconfig-r013-20230313   gcc  
-arc                  randconfig-r022-20230313   gcc  
-arc                  randconfig-r024-20230312   gcc  
-arc                  randconfig-r031-20230313   gcc  
-arc                  randconfig-r043-20230312   gcc  
-arc                  randconfig-r043-20230313   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm          buildonly-randconfig-r003-20230312   clang
-arm                                 defconfig   gcc  
-arm                  randconfig-r046-20230312   clang
-arm                  randconfig-r046-20230313   gcc  
-arm64                            allyesconfig   gcc  
-arm64        buildonly-randconfig-r001-20230312   clang
-arm64                               defconfig   gcc  
-arm64                randconfig-r003-20230312   clang
-arm64                randconfig-r011-20230312   gcc  
-arm64                randconfig-r015-20230313   clang
-arm64                randconfig-r023-20230312   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r004-20230313   gcc  
-csky                 randconfig-r022-20230312   gcc  
-hexagon      buildonly-randconfig-r001-20230313   clang
-hexagon              randconfig-r002-20230312   clang
-hexagon              randconfig-r024-20230313   clang
-hexagon              randconfig-r041-20230312   clang
-hexagon              randconfig-r041-20230313   clang
-hexagon              randconfig-r045-20230312   clang
-hexagon              randconfig-r045-20230313   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r006-20230313   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-a001-20230313   gcc  
-i386                 randconfig-a002-20230313   gcc  
-i386                 randconfig-a003-20230313   gcc  
-i386                 randconfig-a004-20230313   gcc  
-i386                 randconfig-a005-20230313   gcc  
-i386                 randconfig-a006-20230313   gcc  
-i386                 randconfig-a011-20230313   clang
-i386                 randconfig-a012-20230313   clang
-i386                 randconfig-a013-20230313   clang
-i386                 randconfig-a014-20230313   clang
-i386                 randconfig-a015-20230313   clang
-i386                 randconfig-a016-20230313   clang
-i386                 randconfig-r003-20230313   gcc  
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r012-20230312   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k         buildonly-randconfig-r004-20230313   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r004-20230312   gcc  
-m68k                 randconfig-r006-20230312   gcc  
-m68k                 randconfig-r016-20230313   gcc  
-m68k                 randconfig-r032-20230312   gcc  
-microblaze   buildonly-randconfig-r002-20230313   gcc  
-microblaze           randconfig-r025-20230312   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips         buildonly-randconfig-r002-20230312   gcc  
-mips                 randconfig-r021-20230312   clang
-nios2                               defconfig   gcc  
-nios2                randconfig-r012-20230313   gcc  
-nios2                randconfig-r023-20230313   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r005-20230312   gcc  
-parisc               randconfig-r034-20230312   gcc  
-parisc               randconfig-r035-20230312   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc              randconfig-r026-20230312   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r014-20230312   gcc  
-riscv                randconfig-r042-20230312   gcc  
-riscv                randconfig-r042-20230313   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r011-20230313   clang
-s390                 randconfig-r031-20230312   clang
-s390                 randconfig-r044-20230312   gcc  
-s390                 randconfig-r044-20230313   clang
-sh                               allmodconfig   gcc  
-sh                   randconfig-r021-20230313   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r032-20230313   gcc  
-sparc                randconfig-r036-20230313   gcc  
-sparc64              randconfig-r001-20230312   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230313   gcc  
-x86_64               randconfig-a002-20230313   gcc  
-x86_64               randconfig-a003-20230313   gcc  
-x86_64               randconfig-a004-20230313   gcc  
-x86_64               randconfig-a005-20230313   gcc  
-x86_64               randconfig-a006-20230313   gcc  
-x86_64               randconfig-a011-20230313   clang
-x86_64               randconfig-a012-20230313   clang
-x86_64               randconfig-a013-20230313   clang
-x86_64               randconfig-a014-20230313   clang
-x86_64               randconfig-a015-20230313   clang
-x86_64               randconfig-a016-20230313   clang
-x86_64               randconfig-r014-20230313   clang
-x86_64               randconfig-r025-20230313   clang
-x86_64               randconfig-r033-20230313   gcc  
-x86_64                               rhel-8.3   gcc  
-xtensa       buildonly-randconfig-r005-20230312   gcc  
-xtensa       buildonly-randconfig-r006-20230312   gcc  
-xtensa               randconfig-r005-20230313   gcc  
-xtensa               randconfig-r015-20230312   gcc  
+For code:
+Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Thanks,
+Mariusz
