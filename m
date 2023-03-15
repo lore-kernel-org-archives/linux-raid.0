@@ -2,135 +2,157 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C04CC6FD1D
-	for <linux-raid@archiver.kernel.org>; Wed, 15 Mar 2023 15:38:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C14C1C6FD1D
+	for <linux-raid@archiver.kernel.org>; Wed, 15 Mar 2023 18:04:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232289AbjCOPie (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 15 Mar 2023 11:38:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52962 "EHLO
+        id S229941AbjCOSE0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 15 Mar 2023 14:04:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232663AbjCOPiY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Mar 2023 11:38:24 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B54A2D56
-        for <linux-raid@vger.kernel.org>; Wed, 15 Mar 2023 08:38:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678894698; x=1710430698;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=my+1eaYYbjkuQi8/aV/P27e7gqYYBgLvC5nNOOiwsmM=;
-  b=Qfwvnr6dnyXX6csID00S8Re1lYPkNqICT+ZwcvQVTEA83HZ/k4Skl3Bw
-   mP/wJu52CTovvvIqlRqWA95DA0pOyNMgJwelq1xLgNP8+9EKnciT3e1Vw
-   YeJb5EKfgAsL0Xyc22HSE7n3mFxfjMW8qItDlDBzyZObA0EngKCdEWQgq
-   7yqFKSnqmCkghJr9d3IUqI2UFQt8j2xULTpQ+4ma+5OchkNCvDVke/d2g
-   /7xlXF2d/isVncFaoZcD+zhavGaFlnsZYmCQtWzqmTEoyc9oSEXCo3+Zx
-   6faGiMWxFsf6caISjq4ryHg6dfpE7CPN35a/YUQ9bAesEDhA6TwQ7Yj8y
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10650"; a="321577058"
-X-IronPort-AV: E=Sophos;i="5.98,262,1673942400"; 
-   d="scan'208";a="321577058"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Mar 2023 08:37:57 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10650"; a="711965134"
-X-IronPort-AV: E=Sophos;i="5.98,262,1673942400"; 
-   d="scan'208";a="711965134"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 15 Mar 2023 08:37:56 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pcTCM-0007pP-1x;
-        Wed, 15 Mar 2023 15:37:54 +0000
-Date:   Wed, 15 Mar 2023 23:37:15 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Jon Derrick <jonathan.derrick@linux.dev>
-Cc:     oe-kbuild-all@lists.linux.dev, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>, Christoph Hellwig <hch@lst.de>
-Subject: [song-md:md-next 6/14] drivers/md/md-bitmap.c:242 __write_sb_page()
- warn: unsigned 'offset' is never less than zero.
-Message-ID: <202303152311.cmIqIgUw-lkp@intel.com>
+        with ESMTP id S230452AbjCOSEY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Mar 2023 14:04:24 -0400
+Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 425CD22031
+        for <linux-raid@vger.kernel.org>; Wed, 15 Mar 2023 11:04:22 -0700 (PDT)
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+        by m0001303.ppops.net (8.17.1.19/8.17.1.19) with ESMTP id 32FH0oPa018223
+        for <linux-raid@vger.kernel.org>; Wed, 15 Mar 2023 11:04:21 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from : to : subject :
+ date : message-id : content-type : content-id : mime-version;
+ s=s2048-2021-q4; bh=TrmdC7vIFpWJyCrCtLeR2XxnHUnFelr14fzQ5zyzElc=;
+ b=l0IDjZ9JU8j97ppSIYc7mVuJojADdCPUaiEvtgedksxfNoezFEgkTMf34ufrkwVWydQV
+ p1Rm5lVoRMeVvlqcClSFBzfW6Vr+V5dACu1WTnq1DGkzAGr0q+OMQZrGcogdTcvvLvCl
+ alnKlHF/xgvzkMhtZzc0ZprDr12isVq7a59i6qO42pRasd8HC60kpI5as+G6IsY8Xv6X
+ 4tpcLOpzjHuX0sDlpw6o6caV4zDlBGHSxPloFksCFcJznpAHUfYfdCKbS8dfQw1UowrB
+ aPqaPIY+6Efs8SQZVYbH4QqXz6ujLqGGdZCFpjGtEjIstr+y2zJfJcxwOmo5S0K8FTKz pQ== 
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2171.outbound.protection.outlook.com [104.47.57.171])
+        by m0001303.ppops.net (PPS) with ESMTPS id 3pb2bu5yp9-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-raid@vger.kernel.org>; Wed, 15 Mar 2023 11:04:21 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=enHwv7lys8M+xER8lJAta4pC9uurrdqF/98In2+iy1ctVqG+VsEi4DS8nkd8U+AQXLhl8kgqXy3zVupiOhV9p+BNsfqpdkVzk0oX9UYR3vL7TFzzQLKBatMQ3MF3no889WCPOJKGH7rBM6porBM3vBJnwYsANaJMhvQiNyJF7r1kCo2pfds/I+huV2geUgZODsYEl0y5hUp3KAH9oKt5RfejlUtjHkOhrTTbU34ZAzvBFkszeH86uxG7QiauEf5opgddVUKoX0a6iTfomKxdg1X3BKCfEMaCswL73owx1+llf9XdjLLe50NT+EksImj9PmP3mYrmZzyZGyroDAReYw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=TrmdC7vIFpWJyCrCtLeR2XxnHUnFelr14fzQ5zyzElc=;
+ b=lvuF6ZsOrEO6xeSbPqfrKPSDJWFPzOIYilhdLrAiGpA0+yiM7YzLY7MUUyObbPzN53klYpomaUFZCpTt1gfBRIX7mUmT6wICZcQcDR3zH10O1UMzPWLEoaBwzw/xGRhXZ1rQXuaCmPO/iqB+QnQtlCE+duhezLpc2qCbJFtmjTxTCVu4BuYCzsJwZvVDigpr7Pb/ba4R66Z+UgSW6uVb0zkmn8uJtiKf3Ygw1GqcpKahdlRdrG5bIhndWI2L/C/YW556jdwUAvtDANQ6lGoBvSrnj4FHsmDKsUL3Hxgs004aqpBNO8DZ2bx414NBOayBOHGBWTWjpWYNty2J5jXFkQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
+ dkim=pass header.d=meta.com; arc=none
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
+ by MW3PR15MB3868.namprd15.prod.outlook.com (2603:10b6:303:40::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.29; Wed, 15 Mar
+ 2023 18:04:18 +0000
+Received: from SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::95a1:140b:9c44:f86d]) by SA1PR15MB5109.namprd15.prod.outlook.com
+ ([fe80::95a1:140b:9c44:f86d%4]) with mapi id 15.20.6178.029; Wed, 15 Mar 2023
+ 18:04:18 +0000
+From:   Song Liu <songliubraving@meta.com>
+To:     Jens Axboe <axboe@kernel.dk>,
+        linux-raid <linux-raid@vger.kernel.org>
+Subject: [GIT PULL] md-fixes 20230315
+Thread-Topic: [GIT PULL] md-fixes 20230315
+Thread-Index: AQHZV2iPgTc2vYQvm02PnNsjxVRo9w==
+Date:   Wed, 15 Mar 2023 18:04:18 +0000
+Message-ID: <ECA01A7B-4737-45A7-B853-2A41069173F7@fb.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3731.400.51.1.1)
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR15MB5109:EE_|MW3PR15MB3868:EE_
+x-ms-office365-filtering-correlation-id: fa3be3d2-246a-4866-3a2b-08db257fb22e
+x-fb-source: Internal
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: HHE1VaNWYYt568O/hrrrGz2N8os7w5HRdAmr3nQNrRi8ks5DCwYMZ3GM+/cC9V6GrH7YtAw4sCHHsA1btDCb0SSYfN2vHD7jfNMfi7G5mQM0yzADNyJAz0X0NdJXv2I8VIKOFXgDCyXd81ltUK0zfJ4wuBWKIeo6SEQd5EXvCriODWhci/n/o120WwTQqn88/+TRyzABQ0sPInhgsoOkIU2DLAI5hC65KKJH4SFceI045Ksjj38+BQCHSdd7E2CpAh2vDmycVNT4bprJoFGcmgyW7CCAwyQKnUFZwR1+nF7cDjV5fX0UkFL1viVsFlOR+/Dvu6PmPkEBajqdLqWXzaLw82F/hqJZuS3KNCPWnUsesD48MwFr8DkZn+ip+c94DyGpPB2r7SLH0/Y0PfwP5MKrhtJLH4gDGoMzrE5WJ8pmFB0cGAl+edUsfRcpU1BSnHVxqVMHVDIxCGJ/+ZMCuUDrmWoV4P85CWCtatfmU8jWsrC4M7iPWu5p2harDOzp3yGLhrnh8Kl53A7AmLUvvsLROrwyG/a7adl/BtGi5mrYYkMnWW1d836OgM15Vquaa7c2ubD0Rdg4bl6t5qrDSs1FGsnNZ2i9Ne/Wkb+QeF69X4wCebToSHKDiJCwgSO4YaqNP1CFDgcGCIJ936b/4w8+1alf1vVRsIhQnSqb7P8WDEAvv+9YaTtw1Yskmbad
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(366004)(396003)(346002)(136003)(39860400002)(376002)(451199018)(8936002)(4744005)(5660300002)(41300700001)(33656002)(86362001)(36756003)(38070700005)(122000001)(38100700002)(2906002)(6512007)(6506007)(9686003)(478600001)(83380400001)(186003)(6486002)(966005)(8676002)(71200400001)(64756008)(66556008)(66476007)(66446008)(66946007)(76116006)(91956017)(110136005)(316002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?CjgP2iBG+SdoHCM2Kd+p4Z3Y4aw6arEkOnfz/tH/YpACPrhUJq+ACviNOHmY?=
+ =?us-ascii?Q?vmoXEW7IVNtY+3fkOQgkuxh/jnhqM5vTwc/LLWxN/RV+IE3gZIIM9v0k1YCo?=
+ =?us-ascii?Q?4ZdWuwTee3bGzLcyvV6+EbVby+bDLjZxYk/qmOJ0zF80FEpToefnZkoJ85uu?=
+ =?us-ascii?Q?pNGX7rxi9oHAYhq/1UjeDdT7dsfOJ/lvf4L+AFyNotsk2CT9G0lK0BRsR1Co?=
+ =?us-ascii?Q?nGiyiw9EEkGSSShkCbv0vVBnGZkXhzCGuv5EA0OawW2Zbj5TIRZ+KxJieCGH?=
+ =?us-ascii?Q?2bq8T7fi5jf6iEihP84jeaEKMtZReUgsU7kXc8QwZ6OfWKgl988/45JQbdxh?=
+ =?us-ascii?Q?NcdMBji7rFh/b+op2n996ePdC4Fr22hlmgHJmm0jJG2sIaV/43snbJpyW4Lx?=
+ =?us-ascii?Q?fxtEms/ph3pjiFTcj+U1AvHOAEGutYaYISrYqUnhUVfI+yT//FaJcX5HHGZG?=
+ =?us-ascii?Q?ZM7oH51eAHzAa7HAMJ3a9Cl/Ud2Zbs28mUBfV136a6s6RiwoGN+L3fVRLp+3?=
+ =?us-ascii?Q?nAYM2put3weP+2hnrs/3ymtBKTiACF1xgdkNcKIqErhiLMbLgxC27h16xVIP?=
+ =?us-ascii?Q?OKbQ2Vj3QYr0/+9l5L9aTmejjWruGnWf2EQQ9G0v9gpMjCUyEYhU0TtzPYWr?=
+ =?us-ascii?Q?xrZJxqKAKoCdya1vuKZqDuxL69qVzQopgLc/MM81kmGmwO1bKmBsAf9eGNgJ?=
+ =?us-ascii?Q?b8T5Z4iGjETdDFYinlLqSxNyvnaB6gO0UovTvhriMLSdnrtKwozjPEOyf1la?=
+ =?us-ascii?Q?LgbQr9f/Od9rlzQb+T9sR756kKZVXe0LraQHJAunRCWhf1bQ8wxGUAEU4zzR?=
+ =?us-ascii?Q?jN4VsORGxaCgJB2ArQrZZbCbaafnuRdpLdU4+2sUSH9tObMyvDW6JzIFW0Fy?=
+ =?us-ascii?Q?oKf/CyyuqvczRRCKt9S2I+E0K2+tCghquazYdHdTCLOlDhDkqZjX1T2a44Zi?=
+ =?us-ascii?Q?+EDQjO2BHIMa2qWGx+tqvDMh3WCQo79ApD18762/2hbcu+aadgvg2qjqbPPY?=
+ =?us-ascii?Q?lgQk08pjJPXZIBqfLiCkMjZf2wBjDhqcT+Fw0yIH1J6MrzjqMmNvshe5JUpu?=
+ =?us-ascii?Q?ONp8Tr2nxxFktTpwDzLsvr+QlUJf1HszZXk3MMvdt2gxaBA8WYitWrHOVI04?=
+ =?us-ascii?Q?yWA15E00gBL33Eq9fl+uLmu3KfSBWA0xM5d0AH4kwsPJoNRYELEE1jAuBOUY?=
+ =?us-ascii?Q?ltHS/tSJC3wpe19gcmisTF85Hi0WJgKrHX2BYaRBs55iQWbuMgkjt+1fDZnn?=
+ =?us-ascii?Q?8gFx+40NiXPynBJBJTmVbsHQvSDSd/ql0ytaw4O4jYWnlTrHOxGuBsGWTT0i?=
+ =?us-ascii?Q?1PVCZ+JiqY+TNCmQC2FyLyfX+8Mm/FVW8DZ7ThCvJXzHrZjFN2cjmeaofeNT?=
+ =?us-ascii?Q?R6qQOSm0aVjDaAIfqornNWgCb0eWoj+O0wGmgjJqhDCQNdHOGEQlSds0OOUZ?=
+ =?us-ascii?Q?naKWszOyS6ZraM015U2shIW+Km8SRbU2s1IuppFpHRhUBAQu7zBpO64qT2f/?=
+ =?us-ascii?Q?cVaeL3FHN7MkS9/rbracWCt4tvk5WDjENMUiKcm1g+yhH7JxDye6zjtet1q2?=
+ =?us-ascii?Q?c0j3zWmWIRHg6ZLzcMHDfX9g9HRD4xlDEhDZxoiedXnYZSL8gqlS4MCWN8Eu?=
+ =?us-ascii?Q?oUlNKRri8qkh7drpFJ72ftFdGMOQHskpSY74YjzsqdOu?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <94464D82F18E4D49B5EF165667313BA7@namprd15.prod.outlook.com>
+X-OriginatorOrg: meta.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fa3be3d2-246a-4866-3a2b-08db257fb22e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Mar 2023 18:04:18.3349
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: rrApGgJKJ35cDPSw5JrG0zawUn0q4KPfnS9g8pDSmjGDvbIko1F+rGXtZ+SuaRkrmSgA0UKmwUCUN81A6P1OQA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR15MB3868
+X-Proofpoint-ORIG-GUID: -_ubuMnfal1Nhbmelno111As71xCzTLo
+X-Proofpoint-GUID: -_ubuMnfal1Nhbmelno111As71xCzTLo
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-15_10,2023-03-15_01,2023-02-09_01
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-head:   703c560db9a7b61c6ac7cb5fd634d7d5c1c4f38f
-commit: d0c7aab97dbfa289ea6ac06acf65c5191f41f9c6 [6/14] md: Fix types in sb writer
-config: ia64-randconfig-m031-20230312 (https://download.01.org/0day-ci/archive/20230315/202303152311.cmIqIgUw-lkp@intel.com/config)
-compiler: ia64-linux-gcc (GCC) 12.1.0
+Hi Jens,
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303152311.cmIqIgUw-lkp@intel.com/
+Please consider pulling the following fixes on top of your for-6.3/block
+branch. This set contains two fixes for old issues (by Neil) and one fix
+for 6.3 (by Xiao). 
 
-smatch warnings:
-drivers/md/md-bitmap.c:242 __write_sb_page() warn: unsigned 'offset' is never less than zero.
+Thanks,
+Song
 
-vim +/offset +242 drivers/md/md-bitmap.c
 
-b2d2c4ceaddc30 drivers/md/bitmap.c    NeilBrown        2008-09-01  211  
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  212  static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  213  			   struct page *page)
-a654b9d8f851f4 drivers/md/bitmap.c    NeilBrown        2005-06-21  214  {
-a6ff7e089c7fca drivers/md/bitmap.c    Jonathan Brassow 2011-01-14  215  	struct block_device *bdev;
-fd01b88c75a718 drivers/md/bitmap.c    NeilBrown        2011-10-11  216  	struct mddev *mddev = bitmap->mddev;
-1ec885cdd01a9a drivers/md/bitmap.c    NeilBrown        2012-05-22  217  	struct bitmap_storage *store = &bitmap->storage;
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  218  	sector_t offset = mddev->bitmap_info.offset;
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  219  	sector_t ps, sboff, doff;
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  220  	unsigned int size = PAGE_SIZE;
-a6ff7e089c7fca drivers/md/bitmap.c    Jonathan Brassow 2011-01-14  221  
-a6ff7e089c7fca drivers/md/bitmap.c    Jonathan Brassow 2011-01-14  222  	bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
-9b1215c102d4b1 drivers/md/bitmap.c    NeilBrown        2012-05-22  223  	if (page->index == store->file_pages - 1) {
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  224  		unsigned int last_page_size = store->bytes & (PAGE_SIZE - 1);
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  225  
-9b1215c102d4b1 drivers/md/bitmap.c    NeilBrown        2012-05-22  226  		if (last_page_size == 0)
-9b1215c102d4b1 drivers/md/bitmap.c    NeilBrown        2012-05-22  227  			last_page_size = PAGE_SIZE;
-9b1215c102d4b1 drivers/md/bitmap.c    NeilBrown        2012-05-22  228  		size = roundup(last_page_size,
-a6ff7e089c7fca drivers/md/bitmap.c    Jonathan Brassow 2011-01-14  229  			       bdev_logical_block_size(bdev));
-9b1215c102d4b1 drivers/md/bitmap.c    NeilBrown        2012-05-22  230  	}
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  231  
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  232  	ps = page->index * PAGE_SIZE / SECTOR_SIZE;
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  233  	sboff = rdev->sb_start + offset;
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  234  	doff = rdev->data_offset;
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  235  
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  236  	/* Just make sure we aren't corrupting data or metadata */
-f6af949c567211 drivers/md/bitmap.c    NeilBrown        2009-12-14  237  	if (mddev->external) {
-f6af949c567211 drivers/md/bitmap.c    NeilBrown        2009-12-14  238  		/* Bitmap could be anywhere. */
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  239  		if (sboff + ps > doff &&
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  240  		    sboff < (doff + mddev->dev_sectors + PAGE_SIZE / SECTOR_SIZE))
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  241  			return -EINVAL;
-f6af949c567211 drivers/md/bitmap.c    NeilBrown        2009-12-14 @242  	} else if (offset < 0) {
-f0d76d70bc77b9 drivers/md/bitmap.c    NeilBrown        2007-07-17  243  		/* DATA  BITMAP METADATA  */
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  244  		if (offset + ps + size / SECTOR_SIZE > 0)
-f0d76d70bc77b9 drivers/md/bitmap.c    NeilBrown        2007-07-17  245  			/* bitmap runs in to metadata */
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  246  			return -EINVAL;
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  247  
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  248  		if (doff + mddev->dev_sectors > sboff)
-f0d76d70bc77b9 drivers/md/bitmap.c    NeilBrown        2007-07-17  249  			/* data runs in to bitmap */
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  250  			return -EINVAL;
-0f420358e3a2ab drivers/md/bitmap.c    Andre Noll       2008-07-11  251  	} else if (rdev->sb_start < rdev->data_offset) {
-f0d76d70bc77b9 drivers/md/bitmap.c    NeilBrown        2007-07-17  252  		/* METADATA BITMAP DATA */
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  253  		if (sboff + ps + size / SECTOR_SIZE > doff)
-f0d76d70bc77b9 drivers/md/bitmap.c    NeilBrown        2007-07-17  254  			/* bitmap runs in to data */
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  255  			return -EINVAL;
-f0d76d70bc77b9 drivers/md/bitmap.c    NeilBrown        2007-07-17  256  	} else {
-f0d76d70bc77b9 drivers/md/bitmap.c    NeilBrown        2007-07-17  257  		/* DATA METADATA BITMAP - no problems */
-f0d76d70bc77b9 drivers/md/bitmap.c    NeilBrown        2007-07-17  258  	}
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  259  
-d0c7aab97dbfa2 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  260  	md_super_write(mddev, rdev, sboff + ps, (int) size, page);
-459bd47c515277 drivers/md/md-bitmap.c Jon Derrick      2023-02-24  261  	return 0;
-ab6085c795a71b drivers/md/bitmap.c    NeilBrown        2007-05-23  262  }
-a654b9d8f851f4 drivers/md/bitmap.c    NeilBrown        2005-06-21  263  
+The following changes since commit 49d24398327e32265eccdeec4baeb5a6a609c0bd:
 
-:::::: The code at line 242 was first introduced by commit
-:::::: f6af949c5672115313cc3c976d85b0533f607d7e md: support bitmap offset appropriate for external-metadata arrays.
+  blk-mq: enforce op-specific segment limits in blk_insert_cloned_request (2023-03-02 21:00:20 -0700)
 
-:::::: TO: NeilBrown <neilb@suse.de>
-:::::: CC: NeilBrown <neilb@suse.de>
+are available in the Git repository at:
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+
+for you to fetch changes up to f6bb5176318186880ff2f16ad65f519b70f04686:
+
+  Subject: md: select BLOCK_LEGACY_AUTOLOAD (2023-03-13 13:34:29 -0700)
+
+----------------------------------------------------------------
+NeilBrown (2):
+      md: avoid signed overflow in slot_store()
+      Subject: md: select BLOCK_LEGACY_AUTOLOAD
+
+Xiao Ni (1):
+      md: Free resources in __md_stop
+
+ drivers/md/Kconfig |  4 ++++
+ drivers/md/md.c    | 17 ++++++++---------
+ 2 files changed, 12 insertions(+), 9 deletions(-)
