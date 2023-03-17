@@ -2,61 +2,86 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD452C74A5B
-	for <linux-raid@archiver.kernel.org>; Fri, 17 Mar 2023 08:43:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1916C6FD1D
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Mar 2023 17:38:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231728AbjCQInE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 17 Mar 2023 04:43:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40352 "EHLO
+        id S229787AbjCQRiT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Mar 2023 13:38:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230357AbjCQImg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Mar 2023 04:42:36 -0400
-Received: from mail.surechiers.com (mail.surechiers.com [80.211.239.236])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 649B6E2501
-        for <linux-raid@vger.kernel.org>; Fri, 17 Mar 2023 01:41:30 -0700 (PDT)
-Received: by mail.surechiers.com (Postfix, from userid 1002)
-        id 8F6F38399C; Fri, 17 Mar 2023 09:40:41 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=surechiers.com;
-        s=mail; t=1679042444;
-        bh=xg3VVY9SU+I+f+ynMyY8e0Lum0EY/KrTvpy5BYTg7yw=;
-        h=Date:From:To:Subject:From;
-        b=szFZ88TNrf2DJp7MVRcBYYmlDTGR2A0NbxKRxHvw8+hSiRtr0vXsf2bfMXnbT05CZ
-         Xw0aPCGeZ9plhwtA4uA3RsFzIHZNYEITUNC5vPQk641YrHTgjxo3b3MexmaxIPPUko
-         IEkTAngND/MRv1bbC+L/k9cuzTqZ8eO7l3YI+ROmQpIy68QZBnoqO0THJaCObyiF+T
-         rSU2IhUWczFaf/PRYvh/qzacZB5vkoBqWSc1aCB2RySM9/nTd1nMO+2GDw0h04WE5v
-         zNmKb4kxuoi/5htJf3/A5NxATm2uQqRdOvg1JvirKaopQGSGyTb7/ECYh9g3e044bM
-         yORZt+KLloQmw==
-Received: by mail.surechiers.com for <linux-raid@vger.kernel.org>; Fri, 17 Mar 2023 08:40:39 GMT
-Message-ID: <20230317084500-0.1.r.1p64.0.9luzcvcm8h@surechiers.com>
-Date:   Fri, 17 Mar 2023 08:40:39 GMT
-From:   =?UTF-8?Q? "J=C3=A1chym_Zdr=C3=A1hal" ?= 
-        <jachym.zdrahal@surechiers.com>
-To:     <linux-raid@vger.kernel.org>
-Subject: Renovace podlahy
-X-Mailer: mail.surechiers.com
+        with ESMTP id S229734AbjCQRiR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Mar 2023 13:38:17 -0400
+Received: from mail1.merlins.org (magic.merlins.org [209.81.13.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74C8528E56
+        for <linux-raid@vger.kernel.org>; Fri, 17 Mar 2023 10:38:13 -0700 (PDT)
+Received: from [76.132.34.178] (port=60048 helo=sauron.svh.merlins.org)
+        by mail1.merlins.org with esmtpsa 
+        (Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim 4.94.2 #2)
+        id 1pdD7j-0001BE-9O by authid <merlins.org> with srv_auth_plain; Fri, 17 Mar 2023 10:38:10 -0700
+Received: from merlin by sauron.svh.merlins.org with local (Exim 4.92)
+        (envelope-from <marc@merlins.org>)
+        id 1pdE1q-008yML-7l; Fri, 17 Mar 2023 10:38:10 -0700
+Date:   Fri, 17 Mar 2023 10:38:10 -0700
+From:   Marc MERLIN <marc@merlins.org>
+To:     linux-raid@vger.kernel.org
+Subject: mdadm --detail works, mdadm --stop says "does not appear to be an md
+ device"
+Message-ID: <20230317173810.GW4049235@merlins.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Sysadmin: BOFH
+X-URL:  http://marc.merlins.org/
+X-Broken-Reverse-DNS: no host name for IP address 76.132.34.178
+X-SA-Exim-Connect-IP: 76.132.34.178
+X-SA-Exim-Mail-From: marc@merlins.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dobr=C3=A9 r=C3=A1no,
+gargamel:~# cat /proc/mdstat 
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath] 
+md6 : active raid5 sdn1[3](F) sdt1[0](F) sds1[1](F) sdq1[2](F)
+      23441547264 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/0] [_____]
+gargamel:~# mdadm --stop /dev/md6
+mdadm: /dev/md6 does not appear to be an md device
+gargamel:~# mdadm --detail /dev/md6
+/dev/md6:
+           Version : 1.2
+     Creation Time : Wed Jul  8 10:09:21 2020
+        Raid Level : raid5
+        Array Size : 23441547264 (22355.60 GiB 24004.14 GB)
+     Used Dev Size : 5860386816 (5588.90 GiB 6001.04 GB)
+      Raid Devices : 5
+     Total Devices : 4
+       Persistence : Superblock is persistent
 
-m=C4=9Bli byste z=C3=A1jem o beze=C5=A1v=C3=A9, chemicky, n=C3=A1razu a o=
-t=C4=9Bru odoln=C3=A9 podlahy?
+       Update Time : Fri Mar 17 09:17:28 2023
+             State : clean, FAILED 
+    Active Devices : 0
+    Failed Devices : 4
+     Spare Devices : 0
 
-Zaji=C5=A1=C5=A5uj=C3=AD spolehlivost bez ohledu na to, zda je pou=C5=BE=C3=
-=ADv=C3=A1te v n=C3=A1ro=C4=8Dn=C3=BDch v=C3=BDrobn=C3=ADch prostorech, s=
-kladech, komunika=C4=8Dn=C3=ADch tras=C3=A1ch nebo komer=C4=8Dn=C3=ADch p=
-rostor=C3=A1ch.
+            Layout : left-symmetric
+        Chunk Size : 512K
 
-Navrhli jsme snadno =C4=8Distiteln=C3=A9, hygienick=C3=A9 a protiskluzov=C3=
-=A9 podlahy pro pr=C5=AFmyslov=C3=A9 i komer=C4=8Dn=C3=AD pou=C5=BEit=C3=AD=
-=2E
+Consistency Policy : ppl
 
-Mohu nab=C3=ADdnout bezplatn=C3=BD audit va=C5=A1ich podlah spolu s kompl=
-exn=C3=AD anal=C3=BDzou podkladu. Mohu o tomhle zavolat?
+    Number   Major   Minor   RaidDevice State
+       -       0        0        0      removed
+       -       0        0        1      removed
+       -       0        0        2      removed
+       -       0        0        3      removed
+       -       0        0        4      removed
 
 
-J=C3=A1chym Zdr=C3=A1hal
+How do I clear this without a reboot?
+
+gargamel:~# uname -r
+5.19.7
+
+
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+ 
+Home page: http://marc.merlins.org/                       | PGP 7F55D5F27AAF9D08
