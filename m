@@ -2,155 +2,187 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 169A1C6FD1F
-	for <linux-raid@archiver.kernel.org>; Thu, 16 Mar 2023 15:25:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14869C74A5B
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Mar 2023 03:30:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230423AbjCPPZ4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 16 Mar 2023 11:25:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57382 "EHLO
+        id S229665AbjCQDav (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 16 Mar 2023 23:30:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbjCPPZy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 16 Mar 2023 11:25:54 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59BC310D7;
-        Thu, 16 Mar 2023 08:25:53 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id d10so1128629pgt.12;
-        Thu, 16 Mar 2023 08:25:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678980353;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=z0idJoJp2w2wIfFTVWZdFY6UxngZNa7XXOBWQnR6Nfc=;
-        b=ALcZNjLSW6SKO4Rn4OiKb3x1iJbhy0pBsSvLP4ueXcqR+kSAmdYu9Hbnn7mx65CcVD
-         dk2UwrPAe7z6TqzzltYxW6X0etOuzQwlXoGBMp+Oqrj8Fqx3b/jyJAm0WVdf+oQsAvrm
-         aSOwtK5SmQga07Q3rROsYzQJ3TqDXvVkypsJPGoXpDuGaDsUFzMmkjWR0CJL5Y+HwIif
-         /1ewCCYjBAXKhaf7HKUY/DfIj8LCAEyQ2xEQODNjVR2dX1PjGRLOquZHiQ3M6Dcp9AFg
-         jwvRcS0QFlkibo59ZEoZS/RDoki/hpclXQOX+y4nhAtixMJxBmsFyl961Lwoxk0QO4Kr
-         JfAQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678980353;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=z0idJoJp2w2wIfFTVWZdFY6UxngZNa7XXOBWQnR6Nfc=;
-        b=HpXhBIXClQp4wG5RKcBOW2+dfwg1qINp5pzzu6Lca/Ll+hVvdMM167ikngxUhHrZqS
-         TGcWhy8I+pVL4ByuT9jl1rmnD5QkLgcZUpZK07tCxTDbFLck3jvkl5Wzk3bhGaOTcH/Q
-         upUgA5EO6f18A0iOnGzpaMsFmavKW7DTY2gvkIvCX4oB9BL+aHzUdYeI8WH71PB1VzSX
-         0o5eWu2OrzPPZWCWCBYUN0a5ifrLq+vnx9wklhNiS4RBrscp70Bvy3Jf9si3Nj+O71m/
-         E9f3u9nFaOonMdZMhpsi8VAqUdwQqWcLEb2eODhZRw0oTftQYIRUGRDbIfHhUdZKd16p
-         6Q4g==
-X-Gm-Message-State: AO0yUKV1DDhhDOzTJXUEJZX1YVFiWpQju6byr7RXuurgFGP1rd6sZdmy
-        valTUQy7FQXGYZ2rpiRWKuZMK48sKl3nuvJ9Sy4=
-X-Google-Smtp-Source: AK7set+waXn+onvuWowCzAPU6KKu/o8UV7RfT+/eZlRBRBZw9yyGPaCFGM3qrZCq7RKIs2MYTJzvA6+D2xRNf+ka730=
-X-Received: by 2002:a05:6a00:1506:b0:625:ce0d:e69b with SMTP id
- q6-20020a056a00150600b00625ce0de69bmr1743171pfu.5.1678980352661; Thu, 16 Mar
- 2023 08:25:52 -0700 (PDT)
+        with ESMTP id S229848AbjCQDap (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 16 Mar 2023 23:30:45 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A958B9EF4D;
+        Thu, 16 Mar 2023 20:30:32 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pd8ll2c5Tz4f3q1t;
+        Fri, 17 Mar 2023 11:30:27 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgA35CHQ3hNkwFg8FA--.47950S3;
+        Fri, 17 Mar 2023 11:30:26 +0800 (CST)
+Subject: Re: [PATCH v2 3/5] md: use md_thread api to wake up sync_thread
+To:     kernel test robot <oliver.sang@intel.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     oe-lkp@lists.linux.dev, lkp@intel.com, linux-raid@vger.kernel.org,
+        agk@redhat.com, snitzer@kernel.org, song@kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, logang@deltatee.com, guoqing.jiang@linux.dev,
+        pmenzel@molgen.mpg.de, "yukuai (C)" <yukuai3@huawei.com>
+References: <202303170904.640a8ece-oliver.sang@intel.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <3e171048-060f-af7c-35ec-76fad4fb6f08@huaweicloud.com>
+Date:   Fri, 17 Mar 2023 11:30:24 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
- <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de> <d95aa962-9750-c27c-639a-2362bdb32f41@cloud.ionos.com>
- <30576384-682c-c021-ff16-bebed8251365@molgen.mpg.de> <cdc0b03c-db53-35bc-2f75-93bbca0363b5@molgen.mpg.de>
- <bc342de0-98d2-1733-39cd-cc1999777ff3@molgen.mpg.de> <c3390ab0-d038-f1c3-5544-67ae9c8408b1@cloud.ionos.com>
- <a27c5a64-62bf-592c-e547-1e8e904e3c97@molgen.mpg.de> <6c7008df-942e-13b1-2e70-a058e96ab0e9@cloud.ionos.com>
- <12f09162-c92f-8fbb-8382-cba6188bfb29@molgen.mpg.de> <6757d55d-ada8-9b7e-b7fd-2071fe905466@cloud.ionos.com>
- <93d8d623-8aec-ad91-490c-a414c4926fb2@molgen.mpg.de> <0bb7c8d8-6b96-ce70-c5ee-ba414de10561@cloud.ionos.com>
- <e271e183-20e9-8ca2-83eb-225d4d7ab5db@molgen.mpg.de> <1cdfceb6-f39b-70e1-3018-ea14dbe257d9@cloud.ionos.com>
- <7733de01-d1b0-e56f-db6a-137a752f7236@molgen.mpg.de> <d92922af-f411-fc53-219f-154de855cd13@cloud.ionos.com>
- <CAH6h+hf7Y-kurBJG+pnH6WCQiaEK+Jq3KG5JOGnHJ4Uw6AbUjg@mail.gmail.com>
- <2af18cf7-05eb-f1d1-616a-2c5894d1ac43@linux.dev> <CAH6h+hc8VdpaS2q4ya_ZfqVxWFRsKVCjN-sv73SfeyGomXvjRQ@mail.gmail.com>
-In-Reply-To: <CAH6h+hc8VdpaS2q4ya_ZfqVxWFRsKVCjN-sv73SfeyGomXvjRQ@mail.gmail.com>
-From:   Marc Smith <msmith626@gmail.com>
-Date:   Thu, 16 Mar 2023 11:25:41 -0400
-Message-ID: <CAH6h+hcWfXNpC1Mro3zfzQc8tK142vuaOMELLJL7mg_G+o0fXw@mail.gmail.com>
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle" transition
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     Donald Buczek <buczek@molgen.mpg.de>, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+raid@molgen.mpg.de
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <202303170904.640a8ece-oliver.sang@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgA35CHQ3hNkwFg8FA--.47950S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3Wry8Gw4UJFyUWryrurWfZrb_yoW3XF47pF
+        yq9Fn7GF48W3srJFyUG3WUCa4fXw47Aay7Kry7Grn3J345Kw12qF1v9r12vF1DtF4akFyS
+        qwnrXrW09r48Jw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Mar 14, 2023 at 10:45=E2=80=AFAM Marc Smith <msmith626@gmail.com> w=
-rote:
->
-> On Tue, Mar 14, 2023 at 9:55=E2=80=AFAM Guoqing Jiang <guoqing.jiang@linu=
-x.dev> wrote:
-> >
-> >
-> >
-> > On 3/14/23 21:25, Marc Smith wrote:
-> > > On Mon, Feb 8, 2021 at 7:49=E2=80=AFPM Guoqing Jiang
-> > > <guoqing.jiang@cloud.ionos.com> wrote:
-> > >> Hi Donald,
-> > >>
-> > >> On 2/8/21 19:41, Donald Buczek wrote:
-> > >>> Dear Guoqing,
-> > >>>
-> > >>> On 08.02.21 15:53, Guoqing Jiang wrote:
-> > >>>>
-> > >>>> On 2/8/21 12:38, Donald Buczek wrote:
-> > >>>>>> 5. maybe don't hold reconfig_mutex when try to unregister
-> > >>>>>> sync_thread, like this.
-> > >>>>>>
-> > >>>>>>           /* resync has finished, collect result */
-> > >>>>>>           mddev_unlock(mddev);
-> > >>>>>>           md_unregister_thread(&mddev->sync_thread);
-> > >>>>>>           mddev_lock(mddev);
-> > >>>>> As above: While we wait for the sync thread to terminate, wouldn'=
-t it
-> > >>>>> be a problem, if another user space operation takes the mutex?
-> > >>>> I don't think other places can be blocked while hold mutex, otherw=
-ise
-> > >>>> these places can cause potential deadlock. Please try above two li=
-nes
-> > >>>> change. And perhaps others have better idea.
-> > >>> Yes, this works. No deadlock after >11000 seconds,
-> > >>>
-> > >>> (Time till deadlock from previous runs/seconds: 1723, 37, 434, 1265=
-,
-> > >>> 3500, 1136, 109, 1892, 1060, 664, 84, 315, 12, 820 )
-> > >> Great. I will send a formal patch with your reported-by and tested-b=
-y.
-> > >>
-> > >> Thanks,
-> > >> Guoqing
-> > > I'm still hitting this issue with Linux 5.4.229 -- it looks like 1/2
-> > > of the patches that supposedly resolve this were applied to the stabl=
-e
-> > > kernels, however, one was omitted due to a regression:
-> > > md: don't unregister sync_thread with reconfig_mutex held (upstream
-> > > commit 8b48ec23cc51a4e7c8dbaef5f34ebe67e1a80934)
-> > >
-> > > I don't see any follow-up on the thread from June 8th 2022 asking for
-> > > this patch to be dropped from all stable kernels since it caused a
-> > > regression.
-> > >
-> > > The patch doesn't appear to be present in the current mainline kernel
-> > > (6.3-rc2) either. So I assume this issue is still present there, or i=
-t
-> > > was resolved differently and I just can't find the commit/patch.
-> >
-> > It should be fixed by commit 9dfbdafda3b3"md: unlock mddev before reap
-> > sync_thread in action_store".
->
-> Okay, let me try applying that patch... it does not appear to be
-> present in my 5.4.229 kernel source. Thanks.
+Hi,
 
-Yes, applying this '9dfbdafda3b3 "md: unlock mddev before reap
-sync_thread in action_store"' patch on top of vanilla 5.4.229 source
-appears to fix the problem for me -- I can't reproduce the issue with
-the script, and it's been running for >24 hours now. (Previously I was
-able to induce the issue within a matter of minutes.)
+在 2023/03/17 10:30, kernel test robot 写道:
+> 
+> Greeting,
+> 
+> FYI, we noticed INFO:task_blocked_for_more_than#seconds due to commit (built with gcc-11):
+> 
+> commit: af2203c7e88c00d3ce072f18c18a36e2936372fd ("[PATCH v2 3/5] md: use md_thread api to wake up sync_thread")
+> url: https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-pass-a-md_thread-pointer-to-md_register_thread/20230315-142018
+> base: git://git.kernel.org/cgit/linux/kernel/git/song/md.git md-next
+> patch link: https://lore.kernel.org/all/20230315061810.653263-4-yukuai1@huaweicloud.com/
+> patch subject: [PATCH v2 3/5] md: use md_thread api to wake up sync_thread
+> 
 
+I don't expect there is any difference between:
 
->
-> --Marc
->
->
-> >
-> > Thanks,
-> > Guoqing
+if (mddev->sync_thread)
+	wake_up_process(mddev->sync_thread->tsk);
+
+and:
+
+md_wakeup_thread(mddev->sync_thread);
+
+I still don't understand the problem.. I'll try to reporduce this,
+untill them, I guess I'll just drop this patch.
+
+Thanks,
+Kuai
+> in testcase: mdadm-selftests
+> version: mdadm-selftests-x86_64-5f41845-1_20220826
+> with following parameters:
+> 
+> 	disk: 1HDD
+> 	test_prefix: 07revert
+> 
+> 
+> 
+> on test machine: 8 threads 1 sockets Intel(R) Core(TM) i7-4790T CPU @ 2.70GHz (Haswell) with 16G memory
+> 
+> caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
+> 
+> 
+> 
+> If you fix the issue, kindly add following tag
+> | Reported-by: kernel test robot <oliver.sang@intel.com>
+> | Link: https://lore.kernel.org/oe-lkp/202303170904.640a8ece-oliver.sang@intel.com
+> 
+> 
+> kern  :err   : [  990.133727] INFO: task mdadm:1040 blocked for more than 491 seconds.
+> kern  :err   : [  990.140824]       Tainted: G S                 6.3.0-rc1-00019-gaf2203c7e88c #1
+> kern  :err   : [  990.148856] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> kern  :info  : [  990.157410] task:mdadm           state:D stack:0     pid:1040  ppid:963    flags:0x00000000
+> kern  :info  : [  990.166483] Call Trace:
+> kern  :info  : [  990.169666]  <TASK>
+> kern :info : [  990.172504] __schedule (kernel/sched/core.c:5304 kernel/sched/core.c:6622)
+> kern :info : [  990.176810] ? io_schedule_timeout (kernel/sched/core.c:6504)
+> kern :info : [  990.181994] ? _raw_spin_lock_irqsave (arch/x86/include/asm/atomic.h:202 include/linux/atomic/atomic-instrumented.h:543 include/asm-generic/qspinlock.h:111 include/linux/spinlock.h:186 include/linux/spinlock_api_smp.h:111 kernel/locking/spinlock.c:162)
+> kern :info : [  990.187250] ? _raw_write_lock_irq (kernel/locking/spinlock.c:153)
+> kern :info : [  990.192255] schedule (arch/x86/include/asm/preempt.h:85 (discriminator 1) kernel/sched/core.c:6699 (discriminator 1))
+> kern :info : [  990.196291] do_md_stop (drivers/md/md.c:6364 (discriminator 29))
+> kern :info : [  990.200603] ? md_kick_rdev_from_array (drivers/md/md.c:6344)
+> kern :info : [  990.206111] ? add_ptr_to_bulk_krc_lock (arch/x86/include/asm/atomic.h:95 include/linux/atomic/atomic-instrumented.h:191 kernel/rcu/tree.c:3273)
+> kern :info : [  990.211711] ? cpuacct_stats_show (kernel/sched/wait.c:418)
+> kern :info : [  990.216787] ? schedule_delayed_monitor_work (arch/x86/include/asm/bitops.h:207 arch/x86/include/asm/bitops.h:239 include/asm-generic/bitops/instrumented-non-atomic.h:142 kernel/rcu/tree.c:3044)
+> kern :info : [  990.222736] ? __cond_resched (kernel/sched/core.c:8486)
+> kern :info : [  990.227292] ? mutex_lock_interruptible (arch/x86/include/asm/atomic64_64.h:190 include/linux/atomic/atomic-long.h:443 include/linux/atomic/atomic-instrumented.h:1781 kernel/locking/mutex.c:171 kernel/locking/mutex.c:981)
+> kern :info : [  990.232725] ? __mutex_lock_interruptible_slowpath (kernel/locking/mutex.c:978)
+> kern :info : [  990.239095] ? __mutex_unlock_slowpath+0x2a0/0x2a0
+> kern :info : [  990.245668] md_ioctl (drivers/md/md.c:7642)
+> kern :info : [  990.249809] ? hot_add_disk (drivers/md/md.c:7513)
+> kern :info : [  990.254360] ? __call_rcu_common+0x363/0x900
+> kern :info : [  990.260389] ? blkdev_bszset (block/ioctl.c:473)
+> kern :info : [  990.265047] ? rcu_nocb_gp_kthread (kernel/rcu/tree.c:2596)
+> kern :info : [  990.270224] ? __fput (include/linux/fs.h:2554 fs/internal.h:110 fs/file_table.c:328)
+> kern :info : [  990.274269] ? __cond_resched (kernel/sched/core.c:8486)
+> kern :info : [  990.278826] blkdev_ioctl (block/ioctl.c:615)
+> kern :info : [  990.283223] ? blkdev_common_ioctl (block/ioctl.c:560)
+> kern :info : [  990.288568] ? _raw_spin_lock (arch/x86/include/asm/atomic.h:202 include/linux/atomic/atomic-instrumented.h:543 include/asm-generic/qspinlock.h:111 include/linux/spinlock.h:186 include/linux/spinlock_api_smp.h:134 kernel/locking/spinlock.c:154)
+> kern :info : [  990.293139] ? _raw_write_lock_irq (kernel/locking/spinlock.c:153)
+> kern :info : [  990.298137] __x64_sys_ioctl (fs/ioctl.c:52 fs/ioctl.c:870 fs/ioctl.c:856 fs/ioctl.c:856)
+> kern :info : [  990.302800] do_syscall_64 (arch/x86/entry/common.c:50 arch/x86/entry/common.c:80)
+> kern :info : [  990.307108] entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:120)
+> kern  :info  : [  990.312889] RIP: 0033:0x7f00b07c8cc7
+> kern  :info  : [  990.317187] RSP: 002b:00007ffc27cbbc88 EFLAGS: 00000206 ORIG_RAX: 0000000000000010
+> kern  :info  : [  990.325483] RAX: ffffffffffffffda RBX: 0000000000000019 RCX: 00007f00b07c8cc7
+> kern  :info  : [  990.333342] RDX: 0000000000000000 RSI: 0000000000000932 RDI: 0000000000000004
+> kern  :info  : [  990.341195] RBP: 0000000000000004 R08: 0000000000000002 R09: 0000000000000000
+> kern  :info  : [  990.349044] R10: fffffffffffff28e R11: 0000000000000206 R12: 00007ffc27cbe994
+> kern  :info  : [  990.356888] R13: 0000000000000005 R14: 00007ffc27cbbd30 R15: 0000557160bdec10
+> kern  :info  : [  990.364750]  </TASK>
+> user  :err   : [ 1006.832241] Terminated
+> 
+> user  :notice: [ 1006.968217] /lkp/benchmarks/mdadm-selftests/tests/07revert-grow... FAILED - see /var/tmp/07revert-grow.log and /var/tmp/fail07revert-grow.log for details
+> 
+> user  :notice: [ 1007.123127] 07revert-grow TIMEOUT
+> 
+> user  :err   : [ 1008.444219] mdadm: cannot open /dev/md0: No such device
+> 
+> user  :notice: [ 1012.202178] test: please run test suite without running RAIDs environment.
+> 
+> user  :notice: [ 1017.437744] test: please run test suite without running RAIDs environment.
+> 
+> user  :notice: [ 1017.836121] /usr/bin/wget -q --timeout=1800 --tries=1 --local-encoding=UTF-8 http://internal-lkp-server:80/~lkp/cgi-bin/lkp-jobfile-append-var?job_file=/lkp/jobs/scheduled/lkp-hsw-d05/mdadm-selftests-1HDD-07revert-debian-11.1-x86_64-20220510.cgz-af2203c7e88c00d3ce072f18c18a36e2936372fd-20230317-32283-1997139-5.yaml&job_state=post_run -O /dev/null
+> 
+> user  :notice: [ 1019.573946] kill 528 vmstat --timestamp -n 10
+> 
+> user  :notice: [ 1019.588893] kill 526 dmesg --follow --decode
+> 
+> 
+> 
+> To reproduce:
+> 
+>          git clone https://github.com/intel/lkp-tests.git
+>          cd lkp-tests
+>          sudo bin/lkp install job.yaml           # job file is attached in this email
+>          bin/lkp split-job --compatible job.yaml # generate the yaml file for lkp run
+>          sudo bin/lkp run generated-yaml-file
+> 
+>          # if come across any failure that blocks the test,
+>          # please remove ~/.lkp and /lkp dir to run from a clean state.
+> 
+> 
+> 
+
