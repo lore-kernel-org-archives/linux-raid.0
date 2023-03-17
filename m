@@ -2,86 +2,95 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1916C6FD1D
-	for <linux-raid@archiver.kernel.org>; Fri, 17 Mar 2023 17:38:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC9CFC74A5B
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Mar 2023 20:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229787AbjCQRiT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 17 Mar 2023 13:38:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39780 "EHLO
+        id S229654AbjCQU7c (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Mar 2023 16:59:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229734AbjCQRiR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Mar 2023 13:38:17 -0400
-Received: from mail1.merlins.org (magic.merlins.org [209.81.13.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74C8528E56
-        for <linux-raid@vger.kernel.org>; Fri, 17 Mar 2023 10:38:13 -0700 (PDT)
-Received: from [76.132.34.178] (port=60048 helo=sauron.svh.merlins.org)
-        by mail1.merlins.org with esmtpsa 
-        (Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim 4.94.2 #2)
-        id 1pdD7j-0001BE-9O by authid <merlins.org> with srv_auth_plain; Fri, 17 Mar 2023 10:38:10 -0700
-Received: from merlin by sauron.svh.merlins.org with local (Exim 4.92)
-        (envelope-from <marc@merlins.org>)
-        id 1pdE1q-008yML-7l; Fri, 17 Mar 2023 10:38:10 -0700
-Date:   Fri, 17 Mar 2023 10:38:10 -0700
-From:   Marc MERLIN <marc@merlins.org>
-To:     linux-raid@vger.kernel.org
-Subject: mdadm --detail works, mdadm --stop says "does not appear to be an md
- device"
-Message-ID: <20230317173810.GW4049235@merlins.org>
+        with ESMTP id S229516AbjCQU7a (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Mar 2023 16:59:30 -0400
+Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E18FB367E2
+        for <linux-raid@vger.kernel.org>; Fri, 17 Mar 2023 13:59:01 -0700 (PDT)
+Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by mail.stoffel.org (Postfix) with ESMTPSA id 4837B1E131;
+        Fri, 17 Mar 2023 16:58:44 -0400 (EDT)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+        id ED228A84C1; Fri, 17 Mar 2023 16:58:43 -0400 (EDT)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Sysadmin: BOFH
-X-URL:  http://marc.merlins.org/
-X-Broken-Reverse-DNS: no host name for IP address 76.132.34.178
-X-SA-Exim-Connect-IP: 76.132.34.178
-X-SA-Exim-Mail-From: marc@merlins.org
+Content-Transfer-Encoding: 7bit
+Message-ID: <25620.54403.944889.209021@quad.stoffel.home>
+Date:   Fri, 17 Mar 2023 16:58:43 -0400
+From:   "John Stoffel" <john@stoffel.org>
+To:     Ronnie Lazar <ronnie.lazar@vastdata.com>
+Cc:     linux-raid@vger.kernel.org, Asaf Levy <asaf@vastdata.com>
+Subject: Re: Question about potential data consistency issues when writes failed
+ in mdadm raid1
+In-Reply-To: <CALM_6_s7=eyDWFkirzg6ifqeeeF6-bnZD8n7=3=V+fm_qc34AQ@mail.gmail.com>
+References: <CALM_6_s7=eyDWFkirzg6ifqeeeF6-bnZD8n7=3=V+fm_qc34AQ@mail.gmail.com>
+X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-gargamel:~# cat /proc/mdstat 
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath] 
-md6 : active raid5 sdn1[3](F) sdt1[0](F) sds1[1](F) sdq1[2](F)
-      23441547264 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/0] [_____]
-gargamel:~# mdadm --stop /dev/md6
-mdadm: /dev/md6 does not appear to be an md device
-gargamel:~# mdadm --detail /dev/md6
-/dev/md6:
-           Version : 1.2
-     Creation Time : Wed Jul  8 10:09:21 2020
-        Raid Level : raid5
-        Array Size : 23441547264 (22355.60 GiB 24004.14 GB)
-     Used Dev Size : 5860386816 (5588.90 GiB 6001.04 GB)
-      Raid Devices : 5
-     Total Devices : 4
-       Persistence : Superblock is persistent
+>>>>> "Ronnie" == Ronnie Lazar <ronnie.lazar@vastdata.com> writes:
 
-       Update Time : Fri Mar 17 09:17:28 2023
-             State : clean, FAILED 
-    Active Devices : 0
-    Failed Devices : 4
-     Spare Devices : 0
+> I'm trying to understand how mdadm protects against inconsistent data
+> read in the face of failures that occur while writing to a device that
+> has raid1.
 
-            Layout : left-symmetric
-        Chunk Size : 512K
+You need to give a better test case, with examples. 
 
-Consistency Policy : ppl
+> Here is the scenario: I have set up raid1 that has 2 mirrors. First
+> one is on local storage and the second is on remote storage.  The
+> remote storage mirror is configured with write-mostly.
 
-    Number   Major   Minor   RaidDevice State
-       -       0        0        0      removed
-       -       0        0        1      removed
-       -       0        0        2      removed
-       -       0        0        3      removed
-       -       0        0        4      removed
+Configuration details?  And what is the remote device?  
 
+> We have parallel jobs: 1 writing to an area on the device and the
+> other reading from that area.
 
-How do I clear this without a reboot?
+So you create /dev/md9 and are writing/reading from it, then the
+system crashes and you lose the local half of the mirror, right?
 
-gargamel:~# uname -r
-5.19.7
+> The write operation writes the data to the first mirror, and at that
+> point the read operation reads the new data from the first mirror.
 
+So how is your write succeeding if it's not written to both halves of
+the MD device?  You need to give more details and maybe even some
+example code showing what you're doing here. 
 
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
- 
-Home page: http://marc.merlins.org/                       | PGP 7F55D5F27AAF9D08
+> Now, before data has been written to the second (remote) mirror a
+> failure has occurred which caused the first machine to fail, When
+> the machine comes up, the data is recovered from the second, remote,
+> mirror.
+
+Ah... some more details.  It sounds like you have a system A which is
+writing to a SITE local remote device as well as a REMOTE site device
+in the MD mirror, is this correct?  
+
+Are these iSCSI devices?  FibreChannel?  NBD devices?  More details
+please.
+
+> Now when reading from this area, the users will receive the older
+> value, even though, in the first read they got the newer value that
+> was written.
+
+> Does mdadm protect against this inconsistency?
+
+It shouldn't be returning success on the write until both sides of the
+mirror are updated.  But we can't really tell until you give more
+details and an example.
+
+I assume you're not building a RAID1 device and then writing to the
+individual devices behind it's back or something silly like that,
+right? 
+
+John
+
