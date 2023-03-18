@@ -2,95 +2,107 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC9CFC74A5B
-	for <linux-raid@archiver.kernel.org>; Fri, 17 Mar 2023 20:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB847C6FD1D
+	for <linux-raid@archiver.kernel.org>; Sat, 18 Mar 2023 02:32:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229654AbjCQU7c (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 17 Mar 2023 16:59:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52128 "EHLO
+        id S229963AbjCRCcC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Mar 2023 22:32:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbjCQU7a (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Mar 2023 16:59:30 -0400
-Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E18FB367E2
-        for <linux-raid@vger.kernel.org>; Fri, 17 Mar 2023 13:59:01 -0700 (PDT)
-Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by mail.stoffel.org (Postfix) with ESMTPSA id 4837B1E131;
-        Fri, 17 Mar 2023 16:58:44 -0400 (EDT)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-        id ED228A84C1; Fri, 17 Mar 2023 16:58:43 -0400 (EDT)
+        with ESMTP id S229769AbjCRCcB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Mar 2023 22:32:01 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7BF57E8BB;
+        Fri, 17 Mar 2023 19:31:59 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PdlPk5lsSz4f3jXk;
+        Sat, 18 Mar 2023 10:31:54 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgDn4R+YIhVkDZF0FA--.28358S3;
+        Sat, 18 Mar 2023 10:31:54 +0800 (CST)
+Subject: Re: [PATCH v2 3/5] md: use md_thread api to wake up sync_thread
+To:     Yu Kuai <yukuai1@huaweicloud.com>,
+        kernel test robot <oliver.sang@intel.com>
+Cc:     oe-lkp@lists.linux.dev, lkp@intel.com, linux-raid@vger.kernel.org,
+        agk@redhat.com, snitzer@kernel.org, song@kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, logang@deltatee.com, guoqing.jiang@linux.dev,
+        pmenzel@molgen.mpg.de, "yukuai (C)" <yukuai3@huawei.com>
+References: <202303170904.640a8ece-oliver.sang@intel.com>
+ <3e171048-060f-af7c-35ec-76fad4fb6f08@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <89b8377c-e953-f5c5-0ad9-d7b426f1a371@huaweicloud.com>
+Date:   Sat, 18 Mar 2023 10:31:52 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <25620.54403.944889.209021@quad.stoffel.home>
-Date:   Fri, 17 Mar 2023 16:58:43 -0400
-From:   "John Stoffel" <john@stoffel.org>
-To:     Ronnie Lazar <ronnie.lazar@vastdata.com>
-Cc:     linux-raid@vger.kernel.org, Asaf Levy <asaf@vastdata.com>
-Subject: Re: Question about potential data consistency issues when writes failed
- in mdadm raid1
-In-Reply-To: <CALM_6_s7=eyDWFkirzg6ifqeeeF6-bnZD8n7=3=V+fm_qc34AQ@mail.gmail.com>
-References: <CALM_6_s7=eyDWFkirzg6ifqeeeF6-bnZD8n7=3=V+fm_qc34AQ@mail.gmail.com>
-X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
+In-Reply-To: <3e171048-060f-af7c-35ec-76fad4fb6f08@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgDn4R+YIhVkDZF0FA--.28358S3
+X-Coremail-Antispam: 1UD129KBjvdXoWruw4kKr17GF1Duw1rtr4xZwb_yoWkuFcEgr
+        45uryfWFy3Cw13Kr1vy34avrsxtw15AFy8XrWxJFW7tr12gF98WFs3Zr90y3Z3Z3ykCryj
+        yryrZrZruws8ujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb3kFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
+        Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY
+        04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+        v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+        1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+        AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0D
+        MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
+        VFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
->>>>> "Ronnie" == Ronnie Lazar <ronnie.lazar@vastdata.com> writes:
+Hi,
 
-> I'm trying to understand how mdadm protects against inconsistent data
-> read in the face of failures that occur while writing to a device that
-> has raid1.
+在 2023/03/17 11:30, Yu Kuai 写道:
+> Hi,
+> 
+> 在 2023/03/17 10:30, kernel test robot 写道:
+>>
+>> Greeting,
+>>
+>> FYI, we noticed INFO:task_blocked_for_more_than#seconds due to commit 
+>> (built with gcc-11):
+>>
+>> commit: af2203c7e88c00d3ce072f18c18a36e2936372fd ("[PATCH v2 3/5] md: 
+>> use md_thread api to wake up sync_thread")
+>> url: 
+>> https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-pass-a-md_thread-pointer-to-md_register_thread/20230315-142018 
+>>
+>> base: git://git.kernel.org/cgit/linux/kernel/git/song/md.git md-next
+>> patch link: 
+>> https://lore.kernel.org/all/20230315061810.653263-4-yukuai1@huaweicloud.com/ 
+>>
+>> patch subject: [PATCH v2 3/5] md: use md_thread api to wake up 
+>> sync_thread
+>>
+> 
+> I don't expect there is any difference between:
+> 
+> if (mddev->sync_thread)
+>      wake_up_process(mddev->sync_thread->tsk);
+> 
+> and:
+> 
+> md_wakeup_thread(mddev->sync_thread);
 
-You need to give a better test case, with examples. 
+I understand that they are different now.
 
-> Here is the scenario: I have set up raid1 that has 2 mirrors. First
-> one is on local storage and the second is on remote storage.  The
-> remote storage mirror is configured with write-mostly.
+md_wakeup_thread() only wakeup wait_event() from md_thread(), it will
+not wake up 'md_thread->tsk' if it's runing.
 
-Configuration details?  And what is the remote device?  
+Hence this patch is wrong.
 
-> We have parallel jobs: 1 writing to an area on the device and the
-> other reading from that area.
-
-So you create /dev/md9 and are writing/reading from it, then the
-system crashes and you lose the local half of the mirror, right?
-
-> The write operation writes the data to the first mirror, and at that
-> point the read operation reads the new data from the first mirror.
-
-So how is your write succeeding if it's not written to both halves of
-the MD device?  You need to give more details and maybe even some
-example code showing what you're doing here. 
-
-> Now, before data has been written to the second (remote) mirror a
-> failure has occurred which caused the first machine to fail, When
-> the machine comes up, the data is recovered from the second, remote,
-> mirror.
-
-Ah... some more details.  It sounds like you have a system A which is
-writing to a SITE local remote device as well as a REMOTE site device
-in the MD mirror, is this correct?  
-
-Are these iSCSI devices?  FibreChannel?  NBD devices?  More details
-please.
-
-> Now when reading from this area, the users will receive the older
-> value, even though, in the first read they got the newer value that
-> was written.
-
-> Does mdadm protect against this inconsistency?
-
-It shouldn't be returning success on the write until both sides of the
-mirror are updated.  But we can't really tell until you give more
-details and an example.
-
-I assume you're not building a RAID1 device and then writing to the
-individual devices behind it's back or something silly like that,
-right? 
-
-John
+Thanks,
+Kuai
 
