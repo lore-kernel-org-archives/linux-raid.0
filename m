@@ -2,85 +2,124 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E329C7618A
-	for <linux-raid@archiver.kernel.org>; Sun, 19 Mar 2023 19:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B579FC6FD1F
+	for <linux-raid@archiver.kernel.org>; Sun, 19 Mar 2023 22:06:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229575AbjCSTwN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 19 Mar 2023 15:52:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60454 "EHLO
+        id S229913AbjCSWGF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 19 Mar 2023 18:06:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229599AbjCSTwL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 19 Mar 2023 15:52:11 -0400
-Received: from mail-oa1-x2d.google.com (mail-oa1-x2d.google.com [IPv6:2001:4860:4864:20::2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADBE119107
-        for <linux-raid@vger.kernel.org>; Sun, 19 Mar 2023 12:52:10 -0700 (PDT)
-Received: by mail-oa1-x2d.google.com with SMTP id 586e51a60fabf-17e140619fdso2639978fac.11
-        for <linux-raid@vger.kernel.org>; Sun, 19 Mar 2023 12:52:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679255529;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=kpy44NKFgUe8Oq1ABLakQSHcc2YAnxnOySx04vvfn3M=;
-        b=J8ba+SBgNZrE7U35ivv1vCssm7npFPlFDRARkWqchaitEy+mP0q5OInYNnhp9k/nG3
-         u3zn0XV7Ryff987hlgLk5+qGH15yTVGF5e2V5OiyFO0moq8p0W2sHHNWz6B2Nk2G+02U
-         kqHFdQqaJ0LVzEe4TAE89q6VvDGLfpqbauHV2WY0ybGbVQEZM6Xbfl6P33MKDW6e0OXy
-         C2Zf1txpY/5SSt7BU6jvsx6Ylk/p8n61ERhCO7L2sDk7qtRPdFt/DWG1iUFgXNHJ9Dhd
-         RqdNeroQKDbFNvgQGJJvULONcD7n0Bh9Cs4PDYxB2vk0RfMF1t4vY1LO9abypSfi99+7
-         xiuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679255529;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=kpy44NKFgUe8Oq1ABLakQSHcc2YAnxnOySx04vvfn3M=;
-        b=XMYc0KebujXIH7GVCx38Q58LaIOCQkRreVymMPi9Ot+boOsb+1a2P9mk2xOa4FHkeE
-         a9P3rgnjzVhng7rYrq0iwSeTRmOVY0Se8+V8s2ALJDqX5maLle+L/NATeVxiKJQKfjd3
-         WUnnVf52ZeOEFHIDm3Ztm8KvNIEvlHM0LVoYHm5G20WtpgJWBuc5uAw9Mciyi/omGpZk
-         zNx9hhEE30mLuETPO16h/MR4ig4Dju6cRJ5r9wGMybWE88VDh1H5S3LCISU43OLp6ATn
-         B6Zz5zbC1earsWyjj5+0X5vla13QeC2wOTNhIfdu/pGp56ybVdFzSbCQNV/C/A3wTZCD
-         0k2Q==
-X-Gm-Message-State: AO0yUKUN5FpXZYuR3hviAEh+/tsTTUVXnXn47Oq6VzKPaEaJii8+Vns0
-        WNtE+xzLNmnIljpuYvNO85o=
-X-Google-Smtp-Source: AK7set9qW2L6wBx0Z7t8iOomKbh9Hg7ZajJnEqBc8+3D2VNEIjQgQbW18LvYHmT33DpIxfPlPLsU8A==
-X-Received: by 2002:a05:6870:2389:b0:17a:c141:ffdc with SMTP id e9-20020a056870238900b0017ac141ffdcmr3452137oap.58.1679255529461;
-        Sun, 19 Mar 2023 12:52:09 -0700 (PDT)
-Received: from [192.168.3.92] ([47.189.247.51])
-        by smtp.gmail.com with ESMTPSA id zh17-20020a0568716b9100b0017281100b75sm2677651oab.42.2023.03.19.12.52.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 19 Mar 2023 12:52:09 -0700 (PDT)
-Message-ID: <f3b25d87-0ab7-3f74-c6ed-da1cc04db97f@gmail.com>
-Date:   Sun, 19 Mar 2023 14:52:08 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: Renaming md raid and moving md raid to a different machine.
-Content-Language: en-US
-To:     Reindl Harald <h.reindl@thelounge.net>,
-        Linux Raid <linux-raid@vger.kernel.org>
-References: <f237651e-536a-e305-8c1c-475e4c14d906@gmail.com>
- <97945e22-f0d4-96d7-ef66-284ae6f8b016@gmail.com>
- <07163ff3-9e2b-72be-8de2-e4d5e9127e36@thelounge.net>
-From:   Ram Ramesh <rramesh2400@gmail.com>
-In-Reply-To: <07163ff3-9e2b-72be-8de2-e4d5e9127e36@thelounge.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        with ESMTP id S229565AbjCSWGE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 19 Mar 2023 18:06:04 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87A62E4
+        for <linux-raid@vger.kernel.org>; Sun, 19 Mar 2023 15:06:02 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 1C61621B47;
+        Sun, 19 Mar 2023 22:06:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1679263560; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3+Pr7veiLqInyjkMeBPNeLnIToaPNTyarZNUtX3lKPU=;
+        b=rQGC5PC4OCn+/rpH8E6L3gQ6SQHdOILyGtF+CFRjTY1YZz0PJ4ECs8I740/V7jirWUxVQz
+        zA1C1omiyzSLE/murD3XUc3xvsY/ffMhWKclC29KKCaAxb8eRfyRo/rm8s9l/NOhMuYrEr
+        we/F3DQ/NDwmNPKazputH6oNUnlIRjY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1679263560;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3+Pr7veiLqInyjkMeBPNeLnIToaPNTyarZNUtX3lKPU=;
+        b=q969iNmNHitw23UbipzNwDQfnrCnFhhKIKs4vxtW8IQli2DJs/3w61yzAtt6jMwaOUPrIc
+        811g5JX+0haKZaDw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3AE42133E6;
+        Sun, 19 Mar 2023 22:05:57 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id ywgoN0WHF2RPZQAAMHmgww
+        (envelope-from <neilb@suse.de>); Sun, 19 Mar 2023 22:05:57 +0000
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Jes Sorensen" <jes@trained-monkey.org>
+Cc:     linux-raid@vger.kernel.org, "Martin Wilck" <martin.wilck@suse.com>,
+        "Mariusz Tkaczyk" <mariusz.tkaczyk@intel.com>,
+        "Paul Menzel" <pmenzel@molgen.mpg.de>
+Subject: Re: [PATCH 2/6] Improvements for IMSM_NO_PLATFORM testing.
+In-reply-to: <e2256aca-b2a1-344c-8dc4-f00d849530eb@trained-monkey.org>
+References: <167867886675.11443.523512156999408649.stgit@noble.brown>,
+ <167867897868.11443.7240557073570592164.stgit@noble.brown>,
+ <e2256aca-b2a1-344c-8dc4-f00d849530eb@trained-monkey.org>
+Date:   Mon, 20 Mar 2023 09:05:54 +1100
+Message-id: <167926355421.8008.15837133562162816477@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/19/23 14:29, Reindl Harald wrote:
-
-> * create new arrays
-> * mount both on the new machine (1 disk is enough for RAID1)
-> * use dd
+On Mon, 20 Mar 2023, Jes Sorensen wrote:
+> On 3/12/23 23:42, NeilBrown wrote:
+> > Factor out IMSM_NO_PLATFORM testing into a single function that caches
+> > the result.
+> > 
+> > Allow mdmon to explicitly set the result to "1" so that we don't need
+> > the ENV var in the unit file
+> > 
+> > Check if the kernel command line contains "mdadm.imsm.test=1" and in
+> > that case assert NO_PLATFORM.  This simplifies testing in a virtual
+> > machine.
+> > 
+> > Signed-off-by: NeilBrown <neilb@suse.de>
+> > ---
+> >  mdadm.h                |    2 ++
+> >  mdmon.c                |    6 ++++++
+> >  super-intel.c          |   43 ++++++++++++++++++++++++++++++++++++++++---
+> >  systemd/mdmon@.service |    3 ---
+> >  4 files changed, 48 insertions(+), 6 deletions(-)
 > 
+> Hi Neil
+> 
+> > diff --git a/super-intel.c b/super-intel.c
+> > index e155a8ae99cb..a514dea6f95c 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -629,6 +629,43 @@ static const char *_sys_dev_type[] = {
+> >  	[SYS_DEV_VMD] = "VMD"
+> >  };
+> >  
+> > +static int no_platform = -1;
+> > +
+> > +static int check_no_platform(void)
+> > +{
+> > +	static const char search[] = "mdadm.imsm.test=1";
+> > +	int fd;
+> > +	char buf[1024];
+> 
+> This isn't safe, /proc/cmdline can be longer than 1024 characters.
 
-Mmmm... I need to move 6 disk RAID6 and not RAID1. For now RAID1 will 
-stay with old machine. Also, I am trying to avoid coping 24TB of files 
-(if possible) as we are talking about 3 days of copying or resyncing.
+Why not safe?  I agree that /proc/cmdline can be longer than 1024 but the
+only only considers the first 1023 at most, and does so safely.
+
+What would you prefer?  Should I use conf_line() to read the line and
+split it into words for us?
+
+Thanks,
+NeilBrown
 
 
-Regards
-Ramesh
+> 
+> Cheers,
+> Jes
+> 
+> 
 
