@@ -2,74 +2,106 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8326AC6FD1F
-	for <linux-raid@archiver.kernel.org>; Sun, 19 Mar 2023 16:37:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB427C6FD1F
+	for <linux-raid@archiver.kernel.org>; Sun, 19 Mar 2023 18:58:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229782AbjCSQhK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 19 Mar 2023 12:37:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42684 "EHLO
+        id S229896AbjCSS6p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 19 Mar 2023 14:58:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231220AbjCSQgv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 19 Mar 2023 12:36:51 -0400
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCED0CC38;
-        Sun, 19 Mar 2023 09:36:39 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1679243770; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=TWvfcLdvxEd52WkBg3U/j4DiJl8lCvHmTYCTaXaxvuLIFEsK1Q2CGu2adphLmTN3yuniACFaUGp8ZvE2yd3uxm4l6yOIAUT9NJx+hY+qaF+AQFU5jWn1JKS46A/g3m3+P60M6480Hgu2dYvox0ULTfc/gHigU3EQsbGQjJWOJy4=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1679243770; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=1+gnTKfJVBMgMmDYlGD4RzHzJLRW5Xx60pBV+z1t9SQ=; 
-        b=fNlvK8g85iV6YtYscore9bLeYEttHcK0wE66ybbzFU/tBEwXEM1AYvdIZKds8+oQaMZoOmWK0JngX5VzeXZgmU/Xn3AQ/J1dU6YVQIczZICHJ5dJ1NV1Eowsy79wCQK1Dx4Mn5f0x3q/SxH02tWJJSoUrdlCv2+Fpi41bVNMp8U=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 16792437681711020.1266679224117; Sun, 19 Mar 2023 17:36:08 +0100 (CET)
-Message-ID: <318ff554-0694-64e1-72bd-d941a775a16f@trained-monkey.org>
-Date:   Sun, 19 Mar 2023 12:36:06 -0400
+        with ESMTP id S229881AbjCSS6n (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 19 Mar 2023 14:58:43 -0400
+Received: from mail-ot1-x32b.google.com (mail-ot1-x32b.google.com [IPv6:2607:f8b0:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 957A61ABF8
+        for <linux-raid@vger.kernel.org>; Sun, 19 Mar 2023 11:58:41 -0700 (PDT)
+Received: by mail-ot1-x32b.google.com with SMTP id x22-20020a056830409600b0069b30fb38f7so5663731ott.5
+        for <linux-raid@vger.kernel.org>; Sun, 19 Mar 2023 11:58:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1679252321;
+        h=content-transfer-encoding:in-reply-to:references:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=h8gi0Sx95U9sxH8+ztTyhwo4Vx5QgLBI65NQfgDcp7A=;
+        b=dlavt5EnW9FPE5lcvtAYQQzAGsmLNK/jPOxjCZbSP3ApIMU2KcDEtZr4OIS5TeRaPJ
+         xM11KwfT3iwZe0ndhdsT1UAkJEFt515tEoRuEzdAkV9Hg68RMQ3PbMhd3Bhh1TvaFth/
+         tUUO9b3tXR/s7KK+3wV7Y++WMsjl37ZgBiIm9HohYX8KC09e63+kxaU522CtXCAsf+fP
+         fyZ8289zICsXs4awt+l772BDRaNSrS02Glsdnz5AyFbcFgmDSX2o8Xi1vQ8qg5RTiTQT
+         9goQ7GZaV5OpsTDfShNMdmyp3M0zq1lkIjVJiSAy9emnPWBbf6crVfIz8/k6r9in++K5
+         r8OQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679252321;
+        h=content-transfer-encoding:in-reply-to:references:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=h8gi0Sx95U9sxH8+ztTyhwo4Vx5QgLBI65NQfgDcp7A=;
+        b=62oYPuPlSgkdzU4CZNO7UCwb2KR0jf73AqQXY4rOyzxr4P6BK0INSqvGtrOmEC8Hvd
+         NpKtGP02PPW34n5jF7DM/B4sc9A/LNz/ek0Jq899/cU5eLwnTeUhTJ3UTibIuiSiaAtH
+         6mf5gvRt+zRXgppWXLd56KxUAr8SmWfJi1ZNzx1Gi2xpaiL7eVxRTe0YVPB1haY8yNUK
+         w2YTCUiiz+EGxdqZdORb7AL0arEILB56zY3V5IlTKLAFI5cGceAU7s94MDlG7sjnu3tF
+         /Hc7lKaviFVuvcsuY8iDC0SdnwoD8adlR1VvuqI79R1LCUAe51FqZuMLj80kAAIoj3WY
+         fDCA==
+X-Gm-Message-State: AO0yUKViYkwVy275wo6MqOBWm9N9dZlYNOmTXlJ4jgl3CI4mQ594rvpF
+        wBMh0p3XQOMAwibS+oAb0MzrqnyQNpk=
+X-Google-Smtp-Source: AK7set/Y1ve9eKcrDkOS6FiEAnyL8wlrTq1W5GN5PexWRbGv00DBGHpijelOTMIehPA5xORjHTywEA==
+X-Received: by 2002:a05:6830:22cd:b0:69d:2629:fe5d with SMTP id q13-20020a05683022cd00b0069d2629fe5dmr3005024otc.37.1679252320851;
+        Sun, 19 Mar 2023 11:58:40 -0700 (PDT)
+Received: from [192.168.3.92] ([47.189.247.51])
+        by smtp.gmail.com with ESMTPSA id f15-20020a9d5f0f000000b0068bd6cf405dsm977004oti.1.2023.03.19.11.58.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 19 Mar 2023 11:58:40 -0700 (PDT)
+Message-ID: <97945e22-f0d4-96d7-ef66-284ae6f8b016@gmail.com>
+Date:   Sun, 19 Mar 2023 13:58:40 -0500
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
+ Thunderbird/102.6.0
+Subject: Renaming md raid and moving md raid to a different machine.
 Content-Language: en-US
-To:     NeilBrown <neilb@suse.de>
-Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Song Liu <song@kernel.org>,
-        Linux regressions mailing list <regressions@lists.linux.dev>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Nikolay Kichukov <hijacker@oldum.net>
-References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
-Content-Type: text/plain; charset=UTF-8
+From:   Ram Ramesh <rramesh2400@gmail.com>
+To:     Linux Raid <linux-raid@vger.kernel.org>
+References: <f237651e-536a-e305-8c1c-475e4c14d906@gmail.com>
+In-Reply-To: <f237651e-536a-e305-8c1c-475e4c14d906@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/13/23 20:06, NeilBrown wrote:
-> 
-> mdopen() will use create_named_array() to ask the kernel to create the
-> given md array, but only if it is given a number or name.
-> If it is NOT given a name and is required to choose one itself using
-> find_free_devnm() it does NOT use create_named_array().
-> 
-> On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result in
-> failure to assemble an array.  This can particularly seen when the
-> "name" of the array begins with a host name different to the name of the
-> host running the command.
-> 
-> So add the missing call to create_named_array().
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=217074
-> Signed-off-by: NeilBrown <neilb@suse.de>
+Hi,
 
-Applied!
+   My primary DVR is old and I need to move it to more recent hardware. 
+I have two md raids (a raid1 and another raid6) called /dev/md0 and 
+/dev/md1. I plan to have root on the new machine on raid1 and thus I 
+like to rename my /dev/md0 to /dev/md1 in the old machine before I move 
+it to the new machine. After that I want to move the disks in the most 
+recommended way to minimize the chance of loss.
 
-Thanks,
-Jes
+   Since the data is large and usually contains recordings and videos 
+that have backup on Hulu/Ultraviolet, I worry less about backup. Still 
+it will be big task to repopulate all my data from the source and 
+therefore prefer not to do stupid things and loose the data.
 
+  Online search showed me a way to rename using just mdadm.conf and that 
+did not work at all. In fact it messed up my raid6 that I had a panic 
+for a short time. Luckily, I got everything back working normally. So, I 
+am not sure which one of the online instructions to follow to rename my 
+/dev/md0 to /dev/md1 before the move. So, I thought best to ask here.
+
+   Also, once I renamed /dev/md0 to /dev/md1, I want to move all 6 disks 
+in raid6 to the new machine. What is the correct procedure so that after 
+the movement, I will be able to reboot both the old machine without 
+raid6 (ie /dev/md1)and the new machine with the moved disks as /dev/md1? 
+Ideally, I like to teach my old machine to forget /dev/md1 that I want 
+to move and not touch the disks. If I do not do that, I am afraid my 
+reboot (of the old machine) will get stuck at some point trying to look 
+for the missing disks/md. All online tutorial talks about how to 
+assemble on new machine. Does not talk about gracefully removing an md 
+from an old machine. I want to know if there is any trick to this other 
+than shutting down and pulling all disks and rebooting.
+
+   Old host runs debian bullseye (linux 5.19, mdadm v4.1) and new will 
+run debian testing/bookworm (linux 6.1,  mdadm v4.2).  Let me know if 
+you need anymore information.
+
+Thanks and Regards
+Ramesh
 
