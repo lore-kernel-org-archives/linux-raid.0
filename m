@@ -2,124 +2,98 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B579FC6FD1F
-	for <linux-raid@archiver.kernel.org>; Sun, 19 Mar 2023 22:06:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 487A7C6FD1F
+	for <linux-raid@archiver.kernel.org>; Sun, 19 Mar 2023 22:10:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbjCSWGF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 19 Mar 2023 18:06:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59958 "EHLO
+        id S230299AbjCSWKG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 19 Mar 2023 18:10:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229565AbjCSWGE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 19 Mar 2023 18:06:04 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87A62E4
-        for <linux-raid@vger.kernel.org>; Sun, 19 Mar 2023 15:06:02 -0700 (PDT)
+        with ESMTP id S230336AbjCSWJw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 19 Mar 2023 18:09:52 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0F2D6E99;
+        Sun, 19 Mar 2023 15:09:50 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 1C61621B47;
-        Sun, 19 Mar 2023 22:06:00 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 2BD2B1FFD4;
+        Sun, 19 Mar 2023 22:09:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1679263560; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1679263789; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=3+Pr7veiLqInyjkMeBPNeLnIToaPNTyarZNUtX3lKPU=;
-        b=rQGC5PC4OCn+/rpH8E6L3gQ6SQHdOILyGtF+CFRjTY1YZz0PJ4ECs8I740/V7jirWUxVQz
-        zA1C1omiyzSLE/murD3XUc3xvsY/ffMhWKclC29KKCaAxb8eRfyRo/rm8s9l/NOhMuYrEr
-        we/F3DQ/NDwmNPKazputH6oNUnlIRjY=
+        bh=UcKLt9U/8xQce8s4ATm4ybC+SdRvSBXCW4Wo7iUVV4Y=;
+        b=xOhX2Fn3Rz0w79oprPw6eDEjcxfpAAdKSGioQy3Eua+t4gyUGYOPjd+kNDvvxW2K7uFQoL
+        o/lipuAkByPwD2f0KnfQQi+CK65h25DLTXQZ+zgh5/zQ5J/HJ0Izg2NaJ9f/bF+TJ9UA1A
+        vobz0qK6NTIm9Eeh4CZzGz6gGqFFmjk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1679263560;
+        s=susede2_ed25519; t=1679263789;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=3+Pr7veiLqInyjkMeBPNeLnIToaPNTyarZNUtX3lKPU=;
-        b=q969iNmNHitw23UbipzNwDQfnrCnFhhKIKs4vxtW8IQli2DJs/3w61yzAtt6jMwaOUPrIc
-        811g5JX+0haKZaDw==
+        bh=UcKLt9U/8xQce8s4ATm4ybC+SdRvSBXCW4Wo7iUVV4Y=;
+        b=8E6F9s1CZxZzY3OwRJdytAQJH8uxScPdOzRAFxP1klgfgnCCdKdIIhPNP82cX3zVzGrURD
+        LP0Mw2FkwYugcRAA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3AE42133E6;
-        Sun, 19 Mar 2023 22:05:57 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A9CB1133E6;
+        Sun, 19 Mar 2023 22:09:46 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id ywgoN0WHF2RPZQAAMHmgww
-        (envelope-from <neilb@suse.de>); Sun, 19 Mar 2023 22:05:57 +0000
+        id BUPYFyqIF2SVZgAAMHmgww
+        (envelope-from <neilb@suse.de>); Sun, 19 Mar 2023 22:09:46 +0000
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
 From:   "NeilBrown" <neilb@suse.de>
 To:     "Jes Sorensen" <jes@trained-monkey.org>
-Cc:     linux-raid@vger.kernel.org, "Martin Wilck" <martin.wilck@suse.com>,
-        "Mariusz Tkaczyk" <mariusz.tkaczyk@intel.com>,
-        "Paul Menzel" <pmenzel@molgen.mpg.de>
-Subject: Re: [PATCH 2/6] Improvements for IMSM_NO_PLATFORM testing.
-In-reply-to: <e2256aca-b2a1-344c-8dc4-f00d849530eb@trained-monkey.org>
-References: <167867886675.11443.523512156999408649.stgit@noble.brown>,
- <167867897868.11443.7240557073570592164.stgit@noble.brown>,
- <e2256aca-b2a1-344c-8dc4-f00d849530eb@trained-monkey.org>
-Date:   Mon, 20 Mar 2023 09:05:54 +1100
-Message-id: <167926355421.8008.15837133562162816477@noble.neil.brown.name>
+Cc:     "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>,
+        "Song Liu" <song@kernel.org>,
+        "Linux regressions mailing list" <regressions@lists.linux.dev>,
+        "linux-raid" <linux-raid@vger.kernel.org>,
+        "LKML" <linux-kernel@vger.kernel.org>,
+        "Nikolay Kichukov" <hijacker@oldum.net>
+Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
+In-reply-to: <318ff554-0694-64e1-72bd-d941a775a16f@trained-monkey.org>
+References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>,
+ <318ff554-0694-64e1-72bd-d941a775a16f@trained-monkey.org>
+Date:   Mon, 20 Mar 2023 09:09:43 +1100
+Message-id: <167926378352.8008.3450187952660050637@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 On Mon, 20 Mar 2023, Jes Sorensen wrote:
-> On 3/12/23 23:42, NeilBrown wrote:
-> > Factor out IMSM_NO_PLATFORM testing into a single function that caches
-> > the result.
+> On 3/13/23 20:06, NeilBrown wrote:
 > > 
-> > Allow mdmon to explicitly set the result to "1" so that we don't need
-> > the ENV var in the unit file
+> > mdopen() will use create_named_array() to ask the kernel to create the
+> > given md array, but only if it is given a number or name.
+> > If it is NOT given a name and is required to choose one itself using
+> > find_free_devnm() it does NOT use create_named_array().
 > > 
-> > Check if the kernel command line contains "mdadm.imsm.test=1" and in
-> > that case assert NO_PLATFORM.  This simplifies testing in a virtual
-> > machine.
+> > On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result in
+> > failure to assemble an array.  This can particularly seen when the
+> > "name" of the array begins with a host name different to the name of the
+> > host running the command.
 > > 
+> > So add the missing call to create_named_array().
+> > 
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=217074
 > > Signed-off-by: NeilBrown <neilb@suse.de>
-> > ---
-> >  mdadm.h                |    2 ++
-> >  mdmon.c                |    6 ++++++
-> >  super-intel.c          |   43 ++++++++++++++++++++++++++++++++++++++++---
-> >  systemd/mdmon@.service |    3 ---
-> >  4 files changed, 48 insertions(+), 6 deletions(-)
 > 
-> Hi Neil
-> 
-> > diff --git a/super-intel.c b/super-intel.c
-> > index e155a8ae99cb..a514dea6f95c 100644
-> > --- a/super-intel.c
-> > +++ b/super-intel.c
-> > @@ -629,6 +629,43 @@ static const char *_sys_dev_type[] = {
-> >  	[SYS_DEV_VMD] = "VMD"
-> >  };
-> >  
-> > +static int no_platform = -1;
-> > +
-> > +static int check_no_platform(void)
-> > +{
-> > +	static const char search[] = "mdadm.imsm.test=1";
-> > +	int fd;
-> > +	char buf[1024];
-> 
-> This isn't safe, /proc/cmdline can be longer than 1024 characters.
+> Applied!
 
-Why not safe?  I agree that /proc/cmdline can be longer than 1024 but the
-only only considers the first 1023 at most, and does so safely.
+Thanks.
 
-What would you prefer?  Should I use conf_line() to read the line and
-split it into words for us?
+Do you have plans for releasing 4.3?  I'd like this patch to be in a
+numbered release for at least a few months before we change the kernel
+Kconfig to allow md to be built without CONFIG_BLOCK_LEGACY_AUTOLOAD.
 
 Thanks,
 NeilBrown
-
-
-> 
-> Cheers,
-> Jes
-> 
-> 
-
