@@ -2,65 +2,116 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18025C6FD1D
-	for <linux-raid@archiver.kernel.org>; Mon, 20 Mar 2023 06:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8CC9C7618A
+	for <linux-raid@archiver.kernel.org>; Mon, 20 Mar 2023 08:01:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229731AbjCTG0q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 20 Mar 2023 02:26:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54238 "EHLO
+        id S230229AbjCTIA7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 20 Mar 2023 04:00:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbjCTG0p (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Mar 2023 02:26:45 -0400
-Received: from mail-ua1-x92a.google.com (mail-ua1-x92a.google.com [IPv6:2607:f8b0:4864:20::92a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1883CE
-        for <linux-raid@vger.kernel.org>; Sun, 19 Mar 2023 23:26:44 -0700 (PDT)
-Received: by mail-ua1-x92a.google.com with SMTP id i22so7127299uat.8
-        for <linux-raid@vger.kernel.org>; Sun, 19 Mar 2023 23:26:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679293603;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=njiqQA3dfvPD7qZBDbsUICmcJeu2iJVZOJpThgLxyOA=;
-        b=Yq9TyE8vnJCN4jtwW3icT+6u8j2R6/1fC7wF98r8umKAqFc8xf2MioEIeYuee1AIsU
-         U/5lyA4rM39oF7l6sUcJW2EqvfmRtUsWHhC0WyUHzoWec/SmQXyd0g+Z+pSd5VPA0M2R
-         cBhfXx1BdQrVNFBthScc0sk6ynyh8jPVLK0nysPXTMhkj45aJHHv2U7dxTFQKyuChwqh
-         IC6T+I8IZerGA4q96/jRYGTK9utqaiJet4TK9rv3dNZvOPGpKfhQ2tJ8256+AG7mZkvO
-         ik9ZHHDXEf3bvNSZiIM9oc2WiZBeslb19LPryjAYZgrgIrLfRqdALSAotgAHQukJR3mH
-         wQow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679293603;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=njiqQA3dfvPD7qZBDbsUICmcJeu2iJVZOJpThgLxyOA=;
-        b=gewfshzoGbYkBa59FmPw95oh5GVAemqZS2hYr9D5UoPTksiLJHUjg9oao8oOO5pHsv
-         8A9sz2yZ8TVX19Q9vqV8Y4ld46eWyfZsJN0WDetVrg3x/FeUXgfrVXikQjt/81Gbcv92
-         Z7cmOK9k9Iq+5xgbjS2cRHMKIuZt+Rtpt9xU5kSTV4Gocex+0RuUT0+TjEjaVrA3vJqE
-         Geum3ugyc20cf1O9/Zs/r/r29plGEUc4d+HmL2JMg+0StUk6Hm8zQHAr3aBgMEmuZMFj
-         YonZ60xuRD6xmpGrlGGZviL34EahAHtXScMItyDpmL7APv2+/QzivRIpiNIR7AoSjQf+
-         vHMg==
-X-Gm-Message-State: AO0yUKWUU0791C4vF9GwuUY0bO3lEQ356Pva8F5HojN4jBBb6TPzSYD0
-        X6nWiNrC3Qu75xM5k0N5JyEbrdEDHtzuyGFqDnl463sVQ0MM8A==
-X-Google-Smtp-Source: AK7set9ZvMjtkjGnQwDh4aWBFihytbVw44RHNQLEH91Ib8r7bYdZVxWqWy1PsXWMEkQiymP2fApSHXU6a6xHgmDKvvE=
-X-Received: by 2002:a05:6130:325:b0:688:d612:2024 with SMTP id
- ay37-20020a056130032500b00688d6122024mr3948645uab.2.1679293603570; Sun, 19
- Mar 2023 23:26:43 -0700 (PDT)
+        with ESMTP id S229835AbjCTIA5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Mar 2023 04:00:57 -0400
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C90D912F31
+        for <linux-raid@vger.kernel.org>; Mon, 20 Mar 2023 01:00:54 -0700 (PDT)
+Received: from host81-156-202-200.range81-156.btcentralplus.com ([81.156.202.200] helo=[192.168.1.99])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1peARo-00084R-Eu;
+        Mon, 20 Mar 2023 08:00:52 +0000
+Message-ID: <46bab918-f683-d1e2-3409-46a2a03914d3@youngman.org.uk>
+Date:   Mon, 20 Mar 2023 08:00:52 +0000
 MIME-Version: 1.0
-References: <20230216044134.30581-1-kev.friedberg@gmail.com>
-In-Reply-To: <20230216044134.30581-1-kev.friedberg@gmail.com>
-From:   Kevin Friedberg <kev.friedberg@gmail.com>
-Date:   Mon, 20 Mar 2023 02:26:31 -0400
-Message-ID: <CAEJbB426WWdu5KESE1T+T0JHSKx3CGjUcpdZ5yhppsxyXNJDvw@mail.gmail.com>
-Subject: Re: [PATCH] enable RAID for SATA under VMD
-To:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com
-Cc:     Kevin Friedberg <kev.friedberg@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: Renaming md raid and moving md raid to a different machine.
+To:     Ram Ramesh <rramesh2400@gmail.com>,
+        Linux Raid <linux-raid@vger.kernel.org>
+References: <f237651e-536a-e305-8c1c-475e4c14d906@gmail.com>
+ <97945e22-f0d4-96d7-ef66-284ae6f8b016@gmail.com>
+ <7037738d-05e3-b277-61ed-37f66cfdef7e@youngman.org.uk>
+ <671da160-d5b3-8ed1-f7c1-672fa587ecad@gmail.com>
+ <029ada0e-2b85-8999-007b-65f3bfdbc034@youngman.org.uk>
+ <c4f58d3f-57a8-81ce-5a04-47744504a648@gmail.com>
+Content-Language: en-GB
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <c4f58d3f-57a8-81ce-5a04-47744504a648@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Mariusz,
+On 20/03/2023 00:34, Ram Ramesh wrote:
+> On 3/19/23 19:01, Wol wrote:
+>> On 19/03/2023 23:29, Ram Ramesh wrote:
+>>>>>    My primary DVR is old and I need to move it to more recent 
+>>>>> hardware. I have two md raids (a raid1 and another raid6) called 
+>>>>> /dev/md0 and /dev/md1. I plan to have root on the new machine on 
+>>>>> raid1 and thus I like to rename my /dev/md0 to /dev/md1 in the old 
+>>>>> machine before I move it to the new machine. After that I want to 
+>>>>> move the disks in the most recommended way to minimize the chance 
+>>>>> of loss.
+>>>>
+>>>> Do you have an mdadm.conf, or do the arrays auto-assemble without one?
+>>> I have mdadm.conf and each md is named in that file.
+>>>
+>>> ARRAY /dev/md/1 metadata=1.2 name=zym:md1 
+>>> UUID=0e9f76b5:4a89171a:a930bccd:78749144
+>>> ARRAY /dev/md2  metadata=1.2 name=zym:2 
+>>> UUID=d4e30060:d6395b41:dde52d2e:35ffa6fd
+>>
+>> Okay. May I suggest that
+>>
+>> (1) try getting rid of mdadm.conf - temporarily - and see if 
+>> everything boots fine.
+>>
+>> (2) see if you can hard-rename (as in force an update to the metadata) 
+>> the array to a named array eg something like "zym:data"
+>>
+>> If you can do (2), then (1) will boot and the array will come up as 
+>> /dev/md/data.
+>>
+>> At which point you will be able to move the disks across and 
+>> everything should "just work".
+>>
+>> Note that in the modern world your arrays should not be named md1, md2 
+>> etc, as I said. The default numbers count down from - as I said - I 
+>> think 127, and you're advised not to use numbers. I created my 
+>> original arrays as 0, 1, 2 and promptly found they came back as 127, 
+>> 126, and 125.
+>>
+>> I don't know whether advising you to "not have an mdadm.conf" is a 
+>> good idea, but I've never had one, and storing things like array name 
+>> in the metadata is much better than having it stored in an external file.
+>>
+>> And it means you won't have clashing names :-) Actually, if you use 
+>> mdadm.conf to rename the arrays you're moving up to md3 or md4, see if 
+>> they boot fine on the old system, and again you can then just dd your 
+>> system across, then move the raid drives across, and you shouldn't 
+>> have any problems.
+>>
+>> Cheers,
+>> Wol
+> 
+> Yes the names must be in the metadata of the md because I populate 
+> mdadm.conf after every change by actually using the output from mdadm 
+> --detail -scan. Since that comes up with md0/md1/md2, I assume somehow 
+> mdadm simply finds them again and again with exact same name.
 
-You mentioned on the previous version of this patch that it might be a
-while before it could be tested.  Have you had a chance to try this
-revision?
+Not necessarily. mdadm could (probably is) be reading mdadm.conf, 
+building the array using the name in mdadm.conf, and then rebuilding 
+mdadm.conf based on the name it got from mdadm.conf.
+> 
+> I do not ever get md127.
+> 
+If you boot with no mdadm.conf whatsoever? If that gives you md127, then 
+you can rename the arrays on the old system by messing with mdadm.conf.
+
+Also, it's just struck me, you're matching array to name using the UUID. 
+So, assuming that's the array UUID (what else could it be) when you dd 
+the root filesystem across and boot, that array should NOT be called 
+md0, because the UUIDs won't match.
+
+Cheers,
+Wol
