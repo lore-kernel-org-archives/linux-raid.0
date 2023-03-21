@@ -2,112 +2,166 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8271C761AF
-	for <linux-raid@archiver.kernel.org>; Tue, 21 Mar 2023 08:55:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39CB0C74A5B
+	for <linux-raid@archiver.kernel.org>; Tue, 21 Mar 2023 08:57:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230238AbjCUIzi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 21 Mar 2023 04:55:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38194 "EHLO
+        id S231338AbjCUI5f (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 21 Mar 2023 04:57:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230167AbjCUIz1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Mar 2023 04:55:27 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 041603A4C5;
-        Tue, 21 Mar 2023 01:54:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679388847; x=1710924847;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=F0Aai9BhaA5K1wsF4Vod4yMCaBMdeTGqMNHzQ0Ugzio=;
-  b=Q1LhLM1wue8K/BsguMAvD/cn4g4cPu0HWr4x57XRImMffNckW8sfxkEN
-   XnWXMgYdDziLuZKROqH/yzN/1+mGsNXtNpk4Xwd/5m3eWPlMVqUq+wNqH
-   K38Ho6h8acDQvaBR46IU/DLviS1raWVz5K4DR+Eninqt7J7i9/sbsO2xy
-   5jdfhrNGdsMLxinCRiOxxziSlFV1f7KcrOnOs1TlX1nOEOClrWoOEJ5TN
-   zMwZ0MIlLhqa/kIFpqavaZyDod3ee9BfU3h7ziUa8HXph2BDOUj61+xYf
-   zRcRzodrlp3HxzwvOCPyYzxbqcUmZAXjengkCFJJ3fhmRGBXMK/CmFKTG
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10655"; a="337605723"
-X-IronPort-AV: E=Sophos;i="5.98,278,1673942400"; 
-   d="scan'208";a="337605723"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2023 01:49:33 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10655"; a="770548037"
-X-IronPort-AV: E=Sophos;i="5.98,278,1673942400"; 
-   d="scan'208";a="770548037"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.37.33])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2023 01:49:30 -0700
-Date:   Tue, 21 Mar 2023 09:49:26 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Jes Sorensen <jes@trained-monkey.org>
-Cc:     NeilBrown <neilb@suse.de>, Song Liu <song@kernel.org>,
-        Linux regressions mailing list <regressions@lists.linux.dev>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Nikolay Kichukov <hijacker@oldum.net>
-Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
-Message-ID: <20230321094926.00007a38@linux.intel.com>
-In-Reply-To: <c36ee145-c258-5a02-f268-30c145996759@trained-monkey.org>
-References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
-        <318ff554-0694-64e1-72bd-d941a775a16f@trained-monkey.org>
-        <167926378352.8008.3450187952660050637@noble.neil.brown.name>
-        <c36ee145-c258-5a02-f268-30c145996759@trained-monkey.org>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229786AbjCUI5L (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Mar 2023 04:57:11 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96D24D52A
+        for <linux-raid@vger.kernel.org>; Tue, 21 Mar 2023 01:55:56 -0700 (PDT)
+Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4PglmH4hXnz9vTs;
+        Tue, 21 Mar 2023 16:54:55 +0800 (CST)
+Received: from localhost.localdomain (10.175.104.170) by
+ kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.21; Tue, 21 Mar 2023 16:55:15 +0800
+From:   Li Xiaokeng <lixiaokeng@huawei.com>
+To:     <jes@trained-monkey.org>, <mwilck@suse.com>,
+        <pmenzel@molgen.mpg.de>, <colyli@suse.de>,
+        <linux-raid@vger.kernel.org>
+CC:     <miaoguanqin@huawei.com>, <louhongxiang@huawei.com>,
+        lixiaokeng <lixiaokeng@huawei.com>
+Subject: [PATCH] Fix race of "mdadm --add" and "mdadm --incremental"
+Date:   Tue, 21 Mar 2023 16:55:00 +0800
+Message-ID: <20230321085500.867948-1-lixiaokeng@huawei.com>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.104.170]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemm600010.china.huawei.com (7.193.23.86)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, 20 Mar 2023 13:15:35 -0400
-Jes Sorensen <jes@trained-monkey.org> wrote:
+From: lixiaokeng <lixiaokeng@huawei.com>
 
-> On 3/19/23 18:09, NeilBrown wrote:
-> > On Mon, 20 Mar 2023, Jes Sorensen wrote:  
-> >> On 3/13/23 20:06, NeilBrown wrote:  
-> >>>
-> >>> mdopen() will use create_named_array() to ask the kernel to create the
-> >>> given md array, but only if it is given a number or name.
-> >>> If it is NOT given a name and is required to choose one itself using
-> >>> find_free_devnm() it does NOT use create_named_array().
-> >>>
-> >>> On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result in
-> >>> failure to assemble an array.  This can particularly seen when the
-> >>> "name" of the array begins with a host name different to the name of the
-> >>> host running the command.
-> >>>
-> >>> So add the missing call to create_named_array().
-> >>>
-> >>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=217074
-> >>> Signed-off-by: NeilBrown <neilb@suse.de>  
-> >>
-> >> Applied!  
-> > 
-> > Thanks.
-> > 
-> > Do you have plans for releasing 4.3?  I'd like this patch to be in a
-> > numbered release for at least a few months before we change the kernel
-> > Kconfig to allow md to be built without CONFIG_BLOCK_LEGACY_AUTOLOAD.  
-> 
-> No immediate plans, but no reason why we shouldn't do it. I think
-> Mariusz has some pending changes he wants to get in as well, like the
-> error number stuff.
-> 
-> So lets make this a call for submitting changes for mdadm that are
-> needed for the next release.
-> 
+When we add a new disk to a raid, it may return -EBUSY.
 
-Hi Jes,
-My patches around names (where I added those errors) will be too risky to be
-merged and released in short period. I'm going to limit the supported
-characters for names- it could bring regressions in some non obvious cases and I
-would like to give user time to accept it and adopt their solutions to new
-naming policy.
+The main process of --add:
+1. dev_open
+2. store_super1(st, di->fd) in write_init_super1
+3. fsync(di->fd) in write_init_super1
+4. close(di->fd)
+5. ioctl(ADD_NEW_DISK)
 
-Let me see if the patches recently merged doesn't bring any critical
-regression, and we are free to go I think :) I will back with a results soon.
+However, there will be some udev(change) event after step4. Then
+"/usr/sbin/mdadm --incremental ..." will be run, and the new disk
+will be add to md device. After that, ioctl will return -EBUSY.
 
-Thanks,
-Mariusz
+Here we add map_lock before write_init_super in "mdadm --add"
+to fix this race.
+
+Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
+---
+ Manage.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/Manage.c b/Manage.c
+index fde6aba3..893a2ea8 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -720,6 +720,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 	struct supertype *dev_st;
+ 	int j;
+ 	mdu_disk_info_t disc;
++	struct map_ent *map = NULL;
+ 
+ 	if (!get_dev_size(tfd, dv->devname, &ldsize)) {
+ 		if (dv->disposition == 'M')
+@@ -917,6 +918,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 		disc.raid_disk = 0;
+ 	}
+ 
++	map_lock(&map);
+ 	if (array->not_persistent==0) {
+ 		int dfd;
+ 		if (dv->disposition == 'j')
+@@ -928,9 +930,9 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 		dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
+ 		if (tst->ss->add_to_super(tst, &disc, dfd,
+ 					  dv->devname, INVALID_SECTORS))
+-			return -1;
++			goto unlock;
+ 		if (tst->ss->write_init_super(tst))
+-			return -1;
++			goto unlock;
+ 	} else if (dv->disposition == 'A') {
+ 		/*  this had better be raid1.
+ 		 * As we are "--re-add"ing we must find a spare slot
+@@ -988,14 +990,14 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			pr_err("add failed for %s: could not get exclusive access to container\n",
+ 			       dv->devname);
+ 			tst->ss->free_super(tst);
+-			return -1;
++			goto unlock;
+ 		}
+ 
+ 		/* Check if metadata handler is able to accept the drive */
+ 		if (!tst->ss->validate_geometry(tst, LEVEL_CONTAINER, 0, 1, NULL,
+ 		    0, 0, dv->devname, NULL, 0, 1)) {
+ 			close(container_fd);
+-			return -1;
++			goto unlock;
+ 		}
+ 
+ 		Kill(dv->devname, NULL, 0, -1, 0);
+@@ -1004,7 +1006,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 					  dv->devname, INVALID_SECTORS)) {
+ 			close(dfd);
+ 			close(container_fd);
+-			return -1;
++			goto unlock;
+ 		}
+ 		if (!mdmon_running(tst->container_devnm))
+ 			tst->ss->sync_metadata(tst);
+@@ -1015,7 +1017,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			       dv->devname);
+ 			close(container_fd);
+ 			tst->ss->free_super(tst);
+-			return -1;
++			goto unlock;
+ 		}
+ 		sra->array.level = LEVEL_CONTAINER;
+ 		/* Need to set data_offset and component_size */
+@@ -1030,7 +1032,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			pr_err("add new device to external metadata failed for %s\n", dv->devname);
+ 			close(container_fd);
+ 			sysfs_free(sra);
+-			return -1;
++			goto unlock;
+ 		}
+ 		ping_monitor(devnm);
+ 		sysfs_free(sra);
+@@ -1044,7 +1046,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			else
+ 				pr_err("add new device failed for %s as %d: %s\n",
+ 				       dv->devname, j, strerror(errno));
+-			return -1;
++			goto unlock;
+ 		}
+ 		if (dv->disposition == 'j') {
+ 			pr_err("Journal added successfully, making %s read-write\n", devname);
+@@ -1055,7 +1057,11 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 	}
+ 	if (verbose >= 0)
+ 		pr_err("added %s\n", dv->devname);
++	map_unlock(&map);
+ 	return 1;
++unlock:
++	map_unlock(&map);
++	return -1;
+ }
+ 
+ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
+-- 
+2.33.0
+
