@@ -2,95 +2,112 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5651C6FD1C
-	for <linux-raid@archiver.kernel.org>; Tue, 21 Mar 2023 02:01:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8271C761AF
+	for <linux-raid@archiver.kernel.org>; Tue, 21 Mar 2023 08:55:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbjCUCBO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 20 Mar 2023 22:01:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44238 "EHLO
+        id S230238AbjCUIzi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 21 Mar 2023 04:55:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229809AbjCUCBG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 20 Mar 2023 22:01:06 -0400
-Received: from mail1.merlins.org (magic.merlins.org [209.81.13.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43015222C7
-        for <linux-raid@vger.kernel.org>; Mon, 20 Mar 2023 19:01:02 -0700 (PDT)
-Received: from [170.75.143.55] (port=63264 helo=sauron.svh.merlins.org)
-        by mail1.merlins.org with esmtpsa 
-        (Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim 4.94.2 #2)
-        id 1peQP1-0008WD-5M by authid <merlins.org> with srv_auth_plain; Mon, 20 Mar 2023 19:01:02 -0700
-Received: from merlin by sauron.svh.merlins.org with local (Exim 4.92)
-        (envelope-from <marc@merlins.org>)
-        id 1peRJ7-00FbLo-Vb; Mon, 20 Mar 2023 19:01:01 -0700
-Date:   Mon, 20 Mar 2023 19:01:01 -0700
-From:   Marc MERLIN <marc@merlins.org>
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: mdadm --detail works, mdadm --stop says "does not appear to be
- an md device"
-Message-ID: <20230321020101.GC4049235@merlins.org>
-References: <20230317173810.GW4049235@merlins.org>
- <20230320153639.0000238d@linux.intel.com>
- <20230320145035.GW21713@merlins.org>
- <20230320161659.00001c48@linux.intel.com>
+        with ESMTP id S230167AbjCUIz1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Mar 2023 04:55:27 -0400
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 041603A4C5;
+        Tue, 21 Mar 2023 01:54:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1679388847; x=1710924847;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=F0Aai9BhaA5K1wsF4Vod4yMCaBMdeTGqMNHzQ0Ugzio=;
+  b=Q1LhLM1wue8K/BsguMAvD/cn4g4cPu0HWr4x57XRImMffNckW8sfxkEN
+   XnWXMgYdDziLuZKROqH/yzN/1+mGsNXtNpk4Xwd/5m3eWPlMVqUq+wNqH
+   K38Ho6h8acDQvaBR46IU/DLviS1raWVz5K4DR+Eninqt7J7i9/sbsO2xy
+   5jdfhrNGdsMLxinCRiOxxziSlFV1f7KcrOnOs1TlX1nOEOClrWoOEJ5TN
+   zMwZ0MIlLhqa/kIFpqavaZyDod3ee9BfU3h7ziUa8HXph2BDOUj61+xYf
+   zRcRzodrlp3HxzwvOCPyYzxbqcUmZAXjengkCFJJ3fhmRGBXMK/CmFKTG
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10655"; a="337605723"
+X-IronPort-AV: E=Sophos;i="5.98,278,1673942400"; 
+   d="scan'208";a="337605723"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2023 01:49:33 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10655"; a="770548037"
+X-IronPort-AV: E=Sophos;i="5.98,278,1673942400"; 
+   d="scan'208";a="770548037"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.37.33])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2023 01:49:30 -0700
+Date:   Tue, 21 Mar 2023 09:49:26 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Jes Sorensen <jes@trained-monkey.org>
+Cc:     NeilBrown <neilb@suse.de>, Song Liu <song@kernel.org>,
+        Linux regressions mailing list <regressions@lists.linux.dev>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Nikolay Kichukov <hijacker@oldum.net>
+Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
+Message-ID: <20230321094926.00007a38@linux.intel.com>
+In-Reply-To: <c36ee145-c258-5a02-f268-30c145996759@trained-monkey.org>
+References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
+        <318ff554-0694-64e1-72bd-d941a775a16f@trained-monkey.org>
+        <167926378352.8008.3450187952660050637@noble.neil.brown.name>
+        <c36ee145-c258-5a02-f268-30c145996759@trained-monkey.org>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230320161659.00001c48@linux.intel.com>
-X-Sysadmin: BOFH
-X-URL:  http://marc.merlins.org/
-X-Broken-Reverse-DNS: no host name for IP address 170.75.143.55
-X-SA-Exim-Connect-IP: 170.75.143.55
-X-SA-Exim-Mail-From: marc@merlins.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Mar 20, 2023 at 04:16:59PM +0100, Mariusz Tkaczyk wrote:
-> On Mon, 20 Mar 2023 07:50:35 -0700
-> Marc MERLIN <marc@merlins.org> wrote:
-> 
-> > On Mon, Mar 20, 2023 at 03:36:39PM +0100, Mariusz Tkaczyk wrote:
-> > > Hi,
-> > > mdadm is unable to complete this task because it cannot ensure that it is
-> > > safe to stop the array. It cannot open the array with O_EXCL.
-> > > If it is mounted then it may hang if filesystem needs to flush some data.  
-> >  
-> > Thanks for the reply. The array was not mounted, that said, given that
-> > it was fully down, there wasn't a way to flush the data if it had been
-> > (cable problem to an enclosure, all the drives disappeared at once)
-> > 
-> > > Please, try umount the array if it mounted somewhere and then try:
-> > > 
-> > > # echo inactive > /sys/block/md6/md/array_state
-> > > # echo clear > /sys/block/md6/md/array_state  
-> > 
-> > I can try this next time (already had to reboot), thanks.
-> > 
-> > That said, mdadm should output a better message in this case
-> > > > mdadm: /dev/md6 does not appear to be an md device  
-> > is clearly wrong 
-> > 
-> > Is that something easy to fix/improve?
-> 
-> Oh, sorry my bad, please see the code:
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/mdopen.c#n472
-> 
-> We are failing to "understand" the array:
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/util.c#n229
-> It has nothing to do with open and O_EXCL. I didn't dig into to determine why.
-> 
-> Anyway, now error seems to be reasonable but maybe we should be able to tract
-> this array as valid? I requires more work and analysis so it is not simple fix.
+On Mon, 20 Mar 2023 13:15:35 -0400
+Jes Sorensen <jes@trained-monkey.org> wrote:
 
-You are definitely more knowledgeable about this than I am.
-All I can say is that the array was down, not mounted, and I couldn't
-stop it without a reboot, and that's a problem.
+> On 3/19/23 18:09, NeilBrown wrote:
+> > On Mon, 20 Mar 2023, Jes Sorensen wrote:  
+> >> On 3/13/23 20:06, NeilBrown wrote:  
+> >>>
+> >>> mdopen() will use create_named_array() to ask the kernel to create the
+> >>> given md array, but only if it is given a number or name.
+> >>> If it is NOT given a name and is required to choose one itself using
+> >>> find_free_devnm() it does NOT use create_named_array().
+> >>>
+> >>> On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result in
+> >>> failure to assemble an array.  This can particularly seen when the
+> >>> "name" of the array begins with a host name different to the name of the
+> >>> host running the command.
+> >>>
+> >>> So add the missing call to create_named_array().
+> >>>
+> >>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=217074
+> >>> Signed-off-by: NeilBrown <neilb@suse.de>  
+> >>
+> >> Applied!  
+> > 
+> > Thanks.
+> > 
+> > Do you have plans for releasing 4.3?  I'd like this patch to be in a
+> > numbered release for at least a few months before we change the kernel
+> > Kconfig to allow md to be built without CONFIG_BLOCK_LEGACY_AUTOLOAD.  
+> 
+> No immediate plans, but no reason why we shouldn't do it. I think
+> Mariusz has some pending changes he wants to get in as well, like the
+> error number stuff.
+> 
+> So lets make this a call for submitting changes for mdadm that are
+> needed for the next release.
+> 
 
-Any way to force stop in a case like this, would be quite welcome :)
+Hi Jes,
+My patches around names (where I added those errors) will be too risky to be
+merged and released in short period. I'm going to limit the supported
+characters for names- it could bring regressions in some non obvious cases and I
+would like to give user time to accept it and adopt their solutions to new
+naming policy.
+
+Let me see if the patches recently merged doesn't bring any critical
+regression, and we are free to go I think :) I will back with a results soon.
 
 Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
- 
-Home page: http://marc.merlins.org/                       | PGP 7F55D5F27AAF9D08
+Mariusz
