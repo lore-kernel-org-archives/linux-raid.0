@@ -2,235 +2,94 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE1BBC6FD1C
-	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 06:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1C12C6FD1F
+	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 07:01:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229482AbjCVGwz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Mar 2023 02:52:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37858 "EHLO
+        id S229871AbjCVHB2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Mar 2023 03:01:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230047AbjCVGwl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 02:52:41 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8B4E2B9EA;
-        Tue, 21 Mar 2023 23:52:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679467957; x=1711003957;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=ylgya/uy4m5dg2f0yWBBb1jbOoNOCKIoIbUTuCbiP4c=;
-  b=PDgbxYgO3gKFfDkwDk2lUiuVXBNRK59Miz0Q4ZYVcO2IQcW2mQdCsZGS
-   FqRmJ+ZpBO6XI3F0hLX/34lZVRM3f2gm3UpcKN1XKm2RTtAyzOD8kFp+6
-   DI+/9XpuvbzaA8FlkhYDkLMWajSjFb1ojiFohBYzCwaLIv+MIRXPcRZWe
-   rFrwPj/SiUqo9w/1RrtQ8QrH3TF4NjZQVrFwDej+WLw1/PpckAAzEL6Cf
-   tOzxr5a7Ct7eNXsYj8XpIns2LzEae7NQI83u73o4VNR2BipuNZOLrXJXE
-   73hfA47Njyu2Lq2R0W1UQxf49HD3hjMNm/ySLpdqN66KF5N0eoyIytmt5
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10656"; a="401710162"
-X-IronPort-AV: E=Sophos;i="5.98,281,1673942400"; 
-   d="scan'208";a="401710162"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2023 23:51:19 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10656"; a="825267927"
-X-IronPort-AV: E=Sophos;i="5.98,281,1673942400"; 
-   d="scan'208";a="825267927"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.62.75])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2023 23:51:16 -0700
-Date:   Wed, 22 Mar 2023 07:51:11 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     "NeilBrown" <neilb@suse.de>
-Cc:     "Xiao Ni" <xni@redhat.com>,
-        "Jes Sorensen" <jes@trained-monkey.org>,
-        "Song Liu" <song@kernel.org>,
-        "Linux regressions mailing list" <regressions@lists.linux.dev>,
-        "linux-raid" <linux-raid@vger.kernel.org>,
-        "LKML" <linux-kernel@vger.kernel.org>,
-        "Nikolay Kichukov" <hijacker@oldum.net>,
-        Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
-Message-ID: <20230322075111.000064bc@linux.intel.com>
-In-Reply-To: <167945548970.8008.8910680813298326328@noble.neil.brown.name>
-References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
-        <CALTww2916uiO8_ViJQXutO2BPasFmiUJtfz8MxW0HKjDzwGFeQ@mail.gmail.com>
-        <167945548970.8008.8910680813298326328@noble.neil.brown.name>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229482AbjCVHB0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 03:01:26 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BB9953DAC;
+        Wed, 22 Mar 2023 00:01:25 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PhJmp3PvFz4f41GR;
+        Wed, 22 Mar 2023 14:42:18 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgC3YiBHoxpkI55qFQ--.38915S9;
+        Wed, 22 Mar 2023 14:42:19 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     guoqing.jiang@linux.dev, logang@deltatee.com,
+        pmenzel@molgen.mpg.de, agk@redhat.com, snitzer@kernel.org,
+        song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next 5/6] md: wake up 'resync_wait' at last in md_reap_sync_thread()
+Date:   Wed, 22 Mar 2023 14:41:21 +0800
+Message-Id: <20230322064122.2384589-6-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
+References: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgC3YiBHoxpkI55qFQ--.38915S9
+X-Coremail-Antispam: 1UD129KBjvdXoW7XF1rur47Kr1UCw1xAw1kKrg_yoWktFc_WF
+        nrZrWkWry7W39rKr1Yvw1SvrWvqws8Ww1kZFyftFyjyFW5Jw1UJryfuw13Awnxu3yUG3s0
+        9rWj9FWfZrW5GjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbq8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+        IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+        F7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
+        1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
+        IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
+        wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
+        0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AK
+        xVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F
+        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
+        UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 22 Mar 2023 14:24:49 +1100
-"NeilBrown" <neilb@suse.de> wrote:
+From: Yu Kuai <yukuai3@huawei.com>
 
-> On Wed, 22 Mar 2023, Xiao Ni wrote:
-> > On Tue, Mar 14, 2023 at 8:08=E2=80=AFAM NeilBrown <neilb@suse.de> wrote=
-: =20
-> > >
-> > >
-> > > mdopen() will use create_named_array() to ask the kernel to create the
-> > > given md array, but only if it is given a number or name.
-> > > If it is NOT given a name and is required to choose one itself using
-> > > find_free_devnm() it does NOT use create_named_array().
-> > >
-> > > On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result=
- in
-> > > failure to assemble an array.  This can particularly seen when the
-> > > "name" of the array begins with a host name different to the name of =
-the
-> > > host running the command.
-> > >
-> > > So add the missing call to create_named_array().
-> > >
-> > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D217074 =20
-> >=20
-> > Hi Neil
-> >=20
-> > I have two questions, hope you can help to understand the function
-> > create_mddev better.
-> >=20
-> > Frist, from the comment7 of the bug you mentioned:
-> >=20
-> > There are two different sorts names.  Note that you almost
-> > acknowledged this by writing "name for my md device node" while the
-> > documentation only talks about names for "md devices", not for "md
-> > device nodes".
-> >=20
-> > There are
-> > 1/ there are names in /dev or /dev/md/ (device nodes)
-> > 2/ there are names that appear in /proc/mdstat and in /sys/block/ (devi=
-ces)
-> >=20
-> > Thanks for the clarification. But it looks like it doesn't work like
-> > what you said.
-> > For example:
-> > mdadm -CR /dev/md/root -l0 -n2 /dev/sda /dev/sdc --name=3Dtest
-> > cat /proc/mdstat
-> > Personalities : [raid0]
-> > md127 : active raid0 sdc[1] sda[0]
-> >       3906764800 blocks super 1.2 512k chunks
-> > cd /sys/block/md127/md/
-> >=20
-> > In /proc/mdstat and /sys/block, they all use md127 rather than the
-> > name(root) =20
->=20
-> Try again with "CREATE names=3Dyes" in /etc/mdadm.conf.
->=20
-> mdadm generally tries to keep:
->   - the names in /dev/
->   - the names in /dev/md/
->   - the names in /proc/mdstat
->   - the names stored in the metadata
->=20
-> in sync.  It can only do this when:
->  - you enabled "names=3Dyes"
->  - you don't confuse it by specifying a device name (/dev/md/root) that
->    is different from the metadata names "test".
->=20
-> If you don't have "names=3Dyes" then the name in /proc/mdstat and the name
-> in /dev/md* will be numeric.  The name in /dev/md/ and the name in the
-> metadata can be different and will usually be the same.
->=20
-> If you explicitly give a different name with --name=3D than the device
-> name then obviously they will be different.  If you then stop the array
-> and restart with "mdadm -As" or "mdadm -I /dev/sda; mdadm -I /dev/sdb"
-> then mdadm will create a name in /dev/md/ that matches the name in the
-> metadata.
->=20
-> >=20
-> > Before this patch,  it creates a symbol link with the name root rather =
-than
-> > test ll /dev/md/root
-> > lrwxrwxrwx. 1 root root 8 Mar 21 22:35 /dev/md/root -> ../md127 =20
->=20
-> That is what you asked it to do.
->=20
-> >=20
-> > So "test" which is specified by --name looks like it has little usage.
-> >  =20
->=20
-> It is stored in the metadata.  You can see it in --examine output.  If
-> you reassemble the array without specifying a device name, it will use
-> the name "test".
->=20
-> >=20
-> > By the way, after this patch, the symbol link /dev/md/root can't be
-> > created anymore.
-> > Is it a regression problem? =20
->=20
-> I cannot reproduce any problem like that.  Please provide a sequence of
-> steps so that I can try to duplicate it.
+We just replace md_reap_sync_thread() with wait_event(resync_wait, ...)
+from action_store(), this patch just make sure action_store() will still
+wait for everything to be done in md_reap_sync_thread().
 
-Hi,
-It is not caused by this patch. Regression is caused by:
-https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3D8a4ce2c05=
-3866ac97feb436c4c85a54446ee0016
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-We noticed that yesterday.
-
-In our case, udev fails to create link, timeout happens. This is caused by
-missing MD_DEVNAME property in --detail --export. At that is all I know for=
- now.
-Work in progress.
-
-Steps:
-#mdadm -CR imsm -e imsm -n4 /dev/nvme[0-3]n1
-#mdadm -CR vol -l5 -n4 /dev/nvme[0-3]n1 --assume-clean
-
-Thanks,
-Mariusz
-
->=20
-> >=20
-> > Second, are there possibilities that the arguments "dev" and "name" of
-> > function create_mddev
-> > are null at the same time? =20
->=20
-> No.  For Build or Create, dev is never NULL.  For Assemble and
-> Incremental, name is never NULL.
->=20
->=20
-> > After some tests, I found dev can't be null when creating a raid
-> > device. It can be checked before
-> > calling create_mddev. And we must get a name after creating a raid
-> > device. So when assembling
-> > a raid device, the name must not be null. So the dev and name can't be
-> > null at the same time, right? =20
->=20
-> Correct.
->=20
-> NeilBrown
->=20
->=20
-> >=20
-> > Best Regards
-> > Xiao
-> >=20
-> >  =20
-> > > Signed-off-by: NeilBrown <neilb@suse.de>
-> > > ---
-> > >  mdopen.c | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > >
-> > > diff --git a/mdopen.c b/mdopen.c
-> > > index d18c931996d2..810f79a3d19a 100644
-> > > --- a/mdopen.c
-> > > +++ b/mdopen.c
-> > > @@ -370,6 +370,7 @@ int create_mddev(char *dev, char *name, int autof,
-> > > int trustworthy, }
-> > >                 if (block_udev)
-> > >                         udev_block(devnm);
-> > > +               create_named_array(devnm);
-> > >         }
-> > >
-> > >         sprintf(devname, "/dev/%s", devnm);
-> > > --
-> > > 2.39.2
-> > > =20
-> >=20
-> >  =20
->=20
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ddf33a11d8de..cabdfd4ec001 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9511,7 +9511,6 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	if (mddev_is_clustered(mddev) && is_reshaped
+ 				      && !test_bit(MD_CLOSING, &mddev->flags))
+ 		md_cluster_ops->update_size(mddev, old_dev_sectors);
+-	wake_up(&resync_wait);
+ 	/* flag recovery needed just to double check */
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_completed);
+@@ -9519,6 +9518,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	md_new_event();
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
++	wake_up(&resync_wait);
+ }
+ EXPORT_SYMBOL(md_reap_sync_thread);
+ 
+-- 
+2.31.1
 
