@@ -2,43 +2,43 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 925B7C761AF
-	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 20:11:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B141EC6FD1C
+	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 20:11:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232102AbjCVULQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Mar 2023 16:11:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50124 "EHLO
+        id S231859AbjCVULR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Mar 2023 16:11:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231689AbjCVUKW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 16:10:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6252369CCE;
-        Wed, 22 Mar 2023 13:03:40 -0700 (PDT)
+        with ESMTP id S231873AbjCVUKX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 16:10:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04BFD7DF90;
+        Wed, 22 Mar 2023 13:03:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 437A9622C5;
-        Wed, 22 Mar 2023 20:03:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 010FEC4339B;
-        Wed, 22 Mar 2023 20:03:38 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 550D4B81B97;
+        Wed, 22 Mar 2023 20:02:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6923EC433EF;
+        Wed, 22 Mar 2023 20:02:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679515419;
-        bh=Q0MsNZi/NA6Tdci6HGEC0RMSXmpgIv60YUvRFdfoBBs=;
+        s=k20201202; t=1679515330;
+        bh=ADgOMX62IrR82V6veE+B2pFtCQ5XlrDFYKj5HOS6t58=;
         h=From:To:Cc:Subject:Date:From;
-        b=VSFFY3R6WYApEuhDZzs9jjf5KXtc3jNjOCpsbxn13d46IoRU9XB+gFS0igOc/a5M8
-         dOORzvCoZubs1UtM5/nE5fIelusHWOlxkVSaWDQSwjpuYJlTzcXWUXklZxzKiJsRAq
-         luxxd+aGu75iuaW7JXPtdX9fRof2vGFwdGBxV2NvFrvKo6A3OVQ2Isw8bjx7kA3sNl
-         1a/eM9a7mwBBqx9JB8deNpveP024e0s1vLLLBZ+7POjdISs49x2p3IvO+FOVOf7YdF
-         gYKsVukVmz/WOb3sETY8jjNq3kK7mRa5YJj5LC8H1GE0tZBnOkUG6ZARPFdOYFUd5T
-         QU7+G8fOS997w==
+        b=aY3aBFczkCcb9UVy2ASFnv3mGpXwsVfB6nc2UmM0m31rV5VcxBnFJGctoP3k3MhkJ
+         f4kHCtqVEAiRdBCKNPuosauxDHw1auPQnoi8cUI42QUn+meJaPb2gKLPWxf9G8MLZd
+         TprogqtX1z9ONDzTWPxCb/eU65tFCRDQ7L0LFNe/XIJtfCbpcboZx9oItBv9WWlxC0
+         AFV5X5yVBsAlj++M+Q2OCbdjTfEz+8wy//I+G58h7ww5KF7gYGxUhy+5m+Tca7yHpM
+         ZoewSIpBt4ZH518lrBPOSHdALbCi0eFU7pn5Vrib+ZkEo3wJjktsWt73GEdineMdn8
+         t8sVimH1f+PGg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     NeilBrown <neilb@suse.de>, Dan Carpenter <error27@gmail.com>,
         Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 1/9] md: avoid signed overflow in slot_store()
-Date:   Wed, 22 Mar 2023 16:03:28 -0400
-Message-Id: <20230322200337.1997810-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 01/12] md: avoid signed overflow in slot_store()
+Date:   Wed, 22 Mar 2023 16:01:55 -0400
+Message-Id: <20230322200207.1997367-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 X-stable: review
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 880a0ebca8660..69d1501d9160e 100644
+index c0b34637bd667..1553c2495841b 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -2967,6 +2967,9 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
+@@ -3207,6 +3207,9 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
  		err = kstrtouint(buf, 10, (unsigned int *)&slot);
  		if (err < 0)
  			return err;
