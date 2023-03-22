@@ -2,24 +2,24 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FACEC6FD1C
-	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 07:02:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E46A3C6FD1F
+	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 07:02:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229995AbjCVHCA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Mar 2023 03:02:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51668 "EHLO
+        id S230013AbjCVHCB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Mar 2023 03:02:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229945AbjCVHB5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 03:01:57 -0400
+        with ESMTP id S229961AbjCVHB6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 03:01:58 -0400
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C90545B5F3;
-        Wed, 22 Mar 2023 00:01:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 811355BC8B;
+        Wed, 22 Mar 2023 00:01:52 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PhJmn4w7pz4f3l6q;
-        Wed, 22 Mar 2023 14:42:17 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PhJmm26FZz4f3lJw;
+        Wed, 22 Mar 2023 14:42:16 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgC3YiBHoxpkI55qFQ--.38915S8;
-        Wed, 22 Mar 2023 14:42:19 +0800 (CST)
+        by APP3 (Coremail) with SMTP id _Ch0CgC3YiBHoxpkI55qFQ--.38915S5;
+        Wed, 22 Mar 2023 14:42:18 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     guoqing.jiang@linux.dev, logang@deltatee.com,
         pmenzel@molgen.mpg.de, agk@redhat.com, snitzer@kernel.org,
@@ -27,32 +27,32 @@ To:     guoqing.jiang@linux.dev, logang@deltatee.com,
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 4/6] md: refactor idle/frozen_sync_thread()
-Date:   Wed, 22 Mar 2023 14:41:20 +0800
-Message-Id: <20230322064122.2384589-5-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 1/6] Revert "md: unlock mddev before reap sync_thread in action_store"
+Date:   Wed, 22 Mar 2023 14:41:17 +0800
+Message-Id: <20230322064122.2384589-2-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
 References: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgC3YiBHoxpkI55qFQ--.38915S8
-X-Coremail-Antispam: 1UD129KBjvJXoWxZr4xKr4xWF4DXF1kCF4kJFb_yoWrtr48pa
-        yxtFn5Ar4UArW3ZrsrJ3Zrua4rZw109a9rtrW3ua4xArnagr43tF15uFy8ZFykZaySyr45
-        X3WrXay3ZFWUWr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUP214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-        kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
-        wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-        W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZ
-        X7UUUUU==
+X-CM-TRANSID: _Ch0CgC3YiBHoxpkI55qFQ--.38915S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxWr1ftF18AF45XF15ZF18Krg_yoWrKr43p3
+        yfJF9xJrWUArW3ZrWUta4DXa4UZw1jqrZFyrWfW34fJw1fKr43W345uFyUZFyDJas5Zw4a
+        qa1rJFWrZFW09w7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
+        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU4T5dUUUUU
+        =
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -61,151 +61,144 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Our test found a following deadlock in raid10:
+This reverts commit 9dfbdafda3b34e262e43e786077bab8e476a89d1.
 
-1) Issue a normal write, and such write failed:
+Because it will introduce a defect that sync_thread can be running while
+MD_RECOVERY_RUNNING is cleared, which will cause some unexpected problems,
+for example:
 
-  raid10_end_write_request
-   set_bit(R10BIO_WriteError, &r10_bio->state)
-   one_write_done
-    reschedule_retry
+list_add corruption. prev->next should be next (ffff0001ac1daba0), but was ffff0000ce1a02a0. (prev=ffff0000ce1a02a0).
+Call trace:
+ __list_add_valid+0xfc/0x140
+ insert_work+0x78/0x1a0
+ __queue_work+0x500/0xcf4
+ queue_work_on+0xe8/0x12c
+ md_check_recovery+0xa34/0xf30
+ raid10d+0xb8/0x900 [raid10]
+ md_thread+0x16c/0x2cc
+ kthread+0x1a4/0x1ec
+ ret_from_fork+0x10/0x18
 
-  // later from md thread
-  raid10d
-   handle_write_completed
-    list_add(&r10_bio->retry_list, &conf->bio_end_io_list)
+This is because work is requeued while it's still inside workqueue:
 
-  // later from md thread
-  raid10d
-   if (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
-    list_move(conf->bio_end_io_list.prev, &tmp)
-    r10_bio = list_first_entry(&tmp, struct r10bio, retry_list)
-    raid_end_bio_io(r10_bio)
+t1:			t2:
+action_store
+ mddev_lock
+  if (mddev->sync_thread)
+   mddev_unlock
+   md_unregister_thread
+   // first sync_thread is done
+			md_check_recovery
+			 mddev_try_lock
+			 /*
+			  * once MD_RECOVERY_DONE is set, new sync_thread
+			  * can start.
+			  */
+			 set_bit(MD_RECOVERY_RUNNING, &mddev->recovery)
+			 INIT_WORK(&mddev->del_work, md_start_sync)
+			 queue_work(md_misc_wq, &mddev->del_work)
+			  test_and_set_bit(WORK_STRUCT_PENDING_BIT, ...)
+			  // set pending bit
+			  insert_work
+			   list_add_tail
+			 mddev_unlock
+   mddev_lock_nointr
+   md_reap_sync_thread
+   // MD_RECOVERY_RUNNING is cleared
+ mddev_unlock
 
-Dependency chain 1: normal io is waiting for updating superblock
+t3:
 
-2) Trigger a recovery:
+// before queued work started from t2
+md_check_recovery
+ // MD_RECOVERY_RUNNING is not set, a new sync_thread can be started
+ INIT_WORK(&mddev->del_work, md_start_sync)
+  work->data = 0
+  // work pending bit is cleared
+ queue_work(md_misc_wq, &mddev->del_work)
+  insert_work
+   list_add_tail
+   // list is corrupted
 
-  raid10_sync_request
-   raise_barrier
-
-Dependency chain 2: sync thread is waiting for normal io
-
-3) echo idle/frozen to sync_action:
-
-  action_store
-   mddev_lock
-    md_unregister_thread
-     kthread_stop
-
-Dependency chain 3: drop 'reconfig_mutex' is waiting for sync thread
-
-4) md thread can't update superblock:
-
-  raid10d
-   md_check_recovery
-    if (mddev_trylock(mddev))
-     md_update_sb
-
-Dependency chain 4: update superblock is waiting for 'reconfig_mutex'
-
-Hence cyclic dependency exist, in order to fix the problem, we must
-break one of them. Dependency 1 and 2 can't be broken because they are
-foundation design. Dependency 4 may be possible if it can be guaranteed
-that no io can be inflight, however, this requires a new mechanism which
-seems complex. Dependency 3 is a good choice, because idle/frozen only
-requires sync thread to finish, which can be done asynchronously that is
-already implemented, and 'reconfig_mutex' is not needed anymore.
-
-This patch switch 'idle' and 'frozen' to wait sync thread to be done
-asynchronously, and this patch also add a sequence counter to record how
-many times sync thread is done, so that 'idle' won't keep waiting on new
-started sync thread.
+This patch revert the commit to fix the problem, the deadlock this
+commit tries to fix will be fixed in following patches.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 24 ++++++++++++++++++++----
- drivers/md/md.h |  2 ++
- 2 files changed, 22 insertions(+), 4 deletions(-)
+ drivers/md/dm-raid.c |  1 -
+ drivers/md/md.c      | 19 ++-----------------
+ 2 files changed, 2 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 60632b409b80..0601edbf579f 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3729,7 +3729,6 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+ 	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
+ 		if (mddev->sync_thread) {
+ 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-			md_unregister_thread(&mddev->sync_thread);
+ 			md_reap_sync_thread(mddev);
+ 		}
+ 	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 223c03149852..ddf33a11d8de 100644
+index 546b1b81eb28..acf57a5156c7 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -662,6 +662,7 @@ void mddev_init(struct mddev *mddev)
- 	timer_setup(&mddev->safemode_timer, md_safemode_timeout, 0);
- 	atomic_set(&mddev->active, 1);
- 	atomic_set(&mddev->openers, 0);
-+	atomic_set(&mddev->sync_seq, 0);
- 	spin_lock_init(&mddev->lock);
- 	atomic_set(&mddev->flush_pending, 0);
- 	init_waitqueue_head(&mddev->sb_wait);
-@@ -4774,19 +4775,28 @@ static void stop_sync_thread(struct mddev *mddev)
- 	if (work_pending(&mddev->del_work))
+@@ -4770,19 +4770,6 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 			if (work_pending(&mddev->del_work))
+ 				flush_workqueue(md_misc_wq);
+ 			if (mddev->sync_thread) {
+-				sector_t save_rp = mddev->reshape_position;
+-
+-				mddev_unlock(mddev);
+-				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-				md_unregister_thread(&mddev->sync_thread);
+-				mddev_lock_nointr(mddev);
+-				/*
+-				 * set RECOVERY_INTR again and restore reshape
+-				 * position in case others changed them after
+-				 * got lock, eg, reshape_position_store and
+-				 * md_check_recovery.
+-				 */
+-				mddev->reshape_position = save_rp;
+ 				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 				md_reap_sync_thread(mddev);
+ 			}
+@@ -6173,7 +6160,6 @@ static void __md_stop_writes(struct mddev *mddev)
  		flush_workqueue(md_misc_wq);
+ 	if (mddev->sync_thread) {
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-		md_unregister_thread(&mddev->sync_thread);
+ 		md_reap_sync_thread(mddev);
+ 	}
  
--	if (mddev->sync_thread) {
--		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--		md_reap_sync_thread(mddev);
--	}
-+	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-+	/*
-+	 * Thread might be blocked waiting for metadata update which will now
-+	 * never happen.
-+	 */
-+	if (mddev->sync_thread)
-+		wake_up_process(mddev->sync_thread->tsk);
+@@ -9315,7 +9301,6 @@ void md_check_recovery(struct mddev *mddev)
+ 			 * ->spare_active and clear saved_raid_disk
+ 			 */
+ 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-			md_unregister_thread(&mddev->sync_thread);
+ 			md_reap_sync_thread(mddev);
+ 			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+@@ -9351,7 +9336,6 @@ void md_check_recovery(struct mddev *mddev)
+ 			goto unlock;
+ 		}
+ 		if (mddev->sync_thread) {
+-			md_unregister_thread(&mddev->sync_thread);
+ 			md_reap_sync_thread(mddev);
+ 			goto unlock;
+ 		}
+@@ -9431,7 +9415,8 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	sector_t old_dev_sectors = mddev->dev_sectors;
+ 	bool is_reshaped = false;
  
- 	mddev_unlock(mddev);
- }
- 
- static void idle_sync_thread(struct mddev *mddev)
- {
-+	int sync_seq = atomic_read(&mddev->sync_seq);
-+
- 	mutex_lock(&mddev->sync_mutex);
- 	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	stop_sync_thread(mddev);
-+
-+	wait_event(resync_wait, sync_seq != atomic_read(&mddev->sync_seq) ||
-+			!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-+
- 	mutex_unlock(&mddev->sync_mutex);
- }
- 
-@@ -4795,6 +4805,10 @@ static void frozen_sync_thread(struct mddev *mddev)
- 	mutex_lock(&mddev->sync_mutex);
- 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	stop_sync_thread(mddev);
-+
-+	wait_event(resync_wait, mddev->sync_thread == NULL &&
-+			!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-+
- 	mutex_unlock(&mddev->sync_mutex);
- }
- 
-@@ -9451,6 +9465,8 @@ void md_reap_sync_thread(struct mddev *mddev)
- 
- 	/* resync has finished, collect result */
- 	md_unregister_thread(&mddev->sync_thread);
-+	atomic_inc(&mddev->sync_seq);
-+
+-	/* sync_thread should be unregistered, collect result */
++	/* resync has finished, collect result */
++	md_unregister_thread(&mddev->sync_thread);
  	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
  	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
  	    mddev->degraded != mddev->raid_disks) {
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 64474e458545..10d425a3daa3 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -537,6 +537,8 @@ struct mddev {
- 
- 	/* Used to synchronize idle and frozen for action_store() */
- 	struct mutex sync_mutex;
-+	/* The sequence number for sync thread */
-+	atomic_t sync_seq;
- };
- 
- enum recovery_flags {
 -- 
 2.31.1
 
