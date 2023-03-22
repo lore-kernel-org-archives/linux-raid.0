@@ -2,203 +2,202 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E46A3C6FD1F
-	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 07:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D106C6FD1F
+	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 07:05:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230013AbjCVHCB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Mar 2023 03:02:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51678 "EHLO
+        id S229705AbjCVHFu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Mar 2023 03:05:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229961AbjCVHB6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 03:01:58 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 811355BC8B;
-        Wed, 22 Mar 2023 00:01:52 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PhJmm26FZz4f3lJw;
-        Wed, 22 Mar 2023 14:42:16 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgC3YiBHoxpkI55qFQ--.38915S5;
-        Wed, 22 Mar 2023 14:42:18 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     guoqing.jiang@linux.dev, logang@deltatee.com,
-        pmenzel@molgen.mpg.de, agk@redhat.com, snitzer@kernel.org,
-        song@kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next 1/6] Revert "md: unlock mddev before reap sync_thread in action_store"
-Date:   Wed, 22 Mar 2023 14:41:17 +0800
-Message-Id: <20230322064122.2384589-2-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
-References: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
+        with ESMTP id S229684AbjCVHFt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 03:05:49 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 984A758B60
+        for <linux-raid@vger.kernel.org>; Wed, 22 Mar 2023 00:05:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1679468748; x=1711004748;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=D9qYI2yUJuU48b/Mn4fBVApxOB2BQkB+vZaQuO3fxOU=;
+  b=R9d9JMFTabIQdi6iHHXQZmFOQWNE+XM1ISL1wNgpqXwnjh3XB9Y7aR/k
+   hDbxTR0J3ODBpQl08j3Sv/HaWPQs7pzIz6jbDP3ZrngckiJwvGt9Pgm9T
+   PQL1w9CoSXZYk5C3mh1FmeI1nEYTt3xFRJ8x/cplRyWeqUJLqbtXG6EQT
+   gH+k6K/xlMqPXqGR2tSt3qM4m8jFgSdlenLO7Lq7pw0vxWTy9f0QDDUN4
+   dzqtA+mJAjbOutJTMl/1OwMZbP8j8TYvdDOca6dBzByL3bnZl0Sm6XIeA
+   8u6pGqUPLWCpwdvUDJkUpkKVKz54Tr7fLwkDxvq7M/KseQ4DQ2kY/eT+w
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10656"; a="366880885"
+X-IronPort-AV: E=Sophos;i="5.98,281,1673942400"; 
+   d="scan'208";a="366880885"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2023 00:05:48 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10656"; a="770944313"
+X-IronPort-AV: E=Sophos;i="5.98,281,1673942400"; 
+   d="scan'208";a="770944313"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.62.75])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2023 00:05:46 -0700
+Date:   Wed, 22 Mar 2023 08:05:41 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Wu Guanghao <wuguanghao3@huawei.com>
+Cc:     <song@kernel.org>, <linux-raid@vger.kernel.org>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
+        <louhongxiang@huawei.com>
+Subject: Re: [PATCH] raid0: fix set_disk_faulty doesn't return -EBUSY
+Message-ID: <20230322080541.00004e8a@linux.intel.com>
+In-Reply-To: <91f6086c-249d-167c-4948-1359d7b4115b@huawei.com>
+References: <df1fc8d7-0a34-aef7-aeeb-db4f59755f78@huawei.com>
+        <20230321111828.0000172d@linux.intel.com>
+        <91f6086c-249d-167c-4948-1359d7b4115b@huawei.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgC3YiBHoxpkI55qFQ--.38915S5
-X-Coremail-Antispam: 1UD129KBjvJXoWxWr1ftF18AF45XF15ZF18Krg_yoWrKr43p3
-        yfJF9xJrWUArW3ZrWUta4DXa4UZw1jqrZFyrWfW34fJw1fKr43W345uFyUZFyDJas5Zw4a
-        qa1rJFWrZFW09w7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU4T5dUUUUU
-        =
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Wed, 22 Mar 2023 10:24:41 +0800
+Wu Guanghao <wuguanghao3@huawei.com> wrote:
 
-This reverts commit 9dfbdafda3b34e262e43e786077bab8e476a89d1.
+> =E5=9C=A8 2023/3/21 18:18, Mariusz Tkaczyk =E5=86=99=E9=81=93:
+> > On Tue, 21 Mar 2023 16:56:37 +0800
+> > Wu Guanghao <wuguanghao3@huawei.com> wrote:
+> >  =20
+> >> The latest kernel version will not report an error through mdadm
+> >> set_disk_faulty.
+> >>
+> >> $ lsblk
+> >> sdb                                           8:16   0   10G  0 disk
+> >> =E2=94=94=E2=94=80md0                                         9:0    0=
+ 19.9G  0 raid0
+> >> sdc                                           8:32   0   10G  0 disk
+> >> =E2=94=94=E2=94=80md0                                         9:0    0=
+ 19.9G  0 raid0
+> >>
+> >> old kernel:
+> >> ...
+> >> $ mdadm /dev/md0 -f /dev/sdb
+> >> mdadm: set device faulty failed for /dev/sdb:  Device or resource busy
+> >> ...
+> >>
+> >> latest kernel:
+> >> ...
+> >> $ mdadm /dev/md0 -f /dev/sdb
+> >> mdadm: set /dev/sdb faulty in /dev/md0
+> >> ...
+> >>
+> >> The old kernel judges whether the Faulty flag is set in rdev->flags,
+> >> and returns -EBUSY if not. And The latest kernel only return -EBUSY
+> >> if the MD_BROKEN flag is set in mddev->flags. raid0 doesn't set
+> >> error_handler, so MD_BROKEN will not be set, it will return 0.
+> >>
+> >> So if error_handler isn't set for a raid type, also return -EBUSY. =20
+> > Hi,
+> > Please test with:
+> > https://lore.kernel.org/linux-raid/20230306130317.3418-1-mariusz.tkaczy=
+k@linux.intel.com/
+> >=20
+> > Thanks,
+> > Mariusz
+> >  =20
+>=20
+> Hi, Mariusz
+>=20
+> Are there other patches?  There are other problems with this patch.
+> https://lore.kernel.org/linux-raid/20230306130317.3418-1-mariusz.tkaczyk@=
+linux.intel.com/
+>=20
+> md_submit_bio()
+> 	...
+> 	// raid0 set disk faulty failed, but MD_BROKEN flag is set=EF=BC=8C
+> 	// write IO will fail.
+> 	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw =3D=3D WRITE)) {
+> 		bio_io_error(bio);
+> 		return;
+> 	}
+> 	...
+>=20
+> old kernel:
+> ...
+> $ mdadm /dev/md0 -f /dev/sdb
+> mdadm: set device faulty failed for /dev/sdb:  Device or resource busy
+>=20
+> $ mkfs.xfs /dev/md0
+> log stripe unit (524288 bytes) is too large (maximum is 256KiB)
+> log stripe unit adjusted to 32KiB
+> meta-data=3D/dev/md0               isize=3D512    agcount=3D16, agsize=3D=
+1800064 blks
+>          =3D                       sectsz=3D512   attr=3D2, projid32bit=
+=3D1
+>          =3D                       crc=3D1        finobt=3D1, sparse=3D1,=
+ rmapbt=3D0
+>          =3D                       reflink=3D1    bigtime=3D0 inobtcount=
+=3D0
+> data     =3D                       bsize=3D4096   blocks=3D28801024, imax=
+pct=3D25
+>          =3D                       sunit=3D128    swidth=3D256 blks
+> naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1
+> log      =3Dinternal log           bsize=3D4096   blocks=3D14064, version=
+=3D2
+>          =3D                       sectsz=3D512   sunit=3D8 blks, lazy-co=
+unt=3D1
+> realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=
+=3D0
+> Discarding blocks...Done.
+> ...
+>=20
+>=20
+> merged patch kernel:
+> ...
+> # mdadm /dev/md0 -f /dev/sdb
+> mdadm: set device faulty failed for /dev/sdb:  Device or resource busy
+>=20
+> mkfs.xfs /dev/md0
+> log stripe unit (524288 bytes) is too large (maximum is 256KiB)
+> log stripe unit adjusted to 32KiB
+> meta-data=3D/dev/md0               isize=3D512    agcount=3D8, agsize=3D6=
+5408 blks
+>          =3D                       sectsz=3D512   attr=3D2, projid32bit=
+=3D1
+>          =3D                       crc=3D1        finobt=3D1, sparse=3D1,=
+ rmapbt=3D0
+>          =3D                       reflink=3D1    bigtime=3D0 inobtcount=
+=3D0
+> data     =3D                       bsize=3D4096   blocks=3D523264, imaxpc=
+t=3D25
+>          =3D                       sunit=3D128    swidth=3D256 blks
+> naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1
+> log      =3Dinternal log           bsize=3D4096   blocks=3D2560, version=
+=3D2
+>          =3D                       sectsz=3D512   sunit=3D8 blks, lazy-co=
+unt=3D1
+> realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=
+=3D0
+> mkfs.xfs: pwrite failed: Input/output error
+> ...
+>=20
+>=20
+Hi Wu,
+Beside the kernel, there are also patches in mdadm. Please check if you have
+them all.
+https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3Db3e7b7eb1=
+dfedd7cbd9a3800e884941f67d94c96
+https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3D461fae7e7=
+809670d286cc19aac5bfa861c29f93a
+https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3Dfc6fd4063=
+769f4194c3fb8f77b32b2819e140fb9
 
-Because it will introduce a defect that sync_thread can be running while
-MD_RECOVERY_RUNNING is cleared, which will cause some unexpected problems,
-for example:
+Some background:
+--faulty (-f) is intended to be used by administrators. We cannot rely on
+kernel answer because if mdadm will try to set device faulty, it results in
+MD_BROKEN and every new IO will be failed (and that is intended change).
 
-list_add corruption. prev->next should be next (ffff0001ac1daba0), but was ffff0000ce1a02a0. (prev=ffff0000ce1a02a0).
-Call trace:
- __list_add_valid+0xfc/0x140
- insert_work+0x78/0x1a0
- __queue_work+0x500/0xcf4
- queue_work_on+0xe8/0x12c
- md_check_recovery+0xa34/0xf30
- raid10d+0xb8/0x900 [raid10]
- md_thread+0x16c/0x2cc
- kthread+0x1a4/0x1ec
- ret_from_fork+0x10/0x18
+Simply, mdadm must check first if it can remove the drive and that was adde=
+d by
+the mentioned patches. The first patch (the last one) added verification but
+brings regression, the next two patches are fixes for omitted scenarios.
 
-This is because work is requeued while it's still inside workqueue:
-
-t1:			t2:
-action_store
- mddev_lock
-  if (mddev->sync_thread)
-   mddev_unlock
-   md_unregister_thread
-   // first sync_thread is done
-			md_check_recovery
-			 mddev_try_lock
-			 /*
-			  * once MD_RECOVERY_DONE is set, new sync_thread
-			  * can start.
-			  */
-			 set_bit(MD_RECOVERY_RUNNING, &mddev->recovery)
-			 INIT_WORK(&mddev->del_work, md_start_sync)
-			 queue_work(md_misc_wq, &mddev->del_work)
-			  test_and_set_bit(WORK_STRUCT_PENDING_BIT, ...)
-			  // set pending bit
-			  insert_work
-			   list_add_tail
-			 mddev_unlock
-   mddev_lock_nointr
-   md_reap_sync_thread
-   // MD_RECOVERY_RUNNING is cleared
- mddev_unlock
-
-t3:
-
-// before queued work started from t2
-md_check_recovery
- // MD_RECOVERY_RUNNING is not set, a new sync_thread can be started
- INIT_WORK(&mddev->del_work, md_start_sync)
-  work->data = 0
-  // work pending bit is cleared
- queue_work(md_misc_wq, &mddev->del_work)
-  insert_work
-   list_add_tail
-   // list is corrupted
-
-This patch revert the commit to fix the problem, the deadlock this
-commit tries to fix will be fixed in following patches.
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/dm-raid.c |  1 -
- drivers/md/md.c      | 19 ++-----------------
- 2 files changed, 2 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 60632b409b80..0601edbf579f 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3729,7 +3729,6 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
- 	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
- 		if (mddev->sync_thread) {
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--			md_unregister_thread(&mddev->sync_thread);
- 			md_reap_sync_thread(mddev);
- 		}
- 	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 546b1b81eb28..acf57a5156c7 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4770,19 +4770,6 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 			if (work_pending(&mddev->del_work))
- 				flush_workqueue(md_misc_wq);
- 			if (mddev->sync_thread) {
--				sector_t save_rp = mddev->reshape_position;
--
--				mddev_unlock(mddev);
--				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--				md_unregister_thread(&mddev->sync_thread);
--				mddev_lock_nointr(mddev);
--				/*
--				 * set RECOVERY_INTR again and restore reshape
--				 * position in case others changed them after
--				 * got lock, eg, reshape_position_store and
--				 * md_check_recovery.
--				 */
--				mddev->reshape_position = save_rp;
- 				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 				md_reap_sync_thread(mddev);
- 			}
-@@ -6173,7 +6160,6 @@ static void __md_stop_writes(struct mddev *mddev)
- 		flush_workqueue(md_misc_wq);
- 	if (mddev->sync_thread) {
- 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--		md_unregister_thread(&mddev->sync_thread);
- 		md_reap_sync_thread(mddev);
- 	}
- 
-@@ -9315,7 +9301,6 @@ void md_check_recovery(struct mddev *mddev)
- 			 * ->spare_active and clear saved_raid_disk
- 			 */
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--			md_unregister_thread(&mddev->sync_thread);
- 			md_reap_sync_thread(mddev);
- 			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
- 			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-@@ -9351,7 +9336,6 @@ void md_check_recovery(struct mddev *mddev)
- 			goto unlock;
- 		}
- 		if (mddev->sync_thread) {
--			md_unregister_thread(&mddev->sync_thread);
- 			md_reap_sync_thread(mddev);
- 			goto unlock;
- 		}
-@@ -9431,7 +9415,8 @@ void md_reap_sync_thread(struct mddev *mddev)
- 	sector_t old_dev_sectors = mddev->dev_sectors;
- 	bool is_reshaped = false;
- 
--	/* sync_thread should be unregistered, collect result */
-+	/* resync has finished, collect result */
-+	md_unregister_thread(&mddev->sync_thread);
- 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
- 	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
- 	    mddev->degraded != mddev->raid_disks) {
--- 
-2.31.1
-
+Thanks,
+Mariusz
