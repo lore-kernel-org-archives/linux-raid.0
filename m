@@ -2,78 +2,189 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9B70C74A5B
-	for <linux-raid@archiver.kernel.org>; Tue, 21 Mar 2023 13:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A0DBC6FD1D
+	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 02:24:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231334AbjCUNxo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 21 Mar 2023 09:53:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51398 "EHLO
+        id S229487AbjCVCYy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 21 Mar 2023 22:24:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231322AbjCUNxk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Mar 2023 09:53:40 -0400
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C3AB4FA94;
-        Tue, 21 Mar 2023 06:53:18 -0700 (PDT)
-Received: by mail-ed1-x532.google.com with SMTP id r11so59980843edd.5;
-        Tue, 21 Mar 2023 06:53:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679406796;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=8W6ejF7gmj1PXpTdZI2xA9f/8wOpeSmMndaGTr9oNFw=;
-        b=hUoV97dpkPfmUSFYW4vwoWzUklDsHrRtC38eT2rA4UxLiATRCd9kZdBJfSJ0lvrqio
-         hWtKOo3saKK9qyyGKbUJftte/nNlb0bdYnjc51Osghwez7Y4vkGQojC5nlV2pGMhqt+2
-         Ghj29IM7cx22VrkFksNf1zyDVVgPEY/EpK59lfqko2VsKkQhXNyNlwL/i0LKXtYaxvfe
-         I1OexL8I7Vuv7G8u9YNkZ2TSv1kfEnOVFqJbNNBuGvnfSBJ01JaXjGNSmEu+6i0vbufI
-         8wvVYRv4n3R1DuRtGudFKpS4BXygCifbi1j/DTr2YGK5hXKs3dWjtyBq6jpyJvVc86kJ
-         1dpw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679406796;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=8W6ejF7gmj1PXpTdZI2xA9f/8wOpeSmMndaGTr9oNFw=;
-        b=a9Hcb0YFLg/QWQzVcYvSgBNK6rrWNQTvwrnk3MRHKpzLFZCrevYNIbj4hVyMY3Z5kA
-         sndFNc7wzMvQ6XPgkkYuDJWQIZ8p2E3VaHrG1pAbfiw/FjeKPyy/DlciNZ2lmtSyGUdk
-         itrhLdoyY6tRehhRMVBE4u8tD+h+ZYKaAw4pYOXrxWBLoZU9rBJLxDRxFV7aNZOlMPRR
-         X3zjUBGHgkmbv5vRGej9tUz798EiwLi2ic54PMVbVqRsZS50OKjYlXZV374QQKoOG57X
-         m9/Jjl+dvDcW4nK/OiG9Uhlm9ltzJKS7s2VagU7ACBJy0eNpX0JKNPUsgMx4jRUFi74c
-         KMDA==
-X-Gm-Message-State: AO0yUKXSS1Q0CalB2N4jr7PlsY+M/B29PmrcjXGCc/kGfRUyCZ/32i9v
-        6Y082FMjaH3t1Xai7h6w/GkV5fp1aqCijBVnh9Pfmn9X9U3KOg==
-X-Google-Smtp-Source: AK7set/s5RxMFyLJ3g71CZ2H3wSgUc+1I0vaYBez5Vxx/7wCI9wP3s5ElkFf/xSD0ekVeCy826N1b1k+nOXGwbH0HWE=
-X-Received: by 2002:a50:ce45:0:b0:4fb:80cf:898b with SMTP id
- k5-20020a50ce45000000b004fb80cf898bmr1595691edj.7.1679406796401; Tue, 21 Mar
- 2023 06:53:16 -0700 (PDT)
+        with ESMTP id S229991AbjCVCYx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Mar 2023 22:24:53 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C72935A1B2
+        for <linux-raid@vger.kernel.org>; Tue, 21 Mar 2023 19:24:51 -0700 (PDT)
+Received: from dggpemm500014.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PhC2X4jQ8zrW4f;
+        Wed, 22 Mar 2023 10:23:48 +0800 (CST)
+Received: from [10.174.177.211] (10.174.177.211) by
+ dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.21; Wed, 22 Mar 2023 10:24:49 +0800
+Message-ID: <91f6086c-249d-167c-4948-1359d7b4115b@huawei.com>
+Date:   Wed, 22 Mar 2023 10:24:41 +0800
 MIME-Version: 1.0
-From:   lacsaP Patatetom <patatetom@gmail.com>
-Date:   Tue, 21 Mar 2023 14:52:54 +0100
-Message-ID: <CAGhAadc4tfjpB1UJ2WkUVLSkvbsShi+Ek6XUGL=0NbTU9tsGAQ@mail.gmail.com>
-Subject: RO device/partition "tampered" by LVM
-To:     linux-block@vger.kernel.org
-Cc:     linux-raid@vger.kernel.org, dm-devel@redhat.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.3
+Subject: Re: [PATCH] raid0: fix set_disk_faulty doesn't return -EBUSY
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+CC:     <song@kernel.org>, <linux-raid@vger.kernel.org>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
+        <louhongxiang@huawei.com>
+References: <df1fc8d7-0a34-aef7-aeeb-db4f59755f78@huawei.com>
+ <20230321111828.0000172d@linux.intel.com>
+From:   Wu Guanghao <wuguanghao3@huawei.com>
+In-Reply-To: <20230321111828.0000172d@linux.intel.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.177.211]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500014.china.huawei.com (7.185.36.153)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-hello developers,
 
-until recently, I used to modify the `bio_check_ro` function of the
-`block/blk-core.c` file to prevent LVM from altering read-only
-partitions.
 
-is it possible to get this behavior back after the many changes
-applied to the `block/blk-core.c` file and especially to the
-`bio_check_ro` function ?
-if yes, can you tell me how to do it ?
-otherwise, would retrograde only the `block/blk-core.c` file in a
-previous version work ?
+在 2023/3/21 18:18, Mariusz Tkaczyk 写道:
+> On Tue, 21 Mar 2023 16:56:37 +0800
+> Wu Guanghao <wuguanghao3@huawei.com> wrote:
+> 
+>> The latest kernel version will not report an error through mdadm
+>> set_disk_faulty.
+>>
+>> $ lsblk
+>> sdb                                           8:16   0   10G  0 disk
+>> └─md0                                         9:0    0 19.9G  0 raid0
+>> sdc                                           8:32   0   10G  0 disk
+>> └─md0                                         9:0    0 19.9G  0 raid0
+>>
+>> old kernel:
+>> ...
+>> $ mdadm /dev/md0 -f /dev/sdb
+>> mdadm: set device faulty failed for /dev/sdb:  Device or resource busy
+>> ...
+>>
+>> latest kernel:
+>> ...
+>> $ mdadm /dev/md0 -f /dev/sdb
+>> mdadm: set /dev/sdb faulty in /dev/md0
+>> ...
+>>
+>> The old kernel judges whether the Faulty flag is set in rdev->flags,
+>> and returns -EBUSY if not. And The latest kernel only return -EBUSY
+>> if the MD_BROKEN flag is set in mddev->flags. raid0 doesn't set error_handler,
+>> so MD_BROKEN will not be set, it will return 0.
+>>
+>> So if error_handler isn't set for a raid type, also return -EBUSY.
+> Hi,
+> Please test with:
+> https://lore.kernel.org/linux-raid/20230306130317.3418-1-mariusz.tkaczyk@linux.intel.com/
+> 
+> Thanks,
+> Mariusz
+> 
 
-here is a GitHub page that details what I said :
-https://github.com/patatetom/lvm-on-readonly-block-device .
+Hi, Mariusz
 
-on this subject, do you know of any other technologies such as LVM
-that would alter a disk or partition marked as read-only, which would
-ignore the administrator's wish ?
+Are there other patches?  There are other problems with this patch.
+https://lore.kernel.org/linux-raid/20230306130317.3418-1-mariusz.tkaczyk@linux.intel.com/
 
-regards, lacsaP.
+md_submit_bio()
+	...
+	// raid0 set disk faulty failed, but MD_BROKEN flag is set，
+	// write IO will fail.
+	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
+		bio_io_error(bio);
+		return;
+	}
+	...
+
+old kernel:
+...
+$ mdadm /dev/md0 -f /dev/sdb
+mdadm: set device faulty failed for /dev/sdb:  Device or resource busy
+
+$ mkfs.xfs /dev/md0
+log stripe unit (524288 bytes) is too large (maximum is 256KiB)
+log stripe unit adjusted to 32KiB
+meta-data=/dev/md0               isize=512    agcount=16, agsize=1800064 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=4096   blocks=28801024, imaxpct=25
+         =                       sunit=128    swidth=256 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=14064, version=2
+         =                       sectsz=512   sunit=8 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Discarding blocks...Done.
+...
+
+
+merged patch kernel:
+...
+# mdadm /dev/md0 -f /dev/sdb
+mdadm: set device faulty failed for /dev/sdb:  Device or resource busy
+
+mkfs.xfs /dev/md0
+log stripe unit (524288 bytes) is too large (maximum is 256KiB)
+log stripe unit adjusted to 32KiB
+meta-data=/dev/md0               isize=512    agcount=8, agsize=65408 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=4096   blocks=523264, imaxpct=25
+         =                       sunit=128    swidth=256 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=8 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+mkfs.xfs: pwrite failed: Input/output error
+...
+
+
+Regards,
+Wu
+>>
+>> Fixes: 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and RAID10")
+>> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+>> ---
+>>  drivers/md/md.c | 8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 927a43db5dfb..b1786ff60d97 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -2928,10 +2928,10 @@ state_store(struct md_rdev *rdev, const char *buf,
+>> size_t len) int err = -EINVAL;
+>>         bool need_update_sb = false;
+>>
+>> -       if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
+>> -               md_error(rdev->mddev, rdev);
+>> +       if (cmd_match(buf, "faulty") && mddev->pers) {
+>> +               md_error(mddev, rdev);
+>>
+>> -               if (test_bit(MD_BROKEN, &rdev->mddev->flags))
+>> +               if (!mddev->pers->error_handler || test_bit(MD_BROKEN,
+>> &mddev->flags)) err = -EBUSY;
+>>                 else
+>>                         err = 0;
+>> @@ -7421,7 +7421,7 @@ static int set_disk_faulty(struct mddev *mddev, dev_t
+>> dev) err =  -ENODEV;
+>>         else {
+>>                 md_error(mddev, rdev);
+>> -               if (test_bit(MD_BROKEN, &mddev->flags))
+>> +               if (!mddev->pers->error_handler || test_bit(MD_BROKEN,
+>> &mddev->flags)) err = -EBUSY;
+>>         }
+>>         rcu_read_unlock();
+>> --
+>> 2.27.0
+>> .
+> 
+> 
+> .
+> 
