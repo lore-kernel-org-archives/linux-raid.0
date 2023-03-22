@@ -2,43 +2,43 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F3D1C6FD1F
-	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 20:11:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE71FC76196
+	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 20:13:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232129AbjCVULm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Mar 2023 16:11:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50982 "EHLO
+        id S232008AbjCVUNA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Mar 2023 16:13:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232024AbjCVUKz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 16:10:55 -0400
+        with ESMTP id S232171AbjCVUMd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 16:12:33 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58D956B310;
-        Wed, 22 Mar 2023 13:03:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42F996C699;
+        Wed, 22 Mar 2023 13:04:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AB4BC622C0;
-        Wed, 22 Mar 2023 20:02:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61500C433EF;
-        Wed, 22 Mar 2023 20:02:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BF9AE622CD;
+        Wed, 22 Mar 2023 20:03:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DF60C4339B;
+        Wed, 22 Mar 2023 20:03:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679515365;
-        bh=RuYnVTJwWCkgS5pZsTRyfgbm1jPX/9A6YF9I++YlZ7Y=;
+        s=k20201202; t=1679515392;
+        bh=NxzOtRQu6KigYzzhwtqdp249Roma4xVFBm/yW7xDUEc=;
         h=From:To:Cc:Subject:Date:From;
-        b=cBiSET3Fpf+y2+2BG/5QIGlDsq6wXl1gjfmAEIQR1bSS5NuH93cFUyyRlGrovxalV
-         mynPoJlajZReORER+DaY9sLMzM+4uorwzSRoDrKceUJKuqZEuhiXPghe9IDVLV/mJw
-         KfqTHGZnFWm/kGai3e1iAItLRj0dJypWY4qRX+t/Xl8ayKe565xj8jssCoYTzfgId9
-         h7Sus9FvHUPsJEMtyFGWbgjLGYh7ZoDrkc0m+eWfevPFkSd/mhq7YRtBDUuC8AiJER
-         reO5Bx31DfNshJVY9SZAZfgsKm5HdscdJDWLYxbwIPGt08bdu0iv2zu13fIK5MXgUh
-         a0wHuyzX7Bczw==
+        b=oGI8SywsJU30r5QhG2wnacLd5vOhYGV/2IBSymTv2IQJPpgu7fYdXnGPkzf4YT1LB
+         14EFG7ET5/YIOKYlsBS09CeR2ob+LlMHGkSONRyB5nUDJEUwRqUrEMfFbAt2MzFPxJ
+         rlEmdSSB6vwZG0xdvhDXad4KQYsqiJ6JUxNoaXXnqTntjPL/tE6G0x8f7aAkqVKwFB
+         S5S0zbIW97rMhhPWWaoL1eoCbMrfvqoAQFR9tvOptKn0UysVK+XqwkBUeRq/0ekzkp
+         h7t9Cvpmuqc5x2xw6jwiVdFxZBJSzvSe2W1ZqjtJSCBl298zCoxCyuAdZIMaBcftKk
+         MfnSRZCRSqeuw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     NeilBrown <neilb@suse.de>, Dan Carpenter <error27@gmail.com>,
         Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 1/9] md: avoid signed overflow in slot_store()
-Date:   Wed, 22 Mar 2023 16:02:33 -0400
-Message-Id: <20230322200242.1997527-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 1/9] md: avoid signed overflow in slot_store()
+Date:   Wed, 22 Mar 2023 16:03:01 -0400
+Message-Id: <20230322200309.1997651-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 X-stable: review
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index aa2993d5d5d38..64558991ce0a0 100644
+index 89d4dcc5253e5..f8c111b369928 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -3082,6 +3082,9 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
+@@ -2991,6 +2991,9 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
  		err = kstrtouint(buf, 10, (unsigned int *)&slot);
  		if (err < 0)
  			return err;
