@@ -2,36 +2,28 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E90A1C6FD1D
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 03:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9379EC6FD1C
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 06:32:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230346AbjCWDwN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Mar 2023 23:52:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40338 "EHLO
+        id S229617AbjCWGc5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Mar 2023 02:32:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230233AbjCWDvc (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 23:51:32 -0400
-X-Greylist: delayed 47864 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 22 Mar 2023 20:50:53 PDT
-Received: from out-5.mta0.migadu.com (out-5.mta0.migadu.com [91.218.175.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58BC8303F3
-        for <linux-raid@vger.kernel.org>; Wed, 22 Mar 2023 20:50:53 -0700 (PDT)
-Message-ID: <3fc2a539-e4cc-e057-6cf0-da7b3953be6e@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1679543451;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ybg5x3mPlbI3ZHUIehsnRSB/BbMrlTIw6UpPqu0sdhM=;
-        b=e07qC8bsMjxyFPwXnCmmYgpZoQ5i92lD6PPLkh7VCKCwNebCmfr0QTrmlBwtzUMhMEGavF
-        p9DwfMNYP//dTUcGyDdMD2ubsuSChGOvLUVktr3HdkDJs/cN6PdvLqR4eG2UTEHZud74Ce
-        9GMGo5q1g8IJU4SyHqTCN3xgqqRgx/A=
-Date:   Thu, 23 Mar 2023 11:50:48 +0800
-MIME-Version: 1.0
+        with ESMTP id S229500AbjCWGc4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Mar 2023 02:32:56 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8685120;
+        Wed, 22 Mar 2023 23:32:55 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PhwWQ4S5Nz4f3k5b;
+        Thu, 23 Mar 2023 14:32:50 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgDX0R+S8htk_pqkFQ--.47155S3;
+        Thu, 23 Mar 2023 14:32:52 +0800 (CST)
 Subject: Re: [PATCH -next 1/6] Revert "md: unlock mddev before reap
  sync_thread in action_store"
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>, logang@deltatee.com,
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Yu Kuai <yukuai1@huaweicloud.com>, logang@deltatee.com,
         pmenzel@molgen.mpg.de, agk@redhat.com, snitzer@kernel.org,
         song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
@@ -44,213 +36,111 @@ References: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
  <d1d27b2a-96ec-319e-4690-64e781c9a473@huaweicloud.com>
  <b91ae03a-14d5-11eb-8ec7-3ed91ff2c59e@linux.dev>
  <31e7f59e-579a-7812-632d-059ed0a6d441@huaweicloud.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-In-Reply-To: <31e7f59e-579a-7812-632d-059ed0a6d441@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <3fc2a539-e4cc-e057-6cf0-da7b3953be6e@linux.dev>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <3aa073e9-5145-aae2-2201-5ba48c09c693@huaweicloud.com>
+Date:   Thu, 23 Mar 2023 14:32:50 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <3fc2a539-e4cc-e057-6cf0-da7b3953be6e@linux.dev>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+X-CM-TRANSID: _Ch0CgDX0R+S8htk_pqkFQ--.47155S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZrWUWr18CF4rKr1kKFWfZrb_yoW8KFW3pF
+        WfG3Z8Xw4kAw4Iya4jvw1Iqa4Fvw4jvrWUGr95Ga4kJ345GrWIqFy8ua1DuayDXrZ7Aa12
+        vayrtFs3Za95u3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
+        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+        nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi,
 
+在 2023/03/23 11:50, Guoqing Jiang 写道:
 
-On 3/23/23 09:36, Yu Kuai wrote:
-> Hi,
->
-> 在 2023/03/22 22:32, Guoqing Jiang 写道:
->>>> Could you explain how the same work can be re-queued? Isn't the 
->>>> PENDING_BIT
->>>> is already set in t3? I believe queue_work shouldn't do that per 
->>>> the comment
->>>> but I am not expert ...
->>>
->>> This is not related to workqueue, it is just because raid10
->>> reinitialize the work that is already queued, 
->>
->> I am trying to understand the possibility.
->>
->>> like I discribed later in t3:
->>>
->>> t2:
->>> md_check_recovery:
->>>  INIT_WORK -> clear pending
->>>  queue_work -> set pending
->>>   list_add_tail
->>> ...
->>>
->>> t3: -> work is still pending
->>> md_check_recovery:
->>>  INIT_WORK -> clear pending
->>>  queue_work -> set pending
->>>   list_add_tail -> list is corrupted
->>
->> First, t2 and t3 can't be run in parallel since reconfig_mutex must 
->> be held. And if sync_thread existed,
->> the second process would unregister and reap sync_thread which means 
->> the second process will
->> call INIT_WORK and queue_work again.
->>
->> Maybe your description is valid, I would prefer call work_pending and 
->> flush_workqueue instead of
->> INIT_WORK and queue_work.
->
-> This is not enough, it's right this can avoid list corruption, but the
-> worker function md_start_sync just register a sync_thread, and
-> md_do_sync() can still in progress, hence this can't prevent a new
-> sync_thread to start while the old one is not done, some other problems
-> like deadlock can still be triggered.
->
->>> Of course, our 5.10 and mainline are the same,
->>>
->>> there are some tests:
->>>
->>> First the deadlock can be reporduced reliably, test script is simple:
->>>
->>> mdadm -Cv /dev/md0 -n 4 -l10 /dev/sd[abcd]
->>
->> So this is raid10 while the previous problem was appeared in raid456, 
->> I am not sure it is the same
->> issue, but let's see.
->
-> Ok, I'm not quite familiar with raid456 yet, however, the problem is
-> still related to that action_store hold mutex to unregister sync_thread,
-> right?
+> Combined your debug patch with above steps. Seems you are
+> 
+> 1. add delay to action_store, so it can't get lock in time.
+> 2. echo "want_replacement"**triggers md_check_recovery which can grab lock
+>      to start sync thread.
+> 3. action_store finally hold lock to clear RECOVERY_RUNNING in reap sync 
+> thread.
+> 4. Then the new added BUG_ON is invoked since RECOVERY_RUNNING is cleared
+>      in step 3.
 
-Yes and no, the previous raid456 bug also existed because it can't get 
-stripe while
-barrier is involved as you mentioned in patch 4, which is different.
+Yes, this is exactly what I did.
 
->
->>> Then, the problem MD_RECOVERY_RUNNING can be cleared can't be 
->>> reporduced
->>> reliably, usually it takes 2+ days to triggered a problem, and each 
->>> time
->>> problem phenomenon can be different, I'm hacking the kernel and add
->>> some BUG_ON to test MD_RECOVERY_RUNNING in attached patch, following
->>> test can trigger the BUG_ON:
->>
->> Also your debug patch obviously added large delay which make the 
->> calltrace happen, I doubt
->> if user can hit it in real life. Anyway, will try below test from my 
->> side.
->>
->>> mdadm -Cv /dev/md0 -e1.0 -n 4 -l 10 /dev/sd{a..d} --run
->>> sleep 5
->>> echo 1 > /sys/module/md_mod/parameters/set_delay
->>> echo idle > /sys/block/md0/md/sync_action &
->>> sleep 5
->>> echo "want_replacement" > /sys/block/md0/md/dev-sdd/state
+> sync_thread can be interrupted once MD_RECOVERY_INTR is set which means 
+> the RUNNING
+> can be cleared, so I am not sure the added BUG_ON is reasonable. And 
+> change BUG_ON
 
-Combined your debug patch with above steps. Seems you are
+I think BUG_ON() is reasonable because only md_reap_sync_thread can
+clear it, md_do_sync will exit quictly if MD_RECOVERY_INTR is set, but
+md_do_sync should not see that MD_RECOVERY_RUNNING is cleared, otherwise
+there is no gurantee that only one sync_thread can be in progress.
 
-1. add delay to action_store, so it can't get lock in time.
-2. echo "want_replacement"**triggers md_check_recovery which can grab lock
-     to start sync thread.
-3. action_store finally hold lock to clear RECOVERY_RUNNING in reap sync 
-thread.
-4. Then the new added BUG_ON is invoked since RECOVERY_RUNNING is cleared
-     in step 3.
+> like this makes more sense to me.
+> 
+> +BUG_ON(!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+> +!test_bit(MD_RECOVERY_INTR, &mddev->recovery));
 
->>>
->>> test result:
->>>
->>> [  228.390237] md_check_recovery: running is set
->>> [  228.391376] md_check_recovery: queue new sync thread
->>> [  233.671041] action_store unregister success! delay 10s
->>> [  233.689276] md_check_recovery: running is set
->>> [  238.722448] md_check_recovery: running is set
->>> [  238.723328] md_check_recovery: queue new sync thread
->>> [  238.724851] md_do_sync: before new wor, sleep 10s
->>> [  239.725818] md_do_sync: delay done
->>> [  243.674828] action_store delay done
->>> [  243.700102] md_reap_sync_thread: running is cleared!
->>> [  243.748703] ------------[ cut here ]------------
->>> [  243.749656] kernel BUG at drivers/md/md.c:9084!
->>
->> After your debug patch applied, is L9084 points to below?
->>
->> 9084                                 mddev->curr_resync = MaxSector;
->
-> In my environment, it's a BUG_ON() that I added in md_do_sync:
+I think this can be reporduced likewise, md_check_recovery clear
+MD_RECOVERY_INTR, and new sync_thread triggered by echo
+"want_replacement" won't set this bit.
 
-Ok, so we are on different code base ...
+> 
+> I think there might be racy window like you described but it should be 
+> really small, I prefer
+> to just add a few lines like this instead of revert and introduce new 
+> lock to resolve the same
+> issue (if it is).
 
-> 9080  skip:
-> 9081         /* set CHANGE_PENDING here since maybe another update is 
-> needed,
-> 9082         ┊* so other nodes are informed. It should be harmless for 
-> normal
-> 9083         ┊* raid */
-> 9084         BUG_ON(!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-> 9085         set_mask_bits(&mddev->sb_flags, 0,
-> 9086                 ┊     BIT(MD_SB_CHANGE_PENDING) | 
-> BIT(MD_SB_CHANGE_DEVS));
->
->>
->> I don't understand how it triggers below calltrace, and it has 
->> nothing to do with
->> list corruption, right?
->
-> Yes, this is just a early BUG_ON() to detect that if MD_RECOVERY_RUNNING
-> is cleared while sync_thread is still in progress.
+The new lock that I add in this patchset is just try to synchronize idle
+and forzen from action_store（patch 3), I can drop it if you think this
+is not necessary.
 
-sync_thread can be interrupted once MD_RECOVERY_INTR is set which means 
-the RUNNING
-can be cleared, so I am not sure the added BUG_ON is reasonable. And 
-change BUG_ON
-like this makes more sense to me.
+The main changes is patch 4, new lines is not much and I really don't
+like to add new flags unless we have to, current code is already hard
+to understand...
 
-+BUG_ON(!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-+!test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+By the way, I'm concerned that drop the mutex to unregister sync_thread
+might not be safe, since the mutex protects lots of stuff, and there
+might exist other implicit dependencies.
 
-I think there might be racy window like you described but it should be 
-really small, I prefer
-to just add a few lines like this instead of revert and introduce new 
-lock to resolve the same
-issue (if it is).
+> 
+> TBH, I am reluctant to see the changes in the series, it can only be 
+> considered
+> acceptable with conditions:
+> 
+> 1. the previous raid456 bug can be fixed in this way too, hopefully Marc 
+> or others
+>      can verify it.
+> 2. pass all the tests in mdadm
 
-@@ -4792,9 +4793,15 @@action_store(struct mddev *mddev, const char 
-*page, size_t len)
-                        if (mddev->sync_thread) {
-                                sector_t save_rp = mddev->reshape_position;
-
-+set_bit(MD_RECOVERY_DONOT, &mddev->recovery);
-@@ -4805,6 +4812,7 @@action_store(struct mddev *mddev, const char *page, 
-size_t len)
-                                mddev->reshape_position = save_rp;
-                                set_bit(MD_RECOVERY_INTR, 
-&mddev->recovery);
-                                md_reap_sync_thread(mddev);
-+clear_bit(MD_RECOVERY_DONOT, &mddev->recovery);
-                        }
-                        mddev_unlock(mddev);
-@@ -9296,6 +9313,9 @@void md_check_recovery(struct mddev *mddev)
-        if (!md_is_rdwr(mddev) &&
-            !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
-                return;
-+/* action_store is in the middle of reap sync thread, let's wait */
-+if (test_bit(MD_RECOVERY_DONOT, &mddev->recovery))
-+return;
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -553,6 +553,7 @@enum recovery_flags {
-        MD_RECOVERY_ERROR,      /* sync-action interrupted because 
-io-error */
-        MD_RECOVERY_WAIT,       /* waiting for pers->start() to finish */
-        MD_RESYNCING_REMOTE,    /* remote node is running resync thread */
-+MD_RECOVERY_DONOT,     /* for a nasty racy issue */
-};
-
-TBH, I am reluctant to see the changes in the series, it can only be 
-considered
-acceptable with conditions:
-
-1. the previous raid456 bug can be fixed in this way too, hopefully Marc 
-or others
-     can verify it.
-2. pass all the tests in mdadm.
+I already test this patchset with mdadm, If there are reporducer for
+raid456 bug, I can try to verify it myself.
 
 Thanks,
-Guoqing
+Kuai
+> 
+> Thanks,
+> Guoqing
+> .
+> 
+
