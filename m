@@ -2,88 +2,91 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE71FC76196
-	for <linux-raid@archiver.kernel.org>; Wed, 22 Mar 2023 20:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EACB1C6FD1C
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 01:33:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232008AbjCVUNA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Mar 2023 16:13:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50936 "EHLO
+        id S230045AbjCWBdb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Mar 2023 21:33:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232171AbjCVUMd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 16:12:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42F996C699;
-        Wed, 22 Mar 2023 13:04:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BF9AE622CD;
-        Wed, 22 Mar 2023 20:03:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DF60C4339B;
-        Wed, 22 Mar 2023 20:03:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679515392;
-        bh=NxzOtRQu6KigYzzhwtqdp249Roma4xVFBm/yW7xDUEc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=oGI8SywsJU30r5QhG2wnacLd5vOhYGV/2IBSymTv2IQJPpgu7fYdXnGPkzf4YT1LB
-         14EFG7ET5/YIOKYlsBS09CeR2ob+LlMHGkSONRyB5nUDJEUwRqUrEMfFbAt2MzFPxJ
-         rlEmdSSB6vwZG0xdvhDXad4KQYsqiJ6JUxNoaXXnqTntjPL/tE6G0x8f7aAkqVKwFB
-         S5S0zbIW97rMhhPWWaoL1eoCbMrfvqoAQFR9tvOptKn0UysVK+XqwkBUeRq/0ekzkp
-         h7t9Cvpmuqc5x2xw6jwiVdFxZBJSzvSe2W1ZqjtJSCBl298zCoxCyuAdZIMaBcftKk
-         MfnSRZCRSqeuw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     NeilBrown <neilb@suse.de>, Dan Carpenter <error27@gmail.com>,
-        Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 1/9] md: avoid signed overflow in slot_store()
-Date:   Wed, 22 Mar 2023 16:03:01 -0400
-Message-Id: <20230322200309.1997651-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S230027AbjCWBd1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 21:33:27 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CD05AC
+        for <linux-raid@vger.kernel.org>; Wed, 22 Mar 2023 18:32:55 -0700 (PDT)
+Received: from kwepemi500002.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PhnnF4ntLzKtCy;
+        Thu, 23 Mar 2023 09:29:21 +0800 (CST)
+Received: from huawei.com (10.175.101.6) by kwepemi500002.china.huawei.com
+ (7.221.188.171) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.21; Thu, 23 Mar
+ 2023 09:31:38 +0800
+From:   miaoguanqin <miaoguanqin@huawei.com>
+To:     <jes@trained-monkey.org>, <mariusz.tkaczyk@linux.intel.com>,
+        <pmenzel@molgen.mpg.de>, <linux-raid@vger.kernel.org>
+CC:     <linfeilong@huawei.com>, <lixiaokeng@huawei.com>,
+        <louhongxiang@huawei.com>
+Subject: [PATCH 2/4] Fix memory leak in file Kill
+Date:   Thu, 23 Mar 2023 09:30:51 +0800
+Message-ID: <20230323013053.3238005-3-miaoguanqin@huawei.com>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20230323013053.3238005-1-miaoguanqin@huawei.com>
+References: <20230323013053.3238005-1-miaoguanqin@huawei.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemi500002.china.huawei.com (7.221.188.171)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: NeilBrown <neilb@suse.de>
+When we test mdadm with asan,we found some memory leaks in Kill.c
+We fix these memory leaks based on code logic.
 
-[ Upstream commit 3bc57292278a0b6ac4656cad94c14f2453344b57 ]
-
-slot_store() uses kstrtouint() to get a slot number, but stores the
-result in an "int" variable (by casting a pointer).
-This can result in a negative slot number if the unsigned int value is
-very large.
-
-A negative number means that the slot is empty, but setting a negative
-slot number this way will not remove the device from the array.  I don't
-think this is a serious problem, but it could cause confusion and it is
-best to fix it.
-
-Reported-by: Dan Carpenter <error27@gmail.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-Signed-off-by: Song Liu <song@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: miaoguanqin <miaoguanqin@huawei.com>
+Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
 ---
- drivers/md/md.c | 3 +++
- 1 file changed, 3 insertions(+)
+ Kill.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 89d4dcc5253e5..f8c111b369928 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2991,6 +2991,9 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
- 		err = kstrtouint(buf, 10, (unsigned int *)&slot);
- 		if (err < 0)
- 			return err;
-+		if (slot < 0)
-+			/* overflow */
-+			return -ENOSPC;
+diff --git a/Kill.c b/Kill.c
+index bfd0efdc..46a1a8a0 100644
+--- a/Kill.c
++++ b/Kill.c
+@@ -41,6 +41,7 @@ int Kill(char *dev, struct supertype *st, int force, int verbose, int noexcl)
+ 	 *  4 - failed to find a superblock.
+ 	 */
+ 
++	int flags = 0;
+ 	int fd, rv = 0;
+ 
+ 	if (force)
+@@ -52,8 +53,10 @@ int Kill(char *dev, struct supertype *st, int force, int verbose, int noexcl)
+ 				dev);
+ 		return 2;
  	}
- 	if (rdev->mddev->pers && slot == -1) {
- 		/* Setting 'slot' on an active array requires also
+-	if (st == NULL)
++	if (st == NULL) {
+ 		st = guess_super(fd);
++		flags = 1;
++	}
+ 	if (st == NULL || st->ss->init_super == NULL) {
+ 		if (verbose >= 0)
+ 			pr_err("Unrecognised md component device - %s\n", dev);
+@@ -77,6 +80,10 @@ int Kill(char *dev, struct supertype *st, int force, int verbose, int noexcl)
+ 			rv = 0;
+ 		}
+ 	}
++	if (flags == 1 && st) {
++		st->ss->free_super(st);
++		free(st);
++	}
+ 	close(fd);
+ 	return rv;
+ }
 -- 
-2.39.2
+2.33.0
 
