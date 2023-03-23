@@ -2,249 +2,255 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8031DC6FD1F
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 02:10:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E90A1C6FD1D
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 03:52:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229893AbjCWCKv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Mar 2023 22:10:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48322 "EHLO
+        id S230346AbjCWDwN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Mar 2023 23:52:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229801AbjCWCKu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 22:10:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F3CC272D
-        for <linux-raid@vger.kernel.org>; Wed, 22 Mar 2023 19:10:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679537402;
+        with ESMTP id S230233AbjCWDvc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Mar 2023 23:51:32 -0400
+X-Greylist: delayed 47864 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 22 Mar 2023 20:50:53 PDT
+Received: from out-5.mta0.migadu.com (out-5.mta0.migadu.com [91.218.175.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58BC8303F3
+        for <linux-raid@vger.kernel.org>; Wed, 22 Mar 2023 20:50:53 -0700 (PDT)
+Message-ID: <3fc2a539-e4cc-e057-6cf0-da7b3953be6e@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1679543451;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2neQvZ7Wrkn72CUBUMcH+3GLPvcm+NoezLLcDD3fPlg=;
-        b=AHUbtyDPMU396Ecn2FPcBYSo/o8U0CzXSVXb3Psm3mOVM6kaigHC3A9K972Nc3YFBLUGPc
-        2w/5NR3QcYhzl9u7lonxl5wMdNJDGRH9uyt8ah/HZISTjClg5NFnMpXQQsvpKA/wMx6boM
-        0BhC1j7Cwr/G3ezayP1QArsEx0bduPo=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-14-CWKbp2wBMAyLZERh6BFKhw-1; Wed, 22 Mar 2023 22:10:01 -0400
-X-MC-Unique: CWKbp2wBMAyLZERh6BFKhw-1
-Received: by mail-pl1-f197.google.com with SMTP id d2-20020a170902cec200b001a1e8390831so3205204plg.5
-        for <linux-raid@vger.kernel.org>; Wed, 22 Mar 2023 19:10:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679537400;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=2neQvZ7Wrkn72CUBUMcH+3GLPvcm+NoezLLcDD3fPlg=;
-        b=knqK1fkFK0ulA7ftdOMaMcE8Gp8i8SuvLO4czxDY7C6jZRRZePU6SV5JxkxqcoQ+BW
-         kHZHLCbG953owvFXaEV8GqVMDepBbEZKSNfUkpLzowxmnblMwTjUZUv4qbAZ6SgenT66
-         tLof6bKh+HjN6fEvPxH8inEj6hYWe0gH5QmFvZ8XQbEAe/mdosRTtu8lI2uKRwAR8iYH
-         pxyGlPl1GSzPhy8V9Y7Z3ZglKYByYZKlGnDFWr8wymCPSIx9dc+UyBUvB7Y30DIRIwUf
-         fULIAl6HuNsjXRL+ZbFGgONFJHycSPnZVsX2VIPCcYetHk3zpi100WQNyr7wgalDB6sO
-         5rpg==
-X-Gm-Message-State: AO0yUKUis95cDd+eq73UPNbeCxeikC0S/+PjACq8rCLH0i2SjlWh7pqE
-        9SQG4Vrow8vVSO0wsRrJCpHmlJKTGnmzPq/6e1XcVdvnVuYwSaLysx0OCFelXTDnl0tPdT9chR0
-        Kdt/dQAOwvCAL7K8a+MBf2fqgB2tR97SnPcmsJMlCpiqmpJtQRHXJZw==
-X-Received: by 2002:a05:6a00:a02:b0:624:5886:4b4b with SMTP id p2-20020a056a000a0200b0062458864b4bmr3070755pfh.5.1679537399740;
-        Wed, 22 Mar 2023 19:09:59 -0700 (PDT)
-X-Google-Smtp-Source: AK7set+qIXrGpJSca3VWlnSSMX0FxixLB7TvUj8VZeXNeqk+NwfqhId2m9FOijcCr3XSckRmfUxy0IarUZZxDYpFEQ8=
-X-Received: by 2002:a05:6a00:a02:b0:624:5886:4b4b with SMTP id
- p2-20020a056a000a0200b0062458864b4bmr3070746pfh.5.1679537399366; Wed, 22 Mar
- 2023 19:09:59 -0700 (PDT)
+        bh=ybg5x3mPlbI3ZHUIehsnRSB/BbMrlTIw6UpPqu0sdhM=;
+        b=e07qC8bsMjxyFPwXnCmmYgpZoQ5i92lD6PPLkh7VCKCwNebCmfr0QTrmlBwtzUMhMEGavF
+        p9DwfMNYP//dTUcGyDdMD2ubsuSChGOvLUVktr3HdkDJs/cN6PdvLqR4eG2UTEHZud74Ce
+        9GMGo5q1g8IJU4SyHqTCN3xgqqRgx/A=
+Date:   Thu, 23 Mar 2023 11:50:48 +0800
 MIME-Version: 1.0
-References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
- <CALTww2916uiO8_ViJQXutO2BPasFmiUJtfz8MxW0HKjDzwGFeQ@mail.gmail.com> <167945548970.8008.8910680813298326328@noble.neil.brown.name>
-In-Reply-To: <167945548970.8008.8910680813298326328@noble.neil.brown.name>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Thu, 23 Mar 2023 10:09:48 +0800
-Message-ID: <CALTww282qMHzLYfNdDNk6YnpBFz8QYN77MEzFayVj_Ccoz2c3Q@mail.gmail.com>
-Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
-To:     NeilBrown <neilb@suse.de>
-Cc:     Jes Sorensen <jes@trained-monkey.org>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Song Liu <song@kernel.org>,
-        Linux regressions mailing list <regressions@lists.linux.dev>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Nikolay Kichukov <hijacker@oldum.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH -next 1/6] Revert "md: unlock mddev before reap
+ sync_thread in action_store"
+Content-Language: en-US
+To:     Yu Kuai <yukuai1@huaweicloud.com>, logang@deltatee.com,
+        pmenzel@molgen.mpg.de, agk@redhat.com, snitzer@kernel.org,
+        song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        Marc Smith <msmith626@gmail.com>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
+ <20230322064122.2384589-2-yukuai1@huaweicloud.com>
+ <2c2599ec-ac35-6494-aedf-93ecca1969ee@linux.dev>
+ <d1d27b2a-96ec-319e-4690-64e781c9a473@huaweicloud.com>
+ <b91ae03a-14d5-11eb-8ec7-3ed91ff2c59e@linux.dev>
+ <31e7f59e-579a-7812-632d-059ed0a6d441@huaweicloud.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+In-Reply-To: <31e7f59e-579a-7812-632d-059ed0a6d441@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Mar 22, 2023 at 11:25=E2=80=AFAM NeilBrown <neilb@suse.de> wrote:
+
+
+On 3/23/23 09:36, Yu Kuai wrote:
+> Hi,
 >
-> On Wed, 22 Mar 2023, Xiao Ni wrote:
-> > On Tue, Mar 14, 2023 at 8:08=E2=80=AFAM NeilBrown <neilb@suse.de> wrote=
-:
-> > >
-> > >
-> > > mdopen() will use create_named_array() to ask the kernel to create th=
-e
-> > > given md array, but only if it is given a number or name.
-> > > If it is NOT given a name and is required to choose one itself using
-> > > find_free_devnm() it does NOT use create_named_array().
-> > >
-> > > On kernels with CONFIG_BLOCK_LEGACY_AUTOLOAD not set, this can result=
- in
-> > > failure to assemble an array.  This can particularly seen when the
-> > > "name" of the array begins with a host name different to the name of =
-the
-> > > host running the command.
-> > >
-> > > So add the missing call to create_named_array().
-> > >
-> > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D217074
-> >
-> > Hi Neil
-> >
-> > I have two questions, hope you can help to understand the function
-> > create_mddev better.
-> >
-> > Frist, from the comment7 of the bug you mentioned:
-> >
-> > There are two different sorts names.  Note that you almost
-> > acknowledged this by writing "name for my md device node" while the
-> > documentation only talks about names for "md devices", not for "md
-> > device nodes".
-> >
-> > There are
-> > 1/ there are names in /dev or /dev/md/ (device nodes)
-> > 2/ there are names that appear in /proc/mdstat and in /sys/block/ (devi=
-ces)
-> >
-> > Thanks for the clarification. But it looks like it doesn't work like
-> > what you said.
-> > For example:
-> > mdadm -CR /dev/md/root -l0 -n2 /dev/sda /dev/sdc --name=3Dtest
-> > cat /proc/mdstat
-> > Personalities : [raid0]
-> > md127 : active raid0 sdc[1] sda[0]
-> >       3906764800 blocks super 1.2 512k chunks
-> > cd /sys/block/md127/md/
-> >
-> > In /proc/mdstat and /sys/block, they all use md127 rather than the name=
-(root)
+> 在 2023/03/22 22:32, Guoqing Jiang 写道:
+>>>> Could you explain how the same work can be re-queued? Isn't the 
+>>>> PENDING_BIT
+>>>> is already set in t3? I believe queue_work shouldn't do that per 
+>>>> the comment
+>>>> but I am not expert ...
+>>>
+>>> This is not related to workqueue, it is just because raid10
+>>> reinitialize the work that is already queued, 
+>>
+>> I am trying to understand the possibility.
+>>
+>>> like I discribed later in t3:
+>>>
+>>> t2:
+>>> md_check_recovery:
+>>>  INIT_WORK -> clear pending
+>>>  queue_work -> set pending
+>>>   list_add_tail
+>>> ...
+>>>
+>>> t3: -> work is still pending
+>>> md_check_recovery:
+>>>  INIT_WORK -> clear pending
+>>>  queue_work -> set pending
+>>>   list_add_tail -> list is corrupted
+>>
+>> First, t2 and t3 can't be run in parallel since reconfig_mutex must 
+>> be held. And if sync_thread existed,
+>> the second process would unregister and reap sync_thread which means 
+>> the second process will
+>> call INIT_WORK and queue_work again.
+>>
+>> Maybe your description is valid, I would prefer call work_pending and 
+>> flush_workqueue instead of
+>> INIT_WORK and queue_work.
 >
-> Try again with "CREATE names=3Dyes" in /etc/mdadm.conf.
+> This is not enough, it's right this can avoid list corruption, but the
+> worker function md_start_sync just register a sync_thread, and
+> md_do_sync() can still in progress, hence this can't prevent a new
+> sync_thread to start while the old one is not done, some other problems
+> like deadlock can still be triggered.
 >
-> mdadm generally tries to keep:
->   - the names in /dev/
->   - the names in /dev/md/
->   - the names in /proc/mdstat
->   - the names stored in the metadata
+>>> Of course, our 5.10 and mainline are the same,
+>>>
+>>> there are some tests:
+>>>
+>>> First the deadlock can be reporduced reliably, test script is simple:
+>>>
+>>> mdadm -Cv /dev/md0 -n 4 -l10 /dev/sd[abcd]
+>>
+>> So this is raid10 while the previous problem was appeared in raid456, 
+>> I am not sure it is the same
+>> issue, but let's see.
 >
-> in sync.  It can only do this when:
->  - you enabled "names=3Dyes"
->  - you don't confuse it by specifying a device name (/dev/md/root) that
->    is different from the metadata names "test".
->
-> If you don't have "names=3Dyes" then the name in /proc/mdstat and the nam=
-e
-> in /dev/md* will be numeric.  The name in /dev/md/ and the name in the
-> metadata can be different and will usually be the same.
->
-> If you explicitly give a different name with --name=3D than the device
-> name then obviously they will be different.  If you then stop the array
-> and restart with "mdadm -As" or "mdadm -I /dev/sda; mdadm -I /dev/sdb"
-> then mdadm will create a name in /dev/md/ that matches the name in the
-> metadata.
+> Ok, I'm not quite familiar with raid456 yet, however, the problem is
+> still related to that action_store hold mutex to unregister sync_thread,
+> right?
 
-Hi Neil
-
-My last email uses non plain text mode. So many people can't see it. I
-send this again with plain text mode.
-
-Thanks for your explanation.
-
-It looks like I understand it. In the function create_mddev, it tries
-to extract the number and name from dev(device node name) or
-name(metadata name). If it doesn't use --name when creating a raid
-device, it gets the number and name from dev.
-
-1. If it can get a number, we use the mdNN as the raid name. So the
-device node name and raid name are the same(.e.g md0).
-
-2. If it can't get a number and doesn't set 'Create names=3Dyes', it
-automatically chooses a number. In this case the device node name and
-the raid name are different.
-
-For example:
-mdadm -CR /dev/md/root -l0 -n2 /dev/sda /dev/sdc
-The device node name is md127, the raid name is root. Because it
-doesn't specify --name, so the metadata name is root too.
-
-mdadm -CR /dev/md/root -l0 -n2 /dev/sda /dev/sdc --name=3Dtest
-The device node name is md127, the raid name is root, the metadata
-name is test. When assembling raid device, it'll use md127 as the
-device node name too. But the raid name will change to md_test. So
-it's not a good command to create the raid device. If you want to
-specify the raid name in /dev/md/root, it's better not to use --name.
-
-3. If it can't get a number and sets 'Create names=3Dyes' in mdadm.conf,
-it can use the raid name as the device node name.
-For example:
-mdadm -CR /dev/md/root -l0 -n2 /dev/sda /dev/sdc
-The device node name is root, the raid name is root and the metadata
-name is root too.
+Yes and no, the previous raid456 bug also existed because it can't get 
+stripe while
+barrier is involved as you mentioned in patch 4, which is different.
 
 >
-> >
-> > Before this patch,  it creates a symbol link with the name root rather =
-than test
-> > ll /dev/md/root
-> > lrwxrwxrwx. 1 root root 8 Mar 21 22:35 /dev/md/root -> ../md127
->
-> That is what you asked it to do.
->
-> >
-> > So "test" which is specified by --name looks like it has little usage.
-> >
->
-> It is stored in the metadata.  You can see it in --examine output.  If
-> you reassemble the array without specifying a device name, it will use
-> the name "test".
+>>> Then, the problem MD_RECOVERY_RUNNING can be cleared can't be 
+>>> reporduced
+>>> reliably, usually it takes 2+ days to triggered a problem, and each 
+>>> time
+>>> problem phenomenon can be different, I'm hacking the kernel and add
+>>> some BUG_ON to test MD_RECOVERY_RUNNING in attached patch, following
+>>> test can trigger the BUG_ON:
+>>
+>> Also your debug patch obviously added large delay which make the 
+>> calltrace happen, I doubt
+>> if user can hit it in real life. Anyway, will try below test from my 
+>> side.
+>>
+>>> mdadm -Cv /dev/md0 -e1.0 -n 4 -l 10 /dev/sd{a..d} --run
+>>> sleep 5
+>>> echo 1 > /sys/module/md_mod/parameters/set_delay
+>>> echo idle > /sys/block/md0/md/sync_action &
+>>> sleep 5
+>>> echo "want_replacement" > /sys/block/md0/md/dev-sdd/state
 
-So we can call it metadata name :)
+Combined your debug patch with above steps. Seems you are
 
->
-> >
-> > By the way, after this patch, the symbol link /dev/md/root can't be
-> > created anymore.
-> > Is it a regression problem?
->
-> I cannot reproduce any problem like that.  Please provide a sequence of
-> steps so that I can try to duplicate it.
+1. add delay to action_store, so it can't get lock in time.
+2. echo "want_replacement"**triggers md_check_recovery which can grab lock
+     to start sync thread.
+3. action_store finally hold lock to clear RECOVERY_RUNNING in reap sync 
+thread.
+4. Then the new added BUG_ON is invoked since RECOVERY_RUNNING is cleared
+     in step 3.
 
-In the next email, Mariusz has given the reproduction steps. And it's
-another patch that causes the regression.
+>>>
+>>> test result:
+>>>
+>>> [  228.390237] md_check_recovery: running is set
+>>> [  228.391376] md_check_recovery: queue new sync thread
+>>> [  233.671041] action_store unregister success! delay 10s
+>>> [  233.689276] md_check_recovery: running is set
+>>> [  238.722448] md_check_recovery: running is set
+>>> [  238.723328] md_check_recovery: queue new sync thread
+>>> [  238.724851] md_do_sync: before new wor, sleep 10s
+>>> [  239.725818] md_do_sync: delay done
+>>> [  243.674828] action_store delay done
+>>> [  243.700102] md_reap_sync_thread: running is cleared!
+>>> [  243.748703] ------------[ cut here ]------------
+>>> [  243.749656] kernel BUG at drivers/md/md.c:9084!
+>>
+>> After your debug patch applied, is L9084 points to below?
+>>
+>> 9084                                 mddev->curr_resync = MaxSector;
+>
+> In my environment, it's a BUG_ON() that I added in md_do_sync:
 
->
-> >
-> > Second, are there possibilities that the arguments "dev" and "name" of
-> > function create_mddev
-> > are null at the same time?
->
-> No.  For Build or Create, dev is never NULL.  For Assemble and
-> Incremental, name is never NULL.
->
->
-> > After some tests, I found dev can't be null when creating a raid
-> > device. It can be checked before
-> > calling create_mddev. And we must get a name after creating a raid
-> > device. So when assembling
-> > a raid device, the name must not be null. So the dev and name can't be
-> > null at the same time, right?
->
-> Correct.
+Ok, so we are on different code base ...
 
-Thanks for the confirmation. Now there is a comment like this:
-"If both name and dev are NULL, we choose a name 'mdXX' or 'mdpXX'".
-I'll try to write some patches to optimize the function mddev_create
-and those comments.
+> 9080  skip:
+> 9081         /* set CHANGE_PENDING here since maybe another update is 
+> needed,
+> 9082         ┊* so other nodes are informed. It should be harmless for 
+> normal
+> 9083         ┊* raid */
+> 9084         BUG_ON(!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
+> 9085         set_mask_bits(&mddev->sb_flags, 0,
+> 9086                 ┊     BIT(MD_SB_CHANGE_PENDING) | 
+> BIT(MD_SB_CHANGE_DEVS));
+>
+>>
+>> I don't understand how it triggers below calltrace, and it has 
+>> nothing to do with
+>> list corruption, right?
+>
+> Yes, this is just a early BUG_ON() to detect that if MD_RECOVERY_RUNNING
+> is cleared while sync_thread is still in progress.
 
-Best Regards
-Xiao
+sync_thread can be interrupted once MD_RECOVERY_INTR is set which means 
+the RUNNING
+can be cleared, so I am not sure the added BUG_ON is reasonable. And 
+change BUG_ON
+like this makes more sense to me.
 
++BUG_ON(!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
++!test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+
+I think there might be racy window like you described but it should be 
+really small, I prefer
+to just add a few lines like this instead of revert and introduce new 
+lock to resolve the same
+issue (if it is).
+
+@@ -4792,9 +4793,15 @@action_store(struct mddev *mddev, const char 
+*page, size_t len)
+                        if (mddev->sync_thread) {
+                                sector_t save_rp = mddev->reshape_position;
+
++set_bit(MD_RECOVERY_DONOT, &mddev->recovery);
+@@ -4805,6 +4812,7 @@action_store(struct mddev *mddev, const char *page, 
+size_t len)
+                                mddev->reshape_position = save_rp;
+                                set_bit(MD_RECOVERY_INTR, 
+&mddev->recovery);
+                                md_reap_sync_thread(mddev);
++clear_bit(MD_RECOVERY_DONOT, &mddev->recovery);
+                        }
+                        mddev_unlock(mddev);
+@@ -9296,6 +9313,9 @@void md_check_recovery(struct mddev *mddev)
+        if (!md_is_rdwr(mddev) &&
+            !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
+                return;
++/* action_store is in the middle of reap sync thread, let's wait */
++if (test_bit(MD_RECOVERY_DONOT, &mddev->recovery))
++return;
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -553,6 +553,7 @@enum recovery_flags {
+        MD_RECOVERY_ERROR,      /* sync-action interrupted because 
+io-error */
+        MD_RECOVERY_WAIT,       /* waiting for pers->start() to finish */
+        MD_RESYNCING_REMOTE,    /* remote node is running resync thread */
++MD_RECOVERY_DONOT,     /* for a nasty racy issue */
+};
+
+TBH, I am reluctant to see the changes in the series, it can only be 
+considered
+acceptable with conditions:
+
+1. the previous raid456 bug can be fixed in this way too, hopefully Marc 
+or others
+     can verify it.
+2. pass all the tests in mdadm.
+
+Thanks,
+Guoqing
