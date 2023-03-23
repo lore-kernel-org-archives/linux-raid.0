@@ -2,96 +2,74 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3DE7C74A5B
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 15:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85283C74A5B
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 16:15:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232158AbjCWP3Q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Mar 2023 11:29:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54264 "EHLO
+        id S231596AbjCWQPv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Mar 2023 12:15:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232156AbjCWP3O (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Mar 2023 11:29:14 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73F9734317
-        for <linux-raid@vger.kernel.org>; Thu, 23 Mar 2023 08:29:08 -0700 (PDT)
+        with ESMTP id S231959AbjCWQPg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Mar 2023 12:15:36 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E76828D03
+        for <linux-raid@vger.kernel.org>; Thu, 23 Mar 2023 09:15:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679585348; x=1711121348;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=xe7cMoX5nEw+nbmSlaZ0ANw1cSns8GXN1TZKjvxPL10=;
-  b=NBgapu71B2+3It7s/WeLo4YMGctXQWBgedR2Ljy6k3UILKJZjCf/eHDo
-   BMXdjDe0XYvh5lJQvhr8mO3kIJ899gE5JLA7bIw7DFKEq4mNMqx67MEdt
-   ur0pKW52GdY5zF2LxZlQSWgqaYig8mwxar8QkLCd/ZXCVXKtxDfVPpgdW
-   X+lj+7w6QujwHx/FZ5HeJ4fXWOn5IzGxHQ5/JVuT/bEhD81lE8jOhKZlz
-   UPojuXCntzLPTb0+cuBMQrQ6N6LBWdAaenvI1Ns+NDUa1AfbyopiKMrh3
-   iVXHCfr0hnEC/v9/gjX4/PqcBbYrsA1t6x30GkdsWiKsh9HQxvmUBxOma
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10658"; a="323385413"
+  t=1679588123; x=1711124123;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=N4M2UDVelq+/HgWtjwUIbeeW9wpXB7W4DdHmYhcAlZg=;
+  b=gTwByN2hIalgYwvnnwpJIQxsbrnINp7f7K41w9k0YhzAUfq71dhshwxI
+   YvserMqg4lbYHTMZtM6sJB96fNgAJYVQexX1KCqaQZFpaBjYFRlrVaPL0
+   WUE4qUrbYuMfRxNHWKwI6VFB9pJFZqijYqmkTx3Yb3jaZtLjQK3pNxmHH
+   OljsPLUTHul8QLKuL/e46D2sY9SX8nXEUHpQsGT2Gzp7vOumCGHCv067I
+   zxv4YM9X/k7B1tyqEWlvtgR/80j6lc+fuHUnvFalqkAt7ET7Fi2FukzbS
+   AK2OTY3QmNiOV8aL4uUrcvLZHhzev4ZIQIeQY/YJTQ62f77S15UuD8qSt
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10658"; a="341918543"
 X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
-   d="scan'208";a="323385413"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2023 08:29:08 -0700
+   d="scan'208";a="341918543"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2023 09:13:37 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10658"; a="714856752"
+X-IronPort-AV: E=McAfee;i="6600,9927,10658"; a="928304743"
 X-IronPort-AV: E=Sophos;i="5.98,285,1673942400"; 
-   d="scan'208";a="714856752"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.62.238])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2023 08:29:06 -0700
-Date:   Thu, 23 Mar 2023 16:29:01 +0100
+   d="scan'208";a="928304743"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.105.40])
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2023 09:13:36 -0700
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Mateusz Grzonka <mateusz.grzonka@intel.com>
-Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org
-Subject: Re: [PATCH v2] Create: Fix checking for container in
- update_metadata
-Message-ID: <20230323162901.00005b0a@linux.intel.com>
-In-Reply-To: <20230323115000.25364-1-mateusz.grzonka@intel.com>
-References: <20230323115000.25364-1-mateusz.grzonka@intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org, colyli@suse.de
+Subject: [PATCH] Revert "Revert "mdadm/systemd: remove KillMode=none from service file""
+Date:   Thu, 23 Mar 2023 17:13:18 +0100
+Message-Id: <20230323161318.25564-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jes,
-Please merge this to unblock our upstream testing :)
+This reverts commit 28a083955c6f58f8e582734c8c82aff909a7d461.
 
-Thanks,
-Mariusz
+Resolved by commit 723d1df4946e ("mdmon: Improve switchroot
+interactions.") We are ready to drop it.
 
-On Thu, 23 Mar 2023 12:50:00 +0100
-Mateusz Grzonka <mateusz.grzonka@intel.com> wrote:
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+---
+ systemd/mdadm-grow-continue@.service | 1 -
+ 1 file changed, 1 deletion(-)
 
-> The commit 8a4ce2c05386 ("Create: Factor out add_disks() helpers")
-> introduced a regression that caused timeouts and udev failing to create
-> links.
-> 
-> Steps to reproduce the issue were as following:
-> $ mdadm -CR imsm -e imsm -n4 /dev/nvme[0-3]n1
-> $ mdadm -CR vol -l5 -n4 /dev/nvme[0-3]n1 --assume-clean
-> 
-> I found the check for container was wrong because negation was missing.
-> 
-> Fixes: 8a4ce2c05386 ("Create: Factor out add_disks() helpers")
-> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
-> ---
->  Create.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/Create.c b/Create.c
-> index bbe9e13d..0911bf92 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -328,7 +328,7 @@ static int update_metadata(int mdfd, struct shape *s,
-> struct supertype *st,
->  	 * again returns container info.
->  	 */
->  	st->ss->getinfo_super(st, &info_new, NULL);
-> -	if (st->ss->external && is_container(s->level) &&
-> +	if (st->ss->external && !is_container(s->level) &&
->  	    !same_uuid(info_new.uuid, info->uuid, 0)) {
->  		map_update(map, fd2devnm(mdfd),
->  			   info_new.text_version,
+diff --git a/systemd/mdadm-grow-continue@.service b/systemd/mdadm-grow-continue@.service
+index 9ccadca3..64b8254a 100644
+--- a/systemd/mdadm-grow-continue@.service
++++ b/systemd/mdadm-grow-continue@.service
+@@ -15,4 +15,3 @@ ExecStart=BINDIR/mdadm --grow --continue /dev/%I
+ StandardInput=null
+ StandardOutput=null
+ StandardError=null
+-KillMode=none
+-- 
+2.26.2
 
