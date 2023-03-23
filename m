@@ -2,145 +2,171 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9379EC6FD1C
-	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 06:32:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE6ECC6FD1C
+	for <linux-raid@archiver.kernel.org>; Thu, 23 Mar 2023 10:52:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229617AbjCWGc5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 23 Mar 2023 02:32:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36040 "EHLO
+        id S231575AbjCWKwu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 23 Mar 2023 06:52:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229500AbjCWGc4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Mar 2023 02:32:56 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8685120;
-        Wed, 22 Mar 2023 23:32:55 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PhwWQ4S5Nz4f3k5b;
-        Thu, 23 Mar 2023 14:32:50 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgDX0R+S8htk_pqkFQ--.47155S3;
-        Thu, 23 Mar 2023 14:32:52 +0800 (CST)
-Subject: Re: [PATCH -next 1/6] Revert "md: unlock mddev before reap
- sync_thread in action_store"
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Yu Kuai <yukuai1@huaweicloud.com>, logang@deltatee.com,
-        pmenzel@molgen.mpg.de, agk@redhat.com, snitzer@kernel.org,
-        song@kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        with ESMTP id S229990AbjCWKwd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 23 Mar 2023 06:52:33 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F26993644F;
+        Thu, 23 Mar 2023 03:51:27 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 8508F33AFE;
+        Thu, 23 Mar 2023 10:51:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1679568686; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/4T01aO7KrwJ0o9dCCBrYUuu0XOrAxnj5hVsRfD+YWc=;
+        b=0ehM7twXp1X7rd9GU+Iyh80/5EQuIvKw6OjeYVs/ByMwL1jDgQzFI9WSyUcjePnRMy3Xu4
+        WrZyHdNkl62xeUXvDukS8j1B0I0UBSVwA523fvmb+XenMYLM8FAIKgxCTMniTDtLVczlg5
+        o52I6tO+FcfJCe1+QXW6Aenjv+p/1N8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1679568686;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/4T01aO7KrwJ0o9dCCBrYUuu0XOrAxnj5hVsRfD+YWc=;
+        b=acUMaQsh+rlfmQorvDijoAeW614fAQfU/swbT9KWY8FcrlDls58uc6WKHkwXQJ8JkTXSwv
+        xpLWEL9oRRGI6cAw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6440013596;
+        Thu, 23 Mar 2023 10:51:25 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id h59wGC0vHGQVeAAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 23 Mar 2023 10:51:25 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 5E0DCA071C; Thu, 23 Mar 2023 11:51:20 +0100 (CET)
+Date:   Thu, 23 Mar 2023 11:51:20 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Jan Kara <jack@suse.cz>, Yu Kuai <yukuai1@huaweicloud.com>,
+        hch@infradead.org, axboe@kernel.dk, yukuai3@huawei.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         yi.zhang@huawei.com, yangerkun@huawei.com,
-        Marc Smith <msmith626@gmail.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
- <20230322064122.2384589-2-yukuai1@huaweicloud.com>
- <2c2599ec-ac35-6494-aedf-93ecca1969ee@linux.dev>
- <d1d27b2a-96ec-319e-4690-64e781c9a473@huaweicloud.com>
- <b91ae03a-14d5-11eb-8ec7-3ed91ff2c59e@linux.dev>
- <31e7f59e-579a-7812-632d-059ed0a6d441@huaweicloud.com>
- <3fc2a539-e4cc-e057-6cf0-da7b3953be6e@linux.dev>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <3aa073e9-5145-aae2-2201-5ba48c09c693@huaweicloud.com>
-Date:   Thu, 23 Mar 2023 14:32:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH] block: don't set GD_NEED_PART_SCAN if scan partition
+ failed
+Message-ID: <20230323105120.jrhgjfbj3jlgw2h6@quack3>
+References: <ZBmYcuVzpDDTiaP+@ovpn-8-18.pek2.redhat.com>
+ <20230322035926.1791317-1-yukuai1@huaweicloud.com>
+ <ZBq1K90+9ASVbdTu@ovpn-8-17.pek2.redhat.com>
+ <20230322094707.7xsexupiijmxxlom@quack3>
+ <ZBrnxrQ8csN/xkRG@ovpn-8-17.pek2.redhat.com>
+ <20230322130709.7zp7spmhcmjbfjvm@quack3>
+ <ZBsoE677zEuAm23E@ovpn-8-17.pek2.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <3fc2a539-e4cc-e057-6cf0-da7b3953be6e@linux.dev>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDX0R+S8htk_pqkFQ--.47155S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZrWUWr18CF4rKr1kKFWfZrb_yoW8KFW3pF
-        WfG3Z8Xw4kAw4Iya4jvw1Iqa4Fvw4jvrWUGr95Ga4kJ345GrWIqFy8ua1DuayDXrZ7Aa12
-        vayrtFs3Za95u3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZBsoE677zEuAm23E@ovpn-8-17.pek2.redhat.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-在 2023/03/23 11:50, Guoqing Jiang 写道:
-
-> Combined your debug patch with above steps. Seems you are
+On Thu 23-03-23 00:08:51, Ming Lei wrote:
+> On Wed, Mar 22, 2023 at 02:07:09PM +0100, Jan Kara wrote:
+> > On Wed 22-03-23 19:34:30, Ming Lei wrote:
+> > > On Wed, Mar 22, 2023 at 10:47:07AM +0100, Jan Kara wrote:
+> > > > On Wed 22-03-23 15:58:35, Ming Lei wrote:
+> > > > > On Wed, Mar 22, 2023 at 11:59:26AM +0800, Yu Kuai wrote:
+> > > > > > From: Yu Kuai <yukuai3@huawei.com>
+> > > > > > 
+> > > > > > Currently if disk_scan_partitions() failed, GD_NEED_PART_SCAN will still
+> > > > > > set, and partition scan will be proceed again when blkdev_get_by_dev()
+> > > > > > is called. However, this will cause a problem that re-assemble partitioned
+> > > > > > raid device will creat partition for underlying disk.
+> > > > > > 
+> > > > > > Test procedure:
+> > > > > > 
+> > > > > > mdadm -CR /dev/md0 -l 1 -n 2 /dev/sda /dev/sdb -e 1.0
+> > > > > > sgdisk -n 0:0:+100MiB /dev/md0
+> > > > > > blockdev --rereadpt /dev/sda
+> > > > > > blockdev --rereadpt /dev/sdb
+> > > > > > mdadm -S /dev/md0
+> > > > > > mdadm -A /dev/md0 /dev/sda /dev/sdb
+> > > > > > 
+> > > > > > Test result: underlying disk partition and raid partition can be
+> > > > > > observed at the same time
+> > > > > > 
+> > > > > > Note that this can still happen in come corner cases that
+> > > > > > GD_NEED_PART_SCAN can be set for underlying disk while re-assemble raid
+> > > > > > device.
+> > > > > > 
+> > > > > > Fixes: e5cfefa97bcc ("block: fix scan partition for exclusively open device again")
+> > > > > > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> > > > > 
+> > > > > The issue still can't be avoided completely, such as, after rebooting,
+> > > > > /dev/sda1 & /dev/md0p1 can be observed at the same time. And this one
+> > > > > should be underlying partitions scanned before re-assembling raid, I
+> > > > > guess it may not be easy to avoid.
+> > > > 
+> > > > So this was always happening (before my patches, after my patches, and now
+> > > > after Yu's patches) and kernel does not have enough information to know
+> > > > that sda will become part of md0 device in the future. But mdadm actually
+> > > > deals with this as far as I remember and deletes partitions for all devices
+> > > > it is assembling the array from (and quick tracing experiment I did
+> > > > supports this).
+> > > 
+> > > I am testing on Fedora 37, so mdadm v4.2 doesn't delete underlying
+> > > partitions before re-assemble.
+> > 
+> > Strange, I'm on openSUSE Leap 15.4 and mdadm v4.1 deletes these partitions
+> > (at least I can see mdadm do BLKPG_DEL_PARTITION ioctls). And checking
+> > mdadm sources I can see calls to remove_partitions() from start_array()
+> > function in Assemble.c so I'm not sure why this is not working for you...
 > 
-> 1. add delay to action_store, so it can't get lock in time.
-> 2. echo "want_replacement"**triggers md_check_recovery which can grab lock
->      to start sync thread.
-> 3. action_store finally hold lock to clear RECOVERY_RUNNING in reap sync 
-> thread.
-> 4. Then the new added BUG_ON is invoked since RECOVERY_RUNNING is cleared
->      in step 3.
-
-Yes, this is exactly what I did.
-
-> sync_thread can be interrupted once MD_RECOVERY_INTR is set which means 
-> the RUNNING
-> can be cleared, so I am not sure the added BUG_ON is reasonable. And 
-> change BUG_ON
-
-I think BUG_ON() is reasonable because only md_reap_sync_thread can
-clear it, md_do_sync will exit quictly if MD_RECOVERY_INTR is set, but
-md_do_sync should not see that MD_RECOVERY_RUNNING is cleared, otherwise
-there is no gurantee that only one sync_thread can be in progress.
-
-> like this makes more sense to me.
+> I added dump_stack() in delete_partition() for partition 1, not observe
+> stack trace during booting.
 > 
-> +BUG_ON(!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-> +!test_bit(MD_RECOVERY_INTR, &mddev->recovery));
-
-I think this can be reporduced likewise, md_check_recovery clear
-MD_RECOVERY_INTR, and new sync_thread triggered by echo
-"want_replacement" won't set this bit.
-
+> > 
+> > > Also given mdadm or related userspace has to change for avoiding
+> > > to scan underlying partitions, just wondering why not let userspace
+> > > to tell kernel not do it explicitly?
+> > 
+> > Well, those userspace changes are long deployed, now you would introduce
+> > new API that needs to proliferate again. Not very nice. Also how would that
+> > exactly work? I mean once mdadm has underlying device open, the current
+> > logic makes sure we do not create partitions anymore. But there's no way
+> > how mdadm could possibly prevent creation of partitions for devices it
+> > doesn't know about yet so it still has to delete existing partitions...
 > 
-> I think there might be racy window like you described but it should be 
-> really small, I prefer
-> to just add a few lines like this instead of revert and introduce new 
-> lock to resolve the same
-> issue (if it is).
-
-The new lock that I add in this patchset is just try to synchronize idle
-and forzen from action_store（patch 3), I can drop it if you think this
-is not necessary.
-
-The main changes is patch 4, new lines is not much and I really don't
-like to add new flags unless we have to, current code is already hard
-to understand...
-
-By the way, I'm concerned that drop the mutex to unregister sync_thread
-might not be safe, since the mutex protects lots of stuff, and there
-might exist other implicit dependencies.
-
+> I meant if mdadm has to change to delete existed partitions, why not add
+> one ioctl to disable partition scan for this disk when deleting
+> partitions/re-assemble, and re-enable scan after stopping array.
 > 
-> TBH, I am reluctant to see the changes in the series, it can only be 
-> considered
-> acceptable with conditions:
-> 
-> 1. the previous raid456 bug can be fixed in this way too, hopefully Marc 
-> or others
->      can verify it.
-> 2. pass all the tests in mdadm
+> But looks it isn't so, since you mentioned that remove_partitions is
+> supposed to be called before starting array, however I didn't observe this
+> behavior.
 
-I already test this patchset with mdadm, If there are reporducer for
-raid456 bug, I can try to verify it myself.
+Yeah, not sure what's happening on your system.
 
-Thanks,
-Kuai
+> I am worrying if the current approach may cause regression, one concern is
+> that ioctl(BLKRRPART) needs exclusive open now, such as:
 > 
-> Thanks,
-> Guoqing
-> .
+> 1) mount /dev/vdb1 /mnt
 > 
+> 2) ioctl(BLKRRPART) may fail after removing /dev/vdb3
 
+Well, but we always had some variant of:
+
+        if (disk->open_partitions)
+                return -EBUSY;
+
+in disk_scan_partitions(). So as long as any partition on the disk is used,
+EBUSY is the correct return value from BLKRRPART.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
