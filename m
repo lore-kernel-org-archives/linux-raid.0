@@ -2,137 +2,108 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55F7FC76196
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Mar 2023 21:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85E6BC76196
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Mar 2023 23:17:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbjC1VnG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Mar 2023 17:43:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39344 "EHLO
+        id S229685AbjC1XRu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Mar 2023 19:17:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbjC1VnE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 17:43:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7A5D10F5;
-        Tue, 28 Mar 2023 14:43:03 -0700 (PDT)
+        with ESMTP id S229489AbjC1XRt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 19:17:49 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8C921BF0;
+        Tue, 28 Mar 2023 16:17:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 43E2F6195E;
-        Tue, 28 Mar 2023 21:43:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98AA0C433D2;
-        Tue, 28 Mar 2023 21:43:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 98E7DB81CC9;
+        Tue, 28 Mar 2023 23:17:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6692FC4339B;
+        Tue, 28 Mar 2023 23:17:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680039782;
-        bh=AL26jRXOYUbvhq3Ssc/GIxdGUCwkOvFTKnr8aSbyD4w=;
+        s=k20201202; t=1680045466;
+        bh=FhXWBl3/P/hkvn7SURytWrxmi1wOCQCCyLVCHT/AjHg=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Gf0XeA673rNtAVE/M1fOJwnv79NY1dbG0JNBYuEnjvjTxucnWxKLXjRsby+uCfGu8
-         TlI1EkbgAWo6DYTCJbwJo7bgnXapit9bd6DT220JRkd5IjQpJThGXJd5Oiq1KAQyhg
-         /n22izwjLoQrSsnwzMTiUfRX/9b/nuUtpy9Xrr+c84vzzuJQa1ZwkXl57kdErthx4+
-         xTJPfWGUS9NBvVFXzPQlb1tiFM9k51gnJh5HNU8IVHlSWe7SpOJxLLYkP2hVKgPtSR
-         +Ii//Funpa5KFKIvbtxQGjPFhVkrdxGiT00bk9VBM1tss1rKS7HDQSELJf1zzX0MC5
-         8dsmpS4lyy2uw==
-Received: by mail-lj1-f182.google.com with SMTP id x20so14043607ljq.9;
-        Tue, 28 Mar 2023 14:43:02 -0700 (PDT)
-X-Gm-Message-State: AAQBX9fkF/R90AF88/il3vvUFHVS0zd2fmWNPJm02HOiKJuhoqXpV+mV
-        sBuWfNFADIOl0NoxGQMF7YZY66XeLeEVClH/1fY=
-X-Google-Smtp-Source: AKy350Zw5FqhVro20/10UegQdde16M7C5YqEn+uPuZuevgyVZURL2fVpSWkCu94o9xJDqXskjSnpo892vf0sdNILNEQ=
-X-Received: by 2002:a2e:7a17:0:b0:2a5:fe8f:b313 with SMTP id
- v23-20020a2e7a17000000b002a5fe8fb313mr1725987ljc.5.1680039780663; Tue, 28 Mar
- 2023 14:43:00 -0700 (PDT)
+        b=blux9YB951/4mf9tSWq1b+PHavxvnDpNH0F+o3W9b9WXGOFlQOQLYOGWpg6+3GDdN
+         4iXS78ri3vyj1pLjS7eWdqzd30wh3mFZfK14beK70A/+KFcX1kikRtpSLS2Dcyffsk
+         MzEWAKErbiQv76avCUA52mGfg3Kwygj1KUJ7OqLs9iu5X2f7mQfkmJs/wq1v44pHvY
+         Nrew6jNidhflVxmCe95zkmhc2QEk7rkTNvQ5iK+mVbmdORMB6aY3Rs5ra+me/b1B31
+         vDVf1eJZlDuoKFUQ6Ue9u/G9t7d/q00C+dCdTVoFlnH2RvPOXPlQoodbrQBcL8/ZU/
+         oZ4XN+2ZykvvQ==
+Received: by mail-lj1-f180.google.com with SMTP id a11so14254980lji.6;
+        Tue, 28 Mar 2023 16:17:46 -0700 (PDT)
+X-Gm-Message-State: AAQBX9dC+s62uDFMbOtPTEIGRzey6c9GFIGlx1sbCeoDHv1vsU3PIJFk
+        XQjDS5Hz0c1z9Fz3p0BB3ri7OL7g1xS8VZPD/tc=
+X-Google-Smtp-Source: AKy350ZoOmTviqMFDD7yk6Ien8iqOJ+XgAz2HmnZ1y8TuhUngMovHYNfS/rL4IlQRLzEimtw6spi42+fYJOchvvQ4kQ=
+X-Received: by 2002:a2e:9002:0:b0:299:b5e6:4c45 with SMTP id
+ h2-20020a2e9002000000b00299b5e64c45mr5368280ljg.5.1680045464363; Tue, 28 Mar
+ 2023 16:17:44 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230328094400.1448955-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230328094400.1448955-1-yukuai1@huaweicloud.com>
+References: <20230327132324.1769595-1-trix@redhat.com>
+In-Reply-To: <20230327132324.1769595-1-trix@redhat.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 28 Mar 2023 14:42:48 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4hRBQ9YooAOHsZhio88ykAtrbxxZBfKND_5CzhJBHQoQ@mail.gmail.com>
-Message-ID: <CAPhsuW4hRBQ9YooAOHsZhio88ykAtrbxxZBfKND_5CzhJBHQoQ@mail.gmail.com>
-Subject: Re: [PATCH -next] md: fix regression for null-ptr-deference in __md_stop()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     xni@redhat.com, logang@deltatee.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
+Date:   Tue, 28 Mar 2023 16:17:32 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6=zpRso=5wPUWTPKO+s1Z0Nf09BDpSnb5sKHkEgizbHg@mail.gmail.com>
+Message-ID: <CAPhsuW6=zpRso=5wPUWTPKO+s1Z0Nf09BDpSnb5sKHkEgizbHg@mail.gmail.com>
+Subject: Re: [PATCH v2] md/raid5: remove unused working_disks variable
+To:     Tom Rix <trix@redhat.com>
+Cc:     nathan@kernel.org, ndesaulniers@google.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Mar 28, 2023 at 2:44=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
+On Mon, Mar 27, 2023 at 6:23=E2=80=AFAM Tom Rix <trix@redhat.com> wrote:
 >
-> From: Yu Kuai <yukuai3@huawei.com>
+> clang with W=3D1 reports
+> drivers/md/raid5.c:7719:6: error: variable 'working_disks'
+>   set but not used [-Werror,-Wunused-but-set-variable]
+>         int working_disks =3D 0;
+>             ^
+> This variable is not used so remove it.
 >
-> Commit 3e453522593d ("md: Free resources in __md_stop") tried to fix
-> null-ptr-deference for 'active_io' by moving percpu_ref_exit() to
-> __md_stop(), however, the commit also moving 'writes_pending' to
-> __md_stop(), and this will cause mdadm tests broken:
->
-> BUG: kernel NULL pointer dereference, address: 0000000000000038
-> Oops: 0000 [#1] PREEMPT SMP
-> CPU: 15 PID: 17830 Comm: mdadm Not tainted 6.3.0-rc3-next-20230324-00009-=
-g520d37
-> RIP: 0010:free_percpu+0x465/0x670
-> Call Trace:
->  <TASK>
->  __percpu_ref_exit+0x48/0x70
->  percpu_ref_exit+0x1a/0x90
->  __md_stop+0xe9/0x170
->  do_md_stop+0x1e1/0x7b0
->  md_ioctl+0x90c/0x1aa0
->  blkdev_ioctl+0x19b/0x400
->  vfs_ioctl+0x20/0x50
->  __x64_sys_ioctl+0xba/0xe0
->  do_syscall_64+0x6c/0xe0
->  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->
-> And the problem can be reporduced 100% by following test:
->
-> mdadm -CR /dev/md0 -l1 -n1 /dev/sda --force
-> echo inactive > /sys/block/md0/md/array_state
-> echo read-auto  > /sys/block/md0/md/array_state
-> echo inactive > /sys/block/md0/md/array_state
->
-> Root cause:
->
-> // start raid
-> raid1_run
->  mddev_init_writes_pending
->   percpu_ref_init
->
-> // inactive raid
-> array_state_store
->  do_md_stop
->   __md_stop
->    percpu_ref_exit
->
-> // start raid again
-> array_state_store
->  do_md_run
->   raid1_run
->    mddev_init_writes_pending
->     if (mddev->writes_pending.percpu_count_ptr)
->     // won't reinit
->
-> // inactive raid again
-> ...
-> percpu_ref_exit
-> -> null-ptr-deference
->
-> Before the commit, 'writes_pending' is exited when mddev is freed, and
-> it's safe to restart raid because mddev_init_writes_pending() already mak=
-e
-> sure that 'writes_pending' will only be initialized once.
->
-> Fix the prblem by moving 'writes_pending' back, it's a litter hard to fin=
-d
-> the relationship between alloc memory and free memory, however, code
-> changes is much less and we lived with this for a long time already.
->
-> Fixes: 3e453522593d ("md: Free resources in __md_stop")
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Signed-off-by: Tom Rix <trix@redhat.com>
 
-Applied to md-fixes.
+Applied to md-next, with Yu Kuai's Reviewed-by.
 
-Thanks!
+Thanks,
 Song
+
+> ---
+> v2: remove brances
+> ---
+>  drivers/md/raid5.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 7b820b81d8c2..812a12e3e41a 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7716,7 +7716,6 @@ static void raid5_set_io_opt(struct r5conf *conf)
+>  static int raid5_run(struct mddev *mddev)
+>  {
+>         struct r5conf *conf;
+> -       int working_disks =3D 0;
+>         int dirty_parity_disks =3D 0;
+>         struct md_rdev *rdev;
+>         struct md_rdev *journal_dev =3D NULL;
+> @@ -7912,10 +7911,8 @@ static int raid5_run(struct mddev *mddev)
+>                         pr_warn("md: cannot handle concurrent replacement=
+ and reshape.\n");
+>                         goto abort;
+>                 }
+> -               if (test_bit(In_sync, &rdev->flags)) {
+> -                       working_disks++;
+> +               if (test_bit(In_sync, &rdev->flags))
+>                         continue;
+> -               }
+>                 /* This disc is not fully in-sync.  However if it
+>                  * just stored parity (beyond the recovery_offset),
+>                  * when we don't need to be concerned about the
+> --
+> 2.27.0
+>
