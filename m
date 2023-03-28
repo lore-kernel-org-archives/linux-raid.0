@@ -2,69 +2,65 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 644E1C761A6
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Mar 2023 10:29:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0BFFC77B60
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Mar 2023 11:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232381AbjC1K35 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Mar 2023 06:29:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33980 "EHLO
+        id S230497AbjC1LVS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Mar 2023 07:21:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229670AbjC1K34 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 06:29:56 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA0156184
-        for <linux-raid@vger.kernel.org>; Tue, 28 Mar 2023 03:29:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679999395; x=1711535395;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=mjA0wRxujU1LL34pOeQaUbqfT+I9Q8IRfT9e4a65A5o=;
-  b=FpGpPZ3UOb+P37vIb/GeaKKwxldSvSVyxJctORClccDR2fApK1SKZfj5
-   qBemQy5U8JjeFq6cfmkYe+8SRbPxrpNN57KNPoYhrWn/haNBTIRXD1aOx
-   9jh2X1vVt55lpRnmX7SCWJcQrw3AAJyimluLj56FYiNwLcZIlrLCIg1Ri
-   OW0hPUPDg8Blm7AsWNHl5xpytleac4WnvTa/od5MSCjLXURqj60ME87iA
-   v3JoJrq1lrZMLzyo5vL53dTH7cq/SYS92jAvFqPpvcVkO+FcC/jLYrygf
-   YcB7pZuv/Iwr91ypYKRFyRUWSAgOEngw3DGTHNu65/m+isJnscvsKHdBG
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10662"; a="338031036"
-X-IronPort-AV: E=Sophos;i="5.98,297,1673942400"; 
-   d="scan'208";a="338031036"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2023 03:29:55 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10662"; a="858024573"
-X-IronPort-AV: E=Sophos;i="5.98,297,1673942400"; 
-   d="scan'208";a="858024573"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.40.165])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2023 03:29:52 -0700
-Date:   Tue, 28 Mar 2023 12:29:48 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     miaoguanqin <miaoguanqin@huawei.com>
-Cc:     <jes@trained-monkey.org>, <pmenzel@molgen.mpg.de>,
-        <linux-raid@vger.kernel.org>, <linfeilong@huawei.com>,
-        <lixiaokeng@huawei.com>, <louhongxiang@huawei.com>
-Subject: Re: [PATCH 4/4] Fix memory leak in file mdadm
-Message-ID: <20230328122948.00001e4a@linux.intel.com>
-In-Reply-To: <20230323013053.3238005-5-miaoguanqin@huawei.com>
-References: <20230323013053.3238005-1-miaoguanqin@huawei.com>
-        <20230323013053.3238005-5-miaoguanqin@huawei.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229608AbjC1LVR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 07:21:17 -0400
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12A38AB
+        for <linux-raid@vger.kernel.org>; Tue, 28 Mar 2023 04:21:16 -0700 (PDT)
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 5CAB861CC40F9;
+        Tue, 28 Mar 2023 13:21:12 +0200 (CEST)
+Message-ID: <10ffc219-2ffc-8f0b-d18e-54d7c76ee7bc@molgen.mpg.de>
+Date:   Tue, 28 Mar 2023 13:21:11 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH 1/4] Fix memory leak in file Assemble
+To:     miaoguanqin@huawei.com
+Cc:     jes@trained-monkey.org, mariusz.tkaczyk@linux.intel.com,
+        linux-raid@vger.kernel.org, linfeilong@huawei.com,
+        lixiaokeng@huawei.com, louhongxiang@huawei.com
+References: <20230323013053.3238005-1-miaoguanqin@huawei.com>
+ <20230323013053.3238005-2-miaoguanqin@huawei.com>
+Content-Language: en-US
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20230323013053.3238005-2-miaoguanqin@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 23 Mar 2023 09:30:53 +0800
-miaoguanqin <miaoguanqin@huawei.com> wrote:
+Dear Miao,
 
-> When we test mdadm with asan,we found some memory leaks in mdadm.c
+
+Thank you for your patches.
+
+Am 23.03.23 um 02:30 schrieb miaoguanqin:
+> When we test mdadm with asan,we found some memory leaks in Assemble.c
 > We fix these memory leaks based on code logic.
 > 
-space after comma.
 > Signed-off-by: miaoguanqin <miaoguanqin@huawei.com>
 > Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
 
-Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+It’d be great if you used the full names (also in your From: field) 
+instead of usernames. For example, Li Xiao Keng.
+
+     git config --global user.name "…"
+     git commit --amend --author="… <miaoguanqin@huawei.com>"
+
+
+Kind regards,
+
+Paul
