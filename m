@@ -2,80 +2,106 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17451C6FD18
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Mar 2023 23:23:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 749D2C77B60
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Mar 2023 23:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229964AbjC1XXM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Mar 2023 19:23:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35764 "EHLO
+        id S229749AbjC1Xbh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Mar 2023 19:31:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229913AbjC1XWG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 19:22:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42FD12705;
-        Tue, 28 Mar 2023 16:22:03 -0700 (PDT)
+        with ESMTP id S229757AbjC1Xbg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 19:31:36 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E11F2D52;
+        Tue, 28 Mar 2023 16:31:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B7CFA619FE;
-        Tue, 28 Mar 2023 23:22:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20ABDC4339C;
-        Tue, 28 Mar 2023 23:22:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 51F33B81F65;
+        Tue, 28 Mar 2023 23:31:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 209EAC433A4;
+        Tue, 28 Mar 2023 23:31:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680045722;
-        bh=co5fEGaVszuv812QVnnlYJe69TgJtRpilCHulLW9qFU=;
+        s=k20201202; t=1680046289;
+        bh=f6mXSm7e2TzCi7OfP4gtXCf7l1sYhyFNfXWnEy1hKGo=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=jPq81Ti0mF/9qwl4/eRRFfUBShZlyQA3FnMwB+u1M2XJOQ+xrey4dhCmnRNcnPSPg
-         HAUKzsSuCaK3bkjXtpKUbfwAcFSrJRb9Qt5Q2VSI7OpPsdQymqLlXC1cPaVyOlWXN6
-         DUQzO3Usg4EgT8EElxDYX0KbnWBZeOR5vhAcwzwM2qVto+zL19m7fniC83E1vq1XFP
-         TBKJWr0vb57mOoCydY9QEWC0B2J2plJz/11gD+YKmfw6yFTWx5mskBaGHMvqNqekhB
-         lNjoqR8Ssb7h4ohgwmZkk3g7iX0DaS6WwfYZ74fuM/SOTWvxmJzqRFIuQdBbzi4Xqe
-         HknP9mKYD+rDg==
-Received: by mail-lf1-f41.google.com with SMTP id j11so17856955lfg.13;
-        Tue, 28 Mar 2023 16:22:02 -0700 (PDT)
-X-Gm-Message-State: AAQBX9eKzJ2bj5qca/KbbMHhg4BhbOJ8Tk7TQ9h1qiXp+qIQ0g0sC0Om
-        +bVTBRkrAMLLxU3ltz3itnB0UPPwW1VTFv8sVgk=
-X-Google-Smtp-Source: AKy350bnP+To9f0vTNF3FRw9YcJvrhq6/6Y+OpkYwHV7o8Y8kbD9xs0OWp/mam3rNGg33T/z4SyQSdTTEjJi4E7sW2M=
-X-Received: by 2002:ac2:44a6:0:b0:4eb:d25:8686 with SMTP id
- c6-20020ac244a6000000b004eb0d258686mr3182315lfm.3.1680045720118; Tue, 28 Mar
- 2023 16:22:00 -0700 (PDT)
+        b=eVwieGxD/OsmiBqsC7hbOI45S4M1FdMhBWQMJA5pDrUWfjErBN9wb9wAF0o/yrITp
+         J9bdxdTovCzNP/POKpezbFaGIvx7gKzdYHNN5tYNc8/j7vETxKCOjDzgRG/AwyfJRg
+         u7kgCWCrMmSa0lLMJVSYWDrOFDLWv2IRNFveMyAEaGBha5qrenqQ3KQqV2ipqOvBmS
+         S/sdUFTVUcAREkoD/t3XADIM3cBu6uDMgyX4IoMizkIMoVprF5ZzpDcnHLD4M+/c5H
+         /4ikycv94u2nJ//d5ZnV5RDphlx4xV7lg11MV+zf8lHa63GlbQU114pqj5Exj3rdLA
+         bj+aA4BzEFQMA==
+Received: by mail-lf1-f41.google.com with SMTP id h25so17903717lfv.6;
+        Tue, 28 Mar 2023 16:31:29 -0700 (PDT)
+X-Gm-Message-State: AAQBX9dZLD8Xb1AoBmnethoJajgY5C8tsMRmtL2TvU6R5wV+6PAXId8i
+        QtDcWxhZuL7QBNhmlLzc/D8kDT1Tyzlj9kwHEYU=
+X-Google-Smtp-Source: AKy350YQMcC1+47AFrMaRWuhSXYGhQl9m67feGsAA/QFamVMP4j1Gzd+aBos6gk9u+fqGsQxpc0FI0/okuD/s3v5cKQ=
+X-Received: by 2002:ac2:5338:0:b0:4eb:1316:a2e6 with SMTP id
+ f24-20020ac25338000000b004eb1316a2e6mr2107735lfh.3.1680046287127; Tue, 28 Mar
+ 2023 16:31:27 -0700 (PDT)
 MIME-Version: 1.0
-References: <f9303bdc-b1a7-be5e-56c6-dfa8232b8b55@web.de> <6ee3b703-2161-eacd-c12f-7fa3bedf82dc@web.de>
- <49adf0c8-825a-018f-6d95-ce613944fc9b@web.de>
-In-Reply-To: <49adf0c8-825a-018f-6d95-ce613944fc9b@web.de>
+References: <20230315061810.653263-1-yukuai1@huaweicloud.com>
+ <e1a5fe1c-ea3d-adef-62ec-3b30bedbe4f8@molgen.mpg.de> <606b1388-10e7-a0ae-f314-52274b0942dd@deltatee.com>
+ <d0dfd5ad-12d4-c6d1-68b2-a112d3f3c163@huaweicloud.com>
+In-Reply-To: <d0dfd5ad-12d4-c6d1-68b2-a112d3f3c163@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 28 Mar 2023 16:21:48 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7JZDps_fTHyCabjfG4YjzDVEW_41u6d+9mdc2CAJv_Kw@mail.gmail.com>
-Message-ID: <CAPhsuW7JZDps_fTHyCabjfG4YjzDVEW_41u6d+9mdc2CAJv_Kw@mail.gmail.com>
-Subject: Re: [PATCH resent 0/2] md/raid: Adjustments for two function implementations
-To:     Markus Elfring <Markus.Elfring@web.de>
-Cc:     kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org,
-        Coly Li <colyli@suse.de>, Jens Axboe <axboe@kernel.dk>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        Maciej Trela <Maciej.Trela@intel.com>,
-        Neil Brown <neilb@suse.de>, Shaohua Li <shli@fb.com>,
-        cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>
+Date:   Tue, 28 Mar 2023 16:31:14 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6iuoAu=QBrvz8QvEZ3PtEjj=MKdVAbihZ88Dkj3_h-nw@mail.gmail.com>
+Message-ID: <CAPhsuW6iuoAu=QBrvz8QvEZ3PtEjj=MKdVAbihZ88Dkj3_h-nw@mail.gmail.com>
+Subject: Re: [PATCH v2 0/5] md: fix uaf for sync_thread
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>, agk@redhat.com,
+        snitzer@kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, Mar 25, 2023 at 2:20=E2=80=AFAM Markus Elfring <Markus.Elfring@web.=
-de> wrote:
+On Wed, Mar 15, 2023 at 6:26=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
 >
-> Date: Mon, 20 Mar 2023 17:28:05 +0100
+> Hi,
 >
-> A few update suggestions were taken into account
-> from static source code analysis.
->
-> Markus Elfring (2):
->   raid1: Fix exception handling in setup_conf()
->   raid10: Fix exception handling in setup_conf()
+> =E5=9C=A8 2023/03/16 6:55, Logan Gunthorpe =E5=86=99=E9=81=93:
+[...]
+> > I was going to try and confirm that no new regressions were introduced
+> > by Yu's patches, but seems the tests are getting worse. I tried running
+> > the tests on the current md-next branch and found that one of the early
+> > tests, 00raid5-zero, hangs indefinitely. I quickly ran the same test on
 
-The two functions look good to me as-is. I don't think anything is
-broken except that the code analysis tool complains. I don't think
-it is necessary to make these changes.
+I am not able to repro the issue with 00raid5-zero. (I did a rebase before
+running the test, so that might be the reason).
+
+> > v6.3-rc2 and found that it runs just fine there. So it looks like
+> > there's already a regression in md-next that is not part of this series
+> > and I don't have the time to dig into the root cause right now.
+> >
+> > Yu's patches don't apply cleanly to v6.3-rc2 and I can't run the tests
+> > against md-next; so I didn't bother running them, but I did do a quick
+> > review. The locking changes make sense to me so it might be worth
+> > merging for correctness. However, I'm not entirely sure it's the best
+> > solution -- the md thread stuff seems like a bit of a mess and passing
+> > an mddev to thread functions that were not related to the mddev to get =
+a
+> > lock seems to just make the mess a bit worse.
+> >
+> > For example, it seems a bit ugly to me for the lock mddev->thread_lock
+> > to protect the access of a pointer in struct r5l_log. Just spit-balling=
+,
+> > but perhaps RCU would be more appropriate here. Then md_wakeup_thread()
+> > would just need to hold the RCU read lock when dereferencing, and
+> > md_unregister_thread() would just need to synchronize_rcu() before
+> > stopping and freeing the thread. This has the benefit of not requiring
+> > the mddev object for every md_thread and would probably require a lot
+> > less churn than the current patches.
+>
+> Thanks for your suggestion, this make sense to me. I'll try to use rcu.
+
+Yu Kuai, do you plan to resend the set with Logan suggestions?
 
 Thanks,
 Song
