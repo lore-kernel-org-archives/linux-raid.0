@@ -2,90 +2,157 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18FA2C76196
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Mar 2023 09:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 784C4C77B60
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Mar 2023 09:45:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229789AbjC1Jis (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Mar 2023 05:38:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51174 "EHLO
+        id S232631AbjC1Joa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Mar 2023 05:44:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229610AbjC1Jis (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 05:38:48 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E67E2BE
-        for <linux-raid@vger.kernel.org>; Tue, 28 Mar 2023 02:38:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679996326; x=1711532326;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=KoBLOpm67GghMQxJ2/+f4MZcFEEF24Wcve9EdYvwsVI=;
-  b=cuy4Vv8+haxM+tSRXQpwSksagKV9AniEjFxZVKajymcpu1Tl0w1Yqgg2
-   LoNvcWh2pSDU7uiy8WD1m7JKqjrHEzMsw6uj5onWJY2a4tyil3TyF/9X3
-   vqIDliJPngAiHqD2rDz90HYjGZUQhK8SU/VJCRIP2RgI9cMMgegFy1SuB
-   ONE7wsvXvn95hjQh5Ux9z2omsTEDgqyoV3kzEf59xWbVIaVUzWEIg7qYK
-   XMw7FDaNTRk0eAXHmv0rrq8/iSgpcVAoDApI7CEowvu8lbPfKUU2pxYqD
-   lBT2HTVmmqYGcJ9+VAWi8BO/yK67/OrP6MZOK9uJU0I05u58nfNMhKTLv
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10662"; a="339246375"
-X-IronPort-AV: E=Sophos;i="5.98,297,1673942400"; 
-   d="scan'208";a="339246375"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2023 02:38:46 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10662"; a="748346122"
-X-IronPort-AV: E=Sophos;i="5.98,297,1673942400"; 
-   d="scan'208";a="748346122"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.252.40.165])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2023 02:38:44 -0700
-Date:   Tue, 28 Mar 2023 11:38:39 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     miaoguanqin <miaoguanqin@huawei.com>
-Cc:     <jes@trained-monkey.org>, <pmenzel@molgen.mpg.de>,
-        <linux-raid@vger.kernel.org>, <linfeilong@huawei.com>,
-        <lixiaokeng@huawei.com>, <louhongxiang@huawei.com>
-Subject: Re: [PATCH 2/4] Fix memory leak in file Kill
-Message-ID: <20230328113839.000078e3@linux.intel.com>
-In-Reply-To: <20230323013053.3238005-3-miaoguanqin@huawei.com>
-References: <20230323013053.3238005-1-miaoguanqin@huawei.com>
-        <20230323013053.3238005-3-miaoguanqin@huawei.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S232950AbjC1JoW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 05:44:22 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45DBB5BA5;
+        Tue, 28 Mar 2023 02:44:20 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pm4Wz3pNkz4f3wYm;
+        Tue, 28 Mar 2023 17:44:15 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgCnUiDvtiJkYufTFg--.25586S4;
+        Tue, 28 Mar 2023 17:44:16 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     xni@redhat.com, song@kernel.org, logang@deltatee.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next] md: fix regression for null-ptr-deference in __md_stop()
+Date:   Tue, 28 Mar 2023 17:44:00 +0800
+Message-Id: <20230328094400.1448955-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgCnUiDvtiJkYufTFg--.25586S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxGFykAFyUJF48KFy5WrW7urg_yoW5AF17pF
+        WxKF98Gr4kX3yxt3yUAF1kua43Xa48JFZ2ya9xCryrA3ZI9rWDu3WUur1UZFWUCr97t3ZI
+        qw48ZFZrWas0kwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4U
+        JVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
+        rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
+        vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IY
+        x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
+        xKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
+        67AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-see comments below.
+From: Yu Kuai <yukuai3@huawei.com>
 
-On Thu, 23 Mar 2023 09:30:51 +0800
-miaoguanqin <miaoguanqin@huawei.com> wrote:
+Commit 3e453522593d ("md: Free resources in __md_stop") tried to fix
+null-ptr-deference for 'active_io' by moving percpu_ref_exit() to
+__md_stop(), however, the commit also moving 'writes_pending' to
+__md_stop(), and this will cause mdadm tests broken:
 
-> When we test mdadm with asan,we found some memory leaks in Kill.c
-missing space after ","
+BUG: kernel NULL pointer dereference, address: 0000000000000038
+Oops: 0000 [#1] PREEMPT SMP
+CPU: 15 PID: 17830 Comm: mdadm Not tainted 6.3.0-rc3-next-20230324-00009-g520d37
+RIP: 0010:free_percpu+0x465/0x670
+Call Trace:
+ <TASK>
+ __percpu_ref_exit+0x48/0x70
+ percpu_ref_exit+0x1a/0x90
+ __md_stop+0xe9/0x170
+ do_md_stop+0x1e1/0x7b0
+ md_ioctl+0x90c/0x1aa0
+ blkdev_ioctl+0x19b/0x400
+ vfs_ioctl+0x20/0x50
+ __x64_sys_ioctl+0xba/0xe0
+ do_syscall_64+0x6c/0xe0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-> We fix these memory leaks based on code logic.
-> 
-> Signed-off-by: miaoguanqin <miaoguanqin@huawei.com>
-> Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
-> ---
->  Kill.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Kill.c b/Kill.c
-> index bfd0efdc..46a1a8a0 100644
-> --- a/Kill.c
-> +++ b/Kill.c
-> @@ -41,6 +41,7 @@ int Kill(char *dev, struct supertype *st, int force, int
-> verbose, int noexcl)
->  	 *  4 - failed to find a superblock.
->  	 */
->  
-> +	int flags = 0;
+And the problem can be reporduced 100% by following test:
 
-could you name it "free_super" or something like that? could you use bool?
+mdadm -CR /dev/md0 -l1 -n1 /dev/sda --force
+echo inactive > /sys/block/md0/md/array_state
+echo read-auto  > /sys/block/md0/md/array_state
+echo inactive > /sys/block/md0/md/array_state
 
-Thanks,
-Mariusz
+Root cause:
+
+// start raid
+raid1_run
+ mddev_init_writes_pending
+  percpu_ref_init
+
+// inactive raid
+array_state_store
+ do_md_stop
+  __md_stop
+   percpu_ref_exit
+
+// start raid again
+array_state_store
+ do_md_run
+  raid1_run
+   mddev_init_writes_pending
+    if (mddev->writes_pending.percpu_count_ptr)
+    // won't reinit
+
+// inactive raid again
+...
+percpu_ref_exit
+-> null-ptr-deference
+
+Before the commit, 'writes_pending' is exited when mddev is freed, and
+it's safe to restart raid because mddev_init_writes_pending() already make
+sure that 'writes_pending' will only be initialized once.
+
+Fix the prblem by moving 'writes_pending' back, it's a litter hard to find
+the relationship between alloc memory and free memory, however, code
+changes is much less and we lived with this for a long time already.
+
+Fixes: 3e453522593d ("md: Free resources in __md_stop")
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 161231e01faa..06f262050400 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6265,7 +6265,6 @@ static void __md_stop(struct mddev *mddev)
+ 	module_put(pers->owner);
+ 	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 
+-	percpu_ref_exit(&mddev->writes_pending);
+ 	percpu_ref_exit(&mddev->active_io);
+ 	bioset_exit(&mddev->bio_set);
+ 	bioset_exit(&mddev->sync_set);
+@@ -6278,6 +6277,7 @@ void md_stop(struct mddev *mddev)
+ 	 */
+ 	__md_stop_writes(mddev);
+ 	__md_stop(mddev);
++	percpu_ref_exit(&mddev->writes_pending);
+ }
+ 
+ EXPORT_SYMBOL_GPL(md_stop);
+@@ -7848,6 +7848,7 @@ static void md_free_disk(struct gendisk *disk)
+ {
+ 	struct mddev *mddev = disk->private_data;
+ 
++	percpu_ref_exit(&mddev->writes_pending);
+ 	mddev_free(mddev);
+ }
+ 
+-- 
+2.39.2
+
