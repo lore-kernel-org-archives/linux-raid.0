@@ -2,160 +2,118 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52ABAC76196
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 00:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82494C6FD18
+	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 01:14:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229887AbjC2AB2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Mar 2023 20:01:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46768 "EHLO
+        id S229539AbjC2BOe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Mar 2023 21:14:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229779AbjC2AB0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 20:01:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFF38AF;
-        Tue, 28 Mar 2023 17:01:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4BDC2618E5;
-        Wed, 29 Mar 2023 00:01:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE908C433EF;
-        Wed, 29 Mar 2023 00:01:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680048084;
-        bh=RVxXcEiibRebSGr+aKRiwje0chKKQkgOOPr8eSlVSkY=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=awFjxt5m0rkRkcTeDWE3+14Tkz0Ts+OA3EknP8LyGLYSJKo7krFIZWEkt/fa7t6jW
-         QxwfuThJ/kmJ4Landpwg9VLqnUnT7tGY9Y5MVxEJMQZWjYtEqwd4hutizbqCT6aXS6
-         EwpOxhJfxIuhpGi99UdCv1iphl/Uml/hs3cGcz0ILoc53cwbQxalNiTwc+eOVg3Fss
-         kaAdLvwMDeFOb40RvTGnw/pdg5rubsjNIF3qvm+1GwzMRqdKYpqSHOKqez44Gy7OVP
-         9TZu5SU83+qbpoAxi7zBCDKNnHpJl0V4yXsQtYRb6M+qQajFKYxoMUl29Ms32Xqma8
-         uBWdN0XzJ+Gpw==
-Received: by mail-lf1-f49.google.com with SMTP id h11so11007489lfu.8;
-        Tue, 28 Mar 2023 17:01:24 -0700 (PDT)
-X-Gm-Message-State: AAQBX9ci19N+jOu5gFVsNadSuILBcG+PrLw9rM6qNu7+DGHqohK4DRHG
-        X4u9ocCdGJp9bfO4/KKlxZ6O4j21M6gikWgkCos=
-X-Google-Smtp-Source: AKy350b6mMLErOC4Bt39LRAAoBVZQ1UY0GpckPACTLqkHA0ji0rRxAVibRESZV5L9UB9RCqQS1oIe6imBco637i/Krw=
-X-Received: by 2002:ac2:5dcd:0:b0:4e8:5bed:a051 with SMTP id
- x13-20020ac25dcd000000b004e85beda051mr5202722lfq.3.1680048082691; Tue, 28 Mar
- 2023 17:01:22 -0700 (PDT)
+        with ESMTP id S229507AbjC2BOd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 21:14:33 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6FEDE1;
+        Tue, 28 Mar 2023 18:14:20 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PmT934wYpz4f43Nx;
+        Wed, 29 Mar 2023 09:14:15 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgC3YiDnkCNkRbL8Fg--.2035S3;
+        Wed, 29 Mar 2023 09:14:17 +0800 (CST)
+Subject: Re: [PATCH v2 0/5] md: fix uaf for sync_thread
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>, agk@redhat.com,
+        snitzer@kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230315061810.653263-1-yukuai1@huaweicloud.com>
+ <e1a5fe1c-ea3d-adef-62ec-3b30bedbe4f8@molgen.mpg.de>
+ <606b1388-10e7-a0ae-f314-52274b0942dd@deltatee.com>
+ <d0dfd5ad-12d4-c6d1-68b2-a112d3f3c163@huaweicloud.com>
+ <CAPhsuW6iuoAu=QBrvz8QvEZ3PtEjj=MKdVAbihZ88Dkj3_h-nw@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <2de7665b-b6a9-fe23-6a36-0d8ff2626b15@huaweicloud.com>
+Date:   Wed, 29 Mar 2023 09:14:15 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
- <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de> <d95aa962-9750-c27c-639a-2362bdb32f41@cloud.ionos.com>
- <30576384-682c-c021-ff16-bebed8251365@molgen.mpg.de> <cdc0b03c-db53-35bc-2f75-93bbca0363b5@molgen.mpg.de>
- <bc342de0-98d2-1733-39cd-cc1999777ff3@molgen.mpg.de> <c3390ab0-d038-f1c3-5544-67ae9c8408b1@cloud.ionos.com>
- <a27c5a64-62bf-592c-e547-1e8e904e3c97@molgen.mpg.de> <6c7008df-942e-13b1-2e70-a058e96ab0e9@cloud.ionos.com>
- <12f09162-c92f-8fbb-8382-cba6188bfb29@molgen.mpg.de> <6757d55d-ada8-9b7e-b7fd-2071fe905466@cloud.ionos.com>
- <93d8d623-8aec-ad91-490c-a414c4926fb2@molgen.mpg.de> <0bb7c8d8-6b96-ce70-c5ee-ba414de10561@cloud.ionos.com>
- <e271e183-20e9-8ca2-83eb-225d4d7ab5db@molgen.mpg.de> <1cdfceb6-f39b-70e1-3018-ea14dbe257d9@cloud.ionos.com>
- <7733de01-d1b0-e56f-db6a-137a752f7236@molgen.mpg.de> <d92922af-f411-fc53-219f-154de855cd13@cloud.ionos.com>
- <CAH6h+hf7Y-kurBJG+pnH6WCQiaEK+Jq3KG5JOGnHJ4Uw6AbUjg@mail.gmail.com>
- <2af18cf7-05eb-f1d1-616a-2c5894d1ac43@linux.dev> <CAH6h+hc8VdpaS2q4ya_ZfqVxWFRsKVCjN-sv73SfeyGomXvjRQ@mail.gmail.com>
- <CAH6h+hcWfXNpC1Mro3zfzQc8tK142vuaOMELLJL7mg_G+o0fXw@mail.gmail.com>
-In-Reply-To: <CAH6h+hcWfXNpC1Mro3zfzQc8tK142vuaOMELLJL7mg_G+o0fXw@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 28 Mar 2023 17:01:09 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
-Message-ID: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle" transition
-To:     Marc Smith <msmith626@gmail.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Donald Buczek <buczek@molgen.mpg.de>,
-        linux-raid@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+raid@molgen.mpg.de
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CAPhsuW6iuoAu=QBrvz8QvEZ3PtEjj=MKdVAbihZ88Dkj3_h-nw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgC3YiDnkCNkRbL8Fg--.2035S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ww48XF1Dtw1xtF48ZF4xZwb_yoW8tr4Upa
+        y3KaySyw4kJw1Iyr18tr1I9w1IkryrXrWDJrWrG34rA3s8Xw1ftF47trWDCFyv9F4xWw4a
+        va1Yq3yq9a90v3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Mar 16, 2023 at 8:25=E2=80=AFAM Marc Smith <msmith626@gmail.com> wr=
-ote:
->
-> On Tue, Mar 14, 2023 at 10:45=E2=80=AFAM Marc Smith <msmith626@gmail.com>=
- wrote:
-> >
-> > On Tue, Mar 14, 2023 at 9:55=E2=80=AFAM Guoqing Jiang <guoqing.jiang@li=
-nux.dev> wrote:
-> > >
-> > >
-> > >
-> > > On 3/14/23 21:25, Marc Smith wrote:
-> > > > On Mon, Feb 8, 2021 at 7:49=E2=80=AFPM Guoqing Jiang
-> > > > <guoqing.jiang@cloud.ionos.com> wrote:
-> > > >> Hi Donald,
-> > > >>
-> > > >> On 2/8/21 19:41, Donald Buczek wrote:
-> > > >>> Dear Guoqing,
-> > > >>>
-> > > >>> On 08.02.21 15:53, Guoqing Jiang wrote:
-> > > >>>>
-> > > >>>> On 2/8/21 12:38, Donald Buczek wrote:
-> > > >>>>>> 5. maybe don't hold reconfig_mutex when try to unregister
-> > > >>>>>> sync_thread, like this.
-> > > >>>>>>
-> > > >>>>>>           /* resync has finished, collect result */
-> > > >>>>>>           mddev_unlock(mddev);
-> > > >>>>>>           md_unregister_thread(&mddev->sync_thread);
-> > > >>>>>>           mddev_lock(mddev);
-> > > >>>>> As above: While we wait for the sync thread to terminate, would=
-n't it
-> > > >>>>> be a problem, if another user space operation takes the mutex?
-> > > >>>> I don't think other places can be blocked while hold mutex, othe=
-rwise
-> > > >>>> these places can cause potential deadlock. Please try above two =
-lines
-> > > >>>> change. And perhaps others have better idea.
-> > > >>> Yes, this works. No deadlock after >11000 seconds,
-> > > >>>
-> > > >>> (Time till deadlock from previous runs/seconds: 1723, 37, 434, 12=
-65,
-> > > >>> 3500, 1136, 109, 1892, 1060, 664, 84, 315, 12, 820 )
-> > > >> Great. I will send a formal patch with your reported-by and tested=
--by.
-> > > >>
-> > > >> Thanks,
-> > > >> Guoqing
-> > > > I'm still hitting this issue with Linux 5.4.229 -- it looks like 1/=
-2
-> > > > of the patches that supposedly resolve this were applied to the sta=
-ble
-> > > > kernels, however, one was omitted due to a regression:
-> > > > md: don't unregister sync_thread with reconfig_mutex held (upstream
-> > > > commit 8b48ec23cc51a4e7c8dbaef5f34ebe67e1a80934)
-> > > >
-> > > > I don't see any follow-up on the thread from June 8th 2022 asking f=
-or
-> > > > this patch to be dropped from all stable kernels since it caused a
-> > > > regression.
-> > > >
-> > > > The patch doesn't appear to be present in the current mainline kern=
-el
-> > > > (6.3-rc2) either. So I assume this issue is still present there, or=
- it
-> > > > was resolved differently and I just can't find the commit/patch.
-> > >
-> > > It should be fixed by commit 9dfbdafda3b3"md: unlock mddev before rea=
-p
-> > > sync_thread in action_store".
-> >
-> > Okay, let me try applying that patch... it does not appear to be
-> > present in my 5.4.229 kernel source. Thanks.
->
-> Yes, applying this '9dfbdafda3b3 "md: unlock mddev before reap
-> sync_thread in action_store"' patch on top of vanilla 5.4.229 source
-> appears to fix the problem for me -- I can't reproduce the issue with
-> the script, and it's been running for >24 hours now. (Previously I was
-> able to induce the issue within a matter of minutes.)
+Hi, Song!
 
-Hi Marc,
+在 2023/03/29 7:31, Song Liu 写道:
+> On Wed, Mar 15, 2023 at 6:26 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> Hi,
+>>
+>> 在 2023/03/16 6:55, Logan Gunthorpe 写道:
+> [...]
+>>> I was going to try and confirm that no new regressions were introduced
+>>> by Yu's patches, but seems the tests are getting worse. I tried running
+>>> the tests on the current md-next branch and found that one of the early
+>>> tests, 00raid5-zero, hangs indefinitely. I quickly ran the same test on
+> 
+> I am not able to repro the issue with 00raid5-zero. (I did a rebase before
+> running the test, so that might be the reason).
+> 
+>>> v6.3-rc2 and found that it runs just fine there. So it looks like
+>>> there's already a regression in md-next that is not part of this series
+>>> and I don't have the time to dig into the root cause right now.
+>>>
+>>> Yu's patches don't apply cleanly to v6.3-rc2 and I can't run the tests
+>>> against md-next; so I didn't bother running them, but I did do a quick
+>>> review. The locking changes make sense to me so it might be worth
+>>> merging for correctness. However, I'm not entirely sure it's the best
+>>> solution -- the md thread stuff seems like a bit of a mess and passing
+>>> an mddev to thread functions that were not related to the mddev to get a
+>>> lock seems to just make the mess a bit worse.
+>>>
+>>> For example, it seems a bit ugly to me for the lock mddev->thread_lock
+>>> to protect the access of a pointer in struct r5l_log. Just spit-balling,
+>>> but perhaps RCU would be more appropriate here. Then md_wakeup_thread()
+>>> would just need to hold the RCU read lock when dereferencing, and
+>>> md_unregister_thread() would just need to synchronize_rcu() before
+>>> stopping and freeing the thread. This has the benefit of not requiring
+>>> the mddev object for every md_thread and would probably require a lot
+>>> less churn than the current patches.
+>>
+>> Thanks for your suggestion, this make sense to me. I'll try to use rcu.
+> 
+> Yu Kuai, do you plan to resend the set with Logan suggestions?
 
-Could you please run your reproducer on the md-tmp branch?
-
-https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-tmp
-
-This contains a different version of the fix by Yu Kuai.
+Yes, of course, it's just some other problems is triggered while I'm
+testing the patchset, I'll resend the set once all tests is passed.
 
 Thanks,
-Song
+Kuai
+> 
+> Thanks,
+> Song
+> .
+> 
+
