@@ -2,88 +2,95 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC4F0C74A5B
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 19:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A234EC6FD18
+	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 21:52:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230043AbjC2TDu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 29 Mar 2023 15:03:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39110 "EHLO
+        id S230147AbjC2VwW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 29 Mar 2023 17:52:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230038AbjC2TDt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 15:03:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BEC71BEC;
-        Wed, 29 Mar 2023 12:03:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229985AbjC2VwP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 17:52:15 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 600F9524F;
+        Wed, 29 Mar 2023 14:52:05 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D881261DF4;
-        Wed, 29 Mar 2023 19:03:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46F66C4339C;
-        Wed, 29 Mar 2023 19:03:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680116625;
-        bh=YGgwaQb1Yr5alEBeh50oaFn8YhIPQRRHYUsEM/NJD3o=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=P2lmP8E33IXjzH4K/gd1MewJa5cVRw06HgrDUFB8rL+9UUFDaxSX79kGtHk15qHfn
-         +AwnoYTQBJ/Fmq9qyUoqwY5uO7vhVqhVwIwsssSN36Yx1Fe4kLS6uSB2Bdi+yGyoXp
-         +1yjYxdMyzRnXwkd20epYnEARRcYGiCp8pAOhzokhfC3/VHMkKsQsxf54yq0d4USwd
-         8Qw+FGDGlFfaSh47rGbT8hCClgnnu3NTb+hyqEvS2eMDfxx31h4wbbIDB3TiPbTIam
-         jcQOW6J9fNlXYb5A4gCakILz3mNRadydpZ8ucamPdndMjbpnY9809tMjYE65hkhFN9
-         /jjSO07Lvxl3g==
-Received: by mail-lj1-f181.google.com with SMTP id e9so1969009ljq.4;
-        Wed, 29 Mar 2023 12:03:45 -0700 (PDT)
-X-Gm-Message-State: AAQBX9eslECyDJW4PHzFT9rZZNQWFmXi87YoL/EkYly07tkAk5N7tDzw
-        MRvm61g4XmRtUDhswzYbAQKHc0G1QEnkxkSJd8o=
-X-Google-Smtp-Source: AKy350axvSqGy7GyrH8RKgEAR0+nNstDei6hLLlElkZD93z6FpVGXFrT2U64o7wib0jSGOlS/1QRWOI3Dofy8a+cm0s=
-X-Received: by 2002:a2e:6a0d:0:b0:295:93eb:e790 with SMTP id
- f13-20020a2e6a0d000000b0029593ebe790mr6348106ljc.5.1680116623266; Wed, 29 Mar
- 2023 12:03:43 -0700 (PDT)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 0E56821ABF;
+        Wed, 29 Mar 2023 21:52:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1680126724; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=gbyasE+U5G0etNVXeDJPsM6LV+TgTAw9J2CMCHV/AKk=;
+        b=bJWmz8jbUMFtFdRf84YxkPJz179Q8SYLD8FkEV/Ai+5Kwf0zn/qsjQAhKQPcgmAAaEBXUD
+        ZHVOTAPDEgnphqEXXh/c2Phhes5xzpDHHakoGi2chnlRHo+H0V1k8eJR1NCvi1y9RNs/hq
+        xwpianAeCln+vtsuD8RjPnW5aHlmL08=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1680126724;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=gbyasE+U5G0etNVXeDJPsM6LV+TgTAw9J2CMCHV/AKk=;
+        b=cp+/JNy6F1c42CVnU5n0CDpAbXfsyYWkk5DlKhbkDm9yokxdP28jIOn14Umj2GJXUnNE/Z
+        bmegeFteuLxUEKBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6C10A139D3;
+        Wed, 29 Mar 2023 21:52:01 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id r5u+CAGzJGSvCwAAMHmgww
+        (envelope-from <neilb@suse.de>); Wed, 29 Mar 2023 21:52:01 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-References: <f9303bdc-b1a7-be5e-56c6-dfa8232b8b55@web.de> <6ee3b703-2161-eacd-c12f-7fa3bedf82dc@web.de>
- <49adf0c8-825a-018f-6d95-ce613944fc9b@web.de> <CAPhsuW7JZDps_fTHyCabjfG4YjzDVEW_41u6d+9mdc2CAJv_Kw@mail.gmail.com>
- <2fbfc20a-71ee-ddaa-19d8-7beed559b491@web.de>
-In-Reply-To: <2fbfc20a-71ee-ddaa-19d8-7beed559b491@web.de>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 29 Mar 2023 12:03:30 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6pEK6mQbo=F7DWPhCW1ePkKP2WM8saoeAfMOCSF3CdOA@mail.gmail.com>
-Message-ID: <CAPhsuW6pEK6mQbo=F7DWPhCW1ePkKP2WM8saoeAfMOCSF3CdOA@mail.gmail.com>
-Subject: Re: [0/2] md/raid: Adjustments for two function implementations
-To:     Markus Elfring <Markus.Elfring@web.de>
-Cc:     kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org,
-        Coly Li <colyli@suse.de>, Jens Axboe <axboe@kernel.dk>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        Maciej Trela <Maciej.Trela@intel.com>,
-        Neil Brown <neilb@suse.de>, Shaohua Li <shli@fb.com>,
-        cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Xiao Ni" <xni@redhat.com>
+Cc:     "Jes Sorensen" <jes@trained-monkey.org>,
+        "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>,
+        "Song Liu" <song@kernel.org>,
+        "Linux regressions mailing list" <regressions@lists.linux.dev>,
+        "linux-raid" <linux-raid@vger.kernel.org>,
+        "LKML" <linux-kernel@vger.kernel.org>,
+        "Nikolay Kichukov" <hijacker@oldum.net>
+Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
+In-reply-to: <167945548970.8008.8910680813298326328@noble.neil.brown.name>
+References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>,
+ <CALTww2916uiO8_ViJQXutO2BPasFmiUJtfz8MxW0HKjDzwGFeQ@mail.gmail.com>,
+ <167945548970.8008.8910680813298326328@noble.neil.brown.name>
+Date:   Thu, 30 Mar 2023 08:51:54 +1100
+Message-id: <168012671413.8106.6812573281942242445@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Mar 28, 2023 at 10:32=E2=80=AFPM Markus Elfring <Markus.Elfring@web=
-.de> wrote:
->
-> >>   raid1: Fix exception handling in setup_conf()
-> >>   raid10: Fix exception handling in setup_conf()
-> >
-> > The two functions look good to me as-is. I don't think anything is
-> > broken except that the code analysis tool complains. I don't think
-> > it is necessary to make these changes.
->
-> Will development interests ever grow also for advice from another informa=
-tion source?
-> https://wiki.sei.cmu.edu/confluence/display/c/MEM12-C.+Consider+using+a+g=
-oto+chain+when+leaving+a+function+on+error+when+using+and+releasing+resourc=
-es#MEM12C.Considerusingagotochainwhenleavingafunctiononerrorwhenusingandrel=
-easingresources-CompliantSolution%28POSIX,GotoChain%29
+On Wed, 22 Mar 2023, NeilBrown wrote:
+> On Wed, 22 Mar 2023, Xiao Ni wrote:
+> 
+> > 
+> > Second, are there possibilities that the arguments "dev" and "name" of
+> > function create_mddev
+> > are null at the same time?
+> 
+> No.  For Build or Create, dev is never NULL.  For Assemble and
+> Incremental, name is never NULL.
+> 
 
-While I understand "goto chain" is a good pattern for error handling, I am
-not convinced it is a better approach here. Specifically, the goto chain is=
- so
-long that it is hard to maintain. This also adds overhead for users of
-git-blame. Therefore, I would rather keep these two functions as-is.
+I should clarify this a bit.  For Assemble and Incremental, "name" is
+never NULL *but* it might be an empty string.
+So:
+	if (name && name[0] == 0)
+		name = NULL;
 
-Thanks,
-Song
+might cause it to become NULL.  So you cannot assume there is always
+either a valid "dev" or a valid "name".  "dev" might be NULL, and "name"
+might be "".
+
+NeilBrown
