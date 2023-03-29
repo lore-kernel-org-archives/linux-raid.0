@@ -2,118 +2,174 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82494C6FD18
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 01:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8663DC6FD18
+	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 11:01:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229539AbjC2BOe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 28 Mar 2023 21:14:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53310 "EHLO
+        id S229452AbjC2LBy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 29 Mar 2023 07:01:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229507AbjC2BOd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Mar 2023 21:14:33 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6FEDE1;
-        Tue, 28 Mar 2023 18:14:20 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PmT934wYpz4f43Nx;
-        Wed, 29 Mar 2023 09:14:15 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgC3YiDnkCNkRbL8Fg--.2035S3;
-        Wed, 29 Mar 2023 09:14:17 +0800 (CST)
-Subject: Re: [PATCH v2 0/5] md: fix uaf for sync_thread
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>, agk@redhat.com,
-        snitzer@kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230315061810.653263-1-yukuai1@huaweicloud.com>
- <e1a5fe1c-ea3d-adef-62ec-3b30bedbe4f8@molgen.mpg.de>
- <606b1388-10e7-a0ae-f314-52274b0942dd@deltatee.com>
- <d0dfd5ad-12d4-c6d1-68b2-a112d3f3c163@huaweicloud.com>
- <CAPhsuW6iuoAu=QBrvz8QvEZ3PtEjj=MKdVAbihZ88Dkj3_h-nw@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <2de7665b-b6a9-fe23-6a36-0d8ff2626b15@huaweicloud.com>
-Date:   Wed, 29 Mar 2023 09:14:15 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229436AbjC2LBx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 07:01:53 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AEB219BB
+        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 04:01:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1680087712; x=1711623712;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=1EuX+t8MIN7iu/FywNPH9vXnWk3+MGqhvZ0f0fAZbV4=;
+  b=g5QCIn1IwEVtp9309wuzTCrlFYN8uEqTTe+MhescP/wNAf1f/+FSAbRB
+   BmM+MtuYee1XeOWBvoIhoeoq9i7dmej8ORYXuOJEaphwM5p6tScnhJNNk
+   3S7diKD5gVHrCSOEqIUQUq5eN7GQY0v17yyERPTUMOxkUz6+Zg/zMQam1
+   1m37Mt8AStmI9JBkt1O3Hd4WfZBIKAcF5NLPSC0QwQQfLvQgF5kKZNkCb
+   hmqHMpYfUyQYdsL4A+wiChYdewwkI3oXs8WYtsN1fDv7vdgwNCyNSEtx7
+   bvknm30MxvtfRtxjOyxhUJUHSFirjjBuID0oOUnrsNndV432vOuEc3dzC
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10663"; a="324750487"
+X-IronPort-AV: E=Sophos;i="5.98,300,1673942400"; 
+   d="scan'208";a="324750487"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Mar 2023 04:01:48 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10663"; a="714582534"
+X-IronPort-AV: E=Sophos;i="5.98,300,1673942400"; 
+   d="scan'208";a="714582534"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 29 Mar 2023 04:01:46 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1phTYo-000JSY-2f;
+        Wed, 29 Mar 2023 11:01:46 +0000
+Date:   Wed, 29 Mar 2023 19:01:44 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ 969eb2a7464c5170bd5e33e55904b15eb59f9896
+Message-ID: <64241a98.2I2u9KakWIbVSVtt%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW6iuoAu=QBrvz8QvEZ3PtEjj=MKdVAbihZ88Dkj3_h-nw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgC3YiDnkCNkRbL8Fg--.2035S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ww48XF1Dtw1xtF48ZF4xZwb_yoW8tr4Upa
-        y3KaySyw4kJw1Iyr18tr1I9w1IkryrXrWDJrWrG34rA3s8Xw1ftF47trWDCFyv9F4xWw4a
-        va1Yq3yq9a90v3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi, Song!
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+branch HEAD: 969eb2a7464c5170bd5e33e55904b15eb59f9896  md: fix regression for null-ptr-deference in __md_stop()
 
-在 2023/03/29 7:31, Song Liu 写道:
-> On Wed, Mar 15, 2023 at 6:26 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2023/03/16 6:55, Logan Gunthorpe 写道:
-> [...]
->>> I was going to try and confirm that no new regressions were introduced
->>> by Yu's patches, but seems the tests are getting worse. I tried running
->>> the tests on the current md-next branch and found that one of the early
->>> tests, 00raid5-zero, hangs indefinitely. I quickly ran the same test on
-> 
-> I am not able to repro the issue with 00raid5-zero. (I did a rebase before
-> running the test, so that might be the reason).
-> 
->>> v6.3-rc2 and found that it runs just fine there. So it looks like
->>> there's already a regression in md-next that is not part of this series
->>> and I don't have the time to dig into the root cause right now.
->>>
->>> Yu's patches don't apply cleanly to v6.3-rc2 and I can't run the tests
->>> against md-next; so I didn't bother running them, but I did do a quick
->>> review. The locking changes make sense to me so it might be worth
->>> merging for correctness. However, I'm not entirely sure it's the best
->>> solution -- the md thread stuff seems like a bit of a mess and passing
->>> an mddev to thread functions that were not related to the mddev to get a
->>> lock seems to just make the mess a bit worse.
->>>
->>> For example, it seems a bit ugly to me for the lock mddev->thread_lock
->>> to protect the access of a pointer in struct r5l_log. Just spit-balling,
->>> but perhaps RCU would be more appropriate here. Then md_wakeup_thread()
->>> would just need to hold the RCU read lock when dereferencing, and
->>> md_unregister_thread() would just need to synchronize_rcu() before
->>> stopping and freeing the thread. This has the benefit of not requiring
->>> the mddev object for every md_thread and would probably require a lot
->>> less churn than the current patches.
->>
->> Thanks for your suggestion, this make sense to me. I'll try to use rcu.
-> 
-> Yu Kuai, do you plan to resend the set with Logan suggestions?
+elapsed time: 775m
 
-Yes, of course, it's just some other problems is triggered while I'm
-testing the patchset, I'll resend the set once all tests is passed.
+configs tested: 100
+configs skipped: 6
 
-Thanks,
-Kuai
-> 
-> Thanks,
-> Song
-> .
-> 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r011-20230326   gcc  
+arc                  randconfig-r043-20230326   gcc  
+arc                  randconfig-r043-20230327   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                  randconfig-r013-20230326   clang
+arm                  randconfig-r046-20230326   clang
+arm                  randconfig-r046-20230327   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r015-20230327   clang
+csky                                defconfig   gcc  
+csky                 randconfig-r012-20230326   gcc  
+csky                 randconfig-r016-20230326   gcc  
+hexagon              randconfig-r041-20230326   clang
+hexagon              randconfig-r041-20230327   clang
+hexagon              randconfig-r045-20230326   clang
+hexagon              randconfig-r045-20230327   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-a001-20230327   gcc  
+i386                 randconfig-a002-20230327   gcc  
+i386                 randconfig-a003-20230327   gcc  
+i386                 randconfig-a004-20230327   gcc  
+i386                 randconfig-a005-20230327   gcc  
+i386                 randconfig-a006-20230327   gcc  
+i386                 randconfig-a011-20230327   clang
+i386                 randconfig-a012-20230327   clang
+i386                 randconfig-a013-20230327   clang
+i386                 randconfig-a014-20230327   clang
+i386                 randconfig-a015-20230327   clang
+i386                 randconfig-a016-20230327   clang
+ia64                             allmodconfig   gcc  
+ia64                                defconfig   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r014-20230327   gcc  
+loongarch            randconfig-r024-20230326   gcc  
+m68k                             allmodconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r014-20230326   gcc  
+m68k                 randconfig-r015-20230326   gcc  
+microblaze           randconfig-r026-20230326   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r023-20230327   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r021-20230326   gcc  
+parisc               randconfig-r022-20230327   gcc  
+parisc               randconfig-r025-20230326   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r013-20230327   clang
+riscv                randconfig-r042-20230326   gcc  
+riscv                randconfig-r042-20230327   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r024-20230327   clang
+s390                 randconfig-r044-20230326   gcc  
+s390                 randconfig-r044-20230327   clang
+sh                               allmodconfig   gcc  
+sh                   randconfig-r023-20230326   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r021-20230327   gcc  
+sparc                randconfig-r026-20230327   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-a001-20230327   gcc  
+x86_64               randconfig-a002-20230327   gcc  
+x86_64               randconfig-a003-20230327   gcc  
+x86_64               randconfig-a004-20230327   gcc  
+x86_64               randconfig-a005-20230327   gcc  
+x86_64               randconfig-a006-20230327   gcc  
+x86_64               randconfig-a011-20230327   clang
+x86_64               randconfig-a012-20230327   clang
+x86_64               randconfig-a013-20230327   clang
+x86_64               randconfig-a014-20230327   clang
+x86_64               randconfig-a015-20230327   clang
+x86_64               randconfig-a016-20230327   clang
+x86_64               randconfig-r012-20230327   clang
+x86_64                               rhel-8.3   gcc  
+xtensa               randconfig-r016-20230327   gcc  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
