@@ -2,107 +2,72 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C04C77B72
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 17:08:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 400A9C761AF
+	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 17:48:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231538AbjC2RIl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 29 Mar 2023 13:08:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54738 "EHLO
+        id S229845AbjC2Rsh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 29 Mar 2023 13:48:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231372AbjC2RHh (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 13:07:37 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 159AB65B3;
-        Wed, 29 Mar 2023 10:07:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1680109638; x=1711645638;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=813zYQzJ3ygRpxAxwRlfdubSOcWGUy1xvUxQHtIWz2U=;
-  b=fE975ZFR/F65ORP3VK65C4IpimnfQq20lkwum/MaV5oY4uDOh2ko2HyL
-   3tdFV55opmHko1XoDgIbJXoqOu+bWjlClA6TlFLLgZ71qpMjfxxhkxeT+
-   fpP/KdksUpctcUkHeUzqE1PXlVv1kJyTp4n8kE1UPm0+2mp0HskncAmCx
-   yKEb9GjjXbstVLhToA1OUZAIj5EVfTHGdwQSiHRiAGLeRnNE4dVD5Xkcn
-   HOnTJPBSxevoVVrEe02P80okg5aSQ+ps99VX+bIDIIgFUz/T5YqRt3cAD
-   wehWdITYve8fvFb46pIbPTIQ0ekAf5iENat5EDASehkPGRXCsL3iLTtpK
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.98,301,1673884800"; 
-   d="scan'208";a="225092904"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Mar 2023 01:07:12 +0800
-IronPort-SDR: 3BRWLB/ngjlgbGlghhUv2B88oRumIdq/HRK3rm1oI51hULpiccHglpXalHxb0PLT7mUhivyNZL
- 0IpEM9xeftmoq+ru3b6z7afxxWTYROOelYJyb9NrDoJx6Z4k5RNn+AJGTvZUwatWaCEdcxH4gu
- VPLO35JvxG97TljMWm8WrPu+SL1971V2FL94HCBVX4vqt1hPW8UNV74Hf2pP1QpMaczg6fz76W
- EFf4JYuWxGpywwC1LqVMh18Oh+WkZEjZDnFkOKzlNHxqwdaAj7cJzsH4zs6ug44uLxtCSPU3W+
- Ex4=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 09:23:21 -0700
-IronPort-SDR: 5x6F8sxMltI4WaB27lEorTzv/W+x0JlN7rg04JjPfd38UU2ZZm/8DVpEHZF7Dz1SymcLD61OdU
- pMAulltziCw14vrFFK29xsFqr89kB9UbrC7cwH7R1RI8Lt7mmLGDYyj8PgO4p5chUbgRB50fDX
- pEWQG9uo914V+cwk1EfVh6hsltWKfNnh9Gqxgm0AGxlxSe7pa8UIAv+zE9lP4gByUZGpAjJ+IZ
- Lyi/Xsr9WvBwip9Y4KMe0trG46KV0zl+LFfsw1hbin01REWR95Nk66NcjalZz84eqJSVFLmHCh
- l0Q=
-WDCIronportException: Internal
-Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.72])
-  by uls-op-cesaip01.wdc.com with ESMTP; 29 Mar 2023 10:07:11 -0700
-From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        with ESMTP id S229544AbjC2Rsf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 13:48:35 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6A371A7;
+        Wed, 29 Mar 2023 10:48:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=iJ/vola4H8cgViEzEkBXlY8ssW/mXMKcLaixwmisg/8=; b=KzrLO9+ytx3PbWRmiLMufLNeIF
+        uDOJXsmUYrUM1RWImI0Q6RZjfNc59DlaoUlO9FYruvV9zL6gp/6N8Ug10m9lq1fW6H4NVD/orTF3L
+        UC22t2bbOh5slkLr32VRltg5atVlsd5nnPGmg+lSz88Pc2EuESTc5Z7LxUO9mbIq1l/uDb1uMyTLZ
+        lLgUTqa4ZM52QW2KhPUgaxaIa9oitnfFZKC5nbMu3w+qsJg+Nhvy8Osq4w45CGu4TT3zT/bf/fRQy
+        UoicfczStNRwCnW3SVVki5SWWM7i0XVCyJkhaCupv57+kOz/v7+3xTJlGG+mzQ2roOdv5F5YXJAQA
+        /G6qJtWw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1phZu2-009drW-11; Wed, 29 Mar 2023 17:48:06 +0000
+Date:   Wed, 29 Mar 2023 18:48:05 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.de>,
         Chaitanya Kulkarni <kch@nvidia.com>,
         Damien Le Moal <damien.lemoal@wdc.com>,
         Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         dm-devel@redhat.com, Song Liu <song@kernel.org>,
         linux-raid@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
         Dave Kleikamp <shaggy@kernel.org>,
         jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
         Bob Peterson <rpeterso@redhat.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
-        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 18/19] dm-crypt: check if adding pages to clone bio fails
-Date:   Wed, 29 Mar 2023 10:06:04 -0700
-Message-Id: <beea645603eccbb045ad9bb777e05a085b91808a.1680108414.git.johannes.thumshirn@wdc.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <cover.1680108414.git.johannes.thumshirn@wdc.com>
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 02/19] drbd: use __bio_add_page to add page to bio
+Message-ID: <ZCR51cLkBH4yrYEy@casper.infradead.org>
 References: <cover.1680108414.git.johannes.thumshirn@wdc.com>
+ <87d0bf7d65cb7c64a0010524e5b39466f2b79870.1680108414.git.johannes.thumshirn@wdc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87d0bf7d65cb7c64a0010524e5b39466f2b79870.1680108414.git.johannes.thumshirn@wdc.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Check if adding pages to clone bio fails and if bail out.
+On Wed, Mar 29, 2023 at 10:05:48AM -0700, Johannes Thumshirn wrote:
+> +++ b/drivers/block/drbd/drbd_bitmap.c
+> @@ -1043,9 +1043,11 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
+>  	bio = bio_alloc_bioset(device->ldev->md_bdev, 1, op, GFP_NOIO,
+>  			&drbd_md_io_bio_set);
+>  	bio->bi_iter.bi_sector = on_disk_sector;
+> -	/* bio_add_page of a single page to an empty bio will always succeed,
+> -	 * according to api.  Do we want to assert that? */
+> -	bio_add_page(bio, page, len, 0);
+> +	/*
+> +	 * __bio_add_page of a single page to an empty bio will always succeed,
+> +	 * according to api.  Do we want to assert that?
+> +	 */
+> +	__bio_add_page(bio, page, len, 0);
 
-This way we can mark bio_add_pages as __must_check.
-
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- drivers/md/dm-crypt.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 3ba53dc3cc3f..19f7e087c6df 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -1693,7 +1693,14 @@ static struct bio *crypt_alloc_buffer(struct dm_crypt_io *io, unsigned int size)
- 
- 		len = (remaining_size > PAGE_SIZE) ? PAGE_SIZE : remaining_size;
- 
--		bio_add_page(clone, page, len, 0);
-+		if (!bio_add_page(clone, page, len, 0)) {
-+			mempool_free(page, &cc->page_pool);
-+			crypt_free_buffer_pages(cc, clone);
-+			bio_put(clone);
-+			gfp_mask |= __GFP_DIRECT_RECLAIM;
-+			goto retry;
-+
-+		}
- 
- 		remaining_size -= len;
- 	}
--- 
-2.39.2
-
+Surely the comment should just be deleted?  With no return value to
+check, what would you assert?
