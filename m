@@ -2,228 +2,131 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A996DC74A5B
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 12:38:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 899A2C77B6D
+	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 17:06:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbjC2Miy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 29 Mar 2023 08:38:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48910 "EHLO
+        id S231252AbjC2RGf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 29 Mar 2023 13:06:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbjC2Mix (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 08:38:53 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15A3ED1
-        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 05:38:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1680093532; x=1711629532;
-  h=date:from:to:cc:subject:message-id:mime-version:
+        with ESMTP id S231233AbjC2RGd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 13:06:33 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A50B44B8;
+        Wed, 29 Mar 2023 10:06:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1680109581; x=1711645581;
+  h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=UUbZP2x74Q+TWwdbuoH95aEEwu5JWT+UkK2fgzb/xI8=;
-  b=N5DLnhJFedxc5+wSZy6KZ2rKBkQfnIY7ujiOcysgjwx4ZO7HqHy3P4v9
-   3nOtlhbFQWOdZ4M7Q7kzQsWZxIz3DY66PEEJxVTyai+jeC08NaN2Ouj3C
-   nfBnv9NjFlZ9EtjNSp67/XjFGeO+wi3cLSmxnTufmT6oSzRWnX6yLhAxz
-   KxvKGZNIiFbhnF1pnSavxXC8USdcCOTlvpqfKP5PBZaP0Dm44gWRTa7n9
-   /oNYBQ/VFsM+bhPacSlGvyt53FyLXhOSZiUE6WbdWu52t4a3c/zS0mbIj
-   B5HOBg5DVh6+n30yYkGWyjvhKNz8HpU2NjA7LZD+jXPxL+IJ0S3uX4BZM
+  bh=+NnexQOsAOUbE/augeQOa8oyAzkSCsYrdZjdeoHBcjs=;
+  b=eegj7RVxqxvbatq8B2uigrOeBNSe47E0Vr4CJ8Q5pb5LijBYIm2SIfFD
+   LmEpn7ZqRZu8K7NlRYIXfxRgKuoXzpgL+S+kdiGPf4S63OWbc00evtNDX
+   u0RqjBgp1ahJavAYLCQrJbym3ZF/KYloSVIcUo5/Up+eIuseu3XHDhwMA
+   u6XaWsGMkW2SzgXHlOeRKRRkMyQjz7vzNeTCYURvHDR6bR0Nb8CX2GpC9
+   uDuDyx1CrojNNEygT6rnLH7F45mwKe4qwVqoJotcbRzfduHllM+Mhm4+i
+   kx9cbNPJcKVJT9FA4pKEPEUuaBQ3wlVwXkfoJnszNCJyYKEaZApIa6pQM
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10663"; a="324766930"
-X-IronPort-AV: E=Sophos;i="5.98,300,1673942400"; 
-   d="scan'208";a="324766930"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Mar 2023 05:38:51 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10663"; a="677764763"
-X-IronPort-AV: E=Sophos;i="5.98,300,1673942400"; 
-   d="scan'208";a="677764763"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga007.jf.intel.com with ESMTP; 29 Mar 2023 05:38:50 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1phV4j-000JX2-27;
-        Wed, 29 Mar 2023 12:38:49 +0000
-Date:   Wed, 29 Mar 2023 20:37:56 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 5618a78dd48948979bafc67e2eab9b9bce5095fd
-Message-ID: <64243124.JfK7PEABsD0oycwp%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+X-IronPort-AV: E=Sophos;i="5.98,301,1673884800"; 
+   d="scan'208";a="225092813"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 30 Mar 2023 01:06:20 +0800
+IronPort-SDR: 4Czs/V3uRtbM6T8bvTpWTqKbjnAK/1BA1wnwQ618CHNP6O3qWFFXQgMtwW381tq8vRP7vmUzco
+ 5OdSPUve1Wg3TyLP439ObjlmQAT5IqMRIOCF+m8PxMJQQJ7zq2k9vckW0MjO5b1jZK742Wybhg
+ roJ3UQGbmRyori1AlsQhFqctlQhwnYfTIKjSFz+DTepWukNpOnhnURkj3FK1aTZgWYb0xWjfGg
+ A9TUYIpxbMaFxD73OaXs4XgaoPlP8/+dHnvKiZKQEYFM0G90aZPc+/cuKWAOCk5pVE+D2L0DJa
+ IYM=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 09:22:30 -0700
+IronPort-SDR: 5o43zE44ApvlLKedTs27i6ZN/lELa7pMrmIJQK40gUpdn2C4UtQdcwlIfjiKh1n/bPpGX2YXq8
+ YJJVJzgPqspxZi96lPe0WBzcRw9V0Z9BQK2DV4YAFsTQkHP1VrCBf6vXbgxIZ7J5vpxE0lTn/0
+ xSGPZVtghIG7ljFrff33/jPHtv9RuCOmJLd+y2rtbDipZfTukm+09qiddbRkAF472QN1YGPAI9
+ JwRocCI6ASGu/e1WbcS3qvfbyDLv4KkKB37h7xOPvZEpnFh7bqGxuER/H3ZfH5Gd/fUWjoHgjr
+ ZXs=
+WDCIronportException: Internal
+Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.72])
+  by uls-op-cesaip01.wdc.com with ESMTP; 29 Mar 2023 10:06:20 -0700
+From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 00/19] bio: check return values of bio_add_page
+Date:   Wed, 29 Mar 2023 10:05:46 -0700
+Message-Id: <cover.1680108414.git.johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 5618a78dd48948979bafc67e2eab9b9bce5095fd  md/raid5: remove unused working_disks variable
+We have two functions for adding a page to a bio, __bio_add_page() which is
+used to add a single page to a freshly created bio and bio_add_page() which is
+used to add a page to an existing bio.
 
-elapsed time: 723m
+While __bio_add_page() is expected to succeed, bio_add_page() can fail.
 
-configs tested: 154
-configs skipped: 10
+This series converts the callers of bio_add_page() which can easily use
+__bio_add_page() to using it and checks the return of bio_add_page() for
+callers that don't work on a freshly created bio.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Lastly it marks bio_add_page() as __must_check so we don't have to go again
+and audit all callers.
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r012-20230327   gcc  
-alpha                randconfig-r012-20230329   gcc  
-alpha                randconfig-r013-20230326   gcc  
-alpha                randconfig-r015-20230327   gcc  
-alpha                randconfig-r016-20230326   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                        nsimosci_defconfig   gcc  
-arc                  randconfig-r043-20230327   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm          buildonly-randconfig-r002-20230329   gcc  
-arm                                 defconfig   gcc  
-arm                  randconfig-r011-20230326   clang
-arm                  randconfig-r046-20230327   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r002-20230329   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r014-20230329   gcc  
-csky                 randconfig-r031-20230329   gcc  
-csky                 randconfig-r034-20230329   gcc  
-hexagon              randconfig-r015-20230326   clang
-hexagon              randconfig-r015-20230329   clang
-hexagon              randconfig-r041-20230327   clang
-hexagon              randconfig-r041-20230329   clang
-hexagon              randconfig-r045-20230327   clang
-hexagon              randconfig-r045-20230329   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-a001-20230327   gcc  
-i386                 randconfig-a002-20230327   gcc  
-i386                          randconfig-a002   clang
-i386                 randconfig-a003-20230327   gcc  
-i386                 randconfig-a004-20230327   gcc  
-i386                          randconfig-a004   clang
-i386                 randconfig-a005-20230327   gcc  
-i386                 randconfig-a006-20230327   gcc  
-i386                          randconfig-a006   clang
-i386                 randconfig-a011-20230327   clang
-i386                 randconfig-a012-20230327   clang
-i386                          randconfig-a012   gcc  
-i386                 randconfig-a013-20230327   clang
-i386                 randconfig-a014-20230327   clang
-i386                          randconfig-a014   gcc  
-i386                 randconfig-a015-20230327   clang
-i386                 randconfig-a016-20230327   clang
-i386                          randconfig-a016   gcc  
-i386                          randconfig-c001   gcc  
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r003-20230329   gcc  
-ia64                 randconfig-r036-20230329   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r012-20230326   gcc  
-loongarch            randconfig-r024-20230326   gcc  
-loongarch            randconfig-r036-20230329   gcc  
-m68k                             alldefconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k         buildonly-randconfig-r002-20230329   gcc  
-m68k                                defconfig   gcc  
-m68k                          hp300_defconfig   gcc  
-m68k                 randconfig-r016-20230327   gcc  
-m68k                 randconfig-r035-20230329   gcc  
-microblaze           randconfig-r026-20230326   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r001-20230329   clang
-mips                 randconfig-r016-20230329   gcc  
-nios2        buildonly-randconfig-r003-20230329   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r023-20230327   gcc  
-openrisc                  or1klitex_defconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r001-20230329   gcc  
-parisc               randconfig-r021-20230326   gcc  
-parisc               randconfig-r022-20230327   gcc  
-parisc               randconfig-r025-20230326   gcc  
-parisc               randconfig-r032-20230329   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc              randconfig-r032-20230329   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv             nommu_k210_sdcard_defconfig   gcc  
-riscv                randconfig-r042-20230327   clang
-riscv                randconfig-r042-20230329   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r005-20230329   gcc  
-s390                 randconfig-r013-20230327   clang
-s390                 randconfig-r014-20230329   clang
-s390                 randconfig-r016-20230329   clang
-s390                 randconfig-r024-20230327   clang
-s390                 randconfig-r044-20230327   clang
-s390                 randconfig-r044-20230329   clang
-sh                               allmodconfig   gcc  
-sh                   randconfig-r004-20230329   gcc  
-sh                   randconfig-r006-20230329   gcc  
-sh                   randconfig-r023-20230326   gcc  
-sh                           se7206_defconfig   gcc  
-sh                           sh2007_defconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r011-20230327   gcc  
-sparc                randconfig-r014-20230326   gcc  
-sparc                randconfig-r015-20230329   gcc  
-sparc                randconfig-r021-20230327   gcc  
-sparc                randconfig-r026-20230327   gcc  
-sparc64      buildonly-randconfig-r003-20230329   gcc  
-sparc64      buildonly-randconfig-r005-20230329   gcc  
-sparc64      buildonly-randconfig-r006-20230329   gcc  
-sparc64              randconfig-r031-20230329   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230327   gcc  
-x86_64                        randconfig-a001   clang
-x86_64               randconfig-a002-20230327   gcc  
-x86_64                        randconfig-a002   gcc  
-x86_64               randconfig-a003-20230327   gcc  
-x86_64                        randconfig-a003   clang
-x86_64               randconfig-a004-20230327   gcc  
-x86_64                        randconfig-a004   gcc  
-x86_64               randconfig-a005-20230327   gcc  
-x86_64                        randconfig-a005   clang
-x86_64               randconfig-a006-20230327   gcc  
-x86_64                        randconfig-a006   gcc  
-x86_64               randconfig-a011-20230327   clang
-x86_64               randconfig-a012-20230327   clang
-x86_64                        randconfig-a012   clang
-x86_64               randconfig-a013-20230327   clang
-x86_64               randconfig-a014-20230327   clang
-x86_64                        randconfig-a014   clang
-x86_64               randconfig-a015-20230327   clang
-x86_64               randconfig-a016-20230327   clang
-x86_64                        randconfig-a016   clang
-x86_64                        randconfig-k001   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                              defconfig   gcc  
-xtensa               randconfig-r011-20230329   gcc  
-xtensa               randconfig-r033-20230329   gcc  
+Johannes Thumshirn (19):
+  swap: use __bio_add_page to add page to bio
+  drbd: use __bio_add_page to add page to bio
+  dm: dm-zoned: use __bio_add_page for adding single metadata page
+  fs: buffer: use __bio_add_page to add single page to bio
+  md: use __bio_add_page to add single page
+  md: raid5-log: use __bio_add_page to add single page
+  md: raid5: use __bio_add_page to add single page to new bio
+  btrfs: repair: use __bio_add_page for adding single page
+  btrfs: raid56: use __bio_add_page to add single page
+  jfs: logmgr: use __bio_add_page to add single page to bio
+  gfs: use __bio_add_page for adding single page to bio
+  zonefs: use __bio_add_page for adding single page to bio
+  zram: use __bio_add_page for adding single page to bio
+  floppy: use __bio_add_page for adding single page to bio
+  md: check for failure when adding pages in alloc_behind_master_bio
+  md: raid1: use __bio_add_page for adding single page to bio
+  md: raid1: check if adding pages to resync bio fails
+  dm-crypt: check if adding pages to clone bio fails
+  block: mark bio_add_page as __must_check
+
+ drivers/block/drbd/drbd_bitmap.c |  8 +++++---
+ drivers/block/floppy.c           |  2 +-
+ drivers/block/zram/zram_drv.c    |  2 +-
+ drivers/md/dm-crypt.c            |  9 ++++++++-
+ drivers/md/dm-zoned-metadata.c   |  6 +++---
+ drivers/md/md.c                  |  4 ++--
+ drivers/md/raid1-10.c            |  7 ++++++-
+ drivers/md/raid1.c               |  5 +++--
+ drivers/md/raid10.c              | 12 ++++++++++--
+ drivers/md/raid5-cache.c         |  2 +-
+ drivers/md/raid5-ppl.c           |  4 ++--
+ fs/btrfs/bio.c                   |  2 +-
+ fs/btrfs/raid56.c                |  2 +-
+ fs/buffer.c                      |  2 +-
+ fs/gfs2/ops_fstype.c             |  2 +-
+ fs/jfs/jfs_logmgr.c              |  4 ++--
+ fs/zonefs/super.c                |  2 +-
+ include/linux/bio.h              |  2 +-
+ mm/page_io.c                     |  8 ++++----
+ 19 files changed, 54 insertions(+), 31 deletions(-)
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+2.39.2
+
