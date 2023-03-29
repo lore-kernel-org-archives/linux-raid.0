@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29119C77B62
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 23:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89470C6FD18
+	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 23:33:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230476AbjC2XdI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 29 Mar 2023 19:33:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41126 "EHLO
+        id S229943AbjC2Xdn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 29 Mar 2023 19:33:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231197AbjC2XdG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 19:33:06 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4EA44C13
-        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 16:33:04 -0700 (PDT)
+        with ESMTP id S230222AbjC2Xdl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 19:33:41 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15C005257
+        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 16:33:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1680132784; x=1711668784;
+  t=1680132821; x=1711668821;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=APb6MZhJtx+BKA0st8ClsB22pp0y9Pqig7XgT6sLxmI=;
-  b=ZdwYSlptuiiQ9m/XPcu72hjT1HkjkyJO6sAuXBEApjrKviKHBfgedsgK
-   HaUq5j0oujVKNMlVFWcVDw1PqQqmqd3ZIvGAsrTLEN3U3G1F309ADcBrc
-   vF9tk40fN7DQK0xck4VRVOlW1/OR4Fm5SL5udmNAQC4oW/wEyuCQ3GDCq
-   oj55G6QyQhRoG5q83qQO8CTbfwOxhvW/NAwF3+LcVIANWs5iFMPQjCN98
-   e4CxbLwhbIskb8u58cL68zpt6DnHvgSxLvNNLdpJQ7PJAz6T9btCAKxUe
-   DR+BueXsW9o3343724cswkn84FnVkMHdziGXSOhFC3WRN6vsInoYk7Y3Q
-   Q==;
+  bh=2XfkCsgwrNyUw6t3bN5epvi5ctQPl/PkBM51tAE2KI4=;
+  b=PZAqjBj8Jzi4LKg6fUbOKCAPbxL5vMAOCC2Qut3fnuXMpItWh7x1SVCg
+   zkF12Qgu2HaMNCFlN/eFbgYhphS1Xe3A63I5JBUhCalbmBWniGoiRCqg+
+   8yo3zWwXFpSdG0QwyhZD3ix0EDiZJh9Nhiqe6RUZmgnn3wO94ZS1CNOqu
+   F1wlR3UtV3H1MZLoO/lcY52QcPNb8zoXEAQiWmA+LAblZh54+6kZ3vT0e
+   MPuzu1jUIZuoBYFKy/mxGBW7pmmoc8Lp6mjOXhLHn9yuAbtYBFCd0LITW
+   xLbpBwT+1BdnSP6xPeX8Bn+6TASsviIRvPkFH5s48dBJQldNyM+vchuih
+   g==;
 X-IronPort-AV: E=Sophos;i="5.98,301,1673884800"; 
-   d="scan'208";a="331273896"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Mar 2023 07:33:00 +0800
-IronPort-SDR: ueTj3XO/RxQNYx8pxUEWJUR6Wac8klGEn6tiVFLV3w1bnfRwJ4j5cEAxK8kk3QmhENM2Ro/Sj3
- /eVoTtRn0X2ptlPdn2g/EGdut+QGMIvHurXSiZhJ40pTbxhGcsii86AVxeEDK8KoGVYDVqRrJT
- 2T8FXyz4suDVGGbleezz9QqmDs+d9hOXjPpz8zbzISy/uNxQ+1ZtWwUK0fGu9serGxZ6XKkYLX
- xl/ennIM0rmPLFoAJN3uZLVcIkyYNvR0RzpNxPyvTBQYRxVc35Ij6iphSdGVfUeUz9xKOSyBkV
- raI=
+   d="scan'208";a="226648231"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 30 Mar 2023 07:33:39 +0800
+IronPort-SDR: aodq+tSxjSNluPOigTV5tx69ozQBRNSq9eS341qmDy2TL3TnxQ3g5z2Ixv0Vz/wUmSxp82nYVp
+ Q7o8aiVHRPzpP15FnYJ6siPsaq17sDTkyAczmQ4vXITuIOMlS72v3eDfnHg1P+aEXb8Zlin9Tm
+ NzePfGeuXNMYYbQ0YJagXx6aYQTZUo9RiyHmG6o9spb/9/Zu9XcATEWnT0GH5bQ66IiBIGE2Yp
+ iHrDe7V/fxsA/rYWjip3tNqW/z34XIXUfDJlLcHvGVrlF0zlg14MadPLFtzrYXDCpG7qP0zjb6
+ cSA=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 15:43:28 -0700
-IronPort-SDR: zWZRmTE5kFcVyTvw7airUaizxhnejxpbhypYMA2WP1/2eCMrYn4I/2K8BIt5s7h6lCxSzEt+e2
- ImS4IcKj6EVV/sAmcsLr8gO1R7Wi4XjGzJDk09gfQ23M8j/GO26FM3kfJaKV9m4HxYpGbPYGdq
- CiXhbULyjy7lbJjAL333973rLycvypl88H3NhXeglXF5fktwbtWCIUQduA5VN33X1CKDOMSC4B
- UgmWngnmYsHFeEGXOhtT+TXFbH5ZmmPGtZvNkqKWoRRJ3qvEmR3j5twaHbtiVyk5u9HwUD7uq+
- CxQ=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 15:44:07 -0700
+IronPort-SDR: Sltc/6hWeoxtfRr26Gpv7HMPK9Pbn1G6heJ1mABwky1RmWBTPBytacBB3TifojzMgNZerIkUjr
+ D++DljErtknhLQRXDHe4KVfI3BfMDKjP/o5hB71geMJDhFP9j71b30OFWq6k2giFKGein/Pdrf
+ EF6srs4EMuCql9PjgCMlNrf4goeRiLBmNRndvk/r0GomFiOeHbeSq11bVyr6fasqu+sMfdZbzI
+ kQNQCbiQF6mYPGjP5lM7riwgdexBYT1xzaQmBJTPqOn/nwsk0BvRzoJHE28//FiQC2KqNR2q/g
+ tPc=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 16:33:00 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 16:33:39 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Pn2sl5d2Nz1RtVv
-        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 16:32:59 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Pn2tW1FD5z1RtW1
+        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 16:33:39 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,28 +56,28 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1680132779; x=1682724780; bh=APb6MZhJtx+BKA0st8ClsB22pp0y9Pqig7X
-        gT6sLxmI=; b=EYPDnYeYBXvIPZU4yIKMtwumuioUV+FfuJ8fPXn7WoGbUKa7gK8
-        7zyK1PX1ztxSUnflTcanHerZGll9o1DObBU+bLHw03SR356wtqMJKa09n0qcvgMS
-        vZWj5aB/mrLRcKD+ZLaMWZavI1BMEp4d64WqsbKtIuhCcLZQRoyst2pdWD8Q3ya+
-        ByQ8/RWystsxIVYmNeYNkH7soMStSvU7GBy5Z6O0BckSLdQn+7R88KD6YesLFa8q
-        MYecYOCLxyWkIdz2hhL6x1SyTg5ktN5Fm733y5g6M9KOTaT0AtP36cbIMuLZhZ81
-        iYFb15wzt+oKQjUeF0cNSTKYAFDWutLqRVQ==
+        1680132818; x=1682724819; bh=2XfkCsgwrNyUw6t3bN5epvi5ctQPl/PkBM5
+        1tAE2KI4=; b=iL0pOV79abCn58O3GsYB3incxhwrPGLAZGI7X+0lqN4SQQeDOnB
+        qJb7+62q5R7L5egPIr3c45AiogLxHvyE6Lwb4X+ABQD60bWF9q9d86DXH9mxAomK
+        Qu2grIxrBMnxXiUCC9/WpTKWZywUMM3/M8INQgOE8mZwBHEVU6DB5WsHrjzo+Sn/
+        1V6s1+NZHPGuYuWBRZO8OSKChosO5Hy1NGf3W1IvjZty3XmVtff6p8XfHJ30Gaoh
+        4l9C78DP+cf3gRR2ZbpYL8pkpDSGf79rjnBmncsC+8xVR7xVsQk0BA1KeF40WXti
+        HbeBREtOM52B3AwqaTea8N47bzscm0SsNKg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id kIzlrgfcHGte for <linux-raid@vger.kernel.org>;
-        Wed, 29 Mar 2023 16:32:59 -0700 (PDT)
+        with ESMTP id 0vo1UMfRcUTV for <linux-raid@vger.kernel.org>;
+        Wed, 29 Mar 2023 16:33:38 -0700 (PDT)
 Received: from [10.225.163.116] (unknown [10.225.163.116])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Pn2sh28h9z1RtVm;
-        Wed, 29 Mar 2023 16:32:56 -0700 (PDT)
-Message-ID: <93331778-cc12-5d26-34a5-7cd8834a0309@opensource.wdc.com>
-Date:   Thu, 30 Mar 2023 08:32:55 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Pn2tR3Vpwz1RtVm;
+        Wed, 29 Mar 2023 16:33:35 -0700 (PDT)
+Message-ID: <922e7921-c70c-cda6-aa5a-07ed44596d4b@opensource.wdc.com>
+Date:   Thu, 30 Mar 2023 08:33:34 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.0
-Subject: Re: [PATCH 07/19] md: raid5: use __bio_add_page to add single page to
- new bio
+Subject: Re: [PATCH 08/19] btrfs: repair: use __bio_add_page for adding single
+ page
 Content-Language: en-US
 To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Jens Axboe <axboe@kernel.dk>
@@ -94,10 +94,10 @@ Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org
 References: <cover.1680108414.git.johannes.thumshirn@wdc.com>
- <7ba6247aa9f7a7d6f73361386cc7df5395436c33.1680108414.git.johannes.thumshirn@wdc.com>
+ <faae16612c163bd6e65cf3d629b0a3c65666821b.1680108414.git.johannes.thumshirn@wdc.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <7ba6247aa9f7a7d6f73361386cc7df5395436c33.1680108414.git.johannes.thumshirn@wdc.com>
+In-Reply-To: <faae16612c163bd6e65cf3d629b0a3c65666821b.1680108414.git.johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -105,10 +105,9 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 On 3/30/23 02:05, Johannes Thumshirn wrote:
-> The raid5-ppl submission code uses bio_add_page() to add a page to a
-> newly created bio. bio_add_page() can fail, but the return value is never
-> checked. For adding consecutive pages, the return is actually checked and
-> a new bio is allocated if adding the page fails.
+> The btrfs repair bio submission code uses bio_add_page() to add a page to
+> a newly created bio. bio_add_page() can fail, but the return value is
+> never checked.
 > 
 > Use __bio_add_page() as adding a single page to a newly created bio is
 > guaranteed to succeed.
