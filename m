@@ -2,116 +2,115 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C349CC6FD18
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Mar 2023 23:58:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC35BC74A5B
+	for <linux-raid@archiver.kernel.org>; Thu, 30 Mar 2023 00:12:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230290AbjC2X6n (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 29 Mar 2023 19:58:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58358 "EHLO
+        id S231319AbjC3AMX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 29 Mar 2023 20:12:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229917AbjC2X6n (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 19:58:43 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8049759E7
-        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 16:58:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1680134322; x=1711670322;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=l3K4Kt/FO4iBIKq8VgAcGfFNIvXYccX/xQem9blms08=;
-  b=iN0/9zeAznYhbUZXkkd5ZwXC51rfovnITWRz+bWxbNSb2sbSOSV9Nnu1
-   RYpRsLsotdDxFPkUFGgnq06TIlHvUvzB0u3jjV0ljmrP39jJa/TCPukb+
-   jtfIfMygyzY9Ws2dmcvn3iU3hxZe3bRIZf4HIve+9KO/b7z6xZz7oZMtj
-   KxdfYIsfqK/BS/UsXPf/xpnJcmQecrGpm9tZyER6HQGHo8eb208SUEfdi
-   WgdKqtOavQMJ22WPcbaPluttjUtp96muWXIgZw9JgDyxeO+vDRXnvHvX9
-   sHMhNWTZjlV1hQ3THym0RSFAqwqrLrHZERPTKnmUsKt0FfLWDnwKaKpxH
-   A==;
-X-IronPort-AV: E=Sophos;i="5.98,301,1673884800"; 
-   d="scan'208";a="338905088"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Mar 2023 07:58:40 +0800
-IronPort-SDR: c5/XjCdv6OGi/jw5Ym165Ewiaho195qgSxT8yQPJkIo0/vpcVHYbcTEo1uF9IzXmx4A8sjSwvy
- Umw1gYLp9KqaQgDwKVtVwmq8u+yVYXpz2an+J0uzb/LP4oLEsvMBgNPZJo/PCqPzTM2CstKHGX
- AKwLSUzlx/mKz/ouRKaZm8Zt2JUvHGG3k7DanmXMePt2e4wNrZ/x3hviATskAvATLpIFV/hkH2
- re31vGh2n1PU+09F99/Zq3SPMEfp/4uPEYJAGxPRxJTa0cV3tjzZu3hj8NxjAhAdhI00h7Jhss
- Lf0=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 16:14:49 -0700
-IronPort-SDR: 9Sgk0a3t/mF800LtGJapz0Wczdh5hGcXYy+o2O27DoLU7stVIKHNPvqXQZ7mk/ve9JpHoUKMLD
- qorzqWUT1VQEEu4+Hq3erG9LJwRFs7GJFniDdMWTlOyyd7R/RnyywOISiyNMcUkuybhGgx/EoP
- uuaAkUncMDW7/H7k43m1jxpXVya2DnTQyQSPjqGmr8ssnsdfDt/VIDar/lmDB+FBXFEl7TxwaS
- WRZLCtP526BWSUrERDw0gDX7wWIZSByctvmBSV/j/vaZWFEf2sXz0Ma7o2a0dKlkIVNyhnT+2X
- Yd0=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2023 16:58:41 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Pn3RN22RCz1RtW5
-        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 16:58:40 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1680134319; x=1682726320; bh=l3K4Kt/FO4iBIKq8VgAcGfFNIvXYccX/xQe
-        m9blms08=; b=Z/xEynILGjmaBwHeY3zVoiULWBo3e30fvx6iPr3Zx6Wj7JD/AeL
-        AlMf5sdtT16U+2fy8eU1VAKFPpBudi6kurLPAGIzKE9drC6EeQeqgjCFT9E4ojVy
-        TQQB5cTsm8u17203jJLawINrINsD7UcNkKFsfaNP554pst6fe7CQNFLH/4gnZpHW
-        cIc0ZPn8qBqY/PUa8EZzINk2DyDa38pZrA2IHJhRPZg8wTakQ8CRn+WKb8IUyz/t
-        SBylBZXjhtrWwGcmAPksFGN22jMLMsZOAJeZ+IGqQ1Xj5XyaZ0SgGrhmF2I15zcu
-        VVtWA4JMjP+QyIuov+vQWELqF/Tx0+aFYxg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id rbWKEU4AeiWM for <linux-raid@vger.kernel.org>;
-        Wed, 29 Mar 2023 16:58:39 -0700 (PDT)
-Received: from [10.225.163.116] (unknown [10.225.163.116])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Pn3RJ0pDLz1RtVm;
-        Wed, 29 Mar 2023 16:58:35 -0700 (PDT)
-Message-ID: <e088f7f1-827e-f0e5-4fc0-df0dcefbb873@opensource.wdc.com>
-Date:   Thu, 30 Mar 2023 08:58:35 +0900
+        with ESMTP id S231311AbjC3AMQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Mar 2023 20:12:16 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 850E659EA
+        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 17:11:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680135059;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=nJwwoseYXfDmJDLphLxlCuqi1MgqvP9f+lM5hWiKTuQ=;
+        b=EnChsljgEa3sc3f8Veh74LEyv8pQQm+CY3hZ9xNJinUktgOqIYvII9G7VffxxHy1zT2KCW
+        viL5aa+Z5i2bXAkM+Dyx/9Bm3N7cluIQbvWm1xns2zsppaGqJT2ZfHyti+xWtgl0CC6eoF
+        Bth0KenU5kScWSF7Upwz45hmBn3wWFM=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-542-Vy09KK5TMO6zmYYVMBYoEg-1; Wed, 29 Mar 2023 20:10:57 -0400
+X-MC-Unique: Vy09KK5TMO6zmYYVMBYoEg-1
+Received: by mail-pf1-f200.google.com with SMTP id o188-20020a62cdc5000000b0062be61a5e48so6113057pfg.22
+        for <linux-raid@vger.kernel.org>; Wed, 29 Mar 2023 17:10:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680135056;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=nJwwoseYXfDmJDLphLxlCuqi1MgqvP9f+lM5hWiKTuQ=;
+        b=xMWG6IoO5jAvl3ZjuDhBxKFSrZgCWaIK7a4nPp/vggdzsjQzQcVXIFmrFFAfW/XYP1
+         TTLV37DCn5T5qiUCLi8rE9vJOrQRzprSM1RcZ67MFRUpKPSracsOeLY78zcU6lgvROLY
+         yTf0116x6jf/iUqbuKGHX39aqzsZnxujBLuVQbYNcFSGoG8qFTVsFJjOWGL8GxCyU+ne
+         z7oS423KKisu5xYisi5TZ/aybauY6PQNbdEIgl2M6uuEXHhpcWzuQcdA+SozbapukSX9
+         yqUDqac6UoyhJKjFTlba1Y0n6H2mHbyCSMo4uFOrH+9v5xZt/nk9hIl2O6YlfLwRXmfj
+         m5BA==
+X-Gm-Message-State: AAQBX9chtqakgabOv3SXkhLZnJ3MZaqOeFK8d25Mc9230aL27OSrd4j9
+        CP+V+YUxw03yKkhrQDvYpdjzgKvqvChYpOAR3tquwqOgrjdylUdbehlXjAWavjgT/j2n1u3C1DB
+        VQ+JWrAy+r1ss5TLJmr0ZjnC09o3MhDN4H+J8+A==
+X-Received: by 2002:a17:903:2442:b0:19f:3aa9:bbb7 with SMTP id l2-20020a170903244200b0019f3aa9bbb7mr7677570pls.13.1680135056747;
+        Wed, 29 Mar 2023 17:10:56 -0700 (PDT)
+X-Google-Smtp-Source: AKy350YsEMj7r4L0z/wLASuJ8/zR4+nsT4Ssmbi1Yix7c8rVlq1R49pcvGXt96xxwz/5uYgKuTH3WDKxIrj1E+swa+s=
+X-Received: by 2002:a17:903:2442:b0:19f:3aa9:bbb7 with SMTP id
+ l2-20020a170903244200b0019f3aa9bbb7mr7677566pls.13.1680135056463; Wed, 29 Mar
+ 2023 17:10:56 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH 19/19] block: mark bio_add_page as __must_check
-Content-Language: en-US
-To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org
-References: <cover.1680108414.git.johannes.thumshirn@wdc.com>
- <350bd9c62ce575267a2b38625ab767c332429bc1.1680108414.git.johannes.thumshirn@wdc.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <350bd9c62ce575267a2b38625ab767c332429bc1.1680108414.git.johannes.thumshirn@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <167875238571.8008.9808655454439667586@noble.neil.brown.name>
+ <CALTww2916uiO8_ViJQXutO2BPasFmiUJtfz8MxW0HKjDzwGFeQ@mail.gmail.com>
+ <167945548970.8008.8910680813298326328@noble.neil.brown.name> <168012671413.8106.6812573281942242445@noble.neil.brown.name>
+In-Reply-To: <168012671413.8106.6812573281942242445@noble.neil.brown.name>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Thu, 30 Mar 2023 08:10:45 +0800
+Message-ID: <CALTww28X1NQecTY3Jbkz_wbHc_N7GOw3hJLEyb2YnxAmQ8PRFw@mail.gmail.com>
+Subject: Re: [PATCH - mdadm] mdopen: always try create_named_array()
+To:     NeilBrown <neilb@suse.de>
+Cc:     Jes Sorensen <jes@trained-monkey.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Song Liu <song@kernel.org>,
+        Linux regressions mailing list <regressions@lists.linux.dev>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Nikolay Kichukov <hijacker@oldum.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/30/23 02:06, Johannes Thumshirn wrote:
-> Now that all users of bio_add_page check for the return value, mark
-> bio_add_page as __must_check.
-> 
-> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+On Thu, Mar 30, 2023 at 5:52=E2=80=AFAM NeilBrown <neilb@suse.de> wrote:
+>
+> On Wed, 22 Mar 2023, NeilBrown wrote:
+> > On Wed, 22 Mar 2023, Xiao Ni wrote:
+> >
+> > >
+> > > Second, are there possibilities that the arguments "dev" and "name" o=
+f
+> > > function create_mddev
+> > > are null at the same time?
+> >
+> > No.  For Build or Create, dev is never NULL.  For Assemble and
+> > Incremental, name is never NULL.
+> >
+>
+> I should clarify this a bit.  For Assemble and Incremental, "name" is
+> never NULL *but* it might be an empty string.
+> So:
+>         if (name && name[0] =3D=3D 0)
+>                 name =3D NULL;
+>
+> might cause it to become NULL.  So you cannot assume there is always
+> either a valid "dev" or a valid "name".  "dev" might be NULL, and "name"
+> might be "".
+>
+> NeilBrown
+>
 
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Hi Neil
 
--- 
-Damien Le Moal
-Western Digital Research
+The input argument name should be the metadata name. For incremental
+and assemble, why are there possibilities that the metadata name is
+invalid? A raid device should have a valid metadata name, right?
+
+
+--=20
+Best Regards
+Xiao Ni
 
