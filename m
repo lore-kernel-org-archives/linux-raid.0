@@ -2,126 +2,122 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4211EC761A6
-	for <linux-raid@archiver.kernel.org>; Thu, 30 Mar 2023 18:42:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3061DC7619A
+	for <linux-raid@archiver.kernel.org>; Thu, 30 Mar 2023 19:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231661AbjC3Sm6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 30 Mar 2023 14:42:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45782 "EHLO
+        id S232163AbjC3TbW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 30 Mar 2023 15:31:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231596AbjC3Smw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Mar 2023 14:42:52 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95865D53E;
-        Thu, 30 Mar 2023 11:42:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1680201756; x=1711737756;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=3X+EBk6MUL1ZnA4UwVxXj6Bph62XorP3HH/A5HZRS2c=;
-  b=SoazjYIJmShRjlaDur7TdB52B7BO8EDx41Jdz1dsDK4Gxq9KPahWDjyE
-   0VU7vfd2/eFXAF4lCH7CkB0E/qmwGlln70I0gjBNf3xVGKGDMwKEIxaMt
-   gKsCNPBDibl5JFhQSHewwy7nqjhJSuPa8dbfvJZPt3VFlR1z80mKxFHBn
-   +BcVR0GlLVWS3uC77y/L2m3k6TuekDgeJ03IHaScApbAho/rZDEZ96EDy
-   yhtlqfLOYnT+wf+L+pmycC0Kej3zypI3dUKmxTNFpcclWIByH5XMB6UW1
-   8SWLOTrWEjY9MNowSFLsMxWCmOi6jBJI1mWr6FA0svRkjTCb9OQLFlbCs
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10665"; a="342900639"
-X-IronPort-AV: E=Sophos;i="5.98,305,1673942400"; 
-   d="scan'208";a="342900639"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2023 11:41:13 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10665"; a="754135467"
-X-IronPort-AV: E=Sophos;i="5.98,305,1673942400"; 
-   d="scan'208";a="754135467"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 30 Mar 2023 11:41:10 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1phxCr-000L6c-18;
-        Thu, 30 Mar 2023 18:41:05 +0000
-Date:   Fri, 31 Mar 2023 02:40:47 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>, logang@deltatee.com,
-        song@kernel.org
-Cc:     oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yukuai3@huawei.com,
-        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH v3 3/3] md: protect md_thread with rcu
-Message-ID: <202303310252.5OJzxk7h-lkp@intel.com>
-References: <20230330202046.795213-4-yukuai1@huaweicloud.com>
+        with ESMTP id S232110AbjC3TbU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Mar 2023 15:31:20 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFA24213C;
+        Thu, 30 Mar 2023 12:31:19 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 96F501FE07;
+        Thu, 30 Mar 2023 19:31:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1680204678;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Etjp+xE3FIW3A1xPIHa1sQtyQ4/Nn9crT5hD184o2SA=;
+        b=aHv++cdpXPaXb26/G1LMYwclQgZ4Qx/cyWFa0fjo70P5nNjzjoHIeWQSajl20M1XZZkoz2
+        ZwgPzABCzOE8C4i0glI8NLuVt6p2eWDvwk3FK3zK7SXAeXYSpz3JpQIfG2AbcvOChVT7+9
+        1qTNvdPzYgEM+d96UTjl0NgotnSkQr4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1680204678;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Etjp+xE3FIW3A1xPIHa1sQtyQ4/Nn9crT5hD184o2SA=;
+        b=wYPbuyHqUYLobbGSEtgz4W8ycI8q3CtaKnbPUQGE+5MzS+bueBw/fljFzrPU/2rA5fyNzR
+        A2+wNxH4qiVKtHBA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 200FE133E0;
+        Thu, 30 Mar 2023 19:31:18 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 77P7BobjJWQBRQAAMHmgww
+        (envelope-from <dsterba@suse.cz>); Thu, 30 Mar 2023 19:31:18 +0000
+Date:   Thu, 30 Mar 2023 21:25:03 +0200
+From:   David Sterba <dsterba@suse.cz>
+To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc:     "dsterba@suse.cz" <dsterba@suse.cz>, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        Song Liu <song@kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        "jfs-discussion@lists.sourceforge.net" 
+        <jfs-discussion@lists.sourceforge.net>,
+        "cluster-devel@redhat.com" <cluster-devel@redhat.com>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        David Sterba <dsterba@suse.com>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
+Subject: Re: [PATCH v2 00/19] bio: check return values of bio_add_page
+Message-ID: <20230330192503.GT10580@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <cover.1680172791.git.johannes.thumshirn@wdc.com>
+ <20230330154529.GS10580@twin.jikos.cz>
+ <9835fc72-18b4-517d-0861-b5b413252eb9@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230330202046.795213-4-yukuai1@huaweicloud.com>
+In-Reply-To: <9835fc72-18b4-517d-0861-b5b413252eb9@wdc.com>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Yu,
+On Thu, Mar 30, 2023 at 04:41:58PM +0000, Johannes Thumshirn wrote:
+> On 30.03.23 17:52, David Sterba wrote:
+> > On Thu, Mar 30, 2023 at 03:43:42AM -0700, Johannes Thumshirn wrote:
+> >> We have two functions for adding a page to a bio, __bio_add_page() which is
+> >> used to add a single page to a freshly created bio and bio_add_page() which is
+> >> used to add a page to an existing bio.
+> >>
+> >> While __bio_add_page() is expected to succeed, bio_add_page() can fail.
+> >>
+> >> This series converts the callers of bio_add_page() which can easily use
+> >> __bio_add_page() to using it and checks the return of bio_add_page() for
+> >> callers that don't work on a freshly created bio.
+> >>
+> >> Lastly it marks bio_add_page() as __must_check so we don't have to go again
+> >> and audit all callers.
+> >>
+> >> Changes to v1:
+> >> - Removed pointless comment pointed out by Willy
+> >> - Changed commit messages pointed out by Damien
+> >> - Colledted Damien's Reviews and Acks
+> >>
+> >> Johannes Thumshirn (19):
+> > 
+> >>   btrfs: repair: use __bio_add_page for adding single page
+> >>   btrfs: raid56: use __bio_add_page to add single page
+> > 
+> > The btrfs patches added to misc-next, thanks.
+> > 
+> 
+> Thanks but wouldn't it make more sense for Jens to pick up all of them?
+> The last patch in the series flips bio_add_pages() over to
+> __must_check and so it'll create an interdependency between the
+> btrfs and the block tree.
 
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on song-md/md-next]
-[also build test WARNING on device-mapper-dm/for-next linus/master v6.3-rc4 next-20230330]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-pass-a-md_thread-pointer-to-md_register_thread/20230330-202251
-base:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-patch link:    https://lore.kernel.org/r/20230330202046.795213-4-yukuai1%40huaweicloud.com
-patch subject: [PATCH v3 3/3] md: protect md_thread with rcu
-config: x86_64-randconfig-s023 (https://download.01.org/0day-ci/archive/20230331/202303310252.5OJzxk7h-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.3.0-8) 11.3.0
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.4-39-gce1a6720-dirty
-        # https://github.com/intel-lab-lkp/linux/commit/b6edd339e54dc14576816f285b99e0e1815ed1e0
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Yu-Kuai/md-pass-a-md_thread-pointer-to-md_register_thread/20230330-202251
-        git checkout b6edd339e54dc14576816f285b99e0e1815ed1e0
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=x86_64 olddefconfig
-        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/md/
-
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303310252.5OJzxk7h-lkp@intel.com/
-
-sparse warnings: (new ones prefixed by >>)
->> drivers/md/md.c:7905:18: sparse: sparse: incompatible types in comparison expression (different address spaces):
->> drivers/md/md.c:7905:18: sparse:    struct md_thread [noderef] __rcu *
->> drivers/md/md.c:7905:18: sparse:    struct md_thread *
-   drivers/md/md.c:7939:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
-   drivers/md/md.c:7939:9: sparse:    struct md_thread [noderef] __rcu *
-   drivers/md/md.c:7939:9: sparse:    struct md_thread *
-   drivers/md/md.c:7952:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
-   drivers/md/md.c:7952:9: sparse:    struct md_thread [noderef] __rcu *
-   drivers/md/md.c:7952:9: sparse:    struct md_thread *
-
-vim +7905 drivers/md/md.c
-
-  7899	
-  7900	void md_wakeup_thread(struct md_thread **threadp)
-  7901	{
-  7902		struct md_thread *thread;
-  7903	
-  7904		rcu_read_lock();
-> 7905		thread = rcu_dereference(*threadp);
-  7906		if (thread) {
-  7907			pr_debug("md: waking up MD thread %s.\n", thread->tsk->comm);
-  7908			set_bit(THREAD_WAKEUP, &thread->flags);
-  7909			wake_up(&thread->wqueue);
-  7910		}
-  7911		rcu_read_unlock();
-  7912	}
-  7913	EXPORT_SYMBOL(md_wakeup_thread);
-  7914	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+I'd rather take it via btrfs tree, this avoids future merge conflicts.
