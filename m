@@ -2,132 +2,99 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27B93C7619A
-	for <linux-raid@archiver.kernel.org>; Thu, 30 Mar 2023 22:30:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D184C7619A
+	for <linux-raid@archiver.kernel.org>; Fri, 31 Mar 2023 01:08:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230345AbjC3WaA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 30 Mar 2023 18:30:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55004 "EHLO
+        id S229714AbjCaBI1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 30 Mar 2023 21:08:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230339AbjC3W37 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Mar 2023 18:29:59 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8468E1BE1;
-        Thu, 30 Mar 2023 15:29:58 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id j13so18658666pjd.1;
-        Thu, 30 Mar 2023 15:29:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680215398;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=x7V03//xrMoj2maIfgC2qsiNLnzTtZRlKFOvF+x+bJg=;
-        b=mlMMJ39hyYXqt+JHj1LUKtCdNF3jPgcvR5YIbnZgjG2qBiSoA+kwmOTqtkW+KgUjT+
-         f3e/T8MSaieLqfYE0dDEdexsiqrRYKBvODsqM2N1upFbF1vKGKnEQRNu6sm836+CwA5C
-         ck0fVumW1XKGVaDTiJc1oZcOOCIV226dBsy+ORXRDdb3DqX9xOqXNxevXkMcMjtEUDFn
-         3DS5IHtGgjR5BAJQeAORmm+Co3dYw4PAzJtKWdjXOIijVMdHsC+Mv7hna+osVcIUucg/
-         sMDusNSOtuWu7xAgNPPArSDS5AjN3qPzyekWsD7Mi/qHO9lJ1NdSDNgcsKtE2ONpmI68
-         vTqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680215398;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=x7V03//xrMoj2maIfgC2qsiNLnzTtZRlKFOvF+x+bJg=;
-        b=6o7qy2ghE+jk/5ofPwYNeI4QpWdVyjYfDNSM0TQHZNE7sscvLiiPuD2c+UMvxkhkuh
-         SmkJEdBWFmp2OWCIZjHJNgZscC4O+I5OQRswSS0rS1B3zscTxhSWSONNDTtsyyUpvSge
-         PS8JqHSRRKX8AG1AUSdgDhOHcQ87lHS9kRRRPCcZjSKgJwKp7syX9Fr/1qvo3Xia6iCo
-         hCnibPPIySq1TGdvhrIaz8WPVIjuCpmIdqpO3cHi6VEKue5t2CncB00p5BwgzHeN8r5T
-         ErqeoaYXPlbH6Ygmw5NKp/OnqRuG+yLPzx4P+34hrX1MRyvNr4voKq7Au2VJ4Z4rTYvt
-         8spg==
-X-Gm-Message-State: AAQBX9e/4dn5WZ7tKJuxFTCb0GlGltJtdYyPCN6VZ/qUjfFSxUBc/9PY
-        crpfzNTVJ37SwhiHZdhiwclp1V22H2mStOwqYWw=
-X-Google-Smtp-Source: AKy350ZrPyR1hRVTBuZnQUpMEn54ihWHCa7XbNjYLmiSy4XxnRAJ80dimqjvvbOmN9ocOuC+cire+hzLe0DMBMrzkWw=
-X-Received: by 2002:a17:90a:fb57:b0:23d:30c2:c5b7 with SMTP id
- iq23-20020a17090afb5700b0023d30c2c5b7mr2603971pjb.3.1680215397861; Thu, 30
- Mar 2023 15:29:57 -0700 (PDT)
+        with ESMTP id S229485AbjCaBI0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Mar 2023 21:08:26 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65AB8CA31;
+        Thu, 30 Mar 2023 18:08:24 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PnhxH2qWdz4f3mHs;
+        Fri, 31 Mar 2023 09:08:19 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgDHcyGDMiZk3OR6Fw--.5152S3;
+        Fri, 31 Mar 2023 09:08:21 +0800 (CST)
+Subject: Re: [PATCH v3 3/3] md: protect md_thread with rcu
+To:     Logan Gunthorpe <logang@deltatee.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230330202046.795213-1-yukuai1@huaweicloud.com>
+ <20230330202046.795213-4-yukuai1@huaweicloud.com>
+ <67b0f0fb-e9f3-b716-f22f-0ca091a291b0@deltatee.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <7efda5d2-96bf-05a4-418d-122bfdf2ce04@huaweicloud.com>
+Date:   Fri, 31 Mar 2023 09:08:19 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <cover.1680108414.git.johannes.thumshirn@wdc.com>
- <beea645603eccbb045ad9bb777e05a085b91808a.1680108414.git.johannes.thumshirn@wdc.com>
- <3a0f0c92-63cb-3624-c2fe-049a76d1a64a@opensource.wdc.com> <CAHbLzkoRdTTbnfz3RyLQAeNJBOEVNGL2WLgRSE2eQ4nR8sRe2g@mail.gmail.com>
- <b19696d3-54bb-d997-5e56-aa5fd58b469f@opensource.wdc.com>
-In-Reply-To: <b19696d3-54bb-d997-5e56-aa5fd58b469f@opensource.wdc.com>
-From:   Yang Shi <shy828301@gmail.com>
-Date:   Thu, 30 Mar 2023 15:29:46 -0700
-Message-ID: <CAHbLzkrEXVDf4TYLw_MPrFNybWQHWXKX=zP5GhxHQFdpVPWhEg@mail.gmail.com>
-Subject: Re: [PATCH 18/19] dm-crypt: check if adding pages to clone bio fails
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <67b0f0fb-e9f3-b716-f22f-0ca091a291b0@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgDHcyGDMiZk3OR6Fw--.5152S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7JFWkur43ArWkuw4rJFWUJwb_yoWDZrbE9r
+        yvqr4kGrnxWrn3JF129r47XrZxJFW3ZryxZr48KFW7tF1FgFy5WrnxXr4Sv34fZ3y8KF9Y
+        y3s8trWSgrn0kjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb4xFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8
+        JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUU
+        UU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Mar 29, 2023 at 5:24=E2=80=AFPM Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
->
-> On 3/30/23 09:17, Yang Shi wrote:
-> > On Wed, Mar 29, 2023 at 4:49=E2=80=AFPM Damien Le Moal
-> > <damien.lemoal@opensource.wdc.com> wrote:
-> >>
-> >> On 3/30/23 02:06, Johannes Thumshirn wrote:
-> >>> Check if adding pages to clone bio fails and if bail out.
-> >>
-> >> Nope. The code retries with direct reclaim until it succeeds. Which is=
- very
-> >> suspicious...
-> >
-> > It is not related to bio_add_page() failure. It is used to avoid a
-> > race condition when two processes are depleting the mempool
-> > simultaneously.
-> >
-> > IIUC I don't think page merge may happen for dm-crypt, so is
-> > __bio_add_page() good enough? I'm working on this code too, using
-> > __bio_add_page() would make my patch easier.
->
-> If the BIO was allocated with enough bvecs, we could use that function. B=
-ut page
-> merging reduces overhead, so if it can happen, let's use it.
+Hi, Logan!
 
-It does allocate BIO with enough bvecs. IIUC it will merge the
-adjacent pages? If so page merging may happen. Since dm-crypt does
-allocate BIO with enough bvces, so it can't fail if I read the code
-correctly. I'm wondering whether we could have a never fail variant.
+在 2023/03/31 3:35, Logan Gunthorpe 写道:
+> 
+> A couple points:
+> 
+> I don't think we need a double pointer here. rcu_dereference() doesn't
+> actually do anything but annotate the fact that we are accessing a
+> pointer protected by rcu. It does require annotations on that pointer
+> (__rcu) which is checked by sparse (I suspect this patch will produce a
+> lot of sparse errors from kbuild bot).
+> 
+> I think all we need is:
+> 
+> void md_wakeup_thread(struct md_thread __rcu *rthread)
+> {
+> 	struct md_thread *thread;
+>     	
+> 	rcu_read_lock();
+> 	thread = rcu_dereference(rthread);
+> 	...
+> 	rcu_read_unlock();
+> 	
+> }
+> 
+> The __rcu annotation will have to be added to all the pointers this
+> function is called on as well as to md_register_thread() and
+> md_unregister_thread(). And anything else that uses those pointers.
+> Running sparse on the code and eliminating all new errors for the patch
+> is important.
 
->
-> >
-> >>
-> >>>
-> >>> This way we can mark bio_add_pages as __must_check.
-> >>>
-> >>> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> >>
-> >> With the commit message fixed,
-> >>
-> >> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> >>
-> >>
-> >> --
-> >> Damien Le Moal
-> >> Western Digital Research
-> >>
-> >>
->
-> --
-> Damien Le Moal
-> Western Digital Research
->
+Yes, you're right, I'll remove patch 2 and update patch 3. And I'll try
+to run sparse before sending the new version.
+
+Thanks,
+Kuai
+
