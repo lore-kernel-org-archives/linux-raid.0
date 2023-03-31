@@ -2,83 +2,107 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE800C7619A
-	for <linux-raid@archiver.kernel.org>; Fri, 31 Mar 2023 02:31:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDDF1C76196
+	for <linux-raid@archiver.kernel.org>; Fri, 31 Mar 2023 06:36:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229521AbjCaCbU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 30 Mar 2023 22:31:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47988 "EHLO
+        id S230218AbjCaGgq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 31 Mar 2023 02:36:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbjCaCbT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Mar 2023 22:31:19 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 967F1D50B
-        for <linux-raid@vger.kernel.org>; Thu, 30 Mar 2023 19:31:16 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id p13-20020a17090a284d00b0023d2e945aebso7662345pjf.0
-        for <linux-raid@vger.kernel.org>; Thu, 30 Mar 2023 19:31:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112; t=1680229876; x=1682821876;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=rL3uaqw5VlxrRcrq4+BV97ALZaZAZsm58SsHYEesJvc=;
-        b=gNp3MXVAhcOmJiBbEcDsAIzHOWCvMaDSEfia8qqKk0HmTEAYOO3C/9XXQWFekEruQw
-         5z+o59doAGSiCmC/fd6ZJaRYg2U3Z6yTmaMeNnD8V2kfimyO6UtcabLC3ielE3RZr9d4
-         m2i37E3JvVT1JxnIMxKGigPTOYcpOeccqNokptnzZjR8jF3SYK0QiRcrFae0biTI4Jmk
-         TULusXDSPchbojS57AQWovKblLwJLDwqfEDpqkHjqxNUwlFQpozI5mwiVXpx86boKswd
-         XF7OvyqqwYiG8EwIIYFBxbVNhXAW29iUzrjcRx7fP4d6q01U48Hia6Na2xtMyqJXefYl
-         VgsQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680229876; x=1682821876;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rL3uaqw5VlxrRcrq4+BV97ALZaZAZsm58SsHYEesJvc=;
-        b=F+ZWOyz96Xk3LFc/VJP2VgA4tigX8Qol0rBTTHv4bOpw0svuc1IKsIdHc3ciLIMCJe
-         bQhRJwVcO8x+v6GVQ1PGbYQ3UU5PLTJwzrOl7AhUla7+8kEOm7jIspnmfRfDgIXd8t/s
-         76urztIop19VFFiJMCuCeZmTW1YE858qeNO7sEX+nfdpgSOdgCWH1VNIOeaouEIeTeon
-         M1fb4PgEX5x9bJXRiRqTKOcmUXN3I1f3a3DSWMwW2CVm6zlUVHx38iiKcbZ8P/LYh6Q6
-         50UYUgE4b8nrae1ZTPy0i6S2hcQe1NeNnB8rw4SPDkhRyDcWW5SeJVPBCb/KBFF5PZcJ
-         WcBA==
-X-Gm-Message-State: AAQBX9eHnQjuKoEJKSzHcpkDc7Acc2lrn0omcKtuNFA3Y66bVxzePWiY
-        17mmBqa5YtEb+5BGmhvDBESH+g==
-X-Google-Smtp-Source: AKy350bm0vHPF6qGrA84MbD8MufWAWHT6Rtw3YlznHipbEWtIepeqdaiIZDh/vqOGXfXOStv5BXnGQ==
-X-Received: by 2002:a17:902:7c0d:b0:1a0:7663:731b with SMTP id x13-20020a1709027c0d00b001a07663731bmr21993271pll.5.1680229875830;
-        Thu, 30 Mar 2023 19:31:15 -0700 (PDT)
-Received: from [192.168.1.136] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id je22-20020a170903265600b001a0742b0806sm385250plb.108.2023.03.30.19.31.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 30 Mar 2023 19:31:15 -0700 (PDT)
-Message-ID: <a5a6d3df-4148-7e42-5db3-18dafb3c5832@kernel.dk>
-Date:   Thu, 30 Mar 2023 20:31:14 -0600
+        with ESMTP id S230222AbjCaGg2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 31 Mar 2023 02:36:28 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 307DA18FBC;
+        Thu, 30 Mar 2023 23:36:27 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PnrCp13Vwz4f3l85;
+        Fri, 31 Mar 2023 14:36:22 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgBH9CFmfyZk8oCJFw--.10165S3;
+        Fri, 31 Mar 2023 14:36:23 +0800 (CST)
+Subject: Re: [PATCH v3 3/3] md: protect md_thread with rcu
+To:     Yu Kuai <yukuai1@huaweicloud.com>,
+        Logan Gunthorpe <logang@deltatee.com>, song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230330202046.795213-1-yukuai1@huaweicloud.com>
+ <20230330202046.795213-4-yukuai1@huaweicloud.com>
+ <67b0f0fb-e9f3-b716-f22f-0ca091a291b0@deltatee.com>
+ <7efda5d2-96bf-05a4-418d-122bfdf2ce04@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <f54452de-c5f2-aeab-1218-c0ed3990a481@huaweicloud.com>
+Date:   Fri, 31 Mar 2023 14:36:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [GIT PULL] md-fixes 20230329
-Content-Language: en-US
-To:     Song Liu <songliubraving@meta.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Yu Kuai <yukuai3@huawei.com>
-References: <B94EC4B1-8772-4A2C-A454-625B661C03B8@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <B94EC4B1-8772-4A2C-A454-625B661C03B8@fb.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <7efda5d2-96bf-05a4-418d-122bfdf2ce04@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgBH9CFmfyZk8oCJFw--.10165S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF4fJF1rAF1fXFyfJr4xZwb_yoW8JF4xpF
+        W8Kay0kr45ArWvvr12yayUA34Fvr1fX3W5ArykGayfA3y7W3yaqrWj9ryUuas8urZ5Ww1Y
+        gw1Yg347u3yUJaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8
+        JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
+        UUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/29/23 12:53 PM, Song Liu wrote:
-> Hi Jens, 
+Hi,
+
+在 2023/03/31 9:08, Yu Kuai 写道:
+> Hi, Logan!
 > 
-> Please consider pulling the following fix for md-fixes on top of your 
-> block-6.3 branch. 
+> 在 2023/03/31 3:35, Logan Gunthorpe 写道:
+>>
+>> A couple points:
+>>
+>> I don't think we need a double pointer here. rcu_dereference() doesn't
+>> actually do anything but annotate the fact that we are accessing a
+>> pointer protected by rcu. It does require annotations on that pointer
+>> (__rcu) which is checked by sparse (I suspect this patch will produce a
+>> lot of sparse errors from kbuild bot).
+>>
+>> I think all we need is:
+>>
+>> void md_wakeup_thread(struct md_thread __rcu *rthread)
+>> {
+>>     struct md_thread *thread;
+>>
+>>     rcu_read_lock();
+>>     thread = rcu_dereference(rthread);
+>>     ...
+>>     rcu_read_unlock();
+>>
+>> }
+>>
+>> The __rcu annotation will have to be added to all the pointers this
+>> function is called on as well as to md_register_thread() and
+>> md_unregister_thread(). And anything else that uses those pointers.
+>> Running sparse on the code and eliminating all new errors for the patch
+>> is important.
 > 
-> This commit, by Yu Kuai, fixes a null pointer deference in 6.3 RCs.
+> Yes, you're right, I'll remove patch 2 and update patch 3. And I'll try
+> to run sparse before sending the new version.
+> 
 
-Pulled.
+By the way, I observed lots of sparse errors and warnings for current
+code, will it make sense to fix them?
 
--- 
-Jens Axboe
-
+Thanks,
+Kuai
 
