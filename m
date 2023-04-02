@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF64C76196
-	for <linux-raid@archiver.kernel.org>; Sun,  2 Apr 2023 09:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A58BFC7619A
+	for <linux-raid@archiver.kernel.org>; Sun,  2 Apr 2023 09:13:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230290AbjDBJNL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 2 Apr 2023 05:13:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36250 "EHLO
+        id S230301AbjDBJNM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 2 Apr 2023 05:13:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjDBJNK (ORCPT
+        with ESMTP id S230090AbjDBJNK (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Apr 2023 05:13:10 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 796ABCDCC;
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B4DCCC19;
         Sun,  2 Apr 2023 02:13:08 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Pq7bg4ghZz4f3lwR;
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pq7bg0rxTz4f3lX9;
         Sun,  2 Apr 2023 17:13:03 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgD3X7MeRylkVUE8Gg--.50168S8;
-        Sun, 02 Apr 2023 17:13:05 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgD3X7MeRylkVUE8Gg--.50168S6;
+        Sun, 02 Apr 2023 17:13:04 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     logang@deltatee.com, song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH v4 4/5] dm-raid: remove useless checking in raid_message()
-Date:   Sun,  2 Apr 2023 17:12:35 +0800
-Message-Id: <20230402091236.976723-5-yukuai1@huaweicloud.com>
+Subject: [PATCH v4 2/5] md: factor out a helper to wake up md_thread directly
+Date:   Sun,  2 Apr 2023 17:12:33 +0800
+Message-Id: <20230402091236.976723-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230402091236.976723-1-yukuai1@huaweicloud.com>
 References: <20230402091236.976723-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3X7MeRylkVUE8Gg--.50168S8
-X-Coremail-Antispam: 1UD129KBjvdXoWrZrW7trWxXryfJF1fKFW8tFb_yoWfuwbEgF
-        s5Zr9rXrnruw1fA3W2vw40vr90ywn5uF1kWF4rtFyayFy8KryrXryrurn8CwnrZFW7Cryj
-        krWUCr4fCrn5CjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbT8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
-        IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
-        F7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr
-        1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
-        e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
-        8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
-        jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vIr41l4I
-        8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
-        xVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
-        AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
-        cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
-        4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTYUUUUU
+X-CM-TRANSID: gCh0CgD3X7MeRylkVUE8Gg--.50168S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7KryktrWfAw15uw43tFykGrg_yoW5JFy8pa
+        y8tF15Wr48ArZxZFZrJa4qya45Xr10qFy7try3C3yrJw1rKw45tFya9Fyjya4DAF95Ar45
+        Xw15tFWruw4vkF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9v14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
+        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
+        026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
+        JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
+        v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
+        j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JV
+        W8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjYiiDUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,32 +58,78 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-md_wakeup_thread() handle the case that pass in md_thread is NULL, there
-is no need to checking this. Prepare to protect md_thread with rcu.
+md_wakeup_thread() can't wakeup md_thread->tsk if md_thread->run is
+still in progress, and in some cases md_thread->tsk need to be woke up
+directly, like md_set_readonly(), do_md_stop(), and perhaps later in
+action_store().
+
+This patch factor out a helper to wake up md_thread directly, prepare to
+protect md_thread with rcu.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/dm-raid.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/md.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 60632b409b80..5c952a209214 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3754,11 +3754,11 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
- 		 * canceling read-auto mode
- 		 */
- 		mddev->ro = 0;
--		if (!mddev->suspended && mddev->sync_thread)
-+		if (!mddev->suspended)
- 			md_wakeup_thread(mddev->sync_thread);
- 	}
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
--	if (!mddev->suspended && mddev->thread)
-+	if (!mddev->suspended)
- 		md_wakeup_thread(mddev->thread);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 1459c2cfb0dd..139c7b0202e3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -92,6 +92,7 @@ static struct workqueue_struct *md_rdev_misc_wq;
+ static int remove_and_add_spares(struct mddev *mddev,
+ 				 struct md_rdev *this);
+ static void mddev_detach(struct mddev *mddev);
++static void md_wakeup_thread_directly(struct md_thread *thread);
  
+ enum md_ro_state {
+ 	MD_RDWR,
+@@ -6269,10 +6270,12 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+ 	}
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-	if (mddev->sync_thread)
+-		/* Thread might be blocked waiting for metadata update
+-		 * which will now never happen */
+-		wake_up_process(mddev->sync_thread->tsk);
++
++	/*
++	 * Thread might be blocked waiting for metadata update which will now
++	 * never happen
++	 */
++	md_wakeup_thread_directly(mddev->sync_thread);
+ 
+ 	if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
+ 		return -EBUSY;
+@@ -6333,10 +6336,12 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 	}
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-	if (mddev->sync_thread)
+-		/* Thread might be blocked waiting for metadata update
+-		 * which will now never happen */
+-		wake_up_process(mddev->sync_thread->tsk);
++
++	/*
++	 * Thread might be blocked waiting for metadata update which will now
++	 * never happen
++	 */
++	md_wakeup_thread_directly(mddev->sync_thread);
+ 
+ 	mddev_unlock(mddev);
+ 	wait_event(resync_wait, (mddev->sync_thread == NULL &&
+@@ -7886,6 +7891,12 @@ static int md_thread(void *arg)
  	return 0;
+ }
+ 
++static void md_wakeup_thread_directly(struct md_thread *thread)
++{
++	if (thread)
++		wake_up_process(thread->tsk);
++}
++
+ void md_wakeup_thread(struct md_thread *thread)
+ {
+ 	if (thread) {
 -- 
 2.39.2
 
