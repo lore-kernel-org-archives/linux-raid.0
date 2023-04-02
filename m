@@ -2,78 +2,88 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B96AC6FD1D
-	for <linux-raid@archiver.kernel.org>; Sat,  1 Apr 2023 21:07:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF64C76196
+	for <linux-raid@archiver.kernel.org>; Sun,  2 Apr 2023 09:13:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229811AbjDAVHy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 1 Apr 2023 17:07:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54532 "EHLO
+        id S230290AbjDBJNL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 2 Apr 2023 05:13:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229591AbjDAVHx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 1 Apr 2023 17:07:53 -0400
-X-Greylist: delayed 3933 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 01 Apr 2023 14:07:50 PDT
-Received: from a1-bg02.venev.name (a1-bg02.venev.name [213.240.239.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC3AA72B7
-        for <linux-raid@vger.kernel.org>; Sat,  1 Apr 2023 14:07:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=venev.name;
-        s=default; h=Content-Transfer-Encoding:Message-Id:Date:Subject:To:From:
-        Content-Type:Reply-To:Sender; bh=rK+tf5hZCcUtIobl689XTDQlN0aPAaBJ9TzKkwwpQJQ=
-        ; b=X3Q1fgpvHzmiU4nEWdt+wpDTZQMyH5rMYJdyX0N3qYTHwF9kY8ZOX/hG6VOIImQdY7fpAuw+N
-        UJ7/hXO3z7sroC8DyZh+hlQS7O5eoo8agortDqnHWWO45pUpEOZ5gE5eYhSqHAFqY6AWzNQKEdkIW
-        eHQwVkWU/yowBIndiNeGMt7tfYOIUOmuWVm9BKiiTDJ8+J3PGWhXhCBZhD66x6fHP9+wUU3ywjPqI
-        /XbE7eE1y3/6MXgnBUOQYCp5bd+wNhnoDKi8TvEepWoqq+HESX+vNQycHCwJH0ojBGvwZ6yYow8Ya
-        HlXgRnFEA5cx+C5CftNw6tZJFusgjiRqH2lYhX9ZXkEg8JEHSQIZrNjpI4SMDBP4RtMx+amBWbFyS
-        0wg/51MyilxoPiU4y0LMpT8MqrqzMthS8wto+kIYWYmbO/+uLwAgnB6Jkfx1bDxc/LP/tPdbZy+c5
-        lm9QN7vG/ustVnL9f3CVmzxg2Qq25ymF15wAp9mypIVqLiYhBEBb2O8So3FVENe1PD7+ap4OYnY7a
-        MH9QVTT9/Os1Oekzs/9Kh/Kz0J4fI4eLtDiHqSXzg+2RKcMlKpFWd+I+jPVHd9ux38lRhjO/F84Q0
-        IIugH2VcBpbzU2XVRiWAxyZGJ/d6imAuVG+JoljpgFlCN0vTFYIS2lApA+r3TWbnyibnfvk=;
-Received: from a1-bg02.venev.name ([213.240.239.49] helo=pmx1.venev.name)
-        by a1-bg02.venev.name with esmtps
-        id 1pihQT-0001l6-0H
-        (TLS1.3:TLS_AES_256_GCM_SHA384:256)
-        (envelope-from <hristo@venev.name>);
-        Sat, 01 Apr 2023 20:02:13 +0000
-Received: from venev.name ([213.240.239.49])
-        by pmx1.venev.name with ESMTPSA
-        id W9FpFcONKGRoGgAAdB6GMg
-        (envelope-from <hristo@venev.name>); Sat, 01 Apr 2023 20:02:13 +0000
-From:   Hristo Venev <hristo@venev.name>
-To:     linux-raid@vger.kernel.org
-Cc:     NeilBrown <neilb@suse.de>, Hristo Venev <hristo@venev.name>
-Subject: [PATCH] super1: fix truncation check for journal device
-Date:   Sat,  1 Apr 2023 23:01:35 +0300
-Message-Id: <20230401200134.6688-1-hristo@venev.name>
-X-Mailer: git-send-email 2.40.0
+        with ESMTP id S229447AbjDBJNK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Apr 2023 05:13:10 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 796ABCDCC;
+        Sun,  2 Apr 2023 02:13:08 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Pq7bg4ghZz4f3lwR;
+        Sun,  2 Apr 2023 17:13:03 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgD3X7MeRylkVUE8Gg--.50168S8;
+        Sun, 02 Apr 2023 17:13:05 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     logang@deltatee.com, song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH v4 4/5] dm-raid: remove useless checking in raid_message()
+Date:   Sun,  2 Apr 2023 17:12:35 +0800
+Message-Id: <20230402091236.976723-5-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230402091236.976723-1-yukuai1@huaweicloud.com>
+References: <20230402091236.976723-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgD3X7MeRylkVUE8Gg--.50168S8
+X-Coremail-Antispam: 1UD129KBjvdXoWrZrW7trWxXryfJF1fKFW8tFb_yoWfuwbEgF
+        s5Zr9rXrnruw1fA3W2vw40vr90ywn5uF1kWF4rtFyayFy8KryrXryrurn8CwnrZFW7Cryj
+        krWUCr4fCrn5CjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbT8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+        IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+        F7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr
+        1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
+        e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
+        8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
+        jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vIr41l4I
+        8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+        xVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+        AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+        cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+        4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTYUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The journal device can be smaller than the component devices.
+From: Yu Kuai <yukuai3@huawei.com>
 
-Fixes: 171e9743881e ("super1: report truncated device")
-Signed-off-by: Hristo Venev <hristo@venev.name>
+md_wakeup_thread() handle the case that pass in md_thread is NULL, there
+is no need to checking this. Prepare to protect md_thread with rcu.
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- super1.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/md/dm-raid.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/super1.c b/super1.c
-index f7020320..44d6ecad 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2359,8 +2359,9 @@ static int load_super1(struct supertype *st, int fd, char *devname)
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 60632b409b80..5c952a209214 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3754,11 +3754,11 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+ 		 * canceling read-auto mode
+ 		 */
+ 		mddev->ro = 0;
+-		if (!mddev->suspended && mddev->sync_thread)
++		if (!mddev->suspended)
+ 			md_wakeup_thread(mddev->sync_thread);
+ 	}
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	if (!mddev->suspended && mddev->thread)
++	if (!mddev->suspended)
+ 		md_wakeup_thread(mddev->thread);
  
- 	if (st->minor_version >= 1 &&
- 	    st->ignore_hw_compat == 0 &&
--	    (dsize < (__le64_to_cpu(super->data_offset) +
--		      __le64_to_cpu(super->size))
-+	    ((role_from_sb(super) != MD_DISK_ROLE_JOURNAL &&
-+		  dsize < (__le64_to_cpu(super->data_offset) +
-+		      __le64_to_cpu(super->size)))
- 	     ||
- 	     dsize < (__le64_to_cpu(super->data_offset) +
- 		      __le64_to_cpu(super->data_size)))) {
+ 	return 0;
 -- 
-2.40.0
+2.39.2
 
