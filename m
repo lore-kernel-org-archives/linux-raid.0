@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 204FFC77B60
-	for <linux-raid@archiver.kernel.org>; Sun,  2 Apr 2023 09:13:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB2FC77B6E
+	for <linux-raid@archiver.kernel.org>; Sun,  2 Apr 2023 09:13:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230315AbjDBJNQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 2 Apr 2023 05:13:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36274 "EHLO
+        id S230090AbjDBJNR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 2 Apr 2023 05:13:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230294AbjDBJNL (ORCPT
+        with ESMTP id S230297AbjDBJNL (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Apr 2023 05:13:11 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B4A5C66C;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BBE2CDE2;
         Sun,  2 Apr 2023 02:13:08 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pq7bf5PCPz4f3l8k;
-        Sun,  2 Apr 2023 17:13:02 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pq7bh1mxDz4f3lY3;
+        Sun,  2 Apr 2023 17:13:04 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgD3X7MeRylkVUE8Gg--.50168S5;
-        Sun, 02 Apr 2023 17:13:04 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgD3X7MeRylkVUE8Gg--.50168S9;
+        Sun, 02 Apr 2023 17:13:05 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     logang@deltatee.com, song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH v4 1/5] md: pass a md_thread pointer to md_register_thread()
-Date:   Sun,  2 Apr 2023 17:12:32 +0800
-Message-Id: <20230402091236.976723-2-yukuai1@huaweicloud.com>
+Subject: [PATCH v4 5/5] md: protect md_thread with rcu
+Date:   Sun,  2 Apr 2023 17:12:36 +0800
+Message-Id: <20230402091236.976723-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230402091236.976723-1-yukuai1@huaweicloud.com>
 References: <20230402091236.976723-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3X7MeRylkVUE8Gg--.50168S5
-X-Coremail-Antispam: 1UD129KBjvJXoW3JFy3uFykCryfGF15KF1ftFb_yoWfAr4xpa
-        yxWFyayr48ArW3ZrWDAa4Dua45uw10gFWjyry3C34fA3ZxK3y3JFyY9FyUJryDAa4rAF43
-        tw15KFW8uF4kKr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9v14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-        x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
-        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
-        026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
-        JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
-        v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
-        j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JV
-        W8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbec_DUUUUU==
+X-CM-TRANSID: gCh0CgD3X7MeRylkVUE8Gg--.50168S9
+X-Coremail-Antispam: 1UD129KBjvJXoWfJFWkWrWkXw13Zr18GrW3ZFb_yoWkZFW7p3
+        yxta43Ar4UArW5Zr1UAa4DCa4Yqw10qFWqyryfCw1rA3ZFg3y3JFy5GFyUZwn8AF15GFya
+        q3W5KFZ8ur4DKF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9G14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+        z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr
+        1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMx
+        C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
+        wI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
+        vE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v2
+        0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxV
+        W8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZX7UUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,257 +58,363 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Prepare to protect md_thread with rcu, there are no functional changes.
+Our test reports a uaf for 'mddev->sync_thread':
+
+T1                      T2
+md_start_sync
+ md_register_thread
+ // mddev->sync_thread is set
+			raid1d
+			 md_check_recovery
+			  md_reap_sync_thread
+			   md_unregister_thread
+			    kfree
+
+ md_wakeup_thread
+  wake_up
+  ->sync_thread was freed
+
+Root cause is that there is a small windown between register thread and
+wake up thread, where the thread can be freed concurrently.
+
+Currently, a global spinlock 'pers_lock' is borrowed to protect
+'mddev->thread', this problem can be fixed likewise, however, there might
+be similar problem for other md_thread, and I really don't like the idea to
+borrow a global lock.
+
+This patch protect md_thread with rcu.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-cluster.c   | 11 +++++------
- drivers/md/md-multipath.c |  6 +++---
- drivers/md/md.c           | 27 ++++++++++++++-------------
- drivers/md/md.h           |  7 +++----
- drivers/md/raid1.c        |  5 ++---
- drivers/md/raid10.c       | 15 ++++++---------
- drivers/md/raid5-cache.c  |  5 ++---
- drivers/md/raid5.c        | 15 ++++++---------
- 8 files changed, 41 insertions(+), 50 deletions(-)
+ drivers/md/md-bitmap.c   | 21 ++++++++++----
+ drivers/md/md.c          | 62 ++++++++++++++++++----------------------
+ drivers/md/md.h          | 14 ++++-----
+ drivers/md/raid1.c       |  4 +--
+ drivers/md/raid1.h       |  2 +-
+ drivers/md/raid10.c      |  4 +--
+ drivers/md/raid10.h      |  2 +-
+ drivers/md/raid5-cache.c |  2 +-
+ drivers/md/raid5.c       |  4 +--
+ drivers/md/raid5.h       |  2 +-
+ 10 files changed, 61 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 10e0c5381d01..c19e29cb73bf 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -362,9 +362,8 @@ static void __recover_slot(struct mddev *mddev, int slot)
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index f670c72d97be..dc2ea2ce0ae9 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -1784,6 +1784,7 @@ void md_bitmap_wait_behind_writes(struct mddev *mddev)
+ void md_bitmap_destroy(struct mddev *mddev)
+ {
+ 	struct bitmap *bitmap = mddev->bitmap;
++	struct md_thread *thread;
  
- 	set_bit(slot, &cinfo->recovery_map);
- 	if (!cinfo->recovery_thread) {
--		cinfo->recovery_thread = md_register_thread(recover_bitmaps,
--				mddev, "recover");
--		if (!cinfo->recovery_thread) {
-+		if (md_register_thread(&cinfo->recovery_thread, recover_bitmaps,
-+				       mddev, "recover")) {
- 			pr_warn("md-cluster: Could not create recovery thread\n");
- 			return;
+ 	if (!bitmap) /* there was no bitmap */
+ 		return;
+@@ -1797,8 +1798,12 @@ void md_bitmap_destroy(struct mddev *mddev)
+ 	mddev->bitmap = NULL; /* disconnect from the md device */
+ 	spin_unlock(&mddev->lock);
+ 	mutex_unlock(&mddev->bitmap_info.mutex);
+-	if (mddev->thread)
+-		mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
++
++	rcu_read_lock();
++	thread = rcu_dereference(mddev->thread);
++	if (thread)
++		thread->timeout = MAX_SCHEDULE_TIMEOUT;
++	rcu_read_unlock();
+ 
+ 	md_bitmap_free(bitmap);
+ }
+@@ -2433,6 +2438,7 @@ timeout_store(struct mddev *mddev, const char *buf, size_t len)
+ {
+ 	/* timeout can be set at any time */
+ 	unsigned long timeout;
++	struct md_thread *thread;
+ 	int rv = strict_strtoul_scaled(buf, &timeout, 4);
+ 	if (rv)
+ 		return rv;
+@@ -2448,16 +2454,21 @@ timeout_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (timeout < 1)
+ 		timeout = 1;
+ 	mddev->bitmap_info.daemon_sleep = timeout;
+-	if (mddev->thread) {
++
++	rcu_read_lock();
++	thread = rcu_dereference(mddev->thread);
++	if (thread) {
+ 		/* if thread->timeout is MAX_SCHEDULE_TIMEOUT, then
+ 		 * the bitmap is all clean and we don't need to
+ 		 * adjust the timeout right now
+ 		 */
+-		if (mddev->thread->timeout < MAX_SCHEDULE_TIMEOUT) {
+-			mddev->thread->timeout = timeout;
++		if (thread->timeout < MAX_SCHEDULE_TIMEOUT) {
++			thread->timeout = timeout;
+ 			md_wakeup_thread(mddev->thread);
  		}
-@@ -888,9 +887,9 @@ static int join(struct mddev *mddev, int nodes)
- 		goto err;
  	}
- 	/* Initiate the communication resources */
--	ret = -ENOMEM;
--	cinfo->recv_thread = md_register_thread(recv_daemon, mddev, "cluster_recv");
--	if (!cinfo->recv_thread) {
-+	ret = md_register_thread(&cinfo->recv_thread, recv_daemon, mddev,
-+				 "cluster_recv");
-+	if (ret) {
- 		pr_err("md-cluster: cannot allocate memory for recv_thread!\n");
- 		goto err;
- 	}
-diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
-index 66edf5e72bd6..ceec9e4b2a60 100644
---- a/drivers/md/md-multipath.c
-+++ b/drivers/md/md-multipath.c
-@@ -400,9 +400,9 @@ static int multipath_run (struct mddev *mddev)
- 	if (ret)
- 		goto out_free_conf;
++	rcu_read_unlock();
++
+ 	return len;
+ }
  
--	mddev->thread = md_register_thread(multipathd, mddev,
--					   "multipath");
--	if (!mddev->thread)
-+	ret = md_register_thread(&mddev->thread, multipathd, mddev,
-+				 "multipath");
-+	if (ret)
- 		goto out_free_conf;
- 
- 	pr_info("multipath: array %s active with %d out of %d IO paths\n",
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9bc05f451d42..1459c2cfb0dd 100644
+index d5a29ccb24ec..5609b7e3abab 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7896,29 +7896,32 @@ void md_wakeup_thread(struct md_thread *thread)
+@@ -70,11 +70,7 @@
+ #include "md-bitmap.h"
+ #include "md-cluster.h"
+ 
+-/* pers_list is a list of registered personalities protected
+- * by pers_lock.
+- * pers_lock does extra service to protect accesses to
+- * mddev->thread when the mutex cannot be held.
+- */
++/* pers_list is a list of registered personalities protected by pers_lock. */
+ static LIST_HEAD(pers_list);
+ static DEFINE_SPINLOCK(pers_lock);
+ 
+@@ -92,7 +88,7 @@ static struct workqueue_struct *md_rdev_misc_wq;
+ static int remove_and_add_spares(struct mddev *mddev,
+ 				 struct md_rdev *this);
+ static void mddev_detach(struct mddev *mddev);
+-static void md_wakeup_thread_directly(struct md_thread *thread);
++static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
+ 
+ enum md_ro_state {
+ 	MD_RDWR,
+@@ -803,13 +799,8 @@ void mddev_unlock(struct mddev *mddev)
+ 	} else
+ 		mutex_unlock(&mddev->reconfig_mutex);
+ 
+-	/* As we've dropped the mutex we need a spinlock to
+-	 * make sure the thread doesn't disappear
+-	 */
+-	spin_lock(&pers_lock);
+ 	md_wakeup_thread(mddev->thread);
+ 	wake_up(&mddev->sb_wait);
+-	spin_unlock(&pers_lock);
+ }
+ EXPORT_SYMBOL_GPL(mddev_unlock);
+ 
+@@ -7893,23 +7884,33 @@ static int md_thread(void *arg)
+ 	return 0;
+ }
+ 
+-static void md_wakeup_thread_directly(struct md_thread *thread)
++static void md_wakeup_thread_directly(struct md_thread __rcu *thread)
+ {
+-	if (thread)
+-		wake_up_process(thread->tsk);
++	struct md_thread *t;
++
++	rcu_read_lock();
++	t = rcu_dereference(thread);
++	if (t)
++		wake_up_process(t->tsk);
++	rcu_read_unlock();
+ }
+ 
+-void md_wakeup_thread(struct md_thread *thread)
++void md_wakeup_thread(struct md_thread __rcu *thread)
+ {
+-	if (thread) {
+-		pr_debug("md: waking up MD thread %s.\n", thread->tsk->comm);
+-		set_bit(THREAD_WAKEUP, &thread->flags);
+-		wake_up(&thread->wqueue);
++	struct md_thread *t;
++
++	rcu_read_lock();
++	t = rcu_dereference(thread);
++	if (t) {
++		pr_debug("md: waking up MD thread %s.\n", t->tsk->comm);
++		set_bit(THREAD_WAKEUP, &t->flags);
++		wake_up(&t->wqueue);
+ 	}
++	rcu_read_unlock();
  }
  EXPORT_SYMBOL(md_wakeup_thread);
  
--struct md_thread *md_register_thread(void (*run) (struct md_thread *),
--		struct mddev *mddev, const char *name)
-+int md_register_thread(struct md_thread **threadp,
-+		       void (*run)(struct md_thread *),
-+		       struct mddev *mddev, const char *name)
+-int md_register_thread(struct md_thread **threadp,
++int md_register_thread(struct md_thread __rcu **threadp,
+ 		       void (*run)(struct md_thread *),
+ 		       struct mddev *mddev, const char *name)
  {
- 	struct md_thread *thread;
- 
- 	thread = kzalloc(sizeof(struct md_thread), GFP_KERNEL);
- 	if (!thread)
--		return NULL;
-+		return -ENOMEM;
- 
- 	init_waitqueue_head(&thread->wqueue);
- 
- 	thread->run = run;
- 	thread->mddev = mddev;
- 	thread->timeout = MAX_SCHEDULE_TIMEOUT;
--	thread->tsk = kthread_run(md_thread, thread,
--				  "%s_%s",
--				  mdname(thread->mddev),
--				  name);
-+	thread->tsk = kthread_run(md_thread, thread, "%s_%s",
-+				  mdname(thread->mddev), name);
- 	if (IS_ERR(thread->tsk)) {
-+		int err = PTR_ERR(thread->tsk);
-+
- 		kfree(thread);
--		return NULL;
-+		return err;
+@@ -7933,27 +7934,20 @@ int md_register_thread(struct md_thread **threadp,
+ 		return err;
  	}
--	return thread;
-+
-+	*threadp = thread;
-+	return 0;
+ 
+-	*threadp = thread;
++	rcu_assign_pointer(*threadp, thread);
+ 	return 0;
  }
  EXPORT_SYMBOL(md_register_thread);
  
-@@ -9199,10 +9202,8 @@ static void md_start_sync(struct work_struct *ws)
+-void md_unregister_thread(struct md_thread **threadp)
++void md_unregister_thread(struct md_thread __rcu **threadp)
  {
- 	struct mddev *mddev = container_of(ws, struct mddev, del_work);
+-	struct md_thread *thread;
++	struct md_thread *thread = rcu_access_pointer(*threadp);
  
--	mddev->sync_thread = md_register_thread(md_do_sync,
--						mddev,
--						"resync");
--	if (!mddev->sync_thread) {
-+	if (md_register_thread(&mddev->sync_thread, md_do_sync, mddev,
-+			       "resync")) {
- 		pr_warn("%s: could not start resync thread...\n",
- 			mdname(mddev));
- 		/* leave the spares where they are, it shouldn't hurt */
+-	/*
+-	 * Locking ensures that mddev_unlock does not wake_up a
+-	 * non-existent thread
+-	 */
+-	spin_lock(&pers_lock);
+-	thread = *threadp;
+-	if (!thread) {
+-		spin_unlock(&pers_lock);
++	if (!thread)
+ 		return;
+-	}
+-	*threadp = NULL;
+-	spin_unlock(&pers_lock);
++
++	rcu_assign_pointer(*threadp, NULL);
++	synchronize_rcu();
+ 
+ 	pr_debug("interrupting MD-thread pid %d\n", task_pid_nr(thread->tsk));
+ 	kthread_stop(thread->tsk);
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index e148e3c83b0d..344e055e4d0f 100644
+index 5acdd704a922..0525f6d66a4d 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -730,10 +730,9 @@ extern int register_md_cluster_operations(struct md_cluster_operations *ops,
+@@ -367,8 +367,8 @@ struct mddev {
+ 	int				new_chunk_sectors;
+ 	int				reshape_backwards;
+ 
+-	struct md_thread		*thread;	/* management thread */
+-	struct md_thread		*sync_thread;	/* doing resync or reconstruct */
++	struct md_thread __rcu		*thread;	/* management thread */
++	struct md_thread __rcu		*sync_thread;	/* doing resync or reconstruct */
+ 
+ 	/* 'last_sync_action' is initialized to "none".  It is set when a
+ 	 * sync operation (i.e "data-check", "requested-resync", "resync",
+@@ -719,9 +719,9 @@ struct md_io_acct {
+ #define THREAD_WAKEUP  0
+ 
+ /* caller need to make sured returned md_thread won't be freed */
+-static inline struct md_thread *get_md_thread(struct md_thread *t)
++static inline struct md_thread *get_md_thread(struct md_thread __rcu *t)
+ {
+-	return t;
++	return rcu_access_pointer(t);
+ }
+ 
+ static inline void safe_put_page(struct page *p)
+@@ -736,11 +736,11 @@ extern int register_md_cluster_operations(struct md_cluster_operations *ops,
  extern int unregister_md_cluster_operations(void);
  extern int md_setup_cluster(struct mddev *mddev, int nodes);
  extern void md_cluster_stop(struct mddev *mddev);
--extern struct md_thread *md_register_thread(
--	void (*run)(struct md_thread *thread),
--	struct mddev *mddev,
--	const char *name);
-+int md_register_thread(struct md_thread **threadp,
-+		       void (*run)(struct md_thread *thread),
-+		       struct mddev *mddev, const char *name);
- extern void md_unregister_thread(struct md_thread **threadp);
- extern void md_wakeup_thread(struct md_thread *thread);
+-int md_register_thread(struct md_thread **threadp,
++int md_register_thread(struct md_thread __rcu **threadp,
+ 		       void (*run)(struct md_thread *thread),
+ 		       struct mddev *mddev, const char *name);
+-extern void md_unregister_thread(struct md_thread **threadp);
+-extern void md_wakeup_thread(struct md_thread *thread);
++extern void md_unregister_thread(struct md_thread __rcu **threadp);
++extern void md_wakeup_thread(struct md_thread __rcu *thread);
  extern void md_check_recovery(struct mddev *mddev);
+ extern void md_reap_sync_thread(struct mddev *mddev);
+ extern int mddev_init_writes_pending(struct mddev *mddev);
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 68a9e2d9985b..1217c1db0a40 100644
+index 1217c1db0a40..64f019e3615f 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -3083,9 +3083,8 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+@@ -3176,8 +3176,8 @@ static int raid1_run(struct mddev *mddev)
+ 	/*
+ 	 * Ok, everything is just fine now
+ 	 */
+-	mddev->thread = conf->thread;
+-	conf->thread = NULL;
++	rcu_assign_pointer(mddev->thread, conf->thread);
++	rcu_assign_pointer(conf->thread, NULL);
+ 	mddev->private = conf;
+ 	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
+ 
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index ebb6788820e7..468f189da7a0 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -130,7 +130,7 @@ struct r1conf {
+ 	/* When taking over an array from a different personality, we store
+ 	 * the new thread here until we fully activate the array.
+ 	 */
+-	struct md_thread	*thread;
++	struct md_thread __rcu	*thread;
+ 
+ 	/* Keep track of cluster resync window to send to other
+ 	 * nodes.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index fc8d07fb1c7d..5509955b79ec 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4140,8 +4140,8 @@ static int raid10_run(struct mddev *mddev)
  		}
  	}
  
--	err = -ENOMEM;
--	conf->thread = md_register_thread(raid1d, mddev, "raid1");
--	if (!conf->thread)
-+	err = md_register_thread(&conf->thread, raid1d, mddev, "raid1");
-+	if (err)
- 		goto abort;
+-	mddev->thread = conf->thread;
+-	conf->thread = NULL;
++	rcu_assign_pointer(mddev->thread, conf->thread);
++	rcu_assign_pointer(conf->thread, NULL);
  
- 	return conf;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 6c66357f92f5..0171ba4f19b0 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4077,9 +4077,8 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	init_waitqueue_head(&conf->wait_barrier);
- 	atomic_set(&conf->nr_pending, 0);
+ 	if (mddev->queue) {
+ 		blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
+diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+index 8c072ce0bc54..63e48b11b552 100644
+--- a/drivers/md/raid10.h
++++ b/drivers/md/raid10.h
+@@ -100,7 +100,7 @@ struct r10conf {
+ 	/* When taking over an array from a different personality, we store
+ 	 * the new thread here until we fully activate the array.
+ 	 */
+-	struct md_thread	*thread;
++	struct md_thread __rcu	*thread;
  
--	err = -ENOMEM;
--	conf->thread = md_register_thread(raid10d, mddev, "raid10");
--	if (!conf->thread)
-+	err = md_register_thread(&conf->thread, raid10d, mddev, "raid10");
-+	if (err)
- 		goto out;
- 
- 	conf->mddev = mddev;
-@@ -4273,9 +4272,8 @@ static int raid10_run(struct mddev *mddev)
- 		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
- 		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 		set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
--		mddev->sync_thread = md_register_thread(md_do_sync, mddev,
--							"reshape");
--		if (!mddev->sync_thread)
-+		if (md_register_thread(&mddev->sync_thread, md_do_sync, mddev,
-+				       "reshape"))
- 			goto out_free_conf;
- 	}
- 
-@@ -4686,9 +4684,8 @@ static int raid10_start_reshape(struct mddev *mddev)
- 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
- 
--	mddev->sync_thread = md_register_thread(md_do_sync, mddev,
--						"reshape");
--	if (!mddev->sync_thread) {
-+	if (md_register_thread(&mddev->sync_thread, md_do_sync, mddev,
-+			       "reshape")) {
- 		ret = -EAGAIN;
- 		goto abort;
- 	}
+ 	/*
+ 	 * Keep track of cluster resync window to send to other nodes.
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 46182b955aef..0464d4d551fc 100644
+index 7e45df3e093f..b677441d8889 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -3121,9 +3121,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	spin_lock_init(&log->tree_lock);
- 	INIT_RADIX_TREE(&log->big_stripe_tree, GFP_NOWAIT | __GFP_NOWARN);
+@@ -120,7 +120,7 @@ struct r5l_log {
+ 	struct bio_set bs;
+ 	mempool_t meta_pool;
  
--	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
--						 log->rdev->mddev, "reclaim");
--	if (!log->reclaim_thread)
-+	if (md_register_thread(&log->reclaim_thread, r5l_reclaim_thread,
-+			       log->rdev->mddev, "reclaim"))
- 		goto reclaim_thread;
- 	log->reclaim_thread->timeout = R5C_RECLAIM_WAKEUP_INTERVAL;
- 
+-	struct md_thread *reclaim_thread;
++	struct md_thread __rcu *reclaim_thread;
+ 	unsigned long reclaim_target;	/* number of space that need to be
+ 					 * reclaimed.  if it's 0, reclaim spaces
+ 					 * used by io_units which are in
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7b820b81d8c2..04b1093195d0 100644
+index 04b1093195d0..a7e47c37daf3 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -7665,11 +7665,10 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+@@ -7888,8 +7888,8 @@ static int raid5_run(struct mddev *mddev)
  	}
  
- 	sprintf(pers_name, "raid%d", mddev->new_level);
--	conf->thread = md_register_thread(raid5d, mddev, pers_name);
--	if (!conf->thread) {
-+	ret = md_register_thread(&conf->thread, raid5d, mddev, pers_name);
-+	if (ret) {
- 		pr_warn("md/raid:%s: couldn't allocate thread.\n",
- 			mdname(mddev));
--		ret = -ENOMEM;
- 		goto abort;
- 	}
+ 	conf->min_offset_diff = min_offset_diff;
+-	mddev->thread = conf->thread;
+-	conf->thread = NULL;
++	rcu_assign_pointer(mddev->thread, conf->thread);
++	rcu_assign_pointer(conf->thread, NULL);
+ 	mddev->private = conf;
  
-@@ -7989,9 +7988,8 @@ static int raid5_run(struct mddev *mddev)
- 		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
- 		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 		set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
--		mddev->sync_thread = md_register_thread(md_do_sync, mddev,
--							"reshape");
--		if (!mddev->sync_thread)
-+		if (md_register_thread(&mddev->sync_thread, md_do_sync, mddev,
-+				       "reshape"))
- 			goto abort;
- 	}
- 
-@@ -8567,9 +8565,8 @@ static int raid5_start_reshape(struct mddev *mddev)
- 	clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
--	mddev->sync_thread = md_register_thread(md_do_sync, mddev,
--						"reshape");
--	if (!mddev->sync_thread) {
-+	if (md_register_thread(&mddev->sync_thread, md_do_sync, mddev,
-+			       "reshape")) {
- 		mddev->recovery = 0;
- 		spin_lock_irq(&conf->device_lock);
- 		write_seqcount_begin(&conf->gen_lock);
+ 	for (i = 0; i < conf->raid_disks && conf->previous_raid_disks;
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index e873938a6125..f19707189a7b 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -679,7 +679,7 @@ struct r5conf {
+ 	/* When taking over an array from a different personality, we store
+ 	 * the new thread here until we fully activate the array.
+ 	 */
+-	struct md_thread	*thread;
++	struct md_thread __rcu	*thread;
+ 	struct list_head	temp_inactive_list[NR_STRIPE_HASH_LOCKS];
+ 	struct r5worker_group	*worker_groups;
+ 	int			group_cnt;
 -- 
 2.39.2
 
