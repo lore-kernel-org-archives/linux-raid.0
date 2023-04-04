@@ -2,108 +2,79 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E979C761AF
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Apr 2023 08:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC833C761A6
+	for <linux-raid@archiver.kernel.org>; Tue,  4 Apr 2023 11:32:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234302AbjDDI21 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 4 Apr 2023 04:28:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33336 "EHLO
+        id S234181AbjDDLcV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Apr 2023 07:32:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234229AbjDDI2N (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Apr 2023 04:28:13 -0400
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BF3C2D44;
-        Tue,  4 Apr 2023 01:27:41 -0700 (PDT)
-Received: by mail-wr1-f51.google.com with SMTP id r29so31836849wra.13;
-        Tue, 04 Apr 2023 01:27:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680596793;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=P+IA0sfS8Hko6hpK1HZztJ6kiawc/hgiN78OoxbJlkE=;
-        b=qPbXFAu3NFSUuePdXIGCFg7snbxm8fYqQcWtbEZPAtTwXRFsHR5/nTt+RGkYWnX7KI
-         oexHfndDEqnQKxbeSDpaq4leGLariWGtraVXa13jQD4G/d8uyO6JX09NJ4B9SevsFoub
-         NPTALWgkbG0Rx1jI0JZaLHT440ZD3sK/i2fDCwJDXAQo+xJYzXSZcmUK52nMxOZOk4aV
-         5cX+ROXbMfTrFWytmTcVMOZ1K1fZYy9yIcrVJDEj0F3hFX0qhwAoR5qy2J8f44bSBbZW
-         SGUhaENXwL02Y2bMsBBOeVU0eM+Ty94kSLr14hNrkJMD01GRBnppAnI4sc2xVElAy4AW
-         d2HQ==
-X-Gm-Message-State: AAQBX9cnktGdSw29EYqJZAvJFG//Bzppu87rjW/goEp3puGTrpPgjGQX
-        BWxRFkQSQdkrmklGnithvv4=
-X-Google-Smtp-Source: AKy350YRAl3M0jE5+UynIwckjiW+CsHm28SGM1LHNiMQ7J8tXe8xmw1F2qmXD/R4sfgmgOX6wBeBhg==
-X-Received: by 2002:adf:e0c3:0:b0:2cf:e747:b0d4 with SMTP id m3-20020adfe0c3000000b002cfe747b0d4mr940685wri.40.1680596793398;
-        Tue, 04 Apr 2023 01:26:33 -0700 (PDT)
-Received: from [192.168.32.129] (aftr-82-135-86-174.dynamic.mnet-online.de. [82.135.86.174])
-        by smtp.gmail.com with ESMTPSA id t6-20020a7bc3c6000000b003ee1b2ab9a0sm14294575wmj.11.2023.04.04.01.26.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Apr 2023 01:26:32 -0700 (PDT)
-Message-ID: <bbc98aa3-24f0-8ee6-9d74-483564a14f0f@kernel.org>
-Date:   Tue, 4 Apr 2023 10:26:31 +0200
+        with ESMTP id S234741AbjDDLcU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Apr 2023 07:32:20 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45DED268A
+        for <linux-raid@vger.kernel.org>; Tue,  4 Apr 2023 04:32:16 -0700 (PDT)
+Received: from kwepemi500002.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PrQYv1QsqzrV3D;
+        Tue,  4 Apr 2023 19:30:59 +0800 (CST)
+Received: from huawei.com (10.175.101.6) by kwepemi500002.china.huawei.com
+ (7.221.188.171) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Tue, 4 Apr
+ 2023 19:32:13 +0800
+From:   miaoguanqin <miaoguanqin@huawei.com>
+To:     <jes@trained-monkey.org>, <mariusz.tkaczyk@linux.intel.com>,
+        <pmenzel@molgen.mpg.de>, <linux-raid@vger.kernel.org>
+CC:     <linfeilong@huawei.com>, <lixiaokeng@huawei.com>,
+        <louhongxiang@huawei.com>
+Subject: [PATCH] Fix null pointer for incremental in mdadm
+Date:   Tue, 4 Apr 2023 19:31:24 +0800
+Message-ID: <20230404113124.1555782-1-miaoguanqin@huawei.com>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH v2 17/19] md: raid1: check if adding pages to resync bio
- fails
-To:     Song Liu <song@kernel.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        Mike Snitzer <snitzer@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-References: <cover.1680172791.git.johannes.thumshirn@wdc.com>
- <8b8a3bb2db8c5183ef36c1810f2ac776ac526327.1680172791.git.johannes.thumshirn@wdc.com>
- <CAPhsuW7a+mpn+VprfA2mC5Fc+M9BFq8i6d-y+-o5G1u5dOsk2Q@mail.gmail.com>
-Content-Language: en-US
-From:   Johannes Thumshirn <jth@kernel.org>
-In-Reply-To: <CAPhsuW7a+mpn+VprfA2mC5Fc+M9BFq8i6d-y+-o5G1u5dOsk2Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemi500002.china.huawei.com (7.221.188.171)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 31/03/2023 20:13, Song Liu wrote:
-> On Thu, Mar 30, 2023 at 3:44 AM Johannes Thumshirn
-> <johannes.thumshirn@wdc.com> wrote:
->>
->> Check if adding pages to resync bio fails and if bail out.
->>
->> As the comment above suggests this cannot happen, WARN if it actually
->> happens.
->>
->> This way we can mark bio_add_pages as __must_check.
->>
->> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
->> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> ---
->>   drivers/md/raid1-10.c |  7 ++++++-
->>   drivers/md/raid10.c   | 12 ++++++++++--
->>   2 files changed, 16 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
->> index e61f6cad4e08..c21b6c168751 100644
->> --- a/drivers/md/raid1-10.c
->> +++ b/drivers/md/raid1-10.c
->> @@ -105,7 +105,12 @@ static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
->>                   * won't fail because the vec table is big
->>                   * enough to hold all these pages
->>                   */
-> 
-> We know these won't fail. Shall we just use __bio_add_page?
+when we excute mdadm --assemble, udev-md-raid-assembly.rules is triggered.
+Then we stop array, we found an coredump for mdadm --incremental.func
+stack are as follows:
 
-We could yes, but I kind of like the assert() style warning.
-But of cause ultimately your call.
+#0  enough (level=10, raid_disks=4, layout=258, clean=1, 
+    avail=avail@entry=0x0) at util.c:555
+#1  0x0000562170c26965 in Incremental (devlist=<optimized out>, 
+    c=<optimized out>, st=0x5621729b6dc0) at Incremental.c:514
+#2  0x0000562170bfb6ff in main (argc=<optimized out>, 
+    argv=<optimized out>) at mdadm.c:1762
 
-Byte,
-	Johannes
+func enough() use array avail,avail allocate space in func count_active,
+it may not alloc space, causing a coredump.We fix this coredump.
+
+Signed-off-by: Guanqin Miao <miaoguanqin@huawei.com>
+Signed-off-by: lixiaokeng <lixiaokeng@huawei.com>
+---
+ Incremental.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Incremental.c b/Incremental.c
+index 09b94b9f..49a71f72 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -507,6 +507,9 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
+ 				    GET_OFFSET | GET_SIZE));
+ 	active_disks = count_active(st, sra, mdfd, &avail, &info);
+ 
++	if (!avail)
++		goto out_unlock;
++
+ 	journal_device_missing = (info.journal_device_required) && (info.journal_clean == 0);
+ 
+ 	if (info.consistency_policy == CONSISTENCY_POLICY_PPL)
+-- 
+2.33.0
+
