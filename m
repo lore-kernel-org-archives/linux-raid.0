@@ -2,100 +2,108 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 348F2C76188
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Apr 2023 01:35:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E979C761AF
+	for <linux-raid@archiver.kernel.org>; Tue,  4 Apr 2023 08:28:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232916AbjDDBfH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 3 Apr 2023 21:35:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57894 "EHLO
+        id S234302AbjDDI21 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Apr 2023 04:28:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233011AbjDDBe6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 3 Apr 2023 21:34:58 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00F581B0;
-        Mon,  3 Apr 2023 18:34:51 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pr9Kz2Gg3z4f3nJh;
-        Tue,  4 Apr 2023 09:34:47 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgCHgR+3fitktWF6GA--.58991S3;
-        Tue, 04 Apr 2023 09:34:48 +0800 (CST)
-Subject: Re: [PATCH v4 5/5] md: protect md_thread with rcu
-To:     Logan Gunthorpe <logang@deltatee.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230402091236.976723-1-yukuai1@huaweicloud.com>
- <20230402091236.976723-6-yukuai1@huaweicloud.com>
- <84680f93-5936-4a80-fe9e-aed988654e28@deltatee.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <441acd06-606c-8f63-fd69-f7bc82841746@huaweicloud.com>
-Date:   Tue, 4 Apr 2023 09:34:46 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S234229AbjDDI2N (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Apr 2023 04:28:13 -0400
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BF3C2D44;
+        Tue,  4 Apr 2023 01:27:41 -0700 (PDT)
+Received: by mail-wr1-f51.google.com with SMTP id r29so31836849wra.13;
+        Tue, 04 Apr 2023 01:27:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680596793;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=P+IA0sfS8Hko6hpK1HZztJ6kiawc/hgiN78OoxbJlkE=;
+        b=qPbXFAu3NFSUuePdXIGCFg7snbxm8fYqQcWtbEZPAtTwXRFsHR5/nTt+RGkYWnX7KI
+         oexHfndDEqnQKxbeSDpaq4leGLariWGtraVXa13jQD4G/d8uyO6JX09NJ4B9SevsFoub
+         NPTALWgkbG0Rx1jI0JZaLHT440ZD3sK/i2fDCwJDXAQo+xJYzXSZcmUK52nMxOZOk4aV
+         5cX+ROXbMfTrFWytmTcVMOZ1K1fZYy9yIcrVJDEj0F3hFX0qhwAoR5qy2J8f44bSBbZW
+         SGUhaENXwL02Y2bMsBBOeVU0eM+Ty94kSLr14hNrkJMD01GRBnppAnI4sc2xVElAy4AW
+         d2HQ==
+X-Gm-Message-State: AAQBX9cnktGdSw29EYqJZAvJFG//Bzppu87rjW/goEp3puGTrpPgjGQX
+        BWxRFkQSQdkrmklGnithvv4=
+X-Google-Smtp-Source: AKy350YRAl3M0jE5+UynIwckjiW+CsHm28SGM1LHNiMQ7J8tXe8xmw1F2qmXD/R4sfgmgOX6wBeBhg==
+X-Received: by 2002:adf:e0c3:0:b0:2cf:e747:b0d4 with SMTP id m3-20020adfe0c3000000b002cfe747b0d4mr940685wri.40.1680596793398;
+        Tue, 04 Apr 2023 01:26:33 -0700 (PDT)
+Received: from [192.168.32.129] (aftr-82-135-86-174.dynamic.mnet-online.de. [82.135.86.174])
+        by smtp.gmail.com with ESMTPSA id t6-20020a7bc3c6000000b003ee1b2ab9a0sm14294575wmj.11.2023.04.04.01.26.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Apr 2023 01:26:32 -0700 (PDT)
+Message-ID: <bbc98aa3-24f0-8ee6-9d74-483564a14f0f@kernel.org>
+Date:   Tue, 4 Apr 2023 10:26:31 +0200
 MIME-Version: 1.0
-In-Reply-To: <84680f93-5936-4a80-fe9e-aed988654e28@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH v2 17/19] md: raid1: check if adding pages to resync bio
+ fails
+To:     Song Liu <song@kernel.org>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.de>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        Mike Snitzer <snitzer@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+References: <cover.1680172791.git.johannes.thumshirn@wdc.com>
+ <8b8a3bb2db8c5183ef36c1810f2ac776ac526327.1680172791.git.johannes.thumshirn@wdc.com>
+ <CAPhsuW7a+mpn+VprfA2mC5Fc+M9BFq8i6d-y+-o5G1u5dOsk2Q@mail.gmail.com>
+Content-Language: en-US
+From:   Johannes Thumshirn <jth@kernel.org>
+In-Reply-To: <CAPhsuW7a+mpn+VprfA2mC5Fc+M9BFq8i6d-y+-o5G1u5dOsk2Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCHgR+3fitktWF6GA--.58991S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tw15Xr4xCFy8Aw4UJr1kZrb_yoW8XrWfpF
-        s8KFyj9r4DJryUZF4UCan5Ja4Fvr4SvFy3G34DK3s8Aas3Gws5tFy7uryFvr4fur95Ka47
-        Xa1YqFn5Cryqyr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
-        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8
-        JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUU
-        UU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi, Logan!
-
-在 2023/04/03 23:53, Logan Gunthorpe 写道:
->>   
->>   /* caller need to make sured returned md_thread won't be freed */
->> -static inline struct md_thread *get_md_thread(struct md_thread *t)
->> +static inline struct md_thread *get_md_thread(struct md_thread __rcu *t)
->>   {
->> -	return t;
->> +	return rcu_access_pointer(t);
+On 31/03/2023 20:13, Song Liu wrote:
+> On Thu, Mar 30, 2023 at 3:44 AM Johannes Thumshirn
+> <johannes.thumshirn@wdc.com> wrote:
+>>
+>> Check if adding pages to resync bio fails and if bail out.
+>>
+>> As the comment above suggests this cannot happen, WARN if it actually
+>> happens.
+>>
+>> This way we can mark bio_add_pages as __must_check.
+>>
+>> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+>> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>> ---
+>>   drivers/md/raid1-10.c |  7 ++++++-
+>>   drivers/md/raid10.c   | 12 ++++++++++--
+>>   2 files changed, 16 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+>> index e61f6cad4e08..c21b6c168751 100644
+>> --- a/drivers/md/raid1-10.c
+>> +++ b/drivers/md/raid1-10.c
+>> @@ -105,7 +105,12 @@ static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
+>>                   * won't fail because the vec table is big
+>>                   * enough to hold all these pages
+>>                   */
 > 
-> This should not be using rcu_access_pointer(). That function is only
-> appropriate when the value of t is not being dereferenced. This should
-> be using rcu_dereference_protected() with some reasoning as to why it's
-> safe to use this function. It might make sense to open code this for
-> every call site if the reasoning is different in each location.
-> Preferrably the second argument in the check should be some lockdep
-> condition that ensures this. If that's not possible, a comment
-> explaining the reasoning why it is safe in all the call sites should be
-> added here.
+> We know these won't fail. Shall we just use __bio_add_page?
 
-Yes, it's right rcu_dereference_protected() should be used here, I need
-to take a look at each call site from patch 3 and figure out if they're
-safe without rcu protection.
+We could yes, but I kind of like the assert() style warning.
+But of cause ultimately your call.
 
-> 
-> On one hand this is looking like my idea of using RCU is producing more
-> churn than the spin lock. On the other hand I think it's cleaning up and
-> documenting more unsafe use cases (like other potentially unsafe
-> accesses of the the thread pointer). So I still think the RCU is a good
-> approach here.
-
-Yes, some other unsafe accesses is protected now in this patch. I'll
-send a new version soon.
-
-Thanks,
-Kuai
-
+Byte,
+	Johannes
