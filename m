@@ -2,85 +2,151 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B6F0C76196
-	for <linux-raid@archiver.kernel.org>; Fri,  7 Apr 2023 00:46:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 475DEC77B61
+	for <linux-raid@archiver.kernel.org>; Mon, 10 Apr 2023 11:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230010AbjDGAqZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 6 Apr 2023 20:46:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46736 "EHLO
+        id S229935AbjDJLhA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 10 Apr 2023 07:37:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229669AbjDGAqY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 Apr 2023 20:46:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90E716EA1
-        for <linux-raid@vger.kernel.org>; Thu,  6 Apr 2023 17:45:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680828336;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=OAK2MVwskbD4sv0QXFxEpgJJ2jIM2d/e5FTZqVMwUnA=;
-        b=MmdkxGymMyZq9vdbffqRs01ULPWLoeGmyBDJJjdDEdPmsBbVW4OncC6kFNkwqT65xZiJFU
-        10uflrLdQJgDcKb4O8w/UIxPPAEOVbouhrirc0XgnepqGkSIiLMRrJuIh699wSEzaOpbyJ
-        0Qs3eHf9Qqd5aciJ09dAoMgOhcp10Kw=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-557-etoEZvLFMJehl59shG5ntQ-1; Thu, 06 Apr 2023 20:45:33 -0400
-X-MC-Unique: etoEZvLFMJehl59shG5ntQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 07D83884343;
-        Fri,  7 Apr 2023 00:45:33 +0000 (UTC)
-Received: from localhost.localdomain (ovpn-12-95.pek2.redhat.com [10.72.12.95])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 037E8440D8;
-        Fri,  7 Apr 2023 00:45:30 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     jes@trained-monkey.org
-Cc:     neilb@suse.de, linux-raid@vger.kernel.org
-Subject: [PATCH 1/1] Remove the config files in mdcheck_start|continue service
-Date:   Fri,  7 Apr 2023 08:45:28 +0800
-Message-Id: <20230407004528.59539-1-xni@redhat.com>
+        with ESMTP id S229739AbjDJLg6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Apr 2023 07:36:58 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74C7349C8;
+        Mon, 10 Apr 2023 04:36:57 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pw6Pw6nzTz4f3mW6;
+        Mon, 10 Apr 2023 19:36:52 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgAHvbDT9DNk0tNvHA--.50875S6;
+        Mon, 10 Apr 2023 19:36:54 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     logang@deltatee.com, song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next v5 2/6] md: factor out a helper to wake up md_thread directly
+Date:   Mon, 10 Apr 2023 19:35:55 +0800
+Message-Id: <20230410113559.1610455-3-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
+References: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
+X-CM-TRANSID: gCh0CgAHvbDT9DNk0tNvHA--.50875S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxXFW8CF17JrW5Xr1kKF4xtFb_yoW5CFW3p3
+        y8tF15Wr48ZFZ8ZFZrJa4DGa4rZr10qFy7try7Cw4rJw1rKw43tFyS9Fyjya4DAFyrAw45
+        Zw15tFWrurZ2kF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9m14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2
+        IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
+        6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
+        AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
+        s7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
+        0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUc6pPUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-We set MDADM_CHECK_DURATION in the mdcheck_start|continue.service files.
-And mdcheck doesn't use any configs from the config file. So we can remove
-the dependencies.
+From: Yu Kuai <yukuai3@huawei.com>
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
+md_wakeup_thread() can't wakeup md_thread->tsk if md_thread->run is
+still in progress, and in some cases md_thread->tsk need to be woke up
+directly, like md_set_readonly() and do_md_stop().
+
+Commit 9dfbdafda3b3 ("md: unlock mddev before reap sync_thread in
+action_store") introduce a new scenario where unregister sync_thread is
+not protected by 'reconfig_mutex', this can cause null-ptr-deference in
+theroy:
+
+t1: md_set_readonly		t2: action_store
+				md_unregister_thread
+				// 'reconfig_mutex' is not held
+// 'reconfig_mutex' is held by caller
+if (mddev->sync_thread)
+				 thread = *threadp
+				 *threadp = NULL
+ wake_up_process(mddev->sync_thread->tsk)
+ // null-ptr-deference
+
+This patch factor out a helper to wake up md_thread directly, so that
+'sync_thread' won't be accessed multiple times from the reader side. And
+perhaps this helper will be used later to fix action_store().
+
+This patch also prepare to protect md_thread with rcu.
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- systemd/mdcheck_continue.service | 2 --
- systemd/mdcheck_start.service    | 2 --
- 2 files changed, 4 deletions(-)
+ drivers/md/md.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/systemd/mdcheck_continue.service b/systemd/mdcheck_continue.service
-index 854317f11700..f576e0167f3c 100644
---- a/systemd/mdcheck_continue.service
-+++ b/systemd/mdcheck_continue.service
-@@ -12,6 +12,4 @@ ConditionPathExistsGlob = /var/lib/mdcheck/MD_UUID_*
- [Service]
- Type=oneshot
- Environment="MDADM_CHECK_DURATION=6 hours"
--EnvironmentFile=-/run/sysconfig/mdadm
--ExecStartPre=-/usr/lib/mdadm/mdadm_env.sh
- ExecStart=/usr/share/mdadm/mdcheck --continue --duration ${MDADM_CHECK_DURATION}
-diff --git a/systemd/mdcheck_start.service b/systemd/mdcheck_start.service
-index 3bb3d130801f..f98e5c6f52d7 100644
---- a/systemd/mdcheck_start.service
-+++ b/systemd/mdcheck_start.service
-@@ -12,6 +12,4 @@ Wants=mdcheck_continue.timer
- [Service]
- Type=oneshot
- Environment="MDADM_CHECK_DURATION=6 hours"
--EnvironmentFile=-/run/sysconfig/mdadm
--ExecStartPre=-/usr/lib/mdadm/mdadm_env.sh
- ExecStart=/usr/share/mdadm/mdcheck --duration ${MDADM_CHECK_DURATION}
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 1459c2cfb0dd..139c7b0202e3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -92,6 +92,7 @@ static struct workqueue_struct *md_rdev_misc_wq;
+ static int remove_and_add_spares(struct mddev *mddev,
+ 				 struct md_rdev *this);
+ static void mddev_detach(struct mddev *mddev);
++static void md_wakeup_thread_directly(struct md_thread *thread);
+ 
+ enum md_ro_state {
+ 	MD_RDWR,
+@@ -6269,10 +6270,12 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+ 	}
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-	if (mddev->sync_thread)
+-		/* Thread might be blocked waiting for metadata update
+-		 * which will now never happen */
+-		wake_up_process(mddev->sync_thread->tsk);
++
++	/*
++	 * Thread might be blocked waiting for metadata update which will now
++	 * never happen
++	 */
++	md_wakeup_thread_directly(mddev->sync_thread);
+ 
+ 	if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
+ 		return -EBUSY;
+@@ -6333,10 +6336,12 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 	}
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-	if (mddev->sync_thread)
+-		/* Thread might be blocked waiting for metadata update
+-		 * which will now never happen */
+-		wake_up_process(mddev->sync_thread->tsk);
++
++	/*
++	 * Thread might be blocked waiting for metadata update which will now
++	 * never happen
++	 */
++	md_wakeup_thread_directly(mddev->sync_thread);
+ 
+ 	mddev_unlock(mddev);
+ 	wait_event(resync_wait, (mddev->sync_thread == NULL &&
+@@ -7886,6 +7891,12 @@ static int md_thread(void *arg)
+ 	return 0;
+ }
+ 
++static void md_wakeup_thread_directly(struct md_thread *thread)
++{
++	if (thread)
++		wake_up_process(thread->tsk);
++}
++
+ void md_wakeup_thread(struct md_thread *thread)
+ {
+ 	if (thread) {
 -- 
-2.32.0 (Apple Git-132)
+2.39.2
 
