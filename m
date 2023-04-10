@@ -2,142 +2,55 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21BE3C76196
-	for <linux-raid@archiver.kernel.org>; Mon, 10 Apr 2023 15:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E0A5C77B61
+	for <linux-raid@archiver.kernel.org>; Mon, 10 Apr 2023 15:50:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229881AbjDJPmx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 10 Apr 2023 11:42:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53090 "EHLO
+        id S229697AbjDJPuL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 10 Apr 2023 11:50:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229711AbjDJPmw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Apr 2023 11:42:52 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C194530EC;
-        Mon, 10 Apr 2023 08:42:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=M+aCu+o9Pqbd/tZgLt2oYz5Sd1Uzxz4vi6MKq1okd2M=; b=ELWGXPwrWU2cKKGgASTQWcPHfR
-        JOLXob38jcqh1LYyxJB3nNWCfVNW96ZljJZ8THDc3GIg/L7LSPyBeF3BS6CfUlAduhoD92O+5nDF1
-        dVzVnZX8Ttvnrdeu+umJFt0E1uRyMbfgJLRtXe8HReZVkQcQ/Q4ELyr4v3Kp7/kIdOZZ0vYMprZkf
-        j60dsQ8dDMxOc4Jw130KHUHaaWgvATNs8oGVGJBIrDqzwaanqUvGWnP4YXM4ZYfsUgPWySHPmTfAf
-        lT0d0D3uVQuxjB47r4s1u+1AAdYjvpegfNE4BIMsAWeOgPG0yL6AkxL/Hj8L+HEmZFYnIEnFss8aQ
-        kDkXEXmg==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1pltfB-005K4M-6h; Mon, 10 Apr 2023 09:42:38 -0600
-Message-ID: <87c0efd2-c8b0-c6ab-764c-958883fe1d15@deltatee.com>
-Date:   Mon, 10 Apr 2023 09:42:35 -0600
+        with ESMTP id S229618AbjDJPuJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Apr 2023 11:50:09 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0DE61702
+        for <linux-raid@vger.kernel.org>; Mon, 10 Apr 2023 08:50:07 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1681141801; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=bvOeooiCP7THSSUlvyPZW0MemdkdiXviNpoAJsIeLu16FnsLLLuhkpSiZmTFM4YoiSdANvvhHcQjB8QOPJYXyZhTUxwTGVy3tHUDgYWwrhwtcxGGQxK/dz6+KrT7ge7ZU2nFJGV0UsN+IQj7g3jr9lQWsXi2qYK2BalP3ABX6dg=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1681141801; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:MIME-Version:Message-ID:Subject:To; 
+        bh=AKxp9eX5jMTdWZJg80926KQk7BLPlCzzYBLMiPfdp/U=; 
+        b=TTpa/UXAFlZBtB/PnGzw03IPyzhPfkN41ZTUmNxqAseB4ZEqDzXpAV4uyZAikKxQlROjl8cylWVyD1Png30zAb08l/sD//8YFd9UxRM66MUDmEnha205WqA4tFCImikZmuHbhdT1UkIGJotIL/5QE9lfI94/BQnF334B9OkduTI=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1681141800940191.61191959051132; Mon, 10 Apr 2023 17:50:00 +0200 (CEST)
+Message-ID: <e8ed86bb-4162-7d8e-ece9-eb75e045bcc5@trained-monkey.org>
+Date:   Mon, 10 Apr 2023 11:49:59 -0400
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Content-Language: en-CA
-To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-References: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
- <20230410113559.1610455-7-yukuai1@huaweicloud.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20230410113559.1610455-7-yukuai1@huaweicloud.com>
+ Thunderbird/102.8.0
+Content-Language: en-US
+To:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Cc:     NeilBrown <neilb@suse.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Subject: mdadm minimum kernel version requirements?
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: yukuai1@huaweicloud.com, song@kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH -next v5 6/6] md: protect md_thread with rcu
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi,
 
+I bumped the minimum kernel version required for mdadm to 2.6.32.
 
-On 2023-04-10 05:35, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> Our test reports a uaf for 'mddev->sync_thread':
-> 
-> T1                      T2
-> md_start_sync
->  md_register_thread
->  // mddev->sync_thread is set
-> 			raid1d
-> 			 md_check_recovery
-> 			  md_reap_sync_thread
-> 			   md_unregister_thread
-> 			    kfree
-> 
->  md_wakeup_thread
->   wake_up
->   ->sync_thread was freed
-> 
-> Root cause is that there is a small windown between register thread and
-> wake up thread, where the thread can be freed concurrently.
-> 
-> Currently, a global spinlock 'pers_lock' is borrowed to protect
-> 'mddev->thread', this problem can be fixed likewise, however, there might
-> be similar problem elsewhere, and use a global lock for all the cases is
-> not good.
-> 
-> This patch protect md_thread with rcu.
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md-bitmap.c   | 29 ++++++++++++-----
->  drivers/md/md.c          | 68 +++++++++++++++++++---------------------
->  drivers/md/md.h          | 10 +++---
->  drivers/md/raid1.c       |  4 +--
->  drivers/md/raid1.h       |  2 +-
->  drivers/md/raid10.c      | 10 ++++--
->  drivers/md/raid10.h      |  2 +-
->  drivers/md/raid5-cache.c | 15 +++++----
->  drivers/md/raid5.c       |  4 +--
->  drivers/md/raid5.h       |  2 +-
->  10 files changed, 81 insertions(+), 65 deletions(-)
-> 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 29fd41ef55a6..b9baeea5605e 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1219,15 +1219,27 @@ static bitmap_counter_t *md_bitmap_get_counter(struct bitmap_counts *bitmap,
->  					       int create);
->  
->  static void mddev_set_timeout(struct mddev *mddev, unsigned long timeout,
-> -			      bool force)
-> +			      bool force, bool protected)
->  {
-> -	struct md_thread *thread = mddev->thread;
-> +	struct md_thread *thread;
-> +
-> +	if (!protected) {
-> +		rcu_read_lock();
-> +		thread = rcu_dereference(mddev->thread);
-> +	} else {
-> +		thread = rcu_dereference_protected(mddev->thread,
-> +				lockdep_is_held(&mddev->reconfig_mutex));
-> +	}
+Should we drop support for anything prior to 3.10 at this point, since
+RHEL7 is 3.10 based and SLES12 seems to be 3.12 based.
 
-Why not just always use rcu_read_lock()? Even if it's safe with
-reconfig_mutex, it wouldn't harm much and would make the code a bit less
-ugly.
+Thoughts?
 
-
-> @@ -458,8 +454,10 @@ static void md_submit_bio(struct bio *bio)
->   */
->  void mddev_suspend(struct mddev *mddev)
->  {
-> -	WARN_ON_ONCE(mddev->thread && current == mddev->thread->tsk);
-> -	lockdep_assert_held(&mddev->reconfig_mutex);
-> +	struct md_thread *thread = rcu_dereference_protected(mddev->thread,
-> +			lockdep_is_held(&mddev->reconfig_mutex));
-
-Do we know that reconfig_mutex is always held when we call
-md_unregister_thread()? Seems plausible, but maybe it's worth adding a
-lockdep_assert_held() to md_unregsiter_thread().
-
-Thanks,
-
-Logan
+Jes
