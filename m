@@ -2,51 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69F3BC76196
-	for <linux-raid@archiver.kernel.org>; Mon, 10 Apr 2023 11:37:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EECDAC77B61
+	for <linux-raid@archiver.kernel.org>; Mon, 10 Apr 2023 11:37:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229932AbjDJLhB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 10 Apr 2023 07:37:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43878 "EHLO
+        id S229946AbjDJLhD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 10 Apr 2023 07:37:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229719AbjDJLg6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Apr 2023 07:36:58 -0400
+        with ESMTP id S229744AbjDJLg7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Apr 2023 07:36:59 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74BAD44BE;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1E3B49D8;
         Mon, 10 Apr 2023 04:36:57 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pw6Pw2lsMz4f4FSF;
-        Mon, 10 Apr 2023 19:36:52 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHvbDT9DNk0tNvHA--.50875S4;
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Pw6Px4yQxz4f3r6m;
         Mon, 10 Apr 2023 19:36:53 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgAHvbDT9DNk0tNvHA--.50875S8;
+        Mon, 10 Apr 2023 19:36:55 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     logang@deltatee.com, song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v5 0/6] md: fix uaf for sync_thread
-Date:   Mon, 10 Apr 2023 19:35:53 +0800
-Message-Id: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v5 4/6] md/bitmap: always wake up md_thread in timeout_store
+Date:   Mon, 10 Apr 2023 19:35:57 +0800
+Message-Id: <20230410113559.1610455-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
+References: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHvbDT9DNk0tNvHA--.50875S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zr1DXF43tr4DAF4kXFykGrg_yoW8XFy3pF
-        Wagr9xZw4UCrsxZFsxZFyjka45G3Wrtay7KryxC34rZa45uFWUJr4UGFWkWF9ruFyfJa9r
-        Xr15Jr18uF1jyaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
-        rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
-        vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IY
-        x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
-        xKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
-        67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-TRANSID: gCh0CgAHvbDT9DNk0tNvHA--.50875S8
+X-Coremail-Antispam: 1UD129KBjvdXoWrZrW3Wr13ArW7tF4fGr4rZrb_yoWkurcEga
+        nY93s3JrW7CFy7Kw4ayw40vryUtF45u3WkXFn2grWIvwnrK395Wry0vw1qv3WxCFW3Cryr
+        Cry8Wr48Zw15ujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbTxFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+        IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+        F7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
+        1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMx
+        C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
+        wI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
+        vE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v2
+        0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxV
+        W8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZX7UUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -55,49 +58,38 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v5:
- - use rcu_dereference_protected() instead of rcu_access_pointer() where
- rcu_read_lock/unlock is not required.
- - add patch 4,5 to handle that bitmap timeout is set multiple times.
+md_wakeup_thread() can handle the case that pass in md_thread is NULL,
+the only difference is that md_wakeup_thread() will be called when
+current timeout is 'MAX_SCHEDULE_TIMEOUT', this should not matter
+because timeout_store() is not hot path, and the daemon process is
+woke up more than demand from other context already.
 
-Changes in v4:
- - remove patch 2 from v3
- - fix sparse errors and warnings from v3, in order to do that, all access
- to md_thread need to be modified, patch 2-4 is splited to avoid a huge
- patch.
+This patch prepare to factor out a helper to set timeout.
 
-Changes in v3:
- - remove patch 3 from v2
- - use rcu instead of a new lock
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md-bitmap.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Changes in v2:
- - fix a compile error for md-cluster in patch 2
- - replace spin_lock/unlock with spin_lock/unlock_irq in patch 5
- - don't wake up inside the new lock in md wakeup_thread in patch 5
-
-Yu Kuai (6):
-  md: pass a md_thread pointer to md_register_thread()
-  md: factor out a helper to wake up md_thread directly
-  dm-raid: remove useless checking in raid_message()
-  md/bitmap: always wake up md_thread in timeout_store
-  md/bitmap: factor out a helper to set timeout
-  md: protect md_thread with rcu
-
- drivers/md/dm-raid.c      |   4 +-
- drivers/md/md-bitmap.c    |  50 +++++++++++------
- drivers/md/md-cluster.c   |  11 ++--
- drivers/md/md-multipath.c |   6 +--
- drivers/md/md.c           | 110 ++++++++++++++++++++------------------
- drivers/md/md.h           |  15 +++---
- drivers/md/raid1.c        |   9 ++--
- drivers/md/raid1.h        |   2 +-
- drivers/md/raid10.c       |  25 ++++-----
- drivers/md/raid10.h       |   2 +-
- drivers/md/raid5-cache.c  |  20 +++----
- drivers/md/raid5.c        |  19 +++----
- drivers/md/raid5.h        |   2 +-
- 13 files changed, 148 insertions(+), 127 deletions(-)
-
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index e7cc6ba1b657..014e5c8a4fe0 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2452,11 +2452,11 @@ timeout_store(struct mddev *mddev, const char *buf, size_t len)
+ 		 * the bitmap is all clean and we don't need to
+ 		 * adjust the timeout right now
+ 		 */
+-		if (mddev->thread->timeout < MAX_SCHEDULE_TIMEOUT) {
++		if (mddev->thread->timeout < MAX_SCHEDULE_TIMEOUT)
+ 			mddev->thread->timeout = timeout;
+-			md_wakeup_thread(mddev->thread);
+-		}
+ 	}
++
++	md_wakeup_thread(mddev->thread);
+ 	return len;
+ }
+ 
 -- 
 2.39.2
 
