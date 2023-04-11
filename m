@@ -2,75 +2,95 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D0B9C77B61
-	for <linux-raid@archiver.kernel.org>; Tue, 11 Apr 2023 01:17:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FF6C76196
+	for <linux-raid@archiver.kernel.org>; Tue, 11 Apr 2023 01:34:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229977AbjDKBR3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 10 Apr 2023 21:17:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54902 "EHLO
+        id S229701AbjDKBez (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 10 Apr 2023 21:34:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229975AbjDKBRJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Apr 2023 21:17:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53FC62D4B;
-        Mon, 10 Apr 2023 18:16:18 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B80E06204F;
-        Tue, 11 Apr 2023 01:16:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B335C4339B;
-        Tue, 11 Apr 2023 01:16:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681175771;
-        bh=ODaecMr+wJPSHtC8hYe20feIEPMjvcTTCHqXR7iGKOE=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=KXMCsiDlHJK5+SPk1oi/4xjuIPdjXnTKcdYVbg59ndsgv0tvucVDno7yXIT2EFUCu
-         LJ3KwwIHpNtL2PqpdiWltx+3t+KwrsrcziFXfIJqdKWO4KAYvBTLtXsFj+9nVTik1u
-         payvKNIRtPowiMZYTIC1iSGh6++zh4UiwoZJzEZu3gopaM6WNPy1MtUcvJiUTM5W8m
-         w0B6CrLpfoo1VfnPpx1MPv8tl5ghyX7cziVSEBgHu9grVqnvYu+cyFG5sdRVlILo5Q
-         R+UDOFAwZh4O6rMODrvKQIw8DFHZXfmW0QLO6LAqOcVxax5GSssh0qHjz2tUXsLU8G
-         hYsF9bl6oknWA==
-Received: by mail-lj1-f179.google.com with SMTP id x31so2845194ljq.10;
-        Mon, 10 Apr 2023 18:16:11 -0700 (PDT)
-X-Gm-Message-State: AAQBX9eoP45pWDugYFf6A6v23Az/9EXc9TUb2TmK2mIf+BdQOMs+s9Fr
-        779umArp0VCoHaU3mW4dx3t2mEwNtjXMGNO8D0I=
-X-Google-Smtp-Source: AKy350Y2xfVxBP7Vu9TD/upNGfxDqae0YwlFFpdnNBgbocvqzYteiKUGsv79YBWGh99PmGynLpDCXmRXqxWVRqCa75s=
-X-Received: by 2002:a2e:9d1a:0:b0:299:9de5:2f0f with SMTP id
- t26-20020a2e9d1a000000b002999de52f0fmr3371112lji.5.1681175769183; Mon, 10 Apr
- 2023 18:16:09 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230410113559.1610455-1-yukuai1@huaweicloud.com> <20230410113559.1610455-2-yukuai1@huaweicloud.com>
-In-Reply-To: <20230410113559.1610455-2-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 10 Apr 2023 18:15:57 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7rUQ9KFxCQw-iAAA64=x==b-Qu0nnp32TXn-85Okb00w@mail.gmail.com>
-Message-ID: <CAPhsuW7rUQ9KFxCQw-iAAA64=x==b-Qu0nnp32TXn-85Okb00w@mail.gmail.com>
-Subject: Re: [PATCH -next v5 1/6] md: pass a md_thread pointer to md_register_thread()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
+        with ESMTP id S229571AbjDKBey (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Apr 2023 21:34:54 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5039D1723;
+        Mon, 10 Apr 2023 18:34:53 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PwT0m0fFhz4f3ppl;
+        Tue, 11 Apr 2023 09:34:48 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgCnUyE4uTRkJuc_Gg--.27205S3;
+        Tue, 11 Apr 2023 09:34:49 +0800 (CST)
+Subject: Re: [PATCH -next v5 1/6] md: pass a md_thread pointer to
+ md_register_thread()
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     logang@deltatee.com, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
+ <20230410113559.1610455-2-yukuai1@huaweicloud.com>
+ <CAPhsuW7rUQ9KFxCQw-iAAA64=x==b-Qu0nnp32TXn-85Okb00w@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <daa344fe-9d8d-16f9-aded-513f250928b9@huaweicloud.com>
+Date:   Tue, 11 Apr 2023 09:34:48 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <CAPhsuW7rUQ9KFxCQw-iAAA64=x==b-Qu0nnp32TXn-85Okb00w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgCnUyE4uTRkJuc_Gg--.27205S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrKw17ZFy8ZFy3tw1Dur13CFg_yoW3XFb_Zr
+        1vkasrGr17Jr97t3Wjvw40yFsrCrW5Cr17XrWDtrWUKa4FgFyUXr1vv34FyFyxAFWFq39a
+        gr95Z3yUK397GjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb4AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
+        UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Apr 10, 2023 at 4:37=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Prepare to protect md_thread with rcu, there are no functional changes.
+Hi,
 
-Why do we need this change? To add __rcu later?
+在 2023/04/11 9:15, Song Liu 写道:
+> On Mon, Apr 10, 2023 at 4:37 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Prepare to protect md_thread with rcu, there are no functional changes.
+> 
+> Why do we need this change? To add __rcu later?
 
-Can we do something like:
+Add __rcu is one reason, more importantly is to assign md_thread inside
+md_register_thread in patch 6:
 
-struct md_thread __rcu *md_register_thread(void (*run) (struct md_thread *)=
-,
-               struct mddev *mddev, const char *name)
+rcu_assign_pointer(*threadp, thread);
+
+> 
+> Can we do something like:
+> 
+> struct md_thread __rcu *md_register_thread(void (*run) (struct md_thread *),
+>                 struct mddev *mddev, const char *name)
+
+I think this is not necessary, if we don't want to change api, we must
+use rcu_assign_pointer for each caller to set md_thread.
 
 Thanks,
-Song
+Kuai
+> 
+> Thanks,
+> Song
+> .
+> 
+
