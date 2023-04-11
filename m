@@ -2,95 +2,97 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FF6C76196
-	for <linux-raid@archiver.kernel.org>; Tue, 11 Apr 2023 01:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCFDEC7619A
+	for <linux-raid@archiver.kernel.org>; Tue, 11 Apr 2023 05:27:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229701AbjDKBez (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 10 Apr 2023 21:34:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42958 "EHLO
+        id S229722AbjDKF1P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 11 Apr 2023 01:27:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229571AbjDKBey (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Apr 2023 21:34:54 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5039D1723;
-        Mon, 10 Apr 2023 18:34:53 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PwT0m0fFhz4f3ppl;
-        Tue, 11 Apr 2023 09:34:48 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgCnUyE4uTRkJuc_Gg--.27205S3;
-        Tue, 11 Apr 2023 09:34:49 +0800 (CST)
-Subject: Re: [PATCH -next v5 1/6] md: pass a md_thread pointer to
- md_register_thread()
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+        with ESMTP id S229536AbjDKF1O (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 Apr 2023 01:27:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD5582118;
+        Mon, 10 Apr 2023 22:27:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5758C62164;
+        Tue, 11 Apr 2023 05:27:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4825C4339C;
+        Tue, 11 Apr 2023 05:27:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681190831;
+        bh=juqUx14jXbVE5rZmRH4YStnDhcyvxrgBYfHfpfe0lWU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=PyEf9r8GU2wQ5I1/7BESGnlE0cGcdfizAgrRccP3HrXIfNwMzMn8D0XNZztBSlco/
+         kkG+VHqkHYfcanZ+EAe+wmQQeecVW2INKvDbHvB3oaxXPnuL2nO0sCjGUB9n6Netcx
+         VtgwJVTKTk6t3oRAcFtkeYzx9bmRK52EZbLD6CEGFO86tSGODQ11BYvVqz6Mk/aoDV
+         pd8F0xzaJfr1IBLSKPHbC6qQUig7sQGCi2GYaUvtdi2KR6DIVYcc8TWiYK2gMRgSXb
+         CsKK/o/vAfBKn2xGRg1cHA7zZA34UQbJgpq6j174bjZIqpGa1o/Q7wJneLAYpFtle5
+         HQs9ch6O7SuHg==
+Received: by mail-lf1-f47.google.com with SMTP id c9so54582639lfb.1;
+        Mon, 10 Apr 2023 22:27:11 -0700 (PDT)
+X-Gm-Message-State: AAQBX9en0UO4iQnA3NV4YBhiwodIIS4UBpSJ2akW+nM4GfOxbdqnhwEE
+        nUrG6+7GXTLAP0de4yT8tqt8u2fNNRle/uotc/U=
+X-Google-Smtp-Source: AKy350YgSrZvppMXVsdXbh5e6Hr/IYimDt0egy9FTWdgODG27dkV7YTqIyp5qm46OM64qbqr4YwdjtX4otqgU9EBtqQ=
+X-Received: by 2002:ac2:43dc:0:b0:4ec:7967:9e92 with SMTP id
+ u28-20020ac243dc000000b004ec79679e92mr435204lfl.3.1681190829759; Mon, 10 Apr
+ 2023 22:27:09 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
+ <20230410113559.1610455-2-yukuai1@huaweicloud.com> <CAPhsuW7rUQ9KFxCQw-iAAA64=x==b-Qu0nnp32TXn-85Okb00w@mail.gmail.com>
+ <daa344fe-9d8d-16f9-aded-513f250928b9@huaweicloud.com>
+In-Reply-To: <daa344fe-9d8d-16f9-aded-513f250928b9@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 10 Apr 2023 22:26:57 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7bBaVsneBHYqwN3yd5k3sg6ZUFqEJad3yOD0=N-e411g@mail.gmail.com>
+Message-ID: <CAPhsuW7bBaVsneBHYqwN3yd5k3sg6ZUFqEJad3yOD0=N-e411g@mail.gmail.com>
+Subject: Re: [PATCH -next v5 1/6] md: pass a md_thread pointer to md_register_thread()
+To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     logang@deltatee.com, linux-kernel@vger.kernel.org,
         linux-raid@vger.kernel.org, yi.zhang@huawei.com,
         yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230410113559.1610455-1-yukuai1@huaweicloud.com>
- <20230410113559.1610455-2-yukuai1@huaweicloud.com>
- <CAPhsuW7rUQ9KFxCQw-iAAA64=x==b-Qu0nnp32TXn-85Okb00w@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <daa344fe-9d8d-16f9-aded-513f250928b9@huaweicloud.com>
-Date:   Tue, 11 Apr 2023 09:34:48 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <CAPhsuW7rUQ9KFxCQw-iAAA64=x==b-Qu0nnp32TXn-85Okb00w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCnUyE4uTRkJuc_Gg--.27205S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrKw17ZFy8ZFy3tw1Dur13CFg_yoW3XFb_Zr
-        1vkasrGr17Jr97t3Wjvw40yFsrCrW5Cr17XrWDtrWUKa4FgFyUXr1vv34FyFyxAFWFq39a
-        gr95Z3yUK397GjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb4AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
-        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
-        UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Mon, Apr 10, 2023 at 6:34=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/04/11 9:15, Song Liu =E5=86=99=E9=81=93:
+> > On Mon, Apr 10, 2023 at 4:37=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.co=
+m> wrote:
+> >>
+> >> From: Yu Kuai <yukuai3@huawei.com>
+> >>
+> >> Prepare to protect md_thread with rcu, there are no functional changes=
+.
+> >
+> > Why do we need this change? To add __rcu later?
+>
+> Add __rcu is one reason, more importantly is to assign md_thread inside
+> md_register_thread in patch 6:
+>
+> rcu_assign_pointer(*threadp, thread);
 
-在 2023/04/11 9:15, Song Liu 写道:
-> On Mon, Apr 10, 2023 at 4:37 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Prepare to protect md_thread with rcu, there are no functional changes.
-> 
-> Why do we need this change? To add __rcu later?
+Got it.
 
-Add __rcu is one reason, more importantly is to assign md_thread inside
-md_register_thread in patch 6:
+> >
+> > Can we do something like:
+> >
+> > struct md_thread __rcu *md_register_thread(void (*run) (struct md_threa=
+d *),
+> >                 struct mddev *mddev, const char *name)
+>
+> I think this is not necessary, if we don't want to change api, we must
+> use rcu_assign_pointer for each caller to set md_thread.
 
-rcu_assign_pointer(*threadp, thread);
-
-> 
-> Can we do something like:
-> 
-> struct md_thread __rcu *md_register_thread(void (*run) (struct md_thread *),
->                 struct mddev *mddev, const char *name)
-
-I think this is not necessary, if we don't want to change api, we must
-use rcu_assign_pointer for each caller to set md_thread.
+I think it is better to use rcu_assign_pointer at the caller side.
 
 Thanks,
-Kuai
-> 
-> Thanks,
-> Song
-> .
-> 
-
+Song
