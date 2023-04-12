@@ -2,81 +2,94 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7868BC77B6E
-	for <linux-raid@archiver.kernel.org>; Wed, 12 Apr 2023 12:21:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A58C77B6E
+	for <linux-raid@archiver.kernel.org>; Wed, 12 Apr 2023 13:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229620AbjDLMV1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 Apr 2023 08:21:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59090 "EHLO
+        id S230111AbjDLNwo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Apr 2023 09:52:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229553AbjDLMV0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Apr 2023 08:21:26 -0400
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7732830F5
-        for <linux-raid@vger.kernel.org>; Wed, 12 Apr 2023 05:21:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc
-        :To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=IS17R2yg70XPrr9Jk4kU/1cuN5inKEj2FWJEd/owxi8=; b=cxpckQApJ8c14NumoUsipfxbwu
-        5WiQhgU1Vt/IoJvDkqHQrvTRJbUPI7i2aWSb0pbsu65oZJ00KWF+pdw8bQ1tbPYNU0C5IIs6ipMNe
-        JKdo8A4yAzu8tCH1l+pA8eEgyUjD84b9ocjqGsVj7cgNxOSsEfNTVWeMP4N6Nq5aWVqkAIXIHK87N
-        y5M1dXwvokXBDKvuM0C5T+xdxgMxLaLrqJVqPK0tmCl1+mLjCHtrhpl3y1c+O+cHKcMX33+Rgiq+j
-        fc0qo/czkTTaDxsrg3SZfH1cexREPvXvp64+CZQcI3pLEl+dEtDBIJnH+IULaa7gysViHLTYtKQ1p
-        AEOJQq/w==;
-Received: from 108-70-166-50.lightspeed.tukrga.sbcglobal.net ([108.70.166.50] helo=[192.168.20.123])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1pmZTS-0002IB-Uu; Wed, 12 Apr 2023 12:21:18 +0000
-Message-ID: <da9f8739-f923-de3f-2a4e-320c757f3139@turmel.org>
-Date:   Wed, 12 Apr 2023 08:21:18 -0400
+        with ESMTP id S229897AbjDLNwo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Apr 2023 09:52:44 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53EB349C2
+        for <linux-raid@vger.kernel.org>; Wed, 12 Apr 2023 06:52:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681307563; x=1712843563;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=5XUyitWJ84noJH22oCqtK8cqDhIF+hBj5ucycdhrxdY=;
+  b=S1nFjhfWjwATHGzbdctzgLDN0oGTiYanrda7lrwsQ18VUglzbo7B7KdT
+   296umKMieCCulXf7qOB4HFGSDA9B6csq1fNCY7IIX3vBL1EydkZjlfkPY
+   IJmhEvrH1EsFTY5/as3EaRgtJhqL/lbAJ46WHuq2gr5fGofDLwTPfivQl
+   tPaI/qCbKYhj2bJZa8/pBD8IGCeZYEMEdzm5vnWhQSbioOVXF7epP19nO
+   giKIMZLBb3QmrR6iWZypFW0StRlknDp7b0v6pVfvdXf6N+Uv7uKgNZJ7+
+   LZr+CKu6vmGkPbkR+2gE6PkoY+u34EwCKpNU6BnW2+jb+1Rr3bXZN5rvS
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10678"; a="406728819"
+X-IronPort-AV: E=Sophos;i="5.98,339,1673942400"; 
+   d="scan'208";a="406728819"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Apr 2023 06:52:42 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10678"; a="1018749114"
+X-IronPort-AV: E=Sophos;i="5.98,339,1673942400"; 
+   d="scan'208";a="1018749114"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.133.110])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Apr 2023 06:52:41 -0700
+Date:   Wed, 12 Apr 2023 15:52:36 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     "NeilBrown" <neilb@suse.de>
+Cc:     "Jes Sorensen" <jes@trained-monkey.org>,
+        "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Subject: Re: mdadm minimum kernel version requirements?
+Message-ID: <20230412155236.00002f37@linux.intel.com>
+In-Reply-To: <168116364433.24821.9557577764628245206@noble.neil.brown.name>
+References: <e8ed86bb-4162-7d8e-ece9-eb75e045bcc5@trained-monkey.org>
+        <168116364433.24821.9557577764628245206@noble.neil.brown.name>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: Recover data from accidentally created raid5 over raid1
-To:     Reindl Harald <h.reindl@thelounge.net>,
-        Wol <antlists@youngman.org.uk>, John Stoffel <john@stoffel.org>,
-        Moritz Rosin <moritz.rosin@itrosinen.de>
-Cc:     linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>
-References: <c0a9e08b91e86c86038be889907f0796@itrosinen.de>
- <25653.47458.489415.933722@quad.stoffel.home>
- <21b0a1ef-6389-8851-f6f9-17f3ca6d96c0@youngman.org.uk>
- <14ccbf12-0254-b0b8-4c9a-8949c947a63c@thelounge.net>
-Content-Language: en-US
-From:   Phil Turmel <philip@turmel.org>
-In-Reply-To: <14ccbf12-0254-b0b8-4c9a-8949c947a63c@thelounge.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Reindl,
+On Tue, 11 Apr 2023 07:54:04 +1000
+"NeilBrown" <neilb@suse.de> wrote:
 
-On 4/12/23 06:22, Reindl Harald wrote:
+> On Tue, 11 Apr 2023, Jes Sorensen wrote:
+> > Hi,
+> > 
+> > I bumped the minimum kernel version required for mdadm to 2.6.32.
+> > 
+> > Should we drop support for anything prior to 3.10 at this point, since
+> > RHEL7 is 3.10 based and SLES12 seems to be 3.12 based.
+> > 
+> > Thoughts?  
 > 
+> When you talk about changing the required kernel version, I would find
+> it helpful if you at least mention what actual kernel features you now
+> want to depend on - at least the more significant ones.
 > 
-> Am 12.04.23 um 02:18 schrieb Wol:
->> A two-disk raid-5 is the same as a 2-disk mirror
+> Aside from features, I'd rather think about how old the kernel is.
+> 2.6.32 is over 13 years old.
+> 3.10 is very nearly 10 years old.
+> If there is something significant that landed in 3.10 that we want to
+> depend on, then requiring that seems perfectly reasonable.
 > 
-> this is completly nonsense like it was nonsense that a RAID10 of 4 
-> drives after remove two drives is the same as a RAID1 and just a 
-> metadata update should be enough
+> I think the oldest SLE kernel that you might care about would be 4.12
+> (SLE12-SP5 - nearly 6 years old).  Anyone using an older SLE release
+> values stability over new functionality and is not going to be trialling
+> a new mdadm.
 > 
-> why are you doing that always?
-> 
-> the problem is there are people out there which believe what you are 
-> pretending here and spread that nonsense over the web as there isn't 
-> enough wrong information already out there
-> 
+> Thanks,
+> NeilBrown
 
-What is nonsense?  A two-disk raid5 does have exactly the same content 
-on both disks, just like a mirror.  The parity for any given single byte 
-is that same byte.
+Agree with Neil. I have no strong recommendation. I'm not aware significant
+feature that landed recently. I think that any kernel released around 5 ago
+will be applicable.
 
-Please, just once, limit yourself to *positive* contributions.
-
-Phil
+Thanks,
+Marusz
