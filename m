@@ -2,51 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D691C77B61
-	for <linux-raid@archiver.kernel.org>; Thu, 13 Apr 2023 11:33:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E73BAC77B6C
+	for <linux-raid@archiver.kernel.org>; Thu, 13 Apr 2023 11:33:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230290AbjDMLd2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 13 Apr 2023 07:33:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33496 "EHLO
+        id S230344AbjDMLd3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 13 Apr 2023 07:33:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbjDMLd1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 13 Apr 2023 07:33:27 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91BED113;
+        with ESMTP id S230207AbjDMLd2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 13 Apr 2023 07:33:28 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A09561B4;
         Thu, 13 Apr 2023 04:33:25 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4PxyBS2JZNz4f3wgy;
-        Thu, 13 Apr 2023 19:33:20 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PxyBT2rbLz4f40BS;
+        Thu, 13 Apr 2023 19:33:21 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCH77KA6DdkC6FCHQ--.33135S4;
+        by APP4 (Coremail) with SMTP id gCh0CgCH77KA6DdkC6FCHQ--.33135S6;
         Thu, 13 Apr 2023 19:33:22 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     dm-devel@redhat.com, song@kernel.org, logang@deltatee.com
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v6 0/5] md: protect md_thread with rcu
-Date:   Thu, 13 Apr 2023 19:32:12 +0800
-Message-Id: <20230413113217.1934353-1-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v6 2/5] dm-raid: remove useless checking in raid_message()
+Date:   Thu, 13 Apr 2023 19:32:14 +0800
+Message-Id: <20230413113217.1934353-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230413113217.1934353-1-yukuai1@huaweicloud.com>
+References: <20230413113217.1934353-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCH77KA6DdkC6FCHQ--.33135S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cw4rXrW3GF15GFWfGr48JFb_yoW8WF4kpF
-        ZIgF9xZw4UCr43ZFsxZa42ka45G3WrGayUKryxA34ruFy5ur98Jr1UJFy8WF9rWFyfJa9F
-        qF15Jr1DCF1UtaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-        1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48J
-        MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwV
-        AFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv2
-        0xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4
-        v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-        14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-TRANSID: gCh0CgCH77KA6DdkC6FCHQ--.33135S6
+X-Coremail-Antispam: 1UD129KBjvdXoWrZrW7trWxXry3Gr1kGF4rXwb_yoWfuFcEga
+        1rXr9Fgr17u34fA3W2vw4Fvr90ywn5ur1kWF1rtFWayFyrKrWrXr1ruwn8CwnrZFW7Cryj
+        krWjkr1fCr4vkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb-xFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY02
+        0Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+        wVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1l84
+        ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I2
+        62IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcV
+        AFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG
+        0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vIr41l4I8I3I
+        0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWU
+        GVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI
+        0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0
+        rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r
+        4UJbIYCTnIWIevJa73UjIFyTuYvjfU8BMNUUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -55,53 +58,32 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v6:
- - remove first patch from v5, and use rcu_asign_pointer() directly from
- caller.
- - always use rcu_read_lock/unlock to protect mddev_set_timeout().
+md_wakeup_thread() handle the case that pass in md_thread is NULL, there
+is no need to check this. Prepare to protect md_thread with rcu.
 
-Changes in v5:
- - use rcu_dereference_protected() instead of rcu_access_pointer() where
- rcu_read_lock/unlock is not required.
- - add patch 4,5 to handle that bitmap timeout is set multiple times.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/dm-raid.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Changes in v4:
- - remove patch 2 from v3
- - fix sparse errors and warnings from v3, in order to do that, all access
- to md_thread need to be modified, patch 2-4 is splited to avoid a huge
- patch.
-
-Changes in v3:
- - remove patch 3 from v2
- - use rcu instead of a new lock
-
-Changes in v2:
- - fix a compile error for md-cluster in patch 2
- - replace spin_lock/unlock with spin_lock/unlock_irq in patch 5
- - don't wake up inside the new lock in md wakeup_thread in patch 5
-
-Yu Kuai (5):
-  md: factor out a helper to wake up md_thread directly
-  dm-raid: remove useless checking in raid_message()
-  md/bitmap: always wake up md_thread in timeout_store
-  md/bitmap: factor out a helper to set timeout
-  md: protect md_thread with rcu
-
- drivers/md/dm-raid.c      |  4 +-
- drivers/md/md-bitmap.c    | 43 +++++++++++--------
- drivers/md/md-cluster.c   |  7 ++--
- drivers/md/md-multipath.c |  4 +-
- drivers/md/md.c           | 88 +++++++++++++++++++++------------------
- drivers/md/md.h           |  8 ++--
- drivers/md/raid1.c        |  7 ++--
- drivers/md/raid1.h        |  2 +-
- drivers/md/raid10.c       | 21 ++++++----
- drivers/md/raid10.h       |  2 +-
- drivers/md/raid5-cache.c  | 22 ++++++----
- drivers/md/raid5.c        | 15 +++----
- drivers/md/raid5.h        |  2 +-
- 13 files changed, 126 insertions(+), 99 deletions(-)
-
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index c8821fcb8299..8846bf510a35 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3750,11 +3750,11 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+ 		 * canceling read-auto mode
+ 		 */
+ 		mddev->ro = 0;
+-		if (!mddev->suspended && mddev->sync_thread)
++		if (!mddev->suspended)
+ 			md_wakeup_thread(mddev->sync_thread);
+ 	}
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	if (!mddev->suspended && mddev->thread)
++	if (!mddev->suspended)
+ 		md_wakeup_thread(mddev->thread);
+ 
+ 	return 0;
 -- 
 2.39.2
 
