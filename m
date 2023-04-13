@@ -2,77 +2,155 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88E51C77B6E
-	for <linux-raid@archiver.kernel.org>; Thu, 13 Apr 2023 14:59:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 690ADC77B6E
+	for <linux-raid@archiver.kernel.org>; Thu, 13 Apr 2023 15:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231154AbjDMO67 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 13 Apr 2023 10:58:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52798 "EHLO
+        id S230358AbjDMPLP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 13 Apr 2023 11:11:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229604AbjDMO65 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 13 Apr 2023 10:58:57 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41A596E86
-        for <linux-raid@vger.kernel.org>; Thu, 13 Apr 2023 07:58:56 -0700 (PDT)
-Received: from host86-156-145-149.range86-156.btcentralplus.com ([86.156.145.149] helo=[192.168.1.99])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1pmyPW-0004Ym-7a;
-        Thu, 13 Apr 2023 15:58:54 +0100
-Message-ID: <2caf2e58-8acd-6844-a373-42a4d58fd0d9@youngman.org.uk>
-Date:   Thu, 13 Apr 2023 15:58:53 +0100
+        with ESMTP id S230235AbjDMPLO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 13 Apr 2023 11:11:14 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B02210DF;
+        Thu, 13 Apr 2023 08:11:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=UYgY+Jc5tV+vuRR3xCQtdYSUVhJdL1c0C1D9hQyQ6oA=; b=fVq1Zr0KPw6l5hQ7aPS0u5EKaP
+        uLzu13KNBK5cCj4yldrOwlmYpZ/8CKIKkiFB38/2E0DFvR7sIA5R2IEa6QXSuRV3ULEHyJL/8X/yV
+        W3a/L6USOqP90Nt6Zz6u+bmTyhskRTOq+3H4cp0wnS4RnXm6XBi+jbHKadt1A10BWxErVPAXORqBu
+        w36cbfdeJnmqD1Rb9640OCSxWYJfNhu8Z3pziZdJR7ozrfeYWvL52WJw888lBH6pyHwyVU/T2F5EY
+        /yfG/ozqF3OjQmCDkrgssSmmRgR8JuZBrCtAabSeF9hQ+P/FfSWbxRfmSxchgvbaFSStOvvjMYgSh
+        s9CjMkTA==;
+Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1pmyb1-007m0l-TO; Thu, 13 Apr 2023 09:10:48 -0600
+Message-ID: <961691d0-7224-caad-6c19-d9c8ca07a801@deltatee.com>
+Date:   Thu, 13 Apr 2023 09:10:45 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.0
-Subject: Re: Recover data from accidentally created raid5 over raid1
-Content-Language: en-GB
-To:     Phil Turmel <philip@turmel.org>, Mark Wagner <carnildo@gmail.com>,
-        linux-raid@vger.kernel.org
-References: <c0a9e08b91e86c86038be889907f0796@itrosinen.de>
- <25653.47458.489415.933722@quad.stoffel.home>
- <21b0a1ef-6389-8851-f6f9-17f3ca6d96c0@youngman.org.uk>
- <14ccbf12-0254-b0b8-4c9a-8949c947a63c@thelounge.net>
- <da9f8739-f923-de3f-2a4e-320c757f3139@turmel.org>
- <CAA04aRTJ4RreJtOnZcvvTqcc5ZGU5T5WbBt0X0str210CcMo8g@mail.gmail.com>
- <2d471704-bf1c-453f-1c46-469c4d88b98c@youngman.org.uk>
- <5881bab7-9ecf-1098-b624-846b39d83d63@turmel.org>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <5881bab7-9ecf-1098-b624-846b39d83d63@turmel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+To:     Yu Kuai <yukuai1@huaweicloud.com>, dm-devel@redhat.com,
+        song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+References: <20230413113217.1934353-1-yukuai1@huaweicloud.com>
+ <20230413113217.1934353-6-yukuai1@huaweicloud.com>
+Content-Language: en-CA
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20230413113217.1934353-6-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 24.64.144.200
+X-SA-Exim-Rcpt-To: yukuai1@huaweicloud.com, dm-devel@redhat.com, song@kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH -next v6 5/5] md: protect md_thread with rcu
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 13/04/2023 13:12, Phil Turmel wrote:
-> On 4/13/23 04:05, Wols Lists wrote:
->> On 12/04/2023 21:22, Mark Wagner wrote:
->>> On Wed, Apr 12, 2023 at 5:45 AM Phil Turmel <philip@turmel.org> wrote:
->>>>
->>>> What is nonsense?  A two-disk raid5 does have exactly the same content
->>>> on both disks, just like a mirror.  The parity for any given single 
->>>> byte
->>>> is that same byte.
->>>
->>> Only if it's using even parity.  If it's using odd parity, the second
->>> disk is the inverse of the first.
->>>
->> It's documented on the raid wiki (because I think it was documented 
->> there before I started editing it), that the way raid switches between 
->> different raid types is through the fact (accidental or on purpose I 
->> don't know) that most of the two-disk raid types just happen to have 
->> an "identical in practice" disk layout.
->>
->> So converting between raid-1 and raid-5 is as simple as changing the 
->> config of a raid-1 to a degraded raid-5 and vice versa.
+
+
+On 2023-04-13 05:32, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> Be careful!  This is only true for a *two* disk raid.
+> Our test reports a uaf for 'mddev->sync_thread':
 > 
-Which is why (and I've tried) mdadm won't let you convert a 3-disk 
-raid-1 :-)
+> T1                      T2
+> md_start_sync
+>  md_register_thread
+>  // mddev->sync_thread is set
+> 			raid1d
+> 			 md_check_recovery
+> 			  md_reap_sync_thread
+> 			   md_unregister_thread
+> 			    kfree
+> 
+>  md_wakeup_thread
+>   wake_up
+>   ->sync_thread was freed
+> 
+> Root cause is that there is a small windown between register thread and
+> wake up thread, where the thread can be freed concurrently.
+> 
+> Currently, a global spinlock 'pers_lock' is borrowed to protect
+> 'mddev->thread', this problem can be fixed likewise, however, there are
+> similar problems elsewhere, and use a global lock for all the cases is
+> not good.
+> 
+> This patch protect all md_thread with rcu.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md-bitmap.c    | 10 ++++--
+>  drivers/md/md-cluster.c   |  7 ++--
+>  drivers/md/md-multipath.c |  4 +--
+>  drivers/md/md.c           | 69 ++++++++++++++++++---------------------
+>  drivers/md/md.h           |  8 ++---
+>  drivers/md/raid1.c        |  7 ++--
+>  drivers/md/raid1.h        |  2 +-
+>  drivers/md/raid10.c       | 21 +++++++-----
+>  drivers/md/raid10.h       |  2 +-
+>  drivers/md/raid5-cache.c  | 22 ++++++++-----
+>  drivers/md/raid5.c        | 15 +++++----
+>  drivers/md/raid5.h        |  2 +-
+>  12 files changed, 91 insertions(+), 78 deletions(-)
+> 
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 29fd41ef55a6..ab27f66dbb1f 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -1221,13 +1221,19 @@ static bitmap_counter_t *md_bitmap_get_counter(struct bitmap_counts *bitmap,
+>  static void mddev_set_timeout(struct mddev *mddev, unsigned long timeout,
+>  			      bool force)
+>  {
+> -	struct md_thread *thread = mddev->thread;
+> +	struct md_thread *thread;
+> +
+> +	rcu_read_lock();
+> +	thread = rcu_dereference(mddev->thread);
+>  
+>  	if (!thread)
+> -		return;
+> +		goto out;
+>  
+>  	if (force || thread->timeout < MAX_SCHEDULE_TIMEOUT)
+>  		thread->timeout = timeout;
+> +
+> +out:
+> +	rcu_read_unlock();
+>  }
+>  
+>  /*
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index 10e0c5381d01..672dfa6a40ec 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -362,8 +362,8 @@ static void __recover_slot(struct mddev *mddev, int slot)
+>  
+>  	set_bit(slot, &cinfo->recovery_map);
+>  	if (!cinfo->recovery_thread) {
+> -		cinfo->recovery_thread = md_register_thread(recover_bitmaps,
+> -				mddev, "recover");
+> +		rcu_assign_pointer(cinfo->recovery_thread,
+> +			md_register_thread(recover_bitmaps, mddev, "recover"));
+>  		if (!cinfo->recovery_thread) {
+>  			pr_warn("md-cluster: Could not create recovery thread\n");
+>  			return;
+> @@ -889,7 +889,8 @@ static int join(struct mddev *mddev, int nodes)
+>  	}
+>  	/* Initiate the communication resources */
+>  	ret = -ENOMEM;
+> -	cinfo->recv_thread = md_register_thread(recv_daemon, mddev, "cluster_recv");
+> +	rcu_assign_pointer(cinfo->recv_thread,
+> +			md_register_thread(recv_daemon, mddev, "cluster_recv"));
+>  	if (!cinfo->recv_thread) {
 
-But yes, two-disk raids only ...
-
-Cheers,
-Wol
-
+This looks like it'll hit sparse warnings. without an
+rcu_access_pointer(). Might be nicer to use a temporary variable, check
+that it's not null, then call rcu_assign_pointer().
