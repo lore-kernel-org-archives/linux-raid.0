@@ -2,170 +2,185 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3588C77B72
-	for <linux-raid@archiver.kernel.org>; Fri, 14 Apr 2023 21:14:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57FB8C77B70
+	for <linux-raid@archiver.kernel.org>; Mon, 17 Apr 2023 14:03:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229733AbjDNVN7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 14 Apr 2023 17:13:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58020 "EHLO
+        id S229573AbjDQODw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 17 Apr 2023 10:03:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbjDNVN6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 14 Apr 2023 17:13:58 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 901CF559D
-        for <linux-raid@vger.kernel.org>; Fri, 14 Apr 2023 14:13:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1681506837; x=1713042837;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=3KuCaPu+OuVJjE66ctiNQ4MckCFYgefIUVhyRZ6Wvuw=;
-  b=hIZd4Q3ZbGwm2pXOfLVdy4Tx/eReiQXTkTIPd9c/98kJ5AKuUc1dY9IK
-   odVSo0583ly5Gqpi0E2tWLOTWcEsu/1CeQTy10BV4+Hp1fofg4PjGn40R
-   3gx84vigbhqli6FlcnqNA7AiL9HH8DMH/Mvnn5XZ0+K3GVqLIyo0R0CoJ
-   AUsh9+vgQIG7OjrVQUBQaXQv4PpLuE1eDnKdj23NGAG+7PPCmvtfY1LE3
-   Pz82v8TTip1Zn8zj8R40u3vesd5H2+3G+S4zCTJoWFn/5cxDJmguppNiK
-   eY8MTNjEF1VTwtUjHOWw6vAYbnNEFpvijK2M5JcRL8BzdWpHNDquzseJ2
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10680"; a="407457549"
-X-IronPort-AV: E=Sophos;i="5.99,198,1677571200"; 
-   d="scan'208";a="407457549"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2023 14:13:57 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10680"; a="814035674"
-X-IronPort-AV: E=Sophos;i="5.99,198,1677571200"; 
-   d="scan'208";a="814035674"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 14 Apr 2023 14:13:55 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pnQjt-000Zyb-2j;
-        Fri, 14 Apr 2023 21:13:49 +0000
-Date:   Sat, 15 Apr 2023 05:12:52 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 7bc436121e557b1f5bebf5ad67e7ed3614d6df92
-Message-ID: <6439c1d4.6TfflZ5H3jZIC61o%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229802AbjDQODv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 Apr 2023 10:03:51 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B4A31FDE
+        for <linux-raid@vger.kernel.org>; Mon, 17 Apr 2023 07:03:10 -0700 (PDT)
+Received: from kwepemm600010.china.huawei.com (unknown [7.193.23.86])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Q0TGd3xNyzrcH3;
+        Mon, 17 Apr 2023 22:00:41 +0800 (CST)
+Received: from localhost.localdomain (10.175.104.170) by
+ kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Mon, 17 Apr 2023 22:02:09 +0800
+From:   Li Xiao Keng <lixiaokeng@huawei.com>
+To:     <jes@trained-monkey.org>, <mwilck@suse.com>,
+        <pmenzel@molgen.mpg.de>, <colyli@suse.de>,
+        <linux-raid@vger.kernel.org>
+CC:     <miaoguanqin@huawei.com>, <louhongxiang@huawei.com>,
+        Li Xiao Keng <lixiaokeng@huawei.com>
+Subject: [PATCH] Fix race of "mdadm --add" and "mdadm --incremental"
+Date:   Mon, 17 Apr 2023 22:01:44 +0800
+Message-ID: <20230417140144.3013024-1-lixiaokeng@huawei.com>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.104.170]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600010.china.huawei.com (7.193.23.86)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 7bc436121e557b1f5bebf5ad67e7ed3614d6df92  md/raid5: remove unused working_disks variable
+When we add a new disk to a raid, it may return -EBUSY.
 
-elapsed time: 724m
+The main process of --add:
+1. dev_open
+2. store_super1(st, di->fd) in write_init_super1
+3. fsync(di->fd) in write_init_super1
+4. close(di->fd)
+5. ioctl(ADD_NEW_DISK)
 
-configs tested: 96
-configs skipped: 10
+However, there will be some udev(change) event after step4. Then
+"/usr/sbin/mdadm --incremental ..." will be run, and the new disk
+will be add to md device. After that, ioctl will return -EBUSY.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Here we add map_lock before write_init_super in "mdadm --add"
+to fix this race.
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r013-20230410   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm          buildonly-randconfig-r005-20230409   clang
-arm                                 defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r015-20230413   clang
-csky         buildonly-randconfig-r001-20230409   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r015-20230409   gcc  
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-a001-20230410   clang
-i386                 randconfig-a002-20230410   clang
-i386                 randconfig-a003-20230410   clang
-i386                 randconfig-a004-20230410   clang
-i386                 randconfig-a005-20230410   clang
-i386                 randconfig-a006-20230410   clang
-i386                          randconfig-a011   clang
-i386                          randconfig-a012   gcc  
-i386                          randconfig-a013   clang
-i386                          randconfig-a014   gcc  
-i386                          randconfig-a015   clang
-i386                          randconfig-a016   gcc  
-ia64                             allmodconfig   gcc  
-ia64         buildonly-randconfig-r003-20230410   gcc  
-ia64                                defconfig   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch    buildonly-randconfig-r001-20230410   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k         buildonly-randconfig-r002-20230409   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r016-20230409   gcc  
-microblaze   buildonly-randconfig-r006-20230409   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r012-20230410   clang
-mips                 randconfig-r014-20230413   gcc  
-nios2        buildonly-randconfig-r002-20230410   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r011-20230409   gcc  
-nios2                randconfig-r013-20230409   gcc  
-nios2                randconfig-r015-20230410   gcc  
-nios2                randconfig-r016-20230410   gcc  
-parisc       buildonly-randconfig-r002-20230414   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc              randconfig-r011-20230410   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv        buildonly-randconfig-r004-20230414   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r014-20230410   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390         buildonly-randconfig-r003-20230409   gcc  
-s390                                defconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                   randconfig-r011-20230413   gcc  
-sparc        buildonly-randconfig-r004-20230410   gcc  
-sparc        buildonly-randconfig-r006-20230410   gcc  
-sparc                               defconfig   gcc  
-sparc64      buildonly-randconfig-r003-20230414   gcc  
-sparc64              randconfig-r016-20230413   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230410   clang
-x86_64               randconfig-a002-20230410   clang
-x86_64               randconfig-a003-20230410   clang
-x86_64               randconfig-a004-20230410   clang
-x86_64               randconfig-a005-20230410   clang
-x86_64               randconfig-a006-20230410   clang
-x86_64               randconfig-a011-20230410   gcc  
-x86_64               randconfig-a012-20230410   gcc  
-x86_64               randconfig-a013-20230410   gcc  
-x86_64               randconfig-a014-20230410   gcc  
-x86_64               randconfig-a015-20230410   gcc  
-x86_64               randconfig-a016-20230410   gcc  
-x86_64                               rhel-8.3   gcc  
-xtensa       buildonly-randconfig-r001-20230414   gcc  
-xtensa       buildonly-randconfig-r006-20230414   gcc  
+Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
+Signed-off-by: Guanqin Miao <miaoguanqin@huawei.com>
+---
+ Assemble.c |  5 ++++-
+ Manage.c   | 25 +++++++++++++++++--------
+ 2 files changed, 21 insertions(+), 9 deletions(-)
 
+diff --git a/Assemble.c b/Assemble.c
+index 49804941..086890ed 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1479,8 +1479,11 @@ try_again:
+ 	 * to our list.  We flag them so that we don't try to re-add,
+ 	 * but can remove if they turn out to not be wanted.
+ 	 */
+-	if (map_lock(&map))
++	if (map_lock(&map)) {
+ 		pr_err("failed to get exclusive lock on mapfile - continue anyway...\n");
++		return 1;
++	}
++
+ 	if (c->update == UOPT_UUID)
+ 		mp = NULL;
+ 	else
+diff --git a/Manage.c b/Manage.c
+index f54de7c6..6a101bae 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -703,6 +703,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 	struct supertype *dev_st;
+ 	int j;
+ 	mdu_disk_info_t disc;
++	struct map_ent *map = NULL;
+ 
+ 	if (!get_dev_size(tfd, dv->devname, &ldsize)) {
+ 		if (dv->disposition == 'M')
+@@ -900,6 +901,10 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 		disc.raid_disk = 0;
+ 	}
+ 
++	if (map_lock(&map)) {
++		pr_err("failed to get exclusive lock on mapfile when add disk\n");
++		return -1;
++	}
+ 	if (array->not_persistent==0) {
+ 		int dfd;
+ 		if (dv->disposition == 'j')
+@@ -911,9 +916,9 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 		dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
+ 		if (tst->ss->add_to_super(tst, &disc, dfd,
+ 					  dv->devname, INVALID_SECTORS))
+-			return -1;
++			goto unlock;
+ 		if (tst->ss->write_init_super(tst))
+-			return -1;
++			goto unlock;
+ 	} else if (dv->disposition == 'A') {
+ 		/*  this had better be raid1.
+ 		 * As we are "--re-add"ing we must find a spare slot
+@@ -971,14 +976,14 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			pr_err("add failed for %s: could not get exclusive access to container\n",
+ 			       dv->devname);
+ 			tst->ss->free_super(tst);
+-			return -1;
++			goto unlock;
+ 		}
+ 
+ 		/* Check if metadata handler is able to accept the drive */
+ 		if (!tst->ss->validate_geometry(tst, LEVEL_CONTAINER, 0, 1, NULL,
+ 		    0, 0, dv->devname, NULL, 0, 1)) {
+ 			close(container_fd);
+-			return -1;
++			goto unlock;
+ 		}
+ 
+ 		Kill(dv->devname, NULL, 0, -1, 0);
+@@ -987,7 +992,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 					  dv->devname, INVALID_SECTORS)) {
+ 			close(dfd);
+ 			close(container_fd);
+-			return -1;
++			goto unlock;
+ 		}
+ 		if (!mdmon_running(tst->container_devnm))
+ 			tst->ss->sync_metadata(tst);
+@@ -998,7 +1003,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			       dv->devname);
+ 			close(container_fd);
+ 			tst->ss->free_super(tst);
+-			return -1;
++			goto unlock;
+ 		}
+ 		sra->array.level = LEVEL_CONTAINER;
+ 		/* Need to set data_offset and component_size */
+@@ -1013,7 +1018,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			pr_err("add new device to external metadata failed for %s\n", dv->devname);
+ 			close(container_fd);
+ 			sysfs_free(sra);
+-			return -1;
++			goto unlock;
+ 		}
+ 		ping_monitor(devnm);
+ 		sysfs_free(sra);
+@@ -1027,7 +1032,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			else
+ 				pr_err("add new device failed for %s as %d: %s\n",
+ 				       dv->devname, j, strerror(errno));
+-			return -1;
++			goto unlock;
+ 		}
+ 		if (dv->disposition == 'j') {
+ 			pr_err("Journal added successfully, making %s read-write\n", devname);
+@@ -1038,7 +1043,11 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 	}
+ 	if (verbose >= 0)
+ 		pr_err("added %s\n", dv->devname);
++	map_unlock(&map);
+ 	return 1;
++unlock:
++	map_unlock(&map);
++	return -1;
+ }
+ 
+ int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+2.33.0
+
