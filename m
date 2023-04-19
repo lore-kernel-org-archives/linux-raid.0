@@ -2,176 +2,131 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E29F5C77B76
-	for <linux-raid@archiver.kernel.org>; Mon, 17 Apr 2023 17:15:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 952ADC77B75
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Apr 2023 14:10:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230098AbjDQRPp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 17 Apr 2023 13:15:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44372 "EHLO
+        id S232010AbjDSOKq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Apr 2023 10:10:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229602AbjDQRPo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 Apr 2023 13:15:44 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6C69F2
-        for <linux-raid@vger.kernel.org>; Mon, 17 Apr 2023 10:15:42 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 799091F45F;
-        Mon, 17 Apr 2023 17:15:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1681751741; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=S6r+mFXXb/hPTl5jC+sCdii9jOeQB+lBC2phA6Blo88=;
-        b=GaYaqLwiKPHfopDcdtJ8t7UyZJ4mrz8eHBrLLoPdwQKlOkS3iC0YHhKgfFxB/K5rpxRE6W
-        gdfjuThhlpgs3tXn8LaisQZryqAcXSpuj6erfDMKpB1Bm6mluSDZi4HwgKgNyagxY029p+
-        binduINQXXE+/Q0z/DS44cPgPDDILII=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1681751741;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=S6r+mFXXb/hPTl5jC+sCdii9jOeQB+lBC2phA6Blo88=;
-        b=/QNW/5UxgP7fGogxVlT1nMDSeNAlqtg4zHLBVtePez6D+ZQoDsXsnnAxZOXqxNdmi237cI
-        rJaCkGwhLZNhbmAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6929B1390E;
-        Mon, 17 Apr 2023 17:15:41 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 3sefGb1+PWRxbgAAMHmgww
-        (envelope-from <jack@suse.cz>); Mon, 17 Apr 2023 17:15:41 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id D1551A0735; Mon, 17 Apr 2023 19:15:40 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     linux-raid@vger.kernel.org
-Cc:     Song Liu <song@kernel.org>, Logan Gunthorpe <logang@deltatee.com>,
-        Jan Kara <jack@suse.cz>
-Subject: [PATCH] md/raid5: Improve performance for sequential IO
-Date:   Mon, 17 Apr 2023 19:15:37 +0200
-Message-Id: <20230417171537.17899-1-jack@suse.cz>
-X-Mailer: git-send-email 2.35.3
+        with ESMTP id S231319AbjDSOKo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Apr 2023 10:10:44 -0400
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C6EB15A10;
+        Wed, 19 Apr 2023 07:10:30 -0700 (PDT)
+Received: by mail-wm1-f50.google.com with SMTP id he11-20020a05600c540b00b003ef6d684102so1520272wmb.3;
+        Wed, 19 Apr 2023 07:10:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681913428; x=1684505428;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ds+4u+CqEC3ZGaEOp3gVvQ4zLD/cUEcU9lJQRjxdLNA=;
+        b=WX5EowMjS9XI2UcO7k7N2sKja7Qujs2MuxPF+ITs9uQJ59E2W7CDS4aAFza9vyYC5V
+         A+lcsR43X3/BqzbYfET7qJhVlroKrkZXjRXWFs1E0vc9jD440wiQigJ/yyg6NlwCOqdM
+         V/fA4dLotHR+ti15hsg6t7bcWZSie2Y8BRuiOIOYRHG04f5vvZIx7YmnqymPxqj6v6u9
+         L6UxUPiU/uwj9rQ8jTGS9E09iyLTjAjTct1kkGiZZKb48Ji7IjsqkenNkt65LuQHujPU
+         bUZ8zz2lTh51vIefhWpXPr1zYtAeh1V+t0xN+eOv1BKu4/WRIwyg2vHauowhB4ge+N2y
+         6fpQ==
+X-Gm-Message-State: AAQBX9dCt3wzuDiI9i96wDEslyFOlFG83SOUY+MffW5H+ir0Ko8xdqkc
+        CQXft7cNlIWsv78MbBabI80=
+X-Google-Smtp-Source: AKy350Y4xTG1OoU4RldSmLjAWxwSQmurOCS31djj2xM4db5/3zz7gZSX8s3hL+Z3d0qabHExFnk4cg==
+X-Received: by 2002:a05:600c:3ca2:b0:3f1:7371:86bb with SMTP id bg34-20020a05600c3ca200b003f1737186bbmr1907296wmb.20.1681913428480;
+        Wed, 19 Apr 2023 07:10:28 -0700 (PDT)
+Received: from localhost.localdomain (aftr-62-216-205-204.dynamic.mnet-online.de. [62.216.205.204])
+        by smtp.googlemail.com with ESMTPSA id q17-20020a5d61d1000000b002faaa9a1721sm7612089wrv.58.2023.04.19.07.10.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Apr 2023 07:10:27 -0700 (PDT)
+From:   Johannes Thumshirn <jth@kernel.org>
+To:     axboe@kernel.dk
+Cc:     johannes.thumshirn@wdc.com, agruenba@redhat.com,
+        cluster-devel@redhat.com, damien.lemoal@wdc.com,
+        dm-devel@redhat.com, dsterba@suse.com, hare@suse.de, hch@lst.de,
+        jfs-discussion@lists.sourceforge.net, kch@nvidia.com,
+        linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-raid@vger.kernel.org, ming.lei@redhat.com,
+        rpeterso@redhat.com, shaggy@kernel.org, snitzer@kernel.org,
+        song@kernel.org, willy@infradead.org,
+        Johannes Thumshirn <jth@kernel.org>
+Subject: [PATCH v3 00/19] bio: check return values of bio_add_page
+Date:   Wed, 19 Apr 2023 16:09:10 +0200
+Message-Id: <20230419140929.5924-1-jth@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4386; i=jack@suse.cz; h=from:subject; bh=KyZZjA5JaC+xLX9HRT81XUFXzRgdpMkfubmuA/H8f58=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkPX6jEb3ab2t26dTWM15zkPg0WeKEXFV0DSAujpJj GZvecwOJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZD1+owAKCRCcnaoHP2RA2eWrCA DTKbO83upKVGD9od92Za4Gvyxx9s7FBxOfgzhpbIN8CwjH6mRZ0egmjeayFnjOWJpG8lDId1U113h1 l/Zr+WxgHp2kdZhL85uGywe0JqfaT5LxGyv0kySni5FGUM6aMnPyBXxvWT5JahPePvApsPzrhdrRhl mCj3LoAZAOQINNB8oQYxT2Q/7NM+AXN3DSw9U682rJyWNwYGaDVOTGIW1tg5eAmWSFKEKnsdQXUJFr 43gLShgqzCd0y2KJYUCbvt7m424w1FkSjAi0PhTbqKaA2YCVYoZj4gnOYaLAJSBbKLJua+3RWFDyj7 huYfulsD+pPUDqlBjBJyMjdshbyjVK
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Commit 7e55c60acfbb ("md/raid5: Pivot raid5_make_request()") changed the
-order in which requests for underlying disks are created. Since for
-large sequential IO adding of requests frequently races with md_raid5
-thread submitting bios to underlying disks, this results in a change in
-IO pattern because intermediate states of new order of request creation
-result in more smaller discontiguous requests. For RAID5 on top of three
-rotational disks our performance testing revealed this results in
-regression in write throughput:
+We have two functions for adding a page to a bio, __bio_add_page() which is
+used to add a single page to a freshly created bio and bio_add_page() which is
+used to add a page to an existing bio.
 
-iozone -a -s 131072000 -y 4 -q 8 -i 0 -i 1 -R
+While __bio_add_page() is expected to succeed, bio_add_page() can fail.
 
-before 7e55c60acfbb:
-              KB  reclen   write rewrite    read    reread
-       131072000       4  493670  525964   524575   513384
-       131072000       8  540467  532880   512028   513703
+This series converts the callers of bio_add_page() which can easily use
+__bio_add_page() to using it and checks the return of bio_add_page() for
+callers that don't work on a freshly created bio.
 
-after 7e55c60acfbb:
-              KB  reclen   write rewrite    read    reread
-       131072000       4  421785  456184   531278   509248
-       131072000       8  459283  456354   528449   543834
+Lastly it marks bio_add_page() as __must_check so we don't have to go again
+and audit all callers.
 
-To reduce the amount of discontiguous requests we can start generating
-requests with the stripe with the lowest chunk offset as that has the
-best chance of being adjacent to IO queued previously. This improves the
-performance to:
-              KB  reclen   write rewrite    read    reread
-       131072000       4  497682  506317   518043   514559
-       131072000       8  514048  501886   506453   504319
+NOTE: David already applied the two btrfs patches to his tree but I've left
+them in the series to make the build bot happy.
 
-restoring big part of the regression.
+Changes to v2:
+- Removed 'wont fail' comments pointed out by Song
 
-Fixes: 7e55c60acfbb ("md/raid5: Pivot raid5_make_request()")
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- drivers/md/raid5.c | 45 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 44 insertions(+), 1 deletion(-)
+Changes to v1:
+- Removed pointless comment pointed out by Willy
+- Changed commit messages pointed out by Damien
+- Colledted Damien's Reviews and Acks
 
-I'm by no means raid5 expert but this is what I was able to come up with. Any
-opinion or ideas how to fix the problem in a better way?
+Johannes Thumshirn (19):
+  swap: use __bio_add_page to add page to bio
+  drbd: use __bio_add_page to add page to bio
+  dm: dm-zoned: use __bio_add_page for adding single metadata page
+  fs: buffer: use __bio_add_page to add single page to bio
+  md: use __bio_add_page to add single page
+  md: raid5-log: use __bio_add_page to add single page
+  md: raid5: use __bio_add_page to add single page to new bio
+  btrfs: repair: use __bio_add_page for adding single page
+  btrfs: raid56: use __bio_add_page to add single page
+  jfs: logmgr: use __bio_add_page to add single page to bio
+  gfs: use __bio_add_page for adding single page to bio
+  zonefs: use __bio_add_page for adding single page to bio
+  zram: use __bio_add_page for adding single page to bio
+  floppy: use __bio_add_page for adding single page to bio
+  md: check for failure when adding pages in alloc_behind_master_bio
+  md: raid1: use __bio_add_page for adding single page to bio
+  md: raid1: check if adding pages to resync bio fails
+  dm-crypt: check if adding pages to clone bio fails
+  block: mark bio_add_page as __must_check
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7b820b81d8c2..f787c9e5b10e 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6079,6 +6079,38 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
- 	return ret;
- }
- 
-+/*
-+ * If the bio covers multiple data disks, find sector within the bio that has
-+ * the lowest chunk offset in the first chunk.
-+ */
-+static sector_t raid5_bio_lowest_chunk_sector(struct r5conf *conf,
-+					      struct bio *bi)
-+{
-+	int sectors_per_chunk = conf->chunk_sectors;
-+	int raid_disks = conf->raid_disks;
-+	int dd_idx;
-+	struct stripe_head sh;
-+	unsigned int chunk_offset;
-+	sector_t r_sector = bi->bi_iter.bi_sector & ~((sector_t)RAID5_STRIPE_SECTORS(conf)-1);
-+	sector_t sector;
-+
-+	/* We pass in fake stripe_head to get back parity disk numbers */
-+	sector = raid5_compute_sector(conf, r_sector, 0, &dd_idx, &sh);
-+	chunk_offset = sector_div(sector, sectors_per_chunk);
-+	if (sectors_per_chunk - chunk_offset >= bio_sectors(bi))
-+		return r_sector;
-+	/*
-+	 * Bio crosses to the next data disk. Check whether it's in the same
-+	 * chunk.
-+	 */
-+	dd_idx++;
-+	while (dd_idx == sh.pd_idx || dd_idx == sh.qd_idx)
-+		dd_idx++;
-+	if (dd_idx >= raid_disks)
-+		return r_sector;
-+	return r_sector + sectors_per_chunk - chunk_offset;
-+}
-+
- static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- {
- 	DEFINE_WAIT_FUNC(wait, woken_wake_function);
-@@ -6150,6 +6182,17 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	}
- 	md_account_bio(mddev, &bi);
- 
-+	/*
-+	 * Lets start with the stripe with the lowest chunk offset in the first
-+	 * chunk. That has the best chances of creating IOs adjacent to
-+	 * previous IOs in case of sequential IO and thus creates the most
-+	 * sequential IO pattern. We don't bother with the optimization when
-+	 * reshaping as the performance benefit is not worth the complexity.
-+	 */
-+	if (likely(conf->reshape_progress == MaxSector))
-+		logical_sector = raid5_bio_lowest_chunk_sector(conf, bi);
-+	s = (logical_sector - ctx.first_sector) >> RAID5_STRIPE_SHIFT(conf);
-+
- 	add_wait_queue(&conf->wait_for_overlap, &wait);
- 	while (1) {
- 		res = make_stripe_request(mddev, conf, &ctx, logical_sector,
-@@ -6178,7 +6221,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			continue;
- 		}
- 
--		s = find_first_bit(ctx.sectors_to_do, stripe_cnt);
-+		s = find_next_bit_wrap(ctx.sectors_to_do, stripe_cnt, s);
- 		if (s == stripe_cnt)
- 			break;
- 
+ drivers/block/drbd/drbd_bitmap.c |  4 +---
+ drivers/block/floppy.c           |  2 +-
+ drivers/block/zram/zram_drv.c    |  2 +-
+ drivers/md/dm-crypt.c            |  9 ++++++++-
+ drivers/md/dm-zoned-metadata.c   |  6 +++---
+ drivers/md/md.c                  |  4 ++--
+ drivers/md/raid1-10.c            | 11 ++++++-----
+ drivers/md/raid1.c               |  7 +++++--
+ drivers/md/raid10.c              | 20 ++++++++++----------
+ drivers/md/raid5-cache.c         |  2 +-
+ drivers/md/raid5-ppl.c           |  4 ++--
+ fs/btrfs/bio.c                   |  2 +-
+ fs/btrfs/raid56.c                |  2 +-
+ fs/buffer.c                      |  2 +-
+ fs/gfs2/ops_fstype.c             |  2 +-
+ fs/jfs/jfs_logmgr.c              |  4 ++--
+ fs/zonefs/super.c                |  2 +-
+ include/linux/bio.h              |  2 +-
+ mm/page_io.c                     |  8 ++++----
+ 19 files changed, 52 insertions(+), 43 deletions(-)
+
+
+base-commit: af67688dca57999fd848f051eeea1d375ba546b2
 -- 
-2.35.3
+2.39.2
 
