@@ -2,111 +2,114 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DED0C77B73
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Apr 2023 15:50:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BB0DC77B73
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Apr 2023 19:04:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233736AbjDSPuy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 Apr 2023 11:50:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41632 "EHLO
+        id S230502AbjDSTE2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Apr 2023 15:04:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233691AbjDSPuo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Apr 2023 11:50:44 -0400
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD3A5AD14;
-        Wed, 19 Apr 2023 08:50:20 -0700 (PDT)
-Received: by mail-ej1-f44.google.com with SMTP id a5so26396557ejb.6;
-        Wed, 19 Apr 2023 08:50:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681919371; x=1684511371;
-        h=content-transfer-encoding:in-reply-to:subject:from:content-language
-         :references:cc:to:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eOUql/Ro9WMFOAkCEiG4JHxRup0JACmg1t6/598D9Co=;
-        b=ZWM2zrXfhtV/QPwHWKu0Xd2NIH2Dwt2+fAdSZMP/EKAjohBUqwURiwwYg4sxRoFWv7
-         TvX/RHZHIPcp4EL1ohgY3TfrUBiog0fuyjWApEIR/YYrM0ea0n1G40Cfw7GriWgIjrLh
-         diNooW/Wh0Fg2vAm6IEstcPXUuHw/lAfbc5S9bV7yCxAE/krnRdv+nV115joymtI04kM
-         LZrwgzr0V52Cdhg00o4AjSi9MRitUjhX3uSmXEN9sL07w1njMOXQuvq5pK0W/cL54cmX
-         hp/Om1geOVXFsCSHcuit/fE7S6EParBOetrJHGcSLcaxFp6sC1RzsOKPvRhZYZvVqk+s
-         lWGw==
-X-Gm-Message-State: AAQBX9e5nacbjl0OzMK1VdkflBrs9GX/AzSgyNdJqvp92xBj1FQmAx86
-        pWhacyfqZ5Rq1jKfaW2uZNc=
-X-Google-Smtp-Source: AKy350aGL2zkmqe4oR+uMj3AvMO3DzPKJ+2nYfKvNg29gbfKfCGrXHIDbSOpWzqvwSwoi/4pOYVBdg==
-X-Received: by 2002:a17:907:98ef:b0:92c:8e4a:1a42 with SMTP id ke15-20020a17090798ef00b0092c8e4a1a42mr15999637ejc.32.1681919370719;
-        Wed, 19 Apr 2023 08:49:30 -0700 (PDT)
-Received: from [192.168.32.129] (aftr-62-216-205-204.dynamic.mnet-online.de. [62.216.205.204])
-        by smtp.gmail.com with ESMTPSA id o26-20020a1709061d5a00b0094e44899367sm9373601ejh.101.2023.04.19.08.49.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Apr 2023 08:49:30 -0700 (PDT)
-Message-ID: <0388e267-6a5f-85b8-83eb-62ea5aae06e1@kernel.org>
-Date:   Wed, 19 Apr 2023 17:49:28 +0200
+        with ESMTP id S229514AbjDSTE1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Apr 2023 15:04:27 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE36B2120
+        for <linux-raid@vger.kernel.org>; Wed, 19 Apr 2023 12:04:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=FdAYAsG23Szwu9uX1GI5V5Rl6n8PJCeOqY6I9lwPgks=; b=cCXw/H50pNbp0bEw3V0Ay4+Pry
+        vC05GinOGiW2RA702LUlBtoY1rLaVZRdHmQcvBvZo1+pwQa2wls7uFH2iP4bcY5JYm1Y+oAI9ZZwA
+        YyDsDUgzarO70sOoHk5mRvaqYsseas8qL2aENuhWrc0epo555fIuoXqViIxgCv3XUwaN5bLvqKRHk
+        tylASgcUWZMk/FduIC2zVY2yjBDulOZKPxFbCPLJ3VhnZjwtGsipNB5+NGZiPf5louqtAy9KVsn6x
+        s6Qz/ek3feOBnP0yTYI0b/o7Bg2hWaPvWSvXfONpfkXvV8ateajBxnTZt+TivUrrMuwUKJTNyBhvq
+        cNUUf7jQ==;
+Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1ppD6N-00ChH9-0i; Wed, 19 Apr 2023 13:04:23 -0600
+Message-ID: <9a1e2e05-72cd-aba2-b380-d0836d2e98dd@deltatee.com>
+Date:   Wed, 19 Apr 2023 13:04:21 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.0
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     axboe@kernel.dk, johannes.thumshirn@wdc.com, agruenba@redhat.com,
-        cluster-devel@redhat.com, damien.lemoal@wdc.com,
-        dm-devel@redhat.com, dsterba@suse.com, hare@suse.de, hch@lst.de,
-        jfs-discussion@lists.sourceforge.net, kch@nvidia.com,
-        linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-raid@vger.kernel.org, ming.lei@redhat.com,
-        rpeterso@redhat.com, shaggy@kernel.org, snitzer@kernel.org,
-        song@kernel.org, Damien Le Moal <damien.lemoal@opensource.wdc.com>
-References: <20230419140929.5924-1-jth@kernel.org>
- <20230419140929.5924-20-jth@kernel.org>
- <ZD/4b9ZQ1YZRTgHL@casper.infradead.org>
-Content-Language: en-US
-From:   Johannes Thumshirn <jth@kernel.org>
-Subject: Re: [PATCH v3 19/19] block: mark bio_add_page as __must_check
-In-Reply-To: <ZD/4b9ZQ1YZRTgHL@casper.infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Language: en-CA
+To:     Jan Kara <jack@suse.cz>, linux-raid@vger.kernel.org
+Cc:     Song Liu <song@kernel.org>, David Sloan <David.Sloan@eideticom.com>
+References: <20230417171537.17899-1-jack@suse.cz>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20230417171537.17899-1-jack@suse.cz>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 24.64.144.200
+X-SA-Exim-Rcpt-To: jack@suse.cz, linux-raid@vger.kernel.org, song@kernel.org, David.Sloan@eideticom.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH] md/raid5: Improve performance for sequential IO
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 19/04/2023 16:19, Matthew Wilcox wrote:
-> On Wed, Apr 19, 2023 at 04:09:29PM +0200, Johannes Thumshirn wrote:
->> Now that all users of bio_add_page check for the return value, mark
->> bio_add_page as __must_check.
+
+
+On 2023-04-17 11:15, Jan Kara wrote:
+> Commit 7e55c60acfbb ("md/raid5: Pivot raid5_make_request()") changed the
+> order in which requests for underlying disks are created. Since for
+> large sequential IO adding of requests frequently races with md_raid5
+> thread submitting bios to underlying disks, this results in a change in
+> IO pattern because intermediate states of new order of request creation
+> result in more smaller discontiguous requests. For RAID5 on top of three
+> rotational disks our performance testing revealed this results in
+> regression in write throughput:
 > 
-> Should probably add __must_check to bio_add_folio too?  If this is
-> really the way you want to go ... means we also need a
-> __bio_add_folio().
+> iozone -a -s 131072000 -y 4 -q 8 -i 0 -i 1 -R
+> 
+> before 7e55c60acfbb:
+>               KB  reclen   write rewrite    read    reread
+>        131072000       4  493670  525964   524575   513384
+>        131072000       8  540467  532880   512028   513703
+> 
+> after 7e55c60acfbb:
+>               KB  reclen   write rewrite    read    reread
+>        131072000       4  421785  456184   531278   509248
+>        131072000       8  459283  456354   528449   543834
+> 
+> To reduce the amount of discontiguous requests we can start generating
+> requests with the stripe with the lowest chunk offset as that has the
+> best chance of being adjacent to IO queued previously. This improves the
+> performance to:
+>               KB  reclen   write rewrite    read    reread
+>        131072000       4  497682  506317   518043   514559
+>        131072000       8  514048  501886   506453   504319
+> 
+> restoring big part of the regression.
+> 
+> Fixes: 7e55c60acfbb ("md/raid5: Pivot raid5_make_request()")
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-I admit I haven't thought of folios, mea culpa.
+Looks good to me. I ran it through some of the functional tests I used
+to develop the patch in question and found no issues.
 
-3 of the callers of bio_add_folio() don't check the return value:
-$ git grep -E '\sbio_add_folio\b'
-fs/iomap/buffered-io.c:         bio_add_folio(ctx->bio, folio, plen, poff);
-fs/iomap/buffered-io.c: bio_add_folio(&bio, folio, plen, poff);
-fs/iomap/buffered-io.c:         bio_add_folio(wpc->ioend->io_bio, folio, 
-len, poff);
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
-But from a quick look they look OK to me.
+> ---
+>  drivers/md/raid5.c | 45 ++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 44 insertions(+), 1 deletion(-)
+> 
+> I'm by no means raid5 expert but this is what I was able to come up with. Any
+> opinion or ideas how to fix the problem in a better way?
 
-Does that look reasonable to you:
+The other option would be to revert to the old method for spinning disks
+and use the pivot option only on SSDs. The pivot optimization really
+only applies at IO speeds that can be achieved by fast solid state disks
+anyway, and there isn't likely enough IOPS possible on spinning disks to
+get enough lock contention that the optimization would provide any benefit.
 
-diff --git a/block/bio.c b/block/bio.c
-index fd11614bba4d..f3a3524b53e4 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1138,6 +1138,14 @@ int bio_add_page(struct bio *bio, struct page *page,
-  }
-  EXPORT_SYMBOL(bio_add_page);
+So it could make sense to just fall back to the old method of preparing
+the stripes in logical block order if we are running on spinning disks.
+Though, that might be a bit more involved than what this patch does. So
+I think this is probably a good approach, unless we want to recover more
+of the lost throughput.
 
-+void __bio_add_folio(struct bio *bio, struct folio *folio, size_t len,
-+                    size_t off)
-+{
-+       WARN_ON_ONCE(len > UINT_MAX);
-+       WARN_ON_ONCE(off > UINT_MAX);
-+       __bio_add_page(bio, &folio->page, len, off);
-+}
-+
-  /**
-   * bio_add_folio - Attempt to add part of a folio to a bio.
-   * @bio: BIO to add to.
-
-
-Byte,
-	Johannes
+Logan
