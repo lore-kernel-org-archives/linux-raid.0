@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61D08C77B73
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Apr 2023 14:11:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C20EFC7EE23
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Apr 2023 14:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232446AbjDSOLN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 Apr 2023 10:11:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39030 "EHLO
+        id S232509AbjDSOLP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Apr 2023 10:11:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232097AbjDSOLC (ORCPT
+        with ESMTP id S232130AbjDSOLC (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Apr 2023 10:11:02 -0400
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E75514476;
-        Wed, 19 Apr 2023 07:10:45 -0700 (PDT)
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-3f182d74658so1441795e9.0;
-        Wed, 19 Apr 2023 07:10:45 -0700 (PDT)
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7078AF0C;
+        Wed, 19 Apr 2023 07:10:42 -0700 (PDT)
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-3f17f31c258so6349815e9.0;
+        Wed, 19 Apr 2023 07:10:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681913444; x=1684505444;
+        d=1e100.net; s=20221208; t=1681913441; x=1684505441;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=CtDbz8KQ5RO2QKOv20A9cNZoc5bLawdSeLMzRI4Z4l0=;
-        b=Zui6mzuCIYT44ZljpViE1eL00cjfyGbHqFNUYNbBF6oHI3LlZdDrSS4M27+a3jTOTp
-         nOC2UbBV+9LjVSM6s8wP+SaslbhujGXoEI7085xKNCxFuez6SsRv9YIlTZzt1il8lWO7
-         gQ/0T150X/9YQBj0XUrPcT8xwCkLRd0ZaomEF35muWslAWlobgRZL8qmtlmWgSxfy1O5
-         ANI1r2hW8iZv81U9spo1QWeb2l11satcWV4rlU+nirH0r2b4UIhGiUmYq3USHM7Qpjwb
-         ffr+oTavsWcyyOESxOGNNQH/0UWCOyphKFwFyF4W4hSrK+u+xsf7Pq7JgIxnOlfPgeLh
-         nmcA==
-X-Gm-Message-State: AAQBX9cqKVZBjbnSkL3odWp4N/+G4iRoUK7sroVPZ5jF+/I+SQmQlv7X
-        oaHjcS6Jm4BQ/EarZv9fImA=
-X-Google-Smtp-Source: AKy350Ze8Tv0YqSXT14neaUNfEVUUfvrnu6p2Ls7vR1xgw5JSmGx7I9PgXV6gytGGhd8sVCBPP0ulQ==
-X-Received: by 2002:adf:e584:0:b0:2fa:3af5:bd36 with SMTP id l4-20020adfe584000000b002fa3af5bd36mr4878832wrm.24.1681913443959;
-        Wed, 19 Apr 2023 07:10:43 -0700 (PDT)
+        bh=UHB27r2VAJYtptv/DszRuaYXLzHwMALFS99ixQeQIrk=;
+        b=FWG2Jhwog7lwdl/FDPUPAzxhiMkNoJe+QiboItemkqc4nvihGFt2GQ0e3x+guShgfJ
+         InyzpPjguhyVYBBo2Yboe8wYy58qQUFPd0+4p2jditMtzt7FKnzQ+x4+2IvtAyw99iKy
+         GufYomgBU02/JnAm2O+NOCfHy+yXcViKX5N+oxA+RaTabMXiQ1yAUHmN3+EjUj5ZPct4
+         QQYS3JENCmFgkX3sHkAKOdK9vJlUZh4SHUF8UXDONBQ/cnXKrl/44PIoQ+k9F2FHcCQL
+         zescnmyq1vtPLbNHaiebUCBSmyIgx76Uh4hfEbdWc6adzxcg40VFiOOZfYj/nLHfe+7/
+         gIXA==
+X-Gm-Message-State: AAQBX9esJ9r35vZAhp8FVigKZFUqmmciSTnXZq3/Ouq2VYOPGSGrV6Gk
+        /FImx60hSptoHtfTmStZfwk=
+X-Google-Smtp-Source: AKy350Yzi76bXam/T5ppDWB23h4mS+GurlXtWZ/gJi0rAcUNNcaqO1+varQiNYt0Qa9LFt3v3G5TJA==
+X-Received: by 2002:a5d:4411:0:b0:2cf:e517:c138 with SMTP id z17-20020a5d4411000000b002cfe517c138mr4900340wrq.66.1681913441132;
+        Wed, 19 Apr 2023 07:10:41 -0700 (PDT)
 Received: from localhost.localdomain (aftr-62-216-205-204.dynamic.mnet-online.de. [62.216.205.204])
-        by smtp.googlemail.com with ESMTPSA id q17-20020a5d61d1000000b002faaa9a1721sm7612089wrv.58.2023.04.19.07.10.42
+        by smtp.googlemail.com with ESMTPSA id q17-20020a5d61d1000000b002faaa9a1721sm7612089wrv.58.2023.04.19.07.10.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Apr 2023 07:10:43 -0700 (PDT)
+        Wed, 19 Apr 2023 07:10:40 -0700 (PDT)
 From:   Johannes Thumshirn <jth@kernel.org>
 To:     axboe@kernel.dk
 Cc:     johannes.thumshirn@wdc.com, agruenba@redhat.com,
@@ -48,11 +48,10 @@ Cc:     johannes.thumshirn@wdc.com, agruenba@redhat.com,
         linux-raid@vger.kernel.org, ming.lei@redhat.com,
         rpeterso@redhat.com, shaggy@kernel.org, snitzer@kernel.org,
         song@kernel.org, willy@infradead.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>
-Subject: [PATCH v3 10/19] jfs: logmgr: use __bio_add_page to add single page to bio
-Date:   Wed, 19 Apr 2023 16:09:20 +0200
-Message-Id: <20230419140929.5924-11-jth@kernel.org>
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v3 08/19] btrfs: repair: use __bio_add_page for adding single page
+Date:   Wed, 19 Apr 2023 16:09:18 +0200
+Message-Id: <20230419140929.5924-9-jth@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230419140929.5924-1-jth@kernel.org>
 References: <20230419140929.5924-1-jth@kernel.org>
@@ -64,8 +63,9 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-The JFS IO code uses bio_add_page() to add a page to a newly created bio.
-bio_add_page() can fail, but the return value is never checked.
+The btrfs repair bio submission code uses bio_add_page() to add a page to
+a newly created bio. bio_add_page() can fail, but the return value is
+never checked.
 
 Use __bio_add_page() as adding a single page to a newly created bio is
 guaranteed to succeed.
@@ -74,33 +74,23 @@ This brings us a step closer to marking bio_add_page() as __must_check.
 
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Acked-by: Dave Kleikamp <dave.kleikamp@oracle.com>
 ---
- fs/jfs/jfs_logmgr.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/btrfs/bio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/jfs/jfs_logmgr.c b/fs/jfs/jfs_logmgr.c
-index 695415cbfe98..15c645827dec 100644
---- a/fs/jfs/jfs_logmgr.c
-+++ b/fs/jfs/jfs_logmgr.c
-@@ -1974,7 +1974,7 @@ static int lbmRead(struct jfs_log * log, int pn, struct lbuf ** bpp)
+diff --git a/fs/btrfs/bio.c b/fs/btrfs/bio.c
+index 726592868e9c..73220a219c91 100644
+--- a/fs/btrfs/bio.c
++++ b/fs/btrfs/bio.c
+@@ -224,7 +224,7 @@ static struct btrfs_failed_bio *repair_one_sector(struct btrfs_bio *failed_bbio,
+ 	repair_bio = bio_alloc_bioset(NULL, 1, REQ_OP_READ, GFP_NOFS,
+ 				      &btrfs_repair_bioset);
+ 	repair_bio->bi_iter.bi_sector = failed_bbio->saved_iter.bi_sector;
+-	bio_add_page(repair_bio, bv->bv_page, bv->bv_len, bv->bv_offset);
++	__bio_add_page(repair_bio, bv->bv_page, bv->bv_len, bv->bv_offset);
  
- 	bio = bio_alloc(log->bdev, 1, REQ_OP_READ, GFP_NOFS);
- 	bio->bi_iter.bi_sector = bp->l_blkno << (log->l2bsize - 9);
--	bio_add_page(bio, bp->l_page, LOGPSIZE, bp->l_offset);
-+	__bio_add_page(bio, bp->l_page, LOGPSIZE, bp->l_offset);
- 	BUG_ON(bio->bi_iter.bi_size != LOGPSIZE);
- 
- 	bio->bi_end_io = lbmIODone;
-@@ -2115,7 +2115,7 @@ static void lbmStartIO(struct lbuf * bp)
- 
- 	bio = bio_alloc(log->bdev, 1, REQ_OP_WRITE | REQ_SYNC, GFP_NOFS);
- 	bio->bi_iter.bi_sector = bp->l_blkno << (log->l2bsize - 9);
--	bio_add_page(bio, bp->l_page, LOGPSIZE, bp->l_offset);
-+	__bio_add_page(bio, bp->l_page, LOGPSIZE, bp->l_offset);
- 	BUG_ON(bio->bi_iter.bi_size != LOGPSIZE);
- 
- 	bio->bi_end_io = lbmIODone;
+ 	repair_bbio = btrfs_bio(repair_bio);
+ 	btrfs_bio_init(repair_bbio, failed_bbio->inode, NULL, fbio);
 -- 
 2.39.2
 
