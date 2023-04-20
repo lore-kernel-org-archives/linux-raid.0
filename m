@@ -2,50 +2,44 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99D51C77B73
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 09:01:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79022C77B7A
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 10:06:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234363AbjDTJBN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Apr 2023 05:01:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52460 "EHLO
+        id S234418AbjDTKG0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Apr 2023 06:06:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234063AbjDTJA2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 05:00:28 -0400
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1B708A59;
-        Thu, 20 Apr 2023 01:56:40 -0700 (PDT)
-Received: by mail-wm1-f46.google.com with SMTP id bi21-20020a05600c3d9500b003f17a8eaedbso2706701wmb.1;
-        Thu, 20 Apr 2023 01:56:40 -0700 (PDT)
+        with ESMTP id S234480AbjDTKGC (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 06:06:02 -0400
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49C30359D;
+        Thu, 20 Apr 2023 03:05:55 -0700 (PDT)
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-3f17f31c258so5565425e9.0;
+        Thu, 20 Apr 2023 03:05:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681980932; x=1684572932;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Z3oaCtnRgdVnX+/49rnLNjwqRbR+N3XhGwT33lpTGps=;
-        b=bDzgPWwdKH1qMEnqSFq1A4LRveY5MJ2A7oTRSAj79iqYOFoSo1UgWtBIFW/ZB8K9e7
-         JlIX1JYieMobKCujWzsrrrD38UP2oT4qFE6i25X2dd5qprIevNVD6uFCbqxKIPjpNvQK
-         eKT2EGKN57YDOI5XNH4nzBaJHI+tBJMDStelAU3FY4ULn86HX5X25Z4mICFaFqgXefo9
-         WTSUtInHUCZj+Fh05bdO4dq1fTX0G/fW/aVg+Q1SpToCWqUMCbPCpDKVWdCfMApJkiAE
-         N819UxtdxAVq+LpkREHwxzjVw43/w3oeocx1CZL1LoAdYbZ/Yadhx5HbVzxq41UNcJtn
-         5BVQ==
-X-Gm-Message-State: AAQBX9fIjhWBtPnHPZU6SzPZzNWFUqBRi1FZC6ht3rIoor/UwTJ8fB+z
-        Z+/Y2re/P5lqE19non0D3vi2WhaNJn6qQNNc
-X-Google-Smtp-Source: AKy350bKYLeXMzDzDJ6Y6qo/aThxWX/i4drIepoJR2AxRlr5KQ8S+fMnYJCtI7ItM3tNru7pKV43XQ==
-X-Received: by 2002:a05:600c:acf:b0:3f1:72e6:2a69 with SMTP id c15-20020a05600c0acf00b003f172e62a69mr740456wmr.4.1681980932068;
-        Thu, 20 Apr 2023 01:55:32 -0700 (PDT)
-Received: from [192.168.32.129] (aftr-62-216-205-152.dynamic.mnet-online.de. [62.216.205.152])
-        by smtp.gmail.com with ESMTPSA id ip29-20020a05600ca69d00b003f1712b1402sm4669681wmb.30.2023.04.20.01.55.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 20 Apr 2023 01:55:31 -0700 (PDT)
-Message-ID: <0028b1b9-980a-4b3b-b290-099368e44f9f@kernel.org>
-Date:   Thu, 20 Apr 2023 10:55:29 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH v3 11/19] gfs: use __bio_add_page for adding single page
- to bio
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     axboe@kernel.dk, johannes.thumshirn@wdc.com,
+        d=1e100.net; s=20221208; t=1681985154; x=1684577154;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=asKpmswp0ZeanhVo76Eo+6VNkXdxI3jhQK0PDuQZThY=;
+        b=ZTx02YELbHEvCKZhI6ACN+Iq5mOPju7L7PIUB0J7gWHSvRI78a7dntT5hAIRnJM4DX
+         aSbfxii7TtyhS3A6t9If0ZDOmy3j7akOyQ+oWcqNf0UlGPKXpjFj5B+yh2Ck6DdkPLgs
+         unvptYfCu6fjwUngEU9IE2amWJvya+E62EWmGSHmy94o1OqVsv3jCovH/Fm7FDHi2X6n
+         rgfmDdv+TqYBNQm8LQ9QfDqzC9JIFB2qAHVEbOFyZocpuk5g3ZcLAjXlx6wzSsH/SSTW
+         sJSHUQkQqf0hxn8xDgeE8YmbcZcnPMKnTzFJ7quxkhwIYWaco0Y7bML1PLf+u8xdT5wb
+         21Kg==
+X-Gm-Message-State: AAQBX9eF/DrUOVuP/T2KOYxotu7AkJc/7BsC0HmISdFfATx5kYrt7cVW
+        RQ9DznszXY5lNhP+jgTN4GE=
+X-Google-Smtp-Source: AKy350aEPjl5npFp/5W8Iqf2usu87C/1xVbllQj+JBJFP+rdftTKzTknJoS6cfDyj7W7tb2o1uXlCw==
+X-Received: by 2002:a5d:4ecd:0:b0:2fb:4121:285a with SMTP id s13-20020a5d4ecd000000b002fb4121285amr782830wrv.57.1681985153608;
+        Thu, 20 Apr 2023 03:05:53 -0700 (PDT)
+Received: from localhost.localdomain (aftr-62-216-205-208.dynamic.mnet-online.de. [62.216.205.208])
+        by smtp.googlemail.com with ESMTPSA id l11-20020a5d674b000000b0030276f42f08sm201410wrw.88.2023.04.20.03.05.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Apr 2023 03:05:53 -0700 (PDT)
+From:   Johannes Thumshirn <jth@kernel.org>
+To:     axboe@kernel.dk
+Cc:     johannes.thumshirn@wdc.com, agruenba@redhat.com,
         cluster-devel@redhat.com, damien.lemoal@wdc.com,
         dm-devel@redhat.com, dsterba@suse.com, hare@suse.de, hch@lst.de,
         jfs-discussion@lists.sourceforge.net, kch@nvidia.com,
@@ -55,29 +49,65 @@ Cc:     axboe@kernel.dk, johannes.thumshirn@wdc.com,
         rpeterso@redhat.com, shaggy@kernel.org, snitzer@kernel.org,
         song@kernel.org, willy@infradead.org,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>
-References: <20230419140929.5924-1-jth@kernel.org>
- <20230419140929.5924-12-jth@kernel.org>
- <CAHc6FU6U1yZguZGeCc7BUqd1Qm4+SSRK8xbNZWBUSXTk_jjvVQ@mail.gmail.com>
-Content-Language: en-US
-From:   Johannes Thumshirn <jth@kernel.org>
-In-Reply-To: <CAHc6FU6U1yZguZGeCc7BUqd1Qm4+SSRK8xbNZWBUSXTk_jjvVQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: [PATCH v4 03/22] dm: dm-zoned: use __bio_add_page for adding single metadata page
+Date:   Thu, 20 Apr 2023 12:04:42 +0200
+Message-Id: <20230420100501.32981-4-jth@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230420100501.32981-1-jth@kernel.org>
+References: <20230420100501.32981-1-jth@kernel.org>
+MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 19/04/2023 17:19, Andreas Gruenbacher wrote:
-> On Wed, Apr 19, 2023 at 4:10 PM Johannes Thumshirn <jth@kernel.org> wrote:
->>
->> From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
->>
->> The GFS superblock reading code uses bio_add_page() to add a page to a
->> newly created bio. bio_add_page() can fail, but the return value is never
->> checked.
-> 
-> It's GFS2, not GFS, but otherwise this is obviously fine, thanks.
-> 
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-Oops fixed in v4
+dm-zoned uses bio_add_page() for adding a single page to a freshly created
+metadata bio.
+
+Use __bio_add_page() instead as adding a single page to a new bio is
+always guaranteed to succeed.
+
+This brings us a step closer to marking bio_add_page() __must_check
+
+Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+---
+ drivers/md/dm-zoned-metadata.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/dm-zoned-metadata.c b/drivers/md/dm-zoned-metadata.c
+index cf9402064aba..8dbe102ab271 100644
+--- a/drivers/md/dm-zoned-metadata.c
++++ b/drivers/md/dm-zoned-metadata.c
+@@ -577,7 +577,7 @@ static struct dmz_mblock *dmz_get_mblock_slow(struct dmz_metadata *zmd,
+ 	bio->bi_iter.bi_sector = dmz_blk2sect(block);
+ 	bio->bi_private = mblk;
+ 	bio->bi_end_io = dmz_mblock_bio_end_io;
+-	bio_add_page(bio, mblk->page, DMZ_BLOCK_SIZE, 0);
++	__bio_add_page(bio, mblk->page, DMZ_BLOCK_SIZE, 0);
+ 	submit_bio(bio);
+ 
+ 	return mblk;
+@@ -728,7 +728,7 @@ static int dmz_write_mblock(struct dmz_metadata *zmd, struct dmz_mblock *mblk,
+ 	bio->bi_iter.bi_sector = dmz_blk2sect(block);
+ 	bio->bi_private = mblk;
+ 	bio->bi_end_io = dmz_mblock_bio_end_io;
+-	bio_add_page(bio, mblk->page, DMZ_BLOCK_SIZE, 0);
++	__bio_add_page(bio, mblk->page, DMZ_BLOCK_SIZE, 0);
+ 	submit_bio(bio);
+ 
+ 	return 0;
+@@ -752,7 +752,7 @@ static int dmz_rdwr_block(struct dmz_dev *dev, enum req_op op,
+ 	bio = bio_alloc(dev->bdev, 1, op | REQ_SYNC | REQ_META | REQ_PRIO,
+ 			GFP_NOIO);
+ 	bio->bi_iter.bi_sector = dmz_blk2sect(block);
+-	bio_add_page(bio, page, DMZ_BLOCK_SIZE, 0);
++	__bio_add_page(bio, page, DMZ_BLOCK_SIZE, 0);
+ 	ret = submit_bio_wait(bio);
+ 	bio_put(bio);
+ 
+-- 
+2.39.2
 
