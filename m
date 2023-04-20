@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 592C6C77B72
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 11:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28F29C77B73
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 11:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234583AbjDTLbx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Apr 2023 07:31:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34010 "EHLO
+        id S234613AbjDTLbz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Apr 2023 07:31:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234042AbjDTLbo (ORCPT
+        with ESMTP id S233995AbjDTLbo (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 07:31:44 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED587272C;
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ACF630D6;
         Thu, 20 Apr 2023 04:31:21 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Q2Fpq1Q3Lz4f3rg0;
-        Thu, 20 Apr 2023 19:31:15 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q2Fpp5KjSz4f3yb9;
+        Thu, 20 Apr 2023 19:31:14 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7OAIkFkVY8hHw--.17021S11;
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7OAIkFkVY8hHw--.17021S9;
         Thu, 20 Apr 2023 19:31:16 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, neilb@suse.de, akpm@osdl.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 7/8] md/raid1{,0}: Revert "md/raid1{,0}: fix deadlock in bitmap_unplug."
-Date:   Thu, 20 Apr 2023 19:29:45 +0800
-Message-Id: <20230420112946.2869956-8-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 5/8] md/raid1-10: submit write io directly if bitmap is not enabled
+Date:   Thu, 20 Apr 2023 19:29:43 +0800
+Message-Id: <20230420112946.2869956-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230420112946.2869956-1-yukuai1@huaweicloud.com>
 References: <20230420112946.2869956-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7OAIkFkVY8hHw--.17021S11
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF1DXr4fJF4UGry8Cr15urg_yoW8WFWkp3
-        90gayavrWUWrWUZ3yDua1DuFyFg3WqgFW2kF95Z395WFyYqFy3W3y5JFWxWryDZFW3Ja47
-        Zry5K39rJF4YyaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgCnD7OAIkFkVY8hHw--.17021S9
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF15JFyrGw47Ww45AF1DJrb_yoW5ZFyfpa
+        yDGa4Ykr15JFW3X3ZxAa4DAFyFy3s3tr9rKryfC398uFy3XFsxGr4rGay5t3ZrCrnxGF43
+        Xr1YkryUCr18XrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUU9K14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -58,47 +58,97 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-This reverts commit 874807a83139abc094f939e93623c5623573d543.
+Commit 6cce3b23f6f8 ("[PATCH] md: write intent bitmap support for raid10")
+add bitmap support, and it changed that write io is submitted through demon
+thread because bitmap need to be updated before write io. And later, plug
+is used to fix performance regression because all the write io will go to
+demon thread, which means io can't be issued concurrently.
 
-Because the deadlock won't exist after commit a214b949d8e3 ("blk-mq: only
-flush requests from the plug in blk_mq_submit_bio"). And bitmap io is
-handled asynchronously now, the deadlock won't be triggered anymore.
+However, if bitmap is not enabled, the write io should not go to demon
+thread in the first place, and plug is not needed as well.
 
-By the way, for performance considerations, plugged bio should not be
-handled asynchronously.
-
+Fixes: 6cce3b23f6f8 ("[PATCH] md: write intent bitmap support for raid10")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid1.c  | 2 +-
- drivers/md/raid10.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/md-bitmap.c |  4 +---
+ drivers/md/md-bitmap.h |  7 +++++++
+ drivers/md/raid1-10.h  | 15 +++++++++++++--
+ 3 files changed, 21 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7389e599f34e..91e1dbc48228 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1164,7 +1164,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 	struct r1conf *conf = mddev->private;
- 	struct bio *bio;
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index ab27f66dbb1f..4bd980b272ef 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -1000,7 +1000,6 @@ static int md_bitmap_file_test_bit(struct bitmap *bitmap, sector_t block)
+ 	return set;
+ }
  
--	if (from_schedule || current->bio_list) {
-+	if (from_schedule) {
- 		spin_lock_irq(&conf->device_lock);
- 		bio_list_merge(&conf->pending_bio_list, &plug->pending);
- 		spin_unlock_irq(&conf->device_lock);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 9f307ff5d4f6..d92b1efe9eee 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1101,7 +1101,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 	struct r10conf *conf = mddev->private;
- 	struct bio *bio;
+-
+ /* this gets called when the md device is ready to unplug its underlying
+  * (slave) device queues -- before we let any writes go down, we need to
+  * sync the dirty pages of the bitmap file to disk */
+@@ -1010,8 +1009,7 @@ void md_bitmap_unplug(struct bitmap *bitmap)
+ 	int dirty, need_write;
+ 	int writing = 0;
  
--	if (from_schedule || current->bio_list) {
-+	if (from_schedule) {
- 		spin_lock_irq(&conf->device_lock);
- 		bio_list_merge(&conf->pending_bio_list, &plug->pending);
- 		spin_unlock_irq(&conf->device_lock);
+-	if (!bitmap || !bitmap->storage.filemap ||
+-	    test_bit(BITMAP_STALE, &bitmap->flags))
++	if (!md_bitmap_enabled(bitmap))
+ 		return;
+ 
+ 	/* look at each page to see if there are any set bits that need to be
+diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+index cfd7395de8fd..3a4750952b3a 100644
+--- a/drivers/md/md-bitmap.h
++++ b/drivers/md/md-bitmap.h
+@@ -273,6 +273,13 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 			     sector_t *lo, sector_t *hi, bool clear_bits);
+ void md_bitmap_free(struct bitmap *bitmap);
+ void md_bitmap_wait_behind_writes(struct mddev *mddev);
++
++static inline bool md_bitmap_enabled(struct bitmap *bitmap)
++{
++	return bitmap && bitmap->storage.filemap &&
++	       !test_bit(BITMAP_STALE, &bitmap->flags);
++}
++
+ #endif
+ 
+ #endif
+diff --git a/drivers/md/raid1-10.h b/drivers/md/raid1-10.h
+index 9dc53d8a8129..95b2fb4dd9aa 100644
+--- a/drivers/md/raid1-10.h
++++ b/drivers/md/raid1-10.h
+@@ -2,6 +2,8 @@
+ #ifndef _RAID1_10_H
+ #define _RAID1_10_H
+ 
++#include "md-bitmap.h"
++
+ /* Maximum size of each resync request */
+ #define RESYNC_BLOCK_SIZE (64*1024)
+ #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+@@ -133,9 +135,18 @@ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
+ 				      blk_plug_cb_fn unplug)
+ {
+ 	struct raid1_plug_cb *plug = NULL;
+-	struct blk_plug_cb *cb = blk_check_plugged(unplug, mddev,
+-						   sizeof(*plug));
++	struct blk_plug_cb *cb;
++
++	/*
++	 * If bitmap is not enabled, it's safe to submit the io directly, and
++	 * this can get optimal performance.
++	 */
++	if (!md_bitmap_enabled(mddev->bitmap)) {
++		md_submit_write(bio);
++		return true;
++	}
+ 
++	cb = blk_check_plugged(unplug, mddev, sizeof(*plug));
+ 	if (!cb)
+ 		return false;
+ 
 -- 
 2.39.2
 
