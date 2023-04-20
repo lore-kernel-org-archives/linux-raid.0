@@ -2,147 +2,141 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AD64C77B73
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 15:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD36C77B72
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 15:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231776AbjDTPgv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Apr 2023 11:36:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37102 "EHLO
+        id S233646AbjDTPyx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Apr 2023 11:54:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbjDTPgt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 11:36:49 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D1575581;
-        Thu, 20 Apr 2023 08:36:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1682005007; x=1713541007;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=iO/i2tt5DEzt8gruW8+zs93sVMgkJU4X3e0uYovtxx8=;
-  b=Xcmt9R/LozyKo+AlCCS4SPBwcVfJgdODNuBGbRQSpqvqUnbK3sDI3WWI
-   Ai9hQm5jAvuUV2y3tE+tkWgpzj8oh8jaE5qTq8qItSuygO3ur+XtgZCyi
-   Pk71I+UdVneHTCpxXlD4D6ZGboWGAahcA9V5GMYvnzTvu63eq6ITxudyW
-   oWQUfYN6nfA+u8pFno9gA26F7D9haAaM4rkPcD6cmSL8H8+RUCOEK6iHD
-   z8r/+l/H6W+NV/yuJTfHjNZ7YZI+nY5/GP/kKR3+zH2xNq458Aw/vOLqv
-   nSsX+C06jjP1Ux5uqJ9VKQtCex5+fu7ZuFC0nIXEb5M6DKuANcbyNfVlc
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10686"; a="348533242"
-X-IronPort-AV: E=Sophos;i="5.99,213,1677571200"; 
-   d="scan'208";a="348533242"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2023 08:36:46 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10686"; a="756537428"
-X-IronPort-AV: E=Sophos;i="5.99,213,1677571200"; 
-   d="scan'208";a="756537428"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 20 Apr 2023 08:36:44 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1ppWKx-000fuA-2b;
-        Thu, 20 Apr 2023 15:36:43 +0000
-Date:   Thu, 20 Apr 2023 23:35:56 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Daniil Tatianin <d-tatianin@yandex-team.ru>,
-        Song Liu <song@kernel.org>
-Cc:     oe-kbuild-all@lists.linux.dev,
-        Daniil Tatianin <d-tatianin@yandex-team.ru>,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] md/md-multipath: guard against a possible NULL
- dereference
-Message-ID: <202304202346.fddWOoq1-lkp@intel.com>
-References: <20230420071851.326726-1-d-tatianin@yandex-team.ru>
+        with ESMTP id S232784AbjDTPyw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 11:54:52 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1FD3272D
+        for <linux-raid@vger.kernel.org>; Thu, 20 Apr 2023 08:54:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=8jRt1J0BK9Zz+scp1LwnXobVwhKhfQ4aqavahGNFBYw=; b=BI64h04D8Qh0hHRKPZsi81LVxw
+        3hkPgOVX/jtV3L0fFEau3tkmNMOXuMC8aduwlz7g2lR55E+3d7by9nXztBUXYI9a6Zm1Xu6AS/KXV
+        /GI+JtQ9XDfru2wrGexXkXgRuKakq9KY5YmZ4lXy+DC//g7h89cNoMcTKiMtVOnJ0ug3eE/rbDy0F
+        UI4QZrKyIUb7ZIVyjh71/zzK5HMqsFQ0KM18YyZv94MrhhPVdxeoId6wnjuk8LlilyY2GH/qqSF2z
+        0i5jvmt45IWrZM1+suGFwkmINSFQ6iM6amlf8hNVjews+jLmKjYErFf8VkWp+gG0fLG1eY997Vn1H
+        DYu7B+mg==;
+Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1ppWc8-00DUz1-OU; Thu, 20 Apr 2023 09:54:29 -0600
+Message-ID: <c5830dd8-57c5-0d94-a48d-d85f154607e0@deltatee.com>
+Date:   Thu, 20 Apr 2023 09:54:26 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230420071851.326726-1-d-tatianin@yandex-team.ru>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Content-Language: en-CA
+To:     Jan Kara <jack@suse.cz>, Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org, David Sloan <David.Sloan@eideticom.com>
+References: <20230417171537.17899-1-jack@suse.cz>
+ <9a1e2e05-72cd-aba2-b380-d0836d2e98dd@deltatee.com>
+ <CAPhsuW76n5w7AJ5Ee6foGgm4U2FpRDfpMYhELS7=gJE5SeGwAA@mail.gmail.com>
+ <20230420112613.l5wyzi7ran556pum@quack3>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20230420112613.l5wyzi7ran556pum@quack3>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 24.64.144.200
+X-SA-Exim-Rcpt-To: jack@suse.cz, song@kernel.org, linux-raid@vger.kernel.org, David.Sloan@eideticom.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH] md/raid5: Improve performance for sequential IO
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Daniil,
-
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on song-md/md-next]
-[also build test ERROR on linus/master v6.3-rc7 next-20230419]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Daniil-Tatianin/md-md-multipath-guard-against-a-possible-NULL-dereference/20230420-152235
-base:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-patch link:    https://lore.kernel.org/r/20230420071851.326726-1-d-tatianin%40yandex-team.ru
-patch subject: [PATCH] md/md-multipath: guard against a possible NULL dereference
-config: m68k-allyesconfig (https://download.01.org/0day-ci/archive/20230420/202304202346.fddWOoq1-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/3b0e378bb2e165f35044ecb535fb1ed973ea392e
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Daniil-Tatianin/md-md-multipath-guard-against-a-possible-NULL-dereference/20230420-152235
-        git checkout 3b0e378bb2e165f35044ecb535fb1ed973ea392e
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=m68k olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash drivers/
-
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202304202346.fddWOoq1-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   drivers/md/md-multipath.c: In function 'multipath_make_request':
->> drivers/md/md-multipath.c:111:14: error: 'map_bh' undeclared (first use in this function); did you mean 'mp_bh'?
-     111 |         if (!map_bh)
-         |              ^~~~~~
-         |              mp_bh
-   drivers/md/md-multipath.c:111:14: note: each undeclared identifier is reported only once for each function it appears in
 
 
-vim +111 drivers/md/md-multipath.c
+On 2023-04-20 05:26, Jan Kara wrote:
+> On Wed 19-04-23 22:26:07, Song Liu wrote:
+>> On Wed, Apr 19, 2023 at 12:04 PM Logan Gunthorpe <logang@deltatee.com> wrote:
+>>> On 2023-04-17 11:15, Jan Kara wrote:
+>>>> Commit 7e55c60acfbb ("md/raid5: Pivot raid5_make_request()") changed the
+>>>> order in which requests for underlying disks are created. Since for
+>>>> large sequential IO adding of requests frequently races with md_raid5
+>>>> thread submitting bios to underlying disks, this results in a change in
+>>>> IO pattern because intermediate states of new order of request creation
+>>>> result in more smaller discontiguous requests. For RAID5 on top of three
+>>>> rotational disks our performance testing revealed this results in
+>>>> regression in write throughput:
+>>>>
+>>>> iozone -a -s 131072000 -y 4 -q 8 -i 0 -i 1 -R
+>>>>
+>>>> before 7e55c60acfbb:
+>>>>               KB  reclen   write rewrite    read    reread
+>>>>        131072000       4  493670  525964   524575   513384
+>>>>        131072000       8  540467  532880   512028   513703
+>>>>
+>>>> after 7e55c60acfbb:
+>>>>               KB  reclen   write rewrite    read    reread
+>>>>        131072000       4  421785  456184   531278   509248
+>>>>        131072000       8  459283  456354   528449   543834
+>>>>
+>>>> To reduce the amount of discontiguous requests we can start generating
+>>>> requests with the stripe with the lowest chunk offset as that has the
+>>>> best chance of being adjacent to IO queued previously. This improves the
+>>>> performance to:
+>>>>               KB  reclen   write rewrite    read    reread
+>>>>        131072000       4  497682  506317   518043   514559
+>>>>        131072000       8  514048  501886   506453   504319
+>>>>
+>>>> restoring big part of the regression.
+>>>>
+>>>> Fixes: 7e55c60acfbb ("md/raid5: Pivot raid5_make_request()")
+>>>> Signed-off-by: Jan Kara <jack@suse.cz>
+>>>
+>>> Looks good to me. I ran it through some of the functional tests I used
+>>> to develop the patch in question and found no issues.
+>>>
+>>> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+>>
+>> Thanks Jan and Logan! I will apply this to md-next. But it may not make
+>> 6.4 release, as we are already at rc7.
+> 
+> OK, sure, this is not a critical issue.
+> 
+>>>> ---
+>>>>  drivers/md/raid5.c | 45 ++++++++++++++++++++++++++++++++++++++++++++-
+>>>>  1 file changed, 44 insertions(+), 1 deletion(-)
+>>>>
+>>>> I'm by no means raid5 expert but this is what I was able to come up with. Any
+>>>> opinion or ideas how to fix the problem in a better way?
+>>>
+>>> The other option would be to revert to the old method for spinning disks
+>>> and use the pivot option only on SSDs. The pivot optimization really
+>>> only applies at IO speeds that can be achieved by fast solid state disks
+>>> anyway, and there isn't likely enough IOPS possible on spinning disks to
+>>> get enough lock contention that the optimization would provide any benefit.
+>>>
+>>> So it could make sense to just fall back to the old method of preparing
+>>> the stripes in logical block order if we are running on spinning disks.
+>>> Though, that might be a bit more involved than what this patch does. So
+>>> I think this is probably a good approach, unless we want to recover more
+>>> of the lost throughput.
+>>
+>> How about we only do the optimization in this patch for spinning disks?
+>> Something like:
+>>
+>>         if (likely(conf->reshape_progress == MaxSector) &&
+>>             !blk_queue_nonrot(mddev->queue))
+>>                 logical_sector = raid5_bio_lowest_chunk_sector(conf, bi);
+> 
+> Yeah, makes sense. On SSD disks I was not able to observe any adverse
+> effects of the different stripe order. Will you update the patch or should
+> I respin it?
 
-    99	
-   100	static bool multipath_make_request(struct mddev *mddev, struct bio * bio)
-   101	{
-   102		struct mpconf *conf = mddev->private;
-   103		struct multipath_bh * mp_bh;
-   104		struct multipath_info *multipath;
-   105	
-   106		if (unlikely(bio->bi_opf & REQ_PREFLUSH)
-   107		    && md_flush_request(mddev, bio))
-   108			return true;
-   109	
-   110		mp_bh = mempool_alloc(&conf->pool, GFP_NOIO);
- > 111		if (!map_bh)
-   112			return false;
-   113	
-   114		mp_bh->master_bio = bio;
-   115		mp_bh->mddev = mddev;
-   116	
-   117		mp_bh->path = multipath_map(conf);
-   118		if (mp_bh->path < 0) {
-   119			bio_io_error(bio);
-   120			mempool_free(mp_bh, &conf->pool);
-   121			return true;
-   122		}
-   123		multipath = conf->multipaths + mp_bh->path;
-   124	
-   125		bio_init_clone(multipath->rdev->bdev, &mp_bh->bio, bio, GFP_NOIO);
-   126	
-   127		mp_bh->bio.bi_iter.bi_sector += multipath->rdev->data_offset;
-   128		mp_bh->bio.bi_opf |= REQ_FAILFAST_TRANSPORT;
-   129		mp_bh->bio.bi_end_io = multipath_end_request;
-   130		mp_bh->bio.bi_private = mp_bh;
-   131		mddev_check_write_zeroes(mddev, &mp_bh->bio);
-   132		submit_bio_noacct(&mp_bh->bio);
-   133		return true;
-   134	}
-   135	
+Does it make sense? If SSDs work fine with the new stripe order, why do
+things different for them? So I don't see a  benefit of making the fix
+only work with non-rotational devices. It's my original change which
+could be made for non-rotationatial only, but that's much more involved.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Logan
