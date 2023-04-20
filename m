@@ -2,87 +2,106 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06124C77B78
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 10:08:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 273ACC77B73
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 10:52:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234722AbjDTKIb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Apr 2023 06:08:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48114 "EHLO
+        id S234483AbjDTKv5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Apr 2023 06:51:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234571AbjDTKG4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 06:06:56 -0400
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D441171D;
-        Thu, 20 Apr 2023 03:06:18 -0700 (PDT)
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-3f167d0c91bso5444515e9.2;
-        Thu, 20 Apr 2023 03:06:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681985176; x=1684577176;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=bdnAdvAKJlDAz7pM0pp8Diurpm3+TR0sCY4FonfaEe4=;
-        b=Rqf7jaBh/8LOYrqd/Ye1XO/kTtgssmpHumrEKR2L4ngOoTsrp9Skv/WNAYVPqLMDVf
-         iHshIrgED2YRB75AhZnYzc2SF/07PFMxdJIpo7CPo/22rWMCKIv0mTfECWb7VdgoVWFl
-         iLDka5jZVaKPJYirtKe0ECRF9+t7vLYtNruSJgw4/lf5qJpJnWVl/Dnogn1wXn/iy5nB
-         pu1v3zbQV9/wtMrqYnSeEWEokoSht90OFweQfUwLaL5X2qlxxFD+F29tj/O+cvvdUUgk
-         Jgg+VCU/ndIHVgDJB1Gc2cRaGSWRAnq/5kbRSvJefzMhdAAuXUSJMaPeon1YP/Q//meA
-         YNXw==
-X-Gm-Message-State: AAQBX9eOuIitcBl+AQTHnXE8Bh3Y8tSv6DMnNlYuWqim88UeQmjc9vRU
-        p/nxSaYVtnLjOdRUy4Ira7c=
-X-Google-Smtp-Source: AKy350bs2gtzNI5cB6yEjD27bAOubU763Pln69XpJllBqakY/TYBXJ5mOXnM5tQ2B75UHodvDIFK3A==
-X-Received: by 2002:a5d:6dcc:0:b0:2fa:43e7:4a32 with SMTP id d12-20020a5d6dcc000000b002fa43e74a32mr694948wrz.66.1681985176558;
-        Thu, 20 Apr 2023 03:06:16 -0700 (PDT)
-Received: from localhost.localdomain (aftr-62-216-205-208.dynamic.mnet-online.de. [62.216.205.208])
-        by smtp.googlemail.com with ESMTPSA id l11-20020a5d674b000000b0030276f42f08sm201410wrw.88.2023.04.20.03.06.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Apr 2023 03:06:16 -0700 (PDT)
-From:   Johannes Thumshirn <jth@kernel.org>
-To:     axboe@kernel.dk
-Cc:     johannes.thumshirn@wdc.com, agruenba@redhat.com,
-        cluster-devel@redhat.com, damien.lemoal@wdc.com,
-        dm-devel@redhat.com, dsterba@suse.com, hare@suse.de, hch@lst.de,
-        jfs-discussion@lists.sourceforge.net, kch@nvidia.com,
-        linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-raid@vger.kernel.org, ming.lei@redhat.com,
-        rpeterso@redhat.com, shaggy@kernel.org, snitzer@kernel.org,
-        song@kernel.org, willy@infradead.org
-Subject: [PATCH v4 22/22] block: mark bio_add_folio as __must_check
-Date:   Thu, 20 Apr 2023 12:05:01 +0200
-Message-Id: <20230420100501.32981-23-jth@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230420100501.32981-1-jth@kernel.org>
-References: <20230420100501.32981-1-jth@kernel.org>
+        with ESMTP id S234472AbjDTKvc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 06:51:32 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7AFEA277
+        for <linux-raid@vger.kernel.org>; Thu, 20 Apr 2023 03:49:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681987753; x=1713523753;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=WJUgFvSYSwraYKmlIdgPx4VC/n5vz7G6xZdOZvoHMao=;
+  b=HAGKPFFwm+ifTSJmLaJVZTz63F25MwQgQpQM+sjgmEh3rqF5BHZfy45O
+   eiRBrcpwxLIcId9o012sEUdd6s2JMzO7qifSXAVh5dKpw7y0sATkUHn9o
+   7BiSXpKfMfG8ePMpM0pCgoiibs9C0jEVkRJjb1ux/qCgegQN+i2Y3W4Dt
+   h2M+1I9lyyZCewe2+sgO5KGE83+a0pfwJ4a572/N9n7Qzcz9UuIH9q2jx
+   KIqVY8AMfc0GPwKmU2T1OHQeC1zmMqSKz/A0Hj8aWA7B9eSybOzGzaM/A
+   /qJUXiCr0ywMrDZfDtRjMUymT6wAP8sWNBHdE6UF2+GovU1OYut/6/3cX
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10685"; a="373595529"
+X-IronPort-AV: E=Sophos;i="5.99,212,1677571200"; 
+   d="scan'208";a="373595529"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2023 03:46:53 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10685"; a="803299163"
+X-IronPort-AV: E=Sophos;i="5.99,212,1677571200"; 
+   d="scan'208";a="803299163"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.135.14])
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2023 03:46:52 -0700
+Date:   Thu, 20 Apr 2023 12:46:47 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     jes@trained-monkey.org
+Cc:     Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org,
+        colyli@suse.de
+Subject: Re: [PATCH 0/4] Few config related refactors
+Message-ID: <20230420124647.00004cd7@linux.intel.com>
+In-Reply-To: <CALTww2-bbwpo1O=ez8+CpMV+tvKFQ3onR65EU7mrnqs+6HP-cQ@mail.gmail.com>
+References: <20230323165017.27121-1-mariusz.tkaczyk@linux.intel.com>
+        <CALTww2-bbwpo1O=ez8+CpMV+tvKFQ3onR65EU7mrnqs+6HP-cQ@mail.gmail.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+On Fri, 24 Mar 2023 10:13:04 +0800
+Xiao Ni <xni@redhat.com> wrote:
 
-Now that all callers of bio_add_folio() check the return value, mark it as
-__must_check.
+> On Fri, Mar 24, 2023 at 12:50=E2=80=AFAM Mariusz Tkaczyk
+> <mariusz.tkaczyk@linux.intel.com> wrote:
+> >
+> > Hi Jes,
+> > These patches remove multiple inlines across code and replace them
+> > by defines or functions. No functional changes intended. The goal
+> > is to make this some code reusable for both config and cmdline
+> > (mdadm.c). I next patchset I will start optimizing names verification
+> > (extended v2 of previous patchset).
+> >
+> > Mariusz Tkaczyk (4):
+> >   mdadm: define DEV_MD_DIR
+> >   mdadm: define DEV_NUM_PREF
+> >   mdadm: define is_devname_ignore()
+> >   mdadm: numbered names verification
+> >
+> >  Create.c      |  7 +++----
+> >  Detail.c      |  9 ++++-----
+> >  Incremental.c | 10 ++++------
+> >  Monitor.c     | 34 +++++++++++++++++++---------------
+> >  config.c      | 43 +++++++++++++++++++++----------------------
+> >  lib.c         |  4 ++--
+> >  mapfile.c     | 12 ++++++------
+> >  mdadm.c       |  5 ++---
+> >  mdadm.h       | 21 ++++++++++++++++++++-
+> >  mdopen.c      | 16 ++++++++--------
+> >  super-ddf.c   |  2 +-
+> >  super-intel.c |  2 +-
+> >  super1.c      |  3 +--
+> >  sysfs.c       |  2 +-
+> >  util.c        | 44 ++++++++++++++++++++++++++++++++++++++++++++
+> >  15 files changed, 137 insertions(+), 77 deletions(-)
+> >
+> > --
+> > 2.26.2
+> > =20
+>=20
+> Acked-by: Xiao Ni <xni@redhat.com>
+>=20
 
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- include/linux/bio.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Jes,
+Could you please take those patches?
+We are working on changes in other areas and the error enum will be useful.
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 99fa832db836..36cfc091caed 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -466,7 +466,7 @@ void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf);
- void bio_chain(struct bio *, struct bio *);
- 
- int __must_check bio_add_page(struct bio *, struct page *, unsigned len, unsigned off);
--bool bio_add_folio(struct bio *, struct folio *, size_t len, size_t off);
-+bool __must_check bio_add_folio(struct bio *, struct folio *, size_t len, size_t off);
- extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
- 			   unsigned int, unsigned int);
- int bio_add_zone_append_page(struct bio *bio, struct page *page,
--- 
-2.39.2
-
+Thanks,
+Mariusz
