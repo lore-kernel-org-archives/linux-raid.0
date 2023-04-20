@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A567C77B72
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E57EAC77B7A
 	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 10:06:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234627AbjDTKGf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Apr 2023 06:06:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47756 "EHLO
+        id S234631AbjDTKGh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Apr 2023 06:06:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234457AbjDTKGB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 06:06:01 -0400
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55182690;
-        Thu, 20 Apr 2023 03:05:52 -0700 (PDT)
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-3f0a0c4e505so3521735e9.0;
-        Thu, 20 Apr 2023 03:05:52 -0700 (PDT)
+        with ESMTP id S234518AbjDTKGK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 06:06:10 -0400
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FC4B49EB;
+        Thu, 20 Apr 2023 03:05:57 -0700 (PDT)
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-3f09b9ac51dso15220115e9.0;
+        Thu, 20 Apr 2023 03:05:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681985151; x=1684577151;
+        d=1e100.net; s=20221208; t=1681985156; x=1684577156;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=s93ifE1gU+0FrrRIOdnaALh6w14X2Hkv+dazvnzybyI=;
-        b=awtxNKrrf4o7r0DPtDHyrqLo/Ql+TjsX7Mb6Ae3KRmQyd1ocAmFbzkpAAakb8XuF6+
-         Q+rn211GLS9d/i0+MtVnxz3F0Sh8S2TEOZ0zrH1vHlj4WhZdCnmnwzypVXvjVgdk8Mh8
-         52bNhf+SrfywvAV71cA8HYYANKD4XJN2QlKxn98VqsULkpf9mmhFSqAIbhNqqpFc1IV2
-         e2m2I24gZTR9IQf9O+9Ufyt92ReixeqxFz53i4kxkE7JSVG8YkMCY34txO4xrvT88C2G
-         Aslo9Y508dHgHePVUs1Iq0CSBbv8wu2TuQWop9UlaHdJaw6k5qHJm3MkC06w6buAccUO
-         /WYA==
-X-Gm-Message-State: AAQBX9fpeQ2YRGIizUasrHr8GWYJfHTYPEJl29/jCsMPVczaQyYkPqz7
-        RCB6ZWTPh9s9jm450jvnuL8=
-X-Google-Smtp-Source: AKy350ZJizpAlK8UcdkIuYKpQ5Y/PZoh+EKKcTgVEjvN6d0zqGLWnY/auHncEOXRAbbDYcB+iyhuyg==
-X-Received: by 2002:a5d:6149:0:b0:2fb:9dbb:3407 with SMTP id y9-20020a5d6149000000b002fb9dbb3407mr833176wrt.51.1681985151089;
-        Thu, 20 Apr 2023 03:05:51 -0700 (PDT)
+        bh=EWddmUi1sUqAJfDu3vTNgbuTywHhrfsi4XwupHN4WwQ=;
+        b=HMHw7mrsmC+17usjt0VtJimD6d3I/V0+jAQ9FnY09SitmJXx3+jMI7T4HAJmIzSidw
+         m9PANY2LK/z2XhikgxJInhVtD89TpFIAAEcHNIBY75Ft0JKZya+YuM4R+jZ3f2YpV2Xv
+         JuctDYTh2HGhmMzhTcYZhupt/6rx3JcTnKJyijwPwD48RjftinsT2aH7vvwGNmSdz4zv
+         CZePZDm7EuvOJHwJYvbdiwxwCx1jk5FpN3PaySCPtap9w+CPtt5awT5ROQqxb116fjYN
+         zMW9jiEdktfAgPYcYGuvBtqYFgvxPfXVO1sKwUQnm5/Ih4YV8jFKOlJ79TOFVcktCK98
+         u/Cg==
+X-Gm-Message-State: AAQBX9emiULPunBBIWiMCtq13LCHaNnyYaNDefNM0ogOJA7rWPmviioj
+        2234mBOBItYmwPjxpoDDQiI=
+X-Google-Smtp-Source: AKy350ZauLkuXWs6kSjBHCPBBCSAVBhubP5jzpCR4qZ4hYu8gg1Jhd0aZ4abYsMUbuSqsM3DfmG2NQ==
+X-Received: by 2002:adf:f2c8:0:b0:2fc:114c:76e with SMTP id d8-20020adff2c8000000b002fc114c076emr899567wrp.27.1681985155941;
+        Thu, 20 Apr 2023 03:05:55 -0700 (PDT)
 Received: from localhost.localdomain (aftr-62-216-205-208.dynamic.mnet-online.de. [62.216.205.208])
-        by smtp.googlemail.com with ESMTPSA id l11-20020a5d674b000000b0030276f42f08sm201410wrw.88.2023.04.20.03.05.49
+        by smtp.googlemail.com with ESMTPSA id l11-20020a5d674b000000b0030276f42f08sm201410wrw.88.2023.04.20.03.05.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Apr 2023 03:05:50 -0700 (PDT)
+        Thu, 20 Apr 2023 03:05:55 -0700 (PDT)
 From:   Johannes Thumshirn <jth@kernel.org>
 To:     axboe@kernel.dk
 Cc:     johannes.thumshirn@wdc.com, agruenba@redhat.com,
@@ -49,9 +49,9 @@ Cc:     johannes.thumshirn@wdc.com, agruenba@redhat.com,
         rpeterso@redhat.com, shaggy@kernel.org, snitzer@kernel.org,
         song@kernel.org, willy@infradead.org,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH v4 01/22] swap: use __bio_add_page to add page to bio
-Date:   Thu, 20 Apr 2023 12:04:40 +0200
-Message-Id: <20230420100501.32981-2-jth@kernel.org>
+Subject: [PATCH v4 05/22] md: use __bio_add_page to add single page
+Date:   Thu, 20 Apr 2023 12:04:44 +0200
+Message-Id: <20230420100501.32981-6-jth@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230420100501.32981-1-jth@kernel.org>
 References: <20230420100501.32981-1-jth@kernel.org>
@@ -63,58 +63,44 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-The swap code only adds a single page to a newly created bio. So use
-__bio_add_page() to add the page which is guaranteed to succeed in this
-case.
+The md-raid superblock writing code uses bio_add_page() to add a page to a
+newly created bio. bio_add_page() can fail, but the return value is never
+checked.
 
-This brings us closer to marking bio_add_page() as __must_check.
+Use __bio_add_page() as adding a single page to a newly created bio is
+guaranteed to succeed.
 
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+This brings us a step closer to marking bio_add_page() as __must_check.
+
+Signed-of_-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Acked-by: Song Liu <song@kernel.org>
 ---
- mm/page_io.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/md/md.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/mm/page_io.c b/mm/page_io.c
-index 87b682d18850..684cd3c7b59b 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -338,7 +338,7 @@ static void swap_writepage_bdev_sync(struct page *page,
- 	bio_init(&bio, sis->bdev, &bv, 1,
- 		 REQ_OP_WRITE | REQ_SWAP | wbc_to_write_flags(wbc));
- 	bio.bi_iter.bi_sector = swap_page_sector(page);
--	bio_add_page(&bio, page, thp_size(page), 0);
-+	__bio_add_page(&bio, page, thp_size(page), 0);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 13321dbb5fbc..20b9cd7c2f39 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -958,7 +958,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+ 	atomic_inc(&rdev->nr_pending);
  
- 	bio_associate_blkg_from_page(&bio, page);
- 	count_swpout_vm_event(page);
-@@ -360,7 +360,7 @@ static void swap_writepage_bdev_async(struct page *page,
- 			GFP_NOIO);
- 	bio->bi_iter.bi_sector = swap_page_sector(page);
- 	bio->bi_end_io = end_swap_bio_write;
--	bio_add_page(bio, page, thp_size(page), 0);
-+	__bio_add_page(bio, page, thp_size(page), 0);
+ 	bio->bi_iter.bi_sector = sector;
+-	bio_add_page(bio, page, size, 0);
++	__bio_add_page(bio, page, size, 0);
+ 	bio->bi_private = rdev;
+ 	bio->bi_end_io = super_written;
  
- 	bio_associate_blkg_from_page(bio, page);
- 	count_swpout_vm_event(page);
-@@ -468,7 +468,7 @@ static void swap_readpage_bdev_sync(struct page *page,
+@@ -999,7 +999,7 @@ int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+ 		bio.bi_iter.bi_sector = sector + rdev->new_data_offset;
+ 	else
+ 		bio.bi_iter.bi_sector = sector + rdev->data_offset;
+-	bio_add_page(&bio, page, size, 0);
++	__bio_add_page(&bio, page, size, 0);
  
- 	bio_init(&bio, sis->bdev, &bv, 1, REQ_OP_READ);
- 	bio.bi_iter.bi_sector = swap_page_sector(page);
--	bio_add_page(&bio, page, thp_size(page), 0);
-+	__bio_add_page(&bio, page, thp_size(page), 0);
- 	/*
- 	 * Keep this task valid during swap readpage because the oom killer may
- 	 * attempt to access it in the page fault retry time check.
-@@ -488,7 +488,7 @@ static void swap_readpage_bdev_async(struct page *page,
- 	bio = bio_alloc(sis->bdev, 1, REQ_OP_READ, GFP_KERNEL);
- 	bio->bi_iter.bi_sector = swap_page_sector(page);
- 	bio->bi_end_io = end_swap_bio_read;
--	bio_add_page(bio, page, thp_size(page), 0);
-+	__bio_add_page(bio, page, thp_size(page), 0);
- 	count_vm_event(PSWPIN);
- 	submit_bio(bio);
- }
+ 	submit_bio_wait(&bio);
+ 
 -- 
 2.39.2
 
