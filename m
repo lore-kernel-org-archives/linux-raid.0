@@ -2,152 +2,147 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C433C77B73
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 11:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AD64C77B73
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Apr 2023 15:36:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234667AbjDTLb6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Apr 2023 07:31:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34020 "EHLO
+        id S231776AbjDTPgv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Apr 2023 11:36:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234139AbjDTLbp (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 07:31:45 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7472C1FC4;
-        Thu, 20 Apr 2023 04:31:22 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q2Fpq6XV8z4f3yNq;
-        Thu, 20 Apr 2023 19:31:15 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7OAIkFkVY8hHw--.17021S12;
-        Thu, 20 Apr 2023 19:31:17 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, neilb@suse.de, akpm@osdl.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next 8/8] md/raid1-10: limit the number of plugged bio
-Date:   Thu, 20 Apr 2023 19:29:46 +0800
-Message-Id: <20230420112946.2869956-9-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230420112946.2869956-1-yukuai1@huaweicloud.com>
-References: <20230420112946.2869956-1-yukuai1@huaweicloud.com>
+        with ESMTP id S229498AbjDTPgt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Apr 2023 11:36:49 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D1575581;
+        Thu, 20 Apr 2023 08:36:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1682005007; x=1713541007;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=iO/i2tt5DEzt8gruW8+zs93sVMgkJU4X3e0uYovtxx8=;
+  b=Xcmt9R/LozyKo+AlCCS4SPBwcVfJgdODNuBGbRQSpqvqUnbK3sDI3WWI
+   Ai9hQm5jAvuUV2y3tE+tkWgpzj8oh8jaE5qTq8qItSuygO3ur+XtgZCyi
+   Pk71I+UdVneHTCpxXlD4D6ZGboWGAahcA9V5GMYvnzTvu63eq6ITxudyW
+   oWQUfYN6nfA+u8pFno9gA26F7D9haAaM4rkPcD6cmSL8H8+RUCOEK6iHD
+   z8r/+l/H6W+NV/yuJTfHjNZ7YZI+nY5/GP/kKR3+zH2xNq458Aw/vOLqv
+   nSsX+C06jjP1Ux5uqJ9VKQtCex5+fu7ZuFC0nIXEb5M6DKuANcbyNfVlc
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10686"; a="348533242"
+X-IronPort-AV: E=Sophos;i="5.99,213,1677571200"; 
+   d="scan'208";a="348533242"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2023 08:36:46 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10686"; a="756537428"
+X-IronPort-AV: E=Sophos;i="5.99,213,1677571200"; 
+   d="scan'208";a="756537428"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by fmsmga008.fm.intel.com with ESMTP; 20 Apr 2023 08:36:44 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1ppWKx-000fuA-2b;
+        Thu, 20 Apr 2023 15:36:43 +0000
+Date:   Thu, 20 Apr 2023 23:35:56 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Daniil Tatianin <d-tatianin@yandex-team.ru>,
+        Song Liu <song@kernel.org>
+Cc:     oe-kbuild-all@lists.linux.dev,
+        Daniil Tatianin <d-tatianin@yandex-team.ru>,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] md/md-multipath: guard against a possible NULL
+ dereference
+Message-ID: <202304202346.fddWOoq1-lkp@intel.com>
+References: <20230420071851.326726-1-d-tatianin@yandex-team.ru>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7OAIkFkVY8hHw--.17021S12
-X-Coremail-Antispam: 1UD129KBjvJXoWxWw1DZF4xXr18CFyxXw47Jwb_yoW5uryfpa
-        1Uta4avrWUZrWxX3yDJa1UCFyFqw4DXFWqkFZ5C395tFy7XFWjga1rJFWrur1DZFW3Gry3
-        JFn0krWxGF15tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9K14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
-        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAv
-        wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
-        v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTYUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230420071851.326726-1-d-tatianin@yandex-team.ru>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hi Daniil,
 
-bio can be added to plug infinitely, and following writeback test can
-trigger huge amount of pluged bio:
+kernel test robot noticed the following build errors:
 
-Test script:
-modprobe brd rd_nr=4 rd_size=10485760
-mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean
-echo 0 > /proc/sys/vm/dirty_background_ratio
-echo 60 > /proc/sys/vm/dirty_ratio
-fio -filename=/dev/md0 -ioengine=libaio -rw=write -thread -bs=1k-8k -numjobs=1 -iodepth=128 -name=xxx
+[auto build test ERROR on song-md/md-next]
+[also build test ERROR on linus/master v6.3-rc7 next-20230419]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Test result:
-Monitor /sys/block/md0/inflight will found that inflight keep increasing
-until fio finish writing, after running for about 2 minutes:
+url:    https://github.com/intel-lab-lkp/linux/commits/Daniil-Tatianin/md-md-multipath-guard-against-a-possible-NULL-dereference/20230420-152235
+base:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+patch link:    https://lore.kernel.org/r/20230420071851.326726-1-d-tatianin%40yandex-team.ru
+patch subject: [PATCH] md/md-multipath: guard against a possible NULL dereference
+config: m68k-allyesconfig (https://download.01.org/0day-ci/archive/20230420/202304202346.fddWOoq1-lkp@intel.com/config)
+compiler: m68k-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/3b0e378bb2e165f35044ecb535fb1ed973ea392e
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Daniil-Tatianin/md-md-multipath-guard-against-a-possible-NULL-dereference/20230420-152235
+        git checkout 3b0e378bb2e165f35044ecb535fb1ed973ea392e
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=m68k olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash drivers/
 
-[root@fedora ~]# cat /sys/block/md0/inflight
-       0  4474191
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202304202346.fddWOoq1-lkp@intel.com/
 
-Fix the problem by limiting the number of pluged bio based on the number
-of copies for orininal bio.
+All errors (new ones prefixed by >>):
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid1-10.h | 9 ++++++++-
- drivers/md/raid1.c    | 2 +-
- drivers/md/raid10.c   | 2 +-
- 3 files changed, 10 insertions(+), 3 deletions(-)
+   drivers/md/md-multipath.c: In function 'multipath_make_request':
+>> drivers/md/md-multipath.c:111:14: error: 'map_bh' undeclared (first use in this function); did you mean 'mp_bh'?
+     111 |         if (!map_bh)
+         |              ^~~~~~
+         |              mp_bh
+   drivers/md/md-multipath.c:111:14: note: each undeclared identifier is reported only once for each function it appears in
 
-diff --git a/drivers/md/raid1-10.h b/drivers/md/raid1-10.h
-index 95b2fb4dd9aa..2785ae805953 100644
---- a/drivers/md/raid1-10.h
-+++ b/drivers/md/raid1-10.h
-@@ -33,9 +33,12 @@ struct resync_pages {
- 	struct page	*pages[RESYNC_PAGES];
- };
- 
-+#define MAX_PLUG_BIO 32
-+
- struct raid1_plug_cb {
- 	struct blk_plug_cb	cb;
- 	struct bio_list		pending;
-+	unsigned int		count;
- };
- 
- static inline void rbio_pool_free(void *rbio, void *data)
-@@ -132,7 +135,7 @@ static inline void md_submit_write(struct bio *bio)
- }
- 
- static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
--				      blk_plug_cb_fn unplug)
-+				      blk_plug_cb_fn unplug, int copies)
- {
- 	struct raid1_plug_cb *plug = NULL;
- 	struct blk_plug_cb *cb;
-@@ -152,6 +155,10 @@ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
- 
- 	plug = container_of(cb, struct raid1_plug_cb, cb);
- 	bio_list_add(&plug->pending, bio);
-+	if (++plug->count / MAX_PLUG_BIO >= copies) {
-+		list_del(&cb->list);
-+		cb->callback(cb, false);
-+	}
- 
- 	return true;
- }
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 91e1dbc48228..6a38104a7b89 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1561,7 +1561,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 					      r1_bio->sector);
- 		/* flush_pending_writes() needs access to the rdev so...*/
- 		mbio->bi_bdev = (void *)rdev;
--		if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
-+		if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug, disks)) {
- 			spin_lock_irqsave(&conf->device_lock, flags);
- 			bio_list_add(&conf->pending_bio_list, mbio);
- 			spin_unlock_irqrestore(&conf->device_lock, flags);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index d92b1efe9eee..721d50646043 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1300,7 +1300,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
- 
- 	atomic_inc(&r10_bio->remaining);
- 
--	if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
-+	if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copies)) {
- 		spin_lock_irqsave(&conf->device_lock, flags);
- 		bio_list_add(&conf->pending_bio_list, mbio);
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
+
+vim +111 drivers/md/md-multipath.c
+
+    99	
+   100	static bool multipath_make_request(struct mddev *mddev, struct bio * bio)
+   101	{
+   102		struct mpconf *conf = mddev->private;
+   103		struct multipath_bh * mp_bh;
+   104		struct multipath_info *multipath;
+   105	
+   106		if (unlikely(bio->bi_opf & REQ_PREFLUSH)
+   107		    && md_flush_request(mddev, bio))
+   108			return true;
+   109	
+   110		mp_bh = mempool_alloc(&conf->pool, GFP_NOIO);
+ > 111		if (!map_bh)
+   112			return false;
+   113	
+   114		mp_bh->master_bio = bio;
+   115		mp_bh->mddev = mddev;
+   116	
+   117		mp_bh->path = multipath_map(conf);
+   118		if (mp_bh->path < 0) {
+   119			bio_io_error(bio);
+   120			mempool_free(mp_bh, &conf->pool);
+   121			return true;
+   122		}
+   123		multipath = conf->multipaths + mp_bh->path;
+   124	
+   125		bio_init_clone(multipath->rdev->bdev, &mp_bh->bio, bio, GFP_NOIO);
+   126	
+   127		mp_bh->bio.bi_iter.bi_sector += multipath->rdev->data_offset;
+   128		mp_bh->bio.bi_opf |= REQ_FAILFAST_TRANSPORT;
+   129		mp_bh->bio.bi_end_io = multipath_end_request;
+   130		mp_bh->bio.bi_private = mp_bh;
+   131		mddev_check_write_zeroes(mddev, &mp_bh->bio);
+   132		submit_bio_noacct(&mp_bh->bio);
+   133		return true;
+   134	}
+   135	
+
 -- 
-2.39.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
