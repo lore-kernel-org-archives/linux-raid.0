@@ -2,92 +2,133 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F092C7618E
-	for <linux-raid@archiver.kernel.org>; Fri, 21 Apr 2023 06:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05ECAC7618E
+	for <linux-raid@archiver.kernel.org>; Fri, 21 Apr 2023 10:45:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230338AbjDUG6F (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 21 Apr 2023 02:58:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46606 "EHLO
+        id S230373AbjDUKp2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 21 Apr 2023 06:45:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230236AbjDUG6D (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 21 Apr 2023 02:58:03 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C102A7DA2
-        for <linux-raid@vger.kernel.org>; Thu, 20 Apr 2023 23:57:56 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-63b73203e0aso12292132b3a.1
-        for <linux-raid@vger.kernel.org>; Thu, 20 Apr 2023 23:57:56 -0700 (PDT)
+        with ESMTP id S229938AbjDUKp0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 21 Apr 2023 06:45:26 -0400
+Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95CE69016
+        for <linux-raid@vger.kernel.org>; Fri, 21 Apr 2023 03:45:24 -0700 (PDT)
+Received: by mail-wm1-x334.google.com with SMTP id 5b1f17b1804b1-3f178da21b5so11070265e9.3
+        for <linux-raid@vger.kernel.org>; Fri, 21 Apr 2023 03:45:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1682060276; x=1684652276;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=iCQQOrDHvv7muofgTvhggno9gmpvYe5WVwBD+zXre78=;
-        b=hbF+Bk8ojjiZO6o2ok3vxf1WbShiuo5T081GBEE0UAfUBksGieFJSgkGacjYqBeK8w
-         zt8XcYoWlevrCYjZed9y77ALfx/FxTMIwIwFlhupB/WwZM1Z1umn0C+QVKNQOjZ4t1v4
-         rUbAMrVRBbyd04gOqF9r0veBQA2+tqYWKmYcY=
+        d=linaro.org; s=google; t=1682073923; x=1684665923;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=QGO8tJzaq5Ckyew1VqOJukCjoia4S1t87VkO8sAjhVM=;
+        b=bqiu4PVxrACFQUPzyRn6LFV25Z8qqWhFBezyiEDQOhFiz2gMe7ptsVlABBDMK57Ct5
+         p8h0+4+Xset1G42WfWdEnQH2xaGRYEsIBcpdl9HVP2ARy4IiVeA9ORyjlGUXABd1n5QZ
+         9EfpdZlTSBl0i8RH60bbFHSzP+hfxCpT4PqD1XiBOV/u0dHXjUNPMkdyTpP/lJZSxEqn
+         d3iKXmbWCS67j1gRDFKhNAR1Cm16IvHTeLXaTZCJs9qhohzzHfg/8fZlzCyf90j9z4Dz
+         23NC42lHbGZzNhyzRO/bZGt1+eMbG7DjJ9QbY/qWftn8YwbMsE4MR1Oot9Z1cOX7eSfn
+         6T3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682060276; x=1684652276;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=iCQQOrDHvv7muofgTvhggno9gmpvYe5WVwBD+zXre78=;
-        b=SYtsMWotFiMmx5weo+jLfP8ADLY+dlzNKoNv2WDYTnTHsho/ZZJs/VneIkdrwX0xJH
-         DzkosUABwQM5IZBL4TWGhVqT5PpvanCqLzhUR/ys30p+0IRGhRAEG132ZjXX3ksblJoy
-         0bQjJaGKZeG8q7xjJERfiWCTpRFqdK0yS9dyA1ZKW2Gtcu+RP61QD0h4qaFBSuTtl5qo
-         ZpN1xm/d9nRoHHZFUZyJ1zGs5ouIN/vtqw/fvkL8Fgr45ie4X+Dy+7t8b4v7nhow3sAg
-         eHNpf4BuFK80TDlR0u5HLyh42h545/bc2Cvb1JGKMclU1ChdNqk7HuBTs8zs/SEG9g2U
-         jBhg==
-X-Gm-Message-State: AAQBX9fsuIMuPmaxvxRMcy4RHWxQtBMtTDrWa2jEc2fyFsSPbRmYEbc7
-        DkWI5g6vQbbaJuZUQt+AXJzmPg==
-X-Google-Smtp-Source: AKy350ZEEP/PrU7kYgyyZkKivdaMPHUVf5WGz+Wiu1WQ8mlkUVfjfkCNB7ZnxyH4DOCp4JsT1PbWNg==
-X-Received: by 2002:aa7:8554:0:b0:63d:40bb:a88b with SMTP id y20-20020aa78554000000b0063d40bba88bmr8194787pfn.14.1682060275718;
-        Thu, 20 Apr 2023 23:57:55 -0700 (PDT)
-Received: from google.com (KD124209188001.ppp-bb.dion.ne.jp. [124.209.188.1])
-        by smtp.gmail.com with ESMTPSA id 136-20020a63008e000000b0051806da5cd6sm2038374pga.60.2023.04.20.23.57.49
+        d=1e100.net; s=20221208; t=1682073923; x=1684665923;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QGO8tJzaq5Ckyew1VqOJukCjoia4S1t87VkO8sAjhVM=;
+        b=FaYLVoadZGWxd7rp0FPsOFoAawJsRHzIr3eGJifWEUVU9WmVUt8YjVRi57i1923MZ3
+         QNUmajMKePTU7mA8NVV4rEplqSG/d74uZpHoC4+NVqwQxx/rzMWY30FZirSyoufjSY06
+         kEajz6G89MxZzghfLrp78UpbYVFrWvl2Qe/okVW1R9JuDecgM7YD+QjjygnxMWEmSn0d
+         n/jqBIGPW5n25DUusaHj5u17yEnPSdivUzx220wHxbjM1JFtVwcGgwylOh7TTiV+xqLF
+         NoxLa9dnOlOQVX3arJtr24tlRhYiAZMbdea1nq019zo2DUwLrxlg2JFzfKHjax4tbg34
+         Uskw==
+X-Gm-Message-State: AAQBX9dRNDKseSfrn8jcHTAYomVYlmMujjIjrq8gMULbLNb5mvrDZOQG
+        yROac8ksogy5ZahIr3rWNqiIkOtSnOsHAQb4BH0=
+X-Google-Smtp-Source: AKy350YqZme1GT786fqfmxeuS59JkEFCoLvEfmHZgo+WF3dJSGpV+AH6UxuOB23LkEI0hEoT5Tw2Uw==
+X-Received: by 2002:a05:600c:284:b0:3f1:8173:fc1a with SMTP id 4-20020a05600c028400b003f18173fc1amr1453155wmk.28.1682073923047;
+        Fri, 21 Apr 2023 03:45:23 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id h19-20020a05600c351300b003f1958eeadcsm375256wmq.17.2023.04.21.03.45.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Apr 2023 23:57:54 -0700 (PDT)
-Date:   Fri, 21 Apr 2023 15:57:47 +0900
-From:   Sergey Senozhatsky <senozhatsky@chromium.org>
-To:     Johannes Thumshirn <jth@kernel.org>
-Cc:     axboe@kernel.dk, johannes.thumshirn@wdc.com, agruenba@redhat.com,
-        cluster-devel@redhat.com, damien.lemoal@wdc.com,
-        dm-devel@redhat.com, dsterba@suse.com, hare@suse.de, hch@lst.de,
-        jfs-discussion@lists.sourceforge.net, kch@nvidia.com,
-        linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-raid@vger.kernel.org, ming.lei@redhat.com,
-        rpeterso@redhat.com, shaggy@kernel.org, snitzer@kernel.org,
-        song@kernel.org, willy@infradead.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Minchan Kim <minchan@kernel.org>
-Subject: Re: [PATCH v4 13/22] zram: use __bio_add_page for adding single page
- to bio
-Message-ID: <20230421065747.GB1496740@google.com>
-References: <20230420100501.32981-1-jth@kernel.org>
- <20230420100501.32981-14-jth@kernel.org>
+        Fri, 21 Apr 2023 03:45:22 -0700 (PDT)
+Date:   Fri, 21 Apr 2023 13:45:20 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     jonathan.derrick@linux.dev
+Cc:     linux-raid@vger.kernel.org
+Subject: [bug report] md: Fix types in sb writer
+Message-ID: <2dc52026-8261-49da-90c8-55cd5c5c6959@kili.mountain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230420100501.32981-14-jth@kernel.org>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-+ Minchan
+Hello Jon Derrick,
 
-On (23/04/20 12:04), Johannes Thumshirn wrote:
-> 
-> From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> 
-> The zram writeback code uses bio_add_page() to add a page to a newly
-> created bio. bio_add_page() can fail, but the return value is never
-> checked.
-> 
-> Use __bio_add_page() as adding a single page to a newly created bio is
-> guaranteed to succeed.
-> 
-> This brings us a step closer to marking bio_add_page() as __must_check.
-> 
-> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+The patch 10172f200b67: "md: Fix types in sb writer" from Feb 24,
+2023, leads to the following Smatch static checker warning:
 
-Reviewed-by: Sergey Senozhatsky <senozhatsky@chromium.org>
+	drivers/md/md-bitmap.c:265 __write_sb_page()
+	warn: unsigned 'offset' is never less than zero.
+
+drivers/md/md-bitmap.c
+    234 static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
+    235                            struct page *page)
+    236 {
+    237         struct block_device *bdev;
+    238         struct mddev *mddev = bitmap->mddev;
+    239         struct bitmap_storage *store = &bitmap->storage;
+    240         sector_t offset = mddev->bitmap_info.offset;
+                ^^^^^^^^
+offset used to be llof_t which is s64.
+
+    241         sector_t ps, sboff, doff;
+    242         unsigned int size = PAGE_SIZE;
+    243         unsigned int opt_size = PAGE_SIZE;
+    244 
+    245         bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
+    246         if (page->index == store->file_pages - 1) {
+    247                 unsigned int last_page_size = store->bytes & (PAGE_SIZE - 1);
+    248 
+    249                 if (last_page_size == 0)
+    250                         last_page_size = PAGE_SIZE;
+    251                 size = roundup(last_page_size, bdev_logical_block_size(bdev));
+    252                 opt_size = optimal_io_size(bdev, last_page_size, size);
+    253         }
+    254 
+    255         ps = page->index * PAGE_SIZE / SECTOR_SIZE;
+    256         sboff = rdev->sb_start + offset;
+    257         doff = rdev->data_offset;
+    258 
+    259         /* Just make sure we aren't corrupting data or metadata */
+    260         if (mddev->external) {
+    261                 /* Bitmap could be anywhere. */
+    262                 if (sboff + ps > doff &&
+    263                     sboff < (doff + mddev->dev_sectors + PAGE_SIZE / SECTOR_SIZE))
+    264                         return -EINVAL;
+--> 265         } else if (offset < 0) {
+                           ^^^^^^^^^^
+Now that it's a sector_t this is impossible.
+
+    266                 /* DATA  BITMAP METADATA  */
+    267                 size = bitmap_io_size(size, opt_size, offset + ps, 0);
+    268                 if (size == 0)
+    269                         /* bitmap runs in to metadata */
+    270                         return -EINVAL;
+    271 
+    272                 if (doff + mddev->dev_sectors > sboff)
+    273                         /* data runs in to bitmap */
+    274                         return -EINVAL;
+    275         } else if (rdev->sb_start < rdev->data_offset) {
+    276                 /* METADATA BITMAP DATA */
+    277                 size = bitmap_io_size(size, opt_size, sboff + ps, doff);
+    278                 if (size == 0)
+    279                         /* bitmap runs in to data */
+    280                         return -EINVAL;
+    281         } else {
+    282                 /* DATA METADATA BITMAP - no problems */
+    283         }
+    284 
+    285         md_super_write(mddev, rdev, sboff + ps, (int) size, page);
+    286         return 0;
+    287 }
+
+regards,
+dan carpenter
