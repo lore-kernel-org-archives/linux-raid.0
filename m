@@ -2,133 +2,190 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05ECAC7618E
-	for <linux-raid@archiver.kernel.org>; Fri, 21 Apr 2023 10:45:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F16A8C77B76
+	for <linux-raid@archiver.kernel.org>; Sun, 23 Apr 2023 01:30:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230373AbjDUKp2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 21 Apr 2023 06:45:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37902 "EHLO
+        id S229587AbjDWBaa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 22 Apr 2023 21:30:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229938AbjDUKp0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 21 Apr 2023 06:45:26 -0400
-Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95CE69016
-        for <linux-raid@vger.kernel.org>; Fri, 21 Apr 2023 03:45:24 -0700 (PDT)
-Received: by mail-wm1-x334.google.com with SMTP id 5b1f17b1804b1-3f178da21b5so11070265e9.3
-        for <linux-raid@vger.kernel.org>; Fri, 21 Apr 2023 03:45:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1682073923; x=1684665923;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=QGO8tJzaq5Ckyew1VqOJukCjoia4S1t87VkO8sAjhVM=;
-        b=bqiu4PVxrACFQUPzyRn6LFV25Z8qqWhFBezyiEDQOhFiz2gMe7ptsVlABBDMK57Ct5
-         p8h0+4+Xset1G42WfWdEnQH2xaGRYEsIBcpdl9HVP2ARy4IiVeA9ORyjlGUXABd1n5QZ
-         9EfpdZlTSBl0i8RH60bbFHSzP+hfxCpT4PqD1XiBOV/u0dHXjUNPMkdyTpP/lJZSxEqn
-         d3iKXmbWCS67j1gRDFKhNAR1Cm16IvHTeLXaTZCJs9qhohzzHfg/8fZlzCyf90j9z4Dz
-         23NC42lHbGZzNhyzRO/bZGt1+eMbG7DjJ9QbY/qWftn8YwbMsE4MR1Oot9Z1cOX7eSfn
-         6T3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682073923; x=1684665923;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QGO8tJzaq5Ckyew1VqOJukCjoia4S1t87VkO8sAjhVM=;
-        b=FaYLVoadZGWxd7rp0FPsOFoAawJsRHzIr3eGJifWEUVU9WmVUt8YjVRi57i1923MZ3
-         QNUmajMKePTU7mA8NVV4rEplqSG/d74uZpHoC4+NVqwQxx/rzMWY30FZirSyoufjSY06
-         kEajz6G89MxZzghfLrp78UpbYVFrWvl2Qe/okVW1R9JuDecgM7YD+QjjygnxMWEmSn0d
-         n/jqBIGPW5n25DUusaHj5u17yEnPSdivUzx220wHxbjM1JFtVwcGgwylOh7TTiV+xqLF
-         NoxLa9dnOlOQVX3arJtr24tlRhYiAZMbdea1nq019zo2DUwLrxlg2JFzfKHjax4tbg34
-         Uskw==
-X-Gm-Message-State: AAQBX9dRNDKseSfrn8jcHTAYomVYlmMujjIjrq8gMULbLNb5mvrDZOQG
-        yROac8ksogy5ZahIr3rWNqiIkOtSnOsHAQb4BH0=
-X-Google-Smtp-Source: AKy350YqZme1GT786fqfmxeuS59JkEFCoLvEfmHZgo+WF3dJSGpV+AH6UxuOB23LkEI0hEoT5Tw2Uw==
-X-Received: by 2002:a05:600c:284:b0:3f1:8173:fc1a with SMTP id 4-20020a05600c028400b003f18173fc1amr1453155wmk.28.1682073923047;
-        Fri, 21 Apr 2023 03:45:23 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id h19-20020a05600c351300b003f1958eeadcsm375256wmq.17.2023.04.21.03.45.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Apr 2023 03:45:22 -0700 (PDT)
-Date:   Fri, 21 Apr 2023 13:45:20 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     jonathan.derrick@linux.dev
-Cc:     linux-raid@vger.kernel.org
-Subject: [bug report] md: Fix types in sb writer
-Message-ID: <2dc52026-8261-49da-90c8-55cd5c5c6959@kili.mountain>
+        with ESMTP id S229556AbjDWBa3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 22 Apr 2023 21:30:29 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B5610E2
+        for <linux-raid@vger.kernel.org>; Sat, 22 Apr 2023 18:30:27 -0700 (PDT)
+Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Q3rFH5dslzSv3T;
+        Sun, 23 Apr 2023 09:26:11 +0800 (CST)
+Received: from [10.174.177.197] (10.174.177.197) by
+ kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Sun, 23 Apr 2023 09:30:23 +0800
+Subject: Re: [PATCH] Fix race of "mdadm --add" and "mdadm --incremental"
+To:     <jes@trained-monkey.org>, <mwilck@suse.com>,
+        <pmenzel@molgen.mpg.de>, <colyli@suse.de>,
+        <linux-raid@vger.kernel.org>
+CC:     <miaoguanqin@huawei.com>, <louhongxiang@huawei.com>
+References: <20230417140144.3013024-1-lixiaokeng@huawei.com>
+From:   Li Xiao Keng <lixiaokeng@huawei.com>
+Message-ID: <b72aacfa-f99f-0322-5247-aa25aa30cd96@huawei.com>
+Date:   Sun, 23 Apr 2023 09:30:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20230417140144.3013024-1-lixiaokeng@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.177.197]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600010.china.huawei.com (7.193.23.86)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello Jon Derrick,
+ping
 
-The patch 10172f200b67: "md: Fix types in sb writer" from Feb 24,
-2023, leads to the following Smatch static checker warning:
-
-	drivers/md/md-bitmap.c:265 __write_sb_page()
-	warn: unsigned 'offset' is never less than zero.
-
-drivers/md/md-bitmap.c
-    234 static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
-    235                            struct page *page)
-    236 {
-    237         struct block_device *bdev;
-    238         struct mddev *mddev = bitmap->mddev;
-    239         struct bitmap_storage *store = &bitmap->storage;
-    240         sector_t offset = mddev->bitmap_info.offset;
-                ^^^^^^^^
-offset used to be llof_t which is s64.
-
-    241         sector_t ps, sboff, doff;
-    242         unsigned int size = PAGE_SIZE;
-    243         unsigned int opt_size = PAGE_SIZE;
-    244 
-    245         bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
-    246         if (page->index == store->file_pages - 1) {
-    247                 unsigned int last_page_size = store->bytes & (PAGE_SIZE - 1);
-    248 
-    249                 if (last_page_size == 0)
-    250                         last_page_size = PAGE_SIZE;
-    251                 size = roundup(last_page_size, bdev_logical_block_size(bdev));
-    252                 opt_size = optimal_io_size(bdev, last_page_size, size);
-    253         }
-    254 
-    255         ps = page->index * PAGE_SIZE / SECTOR_SIZE;
-    256         sboff = rdev->sb_start + offset;
-    257         doff = rdev->data_offset;
-    258 
-    259         /* Just make sure we aren't corrupting data or metadata */
-    260         if (mddev->external) {
-    261                 /* Bitmap could be anywhere. */
-    262                 if (sboff + ps > doff &&
-    263                     sboff < (doff + mddev->dev_sectors + PAGE_SIZE / SECTOR_SIZE))
-    264                         return -EINVAL;
---> 265         } else if (offset < 0) {
-                           ^^^^^^^^^^
-Now that it's a sector_t this is impossible.
-
-    266                 /* DATA  BITMAP METADATA  */
-    267                 size = bitmap_io_size(size, opt_size, offset + ps, 0);
-    268                 if (size == 0)
-    269                         /* bitmap runs in to metadata */
-    270                         return -EINVAL;
-    271 
-    272                 if (doff + mddev->dev_sectors > sboff)
-    273                         /* data runs in to bitmap */
-    274                         return -EINVAL;
-    275         } else if (rdev->sb_start < rdev->data_offset) {
-    276                 /* METADATA BITMAP DATA */
-    277                 size = bitmap_io_size(size, opt_size, sboff + ps, doff);
-    278                 if (size == 0)
-    279                         /* bitmap runs in to data */
-    280                         return -EINVAL;
-    281         } else {
-    282                 /* DATA METADATA BITMAP - no problems */
-    283         }
-    284 
-    285         md_super_write(mddev, rdev, sboff + ps, (int) size, page);
-    286         return 0;
-    287 }
-
-regards,
-dan carpenter
+On 2023/4/17 22:01, Li Xiao Keng wrote:
+> When we add a new disk to a raid, it may return -EBUSY.
+> 
+> The main process of --add:
+> 1. dev_open
+> 2. store_super1(st, di->fd) in write_init_super1
+> 3. fsync(di->fd) in write_init_super1
+> 4. close(di->fd)
+> 5. ioctl(ADD_NEW_DISK)
+> 
+> However, there will be some udev(change) event after step4. Then
+> "/usr/sbin/mdadm --incremental ..." will be run, and the new disk
+> will be add to md device. After that, ioctl will return -EBUSY.
+> 
+> Here we add map_lock before write_init_super in "mdadm --add"
+> to fix this race.
+> 
+> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
+> Signed-off-by: Guanqin Miao <miaoguanqin@huawei.com>
+> ---
+>  Assemble.c |  5 ++++-
+>  Manage.c   | 25 +++++++++++++++++--------
+>  2 files changed, 21 insertions(+), 9 deletions(-)
+> 
+> diff --git a/Assemble.c b/Assemble.c
+> index 49804941..086890ed 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -1479,8 +1479,11 @@ try_again:
+>  	 * to our list.  We flag them so that we don't try to re-add,
+>  	 * but can remove if they turn out to not be wanted.
+>  	 */
+> -	if (map_lock(&map))
+> +	if (map_lock(&map)) {
+>  		pr_err("failed to get exclusive lock on mapfile - continue anyway...\n");
+> +		return 1;
+> +	}
+> +
+>  	if (c->update == UOPT_UUID)
+>  		mp = NULL;
+>  	else
+> diff --git a/Manage.c b/Manage.c
+> index f54de7c6..6a101bae 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -703,6 +703,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  	struct supertype *dev_st;
+>  	int j;
+>  	mdu_disk_info_t disc;
+> +	struct map_ent *map = NULL;
+>  
+>  	if (!get_dev_size(tfd, dv->devname, &ldsize)) {
+>  		if (dv->disposition == 'M')
+> @@ -900,6 +901,10 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  		disc.raid_disk = 0;
+>  	}
+>  
+> +	if (map_lock(&map)) {
+> +		pr_err("failed to get exclusive lock on mapfile when add disk\n");
+> +		return -1;
+> +	}
+>  	if (array->not_persistent==0) {
+>  		int dfd;
+>  		if (dv->disposition == 'j')
+> @@ -911,9 +916,9 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  		dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
+>  		if (tst->ss->add_to_super(tst, &disc, dfd,
+>  					  dv->devname, INVALID_SECTORS))
+> -			return -1;
+> +			goto unlock;
+>  		if (tst->ss->write_init_super(tst))
+> -			return -1;
+> +			goto unlock;
+>  	} else if (dv->disposition == 'A') {
+>  		/*  this had better be raid1.
+>  		 * As we are "--re-add"ing we must find a spare slot
+> @@ -971,14 +976,14 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  			pr_err("add failed for %s: could not get exclusive access to container\n",
+>  			       dv->devname);
+>  			tst->ss->free_super(tst);
+> -			return -1;
+> +			goto unlock;
+>  		}
+>  
+>  		/* Check if metadata handler is able to accept the drive */
+>  		if (!tst->ss->validate_geometry(tst, LEVEL_CONTAINER, 0, 1, NULL,
+>  		    0, 0, dv->devname, NULL, 0, 1)) {
+>  			close(container_fd);
+> -			return -1;
+> +			goto unlock;
+>  		}
+>  
+>  		Kill(dv->devname, NULL, 0, -1, 0);
+> @@ -987,7 +992,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  					  dv->devname, INVALID_SECTORS)) {
+>  			close(dfd);
+>  			close(container_fd);
+> -			return -1;
+> +			goto unlock;
+>  		}
+>  		if (!mdmon_running(tst->container_devnm))
+>  			tst->ss->sync_metadata(tst);
+> @@ -998,7 +1003,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  			       dv->devname);
+>  			close(container_fd);
+>  			tst->ss->free_super(tst);
+> -			return -1;
+> +			goto unlock;
+>  		}
+>  		sra->array.level = LEVEL_CONTAINER;
+>  		/* Need to set data_offset and component_size */
+> @@ -1013,7 +1018,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  			pr_err("add new device to external metadata failed for %s\n", dv->devname);
+>  			close(container_fd);
+>  			sysfs_free(sra);
+> -			return -1;
+> +			goto unlock;
+>  		}
+>  		ping_monitor(devnm);
+>  		sysfs_free(sra);
+> @@ -1027,7 +1032,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  			else
+>  				pr_err("add new device failed for %s as %d: %s\n",
+>  				       dv->devname, j, strerror(errno));
+> -			return -1;
+> +			goto unlock;
+>  		}
+>  		if (dv->disposition == 'j') {
+>  			pr_err("Journal added successfully, making %s read-write\n", devname);
+> @@ -1038,7 +1043,11 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  	}
+>  	if (verbose >= 0)
+>  		pr_err("added %s\n", dv->devname);
+> +	map_unlock(&map);
+>  	return 1;
+> +unlock:
+> +	map_unlock(&map);
+> +	return -1;
+>  }
+>  
+>  int Manage_remove(struct supertype *tst, int fd, struct mddev_dev *dv,
+> 
