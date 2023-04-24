@@ -2,89 +2,98 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 542F5C77B7E
-	for <linux-raid@archiver.kernel.org>; Mon, 24 Apr 2023 22:36:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 576DBC77B61
+	for <linux-raid@archiver.kernel.org>; Mon, 24 Apr 2023 22:38:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232853AbjDXWgx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 24 Apr 2023 18:36:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52534 "EHLO
+        id S233015AbjDXWih (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 24 Apr 2023 18:38:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233139AbjDXWgm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Apr 2023 18:36:42 -0400
+        with ESMTP id S232940AbjDXWig (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Apr 2023 18:38:36 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A827D8A4E
-        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 15:36:37 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C877C658F;
+        Mon, 24 Apr 2023 15:38:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 402DA629D9
-        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 22:36:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0372C4339B
-        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 22:36:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 63A6B61DD7;
+        Mon, 24 Apr 2023 22:38:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEDFEC4339C;
+        Mon, 24 Apr 2023 22:38:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682375796;
-        bh=xxPLM7naqOLqhqpz5Vc4Q9e3zmwgT4l1aOIA/hsLzuA=;
+        s=k20201202; t=1682375914;
+        bh=evOcVpwCy5DHD+rptVWH5BM9ayFOiHmM7ew5mfght2I=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=LcqO/EJ/D5g+DJ4E3SEZTNGVdXiLB2Ko6S6x1WZupkikWrHdO/xzIVpsRUOSbMiju
-         XUxaGizTk34hoPMlbQJ5jI0NX2/vYJqok+L5TD3tpqSVPtHrGLrkABLs/7tb+pD2Lv
-         bFgMctUSg+fVMSAyCGi5ET5o9S7EmWj0R1RbnRdKN4yzPX+HqKm+rAKcj9x0NKmMz7
-         pFiv6u/ACW/0pOn4+1K3fpjyAt+NLAy+OUpwhg1RyAyoIiZ9jE/EZVobLImEdAlXrZ
-         dvYW88darc2t9kdflD9hS/A6ZRX9c6Hf98Ws4ktdiCcEMfOKAzlzHyYpiZE2glwPkX
-         sU5efiAoIEEfA==
-Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-4efeea05936so2166171e87.2
-        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 15:36:36 -0700 (PDT)
-X-Gm-Message-State: AAQBX9d807fIAwazVAS/EKeSTrfG9qai0P8jLsH/ryO2GLTOycdrKxSJ
-        qFWcDnnQJFjHnb+YTrFxiGer/w2zwb7+dwZlMuc=
-X-Google-Smtp-Source: AKy350Ys3IP5f3cH/GvQvOAAhhrNEaHi6Ahgri1juh4OLNVgWrswvfQ5yqfz2oTvBYMVHqn3R49AyzO1N1oxGx3V4Xg=
-X-Received: by 2002:ac2:5589:0:b0:4ea:e60a:2f5d with SMTP id
- v9-20020ac25589000000b004eae60a2f5dmr3467471lfg.40.1682375794657; Mon, 24 Apr
- 2023 15:36:34 -0700 (PDT)
+        b=RD68tCpxiM5jq0EqkWQlRWyxsEyUYbFXiEwUGWvl21T+60MkWysjyHwFrV7mhOEU9
+         WgM9XKlwpegm1/Ryw1wy1RrbJXZQ5ZOHbQK3JNYG/908/HFoGBTE1BIfldQ4pK+VlM
+         15TmqDWefKTb7ps2GfG+/pcKT7pKGZh93VOSFmqU85u493wpKX8b2IsH+t2vsvuPNt
+         N/zCJR4EtdqYmc9YZ4edUwNF3oQnBLr6QhCL1KWOWYzOGu8HmtbLOkwtgSwQjzhnao
+         aswEHzBKzkcDIjeOQxer6n8+SV8gnM4pvjEHTVgQpL6bns04uowUg4BnrwRiQ81aZ+
+         zQ8eLjLsSxVkA==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-4eff50911bfso1341697e87.2;
+        Mon, 24 Apr 2023 15:38:34 -0700 (PDT)
+X-Gm-Message-State: AAQBX9eVKXazKDEpcUIFDmwjX4AGmSZ9SwuJI0XPQIqXM2K/a0jkGm9d
+        vuuW8iCjBU6q/K/Me87wEHv0RLOtf2KKvD9XkJM=
+X-Google-Smtp-Source: AKy350bd03oPgDoxJXhRz3alMs69f/8aOlpheo2UHJcn6VTzQX+1IFK8tt/wetIT9YCRjA/Wx2qU6mra+4RS/Ovq8AE=
+X-Received: by 2002:ac2:5d4f:0:b0:4db:3d51:6896 with SMTP id
+ w15-20020ac25d4f000000b004db3d516896mr3326186lfd.11.1682375912802; Mon, 24
+ Apr 2023 15:38:32 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230417171537.17899-1-jack@suse.cz> <ZEblloZgE0FxMNow@fisica.ufpr.br>
-In-Reply-To: <ZEblloZgE0FxMNow@fisica.ufpr.br>
+References: <961691d0-7224-caad-6c19-d9c8ca07a801@deltatee.com>
+ <20230414013246.1969224-1-yukuai1@huaweicloud.com> <623c9eb9-b8e6-381f-894f-8d7b955e9651@huaweicloud.com>
+In-Reply-To: <623c9eb9-b8e6-381f-894f-8d7b955e9651@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 24 Apr 2023 15:36:22 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW60kiAbc2Z2SvJSjNo4kL0m26Aarjc4UuNV-AapAiebew@mail.gmail.com>
-Message-ID: <CAPhsuW60kiAbc2Z2SvJSjNo4kL0m26Aarjc4UuNV-AapAiebew@mail.gmail.com>
-Subject: Re: [PATCH] md/raid5: Improve performance for sequential IO
-To:     Carlos Carvalho <carlos@fisica.ufpr.br>
-Cc:     Jan Kara <jack@suse.cz>, linux-raid@vger.kernel.org
+Date:   Mon, 24 Apr 2023 15:38:20 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4XvTtJJ=4Xbu9-zd83OnoyJGaJronzVcn2+nKjs8G1aA@mail.gmail.com>
+Message-ID: <CAPhsuW4XvTtJJ=4Xbu9-zd83OnoyJGaJronzVcn2+nKjs8G1aA@mail.gmail.com>
+Subject: Re: [PATCH -next v7 5/5] md: protect md_thread with rcu
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     logang@deltatee.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Apr 24, 2023 at 1:25=E2=80=AFPM Carlos Carvalho <carlos@fisica.ufpr=
-.br> wrote:
+On Sat, Apr 22, 2023 at 7:42=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
 >
-> Jan Kara (jack@suse.cz) wrote on Mon, Apr 17, 2023 at 02:15:37PM -03:
-> > Commit 7e55c60acfbb ("md/raid5: Pivot raid5_make_request()") changed th=
-e
-> > order in which requests for underlying disks are created.
+> Hi,
 >
-> In which version was this first applied?
-
-7e55c60acfbb ("md/raid5: Pivot raid5_make_request()") is in 6.0+ kernels.
-
+> =E5=9C=A8 2023/04/14 9:32, Yu Kuai =E5=86=99=E9=81=93:
+> > From: Yu Kuai <yukuai3@huawei.com>
+> >
+> > Our test reports a uaf for 'mddev->sync_thread':
+> >
+> > T1                      T2
+> > md_start_sync
+> >   md_register_thread
+> >   // mddev->sync_thread is set
+> >                       raid1d
+> >                        md_check_recovery
+> >                         md_reap_sync_thread
+> >                          md_unregister_thread
+> >                           kfree
+> >
+> >   md_wakeup_thread
+> >    wake_up
+> >    ->sync_thread was freed
+> >
+> > Root cause is that there is a small windown between register thread and
+> > wake up thread, where the thread can be freed concurrently.
+> >
+> > Currently, a global spinlock 'pers_lock' is borrowed to protect
+> > 'mddev->thread', this problem can be fixed likewise, however, there are
+> > similar problems elsewhere, and use a global lock for all the cases is
+> > not good.
+> >
+> > This patch protect all md_thread with rcu.
 >
-> We've observed a large drop in disk performance since 4.* to the point th=
-at
-> 6.1.* is almost unusable for some tasks. For example, we have 2 backup
-> machines, one using raid6/ext4 and another using zfs. The backup of a thi=
-rd
-> machine with a filesystem with ~25M inodes takes 6x-8x longer on the one =
-using
-> raid6/ext4 than on the one using zfs... This is during the rsync phase.
-> Afterwards it removes old trees and the rm with raid6 takes eons even tho=
-ugh
-> the disks are not at all busy (as shown by sar). Running several rm in pa=
-rallel
-> speeds things up a lot, showing the problem is not in the disks.
+> Friendly ping... Or do I need to resend the whole patchset for v7?
 
-I am hoping to look into raid performance soon. But I cannot promise anythi=
-ng
-at the moment.
+Sorry for the delay. But yes, please resend the whole patchset.
 
-Thanks,
 Song
