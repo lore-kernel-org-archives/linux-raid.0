@@ -2,98 +2,144 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 576DBC77B61
-	for <linux-raid@archiver.kernel.org>; Mon, 24 Apr 2023 22:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 828F1C7618E
+	for <linux-raid@archiver.kernel.org>; Mon, 24 Apr 2023 23:56:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233015AbjDXWih (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 24 Apr 2023 18:38:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53806 "EHLO
+        id S232387AbjDXXz7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 24 Apr 2023 19:55:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232940AbjDXWig (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Apr 2023 18:38:36 -0400
+        with ESMTP id S230340AbjDXXz6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Apr 2023 19:55:58 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C877C658F;
-        Mon, 24 Apr 2023 15:38:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9D345272;
+        Mon, 24 Apr 2023 16:55:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 63A6B61DD7;
-        Mon, 24 Apr 2023 22:38:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEDFEC4339C;
-        Mon, 24 Apr 2023 22:38:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 43D7762A56;
+        Mon, 24 Apr 2023 23:55:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7DF9C433D2;
+        Mon, 24 Apr 2023 23:55:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682375914;
-        bh=evOcVpwCy5DHD+rptVWH5BM9ayFOiHmM7ew5mfght2I=;
+        s=k20201202; t=1682380542;
+        bh=/Xy1nbFBL6OoTaN9LfIVZd/HjfssH9pfdGmpPWgQX6o=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=RD68tCpxiM5jq0EqkWQlRWyxsEyUYbFXiEwUGWvl21T+60MkWysjyHwFrV7mhOEU9
-         WgM9XKlwpegm1/Ryw1wy1RrbJXZQ5ZOHbQK3JNYG/908/HFoGBTE1BIfldQ4pK+VlM
-         15TmqDWefKTb7ps2GfG+/pcKT7pKGZh93VOSFmqU85u493wpKX8b2IsH+t2vsvuPNt
-         N/zCJR4EtdqYmc9YZ4edUwNF3oQnBLr6QhCL1KWOWYzOGu8HmtbLOkwtgSwQjzhnao
-         aswEHzBKzkcDIjeOQxer6n8+SV8gnM4pvjEHTVgQpL6bns04uowUg4BnrwRiQ81aZ+
-         zQ8eLjLsSxVkA==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-4eff50911bfso1341697e87.2;
-        Mon, 24 Apr 2023 15:38:34 -0700 (PDT)
-X-Gm-Message-State: AAQBX9eVKXazKDEpcUIFDmwjX4AGmSZ9SwuJI0XPQIqXM2K/a0jkGm9d
-        vuuW8iCjBU6q/K/Me87wEHv0RLOtf2KKvD9XkJM=
-X-Google-Smtp-Source: AKy350bd03oPgDoxJXhRz3alMs69f/8aOlpheo2UHJcn6VTzQX+1IFK8tt/wetIT9YCRjA/Wx2qU6mra+4RS/Ovq8AE=
-X-Received: by 2002:ac2:5d4f:0:b0:4db:3d51:6896 with SMTP id
- w15-20020ac25d4f000000b004db3d516896mr3326186lfd.11.1682375912802; Mon, 24
- Apr 2023 15:38:32 -0700 (PDT)
+        b=AuVRgV5wNL6sfYK5/d6lYuMyDy2EFTKyFAmYNJhhXeYhtrHAnBRRK39z1xNFvZyky
+         L15oVP4EmWZ+NUJ+OK+P/qIPGTIkbdHmWll4FkymNxlYveyQcjW1m5b+5vJe3dhQzK
+         mLAdewCek0zuIIeaa8AI316CSqmKRxNyyCFKdCtHCszcNzY6w2MHgehDapMjk7TEWn
+         imGbH4Qm0q+iDNFRlM0lHvj+JoDE+ECDCgfPivE1bYfGLLK5sYlRRZa/EYMUsdzdOy
+         xPxQd5h2Sl65AzJpp5u6a/1VNuDoEQ7AMgnrP86zbHS1lSCWTlY6AVthEhv4m+zkA5
+         pzSEjv9apo2UQ==
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-2a8b1b51dbdso46948971fa.0;
+        Mon, 24 Apr 2023 16:55:42 -0700 (PDT)
+X-Gm-Message-State: AAQBX9fhIsZ8TiYmWdQXbe8ly9QYMBJ/PCR/zym6ZOe0EnU8q8l7vDOQ
+        Fx0LbO7DhK63fZBViyESdWpsMtVZvgz3x1KbkPg=
+X-Google-Smtp-Source: AKy350YMA6kITZDbZKx3Pm1hFsRyT7meVkV9yVlCuK0wy9PQp8RavGKaILlo7NpZrsZjKijdRKLwgjSp8ci1pS8nkQk=
+X-Received: by 2002:a2e:9989:0:b0:2a9:f114:f168 with SMTP id
+ w9-20020a2e9989000000b002a9f114f168mr3023036lji.46.1682380540697; Mon, 24 Apr
+ 2023 16:55:40 -0700 (PDT)
 MIME-Version: 1.0
-References: <961691d0-7224-caad-6c19-d9c8ca07a801@deltatee.com>
- <20230414013246.1969224-1-yukuai1@huaweicloud.com> <623c9eb9-b8e6-381f-894f-8d7b955e9651@huaweicloud.com>
-In-Reply-To: <623c9eb9-b8e6-381f-894f-8d7b955e9651@huaweicloud.com>
+References: <20230420112946.2869956-1-yukuai1@huaweicloud.com> <20230420112946.2869956-2-yukuai1@huaweicloud.com>
+In-Reply-To: <20230420112946.2869956-2-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 24 Apr 2023 15:38:20 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4XvTtJJ=4Xbu9-zd83OnoyJGaJronzVcn2+nKjs8G1aA@mail.gmail.com>
-Message-ID: <CAPhsuW4XvTtJJ=4Xbu9-zd83OnoyJGaJronzVcn2+nKjs8G1aA@mail.gmail.com>
-Subject: Re: [PATCH -next v7 5/5] md: protect md_thread with rcu
+Date:   Mon, 24 Apr 2023 16:55:28 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7+autdRECogZiJa0uE-UYG3S7w6Hyz7=R8+19QNvu5RQ@mail.gmail.com>
+Message-ID: <CAPhsuW7+autdRECogZiJa0uE-UYG3S7w6Hyz7=R8+19QNvu5RQ@mail.gmail.com>
+Subject: Re: [PATCH -next 1/8] md/raid10: prevent soft lockup while flush writes
 To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     logang@deltatee.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Cc:     neilb@suse.de, akpm@osdl.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, Apr 22, 2023 at 7:42=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+On Thu, Apr 20, 2023 at 4:31=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
 rote:
 >
-> Hi,
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> =E5=9C=A8 2023/04/14 9:32, Yu Kuai =E5=86=99=E9=81=93:
-> > From: Yu Kuai <yukuai3@huawei.com>
-> >
-> > Our test reports a uaf for 'mddev->sync_thread':
-> >
-> > T1                      T2
-> > md_start_sync
-> >   md_register_thread
-> >   // mddev->sync_thread is set
-> >                       raid1d
-> >                        md_check_recovery
-> >                         md_reap_sync_thread
-> >                          md_unregister_thread
-> >                           kfree
-> >
-> >   md_wakeup_thread
-> >    wake_up
-> >    ->sync_thread was freed
-> >
-> > Root cause is that there is a small windown between register thread and
-> > wake up thread, where the thread can be freed concurrently.
-> >
-> > Currently, a global spinlock 'pers_lock' is borrowed to protect
-> > 'mddev->thread', this problem can be fixed likewise, however, there are
-> > similar problems elsewhere, and use a global lock for all the cases is
-> > not good.
-> >
-> > This patch protect all md_thread with rcu.
+> Currently, there is no limit for raid1/raid10 plugged bio. While flushing
+> writes, raid1 has cond_resched() while raid10 doesn't, and too many
+> writes can cause soft lockup.
 >
-> Friendly ping... Or do I need to resend the whole patchset for v7?
+> Follow up soft lockup can be triggered easily with writeback test for
+> raid10 with ramdisks:
+>
+> watchdog: BUG: soft lockup - CPU#10 stuck for 27s! [md0_raid10:1293]
+> Call Trace:
+>  <TASK>
+>  call_rcu+0x16/0x20
+>  put_object+0x41/0x80
+>  __delete_object+0x50/0x90
+>  delete_object_full+0x2b/0x40
+>  kmemleak_free+0x46/0xa0
+>  slab_free_freelist_hook.constprop.0+0xed/0x1a0
+>  kmem_cache_free+0xfd/0x300
+>  mempool_free_slab+0x1f/0x30
+>  mempool_free+0x3a/0x100
+>  bio_free+0x59/0x80
+>  bio_put+0xcf/0x2c0
+>  free_r10bio+0xbf/0xf0
+>  raid_end_bio_io+0x78/0xb0
+>  one_write_done+0x8a/0xa0
+>  raid10_end_write_request+0x1b4/0x430
+>  bio_endio+0x175/0x320
+>  brd_submit_bio+0x3b9/0x9b7 [brd]
+>  __submit_bio+0x69/0xe0
+>  submit_bio_noacct_nocheck+0x1e6/0x5a0
+>  submit_bio_noacct+0x38c/0x7e0
+>  flush_pending_writes+0xf0/0x240
+>  raid10d+0xac/0x1ed0
+>
+> This patch fix the problem by adding cond_resched() to raid10 like what
+> raid1 did.
 
-Sorry for the delay. But yes, please resend the whole patchset.
+nit: per submitting-patches.rst:
 
-Song
+Describe your changes in imperative mood, e.g. "make xyzzy do frotz"
+instead of "[This patch] makes xyzzy do frotz" or "[I] changed xyzzy
+to do frotz", as if you are giving orders to the codebase to change
+its behaviour.
+
+>
+> Note that unlimited plugged bio still need to be optimized because in
+> the case of writeback lots of dirty pages, this will take lots of memory
+> and io latecy is quite bad.
+
+typo: latency.
+
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/raid10.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 6590aa49598c..a116b7c9d9f3 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -921,6 +921,7 @@ static void flush_pending_writes(struct r10conf *conf=
+)
+>                         else
+>                                 submit_bio_noacct(bio);
+>                         bio =3D next;
+> +                       cond_resched();
+>                 }
+>                 blk_finish_plug(&plug);
+>         } else
+> @@ -1140,6 +1141,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
+ool from_schedule)
+>                 else
+>                         submit_bio_noacct(bio);
+>                 bio =3D next;
+> +               cond_resched();
+>         }
+>         kfree(plug);
+>  }
+> --
+> 2.39.2
+>
