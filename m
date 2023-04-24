@@ -2,99 +2,89 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E953EC7EE22
-	for <linux-raid@archiver.kernel.org>; Mon, 24 Apr 2023 22:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 542F5C77B7E
+	for <linux-raid@archiver.kernel.org>; Mon, 24 Apr 2023 22:36:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231189AbjDXWad (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 24 Apr 2023 18:30:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47200 "EHLO
+        id S232853AbjDXWgx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 24 Apr 2023 18:36:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232505AbjDXWaX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Apr 2023 18:30:23 -0400
+        with ESMTP id S233139AbjDXWgm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Apr 2023 18:36:42 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 252AF6185
-        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 15:30:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A827D8A4E
+        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 15:36:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7F70B6204F
-        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 22:30:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1F83C4339B
-        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 22:30:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 402DA629D9
+        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 22:36:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0372C4339B
+        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 22:36:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682375421;
-        bh=DDlRBnZdm/0L33gsMA5bSfU1FAb4SEkWVXh0SI0ajVE=;
+        s=k20201202; t=1682375796;
+        bh=xxPLM7naqOLqhqpz5Vc4Q9e3zmwgT4l1aOIA/hsLzuA=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=u9ISjouFVc9JmOTspP9f+SIdbJVXMRJzZKHsV6lldaFG17ih/r384PJWI6o+dntbY
-         pMAxNk1mH5z3t7sOXXeU/7Rb41ff0FLhsswtMts4ne02Ijy3VB0nAMUVs6QHt+HFD3
-         j9SOaqoijG+K9svBfrG+jhS5RJM2f9fAHaYG5hCF624AF2RRIPDMqyp+8jxZ9g/qP7
-         B5c1ByudNysGLmTEwBd4oTh9jbNGCQzv8VjOTvkKSPPMM3q0xSYB6XCmhfJc3Xmn8j
-         9BLmTDJ53ocxc7FRL5ZK5kJwYk7Ls3KmC8V2TaSfDs3FGPmjr7IZ/ECGSEoxl+IwZH
-         PWQgEiQF7TU2g==
-Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2a8dd1489b0so47885011fa.3
-        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 15:30:21 -0700 (PDT)
-X-Gm-Message-State: AAQBX9evpVuVqIPgWVkOQIJggYUCjFX+jat1YplClsjIrGkwTWZ59tnv
-        z5LMxI0aC/ACsdML9/qH48O/Ixgl+HHMRSjXO5k=
-X-Google-Smtp-Source: AKy350YZ+Q9CYpvl6QfzRnfRx+ZABnkBoAnnTdR9ww6+uGEuMXGSpU4bpv01JaQF/a2gpQtFQ6lanbB/HAuuCC56vlA=
-X-Received: by 2002:ac2:5507:0:b0:4eb:1527:e2a7 with SMTP id
- j7-20020ac25507000000b004eb1527e2a7mr3589426lfk.45.1682375419975; Mon, 24 Apr
- 2023 15:30:19 -0700 (PDT)
+        b=LcqO/EJ/D5g+DJ4E3SEZTNGVdXiLB2Ko6S6x1WZupkikWrHdO/xzIVpsRUOSbMiju
+         XUxaGizTk34hoPMlbQJ5jI0NX2/vYJqok+L5TD3tpqSVPtHrGLrkABLs/7tb+pD2Lv
+         bFgMctUSg+fVMSAyCGi5ET5o9S7EmWj0R1RbnRdKN4yzPX+HqKm+rAKcj9x0NKmMz7
+         pFiv6u/ACW/0pOn4+1K3fpjyAt+NLAy+OUpwhg1RyAyoIiZ9jE/EZVobLImEdAlXrZ
+         dvYW88darc2t9kdflD9hS/A6ZRX9c6Hf98Ws4ktdiCcEMfOKAzlzHyYpiZE2glwPkX
+         sU5efiAoIEEfA==
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-4efeea05936so2166171e87.2
+        for <linux-raid@vger.kernel.org>; Mon, 24 Apr 2023 15:36:36 -0700 (PDT)
+X-Gm-Message-State: AAQBX9d807fIAwazVAS/EKeSTrfG9qai0P8jLsH/ryO2GLTOycdrKxSJ
+        qFWcDnnQJFjHnb+YTrFxiGer/w2zwb7+dwZlMuc=
+X-Google-Smtp-Source: AKy350Ys3IP5f3cH/GvQvOAAhhrNEaHi6Ahgri1juh4OLNVgWrswvfQ5yqfz2oTvBYMVHqn3R49AyzO1N1oxGx3V4Xg=
+X-Received: by 2002:ac2:5589:0:b0:4ea:e60a:2f5d with SMTP id
+ v9-20020ac25589000000b004eae60a2f5dmr3467471lfg.40.1682375794657; Mon, 24 Apr
+ 2023 15:36:34 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230417171537.17899-1-jack@suse.cz> <9a1e2e05-72cd-aba2-b380-d0836d2e98dd@deltatee.com>
- <CAPhsuW76n5w7AJ5Ee6foGgm4U2FpRDfpMYhELS7=gJE5SeGwAA@mail.gmail.com>
- <20230420112613.l5wyzi7ran556pum@quack3> <c5830dd8-57c5-0d94-a48d-d85f154607e0@deltatee.com>
- <CAPhsuW5aaaTL1Ed-wKb82DKSSqg+ckC0MboaOLSUuaiGmTYTuA@mail.gmail.com>
- <e6343cab-01e3-77da-8380-137703344768@deltatee.com> <ZEYllY6ZHZX+q9ZC@infradead.org>
- <ad936a03-5f9e-7465-3565-7902069bd5fc@deltatee.com>
-In-Reply-To: <ad936a03-5f9e-7465-3565-7902069bd5fc@deltatee.com>
+References: <20230417171537.17899-1-jack@suse.cz> <ZEblloZgE0FxMNow@fisica.ufpr.br>
+In-Reply-To: <ZEblloZgE0FxMNow@fisica.ufpr.br>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 24 Apr 2023 15:30:07 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6Phg_Oy18YWH7vgUuywyW2F932Fvcw2FyiZZyqZb3ZCg@mail.gmail.com>
-Message-ID: <CAPhsuW6Phg_Oy18YWH7vgUuywyW2F932Fvcw2FyiZZyqZb3ZCg@mail.gmail.com>
+Date:   Mon, 24 Apr 2023 15:36:22 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW60kiAbc2Z2SvJSjNo4kL0m26Aarjc4UuNV-AapAiebew@mail.gmail.com>
+Message-ID: <CAPhsuW60kiAbc2Z2SvJSjNo4kL0m26Aarjc4UuNV-AapAiebew@mail.gmail.com>
 Subject: Re: [PATCH] md/raid5: Improve performance for sequential IO
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        linux-raid@vger.kernel.org, David Sloan <David.Sloan@eideticom.com>
+To:     Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc:     Jan Kara <jack@suse.cz>, linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Apr 24, 2023 at 8:41=E2=80=AFAM Logan Gunthorpe <logang@deltatee.co=
-m> wrote:
+On Mon, Apr 24, 2023 at 1:25=E2=80=AFPM Carlos Carvalho <carlos@fisica.ufpr=
+.br> wrote:
 >
+> Jan Kara (jack@suse.cz) wrote on Mon, Apr 17, 2023 at 02:15:37PM -03:
+> > Commit 7e55c60acfbb ("md/raid5: Pivot raid5_make_request()") changed th=
+e
+> > order in which requests for underlying disks are created.
 >
->
-> On 2023-04-24 00:45, Christoph Hellwig wrote:
-> > On Thu, Apr 20, 2023 at 02:10:02PM -0600, Logan Gunthorpe wrote:
-> >>> I am hoping to make raid5_make_request() a little faster for non-rota=
-tional
-> >>> devices. We may not easily observe a difference in performance, but t=
-hings
-> >>> add up. Does this make sense?
-> >>
-> >> I guess. But without a performance test that shows that it makes an
-> >> improvement, I'm hesitant about that. It could also be that it helps a
-> >> tiny bit for non-rotational disks, but we just don't know.
-> >>
-> >> Unfortunately, I don't have the time right now to do these performance
-> >> tests.
-> >
-> > FYI, SSDs in general do prefer sequential write streams.  For most you
-> > won't see a different in write performance itself, but it will help wit=
-h
-> > reducing GC overhead later on.
+> In which version was this first applied?
 
-Yeah, this makes sense.
+7e55c60acfbb ("md/raid5: Pivot raid5_make_request()") is in 6.0+ kernels.
 
 >
-> Thanks. Yes, my colleague was able to run performance testing on this
-> patch and didn't find any degradation with Jan's optimization turned on.
-> So I don't think it's worth doing this only for rotational disks and
-> Jan's original patch makes sense.
+> We've observed a large drop in disk performance since 4.* to the point th=
+at
+> 6.1.* is almost unusable for some tasks. For example, we have 2 backup
+> machines, one using raid6/ext4 and another using zfs. The backup of a thi=
+rd
+> machine with a filesystem with ~25M inodes takes 6x-8x longer on the one =
+using
+> raid6/ext4 than on the one using zfs... This is during the rsync phase.
+> Afterwards it removes old trees and the rm with raid6 takes eons even tho=
+ugh
+> the disks are not at all busy (as shown by sar). Running several rm in pa=
+rallel
+> speeds things up a lot, showing the problem is not in the disks.
 
-I will ship Jan's original patch.
+I am hoping to look into raid performance soon. But I cannot promise anythi=
+ng
+at the moment.
 
 Thanks,
 Song
