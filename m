@@ -2,134 +2,79 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDED6C77B61
-	for <linux-raid@archiver.kernel.org>; Tue, 25 Apr 2023 06:47:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62E62C77B61
+	for <linux-raid@archiver.kernel.org>; Tue, 25 Apr 2023 08:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233327AbjDYGrr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 25 Apr 2023 02:47:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52150 "EHLO
+        id S233416AbjDYIvc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 25 Apr 2023 04:51:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233510AbjDYGrq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 25 Apr 2023 02:47:46 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06373BB9E;
-        Mon, 24 Apr 2023 23:47:40 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q5CHC4ZN6z4f42Yl;
-        Tue, 25 Apr 2023 14:47:35 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBnHbF6d0dkDT5vIA--.826S3;
-        Tue, 25 Apr 2023 14:47:24 +0800 (CST)
-Subject: Re: [PATCH -next 1/8] md/raid10: prevent soft lockup while flush
- writes
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     neilb@suse.de, akpm@osdl.org, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230420112946.2869956-1-yukuai1@huaweicloud.com>
- <20230420112946.2869956-2-yukuai1@huaweicloud.com>
- <CAPhsuW5ifaGc47-vJWwbRyjgJHr3CJy+_zZ1wAL=FNxPOk-0WQ@mail.gmail.com>
- <b3393e4d-2fdb-41a6-54ba-fb564c484e56@huaweicloud.com>
- <CAPhsuW47GBgnofLrN8DVMkrBC=tVjhvoQroVZPRrMUHwGcOBLA@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <994e902f-b912-3bab-ac8d-e8c1dd2e17d3@huaweicloud.com>
-Date:   Tue, 25 Apr 2023 14:47:22 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S233355AbjDYIvb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 25 Apr 2023 04:51:31 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 133C57AB1
+        for <linux-raid@vger.kernel.org>; Tue, 25 Apr 2023 01:51:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1682412671; x=1713948671;
+  h=date:from:to:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=jGqHG0yuM52/wd5LD93ZHkiWmaLVm0UrqfF6z0BR3hw=;
+  b=lAK6d9Ljr5D64zUiIVjIBj3NRId+VEFY9EC0jHklkUsJ0pGbXpd7An/R
+   41KrLbc8q9cr5FLrujaVa2yx3Mz7RbrCtMpAJUh+AIM8bgUR67nnvnXif
+   VDHlU1Cv0CRl1LzNfuSGF+WrqECYyfIevtS/Weq147MU2ZKqyIwWmoXbG
+   C0aYmEEYIErhVy6omu/RYP+JgqYG2QRVWLdLB5D2sXSJ8zTHPHnAWS/kA
+   sjsfUW1xl7iEluioDVjlQx2B5e7WPWqnqLyE8ITz/h0guMEuYogHEI6RF
+   OQuRBvravVyo87baWyBaPRNPaILCJVaDK+CTyUwt1wS4M0MPkCHX8yOG2
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10690"; a="411992574"
+X-IronPort-AV: E=Sophos;i="5.99,225,1677571200"; 
+   d="scan'208";a="411992574"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Apr 2023 01:51:10 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10690"; a="837348527"
+X-IronPort-AV: E=Sophos;i="5.99,225,1677571200"; 
+   d="scan'208";a="837348527"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.145.92])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Apr 2023 01:51:07 -0700
+Date:   Tue, 25 Apr 2023 10:51:02 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Jes Sorensen <jes@trained-monkey.org>,
+        <linux-raid@vger.kernel.org>, colyli@suse.de,
+        Xiao Ni <xni@redhat.com>, Coly Li <colyli@suse.de>
+Subject: [RFC] Allow spare's movement only for one metadata type
+Message-ID: <20230425105102.00006f3c@linux.intel.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW47GBgnofLrN8DVMkrBC=tVjhvoQroVZPRrMUHwGcOBLA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnHbF6d0dkDT5vIA--.826S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7AFy8AFWUtF4DAryUGr4kJFb_yoW8urW3p3
-        45KFWayr4DAr43trsYyr1ktFy8tayrXr47WrykJr17J39I9F1jy3WUJr1jgryY9ry7uryU
-        AFWkKrW3uw18t3JanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
-        DUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+Hi all,
+We are seeing issues related to spares movement managed by mdmonitor in
+configurations with IMSM and native arrays because IMSM has some drive specific
+checks inside add_to_super_imsm. The spare will be lost if add fails in the
+middle of the movement.
 
-在 2023/04/25 14:39, Song Liu 写道:
-> On Mon, Apr 24, 2023 at 11:16 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2023/04/25 8:23, Song Liu 写道:
->>> On Thu, Apr 20, 2023 at 4:31 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>
->>>> From: Yu Kuai <yukuai3@huawei.com>
->>>>
->>>> Currently, there is no limit for raid1/raid10 plugged bio. While flushing
->>>> writes, raid1 has cond_resched() while raid10 doesn't, and too many
->>>> writes can cause soft lockup.
->>>>
->>>> Follow up soft lockup can be triggered easily with writeback test for
->>>> raid10 with ramdisks:
->>>>
->>>> watchdog: BUG: soft lockup - CPU#10 stuck for 27s! [md0_raid10:1293]
->>>> Call Trace:
->>>>    <TASK>
->>>>    call_rcu+0x16/0x20
->>>>    put_object+0x41/0x80
->>>>    __delete_object+0x50/0x90
->>>>    delete_object_full+0x2b/0x40
->>>>    kmemleak_free+0x46/0xa0
->>>>    slab_free_freelist_hook.constprop.0+0xed/0x1a0
->>>>    kmem_cache_free+0xfd/0x300
->>>>    mempool_free_slab+0x1f/0x30
->>>>    mempool_free+0x3a/0x100
->>>>    bio_free+0x59/0x80
->>>>    bio_put+0xcf/0x2c0
->>>>    free_r10bio+0xbf/0xf0
->>>>    raid_end_bio_io+0x78/0xb0
->>>>    one_write_done+0x8a/0xa0
->>>>    raid10_end_write_request+0x1b4/0x430
->>>>    bio_endio+0x175/0x320
->>>>    brd_submit_bio+0x3b9/0x9b7 [brd]
->>>>    __submit_bio+0x69/0xe0
->>>>    submit_bio_noacct_nocheck+0x1e6/0x5a0
->>>>    submit_bio_noacct+0x38c/0x7e0
->>>>    flush_pending_writes+0xf0/0x240
->>>>    raid10d+0xac/0x1ed0
->>>
->>> Is it possible to trigger this with a mdadm test?
->>>
->>
->> The test I mentioned in patch 8 can trigger this problem reliablity, so
->> I this add a new test can achieve this.
-> 
-> To be clear, by "mdadm test" I mean the tests included in mdadm:
-> 
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/tree/tests
-> 
-> Could you please try to add a test? If it works, we should add it to
-> mdadm.
+For example, IMSM allows to use only one namespace from the nvme drive. If spare
+in native array is a second namespace ( by-path link is same for every
+namespace, or simply path=* is used) then issue occurs.
 
-Yes, of course. However, I'm not familiar how mdadm tests works yet, it
-might take some time. By the way, I'll be good if I can add the test to
-blktests if possible.
+I would like to not make mdmonitor more complicated and I don't see the
+case when we are configuring spare to be used across many metadata types as
+good requirement. For that reason, I would like to propose limiting
+mdmonitor spares reassignment functionality to work only across one metadata
+type arrays or containers. It means that mdmonitor will be able to move spare
+if metadata type is the same for both donor and target.
+
+It deprecates "metadata=" property in POLICY line because there will be no
+need to specify metadata if spare can be moved only across one metadata type
+arrays/containers.
+
+Thoughts?
 
 Thanks,
-Kuai
-> 
-> Thanks,
-> Song
-> .
-> 
-
+Mariusz
