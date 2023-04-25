@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2399AC77B61
-	for <linux-raid@archiver.kernel.org>; Tue, 25 Apr 2023 00:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C580C7618E
+	for <linux-raid@archiver.kernel.org>; Tue, 25 Apr 2023 00:24:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232797AbjDYADo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 24 Apr 2023 20:03:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36656 "EHLO
+        id S232106AbjDYAYC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 24 Apr 2023 20:24:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232336AbjDYADm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Apr 2023 20:03:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CD115274;
-        Mon, 24 Apr 2023 17:03:41 -0700 (PDT)
+        with ESMTP id S229755AbjDYAYB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 Apr 2023 20:24:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EDF95585;
+        Mon, 24 Apr 2023 17:24:00 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0A7D462A62;
-        Tue, 25 Apr 2023 00:03:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64BB5C433A0;
-        Tue, 25 Apr 2023 00:03:40 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 29ABA62A6D;
+        Tue, 25 Apr 2023 00:24:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78D11C433D2;
+        Tue, 25 Apr 2023 00:23:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682381020;
-        bh=trnIgor0xX4q/91c1oebGULzgj8kBzmPIz2WyUUR4fs=;
+        s=k20201202; t=1682382239;
+        bh=Iiq2gb1MMxnJ3LJdqdqD0CqhoCtzfULA8cDXsPZwt+I=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=dsfphbNwZy7ol45+HO89fFOFBVmbtLKbVFYU0+3lRL47HiJpa9sHbkNeu0acGZDcH
-         RaYMGES44ByO2JY0pyqpUsucD8TQJvyhwHquSnu5mfTOK1ctKl8hspfTPmvrC7rOWo
-         vXjmS/s7bRIP7nWuDV0rzNvUpqk84YX7PSDz9xeJFZul4hjgd981THJWdaIunfBQm3
-         tV5eImY6lSCVLEmgQR3bRqFmecC9WtkV0X18EuXi/1DjcadULIAB5j3JW9g7dUwOku
-         uM1ppt6wnHBzvVfN16WWpQmSgvphrlVCkEFR9E9PKIgClRUTtyRqmaIHg+d9sAK9B3
-         Dj/gTmXGNB8UQ==
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2a8ad872ea5so49564221fa.2;
-        Mon, 24 Apr 2023 17:03:40 -0700 (PDT)
-X-Gm-Message-State: AAQBX9eSaF3AgWXHPbCRyhrvNV7pO94+A9L6ZbAVBIXogDMvyKQKxJ3k
-        ziNb1c3pQjIcjRtRjjiYbmVtXyduESEINkWRsOA=
-X-Google-Smtp-Source: AKy350ZiHWzjvuohgc2eExj8R1+yFM6oSnpZL9ryV43iQZLSMYrd9ACKtxWUQihomvfECH65Xw2YSp2gSRleLGF+78g=
-X-Received: by 2002:a2e:9595:0:b0:2a8:c249:63a4 with SMTP id
- w21-20020a2e9595000000b002a8c24963a4mr2976379ljh.47.1682381018366; Mon, 24
- Apr 2023 17:03:38 -0700 (PDT)
+        b=nbdOZoa0BrOYY2nnu2UzjE+4vgzszYOOQeTEnHgC10sUcH5ZmLRs9rfcMw78jqLIJ
+         ejasczN0E3JAwPWxSIg+hX9QgfWhbG2nVwnBJ3WVkOTHE5OMNprHZAQROzzkGZvZKR
+         2vBXJq6WygSVbXmofY0Lfi/SFxrwMXJF1lVCxSX9l0ITXwo9t1T0JdM7oW3b/Nuq/F
+         lNPR0gwVppnDZS2HT0rvPItJOtLYni7f6JggVrYTCtBQqn1vguZQjXihhjHxNdwsG2
+         GYejV4Wjlf9AjAybkAFQi7A+boXTUoZPk2HIPAfNtLKUXEej4bLI9ErqKYACjCQgoq
+         8n7OSBusApmhA==
+Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2a8a600bd05so48214861fa.2;
+        Mon, 24 Apr 2023 17:23:59 -0700 (PDT)
+X-Gm-Message-State: AAQBX9eaHzgPH4PI9WIyS0H55k0clVKV0yDmv6vStB5pvZ0ojFh6ajpO
+        7n+a+GvuniwxFz16f1lAa6Lw/fUiegOLJWfh2XU=
+X-Google-Smtp-Source: AKy350YkR5niEhpMiQQT0dxBIyGNumGUYY7iSNti+fTHjUck5U67IV/tE8hu/yiQim7FsbzVEEIpZ6xd5fqgox2DRQc=
+X-Received: by 2002:a2e:9dc6:0:b0:2a7:adf7:1781 with SMTP id
+ x6-20020a2e9dc6000000b002a7adf71781mr2801803ljj.2.1682382237457; Mon, 24 Apr
+ 2023 17:23:57 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230420112946.2869956-1-yukuai1@huaweicloud.com> <20230420112946.2869956-3-yukuai1@huaweicloud.com>
-In-Reply-To: <20230420112946.2869956-3-yukuai1@huaweicloud.com>
+References: <20230420112946.2869956-1-yukuai1@huaweicloud.com> <20230420112946.2869956-2-yukuai1@huaweicloud.com>
+In-Reply-To: <20230420112946.2869956-2-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 24 Apr 2023 17:03:26 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6QSuB3vVCPN3Dt3tab-_4C8_7+kmAAe05GB0oBNX-bSA@mail.gmail.com>
-Message-ID: <CAPhsuW6QSuB3vVCPN3Dt3tab-_4C8_7+kmAAe05GB0oBNX-bSA@mail.gmail.com>
-Subject: Re: [PATCH -next 2/8] md/raid1-10: rename raid1-10.c to raid1-10.h
+Date:   Mon, 24 Apr 2023 17:23:45 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5ifaGc47-vJWwbRyjgJHr3CJy+_zZ1wAL=FNxPOk-0WQ@mail.gmail.com>
+Message-ID: <CAPhsuW5ifaGc47-vJWwbRyjgJHr3CJy+_zZ1wAL=FNxPOk-0WQ@mail.gmail.com>
+Subject: Re: [PATCH -next 1/8] md/raid10: prevent soft lockup while flush writes
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     neilb@suse.de, akpm@osdl.org, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, yukuai3@huawei.com,
@@ -62,131 +62,79 @@ rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> raid1-10.c contains definitions that are used both for raid1 and raid10,
-> it's werid to use ".c" suffix.
+> Currently, there is no limit for raid1/raid10 plugged bio. While flushing
+> writes, raid1 has cond_resched() while raid10 doesn't, and too many
+> writes can cause soft lockup.
+>
+> Follow up soft lockup can be triggered easily with writeback test for
+> raid10 with ramdisks:
+>
+> watchdog: BUG: soft lockup - CPU#10 stuck for 27s! [md0_raid10:1293]
+> Call Trace:
+>  <TASK>
+>  call_rcu+0x16/0x20
+>  put_object+0x41/0x80
+>  __delete_object+0x50/0x90
+>  delete_object_full+0x2b/0x40
+>  kmemleak_free+0x46/0xa0
+>  slab_free_freelist_hook.constprop.0+0xed/0x1a0
+>  kmem_cache_free+0xfd/0x300
+>  mempool_free_slab+0x1f/0x30
+>  mempool_free+0x3a/0x100
+>  bio_free+0x59/0x80
+>  bio_put+0xcf/0x2c0
+>  free_r10bio+0xbf/0xf0
+>  raid_end_bio_io+0x78/0xb0
+>  one_write_done+0x8a/0xa0
+>  raid10_end_write_request+0x1b4/0x430
+>  bio_endio+0x175/0x320
+>  brd_submit_bio+0x3b9/0x9b7 [brd]
+>  __submit_bio+0x69/0xe0
+>  submit_bio_noacct_nocheck+0x1e6/0x5a0
+>  submit_bio_noacct+0x38c/0x7e0
+>  flush_pending_writes+0xf0/0x240
+>  raid10d+0xac/0x1ed0
 
-type: weird.
-
-Please see the original discussion about raid1-10.c here:
-
-https://lore.kernel.org/linux-raid/20170712082912.491-1-ming.lei@redhat.com=
-/
-
-Let's keep raid1-10.c for now.
+Is it possible to trigger this with a mdadm test?
 
 Thanks,
 Song
 
 >
+> This patch fix the problem by adding cond_resched() to raid10 like what
+> raid1 did.
+>
+> Note that unlimited plugged bio still need to be optimized because in
+> the case of writeback lots of dirty pages, this will take lots of memory
+> and io latecy is quite bad.
+>
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/{raid1-10.c =3D> raid1-10.h} | 10 +++++++---
->  drivers/md/raid1.c                    |  2 --
->  drivers/md/raid1.h                    |  2 ++
->  drivers/md/raid10.c                   |  2 --
->  drivers/md/raid10.h                   |  2 ++
->  5 files changed, 11 insertions(+), 7 deletions(-)
->  rename drivers/md/{raid1-10.c =3D> raid1-10.h} (92%)
+>  drivers/md/raid10.c | 2 ++
+>  1 file changed, 2 insertions(+)
 >
-> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.h
-> similarity index 92%
-> rename from drivers/md/raid1-10.c
-> rename to drivers/md/raid1-10.h
-> index e61f6cad4e08..04beef35142d 100644
-> --- a/drivers/md/raid1-10.c
-> +++ b/drivers/md/raid1-10.h
-> @@ -1,4 +1,7 @@
->  // SPDX-License-Identifier: GPL-2.0
-> +#ifndef _RAID1_10_H
-> +#define _RAID1_10_H
-> +
->  /* Maximum size of each resync request */
->  #define RESYNC_BLOCK_SIZE (64*1024)
->  #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
-> @@ -33,7 +36,7 @@ struct raid1_plug_cb {
->         struct bio_list         pending;
->  };
->
-> -static void rbio_pool_free(void *rbio, void *data)
-> +static inline void rbio_pool_free(void *rbio, void *data)
->  {
->         kfree(rbio);
->  }
-> @@ -91,8 +94,8 @@ static inline struct resync_pages *get_resync_pages(str=
-uct bio *bio)
->  }
->
->  /* generally called after bio_reset() for reseting bvec */
-> -static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pag=
-es *rp,
-> -                              int size)
-> +static inline void md_bio_reset_resync_pages(struct bio *bio,
-> +                                            struct resync_pages *rp, int=
- size)
->  {
->         int idx =3D 0;
->
-> @@ -109,3 +112,4 @@ static void md_bio_reset_resync_pages(struct bio *bio=
-, struct resync_pages *rp,
->                 size -=3D len;
->         } while (idx++ < RESYNC_PAGES && size > 0);
->  }
-> +#endif
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 2f1011ffdf09..84724b9b20b8 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -49,8 +49,6 @@ static void lower_barrier(struct r1conf *conf, sector_t=
- sector_nr);
->  #define raid1_log(md, fmt, args...)                            \
->         do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid1 " fmt=
-, ##args); } while (0)
->
-> -#include "raid1-10.c"
-> -
->  #define START(node) ((node)->start)
->  #define LAST(node) ((node)->last)
->  INTERVAL_TREE_DEFINE(struct serial_info, node, sector_t, _subtree_last,
-> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-> index 468f189da7a0..80de4d66f010 100644
-> --- a/drivers/md/raid1.h
-> +++ b/drivers/md/raid1.h
-> @@ -2,6 +2,8 @@
->  #ifndef _RAID1_H
->  #define _RAID1_H
->
-> +#include "raid1-10.h"
-> +
->  /*
->   * each barrier unit size is 64MB fow now
->   * note: it must be larger than RESYNC_DEPTH
 > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index a116b7c9d9f3..50d56b6af42f 100644
+> index 6590aa49598c..a116b7c9d9f3 100644
 > --- a/drivers/md/raid10.c
 > +++ b/drivers/md/raid10.c
-> @@ -77,8 +77,6 @@ static void end_reshape(struct r10conf *conf);
->  #define raid10_log(md, fmt, args...)                           \
->         do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid10 " fm=
-t, ##args); } while (0)
->
-> -#include "raid1-10.c"
-> -
->  #define NULL_CMD
->  #define cmd_before(conf, cmd) \
->         do { \
-> diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-> index 63e48b11b552..63e88dd774f7 100644
-> --- a/drivers/md/raid10.h
-> +++ b/drivers/md/raid10.h
-> @@ -2,6 +2,8 @@
->  #ifndef _RAID10_H
->  #define _RAID10_H
->
-> +#include "raid1-10.h"
-> +
->  /* Note: raid10_info.rdev can be set to NULL asynchronously by
->   * raid10_remove_disk.
->   * There are three safe ways to access raid10_info.rdev.
+> @@ -921,6 +921,7 @@ static void flush_pending_writes(struct r10conf *conf=
+)
+>                         else
+>                                 submit_bio_noacct(bio);
+>                         bio =3D next;
+> +                       cond_resched();
+>                 }
+>                 blk_finish_plug(&plug);
+>         } else
+> @@ -1140,6 +1141,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
+ool from_schedule)
+>                 else
+>                         submit_bio_noacct(bio);
+>                 bio =3D next;
+> +               cond_resched();
+>         }
+>         kfree(plug);
+>  }
 > --
 > 2.39.2
 >
