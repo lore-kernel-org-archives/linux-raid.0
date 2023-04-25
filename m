@@ -2,202 +2,89 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3AADC77B71
-	for <linux-raid@archiver.kernel.org>; Tue, 25 Apr 2023 10:54:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2AA6C77B61
+	for <linux-raid@archiver.kernel.org>; Tue, 25 Apr 2023 11:55:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233511AbjDYKx4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 25 Apr 2023 06:53:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49814 "EHLO
+        id S233984AbjDYLzC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 25 Apr 2023 07:55:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230195AbjDYKxy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 25 Apr 2023 06:53:54 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7984749D2
-        for <linux-raid@vger.kernel.org>; Tue, 25 Apr 2023 03:53:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1682420033; x=1713956033;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ST/04kv8xenewn65AFuN56ZHb09fgNHRvOlPajkmcCc=;
-  b=UEDwbYldzvvIlz6XNP0Mdp7yVP8HPXl4vKEnsfnRCBTTdaTYEwNpl5ka
-   Gx2SO6JyzcIXPKEQB0rPFgHlN/yQ2MDDL0ec1arTqcDjcK7ce05zPI5aX
-   Dd/ZUmiWFYrP0+BUcjYgmtdYrDPIEje9IxXCHK0Zuh2b9xt9I6Aoz/mW4
-   4g8EQPmjwRN9qv5u8TXmYqN7kelw43nmI77X7C8WngMMPUFstql0pRtdM
-   Kx3qzppVEBc/lEksOaMX1u4JS6kwnRxEymhfJQ9ngEjc1pkx5kKnjcmdI
-   CQfs2fIX7bi8Y0j0s8h5rBoDk88DFGhnPtp4leOLCeIP4XFOE2Ijrx8OK
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10690"; a="349520714"
-X-IronPort-AV: E=Sophos;i="5.99,225,1677571200"; 
-   d="scan'208";a="349520714"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Apr 2023 03:53:37 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10690"; a="723979179"
-X-IronPort-AV: E=Sophos;i="5.99,225,1677571200"; 
-   d="scan'208";a="723979179"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga008.jf.intel.com with ESMTP; 25 Apr 2023 03:53:36 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1prGIc-000jJy-24;
-        Tue, 25 Apr 2023 10:53:30 +0000
-Date:   Tue, 25 Apr 2023 18:52:57 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- fd08656801050f3f508f455343ab77fd51a76980
-Message-ID: <6447b109.68KdzrC+awF+aHOo%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S233859AbjDYLzA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 25 Apr 2023 07:55:00 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFF86524B;
+        Tue, 25 Apr 2023 04:54:43 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q5L5X0kZpz4f4QGk;
+        Tue, 25 Apr 2023 19:54:40 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbF+v0dkGEZ+IA--.20559S6;
+        Tue, 25 Apr 2023 19:54:41 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     logang@deltatee.com, axboe@kernel.dk, song@kernel.org
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yukuai3@huawei.com,
+        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: [PATCH -next v7 2/5] dm-raid: remove useless checking in raid_message()
+Date:   Tue, 25 Apr 2023 19:52:53 +0800
+Message-Id: <20230425115256.3663932-3-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230425115256.3663932-1-yukuai1@huaweicloud.com>
+References: <20230425115256.3663932-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBnHbF+v0dkGEZ+IA--.20559S6
+X-Coremail-Antispam: 1UD129KBjvdXoWrZrW7trWxXry3Gr1kGF4rXwb_yoWfuFcEga
+        1rXr9Fgr17u34fA3W2vw4Fvr90ywn5ur1kWF1rtFWayFyrKrWrXr1ruwn8CwnrZFW7Cryj
+        krWjkr1fCr4vkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb6AFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY02
+        0Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+        wVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
+        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+        v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+        Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
+        0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
+        JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
+        AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjYiiDUUUUU=
+        =
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: fd08656801050f3f508f455343ab77fd51a76980  md/raid5: Improve performance for sequential IO
+From: Yu Kuai <yukuai3@huawei.com>
 
-elapsed time: 720m
+md_wakeup_thread() handle the case that pass in md_thread is NULL, there
+is no need to check this. Prepare to protect md_thread with rcu.
 
-configs tested: 128
-configs skipped: 14
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/dm-raid.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha        buildonly-randconfig-r005-20230424   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r004-20230423   gcc  
-alpha                randconfig-r013-20230423   gcc  
-alpha                randconfig-r021-20230423   gcc  
-alpha                randconfig-r026-20230423   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r002-20230423   gcc  
-arc                  randconfig-r036-20230425   gcc  
-arc                  randconfig-r043-20230423   gcc  
-arc                  randconfig-r043-20230424   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm          buildonly-randconfig-r001-20230424   clang
-arm                                 defconfig   gcc  
-arm                  randconfig-r002-20230424   gcc  
-arm                  randconfig-r012-20230423   gcc  
-arm                  randconfig-r023-20230423   gcc  
-arm                  randconfig-r046-20230423   gcc  
-arm                  randconfig-r046-20230424   clang
-arm64                            allyesconfig   gcc  
-arm64        buildonly-randconfig-r004-20230423   gcc  
-arm64        buildonly-randconfig-r006-20230423   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r004-20230424   clang
-csky                                defconfig   gcc  
-csky                 randconfig-r003-20230423   gcc  
-csky                 randconfig-r022-20230423   gcc  
-csky                 randconfig-r025-20230423   gcc  
-csky                 randconfig-r026-20230424   gcc  
-csky                 randconfig-r032-20230425   gcc  
-hexagon              randconfig-r041-20230423   clang
-hexagon              randconfig-r041-20230424   clang
-hexagon              randconfig-r045-20230423   clang
-hexagon              randconfig-r045-20230424   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-a001-20230424   clang
-i386                 randconfig-a002-20230424   clang
-i386                 randconfig-a003-20230424   clang
-i386                 randconfig-a004-20230424   clang
-i386                 randconfig-a005-20230424   clang
-i386                 randconfig-a006-20230424   clang
-i386                 randconfig-a011-20230424   gcc  
-i386                 randconfig-a012-20230424   gcc  
-i386                 randconfig-a013-20230424   gcc  
-i386                 randconfig-a014-20230424   gcc  
-i386                 randconfig-a015-20230424   gcc  
-i386                 randconfig-a016-20230424   gcc  
-ia64                             allmodconfig   gcc  
-ia64         buildonly-randconfig-r001-20230423   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r006-20230423   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r013-20230424   gcc  
-loongarch            randconfig-r031-20230425   gcc  
-m68k                             allmodconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r003-20230424   gcc  
-m68k                 randconfig-r021-20230424   gcc  
-m68k                 randconfig-r034-20230425   gcc  
-microblaze   buildonly-randconfig-r004-20230424   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r011-20230423   gcc  
-mips                 randconfig-r015-20230424   clang
-nios2        buildonly-randconfig-r003-20230423   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r024-20230423   gcc  
-nios2                randconfig-r025-20230424   gcc  
-nios2                randconfig-r026-20230423   gcc  
-openrisc     buildonly-randconfig-r002-20230423   gcc  
-openrisc             randconfig-r006-20230424   gcc  
-parisc       buildonly-randconfig-r006-20230424   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r021-20230423   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv        buildonly-randconfig-r003-20230424   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r042-20230423   clang
-riscv                randconfig-r042-20230424   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r001-20230424   clang
-s390                 randconfig-r014-20230424   gcc  
-s390                 randconfig-r044-20230423   clang
-s390                 randconfig-r044-20230424   gcc  
-sh                               allmodconfig   gcc  
-sh                   randconfig-r005-20230424   gcc  
-sh                   randconfig-r023-20230424   gcc  
-sh                   randconfig-r025-20230423   gcc  
-sh                   randconfig-r035-20230425   gcc  
-sparc                               defconfig   gcc  
-sparc64              randconfig-r014-20230423   gcc  
-sparc64              randconfig-r016-20230423   gcc  
-sparc64              randconfig-r023-20230423   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230424   clang
-x86_64               randconfig-a002-20230424   clang
-x86_64               randconfig-a003-20230424   clang
-x86_64               randconfig-a004-20230424   clang
-x86_64               randconfig-a005-20230424   clang
-x86_64               randconfig-a006-20230424   clang
-x86_64               randconfig-a011-20230424   gcc  
-x86_64               randconfig-a012-20230424   gcc  
-x86_64               randconfig-a013-20230424   gcc  
-x86_64               randconfig-a014-20230424   gcc  
-x86_64               randconfig-a015-20230424   gcc  
-x86_64               randconfig-a016-20230424   gcc  
-x86_64                        randconfig-k001   clang
-x86_64                               rhel-8.3   gcc  
-xtensa               randconfig-r033-20230425   gcc  
-
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index c8821fcb8299..8846bf510a35 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3750,11 +3750,11 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+ 		 * canceling read-auto mode
+ 		 */
+ 		mddev->ro = 0;
+-		if (!mddev->suspended && mddev->sync_thread)
++		if (!mddev->suspended)
+ 			md_wakeup_thread(mddev->sync_thread);
+ 	}
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	if (!mddev->suspended && mddev->thread)
++	if (!mddev->suspended)
+ 		md_wakeup_thread(mddev->thread);
+ 
+ 	return 0;
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+2.39.2
+
