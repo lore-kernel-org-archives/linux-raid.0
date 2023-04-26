@@ -2,130 +2,114 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AAFEC77B7C
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Apr 2023 16:21:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BED2C77B78
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Apr 2023 17:58:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233877AbjDZQVA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Apr 2023 12:21:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40176 "EHLO
+        id S234138AbjDZR6g (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Apr 2023 13:58:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233271AbjDZQU7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Apr 2023 12:20:59 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1422F7AAB
-        for <linux-raid@vger.kernel.org>; Wed, 26 Apr 2023 09:20:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1682526047; x=1714062047;
-  h=date:from:to:cc:subject:message-id;
-  bh=Wk7y5RWuA8OzC5tm9adyWSk1YDKCtO1Df2FA9a0YkKU=;
-  b=fZA95BuRpQ9IZY5DCdBbSXmazGaGonZjHblpVIHxIajGJZYjOPULrwxq
-   rk6jVCVMU59caEFbrI4btL0CiHEaU5h+UFUMfmX2Fr67HZaghMxU0rEmp
-   Hk471a/jgcNj6mlC+RJ1S1Pqq3jOi62Gwx8h3s4ztoFJKfSgVbWUOIFhD
-   JXKZgxraQcA57izqPTV8RQJNnYhqE76ZVZA7Eq5+ltO83Owmw3pxK4iGH
-   nb8kWxdByes9VwBDG9gSfZDYgDXjkWESCqSdrBeXgl2s9hNqD4w94HzA/
-   DBP1RFiKRX3uYYc8Snqn1FQxdfZki3ODB+u0Np2kQpx4BDeCMEP5JJ2Fs
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10692"; a="331390985"
-X-IronPort-AV: E=Sophos;i="5.99,228,1677571200"; 
-   d="scan'208";a="331390985"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Apr 2023 09:19:44 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10692"; a="694011053"
-X-IronPort-AV: E=Sophos;i="5.99,228,1677571200"; 
-   d="scan'208";a="694011053"
-Received: from lkp-server01.sh.intel.com (HELO 041f065c1b1b) ([10.239.97.150])
-  by orsmga002.jf.intel.com with ESMTP; 26 Apr 2023 09:19:44 -0700
-Received: from kbuild by 041f065c1b1b with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1prhrr-0000MU-1f;
-        Wed, 26 Apr 2023 16:19:43 +0000
-Date:   Thu, 27 Apr 2023 00:19:18 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 871634828fc3c8069941c7b6a031a71faa61a9f4
-Message-ID: <20230426161918.3i9u4%lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S233948AbjDZR6f (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Apr 2023 13:58:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2BF1618B
+        for <linux-raid@vger.kernel.org>; Wed, 26 Apr 2023 10:58:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5DC3561A73
+        for <linux-raid@vger.kernel.org>; Wed, 26 Apr 2023 17:58:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF819C4339C
+        for <linux-raid@vger.kernel.org>; Wed, 26 Apr 2023 17:58:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1682531913;
+        bh=SN7z3VzK04WlNUByemx8CQHAzIV7XwKryfMccUVeCg8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=VG3dSOpIG0R3DeEt0PylMDmBEzNGAvww2mJUKQiNq/XtaXRwKUWXuM3Pva2lI5Uln
+         VWzw+0sF7YxB9Gt14yInDVwNIvnifU6rIBQmY8PLQHEv99H9Nrg38yFNBe2n11Xu2X
+         7TWCN0m9yEkcHp4p302kmY0HWznzyxNuhacoe4Ycdb8VnBZYxsygrNC+BBY0fcFBft
+         pB4LgKHOJ1TcNqcygIjzKso7WrLYVsQKdLAmqh+vquNga0jpqqeajL8C68HUhtI46P
+         mvycLBEK2iMia2Xrby5CL/Uj8kv/15fIcVoIAJJy7qxxkclRLzfj1HUMzkEu7ha1Ms
+         kPow4pKywcj4g==
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-4f004cc54f4so1275640e87.3
+        for <linux-raid@vger.kernel.org>; Wed, 26 Apr 2023 10:58:33 -0700 (PDT)
+X-Gm-Message-State: AAQBX9e0fb9T8QKBEIFupJ3Pz/h+VpFEzPq4xn9DBCSlw+WIoQnmvWiw
+        0GiRtevfYjhDmO/lYDQiALVG69jQxNZvrRqAV0Q=
+X-Google-Smtp-Source: AKy350asbKZfcosC4NU4bzU/4VnZz/afjk0yT4oaCkxvNaHF3ALKE2ov2DNuppo/f6Et19WFQjIqnfCRQ9JffLCMuTM=
+X-Received: by 2002:ac2:5617:0:b0:4ed:c537:d0c2 with SMTP id
+ v23-20020ac25617000000b004edc537d0c2mr5371287lfd.69.1682531911737; Wed, 26
+ Apr 2023 10:58:31 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230425011438.71046-1-jonathan.derrick@linux.dev> <CAPhsuW6f+6nqqaap1pP_rETSk_WA68keq6wCxEJojkYcVw-Vhw@mail.gmail.com>
+In-Reply-To: <CAPhsuW6f+6nqqaap1pP_rETSk_WA68keq6wCxEJojkYcVw-Vhw@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 26 Apr 2023 10:58:19 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5LMzsus-nvNCj2Fy71cTW04rEN=bwcynqDHc7zrEYxCg@mail.gmail.com>
+Message-ID: <CAPhsuW5LMzsus-nvNCj2Fy71cTW04rEN=bwcynqDHc7zrEYxCg@mail.gmail.com>
+Subject: Re: [PATCH] md: Fix bitmap offset type in sb writer
+To:     Jonathan Derrick <jonathan.derrick@linux.dev>
+Cc:     linux-raid@vger.kernel.org,
+        Dan Carpenter <dan.carpenter@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 871634828fc3c8069941c7b6a031a71faa61a9f4  md: Fix bitmap offset type in sb writer
+Hi Jonathan,
 
-elapsed time: 726m
+On Tue, Apr 25, 2023 at 8:44=E2=80=AFPM Song Liu <song@kernel.org> wrote:
+>
+> On Mon, Apr 24, 2023 at 6:16=E2=80=AFPM Jonathan Derrick
+> <jonathan.derrick@linux.dev> wrote:
+> >
+> > Bitmap offset is allowed to be negative, indicating that bitmap precede=
+s
+> > metadata. Change the type back from sector_t to loff_t to satisfy
+> > conditionals and calculations.
 
-configs tested: 60
-configs skipped: 3
+This actually breaks the following tests from mdadm:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+05r1-add-internalbitmap-v1a
+05r1-internalbitmap-v1a
+05r1-remove-internalbitmap-v1a
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r021-20230423   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r001-20230425   gcc  
-csky                 randconfig-r022-20230423   gcc  
-csky                 randconfig-r025-20230423   gcc  
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r005-20230425   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze           randconfig-r004-20230425   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r024-20230423   gcc  
-nios2                randconfig-r026-20230423   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r006-20230425   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-sh                               allmodconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r002-20230425   gcc  
-sparc64              randconfig-r023-20230423   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a011-20230424   gcc  
-x86_64               randconfig-a012-20230424   gcc  
-x86_64               randconfig-a013-20230424   gcc  
-x86_64               randconfig-a014-20230424   gcc  
-x86_64               randconfig-a015-20230424   gcc  
-x86_64               randconfig-a016-20230424   gcc  
-x86_64                               rhel-8.3   gcc  
+Please look into these.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Thanks,
+Song
+
+> >
+> > Signed-off-by: Jonathan Derrick <jonathan.derrick@linux.dev>
+>
+> I added the following to the patch and applied it to md-next.
+>
+> Thanks,
+> Song
+>
+> Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+> Fixes: 10172f200b67 ("md: Fix types in sb writer")
+>
+> > ---
+> >  drivers/md/md-bitmap.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> > index 920bb68156d2..29ae7f7015e4 100644
+> > --- a/drivers/md/md-bitmap.c
+> > +++ b/drivers/md/md-bitmap.c
+> > @@ -237,8 +237,8 @@ static int __write_sb_page(struct md_rdev *rdev, st=
+ruct bitmap *bitmap,
+> >         struct block_device *bdev;
+> >         struct mddev *mddev =3D bitmap->mddev;
+> >         struct bitmap_storage *store =3D &bitmap->storage;
+> > -       sector_t offset =3D mddev->bitmap_info.offset;
+> > -       sector_t ps, sboff, doff;
+> > +       loff_t sboff, offset =3D mddev->bitmap_info.offset;
+> > +       sector_t ps, doff;
+> >         unsigned int size =3D PAGE_SIZE;
+> >         unsigned int opt_size =3D PAGE_SIZE;
+> >
+> > --
+> > 2.40.0
+> >
