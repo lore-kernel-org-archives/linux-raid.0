@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B522BC77B60
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Apr 2023 08:22:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AF4AC77B7C
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Apr 2023 08:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240154AbjDZIWd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Apr 2023 04:22:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44962 "EHLO
+        id S240163AbjDZIWe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Apr 2023 04:22:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240125AbjDZIW2 (ORCPT
+        with ESMTP id S239964AbjDZIW2 (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Apr 2023 04:22:28 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70A333C1B;
-        Wed, 26 Apr 2023 01:22:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E6B53C0F;
+        Wed, 26 Apr 2023 01:22:25 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q5sL649TFz4f55b3;
-        Wed, 26 Apr 2023 16:22:22 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q5sL45f2Vz4f4d6C;
+        Wed, 26 Apr 2023 16:22:20 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP2 (Coremail) with SMTP id Syh0CgBnW+k430hkUexVIA--.50201S11;
-        Wed, 26 Apr 2023 16:22:23 +0800 (CST)
+        by APP2 (Coremail) with SMTP id Syh0CgBnW+k430hkUexVIA--.50201S7;
+        Wed, 26 Apr 2023 16:22:22 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, akpm@osdl.org, neilb@suse.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 7/7] md/raid1-10: limit the number of plugged bio
-Date:   Wed, 26 Apr 2023 16:20:31 +0800
-Message-Id: <20230426082031.1299149-8-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 3/7] md/raid1-10: factor out a helper to submit normal write
+Date:   Wed, 26 Apr 2023 16:20:27 +0800
+Message-Id: <20230426082031.1299149-4-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
 References: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgBnW+k430hkUexVIA--.50201S11
-X-Coremail-Antispam: 1UD129KBjvJXoWxZr4rKF4fXry8CFyfZry3XFb_yoW5try8pa
-        1Dta4YvrWUZFW7X3yDJayUCFyFga1DWFZFkrZ5C395ZF17XFWjga15JFWrWr1DZFZxGFy3
-        J3Z8Kr4xGF15tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9E14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
-        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAv
-        wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14
-        v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZX7UUUUU==
+X-CM-TRANSID: Syh0CgBnW+k430hkUexVIA--.50201S7
+X-Coremail-Antispam: 1UD129KBjvJXoWxAF1rXFW5ZF4kXFyDWr4Durg_yoW5uw1Dp3
+        9Iqa4fZ3y7XF47Wa1Duay8J3WFga1UtrWUCFW7CayfAFy3ZryDta18JryIgryDJFyrCry7
+        ZF18K3y7Ww43JFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9m14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2
+        IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
+        6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
+        AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
+        s7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
+        0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd8n5UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,100 +58,112 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-bio can be added to plug infinitely, and following writeback test can
-trigger huge amount of plugged bio:
-
-Test script:
-modprobe brd rd_nr=4 rd_size=10485760
-mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean
-echo 0 > /proc/sys/vm/dirty_background_ratio
-echo 60 > /proc/sys/vm/dirty_ratio
-fio -filename=/dev/md0 -ioengine=libaio -rw=write -bs=4k -numjobs=1 -iodepth=128 -name=test
-
-Test result:
-Monitor /sys/block/md0/inflight will found that inflight keep increasing
-until fio finish writing, after running for about 2 minutes:
-
-[root@fedora ~]# cat /sys/block/md0/inflight
-       0  4474191
-
-Fix the problem by limiting the number of plugged bio based on the number
-of copies for original bio.
+There are multiple places to do the same thing, factor out a helper to
+prevent redundant code, and the helper will be used in following patch
+as well.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid1-10.c | 9 ++++++++-
- drivers/md/raid1.c    | 2 +-
- drivers/md/raid10.c   | 2 +-
- 3 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/md/raid1-10.c | 16 ++++++++++++++++
+ drivers/md/raid1.c    | 13 ++-----------
+ drivers/md/raid10.c   | 26 ++++----------------------
+ 3 files changed, 22 insertions(+), 33 deletions(-)
 
 diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 98d678b7df3f..35fb80aa37aa 100644
+index 5ba0c158ccd7..25d55036a6fb 100644
 --- a/drivers/md/raid1-10.c
 +++ b/drivers/md/raid1-10.c
-@@ -21,6 +21,7 @@
- #define IO_MADE_GOOD ((struct bio *)2)
- 
- #define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
-+#define MAX_PLUG_BIO 32
- 
- /* for managing resync I/O pages */
- struct resync_pages {
-@@ -31,6 +32,7 @@ struct resync_pages {
- struct raid1_plug_cb {
- 	struct blk_plug_cb	cb;
- 	struct bio_list		pending;
-+	unsigned int		count;
- };
- 
- static void rbio_pool_free(void *rbio, void *data)
-@@ -127,7 +129,7 @@ static inline void md_submit_write(struct bio *bio)
+@@ -110,6 +110,22 @@ static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
+ 	} while (idx++ < RESYNC_PAGES && size > 0);
  }
  
- static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
--				      blk_plug_cb_fn unplug)
-+				      blk_plug_cb_fn unplug, int copies)
- {
- 	struct raid1_plug_cb *plug = NULL;
- 	struct blk_plug_cb *cb;
-@@ -147,6 +149,11 @@ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
- 
- 	plug = container_of(cb, struct raid1_plug_cb, cb);
- 	bio_list_add(&plug->pending, bio);
-+	if (++plug->count / MAX_PLUG_BIO >= copies) {
-+		list_del(&cb->list);
-+		cb->callback(cb, false);
-+	}
++static inline void md_submit_write(struct bio *bio)
++{
++	struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
 +
- 
- 	return true;
- }
++	bio->bi_next = NULL;
++	bio_set_dev(bio, rdev->bdev);
++	if (test_bit(Faulty, &rdev->flags))
++		bio_io_error(bio);
++	else if (unlikely(bio_op(bio) ==  REQ_OP_DISCARD &&
++			  !bdev_max_discard_sectors(bio->bi_bdev)))
++		/* Just ignore it */
++		bio_endio(bio);
++	else
++		submit_bio_noacct(bio);
++}
++
+ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
+ 				      blk_plug_cb_fn unplug)
+ {
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 639e09cecf01..c6066408a913 100644
+index 92083f5329f9..d79525d6ec8f 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -1562,7 +1562,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 					      r1_bio->sector);
- 		/* flush_pending_writes() needs access to the rdev so...*/
- 		mbio->bi_bdev = (void *)rdev;
--		if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
-+		if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug, disks)) {
- 			spin_lock_irqsave(&conf->device_lock, flags);
- 			bio_list_add(&conf->pending_bio_list, mbio);
- 			spin_unlock_irqrestore(&conf->device_lock, flags);
+@@ -799,17 +799,8 @@ static void flush_bio_list(struct r1conf *conf, struct bio *bio)
+ 
+ 	while (bio) { /* submit pending writes */
+ 		struct bio *next = bio->bi_next;
+-		struct md_rdev *rdev = (void *)bio->bi_bdev;
+-		bio->bi_next = NULL;
+-		bio_set_dev(bio, rdev->bdev);
+-		if (test_bit(Faulty, &rdev->flags)) {
+-			bio_io_error(bio);
+-		} else if (unlikely((bio_op(bio) == REQ_OP_DISCARD) &&
+-				    !bdev_max_discard_sectors(bio->bi_bdev)))
+-			/* Just ignore it */
+-			bio_endio(bio);
+-		else
+-			submit_bio_noacct(bio);
++
++		md_submit_write(bio);
+ 		bio = next;
+ 		cond_resched();
+ 	}
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index bd9e655ca408..7135cfaf75db 100644
+index 2a2e138fa804..626cb8ed2099 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1306,7 +1306,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
+@@ -909,17 +909,8 @@ static void flush_pending_writes(struct r10conf *conf)
  
- 	atomic_inc(&r10_bio->remaining);
+ 		while (bio) { /* submit pending writes */
+ 			struct bio *next = bio->bi_next;
+-			struct md_rdev *rdev = (void*)bio->bi_bdev;
+-			bio->bi_next = NULL;
+-			bio_set_dev(bio, rdev->bdev);
+-			if (test_bit(Faulty, &rdev->flags)) {
+-				bio_io_error(bio);
+-			} else if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
+-					    !bdev_max_discard_sectors(bio->bi_bdev)))
+-				/* Just ignore it */
+-				bio_endio(bio);
+-			else
+-				submit_bio_noacct(bio);
++
++			md_submit_write(bio);
+ 			bio = next;
+ 			cond_resched();
+ 		}
+@@ -1134,17 +1125,8 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
  
--	if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
-+	if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copies)) {
- 		spin_lock_irqsave(&conf->device_lock, flags);
- 		bio_list_add(&conf->pending_bio_list, mbio);
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	while (bio) { /* submit pending writes */
+ 		struct bio *next = bio->bi_next;
+-		struct md_rdev *rdev = (void*)bio->bi_bdev;
+-		bio->bi_next = NULL;
+-		bio_set_dev(bio, rdev->bdev);
+-		if (test_bit(Faulty, &rdev->flags)) {
+-			bio_io_error(bio);
+-		} else if (unlikely((bio_op(bio) ==  REQ_OP_DISCARD) &&
+-				    !bdev_max_discard_sectors(bio->bi_bdev)))
+-			/* Just ignore it */
+-			bio_endio(bio);
+-		else
+-			submit_bio_noacct(bio);
++
++		md_submit_write(bio);
+ 		bio = next;
+ 		cond_resched();
+ 	}
 -- 
 2.39.2
 
