@@ -2,42 +2,42 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24722C7618E
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Apr 2023 08:22:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B522BC77B60
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Apr 2023 08:22:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240143AbjDZIWb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Apr 2023 04:22:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44922 "EHLO
+        id S240154AbjDZIWd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Apr 2023 04:22:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240066AbjDZIW0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Apr 2023 04:22:26 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02D3F35AC;
-        Wed, 26 Apr 2023 01:22:25 -0700 (PDT)
+        with ESMTP id S240125AbjDZIW2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Apr 2023 04:22:28 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70A333C1B;
+        Wed, 26 Apr 2023 01:22:26 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Q5sL45q37z4f4WHg;
-        Wed, 26 Apr 2023 16:22:20 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP2 (Coremail) with SMTP id Syh0CgBnW+k430hkUexVIA--.50201S8;
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q5sL649TFz4f55b3;
         Wed, 26 Apr 2023 16:22:22 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP2 (Coremail) with SMTP id Syh0CgBnW+k430hkUexVIA--.50201S11;
+        Wed, 26 Apr 2023 16:22:23 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, akpm@osdl.org, neilb@suse.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 4/7] md/raid1-10: submit write io directly if bitmap is not enabled
-Date:   Wed, 26 Apr 2023 16:20:28 +0800
-Message-Id: <20230426082031.1299149-5-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 7/7] md/raid1-10: limit the number of plugged bio
+Date:   Wed, 26 Apr 2023 16:20:31 +0800
+Message-Id: <20230426082031.1299149-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
 References: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgBnW+k430hkUexVIA--.50201S8
-X-Coremail-Antispam: 1UD129KBjvJXoWxuF15JFyrGw47Ww45Ww18AFb_yoW5AFy3pa
-        yDGa4Ykr15JFW3X3ZxAa4DAFyFywn7tr9rKryfC395uFy3XFsxGFWrGay5twn7CrnxCFsx
-        Xr1YkryUCr1UXrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9C14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: Syh0CgBnW+k430hkUexVIA--.50201S11
+X-Coremail-Antispam: 1UD129KBjvJXoWxZr4rKF4fXry8CFyfZry3XFb_yoW5try8pa
+        1Dta4YvrWUZFW7X3yDJayUCFyFga1DWFZFkrZ5C395ZF17XFWjga15JFWrWr1DZFZxGFy3
+        J3Z8Kr4xGF15tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9E14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
         z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
@@ -47,9 +47,9 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxuF15JFyrGw47Ww45Ww18AFb_yoW5AFy3pa
         M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
         CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
         14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxK
-        x2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
-        0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkUUUUU=
+        IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAv
+        wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14
+        v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZX7UUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,88 +58,100 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Commit 6cce3b23f6f8 ("[PATCH] md: write intent bitmap support for raid10")
-add bitmap support, and it changed that write io is submitted through
-daemon thread because bitmap need to be updated before write io. And
-later, plug is used to fix performance regression because all the write io
-will go to demon thread, which means io can't be issued concurrently.
+bio can be added to plug infinitely, and following writeback test can
+trigger huge amount of plugged bio:
 
-However, if bitmap is not enabled, the write io should not go to demon
-thread in the first place, and plug is not needed as well.
+Test script:
+modprobe brd rd_nr=4 rd_size=10485760
+mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean
+echo 0 > /proc/sys/vm/dirty_background_ratio
+echo 60 > /proc/sys/vm/dirty_ratio
+fio -filename=/dev/md0 -ioengine=libaio -rw=write -bs=4k -numjobs=1 -iodepth=128 -name=test
 
-Fixes: 6cce3b23f6f8 ("[PATCH] md: write intent bitmap support for raid10")
+Test result:
+Monitor /sys/block/md0/inflight will found that inflight keep increasing
+until fio finish writing, after running for about 2 minutes:
+
+[root@fedora ~]# cat /sys/block/md0/inflight
+       0  4474191
+
+Fix the problem by limiting the number of plugged bio based on the number
+of copies for original bio.
+
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-bitmap.c |  4 +---
- drivers/md/md-bitmap.h |  7 +++++++
- drivers/md/raid1-10.c  | 13 +++++++++++--
- 3 files changed, 19 insertions(+), 5 deletions(-)
+ drivers/md/raid1-10.c | 9 ++++++++-
+ drivers/md/raid1.c    | 2 +-
+ drivers/md/raid10.c   | 2 +-
+ 3 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 2a21633c5917..17e988f88303 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -1023,7 +1023,6 @@ static int md_bitmap_file_test_bit(struct bitmap *bitmap, sector_t block)
- 	return set;
- }
- 
--
- /* this gets called when the md device is ready to unplug its underlying
-  * (slave) device queues -- before we let any writes go down, we need to
-  * sync the dirty pages of the bitmap file to disk */
-@@ -1033,8 +1032,7 @@ void md_bitmap_unplug(struct bitmap *bitmap)
- 	int dirty, need_write;
- 	int writing = 0;
- 
--	if (!bitmap || !bitmap->storage.filemap ||
--	    test_bit(BITMAP_STALE, &bitmap->flags))
-+	if (!md_bitmap_enabled(bitmap))
- 		return;
- 
- 	/* look at each page to see if there are any set bits that need to be
-diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index cfd7395de8fd..3a4750952b3a 100644
---- a/drivers/md/md-bitmap.h
-+++ b/drivers/md/md-bitmap.h
-@@ -273,6 +273,13 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
- 			     sector_t *lo, sector_t *hi, bool clear_bits);
- void md_bitmap_free(struct bitmap *bitmap);
- void md_bitmap_wait_behind_writes(struct mddev *mddev);
-+
-+static inline bool md_bitmap_enabled(struct bitmap *bitmap)
-+{
-+	return bitmap && bitmap->storage.filemap &&
-+	       !test_bit(BITMAP_STALE, &bitmap->flags);
-+}
-+
- #endif
- 
- #endif
 diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 25d55036a6fb..4167bda139b1 100644
+index 98d678b7df3f..35fb80aa37aa 100644
 --- a/drivers/md/raid1-10.c
 +++ b/drivers/md/raid1-10.c
-@@ -130,9 +130,18 @@ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
- 				      blk_plug_cb_fn unplug)
+@@ -21,6 +21,7 @@
+ #define IO_MADE_GOOD ((struct bio *)2)
+ 
+ #define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
++#define MAX_PLUG_BIO 32
+ 
+ /* for managing resync I/O pages */
+ struct resync_pages {
+@@ -31,6 +32,7 @@ struct resync_pages {
+ struct raid1_plug_cb {
+ 	struct blk_plug_cb	cb;
+ 	struct bio_list		pending;
++	unsigned int		count;
+ };
+ 
+ static void rbio_pool_free(void *rbio, void *data)
+@@ -127,7 +129,7 @@ static inline void md_submit_write(struct bio *bio)
+ }
+ 
+ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
+-				      blk_plug_cb_fn unplug)
++				      blk_plug_cb_fn unplug, int copies)
  {
  	struct raid1_plug_cb *plug = NULL;
--	struct blk_plug_cb *cb = blk_check_plugged(unplug, mddev,
--						   sizeof(*plug));
-+	struct blk_plug_cb *cb;
-+
-+	/*
-+	 * If bitmap is not enabled, it's safe to submit the io directly, and
-+	 * this can get optimal performance.
-+	 */
-+	if (!md_bitmap_enabled(mddev->bitmap)) {
-+		md_submit_write(bio);
-+		return true;
+ 	struct blk_plug_cb *cb;
+@@ -147,6 +149,11 @@ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
+ 
+ 	plug = container_of(cb, struct raid1_plug_cb, cb);
+ 	bio_list_add(&plug->pending, bio);
++	if (++plug->count / MAX_PLUG_BIO >= copies) {
++		list_del(&cb->list);
++		cb->callback(cb, false);
 +	}
++
  
-+	cb = blk_check_plugged(unplug, mddev, sizeof(*plug));
- 	if (!cb)
- 		return false;
+ 	return true;
+ }
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 639e09cecf01..c6066408a913 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1562,7 +1562,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 					      r1_bio->sector);
+ 		/* flush_pending_writes() needs access to the rdev so...*/
+ 		mbio->bi_bdev = (void *)rdev;
+-		if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
++		if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug, disks)) {
+ 			spin_lock_irqsave(&conf->device_lock, flags);
+ 			bio_list_add(&conf->pending_bio_list, mbio);
+ 			spin_unlock_irqrestore(&conf->device_lock, flags);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index bd9e655ca408..7135cfaf75db 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1306,7 +1306,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
  
+ 	atomic_inc(&r10_bio->remaining);
+ 
+-	if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
++	if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copies)) {
+ 		spin_lock_irqsave(&conf->device_lock, flags);
+ 		bio_list_add(&conf->pending_bio_list, mbio);
+ 		spin_unlock_irqrestore(&conf->device_lock, flags);
 -- 
 2.39.2
 
