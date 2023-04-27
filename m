@@ -2,83 +2,89 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EABECC77B61
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Apr 2023 08:09:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D65E6C77B73
+	for <linux-raid@archiver.kernel.org>; Thu, 27 Apr 2023 08:57:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242675AbjD0IJV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Apr 2023 04:09:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36206 "EHLO
+        id S242944AbjD0I5Q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 27 Apr 2023 04:57:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232094AbjD0IJU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Apr 2023 04:09:20 -0400
+        with ESMTP id S232094AbjD0I5O (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Apr 2023 04:57:14 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BF802D71
-        for <linux-raid@vger.kernel.org>; Thu, 27 Apr 2023 01:09:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 637EC19AF;
+        Thu, 27 Apr 2023 01:57:12 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q6T0W1qQgz4f3nJN
-        for <linux-raid@vger.kernel.org>; Thu, 27 Apr 2023 16:09:15 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgD3rLCqLUpkEPH+IA--.22003S3;
-        Thu, 27 Apr 2023 16:09:16 +0800 (CST)
-Subject: Re: [question] solution for raid10 configuration concurrent with io
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Linux-RAID <linux-raid@vger.kernel.org>,
-        Song Liu <song@kernel.org>, logang@deltatee.com,
-        guoqing.jiang@linux.dev, "yukuai (C)" <yukuai3@huawei.com>
-References: <cb390b39-1b1e-04e1-55ad-2ff8afc47e1b@huawei.com>
- <CALTww2__S7y9zZ0Y2R6qOW4A_V0S0Z7Z_ixOvoe6BoGxqbnd4g@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <f442f2d1-122e-44fb-5bad-fc14a35e782a@huaweicloud.com>
-Date:   Thu, 27 Apr 2023 16:09:14 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q6V3n03fMz4f3mJP;
+        Thu, 27 Apr 2023 16:57:09 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP4 (Coremail) with SMTP id gCh0CgBH_rHjOEpkmCsBIQ--.37560S5;
+        Thu, 27 Apr 2023 16:57:10 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     song@kernel.org, neilb@suse.de, Rob.Becker@riverbed.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH 1/3] md/raid10: fix slab-out-of-bounds in md_bitmap_get_counter
+Date:   Thu, 27 Apr 2023 16:56:10 +0800
+Message-Id: <20230427085612.1346752-2-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230427085612.1346752-1-linan666@huaweicloud.com>
+References: <20230427085612.1346752-1-linan666@huaweicloud.com>
 MIME-Version: 1.0
-In-Reply-To: <CALTww2__S7y9zZ0Y2R6qOW4A_V0S0Z7Z_ixOvoe6BoGxqbnd4g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3rLCqLUpkEPH+IA--.22003S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYj7kC6x804xWl14x267AKxVW8JVW5JwAF
-        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xv
-        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
-        64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r
-        1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vI
-        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
-        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJ
-        UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID: gCh0CgBH_rHjOEpkmCsBIQ--.37560S5
+X-Coremail-Antispam: 1UD129KBjvdXoWrur48urW5XF4UKw4rZFy7Jrb_yoWftrX_C3
+        4rXFyxJrWUCry3AwnrXw4xZrWjyw1Du3Z7WFsaqrySvF18u343WrW0yrnxt3WrGrW09ry5
+        Jryj9ayrur4YkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbkxYFVCjjxCrM7AC8VAFwI0_Xr0_Wr1l1xkIjI8I6I8E6xAIw20E
+        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r18M2
+        8IrcIa0xkI8VCY1x0267AKxVWUCVW8JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
+        021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r
+        4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
+        GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64
+        xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j
+        6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2
+        kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_
+        Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17
+        CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0
+        I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I
+        8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2Kfnx
+        nUUI43ZEXa7IU858n5UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: Li Nan <linan122@huawei.com>
 
-在 2023/04/27 14:53, Xiao Ni 写道:
+If we write a large number to md/bitmap_set_bits, md_bitmap_checkpage()
+will return -EINVAL because "page >= bitmap->pages", but the return value
+was not checked immediately in md_bitmap_get_counter() in order to set
+*blocks value and slab-out-of-bounds occurs.
 
->> // assum that rdev is NULL, and replacement is not NULL
-> 
-> How can trigger this? Could you give the detailed commands?
-> 
+Return directly if err is -EINVAL.
 
-This is just because raid10_remove_disk() set rdev to NULL first, and
-then replace rdev with replacement. This is temporary but io can
-concurrent with this temporary status.
+Fixes: ef4256733506 ("md/bitmap: optimise scanning of empty bitmaps.")
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/md-bitmap.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-raid10_remove_disk
-
-  p = conf->mirrors + number;
-  rdevp = &p->rdev;
-  *rdevp = NULL;
-  // here!
-  p->rdev = p->replacement;
-  p->replacement = NULL;
-
-Thanks,
-Kuai
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 920bb68156d2..0b41ef422da7 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -1388,6 +1388,8 @@ __acquires(bitmap->lock)
+ 	int err;
+ 
+ 	err = md_bitmap_checkpage(bitmap, page, create, 0);
++	if (err == -EINVAL)
++		return NULL;
+ 
+ 	if (bitmap->bp[page].hijacked ||
+ 	    bitmap->bp[page].map == NULL)
+-- 
+2.31.1
 
