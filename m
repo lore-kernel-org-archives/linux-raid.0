@@ -2,179 +2,121 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B32EFC77B73
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Apr 2023 11:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4AD7C77B73
+	for <linux-raid@archiver.kernel.org>; Thu, 27 Apr 2023 17:45:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243459AbjD0LQW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Apr 2023 07:16:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58976 "EHLO
+        id S233796AbjD0Rpk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 27 Apr 2023 13:45:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242972AbjD0LQU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Apr 2023 07:16:20 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A1291BD9;
-        Thu, 27 Apr 2023 04:16:18 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q6Y8G1zDdz4f3w0G;
-        Thu, 27 Apr 2023 19:16:14 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHcLN9WUpk0uUHIQ--.33659S3;
-        Thu, 27 Apr 2023 19:16:15 +0800 (CST)
-Subject: Re: [PATCH 2/3] md/raid10: fix overflow in safe_delay_store
-To:     linan666@huaweicloud.com, song@kernel.org, neilb@suse.de,
-        Rob.Becker@riverbed.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230427085612.1346752-1-linan666@huaweicloud.com>
- <20230427085612.1346752-3-linan666@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <cc4cfcf6-54cf-a271-4082-687e8ba5c1c5@huaweicloud.com>
-Date:   Thu, 27 Apr 2023 19:16:13 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S244102AbjD0Rpi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Apr 2023 13:45:38 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C039949C9
+        for <linux-raid@vger.kernel.org>; Thu, 27 Apr 2023 10:45:17 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 445C063EC2
+        for <linux-raid@vger.kernel.org>; Thu, 27 Apr 2023 17:45:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A03BCC4339C
+        for <linux-raid@vger.kernel.org>; Thu, 27 Apr 2023 17:45:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1682617516;
+        bh=cOqWvHGZXTJYnL3WDCS+axbyFi4vdTquH5zS8d4j9Tg=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Bzk9kfr5o9G7JszjbM0dsBw3kBim0ex6PSC62vdepz7yXKGbehOiw7mpEwIkwE2Qn
+         eLortiyB7mavKOz9OuMJaI6CEjv4vyS2b3GNbGlDeLd95v2OtLTc76U+Uk70GJPvFX
+         g4IL7hYZq5DRCxtmABcpNlNSAIeFdo5dNIGlGM+4de+9wSC7XTtOfgJL3xggck0lXM
+         P/b8nOn/Blqs0TtrTwpIUPE7T6Ev+1wMXIugqAyEHGSDrpZQFzKCOy0OpgX6rmRIi0
+         djU/7oLWBHRlYFum03CcYlH1iI/qSdJALceAl+d+3shIAM8kIhCC1WoUzpTHT3T40A
+         pV6nuhvwlmoNw==
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-4f0025f4686so3535023e87.3
+        for <linux-raid@vger.kernel.org>; Thu, 27 Apr 2023 10:45:16 -0700 (PDT)
+X-Gm-Message-State: AC+VfDzjeiV68NGKbcfUqYUfXXje2JWSJkcVRHX4EDfKBdYtYQ5IEIoW
+        rmrqNUXN37dEHn1lAM2SqPpZFZ4SmyZRiTPMd98=
+X-Google-Smtp-Source: ACHHUZ6OWIOhMNiXzrFyEYdkXyxjdGRirItcqWk9CXqGYlTzaY1EAP8C/gyYJsPllxrz3jub4zhj6hIzjYFazlj+hW8=
+X-Received: by 2002:a19:f714:0:b0:4ec:9f36:9b5c with SMTP id
+ z20-20020a19f714000000b004ec9f369b5cmr893263lfe.68.1682617514554; Thu, 27 Apr
+ 2023 10:45:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20230427085612.1346752-3-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHcLN9WUpk0uUHIQ--.33659S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWFy3tF4UWFy8KF4xAF4rAFb_yoW5AFW8pa
-        93G34avr4UtryIkF1SvF4DWFy5WFn7XrWDt34IyrZ3XF4DXFn8K34rGw4Fvr1UC3yUZF47
-        Jry5JF1DCr9FkaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
-        07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
-        02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
-        GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
-        CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE
-        14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-        9x07UWE__UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <20230425011438.71046-1-jonathan.derrick@linux.dev>
+ <CAPhsuW6f+6nqqaap1pP_rETSk_WA68keq6wCxEJojkYcVw-Vhw@mail.gmail.com>
+ <CAPhsuW5LMzsus-nvNCj2Fy71cTW04rEN=bwcynqDHc7zrEYxCg@mail.gmail.com> <5a4cba40-6f3a-e5dc-0398-4dd7489de9d8@huaweicloud.com>
+In-Reply-To: <5a4cba40-6f3a-e5dc-0398-4dd7489de9d8@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 27 Apr 2023 10:45:02 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW68kkYW_F7u3RZyq+K9VOF1iCb3Y6c+xY_URS+_uXYMZw@mail.gmail.com>
+Message-ID: <CAPhsuW68kkYW_F7u3RZyq+K9VOF1iCb3Y6c+xY_URS+_uXYMZw@mail.gmail.com>
+Subject: Re: [PATCH] md: Fix bitmap offset type in sb writer
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Jonathan Derrick <jonathan.derrick@linux.dev>,
+        linux-raid@vger.kernel.org,
+        Dan Carpenter <dan.carpenter@linaro.org>,
+        "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-Other than some nits below, this patch looks good to me.
-
-ÔÚ 2023/04/27 16:56, linan666@huaweicloud.com Ð´µÀ:
-> From: Li Nan <linan122@huawei.com>
-> 
-> There is no input check when echo md/safe_mode_delay, and overflow will
-> occur. There is risk of overflow in strict_strtoul_scaled(), too. Fixed
-typo: Fix
-
-> it by using kstrtoul instead of parsing word one by one.
-> 
-> Fixes: 72e02075a33f ("md: factor out parsing of fixed-point numbers")
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/md.c | 66 ++++++++++++++++++++++++++++++++-----------------
->   1 file changed, 43 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 8e344b4b3444..faffbd042925 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3767,35 +3767,51 @@ static int analyze_sbs(struct mddev *mddev)
->    */
->   int strict_strtoul_scaled(const char *cp, unsigned long *res, int scale)
->   {
-> -	unsigned long result = 0;
-> -	long decimals = -1;
-> -	while (isdigit(*cp) || (*cp == '.' && decimals < 0)) {
-> -		if (*cp == '.')
-> -			decimals = 0;
-> -		else if (decimals < scale) {
-> -			unsigned int value;
-> -			value = *cp - '0';
-> -			result = result * 10 + value;
-> -			if (decimals >= 0)
-> -				decimals++;
-> -		}
-> -		cp++;
-> -	}
-> -	if (*cp == '\n')
-> -		cp++;
-> -	if (*cp)
-> +	unsigned long result = 0, decimals = 0;
-> +	char *pos, *str;
-> +	int rv;
-> +
-> +	str = kmemdup_nul(cp, strlen(cp), GFP_KERNEL);
-> +	if (!str)
-> +		return -ENOMEM;
-> +	pos = strchr(str, '.');
-> +	if (pos) {
-> +		int cnt = scale;
-> +
-> +		*pos = '\0';
-> +		while (isdigit(*(++pos))) {
-> +			if (cnt) {
-> +				decimals = decimals * 10 + *pos - '0';
-> +				cnt--;
-> +			}
-> +		}
-> +		if (*pos == '\n')
-> +			pos++;
-> +		if (*pos) {
-> +			kfree(str);
-> +			return -EINVAL;
-> +		}
-> +		decimals *= int_pow(10, cnt);
-> +	}
-> +
-> +	rv = kstrtoul(str, 10, &result);
-> +	kfree(str);
-> +	if (rv)
-> +		return rv;
-> +
-> +	if (result > (ULONG_MAX - decimals) / (unsigned int)int_pow(10, scale))
->   		return -EINVAL;
-> -	if (decimals < 0)
-> -		decimals = 0;
-> -	*res = result * int_pow(10, scale - decimals);
-> -	return 0;
-> +	*res = result * int_pow(10, scale) + decimals;
-> +
-> +	return rv;
+On Thu, Apr 27, 2023 at 2:35=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/04/27 1:58, Song Liu =E5=86=99=E9=81=93:
+> > Hi Jonathan,
+> >
+> > On Tue, Apr 25, 2023 at 8:44=E2=80=AFPM Song Liu <song@kernel.org> wrot=
+e:
+> >>
+> >> On Mon, Apr 24, 2023 at 6:16=E2=80=AFPM Jonathan Derrick
+> >> <jonathan.derrick@linux.dev> wrote:
+> >>>
+> >>> Bitmap offset is allowed to be negative, indicating that bitmap prece=
+des
+> >>> metadata. Change the type back from sector_t to loff_t to satisfy
+> >>> conditionals and calculations.
+> >
+> > This actually breaks the following tests from mdadm:
+> >
+> > 05r1-add-internalbitmap-v1a
+>
+> After a quick look of this test, I think the root cause is another
+> patch:
+>
+> commit 8745faa95611 ("md: Use optimal I/O size for last bitmap page")
+>
+> This patch add a new helper bitmap_io_size(), which breaks the condition
+> that 'negative value < 0'.
+>
+> And following patch should fix this problem:
+>
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index adbe95e03852..b1b521837156 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -219,8 +219,9 @@ static unsigned int optimal_io_size(struct
+> block_device *bdev,
 >   }
->   
->   static ssize_t
->   safe_delay_show(struct mddev *mddev, char *page)
+>
+>   static unsigned int bitmap_io_size(unsigned int io_size, unsigned int
+> opt_size,
+> -                                  sector_t start, sector_t boundary)
+> +                                  loff_t start, loff_t boundary)
 >   {
-> -	int msec = (mddev->safemode_delay*1000)/HZ;
-> -	return sprintf(page, "%d.%03d\n", msec/1000, msec%1000);
-> +	unsigned int msec = ((unsigned long)mddev->safemode_delay*1000)/HZ;
-> +
-> +	return sprintf(page, "%u.%03u\n", msec/1000, msec%1000);
->   }
->   static ssize_t
->   safe_delay_store(struct mddev *mddev, const char *cbuf, size_t len)
-> @@ -3809,10 +3825,14 @@ safe_delay_store(struct mddev *mddev, const char *cbuf, size_t len)
->   
->   	if (strict_strtoul_scaled(cbuf, &msec, 3) < 0)
->   		return -EINVAL;
+>
+> > 05r1-internalbitmap-v1a
+> > 05r1-remove-internalbitmap-v1a
+> >
+>
+> The patch is not tested yet, and I don't have time to look other tests
+> yet...
 
-strict_strtoul_scaled() can return -ENOMEM now.
+Thanks Kuai! This fixed the test.
 
-> +	if (msec > UINT_MAX)
-> +		return -EINVAL;
-> +
->   	if (msec == 0)
->   		mddev->safemode_delay = 0;
->   	else {
->   		unsigned long old_delay = mddev->safemode_delay;
-> +		/* HZ <= 1000, so new_delay < UINT_MAX, too */
->   		unsigned long new_delay = (msec*HZ)/1000;
->   
->   		if (new_delay == 0)
-> 
+I will add your Signed-off-by to the patch. Please let me know if you
+prefer not to have it.
 
+Song
