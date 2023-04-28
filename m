@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5D7DC77B60
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Apr 2023 06:30:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5E4C77B60
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Apr 2023 07:13:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229980AbjD1Gap (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Apr 2023 02:30:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41252 "EHLO
+        id S1345414AbjD1HNB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Apr 2023 03:13:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjD1Gao (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Apr 2023 02:30:44 -0400
+        with ESMTP id S229680AbjD1HNA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Apr 2023 03:13:00 -0400
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99E542711
-        for <linux-raid@vger.kernel.org>; Thu, 27 Apr 2023 23:30:42 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Q72mD5zDbz4f3mJB
-        for <linux-raid@vger.kernel.org>; Fri, 28 Apr 2023 14:30:36 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D154312F;
+        Fri, 28 Apr 2023 00:12:58 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Q73j163QTz4f3kpB;
+        Fri, 28 Apr 2023 15:12:53 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP1 (Coremail) with SMTP id cCh0CgAXNzEMaEtkjh9BHw--.12942S4;
-        Fri, 28 Apr 2023 14:30:38 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbHzcUtkB+tAIQ--.17791S4;
+        Fri, 28 Apr 2023 15:12:52 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
-        jes@trained-monkey.org, pmenzel@molgen.mpg.de, logang@deltatee.com,
-        song@kernel.org
-Cc:     yukuai3@huawei.com, yangerkun@huawei.com
-Subject: [PATCH] tests: add a new test for rdev lifetime
-Date:   Fri, 28 Apr 2023 14:28:45 +0800
-Message-Id: <20230428062845.1975462-1-yukuai1@huaweicloud.com>
+To:     song@kernel.org, neilb@suse.de, akpm@linux-foundation.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next] md: fix duplicate filename for rdev
+Date:   Fri, 28 Apr 2023 15:10:59 +0800
+Message-Id: <20230428071059.1988153-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: cCh0CgAXNzEMaEtkjh9BHw--.12942S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxJFW8Gw1DAr45KF47ur1rWFg_yoW5Ar15pr
-        4I9F15Gr48Gr12yF4aka1fWF1rAa1kCF47Ars7Xr15ZFyj9w17XFyDKF1UAF9xGrZ5Zw1S
-        ya4kJayrKr47GaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCj
-        c4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4
-        CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1x
-        MIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6r
-        W3Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUv
-        cSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
+X-CM-TRANSID: gCh0CgBnHbHzcUtkB+tAIQ--.17791S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxKrW7Cry8JrW7Kw1kXw18Xwb_yoWfCr13p3
+        ySqa45GrWUJrW3Wa1UAws7u3WYgrn7KFZrtryfu3WSywnxGrnrG3WFqFy5XFyrCrZ5Zrn8
+        Za18WF45Zay8GF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+        AvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -55,103 +55,282 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-This test add and remove a underlying disk to raid concurretly, verify
-that the following problem is fixed:
+commit 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device
+from an md array via sysfs") delay the deleting of rdev, however, this
+introduce a window that rdev can be added again while the deleting is
+not done yet, and sysfs will complain about duplicate filename.
 
-run mdadm test 23rdev-lifetime at Fri Apr 28 03:25:30 UTC 2023
-md: could not open device unknown-block(1,0).
-sysfs: cannot create duplicate filename '/devices/virtual/block/md0/md/dev-ram0'
-CPU: 26 PID: 10521 Comm: test Not tainted 6.3.0-rc2-00134-g7b3a8828043c #115
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.1-2.fc37 04/014
-Call Trace:
- <TASK>
- dump_stack_lvl+0xe7/0x180
- dump_stack+0x18/0x30
- sysfs_warn_dup+0xa2/0xd0
- sysfs_create_dir_ns+0x119/0x140
- kobject_add_internal+0x143/0x4d0
- kobject_add_varg+0x35/0x70
- kobject_add+0x64/0xd0
- bind_rdev_to_array+0x254/0x840 [md_mod]
- new_dev_store+0x14d/0x350 [md_mod]
- md_attr_store+0xc1/0x1a0 [md_mod]
- sysfs_kf_write+0x51/0x70
- kernfs_fop_write_iter+0x188/0x270
- vfs_write+0x27e/0x460
- ksys_write+0x85/0x180
- __x64_sys_write+0x21/0x30
- do_syscall_64+0x6c/0xe0
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f26bacf5387
-Code: 0d 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b7 0f 1f 00 f3 0f 1e fa 64 84
-RSP: 002b:00007ffe98d79e68 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007f26bacf5387
-RDX: 0000000000000004 RSI: 000055bd10282bf0 RDI: 0000000000000001
-RBP: 000055bd10282bf0 R08: 000000000000000a R09: 00007f26bad8b4e0
-R10: 00007f26bad8b3e0 R11: 0000000000000246 R12: 0000000000000004
-R13: 00007f26badc8520 R14: 0000000000000004 R15: 00007f26badc8700
- </TASK>
+Follow up patches try to fix this problem by flush workqueue, however,
+flush_rdev_wq() is just dead code, the progress in
+md_kick_rdev_from_array():
 
+1) list_del_rcu(&rdev->same_set);
+2) synchronize_rcu();
+3) queue_work(md_rdev_misc_wq, &rdev->del_work);
+
+So in flush_rdev_wq(), if rdev is found in the list, work_pending() can
+never pass, in the meantime, if work is queued, then rdev can never be
+found in the list.
+
+flush_rdev_wq() can be replaced by flush_workqueue() directly, however,
+this approach is not good:
+- the workqueue is global, this synchronization for all raid disks is
+  not necessary.
+- flush_workqueue can't be called under 'reconfig_mutex', there is still
+  a small window between flush_workqueue() and mddev_lock() that other
+  context can queue new work, hence the problem is not solved completely.
+
+sysfs already have apis to support delete itself through writer, and
+these apis, specifically sysfs_break/unbreak_active_protection(), is used
+so support deleting rdev synchronously. Therefore, the above commit can be
+reverted, and sysfs duplicate filename can be avoided.
+
+A new mdadm regression test [1] is proposed as well.
+
+Link: https://lore.kernel.org/linux-raid/20230428062845.1975462-1-yukuai1@huaweicloud.com/
+Fixes: 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device from an md array via sysfs")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- tests/23rdev-lifetime | 48 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 48 insertions(+)
- create mode 100644 tests/23rdev-lifetime
+ drivers/md/md.c | 85 +++++++++++++++++++++++++------------------------
+ drivers/md/md.h |  8 +++++
+ 2 files changed, 51 insertions(+), 42 deletions(-)
 
-diff --git a/tests/23rdev-lifetime b/tests/23rdev-lifetime
-new file mode 100644
-index 00000000..df0fcdd9
---- /dev/null
-+++ b/tests/23rdev-lifetime
-@@ -0,0 +1,48 @@
-+devname=${dev0##*/}
-+devt=`cat /sys/block/$devname/dev`
-+dmesg_marker="run mdadm test 23rdev-lifetime at `date`"
-+pid1=0
-+pid2=0
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 0a4a10d4c0e0..e1bc223d58b3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -83,12 +83,12 @@ static struct module *md_cluster_mod;
+ static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
+ static struct workqueue_struct *md_wq;
+ static struct workqueue_struct *md_misc_wq;
+-static struct workqueue_struct *md_rdev_misc_wq;
+ 
+ static int remove_and_add_spares(struct mddev *mddev,
+ 				 struct md_rdev *this);
+ static void mddev_detach(struct mddev *mddev);
+ static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
++static void export_rdev(struct md_rdev *rdev);
+ 
+ enum md_ro_state {
+ 	MD_RDWR,
+@@ -674,9 +674,11 @@ void mddev_init(struct mddev *mddev)
+ {
+ 	mutex_init(&mddev->open_mutex);
+ 	mutex_init(&mddev->reconfig_mutex);
++	mutex_init(&mddev->delete_mutex);
+ 	mutex_init(&mddev->bitmap_info.mutex);
+ 	INIT_LIST_HEAD(&mddev->disks);
+ 	INIT_LIST_HEAD(&mddev->all_mddevs);
++	INIT_LIST_HEAD(&mddev->deleting);
+ 	timer_setup(&mddev->safemode_timer, md_safemode_timeout, 0);
+ 	atomic_set(&mddev->active, 1);
+ 	atomic_set(&mddev->openers, 0);
+@@ -778,6 +780,23 @@ static void mddev_free(struct mddev *mddev)
+ 
+ static const struct attribute_group md_redundancy_group;
+ 
++static void md_free_rdev(struct mddev *mddev)
++{
++	struct md_rdev *rdev;
++	struct md_rdev *tmp;
 +
-+stop() {
-+        if [[ $1 -ne 0 ]]; then
-+                kill -9 $1
-+        fi
++	if (list_empty_careful(&mddev->deleting))
++		return;
++
++	mutex_lock(&mddev->delete_mutex);
++	list_for_each_entry_safe(rdev, tmp, &mddev->deleting, same_set) {
++		list_del_init(&rdev->same_set);
++		kobject_del(&rdev->kobj);
++		export_rdev(rdev);
++	}
++	mutex_unlock(&mddev->delete_mutex);
 +}
 +
-+trap 'stop $pid1; stop $pid2;' EXIT
+ void mddev_unlock(struct mddev *mddev)
+ {
+ 	if (mddev->to_remove) {
+@@ -819,6 +838,8 @@ void mddev_unlock(struct mddev *mddev)
+ 	} else
+ 		mutex_unlock(&mddev->reconfig_mutex);
+ 
++	md_free_rdev(mddev);
 +
-+echo "$dmesg_marker" >> /dev/kmsg
+ 	md_wakeup_thread(mddev->thread);
+ 	wake_up(&mddev->sb_wait);
+ }
+@@ -2454,13 +2475,6 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+ 	return err;
+ }
+ 
+-static void rdev_delayed_delete(struct work_struct *ws)
+-{
+-	struct md_rdev *rdev = container_of(ws, struct md_rdev, del_work);
+-	kobject_del(&rdev->kobj);
+-	kobject_put(&rdev->kobj);
+-}
+-
+ void md_autodetect_dev(dev_t dev);
+ 
+ static void export_rdev(struct md_rdev *rdev)
+@@ -2478,6 +2492,8 @@ static void export_rdev(struct md_rdev *rdev)
+ 
+ static void md_kick_rdev_from_array(struct md_rdev *rdev)
+ {
++	struct mddev *mddev = rdev->mddev;
 +
-+check_dmesg() {
-+        dmesg | grep -A 9999 "$dmesg_marker" | grep "sysfs: cannot create duplicate filename"
+ 	bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
+ 	list_del_rcu(&rdev->same_set);
+ 	pr_debug("md: unbind<%pg>\n", rdev->bdev);
+@@ -2491,15 +2507,17 @@ static void md_kick_rdev_from_array(struct md_rdev *rdev)
+ 	rdev->sysfs_unack_badblocks = NULL;
+ 	rdev->sysfs_badblocks = NULL;
+ 	rdev->badblocks.count = 0;
+-	/* We need to delay this, otherwise we can deadlock when
+-	 * writing to 'remove' to "dev/state".  We also need
+-	 * to delay it due to rcu usage.
+-	 */
 +
-+        if [[ $? -eq 0 ]]; then
-+                die "sysfs dumplicate"
-+        fi
-+}
+ 	synchronize_rcu();
+-	INIT_WORK(&rdev->del_work, rdev_delayed_delete);
+-	kobject_get(&rdev->kobj);
+-	queue_work(md_rdev_misc_wq, &rdev->del_work);
+-	export_rdev(rdev);
 +
-+add_by_sysfs() {
-+        while true; do
-+                echo $devt > /sys/block/md0/md/new_dev
-+                check_dmesg
-+        done
-+}
++	/*
++	 * kobject_del() will wait for all in progress writers to be done, where
++	 * reconfig_mutex is held, hence it can't be called under
++	 * reconfig_mutex and it's delayed to mddev_unlock().
++	 */
++	mutex_lock(&mddev->delete_mutex);
++	list_add(&rdev->same_set, &mddev->deleting);
++	mutex_unlock(&mddev->delete_mutex);
+ }
+ 
+ static void export_array(struct mddev *mddev)
+@@ -3564,6 +3582,7 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+ {
+ 	struct rdev_sysfs_entry *entry = container_of(attr, struct rdev_sysfs_entry, attr);
+ 	struct md_rdev *rdev = container_of(kobj, struct md_rdev, kobj);
++	struct kernfs_node *kn = NULL;
+ 	ssize_t rv;
+ 	struct mddev *mddev = rdev->mddev;
+ 
+@@ -3571,6 +3590,10 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+ 		return -EIO;
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
 +
-+remove_by_sysfs(){
-+        while true; do
-+                echo remove > /sys/block/md0/md/dev-${devname}/state
-+                check_dmesg
-+        done
-+}
++	if (entry->store == state_store && cmd_match(page, "remove"))
++		kn = sysfs_break_active_protection(kobj, attr);
 +
-+echo md0 > /sys/module/md_mod/parameters/new_array || die "create md0 failed"
+ 	rv = mddev ? mddev_lock(mddev) : -ENODEV;
+ 	if (!rv) {
+ 		if (rdev->mddev == NULL)
+@@ -3579,6 +3602,10 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+ 			rv = entry->store(rdev, page, length);
+ 		mddev_unlock(mddev);
+ 	}
 +
-+add_by_sysfs &
-+pid1=$!
++	if (kn)
++		sysfs_unbreak_active_protection(kn);
 +
-+remove_by_sysfs &
-+pid2=$!
+ 	return rv;
+ }
+ 
+@@ -4502,20 +4529,6 @@ null_show(struct mddev *mddev, char *page)
+ 	return -EINVAL;
+ }
+ 
+-/* need to ensure rdev_delayed_delete() has completed */
+-static void flush_rdev_wq(struct mddev *mddev)
+-{
+-	struct md_rdev *rdev;
+-
+-	rcu_read_lock();
+-	rdev_for_each_rcu(rdev, mddev)
+-		if (work_pending(&rdev->del_work)) {
+-			flush_workqueue(md_rdev_misc_wq);
+-			break;
+-		}
+-	rcu_read_unlock();
+-}
+-
+ static ssize_t
+ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ {
+@@ -4543,7 +4556,6 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ 	    minor != MINOR(dev))
+ 		return -EOVERFLOW;
+ 
+-	flush_rdev_wq(mddev);
+ 	err = mddev_lock(mddev);
+ 	if (err)
+ 		return err;
+@@ -5603,7 +5615,6 @@ struct mddev *md_alloc(dev_t dev, char *name)
+ 	 * removed (mddev_delayed_delete).
+ 	 */
+ 	flush_workqueue(md_misc_wq);
+-	flush_workqueue(md_rdev_misc_wq);
+ 
+ 	mutex_lock(&disks_mutex);
+ 	mddev = mddev_alloc(dev);
+@@ -7569,9 +7580,6 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
+ 
+ 	}
+ 
+-	if (cmd == ADD_NEW_DISK || cmd == HOT_ADD_DISK)
+-		flush_rdev_wq(mddev);
+-
+ 	if (cmd == HOT_REMOVE_DISK)
+ 		/* need to ensure recovery thread has run */
+ 		wait_event_interruptible_timeout(mddev->sb_wait,
+@@ -9645,10 +9653,6 @@ static int __init md_init(void)
+ 	if (!md_misc_wq)
+ 		goto err_misc_wq;
+ 
+-	md_rdev_misc_wq = alloc_workqueue("md_rdev_misc", 0, 0);
+-	if (!md_rdev_misc_wq)
+-		goto err_rdev_misc_wq;
+-
+ 	ret = __register_blkdev(MD_MAJOR, "md", md_probe);
+ 	if (ret < 0)
+ 		goto err_md;
+@@ -9667,8 +9671,6 @@ static int __init md_init(void)
+ err_mdp:
+ 	unregister_blkdev(MD_MAJOR, "md");
+ err_md:
+-	destroy_workqueue(md_rdev_misc_wq);
+-err_rdev_misc_wq:
+ 	destroy_workqueue(md_misc_wq);
+ err_misc_wq:
+ 	destroy_workqueue(md_wq);
+@@ -9964,7 +9966,6 @@ static __exit void md_exit(void)
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
+ 
+-	destroy_workqueue(md_rdev_misc_wq);
+ 	destroy_workqueue(md_misc_wq);
+ 	destroy_workqueue(md_wq);
+ }
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 6fa71d90fb4d..a228e78e7f3a 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -531,6 +531,14 @@ struct mddev {
+ 	unsigned int			good_device_nr;	/* good device num within cluster raid */
+ 	unsigned int			noio_flag; /* for memalloc scope API */
+ 
++	/*
++	 * Temporarily store rdev that will be finally removed when
++	 * reconfig_mutex is unlocked.
++	 */
++	struct list_head		deleting;
++	/* Protect the deleting list */
++	struct mutex			delete_mutex;
 +
-+sleep 5
-+echo clear > /sys/block/md0/md/array_state
+ 	bool	has_superblocks:1;
+ 	bool	fail_last_dev:1;
+ 	bool	serialize_policy:1;
 -- 
 2.39.2
 
