@@ -2,146 +2,191 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90572C77B61
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Apr 2023 07:23:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F588C77B61
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Apr 2023 07:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345473AbjD1HXI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Apr 2023 03:23:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39246 "EHLO
+        id S1345473AbjD1H32 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Apr 2023 03:29:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345253AbjD1HXH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Apr 2023 03:23:07 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7746B211E
-        for <linux-raid@vger.kernel.org>; Fri, 28 Apr 2023 00:23:05 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Q73wj3K9zz4f3nV1
-        for <linux-raid@vger.kernel.org>; Fri, 28 Apr 2023 15:23:01 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCX_7JVdEtkZmxBIQ--.50792S3;
-        Fri, 28 Apr 2023 15:23:02 +0800 (CST)
-Subject: Re: [PATCH] md: Fix bitmap offset type in sb writer
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
-Cc:     Jonathan Derrick <jonathan.derrick@linux.dev>,
-        linux-raid@vger.kernel.org,
-        Dan Carpenter <dan.carpenter@linaro.org>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230425011438.71046-1-jonathan.derrick@linux.dev>
- <CAPhsuW6f+6nqqaap1pP_rETSk_WA68keq6wCxEJojkYcVw-Vhw@mail.gmail.com>
- <CAPhsuW5LMzsus-nvNCj2Fy71cTW04rEN=bwcynqDHc7zrEYxCg@mail.gmail.com>
- <5a4cba40-6f3a-e5dc-0398-4dd7489de9d8@huaweicloud.com>
- <CAPhsuW68kkYW_F7u3RZyq+K9VOF1iCb3Y6c+xY_URS+_uXYMZw@mail.gmail.com>
- <b86778b3-da99-4ef1-850f-b79095fea879@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <748fbcd8-a30d-7cc4-87c1-c2c47d6943e6@huaweicloud.com>
-Date:   Fri, 28 Apr 2023 15:23:00 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <b86778b3-da99-4ef1-850f-b79095fea879@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCX_7JVdEtkZmxBIQ--.50792S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF13AFW3GFyxtrW7KF13CFg_yoW8tw4kpr
-        W8JFW5KrWUJr10qw1Utr18AFyFyrZrt34DXr1fGF15Ar98tF90qr18WFyjg3s8Wr4rWF1U
-        Aw15G343Zrn8JFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
-        DUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+        with ESMTP id S1345251AbjD1H31 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Apr 2023 03:29:27 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F4F72689
+        for <linux-raid@vger.kernel.org>; Fri, 28 Apr 2023 00:29:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1682666966; x=1714202966;
+  h=date:from:to:cc:subject:message-id;
+  bh=4wGzX8GqCXD5disAAdudHm7aYQjpc0uYdJ+aUBZKnZo=;
+  b=Iqi4QSh3yANGzDsYGT4x984NXCSKfzG6d2G4JujVgSYIfYRA2BCjGrvB
+   aOMjhTZsYkdY1+6qUU6fCtgbV2Yk8Q8GjAsaiYT5RgudFtbdcx7rVA0Ga
+   dfJQ3KIx6tQdPzaKy9z3I336dZLSUTuE9Z4ZIYBijvBCDm5WbE934BKtH
+   D8+EZopi09o6LxfA2VWx2T6FrMUSUCo8z2czuZqyNNr0SczLNup9PEUKB
+   ihwtLVFiZDw+GmbNGlRyJzEU1vjlINPLs+nmRZtVGWdgHl5umh5OBnqLH
+   nN2BxuhmIkQk+yHoXjturmNg+zAO5VL19/2zgl3Uth0UyOVKWY+cB2uZC
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10693"; a="349697972"
+X-IronPort-AV: E=Sophos;i="5.99,233,1677571200"; 
+   d="scan'208";a="349697972"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2023 00:29:25 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10693"; a="672056983"
+X-IronPort-AV: E=Sophos;i="5.99,233,1677571200"; 
+   d="scan'208";a="672056983"
+Received: from lkp-server01.sh.intel.com (HELO 5bad9d2b7fcb) ([10.239.97.150])
+  by orsmga006.jf.intel.com with ESMTP; 28 Apr 2023 00:29:24 -0700
+Received: from kbuild by 5bad9d2b7fcb with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1psIXj-0000Fa-37;
+        Fri, 28 Apr 2023 07:29:23 +0000
+Date:   Fri, 28 Apr 2023 15:28:54 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 8954851c1cf45538d2f2d12e1fbfc8e525bec54c
+Message-ID: <20230428072854.wAhh8%lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 8954851c1cf45538d2f2d12e1fbfc8e525bec54c  md: Fix bitmap offset type in sb writer
 
-在 2023/04/28 10:04, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2023/04/28 1:45, Song Liu 写道:
->> On Thu, Apr 27, 2023 at 2:35 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>
->>> Hi,
->>>
->>> 在 2023/04/27 1:58, Song Liu 写道:
->>>> Hi Jonathan,
->>>>
->>>> On Tue, Apr 25, 2023 at 8:44 PM Song Liu <song@kernel.org> wrote:
->>>>>
->>>>> On Mon, Apr 24, 2023 at 6:16 PM Jonathan Derrick
->>>>> <jonathan.derrick@linux.dev> wrote:
->>>>>>
->>>>>> Bitmap offset is allowed to be negative, indicating that bitmap 
->>>>>> precedes
->>>>>> metadata. Change the type back from sector_t to loff_t to satisfy
->>>>>> conditionals and calculations.
->>>>
->>>> This actually breaks the following tests from mdadm:
->>>>
->>>> 05r1-add-internalbitmap-v1a
->>>
->>> After a quick look of this test, I think the root cause is another
->>> patch:
->>>
->>> commit 8745faa95611 ("md: Use optimal I/O size for last bitmap page")
->>>
->>> This patch add a new helper bitmap_io_size(), which breaks the condition
->>> that 'negative value < 0'.
->>>
->>> And following patch should fix this problem:
->>>
->>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
->>> index adbe95e03852..b1b521837156 100644
->>> --- a/drivers/md/md-bitmap.c
->>> +++ b/drivers/md/md-bitmap.c
->>> @@ -219,8 +219,9 @@ static unsigned int optimal_io_size(struct
->>> block_device *bdev,
->>>    }
->>>
->>>    static unsigned int bitmap_io_size(unsigned int io_size, unsigned int
->>> opt_size,
->>> -                                  sector_t start, sector_t boundary)
->>> +                                  loff_t start, loff_t boundary)
->>>    {
->>>
->>>> 05r1-internalbitmap-v1a
->>>> 05r1-remove-internalbitmap-v1a
->>>>
->>>
->>> The patch is not tested yet, and I don't have time to look other tests
->>> yet...
->>
->> Thanks Kuai! This fixed the test.
-> 
-> Thanks for the test, I'll check more details and try tests myself later.
-> 
-> Kuai
->>
->> I will add your Signed-off-by to the patch. Please let me know if you
->> prefer not to have it.
+elapsed time: 725m
 
-I just reviewed realted patches and tested myself, perhaps it'll be
-better to use Suggested-and-reviewed-by, anyway, I'm good with either
-way.
+configs tested: 121
+configs skipped: 5
 
-Thanks,
-Kuai
->>
->> Song
->> .
->>
-> 
-> .
-> 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r004-20230427   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r025-20230427   gcc  
+arc                  randconfig-r043-20230427   gcc  
+arc                    vdk_hs38_smp_defconfig   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                          collie_defconfig   clang
+arm                                 defconfig   gcc  
+arm                  randconfig-r046-20230427   gcc  
+arm                           u8500_defconfig   gcc  
+arm                         vf610m4_defconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+csky         buildonly-randconfig-r003-20230427   gcc  
+csky         buildonly-randconfig-r004-20230427   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r015-20230427   gcc  
+hexagon              randconfig-r012-20230427   clang
+hexagon              randconfig-r041-20230427   clang
+hexagon              randconfig-r045-20230427   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                          randconfig-a001   gcc  
+i386                          randconfig-a002   clang
+i386                          randconfig-a003   gcc  
+i386                          randconfig-a004   clang
+i386                          randconfig-a005   gcc  
+i386                          randconfig-a006   clang
+i386                          randconfig-a011   clang
+i386                          randconfig-a012   gcc  
+i386                          randconfig-a013   clang
+i386                          randconfig-a014   gcc  
+i386                          randconfig-a015   clang
+i386                          randconfig-a016   gcc  
+ia64                             allmodconfig   gcc  
+ia64                                defconfig   gcc  
+ia64                 randconfig-r011-20230427   gcc  
+ia64                 randconfig-r022-20230427   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r001-20230427   gcc  
+m68k                             allmodconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                            q40_defconfig   gcc  
+microblaze   buildonly-randconfig-r002-20230427   gcc  
+microblaze           randconfig-r016-20230427   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r002-20230427   clang
+mips                 randconfig-r014-20230427   gcc  
+nios2                               defconfig   gcc  
+openrisc     buildonly-randconfig-r005-20230427   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r024-20230427   gcc  
+parisc               randconfig-r036-20230427   gcc  
+parisc64                            defconfig   gcc  
+powerpc                    adder875_defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                    amigaone_defconfig   gcc  
+powerpc                    gamecube_defconfig   clang
+powerpc                    ge_imp3a_defconfig   clang
+powerpc                 mpc8272_ads_defconfig   clang
+powerpc                 mpc836x_mds_defconfig   clang
+powerpc                 mpc85xx_cds_defconfig   gcc  
+powerpc                     tqm5200_defconfig   clang
+powerpc                      walnut_defconfig   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r013-20230427   clang
+riscv                randconfig-r042-20230427   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r031-20230427   gcc  
+s390                 randconfig-r044-20230427   clang
+sh                               allmodconfig   gcc  
+sh                ecovec24-romimage_defconfig   gcc  
+sh                   randconfig-r003-20230427   gcc  
+sh                            titan_defconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r006-20230427   gcc  
+sparc                randconfig-r032-20230427   gcc  
+sparc                randconfig-r034-20230427   gcc  
+sparc64                             defconfig   gcc  
+sparc64              randconfig-r021-20230427   gcc  
+sparc64              randconfig-r026-20230427   gcc  
+sparc64              randconfig-r035-20230427   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                        randconfig-a001   clang
+x86_64                        randconfig-a002   gcc  
+x86_64                        randconfig-a003   clang
+x86_64                        randconfig-a004   gcc  
+x86_64                        randconfig-a005   clang
+x86_64                        randconfig-a006   gcc  
+x86_64                        randconfig-a011   gcc  
+x86_64                        randconfig-a012   clang
+x86_64                        randconfig-a013   gcc  
+x86_64                        randconfig-a014   clang
+x86_64                        randconfig-a015   gcc  
+x86_64                        randconfig-a016   clang
+x86_64                               rhel-8.3   gcc  
+xtensa       buildonly-randconfig-r006-20230427   gcc  
+xtensa                  nommu_kc705_defconfig   gcc  
+xtensa               randconfig-r005-20230427   gcc  
+xtensa               randconfig-r023-20230427   gcc  
+xtensa               randconfig-r033-20230427   gcc  
+xtensa                         virt_defconfig   gcc  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
