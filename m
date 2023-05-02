@@ -2,50 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 701DBC77B73
-	for <linux-raid@archiver.kernel.org>; Tue,  2 May 2023 10:24:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 796FAC7EE24
+	for <linux-raid@archiver.kernel.org>; Tue,  2 May 2023 10:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234008AbjEBKYc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 2 May 2023 06:24:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60056 "EHLO
+        id S233836AbjEBKY5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 2 May 2023 06:24:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233792AbjEBKXS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 2 May 2023 06:23:18 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E50AE5FE0;
-        Tue,  2 May 2023 03:21:58 -0700 (PDT)
+        with ESMTP id S233942AbjEBKXw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 2 May 2023 06:23:52 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2C9A59C0;
+        Tue,  2 May 2023 03:22:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1683022919; x=1714558919;
+  t=1683022928; x=1714558928;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=MB8IrW3XRF0b8tjpVHZZO4VEKTGu+LfkwhaA4xbI4qQ=;
-  b=B8yAHDOBfYe59CxzDLAAA12mHNv4ln6RiZ87pQXsa4r0Fdo2i+8//us2
-   dL6q1OmyuE5rXOMJf+5e4VguJzWkxDU8XgsRoYONRkI+j3M5k1qvVe7sf
-   97DOZV314rzd7HoQvGSm6fHyLDiP+beP8giNiGR9tp335eLfgBE/Fg+8q
-   IgH9QzjOB+TeEYErn/jqk/tC+9XOJJDAldmudWYOhvoFNqbDPazj5fJPD
-   wpYaFH/uXGF9043QGcVWIDhz0GQw48DU7NyV90EEXE/mmC9fAuN4gTr93
-   J2K7QAY6onVoAvOGv9EyHZlwHZe+Zs/vW0tKR74cEXrF2sP6s99sJziux
-   Q==;
+  bh=Td/xHpC7+cd6575Kox8h68Aq0j3mdhGpI0NO3tgGxpE=;
+  b=aBuGBjXDWBektK/SwrB86ZIE+DSOBcllX370cM+wAbrWUJg8zUYQKy0Y
+   hI2wC+BN/p3+vwhKsX9jE2+qsqyUPDN54ERGKwNnvdOAiz0evjWwru/B3
+   kCvVjKqNI3545QBZczdC1WGr/FLY7o6+3VpWEv8Um8KF5HQ+nHwrcIe46
+   rgqxFfkFvUuUTnhkluJB6dcq+vUn8fdaPacjvz/aTdzmBzuEe6lO5+l8y
+   z2IVYrp+e/J0T2B/meBmEtM1gu0GWTTCw0cY3mCaMAhjtUGxnZKVNrhZ1
+   tv5ip+jnifnfU+UpWB9uyRhg5FxA5ngjiBavgLVBEKnyzBvlhXJMbQ31f
+   g==;
 X-IronPort-AV: E=Sophos;i="5.99,243,1677513600"; 
-   d="scan'208";a="229597985"
+   d="scan'208";a="227916349"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 02 May 2023 18:21:59 +0800
-IronPort-SDR: aiWCCspf/XOM4A9JvekFiA4il1eNzf7AAb2G4tfeE5aYs8kwe84RFGnp5fC2u4cWBT1OG/7V0q
- D3S9wDIB9+3IKkwlDnlN5Bnyj8qksjKSeTE4ijLi2qWPgDzEi92ak68qEb7poIsavl1T+JYssX
- 9PKvmWCWYCGjyxMKmRUTaQsl36SoezuNtDx/24ijE//As+UB4ddFBR0VjV+fcvrq8y1FRspn5q
- WQ39KgcXTxav+AYGk+XcaPPTaObwokgo3wpDhQMIXJhHTcQ7tG1RM04hY0FHvcAHeZVGtTeLVU
- h9U=
+  by ob1.hgst.iphmx.com with ESMTP; 02 May 2023 18:22:08 +0800
+IronPort-SDR: uASepkeirDzYMScGcNcoGP1Z0CQqKHWJMMdo8xgUV+f4hK1zGOR/OQu76HxsOPMkWgCCw2CFn8
+ 5Kd3n4hcCnanxZIQ4H6jKa9tpv2ZgUi6GJm+E9/62EOc19rzggkG2+WqQfNNHbmnKMd5z5D45D
+ h/IuDL9e9nhiQ/aVZs8FJ7cT+q0PvvmIrstvGb7Zuz0YsnEQ9DWcxzcv+SuiSl+Fn259cVnuQE
+ Wb60HlmxurcKnGsN0L9fpeRTdTuAIn7fxaUwmelJLSQWq74iawlYEVCyeg9VGjzEWK4FJu6H94
+ KbA=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 May 2023 02:31:45 -0700
-IronPort-SDR: dt0ORTo7y2OvtYPVqxqZKcSlk8TEG/M5IxYJloXDNMtpbFDpduCookvi33MCWWG4kgtbDfnjoU
- qNWcylSMPeGsO0kq0NXDl4G2C7gt3I+rFtkistntPpO5mSXx+HBp1mYREWSzEfGneChk6WparM
- /i8YU9a9mKVsFFGu/e5aSvIr5Y8Ea9LImoNB16+9AysmzPJOxOBZEoak3fvRhFlXukbVn/nkDx
- drQrakT6xd36x6OU6prDHLUpKa5+rnrr2e8A/8Ynql1R4XRsK2thU0KyPWPdS53E7jOulhZ7Dk
- rYQ=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 May 2023 02:31:55 -0700
+IronPort-SDR: Vcxt7Z41NExxCvUESz1tELNOOoVAmCt8KMe9S2wfxXY5MtctxeNwByBgzDDJWsrhCsj1BHWV0Q
+ ZGiNQRrLC1GqKKuIRpNOC2Vb5K9nW2DMjlmAKUuOtSKbHa7NR7aAFqUudcN/yAoLh311Vt4cBL
+ y00A/34+CNpVnLGm46O2cceVC9lFxIP0NOPuIkoffYDZmLB2WN+NgV+aYC3+VTf4qWL5CbSVPK
+ XjePJIBx125icTf/AqdLDhEFFImtpkj2dXIQOUMatT77zeeqXyuVF+60VJakWBDYsxQwY/CpIf
+ OkY=
 WDCIronportException: Internal
 Received: from myd008205.ad.shared (HELO localhost.localdomain) ([10.225.1.100])
-  by uls-op-cesaip02.wdc.com with ESMTP; 02 May 2023 03:21:55 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 02 May 2023 03:22:04 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     "axboe @ kernel . dk" <axboe@kernel.dk>
 Cc:     agruenba@redhat.com, cluster-devel@redhat.com,
@@ -56,9 +56,9 @@ Cc:     agruenba@redhat.com, cluster-devel@redhat.com,
         ming.lei@redhat.com, rpeterso@redhat.com, shaggy@kernel.org,
         snitzer@kernel.org, song@kernel.org, willy@infradead.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v5 18/20] block: add __bio_add_folio
-Date:   Tue,  2 May 2023 12:19:32 +0200
-Message-Id: <20230502101934.24901-19-johannes.thumshirn@wdc.com>
+Subject: [PATCH v5 20/20] block: mark bio_add_folio as __must_check
+Date:   Tue,  2 May 2023 12:19:34 +0200
+Message-Id: <20230502101934.24901-21-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230502101934.24901-1-johannes.thumshirn@wdc.com>
 References: <20230502101934.24901-1-johannes.thumshirn@wdc.com>
@@ -68,45 +68,27 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Just like for bio_add_pages() add a no-fail variant for bio_add_folio().
+Now that all callers of bio_add_folio() check the return value, mark it as
+__must_check.
 
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- block/bio.c         | 8 ++++++++
- include/linux/bio.h | 1 +
- 2 files changed, 9 insertions(+)
+ include/linux/bio.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 043944fd46eb..350c653d4a57 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1138,6 +1138,14 @@ int bio_add_page(struct bio *bio, struct page *page,
- }
- EXPORT_SYMBOL(bio_add_page);
- 
-+void __bio_add_folio(struct bio *bio, struct folio *folio, size_t len,
-+		     size_t off)
-+{
-+	WARN_ON_ONCE(len > UINT_MAX);
-+	WARN_ON_ONCE(off > UINT_MAX);
-+	__bio_add_page(bio, &folio->page, len, off);
-+}
-+
- /**
-  * bio_add_folio - Attempt to add part of a folio to a bio.
-  * @bio: BIO to add to.
 diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 5d5b081ee062..4232a17e6b10 100644
+index 4232a17e6b10..fef9f3085a02 100644
 --- a/include/linux/bio.h
 +++ b/include/linux/bio.h
-@@ -473,6 +473,7 @@ int bio_add_zone_append_page(struct bio *bio, struct page *page,
- 			     unsigned int len, unsigned int offset);
- void __bio_add_page(struct bio *bio, struct page *page,
- 		unsigned int len, unsigned int off);
-+void __bio_add_folio(struct bio *, struct folio *, size_t len, size_t off);
- int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
- void bio_iov_bvec_set(struct bio *bio, struct iov_iter *iter);
- void __bio_release_pages(struct bio *bio, bool mark_dirty);
+@@ -466,7 +466,7 @@ void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf);
+ void bio_chain(struct bio *, struct bio *);
+ 
+ int __must_check bio_add_page(struct bio *, struct page *, unsigned len, unsigned off);
+-bool bio_add_folio(struct bio *, struct folio *, size_t len, size_t off);
++bool __must_check bio_add_folio(struct bio *, struct folio *, size_t len, size_t off);
+ extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+ 			   unsigned int, unsigned int);
+ int bio_add_zone_append_page(struct bio *bio, struct page *page,
 -- 
 2.40.0
 
