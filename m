@@ -2,328 +2,141 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE4D3C77B78
-	for <linux-raid@archiver.kernel.org>; Thu,  4 May 2023 10:49:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 845E2C77B78
+	for <linux-raid@archiver.kernel.org>; Thu,  4 May 2023 11:41:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229928AbjEDKty (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 May 2023 06:49:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59602 "EHLO
+        id S230064AbjEDLlc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 May 2023 07:41:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229830AbjEDKtv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 May 2023 06:49:51 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4578D4698
-        for <linux-raid@vger.kernel.org>; Thu,  4 May 2023 03:49:48 -0700 (PDT)
-Received: from [192.168.100.1] ([94.134.214.237]) by mrelayeu.kundenserver.de
- (mreue012 [212.227.15.167]) with ESMTPSA (Nemesis) id
- 1MnWx3-1qdEjJ0eX7-00jWqH; Thu, 04 May 2023 12:49:32 +0200
-Message-ID: <1a2576e1-26f8-28cf-33d4-5039dbacbdac@online.de>
-Date:   Thu, 4 May 2023 12:49:31 +0200
+        with ESMTP id S229873AbjEDLlb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 May 2023 07:41:31 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D6B619A
+        for <linux-raid@vger.kernel.org>; Thu,  4 May 2023 04:41:26 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QBsN12ltNz4f3nQc
+        for <linux-raid@vger.kernel.org>; Thu,  4 May 2023 19:41:21 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7PhmVNk6372Ig--.17559S3;
+        Thu, 04 May 2023 19:41:23 +0800 (CST)
+Subject: Re: Raid5 to raid6 grow interrupted, mdadm hangs on assemble command
+To:     Jove <jovetoo@gmail.com>, linux-raid@vger.kernel.org
+References: <CAFig2csUV2QiomUhj_t3dPOgV300dbQ6XtM9ygKPdXJFSH__Nw@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     "yukuai (C)" <yukuai3@huawei.com>
+Message-ID: <63d92097-5299-2ae8-9697-768c52678578@huaweicloud.com>
+Date:   Thu, 4 May 2023 19:41:21 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.10.0
-From:   Peter Neuwirth <reddunur@online.de>
-To:     Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
-        "yukuai (C)" <yukuai3@huawei.com>
-Content-Language: en-US
-Subject: Re: linux mdadm assembly error: md: cannot handle concurrent
- replacement and reshape. (reboot while reshaping)
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAFig2csUV2QiomUhj_t3dPOgV300dbQ6XtM9ygKPdXJFSH__Nw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:0v9fhgnMvwAfO49YuRZTxuDHYkV8GqkDiyVP4HZBeR+rTTPbrSP
- u5O1+Xd+B8bw77BBBX8dwFvLeLmis14ci0eLDWocBfyP1nWr4shieKrPCl/vnQ2uIfpl+Mi
- BBI/0No/7tJ/JHGPHnwAzb9ocqrrWYsMZCiAny1eotaoJp+DdjC/bGcjlsveDyloZFWzKUZ
- r2oJnaKsP/G417iWZRw+w==
-UI-OutboundReport: notjunk:1;M01:P0:tvbcGcqx9Pw=;KMzwy1z6xa2aphV381J98Ww/zFR
- BQft0JeU8LmQ7EeX610fbJ+4v5uzLeE/L5sWoEt5F4VGvaVC+Nz99u+8H5REUCow8Yi9u8nXW
- 1OLLE6gU91DMOdKGw6WG1Q3zprrA/m2R4hqVRXjakQ/Bw1i7puNZ9n3sOY9EVZV9gRt1BDgGL
- T+7KM83jTTojZViP2QfltSftl6aWuzDAEldZgbNtWJTGjn/NsjMvKFpxZd2KU0NYTGykSksGk
- ACfWXfppWSg+U7CirJkL2MUndZ9DgUwRznxMuKFGoC3F6v4wR/mwJNMo6YLHcj9iPe0ArDOZG
- 7nkNRtJnYIlGBB4ChKVJYyv0WdanJfwLCx+m7zCzr1F74/NB8xRHKAWEr+qXt1EtBQJRfNrz/
- 9zLe6unX6bzwcNwtmKdbfmFdJMJXH8VBJicdWnNKQXafoo1FSsLRbtRzj/aCQKhcwGsakIQpU
- iRQXjDg0wqm2PzTeWhQ39A182yhYTUubZG++3+hIBMgLptR4usZmNb4BWwKpyafHaltxOwP7t
- Otk4sgOv/yWxfD09h2k3vgQJL76VERGjYzvsB+ZFbLzCa5YxBeGJtG5aeyhhhJI/A23OPo3wH
- ycnKz18tPK3+BYH3stfy0IchUD9H8mztnTPRBjAZxM6OnGz7EIyezFGI7el4g8JX0uBO1FTZL
- 6WjGXiEMjCVSpTQan57skHBBByyi1qKn0fg2rCq8zQ==
+X-CM-TRANSID: gCh0CgCnD7PhmVNk6372Ig--.17559S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxAr45CFy3KrWDury8KFWDtwb_yoW5AF4kp3
+        y8GFn8K3ykJw40ka4kGryxWa4fCrWUAFW3Ga13G3WrAw4q9Fn2va4fGry5ta42yrZa9r4j
+        qFW5ury3Kas5taDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+        AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+        j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+        kEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAK
+        I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
+        xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUXVWUAwCIc40Y0x0EwIxGrwCI42IY6xII
+        jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
+        0EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUzsqWUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello Kuai,
+Hi,
 
-meanwhile I managed to stop devices and recreate, but it seems, with little success for my data:
-After recreation, xfs_repair now could not even find any defect super block :(
-
-regards,
-
-Peter
-
-mdadm  --create --verbose /dev/md0 -c 256K --level=5 --raid-devices=6  /dev/sde /dev/sdc /dev/sdb /dev/sda /dev/sdi /dev/sdj --assume-clean
-mdadm: layout defaults to left-symmetric
-mdadm: layout defaults to left-symmetric
-mdadm: /dev/sde appears to be part of a raid array:
-       level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
-mdadm: partition table exists on /dev/sde but will be lost or
-       meaningless after creating array
-mdadm: /dev/sdc appears to be part of a raid array:
-       level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
-mdadm: partition table exists on /dev/sdc but will be lost or
-       meaningless after creating array
-mdadm: /dev/sdb appears to be part of a raid array:
-       level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
-mdadm: partition table exists on /dev/sdb but will be lost or
-       meaningless after creating array
-mdadm: /dev/sda appears to be part of a raid array:
-       level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
-mdadm: partition table exists on /dev/sda but will be lost or
-       meaningless after creating array
-mdadm: /dev/sdi appears to be part of a raid array:
-       level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
-mdadm: partition table exists on /dev/sdi but will be lost or
-       meaningless after creating array
-mdadm: /dev/sdj appears to be part of a raid array:
-       level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
-mdadm: partition table exists on /dev/sdj but will be lost or
-       meaningless after creating array
-mdadm: size set to 976630272K
-mdadm: automatically enabling write-intent bitmap on large array
-Continue creating array? yes
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
-srv11:~# mdadm --detail /dev/md0
-/dev/md0:
-           Version : 1.2
-     Creation Time : Thu May  4 12:38:27 2023
-        Raid Level : raid5
-        Array Size : 4883151360 (4656.94 GiB 5000.35 GB)
-     Used Dev Size : 976630272 (931.39 GiB 1000.07 GB)
-      Raid Devices : 6
-     Total Devices : 6
-       Persistence : Superblock is persistent
-
-     Intent Bitmap : Internal
-
-       Update Time : Thu May  4 12:38:30 2023
-             State : clean
-    Active Devices : 6
-   Working Devices : 6
-    Failed Devices : 0
-     Spare Devices : 0
-
-            Layout : left-symmetric
-        Chunk Size : 256K
-
-Consistency Policy : bitmap
-
-              Name : srv11:0  (local to host srv11)
-              UUID : eda34f0b:3453c7d6:35b9fdf4:37784433
-            Events : 1
-
-    Number   Major   Minor   RaidDevice State
-       0       8       64        0      active sync   /dev/sde
-       1       8       32        1      active sync   /dev/sdc
-       2       8       16        2      active sync   /dev/sdb
-       3       8        0        3      active sync   /dev/sda
-       4       8      128        4      active sync   /dev/sdi
-       5       8      144        5      active sync   /dev/sdj
-srv11:~# xfs_repair -n /dev/md0
-Phase 1 - find and verify superblock...
-bad primary superblock - bad magic number !!!
-
-attempting to find secondary superblock...
-..............................................
-
-
-Am 04.05.23 um 11:08 schrieb Yu Kuai:
+在 2023/04/24 3:09, Jove 写道:
 > Hi,
->
-> 在 2023/05/04 16:36, Peter Neuwirth 写道:
->> Thank you, Kuai!
->> So my gut instinct was not that bad. Now as I could reassemble my raid set (it tried to recontinue the rebuild, I stopped it)
->> I have a /dev/md0 but it seems that no sensible data is stored on it. Not even a partition table could be found.
->>
->>  From your investigations, what would you say : is there hope I could rescue some of the data from the raidset with a tool
->> like testdisk, when I "recreate" my old gpt partition table ? Or is it likely that the restarted reshape/grow process made
->> minced meat out of my whole raid data ?
->> It seemed interesting to me, that the first grow/shape process seemed to not even touch the two added discs, shown as
->> spare now, their partition tables had not been touched. The process seems to deal only with my legacy raid 5 set with
->> six plates and seemed to move it to a transient raid5/6 architecture, therefore operating atleast on the disc (3) of legacy
->> set, that is now missing..
->> I'm not sure, how much time to spend in this data is sensible,
->> your advice could be very helpful.
->
-> During my test, I'm able to recreat the md0 and mount, but it's just for
-> reference only...
->
-> Test procedure:
-> mdadm --create --run --verbose /dev/md0 -c 256K --level=5 --raid-devices=6  /dev/sd[abcdef] --size=100M
-> mdadm -W /dev/md0
-> mkfs.xfs -f /dev/md0
-> echo 1024 > /sys/block/md0/md/sync_speed_max
->
-> mdadm --add /dev/md0 /dev/sdg /dev/sdh
-> sudo mdadm --grow /dev/md0 --level=6
-> sleep 2
->
-> echo frozen > /sys/block/md0/md/sync_action
->
-> echo system > /sys/block/md0/md/sync_speed_max
-> echo reshape > /sys/block/md0/md/sync_action
-> mdadm -W /dev/md0
->
-> xfs_repair -n /dev/md0
->
-> Above test will reporduce that md0 is corrupted, and this is just
-> because layout is changed. If I recreated md0 with original disks
-> with --assume-clean, xfs_repair won't complain and mount will succeed:
->
-> [root@fedora ~]# mdadm --create --run --verbose /dev/md0 -c 256K --level=5 --raid-devices=6  /dev/sd[abcdef] --size=100M --assume-clean
-> mdadm: layout defaults to left-symmetric
-> mdadm: layout defaults to left-symmetric
-> mdadm: /dev/sda appears to contain an ext2fs file system
->        size=10485760K  mtime=Mon Apr  3 06:18:17 2023
-> mdadm: /dev/sda appears to be part of a raid array:
->        level=raid5 devices=6 ctime=Thu May  4 09:00:08 2023
-> mdadm: /dev/sdb appears to be part of a raid array:
->        level=raid5 devices=6 ctime=Thu May  4 09:00:08 2023
-> mdadm: /dev/sdc appears to be part of a raid array:
->        level=raid5 devices=6 ctime=Thu May  4 09:00:08 2023
-> mdadm: /dev/sdd appears to be part of a raid array:
->        level=raid5 devices=6 ctime=Thu May  4 09:00:08 2023
-> mdadm: /dev/sde appears to be part of a raid array:
->        level=raid5 devices=6 ctime=Thu May  4 09:00:08 2023
-> mdadm: /dev/sdf appears to be part of a raid array:
->        level=raid5 devices=6 ctime=Thu May  4 09:00:08 2023
-> mdadm: largest drive (/dev/sda) exceeds size (102400K) by more than 1%
-> mdadm: creation continuing despite oddities due to --run
-> mdadm: Defaulting to version 1.2 metadata
-> mdadm: array /dev/md0 started.
-> [root@fedora ~]# xfs_repair -n /dev/md0
-> Phase 1 - find and verify superblock...
->         - reporting progress in intervals of 15 minutes
-> Phase 2 - using internal log
->         - zero log...
->         - 09:05:33: zeroing log - 4608 of 4608 blocks done
->         - scan filesystem freespace and inode maps...
->         - 09:05:33: scanning filesystem freespace - 8 of 8 allocation groups done
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - 09:05:33: scanning agi unlinked lists - 8 of 8 allocation groups done
->         - process known inodes and perform inode discovery...
->         - agno = 7
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 4
->         - agno = 5
->         - agno = 6
->         - 09:05:33: process known inodes and inode discovery - 64 of 64 inodes done
->         - process newly discovered inodes...
->         - 09:05:33: process newly discovered inodes - 8 of 8 allocation groups done
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - 09:05:33: setting up duplicate extent list - 8 of 8 allocation groups done
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 6
->         - agno = 4
->         - agno = 3
->         - agno = 7
->         - agno = 2
->         - agno = 5
->         - 09:05:33: check for inodes claiming duplicate blocks - 64 of 64 inodes done
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify link counts...
->         - 09:05:33: verify and correct link counts - 8 of 8 allocation groups done
-> No modify flag set, skipping filesystem flush and exiting.
->
-> Thanks,
-> Kuai
->>
->> regards
->>
->> Peter
->>
->>
->> Am 04.05.23 um 10:16 schrieb Yu Kuai:
->>> Hi,
->>>
->>> 在 2023/04/28 5:09, Peter Neuwirth 写道:
->>>> Hello linux-raid group.
->>>>
->>>> I have an issue with my linux raid setup and I hope somebody here
->>>> could help me get my raid active again without data loss.
->>>>
->>>> I have a debian 11 system with one raid array (6x 1TB hdd drives, raid level 5 )
->>>> that was active running till today, when I added two more 1TB hdd drives
->>>> and also changed the raid level to 6.
->>>>
->>>> Note: For completition:
->>>>
->>>> My raid setup month ago was
->>>>
->>>> mdadm --create --verbose /dev/md0 -c 256K --level=5 --raid-devices=6  /dev/sdd /dev/sdc /dev/sdb /dev/sda /dev/sdg /dev/sdf
->>>>
->>>> mkfs.xfs -d su=254k,sw=6 -l version=2,su=256k -s size=4k /dev/md0
->>>>
->>>> mdadm --detail --scan | tee -a /etc/mdadm/mdadm.conf
->>>>
->>>> update-initramfs -u
->>>>
->>>> echo '/dev/md0 /mnt/data ext4 defaults,nofail,discard 0 0' | sudo tee -a /etc/fstab
->>>>
->>>>
->>>> Today I did:
->>>>
->>>> mdadm --add /dev/md0 /dev/sdg /dev/sdh
->>>>
->>>> sudo mdadm --grow /dev/md0 --level=6
->>>>
->>>>
->>>> This started a growth process, I could observe with
->>>> watch -n 1 cat /proc/mdstat
->>>> and md0 was still usable all the day.
->>>> Due to speedy file access reasons I paused the grow and insertion
->>>> process today at about 50% by issue
->>>>
->>>> echo "frozen" > /sys/block/md0/md/sync_action
->>>>
->>>>
->>>> After the file access was done, I restarted the
->>>> process with
->>>>
->>>> echo reshape > /sys/block/md0/md/sync_action
->>>>
->>> After look into this problem, I figure out that this is how the problem
->>> (corrupted data) triggered in the first place, while the problem that
->>> kernel log about "md: cannot handle concurrent replacement and reshape"
->>> is not fatal.
->>>
->>> "echo reshape" will restart the whole process, while recorded reshape
->>> position should be used. This is a seriously kernel bug, I'll try to fix
->>> this soon.
->>>
->>> By the way, "echo idle" should avoid this problem.
->>>
->>> Thanks,
->>> Kuai
->>>>
->>>> but I saw in mdstat that it started form the scratch.
->>>> After about 5 min I noticed, that /dev/dm0 mount was gone with
->>>> an input/output error in syslog and I rebooted the computer, to see the
->>>> kernel would reassemble dm0 correctly. Maybe the this was a problem,
->>>> because the dm0 was still reshaping, I do not know..
->>>
->>
->>
->> .
->>
->
+> 
+> I've added two drives to my raid5 array and tried to migrate
+> it to raid6 with the following command:
+> 
+> mdadm --grow /dev/md0 --raid-devices 4 --level 6
+> --backup-file=/root/mdadm_raid6_backup.md
+> 
+> This may have been my first mistake, as there are only 5
+> drives. it should have been --raid-devices 3, I think.
+> 
+> As soon as I started this grow, the filesystems went
+> unavailable. All processes trying to access files on it hung.
+> I searched the web which said a reboot during a rebuild
+> was not problematic if things shut down cleanly, so I
+> rebooted. The reboot hung too. The drive activity
+> continued so I let it run overnight. I did wake up to a
+> rebooted system in emergency mode as it could not
+> mount all the partitions on the raid array.
+> 
+> The OS tried to reassemble the array and succeeded.
+> However the udev processes that try to create the dev
+> entries hang.
+> 
+> I went back to Google and found out how i could reboot
+> my system without this automatic assemble.
+> I tried reassembling the array with:
+> 
+> mdadm --verbose --assemble --backup-file mdadm_raid6_backup.md0 /dev/md0
+> 
+> This failed with:
+> No backup metadata on mdadm_raid6_backup.md0
+> Failed to find final backup of critical section.
+> Failed to restore critical section for reshape, sorry.
+> 
+>   I tried again wtih:
+> 
+> mdadm --verbose --assemble --backup-file mdadm_raid6_backup.md0
+> --invalid-backup /dev/md0
+> 
+> Rhis said in addition to the lines above:
+> 
+> continuying without restoring backup
+> 
+> This seemed to have succeeded in reassembling the
+> array but it also hangs indefinitely.
+> 
+> /proc/mdstat now shows:
+> 
+> md0 : active (read-only) raid6 sdc1[0] sde[4](S) sdf[5] sdd1[3] sdg1[1]
+>        7813771264 blocks super 1.2 level 6, 512k chunk, algorithm 18 [4/3] [UUU_]
+>        bitmap: 1/30 pages [4KB], 65536KB chunk
+
+Read only can't continue reshape progress, see details in
+md_check_recovery(), reshape can only start if md_is_rdwr(mddev) pass.
+Do you know why this array is read-only?
+
+> 
+> Again the udev processes trying to access this device hung indefinitely
+> 
+> Eventually, the kernel dumps this in my journal:
+> 
+> Apr 23 19:17:22 atom kernel: task:systemd-udevd   state:D stack:    0
+> pid: 8121 ppid:   706 flags:0x00000006
+> Apr 23 19:17:22 atom kernel: Call Trace:
+> Apr 23 19:17:22 atom kernel:  <TASK>
+> Apr 23 19:17:22 atom kernel:  __schedule+0x20a/0x550
+> Apr 23 19:17:22 atom kernel:  schedule+0x5a/0xc0
+> Apr 23 19:17:22 atom kernel:  schedule_timeout+0x11f/0x160
+> Apr 23 19:17:22 atom kernel:  ? make_stripe_request+0x284/0x490 [raid456]
+> Apr 23 19:17:22 atom kernel:  wait_woken+0x50/0x70
+
+Looks like this normal io is waiting for reshape to be done, that's why
+it hanged indefinitely.
+
+This really is a kernel bug, perhaps it can be bypassed if reshape can
+be done, hopefully automatically if this array can be read/write. Noted
+never echo reshape to sync_action, this will corrupt data in your case.
+
+Thanks,
+Kuai
 
