@@ -2,64 +2,63 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96364C7EE21
-	for <linux-raid@archiver.kernel.org>; Thu,  4 May 2023 09:44:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE4D3C77B78
+	for <linux-raid@archiver.kernel.org>; Thu,  4 May 2023 10:49:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230398AbjEDJoS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 May 2023 05:44:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58810 "EHLO
+        id S229928AbjEDKty (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 May 2023 06:49:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230350AbjEDJoQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 May 2023 05:44:16 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05F653C39
-        for <linux-raid@vger.kernel.org>; Thu,  4 May 2023 02:44:13 -0700 (PDT)
+        with ESMTP id S229830AbjEDKtv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 May 2023 06:49:51 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4578D4698
+        for <linux-raid@vger.kernel.org>; Thu,  4 May 2023 03:49:48 -0700 (PDT)
 Received: from [192.168.100.1] ([94.134.214.237]) by mrelayeu.kundenserver.de
- (mreue011 [212.227.15.167]) with ESMTPSA (Nemesis) id
- 1M2NqA-1pxF3h0XV8-003x7c; Thu, 04 May 2023 11:43:51 +0200
-Message-ID: <d9c432de-5261-07be-93a5-fcac82cb2655@online.de>
-Date:   Thu, 4 May 2023 11:43:50 +0200
+ (mreue012 [212.227.15.167]) with ESMTPSA (Nemesis) id
+ 1MnWx3-1qdEjJ0eX7-00jWqH; Thu, 04 May 2023 12:49:32 +0200
+Message-ID: <1a2576e1-26f8-28cf-33d4-5039dbacbdac@online.de>
+Date:   Thu, 4 May 2023 12:49:31 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Firefox/102.0 Thunderbird/102.10.0
-Content-Language: de-DE, en-US
 From:   Peter Neuwirth <reddunur@online.de>
 To:     Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
         "yukuai (C)" <yukuai3@huawei.com>
+Content-Language: en-US
 Subject: Re: linux mdadm assembly error: md: cannot handle concurrent
  replacement and reshape. (reboot while reshaping)
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:s6HwKlb7dbvLvWkjYDidnTD/nJarqUrMbP8kqzCwYzGC+NUIhVV
- 2QMzlQpdrjgp/QFKNMTzDS7aiWL40+ZTRQH/L1C5MDQqRZDOk46HVqoPEK0kWvBxLBxeu7T
- SyDvYSMaQjy4Vy6JlMeX0ryDHJPkz88YTSLudFaAA1x+hLtMTwrJDT3sRCxn8QwGKUDdFtI
- pSHCP3qvEE3nVXdTsx9sw==
-UI-OutboundReport: notjunk:1;M01:P0:bvThReUPVeQ=;gaFsfn3YpWYJhRIdojLTz+UOUjj
- Msaeo28IZDBnt/JtUmeY3OEyBiQmgUQFkvJ+bXZlwcCNCKYDxqW2gDBPiYyFtrrkNGYARYaOJ
- Jo2LV6QnB6QovtP0zGJOeaR903vVcy2u9Ldt88KVk3ajQhmlNro/T0f4ljvVcFp8OCooAwjsM
- jqYw1kZtgZXgRRcWCaAjKLGUta4Owb0qmg3VapHdAAcqq4/oN4d2+DK6p2wTszA6bzOjvyl0A
- FXpFYFvSErabK84WRzNnMVGj75oj9TMg7FdS081KH+A9e/TkF/DVdcG6LrhG5QIYwdlLFYsre
- rnG2zZ7XcGFh/34v4lcmTbVxT5ATji+L2g6jHmk433ylXqrNu3mckUuAlBuQJ+P0EFl9k6Z0c
- FVAHChhiI2ktT3QyLERB7PcIPizSNtT7uOa4LLMygOMbMe3pWgBlE1MkLHl0p6mXc3yKuBAs2
- PUVBzx0+0bw/TDqCoTmcEFdRBBljyUB0i0sTKka2aKbt4UROq+jrrNnNTF24g/rvhvxVn+XUK
- nWAU67/HcHNUfN/dHviewOUH591XVd35QSPjK43nhXjCoD7huPEG7F/7DYUa0tMgpZejwPISS
- /+s+5SdVsTk6qkrbfFHwu4+eZUzPEomR/9fNEHqMJROY/LbD36GbV6VX1izPy66Fqd718NK8r
- LHTKR0eDkpoYmYz55W91qrWo0/DFEjA3d04mzL1BlA==
+X-Provags-ID: V03:K1:0v9fhgnMvwAfO49YuRZTxuDHYkV8GqkDiyVP4HZBeR+rTTPbrSP
+ u5O1+Xd+B8bw77BBBX8dwFvLeLmis14ci0eLDWocBfyP1nWr4shieKrPCl/vnQ2uIfpl+Mi
+ BBI/0No/7tJ/JHGPHnwAzb9ocqrrWYsMZCiAny1eotaoJp+DdjC/bGcjlsveDyloZFWzKUZ
+ r2oJnaKsP/G417iWZRw+w==
+UI-OutboundReport: notjunk:1;M01:P0:tvbcGcqx9Pw=;KMzwy1z6xa2aphV381J98Ww/zFR
+ BQft0JeU8LmQ7EeX610fbJ+4v5uzLeE/L5sWoEt5F4VGvaVC+Nz99u+8H5REUCow8Yi9u8nXW
+ 1OLLE6gU91DMOdKGw6WG1Q3zprrA/m2R4hqVRXjakQ/Bw1i7puNZ9n3sOY9EVZV9gRt1BDgGL
+ T+7KM83jTTojZViP2QfltSftl6aWuzDAEldZgbNtWJTGjn/NsjMvKFpxZd2KU0NYTGykSksGk
+ ACfWXfppWSg+U7CirJkL2MUndZ9DgUwRznxMuKFGoC3F6v4wR/mwJNMo6YLHcj9iPe0ArDOZG
+ 7nkNRtJnYIlGBB4ChKVJYyv0WdanJfwLCx+m7zCzr1F74/NB8xRHKAWEr+qXt1EtBQJRfNrz/
+ 9zLe6unX6bzwcNwtmKdbfmFdJMJXH8VBJicdWnNKQXafoo1FSsLRbtRzj/aCQKhcwGsakIQpU
+ iRQXjDg0wqm2PzTeWhQ39A182yhYTUubZG++3+hIBMgLptR4usZmNb4BWwKpyafHaltxOwP7t
+ Otk4sgOv/yWxfD09h2k3vgQJL76VERGjYzvsB+ZFbLzCa5YxBeGJtG5aeyhhhJI/A23OPo3wH
+ ycnKz18tPK3+BYH3stfy0IchUD9H8mztnTPRBjAZxM6OnGz7EIyezFGI7el4g8JX0uBO1FTZL
+ 6WjGXiEMjCVSpTQan57skHBBByyi1qKn0fg2rCq8zQ==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 Hello Kuai,
 
-thank you for testing and reproducing this.
-I have tried your recreate scenario, but mdadm will not do it due to
-some busy devices or maybe the partition tables, that it found on the
-hdds..
+meanwhile I managed to stop devices and recreate, but it seems, with little success for my data:
+After recreation, xfs_repair now could not even find any defect super block :(
 
-I started it in the same manner as the initial creation was.
+regards,
 
-srv11:~# mdadm  --create -f --verbose /dev/md0 -c 256K --level=5 --raid-devices=6  /dev/sde /dev/sdc /dev/sdb /dev/sda /dev/sdi /dev/sdj --assume-clean
+Peter
 
+mdadm  --create --verbose /dev/md0 -c 256K --level=5 --raid-devices=6  /dev/sde /dev/sdc /dev/sdb /dev/sda /dev/sdi /dev/sdj --assume-clean
 mdadm: layout defaults to left-symmetric
 mdadm: layout defaults to left-symmetric
 mdadm: /dev/sde appears to be part of a raid array:
@@ -74,8 +73,10 @@ mdadm: /dev/sdb appears to be part of a raid array:
        level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
 mdadm: partition table exists on /dev/sdb but will be lost or
        meaningless after creating array
-mdadm: super1.x cannot open /dev/sda: Device or resource busy
-mdadm: /dev/sda is not suitable for this array.
+mdadm: /dev/sda appears to be part of a raid array:
+       level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
+mdadm: partition table exists on /dev/sda but will be lost or
+       meaningless after creating array
 mdadm: /dev/sdi appears to be part of a raid array:
        level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
 mdadm: partition table exists on /dev/sdi but will be lost or
@@ -84,25 +85,53 @@ mdadm: /dev/sdj appears to be part of a raid array:
        level=raid6 devices=7 ctime=Mon Mar  6 18:17:30 2023
 mdadm: partition table exists on /dev/sdj but will be lost or
        meaningless after creating array
-mdadm: create aborted
+mdadm: size set to 976630272K
+mdadm: automatically enabling write-intent bitmap on large array
+Continue creating array? yes
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
+srv11:~# mdadm --detail /dev/md0
+/dev/md0:
+           Version : 1.2
+     Creation Time : Thu May  4 12:38:27 2023
+        Raid Level : raid5
+        Array Size : 4883151360 (4656.94 GiB 5000.35 GB)
+     Used Dev Size : 976630272 (931.39 GiB 1000.07 GB)
+      Raid Devices : 6
+     Total Devices : 6
+       Persistence : Superblock is persistent
 
+     Intent Bitmap : Internal
 
-Did you disable the device mapper, or have you any idea how to
-stopping my drives being busy?
+       Update Time : Thu May  4 12:38:30 2023
+             State : clean
+    Active Devices : 6
+   Working Devices : 6
+    Failed Devices : 0
+     Spare Devices : 0
 
-Not sure if it is related with this but I could remember, that after
-first reboot, the raid was yet reported as raid5 but I naively reissued
-the commands that, prior to reboot, started the whole process
+            Layout : left-symmetric
+        Chunk Size : 256K
 
- > mdadm --add /dev/md0 /dev/sdg /dev/sdh
- > sudo mdadm --grow /dev/md0 --level=6
+Consistency Policy : bitmap
 
-and the grow simply aborted with notice that there is a growh ongoing,
-but from there on I think the raid set was seen as raid6 in my system.
+              Name : srv11:0  (local to host srv11)
+              UUID : eda34f0b:3453c7d6:35b9fdf4:37784433
+            Events : 1
 
-regards
+    Number   Major   Minor   RaidDevice State
+       0       8       64        0      active sync   /dev/sde
+       1       8       32        1      active sync   /dev/sdc
+       2       8       16        2      active sync   /dev/sdb
+       3       8        0        3      active sync   /dev/sda
+       4       8      128        4      active sync   /dev/sdi
+       5       8      144        5      active sync   /dev/sdj
+srv11:~# xfs_repair -n /dev/md0
+Phase 1 - find and verify superblock...
+bad primary superblock - bad magic number !!!
 
-Peter
+attempting to find secondary superblock...
+..............................................
 
 
 Am 04.05.23 um 11:08 schrieb Yu Kuai:
