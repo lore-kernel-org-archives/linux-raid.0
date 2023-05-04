@@ -2,45 +2,45 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E84C7EE25
-	for <linux-raid@archiver.kernel.org>; Thu,  4 May 2023 19:49:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 126B1C7EE29
+	for <linux-raid@archiver.kernel.org>; Thu,  4 May 2023 19:54:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231337AbjEDTtR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 May 2023 15:49:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58348 "EHLO
+        id S231672AbjEDTyP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 May 2023 15:54:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231211AbjEDTsT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 May 2023 15:48:19 -0400
+        with ESMTP id S231163AbjEDTxW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 May 2023 15:53:22 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76E5411DAF;
-        Thu,  4 May 2023 12:45:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB65917DDC;
+        Thu,  4 May 2023 12:47:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C2421636FB;
-        Thu,  4 May 2023 19:45:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AD2BC433A1;
-        Thu,  4 May 2023 19:45:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 440716378D;
+        Thu,  4 May 2023 19:47:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14D53C433EF;
+        Thu,  4 May 2023 19:47:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229530;
-        bh=khNk1lUsb57j593iQyjy2LDFxUQFL4haW1278EmDDok=;
+        s=k20201202; t=1683229650;
+        bh=UitNJATXfwLU//5VZHJZ1rqVgYxAGa2r5kH97N86JqI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iU+bX8Go7PiWtemDjeCbwPgu5Tp71HDxVbQ0twTSxQQKmtjwGnMlBbf0LfVP0Pybw
-         H27CVoLxzTOtvLspIOx9Tb+crM8Fv3vVOk1m28d9zgCmjFIAQcG+9tmShfSxfUEn+n
-         1+Qy8vSlzVvysyMiXLQDZ/7PN/dn88Iy5NoRoNC6+3hCHmR3iUVAi7caTWUCaZ4r/9
-         KqrZx1oiCdwiWgUo7ocJaqR1YDtJPRmNG6tRLYJGSNPJYlQKO6AUDMwYsvz9g1EkT6
-         +pmABo1Ao/bh7MTXD8NXSNpdlw8Ngt1KleL5ai2TJNtsMc7EyYiWkZu61UN/DLjM9Z
-         YFv0mIDXJvFpw==
+        b=uq/hobs+S+G1YUweStwFuN+f2bQWLFF61x5zfGRJsTK/j351y1XNmXnMXKIeOuUOJ
+         br2LOY0r81uH33ipKoSKan6444GC/syq0RvPOpDPIAr7GUzvwD7k3UUPZMKfsmenpB
+         CdQenc/JKe3OKVMDxzlQIfhvnIQjoo/DDC+2cvFZFVpfjI1SIWi18GIF63SUpaZQHd
+         3R+xNJN0TihxUY94lARov7WfkbsuO2GaSVeirnnVNlR4wxgSGOUlBDm7P1prh4xUj9
+         Bb//gka89ySCuo2cts2cPtKVwn8ZeC0B5tcKUxDT7O02n3f/Fp4wrzrEvXOAEHJLO/
+         rAQJNDWykqEzg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 30/53] md: fix soft lockup in status_resync
-Date:   Thu,  4 May 2023 15:43:50 -0400
-Message-Id: <20230504194413.3806354-30-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 27/49] md: fix soft lockup in status_resync
+Date:   Thu,  4 May 2023 15:46:04 -0400
+Message-Id: <20230504194626.3807438-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194413.3806354-1-sashal@kernel.org>
-References: <20230504194413.3806354-1-sashal@kernel.org>
+In-Reply-To: <20230504194626.3807438-1-sashal@kernel.org>
+References: <20230504194626.3807438-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -76,10 +76,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index beab84f0c585c..6b2ba49203b37 100644
+index d5c362b1602b6..bb73a541bb193 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8019,16 +8019,16 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
+@@ -8028,16 +8028,16 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
  	} else if (resync > max_sectors) {
  		resync = max_sectors;
  	} else {
