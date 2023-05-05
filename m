@@ -2,70 +2,67 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F0E2C77B7D
-	for <linux-raid@archiver.kernel.org>; Fri,  5 May 2023 06:58:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 530BFC77B75
+	for <linux-raid@archiver.kernel.org>; Fri,  5 May 2023 07:08:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230299AbjEEG6R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 5 May 2023 02:58:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38622 "EHLO
+        id S231133AbjEEHIA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 5 May 2023 03:08:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229601AbjEEG6Q (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 02:58:16 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 545A41AE
-        for <linux-raid@vger.kernel.org>; Thu,  4 May 2023 23:58:14 -0700 (PDT)
-Received: from host86-157-72-252.range86-157.btcentralplus.com ([86.157.72.252] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1pupOO-0007qX-4k;
-        Fri, 05 May 2023 07:58:12 +0100
-Message-ID: <d159161d-a5eb-8790-49c4-b7013e66ba65@youngman.org.uk>
-Date:   Fri, 5 May 2023 07:58:11 +0100
+        with ESMTP id S230364AbjEEHH6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 03:07:58 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2955C7EE8;
+        Fri,  5 May 2023 00:07:57 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QCMFy6F9Nz4f3mLb;
+        Fri,  5 May 2023 15:07:50 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbFHq1RkI_svIw--.34399S3;
+        Fri, 05 May 2023 15:07:52 +0800 (CST)
+Message-ID: <ea79f71c-9ba4-e9cd-eebb-2c2eab0f1cdc@huaweicloud.com>
+Date:   Fri, 5 May 2023 15:07:51 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: Raid5 to raid6 grow interrupted, mdadm hangs on assemble command
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Jove <jovetoo@gmail.com>
-Cc:     linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <CAFig2csUV2QiomUhj_t3dPOgV300dbQ6XtM9ygKPdXJFSH__Nw@mail.gmail.com>
- <63d92097-5299-2ae8-9697-768c52678578@huaweicloud.com>
- <CAFig2ct4BJZ0A9BKuXn8RM71+KrUzB8vKGQY0fSjNZiNenQZBg@mail.gmail.com>
- <c71c8381-f26e-f7de-c6f5-3c4411f08b15@huaweicloud.com>
-Content-Language: en-GB
-From:   Wol <antlists@youngman.org.uk>
-In-Reply-To: <c71c8381-f26e-f7de-c6f5-3c4411f08b15@huaweicloud.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 2/3] md/raid10: fix overflow in safe_delay_store
+To:     Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
+        song@kernel.org, neilb@suse.de, Rob.Becker@riverbed.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230427085612.1346752-1-linan666@huaweicloud.com>
+ <20230427085612.1346752-3-linan666@huaweicloud.com>
+ <cc4cfcf6-54cf-a271-4082-687e8ba5c1c5@huaweicloud.com>
+From:   Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <cc4cfcf6-54cf-a271-4082-687e8ba5c1c5@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID: gCh0CgBnHbFHq1RkI_svIw--.34399S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYC7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
+        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+        Iv6xkF7I0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvE
+        ncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I
+        8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0E
+        jII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbI
+        xvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
+        xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
+        kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v2
+        6r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r
+        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUAkucU
+        UUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 05/05/2023 02:34, Yu Kuai wrote:
->> I have had one case in which mdadm didn't hang and in which the
->> reshape continued. Sadly, I was using sparse overlay files and the
->> filesystem could not handle the full 4x 4TB. I had to terminate the
->> reshape.
-> 
-> This sounds like a dead end for now, normal io beyond reshape position
-> must wait:
-> 
-> raid5_make_request
->   make_stripe_request
->    ahead_of_reshape
->     wait_woken
+Thank for suggestion, It will be optimized in v2.
 
-Not sure if I've got the wrong end of the stick, but if I've understood 
-correctly, that shouldn't be the case.
+-- 
+Thanks,
+Nan
 
-Reshape takes place in a window. All io *beyond* the window is allowed 
-to proceed normally - that part of the array has not been reshaped so 
-the old parameters are used.
-
-All io *in front* of the window is allowed to proceed normally - that 
-part of the array has been reshaped so the new parameters are used.
-
-io *IN* the window is paused until the window has passed. This 
-interruption should be short and sweet.
-
-Cheers,
-Wol
