@@ -2,75 +2,76 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8965BC77B7C
-	for <linux-raid@archiver.kernel.org>; Fri,  5 May 2023 07:11:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCB6EC77B75
+	for <linux-raid@archiver.kernel.org>; Fri,  5 May 2023 07:31:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231244AbjEEHLz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 5 May 2023 03:11:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45188 "EHLO
+        id S231315AbjEEHbp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 5 May 2023 03:31:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230099AbjEEHLy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 03:11:54 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A50F814922;
-        Fri,  5 May 2023 00:11:52 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QCMLX1rYBz4f3nKX;
-        Fri,  5 May 2023 15:11:48 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgCX_7I0rFRkkCwwIw--.57202S3;
-        Fri, 05 May 2023 15:11:49 +0800 (CST)
-Message-ID: <a965652a-c108-bb52-ffd4-98b479b71d69@huaweicloud.com>
-Date:   Fri, 5 May 2023 15:11:48 +0800
+        with ESMTP id S231350AbjEEHbf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 03:31:35 -0400
+Received: from mail-ua1-x92c.google.com (mail-ua1-x92c.google.com [IPv6:2607:f8b0:4864:20::92c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10D8F17FEC
+        for <linux-raid@vger.kernel.org>; Fri,  5 May 2023 00:31:25 -0700 (PDT)
+Received: by mail-ua1-x92c.google.com with SMTP id a1e0cc1a2514c-77d049b9040so12712852241.1
+        for <linux-raid@vger.kernel.org>; Fri, 05 May 2023 00:31:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683271884; x=1685863884;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=z9/9JuvyVhZw9zXhGtLhH8ui7PtgkXlKB7tdImiMwA0=;
+        b=r2E0guD+qO9lRdYd1kumnsZXyi2WuxEvkAbKkdb+IOGwM7YTVrz6p7dwj5FQsgRL6D
+         DVl7FTtJPeLW9H5wPukaR+/I37Ik8n8VxSGZwD43rQvxRbHDTQ6jkHVrbp6NivqsF6is
+         4SCHeenzGf1Pk9XxXE87qgj4MBPqMKFh66lGr+2ECOpC6cRZxzuycwi3SwGrd/BD1UOf
+         V97rWLQ7bE22kBtO8Dx9b6IRM4e/7SCFFxsApu8uhwJft9JuNCWjwAHlLNMoyUAXMMn5
+         xbq+WJFisaaSc1++JjdoxTIWr06G6qS0X8GB6xSC7oQjYLECcHSyIn7fJVodSdkZRzcg
+         eGaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683271884; x=1685863884;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=z9/9JuvyVhZw9zXhGtLhH8ui7PtgkXlKB7tdImiMwA0=;
+        b=hXbLgBenTcDqxPJHhNKVSOTAFVgvVl90zNAf4BEcBRAn39+K5G83lHI9AQi2PlMHEK
+         eQB9sAJJqEDLojACtQxCwmd3XsMEAUzElNC5KSkC9AtQkq35wZX6A9C4L5fq7bRG+0pi
+         kTpcQIa2TCRaxRCNKrRfUonIAuqHpCG4BqWLE+e8CCGDla/jmy9ECasUj0IZsCnEuG++
+         dAu87b6Oo1QLZKgrp7ESZ9E42cgNSfe9KAaS5lF2ChGOL66zc+joIl4j9wfya7fJoQ3i
+         oSmiVsbuJIzRx0NpIeF1pf1qTVECZSSLzoV1JBp/TKnKsfupLDPgQaAt7W+8SPZelLW/
+         HyCQ==
+X-Gm-Message-State: AC+VfDw+hdXXZZdSQ5oBUGleEE37Q4i8WgC4lDsJd5+rvw2580rTMELf
+        THhneHfVTYa0lrRitDK4OuXk8Uw1ilzRklLEFWkYjp7h3sK1xg==
+X-Google-Smtp-Source: ACHHUZ6yLdOyngGmryssXxCyXIEWjcacj2Hof9s8R9Xpm2ultlyCiYhP+XUAw8U1Mrbmk1zXriVspefqz0OwkV7Ryaw=
+X-Received: by 2002:a67:c403:0:b0:42e:28b2:aa99 with SMTP id
+ c3-20020a67c403000000b0042e28b2aa99mr426147vsk.14.1683271884122; Fri, 05 May
+ 2023 00:31:24 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH 3/3] md/raid10: fix wrong setting of max_corr_read_errors
-To:     Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
-        song@kernel.org, neilb@suse.de, Rob.Becker@riverbed.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230427085612.1346752-1-linan666@huaweicloud.com>
- <20230427085612.1346752-4-linan666@huaweicloud.com>
- <686d8ef7-cbae-113c-fa48-e0c5dfa2f3d5@huaweicloud.com>
-From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <686d8ef7-cbae-113c-fa48-e0c5dfa2f3d5@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCX_7I0rFRkkCwwIw--.57202S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYA7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-        Iv6xkF7I0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvE
-        ncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I
-        8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0E
-        jII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbI
-        xvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
-        xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
-        kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v2
-        6r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Jr0_Gr
-        1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbZmitUU
-        UUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
+References: <20230216044134.30581-1-kev.friedberg@gmail.com>
+ <CAEJbB426WWdu5KESE1T+T0JHSKx3CGjUcpdZ5yhppsxyXNJDvw@mail.gmail.com>
+ <20230320093545.000016cc@linux.intel.com> <20230428093056.00006ca2@intel.linux.com>
+In-Reply-To: <20230428093056.00006ca2@intel.linux.com>
+From:   Kevin Friedberg <kev.friedberg@gmail.com>
+Date:   Fri, 5 May 2023 03:31:11 -0400
+Message-ID: <CAEJbB41BxMdU1bYWAhHh8KLL2_P_M5DCJaDBt3f_YdphmpN4yQ@mail.gmail.com>
+Subject: Re: [PATCH] enable RAID for SATA under VMD
+To:     Kinga Tanska <kinga.tanska@linux.intel.com>
+Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Fri, Apr 28, 2023 at 3:31=E2=80=AFAM Kinga Tanska
+<kinga.tanska@linux.intel.com> wrote:
 
-在 2023/4/27 18:51, Yu Kuai 写道:
+> Hi,
+>
+> We've been able to test this change and we haven't found problems.
+>
+> Regards,
+> Kinga
 
-> This is not critical, but I think it's better do some cleanup to fold
-> above code into check_decay_read_errors(), and rename it to
-> check_read_error():
-> 
-
-It seems like a good idea. v2 will include this clean up.
-
--- 
-Thanks,
-Nan
-
+Great!  What are the next steps to get it included in a future release?
