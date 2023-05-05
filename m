@@ -2,126 +2,144 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C18C7EE22
-	for <linux-raid@archiver.kernel.org>; Fri,  5 May 2023 14:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD0AC77B75
+	for <linux-raid@archiver.kernel.org>; Fri,  5 May 2023 15:47:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232516AbjEEOME (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 5 May 2023 10:12:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46982 "EHLO
+        id S232761AbjEEPrp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 5 May 2023 11:47:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232090AbjEEOMA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 10:12:00 -0400
-Received: from mail-yw1-x112a.google.com (mail-yw1-x112a.google.com [IPv6:2607:f8b0:4864:20::112a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55E7AD2A
-        for <linux-raid@vger.kernel.org>; Fri,  5 May 2023 07:11:55 -0700 (PDT)
-Received: by mail-yw1-x112a.google.com with SMTP id 00721157ae682-556f2c24a28so2129697b3.1
-        for <linux-raid@vger.kernel.org>; Fri, 05 May 2023 07:11:55 -0700 (PDT)
+        with ESMTP id S232012AbjEEPro (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 11:47:44 -0400
+Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D198B59D8
+        for <linux-raid@vger.kernel.org>; Fri,  5 May 2023 08:47:41 -0700 (PDT)
+Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-55b7630a736so28188217b3.1
+        for <linux-raid@vger.kernel.org>; Fri, 05 May 2023 08:47:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1683295915; x=1685887915;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lYPB3stPQmWSExnYMshDYbYhsfa2W+OlQjJxEpndWnM=;
-        b=qq9k4CHhMcGwgjJP+XM1athe5OHlLq0D26Ch4Y7iLMqhrY6QdPYKg1AtxVumk1ffcg
-         RpfIYS8xAG6L5x7Tb30DAUHqZ9JIwJtrklJT5Xx8ObnVzeY9gSzPiW/toPtuXaGux6eQ
-         /ZT2nMq+AtMMIpZmEcvQLLIsHsiY7R8AjFY8UNrKUp7ru2uqEl4XNnPRIw/lYncqAdXh
-         86+ECEijeVraFzpt3bV587DuKIeREe4VKB6ECv4H52ADB5Q6EAVlhlJ7+Yx1b7HcS+9y
-         6+4ve2FZ3mHqxFYatqkm+vN4DsB5xLgcdPhoqy7i9rNsyYc997kMMoXNsZl/kNyeyH5F
-         mtYA==
+        d=gmail.com; s=20221208; t=1683301661; x=1685893661;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0PfXjde2Oi8l2RUpo54ZtE0qFDbF9EfkPv2241rXkkw=;
+        b=BezMntnsPDxeHnSPeptds/Qv2IkBQMr++rIrjdX2aCXE5VbTWfJRlKbzkdrfZNqSKn
+         m06HpDclPXUP/gUVw+Y098KmyOuyhMqpngNYm/rzrtQZ5RDVg5cMdUXH2zg4hYA27e7U
+         ljUtq9S9inlAWT+uJuWfJidJuxxwz8zKl6rX8NgxXK27hrbOklLqsBM3zcceMv5q6bH8
+         KslYBlmsKPevuZTcuiIxKmBZIRkLUoJ7hG2YXIVrBa6gxzjyWf5Sf9rWGaNOgc8XLLMR
+         WFcgPzWuouZP03Iud9qjzA5MtEzryheYppnOXaduUEjcwxnPEJSlDi6pJq+SGkQwnvLs
+         N3PA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683295915; x=1685887915;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lYPB3stPQmWSExnYMshDYbYhsfa2W+OlQjJxEpndWnM=;
-        b=TA4ActcTZW60z2ij54vXqM8+qCyhUJXZd4w1ahVvAMYsGNNvtAPfeiEGdh+fHYZvi6
-         bg95pUzdINFd25xcCEZSWe6a/0FtB9nVHTCY+10YBgAMdFx3ainbfVaqf5MNSLGjRr4m
-         vxxKATVZ1wEM3FQKbaUqMsJZXS0nXRAom0d7ZZwk9iA0CPwL0lH9BUBdOqhG2jDO0xhf
-         hI6JmTzTGkhyHVJpV6fw+GCbqv8LHS1F1Pzvw3jgVvhWorb+FkYPnZO2aPB2u7i8UVh/
-         Qf1jdbWSZ1Yc/RGFQwh6fSl2uiDu9dcK5Rtk/6UJjk6TVnHaOowL397f+ctDr1vQ2TYj
-         vrQA==
-X-Gm-Message-State: AC+VfDzpIgkn8trthCSQFqGfTb54XiBESgwfnDbe5J0LEgYNlEHmvTYM
-        4FvAHoSOlKLuC8UZIvVZcfIgQg==
-X-Google-Smtp-Source: ACHHUZ6qoOI/+PGpkkPitfDFrwnR+RSgPJAmgOvbSJFeS3wnUhPPJunQJdt8ejTtUoT1u+x3g04+yQ==
-X-Received: by 2002:a81:5d6:0:b0:55a:9e2f:933d with SMTP id 205-20020a8105d6000000b0055a9e2f933dmr1748012ywf.1.1683295914848;
-        Fri, 05 May 2023 07:11:54 -0700 (PDT)
-Received: from [172.20.2.186] ([12.153.103.3])
-        by smtp.gmail.com with ESMTPSA id x8-20020a814a08000000b0054f56baf3f2sm264788ywa.122.2023.05.05.07.11.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 May 2023 07:11:53 -0700 (PDT)
-Message-ID: <e56b4f96-a379-f97b-168f-d03f170744b2@kernel.dk>
-Date:   Fri, 5 May 2023 08:11:52 -0600
+        d=1e100.net; s=20221208; t=1683301661; x=1685893661;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=0PfXjde2Oi8l2RUpo54ZtE0qFDbF9EfkPv2241rXkkw=;
+        b=OkbD9e6VkG1Bx1Bn/Xt7/cq1egjq2Q4JsrjFvyZbtO6e2Dg7xLGwYz1G35aPk2Z2ls
+         212sDK6+a12u0YiXYdi6iEB9+IJlQbCUlC5cYCh3Pyxa/YAT6g1xjQNBah6MxFQFylvk
+         2ccyt7MkfPyBmPsD52/S786479mVCtqDJ8VqOAakZMFar8DToTgHk5nwH+hJopoac8ch
+         r2QV/4cbqeP59vDC/X/y8Um1EcJjjaVeZs16Ac5TDdXXl1MrEXGZ3YjdEHFEg04iv/EV
+         eKC8AgzoMIGodWdZAwrkl8HnzlSed8mWluVKzmjwfok1gBvTw0TZOd0Gi1LBWwb4aGZV
+         JUCA==
+X-Gm-Message-State: AC+VfDzCd3QBR59iF+TyvKPug60ilcIAhZbe9ZhT4ZJ/oPlU33GKeeN/
+        JzAEnX/7gSjB1Bii1p0cMIVv3LWp4rwNZalcaIM=
+X-Google-Smtp-Source: ACHHUZ4xI/3YCu3AQqEXiFpY/QGE8uWlKWV495ISSm3tKzvnclDvL7oN5qeYH/tVNP5SzizK7qBY3tMGNgp0kioE09U=
+X-Received: by 2002:a25:ad08:0:b0:b9e:66f0:be9d with SMTP id
+ y8-20020a25ad08000000b00b9e66f0be9dmr1635327ybi.61.1683301660961; Fri, 05 May
+ 2023 08:47:40 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v5 00/20] bio: check return values of bio_add_page
-Content-Language: en-US
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc:     "agruenba@redhat.com" <agruenba@redhat.com>,
-        "cluster-devel@redhat.com" <cluster-devel@redhat.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "hare@suse.de" <hare@suse.de>, "hch@lst.de" <hch@lst.de>,
-        "jfs-discussion@lists.sourceforge.net" 
-        <jfs-discussion@lists.sourceforge.net>,
-        "kch@nvidia.com" <kch@nvidia.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "rpeterso@redhat.com" <rpeterso@redhat.com>,
-        "shaggy@kernel.org" <shaggy@kernel.org>,
-        "snitzer@kernel.org" <snitzer@kernel.org>,
-        "song@kernel.org" <song@kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>
-References: <20230502101934.24901-1-johannes.thumshirn@wdc.com>
- <1ac1fc5e-3c32-9d62-65bf-5ccbb82c37cc@wdc.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <1ac1fc5e-3c32-9d62-65bf-5ccbb82c37cc@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <CAFig2csUV2QiomUhj_t3dPOgV300dbQ6XtM9ygKPdXJFSH__Nw@mail.gmail.com>
+ <63d92097-5299-2ae8-9697-768c52678578@huaweicloud.com> <CAFig2ct4BJZ0A9BKuXn8RM71+KrUzB8vKGQY0fSjNZiNenQZBg@mail.gmail.com>
+ <c71c8381-f26e-f7de-c6f5-3c4411f08b15@huaweicloud.com> <d159161d-a5eb-8790-49c4-b7013e66ba65@youngman.org.uk>
+ <6f391690-992f-1196-3109-6d422b3522f7@huaweicloud.com>
+In-Reply-To: <6f391690-992f-1196-3109-6d422b3522f7@huaweicloud.com>
+From:   Jove <jovetoo@gmail.com>
+Date:   Fri, 5 May 2023 17:47:29 +0200
+Message-ID: <CAFig2ct+ZbHYEho7p9eubaz-kozGR+GkSJ1tVL+LGaciUBixyw@mail.gmail.com>
+Subject: Re: Raid5 to raid6 grow interrupted, mdadm hangs on assemble command
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Wol <antlists@youngman.org.uk>, linux-raid@vger.kernel.org,
+        "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 5/5/23 2:09?AM, Johannes Thumshirn wrote:
-> On 02.05.23 12:20, Johannes Thumshirn wrote:
->> We have two functions for adding a page to a bio, __bio_add_page() which is
->> used to add a single page to a freshly created bio and bio_add_page() which is
->> used to add a page to an existing bio.
->>
->> While __bio_add_page() is expected to succeed, bio_add_page() can fail.
->>
->> This series converts the callers of bio_add_page() which can easily use
->> __bio_add_page() to using it and checks the return of bio_add_page() for
->> callers that don't work on a freshly created bio.
->>
->> Lastly it marks bio_add_page() as __must_check so we don't have to go again
->> and audit all callers.
->>
->> Changes to v4:
->> - Rebased onto latest Linus' master
->> - Dropped already merged patches
->> - Added Sergey's Reviewed-by
->>
->> Changes to v3:
->> - Added __bio_add_folio and use it in iomap (Willy)
->> - Mark bio_add_folio must check (Willy)
->> - s/GFS/GFS2/ (Andreas)
->>
->> Changes to v2:
->> - Removed 'wont fail' comments pointed out by Song
->>
->> Changes to v1:
->> - Removed pointless comment pointed out by Willy
->> - Changed commit messages pointed out by Damien
->> - Colledted Damien's Reviews and Acks
-> 
-> Jens any comments on this?
+Hi Kuai.
 
-I'll take a look post -rc1.
+> Jove, As I understand this, if mdadm make progress without a blocked
+> io, and reshape continues, it seems you can use this array without
+> problem
 
--- 
-Jens Axboe
+I've had to do some sleuthing to figure out who was doing that array
+access, I was already running a minimal FedoraCore image. I've
+discovered that the culprit is the systemd-udevd daemon. I do not know
+why it accesses the array but if I stop it and rename that executable
+(it gets started automatically when the array is assembled) then the
+reshape continues.
 
+Now it is just a matter of time until the reshape is finished and I
+can discover just how much data I still have :)
+
+Thank you all for your help, I will send a last mail when I know more.
+
+Best regards,
+
+      Johan
+
+
+
+On Fri, May 5, 2023 at 10:02=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/05/05 14:58, Wol =E5=86=99=E9=81=93:
+> > On 05/05/2023 02:34, Yu Kuai wrote:
+> >>> I have had one case in which mdadm didn't hang and in which the
+> >>> reshape continued. Sadly, I was using sparse overlay files and the
+> >>> filesystem could not handle the full 4x 4TB. I had to terminate the
+> >>> reshape.
+> >>
+> >> This sounds like a dead end for now, normal io beyond reshape position
+> >> must wait:
+> >>
+> >> raid5_make_request
+> >>   make_stripe_request
+> >>    ahead_of_reshape
+> >>     wait_woken
+> >
+> > Not sure if I've got the wrong end of the stick, but if I've understood
+> > correctly, that shouldn't be the case.
+> >
+> > Reshape takes place in a window. All io *beyond* the window is allowed
+> > to proceed normally - that part of the array has not been reshaped so
+> > the old parameters are used.
+> >
+> > All io *in front* of the window is allowed to proceed normally - that
+> > part of the array has been reshaped so the new parameters are used.
+> >
+> > io *IN* the window is paused until the window has passed. This
+> > interruption should be short and sweet.
+>
+> Yes, it's correct, and in this case reshape_safe should be the same as
+> reshapge_progress, and I guess io is stuck because
+> stripe_ahead_of_reshape() return true.
+>
+> So this deadlock happens when io is blocked because of reshape, and
+> mddev_suspend() is waiting for this io to be done, in the meantime
+> reshape can't start untill mddev_suspend() returns.
+>
+> Jove, As I understand this, if mdadm make progress without a blocked
+> io, and reshape continues, it seems you can use this array without
+> problem.
+>
+> Thanks,
+> Kuai
+> >
+> > Cheers,
+> > Wol
+> >
+> > .
+> >
+>
