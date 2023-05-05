@@ -2,182 +2,256 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A300C77B7D
-	for <linux-raid@archiver.kernel.org>; Fri,  5 May 2023 08:49:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 358FFC77B7C
+	for <linux-raid@archiver.kernel.org>; Fri,  5 May 2023 09:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231147AbjEEItS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 5 May 2023 04:49:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43836 "EHLO
+        id S231365AbjEEJFM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 5 May 2023 05:05:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjEEItR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 04:49:17 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E44F818916
-        for <linux-raid@vger.kernel.org>; Fri,  5 May 2023 01:49:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683276556; x=1714812556;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Xp8e7zcnTcRILubNOi7os3Sz13kpn6QtNaPoavdhCn0=;
-  b=gd2J5qrdr97UIPI0saAZaaSqE7gohJHjbDVIIDnkj9nK+GtfQAbxr/ug
-   k/q4HDCeznw+KeE7o25Ckv2uuXDGug+EcDwD7VTuWTydN69dF+oliJOOr
-   vhGHurYx6uOVAOXgPI9DsP5OGMOSGBEHY+3C+H1dLyLrhShu8qq6J4xui
-   RXGGWzXJBxDk1z+Xz8eQxmrnJ7/rFrrCpYJXbS8/G8QgDQQGvBE+APNV1
-   vxoQgh11JYGtHtOc5w7hTvum/U8ZKtoD4nc8QmGfj/ljeKxQW+3huldV/
-   eemanaaxetLatypFGpNgdKJLEQoMXvpuCqDHOaRbrv2S+MTQYNQJQm3eW
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10700"; a="377241242"
-X-IronPort-AV: E=Sophos;i="5.99,251,1677571200"; 
-   d="scan'208";a="377241242"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2023 01:49:16 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10700"; a="1027374362"
-X-IronPort-AV: E=Sophos;i="5.99,251,1677571200"; 
-   d="scan'208";a="1027374362"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.139.56])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2023 01:49:15 -0700
-Date:   Fri, 5 May 2023 10:49:10 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Coly Li <colyli@suse.de>
-Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org,
-        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Subject: Re: [PATCH] Incremental: remove obsoleted calls to udisks
-Message-ID: <20230505104910.00000aa9@linux.intel.com>
-In-Reply-To: <20230505052231.7787-1-colyli@suse.de>
-References: <20230505052231.7787-1-colyli@suse.de>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229478AbjEEJFL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 05:05:11 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 660DD18860;
+        Fri,  5 May 2023 02:05:09 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QCPsD683zz4f3k6T;
+        Fri,  5 May 2023 17:05:04 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAHcLO+xlRkaJ01Iw--.55955S3;
+        Fri, 05 May 2023 17:05:03 +0800 (CST)
+Subject: Re: [PATCH -next 1/6] Revert "md: unlock mddev before reap
+ sync_thread in action_store"
+To:     Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
+Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, logang@deltatee.com,
+        pmenzel@molgen.mpg.de, agk@redhat.com, snitzer@kernel.org,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        Marc Smith <msmith626@gmail.com>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230322064122.2384589-1-yukuai1@huaweicloud.com>
+ <20230322064122.2384589-2-yukuai1@huaweicloud.com>
+ <2c2599ec-ac35-6494-aedf-93ecca1969ee@linux.dev>
+ <d1d27b2a-96ec-319e-4690-64e781c9a473@huaweicloud.com>
+ <b91ae03a-14d5-11eb-8ec7-3ed91ff2c59e@linux.dev>
+ <31e7f59e-579a-7812-632d-059ed0a6d441@huaweicloud.com>
+ <3fc2a539-e4cc-e057-6cf0-da7b3953be6e@linux.dev>
+ <3aa073e9-5145-aae2-2201-5ba48c09c693@huaweicloud.com>
+ <CAPhsuW7c2b4yYbwNcqKW+TBL=QYEzchnVQ4pDLBT-xoBoTvQmg@mail.gmail.com>
+ <9d92a862-e728-5493-52c0-abc634eb6e97@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <e9067438-d713-f5f3-0d3d-9e6b0e9efa0e@huaweicloud.com>
+Date:   Fri, 5 May 2023 17:05:01 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <9d92a862-e728-5493-52c0-abc634eb6e97@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAHcLO+xlRkaJ01Iw--.55955S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxKF1kZr1rAryDGFy3ur1fXrb_yoWxXFyUpF
+        y8GF15JrWkAw18Zr4Utw10qFy0vw4UXw1UXryfJF1xJwn8KrW2qFyUZF1j9FZ8Jr4xJw4j
+        vay5JFZ3ZrWDArJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri,  5 May 2023 13:22:31 +0800
-Coly Li <colyli@suse.de> wrote:
+Hi, Song and Guoqing
 
-> Utilility udisks is removed from udev upstream, calling this obsoleted
-> command in run_udisks() doesn't make any sense now.
+在 2023/04/06 16:53, Yu Kuai 写道:
+> Hi,
 > 
-> This patch removes the calls chain of udisks, which includes routines
-> run_udisk(), force_remove(), and 2 locations where force_remove() are
-> called.
-> 
-> In remove_from_member_array() and IncrementalRemove(), if return value
-> of calling Manage_subdevs() is not 0, don't call force_remove() and only
-> print error message when parameter 'verbose' is true.
-> 
-> Signed-off-by: Coly Li <colyli@suse.de>
-> Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-> Cc: Jes Sorensen <jes@trained-monkey.org>
-> ---
->  Incremental.c | 50 +++++++-------------------------------------------
->  1 file changed, 7 insertions(+), 43 deletions(-)
-> 
-> diff --git a/Incremental.c b/Incremental.c
-> index 49a71f7..e1a953a 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -1630,54 +1630,18 @@ release:
->  	return rv;
->  }
->  
-> -static void run_udisks(char *arg1, char *arg2)
-> -{
-> -	int pid = fork();
-> -	int status;
-> -	if (pid == 0) {
-> -		manage_fork_fds(1);
-> -		execl("/usr/bin/udisks", "udisks", arg1, arg2, NULL);
-> -		execl("/bin/udisks", "udisks", arg1, arg2, NULL);
-> -		exit(1);
-> -	}
-> -	while (pid > 0 && wait(&status) != pid)
-> -		;
-> -}
-> -
-> -static int force_remove(char *devnm, int fd, struct mdinfo *mdi, int verbose)
-> -{
-> -	int rv;
-> -	int devid = devnm2devid(devnm);
-> -
-> -	run_udisks("--unmount", map_dev(major(devid), minor(devid), 0));
-> -	rv = Manage_stop(devnm, fd, verbose, 1);
+> 在 2023/03/29 7:58, Song Liu 写道:
+>> On Wed, Mar 22, 2023 at 11:32 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>
+>>> Hi,
+>>>
+>>> 在 2023/03/23 11:50, Guoqing Jiang 写道:
+>>>
+>>>> Combined your debug patch with above steps. Seems you are
+>>>>
+>>>> 1. add delay to action_store, so it can't get lock in time.
+>>>> 2. echo "want_replacement"**triggers md_check_recovery which can 
+>>>> grab lock
+>>>>       to start sync thread.
+>>>> 3. action_store finally hold lock to clear RECOVERY_RUNNING in reap 
+>>>> sync
+>>>> thread.
+>>>> 4. Then the new added BUG_ON is invoked since RECOVERY_RUNNING is 
+>>>> cleared
+>>>>       in step 3.
+>>>
+>>> Yes, this is exactly what I did.
+>>>
+>>>> sync_thread can be interrupted once MD_RECOVERY_INTR is set which means
+>>>> the RUNNING
+>>>> can be cleared, so I am not sure the added BUG_ON is reasonable. And
+>>>> change BUG_ON
+>>>
+>>> I think BUG_ON() is reasonable because only md_reap_sync_thread can
+>>> clear it, md_do_sync will exit quictly if MD_RECOVERY_INTR is set, but
+>>> md_do_sync should not see that MD_RECOVERY_RUNNING is cleared, otherwise
+>>> there is no gurantee that only one sync_thread can be in progress.
+>>>
+>>>> like this makes more sense to me.
+>>>>
+>>>> +BUG_ON(!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+>>>> +!test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+>>>
+>>> I think this can be reporduced likewise, md_check_recovery clear
+>>> MD_RECOVERY_INTR, and new sync_thread triggered by echo
+>>> "want_replacement" won't set this bit.
+>>>
+>>>>
+>>>> I think there might be racy window like you described but it should be
+>>>> really small, I prefer
+>>>> to just add a few lines like this instead of revert and introduce new
+>>>> lock to resolve the same
+>>>> issue (if it is).
+>>>
+>>> The new lock that I add in this patchset is just try to synchronize idle
+>>> and forzen from action_store（patch 3), I can drop it if you think this
+>>> is not necessary.
+>>>
+>>> The main changes is patch 4, new lines is not much and I really don't
+>>> like to add new flags unless we have to, current code is already hard
+>>> to understand...
+>>>
+>>> By the way, I'm concerned that drop the mutex to unregister sync_thread
+>>> might not be safe, since the mutex protects lots of stuff, and there
+>>> might exist other implicit dependencies.
+>>>
+>>>>
+>>>> TBH, I am reluctant to see the changes in the series, it can only be
+>>>> considered
+>>>> acceptable with conditions:
+>>>>
+>>>> 1. the previous raid456 bug can be fixed in this way too, hopefully 
+>>>> Marc
+>>>> or others
+>>>>       can verify it.
 
-Hi Coly,
-Please see that you removed Manage_stop(). Now mdadm won't try to
-stop failed arrays. It is good change but please describe it.
+After reading the thread:
 
-> -	if (rv) {
-> -		/* At least we can try to trigger a 'remove' */
-> -		sysfs_uevent(mdi, "remove");
-> -		if (verbose)
-> -			pr_err("Fail to stop %s too.\n", devnm);
-> -	}
-> -	return rv;
-> -}
-> -
->  static void remove_from_member_array(struct mdstat_ent *memb,
->  				    struct mddev_dev *devlist, int verbose)
->  {
->  	int rv;
-> -	struct mdinfo mmdi;
->  	int subfd = open_dev(memb->devnm);
->  
->  	if (subfd >= 0) {
->  		rv = Manage_subdevs(memb->devnm, subfd, devlist, verbose,
->  				    0, UOPT_UNDEFINED, 0);
-> -		if (rv & 2) {
-> -			if (sysfs_init(&mmdi, -1, memb->devnm))
-> -				pr_err("unable to initialize sysfs for:
-> %s\n",
-> -				       memb->devnm);
-> -			else
-> -				force_remove(memb->devnm, subfd, &mmdi,
-> -					     verbose);
-> -		}
-> +		if ((rv & 2) && verbose)
+https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t
 
-There is a rule (at least we at Intel tried to follow) to use indirect
-comparisons only for pointers. I know that we don't have log level in mdadm,
-we need to compare with values directly:
-if ((rv & 2) && verbose > 0)
+The deadlock in raid456 has same conditions as raid10:
+1) echo idle hold mutex to stop sync thread;
+2) sync thread wait for io to complete;
+3) io can't be handled by daemon thread because sb flag is set;
+4) sb flag can't be cleared because daemon thread can't hold mutex;
 
-It is not mandatory, just to let you know.
-> +			pr_err("Fail to remove %s from array.\n",
-> memb->devnm);
+I tried to reporduce the deadlock with the reporducer provided in the
+thread, howerver, the deadlock is not reporduced after running for more
+than a day.
 
-Could we make this error less "dangerous"? I mean that someone may think that
-something is wrong here but it is not - the message is expected in case when
-raid becomes failed. Note that for raid5 disk is removed from array but EBUSY
-is returned anyway. Maybe we should check for MD_BROKEN in array_state to
-differentiate and make errors more detailed?
+I changed the reporducer to below:
 
-Same applies to the native case below.
+[root@fedora raid5]# cat test_deadlock.sh
+#! /bin/bash
 
->  		close(subfd);
->  	}
->  }
-> @@ -1763,10 +1727,10 @@ int IncrementalRemove(char *devname, char *id_path,
-> int verbose) rv |= Manage_subdevs(ent->devnm, mdfd, &devlist,
->  				    verbose, 0, UOPT_UNDEFINED, 0);
->  		if (rv & 2) {
-> -		/* Failed due to EBUSY, try to stop the array.
-> -		 * Give udisks a chance to unmount it first.
-> -		 */
-> -			rv = force_remove(ent->devnm, mdfd, &mdi, verbose);
-> +			if (verbose)
-> +				pr_err("Fail to remove %s from array.\n",
-> ent->devnm);
-> +			/* Only return 0 or 1 */
-> +			rv = !!rv;
-we are in if (rv & 2) so I think that we can simply set rv = 1, am I right?
+(
+         while true; do
+                 echo check > /sys/block/md0/md/sync_action
+                 sleep 0.5
+                 echo idle > /sys/block/md0/md/sync_action
+         done
+) &
 
->  			goto end;
->  		}
->  	}
+echo 0 > /proc/sys/vm/dirty_background_ratio
+(
+         while true; do
+                 fio -filename=/dev/md0 -bs=4k -rw=write -numjobs=1 
+-name=xxx
+         done
+) &
+
+And I finially able to reporduce the deadlock with this patch
+reverted(running for about an hour):
+
+[root@fedora raid5]# ps -elf | grep " D " | grep -v grep
+1 D root         156       2 16  80   0 -     0 md_wri 06:51 ? 
+00:19:15 [kworker/u8:11+flush-9:0]
+5 D root        2239       1  2  80   0 -   992 kthrea 06:57 pts/0 
+00:02:15 sh test_deadlock.sh
+1 D root       42791       2  0  80   0 -     0 raid5_ 07:45 ? 
+00:00:00 [md0_resync]
+5 D root       42803   42797  0  80   0 - 92175 balanc 07:45 ? 
+00:00:06 fio -filename=/dev/md0 -bs=4k -rw=write -numjobs=1 -name=xxx
+
+[root@fedora raid5]# cat /proc/2239/stack
+[<0>] kthread_stop+0x96/0x2b0
+[<0>] md_unregister_thread+0x5e/0xd0
+[<0>] md_reap_sync_thread+0x27/0x370
+[<0>] action_store+0x1fa/0x490
+[<0>] md_attr_store+0xa7/0x120
+[<0>] sysfs_kf_write+0x3a/0x60
+[<0>] kernfs_fop_write_iter+0x144/0x2b0
+[<0>] new_sync_write+0x140/0x210
+[<0>] vfs_write+0x21a/0x350
+[<0>] ksys_write+0x77/0x150
+[<0>] __x64_sys_write+0x1d/0x30
+[<0>] do_syscall_64+0x45/0x70
+[<0>] entry_SYSCALL_64_after_hwframe+0x61/0xc6
+[root@fedora raid5]# cat /proc/42791/stack
+[<0>] raid5_get_active_stripe+0x606/0x960
+[<0>] raid5_sync_request+0x508/0x570
+[<0>] md_do_sync.cold+0xaa6/0xee7
+[<0>] md_thread+0x266/0x280
+[<0>] kthread+0x151/0x1b0
+[<0>] ret_from_fork+0x1f/0x30
+
+And with this patchset applied, I run the above reporducer for more than
+a day now, and I think the deadlock in raid456 can be fixed.
+
+Can this patchset be considered in next merge window? If so, I'll rebase
+this patchset.
 
 Thanks,
-Mariusz
+Kuai
+>>>> 2. pass all the tests in mdadm
+>>
+>> AFAICT, this set looks like a better solution for this problem. But I 
+>> agree
+>> that we need to make sure it fixes the original bug. mdadm tests are not
+>> in a very good shape at the moment. I will spend more time to look into
+>> these tests.
+> 
+> While I'm working on another thread to protect md_thread with rcu, I
+> found that this patch has other defects that can cause null-ptr-
+> deference in theory where md_unregister_thread(&mddev->sync_thread) can
+> concurrent with other context to access sync_thread, for example:
+> 
+> t1: md_set_readonly             t2: action_store
+>                                  md_unregister_thread
+>                                  // 'reconfig_mutex' is not held
+> // 'reconfig_mutex' is held by caller
+> if (mddev->sync_thread)
+>                                   thread = *threadp
+>                                   *threadp = NULL
+>   wake_up_process(mddev->sync_thread->tsk)
+>   // null-ptr-deference
+> 
+> So, I think this revert will make more sence. 😉
+> 
+> Thanks,
+> Kuai
+> 
+> .
+> 
+
