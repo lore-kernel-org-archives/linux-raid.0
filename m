@@ -2,59 +2,58 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C71C77B7C
-	for <linux-raid@archiver.kernel.org>; Sat,  6 May 2023 02:02:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 385CEC77B7C
+	for <linux-raid@archiver.kernel.org>; Sat,  6 May 2023 02:14:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229619AbjEFCCh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 5 May 2023 22:02:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40196 "EHLO
+        id S230451AbjEFCOj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 5 May 2023 22:14:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbjEFCCg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 22:02:36 -0400
+        with ESMTP id S230339AbjEFCOi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 22:14:38 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D203B5B8A;
-        Fri,  5 May 2023 19:02:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 454C55B86;
+        Fri,  5 May 2023 19:14:37 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QCrRB5L2fz4f3pF9;
-        Sat,  6 May 2023 10:02:30 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QCrj50TSjz4f3v5B;
+        Sat,  6 May 2023 10:14:33 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgD3rLA3tVVk3P5mIw--.60188S3;
-        Sat, 06 May 2023 10:02:31 +0800 (CST)
-Subject: Re: [PATCH v2 3/4] md/raid10: fix wrong setting of
- max_corr_read_errors
+        by APP4 (Coremail) with SMTP id gCh0CgBXwLMIuFVkhJhnIw--.19200S3;
+        Sat, 06 May 2023 10:14:34 +0800 (CST)
+Subject: Re: [PATCH v2 4/4] md/raid10: optimize check_decay_read_errors()
 To:     linan666@huaweicloud.com, song@kernel.org, neilb@suse.de,
         Rob.Becker@riverbed.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
         yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 References: <20230506012315.3370489-1-linan666@huaweicloud.com>
- <20230506012315.3370489-4-linan666@huaweicloud.com>
+ <20230506012315.3370489-5-linan666@huaweicloud.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <ddec947c-d2b9-e4fe-30e6-02c76f162ab3@huaweicloud.com>
-Date:   Sat, 6 May 2023 10:02:30 +0800
+Message-ID: <aaece788-8892-1412-793e-b381b33d951b@huaweicloud.com>
+Date:   Sat, 6 May 2023 10:14:32 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20230506012315.3370489-4-linan666@huaweicloud.com>
+In-Reply-To: <20230506012315.3370489-5-linan666@huaweicloud.com>
 Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3rLA3tVVk3P5mIw--.60188S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF1xWrWDKr4rXw18AryrWFg_yoW8tw48pa
-        ykAas8Zr1UA34UAasrJFyDua4FywnYyayjyryrAw4fXa4fGr98K3W8Gayqgr1kWF1ft3W3
-        XFWDKrZrCa1UtFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgBXwLMIuFVkhJhnIw--.19200S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCFWxAF4UZw4rGFWxGrWktFb_yoWrKrW3pa
+        n8AasxJr4UJry7ArnrJrWqyasYvrySyayjyryxta1xXwn5Jrn8tFy5GFyjg348Gas8Jw15
+        XFZ8Wrs8CF4DKFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
         1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
         JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
         CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
         W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
         0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
         kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
         67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWU
-        JwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjfUF9a9DUUUU
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+        BIdaVFxhVjvjDU0xZFpf9x0JUp6wZUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -66,56 +65,128 @@ Hi,
 ÔÚ 2023/05/06 9:23, linan666@huaweicloud.com Ð´µÀ:
 > From: Li Nan <linan122@huawei.com>
 > 
-> max_corr_read_errors should not be negative number. Change it to
-> unsigned int where use it.
+> check_decay_read_errors() is used to handle rdev->read_errors. But
+> read_errors is inc and read after check_decay_read_errors() is invoked
+> in fix_read_error().
 > 
-
-Looks good, feel free to add:
-
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-
-> Fixes: 1e50915fe0bb ("raid: improve MD/raid10 handling of correctable read errors.")
+> Put all operations of read_errors into check_decay_read_errors() and
+> clean up unnecessary atomic_read of read_errors.
+> 
+> Suggested-by: Yu Kuai <yukuai3@huawei.com>
 > Signed-off-by: Li Nan <linan122@huawei.com>
 > ---
->   drivers/md/md.c     | 2 +-
->   drivers/md/raid10.c | 5 +++--
->   2 files changed, 4 insertions(+), 3 deletions(-)
+>   drivers/md/raid10.c | 66 ++++++++++++++++++++++++---------------------
+>   1 file changed, 35 insertions(+), 31 deletions(-)
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index fd5c3babcd6d..4a1e566d6bdc 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -4486,7 +4486,7 @@ __ATTR_PREALLOC(array_state, S_IRUGO|S_IWUSR, array_state_show, array_state_stor
->   
->   static ssize_t
->   max_corrected_read_errors_show(struct mddev *mddev, char *page) {
-> -	return sprintf(page, "%d\n",
-> +	return sprintf(page, "%u\n",
->   		       atomic_read(&mddev->max_corr_read_errors));
->   }
->   
 > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 4fcfcb350d2b..4d615fcc6a50 100644
+> index 4d615fcc6a50..79f94882227d 100644
 > --- a/drivers/md/raid10.c
 > +++ b/drivers/md/raid10.c
-> @@ -2727,7 +2727,8 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+> @@ -2655,39 +2655,53 @@ static void recovery_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+>   }
+>   
+>   /*
+> - * Used by fix_read_error() to decay the per rdev read_errors.
+> + * Used by fix_read_error() to decay the per rdev read_errors and check if
+> + * read_error > max_read_errors.
+>    * We halve the read error count for every hour that has elapsed
+>    * since the last recorded read error.
+>    *
+>    */
+> -static void check_decay_read_errors(struct mddev *mddev, struct md_rdev *rdev)
+> +static bool check_decay_read_errors(struct mddev *mddev, struct md_rdev *rdev)
+>   {
+> -	long cur_time_mon;
+> +	time64_t cur_time_mon = ktime_get_seconds();
+>   	unsigned long hours_since_last;
+> -	unsigned int read_errors = atomic_read(&rdev->read_errors);
+> -
+> -	cur_time_mon = ktime_get_seconds();
+> +	unsigned int read_errors;
+> +	unsigned int max_read_errors =
+> +			atomic_read(&mddev->max_corr_read_errors);
+>   
+>   	if (rdev->last_read_error == 0) {
+>   		/* first time we've seen a read error */
+>   		rdev->last_read_error = cur_time_mon;
+> -		return;
+> -	}
+
+I prefer to use a goto tag here, so that following code doesn't need to
+be changed. Other than that, this patch looks good to me.
+
+Thanks,
+Kuai
+> +	} else {
+> +		hours_since_last = (long)(cur_time_mon -
+> +				    rdev->last_read_error) / 3600;
+>   
+> -	hours_since_last = (long)(cur_time_mon -
+> -			    rdev->last_read_error) / 3600;
+> +		rdev->last_read_error = cur_time_mon;
+>   
+> -	rdev->last_read_error = cur_time_mon;
+> +		/*
+> +		 * if hours_since_last is > the number of bits in read_errors
+> +		 * just set read errors to 0. We do this to avoid
+> +		 * overflowing the shift of read_errors by hours_since_last.
+> +		 */
+> +		read_errors = atomic_read(&rdev->read_errors);
+> +		if (hours_since_last >= 8 * sizeof(read_errors))
+> +			atomic_set(&rdev->read_errors, 0);
+> +		else
+> +			atomic_set(&rdev->read_errors,
+> +				   read_errors >> hours_since_last);
+> +	}
+>   
+> -	/*
+> -	 * if hours_since_last is > the number of bits in read_errors
+> -	 * just set read errors to 0. We do this to avoid
+> -	 * overflowing the shift of read_errors by hours_since_last.
+> -	 */
+> -	if (hours_since_last >= 8 * sizeof(read_errors))
+> -		atomic_set(&rdev->read_errors, 0);
+> -	else
+> -		atomic_set(&rdev->read_errors, read_errors >> hours_since_last);
+> +	read_errors = atomic_inc_return(&rdev->read_errors);
+> +	if (read_errors > max_read_errors) {
+> +		pr_notice("md/raid10:%s: %pg: Raid device exceeded read_error threshold [cur %u:max %u]\n",
+> +			  mdname(mddev), rdev->bdev, read_errors, max_read_errors);
+> +		pr_notice("md/raid10:%s: %pg: Failing raid device\n",
+> +			  mdname(mddev), rdev->bdev);
+> +		md_error(mddev, rdev);
+> +		return false;
+> +	}
+> +
+> +	return true;
+>   }
+>   
+>   static int r10_sync_page_io(struct md_rdev *rdev, sector_t sector,
+> @@ -2727,8 +2741,6 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
 >   	int sect = 0; /* Offset from r10_bio->sector */
 >   	int sectors = r10_bio->sectors;
 >   	struct md_rdev *rdev;
-> -	int max_read_errors = atomic_read(&mddev->max_corr_read_errors);
-> +	unsigned int max_read_errors =
-> +			atomic_read(&mddev->max_corr_read_errors);
+> -	unsigned int max_read_errors =
+> -			atomic_read(&mddev->max_corr_read_errors);
 >   	int d = r10_bio->devs[r10_bio->read_slot].devnum;
 >   
 >   	/* still own a reference to this rdev, so it cannot
-> @@ -2743,7 +2744,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
->   	check_decay_read_errors(mddev, rdev);
->   	atomic_inc(&rdev->read_errors);
->   	if (atomic_read(&rdev->read_errors) > max_read_errors) {
-> -		pr_notice("md/raid10:%s: %pg: Raid device exceeded read_error threshold [cur %d:max %d]\n",
-> +		pr_notice("md/raid10:%s: %pg: Raid device exceeded read_error threshold [cur %u:max %u]\n",
->   			  mdname(mddev), rdev->bdev,
->   			  atomic_read(&rdev->read_errors), max_read_errors);
->   		pr_notice("md/raid10:%s: %pg: Failing raid device\n",
+> @@ -2741,15 +2753,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+>   		   more fix_read_error() attempts */
+>   		return;
+>   
+> -	check_decay_read_errors(mddev, rdev);
+> -	atomic_inc(&rdev->read_errors);
+> -	if (atomic_read(&rdev->read_errors) > max_read_errors) {
+> -		pr_notice("md/raid10:%s: %pg: Raid device exceeded read_error threshold [cur %u:max %u]\n",
+> -			  mdname(mddev), rdev->bdev,
+> -			  atomic_read(&rdev->read_errors), max_read_errors);
+> -		pr_notice("md/raid10:%s: %pg: Failing raid device\n",
+> -			  mdname(mddev), rdev->bdev);
+> -		md_error(mddev, rdev);
+> +	if (check_decay_read_errors(mddev, rdev)) {
+>   		r10_bio->devs[r10_bio->read_slot].bio = IO_BLOCKED;
+>   		return;
+>   	}
 > 
 
