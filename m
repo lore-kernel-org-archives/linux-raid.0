@@ -2,61 +2,58 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A08C77B7D
-	for <linux-raid@archiver.kernel.org>; Sat,  6 May 2023 01:33:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FFE0C77B75
+	for <linux-raid@archiver.kernel.org>; Sat,  6 May 2023 02:00:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230237AbjEFBdv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 5 May 2023 21:33:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56854 "EHLO
+        id S232707AbjEFCAn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 5 May 2023 22:00:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230131AbjEFBds (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 21:33:48 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42F35469F
-        for <linux-raid@vger.kernel.org>; Fri,  5 May 2023 18:33:33 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QCqnj2dn0z4f3jLq
-        for <linux-raid@vger.kernel.org>; Sat,  6 May 2023 09:33:29 +0800 (CST)
+        with ESMTP id S229935AbjEFCAm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 5 May 2023 22:00:42 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6A994C05;
+        Fri,  5 May 2023 19:00:40 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QCrNz6F8gz4f3nqt;
+        Sat,  6 May 2023 10:00:35 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7NprlVkbpBlIw--.33975S3;
-        Sat, 06 May 2023 09:33:30 +0800 (CST)
-Subject: Re: Raid5 to raid6 grow interrupted, mdadm hangs on assemble command
-To:     Jove <jovetoo@gmail.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Wol <antlists@youngman.org.uk>, linux-raid@vger.kernel.org,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <CAFig2csUV2QiomUhj_t3dPOgV300dbQ6XtM9ygKPdXJFSH__Nw@mail.gmail.com>
- <63d92097-5299-2ae8-9697-768c52678578@huaweicloud.com>
- <CAFig2ct4BJZ0A9BKuXn8RM71+KrUzB8vKGQY0fSjNZiNenQZBg@mail.gmail.com>
- <c71c8381-f26e-f7de-c6f5-3c4411f08b15@huaweicloud.com>
- <d159161d-a5eb-8790-49c4-b7013e66ba65@youngman.org.uk>
- <6f391690-992f-1196-3109-6d422b3522f7@huaweicloud.com>
- <CAFig2ct+ZbHYEho7p9eubaz-kozGR+GkSJ1tVL+LGaciUBixyw@mail.gmail.com>
+        by APP3 (Coremail) with SMTP id _Ch0CgBnFCLDtFVkVJWQIA--.1449S3;
+        Sat, 06 May 2023 10:00:37 +0800 (CST)
+Subject: Re: [PATCH v2 2/4] md/raid10: fix overflow in safe_delay_store
+To:     linan666@huaweicloud.com, song@kernel.org, neilb@suse.de,
+        Rob.Becker@riverbed.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230506012315.3370489-1-linan666@huaweicloud.com>
+ <20230506012315.3370489-3-linan666@huaweicloud.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <bc698b03-446b-a42e-cf0c-5c1b3cb62559@huaweicloud.com>
-Date:   Sat, 6 May 2023 09:33:29 +0800
+Message-ID: <9e7cbf09-aedd-5d16-f847-af519b309de5@huaweicloud.com>
+Date:   Sat, 6 May 2023 10:00:35 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <CAFig2ct+ZbHYEho7p9eubaz-kozGR+GkSJ1tVL+LGaciUBixyw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20230506012315.3370489-3-linan666@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7NprlVkbpBlIw--.33975S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCFWxuF13Kw15uw4DKFyUZFb_yoW5XF1kpa
-        y8t3Wqkr4DJF9YyFW2y34Iqa4Fkry5Gr98Xwn0q34UCrZ8KFyIkrWxKrs0kF92kw1fCr4Y
-        yF4Ut3srWryYgaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: _Ch0CgBnFCLDtFVkVJWQIA--.1449S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCrWkKw18tFW7Gw4UZw47Arb_yoW5tF47pa
+        93G34avrWUtrWIkF1SvF4DWFy3W3Z7XrW7t342yrWfXFZrXFn8Kr1fGw4Fvr1UCrW5ZF43
+        ArW5JFyDCr1Dt3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
         1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
         JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
         CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
         2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfU5WlkUU
-        UUU
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+        BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -65,93 +62,142 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/05/05 23:47, Jove 写道:
-> Hi Kuai.
+�� 2023/05/06 9:23, linan666@huaweicloud.com д��:
+> From: Li Nan <linan122@huawei.com>
 > 
->> Jove, As I understand this, if mdadm make progress without a blocked
->> io, and reshape continues, it seems you can use this array without
->> problem
+> There is no input check when echo md/safe_mode_delay, and overflow will
+> occur. There is risk of overflow in strict_strtoul_scaled(), too. Fix it
+> by using kstrtoul instead of parsing word one by one.
+
+Other than some nits below, this patch looks good to me,
+feel free to add:
+
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 > 
-> I've had to do some sleuthing to figure out who was doing that array
-> access, I was already running a minimal FedoraCore image. I've
-> discovered that the culprit is the systemd-udevd daemon. I do not know
-> why it accesses the array but if I stop it and rename that executable
-> (it gets started automatically when the array is assembled) then the
-> reshape continues.
+> Fixes: 72e02075a33f ("md: factor out parsing of fixed-point numbers")
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>   drivers/md/md.c | 70 ++++++++++++++++++++++++++++++++-----------------
+>   1 file changed, 46 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 8e344b4b3444..fd5c3babcd6d 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -3767,52 +3767,74 @@ static int analyze_sbs(struct mddev *mddev)
+>    */
+>   int strict_strtoul_scaled(const char *cp, unsigned long *res, int scale)
+>   {
+> -	unsigned long result = 0;
+> -	long decimals = -1;
+> -	while (isdigit(*cp) || (*cp == '.' && decimals < 0)) {
+> -		if (*cp == '.')
+> -			decimals = 0;
+> -		else if (decimals < scale) {
+> -			unsigned int value;
+> -			value = *cp - '0';
+> -			result = result * 10 + value;
+> -			if (decimals >= 0)
+> -				decimals++;
+> -		}
+> -		cp++;
+> -	}
+> -	if (*cp == '\n')
+> -		cp++;
+> -	if (*cp)
+> +	unsigned long result = 0, decimals = 0;
+> +	char *pos, *str;
+> +	int rv;
+> +
+> +	str = kmemdup_nul(cp, strlen(cp), GFP_KERNEL);
+> +	if (!str)
+> +		return -ENOMEM;
+> +	pos = strchr(str, '.');
+> +	if (pos) {
+> +		int cnt = scale;
+> +
+> +		*pos = '\0';
+> +		while (isdigit(*(++pos))) {
+> +			if (cnt) {
+> +				decimals = decimals * 10 + *pos - '0';
+> +				cnt--;
+> +			}
+> +		}
+> +		if (*pos == '\n')
+> +			pos++;
+> +		if (*pos) {
+> +			kfree(str);
+> +			return -EINVAL;
+> +		}
+> +		decimals *= int_pow(10, cnt);
+> +	}
+> +
+> +	rv = kstrtoul(str, 10, &result);
+> +	kfree(str);
+> +	if (rv)
+> +		return rv;
+> +
+> +	if (result > (ULONG_MAX - decimals) / (unsigned int)int_pow(10, scale))
 
-Thanks for confirming this, however, I have no idea why systemd-udevd is
-accessing the array.
+This is correct, I guess the reason to use unsigned int is that u64/u64
+will compile error in some 32-bit architecture. It's better to use
+div64_u64() here.
 
-In the meantime, I'll try to fix this deadlock, hope you don't mind a
-reported-by tag.
+>   		return -EINVAL;
+> -	if (decimals < 0)
+> -		decimals = 0;
+> -	*res = result * int_pow(10, scale - decimals);
+> -	return 0;
+> +	*res = result * int_pow(10, scale) + decimals;
+> +
+> +	return rv;
+>   }
+>   
+>   static ssize_t
+>   safe_delay_show(struct mddev *mddev, char *page)
+>   {
+> -	int msec = (mddev->safemode_delay*1000)/HZ;
+> -	return sprintf(page, "%d.%03d\n", msec/1000, msec%1000);
+> +	unsigned int msec = ((unsigned long)mddev->safemode_delay*1000)/HZ;
+> +
+> +	return sprintf(page, "%u.%03u\n", msec/1000, msec%1000);
+>   }
+>   static ssize_t
+>   safe_delay_store(struct mddev *mddev, const char *cbuf, size_t len)
+>   {
+>   	unsigned long msec;
+> +	int ret;
+>   
+>   	if (mddev_is_clustered(mddev)) {
+>   		pr_warn("md: Safemode is disabled for clustered mode\n");
+>   		return -EINVAL;
+>   	}
+>   
+> -	if (strict_strtoul_scaled(cbuf, &msec, 3) < 0)
+> +	ret = strict_strtoul_scaled(cbuf, &msec, 3);
+> +	if (ret < 0)
+> +		return ret;
+> +	if (msec > UINT_MAX)
+>   		return -EINVAL;
+> +
+>   	if (msec == 0)
+>   		mddev->safemode_delay = 0;
+>   	else {
+>   		unsigned long old_delay = mddev->safemode_delay;
+> +		/* HZ <= 1000, so new_delay < UINT_MAX, too */
+
+new_delay <= UNIT_MAX
+
+>   		unsigned long new_delay = (msec*HZ)/1000;
+
+There is no need do declare them as 'unsigned long', you can use
+'unsigned int' directly now.
+
+And you can also use DIV64_U64_ROUND_UP() directly here.
 
 Thanks,
 Kuai
-> 
-> Now it is just a matter of time until the reshape is finished and I
-> can discover just how much data I still have :)
-> 
-> Thank you all for your help, I will send a last mail when I know more.
-> 
-> Best regards,
-> 
->        Johan
-> 
-> 
-> 
-> On Fri, May 5, 2023 at 10:02 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2023/05/05 14:58, Wol 写道:
->>> On 05/05/2023 02:34, Yu Kuai wrote:
->>>>> I have had one case in which mdadm didn't hang and in which the
->>>>> reshape continued. Sadly, I was using sparse overlay files and the
->>>>> filesystem could not handle the full 4x 4TB. I had to terminate the
->>>>> reshape.
->>>>
->>>> This sounds like a dead end for now, normal io beyond reshape position
->>>> must wait:
->>>>
->>>> raid5_make_request
->>>>    make_stripe_request
->>>>     ahead_of_reshape
->>>>      wait_woken
->>>
->>> Not sure if I've got the wrong end of the stick, but if I've understood
->>> correctly, that shouldn't be the case.
->>>
->>> Reshape takes place in a window. All io *beyond* the window is allowed
->>> to proceed normally - that part of the array has not been reshaped so
->>> the old parameters are used.
->>>
->>> All io *in front* of the window is allowed to proceed normally - that
->>> part of the array has been reshaped so the new parameters are used.
->>>
->>> io *IN* the window is paused until the window has passed. This
->>> interruption should be short and sweet.
->>
->> Yes, it's correct, and in this case reshape_safe should be the same as
->> reshapge_progress, and I guess io is stuck because
->> stripe_ahead_of_reshape() return true.
->>
->> So this deadlock happens when io is blocked because of reshape, and
->> mddev_suspend() is waiting for this io to be done, in the meantime
->> reshape can't start untill mddev_suspend() returns.
->>
->> Jove, As I understand this, if mdadm make progress without a blocked
->> io, and reshape continues, it seems you can use this array without
->> problem.
->>
->> Thanks,
->> Kuai
->>>
->>> Cheers,
->>> Wol
->>>
->>> .
->>>
->>
-> .
+>   
+>   		if (new_delay == 0)
 > 
 
