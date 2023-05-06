@@ -2,33 +2,62 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D795C7EE22
-	for <linux-raid@archiver.kernel.org>; Sat,  6 May 2023 22:28:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D7FC77B73
+	for <linux-raid@archiver.kernel.org>; Sat,  6 May 2023 22:29:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230079AbjEFW06 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 6 May 2023 18:26:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57894 "EHLO
+        id S229653AbjEFW3p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 6 May 2023 18:29:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229887AbjEFW04 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 6 May 2023 18:26:56 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5C9C1BD4
-        for <linux-raid@vger.kernel.org>; Sat,  6 May 2023 15:26:54 -0700 (PDT)
-Received: from host86-157-72-252.range86-157.btcentralplus.com ([86.157.72.252] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1pvQMe-0000m9-CG;
-        Sat, 06 May 2023 23:26:53 +0100
-Message-ID: <ab20e20d-40b4-98fb-8be8-7eba6ce9ee54@youngman.org.uk>
-Date:   Sat, 6 May 2023 23:26:51 +0100
+        with ESMTP id S229460AbjEFW3o (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 6 May 2023 18:29:44 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDA9814348
+        for <linux-raid@vger.kernel.org>; Sat,  6 May 2023 15:29:42 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 475D82264A;
+        Sat,  6 May 2023 22:29:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1683412181; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2NQDoOPB/0zRWO+Roe0boAeQRS89Lo1mgKK/ExnLtk0=;
+        b=fVQVGpsMAbFzQUWDX91CUaaFGTpjwtrx/RPogShzKF0EKwmQVWa/RozLBox8wuHAVrDHpS
+        p4pL8CMLrlSdMERyTUEYqSOzZliZADpNo0dSFhOlcFBavRWoGVajSg9z7NN9kg30PuvRmm
+        3M1Jj1pTREeaaCUPOZQZlN+G9vA7UaA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1683412181;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2NQDoOPB/0zRWO+Roe0boAeQRS89Lo1mgKK/ExnLtk0=;
+        b=fxrtwPVexE/Myn9ktCU63bjChWxTJFK6+kkCRc+fCdJx4Ffbr4Esmq2syL4SIIumwSi7mF
+        KC+CDuxmHtlpaOAw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AF5601346B;
+        Sat,  6 May 2023 22:29:40 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id cr4iCtTUVmQZYwAAMHmgww
+        (envelope-from <hare@suse.de>); Sat, 06 May 2023 22:29:40 +0000
+Message-ID: <7605c54f-670a-a804-b238-627cd561ce52@suse.de>
+Date:   Sun, 7 May 2023 00:29:33 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
 Subject: Re: Second of 3 drives in RAID5 missing
-Content-Language: en-GB
+Content-Language: en-US
 To:     Alex Elder <elder@ieee.org>, linux-raid@vger.kernel.org
 References: <d11acbac-a31b-b38c-8e10-b664ec52a47b@ieee.org>
-From:   Wol <antlists@youngman.org.uk>
+From:   Hannes Reinecke <hare@suse.de>
 In-Reply-To: <d11acbac-a31b-b38c-8e10-b664ec52a47b@ieee.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
@@ -36,7 +65,7 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 06/05/2023 17:28, Alex Elder wrote:
+On 5/6/23 18:28, Alex Elder wrote:
 > I have a 3-drive RAID5 that I set up more than 5 years ago.
 > At some point, the "middle" drive failed (hardware failure).
 > I bought a replacement and issued some commands to attempt
@@ -62,8 +91,6 @@ On 06/05/2023 17:28, Alex Elder wrote:
 > Thank you.
 > 
 >                      -Alex
-
-https://raid.wiki.kernel.org/index.php/Linux_Raid
 > 
 > root@meat:/# mdadm --version
 > mdadm - v4.2 - 2021-12-30 - Ubuntu 4.2-3ubuntu1
@@ -93,8 +120,6 @@ https://raid.wiki.kernel.org/index.php/Linux_Raid
 >         -       8       49        -        /dev/sdd1
 >         -       8       17        -        /dev/sdb1
 > root@meat:/#
-
-So the raid array doesn't know about sdc.
 > 
 > root@meat:/# ls -l /dev/sd[bcd]1
 > brw-rw---- 1 root disk 8, 17 May  6 11:20 /dev/sdb1
@@ -106,8 +131,6 @@ So the raid array doesn't know about sdc.
 > root@meat:/# mdadm --examine /dev/sdc1
 > mdadm: No md superblock detected on /dev/sdc1.
 > root@meat:/#
-
-Nor does sdc know about the array.
 > 
 > =========== Here are the other two  disks
 > root@meat:/# mdadm --examine /dev/sd[bd]1
@@ -140,10 +163,6 @@ Nor does sdc know about the array.
 > 
 >     Device Role : Active device 0
 >     Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
-
-Odd ... although this is possibly because the array is inactive so the 
-drive hasn't realised sdc has gone AWOL ...
-
 > /dev/sdd1:
 >            Magic : a92b4efc
 >          Version : 1.2
@@ -175,27 +194,15 @@ drive hasn't realised sdc has gone AWOL ...
 >     Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
 > root@meat:/#
 > 
-Same again.
-
-Okay, the first thing I would do is add sdc1 again. Does sdc1 actually 
-exist? Possibly what you did wrong was forget to create it?
-
-What I'm hoping is that this will then trigger a rebuild and everything 
-will be hunky-dory.
-
-What MIGHT happen, though, is that you end up with an inactive array 
-with two active drives and a spare. At which point it should simply be a 
-matter of activating the array (snag is, I'm not sure how). The fact the 
-array was inactivated is a safety feature - whatever went wrong, md 
-realised that something wasn't right and inactivated the array to 
-protect it.
-
-So to sum up, I'm expecting just re-adding sdc1 (because the add clearly 
-failed last time) will trigger a rebuild, at which point the array will 
-be clean and should just reactivate.
-
-If that doesn't succeed, it won't do any damage, but will need someone 
-with more knowledge than me for the final steps.
+mdadm manage /dev/md127 --add /dev/sdd ?
 
 Cheers,
-Wol
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
+
