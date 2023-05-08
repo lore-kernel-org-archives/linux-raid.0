@@ -2,176 +2,87 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2027EC77B75
-	for <linux-raid@archiver.kernel.org>; Mon,  8 May 2023 13:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D616C77B75
+	for <linux-raid@archiver.kernel.org>; Mon,  8 May 2023 20:22:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234259AbjEHNf0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 8 May 2023 09:35:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51882 "EHLO
+        id S232274AbjEHUWi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 8 May 2023 16:22:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234317AbjEHNfP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 8 May 2023 09:35:15 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5C7233D51
-        for <linux-raid@vger.kernel.org>; Mon,  8 May 2023 06:35:08 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id A3A4C21ED8;
-        Mon,  8 May 2023 13:35:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683552907; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3wooKwxsjEvoLdqmuOb3FwNlkb6wbFOeAq8Xf74t+e4=;
-        b=uHfqFOQB+fDJcr6tGa2GlMXBqAuSAWk1F9UOyKqlozaD4uzowkidrwYfvm34B7MF9i1FJW
-        yZGUE2o92Oni3ZADNPTyTkNzJMC3xO4dM2Fg32tf8WdIogPnyWAI89my4hwHc/PLRPGWgH
-        PefMcAPhnyQFDWnl6NqKUIeWIAWPfo4=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 614BE1346B;
-        Mon,  8 May 2023 13:35:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id d6AlFov6WGRNbwAAMHmgww
-        (envelope-from <mwilck@suse.com>); Mon, 08 May 2023 13:35:07 +0000
-Message-ID: <ad5ba0f238f3919a125fb3ad18a2d228758a4ee0.camel@suse.com>
-Subject: Re: [PATCH] Fix race of "mdadm --add" and "mdadm --incremental"
-From:   Martin Wilck <mwilck@suse.com>
-To:     Li Xiao Keng <lixiaokeng@huawei.com>, jes@trained-monkey.org,
-        pmenzel@molgen.mpg.de, colyli@suse.de, linux-raid@vger.kernel.org
-Cc:     miaoguanqin@huawei.com, louhongxiang@huawei.com
-Date:   Mon, 08 May 2023 15:35:06 +0200
-In-Reply-To: <20230417140144.3013024-1-lixiaokeng@huawei.com>
-References: <20230417140144.3013024-1-lixiaokeng@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.48.1 
+        with ESMTP id S233333AbjEHUWh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 8 May 2023 16:22:37 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82C3640D3
+        for <linux-raid@vger.kernel.org>; Mon,  8 May 2023 13:22:36 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1683577340; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=CzH/Irgk6nhJXgDEC3lC3AIPnF2ANAc0H3qB4MzPs6XKFHQgi1/cJKlcFJ72U6goUX0wKwf3koNvdiPIdGa9jiaba1nmO9u7VJ/5iaNL1dvlIyhnG2tIH5um39ZpzdtIZbUiRrk3SrslRpADCElMpoPkDrhcnvxLuI8mh+llHLM=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1683577339; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=YRxZz+vZlc8/hOmYNy6j0y5gEtL8oZNB04rytzHKk1U=; 
+        b=HcpSO2Fwdp8TSC0hd6gAQDm9po6aUSpZ6ej3QI7X/PzbabYPYRxQpX9Eh1E1gsIMnLogZ6s+tWeephn6pWPs8lPO+HDoSmjTDm1T0vdvXd+FW20B7J/jEdz8BZPDKLIHkF/sFzbx3sUqYbk7xZHHtzgFzV/pSr3s1gs0tc1YtRU=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1683577336853386.29912467551117; Mon, 8 May 2023 22:22:16 +0200 (CEST)
+Message-ID: <9bfd76c4-3775-4ba6-10c3-ac32b5389f63@trained-monkey.org>
+Date:   Mon, 8 May 2023 16:22:15 -0400
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: mdadm minimum kernel version requirements?
+Content-Language: en-US
+To:     NeilBrown <neilb@suse.de>
+Cc:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+References: <e8ed86bb-4162-7d8e-ece9-eb75e045bcc5@trained-monkey.org>
+ <168116364433.24821.9557577764628245206@noble.neil.brown.name>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <168116364433.24821.9557577764628245206@noble.neil.brown.name>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-SGVsbG8gTGkgWGlhbyBLZW5nLAoKT24gTW9uLCAyMDIzLTA0LTE3IGF0IDIyOjAxICswODAwLCBM
-aSBYaWFvIEtlbmcgd3JvdGU6Cj4gV2hlbiB3ZSBhZGQgYSBuZXcgZGlzayB0byBhIHJhaWQsIGl0
-IG1heSByZXR1cm4gLUVCVVNZLgo+IAo+IFRoZSBtYWluIHByb2Nlc3Mgb2YgLS1hZGQ6Cj4gMS4g
-ZGV2X29wZW4KPiAyLiBzdG9yZV9zdXBlcjEoc3QsIGRpLT5mZCkgaW4gd3JpdGVfaW5pdF9zdXBl
-cjEKPiAzLiBmc3luYyhkaS0+ZmQpIGluIHdyaXRlX2luaXRfc3VwZXIxCj4gNC4gY2xvc2UoZGkt
-PmZkKQo+IDUuIGlvY3RsKEFERF9ORVdfRElTSykKPiAKPiBIb3dldmVyLCB0aGVyZSB3aWxsIGJl
-IHNvbWUgdWRldihjaGFuZ2UpIGV2ZW50IGFmdGVyIHN0ZXA0LiBUaGVuCj4gIi91c3Ivc2Jpbi9t
-ZGFkbSAtLWluY3JlbWVudGFsIC4uLiIgd2lsbCBiZSBydW4sIGFuZCB0aGUgbmV3IGRpc2sKPiB3
-aWxsIGJlIGFkZCB0byBtZCBkZXZpY2UuIEFmdGVyIHRoYXQsIGlvY3RsIHdpbGwgcmV0dXJuIC1F
-QlVTWS4KPiAKPiBIZXJlIHdlIGFkZCBtYXBfbG9jayBiZWZvcmUgd3JpdGVfaW5pdF9zdXBlciBp
-biAibWRhZG0gLS1hZGQiCj4gdG8gZml4IHRoaXMgcmFjZS4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBM
-aSBYaWFvIEtlbmcgPGxpeGlhb2tlbmdAaHVhd2VpLmNvbT4KPiBTaWduZWQtb2ZmLWJ5OiBHdWFu
-cWluIE1pYW8gPG1pYW9ndWFucWluQGh1YXdlaS5jb20+CgpJIGRvbid0IGZlZWwgZmFtaWxpYXIg
-ZW5vdWdoIHdpdGggdGhlIG1kYWRtIGNvZGUgdG8gd3JpdGUgYW4KYXV0aG9yaXRhdGl2ZSByZXZp
-ZXcuoEluIHBhcnRpY3VsYXIsIEkgZG9uJ3QgZnVsbHkgdW5kZXJzdGFuZCB0aGUgCmludGVuZGVk
-IHNlbWFudGljcyBvZiBtYXBfbG9jaygpOyB0aHVzIHdoaWxlIEkgYmVsaWV2ZSB0aGUgd2F5IHlv
-dSAKYXJlIHVzaW5nIHRoaXMgbG9jayBpcyBjb3JyZWN0LCBJIGNhbid0IGFzc2VydCB0aGlzIHdp
-dGggY2VydGFpbnR5LgpKZXMsIENvbHksIG9yIHNvbWVvbmUgZWxzZSBzaG91bGQgZG91YmxlLWNo
-ZWNrIHRoYXQuCgpBbnl3YXksIEknbGwgdHJ5IHRvIGdldCB0aGUgY29tbXVuaWNhdGlvbiBvbiB0
-aGlzIGlzc3VlIGdvaW5nIGFnYWluLgoKSSB0aGluayB5b3Ugc2hvdWxkIGV4cGFuZCBzb21lIG1v
-cmUgb24geW91ciBjb21taXQgZGVzY3JpcHRpb24uIEl0Cm1ha2VzIHNlbnNlIGZvciBwZW9wbGUg
-d2hvIGZvbGxvd2VkIHRoZSBwcmV2aW91cyBkaXNjdXNzaW9uLCBidXQgaXQKc2hvdWxkIGJlIHNl
-bGYtZXhwbGFuYXRvcnkgYWxzbyBmb3IgcGVvcGxlIHJlYWRpbmcgdGhlIGNvbW1pdCA1eSBmcm9t
-Cm5vdy4KCk90aGVyIHRoYW4gdGhhdCwgSSBvbmx5IGhhdmUgb25lIG5pdHBpY2sgKHNlZSBiZWxv
-dykuCgpSZWdhcmRzCk1hcnRpbgoKPiAtLS0KPiCgQXNzZW1ibGUuYyB8oCA1ICsrKystCj4goE1h
-bmFnZS5joKAgfCAyNSArKysrKysrKysrKysrKysrKy0tLS0tLS0tCj4goDIgZmlsZXMgY2hhbmdl
-ZCwgMjEgaW5zZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvQXNz
-ZW1ibGUuYyBiL0Fzc2VtYmxlLmMKPiBpbmRleCA0OTgwNDk0MS4uMDg2ODkwZWQgMTAwNjQ0Cj4g
-LS0tIGEvQXNzZW1ibGUuYwo+ICsrKyBiL0Fzc2VtYmxlLmMKPiBAQCAtMTQ3OSw4ICsxNDc5LDEx
-IEBAIHRyeV9hZ2FpbjoKPiCgoKCgoKCgoCAqIHRvIG91ciBsaXN0LqAgV2UgZmxhZyB0aGVtIHNv
-IHRoYXQgd2UgZG9uJ3QgdHJ5IHRvIHJlLWFkZCwKPiCgoKCgoKCgoCAqIGJ1dCBjYW4gcmVtb3Zl
-IGlmIHRoZXkgdHVybiBvdXQgdG8gbm90IGJlIHdhbnRlZC4KPiCgoKCgoKCgoCAqLwo+IC2goKCg
-oKCgaWYgKG1hcF9sb2NrKCZtYXApKQo+ICugoKCgoKCgaWYgKG1hcF9sb2NrKCZtYXApKSB7Cj4g
-oKCgoKCgoKCgoKCgoKCgoHByX2VycigiZmFpbGVkIHRvIGdldCBleGNsdXNpdmUgbG9jayBvbiBt
-YXBmaWxlIC0KPiBjb250aW51ZSBhbnl3YXkuLi5cbiIpOwoKQXMgeW91IGFkZGVkIGEgInJldHVy
-biAxIiBoZXJlLCB0aGUgImNvbnRpbnVlIGFueXdheSIgbWVzc2FnZSBpcyB3cm9uZy4KWW91IG5l
-ZWQgdG8gY2hhbmdlIGl0LgoKPiAroKCgoKCgoKCgoKCgoKCgcmV0dXJuIDE7Cj4gK6CgoKCgoKB9
-Cj4gKwo+IKCgoKCgoKCgaWYgKGMtPnVwZGF0ZSA9PSBVT1BUX1VVSUQpCj4goKCgoKCgoKCgoKCg
-oKCgoG1wID0gTlVMTDsKPiCgoKCgoKCgoGVsc2UKPiBkaWZmIC0tZ2l0IGEvTWFuYWdlLmMgYi9N
-YW5hZ2UuYwo+IGluZGV4IGY1NGRlN2M2Li42YTEwMWJhZSAxMDA2NDQKPiAtLS0gYS9NYW5hZ2Uu
-Ywo+ICsrKyBiL01hbmFnZS5jCj4gQEAgLTcwMyw2ICs3MDMsNyBAQCBpbnQgTWFuYWdlX2FkZChp
-bnQgZmQsIGludCB0ZmQsIHN0cnVjdCBtZGRldl9kZXYKPiAqZHYsCj4goKCgoKCgoKBzdHJ1Y3Qg
-c3VwZXJ0eXBlICpkZXZfc3Q7Cj4goKCgoKCgoKBpbnQgajsKPiCgoKCgoKCgoG1kdV9kaXNrX2lu
-Zm9fdCBkaXNjOwo+ICugoKCgoKCgc3RydWN0IG1hcF9lbnQgKm1hcCA9IE5VTEw7Cj4goAo+IKCg
-oKCgoKCgaWYgKCFnZXRfZGV2X3NpemUodGZkLCBkdi0+ZGV2bmFtZSwgJmxkc2l6ZSkpIHsKPiCg
-oKCgoKCgoKCgoKCgoKCgaWYgKGR2LT5kaXNwb3NpdGlvbiA9PSAnTScpCj4gQEAgLTkwMCw2ICs5
-MDEsMTAgQEAgaW50IE1hbmFnZV9hZGQoaW50IGZkLCBpbnQgdGZkLCBzdHJ1Y3QgbWRkZXZfZGV2
-Cj4gKmR2LAo+IKCgoKCgoKCgoKCgoKCgoKBkaXNjLnJhaWRfZGlzayA9IDA7Cj4goKCgoKCgoKB9
-Cj4goAo+ICugoKCgoKCgaWYgKG1hcF9sb2NrKCZtYXApKSB7Cj4gK6CgoKCgoKCgoKCgoKCgoHBy
-X2VycigiZmFpbGVkIHRvIGdldCBleGNsdXNpdmUgbG9jayBvbiBtYXBmaWxlIHdoZW4KPiBhZGQg
-ZGlza1xuIik7Cj4gK6CgoKCgoKCgoKCgoKCgoHJldHVybiAtMTsKPiAroKCgoKCgoH0KPiCgoKCg
-oKCgoGlmIChhcnJheS0+bm90X3BlcnNpc3RlbnQ9PTApIHsKPiCgoKCgoKCgoKCgoKCgoKCgaW50
-IGRmZDsKPiCgoKCgoKCgoKCgoKCgoKCgaWYgKGR2LT5kaXNwb3NpdGlvbiA9PSAnaicpCj4gQEAg
-LTkxMSw5ICs5MTYsOSBAQCBpbnQgTWFuYWdlX2FkZChpbnQgZmQsIGludCB0ZmQsIHN0cnVjdCBt
-ZGRldl9kZXYKPiAqZHYsCj4goKCgoKCgoKCgoKCgoKCgoGRmZCA9IGRldl9vcGVuKGR2LT5kZXZu
-YW1lLCBPX1JEV1IgfAo+IE9fRVhDTHxPX0RJUkVDVCk7Cj4goKCgoKCgoKCgoKCgoKCgoGlmICh0
-c3QtPnNzLT5hZGRfdG9fc3VwZXIodHN0LCAmZGlzYywgZGZkLAo+IKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgIGR2LT5kZXZuYW1lLAo+IElOVkFMSURfU0VDVE9SUykp
-Cj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCgoKCgoKCgoKBpZiAodHN0LT5zcy0+d3JpdGVf
-aW5pdF9zdXBlcih0c3QpKQo+IC2goKCgoKCgoKCgoKCgoKCgoKCgoKCgoHJldHVybiAtMTsKPiAr
-oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKBnb3RvIHVubG9jazsKPiCgoKCgoKCgoH0gZWxzZSBpZiAo
-ZHYtPmRpc3Bvc2l0aW9uID09ICdBJykgewo+IKCgoKCgoKCgoKCgoKCgoKAvKqAgdGhpcyBoYWQg
-YmV0dGVyIGJlIHJhaWQxLgo+IKCgoKCgoKCgoKCgoKCgoKAgKiBBcyB3ZSBhcmUgIi0tcmUtYWRk
-ImluZyB3ZSBtdXN0IGZpbmQgYSBzcGFyZSBzbG90Cj4gQEAgLTk3MSwxNCArOTc2LDE0IEBAIGlu
-dCBNYW5hZ2VfYWRkKGludCBmZCwgaW50IHRmZCwgc3RydWN0Cj4gbWRkZXZfZGV2ICpkdiwKPiCg
-oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKBwcl9lcnIoImFkZCBmYWlsZWQgZm9yICVzOiBjb3VsZCBu
-b3QgZ2V0Cj4gZXhjbHVzaXZlIGFjY2VzcyB0byBjb250YWluZXJcbiIsCj4goKCgoKCgoKCgoKCg
-oKCgoKCgoKCgoKCgoKCgoKCgIGR2LT5kZXZuYW1lKTsKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-oKB0c3QtPnNzLT5mcmVlX3N1cGVyKHRzdCk7Cj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0
-dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCg
-oKCgoKCgoKB9Cj4goAo+IKCgoKCgoKCgoKCgoKCgoKAvKiBDaGVjayBpZiBtZXRhZGF0YSBoYW5k
-bGVyIGlzIGFibGUgdG8gYWNjZXB0IHRoZQo+IGRyaXZlICovCj4goKCgoKCgoKCgoKCgoKCgoGlm
-ICghdHN0LT5zcy0+dmFsaWRhdGVfZ2VvbWV0cnkodHN0LCBMRVZFTF9DT05UQUlORVIsCj4gMCwg
-MSwgTlVMTCwKPiCgoKCgoKCgoKCgoKCgoKCgoKCgIDAsIDAsIGR2LT5kZXZuYW1lLCBOVUxMLCAw
-LCAxKSkgewo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGNsb3NlKGNvbnRhaW5lcl9mZCk7Cj4g
-LaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCgoKCgoKCgoKB9Cj4goAo+IKCgoKCgoKCgoKCgoKCg
-oKBLaWxsKGR2LT5kZXZuYW1lLCBOVUxMLCAwLCAtMSwgMCk7Cj4gQEAgLTk4Nyw3ICs5OTIsNyBA
-QCBpbnQgTWFuYWdlX2FkZChpbnQgZmQsIGludCB0ZmQsIHN0cnVjdCBtZGRldl9kZXYKPiAqZHYs
-Cj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgZHYtPmRldm5hbWUs
-Cj4gSU5WQUxJRF9TRUNUT1JTKSkgewo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGNsb3NlKGRm
-ZCk7Cj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgY2xvc2UoY29udGFpbmVyX2ZkKTsKPiAtoKCg
-oKCgoKCgoKCgoKCgoKCgoKCgoKByZXR1cm4gLTE7Cj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-Z290byB1bmxvY2s7Cj4goKCgoKCgoKCgoKCgoKCgoH0KPiCgoKCgoKCgoKCgoKCgoKCgaWYgKCFt
-ZG1vbl9ydW5uaW5nKHRzdC0+Y29udGFpbmVyX2Rldm5tKSkKPiCgoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKB0c3QtPnNzLT5zeW5jX21ldGFkYXRhKHRzdCk7Cj4gQEAgLTk5OCw3ICsxMDAzLDcgQEAg
-aW50IE1hbmFnZV9hZGQoaW50IGZkLCBpbnQgdGZkLCBzdHJ1Y3QgbWRkZXZfZGV2Cj4gKmR2LAo+
-IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCBkdi0+ZGV2bmFtZSk7Cj4goKCgoKCgoKCg
-oKCgoKCgoKCgoKCgoKCgY2xvc2UoY29udGFpbmVyX2ZkKTsKPiCgoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKB0c3QtPnNzLT5mcmVlX3N1cGVyKHRzdCk7Cj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-cmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCg
-oKCgoKCgoKCgoKB9Cj4goKCgoKCgoKCgoKCgoKCgoHNyYS0+YXJyYXkubGV2ZWwgPSBMRVZFTF9D
-T05UQUlORVI7Cj4goKCgoKCgoKCgoKCgoKCgoC8qIE5lZWQgdG8gc2V0IGRhdGFfb2Zmc2V0IGFu
-ZCBjb21wb25lbnRfc2l6ZSAqLwo+IEBAIC0xMDEzLDcgKzEwMTgsNyBAQCBpbnQgTWFuYWdlX2Fk
-ZChpbnQgZmQsIGludCB0ZmQsIHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKCgoKCg
-oKCgoKCgoKCgoKCgcHJfZXJyKCJhZGQgbmV3IGRldmljZSB0byBleHRlcm5hbCBtZXRhZGF0YQo+
-IGZhaWxlZCBmb3IgJXNcbiIsIGR2LT5kZXZuYW1lKTsKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-oKBjbG9zZShjb250YWluZXJfZmQpOwo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoHN5c2ZzX2Zy
-ZWUoc3JhKTsKPiAtoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKByZXR1cm4gLTE7Cj4gK6CgoKCgoKCg
-oKCgoKCgoKCgoKCgoKCgZ290byB1bmxvY2s7Cj4goKCgoKCgoKCgoKCgoKCgoH0KPiCgoKCgoKCg
-oKCgoKCgoKCgcGluZ19tb25pdG9yKGRldm5tKTsKPiCgoKCgoKCgoKCgoKCgoKCgc3lzZnNfZnJl
-ZShzcmEpOwo+IEBAIC0xMDI3LDcgKzEwMzIsNyBAQCBpbnQgTWFuYWdlX2FkZChpbnQgZmQsIGlu
-dCB0ZmQsIHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-ZWxzZQo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcHJfZXJyKCJhZGQgbmV3IGRl
-dmljZSBmYWlsZWQgZm9yICVzCj4gYXMgJWQ6ICVzXG4iLAo+IKCgoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgoKCgoKCgoKCgoKCgIGR2LT5kZXZuYW1lLCBqLAo+IHN0cmVycm9yKGVycm5vKSk7Cj4g
-LaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCgoKCgoKCgoKB9Cj4goKCgoKCgoKCgoKCgoKCgoGlm
-IChkdi0+ZGlzcG9zaXRpb24gPT0gJ2onKSB7Cj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcHJf
-ZXJyKCJKb3VybmFsIGFkZGVkIHN1Y2Nlc3NmdWxseSwgbWFraW5nICVzCj4gcmVhZC13cml0ZVxu
-IiwgZGV2bmFtZSk7Cj4gQEAgLTEwMzgsNyArMTA0MywxMSBAQCBpbnQgTWFuYWdlX2FkZChpbnQg
-ZmQsIGludCB0ZmQsIHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKB9Cj4goKCgoKCg
-oKBpZiAodmVyYm9zZSA+PSAwKQo+IKCgoKCgoKCgoKCgoKCgoKBwcl9lcnIoImFkZGVkICVzXG4i
-LCBkdi0+ZGV2bmFtZSk7Cj4gK6CgoKCgoKBtYXBfdW5sb2NrKCZtYXApOwo+IKCgoKCgoKCgcmV0
-dXJuIDE7Cj4gK3VubG9jazoKPiAroKCgoKCgoG1hcF91bmxvY2soJm1hcCk7Cj4gK6CgoKCgoKBy
-ZXR1cm4gLTE7Cj4goH0KPiCgCj4goGludCBNYW5hZ2VfcmVtb3ZlKHN0cnVjdCBzdXBlcnR5cGUg
-KnRzdCwgaW50IGZkLCBzdHJ1Y3QgbWRkZXZfZGV2Cj4gKmR2LAoK
+On 4/10/23 17:54, NeilBrown wrote:
+> On Tue, 11 Apr 2023, Jes Sorensen wrote:
+>> Hi,
+>>
+>> I bumped the minimum kernel version required for mdadm to 2.6.32.
+>>
+>> Should we drop support for anything prior to 3.10 at this point, since
+>> RHEL7 is 3.10 based and SLES12 seems to be 3.12 based.
+>>
+>> Thoughts?
+> 
+> When you talk about changing the required kernel version, I would find
+> it helpful if you at least mention what actual kernel features you now
+> want to depend on - at least the more significant ones.
+> 
+> Aside from features, I'd rather think about how old the kernel is.
+> 2.6.32 is over 13 years old.
+> 3.10 is very nearly 10 years old.
+> If there is something significant that landed in 3.10 that we want to
+> depend on, then requiring that seems perfectly reasonable.
+> 
+> I think the oldest SLE kernel that you might care about would be 4.12
+> (SLE12-SP5 - nearly 6 years old).  Anyone using an older SLE release
+> values stability over new functionality and is not going to be trialling
+> a new mdadm.
+
+Hi Neil,
+
+I guess my mindset is more that I don't expect RHEL/SLES grade distros
+to fully upgrade mdadm, but I do see them backporting changes occasionally.
+
+I was mostly basing my question on what I see us testing for in the
+actual code. Dropping support for anything prior to SLES 12 (4.12) and
+RHEL 8 (kernel 4.18) seems fair.
+
+Cheers,
+Jes
+
 
