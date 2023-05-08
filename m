@@ -2,83 +2,176 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DF06C77B7F
-	for <linux-raid@archiver.kernel.org>; Mon,  8 May 2023 13:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2027EC77B75
+	for <linux-raid@archiver.kernel.org>; Mon,  8 May 2023 13:35:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233016AbjEHNbE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 8 May 2023 09:31:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48032 "EHLO
+        id S234259AbjEHNf0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 8 May 2023 09:35:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229567AbjEHNbD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 8 May 2023 09:31:03 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D887A2B43D
-        for <linux-raid@vger.kernel.org>; Mon,  8 May 2023 06:30:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1683552615;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=FXs2yNMKGw8AEdxyDu281hcnMWMtIqxsexpkHfkY4M0=;
-        b=jGnbHJaiNQLxRYAlurg2MARwvd5dmPqFWfj+t92zd/FwdHzmEzu46e2T7wpbhLEymZ8ZG2
-        kaJwVqwnMGMTZAIDBYmgH7tXqHXQJ15XVO/veawXLQwZINQkRYJN5i5MuAQOl/k44RQFcN
-        PluyMXBlLxUzZLy1pTKppkjYmOpg0zg=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-639-tgnbuEp8PhW3uiO1JYPyOw-1; Mon, 08 May 2023 09:30:14 -0400
-X-MC-Unique: tgnbuEp8PhW3uiO1JYPyOw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S234317AbjEHNfP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 8 May 2023 09:35:15 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5C7233D51
+        for <linux-raid@vger.kernel.org>; Mon,  8 May 2023 06:35:08 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4C96C80101C;
-        Mon,  8 May 2023 13:30:14 +0000 (UTC)
-Received: from localhost.localdomain (ovpn-12-29.pek2.redhat.com [10.72.12.29])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F2E112166B41;
-        Mon,  8 May 2023 13:30:12 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH 1/1] Stop mdcheck_continue timer when mdcheck_start service can finish check
-Date:   Mon,  8 May 2023 21:30:10 +0800
-Message-Id: <20230508133010.42313-1-xni@redhat.com>
+        by smtp-out1.suse.de (Postfix) with ESMTPS id A3A4C21ED8;
+        Mon,  8 May 2023 13:35:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1683552907; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3wooKwxsjEvoLdqmuOb3FwNlkb6wbFOeAq8Xf74t+e4=;
+        b=uHfqFOQB+fDJcr6tGa2GlMXBqAuSAWk1F9UOyKqlozaD4uzowkidrwYfvm34B7MF9i1FJW
+        yZGUE2o92Oni3ZADNPTyTkNzJMC3xO4dM2Fg32tf8WdIogPnyWAI89my4hwHc/PLRPGWgH
+        PefMcAPhnyQFDWnl6NqKUIeWIAWPfo4=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 614BE1346B;
+        Mon,  8 May 2023 13:35:07 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id d6AlFov6WGRNbwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Mon, 08 May 2023 13:35:07 +0000
+Message-ID: <ad5ba0f238f3919a125fb3ad18a2d228758a4ee0.camel@suse.com>
+Subject: Re: [PATCH] Fix race of "mdadm --add" and "mdadm --incremental"
+From:   Martin Wilck <mwilck@suse.com>
+To:     Li Xiao Keng <lixiaokeng@huawei.com>, jes@trained-monkey.org,
+        pmenzel@molgen.mpg.de, colyli@suse.de, linux-raid@vger.kernel.org
+Cc:     miaoguanqin@huawei.com, louhongxiang@huawei.com
+Date:   Mon, 08 May 2023 15:35:06 +0200
+In-Reply-To: <20230417140144.3013024-1-lixiaokeng@huawei.com>
+References: <20230417140144.3013024-1-lixiaokeng@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.48.1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-mdcheck_continue is triggered by mdcheck_start timer. It's used to
-continue check action if the raid is too big and mdcheck_start
-service can't finish check action. If mdcheck start can finish check
-action, it doesn't need to mdcheck continue service anymore. So stop
-it when mdcheck start service can finish check action.
-
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- misc/mdcheck | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/misc/mdcheck b/misc/mdcheck
-index 700c3e252e72..f56972c8ed10 100644
---- a/misc/mdcheck
-+++ b/misc/mdcheck
-@@ -140,7 +140,13 @@ do
- 		echo $a > $fl
- 		any=yes
- 	done
--	if [ -z "$any" ]; then exit 0; fi
-+	if [ -z "$any" ]; then
-+		#mdcheck_continue.timer is started by mdcheck_start.timer.
-+		#When he check action can be finished in mdcheck_start.service,
-+		#it doesn't need mdcheck_continue anymore.
-+		systemctl stop mdcheck_continue.timer
-+		exit 0;
-+	fi
- 	sleep 120
- done
- 
--- 
-2.32.0 (Apple Git-132)
+SGVsbG8gTGkgWGlhbyBLZW5nLAoKT24gTW9uLCAyMDIzLTA0LTE3IGF0IDIyOjAxICswODAwLCBM
+aSBYaWFvIEtlbmcgd3JvdGU6Cj4gV2hlbiB3ZSBhZGQgYSBuZXcgZGlzayB0byBhIHJhaWQsIGl0
+IG1heSByZXR1cm4gLUVCVVNZLgo+IAo+IFRoZSBtYWluIHByb2Nlc3Mgb2YgLS1hZGQ6Cj4gMS4g
+ZGV2X29wZW4KPiAyLiBzdG9yZV9zdXBlcjEoc3QsIGRpLT5mZCkgaW4gd3JpdGVfaW5pdF9zdXBl
+cjEKPiAzLiBmc3luYyhkaS0+ZmQpIGluIHdyaXRlX2luaXRfc3VwZXIxCj4gNC4gY2xvc2UoZGkt
+PmZkKQo+IDUuIGlvY3RsKEFERF9ORVdfRElTSykKPiAKPiBIb3dldmVyLCB0aGVyZSB3aWxsIGJl
+IHNvbWUgdWRldihjaGFuZ2UpIGV2ZW50IGFmdGVyIHN0ZXA0LiBUaGVuCj4gIi91c3Ivc2Jpbi9t
+ZGFkbSAtLWluY3JlbWVudGFsIC4uLiIgd2lsbCBiZSBydW4sIGFuZCB0aGUgbmV3IGRpc2sKPiB3
+aWxsIGJlIGFkZCB0byBtZCBkZXZpY2UuIEFmdGVyIHRoYXQsIGlvY3RsIHdpbGwgcmV0dXJuIC1F
+QlVTWS4KPiAKPiBIZXJlIHdlIGFkZCBtYXBfbG9jayBiZWZvcmUgd3JpdGVfaW5pdF9zdXBlciBp
+biAibWRhZG0gLS1hZGQiCj4gdG8gZml4IHRoaXMgcmFjZS4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBM
+aSBYaWFvIEtlbmcgPGxpeGlhb2tlbmdAaHVhd2VpLmNvbT4KPiBTaWduZWQtb2ZmLWJ5OiBHdWFu
+cWluIE1pYW8gPG1pYW9ndWFucWluQGh1YXdlaS5jb20+CgpJIGRvbid0IGZlZWwgZmFtaWxpYXIg
+ZW5vdWdoIHdpdGggdGhlIG1kYWRtIGNvZGUgdG8gd3JpdGUgYW4KYXV0aG9yaXRhdGl2ZSByZXZp
+ZXcuoEluIHBhcnRpY3VsYXIsIEkgZG9uJ3QgZnVsbHkgdW5kZXJzdGFuZCB0aGUgCmludGVuZGVk
+IHNlbWFudGljcyBvZiBtYXBfbG9jaygpOyB0aHVzIHdoaWxlIEkgYmVsaWV2ZSB0aGUgd2F5IHlv
+dSAKYXJlIHVzaW5nIHRoaXMgbG9jayBpcyBjb3JyZWN0LCBJIGNhbid0IGFzc2VydCB0aGlzIHdp
+dGggY2VydGFpbnR5LgpKZXMsIENvbHksIG9yIHNvbWVvbmUgZWxzZSBzaG91bGQgZG91YmxlLWNo
+ZWNrIHRoYXQuCgpBbnl3YXksIEknbGwgdHJ5IHRvIGdldCB0aGUgY29tbXVuaWNhdGlvbiBvbiB0
+aGlzIGlzc3VlIGdvaW5nIGFnYWluLgoKSSB0aGluayB5b3Ugc2hvdWxkIGV4cGFuZCBzb21lIG1v
+cmUgb24geW91ciBjb21taXQgZGVzY3JpcHRpb24uIEl0Cm1ha2VzIHNlbnNlIGZvciBwZW9wbGUg
+d2hvIGZvbGxvd2VkIHRoZSBwcmV2aW91cyBkaXNjdXNzaW9uLCBidXQgaXQKc2hvdWxkIGJlIHNl
+bGYtZXhwbGFuYXRvcnkgYWxzbyBmb3IgcGVvcGxlIHJlYWRpbmcgdGhlIGNvbW1pdCA1eSBmcm9t
+Cm5vdy4KCk90aGVyIHRoYW4gdGhhdCwgSSBvbmx5IGhhdmUgb25lIG5pdHBpY2sgKHNlZSBiZWxv
+dykuCgpSZWdhcmRzCk1hcnRpbgoKPiAtLS0KPiCgQXNzZW1ibGUuYyB8oCA1ICsrKystCj4goE1h
+bmFnZS5joKAgfCAyNSArKysrKysrKysrKysrKysrKy0tLS0tLS0tCj4goDIgZmlsZXMgY2hhbmdl
+ZCwgMjEgaW5zZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvQXNz
+ZW1ibGUuYyBiL0Fzc2VtYmxlLmMKPiBpbmRleCA0OTgwNDk0MS4uMDg2ODkwZWQgMTAwNjQ0Cj4g
+LS0tIGEvQXNzZW1ibGUuYwo+ICsrKyBiL0Fzc2VtYmxlLmMKPiBAQCAtMTQ3OSw4ICsxNDc5LDEx
+IEBAIHRyeV9hZ2FpbjoKPiCgoKCgoKCgoCAqIHRvIG91ciBsaXN0LqAgV2UgZmxhZyB0aGVtIHNv
+IHRoYXQgd2UgZG9uJ3QgdHJ5IHRvIHJlLWFkZCwKPiCgoKCgoKCgoCAqIGJ1dCBjYW4gcmVtb3Zl
+IGlmIHRoZXkgdHVybiBvdXQgdG8gbm90IGJlIHdhbnRlZC4KPiCgoKCgoKCgoCAqLwo+IC2goKCg
+oKCgaWYgKG1hcF9sb2NrKCZtYXApKQo+ICugoKCgoKCgaWYgKG1hcF9sb2NrKCZtYXApKSB7Cj4g
+oKCgoKCgoKCgoKCgoKCgoHByX2VycigiZmFpbGVkIHRvIGdldCBleGNsdXNpdmUgbG9jayBvbiBt
+YXBmaWxlIC0KPiBjb250aW51ZSBhbnl3YXkuLi5cbiIpOwoKQXMgeW91IGFkZGVkIGEgInJldHVy
+biAxIiBoZXJlLCB0aGUgImNvbnRpbnVlIGFueXdheSIgbWVzc2FnZSBpcyB3cm9uZy4KWW91IG5l
+ZWQgdG8gY2hhbmdlIGl0LgoKPiAroKCgoKCgoKCgoKCgoKCgcmV0dXJuIDE7Cj4gK6CgoKCgoKB9
+Cj4gKwo+IKCgoKCgoKCgaWYgKGMtPnVwZGF0ZSA9PSBVT1BUX1VVSUQpCj4goKCgoKCgoKCgoKCg
+oKCgoG1wID0gTlVMTDsKPiCgoKCgoKCgoGVsc2UKPiBkaWZmIC0tZ2l0IGEvTWFuYWdlLmMgYi9N
+YW5hZ2UuYwo+IGluZGV4IGY1NGRlN2M2Li42YTEwMWJhZSAxMDA2NDQKPiAtLS0gYS9NYW5hZ2Uu
+Ywo+ICsrKyBiL01hbmFnZS5jCj4gQEAgLTcwMyw2ICs3MDMsNyBAQCBpbnQgTWFuYWdlX2FkZChp
+bnQgZmQsIGludCB0ZmQsIHN0cnVjdCBtZGRldl9kZXYKPiAqZHYsCj4goKCgoKCgoKBzdHJ1Y3Qg
+c3VwZXJ0eXBlICpkZXZfc3Q7Cj4goKCgoKCgoKBpbnQgajsKPiCgoKCgoKCgoG1kdV9kaXNrX2lu
+Zm9fdCBkaXNjOwo+ICugoKCgoKCgc3RydWN0IG1hcF9lbnQgKm1hcCA9IE5VTEw7Cj4goAo+IKCg
+oKCgoKCgaWYgKCFnZXRfZGV2X3NpemUodGZkLCBkdi0+ZGV2bmFtZSwgJmxkc2l6ZSkpIHsKPiCg
+oKCgoKCgoKCgoKCgoKCgaWYgKGR2LT5kaXNwb3NpdGlvbiA9PSAnTScpCj4gQEAgLTkwMCw2ICs5
+MDEsMTAgQEAgaW50IE1hbmFnZV9hZGQoaW50IGZkLCBpbnQgdGZkLCBzdHJ1Y3QgbWRkZXZfZGV2
+Cj4gKmR2LAo+IKCgoKCgoKCgoKCgoKCgoKBkaXNjLnJhaWRfZGlzayA9IDA7Cj4goKCgoKCgoKB9
+Cj4goAo+ICugoKCgoKCgaWYgKG1hcF9sb2NrKCZtYXApKSB7Cj4gK6CgoKCgoKCgoKCgoKCgoHBy
+X2VycigiZmFpbGVkIHRvIGdldCBleGNsdXNpdmUgbG9jayBvbiBtYXBmaWxlIHdoZW4KPiBhZGQg
+ZGlza1xuIik7Cj4gK6CgoKCgoKCgoKCgoKCgoHJldHVybiAtMTsKPiAroKCgoKCgoH0KPiCgoKCg
+oKCgoGlmIChhcnJheS0+bm90X3BlcnNpc3RlbnQ9PTApIHsKPiCgoKCgoKCgoKCgoKCgoKCgaW50
+IGRmZDsKPiCgoKCgoKCgoKCgoKCgoKCgaWYgKGR2LT5kaXNwb3NpdGlvbiA9PSAnaicpCj4gQEAg
+LTkxMSw5ICs5MTYsOSBAQCBpbnQgTWFuYWdlX2FkZChpbnQgZmQsIGludCB0ZmQsIHN0cnVjdCBt
+ZGRldl9kZXYKPiAqZHYsCj4goKCgoKCgoKCgoKCgoKCgoGRmZCA9IGRldl9vcGVuKGR2LT5kZXZu
+YW1lLCBPX1JEV1IgfAo+IE9fRVhDTHxPX0RJUkVDVCk7Cj4goKCgoKCgoKCgoKCgoKCgoGlmICh0
+c3QtPnNzLT5hZGRfdG9fc3VwZXIodHN0LCAmZGlzYywgZGZkLAo+IKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgIGR2LT5kZXZuYW1lLAo+IElOVkFMSURfU0VDVE9SUykp
+Cj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCgoKCgoKCgoKBpZiAodHN0LT5zcy0+d3JpdGVf
+aW5pdF9zdXBlcih0c3QpKQo+IC2goKCgoKCgoKCgoKCgoKCgoKCgoKCgoHJldHVybiAtMTsKPiAr
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKBnb3RvIHVubG9jazsKPiCgoKCgoKCgoH0gZWxzZSBpZiAo
+ZHYtPmRpc3Bvc2l0aW9uID09ICdBJykgewo+IKCgoKCgoKCgoKCgoKCgoKAvKqAgdGhpcyBoYWQg
+YmV0dGVyIGJlIHJhaWQxLgo+IKCgoKCgoKCgoKCgoKCgoKAgKiBBcyB3ZSBhcmUgIi0tcmUtYWRk
+ImluZyB3ZSBtdXN0IGZpbmQgYSBzcGFyZSBzbG90Cj4gQEAgLTk3MSwxNCArOTc2LDE0IEBAIGlu
+dCBNYW5hZ2VfYWRkKGludCBmZCwgaW50IHRmZCwgc3RydWN0Cj4gbWRkZXZfZGV2ICpkdiwKPiCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKBwcl9lcnIoImFkZCBmYWlsZWQgZm9yICVzOiBjb3VsZCBu
+b3QgZ2V0Cj4gZXhjbHVzaXZlIGFjY2VzcyB0byBjb250YWluZXJcbiIsCj4goKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgIGR2LT5kZXZuYW1lKTsKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKB0c3QtPnNzLT5mcmVlX3N1cGVyKHRzdCk7Cj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0
+dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCg
+oKCgoKCgoKB9Cj4goAo+IKCgoKCgoKCgoKCgoKCgoKAvKiBDaGVjayBpZiBtZXRhZGF0YSBoYW5k
+bGVyIGlzIGFibGUgdG8gYWNjZXB0IHRoZQo+IGRyaXZlICovCj4goKCgoKCgoKCgoKCgoKCgoGlm
+ICghdHN0LT5zcy0+dmFsaWRhdGVfZ2VvbWV0cnkodHN0LCBMRVZFTF9DT05UQUlORVIsCj4gMCwg
+MSwgTlVMTCwKPiCgoKCgoKCgoKCgoKCgoKCgoKCgIDAsIDAsIGR2LT5kZXZuYW1lLCBOVUxMLCAw
+LCAxKSkgewo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGNsb3NlKGNvbnRhaW5lcl9mZCk7Cj4g
+LaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCgoKCgoKCgoKB9Cj4goAo+IKCgoKCgoKCgoKCgoKCg
+oKBLaWxsKGR2LT5kZXZuYW1lLCBOVUxMLCAwLCAtMSwgMCk7Cj4gQEAgLTk4Nyw3ICs5OTIsNyBA
+QCBpbnQgTWFuYWdlX2FkZChpbnQgZmQsIGludCB0ZmQsIHN0cnVjdCBtZGRldl9kZXYKPiAqZHYs
+Cj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgZHYtPmRldm5hbWUs
+Cj4gSU5WQUxJRF9TRUNUT1JTKSkgewo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGNsb3NlKGRm
+ZCk7Cj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgY2xvc2UoY29udGFpbmVyX2ZkKTsKPiAtoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKByZXR1cm4gLTE7Cj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+Z290byB1bmxvY2s7Cj4goKCgoKCgoKCgoKCgoKCgoH0KPiCgoKCgoKCgoKCgoKCgoKCgaWYgKCFt
+ZG1vbl9ydW5uaW5nKHRzdC0+Y29udGFpbmVyX2Rldm5tKSkKPiCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKB0c3QtPnNzLT5zeW5jX21ldGFkYXRhKHRzdCk7Cj4gQEAgLTk5OCw3ICsxMDAzLDcgQEAg
+aW50IE1hbmFnZV9hZGQoaW50IGZkLCBpbnQgdGZkLCBzdHJ1Y3QgbWRkZXZfZGV2Cj4gKmR2LAo+
+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCBkdi0+ZGV2bmFtZSk7Cj4goKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgY2xvc2UoY29udGFpbmVyX2ZkKTsKPiCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKB0c3QtPnNzLT5mcmVlX3N1cGVyKHRzdCk7Cj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+cmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCg
+oKCgoKCgoKCgoKB9Cj4goKCgoKCgoKCgoKCgoKCgoHNyYS0+YXJyYXkubGV2ZWwgPSBMRVZFTF9D
+T05UQUlORVI7Cj4goKCgoKCgoKCgoKCgoKCgoC8qIE5lZWQgdG8gc2V0IGRhdGFfb2Zmc2V0IGFu
+ZCBjb21wb25lbnRfc2l6ZSAqLwo+IEBAIC0xMDEzLDcgKzEwMTgsNyBAQCBpbnQgTWFuYWdlX2Fk
+ZChpbnQgZmQsIGludCB0ZmQsIHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgcHJfZXJyKCJhZGQgbmV3IGRldmljZSB0byBleHRlcm5hbCBtZXRhZGF0YQo+
+IGZhaWxlZCBmb3IgJXNcbiIsIGR2LT5kZXZuYW1lKTsKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKBjbG9zZShjb250YWluZXJfZmQpOwo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoHN5c2ZzX2Zy
+ZWUoc3JhKTsKPiAtoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKByZXR1cm4gLTE7Cj4gK6CgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgZ290byB1bmxvY2s7Cj4goKCgoKCgoKCgoKCgoKCgoH0KPiCgoKCgoKCg
+oKCgoKCgoKCgcGluZ19tb25pdG9yKGRldm5tKTsKPiCgoKCgoKCgoKCgoKCgoKCgc3lzZnNfZnJl
+ZShzcmEpOwo+IEBAIC0xMDI3LDcgKzEwMzIsNyBAQCBpbnQgTWFuYWdlX2FkZChpbnQgZmQsIGlu
+dCB0ZmQsIHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+ZWxzZQo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcHJfZXJyKCJhZGQgbmV3IGRl
+dmljZSBmYWlsZWQgZm9yICVzCj4gYXMgJWQ6ICVzXG4iLAo+IKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgIGR2LT5kZXZuYW1lLCBqLAo+IHN0cmVycm9yKGVycm5vKSk7Cj4g
+LaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCgoKCgoKCgoKB9Cj4goKCgoKCgoKCgoKCgoKCgoGlm
+IChkdi0+ZGlzcG9zaXRpb24gPT0gJ2onKSB7Cj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcHJf
+ZXJyKCJKb3VybmFsIGFkZGVkIHN1Y2Nlc3NmdWxseSwgbWFraW5nICVzCj4gcmVhZC13cml0ZVxu
+IiwgZGV2bmFtZSk7Cj4gQEAgLTEwMzgsNyArMTA0MywxMSBAQCBpbnQgTWFuYWdlX2FkZChpbnQg
+ZmQsIGludCB0ZmQsIHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKB9Cj4goKCgoKCg
+oKBpZiAodmVyYm9zZSA+PSAwKQo+IKCgoKCgoKCgoKCgoKCgoKBwcl9lcnIoImFkZGVkICVzXG4i
+LCBkdi0+ZGV2bmFtZSk7Cj4gK6CgoKCgoKBtYXBfdW5sb2NrKCZtYXApOwo+IKCgoKCgoKCgcmV0
+dXJuIDE7Cj4gK3VubG9jazoKPiAroKCgoKCgoG1hcF91bmxvY2soJm1hcCk7Cj4gK6CgoKCgoKBy
+ZXR1cm4gLTE7Cj4goH0KPiCgCj4goGludCBNYW5hZ2VfcmVtb3ZlKHN0cnVjdCBzdXBlcnR5cGUg
+KnRzdCwgaW50IGZkLCBzdHJ1Y3QgbWRkZXZfZGV2Cj4gKmR2LAoK
 
