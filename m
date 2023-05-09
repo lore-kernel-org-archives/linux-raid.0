@@ -2,319 +2,313 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE25C77B7C
-	for <linux-raid@archiver.kernel.org>; Tue,  9 May 2023 11:03:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49706C7EE22
+	for <linux-raid@archiver.kernel.org>; Tue,  9 May 2023 11:40:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235425AbjEILDr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 9 May 2023 07:03:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53250 "EHLO
+        id S235321AbjEILk2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 9 May 2023 07:40:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235424AbjEILDS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 9 May 2023 07:03:18 -0400
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E90AE7EC0
-        for <linux-raid@vger.kernel.org>; Tue,  9 May 2023 04:02:31 -0700 (PDT)
-Received: by mail-wm1-x335.google.com with SMTP id 5b1f17b1804b1-3f19ab994ccso57163095e9.2
-        for <linux-raid@vger.kernel.org>; Tue, 09 May 2023 04:02:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683630149; x=1686222149;
-        h=content-language:thread-index:content-transfer-encoding
-         :mime-version:message-id:date:subject:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=kzMot2fJlgG+PUA6e55FH1pRVl7qfllC8yJXJjyoRs8=;
-        b=A1YOfi+NyHpasaVLQsR5nRewJubCnFfhHG6YcoqsM54fyBhREFJAfuTP69I77yObL0
-         uUAG2j+ueOp5uNObymEIbt+hHgaeginbBbCsfjSlQ42WDtuNuL1gcRwtiVmTOa6MF4o3
-         aGb00Tyt2P0myalHCACOde+wr78coCS2AX5WwRLm6Lj6612CJSccdwM9ZkeSi440LPq5
-         EUIM6F/7F9hXdS7trksL0NDpFm/bbVFL+hGN7WUElKGQGts2MZZRsHt5p2Fa9jcqsRHs
-         XExFitnqVKXNqeUvr4dSLqLs+zFuzStCHaYlsKS+ffnIvtTxsL5br5AdJ6CtR/jyP148
-         38NQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683630149; x=1686222149;
-        h=content-language:thread-index:content-transfer-encoding
-         :mime-version:message-id:date:subject:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=kzMot2fJlgG+PUA6e55FH1pRVl7qfllC8yJXJjyoRs8=;
-        b=KsYkDamAAhGOLDfQGK/xEROxiAj1R8amNMxbU2r1ewqlVriHS0c3hGcY6sCpBrluKZ
-         QZMmOSM0m37q3EwiF3jSuz5NpnT9Jda8Q5uVxndx5T6xyiH3fMGCZaLUb6DbvTeuPQmb
-         5lcFKZu/UAvyJZvuKLgbBKrPnrQ30xYeStYcdS3EtHBDo4foLGO2ts/Cg8H5uZx58qLs
-         JLCejWzB8gFOM3X7GrUZlM29z58Drl21BwD5415GfZ1Os2J1JWJHAnKdHk6B0g9aFoFp
-         nxOCxykwTNAdurAn8qXlnnyk3jUPUVOam32FXRddqvRfNnDzgTNleTyPEkSbzHkDJeFH
-         AdhQ==
-X-Gm-Message-State: AC+VfDz6IfQNd0BVGdRy6gtgRVTXQSOTzlTN3PJfaZq7nmFJjNaGWtq1
-        R2pymJLk5QCqVKtr4n/Mr65tkPcxjHE=
-X-Google-Smtp-Source: ACHHUZ4Rf711EbmK+WDXkkURDN0Ftu7plUIzKHJcg6tuNdE8OO33js42IoZqUacDw+DPaoPYsmVaVQ==
-X-Received: by 2002:a1c:4b06:0:b0:3f4:294d:48d0 with SMTP id y6-20020a1c4b06000000b003f4294d48d0mr2452071wma.17.1683630148608;
-        Tue, 09 May 2023 04:02:28 -0700 (PDT)
-Received: from MaartenXPS ([145.131.244.43])
-        by smtp.gmail.com with ESMTPSA id e7-20020adfe387000000b003064088a94fsm13935411wrm.16.2023.05.09.04.02.27
-        for <linux-raid@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 May 2023 04:02:27 -0700 (PDT)
-From:   <maartenvanmalland@gmail.com>
-To:     <linux-raid@vger.kernel.org>
-Subject: Raid 5 journal bug (crash)
-Date:   Tue, 9 May 2023 13:02:27 +0200
-Message-ID: <04df01d98265$be3a9b80$3aafd280$@gmail.com>
+        with ESMTP id S235545AbjEILkJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 9 May 2023 07:40:09 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3005B5B8A
+        for <linux-raid@vger.kernel.org>; Tue,  9 May 2023 04:39:53 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QFx5t6j2Zz4f3vf7
+        for <linux-raid@vger.kernel.org>; Tue,  9 May 2023 19:39:46 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgDn4R8CMVpke+dtIQ--.63777S3;
+        Tue, 09 May 2023 19:39:48 +0800 (CST)
+Subject: Re: Raid 5 journal bug (crash)
+To:     maartenvanmalland@gmail.com, linux-raid@vger.kernel.org,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <04df01d98265$be3a9b80$3aafd280$@gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <319dc433-af3d-1ba1-04af-690c4f2576c0@huaweicloud.com>
+Date:   Tue, 9 May 2023 19:39:46 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AdmBh/BmvliUzOFwQfmmnEpygZl+8Q==
-Content-Language: nl
+In-Reply-To: <04df01d98265$be3a9b80$3aafd280$@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: base64
+X-CM-TRANSID: _Ch0CgDn4R8CMVpke+dtIQ--.63777S3
+X-Coremail-Antispam: 1UD129KBjvAXoW3uFyftr47Kry8JF1kXF47Arb_yoW8Gw47Go
+        WUGr17Jw48Gr1DJr1kJF1DJa1jyrn2yFnrXr4Utw1UurnrJanrJFy3JFyUAFWYqa1DZ3yU
+        A34DKr1kK3s5Jrn7n29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+        AaLaJ3UjIYCTnIWjp_UUUYD7kC6x804xWl14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK
+        8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4
+        AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF
+        7I0E14v26r4j6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFcxC0VAYjxAxZF0Ew4CEw7xC0wCYjI0SjxkI62AI
+        1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+        8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUXVWU
+        AwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+        0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AK
+        xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJwCE64xvF2IEb7IF0Fy7YxBIda
+        VFxhVjvjDU0xZFpf9x07UiXocUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-I'm pretty sure I hit a bug in the raid5 code somewhere. (I also have a =
-rather obscure storage config, so please bear with me.)=20
-
-The (relevant) storage config is as follows:
-
-2 x nvme (mdadm raid1) -> lvm2  -> volume for journal of ext4, volume =
-for bcache caching and also a volume for raid5 journal.
-6 x sata (mdadm raid5) -> bcache -> lvm2 -> ext4 volume with external =
-journal
-
-Surprisingly, this boots just fine =F0=9F=98=89. However, since I =
-enabled the raid5 journal on the nvme drives, the system hangs randomly =
-with the following kernel output:
-
-kernel: [14785.293972] BUG: kernel NULL pointer dereference, address: =
-0000000000000050
-kernel: [14785.293984] #PF: supervisor read access in kernel mode
-kernel: [14785.293992] #PF: error_code(0x0000) - not-present page
-kernel: [14785.293997] PGD 0 P4D 0
-kernel: [14785.294004] Oops: 0000 [#1] PREEMPT SMP PTI
-kernel: [14785.294010] CPU: 4 PID: 543 Comm: md3_raid5 Tainted: P        =
-   O       6.1.0-7-amd64 #1  Debian 6.1.20-2
-kernel: [14785.294018] Hardware name: System manufacturer System Product =
-Name/WS X299 PRO_SE, BIOS 3701 05/24/2022
-kernel: [14785.294022] RIP: 0010:blk_cgroup_bio_start+0x46/0xb0
-kernel: [14785.294033] Code: 00 00 0f 45 c2 89 c5 e8 b8 5c be ff 48 c7 =
-c7 ad 6d 1a 8a e8 dc 14 53 00 48 8b 43 48 0f b7 4b 14 65 8b 35 f5 a5 d2 =
-76 48 63 d6 <48> 8b 40 50 48 03 04 d5 a0 7a 1c 8a 48 63 d5 f6 c5 01 75 =
-0e 80 cd
-kernel: [14785.294039] RSP: 0000:ffffaf9500db7cb8 EFLAGS: 00010282
-kernel: [14785.294045] RAX: 0000000000000000 RBX: ffffa03544df28b8 RCX: =
-0000000000000000
-kernel: [14785.294050] RDX: 0000000000000004 RSI: 0000000000000004 RDI: =
-ffffffff8a15820e
-kernel: [14785.294054] RBP: 0000000000000001 R08: 0000000000040001 R09: =
-ffffaf9500db7d38
-kernel: [14785.294058] R10: 0000000000000007 R11: ffffffffc08ff6a0 R12: =
-0000000000000000
-kernel: [14785.294062] R13: 8000000000000000 R14: ffffa03582724b1c R15: =
-0000000000000008
-kernel: [14785.294066] FS:  0000000000000000(0000) =
-GS:ffffa053dfb00000(0000) knlGS:0000000000000000
-kernel: [14785.294072] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-kernel: [14785.294076] CR2: 0000000000000050 CR3: 0000000dae210005 CR4: =
-00000000003726e0
-kernel: [14785.294081] Call Trace:
-kernel: [14785.294086]  <TASK>
-kernel: [14785.294092]  submit_bio_noacct_nocheck+0x38/0x370
-kernel: [14785.294099]  ? bio_associate_blkg+0x28/0x60
-kernel: [14785.294106]  ? bio_init+0x6d/0xc0
-kernel: [14785.294117]  handle_active_stripes.constprop.0+0x349/0x560 =
-[raid456]
-kernel: [14785.294152]  raid5d+0x49c/0x760 [raid456]
-kernel: [14785.294173]  ? __schedule+0x359/0xa20
-kernel: [14785.294183]  ? _raw_spin_lock_irqsave+0x23/0x50
-kernel: [14785.294191]  ? preempt_count_add+0x6a/0xa0
-kernel: [14785.294197]  ? _raw_spin_lock_irqsave+0x23/0x50
-kernel: [14785.294206]  ? unregister_md_personality+0x70/0x70 [md_mod]
-kernel: [14785.294230]  md_thread+0xa7/0x180 [md_mod]
-kernel: [14785.294253]  ? dequeue_task_stop+0x70/0x70
-kernel: [14785.294262]  kthread+0xe6/0x110
-kernel: [14785.294270]  ? kthread_complete_and_exit+0x20/0x20
-kernel: [14785.294278]  ret_from_fork+0x1f/0x30
-kernel: [14785.294292]  </TASK>
-kernel: [14785.294295] Modules linked in: brd veth xt_conntrack =
-xt_MASQUERADE nf_conntrack_netlink xt_addrtype br_netfilter =
-snd_seq_dummy snd_hrtimer vhost_net vhost vhost_iotlb tap tun =
-cpufreq_conservative cpufreq_userspace cpufreq_powersave =
-cpufreq_ondemand nvidia_uvm(PO) xfrm_user xfrm_algo rdma_ucm ib_uverbs =
-rdma_cm iw_cm scsi_transport_iscsi ib_cm ib_core nvme_fabrics overlay =
-nvidia_modeset(PO) qrtr bridge stp llc bonding tls nft_log xt_NFLOG =
-nfnetlink_log xt_geoip(O) nft_chain_nat xt_nat nf_nat nf_conntrack =
-nf_defrag_ipv6 nf_defrag_ipv4 xt_tcpudp nft_compat nf_tables nfnetlink =
-binfmt_misc nls_ascii nls_cp437 vfat fat xfs intel_rapl_msr =
-intel_rapl_common intel_uncore_frequency intel_uncore_frequency_common =
-isst_if_common nfit libnvdimm squashfs x86_pkg_temp_thermal nvidia(PO) =
-intel_powerclamp coretemp kvm_intel zfs(PO) kvm ftdi_sio usbserial =
-snd_hda_codec_realtek ghash_clmulni_intel snd_hda_codec_generic =
-snd_hda_codec_hdmi zunicode(PO) snd_hda_intel zzstd(O) snd_intel_dspcfg =
-aesni_intel
-kernel: [14785.294429]  eeepc_wmi snd_intel_sdw_acpi zlua(O) crypto_simd =
-asus_wmi snd_hda_codec zavl(PO) cryptd ipmi_ssif platform_profile =
-snd_hda_core icp(PO) rapl battery snd_hwdep sparse_keymap intel_cstate =
-zcommon(PO) snd_pcm_oss ledtrig_audio znvpair(PO) intel_uncore =
-snd_mixer_oss rfkill wmi_bmof intel_wmi_thunderbolt mei_me joydev spl(O) =
-sha512_ssse3 snd_pcm mei ioatdma sha512_generic acpi_ipmi ipmi_si =
-acpi_tad evdev tcp_bbr sch_fq vfio_pci vfio_pci_core vfio_virqfd =
-vfio_iommu_type1 vfio irqbypass vmwgfx snd_seq_midi snd_seq_midi_event =
-snd_rawmidi snd_seq snd_seq_device snd_timer snd soundcore sg =
-ipmi_watchdog ipmi_poweroff ipmi_devintf ipmi_msghandler msr nfsd drbd =
-auth_rpcgss lru_cache nfs_acl parport_pc lockd ppdev grace lp parport =
-fuse sunrpc loop efi_pstore configfs ip_tables x_tables autofs4 ext4 =
-crc16 mbcache jbd2 btrfs blake2b_generic zstd_compress efivarfs raid10 =
-multipath linear z3fold lz4 lz4_compress dm_snapshot dm_bufio i915 =
-drm_buddy video drm_display_helper cec rc_core sr_mod
-kernel: [14785.294590]  cdrom hid_generic usbhid uas hid usb_storage =
-raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor =
-raid6_pq libcrc32c crc32c_generic raid0 bcache dm_mod sd_mod raid1 =
-md_mod nvme nvme_core t10_pi ast crc64_rocksoft drm_vram_helper ahci =
-crc64 atlantic drm_ttm_helper igb libahci crc_t10dif xhci_pci ttm macsec =
-dca drm_kms_helper libata crct10dif_generic xhci_hcd crc32_pclmul ptp =
-i2c_i801 usbcore crct10dif_pclmul drm mxm_wmi scsi_mod crc32c_intel =
-pps_core i2c_smbus i2c_algo_bit crct10dif_common usb_common scsi_common =
-wmi button [last unloaded: brd]
-kernel: [14785.294688] CR2: 0000000000000050
-kernel: [14785.294693] ---[ end trace 0000000000000000 ]---
-kernel: [14787.059673] RIP: 0010:blk_cgroup_bio_start+0x46/0xb0
-kernel: [14787.059682] Code: 00 00 0f 45 c2 89 c5 e8 b8 5c be ff 48 c7 =
-c7 ad 6d 1a 8a e8 dc 14 53 00 48 8b 43 48 0f b7 4b 14 65 8b 35 f5 a5 d2 =
-76 48 63 d6 <48> 8b 40 50 48 03 04 d5 a0 7a 1c 8a 48 63 d5 f6 c5 01 75 =
-0e 80 cd
-kernel: [14787.059684] RSP: 0000:ffffaf9500db7cb8 EFLAGS: 00010282
-kernel: [14787.059687] RAX: 0000000000000000 RBX: ffffa03544df28b8 RCX: =
-0000000000000000
-kernel: [14787.059688] RDX: 0000000000000004 RSI: 0000000000000004 RDI: =
-ffffffff8a15820e
-kernel: [14787.059689] RBP: 0000000000000001 R08: 0000000000040001 R09: =
-ffffaf9500db7d38
-kernel: [14787.059691] R10: 0000000000000007 R11: ffffffffc08ff6a0 R12: =
-0000000000000000
-kernel: [14787.059692] R13: 8000000000000000 R14: ffffa03582724b1c R15: =
-0000000000000008
-kernel: [14787.059693] FS:  0000000000000000(0000) =
-GS:ffffa053dfb00000(0000) knlGS:0000000000000000
-kernel: [14787.059695] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-kernel: [14787.059697] CR2: 0000000000000050 CR3: 000000048199e006 CR4: =
-00000000003726e0
-kernel: [14787.059698] note: md3_raid5[543] exited with irqs disabled
-kernel: [14787.059788] note: md3_raid5[543] exited with preempt_count 1
-kernel: [14787.059794] ------------[ cut here ]------------
-kernel: [14787.059796] WARNING: CPU: 4 PID: 543 at kernel/exit.c:814 =
-do_exit+0x8ff/0xb10
-kernel: [14787.059803] Modules linked in: brd veth xt_conntrack =
-xt_MASQUERADE nf_conntrack_netlink xt_addrtype br_netfilter =
-snd_seq_dummy snd_hrtimer vhost_net vhost vhost_iotlb tap tun =
-cpufreq_conservative cpufreq_userspace cpufreq_powersave =
-cpufreq_ondemand nvidia_uvm(PO) xfrm_user xfrm_algo rdma_ucm ib_uverbs =
-rdma_cm iw_cm scsi_transport_iscsi ib_cm ib_core nvme_fabrics overlay =
-nvidia_modeset(PO) qrtr bridge stp llc bonding tls nft_log xt_NFLOG =
-nfnetlink_log xt_geoip(O) nft_chain_nat xt_nat nf_nat nf_conntrack =
-nf_defrag_ipv6 nf_defrag_ipv4 xt_tcpudp nft_compat nf_tables nfnetlink =
-binfmt_misc nls_ascii nls_cp437 vfat fat xfs intel_rapl_msr =
-intel_rapl_common intel_uncore_frequency intel_uncore_frequency_common =
-isst_if_common nfit libnvdimm squashfs x86_pkg_temp_thermal nvidia(PO) =
-intel_powerclamp coretemp kvm_intel zfs(PO) kvm ftdi_sio usbserial =
-snd_hda_codec_realtek ghash_clmulni_intel snd_hda_codec_generic =
-snd_hda_codec_hdmi zunicode(PO) snd_hda_intel zzstd(O) snd_intel_dspcfg =
-aesni_intel
-kernel: [14787.059873]  eeepc_wmi snd_intel_sdw_acpi zlua(O) crypto_simd =
-asus_wmi snd_hda_codec zavl(PO) cryptd ipmi_ssif platform_profile =
-snd_hda_core icp(PO) rapl battery snd_hwdep sparse_keymap intel_cstate =
-zcommon(PO) snd_pcm_oss ledtrig_audio znvpair(PO) intel_uncore =
-snd_mixer_oss rfkill wmi_bmof intel_wmi_thunderbolt mei_me joydev spl(O) =
-sha512_ssse3 snd_pcm mei ioatdma sha512_generic acpi_ipmi ipmi_si =
-acpi_tad evdev tcp_bbr sch_fq vfio_pci vfio_pci_core vfio_virqfd =
-vfio_iommu_type1 vfio irqbypass vmwgfx snd_seq_midi snd_seq_midi_event =
-snd_rawmidi snd_seq snd_seq_device snd_timer snd soundcore sg =
-ipmi_watchdog ipmi_poweroff ipmi_devintf ipmi_msghandler msr nfsd drbd =
-auth_rpcgss lru_cache nfs_acl parport_pc lockd ppdev grace lp parport =
-fuse sunrpc loop efi_pstore configfs ip_tables x_tables autofs4 ext4 =
-crc16 mbcache jbd2 btrfs blake2b_generic zstd_compress efivarfs raid10 =
-multipath linear z3fold lz4 lz4_compress dm_snapshot dm_bufio i915 =
-drm_buddy video drm_display_helper cec rc_core sr_mod
-kernel: [14787.059934]  cdrom hid_generic usbhid uas hid usb_storage =
-raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor =
-raid6_pq libcrc32c crc32c_generic raid0 bcache dm_mod sd_mod raid1 =
-md_mod nvme nvme_core t10_pi ast crc64_rocksoft drm_vram_helper ahci =
-crc64 atlantic drm_ttm_helper igb libahci crc_t10dif xhci_pci ttm macsec =
-dca drm_kms_helper libata crct10dif_generic xhci_hcd crc32_pclmul ptp =
-i2c_i801 usbcore crct10dif_pclmul drm mxm_wmi scsi_mod crc32c_intel =
-pps_core i2c_smbus i2c_algo_bit crct10dif_common usb_common scsi_common =
-wmi button [last unloaded: brd]
-kernel: [14787.059971] CPU: 4 PID: 543 Comm: md3_raid5 Tainted: P      D =
-   O       6.1.0-7-amd64 #1  Debian 6.1.20-2
-kernel: [14787.059973] Hardware name: System manufacturer System Product =
-Name/WS X299 PRO_SE, BIOS 3701 05/24/2022
-kernel: [14787.059975] RIP: 0010:do_exit+0x8ff/0xb10
-kernel: [14787.059977] Code: 06 ff ff ff 48 89 df e8 3f 47 0f 00 e9 4e =
-f9 ff ff 0f 0b e9 51 f7 ff ff 4c 89 e6 bf 05 06 00 00 e8 06 eb 00 00 e9 =
-2a f8 ff ff <0f> 0b e9 74 f7 ff ff 48 8b bb e0 0b 00 00 e8 2e db ff ff =
-48 85 c0
-kernel: [14787.059978] RSP: 0000:ffffaf9500db7ed8 EFLAGS: 00010286
-kernel: [14787.059980] RAX: 0000000000000000 RBX: ffffa034e42c8000 RCX: =
-0000000000000000
-kernel: [14787.059981] RDX: 0000000000000001 RSI: 0000000000002710 RDI: =
-00000000ffffffff
-kernel: [14787.059983] RBP: ffffa034e42e0000 R08: 0000000000000000 R09: =
-ffffaf9500db7dd0
-kernel: [14787.059984] R10: 0000000000000003 R11: ffffa0545ff6eb28 R12: =
-0000000000000009
-kernel: [14787.059985] R13: ffffa035827c5ac0 R14: 0000000000000000 R15: =
-0000000000000000
-kernel: [14787.059986] FS:  0000000000000000(0000) =
-GS:ffffa053dfb00000(0000) knlGS:0000000000000000
-kernel: [14787.059988] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-kernel: [14787.059989] CR2: 0000000000000050 CR3: 000000048199e006 CR4: =
-00000000003726e0
-kernel: [14787.059991] Call Trace:
-kernel: [14787.059993]  <TASK>
-kernel: [14787.059996]  make_task_dead+0x8d/0x90
-kernel: [14787.059999]  rewind_stack_and_make_dead+0x17/0x20
-kernel: [14787.060003] RIP: 0000:0x0
-kernel: [14787.060007] Code: Unable to access opcode bytes at =
-0xffffffffffffffd6.
-kernel: [14787.060008] RSP: 0000:0000000000000000 EFLAGS: 00000000 =
-ORIG_RAX: 0000000000000000
-kernel: [14787.060010] RAX: 0000000000000000 RBX: 0000000000000000 RCX: =
-0000000000000000
-kernel: [14787.059981] RDX: 0000000000000001 RSI: 0000000000002710 RDI: =
-00000000ffffffff
-kernel: [14787.059983] RBP: ffffa034e42e0000 R08: 0000000000000000 R09: =
-ffffaf9500db7dd0
-kernel: [14787.059984] R10: 0000000000000003 R11: ffffa0545ff6eb28 R12: =
-0000000000000009
-kernel: [14787.059985] R13: ffffa035827c5ac0 R14: 0000000000000000 R15: =
-0000000000000000
-kernel: [14787.059986] FS:  0000000000000000(0000) =
-GS:ffffa053dfb00000(0000) knlGS:0000000000000000
-kernel: [14787.059988] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-kernel: [14787.059989] CR2: 0000000000000050 CR3: 000000048199e006 CR4: =
-00000000003726e0
-kernel: [14787.059991] Call Trace:
-kernel: [14787.059993]  <TASK>
-kernel: [14787.059996]  make_task_dead+0x8d/0x90
-kernel: [14787.059999]  rewind_stack_and_make_dead+0x17/0x20
-kernel: [14787.060003] RIP: 0000:0x0
-kernel: [14787.060007] Code: Unable to access opcode bytes at =
-0xffffffffffffffd6.
-kernel: [14787.060008] RSP: 0000:0000000000000000 EFLAGS: 00000000 =
-ORIG_RAX: 0000000000000000
-kernel: [14787.060010] RAX: 0000000000000000 RBX: 0000000000000000 RCX: =
-0000000000000000
-kernel: [14787.060011] RDX: 0000000000000000 RSI: 0000000000000000 RDI: =
-0000000000000000
-kernel: [14787.060012] RBP: 0000000000000000 R08: 0000000000000000 R09: =
-0000000000000000
-kernel: [14787.060013] R10: 0000000000000000 R11: 0000000000000000 R12: =
-0000000000000000
-kernel: [14787.060014] R13: 0000000000000000 R14: 0000000000000000 R15: =
-0000000000000000
-kernel: [14787.060017]  </TASK>
-kernel: [14787.060018] ---[ end trace 0000000000000000 ]---
-
-For now I've reverted to an internal bitmap for the raid5 and all is =
-stable again. If you need more information, please let me know!
-
-Kind regards,
-
-Maarten
+SGksDQoNCuWcqCAyMDIzLzA1LzA5IDE5OjAyLCBtYWFydGVudmFubWFsbGFuZEBnbWFpbC5j
+b20g5YaZ6YGTOg0KPiBIaSwNCj4gDQo+IEknbSBwcmV0dHkgc3VyZSBJIGhpdCBhIGJ1ZyBp
+biB0aGUgcmFpZDUgY29kZSBzb21ld2hlcmUuIChJIGFsc28gaGF2ZSBhIHJhdGhlciBvYnNj
+dXJlIHN0b3JhZ2UgY29uZmlnLCBzbyBwbGVhc2UgYmVhciB3aXRoIG1lLikNCj4gDQo+IFRo
+ZSAocmVsZXZhbnQpIHN0b3JhZ2UgY29uZmlnIGlzIGFzIGZvbGxvd3M6DQo+IA0KPiAyIHgg
+bnZtZSAobWRhZG0gcmFpZDEpIC0+IGx2bTIgIC0+IHZvbHVtZSBmb3Igam91cm5hbCBvZiBl
+eHQ0LCB2b2x1bWUgZm9yIGJjYWNoZSBjYWNoaW5nIGFuZCBhbHNvIGEgdm9sdW1lIGZvciBy
+YWlkNSBqb3VybmFsLg0KPiA2IHggc2F0YSAobWRhZG0gcmFpZDUpIC0+IGJjYWNoZSAtPiBs
+dm0yIC0+IGV4dDQgdm9sdW1lIHdpdGggZXh0ZXJuYWwgam91cm5hbA0KPiANCj4gU3VycHJp
+c2luZ2x5LCB0aGlzIGJvb3RzIGp1c3QgZmluZSDwn5iJLiBIb3dldmVyLCBzaW5jZSBJIGVu
+YWJsZWQgdGhlIHJhaWQ1IGpvdXJuYWwgb24gdGhlIG52bWUgZHJpdmVzLCB0aGUgc3lzdGVt
+IGhhbmdzIHJhbmRvbWx5IHdpdGggdGhlIGZvbGxvd2luZyBrZXJuZWwgb3V0cHV0Og0KPiAN
+Cj4ga2VybmVsOiBbMTQ3ODUuMjkzOTcyXSBCVUc6IGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVy
+ZWZlcmVuY2UsIGFkZHJlc3M6IDAwMDAwMDAwMDAwMDAwNTANCj4ga2VybmVsOiBbMTQ3ODUu
+MjkzOTg0XSAjUEY6IHN1cGVydmlzb3IgcmVhZCBhY2Nlc3MgaW4ga2VybmVsIG1vZGUNCj4g
+a2VybmVsOiBbMTQ3ODUuMjkzOTkyXSAjUEY6IGVycm9yX2NvZGUoMHgwMDAwKSAtIG5vdC1w
+cmVzZW50IHBhZ2UNCj4ga2VybmVsOiBbMTQ3ODUuMjkzOTk3XSBQR0QgMCBQNEQgMA0KPiBr
+ZXJuZWw6IFsxNDc4NS4yOTQwMDRdIE9vcHM6IDAwMDAgWyMxXSBQUkVFTVBUIFNNUCBQVEkN
+Cj4ga2VybmVsOiBbMTQ3ODUuMjk0MDEwXSBDUFU6IDQgUElEOiA1NDMgQ29tbTogbWQzX3Jh
+aWQ1IFRhaW50ZWQ6IFAgICAgICAgICAgIE8gICAgICAgNi4xLjAtNy1hbWQ2NCAjMSAgRGVi
+aWFuIDYuMS4yMC0yDQo+IGtlcm5lbDogWzE0Nzg1LjI5NDAxOF0gSGFyZHdhcmUgbmFtZTog
+U3lzdGVtIG1hbnVmYWN0dXJlciBTeXN0ZW0gUHJvZHVjdCBOYW1lL1dTIFgyOTkgUFJPX1NF
+LCBCSU9TIDM3MDEgMDUvMjQvMjAyMg0KPiBrZXJuZWw6IFsxNDc4NS4yOTQwMjJdIFJJUDog
+MDAxMDpibGtfY2dyb3VwX2Jpb19zdGFydCsweDQ2LzB4YjANCg0KSXQnbGwgYmUgbXVjaCBo
+ZWxwZnVsIGlmIHlvdSBjYW4gcHJvdmlkZSBhZGRyMmxpbmUgcmVzdWx0Lg0KDQpUaGFua3Ms
+DQpLdWFpDQo+IGtlcm5lbDogWzE0Nzg1LjI5NDAzM10gQ29kZTogMDAgMDAgMGYgNDUgYzIg
+ODkgYzUgZTggYjggNWMgYmUgZmYgNDggYzcgYzcgYWQgNmQgMWEgOGEgZTggZGMgMTQgNTMg
+MDAgNDggOGIgNDMgNDggMGYgYjcgNGIgMTQgNjUgOGIgMzUgZjUgYTUgZDIgNzYgNDggNjMg
+ZDYgPDQ4PiA4YiA0MCA1MCA0OCAwMyAwNCBkNSBhMCA3YSAxYyA4YSA0OCA2MyBkNSBmNiBj
+NSAwMSA3NSAwZSA4MCBjZA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQwMzldIFJTUDogMDAwMDpm
+ZmZmYWY5NTAwZGI3Y2I4IEVGTEFHUzogMDAwMTAyODINCj4ga2VybmVsOiBbMTQ3ODUuMjk0
+MDQ1XSBSQVg6IDAwMDAwMDAwMDAwMDAwMDAgUkJYOiBmZmZmYTAzNTQ0ZGYyOGI4IFJDWDog
+MDAwMDAwMDAwMDAwMDAwMA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQwNTBdIFJEWDogMDAwMDAw
+MDAwMDAwMDAwNCBSU0k6IDAwMDAwMDAwMDAwMDAwMDQgUkRJOiBmZmZmZmZmZjhhMTU4MjBl
+DQo+IGtlcm5lbDogWzE0Nzg1LjI5NDA1NF0gUkJQOiAwMDAwMDAwMDAwMDAwMDAxIFIwODog
+MDAwMDAwMDAwMDA0MDAwMSBSMDk6IGZmZmZhZjk1MDBkYjdkMzgNCj4ga2VybmVsOiBbMTQ3
+ODUuMjk0MDU4XSBSMTA6IDAwMDAwMDAwMDAwMDAwMDcgUjExOiBmZmZmZmZmZmMwOGZmNmEw
+IFIxMjogMDAwMDAwMDAwMDAwMDAwMA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQwNjJdIFIxMzog
+ODAwMDAwMDAwMDAwMDAwMCBSMTQ6IGZmZmZhMDM1ODI3MjRiMWMgUjE1OiAwMDAwMDAwMDAw
+MDAwMDA4DQo+IGtlcm5lbDogWzE0Nzg1LjI5NDA2Nl0gRlM6ICAwMDAwMDAwMDAwMDAwMDAw
+KDAwMDApIEdTOmZmZmZhMDUzZGZiMDAwMDAoMDAwMCkga25sR1M6MDAwMDAwMDAwMDAwMDAw
+MA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQwNzJdIENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAw
+MCBDUjA6IDAwMDAwMDAwODAwNTAwMzMNCj4ga2VybmVsOiBbMTQ3ODUuMjk0MDc2XSBDUjI6
+IDAwMDAwMDAwMDAwMDAwNTAgQ1IzOiAwMDAwMDAwZGFlMjEwMDA1IENSNDogMDAwMDAwMDAw
+MDM3MjZlMA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQwODFdIENhbGwgVHJhY2U6DQo+IGtlcm5l
+bDogWzE0Nzg1LjI5NDA4Nl0gIDxUQVNLPg0KPiBrZXJuZWw6IFsxNDc4NS4yOTQwOTJdICBz
+dWJtaXRfYmlvX25vYWNjdF9ub2NoZWNrKzB4MzgvMHgzNzANCj4ga2VybmVsOiBbMTQ3ODUu
+Mjk0MDk5XSAgPyBiaW9fYXNzb2NpYXRlX2Jsa2crMHgyOC8weDYwDQo+IGtlcm5lbDogWzE0
+Nzg1LjI5NDEwNl0gID8gYmlvX2luaXQrMHg2ZC8weGMwDQo+IGtlcm5lbDogWzE0Nzg1LjI5
+NDExN10gIGhhbmRsZV9hY3RpdmVfc3RyaXBlcy5jb25zdHByb3AuMCsweDM0OS8weDU2MCBb
+cmFpZDQ1Nl0NCj4ga2VybmVsOiBbMTQ3ODUuMjk0MTUyXSAgcmFpZDVkKzB4NDljLzB4NzYw
+IFtyYWlkNDU2XQ0KPiBrZXJuZWw6IFsxNDc4NS4yOTQxNzNdICA/IF9fc2NoZWR1bGUrMHgz
+NTkvMHhhMjANCj4ga2VybmVsOiBbMTQ3ODUuMjk0MTgzXSAgPyBfcmF3X3NwaW5fbG9ja19p
+cnFzYXZlKzB4MjMvMHg1MA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQxOTFdICA/IHByZWVtcHRf
+Y291bnRfYWRkKzB4NmEvMHhhMA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQxOTddICA/IF9yYXdf
+c3Bpbl9sb2NrX2lycXNhdmUrMHgyMy8weDUwDQo+IGtlcm5lbDogWzE0Nzg1LjI5NDIwNl0g
+ID8gdW5yZWdpc3Rlcl9tZF9wZXJzb25hbGl0eSsweDcwLzB4NzAgW21kX21vZF0NCj4ga2Vy
+bmVsOiBbMTQ3ODUuMjk0MjMwXSAgbWRfdGhyZWFkKzB4YTcvMHgxODAgW21kX21vZF0NCj4g
+a2VybmVsOiBbMTQ3ODUuMjk0MjUzXSAgPyBkZXF1ZXVlX3Rhc2tfc3RvcCsweDcwLzB4NzAN
+Cj4ga2VybmVsOiBbMTQ3ODUuMjk0MjYyXSAga3RocmVhZCsweGU2LzB4MTEwDQo+IGtlcm5l
+bDogWzE0Nzg1LjI5NDI3MF0gID8ga3RocmVhZF9jb21wbGV0ZV9hbmRfZXhpdCsweDIwLzB4
+MjANCj4ga2VybmVsOiBbMTQ3ODUuMjk0Mjc4XSAgcmV0X2Zyb21fZm9yaysweDFmLzB4MzAN
+Cj4ga2VybmVsOiBbMTQ3ODUuMjk0MjkyXSAgPC9UQVNLPg0KPiBrZXJuZWw6IFsxNDc4NS4y
+OTQyOTVdIE1vZHVsZXMgbGlua2VkIGluOiBicmQgdmV0aCB4dF9jb25udHJhY2sgeHRfTUFT
+UVVFUkFERSBuZl9jb25udHJhY2tfbmV0bGluayB4dF9hZGRydHlwZSBicl9uZXRmaWx0ZXIg
+c25kX3NlcV9kdW1teSBzbmRfaHJ0aW1lciB2aG9zdF9uZXQgdmhvc3Qgdmhvc3RfaW90bGIg
+dGFwIHR1biBjcHVmcmVxX2NvbnNlcnZhdGl2ZSBjcHVmcmVxX3VzZXJzcGFjZSBjcHVmcmVx
+X3Bvd2Vyc2F2ZSBjcHVmcmVxX29uZGVtYW5kIG52aWRpYV91dm0oUE8pIHhmcm1fdXNlciB4
+ZnJtX2FsZ28gcmRtYV91Y20gaWJfdXZlcmJzIHJkbWFfY20gaXdfY20gc2NzaV90cmFuc3Bv
+cnRfaXNjc2kgaWJfY20gaWJfY29yZSBudm1lX2ZhYnJpY3Mgb3ZlcmxheSBudmlkaWFfbW9k
+ZXNldChQTykgcXJ0ciBicmlkZ2Ugc3RwIGxsYyBib25kaW5nIHRscyBuZnRfbG9nIHh0X05G
+TE9HIG5mbmV0bGlua19sb2cgeHRfZ2VvaXAoTykgbmZ0X2NoYWluX25hdCB4dF9uYXQgbmZf
+bmF0IG5mX2Nvbm50cmFjayBuZl9kZWZyYWdfaXB2NiBuZl9kZWZyYWdfaXB2NCB4dF90Y3B1
+ZHAgbmZ0X2NvbXBhdCBuZl90YWJsZXMgbmZuZXRsaW5rIGJpbmZtdF9taXNjIG5sc19hc2Np
+aSBubHNfY3A0MzcgdmZhdCBmYXQgeGZzIGludGVsX3JhcGxfbXNyIGludGVsX3JhcGxfY29t
+bW9uIGludGVsX3VuY29yZV9mcmVxdWVuY3kgaW50ZWxfdW5jb3JlX2ZyZXF1ZW5jeV9jb21t
+b24gaXNzdF9pZl9jb21tb24gbmZpdCBsaWJudmRpbW0gc3F1YXNoZnMgeDg2X3BrZ190ZW1w
+X3RoZXJtYWwgbnZpZGlhKFBPKSBpbnRlbF9wb3dlcmNsYW1wIGNvcmV0ZW1wIGt2bV9pbnRl
+bCB6ZnMoUE8pIGt2bSBmdGRpX3NpbyB1c2JzZXJpYWwgc25kX2hkYV9jb2RlY19yZWFsdGVr
+IGdoYXNoX2NsbXVsbmlfaW50ZWwgc25kX2hkYV9jb2RlY19nZW5lcmljIHNuZF9oZGFfY29k
+ZWNfaGRtaSB6dW5pY29kZShQTykgc25kX2hkYV9pbnRlbCB6enN0ZChPKSBzbmRfaW50ZWxf
+ZHNwY2ZnIGFlc25pX2ludGVsDQo+IGtlcm5lbDogWzE0Nzg1LjI5NDQyOV0gIGVlZXBjX3dt
+aSBzbmRfaW50ZWxfc2R3X2FjcGkgemx1YShPKSBjcnlwdG9fc2ltZCBhc3VzX3dtaSBzbmRf
+aGRhX2NvZGVjIHphdmwoUE8pIGNyeXB0ZCBpcG1pX3NzaWYgcGxhdGZvcm1fcHJvZmlsZSBz
+bmRfaGRhX2NvcmUgaWNwKFBPKSByYXBsIGJhdHRlcnkgc25kX2h3ZGVwIHNwYXJzZV9rZXlt
+YXAgaW50ZWxfY3N0YXRlIHpjb21tb24oUE8pIHNuZF9wY21fb3NzIGxlZHRyaWdfYXVkaW8g
+em52cGFpcihQTykgaW50ZWxfdW5jb3JlIHNuZF9taXhlcl9vc3MgcmZraWxsIHdtaV9ibW9m
+IGludGVsX3dtaV90aHVuZGVyYm9sdCBtZWlfbWUgam95ZGV2IHNwbChPKSBzaGE1MTJfc3Nz
+ZTMgc25kX3BjbSBtZWkgaW9hdGRtYSBzaGE1MTJfZ2VuZXJpYyBhY3BpX2lwbWkgaXBtaV9z
+aSBhY3BpX3RhZCBldmRldiB0Y3BfYmJyIHNjaF9mcSB2ZmlvX3BjaSB2ZmlvX3BjaV9jb3Jl
+IHZmaW9fdmlycWZkIHZmaW9faW9tbXVfdHlwZTEgdmZpbyBpcnFieXBhc3Mgdm13Z2Z4IHNu
+ZF9zZXFfbWlkaSBzbmRfc2VxX21pZGlfZXZlbnQgc25kX3Jhd21pZGkgc25kX3NlcSBzbmRf
+c2VxX2RldmljZSBzbmRfdGltZXIgc25kIHNvdW5kY29yZSBzZyBpcG1pX3dhdGNoZG9nIGlw
+bWlfcG93ZXJvZmYgaXBtaV9kZXZpbnRmIGlwbWlfbXNnaGFuZGxlciBtc3IgbmZzZCBkcmJk
+IGF1dGhfcnBjZ3NzIGxydV9jYWNoZSBuZnNfYWNsIHBhcnBvcnRfcGMgbG9ja2QgcHBkZXYg
+Z3JhY2UgbHAgcGFycG9ydCBmdXNlIHN1bnJwYyBsb29wIGVmaV9wc3RvcmUgY29uZmlnZnMg
+aXBfdGFibGVzIHhfdGFibGVzIGF1dG9mczQgZXh0NCBjcmMxNiBtYmNhY2hlIGpiZDIgYnRy
+ZnMgYmxha2UyYl9nZW5lcmljIHpzdGRfY29tcHJlc3MgZWZpdmFyZnMgcmFpZDEwIG11bHRp
+cGF0aCBsaW5lYXIgejNmb2xkIGx6NCBsejRfY29tcHJlc3MgZG1fc25hcHNob3QgZG1fYnVm
+aW8gaTkxNSBkcm1fYnVkZHkgdmlkZW8gZHJtX2Rpc3BsYXlfaGVscGVyIGNlYyByY19jb3Jl
+IHNyX21vZA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQ1OTBdICBjZHJvbSBoaWRfZ2VuZXJpYyB1
+c2JoaWQgdWFzIGhpZCB1c2Jfc3RvcmFnZSByYWlkNDU2IGFzeW5jX3JhaWQ2X3JlY292IGFz
+eW5jX21lbWNweSBhc3luY19wcSBhc3luY194b3IgYXN5bmNfdHggeG9yIHJhaWQ2X3BxIGxp
+YmNyYzMyYyBjcmMzMmNfZ2VuZXJpYyByYWlkMCBiY2FjaGUgZG1fbW9kIHNkX21vZCByYWlk
+MSBtZF9tb2QgbnZtZSBudm1lX2NvcmUgdDEwX3BpIGFzdCBjcmM2NF9yb2Nrc29mdCBkcm1f
+dnJhbV9oZWxwZXIgYWhjaSBjcmM2NCBhdGxhbnRpYyBkcm1fdHRtX2hlbHBlciBpZ2IgbGli
+YWhjaSBjcmNfdDEwZGlmIHhoY2lfcGNpIHR0bSBtYWNzZWMgZGNhIGRybV9rbXNfaGVscGVy
+IGxpYmF0YSBjcmN0MTBkaWZfZ2VuZXJpYyB4aGNpX2hjZCBjcmMzMl9wY2xtdWwgcHRwIGky
+Y19pODAxIHVzYmNvcmUgY3JjdDEwZGlmX3BjbG11bCBkcm0gbXhtX3dtaSBzY3NpX21vZCBj
+cmMzMmNfaW50ZWwgcHBzX2NvcmUgaTJjX3NtYnVzIGkyY19hbGdvX2JpdCBjcmN0MTBkaWZf
+Y29tbW9uIHVzYl9jb21tb24gc2NzaV9jb21tb24gd21pIGJ1dHRvbiBbbGFzdCB1bmxvYWRl
+ZDogYnJkXQ0KPiBrZXJuZWw6IFsxNDc4NS4yOTQ2ODhdIENSMjogMDAwMDAwMDAwMDAwMDA1
+MA0KPiBrZXJuZWw6IFsxNDc4NS4yOTQ2OTNdIC0tLVsgZW5kIHRyYWNlIDAwMDAwMDAwMDAw
+MDAwMDAgXS0tLQ0KPiBrZXJuZWw6IFsxNDc4Ny4wNTk2NzNdIFJJUDogMDAxMDpibGtfY2dy
+b3VwX2Jpb19zdGFydCsweDQ2LzB4YjANCj4ga2VybmVsOiBbMTQ3ODcuMDU5NjgyXSBDb2Rl
+OiAwMCAwMCAwZiA0NSBjMiA4OSBjNSBlOCBiOCA1YyBiZSBmZiA0OCBjNyBjNyBhZCA2ZCAx
+YSA4YSBlOCBkYyAxNCA1MyAwMCA0OCA4YiA0MyA0OCAwZiBiNyA0YiAxNCA2NSA4YiAzNSBm
+NSBhNSBkMiA3NiA0OCA2MyBkNiA8NDg+IDhiIDQwIDUwIDQ4IDAzIDA0IGQ1IGEwIDdhIDFj
+IDhhIDQ4IDYzIGQ1IGY2IGM1IDAxIDc1IDBlIDgwIGNkDQo+IGtlcm5lbDogWzE0Nzg3LjA1
+OTY4NF0gUlNQOiAwMDAwOmZmZmZhZjk1MDBkYjdjYjggRUZMQUdTOiAwMDAxMDI4Mg0KPiBr
+ZXJuZWw6IFsxNDc4Ny4wNTk2ODddIFJBWDogMDAwMDAwMDAwMDAwMDAwMCBSQlg6IGZmZmZh
+MDM1NDRkZjI4YjggUkNYOiAwMDAwMDAwMDAwMDAwMDAwDQo+IGtlcm5lbDogWzE0Nzg3LjA1
+OTY4OF0gUkRYOiAwMDAwMDAwMDAwMDAwMDA0IFJTSTogMDAwMDAwMDAwMDAwMDAwNCBSREk6
+IGZmZmZmZmZmOGExNTgyMGUNCj4ga2VybmVsOiBbMTQ3ODcuMDU5Njg5XSBSQlA6IDAwMDAw
+MDAwMDAwMDAwMDEgUjA4OiAwMDAwMDAwMDAwMDQwMDAxIFIwOTogZmZmZmFmOTUwMGRiN2Qz
+OA0KPiBrZXJuZWw6IFsxNDc4Ny4wNTk2OTFdIFIxMDogMDAwMDAwMDAwMDAwMDAwNyBSMTE6
+IGZmZmZmZmZmYzA4ZmY2YTAgUjEyOiAwMDAwMDAwMDAwMDAwMDAwDQo+IGtlcm5lbDogWzE0
+Nzg3LjA1OTY5Ml0gUjEzOiA4MDAwMDAwMDAwMDAwMDAwIFIxNDogZmZmZmEwMzU4MjcyNGIx
+YyBSMTU6IDAwMDAwMDAwMDAwMDAwMDgNCj4ga2VybmVsOiBbMTQ3ODcuMDU5NjkzXSBGUzog
+IDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZmEwNTNkZmIwMDAwMCgwMDAwKSBrbmxH
+UzowMDAwMDAwMDAwMDAwMDAwDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTY5NV0gQ1M6ICAwMDEw
+IERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KPiBrZXJuZWw6IFsx
+NDc4Ny4wNTk2OTddIENSMjogMDAwMDAwMDAwMDAwMDA1MCBDUjM6IDAwMDAwMDA0ODE5OWUw
+MDYgQ1I0OiAwMDAwMDAwMDAwMzcyNmUwDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTY5OF0gbm90
+ZTogbWQzX3JhaWQ1WzU0M10gZXhpdGVkIHdpdGggaXJxcyBkaXNhYmxlZA0KPiBrZXJuZWw6
+IFsxNDc4Ny4wNTk3ODhdIG5vdGU6IG1kM19yYWlkNVs1NDNdIGV4aXRlZCB3aXRoIHByZWVt
+cHRfY291bnQgMQ0KPiBrZXJuZWw6IFsxNDc4Ny4wNTk3OTRdIC0tLS0tLS0tLS0tLVsgY3V0
+IGhlcmUgXS0tLS0tLS0tLS0tLQ0KPiBrZXJuZWw6IFsxNDc4Ny4wNTk3OTZdIFdBUk5JTkc6
+IENQVTogNCBQSUQ6IDU0MyBhdCBrZXJuZWwvZXhpdC5jOjgxNCBkb19leGl0KzB4OGZmLzB4
+YjEwDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTgwM10gTW9kdWxlcyBsaW5rZWQgaW46IGJyZCB2
+ZXRoIHh0X2Nvbm50cmFjayB4dF9NQVNRVUVSQURFIG5mX2Nvbm50cmFja19uZXRsaW5rIHh0
+X2FkZHJ0eXBlIGJyX25ldGZpbHRlciBzbmRfc2VxX2R1bW15IHNuZF9ocnRpbWVyIHZob3N0
+X25ldCB2aG9zdCB2aG9zdF9pb3RsYiB0YXAgdHVuIGNwdWZyZXFfY29uc2VydmF0aXZlIGNw
+dWZyZXFfdXNlcnNwYWNlIGNwdWZyZXFfcG93ZXJzYXZlIGNwdWZyZXFfb25kZW1hbmQgbnZp
+ZGlhX3V2bShQTykgeGZybV91c2VyIHhmcm1fYWxnbyByZG1hX3VjbSBpYl91dmVyYnMgcmRt
+YV9jbSBpd19jbSBzY3NpX3RyYW5zcG9ydF9pc2NzaSBpYl9jbSBpYl9jb3JlIG52bWVfZmFi
+cmljcyBvdmVybGF5IG52aWRpYV9tb2Rlc2V0KFBPKSBxcnRyIGJyaWRnZSBzdHAgbGxjIGJv
+bmRpbmcgdGxzIG5mdF9sb2cgeHRfTkZMT0cgbmZuZXRsaW5rX2xvZyB4dF9nZW9pcChPKSBu
+ZnRfY2hhaW5fbmF0IHh0X25hdCBuZl9uYXQgbmZfY29ubnRyYWNrIG5mX2RlZnJhZ19pcHY2
+IG5mX2RlZnJhZ19pcHY0IHh0X3RjcHVkcCBuZnRfY29tcGF0IG5mX3RhYmxlcyBuZm5ldGxp
+bmsgYmluZm10X21pc2MgbmxzX2FzY2lpIG5sc19jcDQzNyB2ZmF0IGZhdCB4ZnMgaW50ZWxf
+cmFwbF9tc3IgaW50ZWxfcmFwbF9jb21tb24gaW50ZWxfdW5jb3JlX2ZyZXF1ZW5jeSBpbnRl
+bF91bmNvcmVfZnJlcXVlbmN5X2NvbW1vbiBpc3N0X2lmX2NvbW1vbiBuZml0IGxpYm52ZGlt
+bSBzcXVhc2hmcyB4ODZfcGtnX3RlbXBfdGhlcm1hbCBudmlkaWEoUE8pIGludGVsX3Bvd2Vy
+Y2xhbXAgY29yZXRlbXAga3ZtX2ludGVsIHpmcyhQTykga3ZtIGZ0ZGlfc2lvIHVzYnNlcmlh
+bCBzbmRfaGRhX2NvZGVjX3JlYWx0ZWsgZ2hhc2hfY2xtdWxuaV9pbnRlbCBzbmRfaGRhX2Nv
+ZGVjX2dlbmVyaWMgc25kX2hkYV9jb2RlY19oZG1pIHp1bmljb2RlKFBPKSBzbmRfaGRhX2lu
+dGVsIHp6c3RkKE8pIHNuZF9pbnRlbF9kc3BjZmcgYWVzbmlfaW50ZWwNCj4ga2VybmVsOiBb
+MTQ3ODcuMDU5ODczXSAgZWVlcGNfd21pIHNuZF9pbnRlbF9zZHdfYWNwaSB6bHVhKE8pIGNy
+eXB0b19zaW1kIGFzdXNfd21pIHNuZF9oZGFfY29kZWMgemF2bChQTykgY3J5cHRkIGlwbWlf
+c3NpZiBwbGF0Zm9ybV9wcm9maWxlIHNuZF9oZGFfY29yZSBpY3AoUE8pIHJhcGwgYmF0dGVy
+eSBzbmRfaHdkZXAgc3BhcnNlX2tleW1hcCBpbnRlbF9jc3RhdGUgemNvbW1vbihQTykgc25k
+X3BjbV9vc3MgbGVkdHJpZ19hdWRpbyB6bnZwYWlyKFBPKSBpbnRlbF91bmNvcmUgc25kX21p
+eGVyX29zcyByZmtpbGwgd21pX2Jtb2YgaW50ZWxfd21pX3RodW5kZXJib2x0IG1laV9tZSBq
+b3lkZXYgc3BsKE8pIHNoYTUxMl9zc3NlMyBzbmRfcGNtIG1laSBpb2F0ZG1hIHNoYTUxMl9n
+ZW5lcmljIGFjcGlfaXBtaSBpcG1pX3NpIGFjcGlfdGFkIGV2ZGV2IHRjcF9iYnIgc2NoX2Zx
+IHZmaW9fcGNpIHZmaW9fcGNpX2NvcmUgdmZpb192aXJxZmQgdmZpb19pb21tdV90eXBlMSB2
+ZmlvIGlycWJ5cGFzcyB2bXdnZnggc25kX3NlcV9taWRpIHNuZF9zZXFfbWlkaV9ldmVudCBz
+bmRfcmF3bWlkaSBzbmRfc2VxIHNuZF9zZXFfZGV2aWNlIHNuZF90aW1lciBzbmQgc291bmRj
+b3JlIHNnIGlwbWlfd2F0Y2hkb2cgaXBtaV9wb3dlcm9mZiBpcG1pX2RldmludGYgaXBtaV9t
+c2doYW5kbGVyIG1zciBuZnNkIGRyYmQgYXV0aF9ycGNnc3MgbHJ1X2NhY2hlIG5mc19hY2wg
+cGFycG9ydF9wYyBsb2NrZCBwcGRldiBncmFjZSBscCBwYXJwb3J0IGZ1c2Ugc3VucnBjIGxv
+b3AgZWZpX3BzdG9yZSBjb25maWdmcyBpcF90YWJsZXMgeF90YWJsZXMgYXV0b2ZzNCBleHQ0
+IGNyYzE2IG1iY2FjaGUgamJkMiBidHJmcyBibGFrZTJiX2dlbmVyaWMgenN0ZF9jb21wcmVz
+cyBlZml2YXJmcyByYWlkMTAgbXVsdGlwYXRoIGxpbmVhciB6M2ZvbGQgbHo0IGx6NF9jb21w
+cmVzcyBkbV9zbmFwc2hvdCBkbV9idWZpbyBpOTE1IGRybV9idWRkeSB2aWRlbyBkcm1fZGlz
+cGxheV9oZWxwZXIgY2VjIHJjX2NvcmUgc3JfbW9kDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTkz
+NF0gIGNkcm9tIGhpZF9nZW5lcmljIHVzYmhpZCB1YXMgaGlkIHVzYl9zdG9yYWdlIHJhaWQ0
+NTYgYXN5bmNfcmFpZDZfcmVjb3YgYXN5bmNfbWVtY3B5IGFzeW5jX3BxIGFzeW5jX3hvciBh
+c3luY190eCB4b3IgcmFpZDZfcHEgbGliY3JjMzJjIGNyYzMyY19nZW5lcmljIHJhaWQwIGJj
+YWNoZSBkbV9tb2Qgc2RfbW9kIHJhaWQxIG1kX21vZCBudm1lIG52bWVfY29yZSB0MTBfcGkg
+YXN0IGNyYzY0X3JvY2tzb2Z0IGRybV92cmFtX2hlbHBlciBhaGNpIGNyYzY0IGF0bGFudGlj
+IGRybV90dG1faGVscGVyIGlnYiBsaWJhaGNpIGNyY190MTBkaWYgeGhjaV9wY2kgdHRtIG1h
+Y3NlYyBkY2EgZHJtX2ttc19oZWxwZXIgbGliYXRhIGNyY3QxMGRpZl9nZW5lcmljIHhoY2lf
+aGNkIGNyYzMyX3BjbG11bCBwdHAgaTJjX2k4MDEgdXNiY29yZSBjcmN0MTBkaWZfcGNsbXVs
+IGRybSBteG1fd21pIHNjc2lfbW9kIGNyYzMyY19pbnRlbCBwcHNfY29yZSBpMmNfc21idXMg
+aTJjX2FsZ29fYml0IGNyY3QxMGRpZl9jb21tb24gdXNiX2NvbW1vbiBzY3NpX2NvbW1vbiB3
+bWkgYnV0dG9uIFtsYXN0IHVubG9hZGVkOiBicmRdDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk3
+MV0gQ1BVOiA0IFBJRDogNTQzIENvbW06IG1kM19yYWlkNSBUYWludGVkOiBQICAgICAgRCAg
+ICBPICAgICAgIDYuMS4wLTctYW1kNjQgIzEgIERlYmlhbiA2LjEuMjAtMg0KPiBrZXJuZWw6
+IFsxNDc4Ny4wNTk5NzNdIEhhcmR3YXJlIG5hbWU6IFN5c3RlbSBtYW51ZmFjdHVyZXIgU3lz
+dGVtIFByb2R1Y3QgTmFtZS9XUyBYMjk5IFBST19TRSwgQklPUyAzNzAxIDA1LzI0LzIwMjIN
+Cj4ga2VybmVsOiBbMTQ3ODcuMDU5OTc1XSBSSVA6IDAwMTA6ZG9fZXhpdCsweDhmZi8weGIx
+MA0KPiBrZXJuZWw6IFsxNDc4Ny4wNTk5NzddIENvZGU6IDA2IGZmIGZmIGZmIDQ4IDg5IGRm
+IGU4IDNmIDQ3IDBmIDAwIGU5IDRlIGY5IGZmIGZmIDBmIDBiIGU5IDUxIGY3IGZmIGZmIDRj
+IDg5IGU2IGJmIDA1IDA2IDAwIDAwIGU4IDA2IGViIDAwIDAwIGU5IDJhIGY4IGZmIGZmIDww
+Zj4gMGIgZTkgNzQgZjcgZmYgZmYgNDggOGIgYmIgZTAgMGIgMDAgMDAgZTggMmUgZGIgZmYg
+ZmYgNDggODUgYzANCj4ga2VybmVsOiBbMTQ3ODcuMDU5OTc4XSBSU1A6IDAwMDA6ZmZmZmFm
+OTUwMGRiN2VkOCBFRkxBR1M6IDAwMDEwMjg2DQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk4MF0g
+UkFYOiAwMDAwMDAwMDAwMDAwMDAwIFJCWDogZmZmZmEwMzRlNDJjODAwMCBSQ1g6IDAwMDAw
+MDAwMDAwMDAwMDANCj4ga2VybmVsOiBbMTQ3ODcuMDU5OTgxXSBSRFg6IDAwMDAwMDAwMDAw
+MDAwMDEgUlNJOiAwMDAwMDAwMDAwMDAyNzEwIFJESTogMDAwMDAwMDBmZmZmZmZmZg0KPiBr
+ZXJuZWw6IFsxNDc4Ny4wNTk5ODNdIFJCUDogZmZmZmEwMzRlNDJlMDAwMCBSMDg6IDAwMDAw
+MDAwMDAwMDAwMDAgUjA5OiBmZmZmYWY5NTAwZGI3ZGQwDQo+IGtlcm5lbDogWzE0Nzg3LjA1
+OTk4NF0gUjEwOiAwMDAwMDAwMDAwMDAwMDAzIFIxMTogZmZmZmEwNTQ1ZmY2ZWIyOCBSMTI6
+IDAwMDAwMDAwMDAwMDAwMDkNCj4ga2VybmVsOiBbMTQ3ODcuMDU5OTg1XSBSMTM6IGZmZmZh
+MDM1ODI3YzVhYzAgUjE0OiAwMDAwMDAwMDAwMDAwMDAwIFIxNTogMDAwMDAwMDAwMDAwMDAw
+MA0KPiBrZXJuZWw6IFsxNDc4Ny4wNTk5ODZdIEZTOiAgMDAwMDAwMDAwMDAwMDAwMCgwMDAw
+KSBHUzpmZmZmYTA1M2RmYjAwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCj4g
+a2VybmVsOiBbMTQ3ODcuMDU5OTg4XSBDUzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1Iw
+OiAwMDAwMDAwMDgwMDUwMDMzDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk4OV0gQ1IyOiAwMDAw
+MDAwMDAwMDAwMDUwIENSMzogMDAwMDAwMDQ4MTk5ZTAwNiBDUjQ6IDAwMDAwMDAwMDAzNzI2
+ZTANCj4ga2VybmVsOiBbMTQ3ODcuMDU5OTkxXSBDYWxsIFRyYWNlOg0KPiBrZXJuZWw6IFsx
+NDc4Ny4wNTk5OTNdICA8VEFTSz4NCj4ga2VybmVsOiBbMTQ3ODcuMDU5OTk2XSAgbWFrZV90
+YXNrX2RlYWQrMHg4ZC8weDkwDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk5OV0gIHJld2luZF9z
+dGFja19hbmRfbWFrZV9kZWFkKzB4MTcvMHgyMA0KPiBrZXJuZWw6IFsxNDc4Ny4wNjAwMDNd
+IFJJUDogMDAwMDoweDANCj4ga2VybmVsOiBbMTQ3ODcuMDYwMDA3XSBDb2RlOiBVbmFibGUg
+dG8gYWNjZXNzIG9wY29kZSBieXRlcyBhdCAweGZmZmZmZmZmZmZmZmZmZDYuDQo+IGtlcm5l
+bDogWzE0Nzg3LjA2MDAwOF0gUlNQOiAwMDAwOjAwMDAwMDAwMDAwMDAwMDAgRUZMQUdTOiAw
+MDAwMDAwMCBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDAwMA0KPiBrZXJuZWw6IFsxNDc4Ny4w
+NjAwMTBdIFJBWDogMDAwMDAwMDAwMDAwMDAwMCBSQlg6IDAwMDAwMDAwMDAwMDAwMDAgUkNY
+OiAwMDAwMDAwMDAwMDAwMDAwDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk4MV0gUkRYOiAwMDAw
+MDAwMDAwMDAwMDAxIFJTSTogMDAwMDAwMDAwMDAwMjcxMCBSREk6IDAwMDAwMDAwZmZmZmZm
+ZmYNCj4ga2VybmVsOiBbMTQ3ODcuMDU5OTgzXSBSQlA6IGZmZmZhMDM0ZTQyZTAwMDAgUjA4
+OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogZmZmZmFmOTUwMGRiN2RkMA0KPiBrZXJuZWw6IFsx
+NDc4Ny4wNTk5ODRdIFIxMDogMDAwMDAwMDAwMDAwMDAwMyBSMTE6IGZmZmZhMDU0NWZmNmVi
+MjggUjEyOiAwMDAwMDAwMDAwMDAwMDA5DQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk4NV0gUjEz
+OiBmZmZmYTAzNTgyN2M1YWMwIFIxNDogMDAwMDAwMDAwMDAwMDAwMCBSMTU6IDAwMDAwMDAw
+MDAwMDAwMDANCj4ga2VybmVsOiBbMTQ3ODcuMDU5OTg2XSBGUzogIDAwMDAwMDAwMDAwMDAw
+MDAoMDAwMCkgR1M6ZmZmZmEwNTNkZmIwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAw
+MDAwDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk4OF0gQ1M6ICAwMDEwIERTOiAwMDAwIEVTOiAw
+MDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KPiBrZXJuZWw6IFsxNDc4Ny4wNTk5ODldIENS
+MjogMDAwMDAwMDAwMDAwMDA1MCBDUjM6IDAwMDAwMDA0ODE5OWUwMDYgQ1I0OiAwMDAwMDAw
+MDAwMzcyNmUwDQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk5MV0gQ2FsbCBUcmFjZToNCj4ga2Vy
+bmVsOiBbMTQ3ODcuMDU5OTkzXSAgPFRBU0s+DQo+IGtlcm5lbDogWzE0Nzg3LjA1OTk5Nl0g
+IG1ha2VfdGFza19kZWFkKzB4OGQvMHg5MA0KPiBrZXJuZWw6IFsxNDc4Ny4wNTk5OTldICBy
+ZXdpbmRfc3RhY2tfYW5kX21ha2VfZGVhZCsweDE3LzB4MjANCj4ga2VybmVsOiBbMTQ3ODcu
+MDYwMDAzXSBSSVA6IDAwMDA6MHgwDQo+IGtlcm5lbDogWzE0Nzg3LjA2MDAwN10gQ29kZTog
+VW5hYmxlIHRvIGFjY2VzcyBvcGNvZGUgYnl0ZXMgYXQgMHhmZmZmZmZmZmZmZmZmZmQ2Lg0K
+PiBrZXJuZWw6IFsxNDc4Ny4wNjAwMDhdIFJTUDogMDAwMDowMDAwMDAwMDAwMDAwMDAwIEVG
+TEFHUzogMDAwMDAwMDAgT1JJR19SQVg6IDAwMDAwMDAwMDAwMDAwMDANCj4ga2VybmVsOiBb
+MTQ3ODcuMDYwMDEwXSBSQVg6IDAwMDAwMDAwMDAwMDAwMDAgUkJYOiAwMDAwMDAwMDAwMDAw
+MDAwIFJDWDogMDAwMDAwMDAwMDAwMDAwMA0KPiBrZXJuZWw6IFsxNDc4Ny4wNjAwMTFdIFJE
+WDogMDAwMDAwMDAwMDAwMDAwMCBSU0k6IDAwMDAwMDAwMDAwMDAwMDAgUkRJOiAwMDAwMDAw
+MDAwMDAwMDAwDQo+IGtlcm5lbDogWzE0Nzg3LjA2MDAxMl0gUkJQOiAwMDAwMDAwMDAwMDAw
+MDAwIFIwODogMDAwMDAwMDAwMDAwMDAwMCBSMDk6IDAwMDAwMDAwMDAwMDAwMDANCj4ga2Vy
+bmVsOiBbMTQ3ODcuMDYwMDEzXSBSMTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAw
+MDAwMDAwMDAwIFIxMjogMDAwMDAwMDAwMDAwMDAwMA0KPiBrZXJuZWw6IFsxNDc4Ny4wNjAw
+MTRdIFIxMzogMDAwMDAwMDAwMDAwMDAwMCBSMTQ6IDAwMDAwMDAwMDAwMDAwMDAgUjE1OiAw
+MDAwMDAwMDAwMDAwMDAwDQo+IGtlcm5lbDogWzE0Nzg3LjA2MDAxN10gIDwvVEFTSz4NCj4g
+a2VybmVsOiBbMTQ3ODcuMDYwMDE4XSAtLS1bIGVuZCB0cmFjZSAwMDAwMDAwMDAwMDAwMDAw
+IF0tLS0NCj4gDQo+IEZvciBub3cgSSd2ZSByZXZlcnRlZCB0byBhbiBpbnRlcm5hbCBiaXRt
+YXAgZm9yIHRoZSByYWlkNSBhbmQgYWxsIGlzIHN0YWJsZSBhZ2Fpbi4gSWYgeW91IG5lZWQg
+bW9yZSBpbmZvcm1hdGlvbiwgcGxlYXNlIGxldCBtZSBrbm93IQ0KPiANCj4gS2luZCByZWdh
+cmRzLA0KPiANCj4gTWFhcnRlbg0KPiANCj4gLg0KPiANCg==
 
