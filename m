@@ -2,100 +2,87 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45E50C7EE22
-	for <linux-raid@archiver.kernel.org>; Tue,  9 May 2023 17:27:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 087B8C77B75
+	for <linux-raid@archiver.kernel.org>; Tue,  9 May 2023 20:36:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233354AbjEIR1w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 9 May 2023 13:27:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41840 "EHLO
+        id S229701AbjEIUgi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 9 May 2023 16:36:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230345AbjEIR1v (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 9 May 2023 13:27:51 -0400
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1623E1BE6
-        for <linux-raid@vger.kernel.org>; Tue,  9 May 2023 10:27:49 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1683653259; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=eRn5TG+iDu5CA7F01RfVicZHOV87r4Mv+CphMPFW36LWrl++RD8gXFWO5Xv3OeiciPLBll/8P2frQcHkYo2euVKQC7a9JQCOtOcjItpVaaoLa8qCEP46xGh1Hr/RqY/Phuf4kNNlq0MnLbVCJwuweFP1Zb2iBU+YpU62J40LTAI=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1683653259; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=ETfBYGyX04fsmKaor6v6WUKDCFZShJ//PqH8HZbWa/k=; 
-        b=kDPW8dnZUmUo0CCI46Gp3KiWwUITKYqxb96gxUlT0EiKUCpeDTphwHeTxuadC/Dkr6YfDeTO0Q4pSzh4P/0ukL/ZHR7IXu/uJlCcEvi1oTDVt7sf9MWkygTczmr7VSqnoGmjEuy9xIlGEQmbIEPB5vUO8DX+rsES2KnD7TqLNfw=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [IPV6:2620:10d:c0a8:1102::1004] (163.114.130.3 [163.114.130.3]) by mx.zoho.eu
-        with SMTPS id 1683653256609375.2922068755561; Tue, 9 May 2023 19:27:36 +0200 (CEST)
-Message-ID: <b66f7005-754a-2f4c-f750-a9a62835ddfe@trained-monkey.org>
-Date:   Tue, 9 May 2023 13:27:34 -0400
+        with ESMTP id S229734AbjEIUgh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 9 May 2023 16:36:37 -0400
+X-Greylist: delayed 1070 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 09 May 2023 13:36:17 PDT
+Received: from relay-b02.edpnet.be (relay-b02.edpnet.be [212.71.1.222])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59B244C3E
+        for <linux-raid@vger.kernel.org>; Tue,  9 May 2023 13:36:16 -0700 (PDT)
+X-ASG-Debug-ID: 1683663503-15c43379987553e0001-LoH05x
+Received: from atom ([213.219.153.70]) by relay-b02.edpnet.be with ESMTP id ZxqCEJ01DbKDc1I4; Tue, 09 May 2023 22:18:23 +0200 (CEST)
+X-Barracuda-Envelope-From: johan@verrept.eu
+X-Barracuda-Effective-Source-IP: UNKNOWN[213.219.153.70]
+X-Barracuda-Apparent-Source-IP: 213.219.153.70
+Received: from [192.168.1.199] (unknown [192.168.1.199])
+        by atom (Postfix) with ESMTPSA id 6966420938DF;
+        Tue,  9 May 2023 22:18:23 +0200 (CEST)
+Message-ID: <753b096d-5dfc-3c47-eee4-07f1e4931b7b@verrept.eu>
+Date:   Tue, 9 May 2023 22:18:23 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: mdadm minimum kernel version requirements?
+ Thunderbird/102.10.0
+Subject: Re: Raid5 to raid6 grow interrupted, mdadm hangs on assemble command
 Content-Language: en-US
-To:     NeilBrown <neilb@suse.de>
-Cc:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-References: <e8ed86bb-4162-7d8e-ece9-eb75e045bcc5@trained-monkey.org>
- <168116364433.24821.9557577764628245206@noble.neil.brown.name>
- <9bfd76c4-3775-4ba6-10c3-ac32b5389f63@trained-monkey.org>
- <168357984365.26026.8909042734026812929@noble.neil.brown.name>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <168357984365.26026.8909042734026812929@noble.neil.brown.name>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+X-ASG-Orig-Subj: Re: Raid5 to raid6 grow interrupted, mdadm hangs on assemble command
+To:     Yu Kuai <yukuai1@huaweicloud.com>, Jove <jovetoo@gmail.com>
+Cc:     Wol <antlists@youngman.org.uk>, linux-raid@vger.kernel.org,
+        "yukuai (C)" <yukuai3@huawei.com>, songliubraving@meta.com,
+        Logan Gunthorpe <logang@deltatee.com>
+References: <CAFig2csUV2QiomUhj_t3dPOgV300dbQ6XtM9ygKPdXJFSH__Nw@mail.gmail.com>
+ <63d92097-5299-2ae8-9697-768c52678578@huaweicloud.com>
+ <CAFig2ct4BJZ0A9BKuXn8RM71+KrUzB8vKGQY0fSjNZiNenQZBg@mail.gmail.com>
+ <c71c8381-f26e-f7de-c6f5-3c4411f08b15@huaweicloud.com>
+ <d159161d-a5eb-8790-49c4-b7013e66ba65@youngman.org.uk>
+ <6f391690-992f-1196-3109-6d422b3522f7@huaweicloud.com>
+ <CAFig2ct+ZbHYEho7p9eubaz-kozGR+GkSJ1tVL+LGaciUBixyw@mail.gmail.com>
+ <bc698b03-446b-a42e-cf0c-5c1b3cb62559@huaweicloud.com>
+ <CAFig2csN8qSEafSehM5oN-kO3FsK=6+vvyEeiYcbvqRkmoiN7Q@mail.gmail.com>
+ <5862fb1d-33e0-acb1-d740-dd6fda27eaf4@huaweicloud.com>
+From:   Johan Verrept <johan@verrept.eu>
+In-Reply-To: <5862fb1d-33e0-acb1-d740-dd6fda27eaf4@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Barracuda-Connect: UNKNOWN[213.219.153.70]
+X-Barracuda-Start-Time: 1683663503
+X-Barracuda-URL: https://212.71.1.222:443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at edpnet.be
+X-Barracuda-Scan-Msg-Size: 576
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Spam-Score: 0.00
+X-Barracuda-Spam-Status: No, SCORE=0.00 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=7.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.108547
+        Rule breakdown below
+         pts rule name              description
+        ---- ---------------------- --------------------------------------------------
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 5/8/23 17:04, NeilBrown wrote:
-> On Tue, 09 May 2023, Jes Sorensen wrote:
->> On 4/10/23 17:54, NeilBrown wrote:
->>> On Tue, 11 Apr 2023, Jes Sorensen wrote:
->>>> Hi,
->>>>
->>>> I bumped the minimum kernel version required for mdadm to 2.6.32.
->>>>
->>>> Should we drop support for anything prior to 3.10 at this point, since
->>>> RHEL7 is 3.10 based and SLES12 seems to be 3.12 based.
->>>>
->>>> Thoughts?
->>>
->>> When you talk about changing the required kernel version, I would find
->>> it helpful if you at least mention what actual kernel features you now
->>> want to depend on - at least the more significant ones.
->>>
->>> Aside from features, I'd rather think about how old the kernel is.
->>> 2.6.32 is over 13 years old.
->>> 3.10 is very nearly 10 years old.
->>> If there is something significant that landed in 3.10 that we want to
->>> depend on, then requiring that seems perfectly reasonable.
->>>
->>> I think the oldest SLE kernel that you might care about would be 4.12
->>> (SLE12-SP5 - nearly 6 years old).  Anyone using an older SLE release
->>> values stability over new functionality and is not going to be trialling
->>> a new mdadm.
->>
->> Hi Neil,
->>
->> I guess my mindset is more that I don't expect RHEL/SLES grade distros
->> to fully upgrade mdadm, but I do see them backporting changes occasionally.
->>
->> I was mostly basing my question on what I see us testing for in the
->> actual code. Dropping support for anything prior to SLES 12 (4.12) and
->> RHEL 8 (kernel 4.18) seems fair.
-> 
-> So where you say "dropping support" you don't actually mean removing any
-> code, but only that you will document somewhere that no effort will be
-> made support, or test against, earlier kernels. Is that correct?
-> Sounds reasonable to me.
 
-There may be a few removals, or at least checks for linux kernel being
-more recent than X. Otherwise yes, not planning on proactively ripping
-anything out.
+Hi Kuai,
 
-Cheers,
-Jes
+> Here is the first verion of the fixed patch, I fail the io that is
+> waiting for reshape while reshape can't make progress. I tested in my
+> VM and it works as I expected. Can you give it a try to see if mdadm
+> can still assemble? 
 
+Assemble seems to work fine and the reshape resumed.
+
+I see this error appearing:
+
+     md/raid456:md0: array is suspended or not read write, io accross 
+reshape position failed, please try again after reshape.
+
+ From what I can see in your patch, this is what is expected.
+
+Best regards,
+
+     Johan
 
