@@ -2,103 +2,119 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79DCBC7EE22
-	for <linux-raid@archiver.kernel.org>; Thu, 11 May 2023 09:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0925C7EE22
+	for <linux-raid@archiver.kernel.org>; Thu, 11 May 2023 13:51:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237885AbjEKJ5e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 11 May 2023 05:57:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42278 "EHLO
+        id S238032AbjEKNvM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 11 May 2023 09:51:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237847AbjEKJ45 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 May 2023 05:56:57 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25702D07B
-        for <linux-raid@vger.kernel.org>; Thu, 11 May 2023 02:56:43 -0700 (PDT)
+        with ESMTP id S236577AbjEKNvL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 May 2023 09:51:11 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8900D9
+        for <linux-raid@vger.kernel.org>; Thu, 11 May 2023 06:51:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683799003; x=1715335003;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
+  t=1683813069; x=1715349069;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=RJS0GeCAIh0DhOi6LyspsO3iorZnfKWXKkRCg2T8kNM=;
-  b=eTJiBlsu3Kt4hjETBE4QGdqwMtFFIn9oXJpYR7PYhMWeORiPlF1SJrnS
-   e3ejlQYsdpeL+fgaX5PRVbMePJsfp/T1qnsTF7VfUn4Q9m/56+BxQthYS
-   toooVlkN93VH+p1m820S7TcXH2RhH18XejH0xpxgDqdD8bTqvtMetKHwF
-   eTdeaCptFq8oTDMRLIde5wYDE8JoW14y8cghkpXNYylTfzL7cUEeaFDgN
-   IAFbSZdMsc6ylJG5KXNAxr5lvNRHgEkSBOJoi2Qee1lKn4t+ciPIUkzcW
-   QPHsy0dAeQ1QVKxbC4b811pKyPCTBzf49V3HsJUjF+9oDAPpZzE6uN9KL
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10706"; a="334936779"
+  bh=gVejCnkEjtFBMOxPgpjeG6znbJ1c0sSR74WVPZREqlg=;
+  b=CE5mqI2V6zE+UsWTDC4+AjrFiY1y3gX6qRqmm+gubPuAF5urnPij7ggY
+   87DKm989AFhBJufQYtr3L8TEZOztjJkVMP0+c7aGaFsqAPzPNck7+pbLb
+   ybJDOMYg4zzcMzVS2sd3Wfti+A9uHhqIFBOiOWuZZFKGRNF37zMzkkNLb
+   NywbDBkG38A99gJuakp043czs/MIet/+IVfd5oYt5dHinmShbkUmcUmWw
+   3RT7CWjJTUsIbMnGWVzezeVtXmaE496DkuMJqaahOtgetLcbDHqhJSssb
+   v/xOtrc4colh3uVb0oE9LvsDnJm7dxrrrxnKnGOnEvWoswX8pkOlz75y2
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10707"; a="352730397"
 X-IronPort-AV: E=Sophos;i="5.99,266,1677571200"; 
-   d="scan'208";a="334936779"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2023 02:54:23 -0700
+   d="scan'208";a="352730397"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2023 06:48:21 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10706"; a="946073705"
+X-IronPort-AV: E=McAfee;i="6600,9927,10707"; a="699728991"
 X-IronPort-AV: E=Sophos;i="5.99,266,1677571200"; 
-   d="scan'208";a="946073705"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.203])
-  by fmsmga006.fm.intel.com with ESMTP; 11 May 2023 02:54:22 -0700
-From:   Kinga Tanska <kinga.tanska@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH v2 2/2] platform-intel: limit guid length
-Date:   Thu, 11 May 2023 04:55:13 +0200
-Message-Id: <20230511025513.13783-3-kinga.tanska@intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20230511025513.13783-1-kinga.tanska@intel.com>
-References: <20230511025513.13783-1-kinga.tanska@intel.com>
+   d="scan'208";a="699728991"
+Received: from bkucman-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.0.38])
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2023 06:48:12 -0700
+Date:   Thu, 11 May 2023 15:48:07 +0200
+From:   Blazej Kucman <blazej.kucman@linux.intel.com>
+To:     miaoguanqin <miaoguanqin@huawei.com>
+Cc:     Jes Sorensen <jes@trained-monkey.org>,
+        Martin Wilck <mwilck@suse.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>, <colyli@suse.de>,
+        <linux-raid@vger.kernel.org>, linfeilong <linfeilong@huawei.com>,
+        <louhongxiang@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
+Subject: Re: [QUESTION]mdadm4.1 upgrade to mdadm4.2,mdmonitor services
+ failed to start if no raid in environment
+Message-ID: <20230511154409.00002c8c@linux.intel.com>
+In-Reply-To: <1c85276f-b44a-07f1-dd34-b853c5f7529f@huawei.com>
+References: <1c85276f-b44a-07f1-dd34-b853c5f7529f@huawei.com>
+Organization: intel
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Moving GUID_STR_MAX to header to use it as
-a length limitation for snprintf function.
+On Thu, 11 May 2023 15:56:31 +0800
+miaoguanqin <miaoguanqin@huawei.com> wrote:
 
-Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
----
- platform-intel.c | 3 ---
- platform-intel.h | 5 ++++-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+> Hi
+>   Here we meet a question. After we upgrade mdadm from 4.1 to 4.2, we 
+> execute :
+>      systemctl start mdmonitor
+> the mdmonitor service failed to start when no raid device in 
+> environment. error message are as follows:
+> 
+> mdmonitor.service - MD array monitor
+>       Loaded: loaded (/usr/lib/systemd/system/mdmonitor.service; 
+> enabled; vendor preset: enabled)
+>       Active: failed (Result: protocol) since Thu 2023-05-11 10:52:32 
+> CST; 5s ago
+>      Process: 999741 ExecStartPre=mkdir -p /run/mdadm (code=exited, 
+> status=0/SUCCESS)
+>      Process: 999743 ExecStart=/sbin/mdadm --monitor
+> $MDADM_MONITOR_ARGS -f --pid-file=/run/mdadm/mdadm.pid (c>
+> 
+> May 11 10:52:32 localhost.localdomain systemd[1]: Starting MD array 
+> monitor...
+> May 11 10:52:32 localhost.localdomain systemd[1]: mdmonitor.service: 
+> Can't open PID file /run/mdadm/mdadm.pid>
+> May 11 10:52:32 localhost.localdomain systemd[1]: mdmonitor.service: 
+> Failed with result 'protocol'.
+> May 11 10:52:32 localhost.localdomain systemd[1]: Failed to start MD 
+> array monitor.
+> 
+> In the mdmonitor service file, type is set to forking and the PIDFILE 
+> field is set. The systemd detection process is as follows:
+> (1)when the parent process exits, a signal is sent to systemd
+> (2)systemd wakes up and checks whether pidfile exists by PIDFILE
+> field. (3)If the pidfile file does not exist, the service status is
+> set to fail. In function Monitor code logic, after the parent process
+> creates a pidfile, before systemd detects the pidfile, the pidfile is
+> deleted from the child process. As a result, the systemd cannot
+> detect the pidfile and sets the service status to fail.
+> 
+> It is a problem for user, because the mdmonitor service status is
+> fail. If there is no RAID device in the environment, We want the
+> service status is expected to be inactive after the service is
+> started. Can you have any advice for this problem ?
 
-diff --git a/platform-intel.c b/platform-intel.c
-index eb6e1b7e..ef90c3fd 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -510,9 +510,6 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
- 	return get_orom_by_device_id(hba->dev_id);
- }
- 
--#define GUID_STR_MAX	37  /* according to GUID format:
--			     * xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" */
--
- #define EFI_GUID(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7) \
- ((struct efi_guid) \
- {{ (a) & 0xff, ((a) >> 8) & 0xff, ((a) >> 16) & 0xff, ((a) >> 24) & 0xff, \
-diff --git a/platform-intel.h b/platform-intel.h
-index 2c0f4e39..ba97fb04 100644
---- a/platform-intel.h
-+++ b/platform-intel.h
-@@ -19,6 +19,9 @@
- #include <asm/types.h>
- #include <strings.h>
- 
-+/* according to GUID format: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" */
-+#define GUID_STR_MAX	37
-+
- /* The IMSM Capability (IMSM AHCI and ISCU OROM/EFI variable) Version Table definition */
- struct imsm_orom {
- 	__u8 signature[4];
-@@ -229,7 +232,7 @@ extern struct orom_entry *orom_entries;
- 
- static inline char *guid_str(char *buf, struct efi_guid guid)
- {
--	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-+	snprintf(buf, GUID_STR_MAX, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
- 		 guid.b[3], guid.b[2], guid.b[1], guid.b[0],
- 		 guid.b[5], guid.b[4], guid.b[7], guid.b[6],
- 		 guid.b[8], guid.b[9], guid.b[10], guid.b[11],
--- 
-2.26.2
+Hi,
 
+I do not know if the service should be in this state for such a case,
+but the start of the mdmonitor service is also forced by udev rule
+udev-md-raid-arrays.rules
+
+# ENV{MD_LEVEL}=="raid[1-9]*", ENV{SYSTEMD_WANTS}+="mdmonitor.service"
+
+so if the service is failed, it will be started anyway after creating
+a new RAID.
+
+Regards,
+Blazej
