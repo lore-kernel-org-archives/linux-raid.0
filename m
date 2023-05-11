@@ -2,68 +2,88 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5794C77B7D
-	for <linux-raid@archiver.kernel.org>; Wed, 10 May 2023 06:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A97CC7EE22
+	for <linux-raid@archiver.kernel.org>; Thu, 11 May 2023 07:56:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234959AbjEJGvQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 10 May 2023 02:51:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50574 "EHLO
+        id S237486AbjEKH4o (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 11 May 2023 03:56:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235908AbjEJGvP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 May 2023 02:51:15 -0400
-Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32DC0270B
-        for <linux-raid@vger.kernel.org>; Tue,  9 May 2023 23:51:13 -0700 (PDT)
-Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4QGQfQ0nr1zXKh;
-        Wed, 10 May 2023 08:51:05 +0200 (CEST)
-Message-ID: <80eebba8-5506-f7f5-721e-876f39f1ebc9@thelounge.net>
-Date:   Wed, 10 May 2023 08:51:04 +0200
+        with ESMTP id S237502AbjEKH4g (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 May 2023 03:56:36 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E5C98690
+        for <linux-raid@vger.kernel.org>; Thu, 11 May 2023 00:56:35 -0700 (PDT)
+Received: from kwepemi500002.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QH4063H7pzLnsg;
+        Thu, 11 May 2023 15:53:42 +0800 (CST)
+Received: from [10.174.179.167] (10.174.179.167) by
+ kwepemi500002.china.huawei.com (7.221.188.171) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Thu, 11 May 2023 15:56:32 +0800
+Message-ID: <1c85276f-b44a-07f1-dd34-b853c5f7529f@huawei.com>
+Date:   Thu, 11 May 2023 15:56:31 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: how to set md device to specific group at boot
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.3
 Content-Language: en-US
-To:     Benjammin2068 <benjammin2068@gmail.com>,
-        Linux-RAID <linux-raid@vger.kernel.org>
-References: <cb1e4326-f5bd-c3c1-f262-d0106c19cb88@gmail.com>
- <455d9008-b04a-6645-edae-633bc4c01c18@gmail.com>
-From:   Reindl Harald <h.reindl@thelounge.net>
-Organization: the lounge interactive design
-In-Reply-To: <455d9008-b04a-6645-edae-633bc4c01c18@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Jes Sorensen <jes@trained-monkey.org>,
+        Martin Wilck <mwilck@suse.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>, <colyli@suse.de>,
+        <linux-raid@vger.kernel.org>
+CC:     linfeilong <linfeilong@huawei.com>, <louhongxiang@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
+From:   miaoguanqin <miaoguanqin@huawei.com>
+Subject: [QUESTION]mdadm4.1 upgrade to mdadm4.2,mdmonitor services failed to
+ start if no raid in environment
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.167]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500002.china.huawei.com (7.221.188.171)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
+Hi
+  Here we meet a question. After we upgrade mdadm from 4.1 to 4.2, we 
+execute :
+     systemctl start mdmonitor
+the mdmonitor service failed to start when no raid device in 
+environment. error message are as follows:
 
-Am 10.05.23 um 03:57 schrieb Benjammin2068:
-> On 5/9/23 8:25 PM, Benjammin2068 wrote:
-> 
->> Hey all,
->>
->> I can't seem to find the answer (looking all around via google)...
->>
->> I have a couple of RAID drives (/dev/md123, /dev/md124) I set up a 
->> long time ago (storage arrays) by hand... And have worked fine.
->>
->> Tthey mount as root:root but I need them as root:disk
+mdmonitor.service - MD array monitor
+      Loaded: loaded (/usr/lib/systemd/system/mdmonitor.service; 
+enabled; vendor preset: enabled)
+      Active: failed (Result: protocol) since Thu 2023-05-11 10:52:32 
+CST; 5s ago
+     Process: 999741 ExecStartPre=mkdir -p /run/mdadm (code=exited, 
+status=0/SUCCESS)
+     Process: 999743 ExecStart=/sbin/mdadm --monitor $MDADM_MONITOR_ARGS 
+-f --pid-file=/run/mdadm/mdadm.pid (c>
 
-normally the filesystem defines owner/group
+May 11 10:52:32 localhost.localdomain systemd[1]: Starting MD array 
+monitor...
+May 11 10:52:32 localhost.localdomain systemd[1]: mdmonitor.service: 
+Can't open PID file /run/mdadm/mdadm.pid>
+May 11 10:52:32 localhost.localdomain systemd[1]: mdmonitor.service: 
+Failed with result 'protocol'.
+May 11 10:52:32 localhost.localdomain systemd[1]: Failed to start MD 
+array monitor.
 
->> I can't seem to find where to change that.
+In the mdmonitor service file, type is set to forking and the PIDFILE 
+field is set. The systemd detection process is as follows:
+(1)when the parent process exits, a signal is sent to systemd
+(2)systemd wakes up and checks whether pidfile exists by PIDFILE field.
+(3)If the pidfile file does not exist, the service status is set to fail.
+In function Monitor code logic, after the parent process creates a 
+pidfile, before systemd detects the pidfile, the pidfile is deleted from 
+the child process. As a result, the systemd cannot detect the pidfile 
+and sets the service status to fail.
 
-what about uid=,gid= in the fstab?
-works at least for vfat/sshfs
-
-> The arrays I made weren't explicitly listed -- AUTO was assembling them
-
-that's obvious by /dev/md123 and make sure you rebuild that initrd to 
-contain the changed /etc/mdadm.conf
-
+It is a problem for user, because the mdmonitor service status is fail.
+If there is no RAID device in the environment, We want the service 
+status is expected to be inactive after the service is started. Can you 
+have any advice for this problem ?
