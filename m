@@ -2,222 +2,78 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22C22C7EE23
-	for <linux-raid@archiver.kernel.org>; Thu, 11 May 2023 17:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6891C77B7F
+	for <linux-raid@archiver.kernel.org>; Fri, 12 May 2023 01:58:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238793AbjEKRGs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 11 May 2023 13:06:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44884 "EHLO
+        id S239748AbjELB66 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 11 May 2023 21:58:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229756AbjEKRGr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 May 2023 13:06:47 -0400
-Received: from wout4-smtp.messagingengine.com (wout4-smtp.messagingengine.com [64.147.123.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84932FA;
-        Thu, 11 May 2023 10:06:45 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailout.west.internal (Postfix) with ESMTP id CD5CB32008C3;
-        Thu, 11 May 2023 13:06:44 -0400 (EDT)
-Received: from imap50 ([10.202.2.100])
-  by compute5.internal (MEProxy); Thu, 11 May 2023 13:06:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        colorremedies.com; h=cc:content-type:content-type:date:date:from
-        :from:in-reply-to:message-id:mime-version:reply-to:sender
-        :subject:subject:to:to; s=fm1; t=1683824804; x=1683911204; bh=A5
-        jTFtJOtctoZaxC3gTjHWmQRsjq8+d+7S7Z9ZyMZY8=; b=kUR9vThFK6NnPQWCgv
-        si0KhvA4LvM7qfHTBtgyuOzVLZusvKggoSM9/8Ox6o6FKe6/USSgZbTvQK/t/Rgr
-        Vd04+To7BxOPY38DNyOTEWCBa/bUh2tRgaiIIG5VBUjQsvZgLWryXq5BqJCdtSPT
-        KAmyQWxxiBWX/jOcr7LSToHUENfGpXyZcdDzoGkBEyh32UNNHbmRhg2WN4UaiCRc
-        sRMHjvmnFsHX/5cfWZw/lzXbEXHtRGgJBITNLf/GI/gBh4dCE7KElGAZQTH4NZPg
-        S6ye08GV4py0G29GmkVBzn4RNodABb2qfpSCVtf/TjJHJgHYuCS/iQrbvtUa9Oky
-        JNMg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:message-id
-        :mime-version:reply-to:sender:subject:subject:to:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-        1683824804; x=1683911204; bh=A5jTFtJOtctoZaxC3gTjHWmQRsjq8+d+7S7
-        Z9ZyMZY8=; b=hSCBN13IeyVjF6iIdaRrgVfQnSHE1/Wi2jmQqFsgNTJzgtlvc3U
-        5BRIDE8TineOa0odDSb7JQFhOpcziJiUI2HrhKRqI+OBFcBtMgxw923JRnhSMqSZ
-        kbxOS7zdolEGp2oL8QBg6WvAwEZ7t0UUdqk1MAFnFwMWknYqjvBYXnQJkQxVNYJ/
-        04hv5Vtp7sCU2gIe5ETRWGNTltS4/wE5IJG0Qh7bSreRyAM932CuV6Vsa8Ah0LrY
-        f1KmILe8Qq6LHYnwzMto1bAcVibqWIlL2DU9b9oDwxtjQW7v3mFlBQd3rUAzgn64
-        Yn0yyQgbzSyl9RlUfVDz4Go3WPVArSzXWGA==
-X-ME-Sender: <xms:pCBdZFa9NvYswapJocfqu6ZX0M5Sn1E8FtTlD6GH9I35l20B3yGmFw>
-    <xme:pCBdZMb9p2o_zmkgl7nxPI2k9KLD8O0iaoBhzgEdpRBvyjg2dkJ_3lotP7kcze7F8
-    gx9mhRqYfVy9fJ4syM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeegkedguddutdcutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
-    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
-    enucfjughrpefofgggkfffhffvufgtsehttdertderredtnecuhfhrohhmpedfvehhrhhi
-    shcuofhurhhphhihfdcuoehlihhsthhssegtohhlohhrrhgvmhgvughivghsrdgtohhmqe
-    enucggtffrrghtthgvrhhnpeeffeeltdejheefudetjedvleffvdevieegueegffdvffev
-    ffevkeeivdfhkeeikeenucffohhmrghinheprhgvughhrghtrdgtohhmnecuvehluhhsth
-    gvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheplhhishhtshestgholhho
-    rhhrvghmvgguihgvshdrtghomh
-X-ME-Proxy: <xmx:pCBdZH9Jb_UrRPk52bHxznXhJWps41v-UwZ64qxfgfCL1CvAlWEnLw>
-    <xmx:pCBdZDrRYaQxyUjA5k3ZppLZ4_tgKoED3f0XPEbjNVDxUcUZUPDLBQ>
-    <xmx:pCBdZAr2W0l6UpCdY_wLSqocw7QhLa_naA8K1UprNXJyx1TGlDRWTA>
-    <xmx:pCBdZNAJSFBppXG1Z50bsRltM2fxuHkXaUY529LMuRXf4uoJU6-3Ng>
-Feedback-ID: i06494636:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id F42061700168; Thu, 11 May 2023 13:06:43 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-415-gf2b17fe6c3-fm-20230503.001-gf2b17fe6
-Mime-Version: 1.0
-Message-Id: <715c18c5-ee46-41e1-a115-203c88335e50@app.fastmail.com>
-Date:   Thu, 11 May 2023 13:06:22 -0400
-From:   "Chris Murphy" <lists@colorremedies.com>
-To:     "Btrfs BTRFS" <linux-btrfs@vger.kernel.org>,
-        "Linux Devel" <linux-fsdevel@vger.kernel.org>,
-        linux-block@vger.kernel.org,
-        Linux-RAID <linux-raid@vger.kernel.org>
-Subject: 6.2 series regression, transient stalls during write intensive workloads
-Content-Type: text/plain
+        with ESMTP id S229717AbjELB64 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 May 2023 21:58:56 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66CDE55BA;
+        Thu, 11 May 2023 18:58:53 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QHX4844l0z4f3jHZ;
+        Fri, 12 May 2023 09:58:48 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbFYnV1kbjQOJQ--.16243S4;
+        Fri, 12 May 2023 09:58:50 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     logang@deltatee.com, reddunur@online.de, jovetoo@gmail.com,
+        dgilmour76@gmail.com, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next 0/5] md/raid5: fix several reported bugs
+Date:   Fri, 12 May 2023 09:56:05 +0800
+Message-Id: <20230512015610.821290-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBnHbFYnV1kbjQOJQ--.16243S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7Xr1fKFyUJw4DZF47JrWkJFb_yoW3trXEqF
+        y8JasxJr1UGas5GFy5Jrs7XryxWw4UWryUXa4UKrW3ArnxJF4DGF1UZw4fXr4xXF1UKry5
+        Jr1jqry8ArnI9jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbxkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+        n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
+        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb
+        XdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-kernel 6.2.14-300.fc38.x86_64
+From: Yu Kuai <yukuai3@huawei.com>
 
-Summary: User with LSI MegaRAID SAS 2108 in raid5 with Btrfs is reporting transient (but reproducible) stalls about 10s at a time, during which time the system UI is unresponsive both CLI and GUI. PSI reports no memory or CPU pressure, but light IO pressure ~10%. Some blocked tasks are captured with sysrq+w. The IO scheduler is BFQ, changing to mq-deadline might relieve some of the stalls but is inconclusive because the problem still happens. The problem does not occur with kernel 6.1.18.
+patch 1 fix that array can't assemble if replacement is set while
+reshape is still in progress.
+patch 2 fix data corruption while echo reshape to sync_action
+patch 3-5 fix a deadlock for assemble while reboot from growing
 
-Downstream bug report:
-regression - transient stalls during write-intensive workload (edit) 
-https://bugzilla.redhat.com/show_bug.cgi?id=2193259
+Yu Kuai (5):
+  md/raid5: don't allow replacement while reshape is not done
+  md: fix data corruption for raid456 when reshape restart while grow up
+  md: export md_is_rdwr() and is_md_suspended()
+  md: add a new api prepare_suspend() in md_personality
+  md/raid5: fix a deadlock in the case that reshape is interrupted
 
-Attachment, output from "(cd /sys/kernel/debug/block/sda && find . -type f -exec grep -aH . {} \;)"
-https://bugzilla-attachments.redhat.com/attachment.cgi?id=1962546
+ drivers/md/md.c    | 35 +++++++++++++++++------------------
+ drivers/md/md.h    | 18 ++++++++++++++++++
+ drivers/md/raid5.c | 45 ++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 79 insertions(+), 19 deletions(-)
 
-sysrq+w excerpt:
+-- 
+2.39.2
 
-[21672.537148] sysrq: Show Blocked State
-[21672.537553] task:worker          state:D stack:0     pid:9723  ppid:1      flags:0x00004002
-[21672.537562] Call Trace:
-[21672.537565]  <TASK>
-[21672.537570]  __schedule+0x3cc/0x13e0
-[21672.537585]  schedule+0x5d/0xe0
-[21672.537590]  io_schedule+0x42/0x70
-[21672.537595]  folio_wait_bit_common+0x13d/0x370
-[21672.537605]  ? __pfx_wake_page_function+0x10/0x10
-[21672.537611]  folio_wait_writeback+0x28/0x80
-[21672.537618]  extent_write_cache_pages+0x3ac/0x540
-[21672.537628]  extent_writepages+0x5a/0x120
-[21672.537633]  ? __pfx_end_bio_extent_writepage+0x10/0x10
-[21672.537637]  do_writepages+0xc0/0x1d0
-[21672.537644]  ? hrtimer_cancel+0x11/0x20
-[21672.537650]  filemap_fdatawrite_wbc+0x5f/0x80
-[21672.537654]  __filemap_fdatawrite_range+0x58/0x80
-[21672.537662]  start_ordered_ops.constprop.0+0x73/0xd0
-[21672.537668]  btrfs_sync_file+0xbc/0x580
-[21672.537672]  ? __seccomp_filter+0x333/0x500
-[21672.537681]  __x64_sys_fdatasync+0x4b/0x90
-[21672.537689]  do_syscall_64+0x5c/0x90
-[21672.537696]  ? syscall_exit_to_user_mode+0x17/0x40
-[21672.537701]  ? do_syscall_64+0x68/0x90
-[21672.537704]  ? syscall_exit_to_user_mode+0x17/0x40
-[21672.537708]  ? do_syscall_64+0x68/0x90
-[21672.537712]  ? syscall_exit_to_user_mode+0x17/0x40
-[21672.537715]  ? do_syscall_64+0x68/0x90
-[21672.537718]  ? do_syscall_64+0x68/0x90
-[21672.537722]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
-[21672.537729] RIP: 0033:0x7f899579ae9c
-[21672.537749] RSP: 002b:00007f78a57f9650 EFLAGS: 00000293 ORIG_RAX: 000000000000004b
-[21672.537754] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f899579ae9c
-[21672.537757] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000010
-[21672.537759] RBP: 00007f78a57f9660 R08: 0000000000000000 R09: 0000000000000001
-[21672.537761] R10: 0000000000000000 R11: 0000000000000293 R12: 000055d1291be230
-[21672.537764] R13: 000055d128f6f1b0 R14: 000055d1287843d8 R15: 000055d128f6f218
-[21672.537771]  </TASK>
-[21699.524273] sysrq: Show Blocked State
-[21715.167298] sysrq: Show Blocked State
-[21715.167633] task:worker          state:D stack:0     pid:9723  ppid:1      flags:0x00004002
-[21715.167639] Call Trace:
-[21715.167642]  <TASK>
-[21715.167647]  __schedule+0x3cc/0x13e0
-[21715.167657]  ? __schedule+0x3d4/0x13e0
-[21715.167662]  schedule+0x5d/0xe0
-[21715.167665]  io_schedule+0x42/0x70
-[21715.167668]  folio_wait_bit_common+0x13d/0x370
-[21715.167676]  ? __pfx_wake_page_function+0x10/0x10
-[21715.167680]  folio_wait_writeback+0x28/0x80
-[21715.167685]  extent_write_cache_pages+0x3ac/0x540
-[21715.167692]  extent_writepages+0x5a/0x120
-[21715.167694]  ? ttwu_queue_wakelist+0xbf/0x110
-[21715.167700]  ? __pfx_end_bio_extent_writepage+0x10/0x10
-[21715.167703]  do_writepages+0xc0/0x1d0
-[21715.167707]  ? __remove_hrtimer+0x39/0x90
-[21715.167711]  filemap_fdatawrite_wbc+0x5f/0x80
-[21715.167714]  __filemap_fdatawrite_range+0x58/0x80
-[21715.167719]  start_ordered_ops.constprop.0+0x73/0xd0
-[21715.167723]  btrfs_sync_file+0xbc/0x580
-[21715.167726]  ? __seccomp_filter+0x333/0x500
-[21715.167732]  __x64_sys_fdatasync+0x4b/0x90
-[21715.167738]  do_syscall_64+0x5c/0x90
-[21715.167743]  ? syscall_exit_to_user_mode+0x17/0x40
-[21715.167747]  ? do_syscall_64+0x68/0x90
-[21715.167749]  ? syscall_exit_to_user_mode+0x17/0x40
-[21715.167751]  ? do_syscall_64+0x68/0x90
-[21715.167753]  ? syscall_exit_to_user_mode+0x17/0x40
-[21715.167755]  ? do_syscall_64+0x68/0x90
-[21715.167757]  ? do_syscall_64+0x68/0x90
-[21715.167760]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
-[21715.167765] RIP: 0033:0x7f899579ae9c
-[21715.167782] RSP: 002b:00007f78a57f9650 EFLAGS: 00000293 ORIG_RAX: 000000000000004b
-[21715.167785] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f899579ae9c
-[21715.167787] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000010
-[21715.167789] RBP: 00007f78a57f9660 R08: 0000000000000000 R09: 0000000000000001
-[21715.167790] R10: 0000000000000000 R11: 0000000000000293 R12: 000055d1291be230
-[21715.167792] R13: 000055d128f6f1b0 R14: 000055d1287843d8 R15: 000055d128f6f218
-[21715.167797]  </TASK>
-[21715.167822] task:kworker/u48:5   state:D stack:0     pid:9080  ppid:2      flags:0x00004000
-[21715.167826] Workqueue: writeback wb_workfn (flush-btrfs-1)
-[21715.167830] Call Trace:
-[21715.167832]  <TASK>
-[21715.167833]  __schedule+0x3cc/0x13e0
-[21715.167839]  schedule+0x5d/0xe0
-[21715.167842]  io_schedule+0x42/0x70
-[21715.167845]  blk_mq_get_tag+0x11a/0x2a0
-[21715.167850]  ? __pfx_autoremove_wake_function+0x10/0x10
-[21715.167855]  __blk_mq_alloc_requests+0x18e/0x2e0
-[21715.167861]  blk_mq_submit_bio+0x2fb/0x5f0
-[21715.167867]  __submit_bio+0xf5/0x180
-[21715.167872]  submit_bio_noacct_nocheck+0x32e/0x370
-[21715.167876]  ? submit_bio_noacct+0x71/0x4e0
-[21715.167880]  btrfs_submit_bio+0x247/0x270
-[21715.167887]  submit_one_bio+0xfa/0x120
-[21715.167893]  submit_extent_page+0x15f/0x500
-[21715.167898]  ? __pfx_page_mkclean_one+0x10/0x10
-[21715.167905]  ? __pfx_invalid_mkclean_vma+0x10/0x10
-[21715.167909]  __extent_writepage_io.constprop.0+0x273/0x590
-[21715.167914]  ? writepage_delalloc+0x20/0x180
-[21715.167918]  __extent_writepage+0x124/0x440
-[21715.167922]  extent_write_cache_pages+0x15f/0x540
-[21715.167927]  extent_writepages+0x5a/0x120
-[21715.167930]  ? __pfx_end_bio_extent_writepage+0x10/0x10
-[21715.167933]  do_writepages+0xc0/0x1d0
-[21715.167936]  ? __pfx_stack_trace_consume_entry+0x10/0x10
-[21715.167942]  __writeback_single_inode+0x3d/0x360
-[21715.167945]  ? _raw_spin_lock+0x13/0x40
-[21715.167950]  writeback_sb_inodes+0x1ed/0x4b0
-[21715.167955]  __writeback_inodes_wb+0x4c/0xf0
-[21715.167958]  wb_writeback+0x172/0x2f0
-[21715.167962]  wb_workfn+0x357/0x510
-[21715.167964]  ? __schedule+0x3d4/0x13e0
-[21715.167969]  process_one_work+0x1c7/0x3d0
-[21715.167974]  worker_thread+0x4d/0x380
-[21715.167978]  ? __pfx_worker_thread+0x10/0x10
-[21715.167981]  kthread+0xe9/0x110
-[21715.167985]  ? __pfx_kthread+0x10/0x10
-[21715.167988]  ret_from_fork+0x2c/0x50
-[21715.167996]  </TASK>
-
-full dmesg attachment
-https://bugzilla-attachments.redhat.com/attachment.cgi?id=1962385
-
-
-Thanks,
-
-
-
---
-Chris Murphy
