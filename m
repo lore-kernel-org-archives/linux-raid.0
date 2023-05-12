@@ -2,53 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6891C77B7F
-	for <linux-raid@archiver.kernel.org>; Fri, 12 May 2023 01:58:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD69BC77B7C
+	for <linux-raid@archiver.kernel.org>; Fri, 12 May 2023 01:59:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239748AbjELB66 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 11 May 2023 21:58:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49066 "EHLO
+        id S239791AbjELB7K (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 11 May 2023 21:59:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229717AbjELB64 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 May 2023 21:58:56 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66CDE55BA;
-        Thu, 11 May 2023 18:58:53 -0700 (PDT)
+        with ESMTP id S239657AbjELB66 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 May 2023 21:58:58 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99FED5B8B;
+        Thu, 11 May 2023 18:58:55 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QHX4844l0z4f3jHZ;
-        Fri, 12 May 2023 09:58:48 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QHX4C62H7z4f3lY0;
+        Fri, 12 May 2023 09:58:51 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgBnHbFYnV1kbjQOJQ--.16243S4;
-        Fri, 12 May 2023 09:58:50 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbFYnV1kbjQOJQ--.16243S7;
+        Fri, 12 May 2023 09:58:53 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     logang@deltatee.com, reddunur@online.de, jovetoo@gmail.com,
         dgilmour76@gmail.com, song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 0/5] md/raid5: fix several reported bugs
-Date:   Fri, 12 May 2023 09:56:05 +0800
-Message-Id: <20230512015610.821290-1-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 3/5] md: export md_is_rdwr() and is_md_suspended()
+Date:   Fri, 12 May 2023 09:56:08 +0800
+Message-Id: <20230512015610.821290-4-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230512015610.821290-1-yukuai1@huaweicloud.com>
+References: <20230512015610.821290-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnHbFYnV1kbjQOJQ--.16243S4
-X-Coremail-Antispam: 1UD129KBjvdXoW7Xr1fKFyUJw4DZF47JrWkJFb_yoW3trXEqF
-        y8JasxJr1UGas5GFy5Jrs7XryxWw4UWryUXa4UKrW3ArnxJF4DGF1UZw4fXr4xXF1UKry5
-        Jr1jqry8ArnI9jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbxkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-        n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
-        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
-        AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
-        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb
-        XdbUUUUUU==
+X-CM-TRANSID: gCh0CgBnHbFYnV1kbjQOJQ--.16243S7
+X-Coremail-Antispam: 1UD129KBjvJXoW7WFyxAFW8Cr47Wr43CrWruFg_yoW8uF1rpa
+        ySqFyfZr4DZF43Gw4UJ3yDua45Zr1xKFW2yry7Cw4rZa43Xr1DCF1rWFWUXrykGFyfCr12
+        qa1UJFy8Cr40yrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
+        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd8n5UUUUU
+        =
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -57,23 +60,77 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-patch 1 fix that array can't assemble if replacement is set while
-reshape is still in progress.
-patch 2 fix data corruption while echo reshape to sync_action
-patch 3-5 fix a deadlock for assemble while reboot from growing
+The two apis will be used later to fix a deadlock in raid456, there are
+no functional changes.
 
-Yu Kuai (5):
-  md/raid5: don't allow replacement while reshape is not done
-  md: fix data corruption for raid456 when reshape restart while grow up
-  md: export md_is_rdwr() and is_md_suspended()
-  md: add a new api prepare_suspend() in md_personality
-  md/raid5: fix a deadlock in the case that reshape is interrupted
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 16 ----------------
+ drivers/md/md.h | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 16 deletions(-)
 
- drivers/md/md.c    | 35 +++++++++++++++++------------------
- drivers/md/md.h    | 18 ++++++++++++++++++
- drivers/md/raid5.c | 45 ++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 79 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index cf60d4b5356d..5db26b7e7314 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -90,18 +90,6 @@ static void mddev_detach(struct mddev *mddev);
+ static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
+ static void export_rdev(struct md_rdev *rdev);
+ 
+-enum md_ro_state {
+-	MD_RDWR,
+-	MD_RDONLY,
+-	MD_AUTO_READ,
+-	MD_MAX_STATE
+-};
+-
+-static bool md_is_rdwr(struct mddev *mddev)
+-{
+-	return (mddev->ro == MD_RDWR);
+-}
+-
+ /*
+  * Default number of read corrections we'll attempt on an rdev
+  * before ejecting it from the array. We divide the read error
+@@ -377,10 +365,6 @@ EXPORT_SYMBOL_GPL(md_new_event);
+ static LIST_HEAD(all_mddevs);
+ static DEFINE_SPINLOCK(all_mddevs_lock);
+ 
+-static bool is_md_suspended(struct mddev *mddev)
+-{
+-	return percpu_ref_is_dying(&mddev->active_io);
+-}
+ /* Rather than calling directly into the personality make_request function,
+  * IO requests come here first so that we can check if the device is
+  * being suspended pending a reconfiguration.
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index a228e78e7f3a..7827f27c1406 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -563,6 +563,23 @@ enum recovery_flags {
+ 	MD_RESYNCING_REMOTE,	/* remote node is running resync thread */
+ };
+ 
++enum md_ro_state {
++	MD_RDWR,
++	MD_RDONLY,
++	MD_AUTO_READ,
++	MD_MAX_STATE
++};
++
++static inline bool md_is_rdwr(struct mddev *mddev)
++{
++	return (mddev->ro == MD_RDWR);
++}
++
++static inline bool is_md_suspended(struct mddev *mddev)
++{
++	return percpu_ref_is_dying(&mddev->active_io);
++}
++
+ static inline int __must_check mddev_lock(struct mddev *mddev)
+ {
+ 	return mutex_lock_interruptible(&mddev->reconfig_mutex);
 -- 
 2.39.2
 
