@@ -2,350 +2,348 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A11C7EE24
-	for <linux-raid@archiver.kernel.org>; Fri, 12 May 2023 08:10:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36FCAC7EE30
+	for <linux-raid@archiver.kernel.org>; Fri, 12 May 2023 09:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239985AbjELIKM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 12 May 2023 04:10:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37104 "EHLO
+        id S240517AbjELJlv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 12 May 2023 05:41:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239902AbjELIJa (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 May 2023 04:09:30 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2061e.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe5b::61e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F2DA10E52;
-        Fri, 12 May 2023 01:08:28 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=f+HTBXeObu0fOJ4k4+LK61g18sUsL7H9H3YU7YDfipM1lL+VKRQ5cDMAaAuup3FElg7m0WpdD3iw6VtV+6jZM4dDWRAVLZntWmRSINOaGdL1R2c+o58zCEXZY9gRbXlF+ULfbG1Lsa2fa75svRLErSO+wGBp3/z8Y+5f+35CJ8YskNsDEB1VqcVc6CxWZrA6pG5TMJ+rWaUY6b3PIfZg91+xKdja8NRbGOLzIKXHlhZUCxMxtdYhFOQ9RYyjPuhKKsVfBoHWdKoHsb80MrqK3l7FQyhfG/C+zcHvqXOnJytpmyhrHqWTAUkSwUQTV8WJYyvv71kIfZbyjzZqh7tGbA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BWZon/QtQeQxIm2xALI9b/xp6IIc8xxX26Bp46PTpAY=;
- b=aKS/+wLYequvB4Nuj+9uY9Y1KKjWMOKQ8raz+t1GA/+nadzhs43Pq1mJBIf1vmt18MpS8FWSUbHMralnlk8sT3BBT+jaRwgNcg4Qs+9+AshFMn+6pMYp7LdjKSBLhvmPjfO3e37eab9wmJjEo/4TV3jEUbI9HJfbm5C13bnjt1xIDUfP9hbmzTuTUaLdqUbIXdGSkeTbOg1wHkpBND7akG77nDtMNBXjCQEqP3pDD5bYbKt2UiXmnPRtXKe7aa20dbAQzJsOf3ikzlYnWZJ+BqRET/9DTfRRywRIQvWvj2BnKPAb2x0u2bkzZH2U1c4vDAWoecbZ+v1ORVPtTkgu2A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BWZon/QtQeQxIm2xALI9b/xp6IIc8xxX26Bp46PTpAY=;
- b=lFGsvvnK4QEDEs55VOfXEvJ0HWXJT4f5xOYxYEMqaJiqbCGt9EoQRN+xjbCXl8gIqYRhvf62uldrYQJDzt62NI/PjE59gMC2iy02J+mk3sjJZJh2oBc37RxGkFFyh5bRUOCOs6J+xxY2BVJQ9ZJ2Wb7zpsTYiJoMkld41ypvKVlQGr53ZSYNusw/4vNNhMB5Y9upJStWSk1s7yjfxkKGjatbvCWBqP+VXSDEuQ95uUtr29Mw9PvlQXVT3h0HYmXqeTZIocz/xOTxwxGjIrehD5ysGcrVxfR+b6gr+5G8FZSSNpVdVh19Ou3B3pb7bUTnRoei7Ns4/t0PQXU2FA1+qw==
-Received: from BN9PR03CA0427.namprd03.prod.outlook.com (2603:10b6:408:113::12)
- by IA1PR12MB8264.namprd12.prod.outlook.com (2603:10b6:208:3f5::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6387.22; Fri, 12 May
- 2023 08:08:25 +0000
-Received: from BN8NAM11FT038.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:113:cafe::32) by BN9PR03CA0427.outlook.office365.com
- (2603:10b6:408:113::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6387.25 via Frontend
- Transport; Fri, 12 May 2023 08:08:25 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- BN8NAM11FT038.mail.protection.outlook.com (10.13.176.246) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6387.24 via Frontend Transport; Fri, 12 May 2023 08:08:25 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.5; Fri, 12 May 2023
- 01:08:13 -0700
-Received: from dev.nvidia.com (10.126.230.37) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.37; Fri, 12 May
- 2023 01:08:12 -0700
-From:   Chaitanya Kulkarni <kch@nvidia.com>
-To:     <linux-block@vger.kernel.org>, <linux-bcache@vger.kernel.org>,
-        <linux-raid@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
-        <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
-CC:     <axboe@kernel.dk>, <colyli@suse.de>, <kent.overstreet@gmail.com>,
-        <agk@redhat.com>, <snitzer@kernel.org>, <dm-devel@redhat.com>,
-        <song@kernel.org>, <hch@lst.de>, <sagi@grimberg.me>,
-        <kch@nvidia.com>, <martin.petersen@oracle.com>
-Subject: [RFC PATCH] block: add meaningful macro for flush op flags
-Date:   Fri, 12 May 2023 01:07:57 -0700
-Message-ID: <20230512080757.387523-1-kch@nvidia.com>
-X-Mailer: git-send-email 2.40.0
+        with ESMTP id S240541AbjELJl2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 May 2023 05:41:28 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3297111DAF;
+        Fri, 12 May 2023 02:41:05 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QHkKF2VR3z4f41GZ;
+        Fri, 12 May 2023 17:40:49 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCH77KgCV5kUFwkJQ--.16388S3;
+        Fri, 12 May 2023 17:40:50 +0800 (CST)
+Subject: Re: [PATCH -next] md: fix duplicate filename for rdev
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, neilb@suse.de,
+        akpm@linux-foundation.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230428071059.1988153-1-yukuai1@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <2d26c915-97d8-d151-68b8-e6d168e361da@huaweicloud.com>
+Date:   Fri, 12 May 2023 17:40:48 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <20230428071059.1988153-1-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.126.230.37]
-X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT038:EE_|IA1PR12MB8264:EE_
-X-MS-Office365-Filtering-Correlation-Id: 22f4c5b9-c067-4230-9145-08db52c00fb8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tGr7I95rCI7umabVb/j9/7l3jrhXJyPIOk2/fYjACFX0msZcOHs47HpuscArmNecGBfG78CWJIpHhtqWA0+aPK3rO7TC79zw0Lt5xKmFJwmcMid4QOsRsdN9DijvlDmP3BgrWWqYzzR1YgQb303j4tbnBCNkFi9lll65NF4rfeKirXaBiOrR7o6qW6eXKH8m0m5/VfM47E6fjBig4XetgAYNGY5M30MuDsDe0FyhXVHH5JTRkwLaqQ5AL055kCNwAN+stgYFnJlp7CB612EPHRjBVXLx0Gfkw+l9EL87tpEgy1JCtVnXw7MRz+3IJlImEopxbgeT0lH7ib1wzYxB9tanSGMKjtSniOiFAJum9M8AutwhZwLuWlG65HHp4xcLUQMXqunRckNsVsjVExX9p95N623oR1R7d603yvoSLPKr+f6y5H04Y+/wfsplNfiXTd6uo9EhdNz0DJVFY7aapsA4PAmYOJG6JMRlu4Lel805oRHmi0GhgiKORuqk9EEtpj+oMq0JOGknziP6ectxJ0Evkh12hhcNY6GxBOPjSuWdSP/XERk5pNzVVa2Ydh8FA7kHu4ucGX7W3N6GzRYagDMR1u3nk5a5En0r9xbQbfKS0mBAFF2kIzX1VC7s+DgcEw3iVbQ2SQQc8NuSDAuuUCVaP0tKSd+WzSriltq3iVd+YPcSuVy616ivBKkwnz8So+X/busG9d70bdq/EvCdcNPBsRKbLY5liSFN664yUXfwvYfllHWW22/MLgbZPDgHlCqlzqyuc3A/YGIqevPdPJOTainzo5L9hOf1UMTbhHA=
-X-Forefront-Antispam-Report: CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230028)(4636009)(346002)(396003)(136003)(376002)(39860400002)(451199021)(40470700004)(36840700001)(46966006)(70586007)(82310400005)(2906002)(7416002)(8936002)(5660300002)(8676002)(316002)(478600001)(41300700001)(70206006)(4326008)(110136005)(47076005)(54906003)(40460700003)(7696005)(966005)(6666004)(1076003)(26005)(356005)(7636003)(82740400003)(186003)(16526019)(336012)(426003)(2616005)(36756003)(40480700001)(83380400001)(36860700001)(2101003);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2023 08:08:25.2134
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 22f4c5b9-c067-4230-9145-08db52c00fb8
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT038.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8264
+X-CM-TRANSID: gCh0CgCH77KgCV5kUFwkJQ--.16388S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxKrW3XryxZryfGw4rWw1fCrg_yoWftrWDpF
+        WSqa45GrWjqrW7Wa1UXwsruas0vw1kKFZrtryfu3WSywnxGrnrG3WFgFy5JFyrCrZ5urs8
+        Za18WFs8Za4jgrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Gr0_
+        Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
+        DUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Flush requests are implemented as REQ_OP_WRITE + REQ_OP_PREFLUSH
-combination and not REQ_OP_FLUSH + REQ_PREFLUSH combination.
+Hi,
 
-This unclear nature has lead to the confusion and bugs in the code for
-block drivers causing more work for testing, reviews and fixes :-
+ÔÚ 2023/04/28 15:10, Yu Kuai Ð´µÀ:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> commit 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device
+> from an md array via sysfs") delay the deleting of rdev, however, this
+> introduce a window that rdev can be added again while the deleting is
+> not done yet, and sysfs will complain about duplicate filename.
+> 
+> Follow up patches try to fix this problem by flush workqueue, however,
+> flush_rdev_wq() is just dead code, the progress in
+> md_kick_rdev_from_array():
+> 
+> 1) list_del_rcu(&rdev->same_set);
+> 2) synchronize_rcu();
+> 3) queue_work(md_rdev_misc_wq, &rdev->del_work);
+> 
+> So in flush_rdev_wq(), if rdev is found in the list, work_pending() can
+> never pass, in the meantime, if work is queued, then rdev can never be
+> found in the list.
+> 
+> flush_rdev_wq() can be replaced by flush_workqueue() directly, however,
+> this approach is not good:
+> - the workqueue is global, this synchronization for all raid disks is
+>    not necessary.
+> - flush_workqueue can't be called under 'reconfig_mutex', there is still
+>    a small window between flush_workqueue() and mddev_lock() that other
+>    context can queue new work, hence the problem is not solved completely.
+> 
+> sysfs already have apis to support delete itself through writer, and
+> these apis, specifically sysfs_break/unbreak_active_protection(), is used
+> so support deleting rdev synchronously. Therefore, the above commit can be
+> reverted, and sysfs duplicate filename can be avoided.
+> 
+> A new mdadm regression test [1] is proposed as well.
 
-1. https://lore.kernel.org/all/ZFHgefWofVt24tRl@infradead.org/
-2. https://marc.info/?l=linux-block&m=168386364026498&w=2
+Friendly ping ...
 
-Add a macro (name can me more meaningful) with a meaningful comment
-clearing the confusion and replace the REQ_OP_WRITE | REQ_PREFLUSH with
-the new macro name that also saves code repetation.
-
-Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
----
- block/blk-flush.c                   | 2 +-
- drivers/md/bcache/request.c         | 3 +--
- drivers/md/dm-bufio.c               | 2 +-
- drivers/md/dm-integrity.c           | 2 +-
- drivers/md/dm-log.c                 | 2 +-
- drivers/md/dm-raid1.c               | 2 +-
- drivers/md/dm-snap-persistent.c     | 5 ++---
- drivers/md/dm-writecache.c          | 2 +-
- drivers/md/dm.c                     | 2 +-
- drivers/md/md.c                     | 3 +--
- drivers/md/raid5-cache.c            | 3 +--
- drivers/md/raid5-ppl.c              | 3 +--
- drivers/nvme/target/io-cmd-bdev.c   | 2 +-
- drivers/target/target_core_iblock.c | 3 +--
- include/linux/blk_types.h           | 7 +++++++
- 15 files changed, 22 insertions(+), 21 deletions(-)
-
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 04698ed9bcd4..376f00257100 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -460,7 +460,7 @@ int blkdev_issue_flush(struct block_device *bdev)
- {
- 	struct bio bio;
- 
--	bio_init(&bio, bdev, NULL, 0, REQ_OP_WRITE | REQ_PREFLUSH);
-+	bio_init(&bio, bdev, NULL, 0, REQ_FLUSH_OPF);
- 	return submit_bio_wait(&bio);
- }
- EXPORT_SYMBOL(blkdev_issue_flush);
-diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
-index 67a2e29e0b40..ab89897a36a2 100644
---- a/drivers/md/bcache/request.c
-+++ b/drivers/md/bcache/request.c
-@@ -1023,8 +1023,7 @@ static void cached_dev_write(struct cached_dev *dc, struct search *s)
- 			 */
- 			struct bio *flush;
- 
--			flush = bio_alloc_bioset(bio->bi_bdev, 0,
--						 REQ_OP_WRITE | REQ_PREFLUSH,
-+			flush = bio_alloc_bioset(bio->bi_bdev, 0, REQ_FLUSH_OPF,
- 						 GFP_NOIO, &dc->disk.bio_split);
- 			if (!flush) {
- 				s->iop.status = BLK_STS_RESOURCE;
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index eea977662e81..da815325842b 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -2133,7 +2133,7 @@ EXPORT_SYMBOL_GPL(dm_bufio_write_dirty_buffers);
- int dm_bufio_issue_flush(struct dm_bufio_client *c)
- {
- 	struct dm_io_request io_req = {
--		.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
-+		.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
- 		.mem.type = DM_IO_KMEM,
- 		.mem.ptr.addr = NULL,
- 		.client = c->dm_io,
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 31838b13ea54..2d90f8ad1ae5 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -1533,7 +1533,7 @@ static void dm_integrity_flush_buffers(struct dm_integrity_c *ic, bool flush_dat
- 	if (!ic->meta_dev)
- 		flush_data = false;
- 	if (flush_data) {
--		fr.io_req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
-+		fr.io_req.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
- 		fr.io_req.mem.type = DM_IO_KMEM,
- 		fr.io_req.mem.ptr.addr = NULL,
- 		fr.io_req.notify.fn = flush_notify,
-diff --git a/drivers/md/dm-log.c b/drivers/md/dm-log.c
-index f9f84236dfcd..2c40f865ef16 100644
---- a/drivers/md/dm-log.c
-+++ b/drivers/md/dm-log.c
-@@ -311,7 +311,7 @@ static int flush_header(struct log_c *lc)
- 		.count = 0,
- 	};
- 
--	lc->io_req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
-+	lc->io_req.bi_opf = REQ_FLUSH_OPF;
- 
- 	return dm_io(&lc->io_req, 1, &null_location, NULL);
- }
-diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
-index ddcb2bc4a617..7acb9a390b38 100644
---- a/drivers/md/dm-raid1.c
-+++ b/drivers/md/dm-raid1.c
-@@ -265,7 +265,7 @@ static int mirror_flush(struct dm_target *ti)
- 	struct dm_io_region io[MAX_NR_MIRRORS];
- 	struct mirror *m;
- 	struct dm_io_request io_req = {
--		.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
-+		.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
- 		.mem.type = DM_IO_KMEM,
- 		.mem.ptr.addr = NULL,
- 		.client = ms->io_client,
-diff --git a/drivers/md/dm-snap-persistent.c b/drivers/md/dm-snap-persistent.c
-index 15649921f2a9..cfb7f1b92c5e 100644
---- a/drivers/md/dm-snap-persistent.c
-+++ b/drivers/md/dm-snap-persistent.c
-@@ -739,8 +739,7 @@ static void persistent_commit_exception(struct dm_exception_store *store,
- 	/*
- 	 * Commit exceptions to disk.
- 	 */
--	if (ps->valid && area_io(ps, REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA |
--				 REQ_SYNC))
-+	if (ps->valid && area_io(ps, REQ_FLUSH_OPF | REQ_FUA | REQ_SYNC))
- 		ps->valid = 0;
- 
- 	/*
-@@ -817,7 +816,7 @@ static int persistent_commit_merge(struct dm_exception_store *store,
- 	for (i = 0; i < nr_merged; i++)
- 		clear_exception(ps, ps->current_committed - 1 - i);
- 
--	r = area_io(ps, REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA);
-+	r = area_io(ps, REQ_FLUSH_OPF | REQ_FUA);
- 	if (r < 0)
- 		return r;
- 
-diff --git a/drivers/md/dm-writecache.c b/drivers/md/dm-writecache.c
-index 074cb785eafc..538f74114d13 100644
---- a/drivers/md/dm-writecache.c
-+++ b/drivers/md/dm-writecache.c
-@@ -590,7 +590,7 @@ static void writecache_disk_flush(struct dm_writecache *wc, struct dm_dev *dev)
- 	region.bdev = dev->bdev;
- 	region.sector = 0;
- 	region.count = 0;
--	req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
-+	req.bi_opf = REQ_FLUSH_OPF;
- 	req.mem.type = DM_IO_KMEM;
- 	req.mem.ptr.addr = NULL;
- 	req.client = wc->dm_io;
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 3b694ba3a106..a570024a747d 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1555,7 +1555,7 @@ static void __send_empty_flush(struct clone_info *ci)
- 	 * the basis for the clone(s).
- 	 */
- 	bio_init(&flush_bio, ci->io->md->disk->part0, NULL, 0,
--		 REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC);
-+		 REQ_FLUSH_OPF | REQ_SYNC);
- 
- 	ci->bio = &flush_bio;
- 	ci->sector_count = 0;
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8e344b4b3444..5f72a693dc1c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -533,8 +533,7 @@ static void submit_flushes(struct work_struct *ws)
- 			atomic_inc(&rdev->nr_pending);
- 			atomic_inc(&rdev->nr_pending);
- 			rcu_read_unlock();
--			bi = bio_alloc_bioset(rdev->bdev, 0,
--					      REQ_OP_WRITE | REQ_PREFLUSH,
-+			bi = bio_alloc_bioset(rdev->bdev, 0, REQ_FLUSH_OPF,
- 					      GFP_NOIO, &mddev->bio_set);
- 			bi->bi_end_io = md_end_flush;
- 			bi->bi_private = rdev;
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 46182b955aef..692c3ed33b1f 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1303,8 +1303,7 @@ void r5l_flush_stripe_to_raid(struct r5l_log *log)
- 
- 	if (!do_flush)
- 		return;
--	bio_init(&log->flush_bio, log->rdev->bdev, NULL, 0,
--		  REQ_OP_WRITE | REQ_PREFLUSH);
-+	bio_init(&log->flush_bio, log->rdev->bdev, NULL, 0, REQ_FLUSH_OPF);
- 	log->flush_bio.bi_end_io = r5l_log_flush_endio;
- 	submit_bio(&log->flush_bio);
- }
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index e495939bb3e0..da2012744b0d 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -629,8 +629,7 @@ static void ppl_do_flush(struct ppl_io_unit *io)
- 		if (bdev) {
- 			struct bio *bio;
- 
--			bio = bio_alloc_bioset(bdev, 0,
--					       REQ_OP_WRITE | REQ_PREFLUSH,
-+			bio = bio_alloc_bioset(bdev, 0, REQ_FLUSH_OPF,
- 					       GFP_NOIO, &ppl_conf->flush_bs);
- 			bio->bi_private = io;
- 			bio->bi_end_io = ppl_flush_endio;
-diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
-index c2d6cea0236b..2717b64cb02f 100644
---- a/drivers/nvme/target/io-cmd-bdev.c
-+++ b/drivers/nvme/target/io-cmd-bdev.c
-@@ -342,7 +342,7 @@ static void nvmet_bdev_execute_flush(struct nvmet_req *req)
- 		return;
- 
- 	bio_init(bio, req->ns->bdev, req->inline_bvec,
--		 ARRAY_SIZE(req->inline_bvec), REQ_OP_WRITE | REQ_PREFLUSH);
-+		 ARRAY_SIZE(req->inline_bvec), REQ_FLUSH_OPF);
- 	bio->bi_private = req;
- 	bio->bi_end_io = nvmet_bio_done;
- 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index cc838ffd1294..01984d07ff9c 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -419,8 +419,7 @@ iblock_execute_sync_cache(struct se_cmd *cmd)
- 	if (immed)
- 		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 
--	bio = bio_alloc(ib_dev->ibd_bd, 0, REQ_OP_WRITE | REQ_PREFLUSH,
--			GFP_KERNEL);
-+	bio = bio_alloc(ib_dev->ibd_bd, 0, REQ_FLUSH_OPF, GFP_KERNEL);
- 	bio->bi_end_io = iblock_end_io_flush;
- 	if (!immed)
- 		bio->bi_private = cmd;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 740afe80f297..f3afdbb3f239 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -455,6 +455,13 @@ enum req_flag_bits {
- #define REQ_NOMERGE_FLAGS \
- 	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA)
- 
-+/*
-+ * Flush requests are implemented as REQ_OP_WRITE + REQ_OP_PREFLUSH combination
-+ * and not REQ_OP_FLUSH + REQ_PREFLUSH combination.
-+ */
-+
-+#define REQ_FLUSH_OPF (REQ_OP_WRITE | REQ_PREFLUSH)
-+
- enum stat_group {
- 	STAT_READ,
- 	STAT_WRITE,
--- 
-2.40.0
+Thanks,
+Kuai
+> 
+> Link: https://lore.kernel.org/linux-raid/20230428062845.1975462-1-yukuai1@huaweicloud.com/
+> Fixes: 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device from an md array via sysfs")
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   drivers/md/md.c | 85 +++++++++++++++++++++++++------------------------
+>   drivers/md/md.h |  8 +++++
+>   2 files changed, 51 insertions(+), 42 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 0a4a10d4c0e0..e1bc223d58b3 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -83,12 +83,12 @@ static struct module *md_cluster_mod;
+>   static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
+>   static struct workqueue_struct *md_wq;
+>   static struct workqueue_struct *md_misc_wq;
+> -static struct workqueue_struct *md_rdev_misc_wq;
+>   
+>   static int remove_and_add_spares(struct mddev *mddev,
+>   				 struct md_rdev *this);
+>   static void mddev_detach(struct mddev *mddev);
+>   static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
+> +static void export_rdev(struct md_rdev *rdev);
+>   
+>   enum md_ro_state {
+>   	MD_RDWR,
+> @@ -674,9 +674,11 @@ void mddev_init(struct mddev *mddev)
+>   {
+>   	mutex_init(&mddev->open_mutex);
+>   	mutex_init(&mddev->reconfig_mutex);
+> +	mutex_init(&mddev->delete_mutex);
+>   	mutex_init(&mddev->bitmap_info.mutex);
+>   	INIT_LIST_HEAD(&mddev->disks);
+>   	INIT_LIST_HEAD(&mddev->all_mddevs);
+> +	INIT_LIST_HEAD(&mddev->deleting);
+>   	timer_setup(&mddev->safemode_timer, md_safemode_timeout, 0);
+>   	atomic_set(&mddev->active, 1);
+>   	atomic_set(&mddev->openers, 0);
+> @@ -778,6 +780,23 @@ static void mddev_free(struct mddev *mddev)
+>   
+>   static const struct attribute_group md_redundancy_group;
+>   
+> +static void md_free_rdev(struct mddev *mddev)
+> +{
+> +	struct md_rdev *rdev;
+> +	struct md_rdev *tmp;
+> +
+> +	if (list_empty_careful(&mddev->deleting))
+> +		return;
+> +
+> +	mutex_lock(&mddev->delete_mutex);
+> +	list_for_each_entry_safe(rdev, tmp, &mddev->deleting, same_set) {
+> +		list_del_init(&rdev->same_set);
+> +		kobject_del(&rdev->kobj);
+> +		export_rdev(rdev);
+> +	}
+> +	mutex_unlock(&mddev->delete_mutex);
+> +}
+> +
+>   void mddev_unlock(struct mddev *mddev)
+>   {
+>   	if (mddev->to_remove) {
+> @@ -819,6 +838,8 @@ void mddev_unlock(struct mddev *mddev)
+>   	} else
+>   		mutex_unlock(&mddev->reconfig_mutex);
+>   
+> +	md_free_rdev(mddev);
+> +
+>   	md_wakeup_thread(mddev->thread);
+>   	wake_up(&mddev->sb_wait);
+>   }
+> @@ -2454,13 +2475,6 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+>   	return err;
+>   }
+>   
+> -static void rdev_delayed_delete(struct work_struct *ws)
+> -{
+> -	struct md_rdev *rdev = container_of(ws, struct md_rdev, del_work);
+> -	kobject_del(&rdev->kobj);
+> -	kobject_put(&rdev->kobj);
+> -}
+> -
+>   void md_autodetect_dev(dev_t dev);
+>   
+>   static void export_rdev(struct md_rdev *rdev)
+> @@ -2478,6 +2492,8 @@ static void export_rdev(struct md_rdev *rdev)
+>   
+>   static void md_kick_rdev_from_array(struct md_rdev *rdev)
+>   {
+> +	struct mddev *mddev = rdev->mddev;
+> +
+>   	bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
+>   	list_del_rcu(&rdev->same_set);
+>   	pr_debug("md: unbind<%pg>\n", rdev->bdev);
+> @@ -2491,15 +2507,17 @@ static void md_kick_rdev_from_array(struct md_rdev *rdev)
+>   	rdev->sysfs_unack_badblocks = NULL;
+>   	rdev->sysfs_badblocks = NULL;
+>   	rdev->badblocks.count = 0;
+> -	/* We need to delay this, otherwise we can deadlock when
+> -	 * writing to 'remove' to "dev/state".  We also need
+> -	 * to delay it due to rcu usage.
+> -	 */
+> +
+>   	synchronize_rcu();
+> -	INIT_WORK(&rdev->del_work, rdev_delayed_delete);
+> -	kobject_get(&rdev->kobj);
+> -	queue_work(md_rdev_misc_wq, &rdev->del_work);
+> -	export_rdev(rdev);
+> +
+> +	/*
+> +	 * kobject_del() will wait for all in progress writers to be done, where
+> +	 * reconfig_mutex is held, hence it can't be called under
+> +	 * reconfig_mutex and it's delayed to mddev_unlock().
+> +	 */
+> +	mutex_lock(&mddev->delete_mutex);
+> +	list_add(&rdev->same_set, &mddev->deleting);
+> +	mutex_unlock(&mddev->delete_mutex);
+>   }
+>   
+>   static void export_array(struct mddev *mddev)
+> @@ -3564,6 +3582,7 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+>   {
+>   	struct rdev_sysfs_entry *entry = container_of(attr, struct rdev_sysfs_entry, attr);
+>   	struct md_rdev *rdev = container_of(kobj, struct md_rdev, kobj);
+> +	struct kernfs_node *kn = NULL;
+>   	ssize_t rv;
+>   	struct mddev *mddev = rdev->mddev;
+>   
+> @@ -3571,6 +3590,10 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+>   		return -EIO;
+>   	if (!capable(CAP_SYS_ADMIN))
+>   		return -EACCES;
+> +
+> +	if (entry->store == state_store && cmd_match(page, "remove"))
+> +		kn = sysfs_break_active_protection(kobj, attr);
+> +
+>   	rv = mddev ? mddev_lock(mddev) : -ENODEV;
+>   	if (!rv) {
+>   		if (rdev->mddev == NULL)
+> @@ -3579,6 +3602,10 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+>   			rv = entry->store(rdev, page, length);
+>   		mddev_unlock(mddev);
+>   	}
+> +
+> +	if (kn)
+> +		sysfs_unbreak_active_protection(kn);
+> +
+>   	return rv;
+>   }
+>   
+> @@ -4502,20 +4529,6 @@ null_show(struct mddev *mddev, char *page)
+>   	return -EINVAL;
+>   }
+>   
+> -/* need to ensure rdev_delayed_delete() has completed */
+> -static void flush_rdev_wq(struct mddev *mddev)
+> -{
+> -	struct md_rdev *rdev;
+> -
+> -	rcu_read_lock();
+> -	rdev_for_each_rcu(rdev, mddev)
+> -		if (work_pending(&rdev->del_work)) {
+> -			flush_workqueue(md_rdev_misc_wq);
+> -			break;
+> -		}
+> -	rcu_read_unlock();
+> -}
+> -
+>   static ssize_t
+>   new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+>   {
+> @@ -4543,7 +4556,6 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+>   	    minor != MINOR(dev))
+>   		return -EOVERFLOW;
+>   
+> -	flush_rdev_wq(mddev);
+>   	err = mddev_lock(mddev);
+>   	if (err)
+>   		return err;
+> @@ -5603,7 +5615,6 @@ struct mddev *md_alloc(dev_t dev, char *name)
+>   	 * removed (mddev_delayed_delete).
+>   	 */
+>   	flush_workqueue(md_misc_wq);
+> -	flush_workqueue(md_rdev_misc_wq);
+>   
+>   	mutex_lock(&disks_mutex);
+>   	mddev = mddev_alloc(dev);
+> @@ -7569,9 +7580,6 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
+>   
+>   	}
+>   
+> -	if (cmd == ADD_NEW_DISK || cmd == HOT_ADD_DISK)
+> -		flush_rdev_wq(mddev);
+> -
+>   	if (cmd == HOT_REMOVE_DISK)
+>   		/* need to ensure recovery thread has run */
+>   		wait_event_interruptible_timeout(mddev->sb_wait,
+> @@ -9645,10 +9653,6 @@ static int __init md_init(void)
+>   	if (!md_misc_wq)
+>   		goto err_misc_wq;
+>   
+> -	md_rdev_misc_wq = alloc_workqueue("md_rdev_misc", 0, 0);
+> -	if (!md_rdev_misc_wq)
+> -		goto err_rdev_misc_wq;
+> -
+>   	ret = __register_blkdev(MD_MAJOR, "md", md_probe);
+>   	if (ret < 0)
+>   		goto err_md;
+> @@ -9667,8 +9671,6 @@ static int __init md_init(void)
+>   err_mdp:
+>   	unregister_blkdev(MD_MAJOR, "md");
+>   err_md:
+> -	destroy_workqueue(md_rdev_misc_wq);
+> -err_rdev_misc_wq:
+>   	destroy_workqueue(md_misc_wq);
+>   err_misc_wq:
+>   	destroy_workqueue(md_wq);
+> @@ -9964,7 +9966,6 @@ static __exit void md_exit(void)
+>   	}
+>   	spin_unlock(&all_mddevs_lock);
+>   
+> -	destroy_workqueue(md_rdev_misc_wq);
+>   	destroy_workqueue(md_misc_wq);
+>   	destroy_workqueue(md_wq);
+>   }
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 6fa71d90fb4d..a228e78e7f3a 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -531,6 +531,14 @@ struct mddev {
+>   	unsigned int			good_device_nr;	/* good device num within cluster raid */
+>   	unsigned int			noio_flag; /* for memalloc scope API */
+>   
+> +	/*
+> +	 * Temporarily store rdev that will be finally removed when
+> +	 * reconfig_mutex is unlocked.
+> +	 */
+> +	struct list_head		deleting;
+> +	/* Protect the deleting list */
+> +	struct mutex			delete_mutex;
+> +
+>   	bool	has_superblocks:1;
+>   	bool	fail_last_dev:1;
+>   	bool	serialize_policy:1;
+> 
 
