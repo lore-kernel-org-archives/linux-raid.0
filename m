@@ -2,220 +2,350 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C69C7EE26
-	for <linux-raid@archiver.kernel.org>; Fri, 12 May 2023 01:59:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A11C7EE24
+	for <linux-raid@archiver.kernel.org>; Fri, 12 May 2023 08:10:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239682AbjELB7Q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 11 May 2023 21:59:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49038 "EHLO
+        id S239985AbjELIKM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 12 May 2023 04:10:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239750AbjELB67 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 May 2023 21:58:59 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87FAD6199;
-        Thu, 11 May 2023 18:58:56 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QHX4D1WCHz4f3mJf;
-        Fri, 12 May 2023 09:58:52 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgBnHbFYnV1kbjQOJQ--.16243S9;
-        Fri, 12 May 2023 09:58:53 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     logang@deltatee.com, reddunur@online.de, jovetoo@gmail.com,
-        dgilmour76@gmail.com, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next 5/5] md/raid5: fix a deadlock in the case that reshape is interrupted
-Date:   Fri, 12 May 2023 09:56:10 +0800
-Message-Id: <20230512015610.821290-6-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230512015610.821290-1-yukuai1@huaweicloud.com>
-References: <20230512015610.821290-1-yukuai1@huaweicloud.com>
+        with ESMTP id S239902AbjELIJa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 May 2023 04:09:30 -0400
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2061e.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe5b::61e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F2DA10E52;
+        Fri, 12 May 2023 01:08:28 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=f+HTBXeObu0fOJ4k4+LK61g18sUsL7H9H3YU7YDfipM1lL+VKRQ5cDMAaAuup3FElg7m0WpdD3iw6VtV+6jZM4dDWRAVLZntWmRSINOaGdL1R2c+o58zCEXZY9gRbXlF+ULfbG1Lsa2fa75svRLErSO+wGBp3/z8Y+5f+35CJ8YskNsDEB1VqcVc6CxWZrA6pG5TMJ+rWaUY6b3PIfZg91+xKdja8NRbGOLzIKXHlhZUCxMxtdYhFOQ9RYyjPuhKKsVfBoHWdKoHsb80MrqK3l7FQyhfG/C+zcHvqXOnJytpmyhrHqWTAUkSwUQTV8WJYyvv71kIfZbyjzZqh7tGbA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=BWZon/QtQeQxIm2xALI9b/xp6IIc8xxX26Bp46PTpAY=;
+ b=aKS/+wLYequvB4Nuj+9uY9Y1KKjWMOKQ8raz+t1GA/+nadzhs43Pq1mJBIf1vmt18MpS8FWSUbHMralnlk8sT3BBT+jaRwgNcg4Qs+9+AshFMn+6pMYp7LdjKSBLhvmPjfO3e37eab9wmJjEo/4TV3jEUbI9HJfbm5C13bnjt1xIDUfP9hbmzTuTUaLdqUbIXdGSkeTbOg1wHkpBND7akG77nDtMNBXjCQEqP3pDD5bYbKt2UiXmnPRtXKe7aa20dbAQzJsOf3ikzlYnWZJ+BqRET/9DTfRRywRIQvWvj2BnKPAb2x0u2bkzZH2U1c4vDAWoecbZ+v1ORVPtTkgu2A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BWZon/QtQeQxIm2xALI9b/xp6IIc8xxX26Bp46PTpAY=;
+ b=lFGsvvnK4QEDEs55VOfXEvJ0HWXJT4f5xOYxYEMqaJiqbCGt9EoQRN+xjbCXl8gIqYRhvf62uldrYQJDzt62NI/PjE59gMC2iy02J+mk3sjJZJh2oBc37RxGkFFyh5bRUOCOs6J+xxY2BVJQ9ZJ2Wb7zpsTYiJoMkld41ypvKVlQGr53ZSYNusw/4vNNhMB5Y9upJStWSk1s7yjfxkKGjatbvCWBqP+VXSDEuQ95uUtr29Mw9PvlQXVT3h0HYmXqeTZIocz/xOTxwxGjIrehD5ysGcrVxfR+b6gr+5G8FZSSNpVdVh19Ou3B3pb7bUTnRoei7Ns4/t0PQXU2FA1+qw==
+Received: from BN9PR03CA0427.namprd03.prod.outlook.com (2603:10b6:408:113::12)
+ by IA1PR12MB8264.namprd12.prod.outlook.com (2603:10b6:208:3f5::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6387.22; Fri, 12 May
+ 2023 08:08:25 +0000
+Received: from BN8NAM11FT038.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:113:cafe::32) by BN9PR03CA0427.outlook.office365.com
+ (2603:10b6:408:113::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6387.25 via Frontend
+ Transport; Fri, 12 May 2023 08:08:25 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ BN8NAM11FT038.mail.protection.outlook.com (10.13.176.246) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6387.24 via Frontend Transport; Fri, 12 May 2023 08:08:25 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.5; Fri, 12 May 2023
+ 01:08:13 -0700
+Received: from dev.nvidia.com (10.126.230.37) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.37; Fri, 12 May
+ 2023 01:08:12 -0700
+From:   Chaitanya Kulkarni <kch@nvidia.com>
+To:     <linux-block@vger.kernel.org>, <linux-bcache@vger.kernel.org>,
+        <linux-raid@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
+        <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
+CC:     <axboe@kernel.dk>, <colyli@suse.de>, <kent.overstreet@gmail.com>,
+        <agk@redhat.com>, <snitzer@kernel.org>, <dm-devel@redhat.com>,
+        <song@kernel.org>, <hch@lst.de>, <sagi@grimberg.me>,
+        <kch@nvidia.com>, <martin.petersen@oracle.com>
+Subject: [RFC PATCH] block: add meaningful macro for flush op flags
+Date:   Fri, 12 May 2023 01:07:57 -0700
+Message-ID: <20230512080757.387523-1-kch@nvidia.com>
+X-Mailer: git-send-email 2.40.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnHbFYnV1kbjQOJQ--.16243S9
-X-Coremail-Antispam: 1UD129KBjvJXoW3Gr4rCryxtFWxuw4DAr4UXFb_yoW7Kw15pa
-        92kFn0vr4jqF9xKFWDta1kWa4F9397KrW3ta9xJw18Aw43Jr48A3W3WF45XF1UAa48J3yY
-        qF1rt34Dur4jga7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-        kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-        wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-        W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
-        UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [10.126.230.37]
+X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN8NAM11FT038:EE_|IA1PR12MB8264:EE_
+X-MS-Office365-Filtering-Correlation-Id: 22f4c5b9-c067-4230-9145-08db52c00fb8
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: tGr7I95rCI7umabVb/j9/7l3jrhXJyPIOk2/fYjACFX0msZcOHs47HpuscArmNecGBfG78CWJIpHhtqWA0+aPK3rO7TC79zw0Lt5xKmFJwmcMid4QOsRsdN9DijvlDmP3BgrWWqYzzR1YgQb303j4tbnBCNkFi9lll65NF4rfeKirXaBiOrR7o6qW6eXKH8m0m5/VfM47E6fjBig4XetgAYNGY5M30MuDsDe0FyhXVHH5JTRkwLaqQ5AL055kCNwAN+stgYFnJlp7CB612EPHRjBVXLx0Gfkw+l9EL87tpEgy1JCtVnXw7MRz+3IJlImEopxbgeT0lH7ib1wzYxB9tanSGMKjtSniOiFAJum9M8AutwhZwLuWlG65HHp4xcLUQMXqunRckNsVsjVExX9p95N623oR1R7d603yvoSLPKr+f6y5H04Y+/wfsplNfiXTd6uo9EhdNz0DJVFY7aapsA4PAmYOJG6JMRlu4Lel805oRHmi0GhgiKORuqk9EEtpj+oMq0JOGknziP6ectxJ0Evkh12hhcNY6GxBOPjSuWdSP/XERk5pNzVVa2Ydh8FA7kHu4ucGX7W3N6GzRYagDMR1u3nk5a5En0r9xbQbfKS0mBAFF2kIzX1VC7s+DgcEw3iVbQ2SQQc8NuSDAuuUCVaP0tKSd+WzSriltq3iVd+YPcSuVy616ivBKkwnz8So+X/busG9d70bdq/EvCdcNPBsRKbLY5liSFN664yUXfwvYfllHWW22/MLgbZPDgHlCqlzqyuc3A/YGIqevPdPJOTainzo5L9hOf1UMTbhHA=
+X-Forefront-Antispam-Report: CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230028)(4636009)(346002)(396003)(136003)(376002)(39860400002)(451199021)(40470700004)(36840700001)(46966006)(70586007)(82310400005)(2906002)(7416002)(8936002)(5660300002)(8676002)(316002)(478600001)(41300700001)(70206006)(4326008)(110136005)(47076005)(54906003)(40460700003)(7696005)(966005)(6666004)(1076003)(26005)(356005)(7636003)(82740400003)(186003)(16526019)(336012)(426003)(2616005)(36756003)(40480700001)(83380400001)(36860700001)(2101003);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2023 08:08:25.2134
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 22f4c5b9-c067-4230-9145-08db52c00fb8
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT038.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8264
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+Flush requests are implemented as REQ_OP_WRITE + REQ_OP_PREFLUSH
+combination and not REQ_OP_FLUSH + REQ_PREFLUSH combination.
 
-If reshape is in progress and io across reshape_position is issued, such
-io will wait for reshape to make progress(see details in the case that
-make_stripe_request() return STRIPE_SCHEDULE_AND_RETRY).
+This unclear nature has lead to the confusion and bugs in the code for
+block drivers causing more work for testing, reviews and fixes :-
 
-It has been reported several times that if system reboot while growing
-raid5 to raid6, array assemble will hang infinitely([1, 2]). This is
-because following deadlock is triggered:
+1. https://lore.kernel.org/all/ZFHgefWofVt24tRl@infradead.org/
+2. https://marc.info/?l=linux-block&m=168386364026498&w=2
 
-1) a normal io is waiting for reshape to progress, this io can be from
-   system-udevd or mdadm.
-2) while assemble, mdadm tries to suspend the array, hence
-   'reconfig_mutex' is held and mddev_suspend() must wait for normal io
-   to be done.
-3) daemon thread can't start reshape because 'reconfig_mutex' can't be
-   held.
+Add a macro (name can me more meaningful) with a meaningful comment
+clearing the confusion and replace the REQ_OP_WRITE | REQ_PREFLUSH with
+the new macro name that also saves code repetation.
 
-1) and 3) is unbreakable because they're foundation design. In order to
-break 2), following is possible solutions that I can think of:
-
-a) Let mddev_suspend() fail is not a good option, because this will
-   break many scenarios since mddev_suspend() doesn't fail before.
-b) Fail the io that is waiting for reshape to make progress from
-   mddev_suspend().
-c) Return false for the io that is waiting for reshape to make
-   progress from raid5_make_request(), and these io will wait for
-   suspend to be done in md_handle_request(), where 'active_io' is
-   not grabbed.
-
-c) sounds better than b), however, b) is used because it's easy and
-straightforward, and it's verified that mdadm can assemble in this case.
-On the other hand, c) breaks the logic that mddev_suspend() will wait
-for submitted io to be completely handled.
-
-Fix the problem by checking reshape in mddev_suspend(), if reshape can't
-make progress and there are still some io waiting for reshape, fail
-those io.
-
-Reported-by: Jove <jovetoo@gmail.com>
-[1] https://lore.kernel.org/all/CAFig2csUV2QiomUhj_t3dPOgV300dbQ6XtM9ygKPdXJFSH__Nw@mail.gmail.com/
-Reported-by: David Gilmour <dgilmour76@gmail.com>
-[2] https://lore.kernel.org/all/CAO2ABipzbw6QL5eNa44CQHjiVa-LTvS696Mh9QaTw+qsUKFUCw@mail.gmail.com/
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
 ---
- drivers/md/md.c    |  1 +
- drivers/md/raid5.c | 44 +++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 44 insertions(+), 1 deletion(-)
+ block/blk-flush.c                   | 2 +-
+ drivers/md/bcache/request.c         | 3 +--
+ drivers/md/dm-bufio.c               | 2 +-
+ drivers/md/dm-integrity.c           | 2 +-
+ drivers/md/dm-log.c                 | 2 +-
+ drivers/md/dm-raid1.c               | 2 +-
+ drivers/md/dm-snap-persistent.c     | 5 ++---
+ drivers/md/dm-writecache.c          | 2 +-
+ drivers/md/dm.c                     | 2 +-
+ drivers/md/md.c                     | 3 +--
+ drivers/md/raid5-cache.c            | 3 +--
+ drivers/md/raid5-ppl.c              | 3 +--
+ drivers/nvme/target/io-cmd-bdev.c   | 2 +-
+ drivers/target/target_core_iblock.c | 3 +--
+ include/linux/blk_types.h           | 7 +++++++
+ 15 files changed, 22 insertions(+), 21 deletions(-)
 
+diff --git a/block/blk-flush.c b/block/blk-flush.c
+index 04698ed9bcd4..376f00257100 100644
+--- a/block/blk-flush.c
++++ b/block/blk-flush.c
+@@ -460,7 +460,7 @@ int blkdev_issue_flush(struct block_device *bdev)
+ {
+ 	struct bio bio;
+ 
+-	bio_init(&bio, bdev, NULL, 0, REQ_OP_WRITE | REQ_PREFLUSH);
++	bio_init(&bio, bdev, NULL, 0, REQ_FLUSH_OPF);
+ 	return submit_bio_wait(&bio);
+ }
+ EXPORT_SYMBOL(blkdev_issue_flush);
+diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
+index 67a2e29e0b40..ab89897a36a2 100644
+--- a/drivers/md/bcache/request.c
++++ b/drivers/md/bcache/request.c
+@@ -1023,8 +1023,7 @@ static void cached_dev_write(struct cached_dev *dc, struct search *s)
+ 			 */
+ 			struct bio *flush;
+ 
+-			flush = bio_alloc_bioset(bio->bi_bdev, 0,
+-						 REQ_OP_WRITE | REQ_PREFLUSH,
++			flush = bio_alloc_bioset(bio->bi_bdev, 0, REQ_FLUSH_OPF,
+ 						 GFP_NOIO, &dc->disk.bio_split);
+ 			if (!flush) {
+ 				s->iop.status = BLK_STS_RESOURCE;
+diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+index eea977662e81..da815325842b 100644
+--- a/drivers/md/dm-bufio.c
++++ b/drivers/md/dm-bufio.c
+@@ -2133,7 +2133,7 @@ EXPORT_SYMBOL_GPL(dm_bufio_write_dirty_buffers);
+ int dm_bufio_issue_flush(struct dm_bufio_client *c)
+ {
+ 	struct dm_io_request io_req = {
+-		.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
++		.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
+ 		.mem.type = DM_IO_KMEM,
+ 		.mem.ptr.addr = NULL,
+ 		.client = c->dm_io,
+diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+index 31838b13ea54..2d90f8ad1ae5 100644
+--- a/drivers/md/dm-integrity.c
++++ b/drivers/md/dm-integrity.c
+@@ -1533,7 +1533,7 @@ static void dm_integrity_flush_buffers(struct dm_integrity_c *ic, bool flush_dat
+ 	if (!ic->meta_dev)
+ 		flush_data = false;
+ 	if (flush_data) {
+-		fr.io_req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
++		fr.io_req.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
+ 		fr.io_req.mem.type = DM_IO_KMEM,
+ 		fr.io_req.mem.ptr.addr = NULL,
+ 		fr.io_req.notify.fn = flush_notify,
+diff --git a/drivers/md/dm-log.c b/drivers/md/dm-log.c
+index f9f84236dfcd..2c40f865ef16 100644
+--- a/drivers/md/dm-log.c
++++ b/drivers/md/dm-log.c
+@@ -311,7 +311,7 @@ static int flush_header(struct log_c *lc)
+ 		.count = 0,
+ 	};
+ 
+-	lc->io_req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
++	lc->io_req.bi_opf = REQ_FLUSH_OPF;
+ 
+ 	return dm_io(&lc->io_req, 1, &null_location, NULL);
+ }
+diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
+index ddcb2bc4a617..7acb9a390b38 100644
+--- a/drivers/md/dm-raid1.c
++++ b/drivers/md/dm-raid1.c
+@@ -265,7 +265,7 @@ static int mirror_flush(struct dm_target *ti)
+ 	struct dm_io_region io[MAX_NR_MIRRORS];
+ 	struct mirror *m;
+ 	struct dm_io_request io_req = {
+-		.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC,
++		.bi_opf = REQ_FLUSH_OPF | REQ_SYNC,
+ 		.mem.type = DM_IO_KMEM,
+ 		.mem.ptr.addr = NULL,
+ 		.client = ms->io_client,
+diff --git a/drivers/md/dm-snap-persistent.c b/drivers/md/dm-snap-persistent.c
+index 15649921f2a9..cfb7f1b92c5e 100644
+--- a/drivers/md/dm-snap-persistent.c
++++ b/drivers/md/dm-snap-persistent.c
+@@ -739,8 +739,7 @@ static void persistent_commit_exception(struct dm_exception_store *store,
+ 	/*
+ 	 * Commit exceptions to disk.
+ 	 */
+-	if (ps->valid && area_io(ps, REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA |
+-				 REQ_SYNC))
++	if (ps->valid && area_io(ps, REQ_FLUSH_OPF | REQ_FUA | REQ_SYNC))
+ 		ps->valid = 0;
+ 
+ 	/*
+@@ -817,7 +816,7 @@ static int persistent_commit_merge(struct dm_exception_store *store,
+ 	for (i = 0; i < nr_merged; i++)
+ 		clear_exception(ps, ps->current_committed - 1 - i);
+ 
+-	r = area_io(ps, REQ_OP_WRITE | REQ_PREFLUSH | REQ_FUA);
++	r = area_io(ps, REQ_FLUSH_OPF | REQ_FUA);
+ 	if (r < 0)
+ 		return r;
+ 
+diff --git a/drivers/md/dm-writecache.c b/drivers/md/dm-writecache.c
+index 074cb785eafc..538f74114d13 100644
+--- a/drivers/md/dm-writecache.c
++++ b/drivers/md/dm-writecache.c
+@@ -590,7 +590,7 @@ static void writecache_disk_flush(struct dm_writecache *wc, struct dm_dev *dev)
+ 	region.bdev = dev->bdev;
+ 	region.sector = 0;
+ 	region.count = 0;
+-	req.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
++	req.bi_opf = REQ_FLUSH_OPF;
+ 	req.mem.type = DM_IO_KMEM;
+ 	req.mem.ptr.addr = NULL;
+ 	req.client = wc->dm_io;
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 3b694ba3a106..a570024a747d 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1555,7 +1555,7 @@ static void __send_empty_flush(struct clone_info *ci)
+ 	 * the basis for the clone(s).
+ 	 */
+ 	bio_init(&flush_bio, ci->io->md->disk->part0, NULL, 0,
+-		 REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC);
++		 REQ_FLUSH_OPF | REQ_SYNC);
+ 
+ 	ci->bio = &flush_bio;
+ 	ci->sector_count = 0;
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1ef81421e131..e2bef5bb00f2 100644
+index 8e344b4b3444..5f72a693dc1c 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9133,6 +9133,7 @@ void md_do_sync(struct md_thread *thread)
- 	spin_unlock(&mddev->lock);
+@@ -533,8 +533,7 @@ static void submit_flushes(struct work_struct *ws)
+ 			atomic_inc(&rdev->nr_pending);
+ 			atomic_inc(&rdev->nr_pending);
+ 			rcu_read_unlock();
+-			bi = bio_alloc_bioset(rdev->bdev, 0,
+-					      REQ_OP_WRITE | REQ_PREFLUSH,
++			bi = bio_alloc_bioset(rdev->bdev, 0, REQ_FLUSH_OPF,
+ 					      GFP_NOIO, &mddev->bio_set);
+ 			bi->bi_end_io = md_end_flush;
+ 			bi->bi_private = rdev;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 46182b955aef..692c3ed33b1f 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1303,8 +1303,7 @@ void r5l_flush_stripe_to_raid(struct r5l_log *log)
  
- 	wake_up(&resync_wait);
-+	wake_up(&mddev->sb_wait);
- 	md_wakeup_thread(mddev->thread);
- 	return;
+ 	if (!do_flush)
+ 		return;
+-	bio_init(&log->flush_bio, log->rdev->bdev, NULL, 0,
+-		  REQ_OP_WRITE | REQ_PREFLUSH);
++	bio_init(&log->flush_bio, log->rdev->bdev, NULL, 0, REQ_FLUSH_OPF);
+ 	log->flush_bio.bi_end_io = r5l_log_flush_endio;
+ 	submit_bio(&log->flush_bio);
  }
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index bd3b535c0739..7e2bbcfef325 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5966,6 +5966,19 @@ static int add_all_stripe_bios(struct r5conf *conf,
- 	return ret;
- }
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index e495939bb3e0..da2012744b0d 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -629,8 +629,7 @@ static void ppl_do_flush(struct ppl_io_unit *io)
+ 		if (bdev) {
+ 			struct bio *bio;
  
-+static bool reshape_inprogress(struct mddev *mddev)
-+{
-+	return test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-+	       test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-+	       !test_bit(MD_RECOVERY_DONE, &mddev->recovery) &&
-+	       !test_bit(MD_RECOVERY_INTR, &mddev->recovery);
-+}
-+
-+static bool reshape_disabled(struct mddev *mddev)
-+{
-+	return is_md_suspended(mddev) || !md_is_rdwr(mddev);
-+}
-+
- static enum stripe_result make_stripe_request(struct mddev *mddev,
- 		struct r5conf *conf, struct stripe_request_ctx *ctx,
- 		sector_t logical_sector, struct bio *bi)
-@@ -5997,7 +6010,8 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
- 			if (ahead_of_reshape(mddev, logical_sector,
- 					     conf->reshape_safe)) {
- 				spin_unlock_irq(&conf->device_lock);
--				return STRIPE_SCHEDULE_AND_RETRY;
-+				ret = STRIPE_SCHEDULE_AND_RETRY;
-+				goto out;
- 			}
- 		}
- 		spin_unlock_irq(&conf->device_lock);
-@@ -6076,6 +6090,15 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+-			bio = bio_alloc_bioset(bdev, 0,
+-					       REQ_OP_WRITE | REQ_PREFLUSH,
++			bio = bio_alloc_bioset(bdev, 0, REQ_FLUSH_OPF,
+ 					       GFP_NOIO, &ppl_conf->flush_bs);
+ 			bio->bi_private = io;
+ 			bio->bi_end_io = ppl_flush_endio;
+diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
+index c2d6cea0236b..2717b64cb02f 100644
+--- a/drivers/nvme/target/io-cmd-bdev.c
++++ b/drivers/nvme/target/io-cmd-bdev.c
+@@ -342,7 +342,7 @@ static void nvmet_bdev_execute_flush(struct nvmet_req *req)
+ 		return;
  
- out_release:
- 	raid5_release_stripe(sh);
-+out:
-+	if (ret == STRIPE_SCHEDULE_AND_RETRY && !reshape_inprogress(mddev) &&
-+	    reshape_disabled(mddev)) {
-+		bi->bi_status = BLK_STS_IOERR;
-+		ret = STRIPE_FAIL;
-+		pr_err("md/raid456:%s: io failed across reshape position while reshape can't make progress.\n",
-+		       mdname(mddev));
-+	}
-+
- 	return ret;
- }
+ 	bio_init(bio, req->ns->bdev, req->inline_bvec,
+-		 ARRAY_SIZE(req->inline_bvec), REQ_OP_WRITE | REQ_PREFLUSH);
++		 ARRAY_SIZE(req->inline_bvec), REQ_FLUSH_OPF);
+ 	bio->bi_private = req;
+ 	bio->bi_end_io = nvmet_bio_done;
  
-@@ -9045,6 +9068,22 @@ static int raid5_start(struct mddev *mddev)
- 	return r5l_start(conf->log);
- }
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index cc838ffd1294..01984d07ff9c 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -419,8 +419,7 @@ iblock_execute_sync_cache(struct se_cmd *cmd)
+ 	if (immed)
+ 		target_complete_cmd(cmd, SAM_STAT_GOOD);
  
-+static void raid5_prepare_suspend(struct mddev *mddev)
-+{
-+	struct r5conf *conf = mddev->private;
+-	bio = bio_alloc(ib_dev->ibd_bd, 0, REQ_OP_WRITE | REQ_PREFLUSH,
+-			GFP_KERNEL);
++	bio = bio_alloc(ib_dev->ibd_bd, 0, REQ_FLUSH_OPF, GFP_KERNEL);
+ 	bio->bi_end_io = iblock_end_io_flush;
+ 	if (!immed)
+ 		bio->bi_private = cmd;
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 740afe80f297..f3afdbb3f239 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -455,6 +455,13 @@ enum req_flag_bits {
+ #define REQ_NOMERGE_FLAGS \
+ 	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA)
+ 
++/*
++ * Flush requests are implemented as REQ_OP_WRITE + REQ_OP_PREFLUSH combination
++ * and not REQ_OP_FLUSH + REQ_PREFLUSH combination.
++ */
 +
-+	wait_event(mddev->sb_wait, !reshape_inprogress(mddev) ||
-+				    percpu_ref_is_zero(&mddev->active_io));
-+	if (percpu_ref_is_zero(&mddev->active_io))
-+		return;
++#define REQ_FLUSH_OPF (REQ_OP_WRITE | REQ_PREFLUSH)
 +
-+	/*
-+	 * Reshape is not in progress, and array is suspended, io that is
-+	 * waiting for reshpape can never be done.
-+	 */
-+	wake_up(&conf->wait_for_overlap);
-+}
-+
- static struct md_personality raid6_personality =
- {
- 	.name		= "raid6",
-@@ -9065,6 +9104,7 @@ static struct md_personality raid6_personality =
- 	.check_reshape	= raid6_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
-+	.prepare_suspend = raid5_prepare_suspend,
- 	.quiesce	= raid5_quiesce,
- 	.takeover	= raid6_takeover,
- 	.change_consistency_policy = raid5_change_consistency_policy,
-@@ -9089,6 +9129,7 @@ static struct md_personality raid5_personality =
- 	.check_reshape	= raid5_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
-+	.prepare_suspend = raid5_prepare_suspend,
- 	.quiesce	= raid5_quiesce,
- 	.takeover	= raid5_takeover,
- 	.change_consistency_policy = raid5_change_consistency_policy,
-@@ -9114,6 +9155,7 @@ static struct md_personality raid4_personality =
- 	.check_reshape	= raid5_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
-+	.prepare_suspend = raid5_prepare_suspend,
- 	.quiesce	= raid5_quiesce,
- 	.takeover	= raid4_takeover,
- 	.change_consistency_policy = raid5_change_consistency_policy,
+ enum stat_group {
+ 	STAT_READ,
+ 	STAT_WRITE,
 -- 
-2.39.2
+2.40.0
 
