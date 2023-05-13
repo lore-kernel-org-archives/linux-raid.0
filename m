@@ -2,58 +2,61 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89EDFC77B75
-	for <linux-raid@archiver.kernel.org>; Sat, 13 May 2023 02:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67887C77B7F
+	for <linux-raid@archiver.kernel.org>; Sat, 13 May 2023 02:21:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241671AbjEMCED (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 12 May 2023 22:04:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45356 "EHLO
+        id S241081AbjEMCVt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 12 May 2023 22:21:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229688AbjEMCEC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 May 2023 22:04:02 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13F141718;
-        Fri, 12 May 2023 19:03:59 -0700 (PDT)
+        with ESMTP id S231547AbjEMCVs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 May 2023 22:21:48 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30D5D91;
+        Fri, 12 May 2023 19:21:45 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QJ87Y308Zz4f3mLC;
-        Sat, 13 May 2023 10:03:53 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QJ8X40J4Pz4f3kKb;
+        Sat, 13 May 2023 10:21:40 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHvbAH8F5k1m9UJQ--.37479S3;
-        Sat, 13 May 2023 10:03:52 +0800 (CST)
-Subject: Re: [PATCH -next v2 0/7] limit the number of plugged bio
+        by APP4 (Coremail) with SMTP id gCh0CgD3rLAz9F5kn05VJQ--.55330S3;
+        Sat, 13 May 2023 10:21:41 +0800 (CST)
+Subject: Re: [PATCH v2 3/4] md/raid10: fix wrong setting of
+ max_corr_read_errors
 To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     akpm@osdl.org, neilb@suse.de, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+Cc:     linan666@huaweicloud.com, neilb@suse.de, Rob.Becker@riverbed.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
         yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
- <a7246f63-b499-8b26-e27a-3d16abc18ced@huaweicloud.com>
- <CAPhsuW4ZVs0QbWhHibL4A4LG72Q9bPabjCY7ZZkcshTYf+vhbg@mail.gmail.com>
+References: <20230506012315.3370489-1-linan666@huaweicloud.com>
+ <20230506012315.3370489-4-linan666@huaweicloud.com>
+ <ddec947c-d2b9-e4fe-30e6-02c76f162ab3@huaweicloud.com>
+ <CAPhsuW6zSN86vGO9rd-oTq4TuCYLc+ftrAO6mo6UE7qCNJaCUw@mail.gmail.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <88d2b016-376c-d65d-ef04-d9cdf5d7b096@huaweicloud.com>
-Date:   Sat, 13 May 2023 10:03:50 +0800
+Message-ID: <5db8b619-7eac-79be-10e4-1292a44b943b@huaweicloud.com>
+Date:   Sat, 13 May 2023 10:21:39 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW4ZVs0QbWhHibL4A4LG72Q9bPabjCY7ZZkcshTYf+vhbg@mail.gmail.com>
+In-Reply-To: <CAPhsuW6zSN86vGO9rd-oTq4TuCYLc+ftrAO6mo6UE7qCNJaCUw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHvbAH8F5k1m9UJQ--.37479S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7uFyfXF48Kr18JFWUCry5twb_yoW8XF1rpa
-        y3GanYkF4kArnrAws2yF4xWry0ka1fJr4UXrn8KryxCF98WFyxWF1xKw45Kwn2vr93W3W2
-        9ayUt3s7KFyvyFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgD3rLAz9F5kn05VJQ--.55330S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF4fGr43Kr4DGr45KFy5CFg_yoW5Ary5pw
+        4kAas0vr4UJ34UCr9rtryq9a4FyrySyrW0kry8Jw4fX3sxtr9xta48Ga4jgr1kWr1fK3W3
+        XFWDKrZrAa18tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
         6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
         Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
         I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
-        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8
-        JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUU
-        UU=
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3
+        Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -62,52 +65,83 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/05/13 8:50, Song Liu 写道:
-> On Fri, May 12, 2023 at 2:43 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+在 2023/05/13 9:08, Song Liu 写道:
+> On Fri, May 5, 2023 at 7:02 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
 >>
 >> Hi,
 >>
->> 在 2023/04/26 16:20, Yu Kuai 写道:
->>> From: Yu Kuai <yukuai3@huawei.com>
+>> 在 2023/05/06 9:23, linan666@huaweicloud.com 写道:
+>>> From: Li Nan <linan122@huawei.com>
 >>>
->>> Changes in v2:
->>>    - remove the patch to rename raid1-10.c
+>>> max_corr_read_errors should not be negative number. Change it to
+>>> unsigned int where use it.
 >>>
->>> This patchset tries to limit the number of plugged bio for raid1 and
->>> raid10, which is done in the last patch, other patches are some refactor
->>> and optimizations.
->>>
->>> This patchset is tested with a new test [1], this test triggers dirty
->>> pages writeback for 10s, and in the meantime checks disk inflight.
->>>
->>> Before this patchset, test will fail because inflight exceed threshold
->>> (threshold is set to 4096 in the test, in theory this can be mutch
->>>    greater as long as there are enough dirty pages and memory).
->>>
->>> After this patchset, inflight is within 96 (MAX_PLUG_BIO * copies).
->>>
->>> [1] https://lore.kernel.org/linux-raid/20230426073447.1294916-1-yukuai1@huaweicloud.com/
 >>
->> Friendly ping...
+>> Looks good, feel free to add:
+>>
+>> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+>>
+>>> Fixes: 1e50915fe0bb ("raid: improve MD/raid10 handling of correctable read errors.")
+>>> Signed-off-by: Li Nan <linan122@huawei.com>
 > 
-> I am sorry for the delay.
-> 
-> The set looks good overall, but I will need some more time to take a closer
-> look. A few comments/questions:
-> 
-> 1. For functions in raid1-10.c, let's prefix them with raid1_ instead of md_*.
-Ok, I'll change that in v3.
+> Hmm.. Does the current code break in any cases?
 
-> 2. Do we need unplug_wq to be per-bitmap? Would a shared queue work?
+The problem is that somewhere use unsigned value, and somewhere use
+signed value, and I thinsk the only functional change is in
+fix_read_error(), if max_read_errors is negative, the judgement will
+always pass before this patch:
 
-I think this can work, the limitation is that global workqueue can
-support 256 queued work at a time, but this should be enough.
+if (atomic_read(&rdev->read_errors) > max_read_errors)
 
 Thanks,
 Kuai
 > 
 > Thanks,
 > Song
+> 
+>>> ---
+>>>    drivers/md/md.c     | 2 +-
+>>>    drivers/md/raid10.c | 5 +++--
+>>>    2 files changed, 4 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index fd5c3babcd6d..4a1e566d6bdc 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -4486,7 +4486,7 @@ __ATTR_PREALLOC(array_state, S_IRUGO|S_IWUSR, array_state_show, array_state_stor
+>>>
+>>>    static ssize_t
+>>>    max_corrected_read_errors_show(struct mddev *mddev, char *page) {
+>>> -     return sprintf(page, "%d\n",
+>>> +     return sprintf(page, "%u\n",
+>>>                       atomic_read(&mddev->max_corr_read_errors));
+>>>    }
+>>>
+>>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>>> index 4fcfcb350d2b..4d615fcc6a50 100644
+>>> --- a/drivers/md/raid10.c
+>>> +++ b/drivers/md/raid10.c
+>>> @@ -2727,7 +2727,8 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+>>>        int sect = 0; /* Offset from r10_bio->sector */
+>>>        int sectors = r10_bio->sectors;
+>>>        struct md_rdev *rdev;
+>>> -     int max_read_errors = atomic_read(&mddev->max_corr_read_errors);
+>>> +     unsigned int max_read_errors =
+>>> +                     atomic_read(&mddev->max_corr_read_errors);
+>>>        int d = r10_bio->devs[r10_bio->read_slot].devnum;
+>>>
+>>>        /* still own a reference to this rdev, so it cannot
+>>> @@ -2743,7 +2744,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+>>>        check_decay_read_errors(mddev, rdev);
+>>>        atomic_inc(&rdev->read_errors);
+>>>        if (atomic_read(&rdev->read_errors) > max_read_errors) {
+>>> -             pr_notice("md/raid10:%s: %pg: Raid device exceeded read_error threshold [cur %d:max %d]\n",
+>>> +             pr_notice("md/raid10:%s: %pg: Raid device exceeded read_error threshold [cur %u:max %u]\n",
+>>>                          mdname(mddev), rdev->bdev,
+>>>                          atomic_read(&rdev->read_errors), max_read_errors);
+>>>                pr_notice("md/raid10:%s: %pg: Failing raid device\n",
+>>>
+>>
 > .
 > 
 
