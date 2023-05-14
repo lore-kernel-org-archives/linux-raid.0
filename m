@@ -2,102 +2,129 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F920C77B7F
-	for <linux-raid@archiver.kernel.org>; Sun, 14 May 2023 11:14:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7566FC77B7D
+	for <linux-raid@archiver.kernel.org>; Sun, 14 May 2023 11:15:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231472AbjENLOr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 14 May 2023 07:14:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42706 "EHLO
+        id S231506AbjENLPs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 14 May 2023 07:15:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229894AbjENLOq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 May 2023 07:14:46 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6318187
-        for <linux-raid@vger.kernel.org>; Sun, 14 May 2023 04:14:45 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7768D1F88B;
-        Sun, 14 May 2023 11:14:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1684062884; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fviU152UOSBAAJD9t6Q+amM9HfIYGRyTR5ac22GaW/k=;
-        b=uhFgTGnZ9xflBaOXfZMfOEm5XyJ5mUZmFWMcvqabGqz19aHB/7Cj5pjiSW1GQBfVst5JSB
-        C3hHVhZfKatZd+MIHD2AR6FRdeSm5tSuEDiLfu23l0XKcFEjS4pA58mz3HJcNK+2WAMuF5
-        t8yaSkIrqoDDaTfruplrldlJU0Uf43w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1684062884;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fviU152UOSBAAJD9t6Q+amM9HfIYGRyTR5ac22GaW/k=;
-        b=dMac6KT3uH+XSvQEd1Z0vdzKJWxs9S4ZMnitxK/aGNYecNdBZgD41YSgqjtv0k4vPtfhyj
-        HB83OuCmlfzTYWAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5E9FB138F5;
-        Sun, 14 May 2023 11:14:44 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id DFswFqTCYGTfdQAAMHmgww
-        (envelope-from <colyli@suse.de>); Sun, 14 May 2023 11:14:44 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.500.231\))
-Subject: Re: [PATCH v2 0/2] Fix unsafe string functions
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20230511025513.13783-1-kinga.tanska@intel.com>
-Date:   Sun, 14 May 2023 13:14:33 +0200
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Jes Sorensen <jes@trained-monkey.org>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <7E423237-21B0-4350-A3ED-E4AFF192C8BA@suse.de>
-References: <20230511025513.13783-1-kinga.tanska@intel.com>
-To:     Kinga Tanska <kinga.tanska@intel.com>
-X-Mailer: Apple Mail (2.3731.500.231)
+        with ESMTP id S229894AbjENLPr (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 May 2023 07:15:47 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6DBE187;
+        Sun, 14 May 2023 04:15:46 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QK0Kp64lVz4f3wtQ;
+        Sun, 14 May 2023 19:15:42 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgBn0LPfwmBkDDe0JQ--.4748S3;
+        Sun, 14 May 2023 19:15:43 +0800 (CST)
+Message-ID: <863a4b6e-ff85-2d82-cf8b-bec87e0f5468@huaweicloud.com>
+Date:   Sun, 14 May 2023 19:15:43 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v2 1/4] md/raid10: fix slab-out-of-bounds in
+ md_bitmap_get_counter
+To:     Song Liu <song@kernel.org>, linan666@huaweicloud.com
+Cc:     neilb@suse.de, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
+References: <20230506012315.3370489-1-linan666@huaweicloud.com>
+ <20230506012315.3370489-2-linan666@huaweicloud.com>
+ <CAPhsuW7p=xw41EZ-f+UHMO+o5bLFGirORPE-gfnkYqfpjv-rzw@mail.gmail.com>
+From:   Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <CAPhsuW7p=xw41EZ-f+UHMO+o5bLFGirORPE-gfnkYqfpjv-rzw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBn0LPfwmBkDDe0JQ--.4748S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZF4UJFyxGFW8CFyDJF1DZFb_yoW8Ww13pF
+        srW3W5Crn5JF1UuF1jvFykAFyrtws5KrZrJrWrG345ua47GF9xArWrKF1Y9wn29r13GFZx
+        XF45G3WfurnYqaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9j14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+        0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr
+        1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
+        xwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
+        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
+        b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
+        vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1l
+        IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvf
+        C2KfnxnUUI43ZEXa7VU1c4S5UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-> 2023=E5=B9=B45=E6=9C=8811=E6=97=A5 04:55=EF=BC=8CKinga Tanska =
-<kinga.tanska@intel.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> This series of patches contains fixes for unsafe string
-> functions usings. Unsafe functions were replaced with
-> new ones that limites the input length.
+在 2023/5/13 9:05, Song Liu 写道:
+> On Fri, May 5, 2023 at 6:24 PM <linan666@huaweicloud.com> wrote:
+>>
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> If we write a large number to md/bitmap_set_bits, md_bitmap_checkpage()
+>> will return -EINVAL because "page >= bitmap->pages", but the return value
+>> was not checked immediately in md_bitmap_get_counter() in order to set
+>> *blocks value and slab-out-of-bounds occurs.
+>>
+>> Return directly if err is -EINVAL.
+>>
+>> Fixes: ef4256733506 ("md/bitmap: optimise scanning of empty bitmaps.")
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/md-bitmap.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+>> index 920bb68156d2..0b41ef422da7 100644
+>> --- a/drivers/md/md-bitmap.c
+>> +++ b/drivers/md/md-bitmap.c
+>> @@ -1388,6 +1388,8 @@ __acquires(bitmap->lock)
+>>          int err;
+>>
+>>          err = md_bitmap_checkpage(bitmap, page, create, 0);
+>> +       if (err == -EINVAL)
+>> +               return NULL;
+> 
+> This logic is error prone. Since we are on it, let's fix it better.
+> Specifically, we can move "page >= bitmap->pages" check out
 
-Hi Kinga,
+I will check out it in v3.
 
-I am on a travel and fighting with jet lag now, hope I can response next =
-week after I back to Beijing.
+> of md_bitmap_checkpage(). (and fix the call site in md_bitmap_resize
+> for clustered md).
+> 
 
-Thanks.
+In md_bitmap_resize(), incoming parameters "page < bitmap->counts.page" 
+and do not have this problem.
 
-Coly Li
 
+> Also, could you please add a mdadm test for this issue?
+> 
 
->=20
-> Kinga Tanska (2):
->  Fix unsafe string functions
->  platform-intel: limit guid length
->=20
-> mdmon.c          | 6 +++---
-> mdopen.c         | 4 ++--
-> platform-intel.c | 5 +----
-> platform-intel.h | 5 ++++-
-> super-intel.c    | 6 +++---
-> 5 files changed, 13 insertions(+), 13 deletions(-)
->=20
-> --=20
-> 2.26.2
->=20
+It's my pleasure.
+
+> Thanks,
+> Song
+> 
+>>
+>>          if (bitmap->bp[page].hijacked ||
+>>              bitmap->bp[page].map == NULL)
+>> --
+>> 2.31.1
+>>
+> .
+
+Thanks for your suggesion.
+
+-- 
+Thanks,
+Nan
 
