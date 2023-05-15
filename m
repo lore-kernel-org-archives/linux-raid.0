@@ -2,96 +2,84 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A39D1C7EE26
-	for <linux-raid@archiver.kernel.org>; Mon, 15 May 2023 01:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF60C7EE22
+	for <linux-raid@archiver.kernel.org>; Mon, 15 May 2023 13:49:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238142AbjEOBnc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 14 May 2023 21:43:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45676 "EHLO
+        id S233374AbjEONti (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 15 May 2023 09:49:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229708AbjEOBnb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 May 2023 21:43:31 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EABA10E9;
-        Sun, 14 May 2023 18:43:30 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QKMb13jWdz4f3mJ8;
-        Mon, 15 May 2023 09:43:25 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP3 (Coremail) with SMTP id _Ch0CgBH9CE9jmFkXtnYIg--.28848S3;
-        Mon, 15 May 2023 09:43:27 +0800 (CST)
-Subject: Re: [RFC PATCH] block: add meaningful macro for flush op flags
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "colyli@suse.de" <colyli@suse.de>,
-        "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@kernel.org" <snitzer@kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230512080757.387523-1-kch@nvidia.com>
- <20230512130042.GA29078@lst.de>
- <67376534-ac4a-3cd9-fab6-fd3a062f5e48@nvidia.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <2ca38f24-6c6f-4975-fcc8-e700c67029ee@huaweicloud.com>
-Date:   Mon, 15 May 2023 09:43:25 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S232128AbjEONtg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 15 May 2023 09:49:36 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFF8A10F1;
+        Mon, 15 May 2023 06:49:34 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QKghn13qDz4f3nTp;
+        Mon, 15 May 2023 21:49:29 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7NoOGJkNcUBJg--.7104S4;
+        Mon, 15 May 2023 21:49:30 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     song@kernel.org, neilb@suse.de, Rob.Becker@riverbed.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH OLK-5.10 v3 0/4] md: bugfix of writing raid sysfs
+Date:   Mon, 15 May 2023 21:48:04 +0800
+Message-Id: <20230515134808.3936750-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <67376534-ac4a-3cd9-fab6-fd3a062f5e48@nvidia.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgBH9CE9jmFkXtnYIg--.28848S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYI7kC6x804xWl14x267AKxVW5JVWrJwAF
-        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
-        64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r
-        1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjxUFDGOUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID: gCh0CgCnD7NoOGJkNcUBJg--.7104S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gr4kZF17WF4ktr1ktFWrKrg_yoWDXrcEqF
+        W0qa45tr1xXFW3JasrurnxArWUCa1jg3ZrJa1DtF4avw17Zry0qr40yrs5XF4rXrZ2vF15
+        AryxCr18ArnayjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb3xYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+        67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+        AFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAq
+        x4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14
+        v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02
+        628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+        v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+        1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+        AIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0D
+        MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvf
+        C2KfnxnUUI43ZEXa7IU1kpnJUUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: Li Nan <linan122@huawei.com>
 
-在 2023/05/13 9:09, Chaitanya Kulkarni 写道:
-> On 5/12/23 06:00, Christoph Hellwig wrote:
->> Hell no.  This is just obsfucation.  We can look into actually exposing
->> REQ_OP_FLUSH at the bio level, but not something like this.
->>
-> 
-> and that's why I made it RFC, thanks for the can you please elaborate
-> on "exposing REQ_OP_FLUSH at the bio level" ?
+The patch series fix the bug of writing raid sysfs.
 
-I think Christoph means that use this flag directly for bio, it's only
-used for reqeust for now.
+Changes in v2:
+ - in patch 1, move check out of md_bitmap_checkpage().
+ - in patch 2, use div64_u64() and DIV64_U64_ROUND_UP() instead of directly
+   '/', and chang old_delay/old_delay to unsigned int.
+ - in patch 4, use 'goto' to make changes more readable.
 
-Thanks,
-Kuai
-> 
-> I'd really like work that ...
-> 
-> -ck
-> 
-> 
+Changes in v2:
+ - add patch "md/raid10: optimize check_decay_read_errors()".
+ - in patch 2, return ret-value of strict_strtoul_scaled if error occurs.
+ - in patch 3, optimize format.
+
+Li Nan (4):
+  md/raid10: fix slab-out-of-bounds in md_bitmap_get_counter
+  md/raid10: fix overflow in safe_delay_store
+  md/raid10: fix wrong setting of max_corr_read_errors
+  md/raid10: optimize check_decay_read_errors()
+
+ drivers/md/md-bitmap.c | 17 ++++-----
+ drivers/md/md.c        | 78 ++++++++++++++++++++++++++----------------
+ drivers/md/raid10.c    | 41 +++++++++++++---------
+ 3 files changed, 82 insertions(+), 54 deletions(-)
+
+-- 
+2.31.1
 
