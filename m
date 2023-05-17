@@ -2,396 +2,121 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE6BDC77B7F
-	for <linux-raid@archiver.kernel.org>; Wed, 17 May 2023 13:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62582C7EE23
+	for <linux-raid@archiver.kernel.org>; Wed, 17 May 2023 23:33:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230415AbjEQN0p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 May 2023 09:26:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38540 "EHLO
+        id S229702AbjEQXdT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 May 2023 19:33:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229889AbjEQN0o (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 May 2023 09:26:44 -0400
-Received: from tiger.tulip.relay.mailchannels.net (tiger.tulip.relay.mailchannels.net [23.83.218.248])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07487199
-        for <linux-raid@vger.kernel.org>; Wed, 17 May 2023 06:26:39 -0700 (PDT)
-X-Sender-Id: a2hosting|x-authuser|raid@electrons.cloud
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id BF8AE3410C1
-        for <linux-raid@vger.kernel.org>; Wed, 17 May 2023 13:26:35 +0000 (UTC)
-Received: from mi3-ss61.a2hosting.com (unknown [127.0.0.6])
-        (Authenticated sender: a2hosting)
-        by relay.mailchannels.net (Postfix) with ESMTPA id 241DA340C26
-        for <linux-raid@vger.kernel.org>; Wed, 17 May 2023 13:26:35 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1684329995; a=rsa-sha256;
-        cv=none;
-        b=sHaEThFMuIp/NRkKKorKa9vB4jDam2ylzSe/bxmVgoVHEh0s0VECqJB7eG3ly6yspBHXcO
-        aphFiTtIFXS/wmWhEvkrRe4mCv3YYWDByfaLdw/1LkYx8H2IYL0Ys4t60if8JpAh6q8389
-        gCM0tXyUe6pyEwxpePpa4JfH9saspJ7KO0pfAc5U4bAkiGyCr78mYtS6xQ2AKrVVBSfM8b
-        jwenfH1EeUglIpl/vCyyG0g1rt8mkJutEQ4E02XQ5MHtOu/kEWJDn4mVEQg26SaQnTJsc8
-        m24ZNAX7nmGmpsCn4EGTVEoOarGnYpcuVLB2+h0luJMJDuNoeZNmojavcyVkZQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1684329995;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:dkim-signature;
-        bh=lCsgnkJ9jQ/BQkj9XZY5WD2MiupU01htJ8MnxcipZj0=;
-        b=6Y5H6LTbVTYbyQTswOglev5/XOuo5Vw4glqfNC7XdTYNnPVYDEnIMJykd8iNX2fWWw9+VQ
-        8DHjpg0M0FhGh/bzQmFO6h1N5wxaod4i4AVv2QCpZ/ZuQc+CGPN+g/j0elg41iWnBHBnBb
-        Vz6He9Nnz4gkfQj++DNJ3eHoLxi6+hwLobWG/KAcom4wB7kNwwamnk710+rJHcIQd1Wk3F
-        Y8qHC2/G2S3Ko74i20o/VP4QjbPDrHPfIl4csz4TrDPKBCu0ImBk9P00JwAaSjsAvCIIHf
-        onTRmNngvmTkT+SrcDATdLNq/EwO7vOH59Zx4NrWdaw36w5fVPIBJpWPMJnVSQ==
-ARC-Authentication-Results: i=1;
-        rspamd-5cdf8fd7d9-7wjvd;
-        auth=pass smtp.auth=a2hosting smtp.mailfrom=raid@electrons.cloud
-X-Sender-Id: a2hosting|x-authuser|raid@electrons.cloud
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: a2hosting|x-authuser|raid@electrons.cloud
-X-MailChannels-Auth-Id: a2hosting
-X-Whispering-Lonely: 1121d73c24988e9e_1684329995518_1867466032
-X-MC-Loop-Signature: 1684329995518:3719912108
-X-MC-Ingress-Time: 1684329995518
-Received: from mi3-ss61.a2hosting.com (mi3-ss61.a2hosting.com [70.32.23.92])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384)
-        by 100.127.59.19 (trex/6.8.1);
-        Wed, 17 May 2023 13:26:35 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=electrons.cloud; s=default; h=Content-Transfer-Encoding:MIME-Version:Date:
-        Content-Type:To:Reply-To:From:Subject:Message-ID:Sender:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=lCsgnkJ9jQ/BQkj9XZY5WD2MiupU01htJ8MnxcipZj0=; b=SEBmMLd/XG+EVj8MT4pcCV5NP9
-        ArhvpX6Fg6Od4rfCi5ZvOwsehgKjGPyLPaWiBa//eI4kXRl6HBQGzsR3AssJFFvE2abNyVsTub0RD
-        +yxXqblcdSMqmjeH/31a5FIIFRsEms3j1GQ47B8Qprg/y+ayS68BWYU6Pn4mujPMS+1I6qwvpVVOm
-        qdZY/lL1D9KrzTQ2QcVjSF4YPcCiLOJHEeA7FmnSVHswRrXy9I/uzup9VVFq1Vl3mKITgrN23yytt
-        BDv3aYdUuiZTsGEw9Egb8dbjgYmb8OQDGttoeHRC/bB07LcV1bvCHRAWr6sQB5DeTbdNDX20NSZ1d
-        VxTbePRg==;
-Received: from [2.56.190.51] (port=37256 helo=OAK2023)
-        by mi3-ss61.a2hosting.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.96)
-        (envelope-from <raid@electrons.cloud>)
-        id 1pzHAn-0007JE-38
-        for linux-raid@vger.kernel.org;
-        Wed, 17 May 2023 09:26:34 -0400
-Message-ID: <60563747e11acd6757b20ba19006fcdcff5df519.camel@electrons.cloud>
-Subject: RAID5 Phantom Drive Appeared while Reshaping Four Drive Array
- (HARDLOCK)
-From:   raid <raid@electrons.cloud>
-Reply-To: raid@electrons.cloud
-To:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date:   Wed, 17 May 2023 08:26:25 -0500
+        with ESMTP id S229468AbjEQXdS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 May 2023 19:33:18 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2614B40EB
+        for <linux-raid@vger.kernel.org>; Wed, 17 May 2023 16:33:17 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1ae3a5dfa42so11170435ad.0
+        for <linux-raid@vger.kernel.org>; Wed, 17 May 2023 16:33:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1684366396; x=1686958396;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZsdBaiO+SLRmvoF1oxELdQlQ303GgQ3he6ImyAqilwM=;
+        b=J/MaOic+T6lZSX9z6Crj6gInRjMD4E+E+bGF8IeK/gvj8+kVm52/pHWph1u3U31zYE
+         jIREYD7YA8vdvmTFseMWbpy5Nv0+FJ9aDZeIyNdd6yH1d6RIjSOmxQv7oWoVirv0X/E3
+         +iEcRGwC9ZGFbWfLGxA7xjhE6A9XCca1Op/D8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684366396; x=1686958396;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZsdBaiO+SLRmvoF1oxELdQlQ303GgQ3he6ImyAqilwM=;
+        b=Mi2d1JaW73bu21WCnzHDxaE7pbW86GJy41w5d9suUn4hdNx2PTr+vq2mrmmRRcAx9M
+         qAN3CwL2AAUaLYrixdswX922/U7+6P9q48ic0/lmrcZXA/3+zQ9QY4Ybfjfypghi8F+E
+         uvCWVIJ0f4V/q85hf19QLaXzZ1CWIBHL/4B2GgXFqIWZ5X4/eQCRLkfZ5yP6meUtTMHP
+         k/79YJXwMmcAU8LVO2lVYdiyNRchdjlp9iCbVnNFU7wZbWhUHvA95dvxCkx1SYnr3MgU
+         IrbtHfS2h/zD6L8+Hw26pY+XHjLZhgU1X4yIFIvIZs717fl/5QZF6JzxP1o8yKjjwY0L
+         OnWQ==
+X-Gm-Message-State: AC+VfDzghJLvbneN4YkMVWBV5zoYYde3cRc4PMDqY5pAuhbAXS69ynKE
+        gMin22ONykagZ3ZmUhLvrf4mmQ==
+X-Google-Smtp-Source: ACHHUZ6E2Rw/PI0VAhjazUgu2RxKRx7eteRLCIGlE1gszdmLtBUw2S018ls9GRz9WQsxYdPoqGDQIQ==
+X-Received: by 2002:a17:903:441:b0:19d:1bc1:ce22 with SMTP id iw1-20020a170903044100b0019d1bc1ce22mr456930plb.5.1684366396668;
+        Wed, 17 May 2023 16:33:16 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id j12-20020a170902690c00b001a04d27ee92sm18103534plk.241.2023.05.17.16.33.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 May 2023 16:33:16 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     Song Liu <song@kernel.org>
+Cc:     Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: [PATCH] md/raid5: Convert stripe_head's "dev" to flexible array member
+Date:   Wed, 17 May 2023 16:33:14 -0700
+Message-Id: <20230517233313.never.130-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Evolution 3.30.5-1.1 
-Content-Transfer-Encoding: 7bit
-X-AuthUser: raid@electrons.cloud
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2199; h=from:subject:message-id; bh=dQaDdwwfJIKVOpP+xhSN1JdgX+awrlBT4qD4Mzl0Qq4=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBkZWQ6fyNNtbsV/hrySf2Chk5e0QLsK0bNKO8z4CGK W/FZl+6JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZGVkOgAKCRCJcvTf3G3AJkBVD/ 0VnC+3+XtytL1FbA2D8cGLXcifNdjNC2tFU+YvanxrXpbAXCMZMNbbLI9x/wA+DpnMgDCIorVvmzxp 5qOg6fKbI521D3qFRGLs8+zvjo97zAUnamMh5P10oVxDuR8+/mTpLJqOriXMDpbWQ59PPiue9d7y4i A2Ypz4LBiPgfwTy28j9oMEjIFrJdLJ8f6fDIk/+ylA13ye5HybcjkqMPnw0GFcaqSw9QKPY04SZwdI V3gofJWC4TrHAvO8UlrBXlHn/85ONM/WVetDN2CbBnAtnbhVM5Dvl4q6w/EIEmzpx0qLW2/K+XS/hc TBfQwNA3x/qN4Q05uJL8MOots/9ubwpvVAkP04R2GWnYra7dSuQ/qx9n7o31zZRAxNpLp4sZdCxg/j OPRzEvMElGft2bf2uZBvOhVkAmLIF3g4S9miE4hN112NTumjDidb3fDdAD6QOxN4WmV52AoNbYl9Wn vGAjU36QjmZHLEwcZT6tjXBIN2lZJhV5At1cWpn7wETRK2cf3/9hcvabLdoGem+0uSUPL/5dUtkE06 wgRJw/BNYXNanjMEU7MwSQH3+q/ZO8gs7KWh5tW9ugSylw28UAFJq9ZrkoX553GNAyC3q3cCGxLlEc jpl3o64ZLcZvNX0/+vF8mJpYtCDj+CmiWU6+qpL+68medw17eMHWEIKs1fGQ==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-RAID5 Phantom Drive Appeared while Reshaping Four Drive Array
-(HARDLOCK)
+Replace old-style 1-element array of "dev" in struct stripe_head with
+modern C99 flexible array. In the future, we can additionally annotate
+it with the run-time size, found in the "disks" member.
 
-I've been struggling with this for about two weeks now, realizing that
-I need some expert help.
-
-My original 18 month old RAID5 consists of three newer TOSHIBA drives.
-/dev/sdc :: TOSHIBA MG08ACA16TE (4303) :: 16 TB (16,000,900,661,248
-bytes)
-/dev/sdd :: TOSHIBA MG08ACA16TE (4303) :: 16 TB (16,000,900,661,248
-bytes)
-/dev/sde :: TOSHIBA MG08ACA16TE (4002) :: 16 TB (16,000,900,661,248
-bytes)
-
-Recently added...
-/dev/sdf :: TOSHIBA MG08ACA16TE (4303) :: 16 TB (16,000,900,661,248
-bytes)
-
-In a nutshell, I've added a fourth drive to my RAID5 and executed --
-grow & mdadm estimated completion in 3-5 days.
-At about 30-50% of reshaping, the computer hard locked. Pushing the
-reset button was the agonizing requirement.
-
-After first reboot mdadm assembled & continued. But it displayed a
-fifth physical disk.
-The phantom FIFTH drive appeared as failed, while the other four
-continued reshaping, temporarily.
-The reshaping speed dropped to 0 after another day or so. It was near
-80%, I think.
-So, I used mdadm -S then mdadm --assemble --scan it couldn't start
-(because phantom drive?) not enough
-drives to start the array. The Array State on each member shows the
-fifth drive with varying status.
-
-File system (ext4) appears damaged and won't mount. Unrecognized
-filesystem.
-20TB are backed up, there are, however, about 7000 newly scanned
-documents that aren't.
-I've done a cursory examination of data using R-Linux. Abit of in depth
-peeking using Active Disk Editor.
-
-Life goes on. I've researched and read way more than I ever thought I
-would about mdadm RAID.
-Not any closer on how to proceed. I'm a hardware technician with some
-software skills. I'm stumped.
-Also trying to be cautious not to damage whats left of the RAID. ANY
-help with what commands
-I can attempt to at least get the RAID to assemble WITHOUT the phantom
-fifth drive would be
-immensely appreciated.
-
-All four drives now appear as spares.
-
+Cc: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
-watch -c -d -n 1 cat /proc/mdstat
-md480 : inactive sdc1[0](S) sdd1[1](S) sdf1[4](S) sde1[3](S)
-      62502985709 blocks super 1.2
+It looks like this memory calculation:
+
+        memory = conf->min_nr_stripes * (sizeof(struct stripe_head) +
+                 max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
+
+... was already buggy (i.e. it included the single "dev" bytes in the
+result). However, I'm not entirely sure if that is the right analysis,
+since "dev" is not related to struct bio nor PAGE_SIZE?
 ---
-uname -a
-Linux OAK2023 4.19.0-24-amd64 #1 SMP Debian 4.19.282-1 (2023-04-29)
-x86_64 GNU/Linux
----
-mdadm --version
-mdadm - v4.1 - 2018-10-01
----
-mdadm -E /dev/sd[c-f]1 
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x45
-     Array UUID : 20211025:02005a7a:5a7abeef:cafebabe
-           Name : GRANDSLAM:480
-  Creation Time : Tue Oct 26 14:06:53 2021
-     Raid Level : raid5
-   Raid Devices : 5
+ drivers/md/raid5.c | 4 ++--
+ drivers/md/raid5.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
- Avail Dev Size : 31251492831 (14901.87 GiB 16000.76 GB)
-     Array Size : 62502983680 (59607.49 GiB 64003.06 GB)
-  Used Dev Size : 31251491840 (14901.87 GiB 16000.76 GB)
-    Data Offset : 264192 sectors
-     New Offset : 261120 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 8f0835db:3ea24540:2ab4232d:6203d1b7
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 51850891264 (49448.86 GiB 53095.31 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Thu May  4 14:39:03 2023
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 37ac3c04 - correct
-         Events : 78714
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AA.A. ('A' == active, '.' == missing, 'R' ==
-replacing)
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x45
-     Array UUID : 20211025:02005a7a:5a7abeef:cafebabe
-           Name : GRANDSLAM:480
-  Creation Time : Tue Oct 26 14:06:53 2021
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 31251492831 (14901.87 GiB 16000.76 GB)
-     Array Size : 62502983680 (59607.49 GiB 64003.06 GB)
-  Used Dev Size : 31251491840 (14901.87 GiB 16000.76 GB)
-    Data Offset : 264192 sectors
-     New Offset : 261120 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : b4660f49:867b9f1e:ecad0ace:c7119c37
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 51850891264 (49448.86 GiB 53095.31 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Thu May  4 14:39:03 2023
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : a4927b98 - correct
-         Events : 78714
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AA.A. ('A' == active, '.' == missing, 'R' ==
-replacing)
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x45
-     Array UUID : 20211025:02005a7a:5a7abeef:cafebabe
-           Name : GRANDSLAM:480
-  Creation Time : Tue Oct 26 14:06:53 2021
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 31251492831 (14901.87 GiB 16000.76 GB)
-     Array Size : 62502983680 (59607.49 GiB 64003.06 GB)
-  Used Dev Size : 31251491840 (14901.87 GiB 16000.76 GB)
-    Data Offset : 264192 sectors
-     New Offset : 261120 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 79a3dff4:c53f9071:f9c1c262:403fbc10
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 51850891264 (49448.86 GiB 53095.31 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Thu May  4 14:38:38 2023
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 112fbe09 - correct
-         Events : 78712
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : AAAA. ('A' == active, '.' == missing, 'R' ==
-replacing)
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x45
-     Array UUID : 20211025:02005a7a:5a7abeef:cafebabe
-           Name : GRANDSLAM:480
-  Creation Time : Tue Oct 26 14:06:53 2021
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 31251492926 (14901.87 GiB 16000.76 GB)
-     Array Size : 62502983680 (59607.49 GiB 64003.06 GB)
-  Used Dev Size : 31251491840 (14901.87 GiB 16000.76 GB)
-    Data Offset : 264192 sectors
-     New Offset : 261120 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 9d9c1c0d:030844a7:f365ace6:5e568930
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 51850891264 (49448.86 GiB 53095.31 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Thu May  4 14:39:03 2023
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 2d33aff - correct
-         Events : 78714
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : AA.A. ('A' == active, '.' == missing, 'R' ==
-replacing)
----
-mdadm -E /dev/sd[c-f]1 | grep -E '^/dev/sd|Update'
-/dev/sdc1:
-    Update Time : Thu May  4 14:39:03 2023
-/dev/sdd1:
-    Update Time : Thu May  4 14:39:03 2023
-/dev/sde1:
-    Update Time : Thu May  4 14:38:38 2023
-/dev/sdf1:
-    Update Time : Thu May  4 14:39:03 2023
----
-mdadm --assemble --scan 
-mdadm: /dev/md/GRANDSLAM:480 assembled from 3 drives - not enough to
-start the array.
----
-/etc/mdadm/mdadm.conf
-# This configuration was auto-generated on Tue, 26 Oct 2021 12:52:33
--0500 by mkconf
-ARRAY /dev/md480 metadata=1.2 name=GRANDSLAM:480
-UUID=20211025:02005a7a:5a7abeef:cafebabe
----
-
-NOTE: Raid Level is now shown below to be raid0. This is a RAID5.
-      Delta Devices are munged?
-
-NOW;mdadm -D /dev/md480
- 2023.05.17 02:44:06 AM 
-/dev/md480:
-           Version : 1.2
-        Raid Level : raid0
-     Total Devices : 4
-       Persistence : Superblock is persistent
-
-             State : inactive
-   Working Devices : 4
-
-     Delta Devices : 1, (-1->0)
-         New Level : raid5
-        New Layout : left-symmetric
-     New Chunksize : 512K
-
-              Name : GRANDSLAM:480
-              UUID : 20211025:02005a7a:5a7abeef:cafebabe
-            Events : 78714
-
-    Number   Major   Minor   RaidDevice
-
-       -       8       81        -        /dev/sdf1
-       -       8       65        -        /dev/sde1
-       -       8       49        -        /dev/sdd1
-       -       8       33        -        /dev/sdc1
----
-
-NOTE: The HITACHI MG08ACA16TE drives default to DISABLED
-      I've since enabled the setting if this helps.
-
-smartctl -l scterc /dev/sdc; smartctl -l scterc /dev/sdd; smartctl -l
-scterc /dev/sde; smartctl -l scterc /dev/sdf
-
-smartctl 6.6 2017-11-05 r4594 [x86_64-linux-4.19.0-24-amd64] (local
-build)
-Copyright (C) 2002-17, Bruce Allen, Christian Franke, 
-www.smartmontools.org
-
-SCT Error Recovery Control:
-           Read:     70 (7.0 seconds)
-          Write:     70 (7.0 seconds)
-
-smartctl 6.6 2017-11-05 r4594 [x86_64-linux-4.19.0-24-amd64] (local
-build)
-Copyright (C) 2002-17, Bruce Allen, Christian Franke, 
-www.smartmontools.org
-
-SCT Error Recovery Control:
-           Read:     70 (7.0 seconds)
-          Write:     70 (7.0 seconds)
-
-smartctl 6.6 2017-11-05 r4594 [x86_64-linux-4.19.0-24-amd64] (local
-build)
-Copyright (C) 2002-17, Bruce Allen, Christian Franke, 
-www.smartmontools.org
-
-SCT Error Recovery Control:
-           Read:     70 (7.0 seconds)
-          Write:     70 (7.0 seconds)
-
-smartctl 6.6 2017-11-05 r4594 [x86_64-linux-4.19.0-24-amd64] (local
-build)
-Copyright (C) 2002-17, Bruce Allen, Christian Franke, 
-www.smartmontools.org
-
-SCT Error Recovery Control:
-           Read:     70 (7.0 seconds)
-          Write:     70 (7.0 seconds)
-
----
-
-Exhausted and maybe I'm just looking for someone to suggest running the
-command that I really don't want to run yet.
-
-Enabling Loss Of Confusion flag hasn't worked either.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4739ed891e75..95aa74aea076 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2433,7 +2433,7 @@ static int grow_stripes(struct r5conf *conf, int num)
+ 
+ 	conf->active_name = 0;
+ 	sc = kmem_cache_create(conf->cache_name[conf->active_name],
+-			       sizeof(struct stripe_head)+(devs-1)*sizeof(struct r5dev),
++			       struct_size((struct stripe_head *)0, dev, devs),
+ 			       0, 0, NULL);
+ 	if (!sc)
+ 		return 1;
+@@ -2559,7 +2559,7 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+ 
+ 	/* Step 1 */
+ 	sc = kmem_cache_create(conf->cache_name[1-conf->active_name],
+-			       sizeof(struct stripe_head)+(newsize-1)*sizeof(struct r5dev),
++			       struct_size((struct stripe_head *)0, dev, newsize),
+ 			       0, 0, NULL);
+ 	if (!sc)
+ 		return -ENOMEM;
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index e873938a6125..6cfc74162b41 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -268,7 +268,7 @@ struct stripe_head {
+ 		unsigned long	flags;
+ 		u32		log_checksum;
+ 		unsigned short	write_hint;
+-	} dev[1]; /* allocated with extra space depending of RAID geometry */
++	} dev[]; /* allocated with extra space depending of RAID geometry */
+ };
+ 
+ /* stripe_head_state - collects and tracks the dynamic state of a stripe_head
+-- 
+2.34.1
 
