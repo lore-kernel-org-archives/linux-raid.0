@@ -2,110 +2,158 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA9DDC7EE22
-	for <linux-raid@archiver.kernel.org>; Mon, 15 May 2023 13:49:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CBB4C77B7F
+	for <linux-raid@archiver.kernel.org>; Wed, 17 May 2023 13:22:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235634AbjEONtr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 15 May 2023 09:49:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56138 "EHLO
+        id S230086AbjEQNWt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 May 2023 09:22:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232713AbjEONth (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 15 May 2023 09:49:37 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C5BD1BDF;
-        Mon, 15 May 2023 06:49:35 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QKghn4ws5z4f3lwl;
-        Mon, 15 May 2023 21:49:29 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7NoOGJkNcUBJg--.7104S7;
-        Mon, 15 May 2023 21:49:31 +0800 (CST)
-From:   linan666@huaweicloud.com
-To:     song@kernel.org, neilb@suse.de, Rob.Becker@riverbed.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
-        houtao1@huawei.com, yangerkun@huawei.com
-Subject: [PATCH OLK-5.10 v3 3/4] md/raid10: fix wrong setting of max_corr_read_errors
-Date:   Mon, 15 May 2023 21:48:07 +0800
-Message-Id: <20230515134808.3936750-4-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230515134808.3936750-1-linan666@huaweicloud.com>
-References: <20230515134808.3936750-1-linan666@huaweicloud.com>
+        with ESMTP id S231932AbjEQNWg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 May 2023 09:22:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 700CC19BD;
+        Wed, 17 May 2023 06:22:28 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DAA3D6435E;
+        Wed, 17 May 2023 13:22:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C252C433EF;
+        Wed, 17 May 2023 13:22:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684329747;
+        bh=kOiatuzHsXf6QCfoX/dn21WUzpfgb5KaOfzC26f90Zo=;
+        h=From:To:Cc:Subject:Date:From;
+        b=XHdoBVopIBFp9u3NUtzX8zsVUCrgJPg/GcgSg2H2tRYfaboEy+qNa2efQnFLRnTiZ
+         RV8zuBCCNbIg+8I1i4wPMiMblmAbyfDt4sySoL9MseG4Vw1H1qcr5O6E078MDAZChN
+         UB+1hJ3JE8W4twf5vYYzn1wSFvmZbdslrLVE65xMkBvsuCQtoxbRJHqomHmt5TDSlm
+         ppx3jUpbCLVufS93I5hT5Qp/HkBoSyT6Ma+TQn1qd/v39HXL5TVYPns28GrQZP1quP
+         olyGfnx7ZX3UgAMMtnxJpV5xW1aewJhKW8oGd2ZBKvtMqoMwWD2bx9g4d9jMKVi1q4
+         n3BnP7qfBecSw==
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>, Song Liu <song@kernel.org>
+Cc:     Ard Biesheuvel <ardb@kernel.org>, linux-raid@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
+Subject: [PATCH] raid6: neon: add missing prototypes
+Date:   Wed, 17 May 2023 15:22:12 +0200
+Message-Id: <20230517132220.937200-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7NoOGJkNcUBJg--.7104S7
-X-Coremail-Antispam: 1UD129KBjvJXoW7CrWDCFWruF13uF43uF4kJFb_yoW8uFW7pw
-        srAasxZr15A34UAr1DJrykua4Fy34FkayjyryrAw4fW3W3Jr98t3WUGayjgr1DWF1rt3W3
-        XFZ8KrWDCa18tFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUmjb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
-        A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-        6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
-        ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
-        JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2
-        ka0xkIwI1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j
-        6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7
-        AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE
-        2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcV
-        C2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kfnx
-        nUUI43ZEXa7IU1BOJ7UUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Li Nan <linan122@huawei.com>
+From: Arnd Bergmann <arnd@arndb.de>
 
-max_corr_read_errors should not be negative number. Change it to
-unsigned int where use it.
+The raid6 syndrome functions are generated for different sizes and have
+no generic prototype, while in the inner functions have a prototype
+in a header that cannot be included from the correct file. In both
+cases, the compiler warns about missing prototypes:
 
-Fixes: 1e50915fe0bb ("raid: improve MD/raid10 handling of correctable read errors.")
-Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+lib/raid6/recov_neon_inner.c:27:6: warning: no previous prototype for '__raid6_2data_recov_neon' [-Wmissing-prototypes]
+lib/raid6/recov_neon_inner.c:77:6: warning: no previous prototype for '__raid6_datap_recov_neon' [-Wmissing-prototypes]
+lib/raid6/neon1.c:56:6: warning: no previous prototype for 'raid6_neon1_gen_syndrome_real' [-Wmissing-prototypes]
+lib/raid6/neon1.c:86:6: warning: no previous prototype for 'raid6_neon1_xor_syndrome_real' [-Wmissing-prototypes]
+lib/raid6/neon2.c:56:6: warning: no previous prototype for 'raid6_neon2_gen_syndrome_real' [-Wmissing-prototypes]
+lib/raid6/neon2.c:97:6: warning: no previous prototype for 'raid6_neon2_xor_syndrome_real' [-Wmissing-prototypes]
+lib/raid6/neon4.c:56:6: warning: no previous prototype for 'raid6_neon4_gen_syndrome_real' [-Wmissing-prototypes]
+lib/raid6/neon4.c:119:6: warning: no previous prototype for 'raid6_neon4_xor_syndrome_real' [-Wmissing-prototypes]
+lib/raid6/neon8.c:56:6: warning: no previous prototype for 'raid6_neon8_gen_syndrome_real' [-Wmissing-prototypes]
+lib/raid6/neon8.c:163:6: warning: no previous prototype for 'raid6_neon8_xor_syndrome_real' [-Wmissing-prototypes]
+
+Add a new header file that contains the prototypes for both to avoid
+the warnings.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/md/md.c     | 2 +-
- drivers/md/raid10.c | 5 +++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ lib/raid6/neon.h             | 22 ++++++++++++++++++++++
+ lib/raid6/neon.uc            |  1 +
+ lib/raid6/recov_neon.c       |  8 +-------
+ lib/raid6/recov_neon_inner.c |  1 +
+ 4 files changed, 25 insertions(+), 7 deletions(-)
+ create mode 100644 lib/raid6/neon.h
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5bba071ea907..b69ddfb1662a 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4484,7 +4484,7 @@ __ATTR_PREALLOC(array_state, S_IRUGO|S_IWUSR, array_state_show, array_state_stor
+diff --git a/lib/raid6/neon.h b/lib/raid6/neon.h
+new file mode 100644
+index 000000000000..2ca41ee9b499
+--- /dev/null
++++ b/lib/raid6/neon.h
+@@ -0,0 +1,22 @@
++// SPDX-License-Identifier: GPL-2.0-only
++
++void raid6_neon1_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs);
++void raid6_neon1_xor_syndrome_real(int disks, int start, int stop,
++				    unsigned long bytes, void **ptrs);
++void raid6_neon2_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs);
++void raid6_neon2_xor_syndrome_real(int disks, int start, int stop,
++				    unsigned long bytes, void **ptrs);
++void raid6_neon4_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs);
++void raid6_neon4_xor_syndrome_real(int disks, int start, int stop,
++				    unsigned long bytes, void **ptrs);
++void raid6_neon8_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs);
++void raid6_neon8_xor_syndrome_real(int disks, int start, int stop,
++				    unsigned long bytes, void **ptrs);
++void __raid6_2data_recov_neon(int bytes, uint8_t *p, uint8_t *q, uint8_t *dp,
++			      uint8_t *dq, const uint8_t *pbmul,
++			      const uint8_t *qmul);
++
++void __raid6_datap_recov_neon(int bytes, uint8_t *p, uint8_t *q, uint8_t *dq,
++			      const uint8_t *qmul);
++
++
+diff --git a/lib/raid6/neon.uc b/lib/raid6/neon.uc
+index b7c68030da4f..355270af0cd6 100644
+--- a/lib/raid6/neon.uc
++++ b/lib/raid6/neon.uc
+@@ -25,6 +25,7 @@
+  */
  
- static ssize_t
- max_corrected_read_errors_show(struct mddev *mddev, char *page) {
--	return sprintf(page, "%d\n",
-+	return sprintf(page, "%u\n",
- 		       atomic_read(&mddev->max_corr_read_errors));
+ #include <arm_neon.h>
++#include "neon.h"
+ 
+ typedef uint8x16_t unative_t;
+ 
+diff --git a/lib/raid6/recov_neon.c b/lib/raid6/recov_neon.c
+index d6fba8bf8c0a..1bfc14174d4d 100644
+--- a/lib/raid6/recov_neon.c
++++ b/lib/raid6/recov_neon.c
+@@ -8,6 +8,7 @@
+ 
+ #ifdef __KERNEL__
+ #include <asm/neon.h>
++#include "neon.h"
+ #else
+ #define kernel_neon_begin()
+ #define kernel_neon_end()
+@@ -19,13 +20,6 @@ static int raid6_has_neon(void)
+ 	return cpu_has_neon();
  }
  
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 4fcfcb350d2b..4d615fcc6a50 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2727,7 +2727,8 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
- 	int sect = 0; /* Offset from r10_bio->sector */
- 	int sectors = r10_bio->sectors;
- 	struct md_rdev *rdev;
--	int max_read_errors = atomic_read(&mddev->max_corr_read_errors);
-+	unsigned int max_read_errors =
-+			atomic_read(&mddev->max_corr_read_errors);
- 	int d = r10_bio->devs[r10_bio->read_slot].devnum;
+-void __raid6_2data_recov_neon(int bytes, uint8_t *p, uint8_t *q, uint8_t *dp,
+-			      uint8_t *dq, const uint8_t *pbmul,
+-			      const uint8_t *qmul);
+-
+-void __raid6_datap_recov_neon(int bytes, uint8_t *p, uint8_t *q, uint8_t *dq,
+-			      const uint8_t *qmul);
+-
+ static void raid6_2data_recov_neon(int disks, size_t bytes, int faila,
+ 		int failb, void **ptrs)
+ {
+diff --git a/lib/raid6/recov_neon_inner.c b/lib/raid6/recov_neon_inner.c
+index 90eb80d43790..f9e7e8f5a151 100644
+--- a/lib/raid6/recov_neon_inner.c
++++ b/lib/raid6/recov_neon_inner.c
+@@ -5,6 +5,7 @@
+  */
  
- 	/* still own a reference to this rdev, so it cannot
-@@ -2743,7 +2744,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
- 	check_decay_read_errors(mddev, rdev);
- 	atomic_inc(&rdev->read_errors);
- 	if (atomic_read(&rdev->read_errors) > max_read_errors) {
--		pr_notice("md/raid10:%s: %pg: Raid device exceeded read_error threshold [cur %d:max %d]\n",
-+		pr_notice("md/raid10:%s: %pg: Raid device exceeded read_error threshold [cur %u:max %u]\n",
- 			  mdname(mddev), rdev->bdev,
- 			  atomic_read(&rdev->read_errors), max_read_errors);
- 		pr_notice("md/raid10:%s: %pg: Failing raid device\n",
+ #include <arm_neon.h>
++#include "neon.h"
+ 
+ #ifdef CONFIG_ARM
+ /*
 -- 
-2.31.1
+2.39.2
 
