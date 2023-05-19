@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5FB4C77B7A
-	for <linux-raid@archiver.kernel.org>; Fri, 19 May 2023 21:21:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31976C77B7A
+	for <linux-raid@archiver.kernel.org>; Fri, 19 May 2023 22:01:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231590AbjESVVA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 19 May 2023 17:21:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50292 "EHLO
+        id S229887AbjESWB6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 19 May 2023 18:01:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231172AbjESVU7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 19 May 2023 17:20:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8846719A5;
-        Fri, 19 May 2023 14:20:27 -0700 (PDT)
+        with ESMTP id S229458AbjESWB5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 19 May 2023 18:01:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EA0DB8;
+        Fri, 19 May 2023 15:01:57 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 08B5665B4A;
-        Fri, 19 May 2023 21:20:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21D9FC433A0;
-        Fri, 19 May 2023 21:20:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DF1D665AF2;
+        Fri, 19 May 2023 22:01:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C376C4339C;
+        Fri, 19 May 2023 22:01:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684531226;
-        bh=Hx9YxDvnmiuLLsAPDd2ZBc/YZmExH97fLGn0ryg0wbA=;
+        s=k20201202; t=1684533716;
+        bh=zP5YbzLCW3H0+E9nltMtNoB/5VTVg3nEDMBHv7bodmA=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=E2OoWc4mFCxQs4OOViJWKQUvGuPvRpSTW5QO1LpeR90qzptifJZzz0cGtAKeWlrEq
-         CSKpRr4rmcU1QNucIDXe7aYEOw9a4ZUkqoRpseNHQnp1owGs6Dv+2JU0ctwd/7tokk
-         8wK9o9JH9S+mJOsTg3FPtcvroyLY1Wzdq0Ef2CjP+cYTDFuUSEdZoMhnVjnLMiQBjj
-         vi5NwBxAgMwedDj7y9LWv7XgDxH13BkwFqYSdwlpW+FPWfvJwStj7DWqNg8p4k2hDf
-         Fo9LZr7EoCgQAgeRMaCg3hlXA26ftcDxy5IHSWuhdLGUzXNu8teOkXM87rkjOVYaSS
-         plUKLVyj9yrIg==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-4f00d41df22so1614980e87.1;
-        Fri, 19 May 2023 14:20:25 -0700 (PDT)
-X-Gm-Message-State: AC+VfDzWreugUqGoEo4HYRIi9WIhLPh4Tc4UAAwcP+7QmwvHot/IOi0E
-        MpBU+oT3yL3fpkBEzc6TcuYWDDGrq3K55n84eKw=
-X-Google-Smtp-Source: ACHHUZ6Zdk+ZYWMf7/0dgtkwTjYsk7+tB3MdzH1u1nvfCHTXpfmxvjhPUIYRsjULOTKH6D5fpF9hD/LPo2FgU6Qky2k=
-X-Received: by 2002:a05:6512:3ca3:b0:4f3:7889:7603 with SMTP id
- h35-20020a0565123ca300b004f378897603mr1355316lfv.24.1684531223886; Fri, 19
- May 2023 14:20:23 -0700 (PDT)
+        b=bsV1NvDfvlFGN6APD8QVM8hE+rypkD09e2/VlWPZdED6Qp6dqxNZE1rxZJYzxCpFV
+         9oVE8jUCYY95Te4GcNIoE1td5uN91V6EzfEdIAD/08zds04vYu6AUpKN/qZ/5orvBB
+         KqIOtCGuoJBBL/8pyRH1+rZU06mXvHW4MucelwUs3vf+pi3jVIzP9F3B4vutUvJVTb
+         K6KahXfBHmEbEN0OV7hfsot3XhkM8FSmPAiQRECczdesMGBNRE4YNMQo1O/RprNMCf
+         Y4ahONiGYF7CEtwgeejjeoh+E5hx9jLiiDr2fAa3t86eAY9MTXI8H98poBe6+002K/
+         YRaigv7zSz1Yg==
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-4efe8b3f3f7so4271911e87.2;
+        Fri, 19 May 2023 15:01:56 -0700 (PDT)
+X-Gm-Message-State: AC+VfDza118GaZuIZBNO9s/noqkDBlmQaYZ0/wxH+3M8PUsdS23CMY33
+        9fbuqcZ1EUAJmLT2WKWKo+j6CXgZXPoi+7vZkQE=
+X-Google-Smtp-Source: ACHHUZ61GFQXgASCQYjDCJyi45K5KlKEUFmHKNXXkbtTeByodchdOGGwTLqGV1P53cPWhRppnf/U/xGLBeSFZhVbX/g=
+X-Received: by 2002:ac2:547c:0:b0:4ef:f01d:5a96 with SMTP id
+ e28-20020ac2547c000000b004eff01d5a96mr1016203lfn.21.1684533714316; Fri, 19
+ May 2023 15:01:54 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230515134808.3936750-1-linan666@huaweicloud.com> <20230515134808.3936750-2-linan666@huaweicloud.com>
-In-Reply-To: <20230515134808.3936750-2-linan666@huaweicloud.com>
+References: <20230515134808.3936750-1-linan666@huaweicloud.com> <20230515134808.3936750-3-linan666@huaweicloud.com>
+In-Reply-To: <20230515134808.3936750-3-linan666@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 19 May 2023 14:20:11 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5AuCPm1kL9f-R1fdPMqs3OEfZR2UUF3AkqC3Y0T_=snQ@mail.gmail.com>
-Message-ID: <CAPhsuW5AuCPm1kL9f-R1fdPMqs3OEfZR2UUF3AkqC3Y0T_=snQ@mail.gmail.com>
-Subject: Re: [PATCH OLK-5.10 v3 1/4] md/raid10: fix slab-out-of-bounds in md_bitmap_get_counter
+Date:   Fri, 19 May 2023 15:01:42 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW53EAK406k+PoLWi2z6SPLJBWa8r4rgXqoYKFRXm-kPSg@mail.gmail.com>
+Message-ID: <CAPhsuW53EAK406k+PoLWi2z6SPLJBWa8r4rgXqoYKFRXm-kPSg@mail.gmail.com>
+Subject: Re: [PATCH OLK-5.10 v3 2/4] md/raid10: fix overflow in safe_delay_store
 To:     linan666@huaweicloud.com
 Cc:     neilb@suse.de, Rob.Becker@riverbed.com, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, linan122@huawei.com,
@@ -62,73 +62,19 @@ On Mon, May 15, 2023 at 6:49=E2=80=AFAM <linan666@huaweicloud.com> wrote:
 >
 > From: Li Nan <linan122@huawei.com>
 >
-> If we write a large number to md/bitmap_set_bits, md_bitmap_checkpage()
-> will return -EINVAL because 'page >=3D bitmap->pages', but the return val=
-ue
-> was not checked immediately in md_bitmap_get_counter() in order to set
-> *blocks value and slab-out-of-bounds occurs.
+> There is no input check when echo md/safe_mode_delay and overflow will
+> occur. There is risk of overflow in strict_strtoul_scaled(), too. Fix it
+> by using kstrtoul instead of parsing word one by one.
 >
-> Move check of 'page >=3D bitmap->pages' to md_bitmap_get_counter() and
-> return directly if true.
->
-> Fixes: ef4256733506 ("md/bitmap: optimise scanning of empty bitmaps.")
+> Fixes: 72e02075a33f ("md: factor out parsing of fixed-point numbers")
 > Signed-off-by: Li Nan <linan122@huawei.com>
 > Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/md-bitmap.c | 17 +++++++++--------
->  1 file changed, 9 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 920bb68156d2..e122b19c124d 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -46,6 +46,7 @@ static inline char *bmname(struct bitmap *bitmap)
->   *
->   * if we find our page, we increment the page's refcount so that it stay=
-s
->   * allocated while we're using it
-> + * the caller must make sure 'page < bimap->pages'
->   */
+>  drivers/md/md.c | 76 +++++++++++++++++++++++++++++++------------------
+>  1 file changed, 48 insertions(+), 28 deletions(-)
 
-I removed this comment, and added WARN_ON_ONCE().
+This patch adds more complexity, which I don't really think is necessary.
+Can we just check for overflow in safe_delay_store()?
 
 Thanks,
 Song
-
->  static int md_bitmap_checkpage(struct bitmap_counts *bitmap,
->                                unsigned long page, int create, int no_hij=
-ack)
-> @@ -54,14 +55,6 @@ __acquires(bitmap->lock)
->  {
->         unsigned char *mappage;
->
-> -       if (page >=3D bitmap->pages) {
-> -               /* This can happen if bitmap_start_sync goes beyond
-> -                * End-of-device while looking for a whole page.
-> -                * It is harmless.
-> -                */
-> -               return -EINVAL;
-> -       }
-> -
->         if (bitmap->bp[page].hijacked) /* it's hijacked, don't try to all=
-oc */
->                 return 0;
->
-> @@ -1387,6 +1380,14 @@ __acquires(bitmap->lock)
->         sector_t csize;
->         int err;
->
-> +       if (page >=3D bitmap->pages) {
-> +               /*
-> +                * This can happen if bitmap_start_sync goes beyond
-> +                * End-of-device while looking for a whole page or
-> +                * user set a huge number to sysfs bitmap_set_bits.
-> +                */
-> +               return NULL;
-> +       }
->         err =3D md_bitmap_checkpage(bitmap, page, create, 0);
->
->         if (bitmap->bp[page].hijacked ||
-> --
-> 2.31.1
->
