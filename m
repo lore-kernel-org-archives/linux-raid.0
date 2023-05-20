@@ -2,59 +2,57 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E075EC77B7A
-	for <linux-raid@archiver.kernel.org>; Sat, 20 May 2023 00:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 126BBC77B75
+	for <linux-raid@archiver.kernel.org>; Sat, 20 May 2023 00:51:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230149AbjETAqh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 19 May 2023 20:46:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37786 "EHLO
+        id S230324AbjETAvK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 19 May 2023 20:51:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbjETAqg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 19 May 2023 20:46:36 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85FE619F;
-        Fri, 19 May 2023 17:46:35 -0700 (PDT)
+        with ESMTP id S229512AbjETAvJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 19 May 2023 20:51:09 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ED4E19A;
+        Fri, 19 May 2023 17:51:08 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QNQ5348DPz4f3l91;
-        Sat, 20 May 2023 08:46:31 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QNQBH2Mthz4f3lK7;
+        Sat, 20 May 2023 08:51:03 +0800 (CST)
 Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgCH77JoGGhkawM3Jw--.59245S3;
-        Sat, 20 May 2023 08:46:32 +0800 (CST)
-Message-ID: <537ffeb6-5b46-ebc7-cf48-19f9d628967c@huaweicloud.com>
-Date:   Sat, 20 May 2023 08:46:32 +0800
+        by APP4 (Coremail) with SMTP id gCh0CgAHvbB4GWhk6TI3Jw--.19687S3;
+        Sat, 20 May 2023 08:51:05 +0800 (CST)
+Message-ID: <3a0962c4-0aa4-c54c-99dd-f3d00969e672@huaweicloud.com>
+Date:   Sat, 20 May 2023 08:51:04 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH OLK-5.10 v3 3/4] md/raid10: fix wrong setting of
- max_corr_read_errors
+Subject: Re: [PATCH OLK-5.10 v3 0/4] md: bugfix of writing raid sysfs
 To:     Song Liu <song@kernel.org>, linan666@huaweicloud.com
 Cc:     neilb@suse.de, Rob.Becker@riverbed.com, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, yukuai3@huawei.com,
         yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
 References: <20230515134808.3936750-1-linan666@huaweicloud.com>
- <20230515134808.3936750-4-linan666@huaweicloud.com>
- <CAPhsuW4SweXwqCN-_z926CSw4+i0-nHKj8wNooKBvV-1YJ1moQ@mail.gmail.com>
+ <CAPhsuW7m5hFY2L=2_FA-Qq3Yxr0a4r_QHdXSeZQ8kLgXMvj1sA@mail.gmail.com>
+ <CAPhsuW7xWOcX8jOpyzTV2hVFj8XXwH0frgYx9r8xD6VNndPDng@mail.gmail.com>
 From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <CAPhsuW4SweXwqCN-_z926CSw4+i0-nHKj8wNooKBvV-1YJ1moQ@mail.gmail.com>
+In-Reply-To: <CAPhsuW7xWOcX8jOpyzTV2hVFj8XXwH0frgYx9r8xD6VNndPDng@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCH77JoGGhkawM3Jw--.59245S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF1kJr45KF1ktr1xtr1UKFg_yoW8Gr48pF
-        4kGas0vr4UAF17AFsFvrykuasYyasakrWUGryUAa4fXF98Wry3Cr9rKa9agF1vgr1rKF13
-        XFsIg3s8C3W8trDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-        0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr
-        1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
-        xwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7V
-        AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-        r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6x
-        IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-        w20EY4v20xvaj40_Zr0_Wr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-        CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUAkucUUUUU=
+X-CM-TRANSID: gCh0CgAHvbB4GWhk6TI3Jw--.19687S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYA7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
+        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+        Iv6xkF7I0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvE
+        ncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I
+        8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0E
+        jII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbI
+        xvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
+        xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
+        kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v2
+        6r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Jr0_Gr
+        1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbZmitUU
+        UUU==
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -63,45 +61,13 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-在 2023/5/20 6:06, Song Liu 写道:
-> On Mon, May 15, 2023 at 6:49 AM <linan666@huaweicloud.com> wrote:
->>
->> From: Li Nan <linan122@huawei.com>
->>
->> max_corr_read_errors should not be negative number. Change it to
->> unsigned int where use it.
->>
->> Fixes: 1e50915fe0bb ("raid: improve MD/raid10 handling of correctable read errors.")
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   drivers/md/md.c     | 2 +-
->>   drivers/md/raid10.c | 5 +++--
->>   2 files changed, 4 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 5bba071ea907..b69ddfb1662a 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -4484,7 +4484,7 @@ __ATTR_PREALLOC(array_state, S_IRUGO|S_IWUSR, array_state_show, array_state_stor
->>
->>   static ssize_t
->>   max_corrected_read_errors_show(struct mddev *mddev, char *page) {
->> -       return sprintf(page, "%d\n",
->> +       return sprintf(page, "%u\n",
->>                         atomic_read(&mddev->max_corr_read_errors));
->>   }
+在 2023/5/20 6:08, Song Liu 写道:
+> Btw, what does "OLK-5.10" mean?
 > 
-> max_corr_read_errors is atomic_t, so a signed integer. So these
-> signed => unsigned changes are pretty error prone. Can we just
-> add check in max_corrected_read_errors_store() so we never store
-> a negative value?
-> 
-> Thanks,
 > Song
 > 
 
-I will check input in v4
+Sry, it is a slip of the pen.
 
 -- 
 Thanks,
