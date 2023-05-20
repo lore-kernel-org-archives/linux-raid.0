@@ -2,74 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 126BBC77B75
-	for <linux-raid@archiver.kernel.org>; Sat, 20 May 2023 00:51:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E6ADC77B7F
+	for <linux-raid@archiver.kernel.org>; Sat, 20 May 2023 02:31:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230324AbjETAvK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 19 May 2023 20:51:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38714 "EHLO
+        id S229944AbjETCa7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 19 May 2023 22:30:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbjETAvJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 19 May 2023 20:51:09 -0400
+        with ESMTP id S229543AbjETCa6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 19 May 2023 22:30:58 -0400
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ED4E19A;
-        Fri, 19 May 2023 17:51:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BCFF1B0;
+        Fri, 19 May 2023 19:30:56 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QNQBH2Mthz4f3lK7;
-        Sat, 20 May 2023 08:51:03 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgAHvbB4GWhk6TI3Jw--.19687S3;
-        Sat, 20 May 2023 08:51:05 +0800 (CST)
-Message-ID: <3a0962c4-0aa4-c54c-99dd-f3d00969e672@huaweicloud.com>
-Date:   Sat, 20 May 2023 08:51:04 +0800
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QNSPR170dz4f3khJ;
+        Sat, 20 May 2023 10:30:51 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7PbMGhkefs7Jw--.24946S3;
+        Sat, 20 May 2023 10:30:52 +0800 (CST)
+Subject: Re: [PATCH -next] md: fix duplicate filename for rdev
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     neilb@suse.de, akpm@linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230428071059.1988153-1-yukuai1@huaweicloud.com>
+ <CAPhsuW75ufS+t-Q=GaXP__VOt9Wf8cZKMBMXEXaVWWS=5bN8ew@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <6ee3af14-541b-6b63-3d80-70a8a4546b4c@huaweicloud.com>
+Date:   Sat, 20 May 2023 10:30:51 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH OLK-5.10 v3 0/4] md: bugfix of writing raid sysfs
-To:     Song Liu <song@kernel.org>, linan666@huaweicloud.com
-Cc:     neilb@suse.de, Rob.Becker@riverbed.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-References: <20230515134808.3936750-1-linan666@huaweicloud.com>
- <CAPhsuW7m5hFY2L=2_FA-Qq3Yxr0a4r_QHdXSeZQ8kLgXMvj1sA@mail.gmail.com>
- <CAPhsuW7xWOcX8jOpyzTV2hVFj8XXwH0frgYx9r8xD6VNndPDng@mail.gmail.com>
-From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <CAPhsuW7xWOcX8jOpyzTV2hVFj8XXwH0frgYx9r8xD6VNndPDng@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAPhsuW75ufS+t-Q=GaXP__VOt9Wf8cZKMBMXEXaVWWS=5bN8ew@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHvbB4GWhk6TI3Jw--.19687S3
+X-CM-TRANSID: gCh0CgCnD7PbMGhkefs7Jw--.24946S3
 X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYA7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYr7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
         6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-        Iv6xkF7I0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvE
-        ncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I
-        8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0E
-        jII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbI
-        xvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
-        xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
-        kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v2
-        6r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Jr0_Gr
-        1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbZmitUU
-        UUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8I
+        cVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2js
+        IEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE
+        5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeV
+        CFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2
+        V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8Jw
+        C20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAF
+        wI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjx
+        v20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2
+        z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73Uj
+        IFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi,
 
+在 2023/05/20 7:15, Song Liu 写道:
 
-在 2023/5/20 6:08, Song Liu 写道:
-> Btw, what does "OLK-5.10" mean?
+> There is some conflict with md_wakeup_thread_directly().
+> I guess you run format-patch on top of the "protect md_thread" set
+> which is not merged yet (and we are waiting for v8 of it?).
 > 
-> Song
-> 
+> Please redo the patch on top of the latest md-next. I just updated it.
 
-Sry, it is a slip of the pen.
+Sorry I was formating this patch on the top of some other patches.
 
--- 
+I'll redo this patch on top of latest md-next, and resend other
+patchset.
+
 Thanks,
-Nan
+Kuai
+> 
+> Thanks,
+> Song
+> .
+> 
 
