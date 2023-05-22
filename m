@@ -2,55 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C13C7EE2F
-	for <linux-raid@archiver.kernel.org>; Mon, 22 May 2023 07:27:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 260A9C77B75
+	for <linux-raid@archiver.kernel.org>; Mon, 22 May 2023 07:27:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232566AbjEVH1W (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 22 May 2023 03:27:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54544 "EHLO
+        id S232454AbjEVH1V (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 22 May 2023 03:27:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232439AbjEVH1R (ORCPT
+        with ESMTP id S232421AbjEVH1R (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Mon, 22 May 2023 03:27:17 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FA0ABF;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E196B9;
         Mon, 22 May 2023 00:27:10 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QPptL5nDLz4f3p17;
-        Mon, 22 May 2023 15:27:06 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QPptK5Xw6z4f3jpl;
+        Mon, 22 May 2023 15:27:05 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP2 (Coremail) with SMTP id Syh0CgBH7epJGWtkztVuJw--.34097S6;
-        Mon, 22 May 2023 15:27:07 +0800 (CST)
+        by APP2 (Coremail) with SMTP id Syh0CgBH7epJGWtkztVuJw--.34097S4;
+        Mon, 22 May 2023 15:27:06 +0800 (CST)
 From:   linan666@huaweicloud.com
 To:     song@kernel.org, neilb@suse.de, Rob.Becker@riverbed.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
         houtao1@huawei.com, yangerkun@huawei.com
-Subject: [PATCH v4 2/3] md/raid10: fix wrong setting of max_corr_read_errors
-Date:   Mon, 22 May 2023 15:25:34 +0800
-Message-Id: <20230522072535.1523740-3-linan666@huaweicloud.com>
+Subject: [PATCH v4 0/3] md: bugfix of writing raid sysfs
+Date:   Mon, 22 May 2023 15:25:32 +0800
+Message-Id: <20230522072535.1523740-1-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230522072535.1523740-1-linan666@huaweicloud.com>
-References: <20230522072535.1523740-1-linan666@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgBH7epJGWtkztVuJw--.34097S6
-X-Coremail-Antispam: 1UD129KBjvdXoWrur4kXF4fGw18JF4fZrWxtFb_yoW3ZFg_Ca
-        1Fqay3Xr9Iyr12ywn8Zr4SvrW2y3yv9ryDWF1Ika45A3WrZ34Iqa4ru3s8Xr1rJrWkua45
-        Xr1kK3yIvr4DKjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbk8YFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
-        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r15M2
-        8IrcIa0xkI8VCY1x0267AKxVW8JVW5JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
-        021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r
-        4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-        GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64
-        xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j
-        6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2
-        kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_
-        Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17
-        CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0
-        I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I
-        8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73
-        UjIFyTuYvjxUc-txDUUUU
+X-CM-TRANSID: Syh0CgBH7epJGWtkztVuJw--.34097S4
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYg7kC6x804xWl14x267AKxVW8JVW5JwAF
+        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
+        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xv
+        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
+        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY
+        6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr
+        0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0E
+        wIxGrwACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr4
+        1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
+        67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
+        8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAv
+        wI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
+        AFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1kpnJUUUUU==
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -59,29 +54,21 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Li Nan <linan122@huawei.com>
 
-There is no input check when echo md/max_read_errors and overflow might
-occur. Add check of input number.
+The patch series fix the bug of writing raid sysfs.
 
-Fixes: 1e50915fe0bb ("raid: improve MD/raid10 handling of correctable read errors.")
-Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 2 ++
- 1 file changed, 2 insertions(+)
+Changes in v4:
+ - in patch 1, check overflow in safe_delay_store() directly.
+ - in patch 2, check input number instead of using unsigned int.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b2d69260b5b1..350094f1cb09 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4478,6 +4478,8 @@ max_corrected_read_errors_store(struct mddev *mddev, const char *buf, size_t len
- 	rv = kstrtouint(buf, 10, &n);
- 	if (rv < 0)
- 		return rv;
-+	if (n > INT_MAX)
-+		return -EINVAL;
- 	atomic_set(&mddev->max_corr_read_errors, n);
- 	return len;
- }
+Li Nan (3):
+  md/raid10: fix overflow of md/safe_mode_delay
+  md/raid10: fix wrong setting of max_corr_read_errors
+  md/raid10: optimize check_decay_read_errors()
+
+ drivers/md/md.c     |  9 ++++++---
+ drivers/md/raid10.c | 41 ++++++++++++++++++++++++-----------------
+ 2 files changed, 30 insertions(+), 20 deletions(-)
+
 -- 
 2.31.1
 
