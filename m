@@ -2,124 +2,138 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 497BFC7EE26
-	for <linux-raid@archiver.kernel.org>; Mon, 22 May 2023 11:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C4B2C7EE26
+	for <linux-raid@archiver.kernel.org>; Mon, 22 May 2023 13:01:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232818AbjEVL4c (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 22 May 2023 07:56:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34140 "EHLO
+        id S232479AbjEVNBS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 22 May 2023 09:01:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233179AbjEVL41 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 22 May 2023 07:56:27 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 005F4AB;
-        Mon, 22 May 2023 04:56:24 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QPws03b1Gz4f3lwx;
-        Mon, 22 May 2023 19:56:20 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP4 (Coremail) with SMTP id gCh0CgBXwLNiWGtk2XrkJw--.28031S7;
-        Mon, 22 May 2023 19:56:22 +0800 (CST)
-From:   linan666@huaweicloud.com
-To:     song@kernel.org, shli@fb.com, allenpeng@synology.com,
-        alexwu@synology.com, bingjingc@synology.com, neilb@suse.de
+        with ESMTP id S234119AbjEVNBO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 22 May 2023 09:01:14 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F015C90;
+        Mon, 22 May 2023 06:01:11 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QPyHk0Vycz4f3kKb;
+        Mon, 22 May 2023 21:01:06 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgC3YiCRZ2tkManCJA--.63342S3;
+        Mon, 22 May 2023 21:01:07 +0800 (CST)
+Subject: Re: [PATCH 1/3] md/raid10: fix null-ptr-deref of mreplace in
+ raid10_sync_request
+To:     linan666@huaweicloud.com, song@kernel.org, shli@fb.com,
+        allenpeng@synology.com, alexwu@synology.com,
+        bingjingc@synology.com, neilb@suse.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
-        houtao1@huawei.com, yangerkun@huawei.com
-Subject: [PATCH 3/3] md/raid10: fix io loss while replacement replace rdev
-Date:   Mon, 22 May 2023 19:54:49 +0800
-Message-Id: <20230522115449.2203939-4-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230522115449.2203939-1-linan666@huaweicloud.com>
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 References: <20230522115449.2203939-1-linan666@huaweicloud.com>
+ <20230522115449.2203939-2-linan666@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <6c2d40de-7b8c-d84d-d9a2-7c5dce7471aa@huaweicloud.com>
+Date:   Mon, 22 May 2023 21:01:05 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <20230522115449.2203939-2-linan666@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBXwLNiWGtk2XrkJw--.28031S7
-X-Coremail-Antispam: 1UD129KBjvJXoW7tFWkCrWkKr4xKrykJry8AFb_yoW8tFyfpF
-        4DK3W5Zr1UJwsFgFs8AF4DJa4SvrWxtFs5Jry3W343ua1rtrW8Aay7GrW3Zrs8ZFWDXryY
-        qa13Kws5u3W29FDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUmYb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
-        A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-        6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
-        ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
-        JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2
-        ka0xkIwI1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j
-        6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7
-        AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE
-        2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
-        vEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIev
-        Ja73UjIFyTuYvjxUwfHjUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CM-TRANSID: _Ch0CgC3YiCRZ2tkManCJA--.63342S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF1xuF43tr1DWr43Zr4DXFb_yoW5Jry5p3
+        y7JF9rGr1UJ3yjka1DA3ZrWF1S93Z7Jr98Cry5W343Ar1agrZFkFW0gFWYqF1DXF4Yqw4Y
+        qw1jyan8uF4IqaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+        BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Li Nan <linan122@huawei.com>
+Hi,
 
-When we remove a disk which has replacement, first set rdev to NULL
-and then set replacement to rdev, finally set replacement to NULL (see
-raid10_remove_disk()). If io is submitted during the same time, it might
-read both rdev and replacement as NULL, and io will not be submitted.
+ÔÚ 2023/05/22 19:54, linan666@huaweicloud.com Ð´µÀ:
+> From: Li Nan <linan122@huawei.com>
+> 
+> need_replace will be set to 1 if no-Faulty mreplace exists, and mreplace
+> will be deref later. However, the latter check of mreplace might set
+> mreplace to NULL, null-ptr-deref occurs if need_replace is 1 at this time.
+> 
+> Fix it by merging two checks into one. And replace 'need_replace' with
+> 'mreplace' because their values are always the same.
+> 
+> Fixes: ee37d7314a32 ("md/raid10: Fix raid10 replace hang when new added disk faulty")
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>   drivers/md/raid10.c | 13 +++++--------
+>   1 file changed, 5 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 4fcfcb350d2b..e21502c03b45 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -3438,7 +3438,6 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+>   			int must_sync;
+>   			int any_working;
+>   			int need_recover = 0;
 
-  rdev -> NULL
-			read rdev
-  replacement -> NULL
-			read replacement
+need_recover can be removed as well. Otherwise, this patch looks good to
+me.
 
-Fix it by reading replacement first and rdev later, meanwhile, use smp_mb()
-to prevent memory reordering.
-
-Fixes: 475b0321a4df ("md/raid10: writes should get directed to replacement as well as original.")
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/raid10.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 70cc87c7ee57..25a5a7b1e95c 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -779,8 +779,16 @@ static struct md_rdev *read_balance(struct r10conf *conf,
- 		disk = r10_bio->devs[slot].devnum;
- 		rdev = rcu_dereference(conf->mirrors[disk].replacement);
- 		if (rdev == NULL || test_bit(Faulty, &rdev->flags) ||
--		    r10_bio->devs[slot].addr + sectors > rdev->recovery_offset)
-+		    r10_bio->devs[slot].addr + sectors >
-+		    rdev->recovery_offset) {
-+			/*
-+			 * Read replacement first to prevent reading both rdev
-+			 * and replacement as NULL during replacement replace
-+			 * rdev.
-+			 */
-+			smp_mb();
- 			rdev = rcu_dereference(conf->mirrors[disk].rdev);
-+		    }
- 		if (rdev == NULL ||
- 		    test_bit(Faulty, &rdev->flags))
- 			continue;
-@@ -1479,9 +1487,15 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 
- 	for (i = 0;  i < conf->copies; i++) {
- 		int d = r10_bio->devs[i].devnum;
--		struct md_rdev *rdev = rcu_dereference(conf->mirrors[d].rdev);
--		struct md_rdev *rrdev = rcu_dereference(
--			conf->mirrors[d].replacement);
-+		struct md_rdev *rdev, *rrdev;
-+
-+		rrdev = rcu_dereference(conf->mirrors[d].replacement);
-+		/*
-+		 * Read replacement first to Prevent reading both rdev and
-+		 * replacement as NULL during replacement replace rdev.
-+		 */
-+		smp_mb();
-+		rdev = rcu_dereference(conf->mirrors[d].rdev);
- 		if (rdev == rrdev)
- 			rrdev = NULL;
- 		if (rdev && (test_bit(Faulty, &rdev->flags)))
--- 
-2.31.1
+Thanks,
+Kuai
+> -			int need_replace = 0;
+>   			struct raid10_info *mirror = &conf->mirrors[i];
+>   			struct md_rdev *mrdev, *mreplace;
+>   
+> @@ -3451,10 +3450,10 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+>   			    !test_bit(In_sync, &mrdev->flags))
+>   				need_recover = 1;
+>   			if (mreplace != NULL &&
+> -			    !test_bit(Faulty, &mreplace->flags))
+> -				need_replace = 1;
+> +			    test_bit(Faulty, &mreplace->flags))
+> +				mreplace = NULL;
+>   
+> -			if (!need_recover && !need_replace) {
+> +			if (!need_recover && !mreplace) {
+>   				rcu_read_unlock();
+>   				continue;
+>   			}
+> @@ -3470,8 +3469,6 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+>   				rcu_read_unlock();
+>   				continue;
+>   			}
+> -			if (mreplace && test_bit(Faulty, &mreplace->flags))
+> -				mreplace = NULL;
+>   			/* Unless we are doing a full sync, or a replacement
+>   			 * we only need to recover the block if it is set in
+>   			 * the bitmap
+> @@ -3594,11 +3591,11 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+>   				bio = r10_bio->devs[1].repl_bio;
+>   				if (bio)
+>   					bio->bi_end_io = NULL;
+> -				/* Note: if need_replace, then bio
+> +				/* Note: if replace is not NULL, then bio
+>   				 * cannot be NULL as r10buf_pool_alloc will
+>   				 * have allocated it.
+>   				 */
+> -				if (!need_replace)
+> +				if (!mreplace)
+>   					break;
+>   				bio->bi_next = biolist;
+>   				biolist = bio;
+> 
 
