@@ -2,208 +2,122 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 211D5C77B7A
-	for <linux-raid@archiver.kernel.org>; Sat, 20 May 2023 14:38:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F8EEC7EE23
+	for <linux-raid@archiver.kernel.org>; Mon, 22 May 2023 03:46:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229832AbjETOiz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 20 May 2023 10:38:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51874 "EHLO
+        id S231307AbjEVDqV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 21 May 2023 23:46:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229464AbjETOiy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 20 May 2023 10:38:54 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D86C109
-        for <linux-raid@vger.kernel.org>; Sat, 20 May 2023 07:38:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684593531; x=1716129531;
-  h=date:from:to:cc:subject:message-id;
-  bh=ERjeBcpnudSU3w3vzddxH5OaRuDGnZit48+S4AZdDHw=;
-  b=XrzG/5hxQaQL4RShK+f1UYtzCdD008WPVezUmV344QeVLQU4KdlWEjLx
-   4aQ3uDPiGwwxTi6psLV88xLIhQd5Gy/7FA6tSXMD21fg4uqXzjV6vBkOH
-   HjYzBKaF6stiZIVPbkEWqgCuHqro31qb+Vc9E+dEglcXjsurwK02dgbr9
-   Ri9eGBeOSbnWsaQTGmv+0zd57bVogF/lUEcpCsmzEKrGDP5b8mm6EyclT
-   iZDpnq7yPTq98eK0idoOSN17p2AD08xCXupmudiqJaokSaV+r2N9TK4iS
-   w+aghh0rfLHU/+ajWddiNb2OMAUBjh3gOFAMoGmqsUgUXhuVkmWDdj69P
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10716"; a="416054706"
-X-IronPort-AV: E=Sophos;i="6.00,180,1681196400"; 
-   d="scan'208";a="416054706"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2023 07:38:50 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10716"; a="735835895"
-X-IronPort-AV: E=Sophos;i="6.00,180,1681196400"; 
-   d="scan'208";a="735835895"
-Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 20 May 2023 07:38:48 -0700
-Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q0NjM-000BbO-0b;
-        Sat, 20 May 2023 14:38:48 +0000
-Date:   Sat, 20 May 2023 22:38:22 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 4539f9ff958c04bf06b5906b6ae2688f54522c55
-Message-ID: <20230520143822.h4jQI%lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S229819AbjEVDqS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 21 May 2023 23:46:18 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 610D6C4;
+        Sun, 21 May 2023 20:46:17 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QPjzT0Cf7z4f3v4h;
+        Mon, 22 May 2023 11:46:13 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCH77KA5Wpky7bMJw--.54379S3;
+        Mon, 22 May 2023 11:46:10 +0800 (CST)
+Subject: Re: [PATCH -next 1/5] md/raid5: don't allow replacement while reshape
+ is not done
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     logang@deltatee.com, reddunur@online.de, jovetoo@gmail.com,
+        dgilmour76@gmail.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230512015610.821290-1-yukuai1@huaweicloud.com>
+ <20230512015610.821290-2-yukuai1@huaweicloud.com>
+ <CAPhsuW5YFnqkOFz2tU+GQT=TnVXc-RySECaj=FOHw2rEh5tz0g@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <aad4acb6-ccc7-560e-e251-3b4b28a862ef@huaweicloud.com>
+Date:   Mon, 22 May 2023 11:46:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <CAPhsuW5YFnqkOFz2tU+GQT=TnVXc-RySECaj=FOHw2rEh5tz0g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCH77KA5Wpky7bMJw--.54379S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tFy3AFW5JFW8XrWkuw4xXrb_yoW8Cw1rpa
+        ySkFs8ZF4UZw45Ca1DJ3WrWFyS939agrZ0krnxu34Yv34Yqr18G3yxKry5Cr48Zr4Yk3yF
+        qr1UGa9xJw10y3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: INFO setup_repo_specs: /db/releases/20230519164737/lkp-src/repo/*/song-md
-git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 4539f9ff958c04bf06b5906b6ae2688f54522c55  md/raid5: fix a deadlock in the case that reshape is interrupted
+Hi,
 
-elapsed time: 851m
+在 2023/05/20 7:33, Song Liu 写道:
+> On Thu, May 11, 2023 at 6:59 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Set rdev replacement has but not only two conditions:
+>>
+>> 1) MD_RECOVERY_RUNNING is not set;
+>> 2) rdev nr_pending is 0;
+> 
+> The above is confusing. I updated it and applied the set to md-next.
 
-configs tested: 137
-configs skipped: 5
+By the way, I'm willing to add regression test for these problems, and I
+already send two other tests and there are no response yet. Should the
+test wait for fixed patch to be applied to make progress?
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks,
+Kuai
+> Please let me know if it looks good.
+> 
+> Thanks,
+> Song
+> 
+>>
+>> If reshape is interrupted(for example, echo frozen to sync_action), then
+>> rdev replacement can be set. It's safe because reshape is always prior to
+>> resync in md_check_recovery(). However, if system reboots, then kernel will
+>> complain cannot handle concurrent replacement and reshape and this array
+>> is not able to assemble anymore.
+>>
+>> Fix this problem by don't allow replacement until reshape is done.
+>>
+>> Reported-by: Peter Neuwirth <reddunur@online.de>
+>> Link: https://lore.kernel.org/linux-raid/e2f96772-bfbc-f43b-6da1-f520e5164536@online.de/
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/raid5.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index a58507a4345d..bd3b535c0739 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -8378,6 +8378,7 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>>                  p = conf->disks + disk;
+>>                  tmp = rdev_mdlock_deref(mddev, p->rdev);
+>>                  if (test_bit(WantReplacement, &tmp->flags) &&
+>> +                   mddev->reshape_position == MaxSector &&
+>>                      p->replacement == NULL) {
+>>                          clear_bit(In_sync, &rdev->flags);
+>>                          set_bit(Replacement, &rdev->flags);
+>> --
+>> 2.39.2
+>>
+> .
+> 
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha        buildonly-randconfig-r001-20230517   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r015-20230517   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                     haps_hs_smp_defconfig   gcc  
-arc                  randconfig-r025-20230517   gcc  
-arc                  randconfig-r043-20230517   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                           h3600_defconfig   gcc  
-arm                   milbeaut_m10v_defconfig   clang
-arm                  randconfig-r046-20230517   clang
-arm                       versatile_defconfig   clang
-arm                         vf610m4_defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-hexagon      buildonly-randconfig-r006-20230517   clang
-hexagon              randconfig-r041-20230517   clang
-hexagon              randconfig-r045-20230517   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                          randconfig-a001   gcc  
-i386                          randconfig-a002   clang
-i386                          randconfig-a003   gcc  
-i386                          randconfig-a004   clang
-i386                          randconfig-a005   gcc  
-i386                          randconfig-a006   clang
-i386                          randconfig-a011   clang
-i386                          randconfig-a012   gcc  
-i386                          randconfig-a013   clang
-i386                          randconfig-a014   gcc  
-i386                          randconfig-a015   clang
-i386                          randconfig-a016   gcc  
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r014-20230517   gcc  
-ia64                 randconfig-r023-20230517   gcc  
-ia64                 randconfig-r031-20230517   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch    buildonly-randconfig-r002-20230517   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                       m5249evb_defconfig   gcc  
-m68k                 randconfig-r005-20230517   gcc  
-m68k                           virt_defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                     cu1000-neo_defconfig   clang
-mips                     decstation_defconfig   gcc  
-mips                           gcw0_defconfig   gcc  
-mips                           ip28_defconfig   clang
-mips                 randconfig-r016-20230517   clang
-nios2                               defconfig   gcc  
-nios2                randconfig-r011-20230517   gcc  
-openrisc                  or1klitex_defconfig   gcc  
-openrisc             randconfig-r001-20230517   gcc  
-openrisc             randconfig-r003-20230517   gcc  
-openrisc             randconfig-r036-20230517   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r032-20230517   gcc  
-parisc               randconfig-r035-20230517   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                     asp8347_defconfig   gcc  
-powerpc      buildonly-randconfig-r004-20230517   gcc  
-powerpc                 canyonlands_defconfig   gcc  
-powerpc                      katmai_defconfig   clang
-powerpc                     ksi8560_defconfig   clang
-powerpc                     redwood_defconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv        buildonly-randconfig-r003-20230517   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r006-20230517   clang
-riscv                randconfig-r042-20230517   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r022-20230517   gcc  
-s390                 randconfig-r044-20230517   gcc  
-sh                               allmodconfig   gcc  
-sh                   randconfig-r013-20230517   gcc  
-sh                          sdk7786_defconfig   gcc  
-sh                           se7705_defconfig   gcc  
-sh                           se7712_defconfig   gcc  
-sh                  sh7785lcr_32bit_defconfig   gcc  
-sh                              ul2_defconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r021-20230517   gcc  
-sparc                randconfig-r024-20230517   gcc  
-sparc64      buildonly-randconfig-r005-20230517   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                        randconfig-a001   clang
-x86_64                        randconfig-a002   gcc  
-x86_64                        randconfig-a003   clang
-x86_64                        randconfig-a004   gcc  
-x86_64                        randconfig-a005   clang
-x86_64                        randconfig-a006   gcc  
-x86_64                        randconfig-a011   gcc  
-x86_64                        randconfig-a012   clang
-x86_64                        randconfig-a013   gcc  
-x86_64                        randconfig-a014   clang
-x86_64                        randconfig-a015   gcc  
-x86_64                        randconfig-a016   clang
-x86_64                        randconfig-k001   clang
-x86_64                        randconfig-x051   gcc  
-x86_64                        randconfig-x052   clang
-x86_64                        randconfig-x053   gcc  
-x86_64                        randconfig-x054   clang
-x86_64                        randconfig-x055   gcc  
-x86_64                        randconfig-x056   clang
-x86_64                        randconfig-x061   gcc  
-x86_64                        randconfig-x062   clang
-x86_64                        randconfig-x063   gcc  
-x86_64                        randconfig-x064   clang
-x86_64                        randconfig-x065   gcc  
-x86_64                        randconfig-x066   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                  audio_kc705_defconfig   gcc  
-xtensa                generic_kc705_defconfig   gcc  
-xtensa               randconfig-r004-20230517   gcc  
-xtensa               randconfig-r026-20230517   gcc  
-xtensa               randconfig-r033-20230517   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
