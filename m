@@ -2,130 +2,117 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99F68C7EE23
-	for <linux-raid@archiver.kernel.org>; Mon, 22 May 2023 14:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7227C7EE23
+	for <linux-raid@archiver.kernel.org>; Mon, 22 May 2023 16:03:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233338AbjEVOKs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 22 May 2023 10:10:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44508 "EHLO
+        id S233478AbjEVQDc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 22 May 2023 12:03:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233224AbjEVOKs (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 22 May 2023 10:10:48 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6880E8F;
-        Mon, 22 May 2023 07:10:46 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QPzTQ0XhMz4f3jHy;
-        Mon, 22 May 2023 21:54:34 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBH_rEadGtkdSjqJw--.17505S3;
-        Mon, 22 May 2023 21:54:35 +0800 (CST)
+        with ESMTP id S231409AbjEVQDb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 22 May 2023 12:03:31 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E88C6C5;
+        Mon, 22 May 2023 09:03:29 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 74D7F61644;
+        Mon, 22 May 2023 16:03:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE921C433EF;
+        Mon, 22 May 2023 16:03:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684771408;
+        bh=diFwMuGlQSl9msXnxnUJWOr9y6fEdWUi6lbjlWuyfUU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=hfciaBwkehpNzvR5/YWGrRHDY5xoQeiqidB4LXCK5aN6413dVqAaBxuzPoV3CKSC7
+         1RE9NyU2+3ry4An42zsmWXoXpWUVs9f9AhD1D2Q7uFs574xs8CFi8JyAQPHoxI4/6w
+         x7MGzVFk3m220ZGL6ls0RM/I6mHL8Y1etmwsmsS+r6AsyjxwQmEde234a+tQVHZkxA
+         6VmSGBowDKCyzVDITCqAFdQFskaMJ70tm2qjSO/h3InZbolgVwdv621Qpw+BtH5rrm
+         QIN4/xSuLXKZVDEx3VF1yBpOOxpkMHB8rXVWNrt/jmeLgypM3VtHx+CiLBr4YyORkE
+         2RKPYWlqK5nTQ==
+Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-2af2c35fb85so30926441fa.3;
+        Mon, 22 May 2023 09:03:28 -0700 (PDT)
+X-Gm-Message-State: AC+VfDwoZlY6t3dumgHLsmHxNMGPso+aiHhjox5R7P/PeMH4znixtt3A
+        KQRZWcwmtI4wY32OwCUiRUWrNymYyf+OaNOmMJk=
+X-Google-Smtp-Source: ACHHUZ77eO1lzVtszn4sQTn6uez60hsE+6AwDA4OvxE+2HgYR9rNNW0wmjw04AgqWr+/4SAR9Evu+bHj2nZgURg6yNU=
+X-Received: by 2002:ac2:43cd:0:b0:4f2:6f55:2d6c with SMTP id
+ u13-20020ac243cd000000b004f26f552d6cmr3525325lfl.5.1684771406870; Mon, 22 May
+ 2023 09:03:26 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230522115449.2203939-1-linan666@huaweicloud.com>
+ <20230522115449.2203939-3-linan666@huaweicloud.com> <801a3a11-9a2c-dca2-cec4-4a9c71d3afb6@huaweicloud.com>
+In-Reply-To: <801a3a11-9a2c-dca2-cec4-4a9c71d3afb6@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 22 May 2023 09:03:14 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6UTc+sdVKvYqDX1VN3u9VgmkNVo0b84AxG=DdOY7pfhQ@mail.gmail.com>
+Message-ID: <CAPhsuW6UTc+sdVKvYqDX1VN3u9VgmkNVo0b84AxG=DdOY7pfhQ@mail.gmail.com>
 Subject: Re: [PATCH 2/3] md/raid10: fix incorrect done of recovery
-To:     linan666@huaweicloud.com, song@kernel.org, shli@fb.com,
-        allenpeng@synology.com, alexwu@synology.com,
-        bingjingc@synology.com, neilb@suse.de
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     linan666@huaweicloud.com, shli@fb.com, allenpeng@synology.com,
+        alexwu@synology.com, bingjingc@synology.com, neilb@suse.de,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
         yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230522115449.2203939-1-linan666@huaweicloud.com>
- <20230522115449.2203939-3-linan666@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <801a3a11-9a2c-dca2-cec4-4a9c71d3afb6@huaweicloud.com>
-Date:   Mon, 22 May 2023 21:54:33 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <20230522115449.2203939-3-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH_rEadGtkdSjqJw--.17505S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF17uF4kXrWUtw4kKF17KFg_yoW8tF1Upa
-        nrJF9xt3y5W393J3ZrAryUuFyFyry8t34jkr12g345Kr9YqrWDuFWfXF48XFy7Wr1Fq3yY
-        qw1DWFW5CF1xKaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
-        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-        BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Mon, May 22, 2023 at 6:54=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/05/22 19:54, linan666@huaweicloud.com =E5=86=99=E9=81=93:
+> > From: Li Nan <linan122@huawei.com>
+> >
+> > Recovery will go to giveup and let chunks_skipped++ in
+> > raid10_sync_request() if there are some bad_blocks, and it will return
+> > max_sector when chunks_skipped >=3D geo.raid_disks. Now, recovery fail =
+and
+> > data is inconsistent but user think recovery is done, it is wrong.
+> >
+> > Fix it by set mirror's recovery_disabled and spare device shouln't be
+> > added to here.
+> >
+> > Signed-off-by: Li Nan <linan122@huawei.com>
+> > ---
+> >   drivers/md/raid10.c | 16 +++++++++++++++-
+> >   1 file changed, 15 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> > index e21502c03b45..70cc87c7ee57 100644
+> > --- a/drivers/md/raid10.c
+> > +++ b/drivers/md/raid10.c
+> > @@ -3303,6 +3303,7 @@ static sector_t raid10_sync_request(struct mddev =
+*mddev, sector_t sector_nr,
+> >       int chunks_skipped =3D 0;
+> >       sector_t chunk_mask =3D conf->geo.chunk_mask;
+> >       int page_idx =3D 0;
+> > +     int error_disk =3D -1;
+> >
+> >       /*
+> >        * Allow skipping a full rebuild for incremental assembly
+> > @@ -3386,7 +3387,18 @@ static sector_t raid10_sync_request(struct mddev=
+ *mddev, sector_t sector_nr,
+> >               return reshape_request(mddev, sector_nr, skipped);
+> >
+> >       if (chunks_skipped >=3D conf->geo.raid_disks) {
+> > -             /* if there has been nothing to do on any drive,
+> > +             pr_err("md/raid10:%s: %s fail\n", mdname(mddev),
+> > +                     test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?  "=
+resync" : "recovery");
+>
+> Line exceed 80 columns, and following.
 
-ÔÚ 2023/05/22 19:54, linan666@huaweicloud.com Ð´µÀ:
-> From: Li Nan <linan122@huawei.com>
-> 
-> Recovery will go to giveup and let chunks_skipped++ in
-> raid10_sync_request() if there are some bad_blocks, and it will return
-> max_sector when chunks_skipped >= geo.raid_disks. Now, recovery fail and
-> data is inconsistent but user think recovery is done, it is wrong.
-> 
-> Fix it by set mirror's recovery_disabled and spare device shouln't be
-> added to here.
-> 
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/raid10.c | 16 +++++++++++++++-
->   1 file changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index e21502c03b45..70cc87c7ee57 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3303,6 +3303,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   	int chunks_skipped = 0;
->   	sector_t chunk_mask = conf->geo.chunk_mask;
->   	int page_idx = 0;
-> +	int error_disk = -1;
->   
->   	/*
->   	 * Allow skipping a full rebuild for incremental assembly
-> @@ -3386,7 +3387,18 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   		return reshape_request(mddev, sector_nr, skipped);
->   
->   	if (chunks_skipped >= conf->geo.raid_disks) {
-> -		/* if there has been nothing to do on any drive,
-> +		pr_err("md/raid10:%s: %s fail\n", mdname(mddev),
-> +			test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?  "resync" : "recovery");
-
-Line exceed 80 columns, and following.
-> +		if (error_disk >= 0 && !test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
-
-Resync has the same problem, right?
+If it makes the code look better, such as in this case, it is OK to have
+lines longer than 80 columns.
 
 Thanks,
-Kuai
-> +			/*
-> +			 * recovery fail, set mirrors.recovory_disabled,
-> +			 * device shouldn't be added to there.
-> +			 */
-> +			conf->mirrors[error_disk].recovery_disabled = mddev->recovery_disabled;
-> +			return 0;
-> +		}
-> +		/*
-> +		 * if there has been nothing to do on any drive,
->   		 * then there is nothing to do at all..
->   		 */
->   		*skipped = 1;
-> @@ -3640,6 +3652,8 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   						       mdname(mddev));
->   					mirror->recovery_disabled
->   						= mddev->recovery_disabled;
-> +				} else {
-> +					error_disk = i;
->   				}
->   				put_buf(r10_bio);
->   				if (rb2)
-> 
+Song
 
+> > +             if (error_disk >=3D 0 && !test_bit(MD_RECOVERY_SYNC, &mdd=
+ev->recovery)) {
+>
