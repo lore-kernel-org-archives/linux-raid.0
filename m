@@ -2,127 +2,88 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC864C77B75
-	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 13:43:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A593C77B75
+	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 13:46:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235740AbjEWNm7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 23 May 2023 09:42:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32962 "EHLO
+        id S236961AbjEWNqc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 23 May 2023 09:46:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236858AbjEWNms (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 23 May 2023 09:42:48 -0400
+        with ESMTP id S234585AbjEWNqb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 23 May 2023 09:46:31 -0400
 Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 158CCE4F
-        for <linux-raid@vger.kernel.org>; Tue, 23 May 2023 06:42:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64A3CCA;
+        Tue, 23 May 2023 06:46:30 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QQb8q0jrWz4f3kjV
-        for <linux-raid@vger.kernel.org>; Tue, 23 May 2023 21:42:19 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP1 (Coremail) with SMTP id cCh0CgAHJzG4wmxkVTLYJQ--.25598S5;
-        Tue, 23 May 2023 21:42:18 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QQbFX1Z0xz4f3kjM;
+        Tue, 23 May 2023 21:46:24 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP2 (Coremail) with SMTP id Syh0CgAXvuuww2xkCSPIJw--.31377S3;
+        Tue, 23 May 2023 21:46:26 +0800 (CST)
+Subject: Re: [PATCH] md/raid5: Convert stripe_head's "dev" to flexible array
+ member
+To:     Christoph Hellwig <hch@infradead.org>,
+        Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Kees Cook <keescook@chromium.org>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230517233313.never.130-kees@kernel.org>
+ <ZGWpLClY7vz+xl5A@infradead.org>
+ <229ac866-9710-5dbe-80c4-61498f807662@huaweicloud.com>
+ <ZGxU/zSGkqGhGWmF@infradead.org>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
-        jes@trained-monkey.org, pmenzel@molgen.mpg.de, logang@deltatee.com,
-        song@kernel.org
-Cc:     yukuai3@huawei.com, yangerkun@huawei.com
-Subject: [PATCH tests 1/5] tests: add a new test to check if pluged bio is unlimited for raid10
-Date:   Tue, 23 May 2023 21:38:56 +0800
-Message-Id: <20230523133900.3149123-2-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230523133900.3149123-1-yukuai1@huaweicloud.com>
-References: <20230523133900.3149123-1-yukuai1@huaweicloud.com>
+Message-ID: <33c61f2b-2391-1199-d760-b438aff2cebe@huaweicloud.com>
+Date:   Tue, 23 May 2023 21:46:24 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <ZGxU/zSGkqGhGWmF@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: cCh0CgAHJzG4wmxkVTLYJQ--.25598S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFyUGF17tr1rCFy5Ww4Durg_yoW8Zw45pF
-        4fWrWY9r17Aw13twsIq3WxZFyFvrW8JFy2yrWftr17tr9xGryava4fKF4YgrW7Wr4fW34f
-        uF4YgFyxKF1jyaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvlb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-        A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        WxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-        GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
-        0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWU
-        JVW8JwACjcxG0xvY0x0EwIxGrwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJV
-        W8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF
-        1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6x
-        IIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvE
-        x4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvj
-        DU0xZFpf9x07UiAwxUUUUU=
+X-CM-TRANSID: Syh0CgAXvuuww2xkCSPIJw--.31377S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrZFW3Xr1UXF4rurykuFy3Arb_yoWxCwc_Za
+        1akF47Gr17AFyvvF47twn8WrWv93W8WFZxAry0gFs2q3s8Zas3Cr4kAwnavF98t3Wftr4Y
+        9F90qF15JFs7KjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb4AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        WxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVW8JVWx
+        JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
+        UUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hi,
 
-Pluged bio is unlimited means that all submitted bio will be pluged, and
-those bio won't be issued to underlaying disks until blk_finish_plug() or
-blk_flush_plug(). In this case, a lot memory will be used for
-raid10_bio and io latency will be very bad.
+在 2023/05/23 13:54, Christoph Hellwig 写道:
+> On Mon, May 22, 2023 at 07:49:38PM +0800, Yu Kuai wrote:
+>> Hi, Christoph
+>>
+>> 在 2023/05/18 12:27, Christoph Hellwig 写道:
+>>
+>> It's not related to this patch, just I think I found a problem while
+>> reviewing raid5 code, commit e82ed3a4fbb5 ("md/raid6: refactor
+>> raid5_read_one_chunk") changes the caculation of 'end_sector',
+>> 'end_sector' is compared to 'rdev->recovery_offset', so it should be
+>> offset to rdev, but this commit change it to offset to the array.
+>>
+>> Perhaps following change will make sense:
+> 
+> Yes, I think it does.  Can you send a patch?
+> .
+> 
 
-This test do some dirty pages writeback for raid10, where plug is used, and
-check if device inflight counter exceed threshold.
+Of course, thanks for your response.
 
-This problem is supposed to be fixed by [1].
-
-[1] https://lore.kernel.org/linux-raid/20230420112946.2869956-9-yukuai1@huaweicloud.com/
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- tests/22raid10plug | 41 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
- create mode 100644 tests/22raid10plug
-
-diff --git a/tests/22raid10plug b/tests/22raid10plug
-new file mode 100644
-index 00000000..fde4ce80
---- /dev/null
-+++ b/tests/22raid10plug
-@@ -0,0 +1,41 @@
-+devs="$dev0 $dev1 $dev2 $dev3 $dev4 $dev5"
-+
-+# test will fail if inflight is observed to be greater
-+threshold=4096
-+
-+# create a simple raid10
-+mdadm --create --run --level=raid10 --raid-disks 6 $md0 $devs --bitmap=internal --assume-clean
-+if [ $? -ne 0 ]; then
-+        die "create raid10 failed"
-+fi
-+
-+old_background=`cat /proc/sys/vm/dirty_background_ratio`
-+old=`cat /proc/sys/vm/dirty_ratio`
-+
-+# trigger background writeback
-+echo 0 > /proc/sys/vm/dirty_background_ratio
-+echo 60 > /proc/sys/vm/dirty_ratio
-+
-+# io pressure with buffer write
-+fio -filename=$md0 -ioengine=libaio -rw=write -bs=4k -numjobs=1 -iodepth=128 -name=test -runtime=10 &
-+
-+pid=$!
-+
-+sleep 2
-+
-+# check if inflight exceed threshold
-+while true; do
-+        tmp=`cat /sys/block/md0/inflight | awk '{printf("%d\n", $1 + $2);}'`
-+        if [ $tmp -gt $threshold ]; then
-+                die "inflight is greater than 4096"
-+                break
-+        elif [ $tmp -eq 0 ]; then
-+                break
-+        fi
-+        sleep 0.1
-+done
-+
-+kill -9 $pid
-+mdadm -S $md0
-+echo $old_background > /proc/sys/vm/dirty_background_ratio
-+echo $old > /proc/sys/vm/dirty_ratio
--- 
-2.39.2
+Kuai
 
