@@ -2,73 +2,91 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FFECC77B75
-	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 02:39:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CD5DC77B7A
+	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 04:38:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229886AbjEWCjQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 22 May 2023 22:39:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50654 "EHLO
+        id S231454AbjEWEi2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 23 May 2023 00:38:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233455AbjEWCjM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 22 May 2023 22:39:12 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1210CA;
-        Mon, 22 May 2023 19:38:46 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QQJR64fDnz4f3kjy;
-        Tue, 23 May 2023 10:38:42 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgAHvbAyJ2xk9nwPKA--.33442S3;
-        Tue, 23 May 2023 10:38:43 +0800 (CST)
-Message-ID: <daca108d-4dd3-ecbf-c630-69d4bc2b96c0@huaweicloud.com>
-Date:   Tue, 23 May 2023 10:38:41 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
+        with ESMTP id S229469AbjEWEi0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 23 May 2023 00:38:26 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89620109;
+        Mon, 22 May 2023 21:38:22 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 2054E225C8;
+        Tue, 23 May 2023 04:38:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1684816701; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WAYA0NV+vOzsI9Gb5w4I9DHICOPBYPQ7rwX4WOVMFxY=;
+        b=orWFOsUaYIfAXAtwdmh1dofxwrDzPE+/r9LqNcJZ9RQEO1VAr4nUPQsFcu/fF5Lu2aiMD8
+        cWz6g/cQNZ9hyvd8UUA0o1svAHWbmwGi3zBHUjKKEHJmNiWwJodHmyMIAUCpiYzEISlhFX
+        aIwXn/VmKZhFCyoFnlj4uU6PQs7NGto=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1684816701;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WAYA0NV+vOzsI9Gb5w4I9DHICOPBYPQ7rwX4WOVMFxY=;
+        b=zdcwWRMBR8flLtp0EEW+xOHIRxsOwhWPys5qxxUiVRPeFFyqAc+nwnSlFm/2EvmvicxWxy
+        Ck2JXb4sMqlhv3CQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4F0C013588;
+        Tue, 23 May 2023 04:38:18 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id OKDABzpDbGSMZAAAMHmgww
+        (envelope-from <colyli@suse.de>); Tue, 23 May 2023 04:38:18 +0000
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.500.231\))
 Subject: Re: [PATCH v6 0/7] badblocks improvement for multiple bad block
  ranges
-To:     Coly Li <colyli@suse.de>, linux-block@vger.kernel.org
-Cc:     nvdimm@lists.linux.dev, linux-raid@vger.kernel.org,
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <daca108d-4dd3-ecbf-c630-69d4bc2b96c0@huaweicloud.com>
+Date:   Tue, 23 May 2023 12:38:05 +0800
+Cc:     linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-raid@vger.kernel.org,
         Dan Williams <dan.j.williams@intel.com>,
         Geliang Tang <geliang.tang@suse.com>,
         Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
         NeilBrown <neilb@suse.de>, Richard Fan <richard.fan@suse.com>,
         Vishal L Verma <vishal.l.verma@intel.com>,
         Wols Lists <antlists@youngman.org.uk>, Xiao Ni <xni@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <A43DF8F4-2DEF-4865-B4B4-4B5FBF834678@suse.de>
 References: <20220721121152.4180-1-colyli@suse.de>
-From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20220721121152.4180-1-colyli@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID: gCh0CgAHvbAyJ2xk9nwPKA--.33442S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYB7kC6x804xWl14x267AKxVW8JVW5JwAF
-        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY
-        6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr
-        0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxG
-        rwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7V
-        AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-        r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6x
-        IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-        w20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6x
-        kF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUFfHjUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
+ <daca108d-4dd3-ecbf-c630-69d4bc2b96c0@huaweicloud.com>
+To:     Li Nan <linan666@huaweicloud.com>
+X-Mailer: Apple Mail (2.3731.500.231)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Coly Li,
 
-Recently, I have been trying to fix the bug of backblocks settings, and 
-I found that your patch series has already fixed the bug. This patch 
-series has not been applied to mainline at present, may I ask if you 
+
+> 2023=E5=B9=B45=E6=9C=8823=E6=97=A5 10:38=EF=BC=8CLi Nan =
+<linan666@huaweicloud.com> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> Hi Coly Li,
+>=20
+> Recently, I have been trying to fix the bug of backblocks settings, =
+and I found that your patch series has already fixed the bug. This patch =
+series has not been applied to mainline at present, may I ask if you =
 still plan to continue working on it?
 
--- 
-Thanks,
-Nan
+Sure, I will post an update version for your testing.
+
+Coly Li
 
