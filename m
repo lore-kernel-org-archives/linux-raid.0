@@ -2,138 +2,159 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C62A7C77B7A
-	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 06:19:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DFCEC7EE26
+	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 13:42:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232262AbjEWGTH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 23 May 2023 02:19:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58968 "EHLO
+        id S236790AbjEWNms (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 23 May 2023 09:42:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235171AbjEWGSv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 23 May 2023 02:18:51 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6551611A
-        for <linux-raid@vger.kernel.org>; Mon, 22 May 2023 23:18:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684822727; x=1716358727;
-  h=date:from:to:cc:subject:message-id;
-  bh=7YFJNKk33M1aV6lkgo96U6NHzFvTRft2x0sNDxDcNOM=;
-  b=RrwdTG+RWyNwrHJLdco3Sreaz051c0AUZP4AqN3AKp0g+uRTtXm7MavH
-   qy3/93cEps/u2aScaBtr6filq1w1aNSXLmpChmS8sd0jvpP9UxwWiT+kc
-   voy2iUmQaJuLzgnTP94n/ly2n05C1bn+vPA2vMjZSi0jiUnQ6KrgEAcGo
-   3ptkWSh0KKsZjRPj9WoFu/mmqAoQ1an4Xvf9qo877O/19bVYwNKBrq921
-   abe6F3OU7Kb/3HKpEm3K2i0kL/g8/evyVGLbtHn4uK2t9wJDVJv6tCRk/
-   HOJaID4NgURXuROw8jG8LvU220BGg/cMBsEgM484w+zAQD540M6jDyAYg
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10718"; a="416609571"
-X-IronPort-AV: E=Sophos;i="6.00,185,1681196400"; 
-   d="scan'208";a="416609571"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2023 23:18:46 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10718"; a="1033918466"
-X-IronPort-AV: E=Sophos;i="6.00,185,1681196400"; 
-   d="scan'208";a="1033918466"
-Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 22 May 2023 23:18:45 -0700
-Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q1LM4-000DWv-2Y;
-        Tue, 23 May 2023 06:18:44 +0000
-Date:   Tue, 23 May 2023 14:18:11 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 7f102f1ef365d75ff7ebc235d0d1e72c5b7f0314
-Message-ID: <20230523061811.oIaoa%lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S231951AbjEWNmq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 23 May 2023 09:42:46 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8A061A4
+        for <linux-raid@vger.kernel.org>; Tue, 23 May 2023 06:42:30 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QQb8q2jT6z4f3lKK
+        for <linux-raid@vger.kernel.org>; Tue, 23 May 2023 21:42:19 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP1 (Coremail) with SMTP id cCh0CgAHJzG4wmxkVTLYJQ--.25598S6;
+        Tue, 23 May 2023 21:42:21 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
+        jes@trained-monkey.org, pmenzel@molgen.mpg.de, logang@deltatee.com,
+        song@kernel.org
+Cc:     yukuai3@huawei.com, yangerkun@huawei.com
+Subject: [PATCH tests 2/5] tests: add a new test for rdev lifetime
+Date:   Tue, 23 May 2023 21:38:57 +0800
+Message-Id: <20230523133900.3149123-3-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230523133900.3149123-1-yukuai1@huaweicloud.com>
+References: <20230523133900.3149123-1-yukuai1@huaweicloud.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: cCh0CgAHJzG4wmxkVTLYJQ--.25598S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxJFW8Gw1DAr45KF47ur1rWFg_yoW5Ar15pr
+        4I9F15Gr48Gr12yF4aka1fWF1rAa1kCF47Ars7Xr15ZFyj9w17XFyDKF1UAF9xGrZ5Zw1S
+        ya4kJayrKr47GaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvGb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
+        A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+        WxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
+        GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
+        0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWU
+        JVW8JwACjcxG0xvY0x0EwIxGrwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJV
+        W8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF
+        1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6x
+        IIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvE
+        x4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa
+        73UjIFyTuYvjxU2GYLDUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: INFO setup_repo_specs: /db/releases/20230523114855/lkp-src/repo/*/song-md
-git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 7f102f1ef365d75ff7ebc235d0d1e72c5b7f0314  md/raid10: fix wrong setting of max_corr_read_errors
+From: Yu Kuai <yukuai3@huawei.com>
 
-elapsed time: 728m
+This test add and remove a underlying disk to raid concurretly, verify
+that the following problem is fixed:
 
-configs tested: 67
-configs skipped: 3
+run mdadm test 23rdev-lifetime at Fri Apr 28 03:25:30 UTC 2023
+md: could not open device unknown-block(1,0).
+sysfs: cannot create duplicate filename '/devices/virtual/block/md0/md/dev-ram0'
+CPU: 26 PID: 10521 Comm: test Not tainted 6.3.0-rc2-00134-g7b3a8828043c #115
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.1-2.fc37 04/014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xe7/0x180
+ dump_stack+0x18/0x30
+ sysfs_warn_dup+0xa2/0xd0
+ sysfs_create_dir_ns+0x119/0x140
+ kobject_add_internal+0x143/0x4d0
+ kobject_add_varg+0x35/0x70
+ kobject_add+0x64/0xd0
+ bind_rdev_to_array+0x254/0x840 [md_mod]
+ new_dev_store+0x14d/0x350 [md_mod]
+ md_attr_store+0xc1/0x1a0 [md_mod]
+ sysfs_kf_write+0x51/0x70
+ kernfs_fop_write_iter+0x188/0x270
+ vfs_write+0x27e/0x460
+ ksys_write+0x85/0x180
+ __x64_sys_write+0x21/0x30
+ do_syscall_64+0x6c/0xe0
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f26bacf5387
+Code: 0d 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b7 0f 1f 00 f3 0f 1e fa 64 84
+RSP: 002b:00007ffe98d79e68 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007f26bacf5387
+RDX: 0000000000000004 RSI: 000055bd10282bf0 RDI: 0000000000000001
+RBP: 000055bd10282bf0 R08: 000000000000000a R09: 00007f26bad8b4e0
+R10: 00007f26bad8b3e0 R11: 0000000000000246 R12: 0000000000000004
+R13: 00007f26badc8520 R14: 0000000000000004 R15: 00007f26badc8700
+ </TASK>
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ tests/23rdev-lifetime | 48 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+ create mode 100644 tests/23rdev-lifetime
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r026-20230522   gcc  
-m68k                             allmodconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r021-20230522   gcc  
-microblaze           randconfig-r022-20230522   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                               defconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                      pmac32_defconfig   clang
-powerpc              randconfig-r023-20230522   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-sh                               allmodconfig   gcc  
-sparc                               defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-r025-20230522   clang
-x86_64               randconfig-x051-20230522   clang
-x86_64               randconfig-x052-20230522   clang
-x86_64               randconfig-x053-20230522   clang
-x86_64               randconfig-x054-20230522   clang
-x86_64               randconfig-x055-20230522   clang
-x86_64               randconfig-x056-20230522   clang
-x86_64               randconfig-x061-20230522   clang
-x86_64               randconfig-x062-20230522   clang
-x86_64               randconfig-x063-20230522   clang
-x86_64               randconfig-x064-20230522   clang
-x86_64               randconfig-x065-20230522   clang
-x86_64               randconfig-x066-20230522   clang
-x86_64               randconfig-x081-20230522   gcc  
-x86_64               randconfig-x082-20230522   gcc  
-x86_64               randconfig-x083-20230522   gcc  
-x86_64               randconfig-x084-20230522   gcc  
-x86_64               randconfig-x085-20230522   gcc  
-x86_64               randconfig-x086-20230522   gcc  
-x86_64                               rhel-8.3   gcc  
-
+diff --git a/tests/23rdev-lifetime b/tests/23rdev-lifetime
+new file mode 100644
+index 00000000..df0fcdd9
+--- /dev/null
++++ b/tests/23rdev-lifetime
+@@ -0,0 +1,48 @@
++devname=${dev0##*/}
++devt=`cat /sys/block/$devname/dev`
++dmesg_marker="run mdadm test 23rdev-lifetime at `date`"
++pid1=0
++pid2=0
++
++stop() {
++        if [[ $1 -ne 0 ]]; then
++                kill -9 $1
++        fi
++}
++
++trap 'stop $pid1; stop $pid2;' EXIT
++
++echo "$dmesg_marker" >> /dev/kmsg
++
++check_dmesg() {
++        dmesg | grep -A 9999 "$dmesg_marker" | grep "sysfs: cannot create duplicate filename"
++
++        if [[ $? -eq 0 ]]; then
++                die "sysfs dumplicate"
++        fi
++}
++
++add_by_sysfs() {
++        while true; do
++                echo $devt > /sys/block/md0/md/new_dev
++                check_dmesg
++        done
++}
++
++remove_by_sysfs(){
++        while true; do
++                echo remove > /sys/block/md0/md/dev-${devname}/state
++                check_dmesg
++        done
++}
++
++echo md0 > /sys/module/md_mod/parameters/new_array || die "create md0 failed"
++
++add_by_sysfs &
++pid1=$!
++
++remove_by_sysfs &
++pid2=$!
++
++sleep 5
++echo clear > /sys/block/md0/md/array_state
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+2.39.2
+
