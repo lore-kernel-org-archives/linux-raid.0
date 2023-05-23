@@ -2,458 +2,363 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 592E1C7EE2D
-	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 00:40:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1147C7EE26
+	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 01:11:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235043AbjEWAk2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 22 May 2023 20:40:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38540 "EHLO
+        id S232776AbjEWBLY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 22 May 2023 21:11:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235008AbjEWAKw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 22 May 2023 20:10:52 -0400
-Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCA4D2102
-        for <linux-raid@vger.kernel.org>; Mon, 22 May 2023 16:50:13 -0700 (PDT)
-Received: by mail-il1-x131.google.com with SMTP id e9e14a558f8ab-33550237f6fso1526845ab.3
-        for <linux-raid@vger.kernel.org>; Mon, 22 May 2023 16:50:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684799413; x=1687391413;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=w8HUX5qFRj570KVtloJTuSEa/8SKBFI9o3yUmk9oA5Q=;
-        b=fv1EgaBuLm7yKFOSY4MjWbQmcErC/5NmNWfCrR5oCy5U4mVJqT2QeQAKZQM0bmEUKD
-         cSxlfbF3AL/8hi1HyuSefWa/dsGewcn72sAICnmW/hhlW8g/xk23LGnnT2ckS74K/XFc
-         ROq54+uRavGhH2YbTgLcAnMQqDzp13XZgUtsQPGagvpZfD/JrQpB4S+ThmJVbH/aJnZX
-         +EU7wGu0wcNkVtRv2NQUhfm0PRUjcxsgQOGTh6sJG6btvsPkSSrSIkBg+4dIGxVqDt2Z
-         0ErPQyC5Zz3WLJTy7C6EBmeR89ZMOZnspB4j+FMC9R7x8JRrJgJfaQBl3oONOJT8HfJu
-         0BHQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684799413; x=1687391413;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=w8HUX5qFRj570KVtloJTuSEa/8SKBFI9o3yUmk9oA5Q=;
-        b=ayPm6XERS/J6bHQOyfUyBCPfxqt1XW3rjYTm/0Ji+AXWBI4IExCWu4/4imPs1W/PVI
-         WFkHMBsugKktnPHpOof28PIPtH9lJtKolI9FrtI+OYy1B142gUPWeF9gOx0CU0qKic+h
-         dS0Ft7ZaiidNa67bI9DTahBQ0TsXok07EG2Try4lcsrhdRWoCQECoU+GWCyf27U6FwEo
-         3yX/qQtCnFBkvSXCG7epki11GoC38ErUrM0AxdNk+ROrD0FYo0p014E4XrlGB7TPk8dj
-         yxwzuIeAm2oaBXemwrJtKhGsKpQ/IzHVOmyYzEVQX7Sw1xYUrgTQZs5yZT44YVnLac+N
-         QM/A==
-X-Gm-Message-State: AC+VfDycPf2vACFzCoSHG3Jhb2N2EKkM058togwQ9sgIFM/uZfz6s8UR
-        vdvi5VnSXbdDurBUYMFmzzE/LTsEFNZ6Yo1qRh4=
-X-Google-Smtp-Source: ACHHUZ6IsMzCHJVASOptZo/uGdZaJLXKXWPnMqzgMHyzoa4fRmBky24hCMxFP6hCBwHCw77F3wh25EhWUe56hkUohyE=
-X-Received: by 2002:a92:cb06:0:b0:331:f812:63a6 with SMTP id
- s6-20020a92cb06000000b00331f81263a6mr8972568ilo.14.1684799412924; Mon, 22 May
- 2023 16:50:12 -0700 (PDT)
+        with ESMTP id S230284AbjEWBLS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 22 May 2023 21:11:18 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ED1D8E;
+        Mon, 22 May 2023 18:11:15 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QQGV73GQLz4f3l7v;
+        Tue, 23 May 2023 09:11:11 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgBXwLOsEmxkkTwLKA--.12243S3;
+        Tue, 23 May 2023 09:11:10 +0800 (CST)
+Subject: Re: [PATCH v2] md: fix duplicate filename for rdev
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     neilb@suse.de, akpm@linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230522133225.2983667-1-yukuai1@huaweicloud.com>
+ <CAPhsuW7DEZFbzGOThwvZaTgdJdOhYZy2QHRUPUPr=_yYN=wCbQ@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <1d45f5fd-c00d-3f12-d8e7-d24f986609d9@huaweicloud.com>
+Date:   Tue, 23 May 2023 09:11:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <60563747e11acd6757b20ba19006fcdcff5df519.camel@electrons.cloud>
- <96524acc-504d-6a07-85a0-0b56a9e2f2d7@youngman.org.uk> <9b22d5ce-5f1b-0fc8-acdc-02c2e8cefa55@huaweicloud.com>
- <b18cfe9f6f8e44285aa4ab4300e0c0e1b863fe08.camel@electrons.cloud>
- <a78c4551-defb-d531-3b5e-372889158f28@huaweicloud.com> <3f3fd288e33cccdae32e3f26943218c773589849.camel@electrons.cloud>
-In-Reply-To: <3f3fd288e33cccdae32e3f26943218c773589849.camel@electrons.cloud>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Mon, 22 May 2023 18:50:01 -0500
-Message-ID: <CAAMCDedzs2mi7TGrOUKkSDPVqOQvq+j2JMa3WOtzOtwt7324Jw@mail.gmail.com>
-Subject: Re: RAID5 Phantom Drive Appeared while Reshaping Four Drive Array (HARDLOCK)
-To:     raid@electrons.cloud
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>, Wol <antlists@youngman.org.uk>,
-        linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>,
-        NeilBrown <neilb@suse.com>, "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CAPhsuW7DEZFbzGOThwvZaTgdJdOhYZy2QHRUPUPr=_yYN=wCbQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBXwLOsEmxkkTwLKA--.12243S3
+X-Coremail-Antispam: 1UD129KBjvJXoWfGw4DurWxKF43WF13Zw4DXFb_yoWDXw1Upr
+        Wfta15GrWUJrW7Ww42qwsruasIqw1DKrsrKryfu3WSywn8CrnrG3WFgry5uFyrCrZ5ur18
+        Za1UWFsxua4FqrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
+        UUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Given what the array is reporting I would doubt that is going to fix
-anything.    The array being in the middle of a reshape makes it
-likely that neither n or n-1 is the right raid config for at least 1/2
-of the data, so it is likely the filesystem will be completely broken.
+Hi,
 
-Right now the array reports it is a 5 disk array, and the array data
-says it was going from 4 disks to 5.
+在 2023/05/23 3:02, Song Liu 写道:
+> On Mon, May 22, 2023 at 6:35 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> commit 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device
+>> from an md array via sysfs") delay the deleting of rdev, however, this
+>> introduce a window that rdev can be added again while the deleting is
+>> not done yet, and sysfs will complain about duplicate filename.
+>>
+>> Follow up patches try to fix this problem by flush workqueue, however,
+>> flush_rdev_wq() is just dead code, the progress in
+>> md_kick_rdev_from_array():
+>>
+>> 1) list_del_rcu(&rdev->same_set);
+>> 2) synchronize_rcu();
+>> 3) queue_work(md_rdev_misc_wq, &rdev->del_work);
+>>
+>> So in flush_rdev_wq(), if rdev is found in the list, work_pending() can
+>> never pass, in the meantime, if work is queued, then rdev can never be
+>> found in the list.
+>>
+>> flush_rdev_wq() can be replaced by flush_workqueue() directly, however,
+>> this approach is not good:
+>> - the workqueue is global, this synchronization for all raid disks is
+>>    not necessary.
+>> - flush_workqueue can't be called under 'reconfig_mutex', there is still
+>>    a small window between flush_workqueue() and mddev_lock() that other
+>>    context can queue new work, hence the problem is not solved completely.
+>>
+>> sysfs already have apis to support delete itself through writer, and
+>> these apis, specifically sysfs_break/unbreak_active_protection(), is used
+>> to support deleting rdev synchronously. Therefore, the above commit can be
+>> reverted, and sysfs duplicate filename can be avoided.
+>>
+>> A new mdadm regression test is proposed as well.
+>>
+>> Link: https://lore.kernel.org/linux-raid/20230428062845.1975462-1-yukuai1@huaweicloud.com/
+>> Fixes: 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device from an md array via sysfs")
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> 
+> We got build time warning with this patch:
+> 
+> drivers/md/md.c:90:33: warning: ‘md_rdev_misc_wq’ defined but not used
+> [-Wunused-variable]
+>   static struct workqueue_struct *md_rdev_misc_wq;
 
-What was the command you used to add the 4th disk?     No one is sure
-based on what you are saying how exactly the array got into this
-state.   The data being shown disagrees with what you are reporting,
-and given that no one knows what actually happened.
+Will fix this in the next version,
 
-On Mon, May 22, 2023 at 3:18=E2=80=AFPM raid <raid@electrons.cloud> wrote:
->
-> Hi
->
-> Thanks for your time so far ! Final questions before I rebuild this RAID =
-from scratch.
->
-> BTW I created detailed notes when I created this array (as I have for eig=
-ht other RAIDs that I maintain).
->     These notes may be applicable later... Here's why.
->
-> Do you think that Zero'ing the drives (as is done for initial drive prep)=
- and then recreating the
-> RAID5 using the initial settings (originally three drives, NOW four drive=
-s) could possibly offer
-> a greater chance to recover files? As in, more complete file recovery if =
-the striping aligns
-> correctly? Technically, I've had to write off the files that aren't curre=
-ntly backed up.
->
-> However, I'm still willing to make an attempt if you think the idea above=
- might yield something
-> better than one or two stripes of data per file?
->
-> And/Or any other tips for this final attempt? Setting ReadOnly if possibl=
-e?
->
-> Thanks Again
-> SA
->
-> ---
-> Detailed Notes:
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->   2021.10.26 0200P NEW RAID MD480 (48TB) 3x 1600GB HITACHI
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> =3D PREPARATION =3D=3D
->
-> watch -c -d -n 1 cat /proc/mdstat  ############## OPEN A TERMINAL AND MON=
-ITOR STATUS ##
->
-> sudo lsblk && sudo blkid  ########################################### VER=
-IFY DEVICES ##
->
-> sudo umount /MEGARAID                         # Unmount if filesystem is =
-mounted
-> sudo mdadm --stop /dev/md480                  # Stop the RAID/md480 devic=
-e
-> sudo mdadm --zero-superblock /dev/sd[cdf]1    # Zero  the   superblock(s)=
-  on
->                                               #      all members of the a=
-rray
-> sudo mdadm --remove /dev/md480                # Remove the RAID/md480
->
-> Edit  ########################################## OPTIONAL FINALIZE PERMAN=
-ENT REMOVAL ##
-> /etc/fstab
-> /etc/mdadm/mdadm.conf
-> Removing referrences to the mounting and the definition of the RAID/MD480=
- device(s)
-> NOTE: Some fstab CFG settings allow skipping devices when unavailable at =
-boot. (nofail)
->
-> sudo update-initramfs -uv       # -uv  update ; verbose  ########### RESE=
-T INITRAMFS ##
->
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D CREATE RAID & ADD FILESYSTEM =3D=
-=3D
->   MEGARAID 2021.10.26 0200P
-> ##############  RAID5 ARRAY MD480 32TB (32,001,527,644,160 bytes) Availab=
-le (3x16TB) ##
->
-> sudo mdadm --create --verbose /dev/md480 --level=3D5 --raid-devices=3D3 -=
--uuid=3D2021102502005a7a5a7abeefcafebabe
-> /dev/sd[cdf]1
->
-> 31,251,491,840 BLOCKS CREATED IN ~20 HOURS
->
-> ############################################################  CREATE FILE=
-SYSTEM EXT4 ##
->  -v VERBOSE
->  -L DISK LABEL
->  -U UUID FORMATTED AS 8CHARS-4CHARS-4CHARS-4CHARS-12CHARS
->  -m OVERFLOW PROTECTION PERCENTAGE IE. .025 OF 24,576GB IS ~615MB FREE IS=
- CONSIDERED FULL
->  -b BLOCK SIZE 1/4 OF STRIDE=3D OFFERS BEST OVERALL PERFORMANCE
->  -E STRIDE=3D MULTIPLE OF 8
->     STRIPE-WIDTH=3D STRIDE X 2
->
-> sudo mkfs.ext4 -v -L MEGARAID    -U 20211028-0500-5a7a-5a7a-beefcafebabe =
--m .025 -b 4096 -E stride=3D32,stripe-width=3D64
-> /dev/md480
->
-> sudo mkdir  /MEGARAID  ; sudo chown adminx:adminx -R /MEGARAID
->
-> ##############################################################  SET CORRE=
-CT HOMEHOST ##
->
-> sudo umount /MEGARAID
-> sudo mdadm --stop /dev/md480
-> sudo mdadm --assemble --update=3Dhomehost --homehost=3DGRANDSLAM /dev/md4=
-80 /dev/sd[cdf]1
-> sudo blkid
->
-> /dev/sdc1: UUID=3D"20211025-0200-5a7a-5a7a-beefcafebabe"
->            UUID_SUB=3D"8f0835db-3ea2-4540-2ab4-232d6203d1b7"
->            LABEL=3D"GRANDSLAM:480" TYPE=3D"linux_raid_member"
->            PARTLABEL=3D"HIT*16TB*001*RAID5"
->            PARTUUID=3D"3b68fe63-35d0-404d-912e-dfe1127f109b"
->
-> /dev/sdd1: UUID=3D"20211025-0200-5a7a-5a7a-beefcafebabe"
->            UUID_SUB=3D"b4660f49-867b-9f1e-ecad-0acec7119c37"
->            LABEL=3D"GRANDSLAM:480" TYPE=3D"linux_raid_member"
->            PARTLABEL=3D"HIT*16TB*002*RAID5"
->            PARTUUID=3D"32c50f4f-f6ce-4309-b8e4-facdb6e05ba8"
->
-> /dev/sdf1: UUID=3D"20211025-0200-5a7a-5a7a-beefcafebabe"
->            UUID_SUB=3D"79a3dff4-c53f-9071-f9c1-c262403fbc10"
->            LABEL=3D"GRANDSLAM:480" TYPE=3D"linux_raid_member"
->            PARTLABEL=3D"HIT*16TB*003*RAID5"
->            PARTUUID=3D"7ec27f96-2275-4e09-9013-ac056f11ebfb"
->
-> /dev/md480: LABEL=3D"MEGARAID" UUID=3D"20211028-0500-5a7a-5a7a-beefcafeba=
-be" TYPE=3D"ext4"
->
-> ############################################################### ENTRY FOR=
- /ETC/FSTAB ##
->
-> /dev/md480              /MEGARAID               ext4            nofail,no=
-atime,nodiratime,relatime,errors=3Dremount-ro
-> 0               2
->
-> #################################################### ENTRY FOR /ETC/MDADM=
-/MDADM.CONF ##
->
-> ARRAY /dev/md480 metadata=3D1.2 name=3DGRANDSLAM:480 UUID=3D20211025:0200=
-5a7a:5a7abeef:cafebabe
->
-> #########################################################################=
-##############
->
-> sudo update-initramfs -uv       # -uv  update ; verbose
-> sudo mount -a
-> sudo chown adminx:adminx -R /MEGARAID
->
-> ############################################################### END 2021.=
-10.28 0545A ##
->
->
->
->
->
->
-> On Mon, 2023-05-22 at 15:51 +0800, Yu Kuai wrote:
-> > Hi,
-> >
-> > =E5=9C=A8 2023/05/22 14:56, raid =E5=86=99=E9=81=93:
-> > > Hi,
-> > > Thanks for the guidance as the current state has at least changed som=
-ewhat.
-> > >
-> > > BTW Sorry about Life getting in the way of tech. =3D) Reason for my d=
-elayed response.
-> > >
-> > > -sudo mdadm -I /dev/sdc1
-> > > mdadm: /dev/sdc1 attached to /dev/md480, not enough to start (1).
-> > > -sudo mdadm -D /dev/md480
-> > > /dev/md480:
-> > >             Version : 1.2
-> > >          Raid Level : raid0
-> > >       Total Devices : 1
-> > >         Persistence : Superblock is persistent
-> > >
-> > >               State : inactive
-> > >     Working Devices : 1
-> > >
-> > >       Delta Devices : 1, (-1->0)
-> > >           New Level : raid5
-> > >          New Layout : left-symmetric
-> > >       New Chunksize : 512K
-> > >
-> > >                Name : GRANDSLAM:480
-> > >                UUID : 20211025:02005a7a:5a7abeef:cafebabe
-> > >              Events : 78714
-> > >
-> > >      Number   Major   Minor   RaidDevice
-> > >
-> > >         -       8       33        -        /dev/sdc1
-> > > -sudo mdadm -I /dev/sdd1
-> > > mdadm: /dev/sdd1 attached to /dev/md480, not enough to start (2).
-> > > -sudo mdadm -D /dev/md480
-> > > /dev/md480:
-> > >             Version : 1.2
-> > >          Raid Level : raid0
-> > >       Total Devices : 2
-> > >         Persistence : Superblock is persistent
-> > >
-> > >               State : inactive
-> > >     Working Devices : 2
-> > >
-> > >       Delta Devices : 1, (-1->0)
-> > >           New Level : raid5
-> > >          New Layout : left-symmetric
-> > >       New Chunksize : 512K
-> > >
-> > >                Name : GRANDSLAM:480
-> > >                UUID : 20211025:02005a7a:5a7abeef:cafebabe
-> > >              Events : 78714
-> > >
-> > >      Number   Major   Minor   RaidDevice
-> > >
-> > >         -       8       49        -        /dev/sdd1
-> > >         -       8       33        -        /dev/sdc1
-> > > -sudo mdadm -I /dev/sde1
-> > > mdadm: /dev/sde1 attached to /dev/md480, not enough to start (2).
-> > > -sudo mdadm -D /dev/md480
-> > > /dev/md480:
-> > >             Version : 1.2
-> > >          Raid Level : raid0
-> > >       Total Devices : 3
-> > >         Persistence : Superblock is persistent
-> > >
-> > >               State : inactive
-> > >     Working Devices : 3
-> > >
-> > >       Delta Devices : 1, (-1->0)
-> > >           New Level : raid5
-> > >          New Layout : left-symmetric
-> > >       New Chunksize : 512K
-> > >
-> > >                Name : GRANDSLAM:480
-> > >                UUID : 20211025:02005a7a:5a7abeef:cafebabe
-> > >              Events : 78712
-> > >
-> > >      Number   Major   Minor   RaidDevice
-> > >
-> > >         -       8       65        -        /dev/sde1
-> > >         -       8       49        -        /dev/sdd1
-> > >         -       8       33        -        /dev/sdc1
-> > > -sudo mdadm -I /dev/sdf1
-> > > mdadm: /dev/sdf1 attached to /dev/md480, not enough to start (3).
-> > > -sudo mdadm -D /dev/md480
-> > > /dev/md480:
-> > >             Version : 1.2
-> > >          Raid Level : raid0
-> > >       Total Devices : 4
-> > >         Persistence : Superblock is persistent
-> > >
-> > >               State : inactive
-> > >     Working Devices : 4
-> > >
-> > >       Delta Devices : 1, (-1->0)
-> > >           New Level : raid5
-> > >          New Layout : left-symmetric
-> > >       New Chunksize : 512K
-> > >
-> > >                Name : GRANDSLAM:480
-> > >                UUID : 20211025:02005a7a:5a7abeef:cafebabe
-> > >              Events : 78714
-> > >
-> > >      Number   Major   Minor   RaidDevice
-> > >
-> > >         -       8       81        -        /dev/sdf1
-> > >         -       8       65        -        /dev/sde1
-> > >         -       8       49        -        /dev/sdd1
-> > >         -       8       33        -        /dev/sdc1
-> > > -sudo mdadm -R /dev/md480
-> > > mdadm: failed to start array /dev/md480: Input/output error
-> > > ---
-> > > NOTE: Of additional interest...
-> > > ---
-> > > -sudo mdadm -D /dev/md480
-> > > /dev/md480:
-> > >             Version : 1.2
-> > >       Creation Time : Tue Oct 26 14:06:53 2021
-> > >          Raid Level : raid5
-> > >       Used Dev Size : 18446744073709551615
-> > >        Raid Devices : 5
-> > >       Total Devices : 3
-> > >         Persistence : Superblock is persistent
-> > >
-> > >         Update Time : Thu May  4 14:39:03 2023
-> > >               State : active, FAILED, Not Started
-> > >      Active Devices : 3
-> > >     Working Devices : 3
-> > >      Failed Devices : 0
-> > >       Spare Devices : 0
-> > >
-> > >              Layout : left-symmetric
-> > >          Chunk Size : 512K
-> > >
-> > > Consistency Policy : unknown
-> > >
-> > >       Delta Devices : 1, (4->5)
-> > >
-> > >                Name : GRANDSLAM:480
-> > >                UUID : 20211025:02005a7a:5a7abeef:cafebabe
-> > >              Events : 78714
-> > >
-> > >      Number   Major   Minor   RaidDevice State
-> > >         -       0        0        0      removed
-> > >         -       0        0        1      removed
-> > >         -       0        0        2      removed
-> > >         -       0        0        3      removed
-> > >         -       0        0        4      removed
-> > >
-> > >         -       8       81        3      sync   /dev/sdf1
-> > >         -       8       49        1      sync   /dev/sdd1
-> > >         -       8       33        0      sync   /dev/sdc1
-> >
-> > So the reason that this array can't start is that /dev/sde1 is not
-> > recognized as RaidDevice 2, and there are two RaidDevice missing for
-> > a raid5.
-> >
-> > Sadly I have no idea to workaroud this, sb metadate seems to be broken.
-> >
-> > Thanks,
-> > Kuai
-> > > ---
-> > > -watch -c -d -n 1 cat /proc/mdstat
-> > > ---
-> > > Every 1.0s: cat /proc/mdstat                                         =
-            OAK2023: Mon May 22 01:48:24 2023
-> > >
-> > > Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] =
-[raid4] [raid10]
-> > > md480 : inactive sdf1[4] sdd1[1] sdc1[0]
-> > >        46877239294 blocks super 1.2
-> > >
-> > > unused devices: <none>
-> > > ---
-> > > Hopeful that is some progress towards an array start? It's definately=
- unexpected output to me.
-> > > I/O Error starting md480
-> > >
-> > > Thanks!
-> > > SA
-> > >
-> > > On Thu, 2023-05-18 at 11:15 +0800, Yu Kuai wrote:
-> > >
-> > > > I have no idle why other disk shows that device 2 is missing, and w=
-hat
-> > > > is device 4.
-> > > >
-> > > > Anyway, can you try the following?
-> > > >
-> > > > mdadm -I /dev/sdc1
-> > > > mdadm -D /dev/mdxxx
-> > > >
-> > > > mdadm -I /dev/sdd1
-> > > > mdadm -D /dev/mdxxx
-> > > >
-> > > > mdadm -I /dev/sde1
-> > > > mdadm -D /dev/mdxxx
-> > > >
-> > > > mdadm -I /dev/sdf1
-> > > > mdadm -D /dev/mdxxx
-> > > >
-> > > > If above works well, you can try:
-> > > >
-> > > > mdadm -R /dev/mdxxx, and see if the array can be started.
-> > > >
-> > > > Thanks,
-> > > > Kuai
-> > >
-> > >
-> > >
-> > > .
-> > >
->
+Thanks,
+Kuai
+>                                   ^~~~~~~~~~~~~~~
+> 
+> Thanks,
+> Song
+> 
+>> ---
+>> Changes in v2:
+>>   - rebase from the latest md-next branch
+>>
+>>   drivers/md/md.c | 84 +++++++++++++++++++++++++------------------------
+>>   drivers/md/md.h |  8 +++++
+>>   2 files changed, 51 insertions(+), 41 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 7455bc9d8498..cafb457d614c 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -92,6 +92,7 @@ static struct workqueue_struct *md_rdev_misc_wq;
+>>   static int remove_and_add_spares(struct mddev *mddev,
+>>                                   struct md_rdev *this);
+>>   static void mddev_detach(struct mddev *mddev);
+>> +static void export_rdev(struct md_rdev *rdev);
+>>
+>>   /*
+>>    * Default number of read corrections we'll attempt on an rdev
+>> @@ -643,9 +644,11 @@ void mddev_init(struct mddev *mddev)
+>>   {
+>>          mutex_init(&mddev->open_mutex);
+>>          mutex_init(&mddev->reconfig_mutex);
+>> +       mutex_init(&mddev->delete_mutex);
+>>          mutex_init(&mddev->bitmap_info.mutex);
+>>          INIT_LIST_HEAD(&mddev->disks);
+>>          INIT_LIST_HEAD(&mddev->all_mddevs);
+>> +       INIT_LIST_HEAD(&mddev->deleting);
+>>          timer_setup(&mddev->safemode_timer, md_safemode_timeout, 0);
+>>          atomic_set(&mddev->active, 1);
+>>          atomic_set(&mddev->openers, 0);
+>> @@ -747,6 +750,23 @@ static void mddev_free(struct mddev *mddev)
+>>
+>>   static const struct attribute_group md_redundancy_group;
+>>
+>> +static void md_free_rdev(struct mddev *mddev)
+>> +{
+>> +       struct md_rdev *rdev;
+>> +       struct md_rdev *tmp;
+>> +
+>> +       if (list_empty_careful(&mddev->deleting))
+>> +               return;
+>> +
+>> +       mutex_lock(&mddev->delete_mutex);
+>> +       list_for_each_entry_safe(rdev, tmp, &mddev->deleting, same_set) {
+>> +               list_del_init(&rdev->same_set);
+>> +               kobject_del(&rdev->kobj);
+>> +               export_rdev(rdev);
+>> +       }
+>> +       mutex_unlock(&mddev->delete_mutex);
+>> +}
+>> +
+>>   void mddev_unlock(struct mddev *mddev)
+>>   {
+>>          if (mddev->to_remove) {
+>> @@ -788,6 +808,8 @@ void mddev_unlock(struct mddev *mddev)
+>>          } else
+>>                  mutex_unlock(&mddev->reconfig_mutex);
+>>
+>> +       md_free_rdev(mddev);
+>> +
+>>          /* As we've dropped the mutex we need a spinlock to
+>>           * make sure the thread doesn't disappear
+>>           */
+>> @@ -2428,13 +2450,6 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+>>          return err;
+>>   }
+>>
+>> -static void rdev_delayed_delete(struct work_struct *ws)
+>> -{
+>> -       struct md_rdev *rdev = container_of(ws, struct md_rdev, del_work);
+>> -       kobject_del(&rdev->kobj);
+>> -       kobject_put(&rdev->kobj);
+>> -}
+>> -
+>>   void md_autodetect_dev(dev_t dev);
+>>
+>>   static void export_rdev(struct md_rdev *rdev)
+>> @@ -2452,6 +2467,8 @@ static void export_rdev(struct md_rdev *rdev)
+>>
+>>   static void md_kick_rdev_from_array(struct md_rdev *rdev)
+>>   {
+>> +       struct mddev *mddev = rdev->mddev;
+>> +
+>>          bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
+>>          list_del_rcu(&rdev->same_set);
+>>          pr_debug("md: unbind<%pg>\n", rdev->bdev);
+>> @@ -2465,15 +2482,17 @@ static void md_kick_rdev_from_array(struct md_rdev *rdev)
+>>          rdev->sysfs_unack_badblocks = NULL;
+>>          rdev->sysfs_badblocks = NULL;
+>>          rdev->badblocks.count = 0;
+>> -       /* We need to delay this, otherwise we can deadlock when
+>> -        * writing to 'remove' to "dev/state".  We also need
+>> -        * to delay it due to rcu usage.
+>> -        */
+>> +
+>>          synchronize_rcu();
+>> -       INIT_WORK(&rdev->del_work, rdev_delayed_delete);
+>> -       kobject_get(&rdev->kobj);
+>> -       queue_work(md_rdev_misc_wq, &rdev->del_work);
+>> -       export_rdev(rdev);
+>> +
+>> +       /*
+>> +        * kobject_del() will wait for all in progress writers to be done, where
+>> +        * reconfig_mutex is held, hence it can't be called under
+>> +        * reconfig_mutex and it's delayed to mddev_unlock().
+>> +        */
+>> +       mutex_lock(&mddev->delete_mutex);
+>> +       list_add(&rdev->same_set, &mddev->deleting);
+>> +       mutex_unlock(&mddev->delete_mutex);
+>>   }
+>>
+>>   static void export_array(struct mddev *mddev)
+>> @@ -3541,6 +3560,7 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+>>   {
+>>          struct rdev_sysfs_entry *entry = container_of(attr, struct rdev_sysfs_entry, attr);
+>>          struct md_rdev *rdev = container_of(kobj, struct md_rdev, kobj);
+>> +       struct kernfs_node *kn = NULL;
+>>          ssize_t rv;
+>>          struct mddev *mddev = rdev->mddev;
+>>
+>> @@ -3548,6 +3568,10 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+>>                  return -EIO;
+>>          if (!capable(CAP_SYS_ADMIN))
+>>                  return -EACCES;
+>> +
+>> +       if (entry->store == state_store && cmd_match(page, "remove"))
+>> +               kn = sysfs_break_active_protection(kobj, attr);
+>> +
+>>          rv = mddev ? mddev_lock(mddev) : -ENODEV;
+>>          if (!rv) {
+>>                  if (rdev->mddev == NULL)
+>> @@ -3556,6 +3580,10 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+>>                          rv = entry->store(rdev, page, length);
+>>                  mddev_unlock(mddev);
+>>          }
+>> +
+>> +       if (kn)
+>> +               sysfs_unbreak_active_protection(kn);
+>> +
+>>          return rv;
+>>   }
+>>
+>> @@ -4479,20 +4507,6 @@ null_show(struct mddev *mddev, char *page)
+>>          return -EINVAL;
+>>   }
+>>
+>> -/* need to ensure rdev_delayed_delete() has completed */
+>> -static void flush_rdev_wq(struct mddev *mddev)
+>> -{
+>> -       struct md_rdev *rdev;
+>> -
+>> -       rcu_read_lock();
+>> -       rdev_for_each_rcu(rdev, mddev)
+>> -               if (work_pending(&rdev->del_work)) {
+>> -                       flush_workqueue(md_rdev_misc_wq);
+>> -                       break;
+>> -               }
+>> -       rcu_read_unlock();
+>> -}
+>> -
+>>   static ssize_t
+>>   new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+>>   {
+>> @@ -4520,7 +4534,6 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+>>              minor != MINOR(dev))
+>>                  return -EOVERFLOW;
+>>
+>> -       flush_rdev_wq(mddev);
+>>          err = mddev_lock(mddev);
+>>          if (err)
+>>                  return err;
+>> @@ -5590,7 +5603,6 @@ struct mddev *md_alloc(dev_t dev, char *name)
+>>           * removed (mddev_delayed_delete).
+>>           */
+>>          flush_workqueue(md_misc_wq);
+>> -       flush_workqueue(md_rdev_misc_wq);
+>>
+>>          mutex_lock(&disks_mutex);
+>>          mddev = mddev_alloc(dev);
+>> @@ -7553,9 +7565,6 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
+>>
+>>          }
+>>
+>> -       if (cmd == ADD_NEW_DISK || cmd == HOT_ADD_DISK)
+>> -               flush_rdev_wq(mddev);
+>> -
+>>          if (cmd == HOT_REMOVE_DISK)
+>>                  /* need to ensure recovery thread has run */
+>>                  wait_event_interruptible_timeout(mddev->sb_wait,
+>> @@ -9618,10 +9627,6 @@ static int __init md_init(void)
+>>          if (!md_misc_wq)
+>>                  goto err_misc_wq;
+>>
+>> -       md_rdev_misc_wq = alloc_workqueue("md_rdev_misc", 0, 0);
+>> -       if (!md_rdev_misc_wq)
+>> -               goto err_rdev_misc_wq;
+>> -
+>>          ret = __register_blkdev(MD_MAJOR, "md", md_probe);
+>>          if (ret < 0)
+>>                  goto err_md;
+>> @@ -9640,8 +9645,6 @@ static int __init md_init(void)
+>>   err_mdp:
+>>          unregister_blkdev(MD_MAJOR, "md");
+>>   err_md:
+>> -       destroy_workqueue(md_rdev_misc_wq);
+>> -err_rdev_misc_wq:
+>>          destroy_workqueue(md_misc_wq);
+>>   err_misc_wq:
+>>          destroy_workqueue(md_wq);
+>> @@ -9937,7 +9940,6 @@ static __exit void md_exit(void)
+>>          }
+>>          spin_unlock(&all_mddevs_lock);
+>>
+>> -       destroy_workqueue(md_rdev_misc_wq);
+>>          destroy_workqueue(md_misc_wq);
+>>          destroy_workqueue(md_wq);
+>>   }
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index 1eec65cf783c..4d191db831da 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -531,6 +531,14 @@ struct mddev {
+>>          unsigned int                    good_device_nr; /* good device num within cluster raid */
+>>          unsigned int                    noio_flag; /* for memalloc scope API */
+>>
+>> +       /*
+>> +        * Temporarily store rdev that will be finally removed when
+>> +        * reconfig_mutex is unlocked.
+>> +        */
+>> +       struct list_head                deleting;
+>> +       /* Protect the deleting list */
+>> +       struct mutex                    delete_mutex;
+>> +
+>>          bool    has_superblocks:1;
+>>          bool    fail_last_dev:1;
+>>          bool    serialize_policy:1;
+>> --
+>> 2.39.2
+>>
+> .
+> 
+
