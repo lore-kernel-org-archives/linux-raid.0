@@ -2,114 +2,83 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA562C77B75
-	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 18:05:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5DF0C7EE26
+	for <linux-raid@archiver.kernel.org>; Tue, 23 May 2023 18:36:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238119AbjEWSFg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 23 May 2023 14:05:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57990 "EHLO
+        id S237952AbjEWSgN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 23 May 2023 14:36:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238090AbjEWSFf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 23 May 2023 14:05:35 -0400
+        with ESMTP id S235384AbjEWSgH (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 23 May 2023 14:36:07 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6578FBF;
-        Tue, 23 May 2023 11:05:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9632120
+        for <linux-raid@vger.kernel.org>; Tue, 23 May 2023 11:36:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F3E7B61A78;
-        Tue, 23 May 2023 18:05:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61082C433A0;
-        Tue, 23 May 2023 18:05:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7396562DA4
+        for <linux-raid@vger.kernel.org>; Tue, 23 May 2023 18:36:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0A9DC4339E
+        for <linux-raid@vger.kernel.org>; Tue, 23 May 2023 18:36:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684865133;
-        bh=b3t5Gx+ugyIRyjbDZAA94kYedVCnqDFkf41gqK2qYjk=;
+        s=k20201202; t=1684866962;
+        bh=U7NjGne/yRQxzowV+AzT1KR1wAm5ZIeHfrNFXUStrM0=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=ucCaNAWNQC1uXle8eDxFS7C294anKuz/5c5d8+ghTp8DcMDtkAegjQjZ6fQh8SXWJ
-         tIN9Z971Dnjlb1buE+4x14s78wTRgMvuCaxphswbBXbzI/5/BG7mtQyQq7ZNFWL1Xx
-         nile7rqqsp+nU/VRzgjcRjVq3Rom2KtLl0Cg0rcAN7RNJ4XuzGS0+EeMo0GRy0NZaQ
-         /s1OK86Ftp7MHC7dTqx8KKTXpFfQ8o+eEmTBiuqdrnouHeKKUU1atx01tsUq+5waB1
-         ZUJNppN550OhORmjlFlsG6fjH5Rh6wn7s29LVygJpIydoqCXfYMQ02B1VY5PPpnesA
-         DBomrhAgVOtAw==
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2afb2874e83so1813681fa.0;
-        Tue, 23 May 2023 11:05:33 -0700 (PDT)
-X-Gm-Message-State: AC+VfDxudfZhljxj9ushSFJG42qI42BwFgFUO9rBy4/3Iynk776R3/JP
-        ED5eIsGluRRa/13+P3OSg497yyiaasGA/rbD0xw=
-X-Google-Smtp-Source: ACHHUZ7LSYfnYGogDK37Or8AN1sbRimvTaumCalpLufljag3TafLAnqMLMRYMOKZ8oh+fCotj0fenuvVABE4bd1jQFU=
-X-Received: by 2002:a2e:8743:0:b0:2b0:2f2f:4954 with SMTP id
- q3-20020a2e8743000000b002b02f2f4954mr1421164ljj.44.1684865131245; Tue, 23 May
- 2023 11:05:31 -0700 (PDT)
+        b=cXV3/3ulx3HInGvcq8qbvr5ayClxeFCwycXVYPq0iou2dKhFNRWjfSnDCLzRM8g9m
+         F10BdZaU+6rxFUy7JpHeXI6X3QuOrIMYdeomZnkHBavO16UsK5z/bExmK1Ke8eXU/z
+         mhtObf+ALjOrisZ5nx3C2Xg6du++8hoWMONK1TXTg76l0UJy0HQI8Y+f3ZfZWJ0CYI
+         rt2uLV45ErwNvMMT8+XSpijqthjVoKiXCJb8JFIejm4OCQp7ukhheTlZ7djvlLmno+
+         AIm2QberSGGNyfwxM/zeb6zysLa05Rm91kbegD80LlxjL45t1ZBaQB3bc5gvM7mw/1
+         3S24pGIMDeWwg==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-4f3b337e842so184940e87.3
+        for <linux-raid@vger.kernel.org>; Tue, 23 May 2023 11:36:02 -0700 (PDT)
+X-Gm-Message-State: AC+VfDxVCZdWg8U65SxqR47IESEEi4hr8EVAIK//qrGax/5LCuID6ZQL
+        znl+Q8ejIUWWeAWHov54uanZsxxqV2B8wSgiq38=
+X-Google-Smtp-Source: ACHHUZ5HVOSj1+YOWYmyJCLLN7KNDufBEMxkgWnbtO6gqdzyNzJbM5Khmu2VV3rAv9wKhEqZhxABDqgbneqTgQYbZr8=
+X-Received: by 2002:ac2:5323:0:b0:4f4:b3a6:4135 with SMTP id
+ f3-20020ac25323000000b004f4b3a64135mr1837539lfh.55.1684866960704; Tue, 23 May
+ 2023 11:36:00 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230523012727.3042247-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230523012727.3042247-1-yukuai1@huaweicloud.com>
+References: <202305191808.4xsaLKSZ-lkp@intel.com> <5e8a5f4f-e71c-97a4-6ace-974753a1a528@linux.dev>
+In-Reply-To: <5e8a5f4f-e71c-97a4-6ace-974753a1a528@linux.dev>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 23 May 2023 11:05:18 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5AERnf5D4804ksgZEB2ZP7gVAG8f5Fghwnn0FKseBG+g@mail.gmail.com>
-Message-ID: <CAPhsuW5AERnf5D4804ksgZEB2ZP7gVAG8f5Fghwnn0FKseBG+g@mail.gmail.com>
-Subject: Re: [PATCH v3] md: fix duplicate filename for rdev
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     pmenzel@molgen.mpg.de, akpm@linux-foundation.org, neilb@suse.de,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Date:   Tue, 23 May 2023 11:35:47 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6aAZK5gAtSpLOTdoNhJDBpY24vvp13kkp=yQ_cADauXw@mail.gmail.com>
+Message-ID: <CAPhsuW6aAZK5gAtSpLOTdoNhJDBpY24vvp13kkp=yQ_cADauXw@mail.gmail.com>
+Subject: Re: [song-md:module_alloc_test 5/6] arch/powerpc/kernel/module.c:108:8:
+ error: unused variable 'ptr'
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     kernel test robot <lkp@intel.com>, llvm@lists.linux.dev,
+        oe-kbuild-all@lists.linux.dev, linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, May 22, 2023 at 6:30=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
+On Fri, May 19, 2023 at 4:05=E2=80=AFAM Guoqing Jiang <guoqing.jiang@linux.=
+dev> wrote:
 >
-> From: Yu Kuai <yukuai3@huawei.com>
 >
-> Commit 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device
-> from an md array via sysfs") delays the deletion of rdev, however, this
-> introduces a window that rdev can be added again while the deletion is
-> not done yet, and sysfs will complain about duplicate filename.
 >
-> Follow up patches try to fix this problem by flushing workqueue, however,
-> flush_rdev_wq() is just dead code, the progress in
-> md_kick_rdev_from_array():
+> On 5/19/23 18:41, kernel test robot wrote:
+> > Hi Song,
+> >
+> > FYI, the error/warning was bisected to this commit, please ignore it if=
+ it's irrelevant.
+> >
+> > tree:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git modul=
+e_alloc_test
 >
-> 1) list_del_rcu(&rdev->same_set);
-> 2) synchronize_rcu();
-> 3) queue_work(md_rdev_misc_wq, &rdev->del_work);
->
-> So in flush_rdev_wq(), if rdev is found in the list, work_pending() can
-> never pass, in the meantime, if work is queued, then rdev can never be
-> found in the list.
->
-> flush_rdev_wq() can be replaced by flush_workqueue() directly, however,
-> this approach is not good:
-> - the workqueue is global, this synchronization for all raid disks is
->   not necessary.
-> - flush_workqueue can't be called under 'reconfig_mutex', there is still
->   a small window between flush_workqueue() and mddev_lock() that other
->   contexts can queue new work, hence the problem is not solved completely=
+> Could you only post test results for md-next/md-fixes branches to raid
+> list? Since this is
+> obvious irrelevant to the list.
+
+Created https://github.com/intel/lkp-tests/pull/303 to silent these reports=
 .
->
-> sysfs already has apis to support delete itself through writer, and
-> these apis, specifically sysfs_break/unbreak_active_protection(), is used
-> to support deleting rdev synchronously. Therefore, the above commit can b=
-e
-> reverted, and sysfs duplicate filename can be avoided.
->
-> A new mdadm regression test is proposed as well([1]).
->
-> [1] https://lore.kernel.org/linux-raid/20230428062845.1975462-1-yukuai1@h=
-uaweicloud.com/
-> Fixes: 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device=
- from an md array via sysfs")
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-Thanks for the fix! I made the following changes and applied it
-to md-next:
+Sorry for the noise.
 
-1. remove md_rdev->del_work, which is not used any more;
-2. change list_empty_safe to list_empty protected by the mutex, as
-   list_empty_safe doesn't seem safe here.
-
-Please let me know if either change doesn't make sense.
-
-Thanks,
+Thank,
 Song
