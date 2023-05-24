@@ -2,130 +2,96 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E781C77B7A
-	for <linux-raid@archiver.kernel.org>; Wed, 24 May 2023 10:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DEA2C7EE23
+	for <linux-raid@archiver.kernel.org>; Wed, 24 May 2023 15:02:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233306AbjEXKjD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 May 2023 06:39:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53834 "EHLO
+        id S231371AbjEXPCP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 May 2023 11:02:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232236AbjEXKip (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 May 2023 06:38:45 -0400
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 022C9132
-        for <linux-raid@vger.kernel.org>; Wed, 24 May 2023 03:38:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684924722; x=1716460722;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Qyc8Z7pjeSVsbnVgjHkfYsuGcIcY7ZDSTo/pOEMJ89w=;
-  b=Eb2qNyqd3/l3di1Zmn6fT+c90ATi+Fj0YNubuIXVonm0MT+wu1+pWvJ/
-   L9LZsn/tXU4h/RFqrNWD7T+TKVy2DEhS2V8avyNzYPJW5SnyoVmmXA6Kp
-   npCijB8/okuKI/f2/jCi6QGKlGG/i/fZF0d1LBCbSj0ygYZVNbDgUu0un
-   FFyqtryjsVRFuAaautbuckLPwtkU8tzD0atNZA+SdHgR+Z32rbW1Sqn/S
-   ps/VgpunV5gVeyhV8Gtuy0Fso0HrcGgEX30ASvxh15huVdLHE9UGHJDUc
-   cVRDotBfWRaVLF22h1ZKYGABlFUw5lZhF7cAcQwI2siZlmbioWvGkVIZs
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10719"; a="342987769"
-X-IronPort-AV: E=Sophos;i="6.00,189,1681196400"; 
-   d="scan'208";a="342987769"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2023 03:38:42 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10719"; a="774195602"
-X-IronPort-AV: E=Sophos;i="6.00,189,1681196400"; 
-   d="scan'208";a="774195602"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.129.144])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2023 03:38:40 -0700
-Date:   Wed, 24 May 2023 12:38:35 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org,
-        pmenzel@molgen.mpg.de, logang@deltatee.com, song@kernel.org,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH tests 2/5] tests: add a new test for rdev lifetime
-Message-ID: <20230524123835.00001f1f@linux.intel.com>
-In-Reply-To: <fab68598-229a-f914-f09e-6ecaa4a88ba4@huaweicloud.com>
-References: <20230523133900.3149123-1-yukuai1@huaweicloud.com>
-        <20230523133900.3149123-3-yukuai1@huaweicloud.com>
-        <20230524103301.00007195@linux.intel.com>
-        <fab68598-229a-f914-f09e-6ecaa4a88ba4@huaweicloud.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S232009AbjEXPCN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 May 2023 11:02:13 -0400
+Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34267C1
+        for <linux-raid@vger.kernel.org>; Wed, 24 May 2023 08:02:12 -0700 (PDT)
+Received: by mail-io1-xd34.google.com with SMTP id ca18e2360f4ac-7747f082d98so7924139f.1
+        for <linux-raid@vger.kernel.org>; Wed, 24 May 2023 08:02:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1684940531; x=1687532531;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rwf57azNybT9v+Lg2CMN2sb9fLVIIGUOGeYghvdjLPg=;
+        b=j8dtYIjP94479te1+EaV/gWEzZPD0jKPaxH4IJEOWq8N99C7cbFAtuJuLoz2zM9Xqi
+         QK/ykjGbpTIocJ5YYHyCbUKtC5O+RF0GYzEFyQHX4ozqaIoPwqpu1xgMpeyoRS4x9/4D
+         3bJqKNey7+kopR/WfC3vwVsgiXZOyjzNtuYnRZS2tlN2pIskqNSsy511kaGSLQicY9U2
+         PIh7J0ws9nxdSC+5OAs9uTKu/bU7guocHNCRSVGQQ47I/ae/dW8njJGHGjH+Bl0XLs0v
+         KneThcxWvH6kmsmfhPxpkIyG+ZDeOEFPch3BpZ9GH2vgp9cVQupwP2mpPmKlWkn8pCeB
+         b/Aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684940531; x=1687532531;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rwf57azNybT9v+Lg2CMN2sb9fLVIIGUOGeYghvdjLPg=;
+        b=iSOcVyZOm4f3qNLny9001kcLHjrhb0/9XNsFDrBBL1jojUdadjbICHC3aklKRHtuYu
+         8YUdTM0Tv4Q7rQPutQAz23e7owZqk888otA4jCRQKtEayOuOCCwnRqMsZ177OqMder/j
+         CwbgOym5ISGFDLdCTsbMhgC2o6W9OPNHFTpnBoNvggK6ri+Bym2FBkPDUXViAhBcRAgU
+         x+oJE3PQ/F0zj34P9ifVZOfnHdakHoD/CgX3ZiYrI0guEmfW80cvgGa5Cfezo6MhM7ls
+         xN3LDapZh9sdYCeiQb8W6PqtEWZ5fVj4Gb4nxTWAaDvy+ED/CARrz5Fb3prEMg8PYVkZ
+         ZfZw==
+X-Gm-Message-State: AC+VfDzvpi7XIkYRMICJx3pvPLNzaE1dpeEbnLaadodlk7f10r2ff0M4
+        9ddmnG7pCWdTOHP29b50fSTa7w==
+X-Google-Smtp-Source: ACHHUZ50tzfDRcH1j6S2Z6TgSbqpVFNpX8Jv88XOuQFTADKkXBGAMy329r3aqgfQXEN+hNSP1qppLQ==
+X-Received: by 2002:a05:6602:3420:b0:774:8571:a6dd with SMTP id n32-20020a056602342000b007748571a6ddmr3685006ioz.2.1684940531189;
+        Wed, 24 May 2023 08:02:11 -0700 (PDT)
+Received: from [192.168.1.94] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id f13-20020a056638112d00b0040fb2ba7357sm3209457jar.4.2023.05.24.08.02.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 24 May 2023 08:02:10 -0700 (PDT)
+Message-ID: <3235f123-0638-b39f-f902-426059b87f81@kernel.dk>
+Date:   Wed, 24 May 2023 09:02:09 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=gbk
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v5 00/20] bio: check return values of bio_add_page
+Content-Language: en-US
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc:     agruenba@redhat.com, cluster-devel@redhat.com,
+        damien.lemoal@wdc.com, dm-devel@redhat.com, hare@suse.de,
+        hch@lst.de, jfs-discussion@lists.sourceforge.net, kch@nvidia.com,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-raid@vger.kernel.org,
+        ming.lei@redhat.com, rpeterso@redhat.com, shaggy@kernel.org,
+        snitzer@kernel.org, song@kernel.org, willy@infradead.org
+References: <20230502101934.24901-1-johannes.thumshirn@wdc.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20230502101934.24901-1-johannes.thumshirn@wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 24 May 2023 17:05:43 +0800
-Yu Kuai <yukuai1@huaweicloud.com> wrote:
-
-> Hi,
+On 5/2/23 4:19?AM, Johannes Thumshirn wrote:
+> We have two functions for adding a page to a bio, __bio_add_page() which is
+> used to add a single page to a freshly created bio and bio_add_page() which is
+> used to add a page to an existing bio.
 > 
-> ÔÚ 2023/05/24 16:33, Mariusz Tkaczyk Ð´µÀ:
-> > On Tue, 23 May 2023 21:38:57 +0800
-> > Yu Kuai <yukuai1@huaweicloud.com> wrote:
-> >   
-> >> From: Yu Kuai <yukuai3@huawei.com>
-> >>
-> >> This test add and remove a underlying disk to raid concurretly, verify
-> >> that the following problem is fixed:  
-> > 
-> > As in previous patch, feel free to move it into separate directory.
-> > 
-> > This test is limited only to this particular problem you resolved because
-> > you are verifying error message in dmesg. It has no additional value because
-> > probability that this issue will ever more occur in the same shape is
-> > minimal.
-> > 
-> > IMO you should check how "remove" and "add" are handled, if errors are
-> > returned, if there is no trace in dmesg or if processes are not blocked in
-> > kernel.  
+> While __bio_add_page() is expected to succeed, bio_add_page() can fail.
 > 
-> It's a litter hard to do that, the problem is that after removing a disk
-> from array, add it back might fail. But if I follow this order,
-> it'll be hard to trigger the race, simply based on how quickly kernel
-> finish queued work. So I just remove and add the disk concurrently, and
-> return errors is not concerned as long as kernel doesn't WARN.
-
-Ok, makes sense. All I really care about is to not grep dmesg for particular
-error message. We should make verification flexible because in the future error
-may come from different place in the same test. That is the main objection here.
-Maybe we can do check like in generic mdadm do_test() :
-dmesg | grep -iq "error\|call trace\|segfault"
-
-I know that it is done anyway because do_test() is involved but I would prefer
-to have this verification in this test anyway to make reported error message
-possibility the most meaningful.
-
-But, as we discussed in other patch, probably mdadm is not perfect place not
-tests like that so please be aware of it if you will decide to add this test
-to kernel.
-
-> > You can check for this error message as a additional step at the end of test
-> > but not as a mandatory test pass criteria.
-> > 
-> > In current form it gives as a knowledge that particular kernel doesn't have
-> > your fix, that is all. Because it is race, probably it is not impacting
-> > real life scenarios, so that gives a weak motivation to backport the fix
-> > (only security reasons matters).
-> > 
-> > I don't see that this particular scenario requires test. You need to make it
-> > more valuable for the future.  
+> This series converts the callers of bio_add_page() which can easily use
+> __bio_add_page() to using it and checks the return of bio_add_page() for
+> callers that don't work on a freshly created bio.
 > 
-> This is just a regression test for a kerenl problem£¨also for all the
-> tests in this patchset) that is solved recently, and I write this test
-> from the kernel perspective, not user, I think this is the main
-> difference, because I'm not quite familiar how mdadm works, I just know
-> how to use it. (I still wonder why not these kernel regression tests is
-> not landed in blktests)
-> 
-> There are more regression tests that I'm planing to add, and is this the
-> wrong place to add such tests?
+> Lastly it marks bio_add_page() as __must_check so we don't have to go again
+> and audit all callers.
 
-I think we cleared it up in patch#4.
+Looks fine to me, though it would be nice if the fs and dm people could
+give this a quick look. Should not take long, any empty bio addition
+should, by definition, be able to use a non-checked page addition for
+the first page.
 
-Thanks for quick feedback,
-Mariusz
+-- 
+Jens Axboe
+
