@@ -2,122 +2,177 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCE73C77B73
-	for <linux-raid@archiver.kernel.org>; Wed, 24 May 2023 09:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61AC2C7EE23
+	for <linux-raid@archiver.kernel.org>; Wed, 24 May 2023 09:07:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240276AbjEXJFw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 May 2023 05:05:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37308 "EHLO
+        id S240194AbjEXJHQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 May 2023 05:07:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240194AbjEXJFu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 May 2023 05:05:50 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D63628E
-        for <linux-raid@vger.kernel.org>; Wed, 24 May 2023 02:05:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684919149; x=1716455149;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=mZonNzxleSu/nW6F82ZzAUCzAhsCXVZI8o9eGtLQM3w=;
-  b=Iq+QiaIfD2hrBRO73IGgXXEM5bRfLLXcEkzyxs78iP988+qf/QouOcog
-   gkMTq6wWg8HzKYl2RAsPGDcqgU15xjrbCCXHgVGSDL4MZTdNenX2Dv2Nz
-   Mu/tY9ieFBWb+GZ6hDT5bPiZ9gcUsfrk/7wtQ6O3kb+ZxBHIensDjrREi
-   TGKGFy9HgyQ7fE/ELoKjuf982RlUDOJvgS3NKIXaAYEv4y8pBSQ77QWZ6
-   0OC4ZxUsASNFxN+mhdiWnDSHUGsf3bpU8YKdyqn7UrQJY1skwRou1rwfS
-   hwuTZBDrFHbhCf1u5R4VixxzVZlJIokXt7DqFPg/QC0N6tTQ4p+ID6uti
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10719"; a="439860572"
-X-IronPort-AV: E=Sophos;i="6.00,188,1681196400"; 
-   d="scan'208";a="439860572"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2023 02:01:03 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10719"; a="698444198"
-X-IronPort-AV: E=Sophos;i="6.00,188,1681196400"; 
-   d="scan'208";a="698444198"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.129.144])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2023 02:00:43 -0700
-Date:   Wed, 24 May 2023 11:00:38 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+        with ESMTP id S240201AbjEXJHN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 May 2023 05:07:13 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66C4B12B
+        for <linux-raid@vger.kernel.org>; Wed, 24 May 2023 02:07:12 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QR50r0f6pz4f402w
+        for <linux-raid@vger.kernel.org>; Wed, 24 May 2023 17:07:08 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP3 (Coremail) with SMTP id _Ch0CgCnUyG7021kUWc9JQ--.13542S3;
+        Wed, 24 May 2023 17:07:08 +0800 (CST)
+Subject: Re: [PATCH tests 4/5] tests: add a regression test for raid10
+ deadlock
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     linux-raid@vger.kernel.org, jes@trained-monkey.org,
-        pmenzel@molgen.mpg.de, logang@deltatee.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH tests 1/5] tests: add a new test to check if pluged bio
- is unlimited for raid10
-Message-ID: <20230524110038.00006c2f@linux.intel.com>
-In-Reply-To: <5fdfece6-6a45-7de7-7754-afc16d58145b@huaweicloud.com>
+        pmenzel@molgen.mpg.de, logang@deltatee.com, song@kernel.org,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 References: <20230523133900.3149123-1-yukuai1@huaweicloud.com>
-        <20230523133900.3149123-2-yukuai1@huaweicloud.com>
-        <20230524095314.000007f9@linux.intel.com>
-        <5fdfece6-6a45-7de7-7754-afc16d58145b@huaweicloud.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+ <20230523133900.3149123-5-yukuai1@huaweicloud.com>
+ <20230524104828.000070bf@linux.intel.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <96ce6522-944c-3058-4d9c-b59381383223@huaweicloud.com>
+Date:   Wed, 24 May 2023 17:07:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=gbk
+In-Reply-To: <20230524104828.000070bf@linux.intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _Ch0CgCnUyG7021kUWc9JQ--.13542S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxWw47GFW3Zw45CFykCw15Jwb_yoW5ZF17pa
+        yUGFW5KrW8W3W7Zw13G3WUCFySqa1kJr47C34aqw4ayr9F9rn7Zan7Kr45uFZ7Zr4UKw1k
+        u3Z0vFWfKr1jkFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVWUJVW8
+        JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUF9a9DU
+        UUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 24 May 2023 16:26:45 +0800
-Yu Kuai <yukuai1@huaweicloud.com> wrote:
+Hi,
 
-> Hi,
+在 2023/05/24 16:48, Mariusz Tkaczyk 写道:
+> On Tue, 23 May 2023 21:38:59 +0800
+> Yu Kuai <yukuai1@huaweicloud.com> wrote:
 > 
-> 在 2023/05/24 15:53, Mariusz Tkaczyk 写道:
-> > On Tue, 23 May 2023 21:38:56 +0800
-> > Yu Kuai <yukuai1@huaweicloud.com> wrote:
-> >   
-> >> From: Yu Kuai <yukuai3@huawei.com>
-> >>
-> >> Pluged bio is unlimited means that all submitted bio will be pluged, and
-> >> those bio won't be issued to underlaying disks until blk_finish_plug() or
-> >> blk_flush_plug(). In this case, a lot memory will be used for
-> >> raid10_bio and io latency will be very bad.
-> >>
-> >> This test do some dirty pages writeback for raid10, where plug is used, and
-> >> check if device inflight counter exceed threshold.
-> >>
-> >> This problem is supposed to be fixed by [1].  
-> > 
-> > The test here is for md, mdadm has nothing to do here. I'm not against it
-> > but please extract it to separate directory because like "md_tests".
-> > We need to start grouping tests.  
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> The deadlock is described in [1], it's fixed first by [2], however,
+>> it turns out this commit will trigger other problems[3], hence this
+>> commit will be reverted and the deadlock is supposed to be fixed by [1].
+>>
+>> [1]
+>> https://lore.kernel.org/linux-raid/20230322064122.2384589-5-yukuai1@huaweicloud.com/
+>> [2]
+>> https://lore.kernel.org/linux-raid/20220621031129.24778-1-guoqing.jiang@linux.dev/
+>> [3]
+>> https://lore.kernel.org/linux-raid/20230322064122.2384589-2-yukuai1@huaweicloud.com/
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   tests/24raid10deadlock              | 85 +++++++++++++++++++++++++++++
+>>   tests/24raid10deadlock.inject_error |  0
+>>   2 files changed, 85 insertions(+)
+>>   create mode 100644 tests/24raid10deadlock
+>>   create mode 100644 tests/24raid10deadlock.inject_error
+>>
+>> diff --git a/tests/24raid10deadlock b/tests/24raid10deadlock
+>> new file mode 100644
+>> index 00000000..27869840
+>> --- /dev/null
+>> +++ b/tests/24raid10deadlock
+>> @@ -0,0 +1,85 @@
+>> +devs="$dev0 $dev1 $dev2 $dev3"
+>> +runtime=120
+>> +pid=""
+>> +
+>> +set_up_injection()
+>> +{
+>> +	echo -1 > /sys/kernel/debug/fail_make_request/times
+>> +	echo 1 > /sys/kernel/debug/fail_make_request/probability
+>> +	echo 0 > /sys/kernel/debug/fail_make_request/verbose
+>> +	echo 1 > /sys/block/${1##*/}/make-it-fail
+>> +}
+>> +
+>> +clean_up_injection()
+>> +{
+>> +	echo 0 > /sys/block/${1##*/}/make-it-fail
+>> +	echo 0 > /sys/kernel/debug/fail_make_request/times
+>> +	echo 0 > /sys/kernel/debug/fail_make_request/probability
+>> +	echo 2 > /sys/kernel/debug/fail_make_request/verbose
+>> +}
+>> +
+>> +test_rdev()
+>> +{
+>> +	while true; do
+>> +		mdadm -f $md0 $1 &> /dev/null
+>> +		mdadm -r $md0 $1 &> /dev/null
+>> +		mdadm --zero-superblock $1 &> /dev/null
+>> +		mdadm -a $md0 $1 &> /dev/null
+>> +		sleep $2
+>> +	done
+>> +}
+>> +
+>> +test_write_action()
+>> +{
+>> +	while true; do
+>> +		echo frozen > /sys/block/md0/md/sync_action
+>> +		echo idle > /sys/block/md0/md/sync_action
+>> +		sleep 0.1
+>> +	done
+>> +}
+>> +
+>> +set_up_test()
+>> +{
+>> +	fio -h &> /dev/null || die "fio not found"
+>> +
+>> +	# create a simple raid10
+>> +	mdadm -Cv -R -n 4 -l10 $md0 $devs || die "create raid10 failed"
+>> +}
+>> +
+>> +clean_up_test()
+>> +{
+>> +	clean_up_injection $dev0
+>> +	kill -9 $pid
+>> +	pkill -9 fio
+>> +
+>> +	sleep 1
+>> +
+>> +	if ! mdadm -S $md0; then
+>> +		die "can't stop array, deadlock is probably triggered"
+>> +	fi
 > 
-> Sorry I don't understand this, currently the test for md is here, I
-> don't see why need a seperate directory, is there a plan to move all
-> these tests into new directory?
-
-Yes, that how it was in the past, and I would like to change it because 
-tests directory is too big and we are still adding new tests.
-
-Ideally, tests like that should stay with kernel, because repository you are
-contributing now is "mdadm" - userspace application to manage md devices, not
-the driver itself.
-That is why I wanted to highlight that placement is controversial but I'm fine
-with that. As you said, we did that in the past.
-
-Song, what do you think? Where we should put the test like in the future?
-
-
-> >> +
-> >> +# check if inflight exceed threshold
-> >> +while true; do
-> >> +        tmp=`cat /sys/block/md0/inflight | awk '{printf("%d\n", $1 +
-> >> $2);}'`
-> >> +        if [ $tmp -gt $threshold ]; then
-> >> +                die "inflight is greater than 4096"  
-> > 
-> > The message here is not meaningful, what 4096 is? Please add comment
-> > describing why value above 4096 causes an error. We need to understand how
-> > the future changes in md may affect this setting (I think that there is a
-> > correlation between the value and MAX_PLUG_BIO).  
+> stop may fail from different reasons I see it as too big to be marker of
+> "deadlock". I know that --stop still fails because md is unable to clear sysfs
+> attrs in expected time (or a least it was a problem few years ago). Is there a
+> better way to check that? I would prefer, different less complicated action to
+> exclude false positives.
 > 
-> MAX_PLUG_BIO is just limit for one task, I'm not sure if there will only
-> be one task issuing io, that why I choose a much larger value 4096.
+> In my IMSM environment I still see that md stop stress test is failing
+> sporadically (1/100).
 
-Please add it in comment above the value.
+Yes, this make sense, perhaps I'll try to detect if related task is
+stuck in D state.
 
 Thanks,
-Mariusz
+Kuai
+> 
+> Thanks,
+> Mariusz
+> 
+> .
+> 
+
