@@ -2,91 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF1FCC77B73
-	for <linux-raid@archiver.kernel.org>; Wed, 24 May 2023 15:03:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42D5CC77B73
+	for <linux-raid@archiver.kernel.org>; Wed, 24 May 2023 17:23:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236419AbjEXPDX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 May 2023 11:03:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49534 "EHLO
+        id S235867AbjEXRXr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 May 2023 13:23:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236397AbjEXPDW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 May 2023 11:03:22 -0400
-Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7366C195
-        for <linux-raid@vger.kernel.org>; Wed, 24 May 2023 08:03:20 -0700 (PDT)
-Received: by mail-io1-xd32.google.com with SMTP id ca18e2360f4ac-760dff4b701so8105439f.0
-        for <linux-raid@vger.kernel.org>; Wed, 24 May 2023 08:03:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1684940599; x=1687532599;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GgDKrHLcU2tmKaG5NStKDv/+h6lvDy9SPWrocWEqRKY=;
-        b=KbH4KU5/h08dj7t3PcKDEDm1/UReJFYLAuotdxeU7tXw+L3zRabkYBA3/BiKFZ6qGI
-         F+gr7jKiGNgNggWdzLjBSu+ilsXCZXOWONG2Kn86u2gb7qD1QKtBHYmpFu6P7boIIbxF
-         Ikcp+oCxS1YOq8hwfuzdVPoX0d+TFE5d9+HLvpfoYubx+csuBQlK4vxHr9KiirNkQuvc
-         yjhDXcL/i6vHnVwz0il0gJbyfMbbI6KloHYzHtfn/jh5+C9TFsv3L+Je+WxPCKJeD4Xa
-         5FGGnwZv1ZsixHpLsBZSgDQfww5jeEUekWIIolhHQKnmz/X1ZKN3WbCjGwog/cXUR0Vv
-         eGIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684940599; x=1687532599;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GgDKrHLcU2tmKaG5NStKDv/+h6lvDy9SPWrocWEqRKY=;
-        b=V2zAWKIC1xUtXrps0uMuZxHFEkkR7ilO5h67pxI0HpQRcnTFvzJn+h+ku5hhZNZ6nQ
-         BzXqvvplYpD2XPLvUB6rJY27Uf1edaEcqCvJ1BvWmYQxQCnuLzkNGTSzzLqXI/EvVCOs
-         +aYcWmV9hIqQIVjUlUZ8UESKV6XeNb4a1vs4Rl+ICM+YiBeq66Q5ysWytceT2wwKKJsS
-         OSa1p4SMQ7R9l2iqreSWst6m3zdhxLsA1YNZE1IynCdg2RbhsXu3KuphyXVghx1NEhjq
-         6tT+4xeyS0TZPzogha+cRJMSYEUXOXCpoz0Kop6OmDqSbwG5joqnYWOXPTG9RoljzH22
-         iIpg==
-X-Gm-Message-State: AC+VfDx1NMWiY8XYOnLIJ+4XBPkvD9XAPUCb/xVuAiHRmv04gMK2MXiv
-        RYs5qhBfBqjuGLS+UJaga4lL3w==
-X-Google-Smtp-Source: ACHHUZ5ssaxrjwm/Xnp0jY+aTTrWQU+36ntdVpV25h3nuBN3qq1X8OGPSHY1YY5Xi3JTKSSDYR1gOQ==
-X-Received: by 2002:a92:cd8b:0:b0:332:868a:ea8 with SMTP id r11-20020a92cd8b000000b00332868a0ea8mr10627847ilb.1.1684940599631;
-        Wed, 24 May 2023 08:03:19 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id t14-20020a92c90e000000b0032b54912651sm1073938ilp.5.2023.05.24.08.03.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 May 2023 08:03:18 -0700 (PDT)
-Message-ID: <7075bfd8-7c52-a778-5651-71ade3cd1f03@kernel.dk>
-Date:   Wed, 24 May 2023 09:03:17 -0600
+        with ESMTP id S233153AbjEXRXV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 May 2023 13:23:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14A671B5;
+        Wed, 24 May 2023 10:21:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9B3C263FA5;
+        Wed, 24 May 2023 17:21:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09AFAC433D2;
+        Wed, 24 May 2023 17:21:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684948914;
+        bh=H23kapb5DNJcM15IBsjyR2uv9rZz+iynRivlE9lYlMA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Qwc5bGgK2asPU9lvbt3S5yi+LsxVDWG3KPVhXcKbxQE8y1EVaGyp9bemMoBGuyJ1P
+         r428M49VAab29Zibu8PSCHTqtwEvkzlk4/X6/QDlwOOuWPkjvdtvpRkSZOKlLHxz9F
+         I0FbYGwY6dQcMWK/BEJ/o1vR8o2VRsgS8N0F0nZ03bpWMqMDfgUPqw9lET2BqT70n2
+         jDuJ3lD4fyIossCWtJMaWTV/AFadq588uQA6N7K+56jS7SWJw7/oJqDk7oA0H8qD8R
+         e45G6BXxFzgAw7R5dUtjGRW71ySzm5qkFD7HQPehDJbrpFbCCAsyZVZoPGfDp07cb7
+         O6vC0JBLXNfRA==
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2af1e290921so15095601fa.3;
+        Wed, 24 May 2023 10:21:53 -0700 (PDT)
+X-Gm-Message-State: AC+VfDxr7QnswsC4W/+4N7FR5sVdccEyoUkQOTLhFZHpRPg5LAyqtG+R
+        gliE0qrm3bX9WMUncCWD4cV1UqeUi9jAgOmddEA=
+X-Google-Smtp-Source: ACHHUZ4UxcgUge7e2vehx/UJslCfpAsV6h46GEpEQUu2lMlqj2aKLN0pWdcnM5M6hNytbVjJQ+U8zKflE1Fdyvi7ktE=
+X-Received: by 2002:a2e:8890:0:b0:2ac:8e5a:1054 with SMTP id
+ k16-20020a2e8890000000b002ac8e5a1054mr183971lji.0.1684948912038; Wed, 24 May
+ 2023 10:21:52 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] md/raid5: fix miscalculation of 'end_sector' in
- raid5_read_one_chunk()
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>, hch@lst.de, song@kernel.org,
+References: <20230524014118.3172781-1-yukuai1@huaweicloud.com> <7075bfd8-7c52-a778-5651-71ade3cd1f03@kernel.dk>
+In-Reply-To: <7075bfd8-7c52-a778-5651-71ade3cd1f03@kernel.dk>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 24 May 2023 10:21:40 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5cBZUdBFM7jdfP11ev5UpQX_YCe_EmR+A1B4XgSrw+-w@mail.gmail.com>
+Message-ID: <CAPhsuW5cBZUdBFM7jdfP11ev5UpQX_YCe_EmR+A1B4XgSrw+-w@mail.gmail.com>
+Subject: Re: [PATCH] md/raid5: fix miscalculation of 'end_sector' in raid5_read_one_chunk()
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Yu Kuai <yukuai1@huaweicloud.com>, hch@lst.de,
         chaitanya.kulkarni@wdc.com, johannes.thumshirn@wdc.com,
-        damien.lemoal@wdc.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-References: <20230524014118.3172781-1-yukuai1@huaweicloud.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20230524014118.3172781-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        damien.lemoal@wdc.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 5/23/23 7:41 PM, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> 'end_sector' is compared to 'rdev->recovery_offset', which is offset to
-> rdev, however, commit e82ed3a4fbb5 ("md/raid6: refactor
-> raid5_read_one_chunk") changes the calculation of 'end_sector' to offset
-> to the array. Fix this miscalculation.
-> 
-> Fixes: e82ed3a4fbb5 ("md/raid6: refactor raid5_read_one_chunk")
+On Wed, May 24, 2023 at 8:03=E2=80=AFAM Jens Axboe <axboe@kernel.dk> wrote:
+>
+> On 5/23/23 7:41=E2=80=AFPM, Yu Kuai wrote:
+> > From: Yu Kuai <yukuai3@huawei.com>
+> >
+> > 'end_sector' is compared to 'rdev->recovery_offset', which is offset to
+> > rdev, however, commit e82ed3a4fbb5 ("md/raid6: refactor
+> > raid5_read_one_chunk") changes the calculation of 'end_sector' to offse=
+t
+> > to the array. Fix this miscalculation.
+> >
+> > Fixes: e82ed3a4fbb5 ("md/raid6: refactor raid5_read_one_chunk")
+>
+> This needs a stable tag as well, Fixes alone is not enough to guarantee
+> it ends up in stable.
+>
+> Song, are you picking this up?
 
-This needs a stable tag as well, Fixes alone is not enough to guarantee
-it ends up in stable.
+Yes, I will test it and send it via md-fixes.
 
-Song, are you picking this up?
-
--- 
-Jens Axboe
-
-
+Thanks,
+Song
