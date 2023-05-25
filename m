@@ -2,31 +2,30 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D04F5C7EE29
-	for <linux-raid@archiver.kernel.org>; Thu, 25 May 2023 13:56:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF99CC7EE2D
+	for <linux-raid@archiver.kernel.org>; Thu, 25 May 2023 14:00:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235835AbjEYN4C (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 25 May 2023 09:56:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37444 "EHLO
+        id S241482AbjEYOAt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 25 May 2023 10:00:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233837AbjEYN4A (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 25 May 2023 09:56:00 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F09F5189;
-        Thu, 25 May 2023 06:55:57 -0700 (PDT)
+        with ESMTP id S241463AbjEYOAn (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 25 May 2023 10:00:43 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67897197;
+        Thu, 25 May 2023 07:00:29 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QRqMT6t0Mz4f3jLy;
-        Thu, 25 May 2023 21:55:49 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QRqSk6hDHz4f3kpH;
+        Thu, 25 May 2023 22:00:22 +0800 (CST)
 Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgBnHbHdaG9kQYvAKA--.6595S3;
-        Thu, 25 May 2023 21:55:51 +0800 (CST)
-Message-ID: <e93da9cc-d92d-34c8-a820-1f2b211caf53@huaweicloud.com>
-Date:   Thu, 25 May 2023 21:55:40 +0800
+        by APP4 (Coremail) with SMTP id gCh0CgAHvbD3aW9k48jAKA--.54760S3;
+        Thu, 25 May 2023 22:00:24 +0800 (CST)
+Message-ID: <10e164cc-149f-baf6-de52-0b7d3c9468f6@huaweicloud.com>
+Date:   Thu, 25 May 2023 22:00:23 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH 1/3] md/raid10: fix null-ptr-deref of mreplace in
- raid10_sync_request
+Subject: Re: [PATCH 2/3] md/raid10: fix incorrect done of recovery
 To:     Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
         song@kernel.org, shli@fb.com, allenpeng@synology.com,
         alexwu@synology.com, bingjingc@synology.com, neilb@suse.de
@@ -34,29 +33,29 @@ Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
         "yukuai (C)" <yukuai3@huawei.com>
 References: <20230522115449.2203939-1-linan666@huaweicloud.com>
- <20230522115449.2203939-2-linan666@huaweicloud.com>
- <6c2d40de-7b8c-d84d-d9a2-7c5dce7471aa@huaweicloud.com>
+ <20230522115449.2203939-3-linan666@huaweicloud.com>
+ <801a3a11-9a2c-dca2-cec4-4a9c71d3afb6@huaweicloud.com>
 From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <6c2d40de-7b8c-d84d-d9a2-7c5dce7471aa@huaweicloud.com>
+In-Reply-To: <801a3a11-9a2c-dca2-cec4-4a9c71d3afb6@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnHbHdaG9kQYvAKA--.6595S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WrWkuryDury7Cw4rCFWkCrg_yoW8Gr1Dpw
-        4kXas7uryUGws2k3WDX3WDuFySgw1xt345Cry5Xa4rZr15JrW2gFW0grWYgF1DXF4rKa4j
-        qr1UtFZxZF18taDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBI14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgAHvbD3aW9k48jAKA--.54760S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7KF48Xr13Gr48KF18tr4Dtwb_yoW8urykpw
+        s7JF9xX34UC3s3Aw1DAryUAFy5try8ta4UKr1xWa4aqry5XryqqFW8XF40gFyDXr4rtF4j
+        qw1jqrW3uFy7KaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUB214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
         JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
         CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-        F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+        F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r
         4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
         4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x
         0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
         7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
         C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
-        04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aV
-        CY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbHa0DUUUUU==
+        04k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6x
+        kF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUFYFADUUUU
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -65,42 +64,56 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-在 2023/5/22 21:01, Yu Kuai 写道:
+在 2023/5/22 21:54, Yu Kuai 写道:
 > Hi,
 > 
 > 在 2023/05/22 19:54, linan666@huaweicloud.com 写道:
 >> From: Li Nan <linan122@huawei.com>
 >>
->> need_replace will be set to 1 if no-Faulty mreplace exists, and mreplace
->> will be deref later. However, the latter check of mreplace might set
->> mreplace to NULL, null-ptr-deref occurs if need_replace is 1 at this 
->> time.
+>> Recovery will go to giveup and let chunks_skipped++ in
+>> raid10_sync_request() if there are some bad_blocks, and it will return
+>> max_sector when chunks_skipped >= geo.raid_disks. Now, recovery fail and
+>> data is inconsistent but user think recovery is done, it is wrong.
 >>
->> Fix it by merging two checks into one. And replace 'need_replace' with
->> 'mreplace' because their values are always the same.
+>> Fix it by set mirror's recovery_disabled and spare device shouln't be
+>> added to here.
 >>
->> Fixes: ee37d7314a32 ("md/raid10: Fix raid10 replace hang when new 
->> added disk faulty")
 >> Signed-off-by: Li Nan <linan122@huawei.com>
 >> ---
->>   drivers/md/raid10.c | 13 +++++--------
->>   1 file changed, 5 insertions(+), 8 deletions(-)
+>>   drivers/md/raid10.c | 16 +++++++++++++++-
+>>   1 file changed, 15 insertions(+), 1 deletion(-)
 >>
 >> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index 4fcfcb350d2b..e21502c03b45 100644
+>> index e21502c03b45..70cc87c7ee57 100644
 >> --- a/drivers/md/raid10.c
 >> +++ b/drivers/md/raid10.c
->> @@ -3438,7 +3438,6 @@ static sector_t raid10_sync_request(struct mddev 
+>> @@ -3303,6 +3303,7 @@ static sector_t raid10_sync_request(struct mddev 
 >> *mddev, sector_t sector_nr,
->>               int must_sync;
->>               int any_working;
->>               int need_recover = 0;
+>>       int chunks_skipped = 0;
+>>       sector_t chunk_mask = conf->geo.chunk_mask;
+>>       int page_idx = 0;
+>> +    int error_disk = -1;
+>>       /*
+>>        * Allow skipping a full rebuild for incremental assembly
+>> @@ -3386,7 +3387,18 @@ static sector_t raid10_sync_request(struct 
+>> mddev *mddev, sector_t sector_nr,
+>>           return reshape_request(mddev, sector_nr, skipped);
+>>       if (chunks_skipped >= conf->geo.raid_disks) {
+>> -        /* if there has been nothing to do on any drive,
+>> +        pr_err("md/raid10:%s: %s fail\n", mdname(mddev),
+>> +            test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?  "resync" 
+>> : "recovery");
 > 
-> need_recover can be removed as well. Otherwise, this patch looks good to
-> me.
+> Line exceed 80 columns, and following.
+>> +        if (error_disk >= 0 && !test_bit(MD_RECOVERY_SYNC, 
+>> &mddev->recovery)) {
+> 
+> Resync has the same problem, right?
 > 
 
-I agree. Let me improve this in v2.
+Yes. But I have no idea to fix it. md_error disk nor set 
+recovery_disabled is a good solution. So, just print error message now.
+Do you have any ideas?
 -- 
 Thanks,
 Nan
