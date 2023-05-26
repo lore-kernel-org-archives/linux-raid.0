@@ -2,120 +2,105 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73130C77B7C
-	for <linux-raid@archiver.kernel.org>; Fri, 26 May 2023 21:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA005C77B7A
+	for <linux-raid@archiver.kernel.org>; Fri, 26 May 2023 21:16:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237732AbjEZVNv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 26 May 2023 17:13:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35254 "EHLO
+        id S231311AbjEZVQK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 26 May 2023 17:16:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230064AbjEZVNu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 May 2023 17:13:50 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54D77E41
-        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 14:13:44 -0700 (PDT)
+        with ESMTP id S229732AbjEZVQJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 May 2023 17:16:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B1EEAD
+        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 14:16:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9E942653BC
-        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 21:13:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05569C433EF
-        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 21:13:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2878265395
+        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 21:16:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EF83C433D2
+        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 21:16:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685135623;
-        bh=wSzSj1sLR2zeeILJbxd5iKR+RJNj7mo9L21cf6xfgX8=;
+        s=k20201202; t=1685135767;
+        bh=KpPDPCfXeZIqH2rI2ZZJEIZZ1rEE4pD6brQWl9N8wkw=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=W8ZHCeBhheoIKKvyMjsJ1tdTybADt082QA9wDR1pBmtQZwphs+Gu3Y4FXgc9/Soa5
-         K2pVBSdLxG6aziF+/ZXrnIIftEB4iuo6TMcx5N2SmpyMCPELBNCAWgswlVt0aowoyM
-         V5LbiGWcmZ5Cm4N/rHmBNFtHd/VsMt5SODBu5zKK+FdeM+U+vS88FZAz7Xv4Q5H3QM
-         JwwUt9yE5bIzCUI0QtHobHhDxfS6f0eVohoDImZ1g4RuxK1zrEHPc87i+EnZbqNDSD
-         R4lz7+qh/M4CkAvxWa25aeTwNNID40L+lrU20KyydbmKD6HM5CJ1QV7dbxsqClVgIr
-         EN4kk7npTsMyw==
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-4f004cc54f4so1355584e87.3
-        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 14:13:42 -0700 (PDT)
-X-Gm-Message-State: AC+VfDz0+Pdo4NAE5gsvx2X1JdxOuFfSMajEEcUp+wUNg3Ou4kaPSIJO
-        9JyVwn9EuaPEHt3o9PG+1UCPVdPwC+N40a4UEB0=
-X-Google-Smtp-Source: ACHHUZ66Bm5tFQ4OYJ4RsKII23iEsgS7xJNsOCBviDJ0KfyC0e9rY5n/qY2fby5JkObXx1eyUF9hxuO0l8fV+b5Y/kE=
-X-Received: by 2002:a19:760b:0:b0:4f3:a08b:275e with SMTP id
- c11-20020a19760b000000b004f3a08b275emr1150941lff.53.1685135621039; Fri, 26
- May 2023 14:13:41 -0700 (PDT)
+        b=kKJXYD+vKUBqLyGQBbpP4Z6of0F1H9gCJi9Ic/5iJCLvCZp/TbzFhoA5pnWXw9oYq
+         rWGplOA4YaSTqdZeFZpea8MvoQwIg+bBm+ucOQr+hS5+Z+jnZ+Bn21M16Wn4voYHWx
+         72F+3AuYxz+LgfB3FaMJlQZiQR25JHUoqjeSY1B8mWxyGXqY0BR+wEUTGCB7jVIlmf
+         Lf53EwlIqAavp+FkQcbGrR8jFaoeiuzhigCLrGwRYX4EKFvKDxrtxUn4kb5hHRIOvL
+         Dm45xFEUKrRwysL5NqoDPOk7bE7rOYUR/zem79bIA1C71nUA5GkQR93by82wr0hERV
+         NV+gkBh4p56uw==
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-4f3b5881734so1370192e87.0
+        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 14:16:07 -0700 (PDT)
+X-Gm-Message-State: AC+VfDxs4U5GH86TUMips8gnifEeXm9RDzuM9AQ+6+dyXBqDqTnaOS8D
+        q+Yw34RPkd7VOP5AZ8zkk5NJ0Nwg8lVlR+QAh1g=
+X-Google-Smtp-Source: ACHHUZ5DARERXcU4WvcJRtg0HA9Q4IxFiXHqQseNAGMEGK4Let8NpAb8aSX6nwNsiChSqpdW426MHU4y0GLH1Xz/Plo=
+X-Received: by 2002:ac2:5e85:0:b0:4f3:a87f:a87b with SMTP id
+ b5-20020ac25e85000000b004f3a87fa87bmr981915lfq.39.1685135765587; Fri, 26 May
+ 2023 14:16:05 -0700 (PDT)
 MIME-Version: 1.0
-References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
- <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev> <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
- <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev> <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
- <20230526111312.000065f2@linux.intel.com>
-In-Reply-To: <20230526111312.000065f2@linux.intel.com>
+References: <3D58B70B-92D3-4355-A89D-0F6490448546@fb.com>
+In-Reply-To: <3D58B70B-92D3-4355-A89D-0F6490448546@fb.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 26 May 2023 14:13:28 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4XKYDsEJsbJJX7mDdq_hhF1D8YLN5oyBi746EUtYVv8A@mail.gmail.com>
-Message-ID: <CAPhsuW4XKYDsEJsbJJX7mDdq_hhF1D8YLN5oyBi746EUtYVv8A@mail.gmail.com>
-Subject: Re: The read data is wrong from raid5 when recovery happens
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     Xiao Ni <xni@redhat.com>, Guoqing Jiang <guoqing.jiang@linux.dev>,
-        "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
+Date:   Fri, 26 May 2023 14:15:53 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6V0dQkGov7rxhUhuj5sf38YNUmPoin0sxP3=MnYDdZKw@mail.gmail.com>
+Message-ID: <CAPhsuW6V0dQkGov7rxhUhuj5sf38YNUmPoin0sxP3=MnYDdZKw@mail.gmail.com>
+Subject: Re: [GIT PULL] md-fixes 20230524
+To:     Song Liu <songliubraving@meta.com>
+Cc:     Jens Axboe <axboe@kernel.dk>,
         linux-raid <linux-raid@vger.kernel.org>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>
+        Yu Kuai <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, May 26, 2023 at 2:13=E2=80=AFAM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
+On Wed, May 24, 2023 at 12:03=E2=80=AFPM Song Liu <songliubraving@meta.com>=
+ wrote:
 >
-> On Fri, 26 May 2023 15:23:58 +0800
-> Xiao Ni <xni@redhat.com> wrote:
+> Hi Jens,
 >
-> > On Fri, May 26, 2023 at 3:12=E2=80=AFPM Guoqing Jiang <guoqing.jiang@li=
-nux.dev> wrote:
-> > >
-> > >
-> > >
-> > > On 5/26/23 14:45, Xiao Ni wrote:
-> > > > On Fri, May 26, 2023 at 11:09=E2=80=AFAM Guoqing Jiang <guoqing.jia=
-ng@linux.dev>
-> > > > wrote:
-> > > >>
-> > > >>
-> > > >> On 5/26/23 09:49, Xiao Ni wrote:
-> > > >>> Hi all
-> > > >>>
-> > > >>> We found a problem recently. The read data is wrong when recovery
-> > > >>> happens. Now we've found it's introduced by patch 10764815f (md: =
-add io
-> > > >>> accounting for raid0 and raid5). I can reproduce this 100%. This
-> > > >>> problem exists in upstream. The test steps are like this:
-> > > >>>
-> > > >>> 1. mdadm -CR $devname -l5 -n4 /dev/sd[b-e] --force --assume-clean
-> > > >>> 2. mkfs.ext4 -F $devname
-> > > >>> 3. mount $devname $mount_point
-> > > >>> 4. mdadm --incremental --fail sdd
-> > > >>> 5. dd if=3D/dev/zero of=3D/tmp/pythontest/file1 bs=3D1M count=3D1=
-00000
-> > > >>> status=3Dprogress
-> > >
-> > > I suppose /tmp is the mount point.
-> >
-> > /tmp/pythontest is the mount point
-> >
-> > >
-> > > >>> 6. mdadm /dev/md126 --add /dev/sdd
-> > > >>> 7. create 31 processes that writes and reads. It compares the con=
-tent
-> > > >>> with md5sum. The test will go on until the recovery stops
-> > >
-> > > Could you share the test code/script for step 7? Will try it from my =
-side.
-> >
-> > The test scripts are written by people from intel.
-> > Hi, Mariusz. Can I share the test scripts here?
+> Please consider pulling the following change for md-fixes on top of your
+> block-6.4 branch. This change fixes a raid5 regression since 5.12 kernels=
+.
 >
-> Yes. Let us know if there is something else we can do to help here.
+> Thanks,
+> Song
+>
+>
+>
+> The following changes since commit 3eb96946f0be6bf447cbdf219aba22bc42672f=
+92:
+>
+>   block: make bio_check_eod work for zero sized devices (2023-05-24 08:19=
+:26 -0600)
+>
+> are available in the Git repository at:
+>
+>   ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/song/md.git tags=
+/md-fixes-2023-05-24
 
-I tried to reproduce this with fio, but didn't get much luck. Please share
-the test scripts.
+Just realized that I forgot to update the repository address. Ut should be:
 
-Thanks,
+https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git
+tags/md-fixes-2023-05-24
+
+I am sorry for this inconvenience.
 Song
+
+
+>
+> for you to fetch changes up to 8557dc27126949c702bd3aafe8a7e0b7e4fcb44c:
+>
+>   md/raid5: fix miscalculation of 'end_sector' in raid5_read_one_chunk() =
+(2023-05-24 10:44:19 -0700)
+>
+> ----------------------------------------------------------------
+> Yu Kuai (1):
+>       md/raid5: fix miscalculation of 'end_sector' in raid5_read_one_chun=
+k()
+>
+>  drivers/md/raid5.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
