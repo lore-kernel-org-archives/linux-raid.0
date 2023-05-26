@@ -2,149 +2,102 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1727EC77B73
-	for <linux-raid@archiver.kernel.org>; Fri, 26 May 2023 21:38:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64AFBC77B73
+	for <linux-raid@archiver.kernel.org>; Fri, 26 May 2023 22:38:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237043AbjEZVin (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 26 May 2023 17:38:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41682 "EHLO
+        id S230372AbjEZWi0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 26 May 2023 18:38:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229964AbjEZVim (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 May 2023 17:38:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EE01AD;
-        Fri, 26 May 2023 14:38:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 01E8B65002;
-        Fri, 26 May 2023 21:38:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ADA5C433D2;
-        Fri, 26 May 2023 21:38:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685137120;
-        bh=OUL/JbdwR38LDfZP5Jo8QoBNmitapP5ncID9LOrh4RM=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=LUHwcAlYUsvEtZZk+PzIF7+KPH/Ce/SImhP+mG+ykKLrjy86HmuPvneYr52GiQjlA
-         50rJRoTo2GX2IfrmH1Mv5HPOyZDMS+i1rCVeKMPFGXDHvWoZZaYIh7bSgPFra4XYrK
-         ztms1JVET9JOmXxN0nUY2O/2KuSfcaMVl3D5rXCN1YqZ12W8DHE4ZWGPbwV4ygG3Fx
-         WmWmtPTnbUBOIHC7wSeFFLgQL4ShmK2li0Atu45xra1HX0g4FGqrrbqveYTgoxwHo2
-         Pt5BW3uFXrkd9LAdAIRRdtj/IWVu5OE7jbxthmYtNTQuCP0cpRr2hFUDm4BRoqw9G+
-         /UyqX2F9JGccg==
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-4f3b9c88af8so1383326e87.2;
-        Fri, 26 May 2023 14:38:40 -0700 (PDT)
-X-Gm-Message-State: AC+VfDyC4/tkB/lylRhfJ3HV5YqjsEpqA7NEW07cuiyL96GZRYJ1lnop
-        NAKwuxu2kATnm3JrJ4l/IU9VirQ5qDbjxc7AslM=
-X-Google-Smtp-Source: ACHHUZ4Y4vsMGiVcHbG/n176heAtWs4TWfFT1nqRdOmftZJjxYij4hWV0m0aafecf+twTK2NYX6GkB2ICJ20iEubGWI=
-X-Received: by 2002:ac2:4567:0:b0:4f4:b13a:d683 with SMTP id
- k7-20020ac24567000000b004f4b13ad683mr879235lfm.69.1685137118345; Fri, 26 May
- 2023 14:38:38 -0700 (PDT)
+        with ESMTP id S229716AbjEZWiY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 May 2023 18:38:24 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 754CF9C
+        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 15:38:23 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id 98e67ed59e1d1-2562b1b1af0so226336a91.0
+        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 15:38:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1685140703; x=1687732703;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NCBcIK81qyzpETvxM2zYvDftpceqYk8XdxslMadazjU=;
+        b=O2hAgTgXanTqcj9joUhSjNSTmtfhGblZnIj+r+e6bydEHH2LhECMjlOEJKgST7x6b3
+         aM3BVK/3gg0HSzVRDENXrxGNGrJtXffrubScD6h/EcNCkE0B8PTUSK5utnmT6ffVgy82
+         2eAiIhJqpNmQTZTpUmZgPBfMOhXpjoMGQS5h7nXwEksgCOPzCS1IURUfhye6URZxy0Wb
+         1c1xhyMMUW9bnDuEfhVoi5UzKVkOtWjvs8dqiGhtioCwHJwIQP7HlPdUt62hNQingTUM
+         6Dhcwajw+XaXRs/s0TcytY/OlsM1H5mbIxk0Q1OmxzO61UX7cUGJYTOWUjtmb7fv3985
+         3b2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685140703; x=1687732703;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=NCBcIK81qyzpETvxM2zYvDftpceqYk8XdxslMadazjU=;
+        b=hvKXPUBp6cP0tpScJlV/EHGFt1Z2zDxoiqPpjlMH9X56nBXVO1m/Iwh/BjKP513ilY
+         Gz1UlBSDvry+jWF4wXGjiRPHGd/OjWNxgTz+71UkBrRQUylU5oZtIuaYUZrtlQCN+dJE
+         PHI6w/qA61dKEovcbcFhsuGlKN8snhUqnacdOxB+23ZJYjxxGWj9Gw+oPy0ZPL5obVBi
+         YOHcVGqoXI8LDrMy6rPG1+MoEOwy9ttQhJq9G7nl72Kxx/pft5fkEVIxWsS9IE1tCuPj
+         bgO6b3AMI2qzZuR0ksfCdDt2EJDa0ZaTWJQZPjfBB7w/nceHEHZPKvDQeY0/AGocOPak
+         k6+g==
+X-Gm-Message-State: AC+VfDzuTvkWaBoASAIBnfVW1x520WSEY07FEyzHU53+x/LBMi+ZxWcL
+        x3v5nR8MIhQSeEwNVti6O0SSjpvV0BYRnxaRdro=
+X-Google-Smtp-Source: ACHHUZ7+5dBv2EB9CkD1X9FZ5vmTg8xls3SI0SZytQSt3WZmWTgSWR//G9UehrwPnezKytvIPXoAqg==
+X-Received: by 2002:a17:90b:3e8e:b0:252:b342:a84a with SMTP id rj14-20020a17090b3e8e00b00252b342a84amr4740457pjb.0.1685140702880;
+        Fri, 26 May 2023 15:38:22 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 27-20020a17090a031b00b00250c753b889sm5393567pje.23.2023.05.26.15.38.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 26 May 2023 15:38:22 -0700 (PDT)
+Message-ID: <e67cfba9-82ca-f1ad-98eb-43baaa66be9d@kernel.dk>
+Date:   Fri, 26 May 2023 16:38:21 -0600
 MIME-Version: 1.0
-References: <20230526074551.669792-1-linan666@huaweicloud.com> <20230526074551.669792-2-linan666@huaweicloud.com>
-In-Reply-To: <20230526074551.669792-2-linan666@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 26 May 2023 14:38:26 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5ThXyAL2rAyWZC31etY27fqsG+eFHcHtzfCS9Da4bosw@mail.gmail.com>
-Message-ID: <CAPhsuW5ThXyAL2rAyWZC31etY27fqsG+eFHcHtzfCS9Da4bosw@mail.gmail.com>
-Subject: Re: [PATCH v2 1/4] md/raid10: fix null-ptr-deref of mreplace in raid10_sync_request
-To:     linan666@huaweicloud.com
-Cc:     bingjingc@synology.com, allenpeng@synology.com,
-        alexwu@synology.com, shli@fb.com, neilb@suse.de,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
-        houtao1@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [GIT PULL] md-fixes 20230524
+To:     Song Liu <song@kernel.org>, Song Liu <songliubraving@meta.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Yu Kuai <yukuai3@huawei.com>
+References: <3D58B70B-92D3-4355-A89D-0F6490448546@fb.com>
+ <CAPhsuW6V0dQkGov7rxhUhuj5sf38YNUmPoin0sxP3=MnYDdZKw@mail.gmail.com>
+Content-Language: en-US
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <CAPhsuW6V0dQkGov7rxhUhuj5sf38YNUmPoin0sxP3=MnYDdZKw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, May 26, 2023 at 12:47=E2=80=AFAM <linan666@huaweicloud.com> wrote:
->
-> From: Li Nan <linan122@huawei.com>
->
-> need_replace will be set to 1 if no-Faulty mreplace exists, and mreplace
-> will be deref later. However, the latter check of mreplace might set
-> mreplace to NULL, null-ptr-deref occurs if need_replace is 1 at this time=
-.
->
-> Fix it by merging two checks into one. And replace 'need_replace' with
-> 'mreplace' because their values are always the same.
->
-> Fixes: ee37d7314a32 ("md/raid10: Fix raid10 replace hang when new added d=
-isk faulty")
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->  drivers/md/raid10.c | 13 +++++--------
->  1 file changed, 5 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 4fcfcb350d2b..e21502c03b45 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3438,7 +3438,6 @@ static sector_t raid10_sync_request(struct mddev *m=
-ddev, sector_t sector_nr,
->                         int must_sync;
->                         int any_working;
->                         int need_recover =3D 0;
-> -                       int need_replace =3D 0;
->                         struct raid10_info *mirror =3D &conf->mirrors[i];
->                         struct md_rdev *mrdev, *mreplace;
->
-> @@ -3451,10 +3450,10 @@ static sector_t raid10_sync_request(struct mddev =
-*mddev, sector_t sector_nr,
->                             !test_bit(In_sync, &mrdev->flags))
->                                 need_recover =3D 1;
->                         if (mreplace !=3D NULL &&
-> -                           !test_bit(Faulty, &mreplace->flags))
-> -                               need_replace =3D 1;
-> +                           test_bit(Faulty, &mreplace->flags))
-> +                               mreplace =3D NULL;
->
-> -                       if (!need_recover && !need_replace) {
-> +                       if (!need_recover && !mreplace) {
->                                 rcu_read_unlock();
->                                 continue;
->                         }
-> @@ -3470,8 +3469,6 @@ static sector_t raid10_sync_request(struct mddev *m=
-ddev, sector_t sector_nr,
->                                 rcu_read_unlock();
->                                 continue;
->                         }
+On 5/26/23 3:15 PM, Song Liu wrote:
+> On Wed, May 24, 2023 at 12:03 PM Song Liu <songliubraving@meta.com> wrote:
+>>
+>> Hi Jens,
+>>
+>> Please consider pulling the following change for md-fixes on top of your
+>> block-6.4 branch. This change fixes a raid5 regression since 5.12 kernels.
+>>
+>> Thanks,
+>> Song
+>>
+>>
+>>
+>> The following changes since commit 3eb96946f0be6bf447cbdf219aba22bc42672f92:
+>>
+>>   block: make bio_check_eod work for zero sized devices (2023-05-24 08:19:26 -0600)
+>>
+>> are available in the Git repository at:
+>>
+>>   ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/song/md.git tags/md-fixes-2023-05-24
+> 
+> Just realized that I forgot to update the repository address. Ut should be:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git
+> tags/md-fixes-2023-05-24
 
-To make sure I understand the issue correctly:
+Pulled, thanks.
 
-The null-ptr-deref only happens when the Faulty bit was set after the
-last check and before this check below, right?
+-- 
+Jens Axboe
 
-> -                       if (mreplace && test_bit(Faulty, &mreplace->flags=
-))
-> -                               mreplace =3D NULL;
->                         /* Unless we are doing a full sync, or a replacem=
-ent
->                          * we only need to recover the block if it is set=
- in
->                          * the bitmap
 
-Thanks,
-Song
-
-> @@ -3594,11 +3591,11 @@ static sector_t raid10_sync_request(struct mddev =
-*mddev, sector_t sector_nr,
->                                 bio =3D r10_bio->devs[1].repl_bio;
->                                 if (bio)
->                                         bio->bi_end_io =3D NULL;
-> -                               /* Note: if need_replace, then bio
-> +                               /* Note: if replace is not NULL, then bio
->                                  * cannot be NULL as r10buf_pool_alloc wi=
-ll
->                                  * have allocated it.
->                                  */
-> -                               if (!need_replace)
-> +                               if (!mreplace)
->                                         break;
->                                 bio->bi_next =3D biolist;
->                                 biolist =3D bio;
-> --
-> 2.31.1
->
