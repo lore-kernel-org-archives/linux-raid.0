@@ -2,198 +2,146 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DCB2C77B7A
-	for <linux-raid@archiver.kernel.org>; Thu, 25 May 2023 17:10:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E436C77B7E
+	for <linux-raid@archiver.kernel.org>; Fri, 26 May 2023 02:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233676AbjEYRKH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 25 May 2023 13:10:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59386 "EHLO
+        id S232877AbjEZCJL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 25 May 2023 22:09:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240804AbjEYRJ6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 25 May 2023 13:09:58 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ABF2135
-        for <linux-raid@vger.kernel.org>; Thu, 25 May 2023 10:09:56 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 040F921B7E;
-        Thu, 25 May 2023 17:09:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1685034595; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=KM8tQC31IxAlWJ2INM7cCgKM4mZrQfZJ0jA1Cuzeax0=;
-        b=iedV3FCJmFrJ5Ch7g/ZiSVM2IYjlp0D3hmvte00prblxlkmuop6qjwsoqQbgqMDUJ/yK3E
-        XdoOzX0VNPMhU77xnbDGDy9cyvySD7lJGkHE6bWBTFsBLiVxaIPASvi2uum51a6gKxPll3
-        XqKAkhoH/dnSL1m5KfCJZITv9Qix3P4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1685034595;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=KM8tQC31IxAlWJ2INM7cCgKM4mZrQfZJ0jA1Cuzeax0=;
-        b=USJkK55Q5XDerHudVy4iKGyFuxGEbQwW0XFRPePEYIlVzEwgiIeH3uD4iHTYXriwm1XJj9
-        +ac0b49HNE0lYwAA==
-Received: from localhost.localdomain (colyli.tcp.ovpn1.nue.suse.de [10.163.16.22])
-        by relay2.suse.de (Postfix) with ESMTP id F17942C141;
-        Thu, 25 May 2023 17:09:52 +0000 (UTC)
-From:   Coly Li <colyli@suse.de>
-To:     linux-raid@vger.kernel.org
-Cc:     Coly Li <colyli@suse.de>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>,
-        Jes Sorensen <jes@trained-monkey.org>
-Subject: [PATCH v2] Incremental: remove obsoleted calls to udisks
-Date:   Fri, 26 May 2023 01:08:43 +0800
-Message-Id: <20230525170843.4616-1-colyli@suse.de>
-X-Mailer: git-send-email 2.35.3
+        with ESMTP id S230049AbjEZCJK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 25 May 2023 22:09:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77829195
+        for <linux-raid@vger.kernel.org>; Thu, 25 May 2023 19:08:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685066903;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=JQr5uTDo02zAtp27aliOjrl2+aB1h/YA+111dOmh72I=;
+        b=cMd3q68H/H4p3cy3wkJf6EoZgoL5YTLxshLMAvikoOltojGHhFT+LDTJn/sgvHJRN1MRau
+        X/pO0/PwsarXtFtfQQFNC/Ilejx+dgDf3zeb3G4Ld7aBTnXaUo7M5uE9cj+65rLgYwV8cc
+        qE1ca3SryUy9w9qLTdr0xhn/D2h70JQ=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-644-B2-9htEZNdqo3tQxWQZyEw-1; Thu, 25 May 2023 22:08:22 -0400
+X-MC-Unique: B2-9htEZNdqo3tQxWQZyEw-1
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-25338b76f79so262920a91.3
+        for <linux-raid@vger.kernel.org>; Thu, 25 May 2023 19:08:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685066901; x=1687658901;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=JQr5uTDo02zAtp27aliOjrl2+aB1h/YA+111dOmh72I=;
+        b=Up8O/DdSG1W9J86/6peFmeb+IT9HIrC5ZexVQ5lncPfG5KkXgqQsJ3xyVX722RIKHa
+         ivOm6ZLwFIf/g1SwFPaXygB4GqyfCxML6ayhutn16N5M3RITkAfzWy2oKcpVOy5Qp9OR
+         UhjDhoOs+O7ypX8QZNv89cUj5emDVnl7DyUBtjsHMobynas9bp+pgiSRZso2o+l8h9u3
+         cuHx1umXHfR0MbhX76XGLvJnv8bUajt+7hHvFA16p05qOLCv4iQ2s+AjE24nTmtN13xP
+         IRVqGoqoPqUploaEEGyegRcT4niS7AMY6ovEmnh+TU2TYxp5k8ecLDsB81SE+sb6Y7gs
+         PI9A==
+X-Gm-Message-State: AC+VfDw6cmXNy37pvk9T1EKwXKiI/R8qGUnYc3uo1HptSIpirsbwmPjx
+        YrFZzpDzF14p2yxcf0v2AxbiWxFL7/ex28caHQr5mEjZw8En+OXgJfaWqG2ATek2ALtEYNBUCgr
+        n7ubnNGAGPSh0gtPxp2470259REkGYPJR6OElylsfcwb/o+gJ
+X-Received: by 2002:a17:902:d4ca:b0:1ae:50cc:45b with SMTP id o10-20020a170902d4ca00b001ae50cc045bmr953199plg.36.1685066901246;
+        Thu, 25 May 2023 19:08:21 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ4zQvqbd0HZxa1FpY5z8E7d1yT3tu703w4yQtJQODN87tykK21GX/DSpFphuKiqeVCdMBHAkUuXLCfihyWUm3I=
+X-Received: by 2002:a17:902:d4ca:b0:1ae:50cc:45b with SMTP id
+ o10-20020a170902d4ca00b001ae50cc045bmr953181plg.36.1685066900955; Thu, 25 May
+ 2023 19:08:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
+In-Reply-To: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Fri, 26 May 2023 10:08:09 +0800
+Message-ID: <CALTww2_4pS=wF6tR0rVejg1ocyGhkTJic0aA=WCcTXDh+cZXQQ@mail.gmail.com>
+Subject: Fwd: The read data is wrong from raid5 when recovery happens
+To:     linux-raid <linux-raid@vger.kernel.org>,
+        Song Liu <song@kernel.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Utilility udisks is removed from udev upstream, calling this obsoleted
-command in run_udisks() doesn't make any sense now.
+I received an email that this email can't delivered to someone. Resent
+it to linux-raid again.
 
-This patch removes the calls chain of udisks, which includes routines
-run_udisk(), force_remove(), and 2 locations where force_remove() are
-called. Considering force_remove() is removed with udisks util, it is
-fair to remove Manage_stop() inside force_remove() as well.
+---------- Forwarded message ---------
+From: Xiao Ni <xni@redhat.com>
+Date: Fri, May 26, 2023 at 9:49=E2=80=AFAM
+Subject: The read data is wrong from raid5 when recovery happens
+To: Song Liu <song@kernel.org>, Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Heinz Mauelshagen
+<heinzm@redhat.com>, Nigel Croxon <ncroxon@redhat.com>
 
-After force_remove() is not called anymore, if Manage_subdevs() returns
-failure due to a busy array, nothing else to do. If the failure is from
-a broken array and verbose information is wanted, a warning message will
-be printed by pr_err().
 
-Signed-off-by: Coly Li <colyli@suse.de>
-Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Cc: Jes Sorensen <jes@trained-monkey.org>
----
-Changelog,
-v2: improve based on code review comments from Mariusz.
-v1: initial version.
+Hi all
 
- Incremental.c | 88 ++++++++++++++++++++++++---------------------------
- 1 file changed, 42 insertions(+), 46 deletions(-)
+We found a problem recently. The read data is wrong when recovery
+happens. Now we've found it's introduced by patch 10764815f (md: add
+io accounting for raid0 and raid5). I can reproduce this 100%. This
+problem exists in upstream. The test steps are like this:
 
-diff --git a/Incremental.c b/Incremental.c
-index f13ce02..d390a08 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -1628,56 +1628,38 @@ release:
- 	return rv;
- }
- 
--static void run_udisks(char *arg1, char *arg2)
--{
--	int pid = fork();
--	int status;
--	if (pid == 0) {
--		manage_fork_fds(1);
--		execl("/usr/bin/udisks", "udisks", arg1, arg2, NULL);
--		execl("/bin/udisks", "udisks", arg1, arg2, NULL);
--		exit(1);
--	}
--	while (pid > 0 && wait(&status) != pid)
--		;
--}
--
--static int force_remove(char *devnm, int fd, struct mdinfo *mdi, int verbose)
--{
--	int rv;
--	int devid = devnm2devid(devnm);
--
--	run_udisks("--unmount", map_dev(major(devid), minor(devid), 0));
--	rv = Manage_stop(devnm, fd, verbose, 1);
--	if (rv) {
--		/* At least we can try to trigger a 'remove' */
--		sysfs_uevent(mdi, "remove");
--		if (verbose)
--			pr_err("Fail to stop %s too.\n", devnm);
--	}
--	return rv;
--}
--
- static void remove_from_member_array(struct mdstat_ent *memb,
- 				    struct mddev_dev *devlist, int verbose)
- {
- 	int rv;
- 	struct mdinfo mmdi;
-+	char buf[32];
- 	int subfd = open_dev(memb->devnm);
- 
--	if (subfd >= 0) {
--		rv = Manage_subdevs(memb->devnm, subfd, devlist, verbose,
--				    0, UOPT_UNDEFINED, 0);
--		if (rv & 2) {
--			if (sysfs_init(&mmdi, -1, memb->devnm))
--				pr_err("unable to initialize sysfs for: %s\n",
--				       memb->devnm);
--			else
--				force_remove(memb->devnm, subfd, &mmdi,
--					     verbose);
-+	if (subfd < 0)
-+		return;
-+
-+	rv = Manage_subdevs(memb->devnm, subfd, devlist, verbose,
-+			    0, UOPT_UNDEFINED, 0);
-+	if (rv) {
-+		/*
-+		 * If the array is busy or no verbose info
-+		 * desired, nonthing else to do.
-+		 */
-+		if ((rv & 2) || verbose <= 0)
-+			goto close;
-+
-+		/* Otherwise if failed due to a broken array, warn */
-+		if (sysfs_init(&mmdi, -1, memb->devnm) == 0 &&
-+		    sysfs_get_str(&mmdi, NULL, "array_state",
-+				  buf, sizeof(buf)) > 0 &&
-+		    strncmp(buf, "broken", 6) == 0) {
-+			pr_err("Fail to remove %s from broken array.\n",
-+			       memb->devnm);
- 		}
--		close(subfd);
- 	}
-+close:
-+	close(subfd);
- }
- 
- /*
-@@ -1760,11 +1742,22 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
- 	} else {
- 		rv |= Manage_subdevs(ent->devnm, mdfd, &devlist,
- 				    verbose, 0, UOPT_UNDEFINED, 0);
--		if (rv & 2) {
--		/* Failed due to EBUSY, try to stop the array.
--		 * Give udisks a chance to unmount it first.
--		 */
--			rv = force_remove(ent->devnm, mdfd, &mdi, verbose);
-+		if (rv) {
-+			/*
-+			 * If the array is busy or no verbose info
-+			 * desired, nothing else to do.
-+			 */
-+			if ((rv & 2) || verbose <= 0)
-+				goto end;
-+
-+			/* Otherwise if failed due to a broken array, warn */
-+			if (sysfs_get_str(&mdi, NULL, "array_state",
-+					  buf, sizeof(buf)) > 0 &&
-+			    strncmp(buf, "broken", 6) == 0) {
-+				pr_err("Fail to remove %s from broken array.\n",
-+				       ent->devnm);
-+			}
-+
- 			goto end;
- 		}
- 	}
-@@ -1775,5 +1768,8 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
- end:
- 	close(mdfd);
- 	free_mdstat(ent);
-+	/* Only return 0 or 1 */
-+	if (rv != 0)
-+		rv = 1;
- 	return rv;
- }
--- 
-2.35.3
+1. mdadm -CR $devname -l5 -n4 /dev/sd[b-e] --force --assume-clean
+2. mkfs.ext4 -F $devname
+3. mount $devname $mount_point
+4. mdadm --incremental --fail sdd
+5. dd if=3D/dev/zero of=3D/tmp/pythontest/file1 bs=3D1M count=3D100000 stat=
+us=3Dprogress
+6. mdadm /dev/md126 --add /dev/sdd
+7. create 31 processes that writes and reads. It compares the content
+with md5sum. The test will go on until the recovery stops
+8. wait for about 10 minutes, we can see some processes report
+checksum is wrong. But if it re-read the data again, the checksum will
+be good.
+
+I tried to narrow this problem like this:
+
+-       md_account_bio(mddev, &bi);
++       if (rw =3D=3D WRITE)
++               md_account_bio(mddev, &bi);
+If it only do account for write requests, the problem can disappear.
+
+-       if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
+-           mddev->reshape_position =3D=3D MaxSector) {
+-               bi =3D chunk_aligned_read(mddev, bi);
+-               if (!bi)
+-                       return true;
+-       }
++       //if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
++       //    mddev->reshape_position =3D=3D MaxSector) {
++       //      bi =3D chunk_aligned_read(mddev, bi);
++       //      if (!bi)
++       //              return true;
++       //}
+
+        if (unlikely(bio_op(bi) =3D=3D REQ_OP_DISCARD)) {
+                make_discard_request(mddev, bi);
+@@ -6180,7 +6180,8 @@ static bool raid5_make_request(struct mddev
+*mddev, struct bio * bi)
+                        md_write_end(mddev);
+                return true;
+        }
+-       md_account_bio(mddev, &bi);
++       if (rw =3D=3D READ)
++               md_account_bio(mddev, &bi);
+
+I comment the chunk_aligned_read out and only account for read
+requests, this problem can be reproduced.
+
+--=20
+Best Regards
+Xiao Ni
+
+
+--=20
+Best Regards
+Xiao Ni
 
