@@ -2,115 +2,270 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0221C77B7A
-	for <linux-raid@archiver.kernel.org>; Fri, 26 May 2023 09:13:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AB3BC7EE23
+	for <linux-raid@archiver.kernel.org>; Fri, 26 May 2023 14:44:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242617AbjEZJNZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 26 May 2023 05:13:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56270 "EHLO
+        id S244043AbjEZOoW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 26 May 2023 10:44:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242954AbjEZJNX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 May 2023 05:13:23 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E5C1198
-        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 02:13:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685092400; x=1716628400;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=K1R3teJ5NGArwGBbWhAITYXzsXt9W+9h7Bkz2lvkUo8=;
-  b=AMNPY8xQutAQnSKhp+65KEge+Wmwwp8CVduILs7c/kxq3a6MCEC/aPkY
-   pmfo9DRCEermv2QHt0JLash6LuTn1A0D7ZPxUIYsI9YSLJlrX9qvjeXk1
-   85Qwpw4AAwAJUYbB5PvEqOKO6xfPXootUmjX3JDKhijfTlmjjt1l3Nlgo
-   JtZVgOglED5tQ8DZT8AFqF99DWMRueMaIdlFz9oMYnU8kysHcoIMQjPH/
-   wyz0X6YM/2pz+JvPv0n+oCiKKswxnvXwEYoAFo08c+xElNIUQ7xpDt9/b
-   y1RPRoryKChrmCd2RvPpot5Z6Lq2FzsKKoN+2GakmD5gX/9Ypr6p/yjgR
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10721"; a="356542724"
-X-IronPort-AV: E=Sophos;i="6.00,193,1681196400"; 
-   d="scan'208";a="356542724"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2023 02:13:20 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10721"; a="705133893"
-X-IronPort-AV: E=Sophos;i="6.00,193,1681196400"; 
-   d="scan'208";a="705133893"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.130.205])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2023 02:13:17 -0700
-Date:   Fri, 26 May 2023 11:13:12 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
-        Song Liu <song@kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>
-Subject: Re: The read data is wrong from raid5 when recovery happens
-Message-ID: <20230526111312.000065f2@linux.intel.com>
-In-Reply-To: <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
-References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
-        <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev>
-        <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
-        <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev>
-        <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S237052AbjEZOoP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 May 2023 10:44:15 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D864E64
+        for <linux-raid@vger.kernel.org>; Fri, 26 May 2023 07:43:37 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 16A7821AFB;
+        Fri, 26 May 2023 14:42:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1685112176; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=EJFXGPU4lE1oaj4GkfLCHh5RLyDCrcv1pD0fRYYPBgM=;
+        b=jApbLe1MUF1qKKVxTehITDs2mz5IPP50RhhYlQFp4PCCkX8bz7DlV8gbG65BuxVkD4V9gZ
+        juVNJri8vgQnh3HK+OUo7E5G+kinPeYfgr9AW0MFNz7uIScDetjmNM2iSDBFHT2VkdyKVp
+        UYLXcIYPTFi15ogTlgsrU9COg4HGMj8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1685112176;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=EJFXGPU4lE1oaj4GkfLCHh5RLyDCrcv1pD0fRYYPBgM=;
+        b=5fzEwpVB0yY9UNwcZXW0/hR/y1gA49NMqa3qK1V5FClS2GTUkVJ61vaaWacrtnWgrpRtF5
+        kjKWTS8V8C9DNDDA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C2D6E13A21;
+        Fri, 26 May 2023 14:42:54 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id LGQzI27FcGSneQAAMHmgww
+        (envelope-from <colyli@suse.de>); Fri, 26 May 2023 14:42:54 +0000
+Date:   Fri, 26 May 2023 22:42:52 +0800
+From:   Coly Li <colyli@suse.de>
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org,
+        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>,
+        Jes Sorensen <jes@trained-monkey.org>
+Subject: Re: [PATCH v2] Incremental: remove obsoleted calls to udisks
+Message-ID: <yhcjmt2pbhcq4feq7nywa5rx26huvobq6brg4erldhmo37j37x@qj7i2hr2n7f3>
+References: <20230525170843.4616-1-colyli@suse.de>
+ <20230526095200.00004c9c@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230526095200.00004c9c@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 26 May 2023 15:23:58 +0800
-Xiao Ni <xni@redhat.com> wrote:
+On Fri, May 26, 2023 at 09:52:00AM +0200, Mariusz Tkaczyk wrote:
+> On Fri, 26 May 2023 01:08:43 +0800
+> Coly Li <colyli@suse.de> wrote:
+> 
+> > Utilility udisks is removed from udev upstream, calling this obsoleted
+> > command in run_udisks() doesn't make any sense now.
+> > 
+> > This patch removes the calls chain of udisks, which includes routines
+> > run_udisk(), force_remove(), and 2 locations where force_remove() are
+> > called. Considering force_remove() is removed with udisks util, it is
+> > fair to remove Manage_stop() inside force_remove() as well.
+> > 
+> > After force_remove() is not called anymore, if Manage_subdevs() returns
+> > failure due to a busy array, nothing else to do. If the failure is from
+> > a broken array and verbose information is wanted, a warning message will
+> > be printed by pr_err().
+> > 
+> > Signed-off-by: Coly Li <colyli@suse.de>
+> > Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+> > Cc: Jes Sorensen <jes@trained-monkey.org>
+> > ---
+> > Changelog,
+> > v2: improve based on code review comments from Mariusz.
+> > v1: initial version.
+> > 
+> >  Incremental.c | 88 ++++++++++++++++++++++++---------------------------
+> >  1 file changed, 42 insertions(+), 46 deletions(-)
+> > 
+> > diff --git a/Incremental.c b/Incremental.c
+> > index f13ce02..d390a08 100644
+> > --- a/Incremental.c
+> > +++ b/Incremental.c
+> > @@ -1628,56 +1628,38 @@ release:
+> >  	return rv;
+> >  }
+> >  
+> > -static void run_udisks(char *arg1, char *arg2)
+> > -{
+> > -	int pid = fork();
+> > -	int status;
+> > -	if (pid == 0) {
+> > -		manage_fork_fds(1);
+> > -		execl("/usr/bin/udisks", "udisks", arg1, arg2, NULL);
+> > -		execl("/bin/udisks", "udisks", arg1, arg2, NULL);
+> > -		exit(1);
+> > -	}
+> > -	while (pid > 0 && wait(&status) != pid)
+> > -		;
+> > -}
+> > -
+> > -static int force_remove(char *devnm, int fd, struct mdinfo *mdi, int verbose)
+> > -{
+> > -	int rv;
+> > -	int devid = devnm2devid(devnm);
+> > -
+> > -	run_udisks("--unmount", map_dev(major(devid), minor(devid), 0));
+> > -	rv = Manage_stop(devnm, fd, verbose, 1);
+> > -	if (rv) {
+> > -		/* At least we can try to trigger a 'remove' */
+> > -		sysfs_uevent(mdi, "remove");
+> > -		if (verbose)
+> > -			pr_err("Fail to stop %s too.\n", devnm);
+> > -	}
+> > -	return rv;
+> > -}
+> > -
+> >  static void remove_from_member_array(struct mdstat_ent *memb,
+> >  				    struct mddev_dev *devlist, int verbose)
+> >  {
+> >  	int rv;
+> >  	struct mdinfo mmdi;
+> > +	char buf[32];
+> 
+> Another place where we hard-coding array size. We already
+> addressed it (patch is waiting for internal regression), so please left it as is
+> for now. Just to let everyone know.
+>
 
-> On Fri, May 26, 2023 at 3:12=E2=80=AFPM Guoqing Jiang <guoqing.jiang@linu=
-x.dev> wrote:
-> >
-> >
-> >
-> > On 5/26/23 14:45, Xiao Ni wrote: =20
-> > > On Fri, May 26, 2023 at 11:09=E2=80=AFAM Guoqing Jiang <guoqing.jiang=
-@linux.dev>
-> > > wrote: =20
-> > >>
-> > >>
-> > >> On 5/26/23 09:49, Xiao Ni wrote: =20
-> > >>> Hi all
-> > >>>
-> > >>> We found a problem recently. The read data is wrong when recovery
-> > >>> happens. Now we've found it's introduced by patch 10764815f (md: ad=
-d io
-> > >>> accounting for raid0 and raid5). I can reproduce this 100%. This
-> > >>> problem exists in upstream. The test steps are like this:
-> > >>>
-> > >>> 1. mdadm -CR $devname -l5 -n4 /dev/sd[b-e] --force --assume-clean
-> > >>> 2. mkfs.ext4 -F $devname
-> > >>> 3. mount $devname $mount_point
-> > >>> 4. mdadm --incremental --fail sdd
-> > >>> 5. dd if=3D/dev/zero of=3D/tmp/pythontest/file1 bs=3D1M count=3D100=
-000
-> > >>> status=3Dprogress =20
-> >
-> > I suppose /tmp is the mount point. =20
->=20
-> /tmp/pythontest is the mount point
->=20
-> > =20
-> > >>> 6. mdadm /dev/md126 --add /dev/sdd
-> > >>> 7. create 31 processes that writes and reads. It compares the conte=
-nt
-> > >>> with md5sum. The test will go on until the recovery stops =20
-> >
-> > Could you share the test code/script for step 7? Will try it from my si=
-de. =20
->=20
-> The test scripts are written by people from intel.
-> Hi, Mariusz. Can I share the test scripts here?
+Yes, I agree. It should be good to do one thing in each patch. The hard-coding
+array size should be addressed in another patch series.
 
-Yes. Let us know if there is something else we can do to help here.
+ 
+> >  	int subfd = open_dev(memb->devnm);
+> >  
+> > -	if (subfd >= 0) {
+> > -		rv = Manage_subdevs(memb->devnm, subfd, devlist, verbose,
+> > -				    0, UOPT_UNDEFINED, 0);
+> > -		if (rv & 2) {
+> > -			if (sysfs_init(&mmdi, -1, memb->devnm))
+> > -				pr_err("unable to initialize sysfs for:
+> > %s\n",
+> > -				       memb->devnm);
+> > -			else
+> > -				force_remove(memb->devnm, subfd, &mmdi,
+> > -					     verbose);
+> > +	if (subfd < 0)
+> > +		return;
+> > +
+> > +	rv = Manage_subdevs(memb->devnm, subfd, devlist, verbose,
+> > +			    0, UOPT_UNDEFINED, 0);
+> > +	if (rv) {
+> > +		/*
+> > +		 * If the array is busy or no verbose info
+> > +		 * desired, nonthing else to do.
+> > +		 */
+> > +		if ((rv & 2) || verbose <= 0)
+> > +			goto close;
+> > +
+> > +		/* Otherwise if failed due to a broken array, warn */
+> > +		if (sysfs_init(&mmdi, -1, memb->devnm) == 0 &&
+> > +		    sysfs_get_str(&mmdi, NULL, "array_state",
+> > +				  buf, sizeof(buf)) > 0 &&
+> > +		    strncmp(buf, "broken", 6) == 0) {
+> > +			pr_err("Fail to remove %s from broken array.\n",
+> > +			       memb->devnm);
+> 
+> The codes above and below are almost the same now, can we move them to a
+> function?
 
-Thanks,
-Mariusz
+There is a little difference on calling sysfs_init(), the second location
+doesn’t call sysfs_init(). It is possible to use a condition variable to
+handle the difference, but that will be another extra complication and
+not worthy IMHO.
+
+
+> >  		}
+> > -		close(subfd);
+> >  	}
+> > +close:
+> > +	close(subfd);
+> >  }
+> >  
+> >  /*
+> > @@ -1760,11 +1742,22 @@ int IncrementalRemove(char *devname, char *id_path,
+> > int verbose) } else {
+> >  		rv |= Manage_subdevs(ent->devnm, mdfd, &devlist,
+> >  				    verbose, 0, UOPT_UNDEFINED, 0);
+> > -		if (rv & 2) {
+> > -		/* Failed due to EBUSY, try to stop the array.
+> > -		 * Give udisks a chance to unmount it first.
+> > -		 */
+> > -			rv = force_remove(ent->devnm, mdfd, &mdi, verbose);
+> > +		if (rv) {
+> I would prefer to reverse logic to make one indentation less (if that is
+> possible):
+> if (rv != 0)
+>     goto end;
+> but it is fine anyway.
+
+Indeed I tends to remove all the warning messages, and do nothing else more
+if rv != 0 from Manage_subdevs(). How do you think of this idea? Checking the
+array state indeed doesn't help too much.
+
+> 
+> > +			/*
+> > +			 * If the array is busy or no verbose info
+> > +			 * desired, nothing else to do.
+> > +			 */
+> > +			if ((rv & 2) || verbose <= 0)
+> > +				goto end;
+> > +
+> > +			/* Otherwise if failed due to a broken array, warn */
+> > +			if (sysfs_get_str(&mdi, NULL, "array_state",
+> > +					  buf, sizeof(buf)) > 0 &&
+> > +			    strncmp(buf, "broken", 6) == 0) {
+> 
+> Broken is defined in sysfs_array_states[], can we use it?
+> if (map_name(sysfs_array_states, buf) == ARRAY_BROKEN)
+> I know that it could looks like a little overhead but compiler should do
+> the job here.
+
+Yes, I am aware of this. But the existed coding style in this file is the hard
+coded strncmp(). So if we do want to print the warning for a broken array, it
+would be better to add the map_name() fixing in another patch. I mean, do one
+thing in single patch.
+
+
+> > +				pr_err("Fail to remove %s from broken
+> > array.\n",
+> > +				       ent->devnm);
+> Not exactly, The broken may be raised even if disk is removed. It is a case for
+> raid456 and raid1/10 with fail_last_dev=1. I would say just "%s is in broken
+> state.\n" 
+> Should be exclude arrays which are already broken (broken was set before we
+> called mdadm -If)? I don't see printing this message everytime as a problem, but
+> it is something you should consider.
+>
+
+Indeed, I still suggest to remove all the pr_err() stuffs, they cannot help too
+much, and introduce extra complication.
+
+ 
+> And I forgot to say it eariler, could you consider adding test/s for both IMSM and native?
+> It is something that should be tested.
+> Sorry, scope is growing :(
+
+Sure, it's good idea, let's do it later.
+
+Thank you for the code review.
+
+-- 
+Coly Li
