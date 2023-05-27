@@ -2,158 +2,125 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14B36C77B7A
-	for <linux-raid@archiver.kernel.org>; Sat, 27 May 2023 01:41:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BCD7C77B7E
+	for <linux-raid@archiver.kernel.org>; Sat, 27 May 2023 07:41:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237407AbjE0BlU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 26 May 2023 21:41:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34760 "EHLO
+        id S232350AbjE0Hlm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 27 May 2023 03:41:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229563AbjE0BlT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 May 2023 21:41:19 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98C96DF;
-        Fri, 26 May 2023 18:41:17 -0700 (PDT)
+        with ESMTP id S232145AbjE0Hlk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 27 May 2023 03:41:40 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63A7490;
+        Sat, 27 May 2023 00:41:38 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QSkyx1D6Cz4f3khL;
-        Sat, 27 May 2023 09:41:13 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBXwLO5X3FkxzUvKQ--.43805S3;
-        Sat, 27 May 2023 09:41:14 +0800 (CST)
-Subject: Re: [PATCH v2 2/4] md/raid10: improve code of mrdev in
- raid10_sync_request
-To:     linan666@huaweicloud.com, song@kernel.org, bingjingc@synology.com,
-        allenpeng@synology.com, alexwu@synology.com, shli@fb.com,
-        neilb@suse.de
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QStZP5ZrTz4f3w0V;
+        Sat, 27 May 2023 15:23:57 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP4 (Coremail) with SMTP id gCh0CgD3rLAKsHFk67lAKQ--.30654S8;
+        Sat, 27 May 2023 15:23:58 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     song@kernel.org, bingjingc@synology.com, allenpeng@synology.com,
+        shli@fb.com, alexwu@synology.com, neilb@suse.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230526074551.669792-1-linan666@huaweicloud.com>
- <20230526074551.669792-3-linan666@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <a9a6bf58-65c2-9f8d-3ab1-c7722f55b25e@huaweicloud.com>
-Date:   Sat, 27 May 2023 09:41:12 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH v3 4/4] md/raid10: fix io loss while replacement replace rdev
+Date:   Sat, 27 May 2023 15:22:18 +0800
+Message-Id: <20230527072218.2365857-5-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230527072218.2365857-1-linan666@huaweicloud.com>
+References: <20230527072218.2365857-1-linan666@huaweicloud.com>
 MIME-Version: 1.0
-In-Reply-To: <20230526074551.669792-3-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBXwLO5X3FkxzUvKQ--.43805S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxZrW3Jw1xAr43JFyUuw45Wrg_yoW5CF48p3
-        y3tFySyry7J3yUGw1DA3WDuF1SvrZ7tFWjkr43G34fW3sIgryDuFyrWFW5Xr1qvFWrXw15
-        Xw1DXws8Ca4IqFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3
-        Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID: gCh0CgD3rLAKsHFk67lAKQ--.30654S8
+X-Coremail-Antispam: 1UD129KBjvJXoW7tFWkCrWkKr4xKrykJry8AFb_yoW8Kr1xpF
+        4DK3W5ZryUAwsFgFs8AF4DJa4S9rWxtFs5Jry3W343ua1rtrWUAay7GrW3Zrs8ZFWDXryY
+        qa13Kws5u3W7KFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUmIb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
+        Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
+        rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
+        AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
+        14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I
+        8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AK
+        xVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxV
+        A2Y2ka0xkIwI1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY
+        6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17
+        CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF
+        0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMI
+        IF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnI
+        WIevJa73UjIFyTuYvjxUwZ2-UUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-ÔÚ 2023/05/26 15:45, linan666@huaweicloud.com Ð´µÀ:
-> From: Li Nan <linan122@huawei.com>
-> 
-> 'need_recover' and 'mrdev' are equivalent in raid10_sync_request(), and
-> inc mrdev->nr_pending is unreasonable if don't need recovery. Replace
-> 'need_recover' with 'mrdev', and only inc nr_pending when needed.
+From: Li Nan <linan122@huawei.com>
 
-LGTM, feel free to add:
+When we remove a disk which has replacement, first set rdev to NULL
+and then set replacement to rdev, finally set replacement to NULL (see
+raid10_remove_disk()). If io is submitted during the same time, it might
+read both rdev and replacement as NULL, and io will not be submitted.
 
+  rdev -> NULL
+			read rdev
+  replacement -> NULL
+			read replacement
+
+Fix it by reading replacement first and rdev later, meanwhile, use smp_mb()
+to prevent memory reordering.
+
+Fixes: 475b0321a4df ("md/raid10: writes should get directed to replacement as well as original.")
+Signed-off-by: Li Nan <linan122@huawei.com>
 Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-> 
-> Suggested-by: Yu Kuai <yukuai3@huawei.com>
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/raid10.c | 22 ++++++++++++----------
->   1 file changed, 12 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index e21502c03b45..9de9eabff209 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3437,7 +3437,6 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   			sector_t sect;
->   			int must_sync;
->   			int any_working;
-> -			int need_recover = 0;
->   			struct raid10_info *mirror = &conf->mirrors[i];
->   			struct md_rdev *mrdev, *mreplace;
->   
-> @@ -3446,14 +3445,14 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   			mreplace = rcu_dereference(mirror->replacement);
->   
->   			if (mrdev != NULL &&
-> -			    !test_bit(Faulty, &mrdev->flags) &&
-> -			    !test_bit(In_sync, &mrdev->flags))
-> -				need_recover = 1;
-> +			    (test_bit(Faulty, &mrdev->flags) ||
-> +			    test_bit(In_sync, &mrdev->flags)))
-> +				mrdev = NULL;
->   			if (mreplace != NULL &&
->   			    test_bit(Faulty, &mreplace->flags))
->   				mreplace = NULL;
->   
-> -			if (!need_recover && !mreplace) {
-> +			if (!mrdev && !mreplace) {
->   				rcu_read_unlock();
->   				continue;
->   			}
-> @@ -3487,7 +3486,8 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   				rcu_read_unlock();
->   				continue;
->   			}
-> -			atomic_inc(&mrdev->nr_pending);
-> +			if (mrdev)
-> +				atomic_inc(&mrdev->nr_pending);
->   			if (mreplace)
->   				atomic_inc(&mreplace->nr_pending);
->   			rcu_read_unlock();
-> @@ -3574,7 +3574,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   				r10_bio->devs[1].devnum = i;
->   				r10_bio->devs[1].addr = to_addr;
->   
-> -				if (need_recover) {
-> +				if (mrdev) {
->   					bio = r10_bio->devs[1].bio;
->   					bio->bi_next = biolist;
->   					biolist = bio;
-> @@ -3619,7 +3619,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   					for (k = 0; k < conf->copies; k++)
->   						if (r10_bio->devs[k].devnum == i)
->   							break;
-> -					if (!test_bit(In_sync,
-> +					if (mrdev && !test_bit(In_sync,
->   						      &mrdev->flags)
->   					    && !rdev_set_badblocks(
->   						    mrdev,
-> @@ -3645,12 +3645,14 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   				if (rb2)
->   					atomic_dec(&rb2->remaining);
->   				r10_bio = rb2;
-> -				rdev_dec_pending(mrdev, mddev);
-> +				if (mrdev)
-> +					rdev_dec_pending(mrdev, mddev);
->   				if (mreplace)
->   					rdev_dec_pending(mreplace, mddev);
->   				break;
->   			}
-> -			rdev_dec_pending(mrdev, mddev);
-> +			if (mrdev)
-> +				rdev_dec_pending(mrdev, mddev);
->   			if (mreplace)
->   				rdev_dec_pending(mreplace, mddev);
->   			if (r10_bio->devs[0].bio->bi_opf & MD_FAILFAST) {
-> 
+---
+ drivers/md/raid10.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 3ba1516ea160..a7830d2c7477 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -779,8 +779,16 @@ static struct md_rdev *read_balance(struct r10conf *conf,
+ 		disk = r10_bio->devs[slot].devnum;
+ 		rdev = rcu_dereference(conf->mirrors[disk].replacement);
+ 		if (rdev == NULL || test_bit(Faulty, &rdev->flags) ||
+-		    r10_bio->devs[slot].addr + sectors > rdev->recovery_offset)
++		    r10_bio->devs[slot].addr + sectors >
++		    rdev->recovery_offset) {
++			/*
++			 * Read replacement first to prevent reading both rdev
++			 * and replacement as NULL during replacement replace
++			 * rdev.
++			 */
++			smp_mb();
+ 			rdev = rcu_dereference(conf->mirrors[disk].rdev);
++		}
+ 		if (rdev == NULL ||
+ 		    test_bit(Faulty, &rdev->flags))
+ 			continue;
+@@ -1479,9 +1487,15 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 
+ 	for (i = 0;  i < conf->copies; i++) {
+ 		int d = r10_bio->devs[i].devnum;
+-		struct md_rdev *rdev = rcu_dereference(conf->mirrors[d].rdev);
+-		struct md_rdev *rrdev = rcu_dereference(
+-			conf->mirrors[d].replacement);
++		struct md_rdev *rdev, *rrdev;
++
++		rrdev = rcu_dereference(conf->mirrors[d].replacement);
++		/*
++		 * Read replacement first to Prevent reading both rdev and
++		 * replacement as NULL during replacement replace rdev.
++		 */
++		smp_mb();
++		rdev = rcu_dereference(conf->mirrors[d].rdev);
+ 		if (rdev == rrdev)
+ 			rrdev = NULL;
+ 		if (rdev && (test_bit(Faulty, &rdev->flags)))
+-- 
+2.31.1
 
