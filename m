@@ -2,93 +2,94 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24FC8C77B7C
-	for <linux-raid@archiver.kernel.org>; Sat, 27 May 2023 10:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92BC9C77B7E
+	for <linux-raid@archiver.kernel.org>; Sun, 28 May 2023 07:48:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232181AbjE0KUh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 27 May 2023 06:20:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44588 "EHLO
+        id S229516AbjE1Hs1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 28 May 2023 03:48:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232105AbjE0KUf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 27 May 2023 06:20:35 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62DAB116;
-        Sat, 27 May 2023 03:20:33 -0700 (PDT)
+        with ESMTP id S229457AbjE1Hs0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 28 May 2023 03:48:26 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 339CFED;
+        Sun, 28 May 2023 00:48:14 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QSyV45NLdz4f3tNp;
-        Sat, 27 May 2023 18:20:28 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP4 (Coremail) with SMTP id gCh0CgBH_rFr2XFkGW9JKQ--.57203S5;
-        Sat, 27 May 2023 18:20:29 +0800 (CST)
-From:   linan666@huaweicloud.com
-To:     song@kernel.org
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QTW3q2Nf0z4f3jYL;
+        Sun, 28 May 2023 15:48:07 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCX_7I3B3NkHieMKQ--.57725S3;
+        Sun, 28 May 2023 15:48:09 +0800 (CST)
+Subject: Re: [PATCH] md/bitmap: check input value with ULONG_MAX in
+ timeout_store
+To:     linan666@huaweicloud.com, song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
-        houtao1@huawei.com, yangerkun@huawei.com
-Subject: [PATCH] md/raid10: clean up md_add_new_disk()
-Date:   Sat, 27 May 2023 18:18:51 +0800
-Message-Id: <20230527101851.3266500-2-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230527101851.3266500-1-linan666@huaweicloud.com>
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 References: <20230527101851.3266500-1-linan666@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <3a1d4ad3-3f85-4ccb-130a-ba3b58d7eeb4@huaweicloud.com>
+Date:   Sun, 28 May 2023 15:48:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <20230527101851.3266500-1-linan666@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH_rFr2XFkGW9JKQ--.57203S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7AF4fJw4DXw1xWrWxJFWUurg_yoW8Jw15pF
-        Z3tF9xCwn5CF1UWw4kXFWjga4rJ3ZF9rs5KF1xJ348ZasrXr4UWa1rKFZIqryDXFyfA3Z0
-        vF9rJ34DXa4kuF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPKb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-        A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-        6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
-        ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
-        JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lw4CEc2x0rVAKj4xxMx
-        kF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4U
-        MI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67
-        AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0
-        cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z2
-        80aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU
-        0xZFpf9x07jbYFAUUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CM-TRANSID: gCh0CgCX_7I3B3NkHieMKQ--.57725S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrKryruw15Gr1UCry5KrW3Wrg_yoWDArc_uw
+        n0vFyftr4qkr42yr45Xw1IvryjyF4UWF1DC3Z2vrnI93Wruay8Gr9Y93sxZa1fJr48AFy5
+        JF9Y9ry0vw42kjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbcAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_GcCE
+        3s1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s
+        1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
+        cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8Jw
+        ACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAYIcxG
+        8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r
+        1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij
+        64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr
+        0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
+        IxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Li Nan <linan122@huawei.com>
+Hi,
 
-Commit 1a855a060665 ("md: fix bug with re-adding of partially recovered
-device.") only add device which is set to In_sync. But it let devices
-without metadata cannot be added when they should be.
+ÔÚ 2023/05/27 18:18, linan666@huaweicloud.com Ð´µÀ:
+> From: Li Nan <linan122@huawei.com>
+> 
+> The type of timeout is unsigned long, but it is compared with 'LONG_MAX'
+> in timeout_store(), which lead to value within (LONG_MAX, ULONG_MAX.]/HZ
+> can't be set. Fix it by checking input value with ULONG_MAX.
+> 
 
-Commit bf572541ab44 ("md: fix regression with re-adding devices to arrays
-with no metadata") fix the above issue, it set device without metadata to
-In_sync when add new disk.
+nak, because MAX_SCHEDULE_TIMEOUT is LONG_MAX, and LONG_MAX should be
+enough for real use case.
 
-However, after commit f466722ca614 ("md: Change handling of save_raid_disk
-and metadata update during recovery.") deletes changes of the first patch,
-setting In_sync for devcie without metadata is meanless because the flag
-will be cleared soon and will not be used during this period. Clean it up.
-
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/md.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8e344b4b3444..e5b67b2d2166 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6733,7 +6733,6 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info)
- 			if (info->state & (1<<MD_DISK_SYNC)  &&
- 			    info->raid_disk < mddev->raid_disks) {
- 				rdev->raid_disk = info->raid_disk;
--				set_bit(In_sync, &rdev->flags);
- 				clear_bit(Bitmap_sync, &rdev->flags);
- 			} else
- 				rdev->raid_disk = -1;
--- 
-2.31.1
+Thanks,
+Kuai
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>   drivers/md/md-bitmap.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index bc8d7565171d..5fd9cba65be8 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2460,7 +2460,7 @@ timeout_store(struct mddev *mddev, const char *buf, size_t len)
+>   		return rv;
+>   
+>   	/* just to make sure we don't overflow... */
+> -	if (timeout >= LONG_MAX / HZ)
+> +	if (timeout >= ULONG_MAX / HZ)
+>   		return -EINVAL;
+>   
+>   	timeout = timeout * HZ / 10000;
+> 
 
