@@ -2,55 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 102C0C77B7A
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:15:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7079DC77B7E
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:24:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229809AbjE2NPn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 09:15:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42504 "EHLO
+        id S229768AbjE2NYV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 09:24:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229728AbjE2NPl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:15:41 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85C9811B;
-        Mon, 29 May 2023 06:14:52 -0700 (PDT)
+        with ESMTP id S229518AbjE2NYU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:24:20 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1313CC4;
+        Mon, 29 May 2023 06:24:19 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QVGGG2chnz4f3sjt;
-        Mon, 29 May 2023 21:14:46 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVGT93tDkz4f3v58;
+        Mon, 29 May 2023 21:24:13 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHcLNDpXRknNjnKQ--.28139S11;
-        Mon, 29 May 2023 21:14:48 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHvbB9p3RkWVPoKQ--.23397S4;
+        Mon, 29 May 2023 21:24:14 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, neilb@suse.de, akpm@osdl.org
-Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: [PATCH -next v3 7/7] md/raid1-10: limit the number of plugged bio
-Date:   Mon, 29 May 2023 21:11:06 +0800
-Message-Id: <20230529131106.2123367-8-yukuai1@huaweicloud.com>
+To:     guoqing.jiang@linux.dev, agk@redhat.com, snitzer@kernel.org,
+        dm-devel@redhat.com, song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next v2 0/6] md: fix that MD_RECOVERY_RUNNING can be cleared while sync_thread is still running
+Date:   Mon, 29 May 2023 21:20:31 +0800
+Message-Id: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230529131106.2123367-1-yukuai1@huaweicloud.com>
-References: <20230529131106.2123367-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHcLNDpXRknNjnKQ--.28139S11
-X-Coremail-Antispam: 1UD129KBjvJXoWxZr4rKF4Duw45JFyUAw1xGrg_yoW5tryDpa
-        1Dta4Yv3yUZrW7X3yDJa1UCFyFga1qgFWDCr95C395ZFy7XFWjga15GFWrCr1DZFZxWF9r
-        J3Z8KrW7GF45tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUP214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6r
-        xdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
-        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
-        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
-        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
-        IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
-        wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
-        0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AK
-        xVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JV
-        WxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZ
-        X7UUUUU==
+X-CM-TRANSID: gCh0CgAHvbB9p3RkWVPoKQ--.23397S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gw1rAw43JrW7Zr4kur4fGrg_yoWfurX_Xa
+        43XFy3Gr47WF15JFyDKr1jv3yDGF45ur1DXFyFqayjyr17WrnrCr1Duw1a9w1Yva42yF18
+        ArWUCrWxurs7WjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbIxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+        n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AK
+        xVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa
+        7VU1a9aPUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -59,99 +57,29 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-bio can be added to plug infinitely, and following writeback test can
-trigger huge amount of plugged bio:
+Changes in v2:
+ - rebase for the latest md-next
 
-Test script:
-modprobe brd rd_nr=4 rd_size=10485760
-mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean --bitmap=internal
-echo 0 > /proc/sys/vm/dirty_background_ratio
-fio -filename=/dev/md0 -ioengine=libaio -rw=write -bs=4k -numjobs=1 -iodepth=128 -name=test
+Patch 1 revert the commit because it will cause MD_RECOVERY_RUNNING to be
+cleared while sync_thread is still running. The deadlock this patch tries
+to fix will be fixed by patch 2-5.
 
-Test result:
-Monitor /sys/block/md0/inflight will found that inflight keep increasing
-until fio finish writing, after running for about 2 minutes:
+Patch 6 enhance checking to prevent MD_RECOVERY_RUNNING to be cleared
+while sync_thread is still running.
 
-[root@fedora ~]# cat /sys/block/md0/inflight
-       0  4474191
+Yu Kuai (6):
+  Revert "md: unlock mddev before reap sync_thread in action_store"
+  md: refactor action_store() for 'idle' and 'frozen'
+  md: add a mutex to synchronize idle and frozen in action_store()
+  md: refactor idle/frozen_sync_thread() to fix deadlock
+  md: wake up 'resync_wait' at last in md_reap_sync_thread()
+  md: enhance checking in md_check_recovery()
 
-Fix the problem by limiting the number of plugged bio based on the number
-of copies for original bio.
+ drivers/md/dm-raid.c |   1 -
+ drivers/md/md.c      | 124 +++++++++++++++++++++++++++++--------------
+ drivers/md/md.h      |   5 ++
+ 3 files changed, 88 insertions(+), 42 deletions(-)
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid1-10.c | 9 ++++++++-
- drivers/md/raid1.c    | 2 +-
- drivers/md/raid10.c   | 2 +-
- 3 files changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 17e55c1fd5a1..bb1e23b66c45 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -21,6 +21,7 @@
- #define IO_MADE_GOOD ((struct bio *)2)
- 
- #define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
-+#define MAX_PLUG_BIO 32
- 
- /* for managing resync I/O pages */
- struct resync_pages {
-@@ -31,6 +32,7 @@ struct resync_pages {
- struct raid1_plug_cb {
- 	struct blk_plug_cb	cb;
- 	struct bio_list		pending;
-+	unsigned int		count;
- };
- 
- static void rbio_pool_free(void *rbio, void *data)
-@@ -128,7 +130,7 @@ static inline void raid1_submit_write(struct bio *bio)
- }
- 
- static inline bool raid1_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
--				      blk_plug_cb_fn unplug)
-+				      blk_plug_cb_fn unplug, int copies)
- {
- 	struct raid1_plug_cb *plug = NULL;
- 	struct blk_plug_cb *cb;
-@@ -148,6 +150,11 @@ static inline bool raid1_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
- 
- 	plug = container_of(cb, struct raid1_plug_cb, cb);
- 	bio_list_add(&plug->pending, bio);
-+	if (++plug->count / MAX_PLUG_BIO >= copies) {
-+		list_del(&cb->list);
-+		cb->callback(cb, false);
-+	}
-+
- 
- 	return true;
- }
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 006620fed595..dc89a1c4b1f1 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1562,7 +1562,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 					      r1_bio->sector);
- 		/* flush_pending_writes() needs access to the rdev so...*/
- 		mbio->bi_bdev = (void *)rdev;
--		if (!raid1_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
-+		if (!raid1_add_bio_to_plug(mddev, mbio, raid1_unplug, disks)) {
- 			spin_lock_irqsave(&conf->device_lock, flags);
- 			bio_list_add(&conf->pending_bio_list, mbio);
- 			spin_unlock_irqrestore(&conf->device_lock, flags);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index fb22cfe94d32..9237dbeb07ba 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1306,7 +1306,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
- 
- 	atomic_inc(&r10_bio->remaining);
- 
--	if (!raid1_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
-+	if (!raid1_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copies)) {
- 		spin_lock_irqsave(&conf->device_lock, flags);
- 		bio_list_add(&conf->pending_bio_list, mbio);
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
 -- 
 2.39.2
 
