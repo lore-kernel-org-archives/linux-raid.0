@@ -2,227 +2,198 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A61C77B7C
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 03:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3965DC7EE23
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 03:42:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229694AbjE2DSu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 28 May 2023 23:18:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33330 "EHLO
+        id S230157AbjE2Dmr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 28 May 2023 23:42:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229570AbjE2DSs (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 28 May 2023 23:18:48 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC9A7B1;
-        Sun, 28 May 2023 20:18:46 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QV12V5Qn2z4f3mJM;
-        Mon, 29 May 2023 11:18:42 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7ORGXRkW4rJKQ--.54725S3;
-        Mon, 29 May 2023 11:18:43 +0800 (CST)
-Subject: Re: [PATCH -next v2 7/7] md/raid1-10: limit the number of plugged bio
-To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, akpm@osdl.org, neilb@suse.de,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
- <20230426082031.1299149-8-yukuai1@huaweicloud.com>
- <CALTww2-yTsHXNFgkAVu0v++HHahZCnvXEUv2qJqbvcGUhKanDw@mail.gmail.com>
- <5e9852fe-0d47-92fc-f6a9-16d028d09ad4@huaweicloud.com>
- <CALTww28ur_S0UpGQqq0TubSgkxGG7dicc1ZKrJ3Pno4CpSOWUw@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <25279079-2600-b0d3-5279-caaf6f664d71@huaweicloud.com>
-Date:   Mon, 29 May 2023 11:18:41 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229958AbjE2Dmq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 28 May 2023 23:42:46 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1DEEAF
+        for <linux-raid@vger.kernel.org>; Sun, 28 May 2023 20:41:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685331719;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=RUsjTl0ysGV/mmmeIOYMDLaGnRoJDAQEFxAKquf76x0=;
+        b=I6cZb4gmwwaXvZ6eaQLYhDM164dPPagLbAGLTA64wz1gjYfDnYP0SS69EcDsDFeM7FHH/q
+        ooBb7NV4fTIC0m5q8HPuUrUpkyCk6665l4tHgsK7mkeuZErLIasUXu2BQjlz3H847LAZmd
+        v3kHdv3Mj/XM1melynlDOst/5jxGjtY=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-364-dFfGItjFMnG-cq7gdOgJDQ-1; Sun, 28 May 2023 23:41:57 -0400
+X-MC-Unique: dFfGItjFMnG-cq7gdOgJDQ-1
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1b04600cac6so2726495ad.1
+        for <linux-raid@vger.kernel.org>; Sun, 28 May 2023 20:41:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685331717; x=1687923717;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RUsjTl0ysGV/mmmeIOYMDLaGnRoJDAQEFxAKquf76x0=;
+        b=WFpn+rpB9fgpDA1V2RZr1wAnH263+H9tBNJKkW5+yflyAgGHo634GcoSWDc3KrcYBa
+         /h1F939SRfcvK6zOAE9C/WAcGmfKnS+rcWWuBHUG+ENFv7WI0mwnVjohxwap6frTnC2J
+         V6O9HuyBtZKFvlXV1FPEfHlp3je2ATvMhZ9mAljhsxz1SvAiVUPpMWknJwr1jH603k1c
+         v+l+OtcGKXgU6efnE5Qr28OgpRIHlK0S75Vba2o8Exr44RHDHQnVch9BJRXhAdJfI99P
+         ir0VPLKuTbn9Wu8rd09jBoJB1hitMUTY0o5mB2mg+TERK9VnoLlQbvLFRLdX+RTVcq1m
+         NLNQ==
+X-Gm-Message-State: AC+VfDz8kA1U2LAiPQH/O/ezfmhjbJDOr1AEQGyFxl3a+2K66vFv6sE3
+        UCdp5UZToLN3hih7XRRUzECcZ5/4ni9RleaZCQtsINWVG+l3S4jQNwrWqC1sTT1hHptyuypauKI
+        5KzdcxSK0M70i7bTVhVCz4GyBNt4c4/vDBqoEo+aEwcXhU4VL
+X-Received: by 2002:a17:903:234f:b0:1ae:3e5b:31b1 with SMTP id c15-20020a170903234f00b001ae3e5b31b1mr12533480plh.9.1685331716710;
+        Sun, 28 May 2023 20:41:56 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7e+2knyJtBH1TBMSTHBSs37mU90hiBedwLMXy2L9ADleEZZTkFnpLJcjE2yVrCNB0tzpFD47AQdvEiG7l34X0=
+X-Received: by 2002:a17:903:234f:b0:1ae:3e5b:31b1 with SMTP id
+ c15-20020a170903234f00b001ae3e5b31b1mr12533464plh.9.1685331716431; Sun, 28
+ May 2023 20:41:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CALTww28ur_S0UpGQqq0TubSgkxGG7dicc1ZKrJ3Pno4CpSOWUw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7ORGXRkW4rJKQ--.54725S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3GF4UXF4DuF48Xry5Ar4UXFb_yoW7Aw45pw
-        4Uta4YkFWUJrW7Xw1jq3WjvF1ftw4DWrWUZr95G343XF9FqFy7Wa15JFWrur1kZrnxGFy7
-        ZFn8KrZxWF15tFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWU
-        JwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
+ <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev> <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
+ <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev> <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
+ <f4bff813-343f-6601-b2f8-c1c54fa1e5a1@linux.dev>
+In-Reply-To: <f4bff813-343f-6601-b2f8-c1c54fa1e5a1@linux.dev>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Mon, 29 May 2023 11:41:45 +0800
+Message-ID: <CALTww29ww7sOwLFR=waX4b2bik=ZAiCW7mMEtg8jsoAHqxvHcQ@mail.gmail.com>
+Subject: Re: The read data is wrong from raid5 when recovery happens
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
+        Song Liu <song@kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Mon, May 29, 2023 at 10:27=E2=80=AFAM Guoqing Jiang <guoqing.jiang@linux=
+.dev> wrote:
+>
+>
+>
+> On 5/26/23 15:23, Xiao Ni wrote:
+> >
+> >>>>> 6. mdadm /dev/md126 --add /dev/sdd
+> >>>>> 7. create 31 processes that writes and reads. It compares the conte=
+nt with
+> >>>>> md5sum. The test will go on until the recovery stops
+> >> Could you share the test code/script for step 7? Will try it from my s=
+ide.
+> > The test scripts are written by people from intel.
+> > Hi, Mariusz. Can I share the test scripts here?
+> >
+> >>>>> 8. wait for about 10 minutes, we can see some processes report chec=
+ksum is
+> >>>>> wrong. But if it re-read the data again, the checksum will be good.
+> >> So it is interim, I guess it appeared before recover was finished.
+> > Yes, it appears before recovery finishes. The test will finish once
+> > the recovery finishes.
+> >
+> >>>>> I tried to narrow this problem like this:
+> >>>>>
+> >>>>> -       md_account_bio(mddev, &bi);
+> >>>>> +       if (rw =3D=3D WRITE)
+> >>>>> +               md_account_bio(mddev, &bi);
+> >>>>> If it only do account for write requests, the problem can disappear=
+.
+> >>>>>
+> >>>>> -       if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
+> >>>>> -           mddev->reshape_position =3D=3D MaxSector) {
+> >>>>> -               bi =3D chunk_aligned_read(mddev, bi);
+> >>>>> -               if (!bi)
+> >>>>> -                       return true;
+> >>>>> -       }
+> >>>>> +       //if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
+> >>>>> +       //    mddev->reshape_position =3D=3D MaxSector) {
+> >>>>> +       //      bi =3D chunk_aligned_read(mddev, bi);
+> >>>>> +       //      if (!bi)
+> >>>>> +       //              return true;
+> >>>>> +       //}
+> >>>>>
+> >>>>>            if (unlikely(bio_op(bi) =3D=3D REQ_OP_DISCARD)) {
+> >>>>>                    make_discard_request(mddev, bi);
+> >>>>> @@ -6180,7 +6180,8 @@ static bool raid5_make_request(struct mddev *=
+mddev,
+> >>>>> struct bio * bi)
+> >>>>>                            md_write_end(mddev);
+> >>>>>                    return true;
+> >>>>>            }
+> >>>>> -       md_account_bio(mddev, &bi);
+> >>>>> +       if (rw =3D=3D READ)
+> >>>>> +               md_account_bio(mddev, &bi);
+> >>>>>
+> >>>>> I comment the chunk_aligned_read out and only account for read requ=
+ests,
+> >>>>> this problem can be reproduced.
+>
+> Only write bio and non aligned chunk read bio call md_account_bio, and
+> only account
+> write bio is fine per your test. It means the md5sum didn't match
+> because of non aligned
+> chunk read bio, so it is not abnormal that data in another chunk could
+> be changed with
+> the recovery is not finished, right?
 
-在 2023/05/29 11:10, Xiao Ni 写道:
-> On Mon, May 29, 2023 at 10:20 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2023/05/29 10:08, Xiao Ni 写道:
->>> Hi Kuai
->>>
->>> There is a limitation of the memory in your test. But for most
->>> situations, customers should not set this. Can this change introduce a
->>> performance regression against other situations?
->>
->> Noted that this limitation is just to triggered writeback as soon as
->> possible in the test, and it's 100% sure real situations can trigger
->> dirty pages write back asynchronously and continue to produce new dirty
->> pages.
-> 
-> Hi
-> 
-> I'm confused here. If we want to trigger write back quickly, it needs
-> to set these two values with a smaller number, rather than 0 and 60.
-> Right?
+That's right, only non aligned read requests can cause this problem.
+Good catch. If I understand right, you mean the non aligned read
+request reads data from the chunk which hasn't been recovered, right?
 
-60 is not required, I'll remove this setting.
+>
+> BTW, I had run the test with bio accounting disabled by default, and
+> seems the result is
+> same.
+>
+> > git tag  --sort=3Dtaggerdate --contain 10764815f |head -1
+> v5.14-rc1
+>
+> localhost:~/readdata #uname -r
+> 5.15.0-rc4-59.24-default
+> localhost:~/readdata #cat /sys/block/md126/queue/iostats
+> 0
+>
+> And I can still see relevant log from the terminal which runs 01-test.sh
 
-0 just means write back if there are any dirty pages.
->>
->> If a lot of bio is not plugged, then it's the same as before; if a lot
->> of bio is plugged, noted that before this patchset, these bio will spent
->> quite a long time in plug, and hence I think performance should be
->> better.
-> 
-> Hmm, it depends on if it's sequential or not? If it's a big io
-> request, can it miss the merge opportunity?
+Hmm, thanks for this. I'll have a try again. Which kind of disks do
+you use for testing?
 
-The bio will still be merged to underlying disks' rq(if it's rq based),
-underlying disk won't flush plug untill the number of request exceed
-threshold.
-
-Thanks,
-Kuai
-> 
-> Regards
-> Xiao
-> 
->>
->> Thanks,
->> Kuai
->>>
->>> Best Regards
->>> Xiao
->>>
->>> On Wed, Apr 26, 2023 at 4:24 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>
->>>> From: Yu Kuai <yukuai3@huawei.com>
->>>>
->>>> bio can be added to plug infinitely, and following writeback test can
->>>> trigger huge amount of plugged bio:
->>>>
->>>> Test script:
->>>> modprobe brd rd_nr=4 rd_size=10485760
->>>> mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean
->>>> echo 0 > /proc/sys/vm/dirty_background_ratio
->>>> echo 60 > /proc/sys/vm/dirty_ratio
->>>> fio -filename=/dev/md0 -ioengine=libaio -rw=write -bs=4k -numjobs=1 -iodepth=128 -name=test
->>>>
->>>> Test result:
->>>> Monitor /sys/block/md0/inflight will found that inflight keep increasing
->>>> until fio finish writing, after running for about 2 minutes:
->>>>
->>>> [root@fedora ~]# cat /sys/block/md0/inflight
->>>>          0  4474191
->>>>
->>>> Fix the problem by limiting the number of plugged bio based on the number
->>>> of copies for original bio.
->>>>
->>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>>> ---
->>>>    drivers/md/raid1-10.c | 9 ++++++++-
->>>>    drivers/md/raid1.c    | 2 +-
->>>>    drivers/md/raid10.c   | 2 +-
->>>>    3 files changed, 10 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
->>>> index 98d678b7df3f..35fb80aa37aa 100644
->>>> --- a/drivers/md/raid1-10.c
->>>> +++ b/drivers/md/raid1-10.c
->>>> @@ -21,6 +21,7 @@
->>>>    #define IO_MADE_GOOD ((struct bio *)2)
->>>>
->>>>    #define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
->>>> +#define MAX_PLUG_BIO 32
->>>>
->>>>    /* for managing resync I/O pages */
->>>>    struct resync_pages {
->>>> @@ -31,6 +32,7 @@ struct resync_pages {
->>>>    struct raid1_plug_cb {
->>>>           struct blk_plug_cb      cb;
->>>>           struct bio_list         pending;
->>>> +       unsigned int            count;
->>>>    };
->>>>
->>>>    static void rbio_pool_free(void *rbio, void *data)
->>>> @@ -127,7 +129,7 @@ static inline void md_submit_write(struct bio *bio)
->>>>    }
->>>>
->>>>    static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
->>>> -                                     blk_plug_cb_fn unplug)
->>>> +                                     blk_plug_cb_fn unplug, int copies)
->>>>    {
->>>>           struct raid1_plug_cb *plug = NULL;
->>>>           struct blk_plug_cb *cb;
->>>> @@ -147,6 +149,11 @@ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
->>>>
->>>>           plug = container_of(cb, struct raid1_plug_cb, cb);
->>>>           bio_list_add(&plug->pending, bio);
->>>> +       if (++plug->count / MAX_PLUG_BIO >= copies) {
->>>> +               list_del(&cb->list);
->>>> +               cb->callback(cb, false);
->>>> +       }
->>>> +
->>>>
->>>>           return true;
->>>>    }
->>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->>>> index 639e09cecf01..c6066408a913 100644
->>>> --- a/drivers/md/raid1.c
->>>> +++ b/drivers/md/raid1.c
->>>> @@ -1562,7 +1562,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->>>>                                                 r1_bio->sector);
->>>>                   /* flush_pending_writes() needs access to the rdev so...*/
->>>>                   mbio->bi_bdev = (void *)rdev;
->>>> -               if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
->>>> +               if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug, disks)) {
->>>>                           spin_lock_irqsave(&conf->device_lock, flags);
->>>>                           bio_list_add(&conf->pending_bio_list, mbio);
->>>>                           spin_unlock_irqrestore(&conf->device_lock, flags);
->>>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>>> index bd9e655ca408..7135cfaf75db 100644
->>>> --- a/drivers/md/raid10.c
->>>> +++ b/drivers/md/raid10.c
->>>> @@ -1306,7 +1306,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
->>>>
->>>>           atomic_inc(&r10_bio->remaining);
->>>>
->>>> -       if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
->>>> +       if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copies)) {
->>>>                   spin_lock_irqsave(&conf->device_lock, flags);
->>>>                   bio_list_add(&conf->pending_bio_list, mbio);
->>>>                   spin_unlock_irqrestore(&conf->device_lock, flags);
->>>> --
->>>> 2.39.2
->>>>
->>>
->>> .
->>>
->>
-> 
-> .
-> 
+Regards
+Xiao
+>
+> file /tmp/pythontest/data.out.nhoBR6 Test failed
+> (org_checksum|checksum_to_match) [582df4ccea6f5851462379fe4b17abf6
+>   -|d41d8cd98f00b204e9800998ec
+> f8427e  -]
+> file /tmp/pythontest/data.out.nhoBR6 calculate checksum again:
+> d41d8cd98f00b204e9800998ecf8427e  -
+>
+> file /tmp/pythontest/data.out.srGqF9 Test failed
+> (org_checksum|checksum_to_match) [7a85ec35b171e52ce41ebdd5da86f1d9
+>   -|d41d8cd98f00b204e9800998ec
+> f8427e  -]
+> file /tmp/pythontest/data.out.srGqF9 calculate checksum again:
+> d41d8cd98f00b204e9800998ecf8427e  -
+> ...
+>
+> file /tmp/pythontest/data.out.q6m1kK Test failed
+> (org_checksum|checksum_to_match) [996f5bb5d2a2ddfd378a80a563ab4ad5
+>   -|d41d8cd98f00b204e9800998ec
+> f8427e  -]
+> file /tmp/pythontest/data.out.q6m1kK calculate checksum again:
+> d41d8cd98f00b204e9800998ecf8427e  -
+>
+> Rebuild ended, testing done!
+> stresstest end at : Sun May 28 22:23:53 EDT 2023
+> Sun May 28 22:23:53 EDT 2023
+>
+> Thanks,
+> Guoqing
+>
 
