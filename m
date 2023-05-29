@@ -2,187 +2,291 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE03C77B7A
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 08:41:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 701DEC7EE2C
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 08:50:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231504AbjE2Iln (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 04:41:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45950 "EHLO
+        id S231569AbjE2Iul (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 04:50:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229628AbjE2IlX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 04:41:23 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28D2CA4
-        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 01:40:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685349634;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NKES7g50AXOp3sHX08Y91bYbQIdIEMzdcjfDAmd8YNk=;
-        b=ZzxeIwiHxkyZv5Geh8WpGxbmqyC/atDOD+vlCQw55wxGi5NV4RQp9fx6+DF7riRtDa4GM6
-        HvVBadXT0qah0ynxej35OC2TDv/Mc19s3YTHNYM9N+iMT1SgSVW2kV6EC3MEyWR/vJz0mM
-        Elezt3DaM7NVUw+JdQULIULmUabWF2c=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-184-_NfrQSLFOLmr-CaLdSiM_A-1; Mon, 29 May 2023 04:40:32 -0400
-X-MC-Unique: _NfrQSLFOLmr-CaLdSiM_A-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2553b096ddfso2650069a91.1
-        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 01:40:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685349631; x=1687941631;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NKES7g50AXOp3sHX08Y91bYbQIdIEMzdcjfDAmd8YNk=;
-        b=MmZJI3YOiQAglwGiZwfGuW82I0580vyAO0CvLDNJPDeyVHhJeMdkNp6zvZZM5k5Z1n
-         AkqbWQy3P/rQNKtCSKbeOC4A5W8FOLLquRL26OzkZNosl+ZuZqJAOweyvVzirCxBEfb+
-         3ddf37Bli4TSXSFQnmBmN5gdIBnUQ+Aa1JTmd12h5AVZPbQJ9wGxfWiobwmR8CJNfWo+
-         Y7PTckVix1wMDxuqLmX6QXJmkwVuVvfJRa/t+LuB2mwwKQ3/tZLJvRrtAIclGM6EPMLg
-         JfZAp06b03CWk3GcgBJhcxSQk4tBSOj/sek1kTUeuOBdgHyU42eVfQzTUPGhVUDq0G05
-         9cBA==
-X-Gm-Message-State: AC+VfDwuKH07grtCt/DaNusUf/CgZAKbN98+Qbjj6s8pbWkFPim0gSGQ
-        up07f7ovTVq/PJJzT/qlk8OJNpo0p5ArcrrlXG8LPkzzuRFdVhJn/Z2Hq1tnB5Ancm++XcHoGT5
-        2e0mq9mUayfEqotStmY5EDHcYuNZKvenk21Pr9+WX66HVq9ASNQ8=
-X-Received: by 2002:a17:90b:1190:b0:256:6462:e399 with SMTP id gk16-20020a17090b119000b002566462e399mr4983983pjb.5.1685349631573;
-        Mon, 29 May 2023 01:40:31 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ6tnl1xS9SCCXRXOTA2WhoEJlLaGtZXsrwl4cIc8uXHR4nRyIj6JJNwR+9OVC9pzIItk54JEN0olU+vfrgIwVE=
-X-Received: by 2002:a17:90b:1190:b0:256:6462:e399 with SMTP id
- gk16-20020a17090b119000b002566462e399mr4983966pjb.5.1685349631263; Mon, 29
- May 2023 01:40:31 -0700 (PDT)
+        with ESMTP id S229513AbjE2Iuk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 04:50:40 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8BDFAC;
+        Mon, 29 May 2023 01:50:38 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QV8PQ2pf5z4f3v4h;
+        Mon, 29 May 2023 16:50:34 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAHcLNYZ3Rk+JjaKQ--.12674S3;
+        Mon, 29 May 2023 16:50:34 +0800 (CST)
+Subject: Re: [PATCH -next v2 7/7] md/raid1-10: limit the number of plugged bio
+To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, akpm@osdl.org, neilb@suse.de,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
+ <20230426082031.1299149-8-yukuai1@huaweicloud.com>
+ <CALTww2-yTsHXNFgkAVu0v++HHahZCnvXEUv2qJqbvcGUhKanDw@mail.gmail.com>
+ <5e9852fe-0d47-92fc-f6a9-16d028d09ad4@huaweicloud.com>
+ <CALTww28ur_S0UpGQqq0TubSgkxGG7dicc1ZKrJ3Pno4CpSOWUw@mail.gmail.com>
+ <25279079-2600-b0d3-5279-caaf6f664d71@huaweicloud.com>
+ <CALTww2-PjJ74J61jYz032t8K5tszN1tnhEbcv5h+MJjkKuVq2A@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <c56e7e9c-90ca-29ca-2003-1a9a88d75fa6@huaweicloud.com>
+Date:   Mon, 29 May 2023 16:50:32 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
- <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev> <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
- <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev> <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
- <f4bff813-343f-6601-b2f8-c1c54fa1e5a1@linux.dev> <CALTww29ww7sOwLFR=waX4b2bik=ZAiCW7mMEtg8jsoAHqxvHcQ@mail.gmail.com>
- <71c45b69-770a-0c28-3bd2-a4bd1a18bc2d@linux.dev>
-In-Reply-To: <71c45b69-770a-0c28-3bd2-a4bd1a18bc2d@linux.dev>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Mon, 29 May 2023 16:40:20 +0800
-Message-ID: <CALTww2_vmryrM1V+Cr8FKj3TRv0qEGjYNzv6nStj=LnM8QKSuw@mail.gmail.com>
-Subject: Re: The read data is wrong from raid5 when recovery happens
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
-        Song Liu <song@kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CALTww2-PjJ74J61jYz032t8K5tszN1tnhEbcv5h+MJjkKuVq2A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAHcLNYZ3Rk+JjaKQ--.12674S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxuFW8uF1rAFWfAFyDAr4rAFb_yoW3Ww4xpa
+        17J3WYkFWUJry7XwnFq3WUZFyftw47XrWUWry8Jw17AryqqFyDWFW8JrWrCr1kZr13GryU
+        Xrs0grZrWr15tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, May 29, 2023 at 4:34=E2=80=AFPM Guoqing Jiang <guoqing.jiang@linux.=
-dev> wrote:
->
->
->
-> On 5/29/23 11:41, Xiao Ni wrote:
-> > On Mon, May 29, 2023 at 10:27=E2=80=AFAM Guoqing Jiang <guoqing.jiang@l=
-inux.dev> wrote:
-> >>
-> >>
-> >> On 5/26/23 15:23, Xiao Ni wrote:
-> >>>>>>> 6. mdadm /dev/md126 --add /dev/sdd
-> >>>>>>> 7. create 31 processes that writes and reads. It compares the con=
-tent with
-> >>>>>>> md5sum. The test will go on until the recovery stops
-> >>>> Could you share the test code/script for step 7? Will try it from my=
- side.
-> >>> The test scripts are written by people from intel.
-> >>> Hi, Mariusz. Can I share the test scripts here?
-> >>>
-> >>>>>>> 8. wait for about 10 minutes, we can see some processes report ch=
-ecksum is
-> >>>>>>> wrong. But if it re-read the data again, the checksum will be goo=
-d.
-> >>>> So it is interim, I guess it appeared before recover was finished.
-> >>> Yes, it appears before recovery finishes. The test will finish once
-> >>> the recovery finishes.
-> >>>
-> >>>>>>> I tried to narrow this problem like this:
-> >>>>>>>
-> >>>>>>> -       md_account_bio(mddev, &bi);
-> >>>>>>> +       if (rw =3D=3D WRITE)
-> >>>>>>> +               md_account_bio(mddev, &bi);
-> >>>>>>> If it only do account for write requests, the problem can disappe=
-ar.
-> >>>>>>>
-> >>>>>>> -       if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
-> >>>>>>> -           mddev->reshape_position =3D=3D MaxSector) {
-> >>>>>>> -               bi =3D chunk_aligned_read(mddev, bi);
-> >>>>>>> -               if (!bi)
-> >>>>>>> -                       return true;
-> >>>>>>> -       }
-> >>>>>>> +       //if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
-> >>>>>>> +       //    mddev->reshape_position =3D=3D MaxSector) {
-> >>>>>>> +       //      bi =3D chunk_aligned_read(mddev, bi);
-> >>>>>>> +       //      if (!bi)
-> >>>>>>> +       //              return true;
-> >>>>>>> +       //}
-> >>>>>>>
-> >>>>>>>             if (unlikely(bio_op(bi) =3D=3D REQ_OP_DISCARD)) {
-> >>>>>>>                     make_discard_request(mddev, bi);
-> >>>>>>> @@ -6180,7 +6180,8 @@ static bool raid5_make_request(struct mddev=
- *mddev,
-> >>>>>>> struct bio * bi)
-> >>>>>>>                             md_write_end(mddev);
-> >>>>>>>                     return true;
-> >>>>>>>             }
-> >>>>>>> -       md_account_bio(mddev, &bi);
-> >>>>>>> +       if (rw =3D=3D READ)
-> >>>>>>> +               md_account_bio(mddev, &bi);
-> >>>>>>>
-> >>>>>>> I comment the chunk_aligned_read out and only account for read re=
-quests,
-> >>>>>>> this problem can be reproduced.
-> >> Only write bio and non aligned chunk read bio call md_account_bio, and
-> >> only account write bio is fine per your test. It means the md5sum didn=
-'t match
-> >> because of non aligned chunk read bio, so it is not abnormal that data=
- in another chunk could
-> >> be changed with the recovery is not finished, right?
-> > That's right, only non aligned read requests can cause this problem.
-> > Good catch. If I understand right, you mean the non aligned read
-> > request reads data from the chunk which hasn't been recovered, right?
->
-> Yes, I don't think compare md5sum for such scenario makes more sense give=
-n
-> the state is interim. And it also appeared in my test with disable io
-> accounting.
+Hi,
 
-It's the data which customers read that can be wrong. So it's a
-dangerous thing. Because customers use the data directly. If it's true
-it looks like there is a race between non aligned read and recovery
-process.
+在 2023/05/29 15:57, Xiao Ni 写道:
+> On Mon, May 29, 2023 at 11:18 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> Hi,
+>>
+>> 在 2023/05/29 11:10, Xiao Ni 写道:
+>>> On Mon, May 29, 2023 at 10:20 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>>
+>>>> Hi,
+>>>>
+>>>> 在 2023/05/29 10:08, Xiao Ni 写道:
+>>>>> Hi Kuai
+>>>>>
+>>>>> There is a limitation of the memory in your test. But for most
+>>>>> situations, customers should not set this. Can this change introduce a
+>>>>> performance regression against other situations?
+>>>>
+>>>> Noted that this limitation is just to triggered writeback as soon as
+>>>> possible in the test, and it's 100% sure real situations can trigger
+>>>> dirty pages write back asynchronously and continue to produce new dirty
+>>>> pages.
+>>>
+>>> Hi
+>>>
+>>> I'm confused here. If we want to trigger write back quickly, it needs
+>>> to set these two values with a smaller number, rather than 0 and 60.
+>>> Right?
+>>
+>> 60 is not required, I'll remove this setting.
+>>
+>> 0 just means write back if there are any dirty pages.
+> 
+> Hi Kuai
+> 
+> Does 0 mean disabling write back? I tried to find the doc that
+> describes the meaning when setting dirty_background_ratio to 0, but I
+> didn't find it.
+> In https://www.kernel.org/doc/html/next/admin-guide/sysctl/vm.html it
+> doesn't describe this. But it says something like this
+> 
+> Note:
+>    dirty_background_bytes is the counterpart of dirty_background_ratio. Only
+>    one of them may be specified at a time. When one sysctl is written it is
+>    immediately taken into account to evaluate the dirty memory limits and the
+>    other appears as 0 when read.
+> 
+> Maybe you can specify dirty_background_ratio to 1 if you want to
+> trigger write back ASAP.
 
-Regards
-Xiao
+The purpose here is to trigger write back ASAP, I'm not an expert here,
+but based on test result, 0 obviously doesn't mean disable write back.
 
->
-> >> BTW, I had run the test with bio accounting disabled by default, and
-> >> seems the result is
-> >> same.
-> >>
-> >>> git tag  --sort=3Dtaggerdate --contain 10764815f |head -1
-> >> v5.14-rc1
-> >>
-> >> localhost:~/readdata #uname -r
-> >> 5.15.0-rc4-59.24-default
-> >> localhost:~/readdata #cat /sys/block/md126/queue/iostats
-> >> 0
-> >>
-> >> And I can still see relevant log from the terminal which runs 01-test.=
-sh
-> > Hmm, thanks for this. I'll have a try again. Which kind of disks do
-> > you use for testing?
->
-> Four SCSI disks (1G capacity) inside VM.
->
-> Thanks,
-> Guoqing
->
+Set dirty_background_bytes to a value, dirty_background_ratio will be
+set to 0 together, which means dirty_background_ratio is disabled.
+However, change dirty_background_ratio from default value to 0, will end
+up both dirty_background_ratio and dirty_background_bytes to be 0, and
+based on following related code, I think 0 just means write back if
+there are any dirty pages.
+
+domain_dirty_limits:
+  bg_bytes = dirty_background_bytes -> 0
+  bg_ratio = (dirty_background_ratio * PAGE_SIZE) / 100 -> 0
+
+  if (bg_bytes)
+	 bg_thresh = DIV_ROUND_UP(bg_bytes, PAGE_SIZE);
+  else
+	 bg_thresh = (bg_ratio * available_memory) / PAGE_SIZE; -> 0
+
+  dtc->bg_thresh = bg_thresh; -> 0
+
+balance_dirty_pages
+  nr_reclaimable = global_node_page_state(NR_FILE_DIRTY);
+  if (!laptop_mode && nr_reclaimable > gdtc->bg_thresh &&
+       !writeback_in_progress(wb))
+    wb_start_background_writeback(wb); -> writeback ASAP
+
+Thanks,
+Kuai
+> 
+>>>>
+>>>> If a lot of bio is not plugged, then it's the same as before; if a lot
+>>>> of bio is plugged, noted that before this patchset, these bio will spent
+>>>> quite a long time in plug, and hence I think performance should be
+>>>> better.
+>>>
+>>> Hmm, it depends on if it's sequential or not? If it's a big io
+>>> request, can it miss the merge opportunity?
+>>
+>> The bio will still be merged to underlying disks' rq(if it's rq based),
+>> underlying disk won't flush plug untill the number of request exceed
+>> threshold.
+> 
+> Thanks for this.
+> 
+> Regards
+> Xiao
+>>
+>> Thanks,
+>> Kuai
+>>>
+>>> Regards
+>>> Xiao
+>>>
+>>>>
+>>>> Thanks,
+>>>> Kuai
+>>>>>
+>>>>> Best Regards
+>>>>> Xiao
+>>>>>
+>>>>> On Wed, Apr 26, 2023 at 4:24 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>>>>
+>>>>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>>>>
+>>>>>> bio can be added to plug infinitely, and following writeback test can
+>>>>>> trigger huge amount of plugged bio:
+>>>>>>
+>>>>>> Test script:
+>>>>>> modprobe brd rd_nr=4 rd_size=10485760
+>>>>>> mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean
+>>>>>> echo 0 > /proc/sys/vm/dirty_background_ratio
+>>>>>> echo 60 > /proc/sys/vm/dirty_ratio
+>>>>>> fio -filename=/dev/md0 -ioengine=libaio -rw=write -bs=4k -numjobs=1 -iodepth=128 -name=test
+>>>>>>
+>>>>>> Test result:
+>>>>>> Monitor /sys/block/md0/inflight will found that inflight keep increasing
+>>>>>> until fio finish writing, after running for about 2 minutes:
+>>>>>>
+>>>>>> [root@fedora ~]# cat /sys/block/md0/inflight
+>>>>>>           0  4474191
+>>>>>>
+>>>>>> Fix the problem by limiting the number of plugged bio based on the number
+>>>>>> of copies for original bio.
+>>>>>>
+>>>>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>>>>> ---
+>>>>>>     drivers/md/raid1-10.c | 9 ++++++++-
+>>>>>>     drivers/md/raid1.c    | 2 +-
+>>>>>>     drivers/md/raid10.c   | 2 +-
+>>>>>>     3 files changed, 10 insertions(+), 3 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+>>>>>> index 98d678b7df3f..35fb80aa37aa 100644
+>>>>>> --- a/drivers/md/raid1-10.c
+>>>>>> +++ b/drivers/md/raid1-10.c
+>>>>>> @@ -21,6 +21,7 @@
+>>>>>>     #define IO_MADE_GOOD ((struct bio *)2)
+>>>>>>
+>>>>>>     #define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
+>>>>>> +#define MAX_PLUG_BIO 32
+>>>>>>
+>>>>>>     /* for managing resync I/O pages */
+>>>>>>     struct resync_pages {
+>>>>>> @@ -31,6 +32,7 @@ struct resync_pages {
+>>>>>>     struct raid1_plug_cb {
+>>>>>>            struct blk_plug_cb      cb;
+>>>>>>            struct bio_list         pending;
+>>>>>> +       unsigned int            count;
+>>>>>>     };
+>>>>>>
+>>>>>>     static void rbio_pool_free(void *rbio, void *data)
+>>>>>> @@ -127,7 +129,7 @@ static inline void md_submit_write(struct bio *bio)
+>>>>>>     }
+>>>>>>
+>>>>>>     static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
+>>>>>> -                                     blk_plug_cb_fn unplug)
+>>>>>> +                                     blk_plug_cb_fn unplug, int copies)
+>>>>>>     {
+>>>>>>            struct raid1_plug_cb *plug = NULL;
+>>>>>>            struct blk_plug_cb *cb;
+>>>>>> @@ -147,6 +149,11 @@ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
+>>>>>>
+>>>>>>            plug = container_of(cb, struct raid1_plug_cb, cb);
+>>>>>>            bio_list_add(&plug->pending, bio);
+>>>>>> +       if (++plug->count / MAX_PLUG_BIO >= copies) {
+>>>>>> +               list_del(&cb->list);
+>>>>>> +               cb->callback(cb, false);
+>>>>>> +       }
+>>>>>> +
+>>>>>>
+>>>>>>            return true;
+>>>>>>     }
+>>>>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>>>>>> index 639e09cecf01..c6066408a913 100644
+>>>>>> --- a/drivers/md/raid1.c
+>>>>>> +++ b/drivers/md/raid1.c
+>>>>>> @@ -1562,7 +1562,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>>>>>                                                  r1_bio->sector);
+>>>>>>                    /* flush_pending_writes() needs access to the rdev so...*/
+>>>>>>                    mbio->bi_bdev = (void *)rdev;
+>>>>>> -               if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
+>>>>>> +               if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug, disks)) {
+>>>>>>                            spin_lock_irqsave(&conf->device_lock, flags);
+>>>>>>                            bio_list_add(&conf->pending_bio_list, mbio);
+>>>>>>                            spin_unlock_irqrestore(&conf->device_lock, flags);
+>>>>>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>>>>>> index bd9e655ca408..7135cfaf75db 100644
+>>>>>> --- a/drivers/md/raid10.c
+>>>>>> +++ b/drivers/md/raid10.c
+>>>>>> @@ -1306,7 +1306,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
+>>>>>>
+>>>>>>            atomic_inc(&r10_bio->remaining);
+>>>>>>
+>>>>>> -       if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
+>>>>>> +       if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copies)) {
+>>>>>>                    spin_lock_irqsave(&conf->device_lock, flags);
+>>>>>>                    bio_list_add(&conf->pending_bio_list, mbio);
+>>>>>>                    spin_unlock_irqrestore(&conf->device_lock, flags);
+>>>>>> --
+>>>>>> 2.39.2
+>>>>>>
+>>>>>
+>>>>> .
+>>>>>
+>>>>
+>>>
+>>> .
+>>>
+>>
+> 
+> .
+> 
 
