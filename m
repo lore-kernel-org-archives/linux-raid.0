@@ -2,111 +2,146 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24CD7C7EE2E
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:32:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93533C77B7A
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:37:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229841AbjE2NcW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 09:32:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53182 "EHLO
+        id S229653AbjE2NhE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 09:37:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229824AbjE2NcM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:32:12 -0400
+        with ESMTP id S229536AbjE2NhD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:37:03 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 576BED9
-        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 06:32:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6D938E;
+        Mon, 29 May 2023 06:37:00 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVGfG3Yhkz4f3pr1
-        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 21:32:06 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgBH_rFSqXRkMLjoKQ--.57183S9;
-        Mon, 29 May 2023 21:32:07 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVGlr3dx4z4f3lVp;
+        Mon, 29 May 2023 21:36:56 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgBH_rF3qnRkMvboKQ--.57470S3;
+        Mon, 29 May 2023 21:36:57 +0800 (CST)
+Subject: Re: [PATCH -next] md/raid5: don't allow concurrent reshape with
+ recovery
+To:     Paul Menzel <pmenzel@molgen.mpg.de>,
+        Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230529031045.1760883-1-yukuai1@huaweicloud.com>
+ <6074a7aa-bb9c-6803-dd94-bba208d47ba0@molgen.mpg.de>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
-        jes@trained-monkey.org, pmenzel@molgen.mpg.de, logang@deltatee.com,
-        song@kernel.org, guoqing.jiang@linux.dev
-Cc:     yukuai3@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com
-Subject: [PATCH v2 5/8] tests: add a regression test that raid456 can't assemble
-Date:   Mon, 29 May 2023 21:28:23 +0800
-Message-Id: <20230529132826.2125392-6-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230529132826.2125392-1-yukuai1@huaweicloud.com>
-References: <20230529132826.2125392-1-yukuai1@huaweicloud.com>
+Message-ID: <7932f1dd-ad0a-a744-39f4-b38b364ab486@huaweicloud.com>
+Date:   Mon, 29 May 2023 21:36:55 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <6074a7aa-bb9c-6803-dd94-bba208d47ba0@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH_rFSqXRkMLjoKQ--.57183S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ww13KFyxKFyUWFyDCFW3Jrb_yoW8Xr48pa
-        nxurnIkr4xAFs2yFZIg3WrWa4rWaykJrW5C3sxJr1Ikr47uryIv3yxKF15tryxXr4I9ay5
-        Z34kKa4fGw40k3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBSb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-        Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-        rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-        AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
-        14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
-        xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
-        z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1l42xK82IYc2
-        Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s02
-        6x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0x
-        vE2Ix0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1lIxAI
-        cVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2js
-        IEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjxUoeOJUUUUU
+X-CM-TRANSID: gCh0CgBH_rF3qnRkMvboKQ--.57470S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7WFy7AFyDGw47tF45tw4fXwb_yoW8Kw13pa
+        92yFZ8WrWUurn3tr4Dtr1UAFy5Jr48t34DtF1fXa4jq3W5AryI9rWUWrZ0gF1UJr40qw4j
+        qw18Xr9rZr17JFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Zr0_Wr1UMIIF0xvEx4A2jsIE14v26r4j
+        6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUoO
+        J5UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hi,
 
-If recovery is interrupted and reshape is started, then this array can't
-assemble anymore. The problem is supposed to be fixed by [1].
+在 2023/05/29 14:44, Paul Menzel 写道:
+> Dear Yu,
+> 
+> 
+> Thank you for your patch. As always some minor commons, you can also 
+> ignore.
 
-[1] https://lore.kernel.org/linux-raid/20230529031045.1760883-1-yukuai1@huaweicloud.com/
+Thanks for there comments, I'll update them in v2 except that 'unsigned
+int i'.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- tests/25raid456-reshape-while-recovery | 32 ++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
- create mode 100644 tests/25raid456-reshape-while-recovery
-
-diff --git a/tests/25raid456-reshape-while-recovery b/tests/25raid456-reshape-while-recovery
-new file mode 100644
-index 00000000..b9f871f2
---- /dev/null
-+++ b/tests/25raid456-reshape-while-recovery
-@@ -0,0 +1,32 @@
-+devs="$dev0 $dev1 $dev2"
-+
-+set_up_test()
-+{
-+	mdadm -Cv -R -n 3 -l5 $md0 $devs --assume-clean --size=50M || die "create array failed"
-+	mdadm -a $md0 $dev3 $dev4 || die "failed to bind new disk to array"
-+	echo 1000 > /sys/block/md0/md/sync_speed_max
-+}
-+
-+clean_up_test()
-+{
-+	mdadm -S $md0
-+}
-+
-+trap 'clean_up_test' EXIT
-+
-+set_up_test || die "set up test failed"
-+
-+# set up replacement
-+echo want_replacement > /sys/block/md0/md/rd0/state
-+sleep 1
-+
-+# trigger reshape
-+echo frozen > /sys/block/md0/md/sync_action
-+mdadm --grow -l 6 $md0
-+sleep 1
-+
-+# reassemeble array
-+mdadm -S $md0 || die "can't stop array"
-+mdadm --assemble $md0 $devs $dev3 $dev4 || die "can't assemble array"
-+
-+exit 0
--- 
-2.39.2
+Thanks,
+Kuai
+> 
+> Am 29.05.23 um 05:10 schrieb Yu Kuai:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> commit 0aecb06e2249 ("md/raid5: don't allow replacement while reshape
+> 
+> I’d start with a capital letter: Commit …
+> 
+>> is in progress") fix that replacement can be set if reshape is
+> 
+> fixes
+> 
+>> interrupted, which will cause that array can't be assemebled.
+> 
+> assembled
+> 
+>> There is a similar on the other side, if recovery is interrupted, then
+> 
+> similar *problem*?
+> 
+>> reshape can start, which will cause the same problem.
+>>
+>> Fix the prblem by don't start reshape is recovery is still in progress.
+> 
+> •  problem
+> •  … by not starting to reshape while recovery is still in progress
+> 
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/raid5.c | 8 ++++++++
+>>   1 file changed, 8 insertions(+)
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 64865f9dd3f5..6db783ca71b7 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -8500,6 +8500,7 @@ static int raid5_start_reshape(struct mddev *mddev)
+>>       struct r5conf *conf = mddev->private;
+>>       struct md_rdev *rdev;
+>>       int spares = 0;
+>> +    int i;
+> 
+> It won’t make a difference for the code I believe, but as the count 
+> variable can’t be negative, I’d use `unsigned int`.
+> 
+>>       unsigned long flags;
+>>       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+>> @@ -8511,6 +8512,13 @@ static int raid5_start_reshape(struct mddev 
+>> *mddev)
+>>       if (has_failed(conf))
+>>           return -EINVAL;
+>> +    /* raid5 can't handle concurrent reshape and recovery */
+>> +    if (mddev->recovery_cp < MaxSector)
+>> +        return -EBUSY;
+>> +    for (i = 0; i < conf->raid_disks; i++)
+>> +        if (rdev_mdlock_deref(mddev, conf->disks[i].replacement))
+>> +            return -EBUSY;
+>> +
+>>       rdev_for_each(rdev, mddev) {
+>>           if (!test_bit(In_sync, &rdev->flags)
+>>               && !test_bit(Faulty, &rdev->flags))
+> 
+> 
+> Kind regards,
+> 
+> Paul
+> 
+> .
+> 
 
