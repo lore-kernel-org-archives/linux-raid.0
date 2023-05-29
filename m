@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B108C7EE2E
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68AF2C77B7A
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:32:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229827AbjE2NcS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 09:32:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53136 "EHLO
+        id S229850AbjE2NcU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 09:32:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjE2NcN (ORCPT
+        with ESMTP id S229837AbjE2NcN (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:32:13 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30F49B7
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8239BDF
         for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 06:32:11 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVGfH3mdQz4f3v4k
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QVGfH0swbz4f3nxN
         for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 21:32:07 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgBH_rFSqXRkMLjoKQ--.57183S11;
+        by APP4 (Coremail) with SMTP id gCh0CgBH_rFSqXRkMLjoKQ--.57183S12;
         Mon, 29 May 2023 21:32:08 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
         jes@trained-monkey.org, pmenzel@molgen.mpg.de, logang@deltatee.com,
         song@kernel.org, guoqing.jiang@linux.dev
 Cc:     yukuai3@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com
-Subject: [PATCH v2 7/8] tests: add a regression test that reshape can corrupt data
-Date:   Mon, 29 May 2023 21:28:25 +0800
-Message-Id: <20230529132826.2125392-8-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 8/8] tests: add a regression test for raid456 deadlock again
+Date:   Mon, 29 May 2023 21:28:26 +0800
+Message-Id: <20230529132826.2125392-9-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230529132826.2125392-1-yukuai1@huaweicloud.com>
 References: <20230529132826.2125392-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH_rFSqXRkMLjoKQ--.57183S11
-X-Coremail-Antispam: 1UD129KBjvJXoW7tw43Ar1xCF13try8Kw4DJwb_yoW8GFy3p3
-        y3AFyakrW8CFsIvanIg3W8XFyrCa4kJrW5G3srt3WIyFW7KryxXrs7KF15Xry7tr4xZws8
-        Z34DWFyrGw1fKaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgBH_rFSqXRkMLjoKQ--.57183S12
+X-Coremail-Antispam: 1UD129KBjvJXoW7tw43Ar1xCF13uw13Zr1DZFb_yoW8JFy5pa
+        y3CF9Ikr48ZFnIv39xW3W8JFyrCa4kGrW5J3srJw1IvFW7Zr1xXw13Kr15Xry3Jr4xAayD
+        u3s5Ga4fKw109aUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBSb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
         6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
         Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
@@ -58,33 +58,33 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-This is a regression test for commit 1544e95c6dd8 ("md: fix data
-corruption for raid456 when reshape restart while grow up").
+This is a regression test for commit ("md/raid5: fix a deadlock in the
+case that reshape is interrupted").
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- tests/25raid456-reshape-corrupt-data | 35 ++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
- create mode 100644 tests/25raid456-reshape-corrupt-data
+ tests/25raid456-reshape-deadlock | 34 ++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
+ create mode 100644 tests/25raid456-reshape-deadlock
 
-diff --git a/tests/25raid456-reshape-corrupt-data b/tests/25raid456-reshape-corrupt-data
+diff --git a/tests/25raid456-reshape-deadlock b/tests/25raid456-reshape-deadlock
 new file mode 100644
-index 00000000..fdb875fb
+index 00000000..bfa0cc56
 --- /dev/null
-+++ b/tests/25raid456-reshape-corrupt-data
-@@ -0,0 +1,35 @@
++++ b/tests/25raid456-reshape-deadlock
+@@ -0,0 +1,34 @@
 +devs="$dev0 $dev1 $dev2"
 +
 +set_up_test()
 +{
 +	mdadm -Cv -R -n 3 -l5 $md0 $devs --size=50M || die "create array failed"
 +	mdadm -a $md0 $dev3 || die "failed to bind new disk to array"
-+	mkfs.xfs -f $md0 || die "mkfs failed"
-+	xfs_ncheck $md0 || die "check fs failed"
++	echo 1000 > /sys/block/md0/md/sync_speed_max
 +}
 +
 +clean_up_test()
 +{
++	echo idle > /sys/block/md0/md/sync_action
 +	mdadm -S $md0
 +}
 +
@@ -93,19 +93,18 @@ index 00000000..fdb875fb
 +set_up_test || die "set up test failed"
 +
 +# trigger reshape
-+echo 1000 > /sys/block/md0/md/sync_speed_max
 +mdadm --grow -l 6 $md0
 +sleep 1
 +
-+# stop and start reshape
++# stop reshape
 +echo frozen > /sys/block/md0/md/sync_action
-+echo system > /sys/block/md0/md/sync_speed_max
-+echo reshape > /sys/block/md0/md/sync_action
 +
-+mdadm -W $md0
++# read accross reshape
++dd if=$md0 of=/dev/NULL bs=1m count=100 iflag=direct &> /dev/null &
++sleep 2
 +
-+# check if data is corrupted
-+xfs_ncheck $md0 || die "data is corrupted after reshape"
++# suspend array
++echo 1 > /sys/block/md0/md/suspend_lo
 +
 +exit 0
 -- 
