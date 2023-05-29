@@ -2,107 +2,84 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC05EC77B7E
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:15:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC1D0C7EE2E
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:15:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229675AbjE2NPK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 09:15:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42020 "EHLO
+        id S229732AbjE2NPL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 09:15:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbjE2NPH (ORCPT
+        with ESMTP id S229461AbjE2NPH (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:15:07 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3D63F1;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B67BBFE;
         Mon, 29 May 2023 06:14:48 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVGGD3MmNz4f3prh;
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVGGD0SXsz4f44Cf;
         Mon, 29 May 2023 21:14:44 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgD3X7NDpXRkydjnKQ--.33661S3;
-        Mon, 29 May 2023 21:14:45 +0800 (CST)
-Message-ID: <e7b9a1ae-3dd9-84a1-561f-88d1cf3bf117@huaweicloud.com>
-Date:   Mon, 29 May 2023 21:14:43 +0800
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgAHcLNDpXRknNjnKQ--.28139S4;
+        Mon, 29 May 2023 21:14:44 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org, neilb@suse.de, akpm@osdl.org
+Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: [PATCH -next v3 0/7] limit the number of plugged bio
+Date:   Mon, 29 May 2023 21:10:59 +0800
+Message-Id: <20230529131106.2123367-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] md/raid10: prioritize adding disk to 'removed' mirror
-To:     Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
-        song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230527092007.3008856-1-linan666@huaweicloud.com>
- <45ee7cb9-6651-46a5-87a2-dd66532084d7@huaweicloud.com>
-From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <45ee7cb9-6651-46a5-87a2-dd66532084d7@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3X7NDpXRkydjnKQ--.33661S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kw4DCw15WF1xAw1rCF4xtFb_yoW8AF4Upr
-        40yw15KrWUJw1kKr1UGr1UJryrtrW8Jw4UJryUXFy7Cr45JryjqrWUXr4Y9r1DJrs3Jr15
-        t3W5Jrn8ZFy8GrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4U
-        JVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-        0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-        1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
-        xwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-        b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-        vE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI
-        42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxh
-        VjvjDU0xZFpf9x0JUQZ23UUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CM-TRANSID: gCh0CgAHcLNDpXRknNjnKQ--.28139S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gw4kKF1xKr4kWw1fJrW3GFg_yoWDWFXEvF
+        yqqF9xtr47XF1ayay7Gr1xZryUCrWqqFnrJanrKrWrZry3ur1UAr1j9r48X3WrZFyUZrn8
+        Ary8Gr1rJrnxujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbxkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j
+        6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxa
+        n2IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
+        AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCI
+        c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
+        AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_
+        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb
+        XdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+From: Yu Kuai <yukuai3@huawei.com>
 
+Changes in v3:
+ - prefix function with 'raid1_' instead of 'md_'
+ - use a globle workequeue instead of per bitmap in patch 5
+Changes in v2:
+ - remove the patch to rename raid1-10.c
 
-在 2023/5/29 21:00, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2023/05/27 17:20, linan666@huaweicloud.com 写道:
->> From: Li Nan <linan122@huawei.com>
->>
->> When add a new disk to raid10, it will traverse conf->mirror from start
->> and find one of the following mirror to add:
->>    1. mirror->rdev is set to WantReplacement and it have no replacement,
->>       set new disk to mirror->replacement.
->>    2. no mirror->rdev, set new disk to mirror->rdev.
->>
->> There is a array as below (sda is set to WantReplacement):
->>
->>      Number   Major   Minor   RaidDevice State
->>         0       8        0        0      active sync set-A   /dev/sda
->>         -       0        0        1      removed
->>         2       8       32        2      active sync set-A   /dev/sdc
->>         3       8       48        3      active sync set-B   /dev/sdd
->>
->> Use 'mdadm --add' to add a new disk to this array, the new disk will
->> become sda's replacement instead of add to removed position, which is
->> confusing for users. Meanwhile, after new disk recovery success, sda
->> will be set to Faulty.
->>
->> Prioritize adding disk to 'removed' mirror is a better choice. In the
->> above scenario, the behavior is the same as before, except sda will not
->> be deleted. Before other disks are added, continued use sda is more
->> reliable.
->>
-> 
-> I think this change make sense, however, it's better to do this for all
-> personality instead of just for raid10.
-> 
-> Thanks,
-> Kuai
+Yu Kuai (7):
+  md/raid10: prevent soft lockup while flush writes
+  md/raid1-10: factor out a helper to add bio to plug
+  md/raid1-10: factor out a helper to submit normal write
+  md/raid1-10: submit write io directly if bitmap is not enabled
+  md/md-bitmap: add a new helper to unplug bitmap asynchrously
+  md/raid1-10: don't handle pluged bio by daemon thread
+  md/raid1-10: limit the number of plugged bio
 
-raid5 is currently like this. If others are OK with this changes to 
-raid10, I will modify raid1 later.
+ drivers/md/md-bitmap.c | 33 ++++++++++++++++++++--
+ drivers/md/md-bitmap.h |  8 ++++++
+ drivers/md/md.c        |  9 ++++++
+ drivers/md/md.h        |  1 +
+ drivers/md/raid1-10.c  | 63 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid1.c     | 29 ++++---------------
+ drivers/md/raid10.c    | 47 +++++++------------------------
+ 7 files changed, 126 insertions(+), 64 deletions(-)
 
 -- 
-Thanks,
-Nan
+2.39.2
 
