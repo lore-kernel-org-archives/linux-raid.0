@@ -2,63 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 701DEC7EE2C
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 08:50:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDF59C77B7E
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:00:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231569AbjE2Iul (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 04:50:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52388 "EHLO
+        id S229533AbjE2NA5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 09:00:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229513AbjE2Iuk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 04:50:40 -0400
+        with ESMTP id S229455AbjE2NA4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:00:56 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8BDFAC;
-        Mon, 29 May 2023 01:50:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DC6899;
+        Mon, 29 May 2023 06:00:54 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QV8PQ2pf5z4f3v4h;
-        Mon, 29 May 2023 16:50:34 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVFyB2PNQz4f3vdW;
+        Mon, 29 May 2023 21:00:50 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHcLNYZ3Rk+JjaKQ--.12674S3;
-        Mon, 29 May 2023 16:50:34 +0800 (CST)
-Subject: Re: [PATCH -next v2 7/7] md/raid1-10: limit the number of plugged bio
-To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, akpm@osdl.org, neilb@suse.de,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
- <20230426082031.1299149-8-yukuai1@huaweicloud.com>
- <CALTww2-yTsHXNFgkAVu0v++HHahZCnvXEUv2qJqbvcGUhKanDw@mail.gmail.com>
- <5e9852fe-0d47-92fc-f6a9-16d028d09ad4@huaweicloud.com>
- <CALTww28ur_S0UpGQqq0TubSgkxGG7dicc1ZKrJ3Pno4CpSOWUw@mail.gmail.com>
- <25279079-2600-b0d3-5279-caaf6f664d71@huaweicloud.com>
- <CALTww2-PjJ74J61jYz032t8K5tszN1tnhEbcv5h+MJjkKuVq2A@mail.gmail.com>
+        by APP4 (Coremail) with SMTP id gCh0CgD3X7MBonRkXhznKQ--.32845S3;
+        Mon, 29 May 2023 21:00:51 +0800 (CST)
+Subject: Re: [PATCH] md/raid10: prioritize adding disk to 'removed' mirror
+To:     linan666@huaweicloud.com, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230527092007.3008856-1-linan666@huaweicloud.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <c56e7e9c-90ca-29ca-2003-1a9a88d75fa6@huaweicloud.com>
-Date:   Mon, 29 May 2023 16:50:32 +0800
+Message-ID: <45ee7cb9-6651-46a5-87a2-dd66532084d7@huaweicloud.com>
+Date:   Mon, 29 May 2023 21:00:49 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <CALTww2-PjJ74J61jYz032t8K5tszN1tnhEbcv5h+MJjkKuVq2A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20230527092007.3008856-1-linan666@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHcLNYZ3Rk+JjaKQ--.12674S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuFW8uF1rAFWfAFyDAr4rAFb_yoW3Ww4xpa
-        17J3WYkFWUJry7XwnFq3WUZFyftw47XrWUWry8Jw17AryqqFyDWFW8JrWrCr1kZr13GryU
-        Xrs0grZrWr15tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgD3X7MBonRkXhznKQ--.32845S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF47WFWkZrW8JrWrXw4fKrg_yoW5uw13pa
+        93J3ZxKry8JwsI9F1UJayDWFWSqrZ5Kayvkry3W34S9rZxtrWUGa4xG3y5JryDArZ8Zw4a
+        q3W5GrZ09a4I9rDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
         1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
         JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
         CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
         2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
+        UUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -67,226 +60,108 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/05/29 15:57, Xiao Ni 写道:
-> On Mon, May 29, 2023 at 11:18 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2023/05/29 11:10, Xiao Ni 写道:
->>> On Mon, May 29, 2023 at 10:20 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>
->>>> Hi,
->>>>
->>>> 在 2023/05/29 10:08, Xiao Ni 写道:
->>>>> Hi Kuai
->>>>>
->>>>> There is a limitation of the memory in your test. But for most
->>>>> situations, customers should not set this. Can this change introduce a
->>>>> performance regression against other situations?
->>>>
->>>> Noted that this limitation is just to triggered writeback as soon as
->>>> possible in the test, and it's 100% sure real situations can trigger
->>>> dirty pages write back asynchronously and continue to produce new dirty
->>>> pages.
->>>
->>> Hi
->>>
->>> I'm confused here. If we want to trigger write back quickly, it needs
->>> to set these two values with a smaller number, rather than 0 and 60.
->>> Right?
->>
->> 60 is not required, I'll remove this setting.
->>
->> 0 just means write back if there are any dirty pages.
+�� 2023/05/27 17:20, linan666@huaweicloud.com д��:
+> From: Li Nan <linan122@huawei.com>
 > 
-> Hi Kuai
+> When add a new disk to raid10, it will traverse conf->mirror from start
+> and find one of the following mirror to add:
+>    1. mirror->rdev is set to WantReplacement and it have no replacement,
+>       set new disk to mirror->replacement.
+>    2. no mirror->rdev, set new disk to mirror->rdev.
 > 
-> Does 0 mean disabling write back? I tried to find the doc that
-> describes the meaning when setting dirty_background_ratio to 0, but I
-> didn't find it.
-> In https://www.kernel.org/doc/html/next/admin-guide/sysctl/vm.html it
-> doesn't describe this. But it says something like this
+> There is a array as below (sda is set to WantReplacement):
 > 
-> Note:
->    dirty_background_bytes is the counterpart of dirty_background_ratio. Only
->    one of them may be specified at a time. When one sysctl is written it is
->    immediately taken into account to evaluate the dirty memory limits and the
->    other appears as 0 when read.
+>      Number   Major   Minor   RaidDevice State
+>         0       8        0        0      active sync set-A   /dev/sda
+>         -       0        0        1      removed
+>         2       8       32        2      active sync set-A   /dev/sdc
+>         3       8       48        3      active sync set-B   /dev/sdd
 > 
-> Maybe you can specify dirty_background_ratio to 1 if you want to
-> trigger write back ASAP.
+> Use 'mdadm --add' to add a new disk to this array, the new disk will
+> become sda's replacement instead of add to removed position, which is
+> confusing for users. Meanwhile, after new disk recovery success, sda
+> will be set to Faulty.
+> 
+> Prioritize adding disk to 'removed' mirror is a better choice. In the
+> above scenario, the behavior is the same as before, except sda will not
+> be deleted. Before other disks are added, continued use sda is more
+> reliable.
+> 
 
-The purpose here is to trigger write back ASAP, I'm not an expert here,
-but based on test result, 0 obviously doesn't mean disable write back.
-
-Set dirty_background_bytes to a value, dirty_background_ratio will be
-set to 0 together, which means dirty_background_ratio is disabled.
-However, change dirty_background_ratio from default value to 0, will end
-up both dirty_background_ratio and dirty_background_bytes to be 0, and
-based on following related code, I think 0 just means write back if
-there are any dirty pages.
-
-domain_dirty_limits:
-  bg_bytes = dirty_background_bytes -> 0
-  bg_ratio = (dirty_background_ratio * PAGE_SIZE) / 100 -> 0
-
-  if (bg_bytes)
-	 bg_thresh = DIV_ROUND_UP(bg_bytes, PAGE_SIZE);
-  else
-	 bg_thresh = (bg_ratio * available_memory) / PAGE_SIZE; -> 0
-
-  dtc->bg_thresh = bg_thresh; -> 0
-
-balance_dirty_pages
-  nr_reclaimable = global_node_page_state(NR_FILE_DIRTY);
-  if (!laptop_mode && nr_reclaimable > gdtc->bg_thresh &&
-       !writeback_in_progress(wb))
-    wb_start_background_writeback(wb); -> writeback ASAP
+I think this change make sense, however, it's better to do this for all
+personality instead of just for raid10.
 
 Thanks,
 Kuai
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>   drivers/md/raid10.c | 35 ++++++++++++++++++++---------------
+>   1 file changed, 20 insertions(+), 15 deletions(-)
 > 
->>>>
->>>> If a lot of bio is not plugged, then it's the same as before; if a lot
->>>> of bio is plugged, noted that before this patchset, these bio will spent
->>>> quite a long time in plug, and hence I think performance should be
->>>> better.
->>>
->>> Hmm, it depends on if it's sequential or not? If it's a big io
->>> request, can it miss the merge opportunity?
->>
->> The bio will still be merged to underlying disks' rq(if it's rq based),
->> underlying disk won't flush plug untill the number of request exceed
->> threshold.
-> 
-> Thanks for this.
-> 
-> Regards
-> Xiao
->>
->> Thanks,
->> Kuai
->>>
->>> Regards
->>> Xiao
->>>
->>>>
->>>> Thanks,
->>>> Kuai
->>>>>
->>>>> Best Regards
->>>>> Xiao
->>>>>
->>>>> On Wed, Apr 26, 2023 at 4:24 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>>>
->>>>>> From: Yu Kuai <yukuai3@huawei.com>
->>>>>>
->>>>>> bio can be added to plug infinitely, and following writeback test can
->>>>>> trigger huge amount of plugged bio:
->>>>>>
->>>>>> Test script:
->>>>>> modprobe brd rd_nr=4 rd_size=10485760
->>>>>> mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean
->>>>>> echo 0 > /proc/sys/vm/dirty_background_ratio
->>>>>> echo 60 > /proc/sys/vm/dirty_ratio
->>>>>> fio -filename=/dev/md0 -ioengine=libaio -rw=write -bs=4k -numjobs=1 -iodepth=128 -name=test
->>>>>>
->>>>>> Test result:
->>>>>> Monitor /sys/block/md0/inflight will found that inflight keep increasing
->>>>>> until fio finish writing, after running for about 2 minutes:
->>>>>>
->>>>>> [root@fedora ~]# cat /sys/block/md0/inflight
->>>>>>           0  4474191
->>>>>>
->>>>>> Fix the problem by limiting the number of plugged bio based on the number
->>>>>> of copies for original bio.
->>>>>>
->>>>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>>>>> ---
->>>>>>     drivers/md/raid1-10.c | 9 ++++++++-
->>>>>>     drivers/md/raid1.c    | 2 +-
->>>>>>     drivers/md/raid10.c   | 2 +-
->>>>>>     3 files changed, 10 insertions(+), 3 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
->>>>>> index 98d678b7df3f..35fb80aa37aa 100644
->>>>>> --- a/drivers/md/raid1-10.c
->>>>>> +++ b/drivers/md/raid1-10.c
->>>>>> @@ -21,6 +21,7 @@
->>>>>>     #define IO_MADE_GOOD ((struct bio *)2)
->>>>>>
->>>>>>     #define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
->>>>>> +#define MAX_PLUG_BIO 32
->>>>>>
->>>>>>     /* for managing resync I/O pages */
->>>>>>     struct resync_pages {
->>>>>> @@ -31,6 +32,7 @@ struct resync_pages {
->>>>>>     struct raid1_plug_cb {
->>>>>>            struct blk_plug_cb      cb;
->>>>>>            struct bio_list         pending;
->>>>>> +       unsigned int            count;
->>>>>>     };
->>>>>>
->>>>>>     static void rbio_pool_free(void *rbio, void *data)
->>>>>> @@ -127,7 +129,7 @@ static inline void md_submit_write(struct bio *bio)
->>>>>>     }
->>>>>>
->>>>>>     static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
->>>>>> -                                     blk_plug_cb_fn unplug)
->>>>>> +                                     blk_plug_cb_fn unplug, int copies)
->>>>>>     {
->>>>>>            struct raid1_plug_cb *plug = NULL;
->>>>>>            struct blk_plug_cb *cb;
->>>>>> @@ -147,6 +149,11 @@ static inline bool md_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
->>>>>>
->>>>>>            plug = container_of(cb, struct raid1_plug_cb, cb);
->>>>>>            bio_list_add(&plug->pending, bio);
->>>>>> +       if (++plug->count / MAX_PLUG_BIO >= copies) {
->>>>>> +               list_del(&cb->list);
->>>>>> +               cb->callback(cb, false);
->>>>>> +       }
->>>>>> +
->>>>>>
->>>>>>            return true;
->>>>>>     }
->>>>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->>>>>> index 639e09cecf01..c6066408a913 100644
->>>>>> --- a/drivers/md/raid1.c
->>>>>> +++ b/drivers/md/raid1.c
->>>>>> @@ -1562,7 +1562,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->>>>>>                                                  r1_bio->sector);
->>>>>>                    /* flush_pending_writes() needs access to the rdev so...*/
->>>>>>                    mbio->bi_bdev = (void *)rdev;
->>>>>> -               if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
->>>>>> +               if (!md_add_bio_to_plug(mddev, mbio, raid1_unplug, disks)) {
->>>>>>                            spin_lock_irqsave(&conf->device_lock, flags);
->>>>>>                            bio_list_add(&conf->pending_bio_list, mbio);
->>>>>>                            spin_unlock_irqrestore(&conf->device_lock, flags);
->>>>>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>>>>> index bd9e655ca408..7135cfaf75db 100644
->>>>>> --- a/drivers/md/raid10.c
->>>>>> +++ b/drivers/md/raid10.c
->>>>>> @@ -1306,7 +1306,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
->>>>>>
->>>>>>            atomic_inc(&r10_bio->remaining);
->>>>>>
->>>>>> -       if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
->>>>>> +       if (!md_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copies)) {
->>>>>>                    spin_lock_irqsave(&conf->device_lock, flags);
->>>>>>                    bio_list_add(&conf->pending_bio_list, mbio);
->>>>>>                    spin_unlock_irqrestore(&conf->device_lock, flags);
->>>>>> --
->>>>>> 2.39.2
->>>>>>
->>>>>
->>>>> .
->>>>>
->>>>
->>>
->>> .
->>>
->>
-> 
-> .
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 4fcfcb350d2b..d90eb830ca1a 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2148,9 +2148,10 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>   {
+>   	struct r10conf *conf = mddev->private;
+>   	int err = -EEXIST;
+> -	int mirror;
+> +	int mirror, repl_slot = -1;
+>   	int first = 0;
+>   	int last = conf->geo.raid_disks - 1;
+> +	struct raid10_info *p;
+>   
+>   	if (mddev->recovery_cp < MaxSector)
+>   		/* only hot-add to in-sync arrays, as recovery is
+> @@ -2173,23 +2174,14 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>   	else
+>   		mirror = first;
+>   	for ( ; mirror <= last ; mirror++) {
+> -		struct raid10_info *p = &conf->mirrors[mirror];
+> +		p = &conf->mirrors[mirror];
+>   		if (p->recovery_disabled == mddev->recovery_disabled)
+>   			continue;
+>   		if (p->rdev) {
+> -			if (!test_bit(WantReplacement, &p->rdev->flags) ||
+> -			    p->replacement != NULL)
+> -				continue;
+> -			clear_bit(In_sync, &rdev->flags);
+> -			set_bit(Replacement, &rdev->flags);
+> -			rdev->raid_disk = mirror;
+> -			err = 0;
+> -			if (mddev->gendisk)
+> -				disk_stack_limits(mddev->gendisk, rdev->bdev,
+> -						  rdev->data_offset << 9);
+> -			conf->fullsync = 1;
+> -			rcu_assign_pointer(p->replacement, rdev);
+> -			break;
+> +			if (test_bit(WantReplacement, &p->rdev->flags) &&
+> +			    p->replacement == NULL && repl_slot < 0)
+> +				repl_slot = mirror;
+> +			continue;
+>   		}
+>   
+>   		if (mddev->gendisk)
+> @@ -2206,6 +2198,19 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+>   		break;
+>   	}
+>   
+> +	if (err && repl_slot >= 0) {
+> +		p = &conf->mirrors[repl_slot];
+> +		clear_bit(In_sync, &rdev->flags);
+> +		set_bit(Replacement, &rdev->flags);
+> +		rdev->raid_disk = repl_slot;
+> +		err = 0;
+> +		if (mddev->gendisk)
+> +			disk_stack_limits(mddev->gendisk, rdev->bdev,
+> +					  rdev->data_offset << 9);
+> +		conf->fullsync = 1;
+> +		rcu_assign_pointer(p->replacement, rdev);
+> +	}
+> +
+>   	print_conf(conf);
+>   	return err;
+>   }
 > 
 
