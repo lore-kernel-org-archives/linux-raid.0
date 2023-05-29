@@ -2,262 +2,178 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4717DC7EE2E
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:55:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8880EC77B7A
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 16:09:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230142AbjE2NzP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 09:55:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36702 "EHLO
+        id S229652AbjE2QJI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 12:09:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230098AbjE2Nyn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:54:43 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB9D2A8
-        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 06:53:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685368429; x=1716904429;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=jNXjofIBQcAf4T/wd1ar/scMxnm+iG97QEJHngNz4oc=;
-  b=hNDUEnb+CegDIDX2KZK6rvjyJd2xt5PUmaAZj9MbSGgl4FBavahtiXXi
-   JHlw32Hw9IGZO8baZaR2jt38/zhgSwuXOKBu7K1+j73v3je6eyeani9jD
-   u+iHm8cNgV3Ycm9rppHC+LHJ8DCps9O+kVlSzmdtV+MaVj6SaB/n2yL8A
-   Jcq5WLwAgeZo5U7yCPJ+COgRWnpZiof/Nh3qiavAxmd16VoLCX9J0i6fE
-   pxbfc6Mc3g1LugZiCELbrJh7YltIQz+Y+NQnys4huhISZlsC/2O5wWWxc
-   dtkyNwCRz3xmGCWcjDXvHn2dwIYUzpmNUPNkshaQJBT7cOKflGl4RFViN
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10725"; a="418193874"
-X-IronPort-AV: E=Sophos;i="6.00,201,1681196400"; 
-   d="scan'208";a="418193874"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 May 2023 06:53:05 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10725"; a="706069275"
-X-IronPort-AV: E=Sophos;i="6.00,201,1681196400"; 
-   d="scan'208";a="706069275"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.105.40])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 May 2023 06:53:04 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org, colyli@suse.de
-Subject: [PATCH 5/6] imsm: return free space after volume for expand
-Date:   Mon, 29 May 2023 15:52:37 +0200
-Message-Id: <20230529135238.18602-6-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20230529135238.18602-1-mariusz.tkaczyk@linux.intel.com>
-References: <20230529135238.18602-1-mariusz.tkaczyk@linux.intel.com>
+        with ESMTP id S229553AbjE2QJF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 12:09:05 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DB5CCD
+        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 09:09:03 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 06B6D21A67;
+        Mon, 29 May 2023 16:09:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1685376542; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=lw0ywLHXt41KIUG7iDSlhj3sb6MqxBygXLIDKtz8QLA=;
+        b=JGVz7IsGxEg+WLpcCHYQ5RUzs2s9EbEYN7Ih3LdIleaDpAxetV8v4MHunQSARAcEVlLjcO
+        BzYs7qbDJZQcB4UHlKf8yUvcKqZLZy/ZpzMwRcA51MWrMYIcjbAdF/R2/5g9IrsPiRJ5L+
+        VoKdw1mNF9qXsaTlOzn758tvKe96fjE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1685376542;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=lw0ywLHXt41KIUG7iDSlhj3sb6MqxBygXLIDKtz8QLA=;
+        b=tPlskpkzOAMmTKDWb2BUveUpbQ24L5lr2javws06tSeEk4zvM9r1wYmxwfacgFPLlTrpf9
+        iojOt4cJ5nXX0tAw==
+Received: from localhost.localdomain (unknown [10.163.16.22])
+        by relay2.suse.de (Postfix) with ESMTP id 078502C141;
+        Mon, 29 May 2023 16:08:59 +0000 (UTC)
+From:   Coly Li <colyli@suse.de>
+To:     linux-raid@vger.kernel.org
+Cc:     Coly Li <colyli@suse.de>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>,
+        Jes Sorensen <jes@trained-monkey.org>
+Subject: [PATCH v3] Incremental: remove obsoleted calls to udisks
+Date:   Tue, 30 May 2023 00:07:54 +0800
+Message-Id: <20230529160754.26849-1-colyli@suse.de>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-merge_extends() routine searches for the biggest free space. For expand,
-it works only in standard cases where the last volume is expanded and
-the free space is determined after the last volume.
-Add volume index to extent struct and use that do determine size after
-super->current_vol during expand.
+Utilility udisks is removed from udev upstream, calling this obsoleted
+command in run_udisks() doesn't make any sense now.
 
-Limitation to last volume is no longer needed. It unblocks scenarios
-where kill-subarray is used to remove first volume and later it is
-recreated (now it is the second volume, even if it is placed before
-existing one).
+This patch removes the calls chain of udisks, which includes routines
+run_udisk(), force_remove(), and 2 locations where force_remove() are
+called. Considering force_remove() is removed with udisks util, it is
+fair to remove Manage_stop() inside force_remove() as well.
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+In the two modifications where calling force_remove() are removed,
+the failure from Manage_subdevs() can be safely ignored, because,
+1) udisks doesn't exist, no need to check the return value to umount
+   the file system by udisks and remove the component disk again.
+2) After the 'I' inremental remove, there is another 'r' hot remove
+   following up. The first incremental remove is a best-try effort.
+
+Therefore in this patch, where force_remove() is removed, the return
+value of calling Manage_subdevs() is not checked too.
+
+Signed-off-by: Coly Li <colyli@suse.de>
+Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Cc: Jes Sorensen <jes@trained-monkey.org>
 ---
- super-intel.c | 71 +++++++++++++++++++++++++++------------------------
- 1 file changed, 37 insertions(+), 34 deletions(-)
+Changelog,
+v3: remove the almost-useless warning message, and make the change
+    more simplified.
+v2: improve based on code review comments from Mariusz.
+v1: initial version.
 
-diff --git a/super-intel.c b/super-intel.c
-index 83bf2bfc..1559c837 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -498,8 +498,15 @@ struct intel_disk {
- 	struct intel_disk *next;
- };
- 
-+/**
-+ * struct extent - reserved space details.
-+ * @start: start offset.
-+ * @size: size of reservation, set to 0 for metadata reservation.
-+ * @vol: index of the volume, meaningful if &size is set.
-+ */
- struct extent {
- 	unsigned long long start, size;
-+	int vol;
- };
- 
- /* definitions of reshape process types */
-@@ -1494,9 +1501,10 @@ static struct extent *get_extents(struct intel_super *super, struct dl *dl,
- 				  int get_minimal_reservation)
- {
- 	/* find a list of used extents on the given physical device */
--	struct extent *rv, *e;
--	int i;
- 	int memberships = count_memberships(dl, super);
-+	struct extent *rv = xcalloc(memberships + 1, sizeof(struct extent));
-+	struct extent *e = rv;
-+	int i;
- 	__u32 reservation;
- 
- 	/* trim the reserved area for spares, so they can join any array
-@@ -1508,9 +1516,6 @@ static struct extent *get_extents(struct intel_super *super, struct dl *dl,
- 	else
- 		reservation = MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
- 
--	rv = xcalloc(sizeof(struct extent), (memberships + 1));
--	e = rv;
--
- 	for (i = 0; i < super->anchor->num_raid_devs; i++) {
- 		struct imsm_dev *dev = get_imsm_dev(super, i);
- 		struct imsm_map *map = get_imsm_map(dev, MAP_0);
-@@ -1518,6 +1523,7 @@ static struct extent *get_extents(struct intel_super *super, struct dl *dl,
- 		if (get_imsm_disk_slot(map, dl->index) >= 0) {
- 			e->start = pba_of_lba0(map);
- 			e->size = per_dev_array_size(map);
-+			e->vol = i;
- 			e++;
- 		}
- 	}
-@@ -6836,24 +6842,26 @@ static unsigned long long find_size(struct extent *e, int *idx, int num_extents)
- 	return end - base_start;
+ Incremental.c | 64 +++++++++++----------------------------------------
+ 1 file changed, 13 insertions(+), 51 deletions(-)
+
+diff --git a/Incremental.c b/Incremental.c
+index f13ce02..05b33c4 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -1628,54 +1628,18 @@ release:
+ 	return rv;
  }
  
--/** merge_extents() - analyze extents and get max common free size.
-+/** merge_extents() - analyze extents and get free size.
-  * @super: Intel metadata, not NULL.
-+ * @expanding: if set, we are expanding &super->current_vol.
-  *
-- * Build a composite disk with all known extents and generate a new maxsize
-- * given the "all disks in an array must share a common start offset"
-- * constraint.
-+ * Build a composite disk with all known extents and generate a size given the
-+ * "all disks in an array must share a common start offset" constraint.
-+ * If a volume is expanded, then return free space after the volume.
-  *
-- * Return: Max free space or 0 on failure.
-+ * Return: Free space or 0 on failure.
-  */
--static unsigned long long merge_extents(struct intel_super *super)
-+static unsigned long long merge_extents(struct intel_super *super, const bool expanding)
- {
- 	struct extent *e;
- 	struct dl *dl;
--	int i, j;
--	int start_extent, sum_extents = 0;
--	unsigned long long pos;
-+	int i, j, pos_vol_idx = -1;
-+	int extent_idx = 0;
-+	int sum_extents = 0;
-+	unsigned long long pos = 0;
- 	unsigned long long start = 0;
--	unsigned long long maxsize;
-+	unsigned long long maxsize = 0;
- 	unsigned long reserve;
- 
- 	for (dl = super->disks; dl; dl = dl->next)
-@@ -6878,26 +6886,26 @@ static unsigned long long merge_extents(struct intel_super *super)
- 	j = 0;
- 	while (i < sum_extents) {
- 		e[j].start = e[i].start;
-+		e[j].vol = e[i].vol;
- 		e[j].size = find_size(e, &i, sum_extents);
- 		j++;
- 		if (e[j-1].size == 0)
- 			break;
- 	}
- 
--	pos = 0;
--	maxsize = 0;
--	start_extent = 0;
- 	i = 0;
- 	do {
--		unsigned long long esize;
-+		unsigned long long esize = e[i].start - pos;
- 
--		esize = e[i].start - pos;
--		if (esize >= maxsize) {
-+		if (expanding ? pos_vol_idx == super->current_vol : esize >= maxsize) {
- 			maxsize = esize;
- 			start = pos;
--			start_extent = i;
-+			extent_idx = i;
- 		}
-+
- 		pos = e[i].start + e[i].size;
-+		pos_vol_idx = e[i].vol;
-+
- 		i++;
- 	} while (e[i-1].size);
- 	free(e);
-@@ -6908,7 +6916,7 @@ static unsigned long long merge_extents(struct intel_super *super)
- 	/* FIXME assumes volume at offset 0 is the first volume in a
- 	 * container
- 	 */
--	if (start_extent > 0)
-+	if (extent_idx > 0)
- 		reserve = IMSM_RESERVED_SECTORS; /* gap between raid regions */
- 	else
- 		reserve = 0;
-@@ -7519,7 +7527,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 		return 0;
- 	}
- 
--	maxsize = merge_extents(super);
-+	maxsize = merge_extents(super, false);
- 
- 	if (mpb->num_raid_devs > 0 && size && size != maxsize)
- 		pr_err("attempting to create a second volume with size less then remaining space.\n");
-@@ -7568,7 +7576,8 @@ static imsm_status_t imsm_get_free_size(struct intel_super *super,
- 					const int raiddisks,
- 					unsigned long long size,
- 					const int chunk,
--					unsigned long long *freesize)
-+					unsigned long long *freesize,
-+					bool expanding)
- {
- 	struct imsm_super *mpb = super->anchor;
- 	struct dl *dl;
-@@ -7605,7 +7614,7 @@ static imsm_status_t imsm_get_free_size(struct intel_super *super,
- 		cnt++;
- 	}
- 
--	maxsize = merge_extents(super);
-+	maxsize = merge_extents(super, expanding);
- 	if (maxsize < minsize)  {
- 		pr_err("imsm: Free space is %llu but must be equal or larger than %llu.\n",
- 		       maxsize, minsize);
-@@ -7663,7 +7672,7 @@ static imsm_status_t autolayout_imsm(struct intel_super *super,
- 	int vol_cnt = super->anchor->num_raid_devs;
- 	imsm_status_t rv;
- 
--	rv = imsm_get_free_size(super, raiddisks, size, chunk, freesize);
-+	rv = imsm_get_free_size(super, raiddisks, size, chunk, freesize, false);
- 	if (rv != IMSM_STATUS_OK)
- 		return IMSM_STATUS_ERROR;
- 
-@@ -11624,19 +11633,13 @@ static imsm_status_t imsm_analyze_expand(struct supertype *st,
- 		goto success;
- 	}
- 
--	if (super->current_vol + 1 != super->anchor->num_raid_devs) {
--		pr_err("imsm: The last volume in container can be expanded only (%i/%s).\n",
--		       super->current_vol, st->devnm);
--		return IMSM_STATUS_ERROR;
+-static void run_udisks(char *arg1, char *arg2)
+-{
+-	int pid = fork();
+-	int status;
+-	if (pid == 0) {
+-		manage_fork_fds(1);
+-		execl("/usr/bin/udisks", "udisks", arg1, arg2, NULL);
+-		execl("/bin/udisks", "udisks", arg1, arg2, NULL);
+-		exit(1);
 -	}
+-	while (pid > 0 && wait(&status) != pid)
+-		;
+-}
 -
- 	if (data_disks == 0) {
- 		pr_err("imsm: Cannot retrieve data disks.\n");
- 		return IMSM_STATUS_ERROR;
- 	}
- 	current_size = array->custom_array_size / data_disks;
+-static int force_remove(char *devnm, int fd, struct mdinfo *mdi, int verbose)
+-{
+-	int rv;
+-	int devid = devnm2devid(devnm);
+-
+-	run_udisks("--unmount", map_dev(major(devid), minor(devid), 0));
+-	rv = Manage_stop(devnm, fd, verbose, 1);
+-	if (rv) {
+-		/* At least we can try to trigger a 'remove' */
+-		sysfs_uevent(mdi, "remove");
+-		if (verbose)
+-			pr_err("Fail to stop %s too.\n", devnm);
+-	}
+-	return rv;
+-}
+-
+ static void remove_from_member_array(struct mdstat_ent *memb,
+ 				    struct mddev_dev *devlist, int verbose)
+ {
+-	int rv;
+-	struct mdinfo mmdi;
+ 	int subfd = open_dev(memb->devnm);
  
--	rv = imsm_get_free_size(super, dev->vol.map->num_members, 0, chunk_kib, &free_size);
-+	rv = imsm_get_free_size(super, dev->vol.map->num_members, 0, chunk_kib, &free_size, true);
- 	if (rv != IMSM_STATUS_OK) {
- 		pr_err("imsm: Cannot find free space for expand.\n");
- 		return IMSM_STATUS_ERROR;
+ 	if (subfd >= 0) {
+-		rv = Manage_subdevs(memb->devnm, subfd, devlist, verbose,
+-				    0, UOPT_UNDEFINED, 0);
+-		if (rv & 2) {
+-			if (sysfs_init(&mmdi, -1, memb->devnm))
+-				pr_err("unable to initialize sysfs for: %s\n",
+-				       memb->devnm);
+-			else
+-				force_remove(memb->devnm, subfd, &mmdi,
+-					     verbose);
+-		}
++		/*
++		 * Ignore the return value because it's necessary
++		 * to handle failure condition here.
++		 */
++		Manage_subdevs(memb->devnm, subfd, devlist, verbose,
++			       0, UOPT_UNDEFINED, 0);
+ 		close(subfd);
+ 	}
+ }
+@@ -1758,21 +1722,19 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
+ 		}
+ 		free_mdstat(mdstat);
+ 	} else {
+-		rv |= Manage_subdevs(ent->devnm, mdfd, &devlist,
+-				    verbose, 0, UOPT_UNDEFINED, 0);
+-		if (rv & 2) {
+-		/* Failed due to EBUSY, try to stop the array.
+-		 * Give udisks a chance to unmount it first.
++		/*
++		 * This 'I' incremental remove is a try-best effort,
++		 * the failure condition can be safely ignored
++		 * because of the following up 'r' remove.
+ 		 */
+-			rv = force_remove(ent->devnm, mdfd, &mdi, verbose);
+-			goto end;
+-		}
++		Manage_subdevs(ent->devnm, mdfd, &devlist,
++			       verbose, 0, UOPT_UNDEFINED, 0);
+ 	}
+ 
+ 	devlist.disposition = 'r';
+ 	rv = Manage_subdevs(ent->devnm, mdfd, &devlist,
+ 			    verbose, 0, UOPT_UNDEFINED, 0);
+-end:
++
+ 	close(mdfd);
+ 	free_mdstat(ent);
+ 	return rv;
 -- 
-2.26.2
+2.35.3
 
