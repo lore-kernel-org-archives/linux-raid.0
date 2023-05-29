@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7929AC77B7E
-	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:32:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24CD7C7EE2E
+	for <linux-raid@archiver.kernel.org>; Mon, 29 May 2023 13:32:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229450AbjE2NcV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 09:32:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53190 "EHLO
+        id S229841AbjE2NcW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 09:32:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229836AbjE2NcM (ORCPT
+        with ESMTP id S229824AbjE2NcM (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 09:32:12 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38C05C7
-        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 06:32:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 576BED9
+        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 06:32:10 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVGfG1j1Pz4f3tNq
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVGfG3Yhkz4f3pr1
         for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 21:32:06 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgBH_rFSqXRkMLjoKQ--.57183S8;
+        by APP4 (Coremail) with SMTP id gCh0CgBH_rFSqXRkMLjoKQ--.57183S9;
         Mon, 29 May 2023 21:32:07 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com,
         jes@trained-monkey.org, pmenzel@molgen.mpg.de, logang@deltatee.com,
         song@kernel.org, guoqing.jiang@linux.dev
 Cc:     yukuai3@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com
-Subject: [PATCH v2 4/8] tests: add a regression test for raid456 deadlock
-Date:   Mon, 29 May 2023 21:28:22 +0800
-Message-Id: <20230529132826.2125392-5-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 5/8] tests: add a regression test that raid456 can't assemble
+Date:   Mon, 29 May 2023 21:28:23 +0800
+Message-Id: <20230529132826.2125392-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230529132826.2125392-1-yukuai1@huaweicloud.com>
 References: <20230529132826.2125392-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH_rFSqXRkMLjoKQ--.57183S8
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zr1kXFyDGw45Xr17JFyftFb_yoW8ur1rpa
-        n8uF1Ykr17Xw13uwsxG34UWa4F9w48Jr47J347Ww4avFWUZryIq3Z7Kr1YvF97trWftayk
-        uwn8XFWfKryjya7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgBH_rFSqXRkMLjoKQ--.57183S9
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ww13KFyxKFyUWFyDCFW3Jrb_yoW8Xr48pa
+        nxurnIkr4xAFs2yFZIg3WrWa4rWaykJrW5C3sxJr1Ikr47uryIv3yxKF15tryxXr4I9ay5
+        Z34kKa4fGw40k3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBSb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
         6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
         Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
@@ -58,69 +58,34 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The deadlock is described in [1], as the last patch described, it's
-fixed first by [2], however this fix will be reverted and the deadlock
-is supposed to be fixed by [3].
+If recovery is interrupted and reshape is started, then this array can't
+assemble anymore. The problem is supposed to be fixed by [1].
 
-[1] https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t
-[2] https://lore.kernel.org/linux-raid/20220621031129.24778-1-guoqing.jiang@linux.dev/
-[3] https://lore.kernel.org/linux-raid/20230322064122.2384589-5-yukuai1@huaweicloud.com/
+[1] https://lore.kernel.org/linux-raid/20230529031045.1760883-1-yukuai1@huaweicloud.com/
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- tests/24raid456deadlock | 58 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 58 insertions(+)
- create mode 100644 tests/24raid456deadlock
+ tests/25raid456-reshape-while-recovery | 32 ++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+ create mode 100644 tests/25raid456-reshape-while-recovery
 
-diff --git a/tests/24raid456deadlock b/tests/24raid456deadlock
+diff --git a/tests/25raid456-reshape-while-recovery b/tests/25raid456-reshape-while-recovery
 new file mode 100644
-index 00000000..80e6e97e
+index 00000000..b9f871f2
 --- /dev/null
-+++ b/tests/24raid456deadlock
-@@ -0,0 +1,58 @@
-+devs="$dev0 $dev1 $dev2 $dev3 $dev4 $dev5"
-+runtime=120
-+pid=""
-+old=`cat /proc/sys/vm/dirty_background_ratio`
-+
-+test_write_action()
-+{
-+	while true; do
-+		echo check > /sys/block/md0/md/sync_action &> /dev/null
-+		sleep 0.1
-+		echo idle > /sys/block/md0/md/sync_action &> /dev/null
-+	done
-+}
-+
-+test_write_back()
-+{
-+	fio -filename=$md0 -bs=4k -rw=write -numjobs=1 -name=test \
-+		-time_based -runtime=$runtime &> /dev/null
-+}
++++ b/tests/25raid456-reshape-while-recovery
+@@ -0,0 +1,32 @@
++devs="$dev0 $dev1 $dev2"
 +
 +set_up_test()
 +{
-+	fio -h &> /dev/null || die "fio not found"
-+
-+	# create a simple raid6
-+	mdadm -Cv -R -n 6 -l6 $md0 $devs --assume-clean || die "create raid6 failed"
-+
-+	# trigger dirty pages write back
-+	echo 0 > /proc/sys/vm/dirty_background_ratio
++	mdadm -Cv -R -n 3 -l5 $md0 $devs --assume-clean --size=50M || die "create array failed"
++	mdadm -a $md0 $dev3 $dev4 || die "failed to bind new disk to array"
++	echo 1000 > /sys/block/md0/md/sync_speed_max
 +}
 +
 +clean_up_test()
 +{
-+	echo $old > /proc/sys/vm/dirty_background_ratio
-+
-+	pkill -9 fio
-+	kill -9 $pid
-+
-+	sleep 1
-+
-+	if ps $pid | tail -1 | awk '{print $3}' | grep D; then
-+		die "thread that is writing sysfs is stuck in D state, deadlock is triggered"
-+	fi
 +	mdadm -S $md0
 +}
 +
@@ -128,12 +93,18 @@ index 00000000..80e6e97e
 +
 +set_up_test || die "set up test failed"
 +
-+test_write_back &
++# set up replacement
++echo want_replacement > /sys/block/md0/md/rd0/state
++sleep 1
 +
-+test_write_action &
-+pid="$!"
++# trigger reshape
++echo frozen > /sys/block/md0/md/sync_action
++mdadm --grow -l 6 $md0
++sleep 1
 +
-+sleep $runtime
++# reassemeble array
++mdadm -S $md0 || die "can't stop array"
++mdadm --assemble $md0 $devs $dev3 $dev4 || die "can't assemble array"
 +
 +exit 0
 -- 
