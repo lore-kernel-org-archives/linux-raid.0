@@ -2,95 +2,101 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80AA7C77B7A
-	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 22:20:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9FD2C77B7A
+	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 23:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232184AbjE3WUh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 May 2023 18:20:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45542 "EHLO
+        id S233536AbjE3XAz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 May 2023 19:00:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231737AbjE3WUg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 18:20:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 398A3EC;
-        Tue, 30 May 2023 15:20:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C980F62B56;
-        Tue, 30 May 2023 22:20:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EBDEC433D2;
-        Tue, 30 May 2023 22:20:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685485234;
-        bh=2trLB9mJazIsJ+HTMKPp7ovHRwQNo7xd+PEwZQ+UIYg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=CRuzqcxd0C89vvW00KNplKdfkD6pE4TpFVIDARI7u3U1T6vag5MxGJ9KOuFd5RZmf
-         2bzg9AQlYv95xo1Ninx1yhUOJJJWHu7WD4sQgU8cmWgUIniYDSv9JsyO3H0WGAd4Nu
-         DK1WDpVTahPCPrPMM3F6MvLM5E7vi6brvXKrL7+Y5NBQSAXSVFtjwNgi+aqU+wUfMm
-         I2TouBaq4SfBv0yEuwZN/WD/000Yh+iKH4LMgQAd3PJ3b+cSl1c2s09JE86BfAvuVB
-         BQXCUjnG9G1Mwub7DMYRdgFmVprbyV9wvljjaUzNZpQVzHvBnWBD91f6xkjacw2UiG
-         U/1DuW9qH/SWA==
-Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-2af98eb6ef0so55724711fa.3;
-        Tue, 30 May 2023 15:20:34 -0700 (PDT)
-X-Gm-Message-State: AC+VfDx4fPvz715TcgXTZkiw/a5Uf+aDXbVCqHI9JtyieZd49ePFYou/
-        8jDBFIyuhGmImQheu4MMBAYwR2vgxBCjcRYhQUg=
-X-Google-Smtp-Source: ACHHUZ6QGvDHbOS41ufK5Rc4GB6v/aWIq+j79Hrjd3nx0m0U9ux7Ke4MEuKP6C0OEMhJP8D7OcDtJhCnfLgqsXA82zI=
-X-Received: by 2002:a2e:350c:0:b0:2ab:6e23:ef71 with SMTP id
- z12-20020a2e350c000000b002ab6e23ef71mr1572061ljz.37.1685485232261; Tue, 30
- May 2023 15:20:32 -0700 (PDT)
+        with ESMTP id S231545AbjE3XAy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 19:00:54 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AB05E8
+        for <linux-raid@vger.kernel.org>; Tue, 30 May 2023 16:00:52 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1b024e29657so27772295ad.3
+        for <linux-raid@vger.kernel.org>; Tue, 30 May 2023 16:00:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1685487651; x=1688079651;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=rJiLW7AmmQnpv9DEnjN9p5/4mIGo+5HG0C4i82Hita4=;
+        b=dxiJXImoRvtMCanp9c/ceTZ8qTmSPzD9b1rkVpo2uNvegmRaKNTVAVmuuWbCmnqbZk
+         LO6bFjayl63AyoqRb11VMuyfiv45TChQjVsuP5zqr3dkHUYMwJRPzRkIqo4njsP3bcSV
+         LjrzWPAs6kMkf5eHTc1VLqHWDu3hatO7OD3Jo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685487651; x=1688079651;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rJiLW7AmmQnpv9DEnjN9p5/4mIGo+5HG0C4i82Hita4=;
+        b=OkK8dVYWw4BbrJwrz+h3OX+bn9z26pO1/pLfIC7H/4+7HdntnFw+8nlWQfZJ6uks7s
+         1CZM7TndzYSZMJPvSK8oyOe+KVfJV9mxn7R+BjhZKzteypPBH7PMDAqiRT8m6Yd/SDcT
+         Iv5WJ0a8eblXH4qbCK+kquPRnDnMdY7xT8Vye0AhZkQCwpo0xxsiWuY3XFXKkaBzmlWt
+         GKfYCRQIPkPocc55R9HGwRUrToVn3/GpBimQmHhmiF+lAGeuEkFHJXpKPg7VtQvabSDw
+         rPRBLdrLG1WmimZGooP/70gHVrv/nygWYt7Mv+B2JElP9hoDs7ZtqxTt8IdT00wNOfHv
+         5yHg==
+X-Gm-Message-State: AC+VfDydr3fRZw2b98ucmy2v9qhjReyZ78qQvHQPcd6bJm+opkKsFj6H
+        giSqzGPzNCBGalrX/+Li/UbdIw==
+X-Google-Smtp-Source: ACHHUZ67LwwGjf/CO2NXgUokK7LdElpmLqHmamM5N0opD0v/5UjtIAhbIW+nDOEd3A//mwLET8bStQ==
+X-Received: by 2002:a17:902:e809:b0:1a5:22a:165c with SMTP id u9-20020a170902e80900b001a5022a165cmr3877787plg.0.1685487651583;
+        Tue, 30 May 2023 16:00:51 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id ik24-20020a170902ab1800b001b0142908f7sm8886130plb.291.2023.05.30.16.00.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 May 2023 16:00:50 -0700 (PDT)
+Date:   Tue, 30 May 2023 16:00:50 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Song Liu <song@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH v2] md/raid5: Convert stripe_head's "dev" to flexible
+ array member
+Message-ID: <202305301600.EEF0BAAD@keescook>
+References: <20230522212114.gonna.589-kees@kernel.org>
+ <CAPhsuW5ibONdyyJq0zVCEHuM38GUocn8A1abi4mTa9gUHH1hHQ@mail.gmail.com>
 MIME-Version: 1.0
-References: <20230527101851.3266500-1-linan666@huaweicloud.com>
- <20230527101851.3266500-2-linan666@huaweicloud.com> <216ed892-11a9-2d8b-c6d5-a0c7dabe2c9d@huaweicloud.com>
-In-Reply-To: <216ed892-11a9-2d8b-c6d5-a0c7dabe2c9d@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 30 May 2023 15:20:20 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW56xuywG80HsS_AQLh9pUUTAztM9wkN=c6Q2ukSqTtNbw@mail.gmail.com>
-Message-ID: <CAPhsuW56xuywG80HsS_AQLh9pUUTAztM9wkN=c6Q2ukSqTtNbw@mail.gmail.com>
-Subject: Re: [PATCH] md/raid10: clean up md_add_new_disk()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     linan666@huaweicloud.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linan122@huawei.com,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAPhsuW5ibONdyyJq0zVCEHuM38GUocn8A1abi4mTa9gUHH1hHQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sun, May 28, 2023 at 12:49=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> =
-wrote:
->
-> =E5=9C=A8 2023/05/27 18:18, linan666@huaweicloud.com =E5=86=99=E9=81=93:
-> > From: Li Nan <linan122@huawei.com>
+On Tue, May 23, 2023 at 10:43:52AM -0700, Song Liu wrote:
+> On Mon, May 22, 2023 at 2:21 PM Kees Cook <keescook@chromium.org> wrote:
 > >
-> > Commit 1a855a060665 ("md: fix bug with re-adding of partially recovered
-> > device.") only add device which is set to In_sync. But it let devices
-> > without metadata cannot be added when they should be.
+> > Replace old-style 1-element array of "dev" in struct stripe_head with
+> > modern C99 flexible array. In the future, we can additionally annotate
+> > it with the run-time size, found in the "disks" member.
 > >
-> > Commit bf572541ab44 ("md: fix regression with re-adding devices to arra=
-ys
-> > with no metadata") fix the above issue, it set device without metadata =
-to
-> > In_sync when add new disk.
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: linux-raid@vger.kernel.org
+> > Signed-off-by: Kees Cook <keescook@chromium.org>
+> > ---
+> > It looks like this memory calculation:
 > >
-> > However, after commit f466722ca614 ("md: Change handling of save_raid_d=
-isk
-> > and metadata update during recovery.") deletes changes of the first pat=
-ch,
-> > setting In_sync for devcie without metadata is meanless because the fla=
-g
-> > will be cleared soon and will not be used during this period. Clean it =
-up.
->
-> LGME, feel free to add:
->
-> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+> >         memory = conf->min_nr_stripes * (sizeof(struct stripe_head) +
+> >                  max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
 > >
-> > Signed-off-by: Li Nan <linan122@huawei.com>
+> > ... was already buggy (i.e. it included the single "dev" bytes in the
+> > result). However, I'm not entirely sure if that is the right analysis,
+> > since "dev" is not related to struct bio nor PAGE_SIZE?
+> >
+> > v1: https://lore.kernel.org/all/20230517233313.never.130-kees@kernel.org/
+> > v2: use new struct_size_t() helper from
+> >     https://lore.kernel.org/lkml/20230522211810.never.421-kees@kernel.org/
+> 
+> LTGM. Thanks!
 
-Applied to md-next.
+Thanks!
 
-Thanks,
-Song
+> I will hold this for a while until struct_size_t() merged.
+
+Since my tree will introduce struct_size_t(), I will just carry it
+there.
+
+-- 
+Kees Cook
