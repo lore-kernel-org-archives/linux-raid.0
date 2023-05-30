@@ -2,101 +2,147 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A05EC77B7A
-	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 06:17:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0827EC77B7A
+	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 11:00:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229891AbjE3GR1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 May 2023 02:17:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54866 "EHLO
+        id S231744AbjE3LAL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 May 2023 07:00:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229491AbjE3GR0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 02:17:26 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FD84BF
-        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 23:17:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685427445; x=1716963445;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=1YVHLzFolUZQ+Oe+H1XD6s8g5+vJh17dZXlf9wuJhFo=;
-  b=Py/9VDBInuh6RqDxCX9IyF8lBXN5a1SiSr9psagyceOxgNUnKAlWxZih
-   CoWJBTvhcs10rqVn9Y3z2M3SGuUtm6lRGi00uULJqI2WikQU2VdBx0e5y
-   xvvSk5DJQA9nXZKg4r3xoeEqxGrporSUX5c9s7naQ2qRYTjn2Bhhw9Ld6
-   aeOHdnjmykJ2c3IU0KYZe3dPrhwu3b+guTEoG6PignY/Da8a9Kk/a4qvW
-   P128Z1qGCxJNWDZv8VgRQTFMqcpfNmDbqYeHajOc62ayg7fqLL7MggrF5
-   ShQFH6O5T0pRfRkrqO6Yih61xeNNjMblQAhJv5NNo9CtcX/nA1YqJpM+o
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10725"; a="420585827"
-X-IronPort-AV: E=Sophos;i="6.00,203,1681196400"; 
-   d="scan'208";a="420585827"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 May 2023 23:17:24 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10725"; a="818652142"
-X-IronPort-AV: E=Sophos;i="6.00,203,1681196400"; 
-   d="scan'208";a="818652142"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.155.14])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 May 2023 23:17:23 -0700
-Date:   Tue, 30 May 2023 08:17:18 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Coly Li <colyli@suse.de>
+        with ESMTP id S231778AbjE3LAG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 07:00:06 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 676C6E5
+        for <linux-raid@vger.kernel.org>; Tue, 30 May 2023 04:00:02 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 165FA21A18;
+        Tue, 30 May 2023 10:59:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1685444390; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DLjm4vXmkf72B/B3/1r/iDlYetTRhM9Sr7WAZg6c20Y=;
+        b=dphKTDN5RuvcPOhTzSQTBA1T7kipYRyHUdz7j+ZlNRs8/AtUBezjQhyPrPbvhVlSlg72zx
+        xt8ZcuHUm3Fw0h5bzjSYIektb2CHmWZB4QkyFwc1YY6DisFTS8MFUfHBZQ2SHtiZr9wwsk
+        x203IDEc4scW5ebza4qxGBbz7jaqt0U=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1685444390;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DLjm4vXmkf72B/B3/1r/iDlYetTRhM9Sr7WAZg6c20Y=;
+        b=m5hc1LhoV3I1MVRzqu8KmicT56hqtZmLmaxlIf93vVR1uieK3EWv2g9yTkm6jS1lS+6dgv
+        PUGiuRJ8h6zvsSBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D764813478;
+        Tue, 30 May 2023 10:59:48 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id mDGPKCTXdWSCagAAMHmgww
+        (envelope-from <colyli@suse.de>); Tue, 30 May 2023 10:59:48 +0000
+Date:   Tue, 30 May 2023 18:59:46 +0800
+From:   Coly Li <colyli@suse.de>
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 Cc:     linux-raid@vger.kernel.org,
         Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>,
         Jes Sorensen <jes@trained-monkey.org>
 Subject: Re: [PATCH v3] Incremental: remove obsoleted calls to udisks
-Message-ID: <20230530081718.00003cb7@linux.intel.com>
-In-Reply-To: <20230529160754.26849-1-colyli@suse.de>
+Message-ID: <c6jr4jmfkesjfxon7wsaxcw2qj52dvgrtjsxuuddoxhpftaly4@3vqllxix4otq>
 References: <20230529160754.26849-1-colyli@suse.de>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+ <20230530081718.00003cb7@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20230530081718.00003cb7@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 30 May 2023 00:07:54 +0800
-Coly Li <colyli@suse.de> wrote:
-
-> Utilility udisks is removed from udev upstream, calling this obsoleted
-> command in run_udisks() doesn't make any sense now.
+On Tue, May 30, 2023 at 08:17:18AM +0200, Mariusz Tkaczyk wrote:
+> On Tue, 30 May 2023 00:07:54 +0800
+> Coly Li <colyli@suse.de> wrote:
 > 
-> This patch removes the calls chain of udisks, which includes routines
-> run_udisk(), force_remove(), and 2 locations where force_remove() are
-> called. Considering force_remove() is removed with udisks util, it is
-> fair to remove Manage_stop() inside force_remove() as well.
+> > Utilility udisks is removed from udev upstream, calling this obsoleted
+> > command in run_udisks() doesn't make any sense now.
+> > 
+> > This patch removes the calls chain of udisks, which includes routines
+> > run_udisk(), force_remove(), and 2 locations where force_remove() are
+> > called. Considering force_remove() is removed with udisks util, it is
+> > fair to remove Manage_stop() inside force_remove() as well.
+> > 
+> > In the two modifications where calling force_remove() are removed,
+> > the failure from Manage_subdevs() can be safely ignored, because,
+> > 1) udisks doesn't exist, no need to check the return value to umount
+> >    the file system by udisks and remove the component disk again.
+> > 2) After the 'I' inremental remove, there is another 'r' hot remove
+> >    following up. The first incremental remove is a best-try effort.
+> Hi Coly,
 > 
-> In the two modifications where calling force_remove() are removed,
-> the failure from Manage_subdevs() can be safely ignored, because,
-> 1) udisks doesn't exist, no need to check the return value to umount
->    the file system by udisks and remove the component disk again.
-> 2) After the 'I' inremental remove, there is another 'r' hot remove
->    following up. The first incremental remove is a best-try effort.
-Hi Coly,
-
-I'm not sure what you meant here. I know that on "remove" event udev will call
-mdadm -If <devname>. And that is all I'm familiar with. I don't see another
-branch executed in code to handle "remove" event, no second attempt for clean
-up is made. Could you clarify? How is it executed?
-Perhaps, I understand it incorrectly as second action that is always executed
-automatically. I know that there is an action "--remove" which can be manually
-triggered. Is that what you meant?
-
-> Therefore in this patch, where force_remove() is removed, the return
-> value of calling Manage_subdevs() is not checked too.
+> I'm not sure what you meant here. I know that on "remove" event udev will call
+> mdadm -If <devname>. And that is all I'm familiar with. I don't see another
+> branch executed in code to handle "remove" event, no second attempt for clean
+> up is made. Could you clarify? How is it executed?
+> Perhaps, I understand it incorrectly as second action that is always executed
+> automatically. I know that there is an action "--remove" which can be manually
+> triggered. Is that what you meant?
 > 
-> Signed-off-by: Coly Li <colyli@suse.de>
-> Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-> Cc: Jes Sorensen <jes@trained-monkey.org>
-> ---
-> Changelog,
-> v3: remove the almost-useless warning message, and make the change
->     more simplified.
-> v2: improve based on code review comments from Mariusz.
-> v1: initial version.
 
-For the code:
-Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+What I mentioned was only related to the source code.
 
-Mariusz
+Before force_remove() is removed, it was called on 2 locations, one was from
+remove_from_member_array(), another was from IncrementalRemove().
+
+But remove_from_member_array() was called from IncrementalRemove() too. The
+code flow is,
+
+	if (container) {
+		call remove_from_member_array()
+	} else {
+		call Manage_subdevs() with 'I' operation.
+		if (return 2)
+			call force_remove()
+	}
+		
+	call Manage_subdevs() with 'r' operation
+
+From the above bogus code, the first call to Manage_subdevs() was an Incremental
+remove, and the second call to Manage_subdevs() was a hot remove. No matter it
+succeed or failed on the first call, the second call for hot remove will always
+happen.
+
+Therefore, after removing force_remove(), it is unnecessary to check the return
+value of the first call to IncrementalRemove(). Because always the second call
+to Manage_subdevs() with 'r' operation will follow up.
+
+This was what I meant, it was only related to the code I modified.
+
+
+e > Therefore in this patch, where force_remove() is removed, the return
+> > value of calling Manage_subdevs() is not checked too.
+> > 
+> > Signed-off-by: Coly Li <colyli@suse.de>
+> > Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+> > Cc: Jes Sorensen <jes@trained-monkey.org>
+> > ---
+> > Changelog,
+> > v3: remove the almost-useless warning message, and make the change
+> >     more simplified.
+> > v2: improve based on code review comments from Mariusz.
+> > v1: initial version.
+> 
+> For the code:
+> Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+
+Thanks.
+
+BTW, do you have any suggestion for the commit log? It seems current commit
+message is not that clear, and I want to listen to your input :-)
+
+-- 
+Coly Li
