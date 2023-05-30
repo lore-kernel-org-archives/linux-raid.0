@@ -2,202 +2,75 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15952C77B7E
-	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 01:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 525FBC77B7A
+	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 01:37:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229847AbjE3BUF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 29 May 2023 21:20:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57314 "EHLO
+        id S229696AbjE3BhE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 29 May 2023 21:37:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229569AbjE3BUD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 21:20:03 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 350A2E0;
-        Mon, 29 May 2023 18:19:56 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QVZLv5PqJz4f3kkd;
-        Tue, 30 May 2023 09:19:51 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHcLM2T3Vk3lMNKg--.7603S3;
-        Tue, 30 May 2023 09:19:51 +0800 (CST)
-Subject: Re: [PATCH -next v2 7/7] md/raid1-10: limit the number of plugged bio
-To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, akpm@osdl.org, neilb@suse.de,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230426082031.1299149-1-yukuai1@huaweicloud.com>
- <20230426082031.1299149-8-yukuai1@huaweicloud.com>
- <CALTww2-yTsHXNFgkAVu0v++HHahZCnvXEUv2qJqbvcGUhKanDw@mail.gmail.com>
- <5e9852fe-0d47-92fc-f6a9-16d028d09ad4@huaweicloud.com>
- <CALTww28ur_S0UpGQqq0TubSgkxGG7dicc1ZKrJ3Pno4CpSOWUw@mail.gmail.com>
- <25279079-2600-b0d3-5279-caaf6f664d71@huaweicloud.com>
- <CALTww2-PjJ74J61jYz032t8K5tszN1tnhEbcv5h+MJjkKuVq2A@mail.gmail.com>
- <c56e7e9c-90ca-29ca-2003-1a9a88d75fa6@huaweicloud.com>
- <CALTww2_JAmqU19Stb1UBVVL-w=ecRFt8WNZo+TmMJVD+O2RJqw@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <37fc3178-c812-ee5e-bd90-34f8e0816a3d@huaweicloud.com>
-Date:   Tue, 30 May 2023 09:19:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229597AbjE3BhD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 29 May 2023 21:37:03 -0400
+X-Greylist: delayed 2586 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 29 May 2023 18:37:00 PDT
+Received: from out-11.mta0.migadu.com (out-11.mta0.migadu.com [IPv6:2001:41d0:1004:224b::b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34CA9D9
+        for <linux-raid@vger.kernel.org>; Mon, 29 May 2023 18:37:00 -0700 (PDT)
+Message-ID: <73b79a2d-95fe-dac0-9afc-8937d723ffdf@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1685410618;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5K9sqJCgffsrxOSbEhjl0+0oxeGnqYIdW8208AD+zCU=;
+        b=bxL7skhHMqKdnocY1hlajGhMnSbAqd3YOPwXo7szMo/CRTY522RCV3vsrP2SpmTH0cV+bc
+        8wl6RGSKftarWU1azMY8IiO+PE874TPocTwGOwuKKIbWv1orjat0Pq8K3sw33gVNj/uN2L
+        hoUDPXjOjjeGc4PQP4rdDgz1hq/N3S0=
+Date:   Tue, 30 May 2023 09:36:55 +0800
 MIME-Version: 1.0
-In-Reply-To: <CALTww2_JAmqU19Stb1UBVVL-w=ecRFt8WNZo+TmMJVD+O2RJqw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHcLM2T3Vk3lMNKg--.7603S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuFW5uryxAryUuF4fJrWUArb_yoW7XF17pa
-        9xG3WYkr1DJw12yrsIyry0v34Syw4xXr45Wry5Cry2y390gF12gFyIgrWF93ZF9r17Ww4j
-        vr4qq3s7Zrn0kF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCT
-        nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Subject: Re: The read data is wrong from raid5 when recovery happens
+Content-Language: en-US
+To:     Xiao Ni <xni@redhat.com>
+Cc:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
+        Song Liu <song@kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>
+References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
+ <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev>
+ <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
+ <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev>
+ <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
+ <f4bff813-343f-6601-b2f8-c1c54fa1e5a1@linux.dev>
+ <CALTww29ww7sOwLFR=waX4b2bik=ZAiCW7mMEtg8jsoAHqxvHcQ@mail.gmail.com>
+ <71c45b69-770a-0c28-3bd2-a4bd1a18bc2d@linux.dev>
+ <CALTww2_vmryrM1V+Cr8FKj3TRv0qEGjYNzv6nStj=LnM8QKSuw@mail.gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+In-Reply-To: <CALTww2_vmryrM1V+Cr8FKj3TRv0qEGjYNzv6nStj=LnM8QKSuw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
 
-在 2023/05/30 8:58, Xiao Ni 写道:
-> On Mon, May 29, 2023 at 4:50 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2023/05/29 15:57, Xiao Ni 写道:
->>> On Mon, May 29, 2023 at 11:18 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>
->>>> Hi,
->>>>
->>>> 在 2023/05/29 11:10, Xiao Ni 写道:
->>>>> On Mon, May 29, 2023 at 10:20 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>>>
->>>>>> Hi,
->>>>>>
->>>>>> 在 2023/05/29 10:08, Xiao Ni 写道:
->>>>>>> Hi Kuai
->>>>>>>
->>>>>>> There is a limitation of the memory in your test. But for most
->>>>>>> situations, customers should not set this. Can this change introduce a
->>>>>>> performance regression against other situations?
->>>>>>
->>>>>> Noted that this limitation is just to triggered writeback as soon as
->>>>>> possible in the test, and it's 100% sure real situations can trigger
->>>>>> dirty pages write back asynchronously and continue to produce new dirty
->>>>>> pages.
->>>>>
->>>>> Hi
->>>>>
->>>>> I'm confused here. If we want to trigger write back quickly, it needs
->>>>> to set these two values with a smaller number, rather than 0 and 60.
->>>>> Right?
->>>>
->>>> 60 is not required, I'll remove this setting.
->>>>
->>>> 0 just means write back if there are any dirty pages.
->>>
->>> Hi Kuai
->>>
->>> Does 0 mean disabling write back? I tried to find the doc that
->>> describes the meaning when setting dirty_background_ratio to 0, but I
->>> didn't find it.
->>> In https://www.kernel.org/doc/html/next/admin-guide/sysctl/vm.html it
->>> doesn't describe this. But it says something like this
->>>
->>> Note:
->>>     dirty_background_bytes is the counterpart of dirty_background_ratio. Only
->>>     one of them may be specified at a time. When one sysctl is written it is
->>>     immediately taken into account to evaluate the dirty memory limits and the
->>>     other appears as 0 when read.
->>>
->>> Maybe you can specify dirty_background_ratio to 1 if you want to
->>> trigger write back ASAP.
->>
->> The purpose here is to trigger write back ASAP, I'm not an expert here,
->> but based on test result, 0 obviously doesn't mean disable write back.
->>
->> Set dirty_background_bytes to a value, dirty_background_ratio will be
->> set to 0 together, which means dirty_background_ratio is disabled.
->> However, change dirty_background_ratio from default value to 0, will end
->> up both dirty_background_ratio and dirty_background_bytes to be 0, and
->> based on following related code, I think 0 just means write back if
->> there are any dirty pages.
->>
->> domain_dirty_limits:
->>    bg_bytes = dirty_background_bytes -> 0
->>    bg_ratio = (dirty_background_ratio * PAGE_SIZE) / 100 -> 0
->>
->>    if (bg_bytes)
->>           bg_thresh = DIV_ROUND_UP(bg_bytes, PAGE_SIZE);
->>    else
->>           bg_thresh = (bg_ratio * available_memory) / PAGE_SIZE; -> 0
->>
->>    dtc->bg_thresh = bg_thresh; -> 0
->>
->> balance_dirty_pages
->>    nr_reclaimable = global_node_page_state(NR_FILE_DIRTY);
->>    if (!laptop_mode && nr_reclaimable > gdtc->bg_thresh &&
->>         !writeback_in_progress(wb))
->>      wb_start_background_writeback(wb); -> writeback ASAP
->>
->> Thanks,
->> Kuai
-> 
-> Hi Kuai
-> 
-> I'm not an expert about this either. Thanks for all your patches, I
-> can study more things too. But I still have some questions.
-> 
-> I did a test in my environment something like this:
-> modprobe brd rd_nr=4 rd_size=10485760
-> mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean
-> echo 0 > /proc/sys/vm/dirty_background_ratio
-> fio -filename=/dev/md0 -ioengine=libaio -rw=write -thread -bs=1k-8k
-> -numjobs=1 -iodepth=128 --runtime=10 -name=xxx
-> It will cause OOM and the system hangs
 
-OOM means you trigger this problem... Plug hold lots of bios and cost
-lots of memory, it's not that write back is disabled, you can verify
-this by monitor md inflight, noted that don't use too much memory for
-ramdisk(rd_nr * rd_size) in the test so that OOM won't be triggered.
+On 5/29/23 16:40, Xiao Ni wrote:
+> It's the data which customers read that can be wrong. So it's a
+> dangerous thing. Because customers use the data directly. If it's true
+> it looks like there is a race between non aligned read and recovery
+> process.
 
-Have you tried to test with this patchset?
+But did you get similar report from customer from the past years? I am not
+sure it is reasonable to expect the md5sum should be match under such
+conditions (multiple processes do write/read with recovery in progress).
 
-> 
-> modprobe brd rd_nr=4 rd_size=10485760
-> mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean
-> echo 1 > /proc/sys/vm/dirty_background_ratio (THIS is the only different place)
-> fio -filename=/dev/md0 -ioengine=libaio -rw=write -thread -bs=1k-8k
-> -numjobs=1 -iodepth=128 --runtime=10 -name=xxx
-> It can finish successfully.  The value of dirty_background_ration is 1
-> here means it flushes ASAP
+Maybe the test launched 32 processes in parallel is another factor, not sure
+it still happens with only 1 process which means only do read after write.
 
-This really doesn't mean flushes ASAP, our test report this problem in
-the real test that doesn't modify dirty_background_ratio. I guess
-somewhere triggers io_scheduler(), probably background thread think
-dirty pages doesn't match threshold, but I'm not sure for now.
+Anyway, I think io accounting is irrelevant.
 
 Thanks,
-Kuai
-> 
-> So your method should be the opposite way as you designed. All the
-> memory can't be flushed in time, so it uses all memory very soon and
-> the memory runs out and the system hangs. The reason I'm looking at
-> the test is that do we really need this change. Because in the real
-> world, most customers don't disable write back. Anyway, it depends on
-> Song's decision and thanks for your patches again. I'll review V3 and
-> try to do some performance tests.
-> 
-> Best Regards
-> Xiao
-
+Guoqing
