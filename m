@@ -2,117 +2,109 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B647CC77B7A
-	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 19:44:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45C82C7EE23
+	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 20:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231630AbjE3To2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 May 2023 15:44:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34550 "EHLO
+        id S232053AbjE3UlM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 May 2023 16:41:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231346AbjE3To0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 15:44:26 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFCB8102
-        for <linux-raid@vger.kernel.org>; Tue, 30 May 2023 12:43:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685475818;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=61jSLilvI6Kq8tZP1TgtpGiMrTcQZMGT4z3p0LusAeA=;
-        b=IxWBEBzJk4lXkJwnYXCkgbPfECWZM1GH82S8oe9UookA38uQFyxbTWWVnsJzsYkhMGJJy+
-        cwO0m2eodnl2HikLGq2zlV2JbuG8YM7J1K2ebhHmUBhMvn+0hpuhXa7hxFTYlL+FYT6kLo
-        YAr7aILKPlMwdjPuKnA6ez3jYuUsdew=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-142-MsdeEUCPPlCHG2sXrVx-fA-1; Tue, 30 May 2023 15:43:35 -0400
-X-MC-Unique: MsdeEUCPPlCHG2sXrVx-fA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S230194AbjE3UlL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 16:41:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93F348E;
+        Tue, 30 May 2023 13:41:10 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 903E8800B2A;
-        Tue, 30 May 2023 19:43:34 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5346B2166B25;
-        Tue, 30 May 2023 19:43:34 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 34UJhY4b022142;
-        Tue, 30 May 2023 15:43:34 -0400
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 34UJhXMb022117;
-        Tue, 30 May 2023 15:43:33 -0400
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Tue, 30 May 2023 15:43:33 -0400 (EDT)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     Mike Snitzer <snitzer@kernel.org>
-cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        "axboe @ kernel . dk" <axboe@kernel.dk>, shaggy@kernel.org,
-        damien.lemoal@wdc.com, cluster-devel@redhat.com, kch@nvidia.com,
-        agruenba@redhat.com, linux-mm@kvack.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        jfs-discussion@lists.sourceforge.net, willy@infradead.org,
-        ming.lei@redhat.com, linux-block@vger.kernel.org, song@kernel.org,
-        dm-devel@redhat.com, rpeterso@redhat.com,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        hch@lst.de
-Subject: Re: [PATCH v5 16/20] dm-crypt: check if adding pages to clone bio
- fails
-In-Reply-To: <ZHYbIYxGbcXbpvIK@redhat.com>
-Message-ID: <alpine.LRH.2.21.2305301527410.18906@file01.intranet.prod.int.rdu2.redhat.com>
-References: <20230502101934.24901-1-johannes.thumshirn@wdc.com> <20230502101934.24901-17-johannes.thumshirn@wdc.com> <alpine.LRH.2.21.2305301045220.3943@file01.intranet.prod.int.rdu2.redhat.com> <ZHYbIYxGbcXbpvIK@redhat.com>
-User-Agent: Alpine 2.21 (LRH 202 2017-01-01)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 286156336C;
+        Tue, 30 May 2023 20:41:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86BC1C4339E;
+        Tue, 30 May 2023 20:41:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685479269;
+        bh=NZg4xbNptwq5J83x4/9FfgWYp2tn6LBMqAKgwyJG6tQ=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=huQNFFH3zVrLLnm5WPfMAbkQPvxCmvDcAuR9nNKd/g6ZoLU+oubgPMfhcvejhwbMy
+         bRuBct3r6wHKkzYqhqEvGFfCpZYRAuAiT3wzv9jYwpqlslolPQpVoC6l4bkxTW5cgq
+         aHvAkKgwybK+QQl1B0Jilwhzk8yfsI7fuifW9XQTkoKFITI0dXVq6KXEBzrUICZPze
+         PyVOTDar79WsVhr08Ikvo3yCjwDdtgjfVU2jkcBlq4rrXYZPDH8DmVzyUBEoHLrosB
+         Mkru2m9rHaX4pyzYCzA4oMl+/2mViC42oBWSv4cVmV6MbUN1IWMmZVyQlgMZsMsif+
+         TJLaW7xm4WLyg==
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-4f4db9987f8so275773e87.1;
+        Tue, 30 May 2023 13:41:09 -0700 (PDT)
+X-Gm-Message-State: AC+VfDyEDKU7ap/F+eqFKI+/1NjSEoNR+a/SpvbbwknSwtcTS2B9K1Wk
+        VX4UKpEIsObbwju0F9EMx+H2XddgdzALxM+QQHA=
+X-Google-Smtp-Source: ACHHUZ7vuf2vQNikh852gIOeYbs1mAspWrnHLpuRQ0WVk/9d/YVdWPAiSzLnXbcDRj80He113UbugMRuu4yM7AjsQxc=
+X-Received: by 2002:a2e:a222:0:b0:2af:18a9:782f with SMTP id
+ i2-20020a2ea222000000b002af18a9782fmr4570675ljm.0.1685479267531; Tue, 30 May
+ 2023 13:41:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
+References: <cover.1685461490.git.johannes.thumshirn@wdc.com> <d7cfd04d410accee4148d8c0e51230bcb8b4bb8f.1685461490.git.johannes.thumshirn@wdc.com>
+In-Reply-To: <d7cfd04d410accee4148d8c0e51230bcb8b4bb8f.1685461490.git.johannes.thumshirn@wdc.com>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 30 May 2023 13:40:55 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6hZWx3Jx0UOc20mf06c5QS5vfDKF_nauzm0mLkr3Xhsw@mail.gmail.com>
+Message-ID: <CAPhsuW6hZWx3Jx0UOc20mf06c5QS5vfDKF_nauzm0mLkr3Xhsw@mail.gmail.com>
+Subject: Re: [PATCH v6 13/20] md: check for failure when adding pages in alloc_behind_master_bio
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.de>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        Mike Snitzer <snitzer@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Mikulas Patocka <mpatocka@redhat.com>, gouhao@uniontech.com,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Tue, May 30, 2023 at 8:50=E2=80=AFAM Johannes Thumshirn
+<johannes.thumshirn@wdc.com> wrote:
+>
+> alloc_behind_master_bio() can possibly add multiple pages to a bio, but i=
+t
+> is not checking for the return value of bio_add_page() if adding really
+> succeeded.
+>
+> Check if the page adding succeeded and if not bail out.
+>
+> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
+Acked-by: Song Liu <song@kernel.org>
 
-On Tue, 30 May 2023, Mike Snitzer wrote:
-
-> On Tue, May 30 2023 at 11:13P -0400,
-> Mikulas Patocka <mpatocka@redhat.com> wrote:
-> 
-> > Hi
-> > 
-> > I nack this. This just adds code that can't ever be executed.
-> > 
-> > dm-crypt already allocates enough entries in the vector (see "unsigned int 
-> > nr_iovecs = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;"), so bio_add_page can't 
-> > fail.
-> > 
-> > If you want to add __must_check to bio_add_page, you should change the 
-> > dm-crypt code to:
-> > if (!bio_add_page(clone, page, len, 0)) {
-> > 	WARN(1, "this can't happen");
-> > 	return NULL;
-> > }
-> > and not write recovery code for a can't-happen case.
-> 
-> Thanks for the review Mikulas. But the proper way forward, in the
-> context of this patchset, is to simply change bio_add_page() to
-> __bio_add_page()
-> 
-> Subject becomes: "dm crypt: use __bio_add_page to add single page to clone bio"
-> 
-> And header can explain that "crypt_alloc_buffer() already allocates
-> enough entries in the clone bio's vector, so bio_add_page can't fail".
-> 
-> Mike
-
-Yes, __bio_add_page would look nicer. But bio_add_page can merge adjacent 
-pages into a single bvec entry and __bio_add_page can't (I don't know how 
-often the merging happens or what is the performance implication of 
-non-merging).
-
-I think that for the next merge window, we can apply this patch: 
-https://listman.redhat.com/archives/dm-devel/2023-May/054046.html
-which makes this discussion irrelevant. (you can change bio_add_page to 
-__bio_add_page in it)
-
-Mikukas
-
+> ---
+>  drivers/md/raid1.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 68a9e2d9985b..8283ef177f6c 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1147,7 +1147,10 @@ static void alloc_behind_master_bio(struct r1bio *=
+r1_bio,
+>                 if (unlikely(!page))
+>                         goto free_pages;
+>
+> -               bio_add_page(behind_bio, page, len, 0);
+> +               if (!bio_add_page(behind_bio, page, len, 0)) {
+> +                       free_page(page);
+> +                       goto free_pages;
+> +               }
+>
+>                 size -=3D len;
+>                 i++;
+> --
+> 2.40.1
+>
