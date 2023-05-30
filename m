@@ -2,178 +2,125 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F243CC77B73
-	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 13:13:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2083C77B7A
+	for <linux-raid@archiver.kernel.org>; Tue, 30 May 2023 15:14:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230305AbjE3NNu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 May 2023 09:13:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41070 "EHLO
+        id S232106AbjE3POh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 May 2023 11:14:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229614AbjE3NNt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 09:13:49 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E30CFA1
-        for <linux-raid@vger.kernel.org>; Tue, 30 May 2023 06:13:47 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 80B8621AE4;
-        Tue, 30 May 2023 13:13:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1685452426; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=+oyJZuhKFjTMfY7Oq15fIw2Y8259qnId6nGtR9TqAEI=;
-        b=PuUMK0YUbUjBvxrbwf99drveIT6OHosjGu8ZoNV/hZ8CPaAKqitLF9CvtbsGaRNiLnT6Rx
-        IWEyaHLMvEBzrgzht0Ucs3I+PZXqXUsVQKSizR/JvZjcgldk42aeQE3rUj+w2g1fEu84d9
-        BO/JWLX9Y5aWPuABwXufHwCNu2fWvhY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1685452426;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=+oyJZuhKFjTMfY7Oq15fIw2Y8259qnId6nGtR9TqAEI=;
-        b=hTDzdYHPljQuD64In7ZoSou0fT2u/+RTLjcfz+9gyWeM8+W5vk8UYlk0/G6+TNFrCmu7Sj
-        YhNYjXXDetENR/Ag==
-Received: from localhost.localdomain (unknown [10.163.16.22])
-        by relay2.suse.de (Postfix) with ESMTP id 0078F2C141;
-        Tue, 30 May 2023 13:13:44 +0000 (UTC)
-From:   Coly Li <colyli@suse.de>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org, Coly Li <colyli@suse.de>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Subject: [PATCH v4] Incremental: remove obsoleted calls to udisks
-Date:   Tue, 30 May 2023 21:12:39 +0800
-Message-Id: <20230530131239.32168-1-colyli@suse.de>
-X-Mailer: git-send-email 2.35.3
+        with ESMTP id S232524AbjE3POd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 11:14:33 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7F9CF1
+        for <linux-raid@vger.kernel.org>; Tue, 30 May 2023 08:13:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685459625;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vye8gB1vOKUzz58ckJ8yXN12XsS7VmnNhEIxChnaCeU=;
+        b=G6hEFDgEQ4cfyxajqtazPnr7+2QJi4lLdfA1n48Gkimr3zyZetAWzVurUxcPDM+1hDndyO
+        noJr56j95XPxY/ohZ4O2RUCUnbrfzHfYOfICaIGpXC9GgUZNTIpl+TqoWpK9z7hJYOQaKz
+        uJuQWyBpY4pCcXjsE7fEKg5eCYvyRKQ=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-5-hmEFKwvqOZWLGW87qowi1w-1; Tue, 30 May 2023 11:13:40 -0400
+X-MC-Unique: hmEFKwvqOZWLGW87qowi1w-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id BB27785A5BA;
+        Tue, 30 May 2023 15:13:39 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8A93F140EBB8;
+        Tue, 30 May 2023 15:13:39 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 34UFDdMG006630;
+        Tue, 30 May 2023 11:13:39 -0400
+Received: from localhost (mpatocka@localhost)
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 34UFDc58006626;
+        Tue, 30 May 2023 11:13:38 -0400
+X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
+Date:   Tue, 30 May 2023 11:13:38 -0400 (EDT)
+From:   Mikulas Patocka <mpatocka@redhat.com>
+X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+cc:     "axboe @ kernel . dk" <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, damien.lemoal@wdc.com, kch@nvidia.com,
+        agruenba@redhat.com, shaggy@kernel.org, song@kernel.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        snitzer@kernel.org, jfs-discussion@lists.sourceforge.net,
+        willy@infradead.org, ming.lei@redhat.com, cluster-devel@redhat.com,
+        linux-mm@kvack.org, dm-devel@redhat.com,
+        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        hch@lst.de, rpeterso@redhat.com
+Subject: Re: [dm-devel] [PATCH v5 16/20] dm-crypt: check if adding pages to
+ clone bio fails
+In-Reply-To: <20230502101934.24901-17-johannes.thumshirn@wdc.com>
+Message-ID: <alpine.LRH.2.21.2305301045220.3943@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20230502101934.24901-1-johannes.thumshirn@wdc.com> <20230502101934.24901-17-johannes.thumshirn@wdc.com>
+User-Agent: Alpine 2.21 (LRH 202 2017-01-01)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.7
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Utility udisks is removed from udev upstream, calling this obsoleted
-command in run_udisks() doesn't make any sense now.
 
-This patch removes the calls chain of udisks, which includes routines
-run_udisk(), force_remove(), and 2 locations where force_remove() are
-called. Considering force_remove() is removed with udisks util, it is
-fair to remove Manage_stop() inside force_remove() as well.
 
-In the two modifications where calling force_remove() are removed,
-the failure from Manage_subdevs() can be safely ignored, because,
-1) udisks doesn't exist, no need to check the return value to umount
-   the file system by udisks and remove the component disk again.
-2) After the 'I' inremental remove, there is another 'r' hot remove
-   following up. The first incremental remove is a best-try effort.
+On Tue, 2 May 2023, Johannes Thumshirn wrote:
 
-Therefore in this patch, where force_remove() is removed, the return
-value of calling Manage_subdevs() is not checked too.
+> Check if adding pages to clone bio fails and if it does retry with
+> reclaim. This mirrors the behaviour of page allocation in
+> crypt_alloc_buffer().
+> 
+> This way we can mark bio_add_pages as __must_check.
+> 
+> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>  drivers/md/dm-crypt.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+> index 8b47b913ee83..b234dc089cee 100644
+> --- a/drivers/md/dm-crypt.c
+> +++ b/drivers/md/dm-crypt.c
+> @@ -1693,7 +1693,14 @@ static struct bio *crypt_alloc_buffer(struct dm_crypt_io *io, unsigned int size)
+>  
+>  		len = (remaining_size > PAGE_SIZE) ? PAGE_SIZE : remaining_size;
+>  
+> -		bio_add_page(clone, page, len, 0);
+> +		if (!bio_add_page(clone, page, len, 0)) {
+> +			mempool_free(page, &cc->page_pool);
+> +			crypt_free_buffer_pages(cc, clone);
+> +			bio_put(clone);
+> +			gfp_mask |= __GFP_DIRECT_RECLAIM;
+> +			goto retry;
+> +
+> +		}
+>  
+>  		remaining_size -= len;
+>  	}
 
-Signed-off-by: Coly Li <colyli@suse.de>
-Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Cc: Jes Sorensen <jes@trained-monkey.org>
----
-Changelog,
-v4: add Reviewed-by from Mariusz.
-v3: remove the almost-useless warning message, and make the change
-   more simplified.
-v2: improve based on code review comments from Mariusz.
-v1: initial version.
+Hi
 
- Incremental.c | 64 +++++++++++----------------------------------------
- 1 file changed, 13 insertions(+), 51 deletions(-)
+I nack this. This just adds code that can't ever be executed.
 
-diff --git a/Incremental.c b/Incremental.c
-index f13ce02..05b33c4 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -1628,54 +1628,18 @@ release:
- 	return rv;
- }
- 
--static void run_udisks(char *arg1, char *arg2)
--{
--	int pid = fork();
--	int status;
--	if (pid == 0) {
--		manage_fork_fds(1);
--		execl("/usr/bin/udisks", "udisks", arg1, arg2, NULL);
--		execl("/bin/udisks", "udisks", arg1, arg2, NULL);
--		exit(1);
--	}
--	while (pid > 0 && wait(&status) != pid)
--		;
--}
--
--static int force_remove(char *devnm, int fd, struct mdinfo *mdi, int verbose)
--{
--	int rv;
--	int devid = devnm2devid(devnm);
--
--	run_udisks("--unmount", map_dev(major(devid), minor(devid), 0));
--	rv = Manage_stop(devnm, fd, verbose, 1);
--	if (rv) {
--		/* At least we can try to trigger a 'remove' */
--		sysfs_uevent(mdi, "remove");
--		if (verbose)
--			pr_err("Fail to stop %s too.\n", devnm);
--	}
--	return rv;
--}
--
- static void remove_from_member_array(struct mdstat_ent *memb,
- 				    struct mddev_dev *devlist, int verbose)
- {
--	int rv;
--	struct mdinfo mmdi;
- 	int subfd = open_dev(memb->devnm);
- 
- 	if (subfd >= 0) {
--		rv = Manage_subdevs(memb->devnm, subfd, devlist, verbose,
--				    0, UOPT_UNDEFINED, 0);
--		if (rv & 2) {
--			if (sysfs_init(&mmdi, -1, memb->devnm))
--				pr_err("unable to initialize sysfs for: %s\n",
--				       memb->devnm);
--			else
--				force_remove(memb->devnm, subfd, &mmdi,
--					     verbose);
--		}
-+		/*
-+		 * Ignore the return value because it's necessary
-+		 * to handle failure condition here.
-+		 */
-+		Manage_subdevs(memb->devnm, subfd, devlist, verbose,
-+			       0, UOPT_UNDEFINED, 0);
- 		close(subfd);
- 	}
- }
-@@ -1758,21 +1722,19 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
- 		}
- 		free_mdstat(mdstat);
- 	} else {
--		rv |= Manage_subdevs(ent->devnm, mdfd, &devlist,
--				    verbose, 0, UOPT_UNDEFINED, 0);
--		if (rv & 2) {
--		/* Failed due to EBUSY, try to stop the array.
--		 * Give udisks a chance to unmount it first.
-+		/*
-+		 * This 'I' incremental remove is a try-best effort,
-+		 * the failure condition can be safely ignored
-+		 * because of the following up 'r' remove.
- 		 */
--			rv = force_remove(ent->devnm, mdfd, &mdi, verbose);
--			goto end;
--		}
-+		Manage_subdevs(ent->devnm, mdfd, &devlist,
-+			       verbose, 0, UOPT_UNDEFINED, 0);
- 	}
- 
- 	devlist.disposition = 'r';
- 	rv = Manage_subdevs(ent->devnm, mdfd, &devlist,
- 			    verbose, 0, UOPT_UNDEFINED, 0);
--end:
-+
- 	close(mdfd);
- 	free_mdstat(ent);
- 	return rv;
--- 
-2.35.3
+dm-crypt already allocates enough entries in the vector (see "unsigned int 
+nr_iovecs = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;"), so bio_add_page can't 
+fail.
+
+If you want to add __must_check to bio_add_page, you should change the 
+dm-crypt code to:
+if (!bio_add_page(clone, page, len, 0)) {
+	WARN(1, "this can't happen");
+	return NULL;
+}
+and not write recovery code for a can't-happen case.
+
+Mikulas
 
