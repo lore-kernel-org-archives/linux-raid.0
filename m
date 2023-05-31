@@ -2,94 +2,115 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83C70C77B7A
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 09:32:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EE4C77B7C
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:12:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234884AbjEaJcG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 05:32:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38836 "EHLO
+        id S234792AbjEaLMU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 07:12:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235078AbjEaJcC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 05:32:02 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76A9BD9;
-        Wed, 31 May 2023 02:32:01 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QWPDF5JFZz4f403R;
-        Wed, 31 May 2023 17:31:57 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgD3rLAMFHdk_vNxKg--.6164S3;
-        Wed, 31 May 2023 17:31:58 +0800 (CST)
-Message-ID: <dab276f1-a186-f26c-ddc9-561ea32d7a07@huaweicloud.com>
-Date:   Wed, 31 May 2023 17:31:56 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v3 3/4] md/raid10: fix incorrect done of recovery
-To:     Song Liu <song@kernel.org>, linan666@huaweicloud.com
-Cc:     bingjingc@synology.com, allenpeng@synology.com, shli@fb.com,
-        alexwu@synology.com, neilb@suse.de, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-References: <20230527072218.2365857-1-linan666@huaweicloud.com>
- <20230527072218.2365857-4-linan666@huaweicloud.com>
- <CAPhsuW7ZeiFNoiY=-EVwj67FhnaW5rphkkumBrSCdtHHgBxzNw@mail.gmail.com>
-From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <CAPhsuW7ZeiFNoiY=-EVwj67FhnaW5rphkkumBrSCdtHHgBxzNw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3rLAMFHdk_vNxKg--.6164S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7GF4fKr47uryxCFW8uF45KFg_yoWfAwb_Wa
-        yjkF1kGw18Z39rCr4xXr4agrZrWF4jqF18J348Xwn5X34UJay3Zan8Kr95ZF45JrZY9rnx
-        tF1FgayxA3929jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbSxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-        0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-        1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
-        xwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7V
-        AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-        r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6x
-        IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-        w20EY4v20xvaj40_Zr0_Wr1UMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7
-        CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUOlksUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
+        with ESMTP id S232331AbjEaLMT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 07:12:19 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1523A107
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 04:12:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1685531538; x=1717067538;
+  h=date:from:to:cc:subject:message-id;
+  bh=ZxdAai7aOGubkSb+MkeDu5Fwzvd1ty0M7yzGaMqr/UA=;
+  b=l6mhPOnBZRtaz9/+iwKfnZZblkbAKdAhggYvQJXp0qSZBLg6X0efmjAJ
+   RGg0lAHS0euCNY8G4gAaHfQCDSnruura5MevMMPpUUaECzs//nosci3xc
+   u2+ubGAbqSU6AtFXxuPNdK9VJSu9g/fjhfLJ8M/0pz3tQV31E0jzsNu8c
+   aH8F7MWVdPjoD1KVH8r8UcLhMKr5cy7Zz1oEg3ACuIBIRw3/eV7s6olXd
+   v3PpI3LgJsZv4xEEyN2BwpAttGOUPm8Ld6MpAPAcfcOZqt27yUIFt3RfT
+   z9+UztQdjx4kqa+LtQIqFA3e/Ld6WFSB8tTHG5Baa/j68y4lu/hDfs5oh
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10726"; a="335552400"
+X-IronPort-AV: E=Sophos;i="6.00,205,1681196400"; 
+   d="scan'208";a="335552400"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 04:12:17 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10726"; a="881136983"
+X-IronPort-AV: E=Sophos;i="6.00,205,1681196400"; 
+   d="scan'208";a="881136983"
+Received: from lkp-server01.sh.intel.com (HELO fb1ced2c09fb) ([10.239.97.150])
+  by orsmga005.jf.intel.com with ESMTP; 31 May 2023 04:12:16 -0700
+Received: from kbuild by fb1ced2c09fb with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1q4JkV-0001Hf-32;
+        Wed, 31 May 2023 11:12:15 +0000
+Date:   Wed, 31 May 2023 19:11:59 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 979f277d08f143765eb427e86a2210d2d706ecfe
+Message-ID: <20230531111159.w-HqG%lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 979f277d08f143765eb427e86a2210d2d706ecfe  md/raid10: clean up md_add_new_disk()
 
+elapsed time: 723m
 
-在 2023/5/31 5:55, Song Liu 写道:
-> On Sat, May 27, 2023 at 12:24 AM <linan666@huaweicloud.com> wrote:
->>
->> From: Li Nan <linan122@huawei.com>
->>
->> Recovery will go to giveup and let chunks_skipped++ in
->> raid10_sync_request() if there are some bad_blocks, and it will return
->> max_sector when chunks_skipped >= geo.raid_disks. Now, recovery fail and
->> data is inconsistent but user think recovery is done, it is wrong.
->>
->> Fix it by set mirror's recovery_disabled, spare device will not  be added
->> to here. The same issue alos exists on resync, it will be fixd in future.
->>
->> Signed-off-by: Li Nan <linan122@huawei.com>
-> 
-> I applied 1/4 and 2/4 of the set to md-next.
-> 
-> For 3/4 and 4/4, please improve the commit log (rephrase confusing statements,
-> fix typo's, etc.). Please also add a mdadm test for 3/4.
-> 
-> Thanks,
-> Song
-> 
+configs tested: 45
+configs skipped: 3
 
-I will add a test later. Thanks for review.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                  randconfig-r006-20230531   clang
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+csky                                defconfig   gcc  
+hexagon              randconfig-r005-20230531   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-r004-20230531   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+m68k                             allmodconfig   gcc  
+m68k                                defconfig   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r003-20230531   clang
+nios2                               defconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r002-20230531   gcc  
+sh                               allmodconfig   gcc  
+sparc                               defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                               rhel-8.3   gcc  
 
 -- 
-Thanks,
-Nan
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
