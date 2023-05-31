@@ -2,262 +2,276 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA534C7EE32
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 15:22:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6970EC77B7A
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 15:25:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233042AbjEaPWJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 11:22:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46912 "EHLO
+        id S234324AbjEaPZ0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 11:25:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234508AbjEaPVj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 11:21:39 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D33D10E
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:21:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685546497; x=1717082497;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=jNXjofIBQcAf4T/wd1ar/scMxnm+iG97QEJHngNz4oc=;
-  b=D8mdSYfA6FWSOGj6nbxh6PO0wx9lwB9V69QNdqDQcjfL540p83amnSE1
-   qPz5DaKwENqaxxrRYVUkRzZzWPU0oR5NWex/ZXoWJZlUyHB6Pcvdb8e9J
-   szCNkGDCetwsV+hL6TCQiWneF0nHmDOVXBeY6Mg7BgTUxLv7SYFZSlraG
-   IRYtv8eK3i7VD+KUHuOdVWVcacRKeGK3KNjVkRPglO6oRF8dKpDIzFQlI
-   HhX5D26n5M3H6l7yll7wL2XGCpzHyDdpSwlkA6IROJiVZ7gbPrKPSZQzZ
-   OjiysMxaMcWLqIseLIqVhZXJwwZO1gF275J5N+5RZjREkoSgD/j4dW7qt
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339864935"
-X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="339864935"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 08:21:36 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="796747344"
-X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="796747344"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.105.40])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 08:21:35 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org, colyli@suse.de
-Subject: [PATCH 5/6] imsm: return free space after volume for expand
-Date:   Wed, 31 May 2023 17:21:07 +0200
-Message-Id: <20230531152108.18103-6-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20230531152108.18103-1-mariusz.tkaczyk@linux.intel.com>
-References: <20230531152108.18103-1-mariusz.tkaczyk@linux.intel.com>
+        with ESMTP id S234904AbjEaPYp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 11:24:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF84019F
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:23:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685546636;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=T7n2kTX8ab3RwNgUIAeH+MWr6FizMEgcp6aIosuEsmI=;
+        b=MlAkuG40YscmkDf8gMc+6SS86Tl8yTmrLSOuYKnblcdtgIR4/U399PzeLEjDeZAwdJWGFZ
+        2iKVrhtaIWY23fRPGvbAk+a96tuKuIgz/R3F2Jl/MmG2MzHk9+F28gcMtgFzqZIN5XWLp5
+        FjRpkXi5Fy9LoycnEKFadGo55MafM3s=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-628-Rk-rMRF5PsiHYj4IhUCJPA-1; Wed, 31 May 2023 11:23:54 -0400
+X-MC-Unique: Rk-rMRF5PsiHYj4IhUCJPA-1
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-518d6f87a47so2960666a12.3
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:23:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685546633; x=1688138633;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=T7n2kTX8ab3RwNgUIAeH+MWr6FizMEgcp6aIosuEsmI=;
+        b=aJjWYwPf+NoVVg8V0W4/XAZTZhAEOug45U9br7MA8LP1bHEdnewpr+T5Mbz+YRIQWD
+         s7t+RXlxoDihOWrpfyTtxjv2RsbI1XYuQCJxe6ELvrd9lp9aQKNbKoIwRNYKZ9MF586K
+         7LVgAyMT6eDYdfoI+GPN/l+48zRrbMsXJfLPx6OZKBJfG8RmpSzzAhrKiv4M9Y6K18Ym
+         iM4iFmPVcDHHztW/B5nRJ+OVU1VXVdqzcL/nINM0YtigevGPZ9FXrlaiz/pRu5jDmohT
+         oFeT6EvgMVw/gKH6u8Q+beVOqHmpuNi+luYy9Qw/4NT6J2PG9PYEqi+FzxOCZcFQJd/8
+         G75A==
+X-Gm-Message-State: AC+VfDx7iMXt3bS90QI9Fu4pezqT9aexxEJZjwzDiGrCCr80D4/5RE3z
+        wJd4nO5+yMdWozeRw2UMbIOv7TMe99zJb3O5U7Ccl+H0wS/5ICBkaGiMQtm/mbtWKHzKQQD0bWl
+        zBRyP3BrqgvjuhbS7bdtcWBZu6Ck1J+xuHtag0A==
+X-Received: by 2002:a17:903:124a:b0:1ae:57d4:efbc with SMTP id u10-20020a170903124a00b001ae57d4efbcmr4941710plh.13.1685546633622;
+        Wed, 31 May 2023 08:23:53 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7KV5Id3KIg954ARS3D8v/eQQuEVgWEGC5d1V4/aTuKB24ZhoY6EbtKcSOAgxi+gnUr5Oxq/oxCiya+H16FMls=
+X-Received: by 2002:a17:903:124a:b0:1ae:57d4:efbc with SMTP id
+ u10-20020a170903124a00b001ae57d4efbcmr4941694plh.13.1685546633258; Wed, 31
+ May 2023 08:23:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230529131106.2123367-1-yukuai1@huaweicloud.com>
+ <20230529131106.2123367-7-yukuai1@huaweicloud.com> <CALTww29ixKpcVknNe36D+x=2c1Aw-=z32SP-dJ_Hj8WxL2n4bg@mail.gmail.com>
+ <830352e1-ecfa-f5dc-ce7c-349553bd3003@huaweicloud.com> <CALTww28_w3h1_viTp5L9SCytY7WmwmABqkXOmyvH_UD8T5odMg@mail.gmail.com>
+ <f5cc14ed-e9d9-42ed-22e1-186973b991b1@huaweicloud.com>
+In-Reply-To: <f5cc14ed-e9d9-42ed-22e1-186973b991b1@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 31 May 2023 23:23:41 +0800
+Message-ID: <CALTww2_8vcszjZF5emGHjcm+XngHptGV+i11TVs00o8E0fPWGw@mail.gmail.com>
+Subject: Re: [PATCH -next v3 6/7] md/raid1-10: don't handle pluged bio by
+ daemon thread
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, neilb@suse.de, akpm@osdl.org,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-merge_extends() routine searches for the biggest free space. For expand,
-it works only in standard cases where the last volume is expanded and
-the free space is determined after the last volume.
-Add volume index to extent struct and use that do determine size after
-super->current_vol during expand.
+On Wed, May 31, 2023 at 4:06=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/05/31 16:00, Xiao Ni =E5=86=99=E9=81=93:
+> > On Wed, May 31, 2023 at 3:55=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.co=
+m> wrote:
+> >>
+> >> Hi,
+> >>
+> >> =E5=9C=A8 2023/05/31 15:50, Xiao Ni =E5=86=99=E9=81=93:
+> >>> On Mon, May 29, 2023 at 9:14=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.=
+com> wrote:
+> >>>>
+> >>>> From: Yu Kuai <yukuai3@huawei.com>
+> >>>>
+> >>>> current->bio_list will be set under submit_bio() context, in this ca=
+se
+> >>>> bitmap io will be added to the list and wait for current io submissi=
+on to
+> >>>> finish, while current io submission must wait for bitmap io to be do=
+ne.
+> >>>> commit 874807a83139 ("md/raid1{,0}: fix deadlock in bitmap_unplug.")=
+ fix
+> >>>> the deadlock by handling plugged bio by daemon thread.
+> >>>
+> >>> Thanks for the historic introduction. I did a test and printed the
+> >>> logs in raid10_unplug. The tools I used are dd and mkfs. from_schedul=
+e
+> >>> is always true during I/O and it's 0 when io finishes. So I have a
+> >>> question here, how can I trigger the condition that from_schedule is =
+0
+> >>> and current->list is not NULL? In other words, is there really a
+> >>> deadlock here? Before your patch it looks like all bios are merged
+> >>> into conf->pending_bio_list and are handled by raid10d. It can't
+> >>> submit bio directly in the originating process which mentioned in
+> >>> 57c67df48866
+> >>>
+> >> As I mentioned below, after commit a214b949d8e3, this deadlock doesn't
+> >> exist anymore, and without this patch, patch 7 will introduce this
+> >> scenario again.
+> >>
+> >> Thanks,
+> >> Kuai
+> >>>>
+> >>>> On the one hand, the deadlock won't exist after commit a214b949d8e3
+> >>>> ("blk-mq: only flush requests from the plug in blk_mq_submit_bio"). =
+On
+> >>>> the other hand, current solution makes it impossible to flush plugge=
+d bio
+> >>>> in raid1/10_make_request(), because this will cause that all the wri=
+tes
+> >>>> will goto daemon thread.
+> >>>>
+> >>>> In order to limit the number of plugged bio, commit 874807a83139
+> >>>> ("md/raid1{,0}: fix deadlock in bitmap_unplug.") is reverted, and th=
+e
+> >>>> deadlock is fixed by handling bitmap io asynchronously.
+> >>>>
+> >>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> >>>> ---
+> >>>>    drivers/md/raid1-10.c | 14 ++++++++++++++
+> >>>>    drivers/md/raid1.c    |  4 ++--
+> >>>>    drivers/md/raid10.c   |  8 +++-----
+> >>>>    3 files changed, 19 insertions(+), 7 deletions(-)
+> >>>>
+> >>>> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+> >>>> index 73cc3cb9154d..17e55c1fd5a1 100644
+> >>>> --- a/drivers/md/raid1-10.c
+> >>>> +++ b/drivers/md/raid1-10.c
+> >>>> @@ -151,3 +151,17 @@ static inline bool raid1_add_bio_to_plug(struct=
+ mddev *mddev, struct bio *bio,
+> >>>>
+> >>>>           return true;
+> >>>>    }
+> >>>> +
+> >>>> +/*
+> >>>> + * current->bio_list will be set under submit_bio() context, in thi=
+s case bitmap
+> >>>> + * io will be added to the list and wait for current io submission =
+to finish,
+> >>>> + * while current io submission must wait for bitmap io to be done. =
+In order to
+> >>>> + * avoid such deadlock, submit bitmap io asynchronously.
+> >>>> + */
+> >>>> +static inline void raid1_prepare_flush_writes(struct bitmap *bitmap=
+)
+> >>>> +{
+> >>>> +       if (current->bio_list)
+> >>>> +               md_bitmap_unplug_async(bitmap);
+> >>>> +       else
+> >>>> +               md_bitmap_unplug(bitmap);
+> >>>> +}
+> >>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> >>>> index 0778e398584c..006620fed595 100644
+> >>>> --- a/drivers/md/raid1.c
+> >>>> +++ b/drivers/md/raid1.c
+> >>>> @@ -794,7 +794,7 @@ static int read_balance(struct r1conf *conf, str=
+uct r1bio *r1_bio, int *max_sect
+> >>>>    static void flush_bio_list(struct r1conf *conf, struct bio *bio)
+> >>>>    {
+> >>>>           /* flush any pending bitmap writes to disk before proceedi=
+ng w/ I/O */
+> >>>> -       md_bitmap_unplug(conf->mddev->bitmap);
+> >>>> +       raid1_prepare_flush_writes(conf->mddev->bitmap);
+> >>>
+> >>> If we unplug bitmap asynchronously, can we make sure the bitmap are
+> >>> flushed before the corresponding data?
+> >
+> > Could you explain this question?
+>
+> Sorry that I missed this... See the new helper in patch 5,
+> md_bitmap_unplug_async() will still wait for bitmap io to finish.
+>
+> md_bitmap_unplug_async
+>   DECLARE_COMPLETION_ONSTACK(done)
+>   ...
+>   wait_for_completion(&done)
 
-Limitation to last volume is no longer needed. It unblocks scenarios
-where kill-subarray is used to remove first volume and later it is
-recreated (now it is the second volume, even if it is placed before
-existing one).
+Ah I c. You use this way to avoid putting the bitmap io to
+current->bio_list. Thanks for the explanation :)
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
----
- super-intel.c | 71 +++++++++++++++++++++++++++------------------------
- 1 file changed, 37 insertions(+), 34 deletions(-)
-
-diff --git a/super-intel.c b/super-intel.c
-index 83bf2bfc..1559c837 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -498,8 +498,15 @@ struct intel_disk {
- 	struct intel_disk *next;
- };
- 
-+/**
-+ * struct extent - reserved space details.
-+ * @start: start offset.
-+ * @size: size of reservation, set to 0 for metadata reservation.
-+ * @vol: index of the volume, meaningful if &size is set.
-+ */
- struct extent {
- 	unsigned long long start, size;
-+	int vol;
- };
- 
- /* definitions of reshape process types */
-@@ -1494,9 +1501,10 @@ static struct extent *get_extents(struct intel_super *super, struct dl *dl,
- 				  int get_minimal_reservation)
- {
- 	/* find a list of used extents on the given physical device */
--	struct extent *rv, *e;
--	int i;
- 	int memberships = count_memberships(dl, super);
-+	struct extent *rv = xcalloc(memberships + 1, sizeof(struct extent));
-+	struct extent *e = rv;
-+	int i;
- 	__u32 reservation;
- 
- 	/* trim the reserved area for spares, so they can join any array
-@@ -1508,9 +1516,6 @@ static struct extent *get_extents(struct intel_super *super, struct dl *dl,
- 	else
- 		reservation = MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
- 
--	rv = xcalloc(sizeof(struct extent), (memberships + 1));
--	e = rv;
--
- 	for (i = 0; i < super->anchor->num_raid_devs; i++) {
- 		struct imsm_dev *dev = get_imsm_dev(super, i);
- 		struct imsm_map *map = get_imsm_map(dev, MAP_0);
-@@ -1518,6 +1523,7 @@ static struct extent *get_extents(struct intel_super *super, struct dl *dl,
- 		if (get_imsm_disk_slot(map, dl->index) >= 0) {
- 			e->start = pba_of_lba0(map);
- 			e->size = per_dev_array_size(map);
-+			e->vol = i;
- 			e++;
- 		}
- 	}
-@@ -6836,24 +6842,26 @@ static unsigned long long find_size(struct extent *e, int *idx, int num_extents)
- 	return end - base_start;
- }
- 
--/** merge_extents() - analyze extents and get max common free size.
-+/** merge_extents() - analyze extents and get free size.
-  * @super: Intel metadata, not NULL.
-+ * @expanding: if set, we are expanding &super->current_vol.
-  *
-- * Build a composite disk with all known extents and generate a new maxsize
-- * given the "all disks in an array must share a common start offset"
-- * constraint.
-+ * Build a composite disk with all known extents and generate a size given the
-+ * "all disks in an array must share a common start offset" constraint.
-+ * If a volume is expanded, then return free space after the volume.
-  *
-- * Return: Max free space or 0 on failure.
-+ * Return: Free space or 0 on failure.
-  */
--static unsigned long long merge_extents(struct intel_super *super)
-+static unsigned long long merge_extents(struct intel_super *super, const bool expanding)
- {
- 	struct extent *e;
- 	struct dl *dl;
--	int i, j;
--	int start_extent, sum_extents = 0;
--	unsigned long long pos;
-+	int i, j, pos_vol_idx = -1;
-+	int extent_idx = 0;
-+	int sum_extents = 0;
-+	unsigned long long pos = 0;
- 	unsigned long long start = 0;
--	unsigned long long maxsize;
-+	unsigned long long maxsize = 0;
- 	unsigned long reserve;
- 
- 	for (dl = super->disks; dl; dl = dl->next)
-@@ -6878,26 +6886,26 @@ static unsigned long long merge_extents(struct intel_super *super)
- 	j = 0;
- 	while (i < sum_extents) {
- 		e[j].start = e[i].start;
-+		e[j].vol = e[i].vol;
- 		e[j].size = find_size(e, &i, sum_extents);
- 		j++;
- 		if (e[j-1].size == 0)
- 			break;
- 	}
- 
--	pos = 0;
--	maxsize = 0;
--	start_extent = 0;
- 	i = 0;
- 	do {
--		unsigned long long esize;
-+		unsigned long long esize = e[i].start - pos;
- 
--		esize = e[i].start - pos;
--		if (esize >= maxsize) {
-+		if (expanding ? pos_vol_idx == super->current_vol : esize >= maxsize) {
- 			maxsize = esize;
- 			start = pos;
--			start_extent = i;
-+			extent_idx = i;
- 		}
-+
- 		pos = e[i].start + e[i].size;
-+		pos_vol_idx = e[i].vol;
-+
- 		i++;
- 	} while (e[i-1].size);
- 	free(e);
-@@ -6908,7 +6916,7 @@ static unsigned long long merge_extents(struct intel_super *super)
- 	/* FIXME assumes volume at offset 0 is the first volume in a
- 	 * container
- 	 */
--	if (start_extent > 0)
-+	if (extent_idx > 0)
- 		reserve = IMSM_RESERVED_SECTORS; /* gap between raid regions */
- 	else
- 		reserve = 0;
-@@ -7519,7 +7527,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 		return 0;
- 	}
- 
--	maxsize = merge_extents(super);
-+	maxsize = merge_extents(super, false);
- 
- 	if (mpb->num_raid_devs > 0 && size && size != maxsize)
- 		pr_err("attempting to create a second volume with size less then remaining space.\n");
-@@ -7568,7 +7576,8 @@ static imsm_status_t imsm_get_free_size(struct intel_super *super,
- 					const int raiddisks,
- 					unsigned long long size,
- 					const int chunk,
--					unsigned long long *freesize)
-+					unsigned long long *freesize,
-+					bool expanding)
- {
- 	struct imsm_super *mpb = super->anchor;
- 	struct dl *dl;
-@@ -7605,7 +7614,7 @@ static imsm_status_t imsm_get_free_size(struct intel_super *super,
- 		cnt++;
- 	}
- 
--	maxsize = merge_extents(super);
-+	maxsize = merge_extents(super, expanding);
- 	if (maxsize < minsize)  {
- 		pr_err("imsm: Free space is %llu but must be equal or larger than %llu.\n",
- 		       maxsize, minsize);
-@@ -7663,7 +7672,7 @@ static imsm_status_t autolayout_imsm(struct intel_super *super,
- 	int vol_cnt = super->anchor->num_raid_devs;
- 	imsm_status_t rv;
- 
--	rv = imsm_get_free_size(super, raiddisks, size, chunk, freesize);
-+	rv = imsm_get_free_size(super, raiddisks, size, chunk, freesize, false);
- 	if (rv != IMSM_STATUS_OK)
- 		return IMSM_STATUS_ERROR;
- 
-@@ -11624,19 +11633,13 @@ static imsm_status_t imsm_analyze_expand(struct supertype *st,
- 		goto success;
- 	}
- 
--	if (super->current_vol + 1 != super->anchor->num_raid_devs) {
--		pr_err("imsm: The last volume in container can be expanded only (%i/%s).\n",
--		       super->current_vol, st->devnm);
--		return IMSM_STATUS_ERROR;
--	}
--
- 	if (data_disks == 0) {
- 		pr_err("imsm: Cannot retrieve data disks.\n");
- 		return IMSM_STATUS_ERROR;
- 	}
- 	current_size = array->custom_array_size / data_disks;
- 
--	rv = imsm_get_free_size(super, dev->vol.map->num_members, 0, chunk_kib, &free_size);
-+	rv = imsm_get_free_size(super, dev->vol.map->num_members, 0, chunk_kib, &free_size, true);
- 	if (rv != IMSM_STATUS_OK) {
- 		pr_err("imsm: Cannot find free space for expand.\n");
- 		return IMSM_STATUS_ERROR;
--- 
-2.26.2
+Regards
+Xiao
+>
+> Thanks,
+> Kuai
+> >
+> > Regards
+> > Xiao
+> >
+> >
+> >>>
+> >>> Regards
+> >>> Xiao
+> >>>
+> >>>>           wake_up(&conf->wait_barrier);
+> >>>>
+> >>>>           while (bio) { /* submit pending writes */
+> >>>> @@ -1166,7 +1166,7 @@ static void raid1_unplug(struct blk_plug_cb *c=
+b, bool from_schedule)
+> >>>>           struct r1conf *conf =3D mddev->private;
+> >>>>           struct bio *bio;
+> >>>>
+> >>>> -       if (from_schedule || current->bio_list) {
+> >>>> +       if (from_schedule) {
+> >>>>                   spin_lock_irq(&conf->device_lock);
+> >>>>                   bio_list_merge(&conf->pending_bio_list, &plug->pen=
+ding);
+> >>>>                   spin_unlock_irq(&conf->device_lock);
+> >>>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> >>>> index 6640507ecb0d..fb22cfe94d32 100644
+> >>>> --- a/drivers/md/raid10.c
+> >>>> +++ b/drivers/md/raid10.c
+> >>>> @@ -902,9 +902,7 @@ static void flush_pending_writes(struct r10conf =
+*conf)
+> >>>>                   __set_current_state(TASK_RUNNING);
+> >>>>
+> >>>>                   blk_start_plug(&plug);
+> >>>> -               /* flush any pending bitmap writes to disk
+> >>>> -                * before proceeding w/ I/O */
+> >>>> -               md_bitmap_unplug(conf->mddev->bitmap);
+> >>>> +               raid1_prepare_flush_writes(conf->mddev->bitmap);
+> >>>>                   wake_up(&conf->wait_barrier);
+> >>>>
+> >>>>                   while (bio) { /* submit pending writes */
+> >>>> @@ -1108,7 +1106,7 @@ static void raid10_unplug(struct blk_plug_cb *=
+cb, bool from_schedule)
+> >>>>           struct r10conf *conf =3D mddev->private;
+> >>>>           struct bio *bio;
+> >>>>
+> >>>> -       if (from_schedule || current->bio_list) {
+> >>>> +       if (from_schedule) {
+> >>>>                   spin_lock_irq(&conf->device_lock);
+> >>>>                   bio_list_merge(&conf->pending_bio_list, &plug->pen=
+ding);
+> >>>>                   spin_unlock_irq(&conf->device_lock);
+> >>>> @@ -1120,7 +1118,7 @@ static void raid10_unplug(struct blk_plug_cb *=
+cb, bool from_schedule)
+> >>>>
+> >>>>           /* we aren't scheduling, so we can do the write-out direct=
+ly. */
+> >>>>           bio =3D bio_list_get(&plug->pending);
+> >>>> -       md_bitmap_unplug(mddev->bitmap);
+> >>>> +       raid1_prepare_flush_writes(mddev->bitmap);
+> >>>>           wake_up(&conf->wait_barrier);
+> >>>>
+> >>>>           while (bio) { /* submit pending writes */
+> >>>> --
+> >>>> 2.39.2
+> >>>>
+> >>>
+> >>> .
+> >>>
+> >>
+> >
+> > .
+> >
+>
 
