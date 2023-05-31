@@ -2,163 +2,208 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 479F0C77B73
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 07:34:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DD3AC77B7A
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 07:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234647AbjEaHeJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 03:34:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43852 "EHLO
+        id S234851AbjEaHxe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 03:53:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234270AbjEaHeI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 03:34:08 -0400
-Received: from out-57.mta0.migadu.com (out-57.mta0.migadu.com [91.218.175.57])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F2F910E
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:34:05 -0700 (PDT)
-Message-ID: <3f6fdbfc-9c35-2bc0-2b44-0e312f89455b@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1685518443;
+        with ESMTP id S234978AbjEaHwy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 03:52:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9052C10EC
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:51:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685519469;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=9TMi838RK67CcEqqTNCbZ89BYFAIJ+LkmU3Cg3dLgM4=;
-        b=ZKynHhuvxzXdH4/QmG+UKaBnmNx2K/hesoDvXlJhLSGXnVsV81mK4CiBfpUmUPzMQCez+j
-        GHhH4lAlITzM2UWSLjDbAR8+0Je1cXuVPljOYSTFDWmdofXTbkKvmDHbNvNIIQvh5PGWen
-        78Estzyq8xwcV8RuYoAeWeHNdqjLfQg=
-Date:   Wed, 31 May 2023 15:33:59 +0800
+        bh=GIyti307NVAkK2IVpw6AEUVPy+EJ6caNfOmMj6XXpdY=;
+        b=APOEU2W8DgOitgc2zPURWWC4QlicHJJUkoMKH+KSpR4IncDyWlVjuet1WI2vJqsxaLicAe
+        1RwxaOnxWLuHecfH9Shqq42ZOj4d63VvYkh5teZhjnj87sKvu8T5+/McY58mJulqi+0QbN
+        3YEPULopKqPBgilav/ud7RSbMMnNUDM=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-348-Hc6Y33AiOdeaOiQ0gcuO1g-1; Wed, 31 May 2023 03:51:08 -0400
+X-MC-Unique: Hc6Y33AiOdeaOiQ0gcuO1g-1
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2563e180afbso4824951a91.1
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:51:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685519468; x=1688111468;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=GIyti307NVAkK2IVpw6AEUVPy+EJ6caNfOmMj6XXpdY=;
+        b=NZtZ3H4FxzGcnD2HwPTsymkYhgilTogE5F5E99GM7jFRlJBfTErixMjcVr9FDcw9rE
+         X/DElagIciWxorHuZCVv3OEdZLkp30Tbdm3F2Bo3Vn+rrhPe+LImnuzto+6Tm5baec6X
+         POPs6zUTOZk7se83JVR5LXHDf6CGsgjslzVx05I0kcSB91OPnEBj5r53j0RVsEhqireg
+         bL6zPTyueJf5PaSe3C7YRq3+tQK+YOX668ZeiMcZVSUB2B25mdLJmcOXiIXjB1JRwmeS
+         RhiTeui91FM4aC33Wq0RZqJDFvzhe6kmmgNGB2wrbaLNOpa/qFCet4BGbe4Z54gGB7Rz
+         h0Bg==
+X-Gm-Message-State: AC+VfDw66uht+20EgP4DAFiR2d7QYroWf4NgRuyW/leO4aj+SxkVxR3h
+        4Lu6Qv3HZ+WyjQuVA4JvMyV0cDXb7zcWqLm9IBmkOf4AAh6k2faNAdLpgizl9zDCMZCZ1Rj0/3B
+        RgllfJ8lrpHam+ZbkQXSSCX18SoEiC91xhUZ54A==
+X-Received: by 2002:a17:902:eccc:b0:1b0:2986:8a6b with SMTP id a12-20020a170902eccc00b001b029868a6bmr5368376plh.55.1685519467805;
+        Wed, 31 May 2023 00:51:07 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ5Ahmb1OOjhgvMqKaa9XR2VNIgsTX4PeJFINGaZxsDn574aSWlvJqrA9Kl8DiFtr7ZZx3tfV0MltE+Z38qKuXo=
+X-Received: by 2002:a17:902:eccc:b0:1b0:2986:8a6b with SMTP id
+ a12-20020a170902eccc00b001b029868a6bmr5368361plh.55.1685519467506; Wed, 31
+ May 2023 00:51:07 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] md/raid5: don't allow concurrent reshape with recovery
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
-        pmenzel@molgen.mpg.de
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230529133410.2125914-1-yukuai1@huaweicloud.com>
- <b9fd7105-eadc-29cb-fa2e-24109f4a99b7@linux.dev>
- <e26af7db-a283-47ca-fc61-89af99f52c17@huaweicloud.com>
- <e2c936ce-5832-9d69-919a-c98af673bb3a@linux.dev>
- <98f285ff-5afb-1d12-f087-cf04a5208e21@huaweicloud.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-In-Reply-To: <98f285ff-5afb-1d12-f087-cf04a5208e21@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+References: <20230529131106.2123367-1-yukuai1@huaweicloud.com> <20230529131106.2123367-7-yukuai1@huaweicloud.com>
+In-Reply-To: <20230529131106.2123367-7-yukuai1@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 31 May 2023 15:50:56 +0800
+Message-ID: <CALTww29ixKpcVknNe36D+x=2c1Aw-=z32SP-dJ_Hj8WxL2n4bg@mail.gmail.com>
+Subject: Re: [PATCH -next v3 6/7] md/raid1-10: don't handle pluged bio by
+ daemon thread
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, neilb@suse.de, akpm@osdl.org,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 5/31/23 11:20, Yu Kuai wrote:
-> Hi,
+On Mon, May 29, 2023 at 9:14=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
 >
-> 在 2023/05/31 9:49, Guoqing Jiang 写道:
->>
->>
->> On 5/31/23 09:22, Yu Kuai wrote:
->>> Hi,
->>>
->>> 在 2023/05/31 9:06, Guoqing Jiang 写道:
->>>>
->>>>
->>>> On 5/29/23 21:34, Yu Kuai wrote:
->>>>> From: Yu Kuai <yukuai3@huawei.com>
->>>>>
->>>>> Commit 0aecb06e2249 ("md/raid5: don't allow replacement while reshape
->>>>> is in progress") fixes that replacement can be set if reshape is
->>>>> interrupted, which will cause that array can't be assembled.
->>
->> I just pulled md tree, but can't find the commit id either in md-next 
->> or md-fixes .
->> gjiang@pc:~/storage/md> git branch
->>   master
->>   md-fixes
->> * md-next
->> gjiang@pc:~/storage/md> git branch --contain 0aecb06e2249
->> error: malformed object name 0aecb06e2249
->>
->>>>> There is a similar problem on the other side, if recovery is
->>>>> interrupted, then reshape can start, which will cause the same 
->>>>> problem.
->>>>>
->>>>> Fix the problem by not starting to reshape while recovery is still in
->>>>> progress.
->>>>>
->>>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>>>> ---
->>>>> Changes in v2:
->>>>>   - fix some typo in commit message.
->>>>>
->>>>>   drivers/md/raid5.c | 8 ++++++++
->>>>>   1 file changed, 8 insertions(+)
->>>>>
->>>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->>>>> index 8686d629e3f2..6615abf54d3f 100644
->>>>> --- a/drivers/md/raid5.c
->>>>> +++ b/drivers/md/raid5.c
->>>>> @@ -8525,6 +8525,7 @@ static int raid5_start_reshape(struct mddev 
->>>>> *mddev)
->>>>>       struct r5conf *conf = mddev->private;
->>>>>       struct md_rdev *rdev;
->>>>>       int spares = 0;
->>>>> +    int i;
->>>>>       unsigned long flags;
->>>>>       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
->>>>> @@ -8536,6 +8537,13 @@ static int raid5_start_reshape(struct mddev 
->>>>> *mddev)
->>>>>       if (has_failed(conf))
->>>>>           return -EINVAL;
->>>>> +    /* raid5 can't handle concurrent reshape and recovery */
->>>>> +    if (mddev->recovery_cp < MaxSector)
->>>>> +        return -EBUSY;
->>>>> +    for (i = 0; i < conf->raid_disks; i++)
->>>>> +        if (rdev_mdlock_deref(mddev, conf->disks[i].replacement))
->>>>> +            return -EBUSY;
->>>>> +
->>>>
->>>> Does it mean reshape and recovery  can happen in parallel without 
->>>> the change?
->>>> I really doubt about it given any kind of internal io (resync, 
->>>> reshape and recovery)
->>>> is handled by resync thread. And IIUC either md_do_sync or 
->>>> md_check_recovery
->>>> should avoid it, no need to do it in personality layer.
->>>>
->>>
->>> They can't, in this case recovery is interrupted, then recovery can't
->>> make progress, and md_check_recovery() will start reshape, and after
->>> reshape is done, recovery will continue, and data will be corrupted
->>> because raid456 reshape doesn't handle replacement.
->>
->> So, do reshape first then recovery, right? I don't see concurrent 
->> reshape and recovery
->> happen based on your description, if concurrent reshape and recovery 
->> is possible
->> then I believe we really have big trouble.
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> Yes, reshape first, and yes they can't concurrent.
+> current->bio_list will be set under submit_bio() context, in this case
+> bitmap io will be added to the list and wait for current io submission to
+> finish, while current io submission must wait for bitmap io to be done.
+> commit 874807a83139 ("md/raid1{,0}: fix deadlock in bitmap_unplug.") fix
+> the deadlock by handling plugged bio by daemon thread.
 
-Then the subject, commit message and above comment are confusing given 
-they can't happen
-even without your change.
+Thanks for the historic introduction. I did a test and printed the
+logs in raid10_unplug. The tools I used are dd and mkfs. from_schedule
+is always true during I/O and it's 0 when io finishes. So I have a
+question here, how can I trigger the condition that from_schedule is 0
+and current->list is not NULL? In other words, is there really a
+deadlock here? Before your patch it looks like all bios are merged
+into conf->pending_bio_list and are handled by raid10d. It can't
+submit bio directly in the originating process which mentioned in
+57c67df48866
 
 >
->>
->>> And by the way in raid456 is that if system reboot, this array can't be
->>> assembled, raid5_run() will fail if reshape and replacement are both
->>> set.
->>
->> Assemble an array need to read data from sb, I don't know which place 
->> record replacement,
->> I probably misunderstand something.
+> On the one hand, the deadlock won't exist after commit a214b949d8e3
+> ("blk-mq: only flush requests from the plug in blk_mq_submit_bio"). On
+> the other hand, current solution makes it impossible to flush plugged bio
+> in raid1/10_make_request(), because this will cause that all the writes
+> will goto daemon thread.
 >
-> It's in rdev->flags, if MD_FEATURE_REPLACEMENT is set in rdev
-> metadata(sb->feature_map), then this rdev will mark Replacement, and
-> later this rdev will set to mirros[]->replacement in setup_conf().
+> In order to limit the number of plugged bio, commit 874807a83139
+> ("md/raid1{,0}: fix deadlock in bitmap_unplug.") is reverted, and the
+> deadlock is fixed by handling bitmap io asynchronously.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/raid1-10.c | 14 ++++++++++++++
+>  drivers/md/raid1.c    |  4 ++--
+>  drivers/md/raid10.c   |  8 +++-----
+>  3 files changed, 19 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+> index 73cc3cb9154d..17e55c1fd5a1 100644
+> --- a/drivers/md/raid1-10.c
+> +++ b/drivers/md/raid1-10.c
+> @@ -151,3 +151,17 @@ static inline bool raid1_add_bio_to_plug(struct mdde=
+v *mddev, struct bio *bio,
+>
+>         return true;
+>  }
+> +
+> +/*
+> + * current->bio_list will be set under submit_bio() context, in this cas=
+e bitmap
+> + * io will be added to the list and wait for current io submission to fi=
+nish,
+> + * while current io submission must wait for bitmap io to be done. In or=
+der to
+> + * avoid such deadlock, submit bitmap io asynchronously.
+> + */
+> +static inline void raid1_prepare_flush_writes(struct bitmap *bitmap)
+> +{
+> +       if (current->bio_list)
+> +               md_bitmap_unplug_async(bitmap);
+> +       else
+> +               md_bitmap_unplug(bitmap);
+> +}
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 0778e398584c..006620fed595 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -794,7 +794,7 @@ static int read_balance(struct r1conf *conf, struct r=
+1bio *r1_bio, int *max_sect
+>  static void flush_bio_list(struct r1conf *conf, struct bio *bio)
+>  {
+>         /* flush any pending bitmap writes to disk before proceeding w/ I=
+/O */
+> -       md_bitmap_unplug(conf->mddev->bitmap);
+> +       raid1_prepare_flush_writes(conf->mddev->bitmap);
 
-Yes, I missed that.
+If we unplug bitmap asynchronously, can we make sure the bitmap are
+flushed before the corresponding data?
 
-Thanks,
-Guoqing
+Regards
+Xiao
+
+>         wake_up(&conf->wait_barrier);
+>
+>         while (bio) { /* submit pending writes */
+> @@ -1166,7 +1166,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bo=
+ol from_schedule)
+>         struct r1conf *conf =3D mddev->private;
+>         struct bio *bio;
+>
+> -       if (from_schedule || current->bio_list) {
+> +       if (from_schedule) {
+>                 spin_lock_irq(&conf->device_lock);
+>                 bio_list_merge(&conf->pending_bio_list, &plug->pending);
+>                 spin_unlock_irq(&conf->device_lock);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 6640507ecb0d..fb22cfe94d32 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -902,9 +902,7 @@ static void flush_pending_writes(struct r10conf *conf=
+)
+>                 __set_current_state(TASK_RUNNING);
+>
+>                 blk_start_plug(&plug);
+> -               /* flush any pending bitmap writes to disk
+> -                * before proceeding w/ I/O */
+> -               md_bitmap_unplug(conf->mddev->bitmap);
+> +               raid1_prepare_flush_writes(conf->mddev->bitmap);
+>                 wake_up(&conf->wait_barrier);
+>
+>                 while (bio) { /* submit pending writes */
+> @@ -1108,7 +1106,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
+ool from_schedule)
+>         struct r10conf *conf =3D mddev->private;
+>         struct bio *bio;
+>
+> -       if (from_schedule || current->bio_list) {
+> +       if (from_schedule) {
+>                 spin_lock_irq(&conf->device_lock);
+>                 bio_list_merge(&conf->pending_bio_list, &plug->pending);
+>                 spin_unlock_irq(&conf->device_lock);
+> @@ -1120,7 +1118,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
+ool from_schedule)
+>
+>         /* we aren't scheduling, so we can do the write-out directly. */
+>         bio =3D bio_list_get(&plug->pending);
+> -       md_bitmap_unplug(mddev->bitmap);
+> +       raid1_prepare_flush_writes(mddev->bitmap);
+>         wake_up(&conf->wait_barrier);
+>
+>         while (bio) { /* submit pending writes */
+> --
+> 2.39.2
+>
+
