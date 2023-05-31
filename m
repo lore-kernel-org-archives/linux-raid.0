@@ -2,27 +2,34 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD85DC77B7A
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 01:29:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35837C77B7A
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 01:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233751AbjEaB3a (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 May 2023 21:29:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40122 "EHLO
+        id S232098AbjEaBty (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 May 2023 21:49:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229600AbjEaB33 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 21:29:29 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A4DD9;
-        Tue, 30 May 2023 18:29:27 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QWBWR0SG3z4f3jLj;
-        Wed, 31 May 2023 09:29:23 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBnHbHzonZk749YKg--.48279S3;
-        Wed, 31 May 2023 09:29:23 +0800 (CST)
+        with ESMTP id S233909AbjEaBtw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 21:49:52 -0400
+Received: from out-1.mta0.migadu.com (out-1.mta0.migadu.com [IPv6:2001:41d0:1004:224b::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8515F113
+        for <linux-raid@vger.kernel.org>; Tue, 30 May 2023 18:49:50 -0700 (PDT)
+Message-ID: <e2c936ce-5832-9d69-919a-c98af673bb3a@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1685497788;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=u48UJmA/2Yjt1kKlLoKXVdzACrCJ2AOYz6a3+Scc6hM=;
+        b=QQ/o6PusxfcxNV/jqDmr7ib7MPO7mmnIvGVQd3fIWB7KsmtqT9S7Xd6jKQnDyHaOXXHtlC
+        dJIvk9B0YdH4Lumj32Lgwr7B+r2lLn4Gfs3sN7N+1cmSRQPp6ONX+J11oShzrx+6e9vpdx
+        T5CFGOOhQEFykdQRL2v/Jd6sPN9DT90=
+Date:   Wed, 31 May 2023 09:49:43 +0800
+MIME-Version: 1.0
 Subject: Re: [PATCH v2] md/raid5: don't allow concurrent reshape with recovery
-To:     Yu Kuai <yukuai1@huaweicloud.com>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>, song@kernel.org,
+Content-Language: en-US
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
         pmenzel@molgen.mpg.de
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yi.zhang@huawei.com, yangerkun@huawei.com,
@@ -30,43 +37,21 @@ Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
 References: <20230529133410.2125914-1-yukuai1@huaweicloud.com>
  <b9fd7105-eadc-29cb-fa2e-24109f4a99b7@linux.dev>
  <e26af7db-a283-47ca-fc61-89af99f52c17@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <829683eb-ecfa-62ff-af67-b86dfd6f95d3@huaweicloud.com>
-Date:   Wed, 31 May 2023 09:29:23 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
 In-Reply-To: <e26af7db-a283-47ca-fc61-89af99f52c17@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnHbHzonZk749YKg--.48279S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF48ZF13XF1UCr47WFy5twb_yoW5XF13pa
-        yktFs8urWDurn3tF4Dtr1jyFyYkryUJ3y5Jr13Wa48Ars8tryI9rWUWFn09r1UXr4Fqw4j
-        qr1rtr9xur17KFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZa9
-        -UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
 
-在 2023/05/31 9:22, Yu Kuai 写道:
+
+On 5/31/23 09:22, Yu Kuai wrote:
 > Hi,
-> 
+>
 > 在 2023/05/31 9:06, Guoqing Jiang 写道:
 >>
 >>
@@ -76,7 +61,16 @@ Hi,
 >>> Commit 0aecb06e2249 ("md/raid5: don't allow replacement while reshape
 >>> is in progress") fixes that replacement can be set if reshape is
 >>> interrupted, which will cause that array can't be assembled.
->>>
+
+I just pulled md tree, but can't find the commit id either in md-next or 
+md-fixes .
+gjiang@pc:~/storage/md> git branch
+  master
+  md-fixes
+* md-next
+gjiang@pc:~/storage/md> git branch --contain 0aecb06e2249
+error: malformed object name 0aecb06e2249
+
 >>> There is a similar problem on the other side, if recovery is
 >>> interrupted, then reshape can start, which will cause the same problem.
 >>>
@@ -117,25 +111,32 @@ Hi,
 >>
 >> Does it mean reshape and recovery  can happen in parallel without the 
 >> change?
->> I really doubt about it given any kind of internal io (resync, reshape 
->> and recovery)
+>> I really doubt about it given any kind of internal io (resync, 
+>> reshape and recovery)
 >> is handled by resync thread. And IIUC either md_do_sync or 
 >> md_check_recovery
 >> should avoid it, no need to do it in personality layer.
 >>
-> 
+>
 > They can't, in this case recovery is interrupted, then recovery can't
 > make progress, and md_check_recovery() will start reshape, and after
 > reshape is done, recovery will continue, and data will be corrupted
 > because raid456 reshape doesn't handle replacement.
-> 
+
+So, do reshape first then recovery, right? I don't see concurrent 
+reshape and recovery
+happen based on your description, if concurrent reshape and recovery is 
+possible
+then I believe we really have big trouble.
+
 > And by the way in raid456 is that if system reboot, this array can't be
 > assembled, raid5_run() will fail if reshape and replacement are both
 > set.
 
-And someone reported this reboot case, I also add new test for this
-case, you can take a look.
+Assemble an array need to read data from sb, I don't know which place 
+record replacement,
+I probably misunderstand something.
 
 Thanks,
-Kuai
+Guoqing
 
