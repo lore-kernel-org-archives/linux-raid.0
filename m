@@ -2,50 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDACEC83003
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:51:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DE58C83005
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:51:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235658AbjEaLvU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 07:51:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49044 "EHLO
+        id S235679AbjEaLvW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 07:51:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235507AbjEaLvP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 07:51:15 -0400
+        with ESMTP id S235567AbjEaLvQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 07:51:16 -0400
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC22F132;
-        Wed, 31 May 2023 04:51:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0951183;
+        Wed, 31 May 2023 04:51:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1685533861; x=1717069861;
+  t=1685533870; x=1717069870;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=yht1tkgwasi8HpY3YFcrQQ6s5n80qKmfhqnvFToXZgs=;
-  b=Tkj9wSOVccVbvRtdJZVAJ2F88JeJZj8KJBUwunbBkHEIeS+6Mm+UUntu
-   ApfQpL9Ewa1ZqoSNImDK+psInxCCr/HAbH5XDlTlHNFs5PTYPRhXkZwGX
-   4x6XjE8yItsqdN3WvuFtXjUFjRP4hm7e///AZnAOT3eIG9gsyJl9/lP9N
-   mtpFXjWkY0foWLKEoY5yAX5Efv/lkwamgtYkPOL5DsQlKqUvoiup61YaM
-   H25LBzQJyxev8YTdoUC8vuYTSVHUsReT3giOJfAD/0ZOup82+73GzlEZ/
-   eKpOSoe+MTGi98crCmYM27EceYSQXTohE/CmidGoNAMGgvpTfvDmzX2vT
-   Q==;
+  bh=KhIiE2PZNX0ldPMtUgXTcFhOjFzcO4m6Vc6He+n9TMM=;
+  b=TBBrPYzJ7ZU2d1Nq5BQoqyu7sdANp60AD6IY+UEwPeYyhtm1rBoqukhX
+   8NWTK+89yMK+pxwAegFMHoGCL5OEinGhElVEu3r5pV2mvutnoCsa4Hisv
+   5CNF06uqvcyInd97/uPvOEY9BNyiOVaTnyf1Qekjoj2pAkKWF++Z0sO4+
+   Wj3DYSQstdbhZa3eVqGaOXDDwYLzcmTZ/6AekFG5NlAF3ofdnVnsjaztd
+   xbeiWzfBuoL1+wHSiQ6MO4IqfneudxIJE76dJjj5flyajdXzM5vOwDwb8
+   5QELaXqjoJT2VRX//8iPS0IeinWe7rlYUI9sYSTdi4qQlfLRcEfWGIhY0
+   A==;
 X-IronPort-AV: E=Sophos;i="6.00,207,1681142400"; 
-   d="scan'208";a="336547909"
+   d="scan'208";a="336547921"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 31 May 2023 19:51:01 +0800
-IronPort-SDR: +ooRInVvHjxF6GDT7d7t+Jw6i7Jf/KRptimZmKXYt2lA5R/NV1ynQepPjR7l2pyFju8FMoig5L
- OE+BVa6rX0mcVQjDwHYod4BCoz2jPwnDfDqjT4FY05P/paQGnOO0yfElEV+Agej1DIJ7U0Kq4J
- HgcNx22k2kbQtKb775KGfnZr/cbrfKOn3BiEq3NcjsgajVAZE2zP/TzEtSJ6G7K6ZQJFOemJhs
- 5+wVDrQ3KGRn+xGEEWIys9eRXmpAbeNs5VVZJRjifKiw1Tiv1J25tj7uPHYMwAyRgrLP8E3L+e
- rAM=
+  by ob1.hgst.iphmx.com with ESMTP; 31 May 2023 19:51:10 +0800
+IronPort-SDR: 2PxdtXov8oYfZVM9o12Jf6wJgWNWE309SN0n4KcVmjmuxtturomPGQQHSQ1IGRHv3goSM5iKFa
+ ZX4rKDsA+9WtVB9Hy6tf+AD3m1GOrmkPt/PG5uAl71sZhFMDq5g2jptfYwKxE3/vFaU997Fa3D
+ q129oNy6nwS1zpH/eUui/d8kZQF8aBw7fxQEP9y5Nsuns87Mn2pG2e+Nqn2uB97spt9Y5q3J17
+ Qu0sQf9QFjoaUMikfTyeq6/+DjLrFNwXYVGC+DnFmiW41Ktj+yKxnYjuw7OSc54Kz6aC0/ngYs
+ sJo=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2023 04:05:54 -0700
-IronPort-SDR: bsi7HwNoddoi1aCCstr6zqEUz0yRweXsbpeUwAD9EpJFxV4mtkV/er5q/U5Rtf4PTtq8dDGKTL
- 6Bm1doXKC1ZsZlmOyIQMYHRP0CxBcyzAqmfz4V1wID7LJJntM04yP77jdrZeLV8zMePOeEB9fi
- mnc/c4IKxHr9qPLks3U0aTHrkZGdC0Nddoqn//IrBToFuqv7JuL6t2n19kxK3ItMI087JoHAiz
- 2NW/P+el9+4FFBvaFgEq5wfOFgSO8ReYWFFZDHZHiKVCZGfLRlQD5HyvSI3XoZi85DenMceD/4
- iYA=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2023 04:06:03 -0700
+IronPort-SDR: f4sky3ehrJxiT/WAHaDyDgGjgkEGaBVQ9Ynqzb+9FpjL0wrWalF1YoF39q6U55+/vA10v+md4S
+ xA+EZ1AAvJbX4CPvXm2q38H3efX7qrlaeAvxzz0OHLkK/u2zsBNbVKWqTmZi71JeCHDpbVB39S
+ aUtkeULE6SgapnBoQdZNAscRSiR6/B2TGee/piMikW+A9bCZVdTSYmVNk+gXPXJSo+BoUGRM1S
+ G6csNNGPboiDcVMzRkpPA8s+7n4Mf/m2BO4bnujYmZkdKcmmY1nC5gkfsQ85PydSyrrQfCFnhg
+ xVI=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.6])
-  by uls-op-cesaip02.wdc.com with ESMTP; 31 May 2023 04:50:59 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 31 May 2023 04:51:08 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
@@ -63,9 +63,9 @@ Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Mikulas Patocka <mpatocka@redhat.com>, gouha7@uniontech.com,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH v7 03/20] dm: dm-zoned: use __bio_add_page for adding single metadata page
-Date:   Wed, 31 May 2023 04:50:26 -0700
-Message-Id: <55a0c8dad7550379647873b579dc7cfbe0191f96.1685532726.git.johannes.thumshirn@wdc.com>
+Subject: [PATCH v7 06/20] md: raid5-log: use __bio_add_page to add single page
+Date:   Wed, 31 May 2023 04:50:29 -0700
+Message-Id: <832a810d6c9e71f88b0a39cb076a8c70e8bcb821.1685532726.git.johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <cover.1685532726.git.johannes.thumshirn@wdc.com>
 References: <cover.1685532726.git.johannes.thumshirn@wdc.com>
@@ -75,50 +75,35 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-dm-zoned uses bio_add_page() for adding a single page to a freshly created
-metadata bio.
+The raid5 log metadata submission code uses bio_add_page() to add a page
+to a newly created bio. bio_add_page() can fail, but the return value is
+never checked.
 
-Use __bio_add_page() instead as adding a single page to a new bio is
-always guaranteed to succeed.
+Use __bio_add_page() as adding a single page to a newly created bio is
+guaranteed to succeed.
 
-This brings us a step closer to marking bio_add_page() __must_check
+This brings us a step closer to marking bio_add_page() as __must_check.
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Acked-by: Song Liu <song@kernel.org>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/md/dm-zoned-metadata.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/md/raid5-cache.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/dm-zoned-metadata.c b/drivers/md/dm-zoned-metadata.c
-index 8f0896a6990b..9d3cca8e3dc9 100644
---- a/drivers/md/dm-zoned-metadata.c
-+++ b/drivers/md/dm-zoned-metadata.c
-@@ -577,7 +577,7 @@ static struct dmz_mblock *dmz_get_mblock_slow(struct dmz_metadata *zmd,
- 	bio->bi_iter.bi_sector = dmz_blk2sect(block);
- 	bio->bi_private = mblk;
- 	bio->bi_end_io = dmz_mblock_bio_end_io;
--	bio_add_page(bio, mblk->page, DMZ_BLOCK_SIZE, 0);
-+	__bio_add_page(bio, mblk->page, DMZ_BLOCK_SIZE, 0);
- 	submit_bio(bio);
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 46182b955aef..852b265c5db4 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -792,7 +792,7 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
+ 	io->current_bio = r5l_bio_alloc(log);
+ 	io->current_bio->bi_end_io = r5l_log_endio;
+ 	io->current_bio->bi_private = io;
+-	bio_add_page(io->current_bio, io->meta_page, PAGE_SIZE, 0);
++	__bio_add_page(io->current_bio, io->meta_page, PAGE_SIZE, 0);
  
- 	return mblk;
-@@ -728,7 +728,7 @@ static int dmz_write_mblock(struct dmz_metadata *zmd, struct dmz_mblock *mblk,
- 	bio->bi_iter.bi_sector = dmz_blk2sect(block);
- 	bio->bi_private = mblk;
- 	bio->bi_end_io = dmz_mblock_bio_end_io;
--	bio_add_page(bio, mblk->page, DMZ_BLOCK_SIZE, 0);
-+	__bio_add_page(bio, mblk->page, DMZ_BLOCK_SIZE, 0);
- 	submit_bio(bio);
- 
- 	return 0;
-@@ -752,7 +752,7 @@ static int dmz_rdwr_block(struct dmz_dev *dev, enum req_op op,
- 	bio = bio_alloc(dev->bdev, 1, op | REQ_SYNC | REQ_META | REQ_PRIO,
- 			GFP_NOIO);
- 	bio->bi_iter.bi_sector = dmz_blk2sect(block);
--	bio_add_page(bio, page, DMZ_BLOCK_SIZE, 0);
-+	__bio_add_page(bio, page, DMZ_BLOCK_SIZE, 0);
- 	ret = submit_bio_wait(bio);
- 	bio_put(bio);
+ 	r5_reserve_log_entry(log, io);
  
 -- 
 2.40.1
