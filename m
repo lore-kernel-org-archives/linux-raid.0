@@ -2,84 +2,189 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E811EC77B7A
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 15:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B8BC77B73
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 15:43:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234042AbjEaPbb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 11:31:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55338 "EHLO
+        id S234785AbjEaPny (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 11:43:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229730AbjEaPb2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 11:31:28 -0400
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94E1310E
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:31:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685547087; x=1717083087;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=2+CWrNL0aMAY7FaBDnkhD5xU9At7V9DxeviYNZQ3pVs=;
-  b=ZjCqwFz6uARFu0cjBA3d+JNJC/9OPiaeiJggTZGsuRq7T6WTCV+HSAmY
-   40nCPdS7ZY4HWRqFfDjWszFWloYqgL5AZeS3tEdURwO7ekyY6fd7Tm1y3
-   AYRO7Wu0kKEOeWNusy8J4nc3vhJ+yZVB282u+5m0X+5qdLk4bqsoArWx3
-   j6ymlIUOXDrZf/glCZRiSOhlXqWK5U1MI2QMvO+rttMTixfn4y2gAzXJ1
-   aRLc7rxmyOgI0VDayhMPNsCL7Xf16cWCa4KlIhzF5gjWiK/Wqz9mOcywx
-   1YitdfiX3XSWLubZ7wh8tQegMMCbGTsEi3i1E7Af/U1iBYlgLQVFKubao
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="344787261"
-X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="344787261"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 08:31:02 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="657367546"
-X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="657367546"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.132.89])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 08:30:59 -0700
-Date:   Wed, 31 May 2023 17:30:54 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org, colyli@suse.de
-Subject: Re: [PATCH 0/6] imsm: expand improvements
-Message-ID: <20230531173054.00003622@linux.intel.com>
-In-Reply-To: <20230531152108.18103-1-mariusz.tkaczyk@linux.intel.com>
-References: <20230531152108.18103-1-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S234757AbjEaPnw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 11:43:52 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EA9A126
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:43:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685547784;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Neyvf7piN/jznj9GMJPM9dIGzEpEK9H8JJFuRevFs+I=;
+        b=FfK3+gREyKXvmxTJcs95hB7I3kKJb+kMmrPddxed8rAzy1tX6rJV5VduQ9kPwdLctVd9gx
+        6yHY6Rs99tLGrrV9XU7WsqjRIkFciTsYarlbdLrhdvrtc+ZoU4Ktaf43iYMIiwKHwSqAhX
+        l5I2QfhFRotDWwlRrHBSHm6zezqD7vs=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-37-wGQMHNA0Nsq7raktu0AXAQ-1; Wed, 31 May 2023 11:43:03 -0400
+X-MC-Unique: wGQMHNA0Nsq7raktu0AXAQ-1
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2553b096ddfso671905a91.1
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:43:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685547782; x=1688139782;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Neyvf7piN/jznj9GMJPM9dIGzEpEK9H8JJFuRevFs+I=;
+        b=lNDsV1WwPXw0hui9xQ7FIvOvYKDIhCfYG9KHP5Ri5thmWB2/lJkrMRsu/bUYm9U/ra
+         5IYzsvIknHw1LY8ADzarrW3ly3MQbDqCVj2IJBSUbfSsmDaiJeYAl4koASX+pG97+HT5
+         drAhOEMZX6BMtAst+24AuP8nsESMUAkPG3Vn8KoME+zc+Lbv/kCNjt0P7WzdqE9zU/UZ
+         hme+/lX7xR6FIBLJrm6a4dW6bbcLS7kyYbETubdHjvtsQPvv7zfsEveaXnRhy9JapWKQ
+         hElsHsXiLGZyPERl17s6XUFHMyHoiXkqsyg+AkU8Nk/qxZmDf3JNsQj3M2FaRVtc3zwS
+         QOJA==
+X-Gm-Message-State: AC+VfDx+DFYZRCylW7I2fMDMX1dNtD6gG+KhS+bKP96y5SCUtXqPtlOU
+        OO5PEnjC/rasUfOR3VwV1pjTUl5E5edjHW3jDHJlsv92b0lmY696usVH77ywwY8MIODNXA4luG2
+        ieyd02sh+KAtTHVufMmf6PoZl+P9FQyxvJQlMHYefb47j2zoF
+X-Received: by 2002:a17:90a:c86:b0:256:a706:44cc with SMTP id v6-20020a17090a0c8600b00256a70644ccmr6614068pja.10.1685547781865;
+        Wed, 31 May 2023 08:43:01 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7rr8NKOMFHE9bTirrXqziuDZM26000F7uZD+o4fsIDiodFAyTrkEOYJouqbypWO3p9YuiKoRILTpdsgJ3SXXw=
+X-Received: by 2002:a17:90a:c86:b0:256:a706:44cc with SMTP id
+ v6-20020a17090a0c8600b00256a70644ccmr6614049pja.10.1685547781501; Wed, 31 May
+ 2023 08:43:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20230529131106.2123367-1-yukuai1@huaweicloud.com> <20230529131106.2123367-8-yukuai1@huaweicloud.com>
+In-Reply-To: <20230529131106.2123367-8-yukuai1@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 31 May 2023 23:42:50 +0800
+Message-ID: <CALTww29JCfgQivaEqi3dAvTrfxT9bhN6Rj04fyXRRJF2DfNHyg@mail.gmail.com>
+Subject: Re: [PATCH -next v3 7/7] md/raid1-10: limit the number of plugged bio
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, neilb@suse.de, akpm@osdl.org,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 31 May 2023 17:21:02 +0200
-Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
+On Mon, May 29, 2023 at 9:14=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> bio can be added to plug infinitely, and following writeback test can
+> trigger huge amount of plugged bio:
+>
+> Test script:
+> modprobe brd rd_nr=3D4 rd_size=3D10485760
+> mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean --bitmap=3Dinte=
+rnal
+> echo 0 > /proc/sys/vm/dirty_background_ratio
+> fio -filename=3D/dev/md0 -ioengine=3Dlibaio -rw=3Dwrite -bs=3D4k -numjobs=
+=3D1 -iodepth=3D128 -name=3Dtest
+>
+> Test result:
+> Monitor /sys/block/md0/inflight will found that inflight keep increasing
+> until fio finish writing, after running for about 2 minutes:
+>
+> [root@fedora ~]# cat /sys/block/md0/inflight
+>        0  4474191
+>
+> Fix the problem by limiting the number of plugged bio based on the number
+> of copies for original bio.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/raid1-10.c | 9 ++++++++-
+>  drivers/md/raid1.c    | 2 +-
+>  drivers/md/raid10.c   | 2 +-
+>  3 files changed, 10 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+> index 17e55c1fd5a1..bb1e23b66c45 100644
+> --- a/drivers/md/raid1-10.c
+> +++ b/drivers/md/raid1-10.c
+> @@ -21,6 +21,7 @@
+>  #define IO_MADE_GOOD ((struct bio *)2)
+>
+>  #define BIO_SPECIAL(bio) ((unsigned long)bio <=3D 2)
+> +#define MAX_PLUG_BIO 32
+>
+>  /* for managing resync I/O pages */
+>  struct resync_pages {
+> @@ -31,6 +32,7 @@ struct resync_pages {
+>  struct raid1_plug_cb {
+>         struct blk_plug_cb      cb;
+>         struct bio_list         pending;
+> +       unsigned int            count;
+>  };
+>
+>  static void rbio_pool_free(void *rbio, void *data)
+> @@ -128,7 +130,7 @@ static inline void raid1_submit_write(struct bio *bio=
+)
+>  }
+>
+>  static inline bool raid1_add_bio_to_plug(struct mddev *mddev, struct bio=
+ *bio,
+> -                                     blk_plug_cb_fn unplug)
+> +                                     blk_plug_cb_fn unplug, int copies)
+>  {
+>         struct raid1_plug_cb *plug =3D NULL;
+>         struct blk_plug_cb *cb;
+> @@ -148,6 +150,11 @@ static inline bool raid1_add_bio_to_plug(struct mdde=
+v *mddev, struct bio *bio,
+>
+>         plug =3D container_of(cb, struct raid1_plug_cb, cb);
+>         bio_list_add(&plug->pending, bio);
+> +       if (++plug->count / MAX_PLUG_BIO >=3D copies) {
+> +               list_del(&cb->list);
+> +               cb->callback(cb, false);
+> +       }
+> +
+It doesn't need this line here.
 
-> merge_extents() was initially designed to support creation only. Expand
-> feature was added later and the current code was not updated properly.
-> Now, we can see two issues:
-> 1. --size=max used with expand and create result in different array size.
-> 2. In scenarios, where volume were deleted an recreated it may not be
-> possible to expand the volume.
-> 
-> The patchset addresses listed issues and removes limitation to the last
-> volume for expand.
-> 
-> Mariusz Tkaczyk (6):
->   imsm: move sum_extents calculations to merge_extents()
->   imsm: imsm_get_free_size() refactor.
->   imsm: introduce round_member_size_to_mb()
->   imsm: move expand verification code into new function
->   imsm: return free space after volume for expand
->   imsm: fix free space calculations
-> 
->  super-intel.c | 363 ++++++++++++++++++++++++++++----------------------
->  1 file changed, 202 insertions(+), 161 deletions(-)
-> 
+Have you done some performance tests with this patch set?
 
-Sent by mistake. Please ignore this.
+Regards
+Xiao
+>
+>         return true;
+>  }
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 006620fed595..dc89a1c4b1f1 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1562,7 +1562,7 @@ static void raid1_write_request(struct mddev *mddev=
+, struct bio *bio,
+>                                               r1_bio->sector);
+>                 /* flush_pending_writes() needs access to the rdev so...*=
+/
+>                 mbio->bi_bdev =3D (void *)rdev;
+> -               if (!raid1_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
+> +               if (!raid1_add_bio_to_plug(mddev, mbio, raid1_unplug, dis=
+ks)) {
+>                         spin_lock_irqsave(&conf->device_lock, flags);
+>                         bio_list_add(&conf->pending_bio_list, mbio);
+>                         spin_unlock_irqrestore(&conf->device_lock, flags)=
+;
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index fb22cfe94d32..9237dbeb07ba 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1306,7 +1306,7 @@ static void raid10_write_one_disk(struct mddev *mdd=
+ev, struct r10bio *r10_bio,
+>
+>         atomic_inc(&r10_bio->remaining);
+>
+> -       if (!raid1_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
+> +       if (!raid1_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copi=
+es)) {
+>                 spin_lock_irqsave(&conf->device_lock, flags);
+>                 bio_list_add(&conf->pending_bio_list, mbio);
+>                 spin_unlock_irqrestore(&conf->device_lock, flags);
+> --
+> 2.39.2
+>
 
-Sorry for noise,
-Mariusz
