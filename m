@@ -2,50 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A0BC77B7C
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39468C77B7C
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:51:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235601AbjEaLv1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 07:51:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49040 "EHLO
+        id S235786AbjEaLvd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 07:51:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235533AbjEaLvP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 07:51:15 -0400
+        with ESMTP id S235605AbjEaLvQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 07:51:16 -0400
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4962138;
-        Wed, 31 May 2023 04:51:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4EA0189;
+        Wed, 31 May 2023 04:51:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1685533867; x=1717069867;
+  t=1685533873; x=1717069873;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=6fCkYLHLU2sdscgq61bKtq6BxI8MUyl+IQuxHUEXz0I=;
-  b=fs86VGy9KboqeQ32EmkGWhft4YnnGZOheQ5ZQpxWzPw68B2sz8x+Wp62
-   3q6l8Wt0NkUgs693IdODWD71T4lQVs1lgdfdZz1n4XO4jg1RUTha8Zwns
-   QcPEGozlh73wm+1Wrjji2PyQ1wN+v7YFGgtPNpE0Zz5/8bNQys1SvxSS1
-   KMDW52XCG7GKtQ76yttVe9A6jJhwjK8ib8mjwBbZPW39DJk+kdIYXcNCT
-   Rf+9Uzgo8/imCH6RWR9CJsQiZjqDEoCD1u22UetJz/SoFZ7JtVB0aDf8a
-   8zdaBlT7c1hZopcYqx5zmlWlNF/XDypsOy6O9dI43GqdLnT7fYLNNhDsw
-   A==;
+  bh=k4a5Zi2GAZJPJB4x28jGupVJUdefs0tR8+WNO4iLVd8=;
+  b=qCi0eX17tc6kWaGcI/LX0JIxEhlFN0Nhx7vtULEtgbgo/hNvcM6D7dBw
+   u6wuzbcFzrQSp0iFGUtPPD5K1GdZltWlrTCmkdD3doNQttwDJYgH0gYgd
+   GjdDylEktkASHepks/88iJ4pOP0/5KIbz8n9D88TGwftUvXoPqfRW0Ixe
+   MlkXRXMjDSizPO13yPLfpLj/7DDnklAES3nMPP5xmRgtCiZ2OVm/Pmcze
+   Z5KQsT232UA/b7kYWO+wsIFgyd1XgQTsaI6SjnS64IorqD7HHk0vxna3S
+   PlDd8KJ5LxB92UISJlpx+Auc0a3J41gdygcB6ps9wY2E97MRUZdXMA+G2
+   g==;
 X-IronPort-AV: E=Sophos;i="6.00,207,1681142400"; 
-   d="scan'208";a="336547920"
+   d="scan'208";a="336547926"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 31 May 2023 19:51:07 +0800
-IronPort-SDR: mAGz2Zb9dgx7kbhFHzKH/59eNIrpkq7XAfSAoi6TSR/rghm+rVry+Do4ycarD/GyOB1EzxLHIR
- RygkBxTzGf2jJXIKxqRQHMRvaCMVsEaHNgF7UxE7xcbUwcj2vF9oa8EUI8gquhmJHDqmFMd0Sr
- If/Oegsr4BuA68JCar7d2dL4Dz7W87OdCavV2iPb5mox+CD4Gjo57sh8tn3eBdjtBgK6pwI2BQ
- kldA3H1wxNE81AcJ4Qpu3rKg6BxJlup6Y7AIxkfvrwpQF7fxj09fXMIr2fK/LKTlea0Ph4n/G/
- K/Q=
+  by ob1.hgst.iphmx.com with ESMTP; 31 May 2023 19:51:13 +0800
+IronPort-SDR: EBU2VvYBoKfMjXac1B+gEcOldwOi5SnXRmTVXmw+1xM1oNm19laY1wL1XnIz30jXpgp18hxM8i
+ 0crbtLHP+M3H89LAnjaOO4qNqsQxc7cq8roS5Epb4QZJ5L/D5v/67+YU1G+0SatyaGZIJL+5Dk
+ rccsOtTm5HSS8Q7u9wATiOaQT/52v2ruDUJtTvjQDQQ0Xryq++jLrKrEHU+N4f467An4xINpnk
+ ecflzWZgkCKIt7K6vFiO3K83LpyTgWGlXDvLTcHGSw1cj0GybC6KBFx9nXVSWchJD+qo0pxPar
+ nnY=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2023 04:06:00 -0700
-IronPort-SDR: Gn53kE5C3awoJBs1z8/fu9zSK3J2c16Qw5Ap/LwMuYuq1ak1onfG41AzuFrfFpDgw093xXiL8G
- 5IDcs8WVq7GROIbadARWQhW/82INlpRG5KezVbrpCpjOVN1FS7s+chB6/dVDBhvHoAzlmzvsFt
- +UZ3q3RZ0XLcO9O7h/52/VdpNEexXInUlEcbNXk1U6y9Wg5zi88lpDr34tQ0Wi9aG36WAafIri
- cEDqzhOb2lXEhROumtjAKvyFK4NA5YKzTDsiWVMUWQxoi2jyv0y9vscB6TDzCHDh05FrNT2GE7
- w8Q=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2023 04:06:06 -0700
+IronPort-SDR: xjFPRUk9Ifjou1cDm0luSpwn78hU9nM+Uh6/lNHb7tmpL9BnDcAHIBz7pRZNu+Y/7vgJ/Ez6sY
+ RyJ/ivLjBW17l+dotn8hVR30logKnTYtxKcJUpZjXM3pkCCTww+Wwx1Q95GuK0KwbO7NqPBTzp
+ ajKcCB7MvUhxXFY/oUZ+zxu7dJ2H1FZ7EusH398EBt4EExQgIH13eoEhJohKwTP8QoP4CwoW9U
+ kzYp0zCcFcq66GRNaEJVSD6lmZnBsL7SZcjVd4x99hRY1Fiv7ecOyIyY8X6ND26gRBWXJrsssH
+ laE=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.6])
-  by uls-op-cesaip02.wdc.com with ESMTP; 31 May 2023 04:51:05 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 31 May 2023 04:51:11 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
@@ -63,9 +63,9 @@ Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Mikulas Patocka <mpatocka@redhat.com>, gouha7@uniontech.com,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH v7 05/20] md: use __bio_add_page to add single page
-Date:   Wed, 31 May 2023 04:50:28 -0700
-Message-Id: <ca196f5e650e318106dbb4496eb6cbac4bc800bd.1685532726.git.johannes.thumshirn@wdc.com>
+Subject: [PATCH v7 07/20] md: raid5: use __bio_add_page to add single page to new bio
+Date:   Wed, 31 May 2023 04:50:30 -0700
+Message-Id: <27e6bcd762354bff74602e89159cdd12ae3d1fa9.1685532726.git.johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <cover.1685532726.git.johannes.thumshirn@wdc.com>
 References: <cover.1685532726.git.johannes.thumshirn@wdc.com>
@@ -75,45 +75,46 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The md-raid superblock writing code uses bio_add_page() to add a page to a
+The raid5-ppl submission code uses bio_add_page() to add a page to a
 newly created bio. bio_add_page() can fail, but the return value is never
-checked.
+checked. For adding consecutive pages, the return is actually checked and
+a new bio is allocated if adding the page fails.
 
 Use __bio_add_page() as adding a single page to a newly created bio is
 guaranteed to succeed.
 
 This brings us a step closer to marking bio_add_page() as __must_check.
 
-Signed-of_-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Acked-by: Song Liu <song@kernel.org>
+Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/md/md.c | 4 ++--
+ drivers/md/raid5-ppl.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8e344b4b3444..6a559a7e89c0 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -938,7 +938,7 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 	atomic_inc(&rdev->nr_pending);
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index e495939bb3e0..eaea57aee602 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -465,7 +465,7 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
  
- 	bio->bi_iter.bi_sector = sector;
--	bio_add_page(bio, page, size, 0);
-+	__bio_add_page(bio, page, size, 0);
- 	bio->bi_private = rdev;
- 	bio->bi_end_io = super_written;
+ 	bio->bi_end_io = ppl_log_endio;
+ 	bio->bi_iter.bi_sector = log->next_io_sector;
+-	bio_add_page(bio, io->header_page, PAGE_SIZE, 0);
++	__bio_add_page(bio, io->header_page, PAGE_SIZE, 0);
  
-@@ -979,7 +979,7 @@ int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
- 		bio.bi_iter.bi_sector = sector + rdev->new_data_offset;
- 	else
- 		bio.bi_iter.bi_sector = sector + rdev->data_offset;
--	bio_add_page(&bio, page, size, 0);
-+	__bio_add_page(&bio, page, size, 0);
+ 	pr_debug("%s: log->current_io_sector: %llu\n", __func__,
+ 	    (unsigned long long)log->next_io_sector);
+@@ -496,7 +496,7 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
+ 					       prev->bi_opf, GFP_NOIO,
+ 					       &ppl_conf->bs);
+ 			bio->bi_iter.bi_sector = bio_end_sector(prev);
+-			bio_add_page(bio, sh->ppl_page, PAGE_SIZE, 0);
++			__bio_add_page(bio, sh->ppl_page, PAGE_SIZE, 0);
  
- 	submit_bio_wait(&bio);
- 
+ 			bio_chain(bio, prev);
+ 			ppl_submit_iounit_bio(io, prev);
 -- 
 2.40.1
 
