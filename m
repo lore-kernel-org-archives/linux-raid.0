@@ -2,189 +2,141 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B8BC77B73
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 15:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 210C8C7EE2F
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 15:50:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234785AbjEaPny (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 11:43:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60254 "EHLO
+        id S234021AbjEaPuZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 11:50:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234757AbjEaPnw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 11:43:52 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EA9A126
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:43:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685547784;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Neyvf7piN/jznj9GMJPM9dIGzEpEK9H8JJFuRevFs+I=;
-        b=FfK3+gREyKXvmxTJcs95hB7I3kKJb+kMmrPddxed8rAzy1tX6rJV5VduQ9kPwdLctVd9gx
-        6yHY6Rs99tLGrrV9XU7WsqjRIkFciTsYarlbdLrhdvrtc+ZoU4Ktaf43iYMIiwKHwSqAhX
-        l5I2QfhFRotDWwlRrHBSHm6zezqD7vs=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-37-wGQMHNA0Nsq7raktu0AXAQ-1; Wed, 31 May 2023 11:43:03 -0400
-X-MC-Unique: wGQMHNA0Nsq7raktu0AXAQ-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2553b096ddfso671905a91.1
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:43:02 -0700 (PDT)
+        with ESMTP id S233996AbjEaPuY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 11:50:24 -0400
+Received: from mail-il1-x135.google.com (mail-il1-x135.google.com [IPv6:2607:f8b0:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E740F180
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:50:20 -0700 (PDT)
+Received: by mail-il1-x135.google.com with SMTP id e9e14a558f8ab-3357fc32a31so1289225ab.1
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 08:50:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1685548219; x=1688140219;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Kr7AYf3i1eBygjzH5q6AjnbmzDMGTDydvzH6ggOcr8w=;
+        b=4nzwQWXlPFrQgBR+Umz4rzJtXWnzFgbzUWVUfB9QgaeAyjDpdPycDHBOlzoGjkiyyF
+         WISZEhApoKJHX22j+q6FimQPSzuRzF1ACB/gjMYQF73jOOv9yb/CaL6c/cBr9iKLVL6a
+         oPEyWRUWLo3t6tEOB+MZMpIXQ/YO7qF9X+uZoWStyxdO1JqHmDHKM6Ywva729pw00VjN
+         K/4G6lUTixU41ZXWz6pHYoaoZ4B8pTBJ+MsxdVR7ZdtzhIvDbDXos/3WexK9ADx0jMsK
+         ImDcTknGUE04r0reHu1U5tXYxAs8kQ2e/F36l0E25F1pgb64Kd8DLNjSS74EObEQif36
+         HXpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685547782; x=1688139782;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20221208; t=1685548219; x=1688140219;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Neyvf7piN/jznj9GMJPM9dIGzEpEK9H8JJFuRevFs+I=;
-        b=lNDsV1WwPXw0hui9xQ7FIvOvYKDIhCfYG9KHP5Ri5thmWB2/lJkrMRsu/bUYm9U/ra
-         5IYzsvIknHw1LY8ADzarrW3ly3MQbDqCVj2IJBSUbfSsmDaiJeYAl4koASX+pG97+HT5
-         drAhOEMZX6BMtAst+24AuP8nsESMUAkPG3Vn8KoME+zc+Lbv/kCNjt0P7WzdqE9zU/UZ
-         hme+/lX7xR6FIBLJrm6a4dW6bbcLS7kyYbETubdHjvtsQPvv7zfsEveaXnRhy9JapWKQ
-         hElsHsXiLGZyPERl17s6XUFHMyHoiXkqsyg+AkU8Nk/qxZmDf3JNsQj3M2FaRVtc3zwS
-         QOJA==
-X-Gm-Message-State: AC+VfDx+DFYZRCylW7I2fMDMX1dNtD6gG+KhS+bKP96y5SCUtXqPtlOU
-        OO5PEnjC/rasUfOR3VwV1pjTUl5E5edjHW3jDHJlsv92b0lmY696usVH77ywwY8MIODNXA4luG2
-        ieyd02sh+KAtTHVufMmf6PoZl+P9FQyxvJQlMHYefb47j2zoF
-X-Received: by 2002:a17:90a:c86:b0:256:a706:44cc with SMTP id v6-20020a17090a0c8600b00256a70644ccmr6614068pja.10.1685547781865;
-        Wed, 31 May 2023 08:43:01 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ7rr8NKOMFHE9bTirrXqziuDZM26000F7uZD+o4fsIDiodFAyTrkEOYJouqbypWO3p9YuiKoRILTpdsgJ3SXXw=
-X-Received: by 2002:a17:90a:c86:b0:256:a706:44cc with SMTP id
- v6-20020a17090a0c8600b00256a70644ccmr6614049pja.10.1685547781501; Wed, 31 May
- 2023 08:43:01 -0700 (PDT)
+        bh=Kr7AYf3i1eBygjzH5q6AjnbmzDMGTDydvzH6ggOcr8w=;
+        b=ZpsaDYRp++Y8CGENSLr+OwAIZ/Pl9yu/qLCpzWEkNbz8WuIsn195qCz3BrvTJwcCcR
+         9r0eFxrkFKoC4Of6TlPBcL8pfd11EAMR4r1/tDfEHwzf1eqGJFcUXHnjEfNrgNCNRAo8
+         FAMm/mSZhRVq231PHj5efTkcpSbtSutqQvd3B9m+j9EY6Snt1xff/wzu3GrVxmIRgjVF
+         jbaGjNcrLIpvazMyAF2dvQNx+hf4fZ/6s5I1EHunXGboRIHNzjQ91VQc5QjmZZqaVQC1
+         8WrfDJDtc9TYNCPU0t00Q0g6eT7iUESj+1dulQjIs2fjhiaW7o2TyfXwusKC7TDfKK8H
+         QUZg==
+X-Gm-Message-State: AC+VfDwknerToDY6sV+MQQ0c5av/t38uXKuDmJOeacTcsLiRejhRc1QX
+        93rCp8IiQw+AqP/pqkzrNn+7VaIAikoz3tw1mdE=
+X-Google-Smtp-Source: ACHHUZ4Vc5K9goUssaOAlBejpFmpFM1M2MosneBhWp7jmoz34Mcc3cGA6Lj397yP4Jgger0rhBRBog==
+X-Received: by 2002:a05:6e02:1061:b0:32b:51df:26a0 with SMTP id q1-20020a056e02106100b0032b51df26a0mr1411548ilj.2.1685548219545;
+        Wed, 31 May 2023 08:50:19 -0700 (PDT)
+Received: from [127.0.0.1] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id a4-20020a927f04000000b0033355fa5440sm3211579ild.37.2023.05.31.08.50.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 31 May 2023 08:50:18 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Mikulas Patocka <mpatocka@redhat.com>, gouha7@uniontech.com
+In-Reply-To: <cover.1685532726.git.johannes.thumshirn@wdc.com>
+References: <cover.1685532726.git.johannes.thumshirn@wdc.com>
+Subject: Re: [PATCH v7 00/20] bio: check return values of bio_add_page
+Message-Id: <168554821814.183617.716542495633198655.b4-ty@kernel.dk>
+Date:   Wed, 31 May 2023 09:50:18 -0600
 MIME-Version: 1.0
-References: <20230529131106.2123367-1-yukuai1@huaweicloud.com> <20230529131106.2123367-8-yukuai1@huaweicloud.com>
-In-Reply-To: <20230529131106.2123367-8-yukuai1@huaweicloud.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 31 May 2023 23:42:50 +0800
-Message-ID: <CALTww29JCfgQivaEqi3dAvTrfxT9bhN6Rj04fyXRRJF2DfNHyg@mail.gmail.com>
-Subject: Re: [PATCH -next v3 7/7] md/raid1-10: limit the number of plugged bio
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, neilb@suse.de, akpm@osdl.org,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.13-dev-00303
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, May 29, 2023 at 9:14=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> bio can be added to plug infinitely, and following writeback test can
-> trigger huge amount of plugged bio:
->
-> Test script:
-> modprobe brd rd_nr=3D4 rd_size=3D10485760
-> mdadm -CR /dev/md0 -l10 -n4 /dev/ram[0123] --assume-clean --bitmap=3Dinte=
-rnal
-> echo 0 > /proc/sys/vm/dirty_background_ratio
-> fio -filename=3D/dev/md0 -ioengine=3Dlibaio -rw=3Dwrite -bs=3D4k -numjobs=
-=3D1 -iodepth=3D128 -name=3Dtest
->
-> Test result:
-> Monitor /sys/block/md0/inflight will found that inflight keep increasing
-> until fio finish writing, after running for about 2 minutes:
->
-> [root@fedora ~]# cat /sys/block/md0/inflight
->        0  4474191
->
-> Fix the problem by limiting the number of plugged bio based on the number
-> of copies for original bio.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/raid1-10.c | 9 ++++++++-
->  drivers/md/raid1.c    | 2 +-
->  drivers/md/raid10.c   | 2 +-
->  3 files changed, 10 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-> index 17e55c1fd5a1..bb1e23b66c45 100644
-> --- a/drivers/md/raid1-10.c
-> +++ b/drivers/md/raid1-10.c
-> @@ -21,6 +21,7 @@
->  #define IO_MADE_GOOD ((struct bio *)2)
->
->  #define BIO_SPECIAL(bio) ((unsigned long)bio <=3D 2)
-> +#define MAX_PLUG_BIO 32
->
->  /* for managing resync I/O pages */
->  struct resync_pages {
-> @@ -31,6 +32,7 @@ struct resync_pages {
->  struct raid1_plug_cb {
->         struct blk_plug_cb      cb;
->         struct bio_list         pending;
-> +       unsigned int            count;
->  };
->
->  static void rbio_pool_free(void *rbio, void *data)
-> @@ -128,7 +130,7 @@ static inline void raid1_submit_write(struct bio *bio=
-)
->  }
->
->  static inline bool raid1_add_bio_to_plug(struct mddev *mddev, struct bio=
- *bio,
-> -                                     blk_plug_cb_fn unplug)
-> +                                     blk_plug_cb_fn unplug, int copies)
->  {
->         struct raid1_plug_cb *plug =3D NULL;
->         struct blk_plug_cb *cb;
-> @@ -148,6 +150,11 @@ static inline bool raid1_add_bio_to_plug(struct mdde=
-v *mddev, struct bio *bio,
->
->         plug =3D container_of(cb, struct raid1_plug_cb, cb);
->         bio_list_add(&plug->pending, bio);
-> +       if (++plug->count / MAX_PLUG_BIO >=3D copies) {
-> +               list_del(&cb->list);
-> +               cb->callback(cb, false);
-> +       }
-> +
-It doesn't need this line here.
 
-Have you done some performance tests with this patch set?
+On Wed, 31 May 2023 04:50:23 -0700, Johannes Thumshirn wrote:
+> We have two functions for adding a page to a bio, __bio_add_page() which is
+> used to add a single page to a freshly created bio and bio_add_page() which is
+> used to add a page to an existing bio.
+> 
+> While __bio_add_page() is expected to succeed, bio_add_page() can fail.
+> 
+> This series converts the callers of bio_add_page() which can easily use
+> __bio_add_page() to using it and checks the return of bio_add_page() for
+> callers that don't work on a freshly created bio.
+> 
+> [...]
 
-Regards
-Xiao
->
->         return true;
->  }
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 006620fed595..dc89a1c4b1f1 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1562,7 +1562,7 @@ static void raid1_write_request(struct mddev *mddev=
-, struct bio *bio,
->                                               r1_bio->sector);
->                 /* flush_pending_writes() needs access to the rdev so...*=
-/
->                 mbio->bi_bdev =3D (void *)rdev;
-> -               if (!raid1_add_bio_to_plug(mddev, mbio, raid1_unplug)) {
-> +               if (!raid1_add_bio_to_plug(mddev, mbio, raid1_unplug, dis=
-ks)) {
->                         spin_lock_irqsave(&conf->device_lock, flags);
->                         bio_list_add(&conf->pending_bio_list, mbio);
->                         spin_unlock_irqrestore(&conf->device_lock, flags)=
-;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index fb22cfe94d32..9237dbeb07ba 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1306,7 +1306,7 @@ static void raid10_write_one_disk(struct mddev *mdd=
-ev, struct r10bio *r10_bio,
->
->         atomic_inc(&r10_bio->remaining);
->
-> -       if (!raid1_add_bio_to_plug(mddev, mbio, raid10_unplug)) {
-> +       if (!raid1_add_bio_to_plug(mddev, mbio, raid10_unplug, conf->copi=
-es)) {
->                 spin_lock_irqsave(&conf->device_lock, flags);
->                 bio_list_add(&conf->pending_bio_list, mbio);
->                 spin_unlock_irqrestore(&conf->device_lock, flags);
-> --
-> 2.39.2
->
+Applied, thanks!
+
+[01/20] swap: use __bio_add_page to add page to bio
+        commit: cb58bf91b138c1a8b18cca9503308789e26e3522
+[02/20] drbd: use __bio_add_page to add page to bio
+        commit: 8f11f79f193c935da617375ba5ea4e768a73a094
+[03/20] dm: dm-zoned: use __bio_add_page for adding single metadata page
+        commit: fc8ac3e539561aff1c0a255d701d9412d425373c
+[04/20] fs: buffer: use __bio_add_page to add single page to bio
+        commit: 741af75d4027b1229fc6e62f4e3c4378dfe04897
+[05/20] md: use __bio_add_page to add single page
+        commit: 3c383235c51dcd6198d37ac3ac06e2acad79f981
+[06/20] md: raid5-log: use __bio_add_page to add single page
+        commit: b0a2f17cad9d3fa564d67c543f5d19343401fefd
+[07/20] md: raid5: use __bio_add_page to add single page to new bio
+        commit: 6eea4ff8528d6a5b9f0eeb47992e48a8f44b5b8f
+[08/20] jfs: logmgr: use __bio_add_page to add single page to bio
+        commit: 2896db174ced7a800863223f9e74543b98271ba0
+[09/20] gfs2: use __bio_add_page for adding single page to bio
+        commit: effa7ddeeba782406c81b572791a142fbdaf6b05
+[10/20] zonefs: use __bio_add_page for adding single page to bio
+        commit: 0fa5b08cf6e17b0a64ffcc5894d8efe186691ab8
+[11/20] zram: use __bio_add_page for adding single page to bio
+        commit: 34848c910b911838e1e83e1370cb988b578c8860
+[12/20] floppy: use __bio_add_page for adding single page to bio
+        commit: 5225229b8fdfb3e65520c43547ecf9a737161c3f
+[13/20] md: check for failure when adding pages in alloc_behind_master_bio
+        commit: 6473bc325644b9c8473e6c92bfb520a68dce1e12
+[14/20] md: raid1: use __bio_add_page for adding single page to bio
+        commit: 2f9848178cfa4ac68a5b46e63e5163a09b8bd80f
+[15/20] md: raid1: check if adding pages to resync bio fails
+        commit: 33332be32fe91ff54ff326b3a1608973544e835a
+[16/20] dm-crypt: use __bio_add_page to add single page to clone bio
+        commit: 9be63ecfdd63f957b9ed25eaf85666d22a02d7a5
+[17/20] block: mark bio_add_page as __must_check
+        commit: 5b3e39c1cc8e1cf31a398830dd665eb15546b4f7
+[18/20] block: add bio_add_folio_nofail
+        commit: 42205551d1d43b1b42942fb7ef023cf954136cea
+[19/20] fs: iomap: use bio_add_folio_nofail where possible
+        commit: f31c58ab3ddaf64503d7988197602d7443d5be37
+[20/20] block: mark bio_add_folio as __must_check
+        commit: 9320744e4dbe10df6059b2b6531946c200a0ba3b
+
+Best regards,
+-- 
+Jens Axboe
+
+
 
