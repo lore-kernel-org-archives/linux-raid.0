@@ -2,50 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D54ACC77B7A
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:39:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E9CAC7EE2F
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:39:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235112AbjEaLjh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 07:39:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44876 "EHLO
+        id S235348AbjEaLjk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 07:39:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235161AbjEaLi5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 07:38:57 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84D39191;
-        Wed, 31 May 2023 04:38:56 -0700 (PDT)
+        with ESMTP id S235575AbjEaLjQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 07:39:16 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6FC41A1;
+        Wed, 31 May 2023 04:39:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1685533136; x=1717069136;
+  t=1685533145; x=1717069145;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=C+NYxtWZcIKLiQW8aZvWShDgl/gtDFIUIUOTPRiObYM=;
-  b=qZb9aDbtjwV2cRnuCD735jsONPVaf404Svgp8zEyKy/kEsqFhzyy3N6n
-   MethnOULEaTBxGcZ4iRYD4iDtNpJ6JS6fOKZFqfrERjaQZw1+uKxKKv2C
-   X/chzz3tT2ipY8+dsnOHg+WTB1unRgVZyPjs32Rll8pHe0vqpXShgThQ1
-   OGymdOgEYWbcsQcxDP8zjkoDHgnYITRLStJA6EZEimwn56FqVdulT4R54
-   0jMeK0oZEnTXAuaMwtati41uWWO81nVQ0dUf/z8oBhz/B3TscjxxlxQsj
-   1RS5kezEIiMznJh4T1qq2eb1wkfu1Py0A1NGMk6RVB627Y4L4211/kYt3
-   g==;
+  bh=Mcd/H07yjDNLd/X+ei4F/kInbJgAqWy0dojDfw1QWYw=;
+  b=CiMMXX2NKlw0EjscvWxhy9ES+3b6W5ONEZx4ZIVK0KEZ+W6pTyl6vOeD
+   goHLcUORVi77CHSFmlQZjfywUDpvnGIdAnyxG9S18a3FhFfOLtXhUXASr
+   +/xZq2+tOejUTbu69peLdDJYinO0NqS6bEiLVueBaq1HTidJO3JFgn1sd
+   r8laS+Q6zu030u+PMvNFvdYVyPNeQ9iHXuyb04yMGUSfnGFX0E1G9pLve
+   Cshh0nGpEJv9uCYamg11lVuZlu5OxK5F9ND9cbujZuqQOcKb+RO8VuvD4
+   p8XvQP8E9HpLk+cyK7ulrW7suh64Inaumuu1oWAbwc80fX6X0Ky2PFXuw
+   w==;
 X-IronPort-AV: E=Sophos;i="6.00,207,1681142400"; 
-   d="scan'208";a="344179124"
+   d="scan'208";a="232064336"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 31 May 2023 19:38:56 +0800
-IronPort-SDR: 3s9pvOcFcUE87NbGbt8fKnlQxTNOA6Uoagmkr48g+rXIdQYQrTjlc5MpMN7/VKyhLg1w+l/VlC
- IY6TEm006oWkf2iYerHl3QFyPT9FKj14nC6fIxnFMSMFHsfH8jctCDCGpsn622WRAqcAJy56SW
- PUUl1agleAggokQn+gA/dfycDtYVwC5mb0YRXkRRaoFOoeJC7NSbUXcucaFbdAVQAv74z10Rdz
- tJjk6+TYyKkElnY67ksuXI0U4/EikhOdvlqK00jXwcR5rVAJJBNBbUUcVlVB9BJxxIN0tFjmZG
- 74U=
+  by ob1.hgst.iphmx.com with ESMTP; 31 May 2023 19:39:05 +0800
+IronPort-SDR: to0HFdKBg+IjClABLpvTPIT1phHfuXDyOhvGvvE5YW+eCEPC6q67jqbl5yg1Q1LvS0Rrv8zFJX
+ g3zyiRNaRPvhqFhvKGVqm+i/kXIKh33aLNTHs7XAwG16gJxucCC+SS68kW7hkr9sVmSGHYCpwU
+ sVQRTbF1Mc7CL4arwpxE+Z3HJ0w8ZpVBhajmz2fDG5USa6OWeRmLm5Ml3CSKfsjnorP9M5CeN9
+ lTt3GCLhfbO+w+j2y9v/ghAMk+KyTuHdJlqekHKOuMX4rc+JBBB8tS5aYoN9+or45nPU6PVM7g
+ BA0=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2023 03:48:08 -0700
-IronPort-SDR: PKSrcm3NLNbiBK+MDQubevMRCFG4qYLLpgaKSxArlKlOXwW0E2BOzt5f10GZ8a1A+2vN6P0M26
- WxUV3N8icLO2ZI2b6wUvGTR/5lBbq92cfmOjXbzq+xJLRd95oOr+yPHrEb9f4OyqGbaMvtJDpN
- u/ss2e1pjPU9QWjjEw6cCVIwv43Blx8EnaXRymC0CiQS/6JKngFCZrNfKU9sh23zLkSiQp8wJg
- /p5T3+o8yTKVEDHWcCFvmVOZj2XoVpeJcgdYtjcA8cYxZJnOw3mdTok85yL8g8qD+jojKuWwK2
- 3wA=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2023 03:48:17 -0700
+IronPort-SDR: dJb/CRSP3Swr2x2jiC+paW0dnGjzm6Bz1GAlGKlca4A7q/x/ky8HuVCu7AA6VYX5uJ0Ewh5t3x
+ q+iWl5HlhzQMV3D+zIls3XMo7zp44uRPShf3qZmHTVjlHtCyJhoy3EfEEf+h9hvbiHfRi/SZaM
+ d9U7RaXciqVsSQr8sZoG/qgLo3wszKIv+4kHv8jpR5BKyb+/H8r/7FEY1iK6JWuO591/DsqLKl
+ X5ltcT6eaJJce6CRG0s8vZd0Q95JNHPvX3nOAbDWSbgMiVFC4dhkCvQP9zoXpp+VrisQgvbaoC
+ Beg=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.6])
-  by uls-op-cesaip02.wdc.com with ESMTP; 31 May 2023 04:38:53 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 31 May 2023 04:39:02 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
@@ -61,11 +61,10 @@ Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Bob Peterson <rpeterso@redhat.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         Mikulas Patocka <mpatocka@redhat.com>, gouha7@uniontech.com,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH v6 16/20] dm-crypt: check if adding pages to clone bio fails
-Date:   Wed, 31 May 2023 04:37:58 -0700
-Message-ID: <e1c7ed59e2d2b69567ef2d9925fa997ecb7b4822.1685461490.git.johannes.thumshirn@wdc.com>
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH v6 19/20] fs: iomap: use __bio_add_folio where possible
+Date:   Wed, 31 May 2023 04:38:01 -0700
+Message-ID: <e809b83d60d9fb0f65a8116b3e50f1432f594725.1685461490.git.johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <cover.1685461490.git.johannes.thumshirn@wdc.com>
 References: <cover.1685461490.git.johannes.thumshirn@wdc.com>
@@ -74,36 +73,51 @@ Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
-Message-ID: <20230531113758.RPbb9t1aL0r9LoBEDFKnTQLh1QR9gq92dj8r9FqD81Q@z>
+Message-ID: <20230531113801.oqrRQw9_ZJBj2bneKuRQoPnF-jA9BsQyVPDudu74HWg@z>
 
-Check if adding pages to clone bio fails and if it does retry with
-reclaim. This mirrors the behaviour of page allocation in
-crypt_alloc_buffer().
+When the iomap buffered-io code can't add a folio to a bio, it allocates a
+new bio and adds the folio to that one. This is done using bio_add_folio(),
+but doesn't check for errors.
 
-This way we can mark bio_add_pages as __must_check.
+As adding a folio to a newly created bio can't fail, use the newly
+introduced __bio_add_folio() function.
 
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/md/dm-crypt.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/iomap/buffered-io.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 8b47b913ee83..0dd231e61757 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -1693,7 +1693,10 @@ static struct bio *crypt_alloc_buffer(struct dm_crypt_io *io, unsigned int size)
- 
- 		len = (remaining_size > PAGE_SIZE) ? PAGE_SIZE : remaining_size;
- 
--		bio_add_page(clone, page, len, 0);
-+		if (!bio_add_page(clone, page, len, 0)) {
-+			WARN_ONCE(1, "Adding page to bio failed\n");
-+			return NULL;
-+		}
- 
- 		remaining_size -= len;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 063133ec77f4..42c5fc0ad329 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -312,7 +312,7 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+ 			ctx->bio->bi_opf |= REQ_RAHEAD;
+ 		ctx->bio->bi_iter.bi_sector = sector;
+ 		ctx->bio->bi_end_io = iomap_read_end_io;
+-		bio_add_folio(ctx->bio, folio, plen, poff);
++		__bio_add_folio(ctx->bio, folio, plen, poff);
  	}
+ 
+ done:
+@@ -539,7 +539,7 @@ static int iomap_read_folio_sync(loff_t block_start, struct folio *folio,
+ 
+ 	bio_init(&bio, iomap->bdev, &bvec, 1, REQ_OP_READ);
+ 	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
+-	bio_add_folio(&bio, folio, plen, poff);
++	__bio_add_folio(&bio, folio, plen, poff);
+ 	return submit_bio_wait(&bio);
+ }
+ 
+@@ -1582,7 +1582,7 @@ iomap_add_to_ioend(struct inode *inode, loff_t pos, struct folio *folio,
+ 
+ 	if (!bio_add_folio(wpc->ioend->io_bio, folio, len, poff)) {
+ 		wpc->ioend->io_bio = iomap_chain_bio(wpc->ioend->io_bio);
+-		bio_add_folio(wpc->ioend->io_bio, folio, len, poff);
++		__bio_add_folio(wpc->ioend->io_bio, folio, len, poff);
+ 	}
+ 
+ 	if (iop)
 -- 
 2.40.1
 
