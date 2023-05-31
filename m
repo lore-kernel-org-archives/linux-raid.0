@@ -2,177 +2,163 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2919C77B73
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 07:27:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 479F0C77B73
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 07:34:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234566AbjEaH1Z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 03:27:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38052 "EHLO
+        id S234647AbjEaHeJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 03:34:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234456AbjEaH1W (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 03:27:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06695123
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:26:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685517988;
+        with ESMTP id S234270AbjEaHeI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 03:34:08 -0400
+Received: from out-57.mta0.migadu.com (out-57.mta0.migadu.com [91.218.175.57])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F2F910E
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:34:05 -0700 (PDT)
+Message-ID: <3f6fdbfc-9c35-2bc0-2b44-0e312f89455b@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1685518443;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=eJ69H8OwkNROgGo3hgzQjdLL4qgWQK91VNRhhvwKcMs=;
-        b=Q91VgnKyZr/i2JJXbF/FFJcX9yrofhXPn8cMX4t/FTceIkKK9iYeylCia3u3QoAIwG1bwE
-        Lqz6y1WUcshgHePq7P2gsY/JjPwhYdOooezTHQc+DrcCfiZe9f1TctotS2Zm6JyYUcEA/Z
-        E5siHwag8AQHAgXNElE0rdZZzequv90=
-Received: from mail-yb1-f197.google.com (mail-yb1-f197.google.com
- [209.85.219.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-434-3neb0lRRMRe0tHQw-Mq_bA-1; Wed, 31 May 2023 03:26:27 -0400
-X-MC-Unique: 3neb0lRRMRe0tHQw-Mq_bA-1
-Received: by mail-yb1-f197.google.com with SMTP id 3f1490d57ef6-babb52dbb00so12547652276.1
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:26:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685517987; x=1688109987;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eJ69H8OwkNROgGo3hgzQjdLL4qgWQK91VNRhhvwKcMs=;
-        b=OA3M5+u1Zt1s2Q/kqJqp624IxQJBGIy9Dze6t+0KQXizMLWAEZZ1wzDF5y/AEFHuAu
-         TCkoGR6faY9j/m6HTPa1ypXprdVNaWIqiTNSAeSfMjnBhq54uTi3pQMxrFSgQC0lypC/
-         dszpCbkEG4pB9mJAu2Ph9jkaoIrsvGXYQc2ta2UC11q3cxhmgFo4BEKJ4tiCYGCTbH0a
-         j31855QUIrqyOs3+dujEH29Ua6negR0vYiL9odGpYxtp4lPmoxrVfXnZ1e7XrQx0U1Aj
-         id+kCYgbQQE9VvJydXywzIjkIXkQadPGMG0zH+LrntfHbHqqdwxYMxxX+a4fB32xtIYy
-         a+AQ==
-X-Gm-Message-State: AC+VfDzYNDJGsr45jzw1Crlp3Oy02w6EHBFPpaKj3jPxP1WxfW5JtNww
-        NWGeP4Uwl6Ed+Og+NGQcQ8Ud1TjrqNNIiN6ZY4aAu3Cd4a5LMpbtZvYM5vqP20nfzxVM5dc+N0e
-        idspejMTKYPcXTWC63tspWEnqM6CKugFKur0i2A==
-X-Received: by 2002:a25:74c3:0:b0:bac:7294:4faf with SMTP id p186-20020a2574c3000000b00bac72944fafmr5830573ybc.27.1685517987254;
-        Wed, 31 May 2023 00:26:27 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ4XLr76L1Km/YFTyFzihehq6bVkfwA3V+9D4X10JGfmRNAo4wi2AqM8Py7Wl/VSrnRZMFnpdyAQsMcwKXANCl8=
-X-Received: by 2002:a25:74c3:0:b0:bac:7294:4faf with SMTP id
- p186-20020a2574c3000000b00bac72944fafmr5830556ybc.27.1685517987025; Wed, 31
- May 2023 00:26:27 -0700 (PDT)
+        bh=9TMi838RK67CcEqqTNCbZ89BYFAIJ+LkmU3Cg3dLgM4=;
+        b=ZKynHhuvxzXdH4/QmG+UKaBnmNx2K/hesoDvXlJhLSGXnVsV81mK4CiBfpUmUPzMQCez+j
+        GHhH4lAlITzM2UWSLjDbAR8+0Je1cXuVPljOYSTFDWmdofXTbkKvmDHbNvNIIQvh5PGWen
+        78Estzyq8xwcV8RuYoAeWeHNdqjLfQg=
+Date:   Wed, 31 May 2023 15:33:59 +0800
 MIME-Version: 1.0
-References: <20230529131106.2123367-1-yukuai1@huaweicloud.com> <20230529131106.2123367-5-yukuai1@huaweicloud.com>
-In-Reply-To: <20230529131106.2123367-5-yukuai1@huaweicloud.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 31 May 2023 15:26:16 +0800
-Message-ID: <CALTww2-mOkQR+Qu0s=TE-TFoR7D0tDaA=gOOJ75r-Z_43X1yEg@mail.gmail.com>
-Subject: Re: [PATCH -next v3 4/7] md/raid1-10: submit write io directly if
- bitmap is not enabled
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, neilb@suse.de, akpm@osdl.org,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v2] md/raid5: don't allow concurrent reshape with recovery
+Content-Language: en-US
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
+        pmenzel@molgen.mpg.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230529133410.2125914-1-yukuai1@huaweicloud.com>
+ <b9fd7105-eadc-29cb-fa2e-24109f4a99b7@linux.dev>
+ <e26af7db-a283-47ca-fc61-89af99f52c17@huaweicloud.com>
+ <e2c936ce-5832-9d69-919a-c98af673bb3a@linux.dev>
+ <98f285ff-5afb-1d12-f087-cf04a5208e21@huaweicloud.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+In-Reply-To: <98f285ff-5afb-1d12-f087-cf04a5208e21@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, May 29, 2023 at 9:14=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Commit 6cce3b23f6f8 ("[PATCH] md: write intent bitmap support for raid10"=
-)
-> add bitmap support, and it changed that write io is submitted through
-> daemon thread because bitmap need to be updated before write io. And
-> later, plug is used to fix performance regression because all the write i=
-o
-> will go to demon thread, which means io can't be issued concurrently.
->
-> However, if bitmap is not enabled, the write io should not go to daemon
-> thread in the first place, and plug is not needed as well.
->
-> Fixes: 6cce3b23f6f8 ("[PATCH] md: write intent bitmap support for raid10"=
-)
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md-bitmap.c |  4 +---
->  drivers/md/md-bitmap.h |  7 +++++++
->  drivers/md/raid1-10.c  | 13 +++++++++++--
->  3 files changed, 19 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index ad5a3456cd8a..3ee590cf12a7 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1016,7 +1016,6 @@ static int md_bitmap_file_test_bit(struct bitmap *b=
-itmap, sector_t block)
->         return set;
->  }
->
-> -
->  /* this gets called when the md device is ready to unplug its underlying
->   * (slave) device queues -- before we let any writes go down, we need to
->   * sync the dirty pages of the bitmap file to disk */
-> @@ -1026,8 +1025,7 @@ void md_bitmap_unplug(struct bitmap *bitmap)
->         int dirty, need_write;
->         int writing =3D 0;
->
-> -       if (!bitmap || !bitmap->storage.filemap ||
-> -           test_bit(BITMAP_STALE, &bitmap->flags))
-> +       if (!md_bitmap_enabled(bitmap))
->                 return;
->
->         /* look at each page to see if there are any set bits that need t=
-o be
-> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-> index cfd7395de8fd..3a4750952b3a 100644
-> --- a/drivers/md/md-bitmap.h
-> +++ b/drivers/md/md-bitmap.h
-> @@ -273,6 +273,13 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, in=
-t slot,
->                              sector_t *lo, sector_t *hi, bool clear_bits)=
-;
->  void md_bitmap_free(struct bitmap *bitmap);
->  void md_bitmap_wait_behind_writes(struct mddev *mddev);
-> +
-> +static inline bool md_bitmap_enabled(struct bitmap *bitmap)
-> +{
-> +       return bitmap && bitmap->storage.filemap &&
-> +              !test_bit(BITMAP_STALE, &bitmap->flags);
-> +}
-> +
->  #endif
->
->  #endif
-> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-> index 506299bd55cb..73cc3cb9154d 100644
-> --- a/drivers/md/raid1-10.c
-> +++ b/drivers/md/raid1-10.c
-> @@ -131,9 +131,18 @@ static inline bool raid1_add_bio_to_plug(struct mdde=
-v *mddev, struct bio *bio,
->                                       blk_plug_cb_fn unplug)
->  {
->         struct raid1_plug_cb *plug =3D NULL;
-> -       struct blk_plug_cb *cb =3D blk_check_plugged(unplug, mddev,
-> -                                                  sizeof(*plug));
-> +       struct blk_plug_cb *cb;
-> +
-> +       /*
-> +        * If bitmap is not enabled, it's safe to submit the io directly,=
- and
-> +        * this can get optimal performance.
-> +        */
-> +       if (!md_bitmap_enabled(mddev->bitmap)) {
-> +               raid1_submit_write(bio);
-> +               return true;
-> +       }
 
-Can we check this out of raid1_add_bio_to_plug and call
-raid1_submit_write directly in make_request function?
 
-Regards
-Xiao
+On 5/31/23 11:20, Yu Kuai wrote:
+> Hi,
 >
-> +       cb =3D blk_check_plugged(unplug, mddev, sizeof(*plug));
->         if (!cb)
->                 return false;
+> 在 2023/05/31 9:49, Guoqing Jiang 写道:
+>>
+>>
+>> On 5/31/23 09:22, Yu Kuai wrote:
+>>> Hi,
+>>>
+>>> 在 2023/05/31 9:06, Guoqing Jiang 写道:
+>>>>
+>>>>
+>>>> On 5/29/23 21:34, Yu Kuai wrote:
+>>>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>>>
+>>>>> Commit 0aecb06e2249 ("md/raid5: don't allow replacement while reshape
+>>>>> is in progress") fixes that replacement can be set if reshape is
+>>>>> interrupted, which will cause that array can't be assembled.
+>>
+>> I just pulled md tree, but can't find the commit id either in md-next 
+>> or md-fixes .
+>> gjiang@pc:~/storage/md> git branch
+>>   master
+>>   md-fixes
+>> * md-next
+>> gjiang@pc:~/storage/md> git branch --contain 0aecb06e2249
+>> error: malformed object name 0aecb06e2249
+>>
+>>>>> There is a similar problem on the other side, if recovery is
+>>>>> interrupted, then reshape can start, which will cause the same 
+>>>>> problem.
+>>>>>
+>>>>> Fix the problem by not starting to reshape while recovery is still in
+>>>>> progress.
+>>>>>
+>>>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>>>> ---
+>>>>> Changes in v2:
+>>>>>   - fix some typo in commit message.
+>>>>>
+>>>>>   drivers/md/raid5.c | 8 ++++++++
+>>>>>   1 file changed, 8 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>>>>> index 8686d629e3f2..6615abf54d3f 100644
+>>>>> --- a/drivers/md/raid5.c
+>>>>> +++ b/drivers/md/raid5.c
+>>>>> @@ -8525,6 +8525,7 @@ static int raid5_start_reshape(struct mddev 
+>>>>> *mddev)
+>>>>>       struct r5conf *conf = mddev->private;
+>>>>>       struct md_rdev *rdev;
+>>>>>       int spares = 0;
+>>>>> +    int i;
+>>>>>       unsigned long flags;
+>>>>>       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+>>>>> @@ -8536,6 +8537,13 @@ static int raid5_start_reshape(struct mddev 
+>>>>> *mddev)
+>>>>>       if (has_failed(conf))
+>>>>>           return -EINVAL;
+>>>>> +    /* raid5 can't handle concurrent reshape and recovery */
+>>>>> +    if (mddev->recovery_cp < MaxSector)
+>>>>> +        return -EBUSY;
+>>>>> +    for (i = 0; i < conf->raid_disks; i++)
+>>>>> +        if (rdev_mdlock_deref(mddev, conf->disks[i].replacement))
+>>>>> +            return -EBUSY;
+>>>>> +
+>>>>
+>>>> Does it mean reshape and recovery  can happen in parallel without 
+>>>> the change?
+>>>> I really doubt about it given any kind of internal io (resync, 
+>>>> reshape and recovery)
+>>>> is handled by resync thread. And IIUC either md_do_sync or 
+>>>> md_check_recovery
+>>>> should avoid it, no need to do it in personality layer.
+>>>>
+>>>
+>>> They can't, in this case recovery is interrupted, then recovery can't
+>>> make progress, and md_check_recovery() will start reshape, and after
+>>> reshape is done, recovery will continue, and data will be corrupted
+>>> because raid456 reshape doesn't handle replacement.
+>>
+>> So, do reshape first then recovery, right? I don't see concurrent 
+>> reshape and recovery
+>> happen based on your description, if concurrent reshape and recovery 
+>> is possible
+>> then I believe we really have big trouble.
 >
-> --
-> 2.39.2
->
+> Yes, reshape first, and yes they can't concurrent.
 
+Then the subject, commit message and above comment are confusing given 
+they can't happen
+even without your change.
+
+>
+>>
+>>> And by the way in raid456 is that if system reboot, this array can't be
+>>> assembled, raid5_run() will fail if reshape and replacement are both
+>>> set.
+>>
+>> Assemble an array need to read data from sb, I don't know which place 
+>> record replacement,
+>> I probably misunderstand something.
+>
+> It's in rdev->flags, if MD_FEATURE_REPLACEMENT is set in rdev
+> metadata(sb->feature_map), then this rdev will mark Replacement, and
+> later this rdev will set to mirros[]->replacement in setup_conf().
+
+Yes, I missed that.
+
+Thanks,
+Guoqing
