@@ -2,64 +2,64 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91454C77B73
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 07:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2919C77B73
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 07:27:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234469AbjEaHW4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 03:22:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33832 "EHLO
+        id S234566AbjEaH1Z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 03:27:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234641AbjEaHWi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 03:22:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CD9510F3
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:21:14 -0700 (PDT)
+        with ESMTP id S234456AbjEaH1W (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 03:27:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06695123
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:26:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685517673;
+        s=mimecast20190719; t=1685517988;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Meyf/XHmfDbzkq87alDHYkBlXs+wlr8Q7mduutGuIR0=;
-        b=Eg5z0b0Lg7BFoQTq9U7RN9NJxr5gmtMJliLl1irukDYcNKf/CjDh1jwacHGGu431ICqwlA
-        4z+lHBOovcdF/W51w24i+MpzQy7/ar2BimwbJ5KwqkCqluMVJTcm//Ta6B4rO3I6YlXI9e
-        /n8HGyx/VdtiQeIuK6u12NvlrG293/Y=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=eJ69H8OwkNROgGo3hgzQjdLL4qgWQK91VNRhhvwKcMs=;
+        b=Q91VgnKyZr/i2JJXbF/FFJcX9yrofhXPn8cMX4t/FTceIkKK9iYeylCia3u3QoAIwG1bwE
+        Lqz6y1WUcshgHePq7P2gsY/JjPwhYdOooezTHQc+DrcCfiZe9f1TctotS2Zm6JyYUcEA/Z
+        E5siHwag8AQHAgXNElE0rdZZzequv90=
+Received: from mail-yb1-f197.google.com (mail-yb1-f197.google.com
+ [209.85.219.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-319-RLLxBPFkPj-r5QkpLy9ygg-1; Wed, 31 May 2023 03:21:12 -0400
-X-MC-Unique: RLLxBPFkPj-r5QkpLy9ygg-1
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-51b743d592dso417994a12.0
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:21:12 -0700 (PDT)
+ us-mta-434-3neb0lRRMRe0tHQw-Mq_bA-1; Wed, 31 May 2023 03:26:27 -0400
+X-MC-Unique: 3neb0lRRMRe0tHQw-Mq_bA-1
+Received: by mail-yb1-f197.google.com with SMTP id 3f1490d57ef6-babb52dbb00so12547652276.1
+        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 00:26:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685517671; x=1688109671;
+        d=1e100.net; s=20221208; t=1685517987; x=1688109987;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Meyf/XHmfDbzkq87alDHYkBlXs+wlr8Q7mduutGuIR0=;
-        b=Lr5PAZzH2YB1o6C6D+e0wYj1M3TjnBB01xlPHpTcVTPZdIyRpgmLX/VvVd55eSrmyA
-         VFOt+z0BXSwRYbIa76vXlj/pVhAz2XDD9V1lJ+/5e57E3Lu7XR8f6Y0yAP4zwlyy0KUu
-         +aXIak48lDcXAIOOmegcTYHJSczwDuUWR6vzwNWB4q7aD2FKaG11XNfrOLlWRI7r1ew1
-         cVYGcYWUCRPgufiZ52qZdE0SVYhS77s8gwJcHe3LLaMsAlSFGMUabIAi6SYARqaywMYN
-         heAOGauCXEzTKDJhBe2RgLTsAYwrXnbg7JK2aokW5E1g6GnXnaV3HZJBHDIbu4TFS/6T
-         EtqA==
-X-Gm-Message-State: AC+VfDwd7n2EzIdF9dNCWQ02/UC6jdfftUBfTi7uy2fGk83EEf2Yfma6
-        NQNcTsCJb0aqmgUMz5E40IpxKbGJSvjD7RC8r9Ger0ttkW7XZ0T4a+SZIwiKWAljF+vrWmYDSwg
-        v+Q01cVnYg6bMfQQh0TJyDO63HriilC0Q9BT5Cg==
-X-Received: by 2002:a17:90a:3d43:b0:250:50c5:cabc with SMTP id o3-20020a17090a3d4300b0025050c5cabcmr14294151pjf.3.1685517671322;
-        Wed, 31 May 2023 00:21:11 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ6Xr2yPl0eRj04AKYLMozSgF8t55H6LRqpy/8SnKUtzxcgZY3K/m9auMoo9kMmyTGnPCK6MHDfI9L0x45szauI=
-X-Received: by 2002:a17:90a:3d43:b0:250:50c5:cabc with SMTP id
- o3-20020a17090a3d4300b0025050c5cabcmr14294137pjf.3.1685517671046; Wed, 31 May
- 2023 00:21:11 -0700 (PDT)
+        bh=eJ69H8OwkNROgGo3hgzQjdLL4qgWQK91VNRhhvwKcMs=;
+        b=OA3M5+u1Zt1s2Q/kqJqp624IxQJBGIy9Dze6t+0KQXizMLWAEZZ1wzDF5y/AEFHuAu
+         TCkoGR6faY9j/m6HTPa1ypXprdVNaWIqiTNSAeSfMjnBhq54uTi3pQMxrFSgQC0lypC/
+         dszpCbkEG4pB9mJAu2Ph9jkaoIrsvGXYQc2ta2UC11q3cxhmgFo4BEKJ4tiCYGCTbH0a
+         j31855QUIrqyOs3+dujEH29Ua6negR0vYiL9odGpYxtp4lPmoxrVfXnZ1e7XrQx0U1Aj
+         id+kCYgbQQE9VvJydXywzIjkIXkQadPGMG0zH+LrntfHbHqqdwxYMxxX+a4fB32xtIYy
+         a+AQ==
+X-Gm-Message-State: AC+VfDzYNDJGsr45jzw1Crlp3Oy02w6EHBFPpaKj3jPxP1WxfW5JtNww
+        NWGeP4Uwl6Ed+Og+NGQcQ8Ud1TjrqNNIiN6ZY4aAu3Cd4a5LMpbtZvYM5vqP20nfzxVM5dc+N0e
+        idspejMTKYPcXTWC63tspWEnqM6CKugFKur0i2A==
+X-Received: by 2002:a25:74c3:0:b0:bac:7294:4faf with SMTP id p186-20020a2574c3000000b00bac72944fafmr5830573ybc.27.1685517987254;
+        Wed, 31 May 2023 00:26:27 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ4XLr76L1Km/YFTyFzihehq6bVkfwA3V+9D4X10JGfmRNAo4wi2AqM8Py7Wl/VSrnRZMFnpdyAQsMcwKXANCl8=
+X-Received: by 2002:a25:74c3:0:b0:bac:7294:4faf with SMTP id
+ p186-20020a2574c3000000b00bac72944fafmr5830556ybc.27.1685517987025; Wed, 31
+ May 2023 00:26:27 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230529131106.2123367-1-yukuai1@huaweicloud.com> <20230529131106.2123367-4-yukuai1@huaweicloud.com>
-In-Reply-To: <20230529131106.2123367-4-yukuai1@huaweicloud.com>
+References: <20230529131106.2123367-1-yukuai1@huaweicloud.com> <20230529131106.2123367-5-yukuai1@huaweicloud.com>
+In-Reply-To: <20230529131106.2123367-5-yukuai1@huaweicloud.com>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 31 May 2023 15:20:59 +0800
-Message-ID: <CALTww29_d7H6DG+qZOOJvQ5A8AieXkDfKWgN38HeCP9W-r5RQg@mail.gmail.com>
-Subject: Re: [PATCH -next v3 3/7] md/raid1-10: factor out a helper to submit
- normal write
+Date:   Wed, 31 May 2023 15:26:16 +0800
+Message-ID: <CALTww2-mOkQR+Qu0s=TE-TFoR7D0tDaA=gOOJ75r-Z_43X1yEg@mail.gmail.com>
+Subject: Re: [PATCH -next v3 4/7] md/raid1-10: submit write io directly if
+ bitmap is not enabled
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     song@kernel.org, neilb@suse.de, akpm@osdl.org,
         linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -75,133 +75,103 @@ rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> There are multiple places to do the same thing, factor out a helper to
-> prevent redundant code, and the helper will be used in following patch
-> as well.
+> Commit 6cce3b23f6f8 ("[PATCH] md: write intent bitmap support for raid10"=
+)
+> add bitmap support, and it changed that write io is submitted through
+> daemon thread because bitmap need to be updated before write io. And
+> later, plug is used to fix performance regression because all the write i=
+o
+> will go to demon thread, which means io can't be issued concurrently.
 >
+> However, if bitmap is not enabled, the write io should not go to daemon
+> thread in the first place, and plug is not needed as well.
+>
+> Fixes: 6cce3b23f6f8 ("[PATCH] md: write intent bitmap support for raid10"=
+)
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/raid1-10.c | 17 +++++++++++++++++
->  drivers/md/raid1.c    | 13 ++-----------
->  drivers/md/raid10.c   | 26 ++++----------------------
->  3 files changed, 23 insertions(+), 33 deletions(-)
+>  drivers/md/md-bitmap.c |  4 +---
+>  drivers/md/md-bitmap.h |  7 +++++++
+>  drivers/md/raid1-10.c  | 13 +++++++++++--
+>  3 files changed, 19 insertions(+), 5 deletions(-)
 >
-> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-> index 9bf19a3409ce..506299bd55cb 100644
-> --- a/drivers/md/raid1-10.c
-> +++ b/drivers/md/raid1-10.c
-> @@ -110,6 +110,23 @@ static void md_bio_reset_resync_pages(struct bio *bi=
-o, struct resync_pages *rp,
->         } while (idx++ < RESYNC_PAGES && size > 0);
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index ad5a3456cd8a..3ee590cf12a7 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -1016,7 +1016,6 @@ static int md_bitmap_file_test_bit(struct bitmap *b=
+itmap, sector_t block)
+>         return set;
 >  }
 >
+> -
+>  /* this gets called when the md device is ready to unplug its underlying
+>   * (slave) device queues -- before we let any writes go down, we need to
+>   * sync the dirty pages of the bitmap file to disk */
+> @@ -1026,8 +1025,7 @@ void md_bitmap_unplug(struct bitmap *bitmap)
+>         int dirty, need_write;
+>         int writing =3D 0;
+>
+> -       if (!bitmap || !bitmap->storage.filemap ||
+> -           test_bit(BITMAP_STALE, &bitmap->flags))
+> +       if (!md_bitmap_enabled(bitmap))
+>                 return;
+>
+>         /* look at each page to see if there are any set bits that need t=
+o be
+> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+> index cfd7395de8fd..3a4750952b3a 100644
+> --- a/drivers/md/md-bitmap.h
+> +++ b/drivers/md/md-bitmap.h
+> @@ -273,6 +273,13 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, in=
+t slot,
+>                              sector_t *lo, sector_t *hi, bool clear_bits)=
+;
+>  void md_bitmap_free(struct bitmap *bitmap);
+>  void md_bitmap_wait_behind_writes(struct mddev *mddev);
 > +
-> +static inline void raid1_submit_write(struct bio *bio)
+> +static inline bool md_bitmap_enabled(struct bitmap *bitmap)
+> +{
+> +       return bitmap && bitmap->storage.filemap &&
+> +              !test_bit(BITMAP_STALE, &bitmap->flags);
+> +}
+> +
+>  #endif
+>
+>  #endif
+> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+> index 506299bd55cb..73cc3cb9154d 100644
+> --- a/drivers/md/raid1-10.c
+> +++ b/drivers/md/raid1-10.c
+> @@ -131,9 +131,18 @@ static inline bool raid1_add_bio_to_plug(struct mdde=
+v *mddev, struct bio *bio,
+>                                       blk_plug_cb_fn unplug)
+>  {
+>         struct raid1_plug_cb *plug =3D NULL;
+> -       struct blk_plug_cb *cb =3D blk_check_plugged(unplug, mddev,
+> -                                                  sizeof(*plug));
+> +       struct blk_plug_cb *cb;
+> +
+> +       /*
+> +        * If bitmap is not enabled, it's safe to submit the io directly,=
+ and
+> +        * this can get optimal performance.
+> +        */
+> +       if (!md_bitmap_enabled(mddev->bitmap)) {
+> +               raid1_submit_write(bio);
+> +               return true;
+> +       }
 
-Hi Kuai
-
-Is it better to change the name to rdev_submit_write? It's just a
-suggestion. The patch looks good to me.
+Can we check this out of raid1_add_bio_to_plug and call
+raid1_submit_write directly in make_request function?
 
 Regards
 Xiao
-
-> +{
-> +       struct md_rdev *rdev =3D (struct md_rdev *)bio->bi_bdev;
-> +
-> +       bio->bi_next =3D NULL;
-> +       bio_set_dev(bio, rdev->bdev);
-> +       if (test_bit(Faulty, &rdev->flags))
-> +               bio_io_error(bio);
-> +       else if (unlikely(bio_op(bio) =3D=3D  REQ_OP_DISCARD &&
-> +                         !bdev_max_discard_sectors(bio->bi_bdev)))
-> +               /* Just ignore it */
-> +               bio_endio(bio);
-> +       else
-> +               submit_bio_noacct(bio);
-> +}
-> +
->  static inline bool raid1_add_bio_to_plug(struct mddev *mddev, struct bio=
- *bio,
->                                       blk_plug_cb_fn unplug)
->  {
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index e86c5e71c604..0778e398584c 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -799,17 +799,8 @@ static void flush_bio_list(struct r1conf *conf, stru=
-ct bio *bio)
 >
->         while (bio) { /* submit pending writes */
->                 struct bio *next =3D bio->bi_next;
-> -               struct md_rdev *rdev =3D (void *)bio->bi_bdev;
-> -               bio->bi_next =3D NULL;
-> -               bio_set_dev(bio, rdev->bdev);
-> -               if (test_bit(Faulty, &rdev->flags)) {
-> -                       bio_io_error(bio);
-> -               } else if (unlikely((bio_op(bio) =3D=3D REQ_OP_DISCARD) &=
-&
-> -                                   !bdev_max_discard_sectors(bio->bi_bde=
-v)))
-> -                       /* Just ignore it */
-> -                       bio_endio(bio);
-> -               else
-> -                       submit_bio_noacct(bio);
-> +
-> +               raid1_submit_write(bio);
->                 bio =3D next;
->                 cond_resched();
->         }
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 18702051ebd1..6640507ecb0d 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -909,17 +909,8 @@ static void flush_pending_writes(struct r10conf *con=
-f)
+> +       cb =3D blk_check_plugged(unplug, mddev, sizeof(*plug));
+>         if (!cb)
+>                 return false;
 >
->                 while (bio) { /* submit pending writes */
->                         struct bio *next =3D bio->bi_next;
-> -                       struct md_rdev *rdev =3D (void*)bio->bi_bdev;
-> -                       bio->bi_next =3D NULL;
-> -                       bio_set_dev(bio, rdev->bdev);
-> -                       if (test_bit(Faulty, &rdev->flags)) {
-> -                               bio_io_error(bio);
-> -                       } else if (unlikely((bio_op(bio) =3D=3D  REQ_OP_D=
-ISCARD) &&
-> -                                           !bdev_max_discard_sectors(bio=
-->bi_bdev)))
-> -                               /* Just ignore it */
-> -                               bio_endio(bio);
-> -                       else
-> -                               submit_bio_noacct(bio);
-> +
-> +                       raid1_submit_write(bio);
->                         bio =3D next;
->                         cond_resched();
->                 }
-> @@ -1134,17 +1125,8 @@ static void raid10_unplug(struct blk_plug_cb *cb, =
-bool from_schedule)
->
->         while (bio) { /* submit pending writes */
->                 struct bio *next =3D bio->bi_next;
-> -               struct md_rdev *rdev =3D (void*)bio->bi_bdev;
-> -               bio->bi_next =3D NULL;
-> -               bio_set_dev(bio, rdev->bdev);
-> -               if (test_bit(Faulty, &rdev->flags)) {
-> -                       bio_io_error(bio);
-> -               } else if (unlikely((bio_op(bio) =3D=3D  REQ_OP_DISCARD) =
-&&
-> -                                   !bdev_max_discard_sectors(bio->bi_bde=
-v)))
-> -                       /* Just ignore it */
-> -                       bio_endio(bio);
-> -               else
-> -                       submit_bio_noacct(bio);
-> +
-> +               raid1_submit_write(bio);
->                 bio =3D next;
->                 cond_resched();
->         }
 > --
 > 2.39.2
 >
