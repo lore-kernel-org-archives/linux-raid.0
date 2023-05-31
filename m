@@ -2,50 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2303AC7EE39
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE5DC7EE33
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 11:51:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235630AbjEaLvT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 May 2023 07:51:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49042 "EHLO
+        id S235618AbjEaLvR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 31 May 2023 07:51:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235494AbjEaLvP (ORCPT
+        with ESMTP id S235257AbjEaLvP (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 31 May 2023 07:51:15 -0400
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6D6812E;
-        Wed, 31 May 2023 04:50:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65D43129;
+        Wed, 31 May 2023 04:50:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1685533858; x=1717069858;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=UUIQkUbEvB2cbvY4f/6uCB2pRFVtewbvTxuQqfjccj0=;
-  b=eXNYbGpIVbl795yF1fLDrjoAAZfCSxK+HVTORjsLNSPBAEhh8shLIxIJ
-   dTTbAGNHAkrRmZubzGEhqXXD23tTKK17+SluyhwRsvdJpH1IAQHtaEJ1b
-   lrnlJI8d3Mw355xPTMzdHWQwlTrbh6snfBAmmsg+9SH+88sbGqE1EqJPz
-   OvFmBPCM7+VtjpNn79hX6wWJnPu5zZiHGoLxX9dqIhETi/aawkTe9aQ6S
-   toPCb5JOdDqauzpn8HKmSbbqDblvF/ALUL3emR7rEkH/jX5TTe+NIVANI
-   uw/NUYYSMIRpdvQIqNUSAQ+84KNbu8CY7/Dv8+1uQhyb7ziMjRwGTIypW
-   g==;
+  t=1685533853; x=1717069853;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=XppOqav2UUYGSjNlhAvtpVVy7ou24D/pviKHTMytfKU=;
+  b=qoCKNhtGL28Awet66nKYqUTffSVuB5s4zRnbOvalc+m8GjANYJmrji97
+   2zi/2XVkMJTUOdiXummsF/DnVeB7hV0ev+/4Nf7FyRPSnCHJAwcxT7r3X
+   Rd44ZUfSQT66h0/Zbh8phHYsjeS+F4cR9++XI6ZXv0KVQkNeXAI2sTnXT
+   6eI+9Q/WI416m5V0jkXJkJYUvp5HKR1JvJ7bJD/Vy8pX0o3ABI7ZG4ORb
+   E1QwKHS/fDeFldd4JdJhGCuzt0Q0eQCQnvJRXC/iGu9f+lmTkhpRBFGOy
+   g23ndKXkYNzGIhU49zYdSnMQw9Llw1fUk7lrY4MEsVPAGFheLl1UFncpR
+   w==;
 X-IronPort-AV: E=Sophos;i="6.00,207,1681142400"; 
-   d="scan'208";a="336547907"
+   d="scan'208";a="336547905"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 31 May 2023 19:50:58 +0800
-IronPort-SDR: KCvTsrBVTJ6uQDDXru1uLuaBY0YFIal6S4iS48rknpsgu5WKPkWldYwYb3oNaGk5bll2GiQwvA
- pz/evyH6T1Uw9I/Bcr8dCwe9a/B+wdvWZPAS/NsEvKJV3MqebamfeC7kTaoFxCFIj9qCjTa3nx
- EU3ctODyx9HtNZwv24YxXdO2pssoTAnO3m5qBAe8KJiRafEtqZoaAjGzrw0ynxIr+R7BlDMxC/
- QWMfec++x/E9kFuy6dam++r8BUTECxDGk2Sb/rDJVKI2CenD6D3j1F9I0c91zXjMXXwfoH/X/Q
- kmg=
+  by ob1.hgst.iphmx.com with ESMTP; 31 May 2023 19:50:52 +0800
+IronPort-SDR: ZT+EmPGxWFd1eDYWc40Y6Ndi3E1LRAtXcJuW2ekTu3WfrFV3jhPQBdi9eiwh070xpOC/ecNcUa
+ PK0jXkepqMOI77SA1mxb9xuaXTWYoyiXYigGGqFxxe057pVS/VjgYaYtOGf9Z3FtZC8qLygvr8
+ 70KgMZsLVpjhX0ywdHjUY6mJgckpLH3yWuy9btJdzPqBIpWTL5C41XtGG05Ny80+2sOsWr4d2k
+ +EI+HCqJCSHXArN0qgX39ncedru9aQTcILzoeNxPGxSpfzKuF1KEkI4CrPjKX3+GlK1lP4K/Qn
+ lPk=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2023 04:05:51 -0700
-IronPort-SDR: 5fbhaGDbiXGkg8+3UI34SjKA36qN8yxQFYrOzNfKBiGqGFKkpSit1Ju10bDfGDplQIS0ftPTpQ
- fD8oNw24RMWU4g7VvkH7fNvddvkm6er01jVyMTVNOtHvSwsR9XJm3ab5VfUwyO9fCxhY/DdOpJ
- rVRoCbjgJZYRe1k4mgWw9zPuHFpUZXB47XYvnY9pZ9QXi/jP1EZfI0KyE55eH/ZOvARZ0NI1B/
- I6tNjRTts0ONBuOq3LjKScjHSb4drUc9pfSOAP0cGx9F/5nOD0Px7pW/36RnXKCA79Pi9R6JLP
- x9c=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2023 04:05:45 -0700
+IronPort-SDR: aBaTXHI9fG0yLOBPINz8tPsC3r6YDYfSeFUWj/Rk8jWbMTPrTXRa0vH3bKfIpcAQLPGli7lgPR
+ YLSb9OcFMBlrCkosi2CpTFqsECBkzuv5p5Jrd02pxOPrTfbsnU9RLpQTpyompRRhsaJ47h6uI4
+ HFFmIaUfh+yjrEGq8krGyD9f3JlGVP2BCq1uoUGxpapj3rkHXsTVQ9vJNkzdRx+/vCDcwtZ89Q
+ 47IpAVAdH8zdPYJjyDmKkai9L/bnaYPqkDkBF4KWaJslks1l4UWdEo5lNDduud2gkMCfqFjV9d
+ oWk=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.6])
-  by uls-op-cesaip02.wdc.com with ESMTP; 31 May 2023 04:50:56 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 31 May 2023 04:50:50 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
@@ -61,47 +61,102 @@ Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Bob Peterson <rpeterso@redhat.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         Mikulas Patocka <mpatocka@redhat.com>, gouha7@uniontech.com,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH v7 02/20] drbd: use __bio_add_page to add page to bio
-Date:   Wed, 31 May 2023 04:50:25 -0700
-Message-Id: <435007afac14f3766455559059d21843771fae53.1685532726.git.johannes.thumshirn@wdc.com>
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH v7 00/20] bio: check return values of bio_add_page
+Date:   Wed, 31 May 2023 04:50:23 -0700
+Message-Id: <cover.1685532726.git.johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <cover.1685532726.git.johannes.thumshirn@wdc.com>
-References: <cover.1685532726.git.johannes.thumshirn@wdc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The drbd code only adds a single page to a newly created bio. So use
-__bio_add_page() to add the page which is guaranteed to succeed in this
-case.
+We have two functions for adding a page to a bio, __bio_add_page() which is
+used to add a single page to a freshly created bio and bio_add_page() which is
+used to add a page to an existing bio.
 
-This brings us closer to marking bio_add_page() as __must_check.
+While __bio_add_page() is expected to succeed, bio_add_page() can fail.
 
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- drivers/block/drbd/drbd_bitmap.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+This series converts the callers of bio_add_page() which can easily use
+__bio_add_page() to using it and checks the return of bio_add_page() for
+callers that don't work on a freshly created bio.
 
-diff --git a/drivers/block/drbd/drbd_bitmap.c b/drivers/block/drbd/drbd_bitmap.c
-index 6ac8c54b44c7..85ca000a0564 100644
---- a/drivers/block/drbd/drbd_bitmap.c
-+++ b/drivers/block/drbd/drbd_bitmap.c
-@@ -1043,9 +1043,7 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
- 	bio = bio_alloc_bioset(device->ldev->md_bdev, 1, op, GFP_NOIO,
- 			&drbd_md_io_bio_set);
- 	bio->bi_iter.bi_sector = on_disk_sector;
--	/* bio_add_page of a single page to an empty bio will always succeed,
--	 * according to api.  Do we want to assert that? */
--	bio_add_page(bio, page, len, 0);
-+	__bio_add_page(bio, page, len, 0);
- 	bio->bi_private = ctx;
- 	bio->bi_end_io = drbd_bm_endio;
- 
+Lastly it marks bio_add_page() as __must_check so we don't have to go again
+and audit all callers.
+
+Changes to v6:
+- Incorporated comments from Mike and Christoph
+- Collected Reviewed-bys
+
+Changes to v5:
+- Rebased onto latest Linus' master
+- Removed now superfluous BUG_ON() in fs/buffer.c (Gou)
+- Removed dead cleanup code in dm-crypt.c (Mikulas)
+
+Changes to v4:
+- Rebased onto latest Linus' master
+- Dropped already merged patches
+- Added Sergey's Reviewed-by
+
+Changes to v3:
+- Added __bio_add_folio and use it in iomap (Willy)
+- Mark bio_add_folio must check (Willy)
+- s/GFS/GFS2/ (Andreas)
+
+Changes to v2:
+- Removed 'wont fail' comments pointed out by Song
+
+Changes to v1:
+- Removed pointless comment pointed out by Willy
+- Changed commit messages pointed out by Damien
+- Colledted Damien's Reviews and Acks
+
+Johannes Thumshirn (20):
+  swap: use __bio_add_page to add page to bio
+  drbd: use __bio_add_page to add page to bio
+  dm: dm-zoned: use __bio_add_page for adding single metadata page
+  fs: buffer: use __bio_add_page to add single page to bio
+  md: use __bio_add_page to add single page
+  md: raid5-log: use __bio_add_page to add single page
+  md: raid5: use __bio_add_page to add single page to new bio
+  jfs: logmgr: use __bio_add_page to add single page to bio
+  gfs2: use __bio_add_page for adding single page to bio
+  zonefs: use __bio_add_page for adding single page to bio
+  zram: use __bio_add_page for adding single page to bio
+  floppy: use __bio_add_page for adding single page to bio
+  md: check for failure when adding pages in alloc_behind_master_bio
+  md: raid1: use __bio_add_page for adding single page to bio
+  md: raid1: check if adding pages to resync bio fails
+  dm-crypt: use __bio_add_page to add single page to clone bio
+  block: mark bio_add_page as __must_check
+  block: add bio_add_folio_nofail
+  fs: iomap: use bio_add_folio_nofail where possible
+  block: mark bio_add_folio as __must_check
+
+ block/bio.c                      |  8 ++++++++
+ drivers/block/drbd/drbd_bitmap.c |  4 +---
+ drivers/block/floppy.c           |  2 +-
+ drivers/block/zram/zram_drv.c    |  2 +-
+ drivers/md/dm-crypt.c            |  3 +--
+ drivers/md/dm-zoned-metadata.c   |  6 +++---
+ drivers/md/md.c                  |  4 ++--
+ drivers/md/raid1-10.c            | 11 ++++++-----
+ drivers/md/raid1.c               |  7 +++++--
+ drivers/md/raid10.c              | 20 ++++++++++----------
+ drivers/md/raid5-cache.c         |  2 +-
+ drivers/md/raid5-ppl.c           |  4 ++--
+ fs/buffer.c                      |  3 +--
+ fs/gfs2/ops_fstype.c             |  2 +-
+ fs/iomap/buffered-io.c           |  6 +++---
+ fs/jfs/jfs_logmgr.c              |  4 ++--
+ fs/zonefs/super.c                |  2 +-
+ include/linux/bio.h              |  8 ++++++--
+ mm/page_io.c                     |  8 ++++----
+ 19 files changed, 59 insertions(+), 47 deletions(-)
+
+
+base-commit: 48b1320a674e1ff5de2fad8606bee38f724594dc
 -- 
 2.40.1
 
