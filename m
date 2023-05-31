@@ -2,101 +2,100 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C513FC77B7A
-	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 01:07:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E460C77B7A
+	for <linux-raid@archiver.kernel.org>; Wed, 31 May 2023 01:21:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233899AbjEaBHB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 May 2023 21:07:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34110 "EHLO
+        id S233684AbjEaBVa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 May 2023 21:21:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231258AbjEaBHA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 21:07:00 -0400
-Received: from out-15.mta1.migadu.com (out-15.mta1.migadu.com [95.215.58.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D64E2115
-        for <linux-raid@vger.kernel.org>; Tue, 30 May 2023 18:06:54 -0700 (PDT)
-Message-ID: <b9fd7105-eadc-29cb-fa2e-24109f4a99b7@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1685495212;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ktzBuz1Q0UcNMvPLJbCEC7kXeHrx4XPsgK/A+XpXcuU=;
-        b=EJC9mR5IYtOEihQJMiQ3p2YVDC9buKhBp0eZPGkk3yxFbf4kkEOCXDSGcAJRdu0n1J0i6P
-        6xyGMgnkya/qb9Jz5rYkkr8qo3zDR4AwSBhGe/zxv+xDAH3PndkF47zRMHjkXOIZdUll9/
-        dc4EuVou47LGbuMJ5DyzQt5Ukc8NXaU=
-Date:   Wed, 31 May 2023 09:06:47 +0800
+        with ESMTP id S231558AbjEaBV2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 May 2023 21:21:28 -0400
+Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE1B193;
+        Tue, 30 May 2023 18:21:24 -0700 (PDT)
+X-QQ-mid: bizesmtp81t1685496025tw3oxnvp
+Received: from [10.7.13.54] ( [113.200.76.118])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Wed, 31 May 2023 09:20:22 +0800 (CST)
+X-QQ-SSF: 01400000000000C0G000000A0000000
+X-QQ-FEAT: W+onFc5Tw4MXg9NmrArDYuEAjJHK4eL16p2bcGANAmu997qLZ+ujaV0s8Z1f/
+        Nzmi8pNaWsKZP3Jmi5RKnu6nb+dCbNyrwOCVF3RhlVA1YBbFzgt8Coml9Vf2MloZUnDRpkl
+        ADpUgJE8XNtjVow/bv7ZzhCNWk6I9WYmKFl0SSM5YLTrc8oT51rizMWMAPqdm1XDAhtCWWX
+        DTqIUQa3efIfkNOAZX6/Yw4UnTUT6YoTYppGEuFOveHR6P5KZuNwCsuXN+Ey1bBhqyCVvPN
+        eC3evk9wk+U3FfRn1CeZLX4tO4xCLND+a2cq7UCdAoJE6IMuJmrs5xNI56H1bmPeS+O61qR
+        RBvgLchUjYteu3Ao0qfjQZGWJn29WS3hcVcO44C5o7MX+jf/j0=
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 16526261309428552688
+Message-ID: <594B3D441ED28D0D+301afc15-d56d-4b9b-dc94-c97c658df05c@uniontech.com>
+Date:   Wed, 31 May 2023 09:20:22 +0800
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] md/raid5: don't allow concurrent reshape with recovery
-To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org,
-        pmenzel@molgen.mpg.de
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-References: <20230529133410.2125914-1-yukuai1@huaweicloud.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH v6 04/20] fs: buffer: use __bio_add_page to add single
+ page to bio
 Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-In-Reply-To: <20230529133410.2125914-1-yukuai1@huaweicloud.com>
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+References: <cover.1685461490.git.johannes.thumshirn@wdc.com>
+ <f67cc9c310bed1e3c3302ea1c206da7d5ebc14cb.1685461490.git.johannes.thumshirn@wdc.com>
+Reply-To: f67cc9c310bed1e3c3302ea1c206da7d5ebc14cb.1685461490.git.johannes.thumshirn@wdc.com
+From:   Gou Hao <gouhao@uniontech.com>
+In-Reply-To: <f67cc9c310bed1e3c3302ea1c206da7d5ebc14cb.1685461490.git.johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 7bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:uniontech.com:qybglogicsvrgz:qybglogicsvrgz7a-0
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 5/30/23 23:49, Johannes Thumshirn wrote:
+
+> The buffer_head submission code uses bio_add_page() to add a page to a
+> newly created bio. bio_add_page() can fail, but the return value is never
+> checked.
+>
+> Use __bio_add_page() as adding a single page to a newly created bio is
+> guaranteed to succeed.
+>
+> This brings us a step closer to marking bio_add_page() as __must_check.
+>
+> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
 
-On 5/29/23 21:34, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Commit 0aecb06e2249 ("md/raid5: don't allow replacement while reshape
-> is in progress") fixes that replacement can be set if reshape is
-> interrupted, which will cause that array can't be assembled.
->
-> There is a similar problem on the other side, if recovery is
-> interrupted, then reshape can start, which will cause the same problem.
->
-> Fix the problem by not starting to reshape while recovery is still in
-> progress.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Gou Hao <gouhao@uniontech.com>
+
 > ---
-> Changes in v2:
->   - fix some typo in commit message.
+>   fs/buffer.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
 >
->   drivers/md/raid5.c | 8 ++++++++
->   1 file changed, 8 insertions(+)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 8686d629e3f2..6615abf54d3f 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -8525,6 +8525,7 @@ static int raid5_start_reshape(struct mddev *mddev)
->   	struct r5conf *conf = mddev->private;
->   	struct md_rdev *rdev;
->   	int spares = 0;
-> +	int i;
->   	unsigned long flags;
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index a7fc561758b1..63da30ce946a 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -2760,8 +2760,7 @@ static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
 >   
->   	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-> @@ -8536,6 +8537,13 @@ static int raid5_start_reshape(struct mddev *mddev)
->   	if (has_failed(conf))
->   		return -EINVAL;
+>   	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
 >   
-> +	/* raid5 can't handle concurrent reshape and recovery */
-> +	if (mddev->recovery_cp < MaxSector)
-> +		return -EBUSY;
-> +	for (i = 0; i < conf->raid_disks; i++)
-> +		if (rdev_mdlock_deref(mddev, conf->disks[i].replacement))
-> +			return -EBUSY;
-> +
-
-Does it mean reshape and recovery  can happen in parallel without the 
-change?
-I really doubt about it given any kind of internal io (resync, reshape 
-and recovery)
-is handled by resync thread. And IIUC either md_do_sync or md_check_recovery
-should avoid it, no need to do it in personality layer.
-
-Thanks,
-Guoqing
+> -	bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
+> -	BUG_ON(bio->bi_iter.bi_size != bh->b_size);
+> +	__bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
+>   
+>   	bio->bi_end_io = end_bio_bh_io_sync;
+>   	bio->bi_private = bh;
