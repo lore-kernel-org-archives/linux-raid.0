@@ -2,98 +2,120 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94369C7EE23
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Jun 2023 04:26:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E56C7EE23
+	for <linux-raid@archiver.kernel.org>; Thu,  1 Jun 2023 06:26:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230509AbjFAE0j (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 1 Jun 2023 00:26:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36104 "EHLO
+        id S231416AbjFAG0Q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 1 Jun 2023 02:26:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229562AbjFAE0h (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Jun 2023 00:26:37 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A65F123
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 21:26:36 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1b041cceb16so3434315ad.2
-        for <linux-raid@vger.kernel.org>; Wed, 31 May 2023 21:26:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685593596; x=1688185596;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HH54ZfR07bvx2it5kMbT2XCoKq4FYr76emvIl28NWxo=;
-        b=XboIlDk6Glckt0sGHOtjbw6iiPKyy3vUg0ctkhF0OKTH2CIPL7wBwcdMMK9gWQNfX7
-         12wjr48MrbLmZPXhqx6s/hmcAY+vKX0027Sh8qUOS0Xh8BOpfAlEoIxdHBfNd5jzbEKw
-         e+6pfHEO2OpXvwHCA7ZjasUfm8+D6I2fd2yZ6XLBxLVjLscZyucIUDh4Ydks3vK9XC4f
-         TaiAk0Rbskf4ZlMxfrDHQaUqeeQUVXUJBTKxnxguxWjQMrGrbp8VWeZyIbzF40zH4YU3
-         9Zx+fWIQv0ERI7wQudqS9d1ttQ/nZcQWf9kOw8V0bB/EgKGKbGVx0zQOgtawjec2gHoC
-         vSLg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685593596; x=1688185596;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HH54ZfR07bvx2it5kMbT2XCoKq4FYr76emvIl28NWxo=;
-        b=Hza3VbyEno2yPjCjoPNoaA17CKk3fQYS0+ZuUMYJP+votOrbeXwdrRM3p6KJ0Vc8PH
-         fAM8daMxdfKgvoU+IOqzB1NcEc1CSV3Me3Yf5oXT2rb3kYxkwbGhqHXfMfZNheJ/tXP9
-         LriAehELpGBMCXY+dB6zEUqB6qVMf68nBtC/HHQIc/F489Ny02YgxstDz5LzG0vvozOp
-         9UtcHkYDrX8/OudWKiZG2x2gom1nH8idVCbaoVNt5nxjyC11F5O6phJGjkfGiRnugRwt
-         hsxqqJYJS6N9mrOvnO4D5yal46l3sWVVpm4ktWFyGgNvIN+Vy65mD2bVI7gL1PHb5XNW
-         pJGQ==
-X-Gm-Message-State: AC+VfDyKC1MV/RlvL/8cwaRjRgd0074XglB36mvZDl1CG1EoOO3R2sXI
-        j2ULcFYI5BskfLkg7ypQUID/og==
-X-Google-Smtp-Source: ACHHUZ6hlZU/MsjoyVz4yyhoe997V/qcrYIwn3uWW59qEXQKN9Rt7VfRZ5XiA6hG1XPeblBFMsaoCQ==
-X-Received: by 2002:a17:902:724c:b0:1af:b9ed:1677 with SMTP id c12-20020a170902724c00b001afb9ed1677mr6568666pll.2.1685593595885;
-        Wed, 31 May 2023 21:26:35 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id f13-20020a170902684d00b001a980a23802sm2281781pln.111.2023.05.31.21.26.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 31 May 2023 21:26:34 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q4ZtQ-006NBe-17;
-        Thu, 01 Jun 2023 14:26:32 +1000
-Date:   Thu, 1 Jun 2023 14:26:32 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Mikulas Patocka <mpatocka@redhat.com>, gouha7@uniontech.com
-Subject: Re: [PATCH v7 19/20] fs: iomap: use bio_add_folio_nofail where
- possible
-Message-ID: <ZHgd+G7/gg0uOGMF@dread.disaster.area>
-References: <cover.1685532726.git.johannes.thumshirn@wdc.com>
- <58fa893c24c67340a63323f09a179fefdca07f2a.1685532726.git.johannes.thumshirn@wdc.com>
- <ZHfMC86ktyLtIxNb@dread.disaster.area>
- <20230601042021.GA21768@lst.de>
+        with ESMTP id S230419AbjFAG0P (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Jun 2023 02:26:15 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 050119D;
+        Wed, 31 May 2023 23:26:13 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QWx3M6cnSz4f3nwJ;
+        Thu,  1 Jun 2023 14:26:07 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbH_OXhko4G0Kg--.24198S5;
+        Thu, 01 Jun 2023 14:26:09 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     song@kernel.org, neilb@suse.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH v5 1/2] md/raid10: fix incorrect done of recovery
+Date:   Thu,  1 Jun 2023 14:24:23 +0800
+Message-Id: <20230601062424.3613218-2-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230601062424.3613218-1-linan666@huaweicloud.com>
+References: <20230601062424.3613218-1-linan666@huaweicloud.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230601042021.GA21768@lst.de>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBnHbH_OXhko4G0Kg--.24198S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cw17JF4kCrykXr1fXF45Awb_yoW8try8pa
+        n7JF93t3s8X3yfJ3WDAryUXFWFy348Ja43KrWxW34jgayaqr9rZFWxXFW0qFyUWF1FqFWY
+        qw4DJrW5CF97KaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBGb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
+        A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+        w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+        6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
+        ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
+        JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lw4CEc2x0rVAKj4xxMx
+        AIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_
+        Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwI
+        xGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWx
+        JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcV
+        C2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x07jbjjgUUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jun 01, 2023 at 06:20:21AM +0200, Christoph Hellwig wrote:
-> On Thu, Jun 01, 2023 at 08:36:59AM +1000, Dave Chinner wrote:
-> > We lose adjacent page merging with this change.
-> 
-> This is only used for adding the first folio to a brand new bio,
-> so there is nothing to merge with yet at this point.
+From: Li Nan <linan122@huawei.com>
 
-Ah, sorry, missed that. Carry on. :)
+In raid10_sync_request(), if data cannot be read from any disk for
+recovery, it will go to 'giveup' and let 'chunks_skipped' + 1. After
+multiple 'giveup', when 'chunks_skipped >= geo.raid_disks', it will
+return 'max_sector', indicating that the recovery has been completed.
+However, the recovery is just aborted and the data remains inconsistent.
 
--Dave.
+Fix it by setting mirror->recovery_disabled, which will prevent the spare
+disk from being added to this mirror. The same issue also exists during
+resync, it will be fixed afterwards.
+
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/raid10.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index d93d8cb2b620..3ba1516ea160 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3303,6 +3303,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 	int chunks_skipped = 0;
+ 	sector_t chunk_mask = conf->geo.chunk_mask;
+ 	int page_idx = 0;
++	int error_disk = -1;
+ 
+ 	/*
+ 	 * Allow skipping a full rebuild for incremental assembly
+@@ -3386,7 +3387,20 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		return reshape_request(mddev, sector_nr, skipped);
+ 
+ 	if (chunks_skipped >= conf->geo.raid_disks) {
+-		/* if there has been nothing to do on any drive,
++		pr_err("md/raid10:%s: %s fail\n", mdname(mddev),
++			test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?  "resync" : "recovery");
++		if (error_disk >= 0 &&
++		    !test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
++			/*
++			 * recovery fail, set mirrors.recovory_disabled,
++			 * device shouldn't be added to there.
++			 */
++			conf->mirrors[error_disk].recovery_disabled =
++						mddev->recovery_disabled;
++			return 0;
++		}
++		/*
++		 * if there has been nothing to do on any drive,
+ 		 * then there is nothing to do at all..
+ 		 */
+ 		*skipped = 1;
+@@ -3638,6 +3652,8 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 						       mdname(mddev));
+ 					mirror->recovery_disabled
+ 						= mddev->recovery_disabled;
++				} else {
++					error_disk = i;
+ 				}
+ 				put_buf(r10_bio);
+ 				if (rb2)
 -- 
-Dave Chinner
-david@fromorbit.com
+2.31.1
+
