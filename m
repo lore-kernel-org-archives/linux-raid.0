@@ -2,118 +2,140 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C04C8C7EE2D
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Jun 2023 18:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F5BC7EE2D
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Jun 2023 06:58:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231895AbjFASrB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 1 Jun 2023 14:47:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44330 "EHLO
+        id S234052AbjFBG6B (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Jun 2023 02:58:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229682AbjFASrA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Jun 2023 14:47:00 -0400
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 908FF198
-        for <linux-raid@vger.kernel.org>; Thu,  1 Jun 2023 11:46:08 -0700 (PDT)
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-6261a25e9b6so10748626d6.0
-        for <linux-raid@vger.kernel.org>; Thu, 01 Jun 2023 11:46:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685645167; x=1688237167;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OhyufVORgAPdxy2e2nylP7DQVEhvcm7KBzR049ls10E=;
-        b=RGAq0ORR/HtTteke28C/z+v1ZMu2TGJfqf28OhIHYRpxlx0y+zzE2vWXMzJgiv1R8L
-         lp6O2pY7tNgBlQJZ4IElkFUe/VpQHNqUDXj6DCo+4uA8+4HxHBm6sqYBUEW+BBs31PzQ
-         qKZxzrsRnKHvz4F0qQEDkK8mdPZf5MWpw/tGkOdGV/ymDJ18XP4EPAH7wFFguum4wjJd
-         4Xya3lvTTNpJeboSyFbRQQIeoVJelu3cJ5xLW0gf0RPltRXBS3c6MrGixgEVzFoPFznX
-         B+0xo15eaFSLqgLcgnjArvfK/qDteSrjpMYpggO5qb7H7ealUyfxy8fClE7RuqGfaUaP
-         Wocw==
-X-Gm-Message-State: AC+VfDzxkUNFoclajr3N+pUEII7aKji0/W+1A2MwjKV4XjGkp3NdEJju
-        yP9aRSqvEYt1Ewz/Lfka4OFo
-X-Google-Smtp-Source: ACHHUZ6u3xR1YiMGmuLlFSVcpQijECu4NK+3gxplM1YXFxd6uPbdqueU4kLpHglpcsupIu+Tz62ckA==
-X-Received: by 2002:a05:6214:aca:b0:625:b849:fa3 with SMTP id g10-20020a0562140aca00b00625b8490fa3mr11540334qvi.30.1685645167691;
-        Thu, 01 Jun 2023 11:46:07 -0700 (PDT)
-Received: from localhost (pool-68-160-166-30.bstnma.fios.verizon.net. [68.160.166.30])
-        by smtp.gmail.com with ESMTPSA id y3-20020ac87c83000000b003e89e2b3c23sm7940746qtv.58.2023.06.01.11.46.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 11:46:07 -0700 (PDT)
-Date:   Thu, 1 Jun 2023 14:46:06 -0400
-From:   Mike Snitzer <snitzer@kernel.org>
-To:     Mikulas Patocka <mpatocka@redhat.com>
-Cc:     "axboe @ kernel . dk" <axboe@kernel.dk>, shaggy@kernel.org,
-        damien.lemoal@wdc.com, kch@nvidia.com, agruenba@redhat.com,
-        song@kernel.org, Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-raid@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
-        willy@infradead.org, ming.lei@redhat.com, cluster-devel@redhat.com,
-        linux-mm@kvack.org, dm-devel@redhat.com,
-        linux-block@vger.kernel.org, rpeterso@redhat.com,
-        linux-fsdevel@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH v5 16/20] dm-crypt: check if adding pages to clone bio
- fails
-Message-ID: <ZHjnbkcpZ/yZWRsE@redhat.com>
-References: <20230502101934.24901-1-johannes.thumshirn@wdc.com>
- <20230502101934.24901-17-johannes.thumshirn@wdc.com>
- <alpine.LRH.2.21.2305301045220.3943@file01.intranet.prod.int.rdu2.redhat.com>
- <ZHYbIYxGbcXbpvIK@redhat.com>
- <alpine.LRH.2.21.2305301527410.18906@file01.intranet.prod.int.rdu2.redhat.com>
+        with ESMTP id S234043AbjFBG56 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Jun 2023 02:57:58 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F217184;
+        Thu,  1 Jun 2023 23:57:52 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QXYjQ72lBz4f3l1s;
+        Fri,  2 Jun 2023 14:57:46 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbHqknlkL8gCKw--.48920S3;
+        Fri, 02 Jun 2023 14:57:48 +0800 (CST)
+Message-ID: <917d7c23-eefc-efc5-1b12-949a684900bc@huaweicloud.com>
+Date:   Fri, 2 Jun 2023 14:57:46 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.21.2305301527410.18906@file01.intranet.prod.int.rdu2.redhat.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v5 1/2] md/raid10: fix incorrect done of recovery
+To:     Paul Menzel <pmenzel@molgen.mpg.de>, linan666@huaweicloud.com
+Cc:     song@kernel.org, neilb@suse.de, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
+References: <20230601062424.3613218-1-linan666@huaweicloud.com>
+ <20230601062424.3613218-2-linan666@huaweicloud.com>
+ <2e36d874-4dd3-080c-3499-44f2f09b9169@molgen.mpg.de>
+From:   Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <2e36d874-4dd3-080c-3499-44f2f09b9169@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBnHbHqknlkL8gCKw--.48920S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCrW3WryrAryxur1rKF4rKrg_yoW5Cr17pr
+        4kJrZ8JryUJwn3Jw1UAryUJFy5Ary8Ja4DJr18W3WUXrW3JryjgFWUXr1jgryUXr48tF1U
+        Jw1UXrW5ZF1UKFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUB214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+        F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+        4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
+        4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x
+        0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
+        7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
+        C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF
+        04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aV
+        CY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUOlksUUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, May 30 2023 at  3:43P -0400,
-Mikulas Patocka <mpatocka@redhat.com> wrote:
 
-> 
-> 
-> On Tue, 30 May 2023, Mike Snitzer wrote:
-> 
-> > On Tue, May 30 2023 at 11:13P -0400,
-> > Mikulas Patocka <mpatocka@redhat.com> wrote:
-> > 
-> > > Hi
-> > > 
-> > > I nack this. This just adds code that can't ever be executed.
-> > > 
-> > > dm-crypt already allocates enough entries in the vector (see "unsigned int 
-> > > nr_iovecs = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;"), so bio_add_page can't 
-> > > fail.
-> > > 
-> > > If you want to add __must_check to bio_add_page, you should change the 
-> > > dm-crypt code to:
-> > > if (!bio_add_page(clone, page, len, 0)) {
-> > > 	WARN(1, "this can't happen");
-> > > 	return NULL;
-> > > }
-> > > and not write recovery code for a can't-happen case.
-> > 
-> > Thanks for the review Mikulas. But the proper way forward, in the
-> > context of this patchset, is to simply change bio_add_page() to
-> > __bio_add_page()
-> > 
-> > Subject becomes: "dm crypt: use __bio_add_page to add single page to clone bio"
-> > 
-> > And header can explain that "crypt_alloc_buffer() already allocates
-> > enough entries in the clone bio's vector, so bio_add_page can't fail".
-> > 
-> > Mike
-> 
-> Yes, __bio_add_page would look nicer. But bio_add_page can merge adjacent 
-> pages into a single bvec entry and __bio_add_page can't (I don't know how 
-> often the merging happens or what is the performance implication of 
-> non-merging).
-> 
-> I think that for the next merge window, we can apply this patch: 
-> https://listman.redhat.com/archives/dm-devel/2023-May/054046.html
-> which makes this discussion irrelevant. (you can change bio_add_page to 
-> __bio_add_page in it)
 
-Yes, your patch is on my TODO list.  I've rebased my dm-6.5 branch on
-the latest block 6.5 branch.  I'll be reviewing/rebasing/applying your
-patch soon.
+在 2023/6/1 15:06, Paul Menzel 写道:
+> Dear Li,
+> 
+> 
+> Thank you for your patch.
+> 
+> Am 01.06.23 um 08:24 schrieb linan666@huaweicloud.com:
+>> From: Li Nan <linan122@huawei.com>
+> 
+> Unfortunately, I do not understand your commit message summary “fix 
+> incorrect done of recovery”. Maybe:
+> 
+> Do not add sparse disk when recovery aborts
+> 
 
-Mike
+"recovery fail" is better?
+
+>> In raid10_sync_request(), if data cannot be read from any disk for
+>> recovery, it will go to 'giveup' and let 'chunks_skipped' + 1. After
+>> multiple 'giveup', when 'chunks_skipped >= geo.raid_disks', it will
+>> return 'max_sector', indicating that the recovery has been completed.
+>> However, the recovery is just aborted and the data remains inconsistent.
+>>
+>> Fix it by setting mirror->recovery_disabled, which will prevent the spare
+>> disk from being added to this mirror. The same issue also exists during
+>> resync, it will be fixed afterwards.
+>>
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>>   drivers/md/raid10.c | 18 +++++++++++++++++-
+>>   1 file changed, 17 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index d93d8cb2b620..3ba1516ea160 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -3303,6 +3303,7 @@ static sector_t raid10_sync_request(struct mddev 
+>> *mddev, sector_t sector_nr,
+>>       int chunks_skipped = 0;
+>>       sector_t chunk_mask = conf->geo.chunk_mask;
+>>       int page_idx = 0;
+>> +    int error_disk = -1;
+>>       /*
+>>        * Allow skipping a full rebuild for incremental assembly
+>> @@ -3386,7 +3387,20 @@ static sector_t raid10_sync_request(struct 
+>> mddev *mddev, sector_t sector_nr,
+>>           return reshape_request(mddev, sector_nr, skipped);
+>>       if (chunks_skipped >= conf->geo.raid_disks) {
+>> -        /* if there has been nothing to do on any drive,
+>> +        pr_err("md/raid10:%s: %s fail\n", mdname(mddev),
+>> +            test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?  "resync" 
+>> : "recovery");
+>> +        if (error_disk >= 0 &&
+>> +            !test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+>> +            /*
+>> +             * recovery fail, set mirrors.recovory_disabled,
+> 
+> recov*e*ry
+> 
+>> +             * device shouldn't be added to there.
+>> +             */
+>> +            conf->mirrors[error_disk].recovery_disabled =
+>> +                        mddev->recovery_disabled;
+>> +            return 0;
+>> +        }
+>> +        /*
+>> +         * if there has been nothing to do on any drive,
+>>            * then there is nothing to do at all..
+> 
+> Just one dot/period at the end?
+>
+Thanks for your suggestion. I will change it in next version.
+
+-- 
+Thanks,
+Nan
+
