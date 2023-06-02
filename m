@@ -2,140 +2,75 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F5BC7EE2D
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Jun 2023 06:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A325AC7EE24
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Jun 2023 07:21:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234052AbjFBG6B (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 2 Jun 2023 02:58:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53252 "EHLO
+        id S234334AbjFBHVa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Jun 2023 03:21:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234043AbjFBG56 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Jun 2023 02:57:58 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F217184;
-        Thu,  1 Jun 2023 23:57:52 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QXYjQ72lBz4f3l1s;
-        Fri,  2 Jun 2023 14:57:46 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgBnHbHqknlkL8gCKw--.48920S3;
-        Fri, 02 Jun 2023 14:57:48 +0800 (CST)
-Message-ID: <917d7c23-eefc-efc5-1b12-949a684900bc@huaweicloud.com>
-Date:   Fri, 2 Jun 2023 14:57:46 +0800
+        with ESMTP id S234312AbjFBHVT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Jun 2023 03:21:19 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F2631B1;
+        Fri,  2 Jun 2023 00:21:18 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QXZDT5ngWz4f3tNy;
+        Fri,  2 Jun 2023 15:21:13 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP2 (Coremail) with SMTP id Syh0CgA33epimHlkYdujKg--.62283S4;
+        Fri, 02 Jun 2023 15:21:14 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     song@kernel.org, neilb@suse.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH v6 0/2] raid10 bugfix
+Date:   Fri,  2 Jun 2023 15:17:15 +0800
+Message-Id: <20230602071717.503287-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v5 1/2] md/raid10: fix incorrect done of recovery
-To:     Paul Menzel <pmenzel@molgen.mpg.de>, linan666@huaweicloud.com
-Cc:     song@kernel.org, neilb@suse.de, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-References: <20230601062424.3613218-1-linan666@huaweicloud.com>
- <20230601062424.3613218-2-linan666@huaweicloud.com>
- <2e36d874-4dd3-080c-3499-44f2f09b9169@molgen.mpg.de>
-From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <2e36d874-4dd3-080c-3499-44f2f09b9169@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnHbHqknlkL8gCKw--.48920S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCrW3WryrAryxur1rKF4rKrg_yoW5Cr17pr
-        4kJrZ8JryUJwn3Jw1UAryUJFy5Ary8Ja4DJr18W3WUXrW3JryjgFWUXr1jgryUXr48tF1U
-        Jw1UXrW5ZF1UKFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUB214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-        F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-        4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
-        4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x
-        0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
-        7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
-        C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF
-        04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aV
-        CY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUOlksUUUUU
+X-CM-TRANSID: Syh0CgA33epimHlkYdujKg--.62283S4
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYz7kC6x804xWl14x267AKxVW8JVW5JwAF
+        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
+        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
+        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
+        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY
+        6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr
+        I_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0E
+        wIxGrwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
+        1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
+        14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
+        IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY
+        6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
+        73UjIFyTuYvjxUouc_DUUUU
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+From: Li Nan <linan122@huawei.com>
 
+Changes in v6:
+ - in patch 1, improve commit message summary and comment.
 
-在 2023/6/1 15:06, Paul Menzel 写道:
-> Dear Li,
-> 
-> 
-> Thank you for your patch.
-> 
-> Am 01.06.23 um 08:24 schrieb linan666@huaweicloud.com:
->> From: Li Nan <linan122@huawei.com>
-> 
-> Unfortunately, I do not understand your commit message summary “fix 
-> incorrect done of recovery”. Maybe:
-> 
-> Do not add sparse disk when recovery aborts
-> 
+Changes in v5:
+ - v4 send wrong patch, correct and resend.
 
-"recovery fail" is better?
+Changes in v4:
+ - improve commit log
+ - removed applied patches
 
->> In raid10_sync_request(), if data cannot be read from any disk for
->> recovery, it will go to 'giveup' and let 'chunks_skipped' + 1. After
->> multiple 'giveup', when 'chunks_skipped >= geo.raid_disks', it will
->> return 'max_sector', indicating that the recovery has been completed.
->> However, the recovery is just aborted and the data remains inconsistent.
->>
->> Fix it by setting mirror->recovery_disabled, which will prevent the spare
->> disk from being added to this mirror. The same issue also exists during
->> resync, it will be fixed afterwards.
->>
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>   drivers/md/raid10.c | 18 +++++++++++++++++-
->>   1 file changed, 17 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index d93d8cb2b620..3ba1516ea160 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -3303,6 +3303,7 @@ static sector_t raid10_sync_request(struct mddev 
->> *mddev, sector_t sector_nr,
->>       int chunks_skipped = 0;
->>       sector_t chunk_mask = conf->geo.chunk_mask;
->>       int page_idx = 0;
->> +    int error_disk = -1;
->>       /*
->>        * Allow skipping a full rebuild for incremental assembly
->> @@ -3386,7 +3387,20 @@ static sector_t raid10_sync_request(struct 
->> mddev *mddev, sector_t sector_nr,
->>           return reshape_request(mddev, sector_nr, skipped);
->>       if (chunks_skipped >= conf->geo.raid_disks) {
->> -        /* if there has been nothing to do on any drive,
->> +        pr_err("md/raid10:%s: %s fail\n", mdname(mddev),
->> +            test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?  "resync" 
->> : "recovery");
->> +        if (error_disk >= 0 &&
->> +            !test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
->> +            /*
->> +             * recovery fail, set mirrors.recovory_disabled,
-> 
-> recov*e*ry
-> 
->> +             * device shouldn't be added to there.
->> +             */
->> +            conf->mirrors[error_disk].recovery_disabled =
->> +                        mddev->recovery_disabled;
->> +            return 0;
->> +        }
->> +        /*
->> +         * if there has been nothing to do on any drive,
->>            * then there is nothing to do at all..
-> 
-> Just one dot/period at the end?
->
-Thanks for your suggestion. I will change it in next version.
+Li Nan (2):
+  md/raid10: Do not add spare disk when recovery fail
+  md/raid10: fix io loss while replacement replace rdev
+
+ drivers/md/raid10.c | 42 ++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 36 insertions(+), 6 deletions(-)
 
 -- 
-Thanks,
-Nan
+2.39.2
 
