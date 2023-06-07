@@ -2,97 +2,70 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 533D3C7EE37
-	for <linux-raid@archiver.kernel.org>; Tue,  6 Jun 2023 21:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B94C7EE23
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Jun 2023 06:58:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239788AbjFFVyp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 6 Jun 2023 17:54:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48782 "EHLO
+        id S238556AbjFGG65 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 7 Jun 2023 02:58:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232321AbjFFVyo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 6 Jun 2023 17:54:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA18C1702;
-        Tue,  6 Jun 2023 14:54:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 572D3631D6;
-        Tue,  6 Jun 2023 21:54:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B49B3C433A1;
-        Tue,  6 Jun 2023 21:54:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686088482;
-        bh=00fM4J5ExwsLDa6lKHnMAvuGz2WILyMJmqh4sSd5tZA=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=hU4YD8fSMEEIv/3O5ulQBbPnvopYIGcOnKJRz52BRTzR8Du3T4F9wnWI0kS2PqgFz
-         cdysNo3A8miheZBViUfVBb1mG1gAtms5bwy13AFjaR5S0hCjFX63Ee8+1jdoWnj9g0
-         /Xb0UlMzcNrZluToeg7P7oSIcaTVc3MOc2RyVlwHqMO7zgll5FZiI3oMQv1/d0e8YP
-         8cSQujH6+oOo+TDDhnpnnr/NfsOVBt/ed7oJEOKoGJTJWqED/0mEJuIxHczGiRg5WS
-         xhJ/8F0NIXxjehFLIpgI9TW+60uP0CO4nkbqVs1RLD3Of7zJoHQ430GqNw0lHvOHul
-         yHiE/crx1U8xg==
-Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-4f620583bc2so4400167e87.1;
-        Tue, 06 Jun 2023 14:54:42 -0700 (PDT)
-X-Gm-Message-State: AC+VfDyoRPOJ9VVeEMJtTVAxr24XJ9bQxvzZrusH2XBpTAHt8ketFFOg
-        Jxl0EM5WJq/hz7qc2rOr0v+Jx0/UUdG7oiUa20A=
-X-Google-Smtp-Source: ACHHUZ6oZumzzmmHdIlrBHRT8Ao9id4ZWjpLD91eyRoPXeEEJ78Q8sr3NmHL7eW444bRJlnXQq9//v8+AqCaqYWA+K8=
-X-Received: by 2002:a2e:9f04:0:b0:2b1:a874:34c9 with SMTP id
- u4-20020a2e9f04000000b002b1a87434c9mr1787047ljk.22.1686088480677; Tue, 06 Jun
- 2023 14:54:40 -0700 (PDT)
+        with ESMTP id S238306AbjFGG6z (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Jun 2023 02:58:55 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F8551730
+        for <linux-raid@vger.kernel.org>; Tue,  6 Jun 2023 23:58:54 -0700 (PDT)
+Received: from kwepemi500002.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QbdNp32SKzqTTn;
+        Wed,  7 Jun 2023 14:54:02 +0800 (CST)
+Received: from huawei.com (10.175.101.6) by kwepemi500002.china.huawei.com
+ (7.221.188.171) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Wed, 7 Jun
+ 2023 14:58:49 +0800
+From:   Guanqin Miao <miaoguanqin@huawei.com>
+To:     <jes@trained-monkey.org>, <mariusz.tkaczyk@linux.intel.com>,
+        <pmenzel@molgen.mpg.de>, <linux-raid@vger.kernel.org>
+CC:     <linfeilong@huawei.com>, <lixiaokeng@huawei.com>,
+        <louhongxiang@huawei.com>, <miaoguanqin@huawei.com>
+Subject: [PATCH] Fix mdmonitor-oneshot.service fail to be executed
+Date:   Wed, 7 Jun 2023 14:57:34 +0800
+Message-ID: <20230607065734.2722921-1-miaoguanqin@huawei.com>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-References: <20230529131106.2123367-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230529131106.2123367-1-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 6 Jun 2023 14:54:28 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7u95vMc2KB7HJkNNmEgn6XyGdJPnvstL1-qvK64h=uBA@mail.gmail.com>
-Message-ID: <CAPhsuW7u95vMc2KB7HJkNNmEgn6XyGdJPnvstL1-qvK64h=uBA@mail.gmail.com>
-Subject: Re: [PATCH -next v3 0/7] limit the number of plugged bio
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     neilb@suse.de, akpm@osdl.org, xni@redhat.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemi500002.china.huawei.com (7.221.188.171)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, May 29, 2023 at 6:14=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Changes in v3:
->  - prefix function with 'raid1_' instead of 'md_'
->  - use a globle workequeue instead of per bitmap in patch 5
-> Changes in v2:
->  - remove the patch to rename raid1-10.c
->
-> Yu Kuai (7):
->   md/raid10: prevent soft lockup while flush writes
->   md/raid1-10: factor out a helper to add bio to plug
->   md/raid1-10: factor out a helper to submit normal write
->   md/raid1-10: submit write io directly if bitmap is not enabled
->   md/md-bitmap: add a new helper to unplug bitmap asynchrously
->   md/raid1-10: don't handle pluged bio by daemon thread
->   md/raid1-10: limit the number of plugged bio
+When we start mdmonitor-oneshot.service, we found an fail 
+for mdmonitor-oneshot.service:
 
-With the fix on 5/7, applied to md-next.
+mdadm: No mail address or alert command - not monitoring
 
-Thanks,
-Song
+According to the error information, We modified the Environment 
+field and added the syslog parameter.The service can be 
+executed successfully.
+---
+ systemd/mdmonitor-oneshot.service | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/systemd/mdmonitor-oneshot.service b/systemd/mdmonitor-oneshot.service
+index ba86b44e..032b8aad 100644
+--- a/systemd/mdmonitor-oneshot.service
++++ b/systemd/mdmonitor-oneshot.service
+@@ -10,7 +10,7 @@ Description=Reminder for degraded MD arrays
+ Documentation=man:mdadm(8)
+ 
+ [Service]
+-Environment=MDADM_MONITOR_ARGS=--scan
++Environment=MDADM_MONITOR_ARGS="--scan --syslog"
+ EnvironmentFile=-/run/sysconfig/mdadm
+ ExecStartPre=-/usr/lib/mdadm/mdadm_env.sh
+ ExecStart=BINDIR/mdadm --monitor --oneshot $MDADM_MONITOR_ARGS
+-- 
+2.33.0
 
->
->  drivers/md/md-bitmap.c | 33 ++++++++++++++++++++--
->  drivers/md/md-bitmap.h |  8 ++++++
->  drivers/md/md.c        |  9 ++++++
->  drivers/md/md.h        |  1 +
->  drivers/md/raid1-10.c  | 63 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/md/raid1.c     | 29 ++++---------------
->  drivers/md/raid10.c    | 47 +++++++------------------------
->  7 files changed, 126 insertions(+), 64 deletions(-)
->
-> --
-> 2.39.2
->
