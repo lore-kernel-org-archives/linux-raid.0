@@ -2,117 +2,97 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B32FC7EE23
-	for <linux-raid@archiver.kernel.org>; Wed,  7 Jun 2023 11:06:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92CC4C77B7A
+	for <linux-raid@archiver.kernel.org>; Thu,  8 Jun 2023 02:41:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239632AbjFGLGb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 7 Jun 2023 07:06:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44630 "EHLO
+        id S233588AbjFHClY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 7 Jun 2023 22:41:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235821AbjFGLG2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Jun 2023 07:06:28 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7DF71723
-        for <linux-raid@vger.kernel.org>; Wed,  7 Jun 2023 04:06:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686135962; x=1717671962;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=hO1aXeMk7cws8o4d48krLtS1NBA50qsQREqhoqFDqxY=;
-  b=Rf4Q5oDlaYLfa6hnYFdC5nxxqfXyzWdbic8k9Vudfi3nMC2D4kFSWLJo
-   6eXWoEeGLHwMgioRekbfyns3Lecg1Jlg7K0GNCSuz0iEPc4JGAyOTYmqE
-   KtZsbaySfTZY5Evb5wCjLvHUmx8GJiGH2ZnGAkniUlBcoF7vBowmFQKWp
-   omzNBwchCIAV4WNOSvfouLoBs36aMgdGAXcRokxASjUBGR1gya+Z7nq60
-   pGoNH7UgA6J2j5EIeZd9UGPsKivNRSRgC071lKKNKMLzif675x9AEgwkU
-   TRXCCdko2tZa7RmVdYiQI80yaj4yjUAQZkOF/70HpcTopWiyfghCQaAt+
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10733"; a="420512384"
-X-IronPort-AV: E=Sophos;i="6.00,223,1681196400"; 
-   d="scan'208";a="420512384"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2023 04:05:07 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10733"; a="703593260"
-X-IronPort-AV: E=Sophos;i="6.00,223,1681196400"; 
-   d="scan'208";a="703593260"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.158.35])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2023 04:05:04 -0700
-Date:   Wed, 7 Jun 2023 13:05:00 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Guanqin Miao <miaoguanqin@huawei.com>
-Cc:     <jes@trained-monkey.org>, <pmenzel@molgen.mpg.de>,
-        <linux-raid@vger.kernel.org>, <linfeilong@huawei.com>,
-        <lixiaokeng@huawei.com>, <louhongxiang@huawei.com>
-Subject: Re: [PATCH] Fix mdmonitor-oneshot.service fail to be executed
-Message-ID: <20230607130500.00004df6@linux.intel.com>
-In-Reply-To: <20230607065734.2722921-1-miaoguanqin@huawei.com>
-References: <20230607065734.2722921-1-miaoguanqin@huawei.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S231698AbjFHClW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Jun 2023 22:41:22 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB5A226A5;
+        Wed,  7 Jun 2023 19:41:05 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qc7kP4wNMz4f3jYv;
+        Thu,  8 Jun 2023 10:41:01 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgBH_rG9P4FkzBfHLA--.54104S3;
+        Thu, 08 Jun 2023 10:41:02 +0800 (CST)
+Subject: Re: [PATCH -next v2 0/6] md: fix that MD_RECOVERY_RUNNING can be
+ cleared while sync_thread is still running
+To:     Yu Kuai <yukuai1@huaweicloud.com>, guoqing.jiang@linux.dev,
+        agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
+        song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <0a38ddc1-b47e-04e8-dbf5-25afcd13fff4@huaweicloud.com>
+Date:   Thu, 8 Jun 2023 10:41:01 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBH_rG9P4FkzBfHLA--.54104S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7GrWktr43Kr17Ww1fAFy3XFb_yoWkWFg_Wa
+        4YkFy3Wr47GF15GFyDKrn8Z39rGFW5ur1DXFyrtayjvFyIgrnxCr1kuw43uw1YvFWjyr18
+        ArWUCayfAwsrWjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb3xFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
+        Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY
+        04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+        v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+        1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+        AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1l
+        IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvf
+        C2KfnxnUUI43ZEXa7VU1a9aPUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 7 Jun 2023 14:57:34 +0800
-Guanqin Miao <miaoguanqin@huawei.com> wrote:
+Hi,
 
-> When we start mdmonitor-oneshot.service, we found an fail 
-> for mdmonitor-oneshot.service:
+ÔÚ 2023/05/29 21:20, Yu Kuai Ð´µÀ:
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> mdadm: No mail address or alert command - not monitoring
+> Changes in v2:
+>   - rebase for the latest md-next
 > 
-> According to the error information, We modified the Environment 
-> field and added the syslog parameter.The service can be 
-> executed successfully.
-> ---
-Hi Guanqin,
+> Patch 1 revert the commit because it will cause MD_RECOVERY_RUNNING to be
+> cleared while sync_thread is still running. The deadlock this patch tries
+> to fix will be fixed by patch 2-5.
+> 
+> Patch 6 enhance checking to prevent MD_RECOVERY_RUNNING to be cleared
+> while sync_thread is still running.
 
-I'm against this approach because systemd service should contains
-parameters specifies systemd wide mode only, like "--scan".
-
-It globally enables syslog logging for --oneshoot. I know that
-it is not configurable right now and nobody is asking but I believe that user
-will prefer to have possibility to enable/disable it, not to have it always
-enabled.
-
-If you want add the syslog logging then it should be configurable via config
-like MAILADDR is e.g.
-
-SYSLOG = yes
-
-Please also consider that we have two services: mdmonitor and mdmonitor-oneshoot
-and logging for them should be configured separately, so I think it is better to
-give two options: SYSLOG, SYSYLOG_ONESHOT.
-
-But the question is, if you want the syslog logging or just to make the service
-working by default.
-
-If service is not working by default it means that your package provider does
-not provide default configuration to run that. It depends on them. We are
-providing a solution which may need to be additionally configured.
-There is not requirement saying "service must work by default" so I do not
-consider it as a bug. Please correct me if you think that I'm wrong here.
+Any suggestions on this patchset? I already sent regression test
+for the deadlock problem for both raid10 and raid456.
 
 Thanks,
-Mariusz
-
->  systemd/mdmonitor-oneshot.service | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Kuai
 > 
-> diff --git a/systemd/mdmonitor-oneshot.service
-> b/systemd/mdmonitor-oneshot.service index ba86b44e..032b8aad 100644
-> --- a/systemd/mdmonitor-oneshot.service
-> +++ b/systemd/mdmonitor-oneshot.service
-> @@ -10,7 +10,7 @@ Description=Reminder for degraded MD arrays
->  Documentation=man:mdadm(8)
->  
->  [Service]
-> -Environment=MDADM_MONITOR_ARGS=--scan
-> +Environment=MDADM_MONITOR_ARGS="--scan --syslog"
->  EnvironmentFile=-/run/sysconfig/mdadm
->  ExecStartPre=-/usr/lib/mdadm/mdadm_env.sh
->  ExecStart=BINDIR/mdadm --monitor --oneshot $MDADM_MONITOR_ARGS
+> Yu Kuai (6):
+>    Revert "md: unlock mddev before reap sync_thread in action_store"
+>    md: refactor action_store() for 'idle' and 'frozen'
+>    md: add a mutex to synchronize idle and frozen in action_store()
+>    md: refactor idle/frozen_sync_thread() to fix deadlock
+>    md: wake up 'resync_wait' at last in md_reap_sync_thread()
+>    md: enhance checking in md_check_recovery()
+> 
+>   drivers/md/dm-raid.c |   1 -
+>   drivers/md/md.c      | 124 +++++++++++++++++++++++++++++--------------
+>   drivers/md/md.h      |   5 ++
+>   3 files changed, 88 insertions(+), 42 deletions(-)
+> 
 
