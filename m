@@ -2,196 +2,120 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A149C7EE25
-	for <linux-raid@archiver.kernel.org>; Fri,  9 Jun 2023 13:33:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0427DC7EE2E
+	for <linux-raid@archiver.kernel.org>; Sat, 10 Jun 2023 02:32:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233272AbjFINdd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 9 Jun 2023 09:33:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50090 "EHLO
+        id S231478AbjFJCc5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 9 Jun 2023 22:32:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230199AbjFINdb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Jun 2023 09:33:31 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB383A3
-        for <linux-raid@vger.kernel.org>; Fri,  9 Jun 2023 06:33:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686317610; x=1717853610;
-  h=date:from:to:cc:subject:message-id;
-  bh=GxNiIpM0X0GCmRkNgpXNSoNmVly00ftGJIVq3OMmjV0=;
-  b=baGnbePiNI+nwZpeSLxtUoZYHtS4tewPJIIfKVzXC4OvPXjCE5JgdKt4
-   2DxWyVuqIJfUEow5IYNfFoHRbHmHNTbYRAy8ZOvI7fIBgMDTVybQwMjKt
-   4w/8gCss6khxO8gCIPDWk61ekWoDRLq3/I/4JQIjvDb33KPFn++W2/JVd
-   fNC3YlhJIWEXmsCn/ZYYBG5085lZYo2QzFBUp5XZrz275eHy7X4kpGoJK
-   4i9ecoyYdVep/mvuH30oJ1j/1SBm3EIa4rMfw4idK4ekQ4v5IulJLTGSh
-   q7GIXzgXzPEsAF12eE6711ejstdY9s2YTaO/u+L9mrYTkh2M2QDrH4ogA
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="342273731"
-X-IronPort-AV: E=Sophos;i="6.00,229,1681196400"; 
-   d="scan'208";a="342273731"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2023 06:33:30 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="1040492498"
-X-IronPort-AV: E=Sophos;i="6.00,229,1681196400"; 
-   d="scan'208";a="1040492498"
-Received: from lkp-server01.sh.intel.com (HELO 15ab08e44a81) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 09 Jun 2023 06:33:15 -0700
-Received: from kbuild by 15ab08e44a81 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q7cEt-00094A-0V;
-        Fri, 09 Jun 2023 13:33:15 +0000
-Date:   Fri, 09 Jun 2023 21:32:25 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 3f38d83c0f18f5eaef5c248769f5a7eb368e9a47
-Message-ID: <202306092123.4OVb0ZLr-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S229697AbjFJCc4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Jun 2023 22:32:56 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 846AE35B5;
+        Fri,  9 Jun 2023 19:32:54 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QdMS25FF1z4f3l2C;
+        Sat, 10 Jun 2023 10:32:50 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCXaK_S4INkrTpkLQ--.11723S3;
+        Sat, 10 Jun 2023 10:32:51 +0800 (CST)
+Subject: Re: [PATCH] md/raid10: Only check QUEUE_FLAG_IO_STAT when issuing io
+To:     linan666@huaweicloud.com, song@kernel.org, jgq516@gmail.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230609094320.2397604-1-linan666@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <8d2134a6-90dc-822b-52ef-cd7cc8060b36@huaweicloud.com>
+Date:   Sat, 10 Jun 2023 10:32:50 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <20230609094320.2397604-1-linan666@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCXaK_S4INkrTpkLQ--.11723S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF13tFWDGFW3Gry8XrWrKrg_yoW8CrW7p3
+        9rCw1Fq3y5Wa12kFyqgayDGa4rKa9FkrW0yrn7J3yUXa4avry2k3WqqFZ0gr1kGrZ3CFW2
+        qF109anrGa90yFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMI
+        IF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+        BIdaVFxhVjvjDU0xZFpf9x0JUZa9-UUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 3f38d83c0f18f5eaef5c248769f5a7eb368e9a47  md/raid1-10: limit the number of plugged bio
+Hi,
 
-elapsed time: 1246m
+ÔÚ 2023/06/09 17:43, linan666@huaweicloud.com Ð´µÀ:
+> From: Li Nan <linan122@huawei.com>
+> 
+> /sys/block/[device]/queue/iostats is used to control whether to count io
+> stat. Write 0 to it will clear queue_flags QUEUE_FLAG_IO_STAT which means
+> iostats is disabled. If we disable iostats and later endable it, the io
+> issued during this period will be counted incorrectly, inflight will be
+> decreased to -1.
+> 
+>    //T1 set iostats
+>    echo 0 > /sys/block/md0/queue/iostats
+>     clear QUEUE_FLAG_IO_STAT
+> 
+> 			//T2 issue io
+> 			if (QUEUE_FLAG_IO_STAT) -> false
+> 			 bio_start_io_acct
+> 			  inflight++
+> 
+>    echo 1 > /sys/block/md0/queue/iostats
+>     set QUEUE_FLAG_IO_STAT
+> 
+> 					//T3 io end
+> 					if (QUEUE_FLAG_IO_STAT) -> true
+> 					 bio_end_io_acct
+> 					  inflight--	-> -1
+> 
+> Also, if iostats is enabled while issuing io but disabled while io end,
+> inflight will never be decreased.
+> 
+> Fix it by checking start_time when io end. Only check QUEUE_FLAG_IO_STAT
+> while issuing io, just like request based devices.
+> 
+> Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>   drivers/md/raid10.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 381c21f7fb06..bf9dca5c25c3 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -325,7 +325,7 @@ static void raid_end_bio_io(struct r10bio *r10_bio)
+>   	if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
+>   		bio->bi_status = BLK_STS_IOERR;
+>   
+> -	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
+> +	if (r10_bio->start_time)
+>   		bio_end_io_acct(bio, r10_bio->start_time);
 
-configs tested: 125
-configs skipped: 6
+This patch LGTM, can you change this for raid1 as well? raid0 and
+raid456 is using md_account_bio(), and they don't have such problem.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks,
+Kuai
+>   	bio_endio(bio);
+>   	/*
+> 
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha        buildonly-randconfig-r002-20230608   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r013-20230608   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r005-20230608   gcc  
-arc                  randconfig-r031-20230608   gcc  
-arc                  randconfig-r035-20230608   gcc  
-arc                  randconfig-r043-20230608   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                  randconfig-r046-20230608   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky         buildonly-randconfig-r004-20230608   gcc  
-csky                                defconfig   gcc  
-hexagon              randconfig-r041-20230608   clang
-hexagon              randconfig-r045-20230608   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230608   gcc  
-i386                 randconfig-i002-20230608   gcc  
-i386                 randconfig-i003-20230608   gcc  
-i386                 randconfig-i004-20230608   gcc  
-i386                 randconfig-i005-20230608   gcc  
-i386                 randconfig-i006-20230608   gcc  
-i386                 randconfig-i011-20230608   clang
-i386                 randconfig-i012-20230608   clang
-i386                 randconfig-i013-20230608   clang
-i386                 randconfig-i014-20230608   clang
-i386                 randconfig-i015-20230608   clang
-i386                 randconfig-i016-20230608   clang
-i386                 randconfig-i051-20230608   gcc  
-i386                 randconfig-i052-20230608   gcc  
-i386                 randconfig-i053-20230608   gcc  
-i386                 randconfig-i054-20230608   gcc  
-i386                 randconfig-i055-20230608   gcc  
-i386                 randconfig-i056-20230608   gcc  
-i386                 randconfig-i061-20230608   gcc  
-i386                 randconfig-i062-20230608   gcc  
-i386                 randconfig-i063-20230608   gcc  
-i386                 randconfig-i064-20230608   gcc  
-i386                 randconfig-i065-20230608   gcc  
-i386                 randconfig-i066-20230608   gcc  
-i386                 randconfig-r022-20230608   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r021-20230608   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze           randconfig-r016-20230608   gcc  
-microblaze           randconfig-r034-20230608   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips         buildonly-randconfig-r005-20230608   clang
-mips                 randconfig-r002-20230608   clang
-mips                 randconfig-r024-20230608   gcc  
-mips                 randconfig-r032-20230608   clang
-nios2                               defconfig   gcc  
-openrisc             randconfig-r011-20230608   gcc  
-openrisc             randconfig-r025-20230608   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc              randconfig-r033-20230608   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r042-20230608   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390         buildonly-randconfig-r003-20230608   clang
-s390                                defconfig   gcc  
-s390                 randconfig-r014-20230608   clang
-s390                 randconfig-r044-20230608   clang
-sh                               allmodconfig   gcc  
-sh                   randconfig-r015-20230608   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64      buildonly-randconfig-r006-20230608   gcc  
-sparc64              randconfig-r006-20230608   gcc  
-sparc64              randconfig-r036-20230608   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   clang
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230608   gcc  
-x86_64               randconfig-a002-20230608   gcc  
-x86_64               randconfig-a003-20230608   gcc  
-x86_64               randconfig-a004-20230608   gcc  
-x86_64               randconfig-a005-20230608   gcc  
-x86_64               randconfig-a006-20230608   gcc  
-x86_64               randconfig-a011-20230608   clang
-x86_64               randconfig-a012-20230608   clang
-x86_64               randconfig-a013-20230608   clang
-x86_64               randconfig-a014-20230608   clang
-x86_64               randconfig-a015-20230608   clang
-x86_64               randconfig-a016-20230608   clang
-x86_64               randconfig-r001-20230608   gcc  
-x86_64               randconfig-r023-20230608   clang
-x86_64               randconfig-x051-20230608   clang
-x86_64               randconfig-x052-20230608   clang
-x86_64               randconfig-x053-20230608   clang
-x86_64               randconfig-x054-20230608   clang
-x86_64               randconfig-x055-20230608   clang
-x86_64               randconfig-x056-20230608   clang
-x86_64               randconfig-x061-20230608   clang
-x86_64               randconfig-x062-20230608   clang
-x86_64               randconfig-x063-20230608   clang
-x86_64               randconfig-x064-20230608   clang
-x86_64               randconfig-x065-20230608   clang
-x86_64               randconfig-x066-20230608   clang
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa               randconfig-r012-20230608   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
