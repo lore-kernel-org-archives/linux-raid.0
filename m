@@ -2,127 +2,237 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E085C7EE29
-	for <linux-raid@archiver.kernel.org>; Sat, 10 Jun 2023 08:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E84BFC7EE43
+	for <linux-raid@archiver.kernel.org>; Tue, 13 Jun 2023 06:26:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231639AbjFJImL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 10 Jun 2023 04:42:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55530 "EHLO
+        id S233950AbjFMG0d (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 13 Jun 2023 02:26:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229799AbjFJImK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 10 Jun 2023 04:42:10 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97D0D3A8C;
-        Sat, 10 Jun 2023 01:42:07 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QdWf31fXqz4f3nJh;
-        Sat, 10 Jun 2023 16:42:03 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgBXwLNaN4Rk84t4LQ--.19484S3;
-        Sat, 10 Jun 2023 16:42:04 +0800 (CST)
-Message-ID: <288f846f-01f7-6c60-b440-aaabb1538de3@huaweicloud.com>
-Date:   Sat, 10 Jun 2023 16:42:02 +0800
+        with ESMTP id S238333AbjFMG0a (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Jun 2023 02:26:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34EA51AD
+        for <linux-raid@vger.kernel.org>; Mon, 12 Jun 2023 23:25:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1686637549;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Dk4w/dlhnM14+5Pc/Gjm/pjDzAHKz0WKmVblyd15aqY=;
+        b=hj+bPT9Zk1otQZe4boc1z9gmVUH+KMPjmL6JQgZwpYBkwuvLNSV6yk42nJDbWdxlI9BcW3
+        VE+LPuUXV18Mgo8ZLXjAtJqHnsVoWoGGlvmRYcnIifcesChiepELcpwN0uCu2MOW2h+I6p
+        zqpxVhIRipYbSwJN1kG7Q9yXEZGiSBg=
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
+ [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-277-xEY7IN4cNNCwGNYn5A9cfg-1; Tue, 13 Jun 2023 02:25:48 -0400
+X-MC-Unique: xEY7IN4cNNCwGNYn5A9cfg-1
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-660c4eecd01so2866764b3a.1
+        for <linux-raid@vger.kernel.org>; Mon, 12 Jun 2023 23:25:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686637547; x=1689229547;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Dk4w/dlhnM14+5Pc/Gjm/pjDzAHKz0WKmVblyd15aqY=;
+        b=Ilq7vixt7Ms/wgh7Kzl2rv6ceFhlmPaKJ/3//BWYbFBPOSpDG+Otpaaycn6RLZWUBi
+         EuF5f2iHjpIyMkIIySqzHun04Q7TFjFT9FGhR97p5FZvlgiz7vFFPcelWB87RG1dCB3x
+         S7alVIXgJfGeP0xmlB6/5o0vrlK2J0kpGGi/g+UsEj/x+Xq9Z9j7dgFVCQqXiSGVSBeo
+         HPkBe9vOZY/8pzuKAggqDkWwWf3MIO87au4kw8yRoTFEp+2qNwDO9arnBuk17WivI54s
+         cT0KUDQa44fZva0UQ8XSKT09rgUrXQlZl5XQGvhNCClthfj3h8mRO87yLcgt+TD4ai87
+         uxNQ==
+X-Gm-Message-State: AC+VfDwthz27SDn6ztyFv4z7PTxPlOnvkztnvxCY59YkOafor7JcTwYM
+        KWtyjT58CRBkezGHF5CS2LDXu8sQoJZkRViELl2LrJ0vQD27ytMtrzQj//fEkdNg9AsrVfQZHL/
+        2Gn4V8Q1+8ZZn2abDTq1Yd1Dor2TROL9w
+X-Received: by 2002:a05:6a20:a5a8:b0:10b:6b1f:c8c8 with SMTP id bc40-20020a056a20a5a800b0010b6b1fc8c8mr9951059pzb.31.1686637547089;
+        Mon, 12 Jun 2023 23:25:47 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ4u3LPIN5hkek6lUp2dJz1pyTMTONqTlT2y5JtlLRtJ1OFqReJODea6RGuFRUGvABTUi5JnGQ==
+X-Received: by 2002:a05:6a20:a5a8:b0:10b:6b1f:c8c8 with SMTP id bc40-20020a056a20a5a800b0010b6b1fc8c8mr9951043pzb.31.1686637546719;
+        Mon, 12 Jun 2023 23:25:46 -0700 (PDT)
+Received: from [10.72.13.126] ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id a10-20020aa780ca000000b00640f1e4a811sm7868913pfn.22.2023.06.12.23.25.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Jun 2023 23:25:46 -0700 (PDT)
+Message-ID: <2d9f34b1-48e1-73a7-8548-bfd1843d3a0a@redhat.com>
+Date:   Tue, 13 Jun 2023 14:25:37 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] md/raid10: Only check QUEUE_FLAG_IO_STAT when issuing io
-To:     Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
-        song@kernel.org, jgq516@gmail.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230609094320.2397604-1-linan666@huaweicloud.com>
- <8d2134a6-90dc-822b-52ef-cd7cc8060b36@huaweicloud.com>
-From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <8d2134a6-90dc-822b-52ef-cd7cc8060b36@huaweicloud.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.11.2
+Subject: Re: [PATCH -next v2 1/6] Revert "md: unlock mddev before reap
+ sync_thread in action_store"
+To:     Yu Kuai <yukuai1@huaweicloud.com>, guoqing.jiang@linux.dev,
+        agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
+        song@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+References: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
+ <20230529132037.2124527-2-yukuai1@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+In-Reply-To: <20230529132037.2124527-2-yukuai1@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBXwLNaN4Rk84t4LQ--.19484S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Wry7Kw1xWF1rGr4Dur47twb_yoW8Kw4Dpr
-        ykKFy5J345Gr4kJryqqr1UAry5tw4DJ34DJr18JFyUXF1UJryjgF4UXr90gr1kJr4fAr17
-        XF15JrnrurW5JF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-        0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI
-        64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8Jw
-        Am72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7
-        M4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64
-        vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
-        jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
-        x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK
-        8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-        CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbHa0DUUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
+在 2023/5/29 下午9:20, Yu Kuai 写道:
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> This reverts commit 9dfbdafda3b34e262e43e786077bab8e476a89d1.
+>
+> Because it will introduce a defect that sync_thread can be running while
+> MD_RECOVERY_RUNNING is cleared, which will cause some unexpected problems,
+> for example:
+>
+> list_add corruption. prev->next should be next (ffff0001ac1daba0), but was ffff0000ce1a02a0. (prev=ffff0000ce1a02a0).
+> Call trace:
+>   __list_add_valid+0xfc/0x140
+>   insert_work+0x78/0x1a0
+>   __queue_work+0x500/0xcf4
+>   queue_work_on+0xe8/0x12c
+>   md_check_recovery+0xa34/0xf30
+>   raid10d+0xb8/0x900 [raid10]
+>   md_thread+0x16c/0x2cc
+>   kthread+0x1a4/0x1ec
+>   ret_from_fork+0x10/0x18
+>
+> This is because work is requeued while it's still inside workqueue:
+>
+> t1:			t2:
+> action_store
+>   mddev_lock
+>    if (mddev->sync_thread)
+>     mddev_unlock
+>     md_unregister_thread
+>     // first sync_thread is done
+> 			md_check_recovery
+> 			 mddev_try_lock
+> 			 /*
+> 			  * once MD_RECOVERY_DONE is set, new sync_thread
+> 			  * can start.
+> 			  */
+> 			 set_bit(MD_RECOVERY_RUNNING, &mddev->recovery)
+> 			 INIT_WORK(&mddev->del_work, md_start_sync)
+> 			 queue_work(md_misc_wq, &mddev->del_work)
+> 			  test_and_set_bit(WORK_STRUCT_PENDING_BIT, ...)
+> 			  // set pending bit
+> 			  insert_work
+> 			   list_add_tail
+> 			 mddev_unlock
+>     mddev_lock_nointr
+>     md_reap_sync_thread
+>     // MD_RECOVERY_RUNNING is cleared
+>   mddev_unlock
+>
+> t3:
+>
+> // before queued work started from t2
+> md_check_recovery
+>   // MD_RECOVERY_RUNNING is not set, a new sync_thread can be started
+>   INIT_WORK(&mddev->del_work, md_start_sync)
+>    work->data = 0
+>    // work pending bit is cleared
+>   queue_work(md_misc_wq, &mddev->del_work)
+>    insert_work
+>     list_add_tail
+>     // list is corrupted
+>
+> The above commit is reverted to fix the problem, the deadlock this
+> commit tries to fix will be fixed in following patches.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   drivers/md/dm-raid.c |  1 -
+>   drivers/md/md.c      | 19 ++-----------------
+>   2 files changed, 2 insertions(+), 18 deletions(-)
+>
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index 8846bf510a35..1f22bef27841 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -3725,7 +3725,6 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+>   	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
+>   		if (mddev->sync_thread) {
+>   			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -			md_unregister_thread(&mddev->sync_thread);
+>   			md_reap_sync_thread(mddev);
+>   		}
+>   	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index a5a7af2f4e59..9b97731e1fe4 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -4772,19 +4772,6 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+>   			if (work_pending(&mddev->del_work))
+>   				flush_workqueue(md_misc_wq);
+>   			if (mddev->sync_thread) {
+> -				sector_t save_rp = mddev->reshape_position;
+> -
+> -				mddev_unlock(mddev);
+> -				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -				md_unregister_thread(&mddev->sync_thread);
+> -				mddev_lock_nointr(mddev);
+> -				/*
+> -				 * set RECOVERY_INTR again and restore reshape
+> -				 * position in case others changed them after
+> -				 * got lock, eg, reshape_position_store and
+> -				 * md_check_recovery.
+> -				 */
+> -				mddev->reshape_position = save_rp;
+>   				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>   				md_reap_sync_thread(mddev);
+>   			}
+> @@ -6184,7 +6171,6 @@ static void __md_stop_writes(struct mddev *mddev)
+>   		flush_workqueue(md_misc_wq);
+>   	if (mddev->sync_thread) {
+>   		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -		md_unregister_thread(&mddev->sync_thread);
+>   		md_reap_sync_thread(mddev);
+>   	}
+>   
+> @@ -9336,7 +9322,6 @@ void md_check_recovery(struct mddev *mddev)
+>   			 * ->spare_active and clear saved_raid_disk
+>   			 */
+>   			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -			md_unregister_thread(&mddev->sync_thread);
+>   			md_reap_sync_thread(mddev);
+>   			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>   			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> @@ -9372,7 +9357,6 @@ void md_check_recovery(struct mddev *mddev)
+>   			goto unlock;
+>   		}
+>   		if (mddev->sync_thread) {
+> -			md_unregister_thread(&mddev->sync_thread);
+>   			md_reap_sync_thread(mddev);
+>   			goto unlock;
+>   		}
+> @@ -9452,7 +9436,8 @@ void md_reap_sync_thread(struct mddev *mddev)
+>   	sector_t old_dev_sectors = mddev->dev_sectors;
+>   	bool is_reshaped = false;
+>   
+> -	/* sync_thread should be unregistered, collect result */
+> +	/* resync has finished, collect result */
+> +	md_unregister_thread(&mddev->sync_thread);
+>   	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+>   	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
+>   	    mddev->degraded != mddev->raid_disks) {
 
-在 2023/6/10 10:32, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2023/06/09 17:43, linan666@huaweicloud.com 写道:
->> From: Li Nan <linan122@huawei.com>
->>
->> /sys/block/[device]/queue/iostats is used to control whether to count io
->> stat. Write 0 to it will clear queue_flags QUEUE_FLAG_IO_STAT which means
->> iostats is disabled. If we disable iostats and later endable it, the io
->> issued during this period will be counted incorrectly, inflight will be
->> decreased to -1.
->>
->>    //T1 set iostats
->>    echo 0 > /sys/block/md0/queue/iostats
->>     clear QUEUE_FLAG_IO_STAT
->>
->>             //T2 issue io
->>             if (QUEUE_FLAG_IO_STAT) -> false
->>              bio_start_io_acct
->>               inflight++
->>
->>    echo 1 > /sys/block/md0/queue/iostats
->>     set QUEUE_FLAG_IO_STAT
->>
->>                     //T3 io end
->>                     if (QUEUE_FLAG_IO_STAT) -> true
->>                      bio_end_io_acct
->>                       inflight--    -> -1
->>
->> Also, if iostats is enabled while issuing io but disabled while io end,
->> inflight will never be decreased.
->>
->> Fix it by checking start_time when io end. Only check QUEUE_FLAG_IO_STAT
->> while issuing io, just like request based devices.
->>
->> Fixes: 528bc2cf2fcc ("md/raid10: enable io accounting")
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>   drivers/md/raid10.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index 381c21f7fb06..bf9dca5c25c3 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -325,7 +325,7 @@ static void raid_end_bio_io(struct r10bio *r10_bio)
->>       if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
->>           bio->bi_status = BLK_STS_IOERR;
->> -    if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
->> +    if (r10_bio->start_time)
->>           bio_end_io_acct(bio, r10_bio->start_time);
-> 
-> This patch LGTM, can you change this for raid1 as well? raid0 and
-> raid456 is using md_account_bio(), and they don't have such problem.
-> 
 
-OK, I will fix raid1 later. Thanks for suggestion.
+Hi Kuai
 
-> Thanks,
-> Kuai
--- 
-Thanks,
-Nan
+Thanks for the patch and the explanation in V1. In version1, I took much 
+time to try to understand the problem. Maybe we can use the problem
+
+itself as the subject. Something like "Don't allow two sync processes 
+running at the same time"? And could you add the test steps which talked 
+in v1
+
+in the patch? It can help to understand the problem very much.
+
+Best Regards
+
+Xiao
 
