@@ -2,59 +2,61 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20ACCC7EE29
-	for <linux-raid@archiver.kernel.org>; Tue, 13 Jun 2023 11:58:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 805E3C7EE2E
+	for <linux-raid@archiver.kernel.org>; Tue, 13 Jun 2023 12:00:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241989AbjFML6Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 13 Jun 2023 07:58:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49402 "EHLO
+        id S241251AbjFMMAW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 13 Jun 2023 08:00:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241923AbjFML6W (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Jun 2023 07:58:22 -0400
+        with ESMTP id S242269AbjFMMAR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Jun 2023 08:00:17 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9D4B135;
-        Tue, 13 Jun 2023 04:58:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7092124;
+        Tue, 13 Jun 2023 05:00:15 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QgRs46JnYz4f3pFy;
-        Tue, 13 Jun 2023 19:58:16 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QgRvG53PZz4f4684;
+        Tue, 13 Jun 2023 20:00:10 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHcLPXWYhk+e1vLg--.58707S3;
-        Tue, 13 Jun 2023 19:58:17 +0800 (CST)
-Subject: Re: [PATCH -next v2 1/6] Revert "md: unlock mddev before reap
- sync_thread in action_store"
+        by APP4 (Coremail) with SMTP id gCh0CgCXaK9KWohkdghwLg--.58089S3;
+        Tue, 13 Jun 2023 20:00:11 +0800 (CST)
+Subject: Re: [dm-devel] [PATCH -next v2 2/6] md: refactor action_store() for
+ 'idle' and 'frozen'
 To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>,
         guoqing.jiang@linux.dev, agk@redhat.com, snitzer@kernel.org,
         dm-devel@redhat.com, song@kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
+Cc:     yi.zhang@huawei.com, yangerkun@huawei.com,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         "yukuai (C)" <yukuai3@huawei.com>
 References: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
- <20230529132037.2124527-2-yukuai1@huaweicloud.com>
- <2d9f34b1-48e1-73a7-8548-bfd1843d3a0a@redhat.com>
+ <20230529132037.2124527-3-yukuai1@huaweicloud.com>
+ <b780ccfd-66b1-fdd1-b33e-aa680fbd86f1@redhat.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <5a107083-488d-1a1f-152c-50c9b9313da5@huaweicloud.com>
-Date:   Tue, 13 Jun 2023 19:58:15 +0800
+Message-ID: <1aaf9150-bbd3-87a8-8d54-8b5d63ab5ed3@huaweicloud.com>
+Date:   Tue, 13 Jun 2023 20:00:10 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <2d9f34b1-48e1-73a7-8548-bfd1843d3a0a@redhat.com>
+In-Reply-To: <b780ccfd-66b1-fdd1-b33e-aa680fbd86f1@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHcLPXWYhk+e1vLg--.58707S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYg7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2js
-        IEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE
-        5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeV
-        CFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxG
-        xcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrw
-        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxK
-        x2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267
-        AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-TRANSID: gCh0CgCXaK9KWohkdghwLg--.58089S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrtFykCF13Gry3WryfZry3XFb_yoW3Xwb_C3
+        yDKw15Wr18Aaya9r1qyw15Z347Krn0v34UGrZ5Zw45uw17WFs5Jrs8J3Z5Wr4UGFWqkr17
+        AFyYqa13Jr429jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb3xFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
+        Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY
+        04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+        v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+        1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+        AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1l
+        IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvf
+        C2KfnxnUUI43ZEXa7VU1a9aPUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -63,16 +65,30 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/06/13 14:25, Xiao Ni 写道:
-> Thanks for the patch and the explanation in V1. In version1, I took much 
-> time to try to understand the problem. Maybe we can use the problem
-> itself as the subject. Something like "Don't allow two sync processes 
-> running at the same time"? And could you add the test steps which talked 
-> in v1
+在 2023/06/13 16:02, Xiao Ni 写道:
 > 
-> in the patch? It can help to understand the problem very much.
+> 在 2023/5/29 下午9:20, Yu Kuai 写道:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Prepare to handle 'idle' and 'frozen' differently to fix a deadlock, 
+>> there
+>> are no functional changes except that MD_RECOVERY_RUNNING is checked
+>> again after 'reconfig_mutex' is held.
+> 
+> 
+> Can you explain more about why it needs to check MD_RECOVERY_RUNNING 
+> again here?
 
-Ok, thanks for the suggestion, I can do that in the next version.
+As I explain in the following comment:
+>> +    /*
+>> +     * Check again in case MD_RECOVERY_RUNNING is cleared before lock is
+>> +     * held.
+>> +     */
+>> +    if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+>> +        mddev_unlock(mddev);
+>> +        return;
+>> +    }
 
+Thanks,
 Kuai
 
