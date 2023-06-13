@@ -2,75 +2,76 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E84BFC7EE43
-	for <linux-raid@archiver.kernel.org>; Tue, 13 Jun 2023 06:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C925C77B7A
+	for <linux-raid@archiver.kernel.org>; Tue, 13 Jun 2023 08:04:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233950AbjFMG0d (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 13 Jun 2023 02:26:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35872 "EHLO
+        id S240792AbjFMIEQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 13 Jun 2023 04:04:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238333AbjFMG0a (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Jun 2023 02:26:30 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34EA51AD
-        for <linux-raid@vger.kernel.org>; Mon, 12 Jun 2023 23:25:50 -0700 (PDT)
+        with ESMTP id S238986AbjFMIEK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 13 Jun 2023 04:04:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 749781BF5
+        for <linux-raid@vger.kernel.org>; Tue, 13 Jun 2023 01:03:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686637549;
+        s=mimecast20190719; t=1686643388;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Dk4w/dlhnM14+5Pc/Gjm/pjDzAHKz0WKmVblyd15aqY=;
-        b=hj+bPT9Zk1otQZe4boc1z9gmVUH+KMPjmL6JQgZwpYBkwuvLNSV6yk42nJDbWdxlI9BcW3
-        VE+LPuUXV18Mgo8ZLXjAtJqHnsVoWoGGlvmRYcnIifcesChiepELcpwN0uCu2MOW2h+I6p
-        zqpxVhIRipYbSwJN1kG7Q9yXEZGiSBg=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=V2WAoXU2sO6i7ouZ+ltrXmzd4T/KwU8+agEZUhVJ2/A=;
+        b=ickTAITODDrOK26altYURzBFHLg6v6uksNQvyX5zVveecCRfUIyAGxXSeG+e+h9NlaBCyr
+        LcOkbddI6CFDVuYznSopO0/0lmwsF6kKcDBpe5bhWtYx2rAizyXO72hD8mkoDfEifAKqqA
+        q+5F9xhENQRUvd91haOMzOGKE4IVqbs=
+Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com
+ [209.85.167.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-277-xEY7IN4cNNCwGNYn5A9cfg-1; Tue, 13 Jun 2023 02:25:48 -0400
-X-MC-Unique: xEY7IN4cNNCwGNYn5A9cfg-1
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-660c4eecd01so2866764b3a.1
-        for <linux-raid@vger.kernel.org>; Mon, 12 Jun 2023 23:25:48 -0700 (PDT)
+ us-mta-222-CRNTVE69Pd64BByUyBLhKA-1; Tue, 13 Jun 2023 04:03:04 -0400
+X-MC-Unique: CRNTVE69Pd64BByUyBLhKA-1
+Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-39ca0a35e21so2206055b6e.2
+        for <linux-raid@vger.kernel.org>; Tue, 13 Jun 2023 01:03:04 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686637547; x=1689229547;
+        d=1e100.net; s=20221208; t=1686643384; x=1689235384;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
          :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=Dk4w/dlhnM14+5Pc/Gjm/pjDzAHKz0WKmVblyd15aqY=;
-        b=Ilq7vixt7Ms/wgh7Kzl2rv6ceFhlmPaKJ/3//BWYbFBPOSpDG+Otpaaycn6RLZWUBi
-         EuF5f2iHjpIyMkIIySqzHun04Q7TFjFT9FGhR97p5FZvlgiz7vFFPcelWB87RG1dCB3x
-         S7alVIXgJfGeP0xmlB6/5o0vrlK2J0kpGGi/g+UsEj/x+Xq9Z9j7dgFVCQqXiSGVSBeo
-         HPkBe9vOZY/8pzuKAggqDkWwWf3MIO87au4kw8yRoTFEp+2qNwDO9arnBuk17WivI54s
-         cT0KUDQa44fZva0UQ8XSKT09rgUrXQlZl5XQGvhNCClthfj3h8mRO87yLcgt+TD4ai87
-         uxNQ==
-X-Gm-Message-State: AC+VfDwthz27SDn6ztyFv4z7PTxPlOnvkztnvxCY59YkOafor7JcTwYM
-        KWtyjT58CRBkezGHF5CS2LDXu8sQoJZkRViELl2LrJ0vQD27ytMtrzQj//fEkdNg9AsrVfQZHL/
-        2Gn4V8Q1+8ZZn2abDTq1Yd1Dor2TROL9w
-X-Received: by 2002:a05:6a20:a5a8:b0:10b:6b1f:c8c8 with SMTP id bc40-20020a056a20a5a800b0010b6b1fc8c8mr9951059pzb.31.1686637547089;
-        Mon, 12 Jun 2023 23:25:47 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ4u3LPIN5hkek6lUp2dJz1pyTMTONqTlT2y5JtlLRtJ1OFqReJODea6RGuFRUGvABTUi5JnGQ==
-X-Received: by 2002:a05:6a20:a5a8:b0:10b:6b1f:c8c8 with SMTP id bc40-20020a056a20a5a800b0010b6b1fc8c8mr9951043pzb.31.1686637546719;
-        Mon, 12 Jun 2023 23:25:46 -0700 (PDT)
+        bh=V2WAoXU2sO6i7ouZ+ltrXmzd4T/KwU8+agEZUhVJ2/A=;
+        b=gwAv05XcQp0Gi6Kr+4uc6+9jnPnLLD/RGiEoU4mMyoXs5Z0SDem+vMtjioQRttHKTv
+         ivuXJmdLFnCSunkoPWCK/S/oVkQTE18215VUsFVEuMOqMOPD1SwWCZheD0TTqjSYm78D
+         zVFmEObDNkAcNFMHDP6IB7tCkpqLLKf6r3od/3rny84OqgoKKWdSh92uFPlVD1cEqUED
+         GgqJZON5okT2ICFFkAJF39rQf+egeZk2BBlFKfCOeqDFZgkddO8jNETFPIeJB6176Ld5
+         FjygXWiRoJJWXPyufWrlhkCH2jd8x8TVxtYVDrK1HJrTZszD29tKzUQxBKZ46wmv9uOS
+         ydkA==
+X-Gm-Message-State: AC+VfDxzLb5G0uw8ZcMldAY2w0kmpteROPHDq8hq/BgtNnBpEL3BcuKU
+        IxTnNljGaNDl2C1AxSseaWCPRQbRS2cxDB3HZiOPTplY4+GtI1k56MO+TtllO8+02piENBqAUyd
+        t5ixD1MnNXjwV0sbRdUgr7g==
+X-Received: by 2002:a05:6808:221c:b0:39a:5e92:f459 with SMTP id bd28-20020a056808221c00b0039a5e92f459mr7996120oib.38.1686643383905;
+        Tue, 13 Jun 2023 01:03:03 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7xUDHntHnuiUM8nQFbipVkqgakxXsx7HwJmcyUfwoHuTXrCOl6qzVaRfoSHzNgRHa7Z0rmLw==
+X-Received: by 2002:a05:6808:221c:b0:39a:5e92:f459 with SMTP id bd28-20020a056808221c00b0039a5e92f459mr7996106oib.38.1686643383607;
+        Tue, 13 Jun 2023 01:03:03 -0700 (PDT)
 Received: from [10.72.13.126] ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id a10-20020aa780ca000000b00640f1e4a811sm7868913pfn.22.2023.06.12.23.25.43
+        by smtp.gmail.com with ESMTPSA id h13-20020a17090a3d0d00b0025954958e06sm9336256pjc.18.2023.06.13.01.02.57
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Jun 2023 23:25:46 -0700 (PDT)
-Message-ID: <2d9f34b1-48e1-73a7-8548-bfd1843d3a0a@redhat.com>
-Date:   Tue, 13 Jun 2023 14:25:37 +0800
+        Tue, 13 Jun 2023 01:03:03 -0700 (PDT)
+Message-ID: <b780ccfd-66b1-fdd1-b33e-aa680fbd86f1@redhat.com>
+Date:   Tue, 13 Jun 2023 16:02:51 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.11.2
-Subject: Re: [PATCH -next v2 1/6] Revert "md: unlock mddev before reap
- sync_thread in action_store"
+Subject: Re: [dm-devel] [PATCH -next v2 2/6] md: refactor action_store() for
+ 'idle' and 'frozen'
 To:     Yu Kuai <yukuai1@huaweicloud.com>, guoqing.jiang@linux.dev,
         agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
         song@kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Cc:     yi.zhang@huawei.com, yangerkun@huawei.com,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com
 References: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
- <20230529132037.2124527-2-yukuai1@huaweicloud.com>
+ <20230529132037.2124527-3-yukuai1@huaweicloud.com>
 From:   Xiao Ni <xni@redhat.com>
-In-Reply-To: <20230529132037.2124527-2-yukuai1@huaweicloud.com>
+In-Reply-To: <20230529132037.2124527-3-yukuai1@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,158 +82,97 @@ X-Mailing-List: linux-raid@vger.kernel.org
 在 2023/5/29 下午9:20, Yu Kuai 写道:
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> This reverts commit 9dfbdafda3b34e262e43e786077bab8e476a89d1.
->
-> Because it will introduce a defect that sync_thread can be running while
-> MD_RECOVERY_RUNNING is cleared, which will cause some unexpected problems,
-> for example:
->
-> list_add corruption. prev->next should be next (ffff0001ac1daba0), but was ffff0000ce1a02a0. (prev=ffff0000ce1a02a0).
-> Call trace:
->   __list_add_valid+0xfc/0x140
->   insert_work+0x78/0x1a0
->   __queue_work+0x500/0xcf4
->   queue_work_on+0xe8/0x12c
->   md_check_recovery+0xa34/0xf30
->   raid10d+0xb8/0x900 [raid10]
->   md_thread+0x16c/0x2cc
->   kthread+0x1a4/0x1ec
->   ret_from_fork+0x10/0x18
->
-> This is because work is requeued while it's still inside workqueue:
->
-> t1:			t2:
-> action_store
->   mddev_lock
->    if (mddev->sync_thread)
->     mddev_unlock
->     md_unregister_thread
->     // first sync_thread is done
-> 			md_check_recovery
-> 			 mddev_try_lock
-> 			 /*
-> 			  * once MD_RECOVERY_DONE is set, new sync_thread
-> 			  * can start.
-> 			  */
-> 			 set_bit(MD_RECOVERY_RUNNING, &mddev->recovery)
-> 			 INIT_WORK(&mddev->del_work, md_start_sync)
-> 			 queue_work(md_misc_wq, &mddev->del_work)
-> 			  test_and_set_bit(WORK_STRUCT_PENDING_BIT, ...)
-> 			  // set pending bit
-> 			  insert_work
-> 			   list_add_tail
-> 			 mddev_unlock
->     mddev_lock_nointr
->     md_reap_sync_thread
->     // MD_RECOVERY_RUNNING is cleared
->   mddev_unlock
->
-> t3:
->
-> // before queued work started from t2
-> md_check_recovery
->   // MD_RECOVERY_RUNNING is not set, a new sync_thread can be started
->   INIT_WORK(&mddev->del_work, md_start_sync)
->    work->data = 0
->    // work pending bit is cleared
->   queue_work(md_misc_wq, &mddev->del_work)
->    insert_work
->     list_add_tail
->     // list is corrupted
->
-> The above commit is reverted to fix the problem, the deadlock this
-> commit tries to fix will be fixed in following patches.
+> Prepare to handle 'idle' and 'frozen' differently to fix a deadlock, there
+> are no functional changes except that MD_RECOVERY_RUNNING is checked
+> again after 'reconfig_mutex' is held.
+
+
+Can you explain more about why it needs to check MD_RECOVERY_RUNNING 
+again here?
+
 >
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->   drivers/md/dm-raid.c |  1 -
->   drivers/md/md.c      | 19 ++-----------------
->   2 files changed, 2 insertions(+), 18 deletions(-)
+>   drivers/md/md.c | 61 ++++++++++++++++++++++++++++++++++++-------------
+>   1 file changed, 45 insertions(+), 16 deletions(-)
 >
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index 8846bf510a35..1f22bef27841 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -3725,7 +3725,6 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
->   	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
->   		if (mddev->sync_thread) {
->   			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> -			md_unregister_thread(&mddev->sync_thread);
->   			md_reap_sync_thread(mddev);
->   		}
->   	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index a5a7af2f4e59..9b97731e1fe4 100644
+> index 9b97731e1fe4..23e8e7eae062 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -4772,19 +4772,6 @@ action_store(struct mddev *mddev, const char *page, size_t len)
->   			if (work_pending(&mddev->del_work))
->   				flush_workqueue(md_misc_wq);
->   			if (mddev->sync_thread) {
-> -				sector_t save_rp = mddev->reshape_position;
-> -
-> -				mddev_unlock(mddev);
+> @@ -4755,6 +4755,46 @@ action_show(struct mddev *mddev, char *page)
+>   	return sprintf(page, "%s\n", type);
+>   }
+>   
+> +static void stop_sync_thread(struct mddev *mddev)
+> +{
+> +	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+> +		return;
+> +
+> +	if (mddev_lock(mddev))
+> +		return;
+> +
+> +	/*
+> +	 * Check again in case MD_RECOVERY_RUNNING is cleared before lock is
+> +	 * held.
+> +	 */
+> +	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+> +		mddev_unlock(mddev);
+> +		return;
+> +	}
+> +
+> +	if (work_pending(&mddev->del_work))
+> +		flush_workqueue(md_misc_wq);
+> +
+> +	if (mddev->sync_thread) {
+> +		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> +		md_reap_sync_thread(mddev);
+> +	}
+> +
+> +	mddev_unlock(mddev);
+> +}
+> +
+> +static void idle_sync_thread(struct mddev *mddev)
+> +{
+> +	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> +	stop_sync_thread(mddev);
+> +}
+> +
+> +static void frozen_sync_thread(struct mddev *mddev)
+> +{
+> +	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> +	stop_sync_thread(mddev);
+> +}
+> +
+>   static ssize_t
+>   action_store(struct mddev *mddev, const char *page, size_t len)
+>   {
+> @@ -4762,22 +4802,11 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+>   		return -EINVAL;
+>   
+>   
+> -	if (cmd_match(page, "idle") || cmd_match(page, "frozen")) {
+> -		if (cmd_match(page, "frozen"))
+> -			set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> -		else
+> -			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> -		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+> -		    mddev_lock(mddev) == 0) {
+> -			if (work_pending(&mddev->del_work))
+> -				flush_workqueue(md_misc_wq);
+> -			if (mddev->sync_thread) {
 > -				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> -				md_unregister_thread(&mddev->sync_thread);
-> -				mddev_lock_nointr(mddev);
-> -				/*
-> -				 * set RECOVERY_INTR again and restore reshape
-> -				 * position in case others changed them after
-> -				 * got lock, eg, reshape_position_store and
-> -				 * md_check_recovery.
-> -				 */
-> -				mddev->reshape_position = save_rp;
->   				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->   				md_reap_sync_thread(mddev);
->   			}
-> @@ -6184,7 +6171,6 @@ static void __md_stop_writes(struct mddev *mddev)
->   		flush_workqueue(md_misc_wq);
->   	if (mddev->sync_thread) {
->   		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> -		md_unregister_thread(&mddev->sync_thread);
->   		md_reap_sync_thread(mddev);
->   	}
->   
-> @@ -9336,7 +9322,6 @@ void md_check_recovery(struct mddev *mddev)
->   			 * ->spare_active and clear saved_raid_disk
->   			 */
->   			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> -			md_unregister_thread(&mddev->sync_thread);
->   			md_reap_sync_thread(mddev);
->   			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->   			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> @@ -9372,7 +9357,6 @@ void md_check_recovery(struct mddev *mddev)
->   			goto unlock;
->   		}
->   		if (mddev->sync_thread) {
-> -			md_unregister_thread(&mddev->sync_thread);
->   			md_reap_sync_thread(mddev);
->   			goto unlock;
->   		}
-> @@ -9452,7 +9436,8 @@ void md_reap_sync_thread(struct mddev *mddev)
->   	sector_t old_dev_sectors = mddev->dev_sectors;
->   	bool is_reshaped = false;
->   
-> -	/* sync_thread should be unregistered, collect result */
-> +	/* resync has finished, collect result */
-> +	md_unregister_thread(&mddev->sync_thread);
->   	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
->   	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
->   	    mddev->degraded != mddev->raid_disks) {
-
-
-Hi Kuai
-
-Thanks for the patch and the explanation in V1. In version1, I took much 
-time to try to understand the problem. Maybe we can use the problem
-
-itself as the subject. Something like "Don't allow two sync processes 
-running at the same time"? And could you add the test steps which talked 
-in v1
-
-in the patch? It can help to understand the problem very much.
-
-Best Regards
-
-Xiao
+> -				md_reap_sync_thread(mddev);
+> -			}
+> -			mddev_unlock(mddev);
+> -		}
+> -	} else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+> +	if (cmd_match(page, "idle"))
+> +		idle_sync_thread(mddev);
+> +	else if (cmd_match(page, "frozen"))
+> +		frozen_sync_thread(mddev);
+> +	else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+>   		return -EBUSY;
+>   	else if (cmd_match(page, "resync"))
+>   		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
 
