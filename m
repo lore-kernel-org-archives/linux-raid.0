@@ -2,65 +2,64 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EB5BEB64D8
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 06:39:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 416BFEB64D9
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 07:13:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234412AbjFNGja (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Jun 2023 02:39:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48514 "EHLO
+        id S243301AbjFNHNF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Jun 2023 03:13:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243179AbjFNGjJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 02:39:09 -0400
+        with ESMTP id S235249AbjFNHNB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 03:13:01 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EE451FEE
-        for <linux-raid@vger.kernel.org>; Tue, 13 Jun 2023 23:38:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFDB119B1
+        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 00:12:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686724687;
+        s=mimecast20190719; t=1686726734;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=O5k1uTdFKNnZoPvkrzeDCXgtuJb8TSEwllYNQtChNT4=;
-        b=EinR+9OlXau0cdcrz9zCU3D9NELp/WyUh8TCdxkywIJB3S2qlhOSkrBn9JU+2kUtd1ZKXF
-        IqLhskgtBYRARj6Kzs7pgIjH6tXm+/N4ZvC1O7KWlF/6Z1pvmGM0Zauie66ZpMbc6fcu+1
-        a82M0J3wJunT7T7/QTrya/gxdb0cPGo=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=Y/U0BSwcxwtPDblW2SZCJPehi+/SQaSwVgJ0GDSC97g=;
+        b=e3GYzJt1zYxuVIW24Hxo6+/xODtfqizwnS5zEaexCtkWseWTEs3Xwcndzf73dlYUvKqvPc
+        20nN6NR4L88fvXrDFq3051lMGTKSlCU0kOhnvSrNAxCn9KOUuV5g3XvqlwgpWq/ZPNcKFV
+        JxjxBSmiK935Q3AXUKvKA0YkAKdzTzk=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-29-VNvwH9hrPryW0GByShKfcQ-1; Wed, 14 Jun 2023 02:38:06 -0400
-X-MC-Unique: VNvwH9hrPryW0GByShKfcQ-1
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-25c07cb3e01so1113147a91.3
-        for <linux-raid@vger.kernel.org>; Tue, 13 Jun 2023 23:38:06 -0700 (PDT)
+ us-mta-441-aI86RNfaPhuihyyDt5iHqg-1; Wed, 14 Jun 2023 03:12:13 -0400
+X-MC-Unique: aI86RNfaPhuihyyDt5iHqg-1
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-25c07cb3e01so1127039a91.3
+        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 00:12:13 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686724685; x=1689316685;
+        d=1e100.net; s=20221208; t=1686726732; x=1689318732;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=O5k1uTdFKNnZoPvkrzeDCXgtuJb8TSEwllYNQtChNT4=;
-        b=ZEn0RgVleD0O2DR0PE0bu3Qw6076Cllhu71xNaWSU10YR6Jsn9ukieodRXp862f3Xj
-         /snAtIBUaBFZ750JvROrYYaCmZaS057YHMR8Ww+/HnGfTLekWfVIkZ/JwAGDEq6u0TwH
-         8dyu8hg3JWl9VpdNNBQM04B218uhj+Qz2VP1jNAyygX6yfFa7Mk3HSMsmcxx4lAUUYT2
-         d64B5FVbLypjE26QbKnoIQQKeQ9eEcU9pJ/Pp4dU/Ul/n513fy1UIrEpM6dA/5fvGJX0
-         MJvZQmw7pJoD3P6ncFEQXL+3WBTlnSL6svyv584wNu5VChFRjPAA8Q9m+cDfKSxxmoYa
-         wppg==
-X-Gm-Message-State: AC+VfDzfy5e6uplRqUBfZvCnrmrixLgbUSMr0JimjdtB4clv8L8mq/ZJ
-        9PBU0O2WX4qNgEw3Rk4aCmAyndxeliel5xcWIbfpyQu9df0s2OFLDF4GbqLEY+6FHSmvV+xzQNr
-        g+mhuN+PnJS4YMCXoJchv/o4ifOMZjytz4hA7VA==
-X-Received: by 2002:a17:90a:1b21:b0:256:9b75:84cf with SMTP id q30-20020a17090a1b2100b002569b7584cfmr868672pjq.6.1686724685017;
-        Tue, 13 Jun 2023 23:38:05 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ7fZLy+FWqn8O4O5SMC+HnwHFAUBN710YNQaqDxUVxNDWfEbCJ9vbEuFEiKJMKPSgHK5V1e3bIiPliaSykzs/E=
-X-Received: by 2002:a17:90a:1b21:b0:256:9b75:84cf with SMTP id
- q30-20020a17090a1b2100b002569b7584cfmr868663pjq.6.1686724684668; Tue, 13 Jun
- 2023 23:38:04 -0700 (PDT)
+        bh=Y/U0BSwcxwtPDblW2SZCJPehi+/SQaSwVgJ0GDSC97g=;
+        b=cIeURpfcm8pBDYwVueUMcxmLnF285CI+hfYEm312XxXmfR68/LvfUUdEQe7yH2TM8V
+         MgHKmlG95kqm4nbNRAGTYJsjk2pKICyKR/3aiDtDWnWesqg3pdBnCzohVW2zc28rF7AE
+         1XW7ZkNQ/shLZlHVZtIzT6m5/nBSCZehP+FKCcVxFJJxb0weil1WCnN04dkufaBjFvLF
+         WHvBRn4+pcRjvbHejskTDFMRbUB0mRgFLTH5Xir9NR0NMjG5oJK93VutiFGPPf5LQJa3
+         fW2xzKS1MeReughm3NFhE6JAN4EfgwYMmK+w9fOndsHGy3zXI/7wcEoxzl0xaQMdK3sO
+         C0pA==
+X-Gm-Message-State: AC+VfDy5sFIC0jnaUDIt+CITzd+tMLOg4RdXiR6bfv1o4HF40q/0xE3o
+        pUD1Zo1VsPGzIv8FC1nWb1xVHMWLV3uniwUbV9FplYrrGg5wZ4wuRxE2nBdc/HiH2pUwofuWLRJ
+        0fCZtPV0T6CUZdDaz+Hth5hlaxH4l9CNQCRzOdA==
+X-Received: by 2002:a17:90a:1cf:b0:25b:ec4c:488b with SMTP id 15-20020a17090a01cf00b0025bec4c488bmr836264pjd.34.1686726732572;
+        Wed, 14 Jun 2023 00:12:12 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ5xfVTtramTVR8uEZ8x1k3b87HRutoNm0rx85rGzKvGkxcTI2Uo0acNpC2eoMSozO2LyB1S30w8RoTHzLfhCJo=
+X-Received: by 2002:a17:90a:1cf:b0:25b:ec4c:488b with SMTP id
+ 15-20020a17090a01cf00b0025bec4c488bmr836251pjd.34.1686726732274; Wed, 14 Jun
+ 2023 00:12:12 -0700 (PDT)
 MIME-Version: 1.0
 References: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
  <20230529132037.2124527-5-yukuai1@huaweicloud.com> <05aa3b09-7bb9-a65a-6231-4707b4b078a0@redhat.com>
- <74b404c4-4fdb-6eb3-93f1-0e640793bba6@huaweicloud.com> <CALTww2_9U0Ez-NCHmzdcd48qXjWpkjvhwunSmYOfKVnX=5=HTg@mail.gmail.com>
- <8f466830-56e7-1106-c935-3e73a2206916@huaweicloud.com>
-In-Reply-To: <8f466830-56e7-1106-c935-3e73a2206916@huaweicloud.com>
+ <74b404c4-4fdb-6eb3-93f1-0e640793bba6@huaweicloud.com> <6e738d9b-6e92-20b7-f9d9-e1cf71d26d73@huaweicloud.com>
+In-Reply-To: <6e738d9b-6e92-20b7-f9d9-e1cf71d26d73@huaweicloud.com>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 14 Jun 2023 14:37:53 +0800
-Message-ID: <CALTww2_ZXr5kHeRdJ_=xpGQHk97GuZ_cY9i5gAs8a8K-TQLkPQ@mail.gmail.com>
+Date:   Wed, 14 Jun 2023 15:12:01 +0800
+Message-ID: <CALTww292gwOe-WEjuBwJn0AXvJC4AbfMZXC43EvVt3GCeBoHfw@mail.gmail.com>
 Subject: Re: [dm-devel] [PATCH -next v2 4/6] md: refactor idle/frozen_sync_thread()
  to fix deadlock
 To:     Yu Kuai <yukuai1@huaweicloud.com>
@@ -74,316 +73,49 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jun 14, 2023 at 2:05=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
+On Wed, Jun 14, 2023 at 10:04=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
 >
 > Hi,
 >
-> =E5=9C=A8 2023/06/14 11:47, Xiao Ni =E5=86=99=E9=81=93:
-> > On Wed, Jun 14, 2023 at 9:48=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.co=
-m> wrote:
-> >>
-> >> Hi,
-> >>
-> >> =E5=9C=A8 2023/06/13 22:50, Xiao Ni =E5=86=99=E9=81=93:
-> >>>
-> >>> =E5=9C=A8 2023/5/29 =E4=B8=8B=E5=8D=889:20, Yu Kuai =E5=86=99=E9=81=
-=93:
-> >>>> From: Yu Kuai <yukuai3@huawei.com>
-> >>>>
-> >>>> Our test found a following deadlock in raid10:
-> >>>>
-> >>>> 1) Issue a normal write, and such write failed:
-> >>>>
-> >>>>     raid10_end_write_request
-> >>>>      set_bit(R10BIO_WriteError, &r10_bio->state)
-> >>>>      one_write_done
-> >>>>       reschedule_retry
-> >>>>
-> >>>>     // later from md thread
-> >>>>     raid10d
-> >>>>      handle_write_completed
-> >>>>       list_add(&r10_bio->retry_list, &conf->bio_end_io_list)
-> >>>>
-> >>>>     // later from md thread
-> >>>>     raid10d
-> >>>>      if (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
-> >>>>       list_move(conf->bio_end_io_list.prev, &tmp)
-> >>>>       r10_bio =3D list_first_entry(&tmp, struct r10bio, retry_list)
-> >>>>       raid_end_bio_io(r10_bio)
-> >>>>
-> >>>> Dependency chain 1: normal io is waiting for updating superblock
-> >>>
-> >>> Hi Kuai
-> >>>
-> >>> It looks like the above situation is more complex. It only needs a
-> >>> normal write and md_write_start needs to
-> >>>
-> >>> wait until the metadata is written to member disks, right? If so, it
-> >>> doesn't need to introduce raid10 write failure
-> >>>
-> >>> here. I guess, it should be your test case. It's nice, if you can put
-> >>> your test steps in the patch. But for the analysis
-> >>>
-> >>> of the deadlock here, it's better to be simple.
-> >>
-> >> Test script can be found here, it's pretty easy to trigger:
-> >>
-> >> https://patchwork.kernel.org/project/linux-raid/patch/20230529132826.2=
-125392-4-yukuai1@huaweicloud.com/
-> >
-> > Thanks for this.
-> >>
-> >> While reviewing the related code, I found that io can only be added to
-> >> list bio_end_io_list from handle_write_completed() if such io failed, =
-so
-> >> I think io failure is needed to trigger deadlock from daemon thread.
-> >>
-> >> I think the key point is how MD_SB_CHANGE_PENDING is set:
-> >>
-> >> 1) raid10_error() and rdev_set_badblocks(), trigger by io failure;
-> >> 2) raid10_write_request() related to reshape;
-> >> 3) md_write_start() and md_allow_write(), and mddev->in_sync is set,
-> >> however, I was thinking this is not a common case;
-> >>
-> >> 1) is used here because it's quite easy to trigger and this is what
-> >> we meet in real test. 3) is possible but I will say let's keep 1), I
-> >> don't think it's necessary to reporduce this deadlock through another
-> >> path again.
-> >
-> > It makes sense. Let's go back to the first path mentioned in the patch.
-> >
-> >> 1) Issue a normal write, and such write failed:
-> >>
-> >>     raid10_end_write_request
-> >>      set_bit(R10BIO_WriteError, &r10_bio->state)
-> >>      one_write_done
-> >>       reschedule_retry
-> >
-> > This is good.
-> >>
-> >>     // later from md thread
-> >>     raid10d
-> >>      handle_write_completed
-> >>       list_add(&r10_bio->retry_list, &conf->bio_end_io_list)
-> >
-> > I have a question here. It should run narrow_write_error in
-> > handle_write_completed. In the test case, will narrow_write_error run
-> > successfully? Or it fails and will call rdev_set_badblocks and
-> > md_error. So MD_RECOVERY_PENDING will be set?
+> =E5=9C=A8 2023/06/14 9:48, Yu Kuai =E5=86=99=E9=81=93:
 >
-> r10_bio will always be added to bio_end_io_list, no matter
-> narrow_write_error() succeed or not. The dependecy chain 1 here is just
-> indicate handle this r10_bio will wait for updating super block, it's
-> not where MD_RECOVERY_PENDING is set...
 >
-> And MD_RECOVERY_PENDING can be set from narrow_write_error() and other
-> places where rdev_set_badblocks() is called.
-
-Because in your patch, it doesn't show which step sets
-MD_RECOVERY_PENDING. It's the reason I need to guess. It's a normal
-write, so md_write_start can set the flag. In this case, it can cause
-the same deadlock. So it's better to give which step sets the flag.
-> >
 > >>
-> >>     // later from md thread
-> >>     raid10d
-> >>      if (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
->         -> It's here, if the flag is set, bio won't be handled.
-
-Yes.
-
-> >>       list_move(conf->bio_end_io_list.prev, &tmp)
-> >>       r10_bio =3D list_first_entry(&tmp, struct r10bio, retry_list)
-> >>       raid_end_bio_io(r10_bio)
+> >> In the patch, sync_seq is added in md_reap_sync_thread. In
+> >> idle_sync_thread, if sync_seq isn't equal
 > >>
-> >> Dependency chain 1: normal io is waiting for updating superblock
-> >
-> > It's a little hard to understand. Because it doesn't show how normal
-> > io waits for a superblock update. And based on your last email, I
-> > guess you want to say rdev_set_badblock sets MD_RECOVERY_PENDING, but
-> > the flag can't be cleared, so the bios can't be added to
-> > bio_end_io_list, so the io rquests can't be finished.
+> >> mddev->sync_seq, it should mean there is someone that stops the sync
+> >> thread already, right? Why do
+> >>
+> >> you say 'new started sync thread' here?
 >
-> It's not that bio can't be added to bio_end_io_list, it's that bio in
-> this list can't be handled if sb_flags is set.
+> If someone stops the sync thread, and new sync thread is not started,
+> then this sync_seq won't make a difference, above wait_event() will not
+> wait because !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) will pass.
+> So 'sync_seq' is only used when the old sync thread stops and new sync
+> thread starts, add 'sync_seq' will bypass this case.
 
-Sorry for this. I wanted to say the same thing. I understand the case total=
-ly.
+Hi
+
+If a new sync thread starts, why can sync_seq be different? sync_seq
+is only added in md_reap_sync_thread. And when a new sync request
+starts, it can't stop the sync request again?
+
+Af first, the sync_seq is 0
+
+admin1
+echo idle > sync_action
+idle_sync_thread(sync_seq is 1)
+echo resync > sync_action (new sync)
+
+Then admin2 echos idle > sync_action, sync_seq is still 1
 
 Regards
 Xiao
+
 >
 > Thanks,
 > Kuai
-> >
-> > Regards
-> > Xiao
-> >>
-> >> Thanks,
-> >> Kuai
-> >>>
-> >>>>
-> >>>> 2) Trigger a recovery:
-> >>>>
-> >>>>     raid10_sync_request
-> >>>>      raise_barrier
-> >>>>
-> >>>> Dependency chain 2: sync thread is waiting for normal io
-> >>>>
-> >>>> 3) echo idle/frozen to sync_action:
-> >>>>
-> >>>>     action_store
-> >>>>      mddev_lock
-> >>>>       md_unregister_thread
-> >>>>        kthread_stop
-> >>>>
-> >>>> Dependency chain 3: drop 'reconfig_mutex' is waiting for sync thread
-> >>>>
-> >>>> 4) md thread can't update superblock:
-> >>>>
-> >>>>     raid10d
-> >>>>      md_check_recovery
-> >>>>       if (mddev_trylock(mddev))
-> >>>>        md_update_sb
-> >>>>
-> >>>> Dependency chain 4: update superblock is waiting for 'reconfig_mutex=
-'
-> >>>>
-> >>>> Hence cyclic dependency exist, in order to fix the problem, we must
-> >>>> break one of them. Dependency 1 and 2 can't be broken because they a=
-re
-> >>>> foundation design. Dependency 4 may be possible if it can be guarant=
-eed
-> >>>> that no io can be inflight, however, this requires a new mechanism w=
-hich
-> >>>> seems complex. Dependency 3 is a good choice, because idle/frozen on=
-ly
-> >>>> requires sync thread to finish, which can be done asynchronously tha=
-t is
-> >>>> already implemented, and 'reconfig_mutex' is not needed anymore.
-> >>>>
-> >>>> This patch switch 'idle' and 'frozen' to wait sync thread to be done
-> >>>> asynchronously, and this patch also add a sequence counter to record=
- how
-> >>>> many times sync thread is done, so that 'idle' won't keep waiting on=
- new
-> >>>> started sync thread.
-> >>>
-> >>> In the patch, sync_seq is added in md_reap_sync_thread. In
-> >>> idle_sync_thread, if sync_seq isn't equal
-> >>>
-> >>> mddev->sync_seq, it should mean there is someone that stops the sync
-> >>> thread already, right? Why do
-> >>>
-> >>> you say 'new started sync thread' here?
-> >>>
-> >>> Regards
-> >>>
-> >>> Xiao
-> >>>
-> >>>
-> >>>>
-> >>>> Noted that raid456 has similiar deadlock([1]), and it's verified[2] =
-this
-> >>>> deadlock can be fixed by this patch as well.
-> >>>>
-> >>>> [1]
-> >>>> https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc=
-1ac@molgen.mpg.de/T/#t
-> >>>>
-> >>>> [2]
-> >>>> https://lore.kernel.org/linux-raid/e9067438-d713-f5f3-0d3d-9e6b0e9ef=
-a0e@huaweicloud.com/
-> >>>>
-> >>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> >>>> ---
-> >>>>    drivers/md/md.c | 23 +++++++++++++++++++----
-> >>>>    drivers/md/md.h |  2 ++
-> >>>>    2 files changed, 21 insertions(+), 4 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >>>> index 63a993b52cd7..7912de0e4d12 100644
-> >>>> --- a/drivers/md/md.c
-> >>>> +++ b/drivers/md/md.c
-> >>>> @@ -652,6 +652,7 @@ void mddev_init(struct mddev *mddev)
-> >>>>        timer_setup(&mddev->safemode_timer, md_safemode_timeout, 0);
-> >>>>        atomic_set(&mddev->active, 1);
-> >>>>        atomic_set(&mddev->openers, 0);
-> >>>> +    atomic_set(&mddev->sync_seq, 0);
-> >>>>        spin_lock_init(&mddev->lock);
-> >>>>        atomic_set(&mddev->flush_pending, 0);
-> >>>>        init_waitqueue_head(&mddev->sb_wait);
-> >>>> @@ -4776,19 +4777,27 @@ static void stop_sync_thread(struct mddev *m=
-ddev)
-> >>>>        if (work_pending(&mddev->del_work))
-> >>>>            flush_workqueue(md_misc_wq);
-> >>>> -    if (mddev->sync_thread) {
-> >>>> -        set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> >>>> -        md_reap_sync_thread(mddev);
-> >>>> -    }
-> >>>> +    set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> >>>> +    /*
-> >>>> +     * Thread might be blocked waiting for metadata update which wi=
-ll
-> >>>> now
-> >>>> +     * never happen
-> >>>> +     */
-> >>>> +    md_wakeup_thread_directly(mddev->sync_thread);
-> >>>>        mddev_unlock(mddev);
-> >>>>    }
-> >>>>    static void idle_sync_thread(struct mddev *mddev)
-> >>>>    {
-> >>>> +    int sync_seq =3D atomic_read(&mddev->sync_seq);
-> >>>> +
-> >>>>        mutex_lock(&mddev->sync_mutex);
-> >>>>        clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> >>>>        stop_sync_thread(mddev);
-> >>>> +
-> >>>> +    wait_event(resync_wait, sync_seq !=3D atomic_read(&mddev->sync_=
-seq) ||
-> >>>> +            !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-> >>>> +
-> >>>>        mutex_unlock(&mddev->sync_mutex);
-> >>>>    }
-> >>>> @@ -4797,6 +4806,10 @@ static void frozen_sync_thread(struct mddev
-> >>>> *mddev)
-> >>>>        mutex_init(&mddev->delete_mutex);
-> >>>>        set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> >>>>        stop_sync_thread(mddev);
-> >>>> +
-> >>>> +    wait_event(resync_wait, mddev->sync_thread =3D=3D NULL &&
-> >>>> +            !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-> >>>> +
-> >>>>        mutex_unlock(&mddev->sync_mutex);
-> >>>>    }
-> >>>> @@ -9472,6 +9485,8 @@ void md_reap_sync_thread(struct mddev *mddev)
-> >>>>        /* resync has finished, collect result */
-> >>>>        md_unregister_thread(&mddev->sync_thread);
-> >>>> +    atomic_inc(&mddev->sync_seq);
-> >>>> +
-> >>>>        if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-> >>>>            !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
-> >>>>            mddev->degraded !=3D mddev->raid_disks) {
-> >>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> >>>> index 2fa903de5bd0..7cab9c7c45b8 100644
-> >>>> --- a/drivers/md/md.h
-> >>>> +++ b/drivers/md/md.h
-> >>>> @@ -539,6 +539,8 @@ struct mddev {
-> >>>>        /* Used to synchronize idle and frozen for action_store() */
-> >>>>        struct mutex            sync_mutex;
-> >>>> +    /* The sequence number for sync thread */
-> >>>> +    atomic_t sync_seq;
-> >>>>        bool    has_superblocks:1;
-> >>>>        bool    fail_last_dev:1;
-> >>>
-> >>> --
-> >>> dm-devel mailing list
-> >>> dm-devel@redhat.com
-> >>> https://listman.redhat.com/mailman/listinfo/dm-devel
-> >>
-> >
-> > .
-> >
 >
 
