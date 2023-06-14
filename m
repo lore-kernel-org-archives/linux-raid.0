@@ -2,172 +2,115 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CB7EEB64DA
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 10:52:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3E01EB64DB
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 12:33:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235097AbjFNKw2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Jun 2023 06:52:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57318 "EHLO
+        id S244670AbjFNMdq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Jun 2023 08:33:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235603AbjFNKwE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 06:52:04 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78DEB172A
-        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 03:52:03 -0700 (PDT)
+        with ESMTP id S244613AbjFNMdm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 08:33:42 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31CFE1FF0
+        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 05:33:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686739923; x=1718275923;
-  h=date:from:to:cc:subject:message-id;
-  bh=3hLs5POaC6ON8ly3r68h73tdQkq8iZ4I9YAn8L+nBTE=;
-  b=C8Ahhmr6OB/cj0vYVCcvL1OZa33FzHCy+MsRVtKzykwQX7TLRGNrFxV1
-   ZAh0GNK/oJJyFD9p1VB7rZfyEYeBBEro8UaAB/5Zd8Y8rZP0bia2Q6klL
-   KtxyUlioKPERdxcoRL5JCgq52fLBUADierRnmiLVU6y6ccdFdAHZp5uYk
-   dchQIeesIUlLWhwppedtC7KI9gijKZALHdSTpYi89tUlQH2FiliSXrQ2K
-   XHtZAmXC2To1R1u1cxJkUh5g8U3B2mXPCRIzdm1uyJdWj33Dy5h+u1VwA
-   qzkW6cz8DsGQyhWFluN18iyqCm02MDA7Kn0mtOnlAaheyPdNlXECa3Hyb
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="422182458"
+  t=1686745999; x=1718281999;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=UGghMEvEY8zW301YstEYZBeI+gjrDjnN55hnJ4f4WAU=;
+  b=jADeRMjgBZXEjfUmqnTg3Nm8cWwpdJK590vyYfJikNAjc8p8TRPs7+z8
+   0nY1q8KyHyRNKVKO7oB7BCw3bP7RJm5kMXT412kGqZYuuc5QjkOmUJhUm
+   t8HIKz7FcL7n+ySe0OPPHC3+IM6vqKWfXM0hWxSiPyYlb3Sdb+XX5Y9H4
+   bWQXisB2sUDri1kt6CZm7e7yu+eZ8ChThbZe+FCFRlnfL1IGAKUrYHsxu
+   JCMUt1eHTuOSv3q+nGKK9aUFiX7MJIBKx1ChtWkGs2gxZM/GhhS6fa7ZL
+   OH5D88UBkziBlzZkNK2gDMjag1EM0Yqf8+iepvfkgCS4iYkFbNchYAz0c
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10741"; a="356091403"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="422182458"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 03:52:02 -0700
+   d="scan'208";a="356091403"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 05:33:18 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="836235358"
+X-IronPort-AV: E=McAfee;i="6600,9927,10741"; a="741823946"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="836235358"
+   d="scan'208";a="741823946"
 Received: from lkp-server02.sh.intel.com (HELO d59cacf64e9e) ([10.239.97.151])
-  by orsmga004.jf.intel.com with ESMTP; 14 Jun 2023 03:52:01 -0700
+  by orsmga008.jf.intel.com with ESMTP; 14 Jun 2023 05:33:16 -0700
 Received: from kbuild by d59cacf64e9e with local (Exim 4.96)
         (envelope-from <lkp@intel.com>)
-        id 1q9O6W-0000Wt-1B;
-        Wed, 14 Jun 2023 10:51:58 +0000
-Date:   Wed, 14 Jun 2023 18:50:36 +0800
+        id 1q9Pga-0000dF-0U;
+        Wed, 14 Jun 2023 12:33:16 +0000
+Date:   Wed, 14 Jun 2023 20:32:31 +0800
 From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 460af1f9d9e62acce4a21f9bd00b5bcd5963bcd4
-Message-ID: <202306141834.Nc0xfvjy-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+To:     Yu Kuai <yukuai3@huawei.com>
+Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>
+Subject: [song-md:md-next 25/29] drivers/md/raid1-10.c:117:25: error: casting
+ from randomized structure pointer type 'struct block_device *' to 'struct
+ md_rdev *'
+Message-ID: <202306142042.fmjfmTF8-lkp@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 460af1f9d9e62acce4a21f9bd00b5bcd5963bcd4  md/raid1-10: limit the number of plugged bio
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+head:   460af1f9d9e62acce4a21f9bd00b5bcd5963bcd4
+commit: 8295efbe68c080047e98d9c0eb5cb933b238a8cb [25/29] md/raid1-10: factor out a helper to submit normal write
+config: arm-randconfig-r026-20230612 (https://download.01.org/0day-ci/archive/20230614/202306142042.fmjfmTF8-lkp@intel.com/config)
+compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project.git 4a5ac14ee968ff0ad5d2cc1ffa0299048db4c88a)
+reproduce (this is a W=1 build):
+        mkdir -p ~/bin
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install arm cross compiling tool for clang build
+        # apt-get install binutils-arm-linux-gnueabi
+        # https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=8295efbe68c080047e98d9c0eb5cb933b238a8cb
+        git remote add song-md git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git
+        git fetch --no-tags song-md md-next
+        git checkout 8295efbe68c080047e98d9c0eb5cb933b238a8cb
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang ~/bin/make.cross W=1 O=build_dir ARCH=arm olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang ~/bin/make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash drivers/
 
-elapsed time: 726m
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202306142042.fmjfmTF8-lkp@intel.com/
 
-configs tested: 103
-configs skipped: 4
+All errors (new ones prefixed by >>):
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+   In file included from drivers/md/raid10.c:80:
+>> drivers/md/raid1-10.c:117:25: error: casting from randomized structure pointer type 'struct block_device *' to 'struct md_rdev *'
+     117 |         struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
+         |                                ^
+   1 error generated.
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allyesconfig   gcc  
-arc          buildonly-randconfig-r004-20230612   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r025-20230612   gcc  
-arc                  randconfig-r043-20230612   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                  randconfig-r046-20230612   clang
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r013-20230612   gcc  
-arm64                randconfig-r022-20230612   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r035-20230612   gcc  
-csky                 randconfig-r036-20230612   gcc  
-hexagon              randconfig-r015-20230612   clang
-hexagon              randconfig-r041-20230612   clang
-hexagon              randconfig-r045-20230612   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r006-20230612   clang
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230612   clang
-i386                 randconfig-i002-20230612   clang
-i386                 randconfig-i003-20230612   clang
-i386                 randconfig-i004-20230612   clang
-i386                 randconfig-i005-20230612   clang
-i386                 randconfig-i006-20230612   clang
-i386                 randconfig-i011-20230612   gcc  
-i386                 randconfig-i012-20230612   gcc  
-i386                 randconfig-i013-20230612   gcc  
-i386                 randconfig-i014-20230612   gcc  
-i386                 randconfig-i015-20230612   gcc  
-i386                 randconfig-i016-20230612   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r011-20230612   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze           randconfig-r003-20230612   gcc  
-microblaze           randconfig-r024-20230612   gcc  
-microblaze           randconfig-r031-20230612   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips         buildonly-randconfig-r002-20230612   gcc  
-nios2                               defconfig   gcc  
-openrisc     buildonly-randconfig-r003-20230612   gcc  
-openrisc             randconfig-r004-20230612   gcc  
-openrisc             randconfig-r016-20230612   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r002-20230612   gcc  
-parisc               randconfig-r012-20230612   gcc  
-parisc               randconfig-r023-20230612   gcc  
-parisc               randconfig-r034-20230612   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc              randconfig-r026-20230612   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r042-20230612   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r001-20230612   clang
-s390                 randconfig-r005-20230612   clang
-s390                 randconfig-r044-20230612   gcc  
-sh                               allmodconfig   gcc  
-sh           buildonly-randconfig-r001-20230612   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64              randconfig-r006-20230612   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   clang
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230612   clang
-x86_64               randconfig-a002-20230612   clang
-x86_64               randconfig-a003-20230612   clang
-x86_64               randconfig-a004-20230612   clang
-x86_64               randconfig-a005-20230612   clang
-x86_64               randconfig-a006-20230612   clang
-x86_64               randconfig-a011-20230612   gcc  
-x86_64               randconfig-a012-20230612   gcc  
-x86_64               randconfig-a013-20230612   gcc  
-x86_64               randconfig-a014-20230612   gcc  
-x86_64               randconfig-a015-20230612   gcc  
-x86_64               randconfig-a016-20230612   gcc  
-x86_64               randconfig-r021-20230612   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa       buildonly-randconfig-r005-20230612   gcc  
-xtensa               randconfig-r033-20230612   gcc  
+
+vim +117 drivers/md/raid1-10.c
+
+   113	
+   114	
+   115	static inline void raid1_submit_write(struct bio *bio)
+   116	{
+ > 117		struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
+   118	
+   119		bio->bi_next = NULL;
+   120		bio_set_dev(bio, rdev->bdev);
+   121		if (test_bit(Faulty, &rdev->flags))
+   122			bio_io_error(bio);
+   123		else if (unlikely(bio_op(bio) ==  REQ_OP_DISCARD &&
+   124				  !bdev_max_discard_sectors(bio->bi_bdev)))
+   125			/* Just ignore it */
+   126			bio_endio(bio);
+   127		else
+   128			submit_bio_noacct(bio);
+   129	}
+   130	
 
 -- 
 0-DAY CI Kernel Test Service
