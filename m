@@ -2,180 +2,217 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 218AFEB64D9
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 08:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A84BEB64DB
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 09:10:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243870AbjFNIwy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Jun 2023 04:52:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42864 "EHLO
+        id S234364AbjFNJKV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Jun 2023 05:10:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243822AbjFNIwk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 04:52:40 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79E792943;
-        Wed, 14 Jun 2023 01:52:20 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qgzh05j2yz4f3w0d;
-        Wed, 14 Jun 2023 16:52:16 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgBnHbG7f4lks7u0Lg--.65484S7;
-        Wed, 14 Jun 2023 16:52:17 +0800 (CST)
-From:   linan666@huaweicloud.com
-To:     song@kernel.org, neilb@suse.de
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
-        houtao1@huawei.com, yangerkun@huawei.com
-Subject: [PATCH 3/3] md/raid10: improve raid10_end_write_request()
-Date:   Wed, 14 Jun 2023 16:47:40 +0800
-Message-Id: <20230614084740.1493969-4-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230614084740.1493969-1-linan666@huaweicloud.com>
-References: <20230614084740.1493969-1-linan666@huaweicloud.com>
+        with ESMTP id S235785AbjFNJJ6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 05:09:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 863811FEA
+        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 02:09:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1686733740;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=YuZfFGL1mKI+1SfogZenr2tUCwIM+u0pKlzpY1axVWo=;
+        b=CILRQonnHJabls6VUGfQId4dZRpbdm2nzjq6uRanQB80A0iTodwO72tM26lnNHZ71tUbuo
+        jJIPJ537kUo6Vf6ya3UyKKHNYVWmKxdW+PGl5UgsYRKIeB7wQTaxl5cEc78i4rSFJm3zto
+        QXpRyNMUUNb0ZxMxzjSWh2M5KBIVNmA=
+Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com
+ [209.85.167.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-627-YNIKTq8yNtOeEVRdunM9uw-1; Wed, 14 Jun 2023 05:08:59 -0400
+X-MC-Unique: YNIKTq8yNtOeEVRdunM9uw-1
+Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-39cdb840b72so2511170b6e.0
+        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 02:08:59 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686733738; x=1689325738;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=YuZfFGL1mKI+1SfogZenr2tUCwIM+u0pKlzpY1axVWo=;
+        b=UmBLTKhcJzRY5wNJuI0Xe2rqy+2/rpUnTpdiz6WshwYSO4/gR3e6t7j88ofERbHuN+
+         GQhP5Es6Eg/jE2jn3m9CKI0NyCaxrYrd+ErYoxEXbTts8wEvIeQaQWcqP8/JEDHlQJ6g
+         4JYp7mqOCYv3eN7hgnfvMv7ptR0ExSmahqah2KPl/umwO0PYte0j2DVB6Xso0MdxVcC3
+         0o4dWfShnqPa3/jieyAEKMxjwVyVCSGC2YlbQTZM2GkZKhRYPXqSkzJaY9CHWizBkhOp
+         RUeNhKOv2LU5R6BDnfLTyr0TTfMQpigNOH/4TPa+2iGJOAPe2QRu9YC0PjRgKrX5ZYED
+         bJPw==
+X-Gm-Message-State: AC+VfDxh+WqpjOVniFupfn7JmI8N5PW205ZJZpVMAZtChhTAmjxKlSaM
+        ZN2tsT6kANhXbIGjgGIQzFtlyCcb8z7QkYRwgqXZNOUN5i95LRZ6v7yxTuKeXVGYG54i79IXNm2
+        QMfVMgwnjzs9pafx+1ZWiK5RnM21fFQZri2RyKg==
+X-Received: by 2002:a05:6808:1389:b0:39c:a986:953a with SMTP id c9-20020a056808138900b0039ca986953amr12173558oiw.34.1686733738611;
+        Wed, 14 Jun 2023 02:08:58 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ58w+HwbaWwKHZAt1p3B0C+JtvwHZqjZISvxx+b6MeyFNPBBwxTSYad7slNHl4ES3WRCVcszuSBd0EYV84rve0=
+X-Received: by 2002:a05:6808:1389:b0:39c:a986:953a with SMTP id
+ c9-20020a056808138900b0039ca986953amr12173538oiw.34.1686733738382; Wed, 14
+ Jun 2023 02:08:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnHbG7f4lks7u0Lg--.65484S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxJF4xtr45Gr18WrykWryrCrg_yoW5ZFykpa
-        9xKan0y39rGwnrArsxtFWUXaySv395KrZ3Cr43Ww18Ja4Yyr45G3WUG3y5XrWUXrZ5ur1Y
-        qF15Wr4DCFsrXFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBlb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
-        A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-        6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
-        ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
-        JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lw4CEc2x0rVAKj4xxMx
-        AIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_
-        Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwI
-        xGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWx
-        JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcV
-        C2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1BOJ7UUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
+References: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
+ <20230529132037.2124527-5-yukuai1@huaweicloud.com> <05aa3b09-7bb9-a65a-6231-4707b4b078a0@redhat.com>
+ <74b404c4-4fdb-6eb3-93f1-0e640793bba6@huaweicloud.com> <6e738d9b-6e92-20b7-f9d9-e1cf71d26d73@huaweicloud.com>
+ <CALTww292gwOe-WEjuBwJn0AXvJC4AbfMZXC43EvVt3GCeBoHfw@mail.gmail.com>
+ <5bf97ec5-0cb4-1163-6917-2bc98d912c2b@huaweicloud.com> <CALTww28UapJnK+Xfx7O9uEd5ZH2E7ufPT_7pKY6YYuzTZ0Fbdw@mail.gmail.com>
+ <b96ec15b-6102-17bb-2c18-a487f224865b@huaweicloud.com>
+In-Reply-To: <b96ec15b-6102-17bb-2c18-a487f224865b@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 14 Jun 2023 17:08:47 +0800
+Message-ID: <CALTww2-knHOoX35NB73X-sMn1u8EJHLA=0aOnoVqVm83+fdG5Q@mail.gmail.com>
+Subject: Re: [dm-devel] [PATCH -next v2 4/6] md: refactor idle/frozen_sync_thread()
+ to fix deadlock
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     guoqing.jiang@linux.dev, agk@redhat.com, snitzer@kernel.org,
+        dm-devel@redhat.com, song@kernel.org, linux-raid@vger.kernel.org,
+        yangerkun@huawei.com, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Li Nan <linan122@huawei.com>
+On Wed, Jun 14, 2023 at 4:29=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/06/14 15:57, Xiao Ni =E5=86=99=E9=81=93:
+> > On Wed, Jun 14, 2023 at 3:38=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.co=
+m> wrote:
+> >>
+> >> Hi,
+> >>
+> >> =E5=9C=A8 2023/06/14 15:12, Xiao Ni =E5=86=99=E9=81=93:
+> >>> On Wed, Jun 14, 2023 at 10:04=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud=
+.com> wrote:
+> >>>>
+> >>>> Hi,
+> >>>>
+> >>>> =E5=9C=A8 2023/06/14 9:48, Yu Kuai =E5=86=99=E9=81=93:
+> >>>>
+> >>>>
+> >>>>>>
+> >>>>>> In the patch, sync_seq is added in md_reap_sync_thread. In
+> >>>>>> idle_sync_thread, if sync_seq isn't equal
+> >>>>>>
+> >>>>>> mddev->sync_seq, it should mean there is someone that stops the sy=
+nc
+> >>>>>> thread already, right? Why do
+> >>>>>>
+> >>>>>> you say 'new started sync thread' here?
+> >>>>
+> >>>> If someone stops the sync thread, and new sync thread is not started=
+,
+> >>>> then this sync_seq won't make a difference, above wait_event() will =
+not
+> >>>> wait because !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) will p=
+ass.
+> >>>> So 'sync_seq' is only used when the old sync thread stops and new sy=
+nc
+> >>>> thread starts, add 'sync_seq' will bypass this case.
+> >>>
+> >>> Hi
+> >>>
+> >>> If a new sync thread starts, why can sync_seq be different? sync_seq
+> >>> is only added in md_reap_sync_thread. And when a new sync request
+> >>> starts, it can't stop the sync request again?
+> >>>
+> >>> Af first, the sync_seq is 0
+> >>>
+> >>> admin1
+> >>> echo idle > sync_action
+> >>> idle_sync_thread(sync_seq is 1)
+> >>
+> >> Wait, I'm confused here, how can sync_seq to be 1 here? I suppose you
+> >> mean that there is a sync_thread just finished?
+> >
+> > Hi Kuai
+> >
+> > Yes. Because idle_sync_thread needs to wait until md_reap_sync_thread
+> > finishes. And md_reap_sync_thread adds sync_seq. Do I understand your
+> > patch right?
+>
+> Yes, noted that idle_sync_thread() will only wait if MD_RECOVERY_RUNNING
+> is set.
+>
+> >
+> >>
+> >> Then the problem is that idle_sync_thread() read sync_seq after the ol=
+d
+> >> sync_thread is done, and new sync_thread start before wait_event() is
+> >> called, should we wait for this new sync_thread?
+> >>
+> >> My answer here is that we should, but I'm also ok to not wait this new
+> >> sync_thread, I don't think this behaviour matters. The key point here
+> >> is that once wait_event() is called from idle_sync_thread(), this
+> >> wait_event() should not wait for new sync_thread...
+> >
+> > I think we should wait. If we don't wait for it, there is a problem.
+> > One person echos idle to sync_action and it doesn't work sometimes.
+> > It's a strange thing.
+> >
+>
+> Ok. I'll add new comment to emphasize that idle_sync_thread() won't wait
+> for new sync_thread that is started after wait_event().
 
-Improving the code to prevent excessive nesting by repeated checks of
-'repl'. And putting bio after it has been set to IO_MADE_GOOD is more
-reasonable.
+I suggest removing this function. Without this change, it's more
+simple and it can work well without problem. The people that echo idle
+to sync_action needs to wait until the sync action finishes. The code
+semantic is clear and simple.
+>
+> >>
+> >>> echo resync > sync_action (new sync)
+> >>
+> >> If this is behind "echo idle > sync_action", idle_sync_thread should n=
+ot
+> >> see that MD_RECOVERY_RUNNING is set and wait_event() won't wait at all=
+.
+> >
+> > `echo resync > sync_action` can't change the sync_seq. So 'echo idle >
+> > sync_action' still waits until MD_RECOVERY_RUNNING is cleared?
+>
+> This is not accurate, if `echo resync > sync_action` triggers a new
+> sync_thread, then sync_seq is updated when this sync_thread is done,
+> during this period, MD_RECOVERY_RUNNING is still set, so `echo idle
+>  >sync_action` will wait for sync_thread to be done.
 
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/raid10.c | 74 ++++++++++++++++++++++++---------------------
- 1 file changed, 39 insertions(+), 35 deletions(-)
+I can understand your comment, but sorry, I still can't get how
+sync_seq works. Could you give a specific case that explains how it
+works?
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 56206cbd169d..b9f2c841dd9f 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -467,48 +467,51 @@ static void raid10_end_write_request(struct bio *bio)
- 
- 	dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
- 
--	if (repl)
-+	if (repl) {
- 		rdev = r10_bio->devs[slot].replacement;
--	else
-+		/* replacement may have replaced rdev */
-+		if (rdev == conf->mirrors[dev].replacement) {
-+			if (bio->bi_status && !discard_error) {
-+				/*
-+				 * Never record new bad blocks to replacement,
-+				 * just fail it.
-+				 */
-+				md_error(rdev->mddev, rdev);
-+				goto out;
-+			}
-+		}
-+	} else {
- 		rdev = r10_bio->devs[slot].rdev;
-+	}
- 	/*
- 	 * this branch is our 'one mirror IO has finished' event handler:
- 	 */
- 	if (bio->bi_status && !discard_error) {
--		/* replacement may have replaced rdev */
--		if (repl && rdev == conf->mirrors[dev].replacement)
--			/* Never record new bad blocks to replacement,
--			 * just fail it.
--			 */
--			md_error(rdev->mddev, rdev);
--		else {
--			set_bit(WriteErrorSeen,	&rdev->flags);
--			if (!test_and_set_bit(WantReplacement, &rdev->flags))
--				set_bit(MD_RECOVERY_NEEDED,
--					&rdev->mddev->recovery);
-+		set_bit(WriteErrorSeen,	&rdev->flags);
-+		if (!test_and_set_bit(WantReplacement, &rdev->flags))
-+			set_bit(MD_RECOVERY_NEEDED,
-+				&rdev->mddev->recovery);
- 
--			dec_rdev = 0;
--			if (test_bit(FailFast, &rdev->flags) &&
--			    (bio->bi_opf & MD_FAILFAST)) {
--				md_error(rdev->mddev, rdev);
--			}
-+		dec_rdev = 0;
-+		if (test_bit(FailFast, &rdev->flags) &&
-+		    (bio->bi_opf & MD_FAILFAST))
-+			md_error(rdev->mddev, rdev);
- 
--			/*
--			 * When the device is faulty, it is not necessary to
--			 * handle write error.
--			 */
--			if (!test_bit(Faulty, &rdev->flags))
--				set_bit(R10BIO_WriteError, &r10_bio->state);
--			else {
--				/* Fail the request */
--				set_bit(R10BIO_Degraded, &r10_bio->state);
--				if (repl)
--					r10_bio->devs[slot].repl_bio = NULL;
--				else
--					r10_bio->devs[slot].bio = NULL;
--				to_put = bio;
--				dec_rdev = 1;
--			}
-+		/*
-+		 * When the device is faulty, it is not necessary to
-+		 * handle write error.
-+		 */
-+		if (!test_bit(Faulty, &rdev->flags)) {
-+			set_bit(R10BIO_WriteError, &r10_bio->state);
-+		} else {
-+			/* Fail the request */
-+			set_bit(R10BIO_Degraded, &r10_bio->state);
-+			if (repl)
-+				r10_bio->devs[slot].repl_bio = NULL;
-+			else
-+				r10_bio->devs[slot].bio = NULL;
-+			to_put = bio;
-+			dec_rdev = 1;
- 		}
- 	} else {
- 		/*
-@@ -540,16 +543,17 @@ static void raid10_end_write_request(struct bio *bio)
- 				r10_bio->devs[slot].addr,
- 				r10_bio->sectors,
- 				&first_bad, &bad_sectors) && !discard_error) {
--			bio_put(bio);
- 			if (repl)
- 				r10_bio->devs[slot].repl_bio = IO_MADE_GOOD;
- 			else
- 				r10_bio->devs[slot].bio = IO_MADE_GOOD;
-+			bio_put(bio);
- 			dec_rdev = 0;
- 			set_bit(R10BIO_MadeGood, &r10_bio->state);
- 		}
- 	}
- 
-+out:
- 	/*
- 	 *
- 	 * Let's see if all mirrored write operations have finished
--- 
-2.39.2
+Regards
+Xiao
+>
+> Thanks,
+> Kuai
+> >
+> > Regards
+> > Xiao
+> >
+> >>
+> >> Thanks,
+> >> Kuai
+> >>>
+> >>> Then admin2 echos idle > sync_action, sync_seq is still 1
+> >>>
+> >>> Regards
+> >>> Xiao
+> >>>
+> >>>>
+> >>>> Thanks,
+> >>>> Kuai
+> >>>>
+> >>>
+> >>> .
+> >>>
+> >>
+> >
+> > .
+> >
+>
 
