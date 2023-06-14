@@ -2,82 +2,182 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58247EB64D9
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 08:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD228EB64D9
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 08:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243488AbjFNI2X (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Jun 2023 04:28:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55432 "EHLO
+        id S243503AbjFNI3C (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Jun 2023 04:29:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243204AbjFNI2W (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 04:28:22 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACAA111F
-        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 01:28:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686731301; x=1718267301;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=yn0WYUt9CaAeyn8qeGea9e9Ihp/Q+Es1dOpyt+4eFX4=;
-  b=Zbb45Jmv4wyWRlMlWrVGps861XlVXzi1f4tQ7i5C9ziQjX/YRxKKsTLC
-   0cAZraLHXt6suc9/2ArB96IZA4pDWzkGHlKwxp14sb/fRIN9q4AZuUxIp
-   Na87baaf2zn/q6Xh+oofxHQzMdwT4aQ9nvix/kiqDLFS9SuUyWcwHtVlL
-   XA+R1QPr+7gk7iK5Yp97jb+OMlZZO6x+iklIFTt40VMyDMGkNcoJIeQZn
-   hw1TjpN9Pd1b4draiqsAZ1pW9eZElejEZCylh3BdAKf2Su9shvz6VOp0b
-   tkFekv36Dy9IijaFYnilC3I8+teuXFVrO7ihUxL0awAfMx/lUd3Lycd5T
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="357432905"
-X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="357432905"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 01:28:20 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="715104257"
-X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="715104257"
-Received: from mkusiak-mobl.ger.corp.intel.com (HELO [10.213.11.188]) ([10.213.11.188])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 01:28:17 -0700
-Message-ID: <36d04bfe-adbd-2ec8-6e8b-d977fbbfb84c@linux.intel.com>
-Date:   Wed, 14 Jun 2023 10:27:53 +0200
+        with ESMTP id S235164AbjFNI3B (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 04:29:01 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99814CA;
+        Wed, 14 Jun 2023 01:28:59 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qgz935tvHz4f403P;
+        Wed, 14 Jun 2023 16:28:55 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgBn0LNHeolkEHGzLg--.64311S3;
+        Wed, 14 Jun 2023 16:28:56 +0800 (CST)
+Subject: Re: [dm-devel] [PATCH -next v2 4/6] md: refactor
+ idle/frozen_sync_thread() to fix deadlock
+To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     guoqing.jiang@linux.dev, agk@redhat.com, snitzer@kernel.org,
+        dm-devel@redhat.com, song@kernel.org, linux-raid@vger.kernel.org,
+        yangerkun@huawei.com, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
+ <20230529132037.2124527-5-yukuai1@huaweicloud.com>
+ <05aa3b09-7bb9-a65a-6231-4707b4b078a0@redhat.com>
+ <74b404c4-4fdb-6eb3-93f1-0e640793bba6@huaweicloud.com>
+ <6e738d9b-6e92-20b7-f9d9-e1cf71d26d73@huaweicloud.com>
+ <CALTww292gwOe-WEjuBwJn0AXvJC4AbfMZXC43EvVt3GCeBoHfw@mail.gmail.com>
+ <5bf97ec5-0cb4-1163-6917-2bc98d912c2b@huaweicloud.com>
+ <CALTww28UapJnK+Xfx7O9uEd5ZH2E7ufPT_7pKY6YYuzTZ0Fbdw@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <b96ec15b-6102-17bb-2c18-a487f224865b@huaweicloud.com>
+Date:   Wed, 14 Jun 2023 16:28:54 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.2
-Subject: Re: The read data is wrong from raid5 when recovery happens
-To:     Xiao Ni <xni@redhat.com>, Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>,
-        "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
-        Song Liu <song@kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
- <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev>
- <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
- <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev>
- <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
- <f4bff813-343f-6601-b2f8-c1c54fa1e5a1@linux.dev>
- <CALTww29ww7sOwLFR=waX4b2bik=ZAiCW7mMEtg8jsoAHqxvHcQ@mail.gmail.com>
- <71c45b69-770a-0c28-3bd2-a4bd1a18bc2d@linux.dev>
- <CALTww2_vmryrM1V+Cr8FKj3TRv0qEGjYNzv6nStj=LnM8QKSuw@mail.gmail.com>
- <73b79a2d-95fe-dac0-9afc-8937d723ffdf@linux.dev>
- <495541d3-3165-6d4b-f662-3690139229e9@huaweicloud.com>
- <CALTww2_wphLSHV6RAOO05gs0QO8H9di-s_yJRm0b=D7JmjjbUg@mail.gmail.com>
- <d3e3ccdf-3384-b302-7266-8996edee4ca8@linux.dev>
- <CALTww2_7PFmmCk1bGMco3a1cMJTxJtUiOs-i764qp0vnQRZJkw@mail.gmail.com>
-Content-Language: pl
-From:   "Kusiak, Mateusz" <mateusz.kusiak@linux.intel.com>
-In-Reply-To: <CALTww2_7PFmmCk1bGMco3a1cMJTxJtUiOs-i764qp0vnQRZJkw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CALTww28UapJnK+Xfx7O9uEd5ZH2E7ufPT_7pKY6YYuzTZ0Fbdw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBn0LNHeolkEHGzLg--.64311S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGrWfXw45WFyrury5GF45KFg_yoW5ur4Dpr
+        y8ZF1Utr4jyr4xZ3y0q3WjvrW0y34UXF15Xr9xJry3Jwn5Kw4ftFW7CFW5uFyDZF95Jw4j
+        k395tF4fJFZFyw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+        BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Xiao,
-looks like this mail thread has gone silent for a while, were you able
-to determine the issue source?
+Hi,
+
+在 2023/06/14 15:57, Xiao Ni 写道:
+> On Wed, Jun 14, 2023 at 3:38 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> Hi,
+>>
+>> 在 2023/06/14 15:12, Xiao Ni 写道:
+>>> On Wed, Jun 14, 2023 at 10:04 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>>
+>>>> Hi,
+>>>>
+>>>> 在 2023/06/14 9:48, Yu Kuai 写道:
+>>>>
+>>>>
+>>>>>>
+>>>>>> In the patch, sync_seq is added in md_reap_sync_thread. In
+>>>>>> idle_sync_thread, if sync_seq isn't equal
+>>>>>>
+>>>>>> mddev->sync_seq, it should mean there is someone that stops the sync
+>>>>>> thread already, right? Why do
+>>>>>>
+>>>>>> you say 'new started sync thread' here?
+>>>>
+>>>> If someone stops the sync thread, and new sync thread is not started,
+>>>> then this sync_seq won't make a difference, above wait_event() will not
+>>>> wait because !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) will pass.
+>>>> So 'sync_seq' is only used when the old sync thread stops and new sync
+>>>> thread starts, add 'sync_seq' will bypass this case.
+>>>
+>>> Hi
+>>>
+>>> If a new sync thread starts, why can sync_seq be different? sync_seq
+>>> is only added in md_reap_sync_thread. And when a new sync request
+>>> starts, it can't stop the sync request again?
+>>>
+>>> Af first, the sync_seq is 0
+>>>
+>>> admin1
+>>> echo idle > sync_action
+>>> idle_sync_thread(sync_seq is 1)
+>>
+>> Wait, I'm confused here, how can sync_seq to be 1 here? I suppose you
+>> mean that there is a sync_thread just finished?
+> 
+> Hi Kuai
+> 
+> Yes. Because idle_sync_thread needs to wait until md_reap_sync_thread
+> finishes. And md_reap_sync_thread adds sync_seq. Do I understand your
+> patch right?
+
+Yes, noted that idle_sync_thread() will only wait if MD_RECOVERY_RUNNING
+is set.
+
+> 
+>>
+>> Then the problem is that idle_sync_thread() read sync_seq after the old
+>> sync_thread is done, and new sync_thread start before wait_event() is
+>> called, should we wait for this new sync_thread?
+>>
+>> My answer here is that we should, but I'm also ok to not wait this new
+>> sync_thread, I don't think this behaviour matters. The key point here
+>> is that once wait_event() is called from idle_sync_thread(), this
+>> wait_event() should not wait for new sync_thread...
+> 
+> I think we should wait. If we don't wait for it, there is a problem.
+> One person echos idle to sync_action and it doesn't work sometimes.
+> It's a strange thing.
+> 
+
+Ok. I'll add new comment to emphasize that idle_sync_thread() won't wait
+for new sync_thread that is started after wait_event().
+
+>>
+>>> echo resync > sync_action (new sync)
+>>
+>> If this is behind "echo idle > sync_action", idle_sync_thread should not
+>> see that MD_RECOVERY_RUNNING is set and wait_event() won't wait at all.
+> 
+> `echo resync > sync_action` can't change the sync_seq. So 'echo idle >
+> sync_action' still waits until MD_RECOVERY_RUNNING is cleared?
+
+This is not accurate, if `echo resync > sync_action` triggers a new
+sync_thread, then sync_seq is updated when this sync_thread is done,
+during this period, MD_RECOVERY_RUNNING is still set, so `echo idle
+ >sync_action` will wait for sync_thread to be done.
 
 Thanks,
-Mateusz
+Kuai
+> 
+> Regards
+> Xiao
+> 
+>>
+>> Thanks,
+>> Kuai
+>>>
+>>> Then admin2 echos idle > sync_action, sync_seq is still 1
+>>>
+>>> Regards
+>>> Xiao
+>>>
+>>>>
+>>>> Thanks,
+>>>> Kuai
+>>>>
+>>>
+>>> .
+>>>
+>>
+> 
+> .
+> 
+
