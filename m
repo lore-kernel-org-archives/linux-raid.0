@@ -2,101 +2,97 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0020EB64D9
-	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 08:47:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC160EB64D9
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Jun 2023 08:52:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235395AbjFNIrr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Jun 2023 04:47:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38920 "EHLO
+        id S243776AbjFNIwq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Jun 2023 04:52:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235409AbjFNIrq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 04:47:46 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3E8E6C
-        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 01:47:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686732419;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=E01jCt7vmyFg3Ui6rRlhnDx1yXGM4s6eZ7oqY6CToYE=;
-        b=Kc0cEqdt1qomdA4uUQut4Ms11TmjrljuIAOyig/A4qRWgAhrPAPWm3hnNlrbda0lSPKdH7
-        mmw84/wBuoH11YaueCBZ2ii/sKqUH7YnMJXvDu7anAtAf5FwLBP78OP1zvk/Prv5wFqIdl
-        tMX9UOxZLjoPGOaRL0KPEfV1XOUHxDs=
-Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com
- [209.85.167.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-625-eU79W-gkMMeLPf7JmFREbQ-1; Wed, 14 Jun 2023 04:46:56 -0400
-X-MC-Unique: eU79W-gkMMeLPf7JmFREbQ-1
-Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-39ceb9a76b1so2095556b6e.3
-        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 01:46:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686732416; x=1689324416;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=E01jCt7vmyFg3Ui6rRlhnDx1yXGM4s6eZ7oqY6CToYE=;
-        b=QLA2Fx9FQ+7PTklRWknJuDZJjgX0nKeuoyRlTRIYsJhgtnGKgorBr7Mi0RPlUy1/iD
-         9gHBtRcpNlGNIkL0jMDlILqYjXsK+shuwYTdSU5mT9yQ44NthDI32F7LOZNo5RWxYvv/
-         v2LlLPo5+Cy7y0o+nfX8IGDgHyCuQ0Ck9G370li1QMtshw4UqS6XZ0KYsTbCP11RuQe8
-         p49FtI6VhSDauZtXTdrbVAgvLlM7D8g6g9pChGU5dC1VlkA4xNXrG9XjQwUXjFllFbWu
-         D7mgVenO0isqYSYevfGWxDd1gjGJ/oKjPyyuefWVEoo9xr6evVZPXrfrYOP9LpkfbNUO
-         JkDQ==
-X-Gm-Message-State: AC+VfDy79nxxFG++dp4IYGG9l3qcK1dn2udoIT5HI8hqsvEQ50KtvxYf
-        wc35TMaV5rVpPIrwZkAaiaZqWTKQJk9/2TnOvO2ikpwpk5XdTCcGzHGdT+ALaFxIDpUlNOifJJJ
-        leM6OvJJQHEd63UwbsdckciYOVluUfbB8hJ2TnA==
-X-Received: by 2002:a05:6358:51de:b0:12e:f63c:57a with SMTP id 30-20020a05635851de00b0012ef63c057amr320303rwl.14.1686732416004;
-        Wed, 14 Jun 2023 01:46:56 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ4HHuN2nI3NmaZarDlPPXNDl/E7qcYL2XLRqDmaiJuuwQZNvDlbZkSoog9HBmpTfEhy9ohKF5LAniHD3e1MRPU=
-X-Received: by 2002:a05:6358:51de:b0:12e:f63c:57a with SMTP id
- 30-20020a05635851de00b0012ef63c057amr320295rwl.14.1686732415727; Wed, 14 Jun
- 2023 01:46:55 -0700 (PDT)
+        with ESMTP id S243779AbjFNIwe (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 04:52:34 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E32B271E;
+        Wed, 14 Jun 2023 01:52:17 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Qgzgv5rZRz4f3l7H;
+        Wed, 14 Jun 2023 16:52:11 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbG7f4lks7u0Lg--.65484S5;
+        Wed, 14 Jun 2023 16:52:13 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     song@kernel.org, neilb@suse.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH 1/3] md/raid10: record rdev/replacement in struct r10bio
+Date:   Wed, 14 Jun 2023 16:47:38 +0800
+Message-Id: <20230614084740.1493969-2-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230614084740.1493969-1-linan666@huaweicloud.com>
+References: <20230614084740.1493969-1-linan666@huaweicloud.com>
 MIME-Version: 1.0
-References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
- <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev> <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
- <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev> <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
- <f4bff813-343f-6601-b2f8-c1c54fa1e5a1@linux.dev> <CALTww29ww7sOwLFR=waX4b2bik=ZAiCW7mMEtg8jsoAHqxvHcQ@mail.gmail.com>
- <71c45b69-770a-0c28-3bd2-a4bd1a18bc2d@linux.dev> <CALTww2_vmryrM1V+Cr8FKj3TRv0qEGjYNzv6nStj=LnM8QKSuw@mail.gmail.com>
- <73b79a2d-95fe-dac0-9afc-8937d723ffdf@linux.dev> <495541d3-3165-6d4b-f662-3690139229e9@huaweicloud.com>
- <CALTww2_wphLSHV6RAOO05gs0QO8H9di-s_yJRm0b=D7JmjjbUg@mail.gmail.com>
- <d3e3ccdf-3384-b302-7266-8996edee4ca8@linux.dev> <CALTww2_7PFmmCk1bGMco3a1cMJTxJtUiOs-i764qp0vnQRZJkw@mail.gmail.com>
- <36d04bfe-adbd-2ec8-6e8b-d977fbbfb84c@linux.intel.com>
-In-Reply-To: <36d04bfe-adbd-2ec8-6e8b-d977fbbfb84c@linux.intel.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 14 Jun 2023 16:46:44 +0800
-Message-ID: <CALTww2_CcqVLpHXXNtBzATMStdR3jv-g0uZJe=w55mtLafXefw@mail.gmail.com>
-Subject: Re: The read data is wrong from raid5 when recovery happens
-To:     "Kusiak, Mateusz" <mateusz.kusiak@linux.intel.com>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Yu Kuai <yukuai1@huaweicloud.com>,
-        "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
-        Song Liu <song@kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBnHbG7f4lks7u0Lg--.65484S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Xw47Cw43AryDZw4UCr1rZwb_yoW8Jr4Upa
+        1DGF13Cr47Wayj9r4DAa1UCa4ftanYy3y8GFWY934aq34avrWDAF4UGrW5urWUZFsxW34I
+        vw1DKrZ5G3WUAFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBlb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
+        A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+        6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
+        ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
+        JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lw4CEc2x0rVAKj4xxMx
+        AIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_
+        Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwI
+        xGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWx
+        JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcV
+        C2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU858n5UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jun 14, 2023 at 4:29=E2=80=AFPM Kusiak, Mateusz
-<mateusz.kusiak@linux.intel.com> wrote:
->
-> Hi Xiao,
-> looks like this mail thread has gone silent for a while, were you able
-> to determine the issue source?
->
-> Thanks,
-> Mateusz
->
+From: Li Nan <linan122@huawei.com>
 
-Hi Mateusz
+Getting rdev/replacement from mirror is risky. Replacement can replace
+rdev while repl_bio pending, which forces us to add some complex code to
+handle this scenario, but there are still some bugs left. Record
+rdev/replacement in r10bio and get them from r10bio is a better way. It
+is easy to ensure that rdev and replacement remains consistent in io
+process, which can help us clean up some code and fix bugs.
 
-Sorry, I'm still trying to figure out the root cause.
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/raid10.h | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Regards
-Xiao
+diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+index 8c072ce0bc54..261315ffe8c0 100644
+--- a/drivers/md/raid10.h
++++ b/drivers/md/raid10.h
+@@ -145,12 +145,12 @@ struct r10bio {
+ 	 */
+ 	struct r10dev {
+ 		struct bio	*bio;
+-		union {
+-			struct bio	*repl_bio; /* used for resync and
+-						    * writes */
+-			struct md_rdev	*rdev;	   /* used for reads
+-						    * (read_slot >= 0) */
+-		};
++		/* Currently just used for normal reads and writes */
++		struct md_rdev	*rdev;
++		/* used for resync and writes */
++		struct bio	*repl_bio;
++		/* Currently just used for normal writes */
++		struct md_rdev	*replacement;
+ 		sector_t	addr;
+ 		int		devnum;
+ 	} devs[];
+-- 
+2.39.2
 
