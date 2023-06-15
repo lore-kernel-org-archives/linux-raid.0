@@ -2,67 +2,57 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2AD6EB64D8
-	for <linux-raid@archiver.kernel.org>; Thu, 15 Jun 2023 01:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03A0EEB64D8
+	for <linux-raid@archiver.kernel.org>; Thu, 15 Jun 2023 01:47:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232957AbjFOB24 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 14 Jun 2023 21:28:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38272 "EHLO
+        id S238493AbjFOBrg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Jun 2023 21:47:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229527AbjFOB2z (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 21:28:55 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A759C2125;
-        Wed, 14 Jun 2023 18:28:53 -0700 (PDT)
+        with ESMTP id S237790AbjFOBrf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Jun 2023 21:47:35 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4792EDF
+        for <linux-raid@vger.kernel.org>; Wed, 14 Jun 2023 18:47:33 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QhPnr2GQ2z4f4DhP;
-        Thu, 15 Jun 2023 09:28:48 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QhQCN1KH1z4f3kht
+        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 09:47:28 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgD3mp5PaYpkU3_rLg--.4972S3;
-        Thu, 15 Jun 2023 09:28:49 +0800 (CST)
-Subject: Re: [dm-devel] [PATCH -next v2 4/6] md: refactor
- idle/frozen_sync_thread() to fix deadlock
-To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     guoqing.jiang@linux.dev, agk@redhat.com, snitzer@kernel.org,
-        dm-devel@redhat.com, song@kernel.org, linux-raid@vger.kernel.org,
-        yangerkun@huawei.com, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230529132037.2124527-1-yukuai1@huaweicloud.com>
- <20230529132037.2124527-5-yukuai1@huaweicloud.com>
- <05aa3b09-7bb9-a65a-6231-4707b4b078a0@redhat.com>
- <74b404c4-4fdb-6eb3-93f1-0e640793bba6@huaweicloud.com>
- <6e738d9b-6e92-20b7-f9d9-e1cf71d26d73@huaweicloud.com>
- <CALTww292gwOe-WEjuBwJn0AXvJC4AbfMZXC43EvVt3GCeBoHfw@mail.gmail.com>
- <5bf97ec5-0cb4-1163-6917-2bc98d912c2b@huaweicloud.com>
- <CALTww28UapJnK+Xfx7O9uEd5ZH2E7ufPT_7pKY6YYuzTZ0Fbdw@mail.gmail.com>
- <b96ec15b-6102-17bb-2c18-a487f224865b@huaweicloud.com>
- <CALTww2-knHOoX35NB73X-sMn1u8EJHLA=0aOnoVqVm83+fdG5Q@mail.gmail.com>
+        by APP4 (Coremail) with SMTP id gCh0CgBnHbGsbYpkuYDsLg--.36696S3;
+        Thu, 15 Jun 2023 09:47:25 +0800 (CST)
+Subject: Re: [song-md:md-next 25/29] drivers/md/raid1-10.c:117:25: error:
+ casting from randomized structure pointer type 'struct block_device *' to
+ 'struct md_rdev *'
+To:     kernel test robot <lkp@intel.com>
+Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <202306142042.fmjfmTF8-lkp@intel.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <04700f85-62a2-1dbd-f330-80f9a13b7d2e@huaweicloud.com>
-Date:   Thu, 15 Jun 2023 09:28:47 +0800
+Message-ID: <dd0d4b24-a149-6796-90c6-b41e569d7902@huaweicloud.com>
+Date:   Thu, 15 Jun 2023 09:47:24 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <CALTww2-knHOoX35NB73X-sMn1u8EJHLA=0aOnoVqVm83+fdG5Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <202306142042.fmjfmTF8-lkp@intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3mp5PaYpkU3_rLg--.4972S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWF45JFy8Xr4xAr18trWUArb_yoWruw47pr
-        y8AF1UGr4UAr47Z34Ut3WjvFW0y34UXF15Xr9xJry3Jwn5Kw4ftFW7CFW5uFykZFn5Jw1U
-        ZrWrJFWfZFWqy3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-TRANSID: gCh0CgBnHbGsbYpkuYDsLg--.36696S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCr1xCFyxGrW5Kw4DJFykuFg_yoW5Zr1Dpa
+        yUKayUG3y8XrW8GayDW3yUW3W5tws5J343Ca4rG347Aw45ZFWUtF97Kry3WFyDCr1DKrWU
+        ZFs7K3ykK34DtFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
+        6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUrR6zUUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -71,122 +61,76 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/06/14 17:08, Xiao Ni 写道:
-> On Wed, Jun 14, 2023 at 4:29 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2023/06/14 15:57, Xiao Ni 写道:
->>> On Wed, Jun 14, 2023 at 3:38 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>
->>>> Hi,
->>>>
->>>> 在 2023/06/14 15:12, Xiao Ni 写道:
->>>>> On Wed, Jun 14, 2023 at 10:04 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>>>
->>>>>> Hi,
->>>>>>
->>>>>> 在 2023/06/14 9:48, Yu Kuai 写道:
->>>>>>
->>>>>>
->>>>>>>>
->>>>>>>> In the patch, sync_seq is added in md_reap_sync_thread. In
->>>>>>>> idle_sync_thread, if sync_seq isn't equal
->>>>>>>>
->>>>>>>> mddev->sync_seq, it should mean there is someone that stops the sync
->>>>>>>> thread already, right? Why do
->>>>>>>>
->>>>>>>> you say 'new started sync thread' here?
->>>>>>
->>>>>> If someone stops the sync thread, and new sync thread is not started,
->>>>>> then this sync_seq won't make a difference, above wait_event() will not
->>>>>> wait because !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) will pass.
->>>>>> So 'sync_seq' is only used when the old sync thread stops and new sync
->>>>>> thread starts, add 'sync_seq' will bypass this case.
->>>>>
->>>>> Hi
->>>>>
->>>>> If a new sync thread starts, why can sync_seq be different? sync_seq
->>>>> is only added in md_reap_sync_thread. And when a new sync request
->>>>> starts, it can't stop the sync request again?
->>>>>
->>>>> Af first, the sync_seq is 0
->>>>>
->>>>> admin1
->>>>> echo idle > sync_action
->>>>> idle_sync_thread(sync_seq is 1)
->>>>
->>>> Wait, I'm confused here, how can sync_seq to be 1 here? I suppose you
->>>> mean that there is a sync_thread just finished?
->>>
->>> Hi Kuai
->>>
->>> Yes. Because idle_sync_thread needs to wait until md_reap_sync_thread
->>> finishes. And md_reap_sync_thread adds sync_seq. Do I understand your
->>> patch right?
->>
->> Yes, noted that idle_sync_thread() will only wait if MD_RECOVERY_RUNNING
->> is set.
->>
->>>
->>>>
->>>> Then the problem is that idle_sync_thread() read sync_seq after the old
->>>> sync_thread is done, and new sync_thread start before wait_event() is
->>>> called, should we wait for this new sync_thread?
->>>>
->>>> My answer here is that we should, but I'm also ok to not wait this new
->>>> sync_thread, I don't think this behaviour matters. The key point here
->>>> is that once wait_event() is called from idle_sync_thread(), this
->>>> wait_event() should not wait for new sync_thread...
->>>
->>> I think we should wait. If we don't wait for it, there is a problem.
->>> One person echos idle to sync_action and it doesn't work sometimes.
->>> It's a strange thing.
->>>
->>
->> Ok. I'll add new comment to emphasize that idle_sync_thread() won't wait
->> for new sync_thread that is started after wait_event().
+�� 2023/06/14 20:32, kernel test robot д��:
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+> head:   460af1f9d9e62acce4a21f9bd00b5bcd5963bcd4
+> commit: 8295efbe68c080047e98d9c0eb5cb933b238a8cb [25/29] md/raid1-10: factor out a helper to submit normal write
+> config: arm-randconfig-r026-20230612 (https://download.01.org/0day-ci/archive/20230614/202306142042.fmjfmTF8-lkp@intel.com/config)
+> compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project.git 4a5ac14ee968ff0ad5d2cc1ffa0299048db4c88a)
+> reproduce (this is a W=1 build):
+>          mkdir -p ~/bin
+>          wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>          chmod +x ~/bin/make.cross
+>          # install arm cross compiling tool for clang build
+>          # apt-get install binutils-arm-linux-gnueabi
+>          # https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=8295efbe68c080047e98d9c0eb5cb933b238a8cb
+>          git remote add song-md git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git
+>          git fetch --no-tags song-md md-next
+>          git checkout 8295efbe68c080047e98d9c0eb5cb933b238a8cb
+>          # save the config file
+>          mkdir build_dir && cp config build_dir/.config
+>          COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang ~/bin/make.cross W=1 O=build_dir ARCH=arm olddefconfig
+>          COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang ~/bin/make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash drivers/
 > 
-> I suggest removing this function. Without this change, it's more
-> simple and it can work well without problem. The people that echo idle
-> to sync_action needs to wait until the sync action finishes. The code
-> semantic is clear and simple.
->>
->>>>
->>>>> echo resync > sync_action (new sync)
->>>>
->>>> If this is behind "echo idle > sync_action", idle_sync_thread should not
->>>> see that MD_RECOVERY_RUNNING is set and wait_event() won't wait at all.
->>>
->>> `echo resync > sync_action` can't change the sync_seq. So 'echo idle >
->>> sync_action' still waits until MD_RECOVERY_RUNNING is cleared?
->>
->> This is not accurate, if `echo resync > sync_action` triggers a new
->> sync_thread, then sync_seq is updated when this sync_thread is done,
->> during this period, MD_RECOVERY_RUNNING is still set, so `echo idle
->>   >sync_action` will wait for sync_thread to be done.
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202306142042.fmjfmTF8-lkp@intel.com/
 > 
-> I can understand your comment, but sorry, I still can't get how
-> sync_seq works. Could you give a specific case that explains how it
-> works?
+> All errors (new ones prefixed by >>):
+> 
+>     In file included from drivers/md/raid10.c:80:
+>>> drivers/md/raid1-10.c:117:25: error: casting from randomized structure pointer type 'struct block_device *' to 'struct md_rdev *'
+>       117 |         struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
 
-Ok, the problem is that echo ilde is supposed to interrupt sync_thread
-and stop sync_thread quickly. Now that we don't hold mutex here, we
-can't prevent new sync_thread to start. For exapmle:
+I didn't hit this warning with W=1 in my local machine, so I guess this
+might related to compiler. I'm using gcc (GCC) 12.2.1 and here is clang
+version 17.0.0.
 
-1) a sync_thread A is runing, MD_RECOVERY_RUNNING is set;
+I'm planning to get rid of all these weird usage, which is used a lot in
+raid, to borrow a field to store something else temporarily, but this
+might take sometime.
 
-2) echo idle, A will be interrupted, mutex is not hold and
-idle_sync_thread() is waiting for MD_RECOVERY_RUNNING to be cleared.
+Can someone help to confirm following change can prevent this warning?
 
-3) A is interrupted, it'll clear MD_RECOVERY_RUNNING and try to wakeup
-idle_sync_thread(), however, before idle_sync_thread() is woken, A can
-be done and a new sync_thread B can be started, and MD_RECOVERY_RUNNING
-will be set again.
-
-4) idle_sync_thread() finially wake up, however, MD_RECOVERY_RUNNING is
-set and it will still waiting. And this time B won't be interrupted.
+struct md_rdev *rdev = (void *)bio->bi_bdev
 
 Thanks,
 Kuai
+
+>           |                                ^
+>     1 error generated.
+> 
+> 
+> vim +117 drivers/md/raid1-10.c
+> 
+>     113	
+>     114	
+>     115	static inline void raid1_submit_write(struct bio *bio)
+>     116	{
+>   > 117		struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
+>     118	
+>     119		bio->bi_next = NULL;
+>     120		bio_set_dev(bio, rdev->bdev);
+>     121		if (test_bit(Faulty, &rdev->flags))
+>     122			bio_io_error(bio);
+>     123		else if (unlikely(bio_op(bio) ==  REQ_OP_DISCARD &&
+>     124				  !bdev_max_discard_sectors(bio->bi_bdev)))
+>     125			/* Just ignore it */
+>     126			bio_endio(bio);
+>     127		else
+>     128			submit_bio_noacct(bio);
+>     129	}
+>     130	
+> 
 
