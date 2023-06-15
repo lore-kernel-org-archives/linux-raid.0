@@ -2,39 +2,39 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6777EB64D9
-	for <linux-raid@archiver.kernel.org>; Thu, 15 Jun 2023 06:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF65C001DE
+	for <linux-raid@archiver.kernel.org>; Thu, 15 Jun 2023 06:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244092AbjFOGuV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 15 Jun 2023 02:50:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56228 "EHLO
+        id S244182AbjFOGuX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 15 Jun 2023 02:50:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244490AbjFOGtz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Jun 2023 02:49:55 -0400
+        with ESMTP id S244544AbjFOGt6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Jun 2023 02:49:58 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B9714214;
-        Wed, 14 Jun 2023 23:48:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4D2C35A6;
+        Wed, 14 Jun 2023 23:48:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=5QI7iu2tF5lZVrJtHh2PVrgwjIKSOna7mZOiuqyQzX4=; b=UbHqcaNEQZRITid+9dUv/AO2hZ
-        xzu872kfgccLbnTwMav990u+GElyK6qDuf8iLrmvGsEDfNNUU4gaZ7BupNfTwvztSxwvR5Bw6WZvj
-        KikP+XLpe2nMgIXAV112uKkhwGq3PaNp01Vl6osJGQer1SI49C3N+tXXh6Nr5m2/PluNZI//m/YjB
-        dJqttrEONot364Qp8vscBUh1x7eonV6N6rWyOq/WUkSqiCCLiyjSdL4QIRyvOIdwgdxzniAmTxAFH
-        eGzsDXgpbID7XxecLABpOZNydc+wSmbM+XOiGTsEaJUEiHd4fgtij/gkRbWy60829T47eqFEJCqSd
-        qFq89IdQ==;
+        bh=KhhhbO/H4IhhYryw9kVCM7NntqzDQwz7VXWYmcFSZ/k=; b=tsNosnH8dzmWYgVZ7pQ3VWrciJ
+        i1/WRnRWgcCvDvQrYpJ+9m26zVyXXyqw8y3HUG3Wrlq7eoz+xATQuksGDMU8nnLp5MaTj3U2EZZd6
+        LM5Iz3KKZ+iHd2X1DOtT9gz8qtkrpuAZJaesEWQu+VUEh85vM0OKVv42mY7/L1M/RndZ791DViPmT
+        84cpDjkbFepx4G7Ze5vaIiopm7B8V6OXYrN3TKQY4Z4BgxL6WCwOegmw4OMOoupgjcY185lQwnbb7
+        Rnm1XtLPMoOwnTdl1eR9vOHCIM0zgUZdF+cFn1IDycFeAHw96WtUC05qCa1uqvdFcOlV8GxC+ZrQG
+        29uDX5Hw==;
 Received: from 2a02-8389-2341-5b80-8c8c-28f8-1274-e038.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:8c8c:28f8:1274:e038] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q9gmk-00Du95-07;
-        Thu, 15 Jun 2023 06:48:46 +0000
+        id 1q9gmt-00DuAm-0v;
+        Thu, 15 Jun 2023 06:48:55 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Song Liu <song@kernel.org>
 Cc:     linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 01/11] md-bitmap: set BITMAP_WRITE_ERROR in write_sb_page
-Date:   Thu, 15 Jun 2023 08:48:30 +0200
-Message-Id: <20230615064840.629492-2-hch@lst.de>
+Subject: [PATCH 05/11] md-bitmap: rename read_page to read_file_page
+Date:   Thu, 15 Jun 2023 08:48:34 +0200
+Message-Id: <20230615064840.629492-6-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230615064840.629492-1-hch@lst.de>
 References: <20230615064840.629492-1-hch@lst.de>
@@ -45,60 +45,48 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Set BITMAP_WRITE_ERROR directly in write_sb_page instead of propagating
-the error to the caller and setting it there.
+Make the difference to read_sb_page clear.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/md-bitmap.c | 21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
+ drivers/md/md-bitmap.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 1ff712889a3b36..d8469720fac23f 100644
+index 46fbcfc9d1fcac..fa0f6ca7b61b0b 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -279,22 +279,20 @@ static int __write_sb_page(struct md_rdev *rdev, struct bitmap *bitmap,
- 	return 0;
- }
- 
--static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
-+static void write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+@@ -348,10 +348,8 @@ static void free_buffers(struct page *page)
+  * This usage is similar to how swap files are handled, and allows us
+  * to write to a file with no concerns of memory allocation failing.
+  */
+-static int read_page(struct file *file, unsigned long index,
+-		     struct bitmap *bitmap,
+-		     unsigned long count,
+-		     struct page *page)
++static int read_file_page(struct file *file, unsigned long index,
++		struct bitmap *bitmap, unsigned long count, struct page *page)
  {
--	struct md_rdev *rdev;
- 	struct mddev *mddev = bitmap->mddev;
--	int ret;
+ 	int ret = 0;
+ 	struct inode *inode = file_inode(file);
+@@ -632,7 +630,7 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+ 		loff_t isize = i_size_read(bitmap->storage.file->f_mapping->host);
+ 		int bytes = isize > PAGE_SIZE ? PAGE_SIZE : isize;
  
- 	do {
--		rdev = NULL;
-+		struct md_rdev *rdev = NULL;
-+
- 		while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
--			ret = __write_sb_page(rdev, bitmap, page);
--			if (ret)
--				return ret;
-+			if (__write_sb_page(rdev, bitmap, page) < 0) {
-+				set_bit(BITMAP_WRITE_ERROR, &bitmap->flags);
-+				return;
-+			}
- 		}
- 	} while (wait && md_super_wait(mddev) < 0);
--
--	return 0;
- }
- 
- static void md_bitmap_file_kick(struct bitmap *bitmap);
-@@ -306,10 +304,7 @@ static void write_page(struct bitmap *bitmap, struct page *page, int wait)
- 	struct buffer_head *bh;
- 
- 	if (bitmap->storage.file == NULL) {
--		switch (write_sb_page(bitmap, page, wait)) {
--		case -EINVAL:
--			set_bit(BITMAP_WRITE_ERROR, &bitmap->flags);
--		}
-+		write_sb_page(bitmap, page, wait);
+-		err = read_page(bitmap->storage.file, 0,
++		err = read_file_page(bitmap->storage.file, 0,
+ 				bitmap, bytes, sb_page);
  	} else {
- 
- 		bh = page_buffers(page);
+ 		err = read_sb_page(bitmap->mddev,
+@@ -1141,7 +1139,7 @@ static int md_bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 				count = PAGE_SIZE;
+ 			page = store->filemap[index];
+ 			if (file)
+-				ret = read_page(file, index, bitmap,
++				ret = read_file_page(file, index, bitmap,
+ 						count, page);
+ 			else
+ 				ret = read_sb_page(
 -- 
 2.39.2
 
