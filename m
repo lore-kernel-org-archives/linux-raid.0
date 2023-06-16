@@ -2,63 +2,63 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDE90EB64D7
-	for <linux-raid@archiver.kernel.org>; Fri, 16 Jun 2023 05:30:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28CE6EB64D7
+	for <linux-raid@archiver.kernel.org>; Fri, 16 Jun 2023 06:08:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240780AbjFPFaE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 16 Jun 2023 01:30:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35286 "EHLO
+        id S231305AbjFPGIQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 16 Jun 2023 02:08:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240784AbjFPFaD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Jun 2023 01:30:03 -0400
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B352A2943
-        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 22:30:01 -0700 (PDT)
-Received: by mail-ej1-x630.google.com with SMTP id a640c23a62f3a-970028cfb6cso41570166b.1
-        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 22:30:01 -0700 (PDT)
+        with ESMTP id S229468AbjFPGIP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Jun 2023 02:08:15 -0400
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68FE6B5
+        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 23:08:13 -0700 (PDT)
+Received: by mail-ej1-x629.google.com with SMTP id a640c23a62f3a-982ae93386aso43452966b.1
+        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 23:08:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686893400; x=1689485400;
+        d=gmail.com; s=20221208; t=1686895692; x=1689487692;
         h=content-transfer-encoding:mime-version:user-agent:references
          :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=4A8JxU3ZB0hKXO5HOtkftNUJmcLEICD5JZ84IHhOlE4=;
-        b=ce9y8gtFHkqrwOX96P0VSEOquijZMgVeiZxM+JyY/H1LlRts7sArUsD65/9cIaTJ2G
-         5xR21drgo+y0Gx3NG28Px0KHPlUBWTqgncTBL88DdTVg2jcYCdPDg9dCUH2Dm3H+7HlH
-         koWOr3/MmTemLLZLVcrAUUfxSvfKOzmUtkJcUueOapq4DeF3rkBg3o8G2daDityF50KV
-         tfUHHv+tP3od7P3+y6D/8opKEcc7ztwCos+xzYJMpdssCxLnu+hCPmbx2SedED5MKq6n
-         G5iYBWLxmYbuOfQk3sPanejRsuj/BKtoc45Xr4x5xXkiei/tU2yB44NVJeMeRrMVsiB8
-         D78w==
+        bh=e1eAt+x9LM9xXOUFv/Zi6YGasT3KMYOgJHBRKa5/ge0=;
+        b=D/EsZN9n0waQcd9RGFqwpU6iKgzL9vZN0f8dXwZ7OVkWjBhrIiQO//uiMI8mNLVdr2
+         FYi0BrCo5MjI3FQjPCBGeP7DlD4sdZOASbtxSMPoEKeg5zHCOggK2Q9w663EAfIjl/RR
+         8SELJJgb/tr0idPe06dWDetAufKOu9YmIdJ8IH5TV6s/vBuw8zaxsY6rDOmrvKRIOLJJ
+         d36E9vQFhWUWjv3aN34SE1XmIxTmgr5Uf0lAvdp/ryDJWW3CcYDdvbUtctErJAJR0cy5
+         oH6GXE2AWF0b2CSdX9GWGRqCNLmiFT/W9elHzVkzQMzG8iXF2rsngUG8DWikT2iwiWkb
+         PGZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686893400; x=1689485400;
+        d=1e100.net; s=20221208; t=1686895692; x=1689487692;
         h=content-transfer-encoding:mime-version:user-agent:references
          :in-reply-to:message-id:subject:cc:to:from:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=4A8JxU3ZB0hKXO5HOtkftNUJmcLEICD5JZ84IHhOlE4=;
-        b=FDynLdbVEfKZ7V8rFew5e8zq4hS3AAJMjXx3/JBTYFS8F8CPBFg8Zo+8yKUmmkVxZX
-         Hk5p3q4zpuTcoq8BRNTOH4l6GMDnGL1gIrsafHt5PYNM5YITnGMscBcZFwECSIdxL6kZ
-         sqmKHrD0StMkQgOZNO228miwur17y5aETz9pbNzOxsEkF8UdSSwwe8KTkpn4inFTJ4FC
-         0+5oeHYMKLoVIhFLnJyLWzyWjRYmvvJVZHCW+lNDEhP1n4TicztRyIAGKWqzmye2LnrD
-         Ge8MgHUfNVxJeNXyZmE1qUrzzuwpAzz3p+MeRLFMpKdB7GHWbaVbdCO4og35id0zQmcW
-         sWfg==
-X-Gm-Message-State: AC+VfDySSPSDye5dZPtNKLhMVtoXEFsXwiPX39RtbRKAsxqgmx7+am7k
-        Rg8JB1uKlrDlI43ZKQ9QIGJHfUSI3VI=
-X-Google-Smtp-Source: ACHHUZ7ow6nOqud6A4+MVh8U8n7xFtHTUA6y6OutEkSRyyx7/KR5nyC2jp+Inkk69m7300E3y7h4LA==
-X-Received: by 2002:a17:907:1c9e:b0:96b:6fb:38d6 with SMTP id nb30-20020a1709071c9e00b0096b06fb38d6mr1050562ejc.65.1686893399950;
-        Thu, 15 Jun 2023 22:29:59 -0700 (PDT)
+        bh=e1eAt+x9LM9xXOUFv/Zi6YGasT3KMYOgJHBRKa5/ge0=;
+        b=JzzbrZY2hG4JV8yL1jBC6HCNWCeVe/ES7Pw7yeUanQAFTTJXdQGkeLzzaxhpCQF98X
+         SWCv9j10vZNUNt9/xz9LqsSz+YIJho4Ha2iv3Ie2MZ/F8eNQA+8PxzT5OTlqTyDWXygI
+         ZIR1wo1WW4yAYYyTYPW3PKNeGM4M/lDYpk8xEChnlGrOgQvDcWuneoLW1Cdq6/SgrL7a
+         r/W90EpIjSeSt9A0RxMqf+Dw1kNFndZjejjQDm4HukkLyqnC9h8MnoyLnMx/d+kuIl6W
+         1VmPagSDdnqA4Oo6JE/0nlF9MolovBW94EKBBYvHZ3QaX/M4YVuuWfkF5OX/NGP1idOG
+         2DeQ==
+X-Gm-Message-State: AC+VfDzqgukE4Ik4L4LstsdfS1/8snBdSXOX4oHeJBfuu6alqcEzqmnK
+        G70zNjUNbqNglTEx6/gZStU=
+X-Google-Smtp-Source: ACHHUZ4pg4ia/+IvwUEcB7ZoSxJtSUDVsLwjIhvPcR7PjAOra+I9/T79rFFDR3ncjDJTH26gHXRPVg==
+X-Received: by 2002:a17:907:3187:b0:96f:c0b0:f137 with SMTP id xe7-20020a170907318700b0096fc0b0f137mr997941ejb.16.1686895691636;
+        Thu, 15 Jun 2023 23:08:11 -0700 (PDT)
 Received: from lilem.mirepesht ([5.236.100.66])
-        by smtp.gmail.com with ESMTPSA id k9-20020a170906128900b00965ffb8407asm10202303ejb.87.2023.06.15.22.29.58
+        by smtp.gmail.com with ESMTPSA id bt16-20020a170906b15000b00977cc21ddd8sm10415029ejb.54.2023.06.15.23.08.09
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 15 Jun 2023 22:29:59 -0700 (PDT)
-Date:   Fri, 16 Jun 2023 08:50:57 +0330
+        Thu, 15 Jun 2023 23:08:11 -0700 (PDT)
+Date:   Fri, 16 Jun 2023 09:22:35 +0330
 From:   Ali Gholami Rudi <aligrudi@gmail.com>
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid@vger.kernel.org, song@kernel.org
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org,
+        song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
 Subject: Re: Unacceptably Poor RAID1 Performance with Many CPU Cores
-Message-ID: <20231606085057@laper.mirepesht>
-In-Reply-To: <CALTww2-HamETu5UppBiz079PZUP+rDRtQkaRA+03=s3wSQGRKA@mail.gmail.com>
-References: <20231506112411@laper.mirepesht> <CALTww29UZ+WewVrvFDSpONqTHY=TR-Q7tobdRrhsTtXKtXvOBg@mail.gmail.com>
- <20231506203832@laper.mirepesht> <20231506210600@laper.mirepesht>
-        <CALTww2-HamETu5UppBiz079PZUP+rDRtQkaRA+03=s3wSQGRKA@mail.gmail.com>
+Message-ID: <20231606092235@laper.mirepesht>
+In-Reply-To: <CALTww28VaFnsBQhkbWMRvqQv6c9HyP-iSFPwG_tn2SqQVLB+7Q@mail.gmail.com>
+References: <20231506112411@laper.mirepesht> <82d2e7c4-1029-ec7b-a8c5-5a6deebfae31@huaweicloud.com>
+        <CALTww28VaFnsBQhkbWMRvqQv6c9HyP-iSFPwG_tn2SqQVLB+7Q@mail.gmail.com>
 User-Agent: Neatmail/1.1 (https://github.com/aligrudi/neatmail)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -67,54 +67,36 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Xiao,
 
-Xiao Ni <xni@redhat.com> wrote:
-> > Ali Gholami Rudi <aligrudi@gmail.com> wrote:
-> > > Xiao Ni <xni@redhat.com> wrote:
-> > > > Because it can be reproduced easily in your environment. Can you try
-> > > > with the latest upstream kernel? If the problem doesn't exist with
-> > > > latest upstream kernel. You can use git bisect to find which patch can
-> > > > fix this problem.
+On Thu, Jun 15, 2023 at 10:06 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> > > FIO configuration file:
 > > >
-> > > I just tried the upstream.  I get almost the same result with 1G ramdisks.
-> > >
-> > > Without RAID (writing to /dev/ram0)
-> > > READ:  IOPS=15.8M BW=60.3GiB/s
-> > > WRITE: IOPS= 6.8M BW=27.7GiB/s
-> > >
-> > > RAID1 (writing to /dev/md/test)
-> > > READ:  IOPS=518K BW=2028MiB/s
-> > > WRITE: IOPS=222K BW= 912MiB/s
-> 
-> I can reproduce this with upstream kernel too.
-> 
-> RAID1
-> READ: bw=3699MiB/s (3879MB/s)
-> WRITE: bw=1586MiB/s (1663MB/s)
-> 
-> ram disk:
-> READ: bw=5720MiB/s (5997MB/s)
-> WRITE: bw=2451MiB/s (2570MB/s)
-> 
-> There is a performance problem. But not like your result. Your result
-> has a huge gap. I'm not sure the reason. Any thoughts?
+> > > [global]
+> > > name=random reads and writes
+> > > ioengine=libaio
+> > > direct=1
+> > > readwrite=randrw
+> > > rwmixread=70
+> > > iodepth=64
+> > > buffered=0
+> > > #filename=/dev/ram0
+> > > filename=/dev/dm/test
+> > > size=1G
+> > > runtime=30
+> > > time_based
+> > > randrepeat=0
+> > > norandommap
+> > > refill_buffers
+> > > ramp_time=10
+> > > bs=4k
+> > > numjobs=400
+> >
+> > 400 is too aggressive, I think spin_lock from fast path is probably
+> > causing the problem, same as I met before for raid10...
 
-It may be the number of cores; in my setup there are 128 cores (256
-threads).  If I understand it correctly, the problem is that
-wakeup(...->wait_barrier) is called unconditionally at the same time
-by many cores in functions like allow_barrier and flush_bio_list,
-while no task is waiting in the task queue.  This results in a
-lock contention for wq_head->lock in __wakekup_common_lock().
-
-> > And this is perf's output:
-> 
-> I'm not familiar with perf, what's your command that I can use to see
-> the same output?
-
-perf record --call-graph dwarf fio fio.test
-
-perf report
+In our workload, we run about this many KVM guests on one machine, and
+when many of the VMs use their disks, we experienced almost the same
+problem with raid1.
 
 Thanks,
 Ali
