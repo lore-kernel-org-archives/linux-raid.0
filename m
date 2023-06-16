@@ -2,86 +2,111 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 511F3EB64D7
-	for <linux-raid@archiver.kernel.org>; Fri, 16 Jun 2023 09:26:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B75CEB64DB
+	for <linux-raid@archiver.kernel.org>; Fri, 16 Jun 2023 09:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344252AbjFPJ0u (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 16 Jun 2023 05:26:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41740 "EHLO
+        id S1343563AbjFPJau (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 16 Jun 2023 05:30:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344440AbjFPJ0a (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Jun 2023 05:26:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7561435A2;
-        Fri, 16 Jun 2023 02:25:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ED9DB63291;
-        Fri, 16 Jun 2023 09:25:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F689C433C8;
-        Fri, 16 Jun 2023 09:25:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686907538;
-        bh=XHQLN9nl8TdAAC8nr9pRDK1MMoc21zbzvmAMT6d+aV8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=HWwpM+qfAVvgds/zGb334+M25YQhO4zvPLkXeZuxOO6aLId+XwaBREqJ6hREUpJo5
-         EJW8rExR4qi4/YMSgUPGdgdWX9LiWvs9E8h31BS7/iqKGuUwDq/eOEVcJ/d/lug0dv
-         wG1DCN7/T8kEpgumUCGYp8bCZ5VHOmBQ7p5GT12nvk0ehAzrIb8OmoRodmdbYtVQqo
-         v+xlbGgGnylf+NqrZqYjX7GFMUXoQYr0QQ4gA3SmlCRguzjhLxaW8EDIo11R1fEMF2
-         06F5f0v+u3x1AdpNHCrTxPc2PFnAWWJpU3wsxZ7x7vjNdXPo/IKWKUV/0qbB1gH7H4
-         1BcDrDR0d8d8w==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>
+        with ESMTP id S245741AbjFPJar (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Jun 2023 05:30:47 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AE3B1FC7;
+        Fri, 16 Jun 2023 02:30:39 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QjDRH0zkGz4f50JL;
+        Fri, 16 Jun 2023 17:30:35 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCHK5+2K4xkJsdRLw--.3111S3;
+        Fri, 16 Jun 2023 17:30:32 +0800 (CST)
+Subject: Re: [PATCH] md/raid1-10: shut up randstruct warning again
+To:     Arnd Bergmann <arnd@kernel.org>, Song Liu <song@kernel.org>
 Cc:     Arnd Bergmann <arnd@arndb.de>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Jens Axboe <axboe@kernel.dk>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] md/raid1-10: shut up randstruct warning again
-Date:   Fri, 16 Jun 2023 11:24:48 +0200
-Message-Id: <20230616092532.3307719-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.2
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230616092532.3307719-1-arnd@kernel.org>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <1d2ea39d-e909-f0b2-0ff8-979ca35f16e9@huaweicloud.com>
+Date:   Fri, 16 Jun 2023 17:30:30 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <20230616092532.3307719-1-arnd@kernel.org>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCHK5+2K4xkJsdRLw--.3111S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF1xAF45ZFW7KFWDGF4UArb_yoW8AF4kpa
+        18Ka48uw45GrWUCa1Dua18Za1F9a1FkrW3CFyru3ySvan8tFyDJFW8J3y5Cr1DCF4rury2
+        vF1UKF4Yk3Wj9FDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
+        6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUOyCJDUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+Hi,
 
-A code reorganization brought back a warning when structure randomization
-is enabled:
+ÔÚ 2023/06/16 17:24, Arnd Bergmann Ð´µÀ:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> A code reorganization brought back a warning when structure randomization
+> is enabled:
+> 
+> drivers/md/raid1-10.c:119:25: error: casting from randomized structure pointer type 'struct block_device *' to 'struct md_rdev *'
+>          struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
+>                                 ^
+> 
+> Before the rework, this used a (void*) cast, so go back to that in order
+> to avoid the warning. Casting between pointers to incompatible types is
+> clearly something that is dangerous, but this driver has always done so,
+> and it's not made any worse by the struct randomization in this case.
+> 
+> Fixes: 8295efbe68c08 ("md/raid1-10: factor out a helper to submit normal write")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-drivers/md/raid1-10.c:119:25: error: casting from randomized structure pointer type 'struct block_device *' to 'struct md_rdev *'
-        struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
-                               ^
+Thanks for the patch, and this problem is already reported by kernel
+test robot:
 
-Before the rework, this used a (void*) cast, so go back to that in order
-to avoid the warning. Casting between pointers to incompatible types is
-clearly something that is dangerous, but this driver has always done so,
-and it's not made any worse by the struct randomization in this case.
+https://lore.kernel.org/oe-kbuild-all/202306142042.fmjfmTF8-lkp@intel.com/
 
-Fixes: 8295efbe68c08 ("md/raid1-10: factor out a helper to submit normal write")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/md/raid1-10.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+And fixed patch is already applied:
 
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 169ebe296f2d0..3f22edec70e78 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -116,7 +116,7 @@ static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
- 
- static inline void raid1_submit_write(struct bio *bio)
- {
--	struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
-+	struct md_rdev *rdev = (void *)bio->bi_bdev;
- 
- 	bio->bi_next = NULL;
- 	bio_set_dev(bio, rdev->bdev);
--- 
-2.39.2
+https://lore.kernel.org/lkml/CAPhsuW6aSvCEa1khjjmDYGozUEs+Tx75RxfaE1+xL2Y1T6aN=Q@mail.gmail.com/T/
+
+Thanks,
+Kuai
+> ---
+>   drivers/md/raid1-10.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+> index 169ebe296f2d0..3f22edec70e78 100644
+> --- a/drivers/md/raid1-10.c
+> +++ b/drivers/md/raid1-10.c
+> @@ -116,7 +116,7 @@ static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
+>   
+>   static inline void raid1_submit_write(struct bio *bio)
+>   {
+> -	struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
+> +	struct md_rdev *rdev = (void *)bio->bi_bdev;
+>   
+>   	bio->bi_next = NULL;
+>   	bio_set_dev(bio, rdev->bdev);
+> 
 
