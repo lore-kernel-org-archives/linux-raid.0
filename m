@@ -2,48 +2,48 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E264EB64D7
-	for <linux-raid@archiver.kernel.org>; Fri, 16 Jun 2023 19:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E69BEB64D7
+	for <linux-raid@archiver.kernel.org>; Fri, 16 Jun 2023 19:46:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232976AbjFPTnJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 16 Jun 2023 15:43:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40290 "EHLO
+        id S231208AbjFPTqH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 16 Jun 2023 15:46:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbjFPTnI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Jun 2023 15:43:08 -0400
+        with ESMTP id S229561AbjFPTqG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 16 Jun 2023 15:46:06 -0400
 Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C67FC10D8
-        for <linux-raid@vger.kernel.org>; Fri, 16 Jun 2023 12:43:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C255810D8
+        for <linux-raid@vger.kernel.org>; Fri, 16 Jun 2023 12:46:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686944587; x=1718480587;
+  t=1686944765; x=1718480765;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=ro6Y8SKKdQVpY1V6tCESW4CUTTnTXx3RL9n6XOxl4l0=;
-  b=fHtSNENxweT1z3lNeLdxOOECRvRtDKLUI5oHkGAoSnFKdXImdu87eu7W
-   wZ8eFPBeeugFO5h4WGbbDRT1cMBTbOsneVbA+8F+EUySMmNz+Zen2YDLo
-   O7dsQEaXleE+4IJBlhI0U1s97nJ0RhbjsfxcnpM/1nOI/8dIztM5Ev74W
-   +69LZ/C4flYb68jiAV3MV/RgAxn0KeLUVQxTTISica1xtuwEOI1x7Czz4
-   VC0DY4lsqDChYXYTA3XhuXSW7h7bz52Hq+o3u640AF3qTXb9PyIRxK4Oz
-   aXx5ye5UDkNL71m+nfS9+ODhRDzQxS/lJMSmMyDnsBIDTWf1ZX34o7Qfr
+  bh=Sqzwu4+LnJGuobKSoPHX8ZUCMHdZmk1cjlionAi/vhk=;
+  b=HszHdT4pG9NLdifjm7mE/5Bf0DXD76VBQ9ZeCRkyz8sJYFS5Zrpg5SiQ
+   mkVdznuF3OPRxlC4g9xLQat67mIZJQ+KS5esXtRACPobvzEjnR1saW2iB
+   4OJgdwru3iOgBHqLhB18BABBkYGAkeyFdM9yfXpyxTmNV7G5ts/lVxTrw
+   5sjci79Ctdu9leZWtq+tx9vUqDl7KvyQlmt6tlHC5JWF0zGs6y+WQ+MHz
+   4V7FuAnL2HSMC47lvDRXSQp3+QHtEGOVnSj2UhAXtPgRVyrhmjLSrkegs
+   zC23XZW3EZoktV/OCIj2rgoGK8L43jTP7wsZ0SmIEthNnGHcGvENhWDb1
    A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10743"; a="445678727"
+X-IronPort-AV: E=McAfee;i="6600,9927,10743"; a="445679289"
 X-IronPort-AV: E=Sophos;i="6.00,248,1681196400"; 
-   d="scan'208";a="445678727"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jun 2023 12:43:07 -0700
+   d="scan'208";a="445679289"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jun 2023 12:46:04 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10743"; a="716143014"
+X-IronPort-AV: E=McAfee;i="6600,9927,10743"; a="825853907"
 X-IronPort-AV: E=Sophos;i="6.00,248,1681196400"; 
-   d="scan'208";a="716143014"
+   d="scan'208";a="825853907"
 Received: from linux-myjy.igk.intel.com ([10.102.108.92])
-  by fmsmga007.fm.intel.com with ESMTP; 16 Jun 2023 12:43:06 -0700
+  by fmsmga002.fm.intel.com with ESMTP; 16 Jun 2023 12:46:02 -0700
 From:   Blazej Kucman <blazej.kucman@intel.com>
 To:     linux-raid@vger.kernel.org
 Cc:     jes@trained-monkey.org, colyli@suse.de
 Subject: [PATCH] Add secure gethostname() wrapper
-Date:   Fri, 16 Jun 2023 21:43:01 +0200
-Message-Id: <20230616194301.6304-1-blazej.kucman@intel.com>
+Date:   Fri, 16 Jun 2023 21:45:55 +0200
+Message-Id: <20230616194555.6452-1-blazej.kucman@intel.com>
 X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -59,7 +59,6 @@ Previously this had to be handled in each place
 of the gethostname() call.
 
 Signed-off-by: Blazej Kucman <blazej.kucman@intel.com>
-Change-Id: I6347afa5d676e09fbfe599991498449606cadf7c
 ---
  Monitor.c   |  3 +--
  lib.c       | 19 +++++++++++++++++++
