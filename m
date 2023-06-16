@@ -2,185 +2,194 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 107B8EB64DA
-	for <linux-raid@archiver.kernel.org>; Fri, 16 Jun 2023 01:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE41DEB64D9
+	for <linux-raid@archiver.kernel.org>; Fri, 16 Jun 2023 02:15:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238975AbjFPByp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 15 Jun 2023 21:54:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33398 "EHLO
+        id S240253AbjFPCPv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 15 Jun 2023 22:15:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238918AbjFPByn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Jun 2023 21:54:43 -0400
+        with ESMTP id S229581AbjFPCPt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Jun 2023 22:15:49 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97BA1AC
-        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 18:53:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EA082966
+        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 19:15:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686880435;
+        s=mimecast20190719; t=1686881701;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xoQUiL5SfEgJvYQD1xhbT3fL/XgncTJIeSbtpUcR1uo=;
-        b=AabhawJHdEcZqNApiuehOXlAu3bk5F99DS/a/UIfQiqwCozofawolaV67ogReT+o2vTnRs
-        jn0okgKv61hTMP8PnRpOnJuL8555fu/hP4i+J2bgbZpLDECBzuws15vwBY7IhSEP34A/b+
-        L0XsKKYkDP6ViXmReZGBKA3Mme4dT6s=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=o6xYSvD9QQZURxzdIVqsBRJfLtDMaMv5TbVaaTKE47g=;
+        b=JFUwyxi5fHVRNfZv+K1+912qfDAmZVaFCcjFGPClaKQ6PsCzKMfdhBRXw6iHePxIesCbiP
+        RXaC5yjEEeuvnyXUAr/BJRQCAdW88k6YFEOuW+1GfiOLaTs4Uq3UDNe/lICaEb2VAtd2LU
+        T0k25DUzbB/wlaPppQrsk5yeQ0hYbA4=
+Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
+ [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-290-hf7BxPIIPearvGlzTqG5Mw-1; Thu, 15 Jun 2023 21:53:54 -0400
-X-MC-Unique: hf7BxPIIPearvGlzTqG5Mw-1
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1b52498ece5so2130925ad.1
-        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 18:53:54 -0700 (PDT)
+ us-mta-260-KEZMT644NESTu09rObVwkg-1; Thu, 15 Jun 2023 22:15:00 -0400
+X-MC-Unique: KEZMT644NESTu09rObVwkg-1
+Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-39c8140b31fso307238b6e.0
+        for <linux-raid@vger.kernel.org>; Thu, 15 Jun 2023 19:15:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686880433; x=1689472433;
+        d=1e100.net; s=20221208; t=1686881699; x=1689473699;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=xoQUiL5SfEgJvYQD1xhbT3fL/XgncTJIeSbtpUcR1uo=;
-        b=b6ohukSDH/gqNz/OksKCNomKzcSOlH2nSq3NOYpwZS3o34To/x0PlyuOXVz4yCHoGp
-         9tO2+Jt+EsrfaBtnxSnhmRWmkJ33n0uGsbosecPfwqID1jaJ7HDkDAu+hkn+vMWgs2F0
-         uJri9Zlo+pEGFI6jiaXIUNKS4PIQPyWHxiAs9JgtxBxGuW0j/je7+uoYQCXDJKIqrMPp
-         a4xKpJfkxj+sXnQaU07TEcpKg2qDx7hs145WlMF8aFSHGRmwzj17WxBxD41oCKRgQSyy
-         T7L5UJhJaVQujdsA9Wz/oeM80A5octzvSfxCkRDG2YyMJ6zHZwGeUGehn7baQv7sxP9O
-         pk5Q==
-X-Gm-Message-State: AC+VfDySQukm2GhA6AJinF/LL+2sFOsyflYvr3E9n3TSbNLBGjFKvhWg
-        CT+FHuSfbQvzUVPHRkRO9OiGmpV5dBqp2nwr134QNgYlbH4gyD8fCK+KZD6oXVO1s6M5j9yUvi8
-        hQe5qqU5OHMxGWm1843BcmUER+2XjubXtZ4NGh+26Kes2a8ndJ0k=
-X-Received: by 2002:a17:902:7689:b0:1b4:ff2a:24e5 with SMTP id m9-20020a170902768900b001b4ff2a24e5mr600825pll.43.1686880433025;
-        Thu, 15 Jun 2023 18:53:53 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ46cL8oNCQLkhdjEumTRcJliMahnIEqkkP2nHStDFrFft0g/5nRYe10oi1K1gnr4S+bH7RBhHAS4gJMjU2TFYE=
-X-Received: by 2002:a17:902:7689:b0:1b4:ff2a:24e5 with SMTP id
- m9-20020a170902768900b001b4ff2a24e5mr600817pll.43.1686880432742; Thu, 15 Jun
- 2023 18:53:52 -0700 (PDT)
+        bh=o6xYSvD9QQZURxzdIVqsBRJfLtDMaMv5TbVaaTKE47g=;
+        b=VWQuBQHQpjw089EAzIZGUyaPIBvYFSo0pElMgyvXs0f0vsx7e+CgS7OgpKHrPCpxJI
+         79EStYa8K8+4YgG3SJ/QMiIAY4GjrkUxfSYOB98qcl6NN/hF1SQkSKp9KBBQaIZ88MhT
+         PKwBfRBuO2G5uFGJrS20nkDOeQMznSyxUcEsYISjHvbPROdj3cEMierJcpbYZXZY9pGG
+         PF1GYvbptSgppT6plL0G33IYaR0iHLyVa6581uw6j/RwI3u0hstgyaFrHYP4h4u9amSz
+         oviMpP0PhhHOKECGa8raNgvaj5iY7czdpDfb12i+JYBG6R6YyrtanYZQWKwj9oIvIBs7
+         0G3w==
+X-Gm-Message-State: AC+VfDyqcDfbxG9pQ1ZETmyq0hwGyXjCIszumL4/wABkfBdWgrJPZcRD
+        MCOTHDZ+yH0x+hgS1nTBwlWGC73K1p0QXWu0oHSArz7XhmgCWJn4u8SOjLgE5etnIOzoErFtseG
+        i6t24oNc9WG7s8YDksqWQVSoQHiVqi1uKr9UNBekhkKzsawbGU+Y=
+X-Received: by 2002:a05:6808:a1b:b0:39a:967d:347e with SMTP id n27-20020a0568080a1b00b0039a967d347emr831376oij.30.1686881699487;
+        Thu, 15 Jun 2023 19:14:59 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ6QSBkAxaid0l6V/rWfUc68X/E+zlHLQ6nRta1/pU6F0susenD5FMWbqb+rXVBpXwr/o3ZNnSitEVLW42yNyGM=
+X-Received: by 2002:a05:6808:a1b:b0:39a:967d:347e with SMTP id
+ n27-20020a0568080a1b00b0039a967d347emr831368oij.30.1686881699267; Thu, 15 Jun
+ 2023 19:14:59 -0700 (PDT)
 MIME-Version: 1.0
-References: <20231506112411@laper.mirepesht> <CALTww29UZ+WewVrvFDSpONqTHY=TR-Q7tobdRrhsTtXKtXvOBg@mail.gmail.com>
- <20231506203832@laper.mirepesht> <20231506210600@laper.mirepesht>
-In-Reply-To: <20231506210600@laper.mirepesht>
+References: <20231506112411@laper.mirepesht> <82d2e7c4-1029-ec7b-a8c5-5a6deebfae31@huaweicloud.com>
+In-Reply-To: <82d2e7c4-1029-ec7b-a8c5-5a6deebfae31@huaweicloud.com>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Fri, 16 Jun 2023 09:53:41 +0800
-Message-ID: <CALTww2-HamETu5UppBiz079PZUP+rDRtQkaRA+03=s3wSQGRKA@mail.gmail.com>
+Date:   Fri, 16 Jun 2023 10:14:48 +0800
+Message-ID: <CALTww28VaFnsBQhkbWMRvqQv6c9HyP-iSFPwG_tn2SqQVLB+7Q@mail.gmail.com>
 Subject: Re: Unacceptably Poor RAID1 Performance with Many CPU Cores
-To:     Ali Gholami Rudi <aligrudi@gmail.com>
-Cc:     linux-raid@vger.kernel.org, song@kernel.org
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Ali Gholami Rudi <aligrudi@gmail.com>, linux-raid@vger.kernel.org,
+        song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Jun 16, 2023 at 1:38=E2=80=AFAM Ali Gholami Rudi <aligrudi@gmail.co=
-m> wrote:
+On Thu, Jun 15, 2023 at 10:06=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
 >
+> Hi,
 >
-> Ali Gholami Rudi <aligrudi@gmail.com> wrote:
-> > Xiao Ni <xni@redhat.com> wrote:
-> > > Because it can be reproduced easily in your environment. Can you try
-> > > with the latest upstream kernel? If the problem doesn't exist with
-> > > latest upstream kernel. You can use git bisect to find which patch ca=
-n
-> > > fix this problem.
+> =E5=9C=A8 2023/06/15 15:54, Ali Gholami Rudi =E5=86=99=E9=81=93:
+> > Perf output:
 > >
-> > I just tried the upstream.  I get almost the same result with 1G ramdis=
-ks.
-> >
-> > Without RAID (writing to /dev/ram0)
-> > READ:  IOPS=3D15.8M BW=3D60.3GiB/s
-> > WRITE: IOPS=3D 6.8M BW=3D27.7GiB/s
-> >
-> > RAID1 (writing to /dev/md/test)
-> > READ:  IOPS=3D518K BW=3D2028MiB/s
-> > WRITE: IOPS=3D222K BW=3D 912MiB/s
-
-Hi Ali
-
-I can reproduce this with upstream kernel too.
-
-RAID1
-READ: bw=3D3699MiB/s (3879MB/s)
-WRITE: bw=3D1586MiB/s (1663MB/s)
-
-ram disk:
-READ: bw=3D5720MiB/s (5997MB/s)
-WRITE: bw=3D2451MiB/s (2570MB/s)
-
-There is a performance problem. But not like your result. Your result
-has a huge gap. I'm not sure the reason. Any thoughts?
-
-
+> > Samples: 1M of event 'cycles', Event count (approx.): 1158425235997
+> >    Children      Self  Command  Shared Object           Symbol
+> > +   97.98%     0.01%  fio      fio                     [.] fio_libaio_c=
+ommit
+> > +   97.95%     0.01%  fio      libaio.so.1.0.1         [.] io_submit
+> > +   97.85%     0.01%  fio      [kernel.kallsyms]       [k] __x64_sys_io=
+_submit
+> > -   97.82%     0.01%  fio      [kernel.kallsyms]       [k] io_submit_on=
+e
+> >     - 97.81% io_submit_one
+> >        - 54.62% aio_write
+> >           - 54.60% blkdev_write_iter
+> >              - 36.30% blk_finish_plug
+> >                 - flush_plug_callbacks
+> >                    - 36.29% raid1_unplug
+> >                       - flush_bio_list
+> >                          - 18.44% submit_bio_noacct
+> >                             - 18.40% brd_submit_bio
+> >                                - 18.13% raid1_end_write_request
+> >                                   - 17.94% raid_end_bio_io
+> >                                      - 17.82% __wake_up_common_lock
+> >                                         + 17.79% _raw_spin_lock_irqsave
+> >                          - 17.79% __wake_up_common_lock
+> >                             + 17.76% _raw_spin_lock_irqsave
+> >              + 18.29% __generic_file_write_iter
+> >        - 43.12% aio_read
+> >           - 43.07% blkdev_read_iter
+> >              - generic_file_read_iter
+> >                 - 43.04% blkdev_direct_IO
+> >                    - 42.95% submit_bio_noacct
+> >                       - 42.23% brd_submit_bio
+> >                          - 41.91% raid1_end_read_request
+> >                             - 41.70% raid_end_bio_io
+> >                                - 41.43% __wake_up_common_lock
+> >                                   + 41.36% _raw_spin_lock_irqsave
+> >                       - 0.68% md_submit_bio
+> >                            0.61% md_handle_request
+> > +   94.90%     0.00%  fio      [kernel.kallsyms]       [k] __wake_up_co=
+mmon_lock
+> > +   94.86%     0.22%  fio      [kernel.kallsyms]       [k] _raw_spin_lo=
+ck_irqsave
+> > +   94.64%    94.64%  fio      [kernel.kallsyms]       [k] native_queue=
+d_spin_lock_slowpath
+> > +   79.63%     0.02%  fio      [kernel.kallsyms]       [k] submit_bio_n=
+oacct
 >
-> And this is perf's output:
+> This looks familiar... Perhaps can you try to test with raid10 with
+> latest mainline kernel? I used to optimize spin_lock for raid10, and I
+> don't do this for raid1 yet... I can try to do the same thing for raid1
+> if it's valuable.
 
-I'm not familiar with perf, what's your command that I can use to see
-the same output?
+Hi Kuai
+
+Which patch?
+
+I have a try on raid10. The results are:
+
+raid10
+READ: bw=3D3711MiB/s (3892MB/s)
+WRITE: bw=3D1590MiB/s (1667MB/s)
+
+raid0
+READ: bw=3D5610MiB/s (5882MB/s)
+WRITE: bw=3D2405MiB/s (2521MB/s)
+
+ram0
+READ: bw=3D5468MiB/s (5734MB/s)
+WRITE: bw=3D2343MiB/s (2457MB/s)
+
+Because raid10 has a function like raid0. So I did a test on raid0
+too. There is a performance gap between raid10 and ram disk too. The
+strange thing is that raid0 doesn't have a big performance
+improvement.
 
 Regards
 Xiao
+
+
+
 >
-> +   98.73%     0.01%  fio      [kernel.kallsyms]       [k] entry_SYSCALL_=
-64_after_hwframe
-> +   98.63%     0.01%  fio      [kernel.kallsyms]       [k] do_syscall_64
-> +   97.28%     0.01%  fio      [kernel.kallsyms]       [k] __x64_sys_io_s=
-ubmit
-> -   97.09%     0.01%  fio      [kernel.kallsyms]       [k] io_submit_one
->    - 97.08% io_submit_one
->       - 53.58% aio_write
->          - 53.42% blkdev_write_iter
->             - 35.28% blk_finish_plug
->                - flush_plug_callbacks
->                   - 35.27% raid1_unplug
->                      - flush_bio_list
->                         - 17.88% submit_bio_noacct_nocheck
->                            - 17.88% __submit_bio
->                               - 17.61% raid1_end_write_request
->                                  - 17.47% raid_end_bio_io
->                                     - 17.41% __wake_up_common_lock
->                                        - 17.38% _raw_spin_lock_irqsave
->                                             native_queued_spin_lock_slowp=
-ath
->                         - 17.35% __wake_up_common_lock
->                            - 17.31% _raw_spin_lock_irqsave
->                                 native_queued_spin_lock_slowpath
->             + 18.07% __generic_file_write_iter
->       - 43.00% aio_read
->          - 42.64% blkdev_read_iter
->             - 42.37% __blkdev_direct_IO_async
->                - 41.40% submit_bio_noacct_nocheck
->                   - 41.34% __submit_bio
->                      - 40.68% raid1_end_read_request
->                         - 40.55% raid_end_bio_io
->                            - 40.35% __wake_up_common_lock
->                               - 40.28% _raw_spin_lock_irqsave
->                                    native_queued_spin_lock_slowpath
-> +   95.19%     0.32%  fio      fio                     [.] thread_main
-> +   95.08%     0.00%  fio      [unknown]               [.] 0xffffffffffff=
-ffff
-> +   95.03%     0.00%  fio      fio                     [.] run_threads
-> +   94.77%     0.00%  fio      fio                     [.] do_io (inlined=
-)
-> +   94.65%     0.16%  fio      fio                     [.] td_io_queue
-> +   94.65%     0.11%  fio      libc-2.31.so            [.] syscall
-> +   94.54%     0.07%  fio      fio                     [.] fio_libaio_com=
-mit
-> +   94.53%     0.05%  fio      fio                     [.] td_io_commit
-> +   94.50%     0.00%  fio      fio                     [.] io_u_submit (i=
-nlined)
-> +   94.47%     0.04%  fio      libaio.so.1.0.1         [.] io_submit
-> +   92.48%     0.02%  fio      [kernel.kallsyms]       [k] _raw_spin_lock=
-_irqsave
-> +   92.48%     0.00%  fio      [kernel.kallsyms]       [k] __wake_up_comm=
-on_lock
-> +   92.46%    92.32%  fio      [kernel.kallsyms]       [k] native_queued_=
-spin_lock_slowpath
-> +   76.85%     0.03%  fio      [kernel.kallsyms]       [k] submit_bio_noa=
-cct_nocheck
-> +   76.76%     0.00%  fio      [kernel.kallsyms]       [k] __submit_bio
-> +   60.25%     0.06%  fio      [kernel.kallsyms]       [k] __blkdev_direc=
-t_IO_async
-> +   58.12%     0.11%  fio      [kernel.kallsyms]       [k] raid_end_bio_i=
-o
-> ..
+> >
+> >
+> > FIO configuration file:
+> >
+> > [global]
+> > name=3Drandom reads and writes
+> > ioengine=3Dlibaio
+> > direct=3D1
+> > readwrite=3Drandrw
+> > rwmixread=3D70
+> > iodepth=3D64
+> > buffered=3D0
+> > #filename=3D/dev/ram0
+> > filename=3D/dev/dm/test
+> > size=3D1G
+> > runtime=3D30
+> > time_based
+> > randrepeat=3D0
+> > norandommap
+> > refill_buffers
+> > ramp_time=3D10
+> > bs=3D4k
+> > numjobs=3D400
+>
+> 400 is too aggressive, I think spin_lock from fast path is probably
+> causing the problem, same as I met before for raid10...
 >
 > Thanks,
-> Ali
+> Kuai
+>
+> > group_reporting=3D1
+> > [job1]
+> >
+> > .
+> >
 >
 
