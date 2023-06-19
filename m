@@ -2,55 +2,55 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3F9DEB64DA
-	for <linux-raid@archiver.kernel.org>; Mon, 19 Jun 2023 12:50:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF2BCEB64DB
+	for <linux-raid@archiver.kernel.org>; Mon, 19 Jun 2023 12:50:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230157AbjFSMuE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 19 Jun 2023 08:50:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34520 "EHLO
+        id S230461AbjFSMuF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 19 Jun 2023 08:50:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231308AbjFSMtz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Jun 2023 08:49:55 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A096B11D;
-        Mon, 19 Jun 2023 05:49:53 -0700 (PDT)
+        with ESMTP id S231321AbjFSMt4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Jun 2023 08:49:56 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2FB9128;
+        Mon, 19 Jun 2023 05:49:55 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Ql8jn5pPLz4f3lXk;
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Ql8jn6v6Dz4f4HGd;
         Mon, 19 Jun 2023 20:49:49 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgBH_rHrTpBkoNw8MA--.51801S7;
-        Mon, 19 Jun 2023 20:49:50 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgBH_rHrTpBkoNw8MA--.51801S10;
+        Mon, 19 Jun 2023 20:49:51 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 3/8] raid5: fix missing io accounting in raid5_align_endio()
-Date:   Tue, 20 Jun 2023 04:48:21 +0800
-Message-Id: <20230619204826.755559-4-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 6/8] md/md-multipath: enable io accounting
+Date:   Tue, 20 Jun 2023 04:48:24 +0800
+Message-Id: <20230619204826.755559-7-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230619204826.755559-1-yukuai1@huaweicloud.com>
 References: <20230619204826.755559-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH_rHrTpBkoNw8MA--.51801S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxWry7XF4kAFykGF1kCFWDXFb_yoW5XFWrpa
-        nagF9xXrW5XrW5WFZFk3yDW3WSqwsrKrZ7tFWxX34fta4ayFyvka18Xa4rJryrCFW8ury7
-        Zw1qka1UGr4xKFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2048vs2IY02
-        0E87I2jVAFwI0_JrWl82xGYIkIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2
-        F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjx
-        v20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2
-        z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0V
-        AKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1l
-        Ox8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErc
-        IFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRPEf5UUUUU
-        =
+X-CM-TRANSID: gCh0CgBH_rHrTpBkoNw8MA--.51801S10
+X-Coremail-Antispam: 1UD129KBjvdXoW7GFWDCF1rKr1fAFy8tr43Wrg_yoW3Jrg_WF
+        n09r97XrWYyFn7Kw1qvr4xZa4I9a4DW3Z7uF12gFZ5ZF15JrWrAFWq9rWUJanrAayxWa4U
+        Aw18Jr13ZF4j9jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbDAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M280x2IEY4vEnII2IxkI6r1a6r45M28IrcIa0xkI8V
+        A2jI8067AKxVWUAVCq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJ
+        M28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2I
+        x0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK
+        6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4
+        xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8
+        JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20V
+        AGYxC7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
+        wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
+        0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AK
+        xVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r
+        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRvJPtU
+        UUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -59,80 +59,26 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Io will only be accounted as done from raid5_align_endio() if the io
-succeed, and io inflight counter will be leaked if such io failed.
-
-Fix this problem by switching to use md_account_bio() for io accounting.
+use md_account_bio() to enable io accounting, also make sure
+mddev_suspend() will wait for all io to be done.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid5.c | 29 ++++++++---------------------
- 1 file changed, 8 insertions(+), 21 deletions(-)
+ drivers/md/md-multipath.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index cef0b400b2ee..4cdb35e54251 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5468,26 +5468,17 @@ static struct bio *remove_bio_from_retry(struct r5conf *conf,
-  */
- static void raid5_align_endio(struct bio *bi)
- {
--	struct md_io_clone *md_io_clone = bi->bi_private;
--	struct bio *raid_bi = md_io_clone->orig_bio;
--	struct mddev *mddev;
--	struct r5conf *conf;
--	struct md_rdev *rdev;
-+	struct bio *raid_bi = bi->bi_private;
-+	struct md_rdev *rdev = (void *)raid_bi->bi_next;
-+	struct mddev *mddev = rdev->mddev;
-+	struct r5conf *conf = mddev->private;
- 	blk_status_t error = bi->bi_status;
--	unsigned long start_time = md_io_clone->start_time;
+diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
+index 92c45be203d7..d22276870283 100644
+--- a/drivers/md/md-multipath.c
++++ b/drivers/md/md-multipath.c
+@@ -107,6 +107,7 @@ static bool multipath_make_request(struct mddev *mddev, struct bio * bio)
+ 	    && md_flush_request(mddev, bio))
+ 		return true;
  
- 	bio_put(bi);
--
--	rdev = (void*)raid_bi->bi_next;
- 	raid_bi->bi_next = NULL;
--	mddev = rdev->mddev;
--	conf = mddev->private;
--
- 	rdev_dec_pending(rdev, conf->mddev);
++	md_account_bio(mddev, &bio);
+ 	mp_bh = mempool_alloc(&conf->pool, GFP_NOIO);
  
- 	if (!error) {
--		if (blk_queue_io_stat(raid_bi->bi_bdev->bd_disk->queue))
--			bio_end_io_acct(raid_bi, start_time);
- 		bio_endio(raid_bi);
- 		if (atomic_dec_and_test(&conf->active_aligned_reads))
- 			wake_up(&conf->wait_for_quiescent);
-@@ -5506,7 +5497,6 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 	struct md_rdev *rdev;
- 	sector_t sector, end_sector, first_bad;
- 	int bad_sectors, dd_idx;
--	struct md_io_clone *md_io_clone;
- 	bool did_inc;
- 
- 	if (!in_chunk_boundary(mddev, raid_bio)) {
-@@ -5543,16 +5533,13 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 		return 0;
- 	}
- 
--	align_bio = bio_alloc_clone(rdev->bdev, raid_bio, GFP_NOIO,
--				    &mddev->io_clone_set);
--	md_io_clone = container_of(align_bio, struct md_io_clone, bio_clone);
-+	md_account_bio(mddev, &raid_bio);
- 	raid_bio->bi_next = (void *)rdev;
--	if (blk_queue_io_stat(raid_bio->bi_bdev->bd_disk->queue))
--		md_io_clone->start_time = bio_start_io_acct(raid_bio);
--	md_io_clone->orig_bio = raid_bio;
- 
-+	align_bio = bio_alloc_clone(rdev->bdev, raid_bio, GFP_NOIO,
-+				    &mddev->bio_set);
- 	align_bio->bi_end_io = raid5_align_endio;
--	align_bio->bi_private = md_io_clone;
-+	align_bio->bi_private = raid_bio;
- 	align_bio->bi_iter.bi_sector = sector;
- 
- 	/* No reshape active, so we can trust rdev->data_offset */
+ 	mp_bh->master_bio = bio;
 -- 
 2.39.2
 
