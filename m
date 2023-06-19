@@ -2,115 +2,137 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A10FDEB64D9
-	for <linux-raid@archiver.kernel.org>; Mon, 19 Jun 2023 10:27:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3F9DEB64DA
+	for <linux-raid@archiver.kernel.org>; Mon, 19 Jun 2023 12:50:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231854AbjFSK1v (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 19 Jun 2023 06:27:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37650 "EHLO
+        id S230157AbjFSMuE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 19 Jun 2023 08:50:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230286AbjFSK1t (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Jun 2023 06:27:49 -0400
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DADAC6;
-        Mon, 19 Jun 2023 03:27:47 -0700 (PDT)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 4493461E5FE03;
-        Mon, 19 Jun 2023 12:27:01 +0200 (CEST)
-Message-ID: <ac4c9d48-b8d2-b847-2721-11179fd922de@molgen.mpg.de>
-Date:   Mon, 19 Jun 2023 12:26:59 +0200
+        with ESMTP id S231308AbjFSMtz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 19 Jun 2023 08:49:55 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A096B11D;
+        Mon, 19 Jun 2023 05:49:53 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Ql8jn5pPLz4f3lXk;
+        Mon, 19 Jun 2023 20:49:49 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgBH_rHrTpBkoNw8MA--.51801S7;
+        Mon, 19 Jun 2023 20:49:50 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     xni@redhat.com, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next 3/8] raid5: fix missing io accounting in raid5_align_endio()
+Date:   Tue, 20 Jun 2023 04:48:21 +0800
+Message-Id: <20230619204826.755559-4-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230619204826.755559-1-yukuai1@huaweicloud.com>
+References: <20230619204826.755559-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: [PATCH] raid10: avoid spin_lock from fastpath from
- raid10_unplug()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     aligrudi@gmail.com, song@kernel.org, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-References: <20230618142520.14662-1-yukuai1@huaweicloud.com>
-Content-Language: en-US
-In-Reply-To: <20230618142520.14662-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBH_rHrTpBkoNw8MA--.51801S7
+X-Coremail-Antispam: 1UD129KBjvJXoWxWry7XF4kAFykGF1kCFWDXFb_yoW5XFWrpa
+        nagF9xXrW5XrW5WFZFk3yDW3WSqwsrKrZ7tFWxX34fta4ayFyvka18Xa4rJryrCFW8ury7
+        Zw1qka1UGr4xKFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2048vs2IY02
+        0E87I2jVAFwI0_JrWl82xGYIkIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2
+        F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjx
+        v20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2
+        z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0V
+        AKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1l
+        Ox8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErc
+        IFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
+        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRPEf5UUUUU
+        =
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Yu,
+From: Yu Kuai <yukuai3@huawei.com>
 
+Io will only be accounted as done from raid5_align_endio() if the io
+succeed, and io inflight counter will be leaked if such io failed.
 
-Thank you for your patch. Some minor nits from my side, you can also ignore.
+Fix this problem by switching to use md_account_bio() for io accounting.
 
-Am 18.06.23 um 16:25 schrieb Yu Kuai:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> Commit 0c0be98bbe67 ("md/raid10: prevent unnecessary calls to wake_up()
-> in fast path") missed one place, for example, while testing with:
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/raid5.c | 29 ++++++++---------------------
+ 1 file changed, 8 insertions(+), 21 deletions(-)
 
-… one place. For example, with
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index cef0b400b2ee..4cdb35e54251 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5468,26 +5468,17 @@ static struct bio *remove_bio_from_retry(struct r5conf *conf,
+  */
+ static void raid5_align_endio(struct bio *bi)
+ {
+-	struct md_io_clone *md_io_clone = bi->bi_private;
+-	struct bio *raid_bi = md_io_clone->orig_bio;
+-	struct mddev *mddev;
+-	struct r5conf *conf;
+-	struct md_rdev *rdev;
++	struct bio *raid_bi = bi->bi_private;
++	struct md_rdev *rdev = (void *)raid_bi->bi_next;
++	struct mddev *mddev = rdev->mddev;
++	struct r5conf *conf = mddev->private;
+ 	blk_status_t error = bi->bi_status;
+-	unsigned long start_time = md_io_clone->start_time;
+ 
+ 	bio_put(bi);
+-
+-	rdev = (void*)raid_bi->bi_next;
+ 	raid_bi->bi_next = NULL;
+-	mddev = rdev->mddev;
+-	conf = mddev->private;
+-
+ 	rdev_dec_pending(rdev, conf->mddev);
+ 
+ 	if (!error) {
+-		if (blk_queue_io_stat(raid_bi->bi_bdev->bd_disk->queue))
+-			bio_end_io_acct(raid_bi, start_time);
+ 		bio_endio(raid_bi);
+ 		if (atomic_dec_and_test(&conf->active_aligned_reads))
+ 			wake_up(&conf->wait_for_quiescent);
+@@ -5506,7 +5497,6 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
+ 	struct md_rdev *rdev;
+ 	sector_t sector, end_sector, first_bad;
+ 	int bad_sectors, dd_idx;
+-	struct md_io_clone *md_io_clone;
+ 	bool did_inc;
+ 
+ 	if (!in_chunk_boundary(mddev, raid_bio)) {
+@@ -5543,16 +5533,13 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
+ 		return 0;
+ 	}
+ 
+-	align_bio = bio_alloc_clone(rdev->bdev, raid_bio, GFP_NOIO,
+-				    &mddev->io_clone_set);
+-	md_io_clone = container_of(align_bio, struct md_io_clone, bio_clone);
++	md_account_bio(mddev, &raid_bio);
+ 	raid_bio->bi_next = (void *)rdev;
+-	if (blk_queue_io_stat(raid_bio->bi_bdev->bd_disk->queue))
+-		md_io_clone->start_time = bio_start_io_acct(raid_bio);
+-	md_io_clone->orig_bio = raid_bio;
+ 
++	align_bio = bio_alloc_clone(rdev->bdev, raid_bio, GFP_NOIO,
++				    &mddev->bio_set);
+ 	align_bio->bi_end_io = raid5_align_endio;
+-	align_bio->bi_private = md_io_clone;
++	align_bio->bi_private = raid_bio;
+ 	align_bio->bi_iter.bi_sector = sector;
+ 
+ 	/* No reshape active, so we can trust rdev->data_offset */
+-- 
+2.39.2
 
-> 
-> fio -direct=1 -rw=write/randwrite -iodepth=1 ...
-> 
-> Then plug and unplug will be called for each io, then wake_up() from
-
-Maybe:
-
-     fio -direct=1 -rw=write/randwrite -iodepth=1 ...
-
-plug und unplug are called for each io, then …
-
-> raid10_unplug() will cause lock contention as well.
-
-Maybe paste the perf command and output?
-
-> Avoid this contention by using wake_up_barrier() instead of wake_up(),
-> where spin_lock is not held while waitqueue is empty.
-
-It’d be great if you added also the test results to the commit message.
-
-> By the way, in this scenario, each blk_plug_cb() will be allocated and
-> freed for each io, this seems need to be optimized as well.
-> 
-> Reported-and-tested-by: Ali Gholami Rudi <aligrudi@gmail.com>
-> Link: https://lore.kernel.org/all/20231606122233@laper.mirepesht/
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->   drivers/md/raid10.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index d0de8c9fb3cf..fbaaa5e05edc 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1118,7 +1118,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
->   		spin_lock_irq(&conf->device_lock);
->   		bio_list_merge(&conf->pending_bio_list, &plug->pending);
->   		spin_unlock_irq(&conf->device_lock);
-> -		wake_up(&conf->wait_barrier);
-> +		wake_up_barrier(conf);
->   		md_wakeup_thread(mddev->thread);
->   		kfree(plug);
->   		return;
-> @@ -1127,7 +1127,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
->   	/* we aren't scheduling, so we can do the write-out directly. */
->   	bio = bio_list_get(&plug->pending);
->   	raid1_prepare_flush_writes(mddev->bitmap);
-> -	wake_up(&conf->wait_barrier);
-> +	wake_up_barrier(conf);
->   
->   	while (bio) { /* submit pending writes */
->   		struct bio *next = bio->bi_next;
-
-Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
-
-
-Kind regards,
-
-Paul
