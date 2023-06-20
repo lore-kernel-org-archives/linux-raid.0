@@ -2,104 +2,140 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D7DEB64DB
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 09:15:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2141DEB64D8
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 10:00:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230029AbjFTJPr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Jun 2023 05:15:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37336 "EHLO
+        id S232033AbjFTKAi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Jun 2023 06:00:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230148AbjFTJPZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 05:15:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C1611FCF
-        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 02:14:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687252408;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NAVkAXb8ZdoRS9PdEG1Q3OrXjJSIDKD/SmD3bUVe+po=;
-        b=PA5jh2zvf5Dc4UgWRoscDwY92Wqgi34mhgaUXTfyhWilSXhwdCV4VawRAuBJm4mRWd7IEn
-        HFq6HSHoZYWgLLHz92WIeCSj0ZBf+aWoYILI9Lod2xeMd604gA+pBbHnhWjH5854Qk0CU1
-        KamezKyhnXZmklZFVAgRPKqf/UQubpE=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-294-mO9zoiHkNba2kopSVSnBAg-1; Tue, 20 Jun 2023 05:13:26 -0400
-X-MC-Unique: mO9zoiHkNba2kopSVSnBAg-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-25f020b30d6so1762244a91.1
-        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 02:13:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687252405; x=1689844405;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NAVkAXb8ZdoRS9PdEG1Q3OrXjJSIDKD/SmD3bUVe+po=;
-        b=c6tcH6vDUP4/hoB0Um2sE0WuiNk+qkXfVRxbrur1DcqdM4PZlpfrLT/EuDwf3ZV+jj
-         BaUpGGPR9Ue3PotF4IIgknC5P3s3ECg++JtQhwa8BZzMlZIbuHT2Y2Pt8/diFOTYNpvt
-         lzeVyz8hzV5R+IjzLvZU/EMvvdvnFhGPqsDcSClskAGiK08iJ4F8725ESTO/7i7+LOs3
-         3OTxdQPdX+WpUNdXbmAKQMSKDxcoHBtM8CFVsy3AtyMSk6yGn2VRDpkRq6vZJYGkGLGF
-         3YoLEwEBQrbEnp7Gbt/JHeYGRHVBWVhnzuvvSzmNwR9wUl1tUTGwxQUuMdwacmkbwca2
-         ymOw==
-X-Gm-Message-State: AC+VfDwzxHGqidyOlFbXIDRCeuvpdRQZsKO6AbYJUrw/ApoYxPI5tIeN
-        EfeWGSaOLSurqTe18xoBF9fMYOnthr27oEZN9S/JbBeEDFaofXbTypCnrYhEA65eRDqYGBpLvrO
-        oUiqfHdvltUHKRHDCdlU3A4YHbPdk+BcEzxzP8g==
-X-Received: by 2002:a17:90a:7064:b0:25e:2db8:cc5f with SMTP id f91-20020a17090a706400b0025e2db8cc5fmr12181218pjk.40.1687252405669;
-        Tue, 20 Jun 2023 02:13:25 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ7zyp0Fo1BsQtG2HUOps6dAU73J5PL1i+1AcHvwya2p2QUZiJlzTP9D9QVWsqaLxZx1/g1L9jfFZpQbmAUpLBo=
-X-Received: by 2002:a17:90a:7064:b0:25e:2db8:cc5f with SMTP id
- f91-20020a17090a706400b0025e2db8cc5fmr12181209pjk.40.1687252405456; Tue, 20
- Jun 2023 02:13:25 -0700 (PDT)
+        with ESMTP id S232686AbjFTKAE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 06:00:04 -0400
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 043A0DB;
+        Tue, 20 Jun 2023 02:58:31 -0700 (PDT)
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id EFAFD61E5FE03;
+        Tue, 20 Jun 2023 11:57:52 +0200 (CEST)
+Message-ID: <6f05e7b4-461c-68db-20c5-e3bfd52cc7f6@molgen.mpg.de>
+Date:   Tue, 20 Jun 2023 11:57:52 +0200
 MIME-Version: 1.0
-References: <20230619204826.755559-1-yukuai1@huaweicloud.com> <20230619204826.755559-9-yukuai1@huaweicloud.com>
-In-Reply-To: <20230619204826.755559-9-yukuai1@huaweicloud.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 20 Jun 2023 17:13:14 +0800
-Message-ID: <CALTww28zutAQp_fv-H5aFRH2Jtv7+WTiedtjTO1NpmfGnVg1YA@mail.gmail.com>
-Subject: Re: [PATCH -next 8/8] md/md-faulty: enable io accounting
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH -next 3/8] raid5: fix missing io accounting in
+ raid5_align_endio()
+Content-Language: en-US
 To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+Cc:     xni@redhat.com, song@kernel.org, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, yukuai3@huawei.com,
         yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+References: <20230619204826.755559-1-yukuai1@huaweicloud.com>
+ <20230619204826.755559-4-yukuai1@huaweicloud.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20230619204826.755559-4-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jun 19, 2023 at 8:50=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
+Dear Yu,
+
+
+Thank you for your patch.
+
+Am 19.06.23 um 22:48 schrieb Yu Kuai:
 > From: Yu Kuai <yukuai3@huawei.com>
->
-> use md_account_bio() to enable io accounting, also make sure
-> mddev_suspend() will wait for all io to be done.
->
+> 
+> Io will only be accounted as done from raid5_align_endio() if the io
+> succeed, and io inflight counter will be leaked if such io failed.
+
+succeed*s* or succeed*ed*?
+
+> Fix this problem by switching to use md_account_bio() for io accounting.
+
+How can this be tested?
+
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/md-faulty.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/md/md-faulty.c b/drivers/md/md-faulty.c
-> index 50ad818978a4..a039e8e20f55 100644
-> --- a/drivers/md/md-faulty.c
-> +++ b/drivers/md/md-faulty.c
-> @@ -204,6 +204,8 @@ static bool faulty_make_request(struct mddev *mddev, =
-struct bio *bio)
->                         failit =3D 1;
->                 }
->         }
-> +
-> +       md_account_bio(mddev, &bio);
->         if (failit) {
->                 struct bio *b =3D bio_alloc_clone(conf->rdev->bdev, bio, =
-GFP_NOIO,
->                                                 &mddev->bio_set);
-> --
-> 2.39.2
->
+>   drivers/md/raid5.c | 29 ++++++++---------------------
+>   1 file changed, 8 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index cef0b400b2ee..4cdb35e54251 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -5468,26 +5468,17 @@ static struct bio *remove_bio_from_retry(struct r5conf *conf,
+>    */
+>   static void raid5_align_endio(struct bio *bi)
+>   {
+> -	struct md_io_clone *md_io_clone = bi->bi_private;
+> -	struct bio *raid_bi = md_io_clone->orig_bio;
+> -	struct mddev *mddev;
+> -	struct r5conf *conf;
+> -	struct md_rdev *rdev;
+> +	struct bio *raid_bi = bi->bi_private;
+> +	struct md_rdev *rdev = (void *)raid_bi->bi_next;
+> +	struct mddev *mddev = rdev->mddev;
+> +	struct r5conf *conf = mddev->private;
+>   	blk_status_t error = bi->bi_status;
+> -	unsigned long start_time = md_io_clone->start_time;
+>   
+>   	bio_put(bi);
+> -
+> -	rdev = (void*)raid_bi->bi_next;
+>   	raid_bi->bi_next = NULL;
+> -	mddev = rdev->mddev;
+> -	conf = mddev->private;
+> -
 
-Reviewed-by: Xiao Ni <xni@redhat.com>
+This looks like unnecessary refactoring. No idea what the preferred 
+style for the subsystem is though. If it is wanted, maybe make it a 
+separate commit?
 
+>   	rdev_dec_pending(rdev, conf->mddev);
+>   
+>   	if (!error) {
+> -		if (blk_queue_io_stat(raid_bi->bi_bdev->bd_disk->queue))
+> -			bio_end_io_acct(raid_bi, start_time);
+>   		bio_endio(raid_bi);
+>   		if (atomic_dec_and_test(&conf->active_aligned_reads))
+>   			wake_up(&conf->wait_for_quiescent);
+> @@ -5506,7 +5497,6 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
+>   	struct md_rdev *rdev;
+>   	sector_t sector, end_sector, first_bad;
+>   	int bad_sectors, dd_idx;
+> -	struct md_io_clone *md_io_clone;
+>   	bool did_inc;
+>   
+>   	if (!in_chunk_boundary(mddev, raid_bio)) {
+> @@ -5543,16 +5533,13 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
+>   		return 0;
+>   	}
+>   
+> -	align_bio = bio_alloc_clone(rdev->bdev, raid_bio, GFP_NOIO,
+> -				    &mddev->io_clone_set);
+> -	md_io_clone = container_of(align_bio, struct md_io_clone, bio_clone);
+> +	md_account_bio(mddev, &raid_bio);
+>   	raid_bio->bi_next = (void *)rdev;
+> -	if (blk_queue_io_stat(raid_bio->bi_bdev->bd_disk->queue))
+> -		md_io_clone->start_time = bio_start_io_acct(raid_bio);
+> -	md_io_clone->orig_bio = raid_bio;
+>   
+> +	align_bio = bio_alloc_clone(rdev->bdev, raid_bio, GFP_NOIO,
+> +				    &mddev->bio_set);
+>   	align_bio->bi_end_io = raid5_align_endio;
+> -	align_bio->bi_private = md_io_clone;
+> +	align_bio->bi_private = raid_bio;
+>   	align_bio->bi_iter.bi_sector = sector;
+>   
+>   	/* No reshape active, so we can trust rdev->data_offset */
+
+
+Kind regards,
+
+Paul
