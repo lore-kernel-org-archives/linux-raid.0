@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21424EB64D7
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 17:38:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29C47EB64D7
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 17:45:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230023AbjFTRik (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Jun 2023 13:38:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37674 "EHLO
+        id S230249AbjFTRps (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Jun 2023 13:45:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229585AbjFTRih (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 13:38:37 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25FADC2;
-        Tue, 20 Jun 2023 10:38:35 -0700 (PDT)
+        with ESMTP id S230235AbjFTRpq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 13:45:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F15DE1737;
+        Tue, 20 Jun 2023 10:45:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AF98761349;
-        Tue, 20 Jun 2023 17:38:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AC16C433CB;
-        Tue, 20 Jun 2023 17:38:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 726B961349;
+        Tue, 20 Jun 2023 17:45:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6A73C433C0;
+        Tue, 20 Jun 2023 17:45:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687282714;
-        bh=e9yjPMEvXGMuMF3eCOUmrOJNV6HNzxUChRL+KMCSvuc=;
+        s=k20201202; t=1687283144;
+        bh=EeaznO+5npE/ee/8pXl1M4Dwk8jMVEieFQAc0R5JPlM=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=ZczpbHWPA+p8159hvgRmoJ8TNjS/HFebfMvcpcDaUUJbN4JyZVW4A49qXX1XTHgeR
-         owABYo7YbCKfx/lXjP3vcUmWb3aKGVyt1giSMlFktTk7aUE3r06kl96P8RjGSjr4DN
-         0IDQ5h4aNqrswWtLw+Bql1qUKUXn+FK+1jN5w/D91vWPkTXUvgEwgMlcN8JBpx/2PE
-         AjKcFh1mfjtJhvRDN4skBiAuOnHKl46xiXL0UGiAhygF9Vft11LRjEQZn6f3s7VN+9
-         6slgYWQlV9N2gVEamkFm8MPFYeV+9mz/eI8C9tAT9O4N80x55NDxm6rqHlLa8eKPRk
-         p9qkNE/F/UWRQ==
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2b46d270ea1so48515961fa.1;
-        Tue, 20 Jun 2023 10:38:33 -0700 (PDT)
-X-Gm-Message-State: AC+VfDzpdBsmmDtN4M2eeTAGKcmH5c9JAF9zT+NEM3v3TG18dynoAMIV
-        0Z0MUZ3SosoOlsk8h8Ggjr5ZCfmdfKEbGZ9zT+Q=
-X-Google-Smtp-Source: ACHHUZ6bplLmSkT8a18K4gbr6A19h/Mrfwsd42Ai2BkYQoShRPSgCVp3Hx6beN2ZP+irequT2AKXNhHzZn0ONkJSlC4=
-X-Received: by 2002:ac2:5b05:0:b0:4f7:69ca:4e71 with SMTP id
- v5-20020ac25b05000000b004f769ca4e71mr7730001lfn.34.1687282712079; Tue, 20 Jun
- 2023 10:38:32 -0700 (PDT)
+        b=ED7SwzXsGiaz6GOhSz/GZar7UzTfRGVqVhgS+FKmVyULbZ4uRM58c+q2gPDUYHcEn
+         KDafi6ZOB2c+wWu0t7QgtcRjKOkvOUH4CBeLN4YJQB2fa7ZDx3BuYalqzslkSdudWf
+         0ZHJciPMGNFAAP2k9Wweb9Jp/OJtBsdI0a/RZ4FmI/s4wnFGHXglEaAL/SJ8ZRhSG8
+         25uwsmzo2APDF4eRZR0a8ya4/zhaLNlB/VduPEdd2KmqhbB44GCHQcD+WgfauvR+A3
+         jV5arj61rwKbbLI4IZFyzKH5reNiNZhR8WORHEoZIcRGnyKu/8PP5AhUOSMQSlemmh
+         qFX1p8lM2Nq4Q==
+Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2b475b54253so40845371fa.2;
+        Tue, 20 Jun 2023 10:45:44 -0700 (PDT)
+X-Gm-Message-State: AC+VfDxDa9qKieF7hcXdnhUz/YmgtI9IFvBDtuj8jOp3XqHW46bid0Pr
+        IWV8Cz8GRVfW6oJnMSQLmTdmoxURg5KDIr2h5jE=
+X-Google-Smtp-Source: ACHHUZ4jFLWFSKFnc24kJ85aTtH7vu96WwjMnmGd7qzzpUc1cg34XTk/EaePf3/mC/4ePWldCKzvwwkHj/gAYYsnmfI=
+X-Received: by 2002:a2e:7819:0:b0:2b4:7fc5:21ab with SMTP id
+ t25-20020a2e7819000000b002b47fc521abmr3789343ljc.51.1687283142838; Tue, 20
+ Jun 2023 10:45:42 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230618142520.14662-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230618142520.14662-1-yukuai1@huaweicloud.com>
+References: <20230619204826.755559-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20230619204826.755559-1-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 20 Jun 2023 10:38:20 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5ZE0wH7vFPtaEDy1S8ZRTFnJGJiKVHJLYwFXz3wWSHNA@mail.gmail.com>
-Message-ID: <CAPhsuW5ZE0wH7vFPtaEDy1S8ZRTFnJGJiKVHJLYwFXz3wWSHNA@mail.gmail.com>
-Subject: Re: [PATCH] raid10: avoid spin_lock from fastpath from raid10_unplug()
+Date:   Tue, 20 Jun 2023 10:45:30 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW42vR2vLniY+GN-iLwo0dFDCWf69--ahXbee0HrF7kq6w@mail.gmail.com>
+Message-ID: <CAPhsuW42vR2vLniY+GN-iLwo0dFDCWf69--ahXbee0HrF7kq6w@mail.gmail.com>
+Subject: Re: [PATCH -next 0/8] md: fix and refactor io accounting and 'active_io'
 To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     aligrudi@gmail.com, linux-raid@vger.kernel.org,
+Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, yukuai3@huawei.com,
         yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
@@ -58,63 +58,21 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, Jun 17, 2023 at 11:26=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
-wrote:
+On Mon, Jun 19, 2023 at 5:49=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> Commit 0c0be98bbe67 ("md/raid10: prevent unnecessary calls to wake_up()
-> in fast path") missed one place, for example, while testing with:
->
-> fio -direct=3D1 -rw=3Dwrite/randwrite -iodepth=3D1 ...
->
-> Then plug and unplug will be called for each io, then wake_up() from
-> raid10_unplug() will cause lock contention as well.
->
-> Avoid this contention by using wake_up_barrier() instead of wake_up(),
-> where spin_lock is not held while waitqueue is empty.
->
-> By the way, in this scenario, each blk_plug_cb() will be allocated and
-> freed for each io, this seems need to be optimized as well.
->
-> Reported-and-tested-by: Ali Gholami Rudi <aligrudi@gmail.com>
-> Link: https://lore.kernel.org/all/20231606122233@laper.mirepesht/
+> This patchset do following things:
+>  - make io accounting for all raid levels consistent, patch 1, 3-5;
+>  - enable io accounting for all raid levels, patch 6-8;
+>  - hold 'active_io' before io start to dispatch, and release 'active_io'
+>  when io is done, make mddev_suspend() will wait for io to be done, patch=
+ 2
 
-I think ./scripts/checkpatch.pl would recommend using "Closes" instead of
-"Link" after "Reported-by". Please follow this pattern.
+This set looks good to me (pending more tests). Please respin with
+feedback from folks. We need to move fast to catch the upcoming
+merge window.
 
 Thanks,
 Song
-
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/raid10.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index d0de8c9fb3cf..fbaaa5e05edc 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1118,7 +1118,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
-ool from_schedule)
->                 spin_lock_irq(&conf->device_lock);
->                 bio_list_merge(&conf->pending_bio_list, &plug->pending);
->                 spin_unlock_irq(&conf->device_lock);
-> -               wake_up(&conf->wait_barrier);
-> +               wake_up_barrier(conf);
->                 md_wakeup_thread(mddev->thread);
->                 kfree(plug);
->                 return;
-> @@ -1127,7 +1127,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
-ool from_schedule)
->         /* we aren't scheduling, so we can do the write-out directly. */
->         bio =3D bio_list_get(&plug->pending);
->         raid1_prepare_flush_writes(mddev->bitmap);
-> -       wake_up(&conf->wait_barrier);
-> +       wake_up_barrier(conf);
->
->         while (bio) { /* submit pending writes */
->                 struct bio *next =3D bio->bi_next;
-> --
-> 2.39.2
->
