@@ -2,162 +2,109 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECA77EB64D7
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 13:39:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E75EB64D8
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 17:18:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231426AbjFTNjL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Jun 2023 09:39:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39138 "EHLO
+        id S229693AbjFTRSI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Jun 2023 13:18:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231411AbjFTNjJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 09:39:09 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42F7E173B;
-        Tue, 20 Jun 2023 06:38:29 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qlnl20n7Yz4f3mWj;
-        Tue, 20 Jun 2023 21:38:06 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHoZS9q5FklceJMA--.2039S3;
-        Tue, 20 Jun 2023 21:38:06 +0800 (CST)
-Subject: Re: [PATCH -next 4/8] md/raid1: switch to use md_account_bio() for io
- accounting
-To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230619204826.755559-1-yukuai1@huaweicloud.com>
- <20230619204826.755559-5-yukuai1@huaweicloud.com>
- <CALTww28AYb3Gi0qKHqsRuFrS0_P9-Fo1BYhsvTsrTFKnu084SA@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <ae66036a-0673-297a-69b8-81721d6b8efc@huaweicloud.com>
-Date:   Tue, 20 Jun 2023 21:38:05 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S231142AbjFTRSF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 13:18:05 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29889E65;
+        Tue, 20 Jun 2023 10:18:04 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A59F56133F;
+        Tue, 20 Jun 2023 17:18:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 169EAC433CB;
+        Tue, 20 Jun 2023 17:18:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687281483;
+        bh=Xe49NstVNbQxwJ+wnptLy8rhubUuN1/2wGDj4qVwxbo=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=GmKcM4R9nPynfVUeLwl46ZdmAmAXqyWWX4dM8qj4kK4JHzk+4jYCedVBAK/R7Kv1q
+         gWqx3MK7Qzsn8mh8eXNm0l45y8O3h8jtdP15Y9XdfXniTsMXWxYc9tW3ACfDX4rZGH
+         u+x2hFjby2cEiyDqT+sznhWMLk8Ugk6AypH5jR8XC1EN0MLv+16qYpKCm6qxeUcTWr
+         7E2C6ZbAlhoGGAg9mvFxp/nixQTGVi/WaYnZ5R8smVQAeTi9Uot83zhoJbetXKJ/DN
+         /4OOFVcxigmcLDeHR8aoYED4FyuMMdgt6AHJ71YWm0bBVFDFwxBceXDHZZKI/9VE8F
+         exhypxX0hr7TA==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-4f76a0a19d4so6652118e87.2;
+        Tue, 20 Jun 2023 10:18:02 -0700 (PDT)
+X-Gm-Message-State: AC+VfDwRkaha0cUr6qDEcQFtjJhRXswuRhSb+hDBEicSvc+azs1MZZ8l
+        BUxBGVvgVAQwvvNIdoTcTWYxaO7qF4KZ7p0xnrs=
+X-Google-Smtp-Source: ACHHUZ6rvn8pdyE+U40fqAjk0Qv/U2Co0eHgq3xAfyqrNdxiTWVqMv+1EGg8UYsK+78kCPwuzJ9scotirx+WxrFsHd0=
+X-Received: by 2002:a19:ab12:0:b0:4f8:cd67:88e6 with SMTP id
+ u18-20020a19ab12000000b004f8cd6788e6mr1886971lfe.44.1687281481091; Tue, 20
+ Jun 2023 10:18:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CALTww28AYb3Gi0qKHqsRuFrS0_P9-Fo1BYhsvTsrTFKnu084SA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHoZS9q5FklceJMA--.2039S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJFy3Xr1xAF13CryfZw4fKrg_yoW5Cry3pa
-        1DGFWrCFWrJayj93sFqa47uF1Fyw4FgFy8CrWI9w17ZFnIqF90ga18WFWFgr1kAF93GFy7
-        t3WvkFsruF47tFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
-        UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <20230618142520.14662-1-yukuai1@huaweicloud.com>
+ <ac4c9d48-b8d2-b847-2721-11179fd922de@molgen.mpg.de> <4c729ee3-ad63-1928-0113-19b576b09b24@huaweicloud.com>
+In-Reply-To: <4c729ee3-ad63-1928-0113-19b576b09b24@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 20 Jun 2023 10:17:48 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7=W4DRBOjeeJ5MSQR5ZWXZ6745FTd-Dj_qsP-KwxTUmQ@mail.gmail.com>
+Message-ID: <CAPhsuW7=W4DRBOjeeJ5MSQR5ZWXZ6745FTd-Dj_qsP-KwxTUmQ@mail.gmail.com>
+Subject: Re: [PATCH] raid10: avoid spin_lock from fastpath from raid10_unplug()
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, aligrudi@gmail.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Mon, Jun 19, 2023 at 6:00=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/06/19 18:26, Paul Menzel =E5=86=99=E9=81=93:
+> > Dear Yu,
+> >
+> >
+> > Thank you for your patch. Some minor nits from my side, you can also
+> > ignore.
+> >
+> > Am 18.06.23 um 16:25 schrieb Yu Kuai:
+> >> From: Yu Kuai <yukuai3@huawei.com>
+> >>
+> >> Commit 0c0be98bbe67 ("md/raid10: prevent unnecessary calls to wake_up(=
+)
+> >> in fast path") missed one place, for example, while testing with:
+> >
+> > =E2=80=A6 one place. For example, with
+> >
+> >>
+> >> fio -direct=3D1 -rw=3Dwrite/randwrite -iodepth=3D1 ...
+> >>
+> >> Then plug and unplug will be called for each io, then wake_up() from
+> >
+> > Maybe:
+> >
+> >      fio -direct=3D1 -rw=3Dwrite/randwrite -iodepth=3D1 ...
+> >
+> > plug und unplug are called for each io, then =E2=80=A6
+> >
+> >> raid10_unplug() will cause lock contention as well.
+> >
+> > Maybe paste the perf command and output?
+>
+> Related test and test result and perf result can be found in the below
+> Link.
 
-在 2023/06/20 17:07, Xiao Ni 写道:
-> On Mon, Jun 19, 2023 at 8:49 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Two problems can be fixed this way:
->>
->> 1) 'active_io' will represent inflight io instead of io that is
->> dispatching.
->>
->> 2) If io accounting is enabled or disabled while io is still inflight,
->> bio_start_io_acct() and bio_end_io_acct() is not balanced and io
->> inflight counter will be leaked.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   drivers/md/raid1.c | 14 ++++++--------
->>   drivers/md/raid1.h |  1 -
->>   2 files changed, 6 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index dd25832eb045..06fa1580501f 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -304,8 +304,6 @@ static void call_bio_endio(struct r1bio *r1_bio)
->>          if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
->>                  bio->bi_status = BLK_STS_IOERR;
->>
->> -       if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
->> -               bio_end_io_acct(bio, r1_bio->start_time);
->>          bio_endio(bio);
->>   }
->>
->> @@ -1303,10 +1301,10 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
->>          }
->>
->>          r1_bio->read_disk = rdisk;
->> -
->> -       if (!r1bio_existed && blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
->> -               r1_bio->start_time = bio_start_io_acct(bio);
->> -
->> +       if (!r1bio_existed) {
->> +               md_account_bio(mddev, &bio);
->> +               r1_bio->master_bio = bio;
->> +       }
->>          read_bio = bio_alloc_clone(mirror->rdev->bdev, bio, gfp,
->>                                     &mddev->bio_set);
->>
->> @@ -1500,8 +1498,8 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->>                  r1_bio->sectors = max_sectors;
->>          }
->>
->> -       if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
->> -               r1_bio->start_time = bio_start_io_acct(bio);
->> +       md_account_bio(mddev, &bio);
->> +       r1_bio->master_bio = bio;
->>          atomic_set(&r1_bio->remaining, 1);
->>          atomic_set(&r1_bio->behind_remaining, 0);
->>
->> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
->> index 468f189da7a0..14d4211a123a 100644
->> --- a/drivers/md/raid1.h
->> +++ b/drivers/md/raid1.h
->> @@ -157,7 +157,6 @@ struct r1bio {
->>          sector_t                sector;
->>          int                     sectors;
->>          unsigned long           state;
->> -       unsigned long           start_time;
->>          struct mddev            *mddev;
->>          /*
->>           * original bio going to /dev/mdx
->> --
->> 2.39.2
->>
-> 
-> Hi Kuai
-> 
-> After this patch, raid1 will have one more memory allocation in the
-> I/O path. Not sure if it can affect performance. Beside this, the
-> patch is good for me.
+We don't need a lot of details of the test results in the commit log. But a
+quick summary of the performance result can be really helpful here.
+Something like: on array X, fio job Y, before the patch we got AAA, with
+the patch, we got BBB.
 
-Yes, I'm aware of this additional memory allocation, however, raid1(and
-similar to other levels) already need to allocate r1bio and some bios(1
-for read, and copies for write), so this is not a none -> new case,
-it's just a allocate 2 -> allocate 3 case.
-
-I think performance under memory pressure are both bad with or without
-this patch, and one one bio clone latency without memory reclaim should
-be fine.
+Other than this, the patch looks good to me.
 
 Thanks,
-Kuai
-> 
-> Reviewed-by: Xiao Ni <xni@redhat.com>
-> 
-> .
-> 
-
+Song
