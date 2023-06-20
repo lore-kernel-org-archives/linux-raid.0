@@ -2,63 +2,63 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 924D7EB64D7
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 09:15:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D7DEB64DB
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 09:15:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232280AbjFTJPl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Jun 2023 05:15:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37366 "EHLO
+        id S230029AbjFTJPr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Jun 2023 05:15:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232503AbjFTJPU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 05:15:20 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B45A1FD2
-        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 02:14:03 -0700 (PDT)
+        with ESMTP id S230148AbjFTJPZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 05:15:25 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C1611FCF
+        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 02:14:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687252348;
+        s=mimecast20190719; t=1687252408;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=j+DstClbbuIYoLgiuHR0ngP8+VmdOxHjqeCjdjYlEa0=;
-        b=YX9MDgCOIsE7cMjKzIwx4EUV/E+VmSf0IdlAiR1OcDNCLbx9f0NLEJEkc+3azOk/NsB6Td
-        W+1/i8NXgkaK8SnyA/kp0PBbnCwTfHGbM7SQZQymWb2lYinsa5s5Pi2dd4Np3spQyAfVC0
-        3uxAhoPy078ReGbzkSL3YEm1/n9aZ74=
+        bh=NAVkAXb8ZdoRS9PdEG1Q3OrXjJSIDKD/SmD3bUVe+po=;
+        b=PA5jh2zvf5Dc4UgWRoscDwY92Wqgi34mhgaUXTfyhWilSXhwdCV4VawRAuBJm4mRWd7IEn
+        HFq6HSHoZYWgLLHz92WIeCSj0ZBf+aWoYILI9Lod2xeMd604gA+pBbHnhWjH5854Qk0CU1
+        KamezKyhnXZmklZFVAgRPKqf/UQubpE=
 Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
  [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-173-WS_v7WT0MX-p929cxNCcvw-1; Tue, 20 Jun 2023 05:12:26 -0400
-X-MC-Unique: WS_v7WT0MX-p929cxNCcvw-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-25e837b564eso3511074a91.1
-        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 02:12:26 -0700 (PDT)
+ us-mta-294-mO9zoiHkNba2kopSVSnBAg-1; Tue, 20 Jun 2023 05:13:26 -0400
+X-MC-Unique: mO9zoiHkNba2kopSVSnBAg-1
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-25f020b30d6so1762244a91.1
+        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 02:13:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687252345; x=1689844345;
+        d=1e100.net; s=20221208; t=1687252405; x=1689844405;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=j+DstClbbuIYoLgiuHR0ngP8+VmdOxHjqeCjdjYlEa0=;
-        b=O98L/5AicLHO+N+XZnCBtNjOSNa4XYh0UU2/kCs4OKAlYqq6OaEY9jLus5GTogBzwX
-         cUlx8QeSfvK31f2MVxtSEdE03SnjmH2hWlvNEKXi8amPvpVtuL8ChWetipwUrMNkjmc2
-         ShnepYtqYhYk3ahcgJYHqqWetTcWX75Rr4bGpXorv5iBaJV6epR4u2QFYICBkezF4YV2
-         Y0yzVsV05soK0ndx7yIMQI2qrGdJ3AzC9wU4peHy34wpsk11wS0N9n5zzByIqCSCFQAZ
-         V6kQlNe8YJHvPqEAvGQpaVzQywYddHZYf6WoxPWJQKAtM1YYWfxY7h67W/RUfpeNK6Qq
-         jAKQ==
-X-Gm-Message-State: AC+VfDyTYRge34Qdr02Q67n5xT4HvFU/sdBLqFmPwm4a6oHVWoTNgsJB
-        dSk1VMD1KpeasHwe+EWMIT4OkjWDsm9njwEGZ4MPC1RH1RS9a+qaq8ez+jqHvuWsaHkJnijd1mn
-        FfbJX4mG2F6SLGGr33D2FOsJ5Cj8MJh6u45+sIagKkG61JnlC
-X-Received: by 2002:a17:90a:38a1:b0:25e:886b:c6b with SMTP id x30-20020a17090a38a100b0025e886b0c6bmr10183568pjb.48.1687252345442;
-        Tue, 20 Jun 2023 02:12:25 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ5yf4FPi/w3rtXTM9KFhnWJaEmjdafqvs3GuqucUyaXBBPbxjvZ8esvPhO3pQcCESORqo2VmW2rh9OP3FsbCMQ=
-X-Received: by 2002:a17:90a:38a1:b0:25e:886b:c6b with SMTP id
- x30-20020a17090a38a100b0025e886b0c6bmr10183561pjb.48.1687252345241; Tue, 20
- Jun 2023 02:12:25 -0700 (PDT)
+        bh=NAVkAXb8ZdoRS9PdEG1Q3OrXjJSIDKD/SmD3bUVe+po=;
+        b=c6tcH6vDUP4/hoB0Um2sE0WuiNk+qkXfVRxbrur1DcqdM4PZlpfrLT/EuDwf3ZV+jj
+         BaUpGGPR9Ue3PotF4IIgknC5P3s3ECg++JtQhwa8BZzMlZIbuHT2Y2Pt8/diFOTYNpvt
+         lzeVyz8hzV5R+IjzLvZU/EMvvdvnFhGPqsDcSClskAGiK08iJ4F8725ESTO/7i7+LOs3
+         3OTxdQPdX+WpUNdXbmAKQMSKDxcoHBtM8CFVsy3AtyMSk6yGn2VRDpkRq6vZJYGkGLGF
+         3YoLEwEBQrbEnp7Gbt/JHeYGRHVBWVhnzuvvSzmNwR9wUl1tUTGwxQUuMdwacmkbwca2
+         ymOw==
+X-Gm-Message-State: AC+VfDwzxHGqidyOlFbXIDRCeuvpdRQZsKO6AbYJUrw/ApoYxPI5tIeN
+        EfeWGSaOLSurqTe18xoBF9fMYOnthr27oEZN9S/JbBeEDFaofXbTypCnrYhEA65eRDqYGBpLvrO
+        oUiqfHdvltUHKRHDCdlU3A4YHbPdk+BcEzxzP8g==
+X-Received: by 2002:a17:90a:7064:b0:25e:2db8:cc5f with SMTP id f91-20020a17090a706400b0025e2db8cc5fmr12181218pjk.40.1687252405669;
+        Tue, 20 Jun 2023 02:13:25 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7zyp0Fo1BsQtG2HUOps6dAU73J5PL1i+1AcHvwya2p2QUZiJlzTP9D9QVWsqaLxZx1/g1L9jfFZpQbmAUpLBo=
+X-Received: by 2002:a17:90a:7064:b0:25e:2db8:cc5f with SMTP id
+ f91-20020a17090a706400b0025e2db8cc5fmr12181209pjk.40.1687252405456; Tue, 20
+ Jun 2023 02:13:25 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230619204826.755559-1-yukuai1@huaweicloud.com> <20230619204826.755559-8-yukuai1@huaweicloud.com>
-In-Reply-To: <20230619204826.755559-8-yukuai1@huaweicloud.com>
+References: <20230619204826.755559-1-yukuai1@huaweicloud.com> <20230619204826.755559-9-yukuai1@huaweicloud.com>
+In-Reply-To: <20230619204826.755559-9-yukuai1@huaweicloud.com>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 20 Jun 2023 17:12:14 +0800
-Message-ID: <CALTww2-_CTY3b9L1OYz0yJUBtNJPmANmw1-RWpDhEQgKCbhewQ@mail.gmail.com>
-Subject: Re: [PATCH -next 7/8] md/md-linear: enable io accounting
+Date:   Tue, 20 Jun 2023 17:13:14 +0800
+Message-ID: <CALTww28zutAQp_fv-H5aFRH2Jtv7+WTiedtjTO1NpmfGnVg1YA@mail.gmail.com>
+Subject: Re: [PATCH -next 8/8] md/md-faulty: enable io accounting
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     song@kernel.org, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, yukuai3@huawei.com,
@@ -79,22 +79,24 @@ rote:
 >
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/md-linear.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/md/md-faulty.c | 2 ++
+>  1 file changed, 2 insertions(+)
 >
-> diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-> index 4eb72b9dd933..71ac99646827 100644
-> --- a/drivers/md/md-linear.c
-> +++ b/drivers/md/md-linear.c
-> @@ -238,6 +238,7 @@ static bool linear_make_request(struct mddev *mddev, =
+> diff --git a/drivers/md/md-faulty.c b/drivers/md/md-faulty.c
+> index 50ad818978a4..a039e8e20f55 100644
+> --- a/drivers/md/md-faulty.c
+> +++ b/drivers/md/md-faulty.c
+> @@ -204,6 +204,8 @@ static bool faulty_make_request(struct mddev *mddev, =
 struct bio *bio)
->                 bio =3D split;
+>                         failit =3D 1;
+>                 }
 >         }
->
+> +
 > +       md_account_bio(mddev, &bio);
->         bio_set_dev(bio, tmp_dev->rdev->bdev);
->         bio->bi_iter.bi_sector =3D bio->bi_iter.bi_sector -
->                 start_sector + data_offset;
+>         if (failit) {
+>                 struct bio *b =3D bio_alloc_clone(conf->rdev->bdev, bio, =
+GFP_NOIO,
+>                                                 &mddev->bio_set);
 > --
 > 2.39.2
 >
