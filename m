@@ -2,64 +2,63 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F22DEB64D7
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 08:37:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12DEEEB64D7
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 08:49:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230102AbjFTIhT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Jun 2023 04:37:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46900 "EHLO
+        id S232038AbjFTIt1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Jun 2023 04:49:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231978AbjFTIhR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 04:37:17 -0400
+        with ESMTP id S230146AbjFTIt0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 04:49:26 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EA43F1
-        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 01:36:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 905B210C1
+        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 01:48:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687250190;
+        s=mimecast20190719; t=1687250913;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=hXYQs/uNz0dnlzmDz8XfAWv7rf/hCek5/Y0d/udpozM=;
-        b=UiJMd8IHgXd1XA3+jQmgwVq2RMd16Ol2LxViVONN7G7mxuWgGCJFD3SQznvJSobQQfuaCU
-        C80Gf52dMg+1fN4vknriwOyEAetMyqUqWRw6nxgReeQ5e0Cxupo9OGWd6s+ipp6v5boRqn
-        bD0/bRCUJdfffSdzvn1tnJQGOQxRm6U=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=NcmocH4bFmjVPRGX3QJnjOB3FQaFAW7Mn3C6eTR0lrA=;
+        b=EEtLBsyoJI3bLj9mvfk2ewm69oDLH1QmHFVy4g8cjKHTjJtCBIeLfJeNTNsdRGFhV9jFrV
+        eN6/gAWmyAOGEDReNmMbDZ0QVahQw3+jybtdP9dWTNfCu4oa8lsrZQ2nCr7o2PzgI6LWpT
+        92a2fg1HuOR4e3VOoDXyPHiNgZbtjwc=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-2-UHH44SibOMaJOXakJ4tfew-1; Tue, 20 Jun 2023 04:35:26 -0400
-X-MC-Unique: UHH44SibOMaJOXakJ4tfew-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-25e8ef41a00so3557211a91.2
-        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 01:35:26 -0700 (PDT)
+ us-mta-567-_TUHzODDN4eIcAs0OLaqGg-1; Tue, 20 Jun 2023 04:48:31 -0400
+X-MC-Unique: _TUHzODDN4eIcAs0OLaqGg-1
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-25eb055e541so1847186a91.1
+        for <linux-raid@vger.kernel.org>; Tue, 20 Jun 2023 01:48:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687250126; x=1689842126;
+        d=1e100.net; s=20221208; t=1687250911; x=1689842911;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=hXYQs/uNz0dnlzmDz8XfAWv7rf/hCek5/Y0d/udpozM=;
-        b=PGN8k7E01AvKzjURJCKm9RKVlt1aVSlilqx3cOjp0lESoK1c6WkRDb99Vwg/6tM6zP
-         pYzMptLMGGlqX/FwgQVtJ6pjJBWYBIixpgaGV1fiWac7rXcUE9YF247Xp+ui280/M45t
-         G+PJMENG8SLQroNJNLbrUmaRv+XbZjbM0xUm381blFRMabjwSeTsnyXrar7Gj7BcJ/TO
-         94RW5WBrafzQMXs25AItcOXvhcPTstF1hDDWEz6zDJN7kn2amBEnkeypMxnc9vYWJUhV
-         BKC8XQVyQKRZdi+yecZBcH2WKEPR+2iLqKZ2kDmSNM5nE6jz/64R8FBoKyGcujzBkpy6
-         GFHQ==
-X-Gm-Message-State: AC+VfDwAYqZ88FxTqlWrfOwezVkRa4WQA5g/UUdSGWqsWQzt+N6etyvA
-        mEX9dLjF+5wA4JXgAA6OsPWK3ExzXOPlEjl43cOo/jgO3+DIJMo141TXa1NLp76Y5pXLgwRE8i6
-        g01nlZL9hxet/DRMMzSOKz0m7MTsQJ9+emKGSiA==
-X-Received: by 2002:a17:90a:8a0b:b0:256:2cb7:406e with SMTP id w11-20020a17090a8a0b00b002562cb7406emr12428282pjn.45.1687250125750;
-        Tue, 20 Jun 2023 01:35:25 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ4Cwvw+53HBO5dyT3yBGubAcxESpLj8w1H9mjcbCyyRmlIi6PWSAZAGWDuabTXUpPiSmwrEXWfrGClGaHCf8o4=
-X-Received: by 2002:a17:90a:8a0b:b0:256:2cb7:406e with SMTP id
- w11-20020a17090a8a0b00b002562cb7406emr12428268pjn.45.1687250125427; Tue, 20
- Jun 2023 01:35:25 -0700 (PDT)
+        bh=NcmocH4bFmjVPRGX3QJnjOB3FQaFAW7Mn3C6eTR0lrA=;
+        b=DyyvGAgqU4Ci5uOuP4Ya1T3NYT5ONGFGIADk0RS/oGtCsvMP1w/Mf7Uzj/mVOXRVRL
+         pyd3Gb/rYBz2+ltuMxV9e/aExI39ofK2UPI99UerBzubUqNNnBCv/EXRjQA2Mgi/pbHS
+         NDnzi9r1NUlxzLB0IvptpcEF1ia5sSypmVdthi51cgsyZOx+TAQajPr/OMsv39ATwmO4
+         +QAH5C1hBkV93dxCIIp2ErNcr4AqD8szETztlgmAO5fuIVG+oZlLNzYIc7LUCZs971ro
+         nHpcwHYwXisg8ItUwls09PyFTUDrwo8gApNXF9K9b4ai4M+BPiS4+Dt545DSMlqqc205
+         rJSQ==
+X-Gm-Message-State: AC+VfDwXJbrzD/xDVpvDI8PCGbSXU9njZi7Y96RWISxmHd7ea1/oj1jZ
+        dbrN+Cqy1DD3PeYHh8188IAExFmDJnG2vn6J0Sj1oQ533E+CdYqHGYu+dYICP/DWowwYCr4bNc3
+        zvPc3tJ4NqEeQJcCisxVVQXkh2UGghh++0bATSA==
+X-Received: by 2002:a17:90a:3ee2:b0:25b:f273:84ca with SMTP id k89-20020a17090a3ee200b0025bf27384camr8893780pjc.12.1687250910790;
+        Tue, 20 Jun 2023 01:48:30 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ5k4K214ZP7sgMFpfMciAnNBmMmgpf6wBnzJI1O6MPu+OMl7hp/0mKKTjqFVGSnr8xWgDVzM/zywSnHc0GzwYQ=
+X-Received: by 2002:a17:90a:3ee2:b0:25b:f273:84ca with SMTP id
+ k89-20020a17090a3ee200b0025bf27384camr8893769pjc.12.1687250910445; Tue, 20
+ Jun 2023 01:48:30 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230619204826.755559-1-yukuai1@huaweicloud.com> <20230619204826.755559-2-yukuai1@huaweicloud.com>
-In-Reply-To: <20230619204826.755559-2-yukuai1@huaweicloud.com>
+References: <20230619204826.755559-1-yukuai1@huaweicloud.com> <20230619204826.755559-3-yukuai1@huaweicloud.com>
+In-Reply-To: <20230619204826.755559-3-yukuai1@huaweicloud.com>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 20 Jun 2023 16:35:14 +0800
-Message-ID: <CALTww281XOxzFXFQmZ-HWcekMzC30bryJ3YtYGRoERTrk2SHCQ@mail.gmail.com>
-Subject: Re: [PATCH -next 1/8] md: move initialization and destruction of
- 'io_acct_set' to md.c
+Date:   Tue, 20 Jun 2023 16:48:19 +0800
+Message-ID: <CALTww2-p6j94zxYfaDe5eHaDJSc+w86LBq1K9jDT1HhKmOOyiQ@mail.gmail.com>
+Subject: Re: [PATCH -next 2/8] md: also clone new io if io accounting is disabled
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     song@kernel.org, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, yukuai3@huawei.com,
@@ -70,298 +69,249 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jun 19, 2023 at 8:50=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+On Mon, Jun 19, 2023 at 8:49=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
 rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> 'io_acct_set' is only used for raid0 and raid456, prepare to use it for
-> raid1 and raid10, so that io accounting from different levels can be
-> consistent.
->
-> By the way, follow up patches will also use this io clone mechanism to
-> make sure 'active_io' represents in flight io, not io that is dispatching=
-,
-> so that mddev_suspend will wait for io to be done as desgined.
+> Currently, 'active_io' is grabed before make_reqeust() is called, and
+> it's dropped immediately make_reqeust() returns. Hence 'active_io'
+> actually means io is dispatching, not io is inflight.
 
 Hi Kuai
 
-typo error: s/desgined/designed/g
+There are three typo errors in the commit message: s/grabed/grabbed/g
 
-Before this patch the personality uses ->quiesce method to wait until
-all inflight ios come back. But I like this solution. It makes the
-codes simpler. Not sure if it can cause problems because it changes
-the meaning of ->active_io. I'm doing regression tests to check.
-
+>
+> For raid0 and raid456 that io accounting is enabled, 'active_io' will
+> also be grabed when bio is cloned for io accounting, and this 'active_io'
+> is dropped until io is done.
+>
+> Always clone new bio so that 'active_io' will mean that io is inflight,
+> raid1 and raid10 will switch to use this method in later patches. Once
+> these are implemented, it can be cleaned up that 'active_io' is grabed
+> twice for one io.
+>
+> Now that bio will be cloned even if io accounting is disabled, also
+> rename related structure from '*_acct_*' to '*_clone_*'.
 >
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/md.c    | 27 ++++++++++-----------------
->  drivers/md/md.h    |  2 --
->  drivers/md/raid0.c | 16 ++--------------
->  drivers/md/raid5.c | 41 +++++++++++------------------------------
->  4 files changed, 23 insertions(+), 63 deletions(-)
+>  drivers/md/md.c    | 61 ++++++++++++++++++++++++----------------------
+>  drivers/md/md.h    |  4 +--
+>  drivers/md/raid5.c | 18 +++++++-------
+>  3 files changed, 43 insertions(+), 40 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 8d62f85d2ab0..42347289195a 100644
+> index 42347289195a..5ad8e7f3aebd 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -5886,6 +5886,13 @@ int md_run(struct mddev *mddev)
+> @@ -2314,7 +2314,7 @@ int md_integrity_register(struct mddev *mddev)
+>         pr_debug("md: data integrity enabled on %s\n", mdname(mddev));
+>         if (bioset_integrity_create(&mddev->bio_set, BIO_POOL_SIZE) ||
+>             (mddev->level !=3D 1 && mddev->level !=3D 10 &&
+> -            bioset_integrity_create(&mddev->io_acct_set, BIO_POOL_SIZE))=
+) {
+> +            bioset_integrity_create(&mddev->io_clone_set, BIO_POOL_SIZE)=
+)) {
+>                 /*
+>                  * No need to handle the failure of bioset_integrity_crea=
+te,
+>                  * because the function is called by md_run() -> pers->ru=
+n(),
+> @@ -5886,9 +5886,9 @@ int md_run(struct mddev *mddev)
 >                         goto exit_bio_set;
 >         }
 >
-> +       if (!bioset_initialized(&mddev->io_acct_set)) {
-> +               err =3D bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
-> +                                 offsetof(struct md_io_acct, bio_clone),=
+> -       if (!bioset_initialized(&mddev->io_acct_set)) {
+> -               err =3D bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
+> -                                 offsetof(struct md_io_acct, bio_clone),=
  0);
-> +               if (err)
-> +                       goto exit_sync_set;
-> +       }
-> +
->         spin_lock(&pers_lock);
->         pers =3D find_pers(mddev->level, mddev->clevel);
->         if (!pers || !try_module_get(pers->owner)) {
-> @@ -6063,6 +6070,8 @@ int md_run(struct mddev *mddev)
+> +       if (!bioset_initialized(&mddev->io_clone_set)) {
+> +               err =3D bioset_init(&mddev->io_clone_set, BIO_POOL_SIZE,
+> +                                 offsetof(struct md_io_clone, bio_clone)=
+, 0);
+>                 if (err)
+>                         goto exit_sync_set;
+>         }
+> @@ -6070,7 +6070,7 @@ int md_run(struct mddev *mddev)
 >         module_put(pers->owner);
 >         md_bitmap_destroy(mddev);
 >  abort:
-> +       bioset_exit(&mddev->io_acct_set);
-> +exit_sync_set:
+> -       bioset_exit(&mddev->io_acct_set);
+> +       bioset_exit(&mddev->io_clone_set);
+>  exit_sync_set:
 >         bioset_exit(&mddev->sync_set);
 >  exit_bio_set:
->         bioset_exit(&mddev->bio_set);
-> @@ -6286,6 +6295,7 @@ static void __md_stop(struct mddev *mddev)
+> @@ -6295,7 +6295,7 @@ static void __md_stop(struct mddev *mddev)
 >         percpu_ref_exit(&mddev->active_io);
 >         bioset_exit(&mddev->bio_set);
 >         bioset_exit(&mddev->sync_set);
-> +       bioset_exit(&mddev->io_acct_set);
+> -       bioset_exit(&mddev->io_acct_set);
+> +       bioset_exit(&mddev->io_clone_set);
 >  }
 >
 >  void md_stop(struct mddev *mddev)
-> @@ -8651,23 +8661,6 @@ void md_submit_discard_bio(struct mddev *mddev, st=
-ruct md_rdev *rdev,
+> @@ -8661,45 +8661,48 @@ void md_submit_discard_bio(struct mddev *mddev, s=
+truct md_rdev *rdev,
 >  }
 >  EXPORT_SYMBOL_GPL(md_submit_discard_bio);
 >
-> -int acct_bioset_init(struct mddev *mddev)
-> -{
-> -       int err =3D 0;
-> -
-> -       if (!bioset_initialized(&mddev->io_acct_set))
-> -               err =3D bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
-> -                       offsetof(struct md_io_acct, bio_clone), 0);
-> -       return err;
-> -}
-> -EXPORT_SYMBOL_GPL(acct_bioset_init);
-> -
-> -void acct_bioset_exit(struct mddev *mddev)
-> -{
-> -       bioset_exit(&mddev->io_acct_set);
-> -}
-> -EXPORT_SYMBOL_GPL(acct_bioset_exit);
-> -
->  static void md_end_io_acct(struct bio *bio)
+> -static void md_end_io_acct(struct bio *bio)
+> +static void md_end_clone_io(struct bio *bio)
 >  {
->         struct md_io_acct *md_io_acct =3D bio->bi_private;
+> -       struct md_io_acct *md_io_acct =3D bio->bi_private;
+> -       struct bio *orig_bio =3D md_io_acct->orig_bio;
+> -       struct mddev *mddev =3D md_io_acct->mddev;
+> +       struct md_io_clone *md_io_clone =3D bio->bi_private;
+> +       struct bio *orig_bio =3D md_io_clone->orig_bio;
+> +       struct mddev *mddev =3D md_io_clone->mddev;
+>
+>         orig_bio->bi_status =3D bio->bi_status;
+>
+> -       bio_end_io_acct(orig_bio, md_io_acct->start_time);
+> +       if (md_io_clone->start_time)
+> +               bio_end_io_acct(orig_bio, md_io_clone->start_time);
+> +
+>         bio_put(bio);
+>         bio_endio(orig_bio);
+> -
+>         percpu_ref_put(&mddev->active_io);
+>  }
+>
+> +static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+> +{
+> +       struct block_device *bdev =3D (*bio)->bi_bdev;
+> +       struct md_io_clone *md_io_clone;
+> +       struct bio *clone =3D
+> +               bio_alloc_clone(bdev, *bio, GFP_NOIO, &mddev->io_clone_se=
+t);
+> +
+> +       md_io_clone =3D container_of(clone, struct md_io_clone, bio_clone=
+);
+> +       md_io_clone->orig_bio =3D *bio;
+> +       md_io_clone->mddev =3D mddev;
+> +       if (blk_queue_io_stat(bdev->bd_disk->queue))
+> +               md_io_clone->start_time =3D bio_start_io_acct(*bio);
+> +
+> +       clone->bi_end_io =3D md_end_clone_io;
+> +       clone->bi_private =3D md_io_clone;
+> +       *bio =3D clone;
+> +}
+> +
+>  /*
+>   * Used by personalities that don't already clone the bio and thus can't
+>   * easily add the timestamp to their extended bio structure.
+>   */
+>  void md_account_bio(struct mddev *mddev, struct bio **bio)
+>  {
+> -       struct block_device *bdev =3D (*bio)->bi_bdev;
+> -       struct md_io_acct *md_io_acct;
+> -       struct bio *clone;
+> -
+> -       if (!blk_queue_io_stat(bdev->bd_disk->queue))
+> -               return;
+> -
+>         percpu_ref_get(&mddev->active_io);
+> -
+> -       clone =3D bio_alloc_clone(bdev, *bio, GFP_NOIO, &mddev->io_acct_s=
+et);
+> -       md_io_acct =3D container_of(clone, struct md_io_acct, bio_clone);
+> -       md_io_acct->orig_bio =3D *bio;
+> -       md_io_acct->start_time =3D bio_start_io_acct(*bio);
+> -       md_io_acct->mddev =3D mddev;
+> -
+> -       clone->bi_end_io =3D md_end_io_acct;
+> -       clone->bi_private =3D md_io_acct;
+> -       *bio =3D clone;
+> +       md_clone_bio(mddev, bio);
+>  }
+>  EXPORT_SYMBOL_GPL(md_account_bio);
+>
 > diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 7cab9c7c45b8..11299d94b239 100644
+> index 11299d94b239..892a598a5029 100644
 > --- a/drivers/md/md.h
 > +++ b/drivers/md/md.h
-> @@ -776,8 +776,6 @@ extern void md_error(struct mddev *mddev, struct md_r=
-dev *rdev);
->  extern void md_finish_reshape(struct mddev *mddev);
->  void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
->                         struct bio *bio, sector_t start, sector_t size);
-> -int acct_bioset_init(struct mddev *mddev);
-> -void acct_bioset_exit(struct mddev *mddev);
->  void md_account_bio(struct mddev *mddev, struct bio **bio);
+> @@ -510,7 +510,7 @@ struct mddev {
+>         struct bio_set                  sync_set; /* for sync operations =
+like
+>                                                    * metadata and bitmap =
+writes
+>                                                    */
+> -       struct bio_set                  io_acct_set; /* for raid0 and rai=
+d5 io accounting */
+> +       struct bio_set                  io_clone_set;
 >
->  extern bool __must_check md_flush_request(struct mddev *mddev, struct bi=
-o *bio);
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index f8ee9a95e25d..38d9209cada1 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -365,7 +365,6 @@ static void raid0_free(struct mddev *mddev, void *pri=
-v)
->         struct r0conf *conf =3D priv;
+>         /* Generic flush handling.
+>          * The last to finish preflush schedules a worker to submit
+> @@ -738,7 +738,7 @@ struct md_thread {
+>         void                    *private;
+>  };
 >
->         free_conf(mddev, conf);
-> -       acct_bioset_exit(mddev);
->  }
->
->  static int raid0_run(struct mddev *mddev)
-> @@ -380,16 +379,11 @@ static int raid0_run(struct mddev *mddev)
->         if (md_check_no_bitmap(mddev))
->                 return -EINVAL;
->
-> -       if (acct_bioset_init(mddev)) {
-> -               pr_err("md/raid0:%s: alloc acct bioset failed.\n", mdname=
-(mddev));
-> -               return -ENOMEM;
-> -       }
-> -
->         /* if private is not null, we are here after takeover */
->         if (mddev->private =3D=3D NULL) {
->                 ret =3D create_strip_zones(mddev, &conf);
->                 if (ret < 0)
-> -                       goto exit_acct_set;
-> +                       return ret;
->                 mddev->private =3D conf;
->         }
->         conf =3D mddev->private;
-> @@ -420,15 +414,9 @@ static int raid0_run(struct mddev *mddev)
->
->         ret =3D md_integrity_register(mddev);
->         if (ret)
-> -               goto free;
-> +               free_conf(mddev, conf);
->
->         return ret;
-> -
-> -free:
-> -       free_conf(mddev, conf);
-> -exit_acct_set:
-> -       acct_bioset_exit(mddev);
-> -       return ret;
->  }
->
->  static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
+> -struct md_io_acct {
+> +struct md_io_clone {
+>         struct mddev    *mddev;
+>         struct bio      *orig_bio;
+>         unsigned long   start_time;
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index f8bc74e16811..29cf5455d7a5 100644
+> index 29cf5455d7a5..cef0b400b2ee 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -7787,19 +7787,12 @@ static int raid5_run(struct mddev *mddev)
+> @@ -5468,13 +5468,13 @@ static struct bio *remove_bio_from_retry(struct r=
+5conf *conf,
+>   */
+>  static void raid5_align_endio(struct bio *bi)
+>  {
+> -       struct md_io_acct *md_io_acct =3D bi->bi_private;
+> -       struct bio *raid_bi =3D md_io_acct->orig_bio;
+> +       struct md_io_clone *md_io_clone =3D bi->bi_private;
+> +       struct bio *raid_bi =3D md_io_clone->orig_bio;
+>         struct mddev *mddev;
+>         struct r5conf *conf;
 >         struct md_rdev *rdev;
->         struct md_rdev *journal_dev =3D NULL;
->         sector_t reshape_offset =3D 0;
-> -       int i, ret =3D 0;
-> +       int i;
->         long long min_offset_diff =3D 0;
->         int first =3D 1;
+>         blk_status_t error =3D bi->bi_status;
+> -       unsigned long start_time =3D md_io_acct->start_time;
+> +       unsigned long start_time =3D md_io_clone->start_time;
 >
-> -       if (acct_bioset_init(mddev)) {
-> -               pr_err("md/raid456:%s: alloc acct bioset failed.\n", mdna=
-me(mddev));
-> +       if (mddev_init_writes_pending(mddev) < 0)
->                 return -ENOMEM;
-> -       }
-> -
-> -       if (mddev_init_writes_pending(mddev) < 0) {
-> -               ret =3D -ENOMEM;
-> -               goto exit_acct_set;
-> -       }
+>         bio_put(bi);
 >
->         if (mddev->recovery_cp !=3D MaxSector)
->                 pr_notice("md/raid:%s: not clean -- starting background r=
-econstruction\n",
-> @@ -7830,8 +7823,7 @@ static int raid5_run(struct mddev *mddev)
->             (mddev->bitmap_info.offset || mddev->bitmap_info.file)) {
->                 pr_notice("md/raid:%s: array cannot have both journal and=
- bitmap\n",
->                           mdname(mddev));
-> -               ret =3D -EINVAL;
-> -               goto exit_acct_set;
-> +               return -EINVAL;
+> @@ -5506,7 +5506,7 @@ static int raid5_read_one_chunk(struct mddev *mddev=
+, struct bio *raid_bio)
+>         struct md_rdev *rdev;
+>         sector_t sector, end_sector, first_bad;
+>         int bad_sectors, dd_idx;
+> -       struct md_io_acct *md_io_acct;
+> +       struct md_io_clone *md_io_clone;
+>         bool did_inc;
+>
+>         if (!in_chunk_boundary(mddev, raid_bio)) {
+> @@ -5544,15 +5544,15 @@ static int raid5_read_one_chunk(struct mddev *mdd=
+ev, struct bio *raid_bio)
 >         }
 >
->         if (mddev->reshape_position !=3D MaxSector) {
-> @@ -7856,15 +7848,13 @@ static int raid5_run(struct mddev *mddev)
->                 if (journal_dev) {
->                         pr_warn("md/raid:%s: don't support reshape with j=
-ournal - aborting.\n",
->                                 mdname(mddev));
-> -                       ret =3D -EINVAL;
-> -                       goto exit_acct_set;
-> +                       return -EINVAL;
->                 }
+>         align_bio =3D bio_alloc_clone(rdev->bdev, raid_bio, GFP_NOIO,
+> -                                   &mddev->io_acct_set);
+> -       md_io_acct =3D container_of(align_bio, struct md_io_acct, bio_clo=
+ne);
+> +                                   &mddev->io_clone_set);
+> +       md_io_clone =3D container_of(align_bio, struct md_io_clone, bio_c=
+lone);
+>         raid_bio->bi_next =3D (void *)rdev;
+>         if (blk_queue_io_stat(raid_bio->bi_bdev->bd_disk->queue))
+> -               md_io_acct->start_time =3D bio_start_io_acct(raid_bio);
+> -       md_io_acct->orig_bio =3D raid_bio;
+> +               md_io_clone->start_time =3D bio_start_io_acct(raid_bio);
+> +       md_io_clone->orig_bio =3D raid_bio;
 >
->                 if (mddev->new_level !=3D mddev->level) {
->                         pr_warn("md/raid:%s: unsupported reshape required=
- - aborting.\n",
->                                 mdname(mddev));
-> -                       ret =3D -EINVAL;
-> -                       goto exit_acct_set;
-> +                       return -EINVAL;
->                 }
->                 old_disks =3D mddev->raid_disks - mddev->delta_disks;
->                 /* reshape_position must be on a new-stripe boundary, and=
- one
-> @@ -7880,8 +7870,7 @@ static int raid5_run(struct mddev *mddev)
->                 if (sector_div(here_new, chunk_sectors * new_data_disks))=
- {
->                         pr_warn("md/raid:%s: reshape_position not on a st=
-ripe boundary\n",
->                                 mdname(mddev));
-> -                       ret =3D -EINVAL;
-> -                       goto exit_acct_set;
-> +                       return -EINVAL;
->                 }
->                 reshape_offset =3D here_new * chunk_sectors;
->                 /* here_new is the stripe we will write to */
-> @@ -7903,8 +7892,7 @@ static int raid5_run(struct mddev *mddev)
->                         else if (mddev->ro =3D=3D 0) {
->                                 pr_warn("md/raid:%s: in-place reshape mus=
-t be started in read-only mode - aborting\n",
->                                         mdname(mddev));
-> -                               ret =3D -EINVAL;
-> -                               goto exit_acct_set;
-> +                               return -EINVAL;
->                         }
->                 } else if (mddev->reshape_backwards
->                     ? (here_new * chunk_sectors + min_offset_diff <=3D
-> @@ -7914,8 +7902,7 @@ static int raid5_run(struct mddev *mddev)
->                         /* Reading from the same stripe as writing to - b=
-ad */
->                         pr_warn("md/raid:%s: reshape_position too early f=
-or auto-recovery - aborting.\n",
->                                 mdname(mddev));
-> -                       ret =3D -EINVAL;
-> -                       goto exit_acct_set;
-> +                       return -EINVAL;
->                 }
->                 pr_debug("md/raid:%s: reshape will continue\n", mdname(md=
-dev));
->                 /* OK, we should be able to continue; */
-> @@ -7939,10 +7926,8 @@ static int raid5_run(struct mddev *mddev)
->         else
->                 conf =3D mddev->private;
+>         align_bio->bi_end_io =3D raid5_align_endio;
+> -       align_bio->bi_private =3D md_io_acct;
+> +       align_bio->bi_private =3D md_io_clone;
+>         align_bio->bi_iter.bi_sector =3D sector;
 >
-> -       if (IS_ERR(conf)) {
-> -               ret =3D PTR_ERR(conf);
-> -               goto exit_acct_set;
-> -       }
-> +       if (IS_ERR(conf))
-> +               return PTR_ERR(conf);
->
->         if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
->                 if (!journal_dev) {
-> @@ -8140,10 +8125,7 @@ static int raid5_run(struct mddev *mddev)
->         free_conf(conf);
->         mddev->private =3D NULL;
->         pr_warn("md/raid:%s: failed to run raid set.\n", mdname(mddev));
-> -       ret =3D -EIO;
-> -exit_acct_set:
-> -       acct_bioset_exit(mddev);
-> -       return ret;
-> +       return -EIO;
->  }
->
->  static void raid5_free(struct mddev *mddev, void *priv)
-> @@ -8151,7 +8133,6 @@ static void raid5_free(struct mddev *mddev, void *p=
-riv)
->         struct r5conf *conf =3D priv;
->
->         free_conf(conf);
-> -       acct_bioset_exit(mddev);
->         mddev->to_remove =3D &raid5_attrs_group;
->  }
->
+>         /* No reshape active, so we can trust rdev->data_offset */
 > --
 > 2.39.2
 >
-
-The patch is good for me.
 
 Reviewed-by: Xiao Ni <xni@redhat.com>
 
