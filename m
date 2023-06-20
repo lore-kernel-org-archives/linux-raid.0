@@ -2,109 +2,119 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E75EB64D8
-	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 17:18:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21424EB64D7
+	for <linux-raid@archiver.kernel.org>; Tue, 20 Jun 2023 17:38:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229693AbjFTRSI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Jun 2023 13:18:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55468 "EHLO
+        id S230023AbjFTRik (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Jun 2023 13:38:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231142AbjFTRSF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 13:18:05 -0400
+        with ESMTP id S229585AbjFTRih (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 13:38:37 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29889E65;
-        Tue, 20 Jun 2023 10:18:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25FADC2;
+        Tue, 20 Jun 2023 10:38:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A59F56133F;
-        Tue, 20 Jun 2023 17:18:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 169EAC433CB;
-        Tue, 20 Jun 2023 17:18:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AF98761349;
+        Tue, 20 Jun 2023 17:38:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AC16C433CB;
+        Tue, 20 Jun 2023 17:38:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687281483;
-        bh=Xe49NstVNbQxwJ+wnptLy8rhubUuN1/2wGDj4qVwxbo=;
+        s=k20201202; t=1687282714;
+        bh=e9yjPMEvXGMuMF3eCOUmrOJNV6HNzxUChRL+KMCSvuc=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=GmKcM4R9nPynfVUeLwl46ZdmAmAXqyWWX4dM8qj4kK4JHzk+4jYCedVBAK/R7Kv1q
-         gWqx3MK7Qzsn8mh8eXNm0l45y8O3h8jtdP15Y9XdfXniTsMXWxYc9tW3ACfDX4rZGH
-         u+x2hFjby2cEiyDqT+sznhWMLk8Ugk6AypH5jR8XC1EN0MLv+16qYpKCm6qxeUcTWr
-         7E2C6ZbAlhoGGAg9mvFxp/nixQTGVi/WaYnZ5R8smVQAeTi9Uot83zhoJbetXKJ/DN
-         /4OOFVcxigmcLDeHR8aoYED4FyuMMdgt6AHJ71YWm0bBVFDFwxBceXDHZZKI/9VE8F
-         exhypxX0hr7TA==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-4f76a0a19d4so6652118e87.2;
-        Tue, 20 Jun 2023 10:18:02 -0700 (PDT)
-X-Gm-Message-State: AC+VfDwRkaha0cUr6qDEcQFtjJhRXswuRhSb+hDBEicSvc+azs1MZZ8l
-        BUxBGVvgVAQwvvNIdoTcTWYxaO7qF4KZ7p0xnrs=
-X-Google-Smtp-Source: ACHHUZ6rvn8pdyE+U40fqAjk0Qv/U2Co0eHgq3xAfyqrNdxiTWVqMv+1EGg8UYsK+78kCPwuzJ9scotirx+WxrFsHd0=
-X-Received: by 2002:a19:ab12:0:b0:4f8:cd67:88e6 with SMTP id
- u18-20020a19ab12000000b004f8cd6788e6mr1886971lfe.44.1687281481091; Tue, 20
- Jun 2023 10:18:01 -0700 (PDT)
+        b=ZczpbHWPA+p8159hvgRmoJ8TNjS/HFebfMvcpcDaUUJbN4JyZVW4A49qXX1XTHgeR
+         owABYo7YbCKfx/lXjP3vcUmWb3aKGVyt1giSMlFktTk7aUE3r06kl96P8RjGSjr4DN
+         0IDQ5h4aNqrswWtLw+Bql1qUKUXn+FK+1jN5w/D91vWPkTXUvgEwgMlcN8JBpx/2PE
+         AjKcFh1mfjtJhvRDN4skBiAuOnHKl46xiXL0UGiAhygF9Vft11LRjEQZn6f3s7VN+9
+         6slgYWQlV9N2gVEamkFm8MPFYeV+9mz/eI8C9tAT9O4N80x55NDxm6rqHlLa8eKPRk
+         p9qkNE/F/UWRQ==
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2b46d270ea1so48515961fa.1;
+        Tue, 20 Jun 2023 10:38:33 -0700 (PDT)
+X-Gm-Message-State: AC+VfDzpdBsmmDtN4M2eeTAGKcmH5c9JAF9zT+NEM3v3TG18dynoAMIV
+        0Z0MUZ3SosoOlsk8h8Ggjr5ZCfmdfKEbGZ9zT+Q=
+X-Google-Smtp-Source: ACHHUZ6bplLmSkT8a18K4gbr6A19h/Mrfwsd42Ai2BkYQoShRPSgCVp3Hx6beN2ZP+irequT2AKXNhHzZn0ONkJSlC4=
+X-Received: by 2002:ac2:5b05:0:b0:4f7:69ca:4e71 with SMTP id
+ v5-20020ac25b05000000b004f769ca4e71mr7730001lfn.34.1687282712079; Tue, 20 Jun
+ 2023 10:38:32 -0700 (PDT)
 MIME-Version: 1.0
 References: <20230618142520.14662-1-yukuai1@huaweicloud.com>
- <ac4c9d48-b8d2-b847-2721-11179fd922de@molgen.mpg.de> <4c729ee3-ad63-1928-0113-19b576b09b24@huaweicloud.com>
-In-Reply-To: <4c729ee3-ad63-1928-0113-19b576b09b24@huaweicloud.com>
+In-Reply-To: <20230618142520.14662-1-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 20 Jun 2023 10:17:48 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7=W4DRBOjeeJ5MSQR5ZWXZ6745FTd-Dj_qsP-KwxTUmQ@mail.gmail.com>
-Message-ID: <CAPhsuW7=W4DRBOjeeJ5MSQR5ZWXZ6745FTd-Dj_qsP-KwxTUmQ@mail.gmail.com>
+Date:   Tue, 20 Jun 2023 10:38:20 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5ZE0wH7vFPtaEDy1S8ZRTFnJGJiKVHJLYwFXz3wWSHNA@mail.gmail.com>
+Message-ID: <CAPhsuW5ZE0wH7vFPtaEDy1S8ZRTFnJGJiKVHJLYwFXz3wWSHNA@mail.gmail.com>
 Subject: Re: [PATCH] raid10: avoid spin_lock from fastpath from raid10_unplug()
 To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, aligrudi@gmail.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
+Cc:     aligrudi@gmail.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jun 19, 2023 at 6:00=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
+On Sat, Jun 17, 2023 at 11:26=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
 >
-> Hi,
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> =E5=9C=A8 2023/06/19 18:26, Paul Menzel =E5=86=99=E9=81=93:
-> > Dear Yu,
-> >
-> >
-> > Thank you for your patch. Some minor nits from my side, you can also
-> > ignore.
-> >
-> > Am 18.06.23 um 16:25 schrieb Yu Kuai:
-> >> From: Yu Kuai <yukuai3@huawei.com>
-> >>
-> >> Commit 0c0be98bbe67 ("md/raid10: prevent unnecessary calls to wake_up(=
-)
-> >> in fast path") missed one place, for example, while testing with:
-> >
-> > =E2=80=A6 one place. For example, with
-> >
-> >>
-> >> fio -direct=3D1 -rw=3Dwrite/randwrite -iodepth=3D1 ...
-> >>
-> >> Then plug and unplug will be called for each io, then wake_up() from
-> >
-> > Maybe:
-> >
-> >      fio -direct=3D1 -rw=3Dwrite/randwrite -iodepth=3D1 ...
-> >
-> > plug und unplug are called for each io, then =E2=80=A6
-> >
-> >> raid10_unplug() will cause lock contention as well.
-> >
-> > Maybe paste the perf command and output?
+> Commit 0c0be98bbe67 ("md/raid10: prevent unnecessary calls to wake_up()
+> in fast path") missed one place, for example, while testing with:
 >
-> Related test and test result and perf result can be found in the below
-> Link.
+> fio -direct=3D1 -rw=3Dwrite/randwrite -iodepth=3D1 ...
+>
+> Then plug and unplug will be called for each io, then wake_up() from
+> raid10_unplug() will cause lock contention as well.
+>
+> Avoid this contention by using wake_up_barrier() instead of wake_up(),
+> where spin_lock is not held while waitqueue is empty.
+>
+> By the way, in this scenario, each blk_plug_cb() will be allocated and
+> freed for each io, this seems need to be optimized as well.
+>
+> Reported-and-tested-by: Ali Gholami Rudi <aligrudi@gmail.com>
+> Link: https://lore.kernel.org/all/20231606122233@laper.mirepesht/
 
-We don't need a lot of details of the test results in the commit log. But a
-quick summary of the performance result can be really helpful here.
-Something like: on array X, fio job Y, before the patch we got AAA, with
-the patch, we got BBB.
-
-Other than this, the patch looks good to me.
+I think ./scripts/checkpatch.pl would recommend using "Closes" instead of
+"Link" after "Reported-by". Please follow this pattern.
 
 Thanks,
 Song
+
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/raid10.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index d0de8c9fb3cf..fbaaa5e05edc 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1118,7 +1118,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
+ool from_schedule)
+>                 spin_lock_irq(&conf->device_lock);
+>                 bio_list_merge(&conf->pending_bio_list, &plug->pending);
+>                 spin_unlock_irq(&conf->device_lock);
+> -               wake_up(&conf->wait_barrier);
+> +               wake_up_barrier(conf);
+>                 md_wakeup_thread(mddev->thread);
+>                 kfree(plug);
+>                 return;
+> @@ -1127,7 +1127,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
+ool from_schedule)
+>         /* we aren't scheduling, so we can do the write-out directly. */
+>         bio =3D bio_list_get(&plug->pending);
+>         raid1_prepare_flush_writes(mddev->bitmap);
+> -       wake_up(&conf->wait_barrier);
+> +       wake_up_barrier(conf);
+>
+>         while (bio) { /* submit pending writes */
+>                 struct bio *next =3D bio->bi_next;
+> --
+> 2.39.2
+>
