@@ -2,85 +2,111 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCF7BC04A6A
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Jun 2023 08:53:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02A87EB64DC
+	for <linux-raid@archiver.kernel.org>; Wed, 21 Jun 2023 08:57:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231814AbjFUIxI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 21 Jun 2023 04:53:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40358 "EHLO
+        id S230336AbjFUI5h (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 21 Jun 2023 04:57:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231758AbjFUIwr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Jun 2023 04:52:47 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89D8C1987;
-        Wed, 21 Jun 2023 01:52:46 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QmHMH1B9Gz4f4FSm;
-        Wed, 21 Jun 2023 16:52:43 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgD3rLBWupJkbVnFMA--.53622S12;
-        Wed, 21 Jun 2023 16:52:43 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, xni@redhat.com, pmenzel@molgen.mpg.de
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH v2 8/8] md/md-faulty: enable io accounting
-Date:   Thu, 22 Jun 2023 00:51:10 +0800
-Message-Id: <20230621165110.1498313-9-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230621165110.1498313-1-yukuai1@huaweicloud.com>
-References: <20230621165110.1498313-1-yukuai1@huaweicloud.com>
+        with ESMTP id S231142AbjFUI45 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Jun 2023 04:56:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 672592953
+        for <linux-raid@vger.kernel.org>; Wed, 21 Jun 2023 01:54:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1687337656;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=tUeqDc8Opf0qvxHmjDxn90zahKMQD9aZkovKepPjZUA=;
+        b=Q7/CSyeT4WR3bdYqNom6ky5d8RcqAzy6ZcemN1tV55YP4DlVQJssHwzmRxDmG97JXzgbsq
+        GYQoTD+QHFfH1w7TVUgBS0WaRAr1nkXaD0x1ioBriFZ0whJs0ndbdB7+yA+iJkTIOeqiO8
+        SOPz0JvnrfSuGR1m08Y/5fz5AaQsoE8=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-116-6SBu1HhhNbG2EjUI36pkAQ-1; Wed, 21 Jun 2023 04:54:14 -0400
+X-MC-Unique: 6SBu1HhhNbG2EjUI36pkAQ-1
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-25e18dac4a3so2482152a91.2
+        for <linux-raid@vger.kernel.org>; Wed, 21 Jun 2023 01:54:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687337653; x=1689929653;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=tUeqDc8Opf0qvxHmjDxn90zahKMQD9aZkovKepPjZUA=;
+        b=hCsP4AEHP6rUlvsuFkVc4zWG2yfTWc/Zek/5cbNucQH47orZbsnnQ5wmkWiWJnbwRu
+         bD6Q1v7ZvBs0V/knqpfOwh8qlwLkCwMpBcKpcN//f9qCWyOWiJ6vsL4nQmGN6XCnJFTv
+         axgbwFlj3MbZuwpM3F5Vkv7VuZqX6axyTZcl6HII3/zQO6nKTYYePgQU9bR1qNnVr4Lr
+         0Emdznnd/fZ1lJqj2aoG92GuUosM766jJgcH9rxMhjtm19D0OOQ0y9SdggZrckYk2Z1W
+         ZvIMvLQgye9txHvgpuqQPJLwBdgVMbWtyCubQxGIg8L93MHRKIXNvpKKzQIsiZr8KIjb
+         Lj4A==
+X-Gm-Message-State: AC+VfDxomyY5jWlRjlLQK/HunW02jS1sl3Tm+u6NF2AnVZE+knsIN0UD
+        KVVvEIF4cE/8VCFkGRyTd+Tm9atldElT5vx/lPV6fagkhdapShOqmvEQ5YSdLxKpOiAY80qmBis
+        oDQnJKU/K6aiH8d7oEbXWeGjUmG6v1ReC1uT7TQ==
+X-Received: by 2002:a17:90a:7892:b0:259:d0f2:3576 with SMTP id x18-20020a17090a789200b00259d0f23576mr11216613pjk.19.1687337653361;
+        Wed, 21 Jun 2023 01:54:13 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7s0sLYCC/Kgqb7IWgIG55HJgxMIIJsmoaEG2Fbph6Xt57Pt6Zp55wzkhsMm/ccLZ7/a7Zo7dBbpJj7EFn7JHs=
+X-Received: by 2002:a17:90a:7892:b0:259:d0f2:3576 with SMTP id
+ x18-20020a17090a789200b00259d0f23576mr11216605pjk.19.1687337653084; Wed, 21
+ Jun 2023 01:54:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3rLBWupJkbVnFMA--.53622S12
-X-Coremail-Antispam: 1UD129KBjvdXoW7GFWDCF1rKr1fAFy8tr43Wrg_yoW3GrXEkr
-        nY9rW7Xr15CF18Kr1jyr4fZrWY93WjgF1kWF17KFs3Arn8J3WIkrWqkF4xJa13urWfXa43
-        Aryvqr4rXr1jkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbq8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M280x2IEY4vEnII2IxkI6r1a6r45M28IrcIa0xkI8V
-        A2jI8067AKxVWUAVCq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJ
-        M28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2I
-        x0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK
-        6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4
-        xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8
-        JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20V
-        AGYxC7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
-        wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
-        0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AK
-        xVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F
-        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjTRKfOw
-        UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <20230617052405.305871-1-song@kernel.org> <CALTww2-f7vSXugM0kMMMG==YgmDOEqSLk+vLf2U_ZyprDKk2+w@mail.gmail.com>
+ <2909cd3b-7716-a0ae-1ced-b5c78b0573da@huaweicloud.com>
+In-Reply-To: <2909cd3b-7716-a0ae-1ced-b5c78b0573da@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 21 Jun 2023 16:54:01 +0800
+Message-ID: <CALTww2_3E2eTCEb86GrK1cdmUsesuNPNFJgf4nPf=RFKmecgBw@mail.gmail.com>
+Subject: Re: [PATCH] md: use mddev->external to select holder in export_rdev()
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Wed, Jun 21, 2023 at 4:21=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/06/21 16:10, Xiao Ni =E5=86=99=E9=81=93:
+> > Hi Song
+> >
+> > After applying your patch, there are still warning messages in the
+> > calltrace. It looks like a deadlock. The test case is
+> > 10ddf-fail-stop-readd.
+> >
+> > [  381.825307] INFO: task md126_raid1:1896 blocked for more than 122 se=
+conds.
+> > [  381.825722]       Tainted: G           OE      6.4.0-rc2+ #1
+> > [  381.826626] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> > disables this message.
+> > [  381.827080] task:md126_raid1     state:D stack:0     pid:1896
+> > ppid:2      flags:0x00004000
+> > [  381.827864] Call Trace:
+> > [  381.828013]  <TASK>
+> > [  381.828514]  __schedule+0x2ad/0x7c0
+> > [  381.829126]  schedule+0x5a/0xd0
+> > [  381.829733]  schedule_preempt_disabled+0x11/0x20
+> > [  381.830396]  __mutex_lock+0x5c8/0xcc0
+>
+> Looks like this is the same deadlock that should be fixed by following
+> patch:
+>
+> https://lore.kernel.org/linux-raid/20230621142933.1395629-1-yukuai1@huawe=
+icloud.com/
+>
+> Thanks,
+> Kuai
 
-use md_account_bio() to enable io accounting, also make sure
-mddev_suspend() will wait for all io to be done.
+After applying these two patches, the warning messages disappear.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/md-faulty.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/md/md-faulty.c b/drivers/md/md-faulty.c
-index 50ad818978a4..a039e8e20f55 100644
---- a/drivers/md/md-faulty.c
-+++ b/drivers/md/md-faulty.c
-@@ -204,6 +204,8 @@ static bool faulty_make_request(struct mddev *mddev, struct bio *bio)
- 			failit = 1;
- 		}
- 	}
-+
-+	md_account_bio(mddev, &bio);
- 	if (failit) {
- 		struct bio *b = bio_alloc_clone(conf->rdev->bdev, bio, GFP_NOIO,
- 						&mddev->bio_set);
--- 
-2.39.2
+Regards
+Xiao
 
