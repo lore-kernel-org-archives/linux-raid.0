@@ -2,60 +2,59 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B23B5EB64D7
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Jun 2023 02:25:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E222BEB64D7
+	for <linux-raid@archiver.kernel.org>; Wed, 21 Jun 2023 02:36:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229808AbjFUCZS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 20 Jun 2023 22:25:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43586 "EHLO
+        id S229937AbjFUCgE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 20 Jun 2023 22:36:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbjFUCZR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 22:25:17 -0400
+        with ESMTP id S229482AbjFUCf6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 20 Jun 2023 22:35:58 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7B05186;
-        Tue, 20 Jun 2023 19:25:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FB1AB4;
+        Tue, 20 Jun 2023 19:35:56 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qm6m706X7z4f3l93;
-        Wed, 21 Jun 2023 10:25:11 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qm70S63Xkz4f3jLf;
+        Wed, 21 Jun 2023 10:35:52 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKuDX5JkyASxMA--.25370S3;
-        Wed, 21 Jun 2023 10:25:08 +0800 (CST)
-Subject: Re: [PATCH v3] md: fix duplicate filename for rdev
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     pmenzel@molgen.mpg.de, akpm@linux-foundation.org, neilb@suse.de,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230523012727.3042247-1-yukuai1@huaweicloud.com>
- <CAPhsuW5AERnf5D4804ksgZEB2ZP7gVAG8f5Fghwnn0FKseBG+g@mail.gmail.com>
- <d8b3f930-0d58-81a8-449c-b39cd5f41983@huaweicloud.com>
- <CAPhsuW4E7P_Xp3EQ0PaO_kZNX6SQyf30FAwbM9cYFBZiVtJfaw@mail.gmail.com>
+        by APP4 (Coremail) with SMTP id gCh0CgAHvbAFYpJk9pSxMA--.19888S3;
+        Wed, 21 Jun 2023 10:35:51 +0800 (CST)
+Subject: Re: [PATCH -next 1/8] md: move initialization and destruction of
+ 'io_acct_set' to md.c
+To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230619204826.755559-1-yukuai1@huaweicloud.com>
+ <20230619204826.755559-2-yukuai1@huaweicloud.com>
+ <CALTww281XOxzFXFQmZ-HWcekMzC30bryJ3YtYGRoERTrk2SHCQ@mail.gmail.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <85c760bb-cb44-ed27-2ad3-f0ee2923226e@huaweicloud.com>
-Date:   Wed, 21 Jun 2023 10:25:06 +0800
+Message-ID: <849ddead-2a0c-38e8-b578-a85f843a6920@huaweicloud.com>
+Date:   Wed, 21 Jun 2023 10:35:49 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW4E7P_Xp3EQ0PaO_kZNX6SQyf30FAwbM9cYFBZiVtJfaw@mail.gmail.com>
+In-Reply-To: <CALTww281XOxzFXFQmZ-HWcekMzC30bryJ3YtYGRoERTrk2SHCQ@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKuDX5JkyASxMA--.25370S3
-X-Coremail-Antispam: 1UD129KBjvJXoWfGr1rWFy8uF1kKryrZFW8JFb_yoWDAF45pr
-        WSqas7Ar4UXrykXr48t3srWryrtayqqrZrGr93Gr10kF4ruryDZry5Kr10gFy5GrykAa1U
-        JayjyrW7Xa4DtrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgAHvbAFYpJk9pSxMA--.19888S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3Jw18try5Gr1kWw1DGrW3KFg_yoWfKryDpa
+        92qF1Ygr40qFWag34Ut3yv9a4Fvr1kKr97KrW3J348Aws2vr1DKFy5Wr4rur9rA34rCr1r
+        Zw4rKFZrur1xKFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
         JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
         CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCT
-        nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
+        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZa9
+        -UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -64,254 +63,296 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/06/21 5:38, Song Liu 写道:
-> On Tue, May 23, 2023 at 6:33 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+在 2023/06/20 16:35, Xiao Ni 写道:
+> On Mon, Jun 19, 2023 at 8:50 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
 >>
->> Hi,
+>> From: Yu Kuai <yukuai3@huawei.com>
 >>
->> 在 2023/05/24 2:05, Song Liu 写道:
->>> On Mon, May 22, 2023 at 6:30 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>>
->>>> From: Yu Kuai <yukuai3@huawei.com>
->>>>
->>>> Commit 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device
->>>> from an md array via sysfs") delays the deletion of rdev, however, this
->>>> introduces a window that rdev can be added again while the deletion is
->>>> not done yet, and sysfs will complain about duplicate filename.
->>>>
->>>> Follow up patches try to fix this problem by flushing workqueue, however,
->>>> flush_rdev_wq() is just dead code, the progress in
->>>> md_kick_rdev_from_array():
->>>>
->>>> 1) list_del_rcu(&rdev->same_set);
->>>> 2) synchronize_rcu();
->>>> 3) queue_work(md_rdev_misc_wq, &rdev->del_work);
->>>>
->>>> So in flush_rdev_wq(), if rdev is found in the list, work_pending() can
->>>> never pass, in the meantime, if work is queued, then rdev can never be
->>>> found in the list.
->>>>
->>>> flush_rdev_wq() can be replaced by flush_workqueue() directly, however,
->>>> this approach is not good:
->>>> - the workqueue is global, this synchronization for all raid disks is
->>>>     not necessary.
->>>> - flush_workqueue can't be called under 'reconfig_mutex', there is still
->>>>     a small window between flush_workqueue() and mddev_lock() that other
->>>>     contexts can queue new work, hence the problem is not solved completely.
->>>>
->>>> sysfs already has apis to support delete itself through writer, and
->>>> these apis, specifically sysfs_break/unbreak_active_protection(), is used
->>>> to support deleting rdev synchronously. Therefore, the above commit can be
->>>> reverted, and sysfs duplicate filename can be avoided.
->>>>
->>>> A new mdadm regression test is proposed as well([1]).
->>>>
->>>> [1] https://lore.kernel.org/linux-raid/20230428062845.1975462-1-yukuai1@huaweicloud.com/
->>>> Fixes: 5792a2856a63 ("[PATCH] md: avoid a deadlock when removing a device from an md array via sysfs")
->>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>>
->>> Thanks for the fix! I made the following changes and applied it
->>> to md-next:
->>>
->>> 1. remove md_rdev->del_work, which is not used any more;
->>> 2. change list_empty_safe to list_empty protected by the mutex, as
->>>      list_empty_safe doesn't seem safe here.
+>> 'io_acct_set' is only used for raid0 and raid456, prepare to use it for
+>> raid1 and raid10, so that io accounting from different levels can be
+>> consistent.
+>>
+>> By the way, follow up patches will also use this io clone mechanism to
+>> make sure 'active_io' represents in flight io, not io that is dispatching,
+>> so that mddev_suspend will wait for io to be done as desgined.
 > 
-> Hmm.. it appears that I missed a circular locking dependency with mdadm
-> test 21raid5cache (delete_mutex and open_mutex).
+> Hi Kuai
 > 
-> Please take a look at this.
+> typo error: s/desgined/designed/g
 > 
+> Before this patch the personality uses ->quiesce method to wait until
+> all inflight ios come back. But I like this solution. It makes the
+> codes simpler. Not sure if it can cause problems because it changes
+> the meaning of ->active_io. I'm doing regression tests to check.
 
-Thanks, I think following patch can fix this, but run this test keep
-failing in my VM. Song, can you pass this test?
+Yes, actually this is the first step that I'm tring to synchronize io
+and raid configuration, and I'm planing to use 'active_io' to check if
+normal io exist, following are follow up plans:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1be64ab76f5c..62b7d2d0e873 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -766,17 +766,29 @@ static void md_free_rdev(struct mddev *mddev)
-  {
-         struct md_rdev *rdev;
-         struct md_rdev *tmp;
-+       LIST_HEAD(delete);
+1. add a new counter(perhaps we can reuse queue->q_usage_counter), and
+grab it for sync io;
+2. refactor and expand 'pers->quiesce', allow normal io and sync io
+to be both quiesced;
+3. call 'pers->quiesce' before raid configuration;
+4. add a new helper to iterate rdev, grab the new counter first;
+5. a lot of cleanups;
 
--       mutex_lock(&mddev->delete_mutex);
--       if (list_empty(&mddev->deleting))
--               goto out;
-+retry:
-+       if (list_empty_careful(&mddev->deleting))
-+               return;
-+
-+       if (!mutex_trylock(&mddev->delete_mutex))
-+               goto retry;
-
--       list_for_each_entry_safe(rdev, tmp, &mddev->deleting, same_set) {
-+       /*
-+        * Clear 'mddev->deleting' first, because export_rdev can trigger
-+        * mddev_unlock(), and grab 'delete_mutex' again will cause 
-deadlock.
-+        * make sure md_free_rdev() will exit directly untill all rdev is
-+        * deleted.
-+        */
-+       list_splice(&delete, &mddev->deleting);
-+
-+       list_for_each_entry_safe(rdev, tmp, &delete, same_set) {
-                 list_del_init(&rdev->same_set);
-                 kobject_del(&rdev->kobj);
-                 export_rdev(rdev, mddev);
-         }
--out:
-+
-         mutex_unlock(&mddev->delete_mutex);
-  }
-
-
-
-> Thanks,
-> Song
+Thanks,
+Kuai
 > 
-> [  239.802277] ======================================================
-> [  239.803650] WARNING: possible circular locking dependency detected
-> [  239.804929] 6.4.0-rc2+ #772 Not tainted
-> [  239.805569] ------------------------------------------------------
-> [  239.806568] kworker/20:1/222 is trying to acquire lock:
-> [  239.807406] ffff88815335b3f0 (&mddev->delete_mutex){+.+.}-{3:3},
-> at: mddev_unlock+0xe0/0x2d0
-> [  239.808653]
->                 but task is already holding lock:
-> [  239.809481] ffffc9000246fe00
-> ((work_completion)(&log->disable_writeback_work)){+.+.}-{0:0}, at:
-> process_one_work+0x462/0xa50
-> [  239.811049]
->                 which lock already depends on the new lock.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/md.c    | 27 ++++++++++-----------------
+>>   drivers/md/md.h    |  2 --
+>>   drivers/md/raid0.c | 16 ++--------------
+>>   drivers/md/raid5.c | 41 +++++++++++------------------------------
+>>   4 files changed, 23 insertions(+), 63 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 8d62f85d2ab0..42347289195a 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -5886,6 +5886,13 @@ int md_run(struct mddev *mddev)
+>>                          goto exit_bio_set;
+>>          }
+>>
+>> +       if (!bioset_initialized(&mddev->io_acct_set)) {
+>> +               err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
+>> +                                 offsetof(struct md_io_acct, bio_clone), 0);
+>> +               if (err)
+>> +                       goto exit_sync_set;
+>> +       }
+>> +
+>>          spin_lock(&pers_lock);
+>>          pers = find_pers(mddev->level, mddev->clevel);
+>>          if (!pers || !try_module_get(pers->owner)) {
+>> @@ -6063,6 +6070,8 @@ int md_run(struct mddev *mddev)
+>>          module_put(pers->owner);
+>>          md_bitmap_destroy(mddev);
+>>   abort:
+>> +       bioset_exit(&mddev->io_acct_set);
+>> +exit_sync_set:
+>>          bioset_exit(&mddev->sync_set);
+>>   exit_bio_set:
+>>          bioset_exit(&mddev->bio_set);
+>> @@ -6286,6 +6295,7 @@ static void __md_stop(struct mddev *mddev)
+>>          percpu_ref_exit(&mddev->active_io);
+>>          bioset_exit(&mddev->bio_set);
+>>          bioset_exit(&mddev->sync_set);
+>> +       bioset_exit(&mddev->io_acct_set);
+>>   }
+>>
+>>   void md_stop(struct mddev *mddev)
+>> @@ -8651,23 +8661,6 @@ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+>>   }
+>>   EXPORT_SYMBOL_GPL(md_submit_discard_bio);
+>>
+>> -int acct_bioset_init(struct mddev *mddev)
+>> -{
+>> -       int err = 0;
+>> -
+>> -       if (!bioset_initialized(&mddev->io_acct_set))
+>> -               err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
+>> -                       offsetof(struct md_io_acct, bio_clone), 0);
+>> -       return err;
+>> -}
+>> -EXPORT_SYMBOL_GPL(acct_bioset_init);
+>> -
+>> -void acct_bioset_exit(struct mddev *mddev)
+>> -{
+>> -       bioset_exit(&mddev->io_acct_set);
+>> -}
+>> -EXPORT_SYMBOL_GPL(acct_bioset_exit);
+>> -
+>>   static void md_end_io_acct(struct bio *bio)
+>>   {
+>>          struct md_io_acct *md_io_acct = bio->bi_private;
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index 7cab9c7c45b8..11299d94b239 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -776,8 +776,6 @@ extern void md_error(struct mddev *mddev, struct md_rdev *rdev);
+>>   extern void md_finish_reshape(struct mddev *mddev);
+>>   void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+>>                          struct bio *bio, sector_t start, sector_t size);
+>> -int acct_bioset_init(struct mddev *mddev);
+>> -void acct_bioset_exit(struct mddev *mddev);
+>>   void md_account_bio(struct mddev *mddev, struct bio **bio);
+>>
+>>   extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
+>> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+>> index f8ee9a95e25d..38d9209cada1 100644
+>> --- a/drivers/md/raid0.c
+>> +++ b/drivers/md/raid0.c
+>> @@ -365,7 +365,6 @@ static void raid0_free(struct mddev *mddev, void *priv)
+>>          struct r0conf *conf = priv;
+>>
+>>          free_conf(mddev, conf);
+>> -       acct_bioset_exit(mddev);
+>>   }
+>>
+>>   static int raid0_run(struct mddev *mddev)
+>> @@ -380,16 +379,11 @@ static int raid0_run(struct mddev *mddev)
+>>          if (md_check_no_bitmap(mddev))
+>>                  return -EINVAL;
+>>
+>> -       if (acct_bioset_init(mddev)) {
+>> -               pr_err("md/raid0:%s: alloc acct bioset failed.\n", mdname(mddev));
+>> -               return -ENOMEM;
+>> -       }
+>> -
+>>          /* if private is not null, we are here after takeover */
+>>          if (mddev->private == NULL) {
+>>                  ret = create_strip_zones(mddev, &conf);
+>>                  if (ret < 0)
+>> -                       goto exit_acct_set;
+>> +                       return ret;
+>>                  mddev->private = conf;
+>>          }
+>>          conf = mddev->private;
+>> @@ -420,15 +414,9 @@ static int raid0_run(struct mddev *mddev)
+>>
+>>          ret = md_integrity_register(mddev);
+>>          if (ret)
+>> -               goto free;
+>> +               free_conf(mddev, conf);
+>>
+>>          return ret;
+>> -
+>> -free:
+>> -       free_conf(mddev, conf);
+>> -exit_acct_set:
+>> -       acct_bioset_exit(mddev);
+>> -       return ret;
+>>   }
+>>
+>>   static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index f8bc74e16811..29cf5455d7a5 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -7787,19 +7787,12 @@ static int raid5_run(struct mddev *mddev)
+>>          struct md_rdev *rdev;
+>>          struct md_rdev *journal_dev = NULL;
+>>          sector_t reshape_offset = 0;
+>> -       int i, ret = 0;
+>> +       int i;
+>>          long long min_offset_diff = 0;
+>>          int first = 1;
+>>
+>> -       if (acct_bioset_init(mddev)) {
+>> -               pr_err("md/raid456:%s: alloc acct bioset failed.\n", mdname(mddev));
+>> +       if (mddev_init_writes_pending(mddev) < 0)
+>>                  return -ENOMEM;
+>> -       }
+>> -
+>> -       if (mddev_init_writes_pending(mddev) < 0) {
+>> -               ret = -ENOMEM;
+>> -               goto exit_acct_set;
+>> -       }
+>>
+>>          if (mddev->recovery_cp != MaxSector)
+>>                  pr_notice("md/raid:%s: not clean -- starting background reconstruction\n",
+>> @@ -7830,8 +7823,7 @@ static int raid5_run(struct mddev *mddev)
+>>              (mddev->bitmap_info.offset || mddev->bitmap_info.file)) {
+>>                  pr_notice("md/raid:%s: array cannot have both journal and bitmap\n",
+>>                            mdname(mddev));
+>> -               ret = -EINVAL;
+>> -               goto exit_acct_set;
+>> +               return -EINVAL;
+>>          }
+>>
+>>          if (mddev->reshape_position != MaxSector) {
+>> @@ -7856,15 +7848,13 @@ static int raid5_run(struct mddev *mddev)
+>>                  if (journal_dev) {
+>>                          pr_warn("md/raid:%s: don't support reshape with journal - aborting.\n",
+>>                                  mdname(mddev));
+>> -                       ret = -EINVAL;
+>> -                       goto exit_acct_set;
+>> +                       return -EINVAL;
+>>                  }
+>>
+>>                  if (mddev->new_level != mddev->level) {
+>>                          pr_warn("md/raid:%s: unsupported reshape required - aborting.\n",
+>>                                  mdname(mddev));
+>> -                       ret = -EINVAL;
+>> -                       goto exit_acct_set;
+>> +                       return -EINVAL;
+>>                  }
+>>                  old_disks = mddev->raid_disks - mddev->delta_disks;
+>>                  /* reshape_position must be on a new-stripe boundary, and one
+>> @@ -7880,8 +7870,7 @@ static int raid5_run(struct mddev *mddev)
+>>                  if (sector_div(here_new, chunk_sectors * new_data_disks)) {
+>>                          pr_warn("md/raid:%s: reshape_position not on a stripe boundary\n",
+>>                                  mdname(mddev));
+>> -                       ret = -EINVAL;
+>> -                       goto exit_acct_set;
+>> +                       return -EINVAL;
+>>                  }
+>>                  reshape_offset = here_new * chunk_sectors;
+>>                  /* here_new is the stripe we will write to */
+>> @@ -7903,8 +7892,7 @@ static int raid5_run(struct mddev *mddev)
+>>                          else if (mddev->ro == 0) {
+>>                                  pr_warn("md/raid:%s: in-place reshape must be started in read-only mode - aborting\n",
+>>                                          mdname(mddev));
+>> -                               ret = -EINVAL;
+>> -                               goto exit_acct_set;
+>> +                               return -EINVAL;
+>>                          }
+>>                  } else if (mddev->reshape_backwards
+>>                      ? (here_new * chunk_sectors + min_offset_diff <=
+>> @@ -7914,8 +7902,7 @@ static int raid5_run(struct mddev *mddev)
+>>                          /* Reading from the same stripe as writing to - bad */
+>>                          pr_warn("md/raid:%s: reshape_position too early for auto-recovery - aborting.\n",
+>>                                  mdname(mddev));
+>> -                       ret = -EINVAL;
+>> -                       goto exit_acct_set;
+>> +                       return -EINVAL;
+>>                  }
+>>                  pr_debug("md/raid:%s: reshape will continue\n", mdname(mddev));
+>>                  /* OK, we should be able to continue; */
+>> @@ -7939,10 +7926,8 @@ static int raid5_run(struct mddev *mddev)
+>>          else
+>>                  conf = mddev->private;
+>>
+>> -       if (IS_ERR(conf)) {
+>> -               ret = PTR_ERR(conf);
+>> -               goto exit_acct_set;
+>> -       }
+>> +       if (IS_ERR(conf))
+>> +               return PTR_ERR(conf);
+>>
+>>          if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
+>>                  if (!journal_dev) {
+>> @@ -8140,10 +8125,7 @@ static int raid5_run(struct mddev *mddev)
+>>          free_conf(conf);
+>>          mddev->private = NULL;
+>>          pr_warn("md/raid:%s: failed to run raid set.\n", mdname(mddev));
+>> -       ret = -EIO;
+>> -exit_acct_set:
+>> -       acct_bioset_exit(mddev);
+>> -       return ret;
+>> +       return -EIO;
+>>   }
+>>
+>>   static void raid5_free(struct mddev *mddev, void *priv)
+>> @@ -8151,7 +8133,6 @@ static void raid5_free(struct mddev *mddev, void *priv)
+>>          struct r5conf *conf = priv;
+>>
+>>          free_conf(conf);
+>> -       acct_bioset_exit(mddev);
+>>          mddev->to_remove = &raid5_attrs_group;
+>>   }
+>>
+>> --
+>> 2.39.2
+>>
 > 
-> [  239.812187]
->                 the existing dependency chain (in reverse order) is:
-> [  239.813230]
->                 -> #3
-> ((work_completion)(&log->disable_writeback_work)){+.+.}-{0:0}:
-> [  239.814468]        __flush_work+0xdb/0x690
-> [  239.815068]        r5l_exit_log+0x59/0xc0
-> [  239.815649]        free_conf+0x34/0x320
-> [  239.816243]        raid5_free+0x11/0x40
-> [  239.816788]        __md_stop+0x9f/0x140
-> [  239.817336]        do_md_stop+0x2af/0xaf0
-> [  239.817901]        md_ioctl+0xb34/0x1e30
-> [  239.818469]        blkdev_ioctl+0x2bf/0x3d0
-> [  239.819079]        __x64_sys_ioctl+0xbe/0x100
-> [  239.819701]        do_syscall_64+0x3a/0x90
-> [  239.820294]        entry_SYSCALL_64_after_hwframe+0x72/0xdc
-> [  239.821076]
->                 -> #2 (&mddev->open_mutex){+.+.}-{3:3}:
-> [  239.821971]        __mutex_lock+0x11d/0x13f0
-> [  239.822592]        md_open+0xad/0x180
-> [  239.822937] kobject: 'md0' (ffff88811c8e5498): kobject_uevent_env
-> [  239.823113]        blkdev_get_whole+0x50/0x120
-> [  239.824216] kobject: 'md0' (ffff88811c8e5498): fill_kobj_path: path
-> = '/devices/virtual/block/md0'
-> [  239.824725]        blkdev_get_by_dev+0x309/0x4f0
-> [  239.826747]        blkdev_open+0x8a/0x110
-> [  239.827319]        do_dentry_open+0x2a5/0x7b0
-> [  239.827939]        path_openat+0xcee/0x1070
-> [  239.828545]        do_filp_open+0x148/0x1d0
-> [  239.829137]        do_sys_openat2+0x2ec/0x470
-> [  239.829791]        do_sys_open+0x8a/0xd0
-> [  239.830352]        do_syscall_64+0x3a/0x90
-> [  239.830935]        entry_SYSCALL_64_after_hwframe+0x72/0xdc
-> [  239.831728]
->                 -> #1 (&disk->open_mutex){+.+.}-{3:3}:
-> [  239.832615]        __mutex_lock+0x11d/0x13f0
-> [  239.833231]        blkdev_put+0x65/0x350
-> [  239.833785]        export_rdev.isra.63+0x72/0xe0
-> [  239.834456]        mddev_unlock+0x1b1/0x2d0
-> [  239.835043]        md_ioctl+0x96c/0x1e30
-> [  239.835616]        blkdev_ioctl+0x2bf/0x3d0
-> [  239.836213]        __x64_sys_ioctl+0xbe/0x100
-> [  239.836828]        do_syscall_64+0x3a/0x90
-> [  239.837414]        entry_SYSCALL_64_after_hwframe+0x72/0xdc
-> [  239.838225]
->                 -> #0 (&mddev->delete_mutex){+.+.}-{3:3}:
-> [  239.839145]        __lock_acquire+0x1e42/0x34b0
-> [  239.839797]        lock_acquire+0x161/0x3d0
-> [  239.840395]        __mutex_lock+0x11d/0x13f0
-> [  239.840999]        mddev_unlock+0xe0/0x2d0
-> [  239.841582]        r5c_disable_writeback_async+0x261/0x270
-> [  239.842354]        process_one_work+0x55f/0xa50
-> [  239.842996]        worker_thread+0x69/0x660
-> [  239.843595]        kthread+0x1a1/0x1e0
-> [  239.844131]        ret_from_fork+0x2c/0x50
-> [  239.844712]
->                 other info that might help us debug this:
+> The patch is good for me.
 > 
-> [  239.845813] Chain exists of:
->                   &mddev->delete_mutex --> &mddev->open_mutex -->
-> (work_completion)(&log->disable_writeback_work)
+> Reviewed-by: Xiao Ni <xni@redhat.com>
 > 
-> [  239.847776]  Possible unsafe locking scenario:
-> 
-> [  239.848623]        CPU0                    CPU1
-> [  239.849262]        ----                    ----
-> [  239.849927]   lock((work_completion)(&log->disable_writeback_work));
-> [  239.850831]                                lock(&mddev->open_mutex);
-> [  239.851719]
-> lock((work_completion)(&log->disable_writeback_work));
-> [  239.852945]   lock(&mddev->delete_mutex);
-> [  239.853517]
->                  *** DEADLOCK ***
-> 
-> [  239.854345] 2 locks held by kworker/20:1/222:
-> [  239.854960]  #0: ffff8881000b2748
-> ((wq_completion)events){+.+.}-{0:0}, at: process_one_work+0x462/0xa50
-> [  239.856287]  #1: ffffc9000246fe00
-> ((work_completion)(&log->disable_writeback_work)){+.+.}-{0:0}, at:
-> process_one_work+0x462/0xa50
-> [  239.857939]
->                 stack backtrace:
-> [  239.858567] CPU: 20 PID: 222 Comm: kworker/20:1 Not tainted 6.4.0-rc2+ #772
-> [  239.859533] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
-> BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
-> [  239.861135] Workqueue: events r5c_disable_writeback_async
-> [  239.861903] Call Trace:
-> [  239.862281]  <TASK>
-> [  239.862606]  dump_stack_lvl+0x46/0x80
-> [  239.863144]  check_noncircular+0x1ff/0x240
-> [  239.863737]  ? __pfx_check_noncircular+0x10/0x10
-> [  239.864401]  ? mark_lock.part.45+0x11a/0x1350
-> [  239.865019]  ? add_chain_block+0x23b/0x310
-> [  239.865624]  __lock_acquire+0x1e42/0x34b0
-> [  239.866202]  ? select_task_rq_fair+0x2b0/0x1e50
-> [  239.866845]  ? __pfx___lock_acquire+0x10/0x10
-> [  239.867473]  ? ttwu_queue_wakelist+0x1cc/0x1f0
-> [  239.868107]  ? __smp_call_single_queue+0x137/0x2a0
-> [  239.868816]  ? __default_send_IPI_dest_field+0x2b/0xa0
-> [  239.869548]  ? __lock_acquire+0xa5d/0x34b0
-> [  239.870131]  lock_acquire+0x161/0x3d0
-> [  239.870660]  ? mddev_unlock+0xe0/0x2d0
-> [  239.871216]  ? __pfx_lock_acquire+0x10/0x10
-> [  239.871808]  ? lock_is_held_type+0xd8/0x130
-> [  239.872405]  __mutex_lock+0x11d/0x13f0
-> [  239.872936]  ? mddev_unlock+0xe0/0x2d0
-> [  239.873474]  ? mddev_unlock+0xe0/0x2d0
-> [  239.874006]  ? __mutex_unlock_slowpath+0x12c/0x410
-> [  239.874695]  ? __pfx___mutex_lock+0x10/0x10
-> [  239.875297]  ? __pfx_rcu_read_lock_held+0x10/0x10
-> [  239.875986]  ? mddev_unlock+0xe0/0x2d0
-> [  239.876530]  mddev_unlock+0xe0/0x2d0
-> [  239.877044]  r5c_disable_writeback_async+0x261/0x270
-> [  239.877753]  ? __pfx_r5c_disable_writeback_async+0x10/0x10
-> [  239.878531]  ? __switch_to+0x2d8/0x770
-> [  239.879066]  ? __pfx_autoremove_wake_function+0x10/0x10
-> [  239.879813]  process_one_work+0x55f/0xa50
-> [  239.880398]  ? __pfx_process_one_work+0x10/0x10
-> [  239.881073]  ? _raw_spin_lock_irq+0x5c/0x90
-> [  239.881675]  worker_thread+0x69/0x660
-> [  239.882206]  ? __kthread_parkme+0xe4/0x100
-> [  239.882786]  ? __pfx_worker_thread+0x10/0x10
-> [  239.883395]  kthread+0x1a1/0x1e0
-> [  239.883863]  ? __pfx_kthread+0x10/0x10
-> [  239.884406]  ret_from_fork+0x2c/0x50
-> [  239.884925]  </TASK>
 > .
 > 
 
