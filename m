@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4102C04FE1
-	for <linux-raid@archiver.kernel.org>; Thu, 22 Jun 2023 09:06:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E49C04FDF
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Jun 2023 09:06:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232021AbjFVJGN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 22 Jun 2023 05:06:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44768 "EHLO
+        id S232065AbjFVJGL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 22 Jun 2023 05:06:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232235AbjFVJFT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Jun 2023 05:05:19 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D24764C01
-        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 01:58:19 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1b515ec39feso12624175ad.0
-        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 01:58:19 -0700 (PDT)
+        with ESMTP id S231560AbjFVJEC (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Jun 2023 05:04:02 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADAA846A4
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 01:57:51 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1b52418c25bso12036125ad.0
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 01:57:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1687424260; x=1690016260;
+        d=bytedance.com; s=google; t=1687424235; x=1690016235;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=aRQUwtIbFrjRbKaWDWITc6Upds+hXxxlwcQqvFPvJow=;
-        b=Kv6dWh2IIchnBu9RbCVLsx8HZLugRgYdolMOnFdVv/Mze68pcgFvadMFaompRsV/Ii
-         Vr4ahAwXirWdfwADAjPFAtSTivwacduawKzyeKPVnp7cESQMTGYfaqAI7425tQvAdQ85
-         8rLDDpZCwcAbH67+6k+hMmW8Fi1etqH6LYFHkuQfbD+ESFiwPmeSocm5kXqI50kDiSjf
-         PCd9vDumWTECSSKSpOEWhL8aCyPGbcSxO0SaB85LOV7uPD9a5LVIfvAATYV0qgfKCSQQ
-         J+7inf8lDO5dvyUSQTFKKOcNdRaAbUMX2WbzVCHQayCH8tZA09PfVWiof+vKchWmVnWN
-         0e0g==
+        bh=WJL0OVu56Nd2o0mxjMzDLbJ1YgOSFE+1vh1fraMJRQc=;
+        b=ZL5KbVwmDDj8Gy97lbIJB7YMY8SjOouZdkJA02qk3b6DF+dyuydzFaZQylnxfC9S+S
+         TSPs6tccznQsZMFsLcEJsyUCVw2T8A7tWiogG+8JrU9eTxXc/9BRSgGLnZUgk22umk+B
+         SSngiAqdElEoARuVlyhvyt60KkFHlCbx7fUzwDo8HLyuhKs4MGrMo82qC5g6M3adQ/kW
+         5sTm4LvGQVeaef4Ot0YEMEqtMtR7HuPlighv8JjZTv9ZOAYC2jp2PBoT7dm2kyLjCYpo
+         2319G2aelwdOOipT4nDLl60x2b/otqGmO31pzkQB3PluAdANWpdqDdwlhTA0kEDJVKL2
+         ha0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687424260; x=1690016260;
+        d=1e100.net; s=20221208; t=1687424235; x=1690016235;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=aRQUwtIbFrjRbKaWDWITc6Upds+hXxxlwcQqvFPvJow=;
-        b=ewyRM8feI9MzrTdG7xBxO+U1fkM2pADSHwBLa8cW7CC3ek7CIUMM2lkL45OOzJAMwZ
-         kExIaSWIV6Wk1qkCdxfrsNk+Lxfsd/Mt7Ex5shSPoYMLoJNRNTtP/UWFDieZt6ejfj6z
-         rXHVD7C/8lMR9lTwFQFqt3wbuZgs82GbEYNPnaPwrcLG3M/NNKoF1bJSLc8Nvh/AbTH6
-         Bvaduo48AsBz6zEMcTDeSO3CmlQJ0olk5wYCN8vbFzN4YLwCZq5yN45nSLSInP9KaBel
-         pjqRG2diKb2j8nFCEw1ShTuZ74nP58xSEZB9o6iMJ4SF4uMeRMuWWdSQ7BQy1pYuuY/j
-         +Dgg==
-X-Gm-Message-State: AC+VfDzdvkmMm7yPvccvZePJ3ZAvdk0tULSTTiATJqRWjTxBidyeJbdi
-        lnHajoivL7iT7rqyrkFP5mErzQ==
-X-Google-Smtp-Source: ACHHUZ4KKZ8AXrupsFYw18EsJWvGfL6qm7cyYV/rSPTKOdYWRQ8IhOkLOim7I9s7W96jDohmbJS9Lg==
-X-Received: by 2002:a17:903:41d2:b0:1a6:cf4b:4d7d with SMTP id u18-20020a17090341d200b001a6cf4b4d7dmr21650808ple.2.1687424260203;
-        Thu, 22 Jun 2023 01:57:40 -0700 (PDT)
+        bh=WJL0OVu56Nd2o0mxjMzDLbJ1YgOSFE+1vh1fraMJRQc=;
+        b=IgDvmvlp2zGB7b4N/axG39BN821fKYfQcpJ2DQ0BQ604jDz0joebtQQ6/TgJiBwB+5
+         p4i2fQ1VgZNZoUPyiH1EETPuIFLRQ5GNPhuVqwKuz5FLeesbC/VSQQQ6MZbDNdwo1x8q
+         Igy6uTeVBQIWIKyrqZP3f76sHH+Eh1Gc7YdoXDYKbmIf0O554JLsjX2w/VV5MMNYMLLS
+         OA+6SzTdoAHTUUTDMCOV8mwiQqN+5eIHFVr2Chaf07eSS4ItDf5NeSdp3/RoHr9Xe/S2
+         xebQxhBoAfWCJVCh+ecQuBjHn+X01mpeIpxOUlCjS/uVaJmKHN+H7YkwzKF7KXOBqqjF
+         +XLw==
+X-Gm-Message-State: AC+VfDwa3WRhZDRsw4c3fmAUj3iPdlMYhdfiyMOyCtLzUZAaQ86wQfXr
+        Hrr72pHPkBDrPdJQiHntwaJ8Hw==
+X-Google-Smtp-Source: ACHHUZ7SQ8rS1EvkM8z3rgy8xjUWZCKvjOIofntYWhPm+3TRoZDLL1AdCBUgXDGJA0nPgYbkXii2Dw==
+X-Received: by 2002:a17:902:c945:b0:1ae:3ff8:7fa7 with SMTP id i5-20020a170902c94500b001ae3ff87fa7mr21702029pla.4.1687424235565;
+        Thu, 22 Jun 2023 01:57:15 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([139.177.225.254])
-        by smtp.gmail.com with ESMTPSA id h2-20020a170902f7c200b001b549fce345sm4806971plw.230.2023.06.22.01.57.32
+        by smtp.gmail.com with ESMTPSA id h2-20020a170902f7c200b001b549fce345sm4806971plw.230.2023.06.22.01.57.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jun 2023 01:57:39 -0700 (PDT)
+        Thu, 22 Jun 2023 01:57:15 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -61,9 +61,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-btrfs@vger.kernel.org, Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH 27/29] mm: vmscan: hold write lock to reparent shrinker nr_deferred
-Date:   Thu, 22 Jun 2023 16:53:33 +0800
-Message-Id: <20230622085335.77010-28-zhengqi.arch@bytedance.com>
+Subject: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
+Date:   Thu, 22 Jun 2023 16:53:30 +0800
+Message-Id: <20230622085335.77010-25-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
 References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
@@ -73,41 +73,244 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-For now, reparent_shrinker_deferred() is the only holder
-of read lock of shrinker_rwsem. And it already holds the
-global cgroup_mutex, so it will not be called in parallel.
+The shrinker_rwsem is a global read-write lock in
+shrinkers subsystem, which protects most operations
+such as slab shrink, registration and unregistration
+of shrinkers, etc. This can easily cause problems in
+the following cases.
 
-Therefore, in order to convert shrinker_rwsem to shrinker_mutex
-later, here we change to hold the write lock of shrinker_rwsem
-to reparent.
+1) When the memory pressure is high and there are many
+   filesystems mounted or unmounted at the same time,
+   slab shrink will be affected (down_read_trylock()
+   failed).
+
+   Such as the real workload mentioned by Kirill Tkhai:
+
+   ```
+   One of the real workloads from my experience is start
+   of an overcommitted node containing many starting
+   containers after node crash (or many resuming containers
+   after reboot for kernel update). In these cases memory
+   pressure is huge, and the node goes round in long reclaim.
+   ```
+
+2) If a shrinker is blocked (such as the case mentioned
+   in [1]) and a writer comes in (such as mount a fs),
+   then this writer will be blocked and cause all
+   subsequent shrinker-related operations to be blocked.
+
+Even if there is no competitor when shrinking slab, there
+may still be a problem. If we have a long shrinker list
+and we do not reclaim enough memory with each shrinker,
+then the down_read_trylock() may be called with high
+frequency. Because of the poor multicore scalability of
+atomic operations, this can lead to a significant drop
+in IPC (instructions per cycle).
+
+We used to implement the lockless slab shrink with
+SRCU [1], but then kernel test robot reported -88.8%
+regression in stress-ng.ramfs.ops_per_sec test case [2],
+so we reverted it [3].
+
+This commit uses the refcount+RCU method [4] proposed by
+by Dave Chinner to re-implement the lockless global slab
+shrink. The memcg slab shrink is handled in the subsequent
+patch.
+
+Currently, the shrinker instances can be divided into
+the following three types:
+
+a) global shrinker instance statically defined in the kernel,
+such as workingset_shadow_shrinker.
+
+b) global shrinker instance statically defined in the kernel
+modules, such as mmu_shrinker in x86.
+
+c) shrinker instance embedded in other structures.
+
+For case a, the memory of shrinker instance is never freed.
+For case b, the memory of shrinker instance will be freed
+after the module is unloaded. But we will call synchronize_rcu()
+in free_module() to wait for RCU read-side critical section to
+exit. For case c, the memory of shrinker instance will be
+dynamically freed by calling kfree_rcu(). So we can use
+rcu_read_{lock,unlock}() to ensure that the shrinker instance
+is valid.
+
+The shrinker::refcount mechanism ensures that the shrinker
+instance will not be run again after unregistration. So the
+structure that records the pointer of shrinker instance can be
+safely freed without waiting for the RCU read-side critical
+section.
+
+In this way, while we implement the lockless slab shrink, we
+don't need to be blocked in unregister_shrinker() to wait
+RCU read-side critical section.
+
+The following are the test results:
+
+stress-ng --timeout 60 --times --verify --metrics-brief --ramfs 9 &
+
+1) Before applying this patchset:
+
+ setting to a 60 second run per stressor
+ dispatching hogs: 9 ramfs
+ stressor       bogo ops real time  usr time  sys time   bogo ops/s     bogo ops/s
+                           (secs)    (secs)    (secs)   (real time) (usr+sys time)
+ ramfs            880623     60.02      7.71    226.93     14671.45        3753.09
+ ramfs:
+          1 System Management Interrupt
+ for a 60.03s run time:
+    5762.40s available CPU time
+       7.71s user time   (  0.13%)
+     226.93s system time (  3.94%)
+     234.64s total time  (  4.07%)
+ load average: 8.54 3.06 2.11
+ passed: 9: ramfs (9)
+ failed: 0
+ skipped: 0
+ successful run completed in 60.03s (1 min, 0.03 secs)
+
+2) After applying this patchset:
+
+ setting to a 60 second run per stressor
+ dispatching hogs: 9 ramfs
+ stressor       bogo ops real time  usr time  sys time   bogo ops/s     bogo ops/s
+                           (secs)    (secs)    (secs)   (real time) (usr+sys time)
+ ramfs            847562     60.02      7.44    230.22     14120.66        3566.23
+ ramfs:
+          4 System Management Interrupts
+ for a 60.12s run time:
+    5771.95s available CPU time
+       7.44s user time   (  0.13%)
+     230.22s system time (  3.99%)
+     237.66s total time  (  4.12%)
+ load average: 8.18 2.43 0.84
+ passed: 9: ramfs (9)
+ failed: 0
+ skipped: 0
+ successful run completed in 60.12s (1 min, 0.12 secs)
+
+We can see that the ops/s has hardly changed.
+
+[1]. https://lore.kernel.org/lkml/20230313112819.38938-1-zhengqi.arch@bytedance.com/
+[2]. https://lore.kernel.org/lkml/202305230837.db2c233f-yujie.liu@intel.com/
+[3]. https://lore.kernel.org/all/20230609081518.3039120-1-qi.zheng@linux.dev/
+[4]. https://lore.kernel.org/lkml/ZIJhou1d55d4H1s0@dread.disaster.area/
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 ---
- mm/vmscan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/linux/shrinker.h |  6 ++++++
+ mm/vmscan.c              | 33 ++++++++++++++-------------------
+ 2 files changed, 20 insertions(+), 19 deletions(-)
 
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index 7bfeb2f25246..b0c6c2df9db8 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -74,6 +74,7 @@ struct shrinker {
+ 
+ 	refcount_t refcount;
+ 	struct completion completion_wait;
++	struct rcu_head rcu;
+ 
+ 	void *private_data;
+ 
+@@ -123,6 +124,11 @@ struct shrinker *shrinker_alloc_and_init(count_objects_cb count,
+ void shrinker_free(struct shrinker *shrinker);
+ void unregister_and_free_shrinker(struct shrinker *shrinker);
+ 
++static inline bool shrinker_try_get(struct shrinker *shrinker)
++{
++	return refcount_inc_not_zero(&shrinker->refcount);
++}
++
+ static inline void shrinker_put(struct shrinker *shrinker)
+ {
+ 	if (refcount_dec_and_test(&shrinker->refcount))
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 357a1f2ad690..0711b63e68d9 100644
+index 6f9c4750effa..767569698946 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -433,7 +433,7 @@ void reparent_shrinker_deferred(struct mem_cgroup *memcg)
- 		parent = root_mem_cgroup;
+@@ -57,6 +57,7 @@
+ #include <linux/khugepaged.h>
+ #include <linux/rculist_nulls.h>
+ #include <linux/random.h>
++#include <linux/rculist.h>
  
- 	/* Prevent from concurrent shrinker_info expand */
--	down_read(&shrinker_rwsem);
-+	down_write(&shrinker_rwsem);
- 	for_each_node(nid) {
- 		child_info = shrinker_info_protected(memcg, nid);
- 		parent_info = shrinker_info_protected(parent, nid);
-@@ -442,7 +442,7 @@ void reparent_shrinker_deferred(struct mem_cgroup *memcg)
- 			atomic_long_add(nr, &parent_info->nr_deferred[i]);
- 		}
- 	}
--	up_read(&shrinker_rwsem);
-+	up_write(&shrinker_rwsem);
+ #include <asm/tlbflush.h>
+ #include <asm/div64.h>
+@@ -742,7 +743,7 @@ void register_shrinker_prepared(struct shrinker *shrinker)
+ 	down_write(&shrinker_rwsem);
+ 	refcount_set(&shrinker->refcount, 1);
+ 	init_completion(&shrinker->completion_wait);
+-	list_add_tail(&shrinker->list, &shrinker_list);
++	list_add_tail_rcu(&shrinker->list, &shrinker_list);
+ 	shrinker->flags |= SHRINKER_REGISTERED;
+ 	shrinker_debugfs_add(shrinker);
+ 	up_write(&shrinker_rwsem);
+@@ -800,7 +801,7 @@ void unregister_shrinker(struct shrinker *shrinker)
+ 	wait_for_completion(&shrinker->completion_wait);
+ 
+ 	down_write(&shrinker_rwsem);
+-	list_del(&shrinker->list);
++	list_del_rcu(&shrinker->list);
+ 	shrinker->flags &= ~SHRINKER_REGISTERED;
+ 	if (shrinker->flags & SHRINKER_MEMCG_AWARE)
+ 		unregister_memcg_shrinker(shrinker);
+@@ -845,7 +846,7 @@ EXPORT_SYMBOL(shrinker_free);
+ void unregister_and_free_shrinker(struct shrinker *shrinker)
+ {
+ 	unregister_shrinker(shrinker);
+-	kfree(shrinker);
++	kfree_rcu(shrinker, rcu);
  }
+ EXPORT_SYMBOL(unregister_and_free_shrinker);
  
- static bool cgroup_reclaim(struct scan_control *sc)
+@@ -1067,33 +1068,27 @@ static unsigned long shrink_slab(gfp_t gfp_mask, int nid,
+ 	if (!mem_cgroup_disabled() && !mem_cgroup_is_root(memcg))
+ 		return shrink_slab_memcg(gfp_mask, nid, memcg, priority);
+ 
+-	if (!down_read_trylock(&shrinker_rwsem))
+-		goto out;
+-
+-	list_for_each_entry(shrinker, &shrinker_list, list) {
++	rcu_read_lock();
++	list_for_each_entry_rcu(shrinker, &shrinker_list, list) {
+ 		struct shrink_control sc = {
+ 			.gfp_mask = gfp_mask,
+ 			.nid = nid,
+ 			.memcg = memcg,
+ 		};
+ 
++		if (!shrinker_try_get(shrinker))
++			continue;
++		rcu_read_unlock();
++
+ 		ret = do_shrink_slab(&sc, shrinker, priority);
+ 		if (ret == SHRINK_EMPTY)
+ 			ret = 0;
+ 		freed += ret;
+-		/*
+-		 * Bail out if someone want to register a new shrinker to
+-		 * prevent the registration from being stalled for long periods
+-		 * by parallel ongoing shrinking.
+-		 */
+-		if (rwsem_is_contended(&shrinker_rwsem)) {
+-			freed = freed ? : 1;
+-			break;
+-		}
+-	}
+ 
+-	up_read(&shrinker_rwsem);
+-out:
++		rcu_read_lock();
++		shrinker_put(shrinker);
++	}
++	rcu_read_unlock();
+ 	cond_resched();
+ 	return freed;
+ }
 -- 
 2.30.2
 
