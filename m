@@ -2,151 +2,96 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BBFEEB64D7
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Jun 2023 23:12:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 065C2EB64DA
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Jun 2023 08:32:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229563AbjFUXM5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 21 Jun 2023 19:12:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56470 "EHLO
+        id S230424AbjFVIc1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 22 Jun 2023 04:32:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjFUXM4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Jun 2023 19:12:56 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4610BC;
-        Wed, 21 Jun 2023 16:12:55 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 33780616FD;
-        Wed, 21 Jun 2023 23:12:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9658AC433C0;
-        Wed, 21 Jun 2023 23:12:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687389174;
-        bh=JfnF/TpSrmEJx8kCqNg6b06ZNb97Ka3wj6EXxtNhFq8=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=DKuy/kRHktyLJ8w1WPfrGZGtEd7Tk9LHK61+rRYS/0gg+xjfuYuLVF5gVJfaRE/Z3
-         frk/maU8fpNlXIEBhxRJFbMP750kGJXP1c4m0e8GblT+2S7XqfjuAoll7MWDmPvL0w
-         F0RcibXGg22z7MKWnt2x/6ZWcrqBVCj4Lp1ZZZkBpunE3zfombs+EYuMZPawwEMDVd
-         +V2cSsSYBZhikCO/9Cdi82P9oYMjbYR+ERrsmQy9GixzG5/wcEcw2P70F1rSSWyk2R
-         PEkrDyZL1tH6r/DRmsWHPtGqCFHhCSF7vYkZhGYPKnQlMX/n4PvXaxl5yOQ+IgCzNG
-         l+Clb2ngW/IKg==
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2b46f1256bbso784191fa.0;
-        Wed, 21 Jun 2023 16:12:54 -0700 (PDT)
-X-Gm-Message-State: AC+VfDxa10Y1QUTFTqytxdfsHgyDNBkpR5aLk1uR6+9bWcSWMks+jGNS
-        ey9Ivhy8H5SXyGl6PAgKbT/LetfpFM0WFkDuRBA=
-X-Google-Smtp-Source: ACHHUZ78Pvzh12zdbL3zmXXhiq51DBjD2HMVUc4E7SwgX1HyeMdhFY8OyIZwL1eUfduN/PZ2lj+CkXZnPo7EqccrLX8=
-X-Received: by 2002:a19:5007:0:b0:4f8:52a8:d123 with SMTP id
- e7-20020a195007000000b004f852a8d123mr5815627lfb.12.1687389172627; Wed, 21 Jun
- 2023 16:12:52 -0700 (PDT)
+        with ESMTP id S230469AbjFVIcS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Jun 2023 04:32:18 -0400
+Received: from mail-oa1-x2f.google.com (mail-oa1-x2f.google.com [IPv6:2001:4860:4864:20::2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 822BF1FEB
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 01:31:43 -0700 (PDT)
+Received: by mail-oa1-x2f.google.com with SMTP id 586e51a60fabf-1aa25c5cf0eso1108873fac.1
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 01:31:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1687422703; x=1690014703;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=jRx5u0dIx9qFXm7I93dXe9q/QmQ9W+wUToPS3aLpk1M=;
+        b=BLxeO0dy+qXx3mtPibK1S1/Or5zgBKyR+cJ+WdJudKlQtS/Nsabue7QFfygOG9X37C
+         JNC/knOS3tjYOQOseW33zi2F030DsgTWZcCvwE6mko6OoqIenxumjcv5Z8/rnxAjBO3/
+         xtucKEfCtZqg/VNDj8oOitF8gRCgoGC+eaFgizTMA41zH3SGC3RP8SzsV7WNcZX8qR+q
+         6s7WskcQisgXsEcLIkuFshZF5uF8hpqRK404CDzKPS3hFNRImlWGDWKvxDEmNrhw0M34
+         cglWSueSHGyZNjK3S6DZy/VJBgyCTc7gX8Qm2fkIbSjNxChukxDTKOPYSzno2UgfFI9l
+         y7Ow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687422703; x=1690014703;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=jRx5u0dIx9qFXm7I93dXe9q/QmQ9W+wUToPS3aLpk1M=;
+        b=k9Ujor4ytL7/Rt+4H9sCqy+nuI8guJkma6KzpT3X0cP37/HfpwdCXk1s+sNrH1xqe8
+         D/ngdWPeagore8r+f/akYvxlQ6XNqCtxPwJXF+pPgm1XUfK1LtvvtE+qQpeontwXkt3U
+         Dy0JGeqTT8ncVAxOo5pK1q0MDs1AWlbfPQL+NWecOodmaiseB0YxV+MWuCq+cwOjNsqv
+         zCOqfs/CA3spJP+TLj6VKCcYDVp8Kc6i+T6RMdRSRGLnl/iFqe3rYLvbXCL6oeh0AL9o
+         uOegPF1KIoLK/0+JmJM7FryWM32qrsa2acAIdHq6Nx42rBBWCSz10+O5quDkko8KyHk7
+         7pDg==
+X-Gm-Message-State: AC+VfDwnd24SH/Z+7XhvT6Lih6n81gaJAho1BPNkT7IIwI3y+ieYuVFT
+        1HHl0YH/yTcf3KRmpSsDHvEfqw==
+X-Google-Smtp-Source: ACHHUZ4rJo+IPtTRaPya+U1JdMgc+u3gA3krnJKF3F08hxGt0uoHrxZAqg1izlNZ+SOIkOa4AMphOQ==
+X-Received: by 2002:a05:6830:19c1:b0:6b1:6db4:556f with SMTP id p1-20020a05683019c100b006b16db4556fmr10609999otp.3.1687422702698;
+        Thu, 22 Jun 2023 01:31:42 -0700 (PDT)
+Received: from [10.4.168.167] ([139.177.225.254])
+        by smtp.gmail.com with ESMTPSA id y17-20020a63e251000000b0050a0227a4bcsm4369684pgj.57.2023.06.22.01.31.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Jun 2023 01:31:42 -0700 (PDT)
+Message-ID: <52bf599c-3c3a-7dfc-30b3-f3a2af5f29a8@bytedance.com>
+Date:   Thu, 22 Jun 2023 16:31:22 +0800
 MIME-Version: 1.0
-References: <20230621105728.1268542-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230621105728.1268542-1-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 21 Jun 2023 16:12:40 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5Th2Q9xbP3-ayteNVcHjiPRKpM0agS0u9KP4YG+vxk7g@mail.gmail.com>
-Message-ID: <CAPhsuW5Th2Q9xbP3-ayteNVcHjiPRKpM0agS0u9KP4YG+vxk7g@mail.gmail.com>
-Subject: Re: [PATCH v2] raid10: avoid spin_lock from fastpath from raid10_unplug()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     pmenzel@molgen.mpg.de, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.12.0
+Subject: Re: [External] [PATCH 00/29] use refcount+RCU method to implement
+ lockless slab shrink
+To:     Qi Zheng <qi.zheng@linux.dev>, akpm@linux-foundation.org,
+        david@fromorbit.com, tkhai@ya.ru, vbabka@suse.cz,
+        roman.gushchin@linux.dev, djwong@kernel.org, brauner@kernel.org,
+        paulmck@kernel.org, tytso@mit.edu
+Cc:     airlied@gmail.com, daniel@ffwll.ch, robdclark@gmail.com,
+        quic_abhinavk@quicinc.com, dmitry.baryshkov@linaro.org,
+        sean@poorly.run, marijn.suijten@somainline.org, robh@kernel.org,
+        tomeu.vizoso@collabora.com, steven.price@arm.com,
+        alyssa.rosenzweig@collabora.com, agk@redhat.com,
+        snitzer@kernel.org, song@kernel.org, colyli@suse.de,
+        kent.overstreet@gmail.com, namit@vmware.com,
+        gregkh@linuxfoundation.org, mst@redhat.com, david@redhat.com,
+        jasowang@redhat.com, xuanzhuo@linux.alibaba.com,
+        viro@zeniv.linux.org.uk, adilger.kernel@dilger.ca, jack@suse.com,
+        chuck.lever@oracle.com, neilb@suse.de, kolga@netapp.com,
+        minchan@kernel.org, senozhatsky@chromium.org, clm@fb.com,
+        josef@toxicpanda.com, dsterba@suse.com, christian.koenig@amd.com,
+        ray.huang@amd.com, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+        linux-arm-msm@vger.kernel.org, dm-devel@redhat.com,
+        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+References: <20230622082454.4090236-1-qi.zheng@linux.dev>
+Content-Language: en-US
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+In-Reply-To: <20230622082454.4090236-1-qi.zheng@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Jun 20, 2023 at 7:59=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Commit 0c0be98bbe67 ("md/raid10: prevent unnecessary calls to wake_up()
-> in fast path") missed one place, for example, with:
->
->         fio -direct=3D1 -rw=3Dwrite/randwrite -iodepth=3D1 ...
->
-> Plug and unplug are called for each io, then wake_up() from raid10_unplug=
-()
-> will cause lock contention as well.
->
-> Avoid this contention by using wake_up_barrier() instead of wake_up(),
-> where spin_lock is not held if waitqueue is empty.
->
-> Fio test script:
->
-> [global]
-> name=3Drandom reads and writes
-> ioengine=3Dlibaio
-> direct=3D1
-> readwrite=3Drandrw
-> rwmixread=3D70
-> iodepth=3D64
-> buffered=3D0
-> filename=3D/dev/md0
-> size=3D1G
-> runtime=3D30
-> time_based
-> randrepeat=3D0
-> norandommap
-> refill_buffers
-> ramp_time=3D10
-> bs=3D4k
-> numjobs=3D400
-> group_reporting=3D1
-> [job1]
->
-> Test result with ramdisk raid10(By Ali):
->
->         Before this patch       With this patch
-> READ    IOPS=3D2033k              IOPS=3D3642k
-> WRITE   IOPS=3D871k               IOPS=3D1561K
->
-> By the way, in this scenario, blk_plug_cb() will be allocated and freed
-> for each io, this seems need to be optimized as well.
->
-> Reported-and-tested-by: Ali Gholami Rudi <aligrudi@gmail.com>
-> Closes: https://lore.kernel.org/all/20231606122233@laper.mirepesht/
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+This patch set failed to send due to the following reasons, please ignore.
 
-Applied to md-next.
-
-Thanks,
-Song
-
-> ---
-> Changes in v2:
->  - update commit message;
->
->  drivers/md/raid10.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index d0de8c9fb3cf..fbaaa5e05edc 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1118,7 +1118,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
-ool from_schedule)
->                 spin_lock_irq(&conf->device_lock);
->                 bio_list_merge(&conf->pending_bio_list, &plug->pending);
->                 spin_unlock_irq(&conf->device_lock);
-> -               wake_up(&conf->wait_barrier);
-> +               wake_up_barrier(conf);
->                 md_wakeup_thread(mddev->thread);
->                 kfree(plug);
->                 return;
-> @@ -1127,7 +1127,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, b=
-ool from_schedule)
->         /* we aren't scheduling, so we can do the write-out directly. */
->         bio =3D bio_list_get(&plug->pending);
->         raid1_prepare_flush_writes(mddev->bitmap);
-> -       wake_up(&conf->wait_barrier);
-> +       wake_up_barrier(conf);
->
->         while (bio) { /* submit pending writes */
->                 struct bio *next =3D bio->bi_next;
-> --
-> 2.39.2
->
+	4.7.1 Error: too many recipients from 49.7.199.65
