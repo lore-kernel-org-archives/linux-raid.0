@@ -2,51 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CF52EB64D7
-	for <linux-raid@archiver.kernel.org>; Fri, 23 Jun 2023 09:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75E48EB64DD
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Jun 2023 09:34:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231512AbjFWJeS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 23 Jun 2023 05:34:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54774 "EHLO
+        id S231527AbjFWJeT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 23 Jun 2023 05:34:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229930AbjFWJeR (ORCPT
+        with ESMTP id S230171AbjFWJeR (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Jun 2023 05:34:17 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1030DE5B;
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 783051BFC;
         Fri, 23 Jun 2023 02:34:16 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QnXB95hdSz4f3nx9;
-        Fri, 23 Jun 2023 17:34:09 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCXaK8TZ5VkaZ1hMQ--.14505S4;
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QnXBC4bK8z4f3v1X;
         Fri, 23 Jun 2023 17:34:11 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgCXaK8TZ5VkaZ1hMQ--.14505S6;
+        Fri, 23 Jun 2023 17:34:12 +0800 (CST)
 From:   linan666@huaweicloud.com
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
         houtao1@huawei.com, yangerkun@huawei.com
-Subject: [PATCH 0/3] md/raid10: optimize and fix read error
-Date:   Sat, 24 Jun 2023 01:32:33 +0800
-Message-Id: <20230623173236.2513554-1-linan666@huaweicloud.com>
+Subject: [PATCH 2/3] md: remove redundant check in fix_read_error()
+Date:   Sat, 24 Jun 2023 01:32:35 +0800
+Message-Id: <20230623173236.2513554-3-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230623173236.2513554-1-linan666@huaweicloud.com>
+References: <20230623173236.2513554-1-linan666@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCXaK8TZ5VkaZ1hMQ--.14505S4
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYK7kC6x804xWl14x267AKxVW8JVW5JwAF
-        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62
-        vIxIIY0VWUZVW8XwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xII
-        jxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwA2z4x0Y4
-        vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAac4AC62xK
-        8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I
-        80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCj
-        c4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4kE6xkIj40Ew7xC0wCF04k20xvY0x0EwIxGrw
-        CF54CYxVCY1x0262kKe7AKxVWUAVWUtwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
-        F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
-        ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxV
-        WUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU
-        IpBTUUUUU
+X-CM-TRANSID: gCh0CgCXaK8TZ5VkaZ1hMQ--.14505S6
+X-Coremail-Antispam: 1UD129KBjvdXoW7Jw47Xr4fAF1rZF13Ar1xGrg_yoWkKwcEkw
+        n3XF9xtr1Fyr17Xr1a9r1Ivryjva4v9r1xJ3y7KFZxZFy5uFyDurykur1kJw45AFW2vFy5
+        A34qg3WUCr4DAjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbLAYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
+        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l87I20VAvwVAaII0Ic2I_JFv_Gryl82
+        xGYIkIc2x26280x7IE14v26r15M28IrcIa0xkI8VCY1x0267AKxVW8JVW5JwA2ocxC64kI
+        II0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7
+        xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2
+        z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4
+        CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_
+        Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x
+        0EwIxGrwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l
+        4c8EcI0Ec7CjxVAaw2AFwI0_JF0_Jw1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I
+        0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IUn
+        -txDUUUUU==
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -55,17 +60,42 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Li Nan <linan122@huawei.com>
 
-This patch series optimizes and fixes fix_read_error().
+In fix_read_error(), 'success' will be checked immediately after assigning
+it, if it is set to 1 then the loop will break. Checking it again in
+condition of loop is redundant. Clean it up.
 
-Li Nan (3):
-  md/raid10: optimize fix_read_error
-  md: remove redundant check in fix_read_error()
-  md/raid10: handle replacement devices in fix_read_error
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/raid1.c  | 2 +-
+ drivers/md/raid10.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
- drivers/md/raid1.c  |  2 +-
- drivers/md/raid10.c | 50 +++++++++++++++++++++++----------------------
- 2 files changed, 27 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 3570da63969b..0391c2d0c109 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2318,7 +2318,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
+ 			d++;
+ 			if (d == conf->raid_disks * 2)
+ 				d = 0;
+-		} while (!success && d != read_disk);
++		} while (d != read_disk);
+ 
+ 		if (!success) {
+ 			/* Cannot read from anywhere - mark it bad */
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 94ae294c8a3c..a36e53fce21f 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2790,7 +2790,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+ 			sl++;
+ 			if (sl == conf->copies)
+ 				sl = 0;
+-		} while (!success && sl != slot);
++		} while (sl != slot);
+ 		rcu_read_unlock();
+ 
+ 		if (!success) {
 -- 
 2.39.2
 
