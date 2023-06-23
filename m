@@ -2,207 +2,198 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6208C001B0
-	for <linux-raid@archiver.kernel.org>; Fri, 23 Jun 2023 05:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5C9AC001B0
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Jun 2023 06:12:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230243AbjFWFuJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 23 Jun 2023 01:50:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34412 "EHLO
+        id S230395AbjFWGMS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 23 Jun 2023 02:12:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231329AbjFWFtk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Jun 2023 01:49:40 -0400
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E84EE46
-        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 22:48:41 -0700 (PDT)
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-        by m0001303.ppops.net (8.17.1.19/8.17.1.19) with ESMTP id 35N4VgPI002759
-        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 22:48:10 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from : to : cc :
- subject : date : message-id : content-type : content-id : mime-version;
- s=s2048-2021-q4; bh=7lEIA9QMjDsCT5Xve8wjTpOu4+pmU9sn7swIJgLRq7o=;
- b=WD0t+zS0PObeqkaJr14m+L/haMmQgWzbIV1peZclKyMu7dp4p0Sp56hw6C/7HQ/ZsZ3/
- f08ejdprlTxBaD6naY4r5xtjZz/8G7G1XWgEcBiThTHp65mhm6iMuykvO2pehbPUzwvK
- uK/N7DT4ZswboaXzCtLF1mzX5iKilvf6J68ffnMEuiCuhv28Y6mjVEKA5eXjhvezgQba
- D1dWgVqrd7fl0zxckyEScMGDw3f/o5wrmq3xw7O3P4pJoFzz7xLUzk45C44+oNE1IlHn
- Rqcrod7c4Ym9DfAj1zBEuijRCdrWURaYRe5AR0mp2XHSEDisyvYjUWuxV+tPF5y6Bpp7 2g== 
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2107.outbound.protection.outlook.com [104.47.55.107])
-        by m0001303.ppops.net (PPS) with ESMTPS id 3rcq9kqp9m-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 22:48:09 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IaEO9MIHRppMhvm8Xw1z1/xDhxZ0jMtcB7+isHnGPa76bnAPEmn7DujgMOw1sJPG5QdgvBcUOgWpA4tjOiDISFA0BzwMg8N2gZRlMaiS3/4JepkCgP8V0b2P03JRwoEJa9Lotost7DS7BcFxPLwN4EBPe0HTYC2k5LMtXD7Ai97WPH6+DhannkCMTwGPl0rEYtgkA4Ku3c4fKjKNVV/av/VT4yEGebU+arK/y4AYOlgO36Xtp6fTRFmjPVzzwjB9wKQxDLl6Eqk+uDbcCH0KP1c691MafqLHrIiC7bCdqr9H24xuAZX/wlRJGCRpHNV9rGgy5ymBV7V9nSK3sYV1ZQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7lEIA9QMjDsCT5Xve8wjTpOu4+pmU9sn7swIJgLRq7o=;
- b=ji8iFd8FvRirezyI9Hks7ZNNGRzVbyNttFGJdlkxV5aX2BgdBP1HRkHy7iAeE0upab+Z2y5q8NsQvy4CgH4vB8u01XW1Kv+pRlF4XjnlIcP4AczIK/Ot66xZgQU6orsIU9tvAIHfOBzX7TzT1QI0KorDNRtOZJWlJjauor1oRZkqKx3eoMXG8mFuf5pzfoNCbEjw3mDSzPrb+71QVW41Yd4n235TnNTiae2UbFqj3jpxHwmGicGCZa+H3ZprYbcxcAMi95Cw/atULAmjN+cdnamlc31zQHFi2/0GMv69zstPiI2ThiflhafJu7ocIXOv8U7EtUSW7TYNpBmZCWbH+A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
- dkim=pass header.d=meta.com; arc=none
-Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
- by MW3PR15MB4010.namprd15.prod.outlook.com (2603:10b6:303:48::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.24; Fri, 23 Jun
- 2023 05:48:03 +0000
-Received: from SA1PR15MB5109.namprd15.prod.outlook.com
- ([fe80::a353:7e78:2a58:dac1]) by SA1PR15MB5109.namprd15.prod.outlook.com
- ([fe80::a353:7e78:2a58:dac1%7]) with mapi id 15.20.6521.024; Fri, 23 Jun 2023
- 05:48:03 +0000
-From:   Song Liu <songliubraving@meta.com>
-To:     Jens Axboe <axboe@kernel.dk>,
-        linux-raid <linux-raid@vger.kernel.org>
-CC:     Christoph Hellwig <hch@lst.de>, Li Nan <linan122@huawei.com>,
-        Yu Kuai <yukuai3@huawei.com>
-Subject: [GIT PULL] md-next 20230622
-Thread-Topic: [GIT PULL] md-next 20230622
-Thread-Index: AQHZpZZGybBX055lAU6zSdjHrZX4Rg==
-Date:   Fri, 23 Jun 2023 05:48:03 +0000
-Message-ID: <BCD9738E-472D-4AA7-B4F9-CCF36B5DA0E1@fb.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3731.600.7)
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR15MB5109:EE_|MW3PR15MB4010:EE_
-x-ms-office365-filtering-correlation-id: 961573cd-e3f4-4c7c-6d06-08db73ad6938
-x-fb-source: Internal
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: uerbQyiaqEa/3kekzBmt7bBIYeOoojinGBXgRmIsv5gS5KhuMsUtFLI8FrvyRQHrJtPvBqObi2G6GaqBm7Sx1SvRMhlo+RqkerLYbxo7j2Q1IKIb2GZF3FLxvVZXEpRO1I+B2uFkG7S6Tjz4Ny+mUosp42wMgV7Uu/F/9DUr8fk+2t97OUJiocWgoyXx/qrqC/gf7qSAKsv4yxGwXjOFnfUfIEt4N30pKGBj4XFE7ztjq/iY26uYiRTCn2b49nLeFHOsf8eKw2nzxyAH4qlzMbdRID3UCuZvWv/60mVZLhjn0ryB+L4majSMliR1sHDNbkCpMpkVTxykg0esHOKWE0RtILhQaKdF7dasfI9uXPbixgT6zlj1xR/tLnxZiUV0g3smoFCP7+EAZh4E0QhbgCkEpRm910ZsZboRMNB0v28uI0bGAGEy1Aruu+RvwJYWrtxCaCXmiyUr/5lHxsIB6VKrxBjgTrAHEdwhxNtr/K5Gqkmu0Bt6dd4a/oVVsG0eZgJLl7s8qGEINdxnSgvPVZ+PQPLfgzzjmYQENULIInwzEgV3Sm+0wWN9gq+3QaWlx9EwfsyzbsF05IAatr8OeH/FKAlVjqqcEgeAXNB7pvI=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(346002)(376002)(39860400002)(396003)(136003)(366004)(451199021)(478600001)(71200400001)(966005)(6506007)(5660300002)(6486002)(110136005)(83380400001)(54906003)(66946007)(4326008)(91956017)(76116006)(41300700001)(66446008)(64756008)(66556008)(66476007)(8936002)(8676002)(33656002)(2906002)(36756003)(6512007)(186003)(9686003)(38100700002)(122000001)(38070700005)(316002)(86362001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?5xDMKOM3Qc8xkRFQIYnNXTAZXZmIf89R8lR9W/Mr8W0jY/55a8Y9WCcWoree?=
- =?us-ascii?Q?DO9BdNaAz/3VTRsMmAMdcS4safpiUX4vDGugPY750AvMKCjbofUzwehUYz4g?=
- =?us-ascii?Q?AhG98A3IKGHXV75/mxJwYbexQiq5HP9O031kpikaj0w0bJlWDBRy5NUbEP3t?=
- =?us-ascii?Q?rVv2D+N6IhRbZeDupPaehg5SqRv2U98MXXDJzBvGS56x70efYLDCLr37GZRj?=
- =?us-ascii?Q?+6DtQocLljBjqJ8yQdWTfXDMiuibnltDdq2+XtLn2eBKAkjJW0bRBxCILUyp?=
- =?us-ascii?Q?RrJvNz4dxRq1d4pppVh4eIFaXeH+S8h/PnYiTyxasizX7DON9r3VyZjyxhun?=
- =?us-ascii?Q?tiXa1FXcDA3fsvJ/I43qjxrIavORlv9+CkiX0/HwIMIsAAaeUJmWw+ALMpMP?=
- =?us-ascii?Q?1o/GYd9zE6CahIPPzsssVICAa1jmdX2OGxfoQtlI22mWsMfYEoJrcG4J3EL6?=
- =?us-ascii?Q?Jhszm54fb+dJfxSdAGpQooArQeiEEM9c+tdob+0BkNfs06nGQXxgFonkR/+A?=
- =?us-ascii?Q?6mpJIyIf9GJEktcRsSVdmw/i+R5df/pGZYF88PBqR4aLJ/j2UqswtDAIXUME?=
- =?us-ascii?Q?3e2hBxDJQMPH02md73/KJF49iKqjA91V46iYuShpvRmned3wVZ+Q5BOiDU3a?=
- =?us-ascii?Q?V4MogmaK7pM4OdSXPldy//0fXxaRysLeI9YvXEhHT35vgqWoBAibASQKKapy?=
- =?us-ascii?Q?j6oDweXWW+OQ0NhTYYt6GgqW6HfVSopOFe3lB1Yh4349jVddo92mMqyynQQE?=
- =?us-ascii?Q?sGoJuWEmEYJaDaOab1FDvSGkS0zjiUmbP0lVSr3shDHxbzG+8yH0HHoqvbhh?=
- =?us-ascii?Q?UU4teb8wWA8fVB3bafFV3bpz8yHM/x1nMq49nWyTk3ODi8dCjpBvks2/pXjO?=
- =?us-ascii?Q?obRF9zB5MjlsMLoqN2do+ds0OiYPL6Np5TT8Mt01UWJf2RlGNTbRdsiwi+xF?=
- =?us-ascii?Q?C/plbs/6n9kY6lxBN0KYlrRArPKFLUEG1YBsRrjoOjPhSeSaKt4MOUx5nVO9?=
- =?us-ascii?Q?lq1VBGSRUlfBUBFWvboPYlGfxgwOBTSEoQuO3f6SyZnPFVwINtNLbbH3+Xxi?=
- =?us-ascii?Q?ScxbP3+bXzQMN7YxPanRrxNhxqScSA34dlzFVZJLod6IJFBX3gxttXgViRTX?=
- =?us-ascii?Q?m9UljZBAFJC6LAjujd/SqFrNoXpCCKwfG41e0vpJmiCmBIUN8UnbbqDlExgv?=
- =?us-ascii?Q?pkfhx8VLFCvvYTBm1nm7L8eywqYM32LGj6riOmLPzglG4qVwZsdFuHwh0J1K?=
- =?us-ascii?Q?qw5lG2zwOaIyb/of7XrjC8rV571xitUJbmunD3eth8pgDG8rS+cGwzHsil+D?=
- =?us-ascii?Q?yBWLwNCDO3LGswX2QefWeuxccVFiK7pbJKQmLU4sZXgVAMaxbSEaDhM9dA+H?=
- =?us-ascii?Q?fUpHymkBHMaZFyrgzgqdxttUen/KOAfwHtj8GXZJtHptDwYs1sG2pec2UMnn?=
- =?us-ascii?Q?po7V4XcD1C1FyU94Y3wxmp2WM0ywqAODvFIFq70jqlO+7px0un3KD4/m85bE?=
- =?us-ascii?Q?o6bNc99nTxKgoC4K7V6mRkd5cqa1tJCKIpl7j/DZ/PUmlATm+dyYSzSUagdO?=
- =?us-ascii?Q?dunCwjjmcIJxJu8h9jaLuJuDmYc3qsw1a7ogFkw6R9nZvgCYnZrgjHkNF7sC?=
- =?us-ascii?Q?ZOXVnUWc9Ki0jHaBtO6ipBM=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <B67622C475EC4A448A6B384DD8B794AB@namprd15.prod.outlook.com>
-X-OriginatorOrg: meta.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 961573cd-e3f4-4c7c-6d06-08db73ad6938
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jun 2023 05:48:03.4443
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 3Hs/H9llw2jNT1XCLA+o67DjaFFPVjVW1jYkr9KlRJPvTYqVgUmBy95UmC4MLRgzpD8cM7tU9hXa+OrjFQVYmw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR15MB4010
-X-Proofpoint-GUID: Dub-eccoXDMp3YyeRRcCCmAAUxODxu3f
-X-Proofpoint-ORIG-GUID: Dub-eccoXDMp3YyeRRcCCmAAUxODxu3f
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S230242AbjFWGMO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Jun 2023 02:12:14 -0400
+Received: from mail-qk1-x72b.google.com (mail-qk1-x72b.google.com [IPv6:2607:f8b0:4864:20::72b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC4BF173F
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 23:12:08 -0700 (PDT)
+Received: by mail-qk1-x72b.google.com with SMTP id af79cd13be357-763a2e39b88so19397985a.1
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 23:12:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687500728; x=1690092728;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=g6Rx1Xf0LH0dvCkca5awQZbD4QgAJXvuKCZBBi/mUhU=;
+        b=SecpzgOSYBos+0sqL4EbPW75FGWVTx9L5r0t3G2iuevcqFrKG4F/tLNs6eWS22kOmh
+         C0PZvcjnf7UYxgnqR+bpG0mTlEGom1YtlVhT3auz/n35x7KxiTrn9uMCHEu7lYc1dP6p
+         eY+aw4EnvIi6B8fviKsKoQH1Jzl15W85hgTxNUcsJ3dNHiRrVQFHxysMeC3SWqeWxnsy
+         yeeVzTshwEBU92s9eN4WsR3lm2qnu+8pne5nYPYtXC9PnDXRC5K4UnNnq5jjmfz2fAMm
+         luXgCfjy27KBowEi38EwnMkC5XGcuX6tyW21/tEwr1FrSp+rGCyLdSsWF3R6DJsSbivl
+         1Q3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687500728; x=1690092728;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=g6Rx1Xf0LH0dvCkca5awQZbD4QgAJXvuKCZBBi/mUhU=;
+        b=lj0WabgEVQN4QsNbJ3dNKpcITWlr9+MZXr0Y87zfVnpGqu7KzzEPpmVfi26r0OxnbZ
+         UqnebTRdlPst3KjDOB5KGKRUnQALkple+/1IHcEfTKQZlxX17/xk3F++H05vZVQsujB8
+         4WMiz72SkH6LykIQ5HiliDZsQKUTn8VJDOygDMuMD4XOuk4Nr6yDc1k9ExtFkPLpzNkP
+         a8I6AD5tI/W8UodzX71vSMnHQ2q3CqWufuhMTqYZenIvxAf+v6p6L5dNcMOpp/uZMCNo
+         O3Hxeksq2qaChvK+R0oQMh1dcTabI/1GtnJNRXfKuQKvN8UgOzTVtTZC4nHjOlzpzlNG
+         lpbg==
+X-Gm-Message-State: AC+VfDz1bisM7qnwcW9kEmWVCGvzPOtNaYW/pKjhZRDf2mcvbmy+6MQB
+        IkhbpnakAQC0dDhTKQ/y5kaiXQ==
+X-Google-Smtp-Source: ACHHUZ5b6N+FK7PXoTwlvRKh6LsH0vyG6YXCaEWGf5NRL5zfUiNEb8MHT84h6djsafTCO/ahpimwww==
+X-Received: by 2002:a05:6214:764:b0:62d:e913:f9ae with SMTP id f4-20020a056214076400b0062de913f9aemr22933956qvz.1.1687500727864;
+        Thu, 22 Jun 2023 23:12:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
+        by smtp.gmail.com with ESMTPSA id p28-20020a634f5c000000b0055387ffef10sm5712930pgl.24.2023.06.22.23.12.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Jun 2023 23:12:07 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qCa1b-00F8aV-2d;
+        Fri, 23 Jun 2023 16:12:03 +1000
+Date:   Fri, 23 Jun 2023 16:12:03 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+Cc:     akpm@linux-foundation.org, tkhai@ya.ru, vbabka@suse.cz,
+        roman.gushchin@linux.dev, djwong@kernel.org, brauner@kernel.org,
+        paulmck@kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 02/29] mm: vmscan: introduce some helpers for dynamically
+ allocating shrinker
+Message-ID: <ZJU3s8tyGsYTVS8f@dread.disaster.area>
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-3-zhengqi.arch@bytedance.com>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-06-23_02,2023-06-22_02,2023-05-22_02
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230622085335.77010-3-zhengqi.arch@bytedance.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jens, 
+On Thu, Jun 22, 2023 at 04:53:08PM +0800, Qi Zheng wrote:
+> Introduce some helpers for dynamically allocating shrinker instance,
+> and their uses are as follows:
+> 
+> 1. shrinker_alloc_and_init()
+> 
+> Used to allocate and initialize a shrinker instance, the priv_data
+> parameter is used to pass the pointer of the previously embedded
+> structure of the shrinker instance.
+> 
+> 2. shrinker_free()
+> 
+> Used to free the shrinker instance when the registration of shrinker
+> fails.
+> 
+> 3. unregister_and_free_shrinker()
+> 
+> Used to unregister and free the shrinker instance, and the kfree()
+> will be changed to kfree_rcu() later.
+> 
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+> ---
+>  include/linux/shrinker.h | 12 ++++++++++++
+>  mm/vmscan.c              | 35 +++++++++++++++++++++++++++++++++++
+>  2 files changed, 47 insertions(+)
+> 
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index 43e6fcabbf51..8e9ba6fa3fcc 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -107,6 +107,18 @@ extern void unregister_shrinker(struct shrinker *shrinker);
+>  extern void free_prealloced_shrinker(struct shrinker *shrinker);
+>  extern void synchronize_shrinkers(void);
+>  
+> +typedef unsigned long (*count_objects_cb)(struct shrinker *s,
+> +					  struct shrink_control *sc);
+> +typedef unsigned long (*scan_objects_cb)(struct shrinker *s,
+> +					 struct shrink_control *sc);
+> +
+> +struct shrinker *shrinker_alloc_and_init(count_objects_cb count,
+> +					 scan_objects_cb scan, long batch,
+> +					 int seeks, unsigned flags,
+> +					 void *priv_data);
+> +void shrinker_free(struct shrinker *shrinker);
+> +void unregister_and_free_shrinker(struct shrinker *shrinker);
 
-Please consider pulling the following changes for md-next on top of your
-for-6.5/block branch. The major changes are:
+Hmmmm. Not exactly how I envisioned this to be done.
 
-1. Deprecate bitmap file support, by Christoph Hellwig;
-2. Fix deadlock with md sync thread, by Yu Kuai;
-3. Refactor md io accounting, by Yu Kuai.
+Ok, this will definitely work, but I don't think it is an
+improvement. It's certainly not what I was thinking of when I
+suggested dynamically allocating shrinkers.
 
-Thanks,
-Song
+The main issue is that this doesn't simplify the API - it expands it
+and creates a minefield of old and new functions that have to be
+used in exactly the right order for the right things to happen.
+
+What I was thinking of was moving the entire shrinker setup code
+over to the prealloc/register_prepared() algorithm, where the setup
+is already separated from the activation of the shrinker.
+
+That is, we start by renaming prealloc_shrinker() to
+shrinker_alloc(), adding a flags field to tell it everything that it
+needs to alloc (i.e. the NUMA/MEMCG_AWARE flags) and having it
+returned a fully allocated shrinker ready to register. Initially
+this also contains an internal flag to say the shrinker was
+allocated so that unregister_shrinker() knows to free it.
+
+The caller then fills out the shrinker functions, seeks, etc. just
+like the do now, and then calls register_shrinker_prepared() to make
+the shrinker active when it wants to turn it on.
+
+When it is time to tear down the shrinker, no API needs to change.
+unregister_shrinker() does all the shutdown and frees all the
+internal memory like it does now. If the shrinker is also marked as
+allocated, it frees the shrinker via RCU, too.
+
+Once everything is converted to this API, we then remove
+register_shrinker(), rename register_shrinker_prepared() to
+shrinker_register(), rename unregister_shrinker to
+shrinker_unregister(), get rid of the internal "allocated" flag
+and always free the shrinker.
+
+At the end of the patchset, every shrinker should be set
+up in a manner like this:
 
 
-The following changes since commit 648fa60fa7de3ca6f6303e1721591ad73def9cf0:
+	sb->shrinker = shrinker_alloc(SHRINKER_MEMCG_AWARE|SHRINKER_NUMA_AWARE,
+				"sb-%s", type->name);
+	if (!sb->shrinker)
+		return -ENOMEM;
 
-  block: don't return -EINVAL for not found names in devt_from_devname (2023-06-22 09:09:33 -0600)
+	sb->shrinker->count_objects = super_cache_count;
+	sb->shrinker->scan_objects = super_cache_scan;
+	sb->shrinker->batch = 1024;
+	sb->shrinker->private = sb;
 
-are available in the Git repository at:
+	.....
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git tags/md-next-20230622
+	shrinker_register(sb->shrinker);
 
-for you to fetch changes up to 41fb72ee7eeda723e619c6918dffaf05a55fc7dd:
+And teardown is just a call to shrinker_unregister(sb->shrinker)
+as it is now.
 
-  md/md-faulty: enable io accounting (2023-06-22 22:28:27 -0700)
+i.e. the entire shrinker regsitration API is now just three
+functions, down from the current four, and much simpler than the
+the seven functions this patch set results in...
 
-----------------------------------------------------------------
-Christoph Hellwig (11):
-      md-bitmap: set BITMAP_WRITE_ERROR in write_sb_page
-      md-bitmap: initialize variables at declaration time in md_bitmap_file_unmap
-      md-bitmap: use %pD to print the file name in md_bitmap_file_kick
-      md-bitmap: split file writes into a separate helper
-      md-bitmap: rename read_page to read_file_page
-      md-bitmap: refactor md_bitmap_init_from_disk
-      md-bitmap: cleanup read_sb_page
-      md-bitmap: account for mddev->bitmap_info.offset in read_sb_page
-      md-bitmap: don't use ->index for pages backing the bitmap file
-      md: make bitmap file support optional
-      md: deprecate bitmap file support
+The other advantage of this is that it will break all the existing
+out of tree code and third party modules using the old API and will
+no longer work with a kernel using lockless slab shrinkers. They
+need to break (both at the source and binary levels) to stop bad
+things from happening due to using uncoverted shrinkers in the new
+setup.
 
-Li Nan (1):
-      md/raid10: fix the condition to call bio_end_io_acct()
-
-Song Liu (1):
-      md: use mddev->external to select holder in export_rdev()
-
-Yu Kuai (17):
-      md/raid1-10: fix casting from randomized structure in raid1_submit_write()
-      Revert "md: unlock mddev before reap sync_thread in action_store"
-      md: refactor action_store() for 'idle' and 'frozen'
-      md: add a mutex to synchronize idle and frozen in action_store()
-      md: refactor idle/frozen_sync_thread() to fix deadlock
-      md: wake up 'resync_wait' at last in md_reap_sync_thread()
-      md: enhance checking in md_check_recovery()
-      md: fix 'delete_mutex' deadlock
-      raid10: avoid spin_lock from fastpath from raid10_unplug()
-      md: move initialization and destruction of 'io_acct_set' to md.c
-      md: also clone new io if io accounting is disabled
-      raid5: fix missing io accounting in raid5_align_endio()
-      md/raid1: switch to use md_account_bio() for io accounting
-      md/raid10: switch to use md_account_bio() for io accounting
-      md/md-multipath: enable io accounting
-      md/md-linear: enable io accounting
-      md/md-faulty: enable io accounting
-
- drivers/md/Kconfig        |  10 +++++
- drivers/md/dm-raid.c      |   1 -
- drivers/md/md-bitmap.c    | 338 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++------------------------------------------------------------------------------
- drivers/md/md-bitmap.h    |   1 +
- drivers/md/md-faulty.c    |   2 +
- drivers/md/md-linear.c    |   1 +
- drivers/md/md-multipath.c |   1 +
- drivers/md/md.c           | 245 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-------------------------------------------------
- drivers/md/md.h           |  15 +++----
- drivers/md/raid0.c        |  16 +-------
- drivers/md/raid1-10.c     |   2 +-
- drivers/md/raid1.c        |  14 +++----
- drivers/md/raid1.h        |   1 -
- drivers/md/raid10.c       |  24 ++++++------
- drivers/md/raid10.h       |   1 -
- drivers/md/raid5.c        |  70 +++++++++------------------------
- 16 files changed, 372 insertions(+), 370 deletions(-)
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
