@@ -2,134 +2,142 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6CBCEB64D7
-	for <linux-raid@archiver.kernel.org>; Fri, 23 Jun 2023 19:17:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF207C00528
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Jun 2023 21:51:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229794AbjFWTRO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 23 Jun 2023 15:17:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58090 "EHLO
+        id S232897AbjFWVvA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 23 Jun 2023 17:51:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229775AbjFWTRO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Jun 2023 15:17:14 -0400
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E53E3E8
-        for <linux-raid@vger.kernel.org>; Fri, 23 Jun 2023 12:17:12 -0700 (PDT)
-Received: by mail-ej1-x632.google.com with SMTP id a640c23a62f3a-989d03eae11so118950866b.2
-        for <linux-raid@vger.kernel.org>; Fri, 23 Jun 2023 12:17:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687547831; x=1690139831;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0h+9uqpnThW8xNc9HKtffDoqNR9WXMY3d/2wmRdmc3s=;
-        b=hO0zwMjZMzKq4MhCNuxyYbTWDN9k3sjMF3WCvI0R2zrFWpqYbUBu2ktYVZN274uLMj
-         zDYDZFZfpUzoNlzbPdLpTwqWTuPk8ecSOBYzctSvgoAE3xPvgNIU4h0L4BXRG983D5hY
-         O9XDB6VrwHgk1fyYWZJLNTOzqse7Nx8h69zIUwTM7zpngNHlCejZ5ESNphT4oY14IjqI
-         OslriCrOlfVm/mzkoLt3DhhZq0ykfaTAVMzo7xZegOSyblNrvd4TtdNEPwxj085oEl53
-         dAZVvTYNwOJRswPSgDaMtajjI6mkyMt2YHAfl9ITYOQL0nald+f2fHJwIMhwfkkDYyPl
-         NWTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687547831; x=1690139831;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0h+9uqpnThW8xNc9HKtffDoqNR9WXMY3d/2wmRdmc3s=;
-        b=QtZ3XWGo9lJgH/dTbysK8SNRvlPLdt87zKrfnSN9y67zz+1OVwJ+Ay0/rzCo9SAe+q
-         CUfo7GFUheCQBNzTCBqg3pw/ZVsC/f+gD8ABWTJMl6eq7/PRzlk/Vsq5+Hd/Kx1h+EYH
-         qD6DXx+qAIujafU8oUR+lUAec68v29cx+u/GOnyMUu46/hgmIURn4TDPhWN1nhLmg+vl
-         Mz8tru+DUby6AVW6jNb6TWIJIxahCvVX1cIhclBcPeCxLFocKr82Q7Ud1uokTmyYVCnS
-         3i/K0E1Oxxo4xRt7MJ4b0dUd0hgKajq9X6K1spzoCmP9nj/nkMgvW9G1ZvNiCyuhlGFC
-         PUVw==
-X-Gm-Message-State: AC+VfDy3ufLBCQL2SgGFyirYg4GJh95tsbTlsu1zFekGswmnGERPufmU
-        /KCaz+wiKPMNS94JYyLHOxtkt+vXEEGaAAWAoDk=
-X-Google-Smtp-Source: ACHHUZ5/fKCcnAHiMKf6MksIvZmqgDJuktY0MvunKCqMH1MQUcN6bCeORAl1VcTYyqQ0v2KalbQug2fq56O9BF6Cnm0=
-X-Received: by 2002:a17:907:9627:b0:988:3943:aaa4 with SMTP id
- gb39-20020a170907962700b009883943aaa4mr18637512ejc.29.1687547830962; Fri, 23
- Jun 2023 12:17:10 -0700 (PDT)
+        with ESMTP id S232753AbjFWVtk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Jun 2023 17:49:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BFBB26A5;
+        Fri, 23 Jun 2023 14:49:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E89EC60AF5;
+        Fri, 23 Jun 2023 21:49:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1671C433C8;
+        Fri, 23 Jun 2023 21:49:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687556978;
+        bh=bPOn8vNljb4Kts16IvF12pTxf9JAyk3Q+pkgmofKYTI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=l4LxiaK6FHJV+LaN+k19qJLvpsW7q6peMpRqQDAloqrBAb7yaQiFzdxyJRQOlUbhL
+         XBecHa58jNv7ky9A034GYSD2hm6ptEDQNutUwI9YecVIS3WmPXE3L9OmXsZUz8kwS8
+         TTwQFFfOfOtb8MAgVm196q6ZTVuewtnjos3fSTZ9GEVB31g3k5MJS42AVjc5SzUh/V
+         FyhyE7GMMMzgjXlbaXwq0dZEfCVwkgehGZA7UY2GwQKM2vvvfQX8LDHnVUTOmbhZdZ
+         3Ac0f71z1GBnxhPGwb/beOuZzWJU5QKmGVyY8UMScHTrLfTWh6qN+V7ajaXz+LKLHt
+         /jQ/IQ+1PydAw==
+Date:   Fri, 23 Jun 2023 17:49:34 -0400
+From:   Chuck Lever <cel@kernel.org>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 15/29] NFSD: dynamically allocate the nfsd-client shrinker
+Message-ID: <ZJYTbnmRKF7j3CHW@manet.1015granger.net>
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-16-zhengqi.arch@bytedance.com>
 MIME-Version: 1.0
-References: <CAO2ABipzbw6QL5eNa44CQHjiVa-LTvS696Mh9QaTw+qsUKFUCw@mail.gmail.com>
- <6fcbab2f-8211-774a-7aa9-883ed5d74168@huaweicloud.com> <CAO2ABiq5bB0cD7c+cS1Vw2PqSZNadyXUgonfEH6Gwsz8d9OiTQ@mail.gmail.com>
- <04036a22-c0b0-8ca1-0220-a531c47a1e25@huaweicloud.com> <CAO2ABioUC9Wy=7FaPAP+AUmd5S-Xanj2d9JJYkqU4BL8DxW5Bg@mail.gmail.com>
- <b1252ee9-4309-a1a9-d2c4-3e278a3e70b6@huaweicloud.com> <CAO2ABioXHT9c4qPx5S4dKsMZLyE0xLGBzST5tSTu8YPmX4FxYQ@mail.gmail.com>
- <51a28406-f850-5f4e-1d2d-87c06df75a9d@huaweicloud.com> <CAO2ABiqEoi4iB__b7KdYu_jQqmeB8joh5xurHNeXj9583mcjjA@mail.gmail.com>
- <1392b816-bdaf-da5f-acc8-b6677aa71e3b@huaweicloud.com> <CAO2ABiqkg7HobNvXRWrid36+uYwZ3yHqLmbft_FQwzD9-B7mRg@mail.gmail.com>
- <CAAMCDec_qt0wsfQ6d1CWc4e3hYtzXabw_sK9ChjMUSkA0cPxXg@mail.gmail.com> <d32a481b-4160-da34-8a1e-303c44d835f7@huaweicloud.com>
-In-Reply-To: <d32a481b-4160-da34-8a1e-303c44d835f7@huaweicloud.com>
-From:   David Gilmour <dgilmour76@gmail.com>
-Date:   Fri, 23 Jun 2023 13:17:00 -0600
-Message-ID: <CAO2ABipBVa3c6v72TG32Ggf+FX+Zm5B5cniNgP_PPvDyaS9OZA@mail.gmail.com>
-Subject: Re: mdadm grow raid 5 to 6 failure (crash)
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Roger Heflin <rogerheflin@gmail.com>, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>, "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230622085335.77010-16-zhengqi.arch@bytedance.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-I wanted to provide an update on this thread. First of all thank you
-for all the insights and recommendations. I finally found a way to
-recover my data and wanted to pass what the fix was in the event
-someone stumbles across this exact scenario. Summary below
- - I believe there is some kind of problem with kernel or module in
-5.14.0-319.el9.x86_64 for my controller (ASMedia ASM1064 chipset)
-which I believe was responsible for the drives attached to it
-disappearing while my grow from raid 5 to raid 6 was taking place
- - After the above event (and rebooting) whenever I tried to assemble
-the raid to kick off resuming the rebuild mdadm would hang as
-previously described in this thread.
- - After Yu pointed me to a patch that might of bypass the issue I
-decided to first boot the system on a rescue disk with an older kernel
-(3.x) and mdadm version
- - Fortunately, my assemble succeeded and the grow resumed and the
-slow rebuild of my 30TB array completed 17 days later
- - My ASMedia ASM1064 chipset controller was 100% stable for the 17
-days of rebuild on the old kernel
- - As soon as I went back to my 5.14.0-319.el9.x86_64 kernel my
-ASMedia ASM1064 controller started showing ata timeout errors and
-drives disappearing again
- - I ended up just purchasing another controller with a different
-chipset (Marvell 88SE9215) out of desperation and the system is
-finally stable and my data is all intact!
+On Thu, Jun 22, 2023 at 04:53:21PM +0800, Qi Zheng wrote:
+> In preparation for implementing lockless slab shrink,
+> we need to dynamically allocate the nfsd-client shrinker,
+> so that it can be freed asynchronously using kfree_rcu().
+> Then it doesn't need to wait for RCU read-side critical
+> section when releasing the struct nfsd_net.
+> 
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 
-Again thank you everyone for the help!
+For 15/29 and 16/29 of this series:
 
---David
+Acked-by: Chuck Lever <chuck.lever@oracle.com>
 
 
-On Mon, May 8, 2023 at 8:33=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
-> Hi,
->
-> =E5=9C=A8 2023/05/09 6:53, Roger Heflin =E5=86=99=E9=81=93:
-> > On Mon, May 8, 2023 at 6:57=E2=80=AFAM David Gilmour <dgilmour76@gmail.=
-com> wrote:
-> >>
-> >> Ok, well I'm willing to try anything at this point. Do you need
-> >> anything from me for a patch? Here is my current kernel details:
-> >
-> > grep -i mdadm /etc/udev/rules.d/* /lib/udev/rules.d/*
-> >
-> > If you can find a udev rule that starts up the monitor then move that
-> > rule out of the directory, so that on the next assemble try it does
-> > not get started.
-> >
-> > If this is the recent bug that is being discussed then anything
-> > accessing the array after the reshape will deadlock the array and the
-> > reshape.
->
-> It's not anything accessing the array, in fact, it's only the io accross
-> reshape position can trigger the deadlock.
->
-> I just posted a fix patch in the other thread by failing such io while
-> reshape can't make progress. However, I'm not sure for now if this will
-> break mdadm, for example, will mdadm must read something from array to
-> make progress?
->
-> Thanks,
-> Kuai
-> > .
-> >
->
+> ---
+>  fs/nfsd/netns.h     |  2 +-
+>  fs/nfsd/nfs4state.c | 20 ++++++++++++--------
+>  2 files changed, 13 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/nfsd/netns.h b/fs/nfsd/netns.h
+> index ec49b200b797..f669444d5336 100644
+> --- a/fs/nfsd/netns.h
+> +++ b/fs/nfsd/netns.h
+> @@ -195,7 +195,7 @@ struct nfsd_net {
+>  	int			nfs4_max_clients;
+>  
+>  	atomic_t		nfsd_courtesy_clients;
+> -	struct shrinker		nfsd_client_shrinker;
+> +	struct shrinker		*nfsd_client_shrinker;
+>  	struct work_struct	nfsd_shrinker_work;
+>  };
+>  
+> diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
+> index 6e61fa3acaf1..a06184270548 100644
+> --- a/fs/nfsd/nfs4state.c
+> +++ b/fs/nfsd/nfs4state.c
+> @@ -4388,8 +4388,7 @@ static unsigned long
+>  nfsd4_state_shrinker_count(struct shrinker *shrink, struct shrink_control *sc)
+>  {
+>  	int count;
+> -	struct nfsd_net *nn = container_of(shrink,
+> -			struct nfsd_net, nfsd_client_shrinker);
+> +	struct nfsd_net *nn = shrink->private_data;
+>  
+>  	count = atomic_read(&nn->nfsd_courtesy_clients);
+>  	if (!count)
+> @@ -8094,14 +8093,19 @@ static int nfs4_state_create_net(struct net *net)
+>  	INIT_WORK(&nn->nfsd_shrinker_work, nfsd4_state_shrinker_worker);
+>  	get_net(net);
+>  
+> -	nn->nfsd_client_shrinker.scan_objects = nfsd4_state_shrinker_scan;
+> -	nn->nfsd_client_shrinker.count_objects = nfsd4_state_shrinker_count;
+> -	nn->nfsd_client_shrinker.seeks = DEFAULT_SEEKS;
+> -
+> -	if (register_shrinker(&nn->nfsd_client_shrinker, "nfsd-client"))
+> +	nn->nfsd_client_shrinker = shrinker_alloc_and_init(nfsd4_state_shrinker_count,
+> +							   nfsd4_state_shrinker_scan,
+> +							   0, DEFAULT_SEEKS, 0,
+> +							   nn);
+> +	if (!nn->nfsd_client_shrinker)
+>  		goto err_shrinker;
+> +
+> +	if (register_shrinker(nn->nfsd_client_shrinker, "nfsd-client"))
+> +		goto err_register;
+>  	return 0;
+>  
+> +err_register:
+> +	shrinker_free(nn->nfsd_client_shrinker);
+>  err_shrinker:
+>  	put_net(net);
+>  	kfree(nn->sessionid_hashtbl);
+> @@ -8197,7 +8201,7 @@ nfs4_state_shutdown_net(struct net *net)
+>  	struct list_head *pos, *next, reaplist;
+>  	struct nfsd_net *nn = net_generic(net, nfsd_net_id);
+>  
+> -	unregister_shrinker(&nn->nfsd_client_shrinker);
+> +	unregister_and_free_shrinker(nn->nfsd_client_shrinker);
+>  	cancel_work(&nn->nfsd_shrinker_work);
+>  	cancel_delayed_work_sync(&nn->laundromat_work);
+>  	locks_end_grace(&nn->nfsd4_manager);
+> -- 
+> 2.30.2
+> 
