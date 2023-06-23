@@ -2,104 +2,129 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC363EB64DA
-	for <linux-raid@archiver.kernel.org>; Fri, 23 Jun 2023 00:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D3A1C001B1
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Jun 2023 05:26:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbjFWAxp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 22 Jun 2023 20:53:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54752 "EHLO
+        id S231422AbjFWF0I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 23 Jun 2023 01:26:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229647AbjFWAxo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Jun 2023 20:53:44 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE12C2107
-        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 17:53:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687481579;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TWfUVFfcgJbrrEHQs0fmtdNsG8h4GlA/L+9Z2Jk8wxA=;
-        b=LbwPYQeN5SRYZ6BXfZKrLaRTrzvsFxZCiZ30R7xTHooGJB4WFtp6gvesYJf8XLKx2QF+Si
-        7ZGynZfDktNRFtSSez0utXWBuegTtCceXT35eISDNTltuiVMlhZlCJbztlfzw0DFIg0Ycb
-        MMFECH5Ds/ODkCix1+Fr1PpBwQz6sFU=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-228-vsn6CwA4O5uOYabZp3hTuQ-1; Thu, 22 Jun 2023 20:52:58 -0400
-X-MC-Unique: vsn6CwA4O5uOYabZp3hTuQ-1
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1b5412be64aso377485ad.0
-        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 17:52:58 -0700 (PDT)
+        with ESMTP id S229907AbjFWF0H (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 23 Jun 2023 01:26:07 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CF722112
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 22:26:02 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b539d2f969so2332645ad.0
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jun 2023 22:26:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1687497961; x=1690089961;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=I74A3FzNlMiWSwenHJ0qW6K9Kk3RrnXa52gDQFbNI94=;
+        b=FE8O7Vw+I3Rj3/ymdkfv8Bc+lpDZ080s6kF+VZ6KYuJ8IcvSDzEvJHrYtehbevzDKJ
+         k39KSog3mD45RBSDswKQweqzUA8WL0SL0uOXty3tY4QBaCgZzpYfPiVwVN0bS3NDj5Wp
+         Vlnc7que1gB/FOXny+Xqd3OrpA8296BqQ44lM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687481577; x=1690073577;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=TWfUVFfcgJbrrEHQs0fmtdNsG8h4GlA/L+9Z2Jk8wxA=;
-        b=GgizTu48y5nrwS+WAIMCIpCBYE62r1sCdi06QQGDUy7frIrC29iLnfdMRezQgY5XTA
-         MDuOxsL8bqQjbQf4hsdEnHXwQZ2/4ZHMv48XYN3FJrTBsMR9/9BqTuYCTmQEzAhvAqrM
-         0pvIzvngLPbIgazb654qL0An9tcqFfXwRbeAlMFBEJwKO+ZLLbh2gOeU0Ebum2Q2VSXn
-         isYj2HpJhtjflwpINbgs75O7Q0ZHNiY8WswPKZSRYkm7tgSsuRJBy1nu2ciJdjWGn1z6
-         zrVRGXBp7PLGDhCimXS5HWsdOWSSPhy+GT+0KinctwU1wfH7FErxxlZAzbZ/LhYmylyF
-         Ugpw==
-X-Gm-Message-State: AC+VfDxSrK1CXpRV5K587yZEzKrQWm/pcMn9n+bO0qyF6MG73cKpiNll
-        6vbpIeyHimqvhoQ6VfJ2rTEeITcshH2eAwUkPH9dwIve49JgRAN5AlqaSDlh45LLzdLBepmPbxL
-        3z3WiDQ0IWkpe69gWhUGXpgwsKd4U9/Yx0ZLKLyDwOGhwh+at
-X-Received: by 2002:a17:903:2347:b0:1b6:b703:3703 with SMTP id c7-20020a170903234700b001b6b7033703mr2623606plh.37.1687481577114;
-        Thu, 22 Jun 2023 17:52:57 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ4YuMs06dFpFSo7j7ulcHiWun/6HP9ljo7/Rk9RPyHkz6rBfNlgBYg4scTWVbJGe0dgT15p/oh32p92P1ZoePQ=
-X-Received: by 2002:a17:903:2347:b0:1b6:b703:3703 with SMTP id
- c7-20020a170903234700b001b6b7033703mr2623601plh.37.1687481576851; Thu, 22 Jun
- 2023 17:52:56 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1687497961; x=1690089961;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=I74A3FzNlMiWSwenHJ0qW6K9Kk3RrnXa52gDQFbNI94=;
+        b=EXQ3kJ2l7KifhsyyGt0+CPGaDg9AJXwM37Ob6Pu3wE5Ez3zL99WzFd73ex5/MyscwM
+         UddFSIW9NiM/3YfaizufAY6dcbJ3RsddTn/7SiWYoBoyJTG7B1sVLBfNFLQ8btBlB7s+
+         cQXVkOJNtvXaast0bDkQtncXu3yibMCSfql7PysllEk3DomaemIyRJydh8Hk2Zap302B
+         Pv0t/7s5h6zpvAjFS1ZDPTJBYvgWQPO/1y/cm1Zd9ADabcvTsbXcQs91pEJ93dR+/lTQ
+         JRWHk6tLfPHFHyokVL5uPTPlmzb+Li4+kubZH8BxDIBp3feBLfUkjAJXiU6hnuEQgVLD
+         IoHA==
+X-Gm-Message-State: AC+VfDxdYxeWZs6d6h2ebmpQlXxE4kMwP+4SIwIwwp9mNOzgMKBeHNj8
+        irA1gtth5tFCG6i5OaxybJ3uYg==
+X-Google-Smtp-Source: ACHHUZ5sPbLx4vVXAJjIGembGjCJJyMTydKicDo1snyQX4c1P9pglVj/z3vqORh1yZ2I9l32bGJbWQ==
+X-Received: by 2002:a17:902:ecc6:b0:1ae:8fa:cd4c with SMTP id a6-20020a170902ecc600b001ae08facd4cmr41235916plh.7.1687497961344;
+        Thu, 22 Jun 2023 22:26:01 -0700 (PDT)
+Received: from google.com ([2401:fa00:8f:203:3383:b451:fa2:1538])
+        by smtp.gmail.com with ESMTPSA id c1-20020a170902d48100b00192aa53a7d5sm6288753plg.8.2023.06.22.22.25.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Jun 2023 22:26:00 -0700 (PDT)
+Date:   Fri, 23 Jun 2023 14:25:54 +0900
+From:   Sergey Senozhatsky <senozhatsky@chromium.org>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-arm-msm@vger.kernel.org, dm-devel@redhat.com,
+        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 29/29] mm: shrinker: move shrinker-related code into a
+ separate file
+Message-ID: <20230623052554.GA11471@google.com>
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-30-zhengqi.arch@bytedance.com>
 MIME-Version: 1.0
-References: <20231506112411@laper.mirepesht> <82d2e7c4-1029-ec7b-a8c5-5a6deebfae31@huaweicloud.com>
- <CALTww28VaFnsBQhkbWMRvqQv6c9HyP-iSFPwG_tn2SqQVLB+7Q@mail.gmail.com>
- <20231606091224@laper.mirepesht> <20231606110134@laper.mirepesht>
- <8b288984-396a-6093-bd1f-266303a8d2b6@huaweicloud.com> <20231606115113@laper.mirepesht>
- <1117f940-6c7f-5505-f962-a06e3227ef24@huaweicloud.com> <20231606122233@laper.mirepesht>
- <20231606152106@laper.mirepesht> <cbc45f91-c341-2207-b3ec-81701a8651b5@huaweicloud.com>
- <CALTww2-Wkvxo3C2OCFrG9Wr_7RynjxnBMtPwR4GppbArZYNzsQ@mail.gmail.com> <e1097397-e477-0449-7579-348eecc81a18@youngman.org.uk>
-In-Reply-To: <e1097397-e477-0449-7579-348eecc81a18@youngman.org.uk>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Fri, 23 Jun 2023 08:52:45 +0800
-Message-ID: <CALTww29_5-FmVk_2XEg_2B3-_p7=y+Wp=PUyoi4Um6BRdUiRKg@mail.gmail.com>
-Subject: Re: Unacceptably Poor RAID1 Performance with Many CPU Cores
-To:     Wols Lists <antlists@youngman.org.uk>
-Cc:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230622085335.77010-30-zhengqi.arch@bytedance.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jun 22, 2023 at 3:34=E2=80=AFAM Wols Lists <antlists@youngman.org.u=
-k> wrote:
->
-> On 21/06/2023 09:05, Xiao Ni wrote:
-> > Cool. And I noticed you mentioned 'fast path' in many places. What's
-> > the meaning of 'fast path'? Does it mean the path that i/os are
-> > submitting?
->
-> It's a pretty generic kernel term, used everywhere. It's intended to be
-> the normal route for whatever is going on, but it must ALWAYS ALWAYS
-> ALWAYS be optimised for speed.
->
-> If it hits a problem, it must back out and use the "slow path", which
-> can wait, block, whatever.
->
-> So the idea is that all your operations normally complete straight away,
-> but if they can't they go into a different path that guarantees they
-> complete, but don't block the normal operation of the system.
->
-> Cheers,
-> Wol
->
+On (23/06/22 16:53), Qi Zheng wrote:
+> +/*
+> + * Remove one
+> + */
+> +void unregister_shrinker(struct shrinker *shrinker)
+> +{
+> +	struct dentry *debugfs_entry;
+> +	int debugfs_id;
+> +
+> +	if (!(shrinker->flags & SHRINKER_REGISTERED))
+> +		return;
+> +
+> +	shrinker_put(shrinker);
+> +	wait_for_completion(&shrinker->completion_wait);
+> +
+> +	mutex_lock(&shrinker_mutex);
+> +	list_del_rcu(&shrinker->list);
 
-Hi Wol
+Should this function wait for RCU grace period(s) before it goes
+touching shrinker fields?
 
-Thanks for the explanation!
+> +	shrinker->flags &= ~SHRINKER_REGISTERED;
+> +	if (shrinker->flags & SHRINKER_MEMCG_AWARE)
+> +		unregister_memcg_shrinker(shrinker);
+> +	debugfs_entry = shrinker_debugfs_detach(shrinker, &debugfs_id);
+> +	mutex_unlock(&shrinker_mutex);
+> +
+> +	shrinker_debugfs_remove(debugfs_entry, debugfs_id);
+> +
+> +	kfree(shrinker->nr_deferred);
+> +	shrinker->nr_deferred = NULL;
+> +}
+> +EXPORT_SYMBOL(unregister_shrinker);
 
-Regards
-Xiao
+[..]
 
+> +void shrinker_free(struct shrinker *shrinker)
+> +{
+> +	kfree(shrinker);
+> +}
+> +EXPORT_SYMBOL(shrinker_free);
+> +
+> +void unregister_and_free_shrinker(struct shrinker *shrinker)
+> +{
+> +	unregister_shrinker(shrinker);
+> +	kfree_rcu(shrinker, rcu);
+> +}
+
+Seems like this
+
+	unregister_shrinker();
+	shrinker_free();
+
+is not exact equivalent of this
+
+	unregister_and_free_shrinker();
