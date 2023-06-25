@@ -2,174 +2,106 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2634AEB64DD
-	for <linux-raid@archiver.kernel.org>; Sun, 25 Jun 2023 03:16:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A06DEB64DC
+	for <linux-raid@archiver.kernel.org>; Sun, 25 Jun 2023 06:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231501AbjFYDPz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 24 Jun 2023 23:15:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47110 "EHLO
+        id S230015AbjFYGpM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 25 Jun 2023 02:45:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231591AbjFYDPj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 24 Jun 2023 23:15:39 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECE0510C1
-        for <linux-raid@vger.kernel.org>; Sat, 24 Jun 2023 20:15:11 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-6687b209e5aso495386b3a.0
-        for <linux-raid@vger.kernel.org>; Sat, 24 Jun 2023 20:15:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1687662910; x=1690254910;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=TKI5JnbDIC0GxIDWgHq4O/cOoJK+mFi4lHzSLMfVTqU=;
-        b=ZAMx9Z9f9sidua+INHohqUOzi6qohVG8u4jVCH5kW+5KNZXm213btXme0+oY3eiFas
-         kJ1eg2nzkYdYzNdOe7oa9qHmaJUnXCYxjS+yzRkh4fKBRaJsJ8sThwNTH8lHQfNkQNAM
-         VzcFUF7+yXpjBTL7GbZNoITLErtoJw0Vjk1rTp/DbKRrvAbdhI1W9mMFrodUhQiTOgU4
-         x87qi5B+whZkF6jL19/UUqYgrCxdv27BCv4u4d4gCY3C0TEpHKxxaHXbF0gjifwSN242
-         21vqEHW8Cm8PCiF/LjQeQL8d9CMETY+gbtFossFoUbQJa5ZrwnE/J5ioBpxXDyTlqBxM
-         qigg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687662910; x=1690254910;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=TKI5JnbDIC0GxIDWgHq4O/cOoJK+mFi4lHzSLMfVTqU=;
-        b=J7d8emWCFtBSq8kUlpNGu8TDTBRhRsIKi90aGFO6RU7oVB9gRaOH6qQcVwxWLB92YG
-         kXetc1pWeRjv3KWdHtB+1jtl3f2qIC+rnpmNBjs6lCVLQFvPBE66D6G0R2gumIFEzT2R
-         uAKa7m6tiUZKVgDs20GVcVnG6q1bhHwzJ/IR1bxVyPhuBfo/J3dmp3+6RWsL24aYeTOz
-         kYqiXMlXPoZvTkiMS3i9Qv2/h1ez+B4y+miZQ6qyw4pcTgRT9Z86g/cbiagu9/a1MoF4
-         83oq9WzbECqE78lKB5jLk/D7Foam9LcQvyWtFr9Q2l5r9sNpaJYA6agxx+uPIf+IJvAn
-         EfOg==
-X-Gm-Message-State: AC+VfDwaGFnOUYfkOHw9Ps/ABqTIYlw0fgqRFMBDl4/2Xs2yTxbNnCiq
-        J2U+H+z0yuAt1rNZ+xET3e43Pw==
-X-Google-Smtp-Source: ACHHUZ4cDGND46+rMO/jpoItKK6gyWoVPMpHTImOruhTgKiq3D9MdRMxw7KZsaNY9vtDgu3MtWReMw==
-X-Received: by 2002:a05:6a20:8426:b0:11f:7829:6d6c with SMTP id c38-20020a056a20842600b0011f78296d6cmr28507253pzd.3.1687662910560;
-        Sat, 24 Jun 2023 20:15:10 -0700 (PDT)
-Received: from [10.70.252.135] ([203.208.167.146])
-        by smtp.gmail.com with ESMTPSA id r9-20020a62e409000000b0066642f95bc5sm1648412pfh.35.2023.06.24.20.15.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 24 Jun 2023 20:15:10 -0700 (PDT)
-Message-ID: <00641d5b-86a3-f5d1-02ee-13b4f815df75@bytedance.com>
-Date:   Sun, 25 Jun 2023 11:15:01 +0800
+        with ESMTP id S229653AbjFYGpL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 25 Jun 2023 02:45:11 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63433E4F;
+        Sat, 24 Jun 2023 23:45:05 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QphL35JD5z4f3xbl;
+        Sun, 25 Jun 2023 14:44:59 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgCX_7Jq4pdkr3_yMQ--.45962S3;
+        Sun, 25 Jun 2023 14:45:00 +0800 (CST)
+Message-ID: <adbdea88-2da6-e3c7-cb86-e75995e550f3@huaweicloud.com>
+Date:   Sun, 25 Jun 2023 14:44:58 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
-Content-Language: en-US
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-To:     Dave Chinner <david@fromorbit.com>, paulmck@kernel.org
-Cc:     Vlastimil Babka <vbabka@suse.cz>, akpm@linux-foundation.org,
-        tkhai@ya.ru, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, RCU <rcu@vger.kernel.org>
-References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
- <20230622085335.77010-25-zhengqi.arch@bytedance.com>
- <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
- <ZJU708VIyJ/3StAX@dread.disaster.area>
- <a21047bb-3b87-a50a-94a7-f3fa4847bc08@bytedance.com>
- <ZJYaYv4pACmCaBoT@dread.disaster.area>
- <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
-In-Reply-To: <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 1/3] md/raid10: optimize fix_read_error
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linan122@huawei.com,
+        yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com
+References: <20230623173236.2513554-1-linan666@huaweicloud.com>
+ <20230623173236.2513554-2-linan666@huaweicloud.com>
+ <d1778341-549e-6f88-0282-3096bfcd6614@molgen.mpg.de>
+From:   Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <d1778341-549e-6f88-0282-3096bfcd6614@molgen.mpg.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCX_7Jq4pdkr3_yMQ--.45962S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7GF45XrWDWr4DGrWfCw15Jwb_yoW8Jr15p3
+        ykt3WYy34DGF13Cr1xArs8J34jq3s3KFW7CF10g3WDuw1DK34aqF4Igr15Wr92krn2g347
+        Xay5Zws7Zas5KaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvYb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
+        Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
+        AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xF
+        o4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+        0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v2
+        6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07
+        UCXd8UUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 2023/6/24 19:08, Qi Zheng wrote:
-> Hi Dave,
+在 2023/6/23 18:03, Paul Menzel 写道:
+> Dear Li,
 > 
-> On 2023/6/24 06:19, Dave Chinner wrote:
->> On Fri, Jun 23, 2023 at 09:10:57PM +0800, Qi Zheng wrote:
->>> On 2023/6/23 14:29, Dave Chinner wrote:
->>>> On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
->>>>> On 6/22/23 10:53, Qi Zheng wrote:
->>>> Yes, I suggested the IDR route because radix tree lookups under RCU
->>>> with reference counted objects are a known safe pattern that we can
->>>> easily confirm is correct or not.  Hence I suggested the unification
->>>> + IDR route because it makes the life of reviewers so, so much
->>>> easier...
->>>
->>> In fact, I originally planned to try the unification + IDR method you
->>> suggested at the beginning. But in the case of CONFIG_MEMCG disabled,
->>> the struct mem_cgroup is not even defined, and root_mem_cgroup and
->>> shrinker_info will not be allocated.  This required more code 
->>> changes, so
->>> I ended up keeping the shrinker_list and implementing the above pattern.
+> 
+> Thank you for your patch.
+> 
+> Am 23.06.23 um 19:32 schrieb linan666@huaweicloud.com:
+>> From: Li Nan <linan122@huawei.com>
 >>
->> Yes. Go back and read what I originally said needed to be done
->> first. In the case of CONFIG_MEMCG=n, a dummy root memcg still needs
->> to exist that holds all of the global shrinkers. Then shrink_slab()
->> is only ever passed a memcg that should be iterated.
->>
->> Yes, it needs changes external to the shrinker code itself to be
->> made to work. And even if memcg's are not enabled, we can still use
->> the memcg structures to ensure a common abstraction is used for the
->> shrinker tracking infrastructure....
+>> We dereference r10_bio->read_slot too many times in fix_read_error().
+>> Optimize it by using a variable to store read_slot.
 > 
-> Yeah, what I imagined before was to define a more concise struct
-> mem_cgroup in the case of CONFIG_MEMCG=n, then allocate a dummy root
-> memcg on system boot:
+> I am always cautious reading about optimizations without any benchmarks 
+> or object code analysis. Although your explanation makes sense, did you 
+> check, that performance didn’t decrease in some way? (Maybe the compiler 
+> even generates the same code.)
 > 
-> #ifdef !CONFIG_MEMCG
 > 
-> struct shrinker_info {
->      struct rcu_head rcu;
->      atomic_long_t *nr_deferred;
->      unsigned long *map;
->      int map_nr_max;
-> };
+> Kind regards,
 > 
-> struct mem_cgroup_per_node {
->      struct shrinker_info __rcu    *shrinker_info;
-> };
+> Paul
 > 
-> struct mem_cgroup {
->      struct mem_cgroup_per_node *nodeinfo[];
-> };
 > 
-> #endif
-> 
-> But I have a concern: if all global shrinkers are tracking with the
-> info->map of root memcg, a shrinker->id needs to be assigned to them,
-> which will cause info->map_nr_max to become larger than before, then
-> making the traversal of info->map slower.
 
-But most of the system is 'sb-xxx' shrinker instances, they all have
-the SHRINKER_MEMCG_AWARE flag, so it should have little impact on the
-speed of traversing info->map. ;)
+Compared assembly code before and after optimization:
+  - With gcc 8.3.0, both are consistent.
+  - With gcc 12.2.1, 'r10_bio->read_slot' mostly uses r10bio dirctly:
+      2853    while (sl != r10_bio->read_slot) {
+        0xffffffff8213f2a0 <+1328>:  cmp    %r14d,0x38(%rbp)
 
-> 
->>
->>> If the above pattern is not safe, I will go back to the unification +
->>> IDR method.
->>
->> And that is exactly how we got into this mess in the first place....
-> 
-> I only found one similar pattern in the kernel:
-> 
-> fs/smb/server/oplock.c:find_same_lease_key/smb_break_all_levII_oplock/lookup_lease_in_table
-> 
-> But IIUC, the refcount here needs to be decremented after holding
-> rcu lock as I did above.
-> 
-> So regardless of whether we choose unification + IDR in the end, I still
-> want to confirm whether the pattern I implemented above is safe. :)
+    'slot' is mostly saved to a register individually:
+      2819    while (sl != slot) {
+        0xffffffff8213f08a <+794>:   cmp    %r14d,%ebx
 
-Also + RCU mailing list.
+I have not tested the performance, and it won't bring significant 
+performance optimization, which can also be seen from the analysis of 
+the assembly code. In fact, I just want to make code more readable.
 
-> 
-> Thanks,
-> Qi
-> 
->>
->> -Dave
+-- 
+Thanks,
+Nan
+
