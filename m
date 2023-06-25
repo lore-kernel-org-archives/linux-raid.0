@@ -2,176 +2,97 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34559EB64DA
-	for <linux-raid@archiver.kernel.org>; Sat, 24 Jun 2023 11:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF20C0015E
+	for <linux-raid@archiver.kernel.org>; Sun, 25 Jun 2023 01:24:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232866AbjFXLR5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 24 Jun 2023 07:17:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42218 "EHLO
+        id S229576AbjFYBX5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 24 Jun 2023 21:23:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230026AbjFXLRz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 24 Jun 2023 07:17:55 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B4301FDF
-        for <linux-raid@vger.kernel.org>; Sat, 24 Jun 2023 04:17:29 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1b693afe799so2541465ad.1
-        for <linux-raid@vger.kernel.org>; Sat, 24 Jun 2023 04:17:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1687605449; x=1690197449;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=T15O6xQIwkBwwHtvfiEExn4sWPaOJ+WY8Ww0WTBtsp8=;
-        b=CYbPeV4zw+1THiloHL2+ypjCEv/Id/OqdEvK4Gbzyx+byuca+5y6cAMB03scGpNQnd
-         SSB/7Anoxb0IyXh7PuVlGbhgdQdF/LJkm6iAy37RUchzkDnhJHkx6mrv3F5vKgoyQyPy
-         OIasGq/04a4yIeBx66N81aJ+oDLEzr/c57Z4snA4iQkl0+r7Z1fxQw1D3B6O1TLBBXtU
-         +6bRquokuMgWUCPSNTKWaKx0RTO9dV5TrEkx6qXy9qwlyog+mmdaA1jG00RymxjmBaI/
-         eUJ0hTbMfoOPJPyWkTS38C3ZPCIA3M/x6cjkzBrGwhlDHNcmA3/i0KhFITfJt8SeOUy8
-         iVYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687605449; x=1690197449;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=T15O6xQIwkBwwHtvfiEExn4sWPaOJ+WY8Ww0WTBtsp8=;
-        b=CfLpaiyAeIz5KKR7dAxhiuptemATg1JkmqmttxUxGSDfFhdqVFRe+p44Vpw0CN6LES
-         XTduQW1OHij0sF0fDCAmeeu9ALO0ckGTnB83iccBl3C/EOCjSPlu+31l7++g29ZzfRKp
-         lw4iqxmfXioyBs/INdPrlVkmrXwgolxzthEy+iV9X2CftgeKVTLbbRL9Q0YLED/YLdiD
-         cat0M3vOOlWoZev23VmgLTvHh+VNV0W5LSZ8usyTgrZdVNHaLn1NDC3BTrhFdLmtY+pc
-         Z7xHZiZy6oRRYYmwsbQ5xVizlB9zYx0TB422qMS2orUWteeMui/RVPHjYDDP2CTrPw+K
-         OtSg==
-X-Gm-Message-State: AC+VfDw557yULi1zNUV0xhzEULkfoLNGMGcmQbXFSdXiQrx0ma6trOw6
-        R8pjlmwR0xfk7gXOGl9G377lwg==
-X-Google-Smtp-Source: ACHHUZ6FdOiaHAk7I6ISkFgljzCcZyK3aCzvXyKEVanrKS23oGi4259EOvC6Ypj8Kzv6/iuF/wHf7Q==
-X-Received: by 2002:a17:902:ecc6:b0:1ae:1364:6086 with SMTP id a6-20020a170902ecc600b001ae13646086mr29288550plh.2.1687605448727;
-        Sat, 24 Jun 2023 04:17:28 -0700 (PDT)
-Received: from [10.4.162.153] ([139.177.225.251])
-        by smtp.gmail.com with ESMTPSA id c13-20020a170902d48d00b001ab0a30c895sm1034090plg.202.2023.06.24.04.17.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 24 Jun 2023 04:17:28 -0700 (PDT)
-Message-ID: <8107f6d1-2f86-46f1-2b31-263928499ab6@bytedance.com>
-Date:   Sat, 24 Jun 2023 19:17:17 +0800
+        with ESMTP id S229537AbjFYBX4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 24 Jun 2023 21:23:56 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BACAE9C;
+        Sat, 24 Jun 2023 18:23:54 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QpYCV3DFbz4f3mWD;
+        Sun, 25 Jun 2023 09:23:50 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgAHoZQll5dkElXhMQ--.24766S3;
+        Sun, 25 Jun 2023 09:23:51 +0800 (CST)
+Message-ID: <3f57cd5a-5d7d-a975-f22f-ab5abd4288f0@huaweicloud.com>
+Date:   Sun, 25 Jun 2023 09:23:49 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: [PATCH 15/29] NFSD: dynamically allocate the nfsd-client shrinker
-Content-Language: en-US
-To:     Chuck Lever <cel@kernel.org>
-Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
-        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
-        linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org,
-        linux-raid@vger.kernel.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
-References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
- <20230622085335.77010-16-zhengqi.arch@bytedance.com>
- <ZJYTbnmRKF7j3CHW@manet.1015granger.net>
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-In-Reply-To: <ZJYTbnmRKF7j3CHW@manet.1015granger.net>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 0/3] md/raid10: optimize and fix read error
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linan122@huawei.com,
+        yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com
+References: <20230623173236.2513554-1-linan666@huaweicloud.com>
+ <2cfb7dd4-ef6e-c460-8132-5c1c49cf6877@molgen.mpg.de>
+From:   Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <2cfb7dd4-ef6e-c460-8132-5c1c49cf6877@molgen.mpg.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAHoZQll5dkElXhMQ--.24766S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7XFy7Wr47tFWrWry3tr1fJFb_yoW3Arg_G3
+        9rtr9Fgr1xXr48Jr43WF1jgF13XF4Yyw15Jw17uwn0yF1rXFn5Grs3Grn5Zrn5Ga95Wr1q
+        9rn8Xw43tw4SkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbxxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
+        67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+        0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l
+        5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67
+        AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07Al
+        zVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
+        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUFf
+        HjUUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Chuck,
 
-On 2023/6/24 05:49, Chuck Lever wrote:
-> On Thu, Jun 22, 2023 at 04:53:21PM +0800, Qi Zheng wrote:
->> In preparation for implementing lockless slab shrink,
->> we need to dynamically allocate the nfsd-client shrinker,
->> so that it can be freed asynchronously using kfree_rcu().
->> Then it doesn't need to wait for RCU read-side critical
->> section when releasing the struct nfsd_net.
->>
->> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+
+在 2023/6/23 17:52, Paul Menzel 写道:
+> Dear Li,
 > 
-> For 15/29 and 16/29 of this series:
 > 
-> Acked-by: Chuck Lever <chuck.lever@oracle.com>
+> Thank you for your patches.
+> 
+> Am 23.06.23 um 19:32 schrieb linan666@huaweicloud.com:
+>> From: Li Nan <linan122@huawei.com>
+> 
+> Just a note, that the date/timestamps of your patches are from the 
+> future. (Yu’s patches had the same problem.) Could you please make sure 
+> to set up the system time correctly.
 
-Thanks for your review! :)
+System time is correct now. Thanks for your reminding :)
 
-And I will implement the APIs suggested by Dave in 02/29 in
-the v2, so there will be some changes here, but it should
-not be much. So I will keep your Acked-bys in the v2.
+> 
+>      Received: from huaweicloud.com (unknown [10.175.104.67])
+>              by APP4 (Coremail) with SMTP id 
+> gCh0CgCXaK8TZ5VkaZ1hMQ--.14505S4;
+>              Fri, 23 Jun 2023 17:34:11 +0800 (CST)
+>      […]
+>      Date:   Sat, 24 Jun 2023 01:32:33 +0800
+> 
+> […]
+> 
+> 
+> Kind regards,
+> 
+> Paul
 
+-- 
 Thanks,
-Qi
+Nan
 
-> 
-> 
->> ---
->>   fs/nfsd/netns.h     |  2 +-
->>   fs/nfsd/nfs4state.c | 20 ++++++++++++--------
->>   2 files changed, 13 insertions(+), 9 deletions(-)
->>
->> diff --git a/fs/nfsd/netns.h b/fs/nfsd/netns.h
->> index ec49b200b797..f669444d5336 100644
->> --- a/fs/nfsd/netns.h
->> +++ b/fs/nfsd/netns.h
->> @@ -195,7 +195,7 @@ struct nfsd_net {
->>   	int			nfs4_max_clients;
->>   
->>   	atomic_t		nfsd_courtesy_clients;
->> -	struct shrinker		nfsd_client_shrinker;
->> +	struct shrinker		*nfsd_client_shrinker;
->>   	struct work_struct	nfsd_shrinker_work;
->>   };
->>   
->> diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
->> index 6e61fa3acaf1..a06184270548 100644
->> --- a/fs/nfsd/nfs4state.c
->> +++ b/fs/nfsd/nfs4state.c
->> @@ -4388,8 +4388,7 @@ static unsigned long
->>   nfsd4_state_shrinker_count(struct shrinker *shrink, struct shrink_control *sc)
->>   {
->>   	int count;
->> -	struct nfsd_net *nn = container_of(shrink,
->> -			struct nfsd_net, nfsd_client_shrinker);
->> +	struct nfsd_net *nn = shrink->private_data;
->>   
->>   	count = atomic_read(&nn->nfsd_courtesy_clients);
->>   	if (!count)
->> @@ -8094,14 +8093,19 @@ static int nfs4_state_create_net(struct net *net)
->>   	INIT_WORK(&nn->nfsd_shrinker_work, nfsd4_state_shrinker_worker);
->>   	get_net(net);
->>   
->> -	nn->nfsd_client_shrinker.scan_objects = nfsd4_state_shrinker_scan;
->> -	nn->nfsd_client_shrinker.count_objects = nfsd4_state_shrinker_count;
->> -	nn->nfsd_client_shrinker.seeks = DEFAULT_SEEKS;
->> -
->> -	if (register_shrinker(&nn->nfsd_client_shrinker, "nfsd-client"))
->> +	nn->nfsd_client_shrinker = shrinker_alloc_and_init(nfsd4_state_shrinker_count,
->> +							   nfsd4_state_shrinker_scan,
->> +							   0, DEFAULT_SEEKS, 0,
->> +							   nn);
->> +	if (!nn->nfsd_client_shrinker)
->>   		goto err_shrinker;
->> +
->> +	if (register_shrinker(nn->nfsd_client_shrinker, "nfsd-client"))
->> +		goto err_register;
->>   	return 0;
->>   
->> +err_register:
->> +	shrinker_free(nn->nfsd_client_shrinker);
->>   err_shrinker:
->>   	put_net(net);
->>   	kfree(nn->sessionid_hashtbl);
->> @@ -8197,7 +8201,7 @@ nfs4_state_shutdown_net(struct net *net)
->>   	struct list_head *pos, *next, reaplist;
->>   	struct nfsd_net *nn = net_generic(net, nfsd_net_id);
->>   
->> -	unregister_shrinker(&nn->nfsd_client_shrinker);
->> +	unregister_and_free_shrinker(nn->nfsd_client_shrinker);
->>   	cancel_work(&nn->nfsd_shrinker_work);
->>   	cancel_delayed_work_sync(&nn->laundromat_work);
->>   	locks_end_grace(&nn->nfsd4_manager);
->> -- 
->> 2.30.2
->>
