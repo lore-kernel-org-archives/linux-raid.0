@@ -2,125 +2,174 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64385EB64DA
-	for <linux-raid@archiver.kernel.org>; Sun, 25 Jun 2023 02:06:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2634AEB64DD
+	for <linux-raid@archiver.kernel.org>; Sun, 25 Jun 2023 03:16:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230407AbjFYCGj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 24 Jun 2023 22:06:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38582 "EHLO
+        id S231501AbjFYDPz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 24 Jun 2023 23:15:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229975AbjFYCGi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 24 Jun 2023 22:06:38 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51E7D124;
-        Sat, 24 Jun 2023 19:06:36 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QpZ8l28xFz4f3q3c;
-        Sun, 25 Jun 2023 10:06:31 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7MmoZdkMJvjMQ--.32219S3;
-        Sun, 25 Jun 2023 10:06:32 +0800 (CST)
-Subject: Re: [PATCH] md/raid1: prioritize adding disk to 'removed' mirror
-To:     linan666@huaweicloud.com, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230623172525.2513235-1-linan666@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <d02d4a53-84ed-cb65-b0d8-2a199bc068cd@huaweicloud.com>
-Date:   Sun, 25 Jun 2023 10:06:30 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S231591AbjFYDPj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 24 Jun 2023 23:15:39 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECE0510C1
+        for <linux-raid@vger.kernel.org>; Sat, 24 Jun 2023 20:15:11 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-6687b209e5aso495386b3a.0
+        for <linux-raid@vger.kernel.org>; Sat, 24 Jun 2023 20:15:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1687662910; x=1690254910;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=TKI5JnbDIC0GxIDWgHq4O/cOoJK+mFi4lHzSLMfVTqU=;
+        b=ZAMx9Z9f9sidua+INHohqUOzi6qohVG8u4jVCH5kW+5KNZXm213btXme0+oY3eiFas
+         kJ1eg2nzkYdYzNdOe7oa9qHmaJUnXCYxjS+yzRkh4fKBRaJsJ8sThwNTH8lHQfNkQNAM
+         VzcFUF7+yXpjBTL7GbZNoITLErtoJw0Vjk1rTp/DbKRrvAbdhI1W9mMFrodUhQiTOgU4
+         x87qi5B+whZkF6jL19/UUqYgrCxdv27BCv4u4d4gCY3C0TEpHKxxaHXbF0gjifwSN242
+         21vqEHW8Cm8PCiF/LjQeQL8d9CMETY+gbtFossFoUbQJa5ZrwnE/J5ioBpxXDyTlqBxM
+         qigg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687662910; x=1690254910;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=TKI5JnbDIC0GxIDWgHq4O/cOoJK+mFi4lHzSLMfVTqU=;
+        b=J7d8emWCFtBSq8kUlpNGu8TDTBRhRsIKi90aGFO6RU7oVB9gRaOH6qQcVwxWLB92YG
+         kXetc1pWeRjv3KWdHtB+1jtl3f2qIC+rnpmNBjs6lCVLQFvPBE66D6G0R2gumIFEzT2R
+         uAKa7m6tiUZKVgDs20GVcVnG6q1bhHwzJ/IR1bxVyPhuBfo/J3dmp3+6RWsL24aYeTOz
+         kYqiXMlXPoZvTkiMS3i9Qv2/h1ez+B4y+miZQ6qyw4pcTgRT9Z86g/cbiagu9/a1MoF4
+         83oq9WzbECqE78lKB5jLk/D7Foam9LcQvyWtFr9Q2l5r9sNpaJYA6agxx+uPIf+IJvAn
+         EfOg==
+X-Gm-Message-State: AC+VfDwaGFnOUYfkOHw9Ps/ABqTIYlw0fgqRFMBDl4/2Xs2yTxbNnCiq
+        J2U+H+z0yuAt1rNZ+xET3e43Pw==
+X-Google-Smtp-Source: ACHHUZ4cDGND46+rMO/jpoItKK6gyWoVPMpHTImOruhTgKiq3D9MdRMxw7KZsaNY9vtDgu3MtWReMw==
+X-Received: by 2002:a05:6a20:8426:b0:11f:7829:6d6c with SMTP id c38-20020a056a20842600b0011f78296d6cmr28507253pzd.3.1687662910560;
+        Sat, 24 Jun 2023 20:15:10 -0700 (PDT)
+Received: from [10.70.252.135] ([203.208.167.146])
+        by smtp.gmail.com with ESMTPSA id r9-20020a62e409000000b0066642f95bc5sm1648412pfh.35.2023.06.24.20.15.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 24 Jun 2023 20:15:10 -0700 (PDT)
+Message-ID: <00641d5b-86a3-f5d1-02ee-13b4f815df75@bytedance.com>
+Date:   Sun, 25 Jun 2023 11:15:01 +0800
 MIME-Version: 1.0
-In-Reply-To: <20230623172525.2513235-1-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.12.0
+Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
+Content-Language: en-US
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+To:     Dave Chinner <david@fromorbit.com>, paulmck@kernel.org
+Cc:     Vlastimil Babka <vbabka@suse.cz>, akpm@linux-foundation.org,
+        tkhai@ya.ru, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, RCU <rcu@vger.kernel.org>
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-25-zhengqi.arch@bytedance.com>
+ <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
+ <ZJU708VIyJ/3StAX@dread.disaster.area>
+ <a21047bb-3b87-a50a-94a7-f3fa4847bc08@bytedance.com>
+ <ZJYaYv4pACmCaBoT@dread.disaster.area>
+ <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
+In-Reply-To: <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7MmoZdkMJvjMQ--.32219S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF17WrWDtryrur47XFyUAwb_yoW8ZFy8pa
-        naqasxGF4UAr129r17JFWDCasavws2qF4kGFyfWw1Y9FZIqrWrG3y8KFW5Jr1DAFW8Aw15
-        tF1akrZ8ta4j9FJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
-        DUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
 
-�� 2023/06/24 1:25, linan666@huaweicloud.com д��:
-> From: Li Nan <linan122@huawei.com>
-> 
-> New disk should be added to "removed" position first instead of to be a
-> replacement. Commit 6090368abcb4 ("md/raid10: prioritize adding disk to
-> 'removed' mirror") has fixed this issue for raid10. This patch fixes raid1.
 
-This commit message "This patch ..." shound use imperative mood, other
-than that, this patch LGTM.
+On 2023/6/24 19:08, Qi Zheng wrote:
+> Hi Dave,
+> 
+> On 2023/6/24 06:19, Dave Chinner wrote:
+>> On Fri, Jun 23, 2023 at 09:10:57PM +0800, Qi Zheng wrote:
+>>> On 2023/6/23 14:29, Dave Chinner wrote:
+>>>> On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
+>>>>> On 6/22/23 10:53, Qi Zheng wrote:
+>>>> Yes, I suggested the IDR route because radix tree lookups under RCU
+>>>> with reference counted objects are a known safe pattern that we can
+>>>> easily confirm is correct or not.  Hence I suggested the unification
+>>>> + IDR route because it makes the life of reviewers so, so much
+>>>> easier...
+>>>
+>>> In fact, I originally planned to try the unification + IDR method you
+>>> suggested at the beginning. But in the case of CONFIG_MEMCG disabled,
+>>> the struct mem_cgroup is not even defined, and root_mem_cgroup and
+>>> shrinker_info will not be allocated.  This required more code 
+>>> changes, so
+>>> I ended up keeping the shrinker_list and implementing the above pattern.
+>>
+>> Yes. Go back and read what I originally said needed to be done
+>> first. In the case of CONFIG_MEMCG=n, a dummy root memcg still needs
+>> to exist that holds all of the global shrinkers. Then shrink_slab()
+>> is only ever passed a memcg that should be iterated.
+>>
+>> Yes, it needs changes external to the shrinker code itself to be
+>> made to work. And even if memcg's are not enabled, we can still use
+>> the memcg structures to ensure a common abstraction is used for the
+>> shrinker tracking infrastructure....
+> 
+> Yeah, what I imagined before was to define a more concise struct
+> mem_cgroup in the case of CONFIG_MEMCG=n, then allocate a dummy root
+> memcg on system boot:
+> 
+> #ifdef !CONFIG_MEMCG
+> 
+> struct shrinker_info {
+>      struct rcu_head rcu;
+>      atomic_long_t *nr_deferred;
+>      unsigned long *map;
+>      int map_nr_max;
+> };
+> 
+> struct mem_cgroup_per_node {
+>      struct shrinker_info __rcu    *shrinker_info;
+> };
+> 
+> struct mem_cgroup {
+>      struct mem_cgroup_per_node *nodeinfo[];
+> };
+> 
+> #endif
+> 
+> But I have a concern: if all global shrinkers are tracking with the
+> info->map of root memcg, a shrinker->id needs to be assigned to them,
+> which will cause info->map_nr_max to become larger than before, then
+> making the traversal of info->map slower.
 
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-> 
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/raid1.c | 26 +++++++++++++++-----------
->   1 file changed, 15 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 68a9e2d9985b..320bede4bfab 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1782,7 +1782,7 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
->   {
->   	struct r1conf *conf = mddev->private;
->   	int err = -EEXIST;
-> -	int mirror = 0;
-> +	int mirror = 0, repl_slot = -1;
->   	struct raid1_info *p;
->   	int first = 0;
->   	int last = conf->raid_disks - 1;
-> @@ -1825,17 +1825,21 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
->   			break;
->   		}
->   		if (test_bit(WantReplacement, &p->rdev->flags) &&
-> -		    p[conf->raid_disks].rdev == NULL) {
-> -			/* Add this device as a replacement */
-> -			clear_bit(In_sync, &rdev->flags);
-> -			set_bit(Replacement, &rdev->flags);
-> -			rdev->raid_disk = mirror;
-> -			err = 0;
-> -			conf->fullsync = 1;
-> -			rcu_assign_pointer(p[conf->raid_disks].rdev, rdev);
-> -			break;
-> -		}
-> +		    p[conf->raid_disks].rdev == NULL && repl_slot < 0)
-> +			repl_slot = mirror;
->   	}
-> +
-> +	if (err && repl_slot >= 0) {
-> +		/* Add this device as a replacement */
-> +		p = conf->mirrors + repl_slot;
-> +		clear_bit(In_sync, &rdev->flags);
-> +		set_bit(Replacement, &rdev->flags);
-> +		rdev->raid_disk = repl_slot;
-> +		err = 0;
-> +		conf->fullsync = 1;
-> +		rcu_assign_pointer(p[conf->raid_disks].rdev, rdev);
-> +	}
-> +
->   	print_conf(conf);
->   	return err;
->   }
-> 
+But most of the system is 'sb-xxx' shrinker instances, they all have
+the SHRINKER_MEMCG_AWARE flag, so it should have little impact on the
+speed of traversing info->map. ;)
 
+> 
+>>
+>>> If the above pattern is not safe, I will go back to the unification +
+>>> IDR method.
+>>
+>> And that is exactly how we got into this mess in the first place....
+> 
+> I only found one similar pattern in the kernel:
+> 
+> fs/smb/server/oplock.c:find_same_lease_key/smb_break_all_levII_oplock/lookup_lease_in_table
+> 
+> But IIUC, the refcount here needs to be decremented after holding
+> rcu lock as I did above.
+> 
+> So regardless of whether we choose unification + IDR in the end, I still
+> want to confirm whether the pattern I implemented above is safe. :)
+
+Also + RCU mailing list.
+
+> 
+> Thanks,
+> Qi
+> 
+>>
+>> -Dave
