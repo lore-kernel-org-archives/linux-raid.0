@@ -2,148 +2,165 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 577CFEB64DD
-	for <linux-raid@archiver.kernel.org>; Sun, 25 Jun 2023 22:34:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43FF7EB64DC
+	for <linux-raid@archiver.kernel.org>; Mon, 26 Jun 2023 02:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229558AbjFYWb4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 25 Jun 2023 18:31:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54562 "EHLO
+        id S229996AbjFZC2O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 25 Jun 2023 22:28:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbjFYWbz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 25 Jun 2023 18:31:55 -0400
-Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 498D5BB
-        for <linux-raid@vger.kernel.org>; Sun, 25 Jun 2023 15:31:54 -0700 (PDT)
-Received: by mail-il1-x12f.google.com with SMTP id e9e14a558f8ab-3422d37d316so11502985ab.3
-        for <linux-raid@vger.kernel.org>; Sun, 25 Jun 2023 15:31:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687732313; x=1690324313;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qswVKjk/0iWBx0AKoAD00ukfxGx83GcL0uO/EGetD/4=;
-        b=fBiu9ar9D5fVPhj7wxMvNReDcFRudM0Y6AP4wdiv1c81aa5oEgGBzjICdihaDFoq3n
-         oVqOURT+Vwe7nXcYwLHTz7Eg7JGB/Rn0nmLg05yoV3Rgo6zhOsuc2JKG0WJWrq8KjG7I
-         +2g5KjFgrj+i4VbQg9313j1g8hyRUMUgxrQYLmHeYWlvjDiTIoH7p5LryE/B2a1tn9ir
-         aTVbBO13z9W+tYsSMnhaOVaC5xGPhmGjEt5Azg6ATcJALfM17TnOyiD4XRIgFXZ1MNWr
-         JCNIXyzzoQ9U9kb6dOEjo036fUb2Xk/IcvC5mQskfXVfrTG/4OB6bvFwkzm3hq8ir5yD
-         Yr5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687732313; x=1690324313;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=qswVKjk/0iWBx0AKoAD00ukfxGx83GcL0uO/EGetD/4=;
-        b=SEeX4r5hIkSReJC5U1Y5bJZgWCZTE4YtDAEvgdQyRblnFNtYT2LFeBZDNDSlJV9fr9
-         xLGzeRdZ5bFrfAk9ZkohzjVDSmIoeRr4vWYYrUwdgfc+t9T7bJRYUDo5N50c22HwtNAj
-         09L+oFS+cea1aPRf+qDjtevzFwnTlfw095VqdcyYzo7tPHtkiyoOnHghArG4BuzhDYiV
-         lY1OohNAZMzRjm5YWL5dvAHGriQ6NDRCCXHlf/ZuIHYsDns+1Nwf4FbjBkqfxgEBqjSL
-         wfAOzSmaZMD8+peI+QWjZm5Xa1QOuDQhj4lsg0j2dC+kMeRCYIxC1SAQul0J1O8Q/ba5
-         qlcQ==
-X-Gm-Message-State: AC+VfDyMOIMGjWXG19Lw8CUNoF3TizykYUl3+rzRFVzxV2paXtmlx9Sq
-        IHTvBccm7AcYpFDtx5nQ+22ULCez1nIndn5XK18=
-X-Google-Smtp-Source: ACHHUZ42dm9Q7klf7g5QAI5z8YEixhDDBlwr35aFw7bDuz7m7JzWxoBieoQnTBfFRzF2qywT7QVlR478muxRbK9hJfc=
-X-Received: by 2002:a92:d2c8:0:b0:345:7e1d:ab9d with SMTP id
- w8-20020a92d2c8000000b003457e1dab9dmr3361544ilg.24.1687732313344; Sun, 25 Jun
- 2023 15:31:53 -0700 (PDT)
+        with ESMTP id S229506AbjFZC2N (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 25 Jun 2023 22:28:13 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC29AB1;
+        Sun, 25 Jun 2023 19:28:11 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QqBbD054cz4f3nbl;
+        Mon, 26 Jun 2023 10:28:08 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgBn0LO395hkXGkxMg--.37238S3;
+        Mon, 26 Jun 2023 10:28:08 +0800 (CST)
+Subject: Re: [PATCH 1/3] md/raid10: optimize fix_read_error
+To:     linan666@huaweicloud.com, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230623173236.2513554-1-linan666@huaweicloud.com>
+ <20230623173236.2513554-2-linan666@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <292862ac-f0e0-6068-eb16-511a01f185b2@huaweicloud.com>
+Date:   Mon, 26 Jun 2023 10:28:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <CAO2ABipzbw6QL5eNa44CQHjiVa-LTvS696Mh9QaTw+qsUKFUCw@mail.gmail.com>
- <6fcbab2f-8211-774a-7aa9-883ed5d74168@huaweicloud.com> <CAO2ABiq5bB0cD7c+cS1Vw2PqSZNadyXUgonfEH6Gwsz8d9OiTQ@mail.gmail.com>
- <04036a22-c0b0-8ca1-0220-a531c47a1e25@huaweicloud.com> <CAO2ABioUC9Wy=7FaPAP+AUmd5S-Xanj2d9JJYkqU4BL8DxW5Bg@mail.gmail.com>
- <b1252ee9-4309-a1a9-d2c4-3e278a3e70b6@huaweicloud.com> <CAO2ABioXHT9c4qPx5S4dKsMZLyE0xLGBzST5tSTu8YPmX4FxYQ@mail.gmail.com>
- <51a28406-f850-5f4e-1d2d-87c06df75a9d@huaweicloud.com> <CAO2ABiqEoi4iB__b7KdYu_jQqmeB8joh5xurHNeXj9583mcjjA@mail.gmail.com>
- <1392b816-bdaf-da5f-acc8-b6677aa71e3b@huaweicloud.com> <CAO2ABiqkg7HobNvXRWrid36+uYwZ3yHqLmbft_FQwzD9-B7mRg@mail.gmail.com>
- <CAAMCDec_qt0wsfQ6d1CWc4e3hYtzXabw_sK9ChjMUSkA0cPxXg@mail.gmail.com>
- <d32a481b-4160-da34-8a1e-303c44d835f7@huaweicloud.com> <CAO2ABipBVa3c6v72TG32Ggf+FX+Zm5B5cniNgP_PPvDyaS9OZA@mail.gmail.com>
-In-Reply-To: <CAO2ABipBVa3c6v72TG32Ggf+FX+Zm5B5cniNgP_PPvDyaS9OZA@mail.gmail.com>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Sun, 25 Jun 2023 17:31:42 -0500
-Message-ID: <CAAMCDeeXDViojSiSYsnkdeVseziyBcUcx1PfBOuH8Ndc2hKgbA@mail.gmail.com>
-Subject: Re: mdadm grow raid 5 to 6 failure (crash)
-To:     David Gilmour <dgilmour76@gmail.com>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>, "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20230623173236.2513554-2-linan666@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBn0LO395hkXGkxMg--.37238S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxWryfCw1DXr43tF4kJF1DKFg_yoW5ZryUpF
+        WDua4FvrWDJFyUZF17tFWDC3ZYy34fGFWUKr4rt34fWw1Skr9xKF18Wryavr1kJF93uw17
+        Zas8ursrCFs7tF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
+        UUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-I won't buy a marvell.    I had some sort of 92xx variant (2 pci-e
-lanes) and it had a bad habit of stopping working under load and
-causing all 4 ports to go offline.   Board maker blamed the driver
-except the driver is/was the generic AHCI so unlikely to be the issue
-since all other ports were also AHCI and were just fine.
+Hi,
 
-Best luck is a used LSI SAS controller.   You can get 8 ports off of
-one, but you may need a breakout cable to use for 4 sata devices.
+ÔÚ 2023/06/24 1:32, linan666@huaweicloud.com Ð´µÀ:
+> From: Li Nan <linan122@huawei.com>
+> 
+> We dereference r10_bio->read_slot too many times in fix_read_error().
+> Optimize it by using a variable to store read_slot.
+> 
 
-On Fri, Jun 23, 2023 at 2:17=E2=80=AFPM David Gilmour <dgilmour76@gmail.com=
-> wrote:
->
-> I wanted to provide an update on this thread. First of all thank you
-> for all the insights and recommendations. I finally found a way to
-> recover my data and wanted to pass what the fix was in the event
-> someone stumbles across this exact scenario. Summary below
->  - I believe there is some kind of problem with kernel or module in
-> 5.14.0-319.el9.x86_64 for my controller (ASMedia ASM1064 chipset)
-> which I believe was responsible for the drives attached to it
-> disappearing while my grow from raid 5 to raid 6 was taking place
->  - After the above event (and rebooting) whenever I tried to assemble
-> the raid to kick off resuming the rebuild mdadm would hang as
-> previously described in this thread.
->  - After Yu pointed me to a patch that might of bypass the issue I
-> decided to first boot the system on a rescue disk with an older kernel
-> (3.x) and mdadm version
->  - Fortunately, my assemble succeeded and the grow resumed and the
-> slow rebuild of my 30TB array completed 17 days later
->  - My ASMedia ASM1064 chipset controller was 100% stable for the 17
-> days of rebuild on the old kernel
->  - As soon as I went back to my 5.14.0-319.el9.x86_64 kernel my
-> ASMedia ASM1064 controller started showing ata timeout errors and
-> drives disappearing again
->  - I ended up just purchasing another controller with a different
-> chipset (Marvell 88SE9215) out of desperation and the system is
-> finally stable and my data is all intact!
->
-> Again thank you everyone for the help!
->
-> --David
->
->
-> On Mon, May 8, 2023 at 8:33=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
-wrote:
-> >
-> > Hi,
-> >
-> > =E5=9C=A8 2023/05/09 6:53, Roger Heflin =E5=86=99=E9=81=93:
-> > > On Mon, May 8, 2023 at 6:57=E2=80=AFAM David Gilmour <dgilmour76@gmai=
-l.com> wrote:
-> > >>
-> > >> Ok, well I'm willing to try anything at this point. Do you need
-> > >> anything from me for a patch? Here is my current kernel details:
-> > >
-> > > grep -i mdadm /etc/udev/rules.d/* /lib/udev/rules.d/*
-> > >
-> > > If you can find a udev rule that starts up the monitor then move that
-> > > rule out of the directory, so that on the next assemble try it does
-> > > not get started.
-> > >
-> > > If this is the recent bug that is being discussed then anything
-> > > accessing the array after the reshape will deadlock the array and the
-> > > reshape.
-> >
-> > It's not anything accessing the array, in fact, it's only the io accros=
-s
-> > reshape position can trigger the deadlock.
-> >
-> > I just posted a fix patch in the other thread by failing such io while
-> > reshape can't make progress. However, I'm not sure for now if this will
-> > break mdadm, for example, will mdadm must read something from array to
-> > make progress?
-> >
-> > Thanks,
-> > Kuai
-> > > .
-> > >
-> >
+Other than a nit below, this patch LGTM.
+
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>   drivers/md/raid10.c | 20 ++++++++++----------
+>   1 file changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 381c21f7fb06..94ae294c8a3c 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2725,10 +2725,10 @@ static int r10_sync_page_io(struct md_rdev *rdev, sector_t sector,
+>   static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10bio *r10_bio)
+>   {
+>   	int sect = 0; /* Offset from r10_bio->sector */
+> -	int sectors = r10_bio->sectors;
+> +	int sectors = r10_bio->sectors, slot = r10_bio->read_slot;
+>   	struct md_rdev *rdev;
+>   	int max_read_errors = atomic_read(&mddev->max_corr_read_errors);
+> -	int d = r10_bio->devs[r10_bio->read_slot].devnum;
+> +	int d = r10_bio->devs[slot].devnum;
+>   
+>   	/* still own a reference to this rdev, so it cannot
+>   	 * have been cleared recently.
+> @@ -2749,13 +2749,13 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+>   		pr_notice("md/raid10:%s: %pg: Failing raid device\n",
+>   			  mdname(mddev), rdev->bdev);
+>   		md_error(mddev, rdev);
+> -		r10_bio->devs[r10_bio->read_slot].bio = IO_BLOCKED;
+> +		r10_bio->devs[slot].bio = IO_BLOCKED;
+>   		return;
+>   	}
+>   
+>   	while(sectors) {
+>   		int s = sectors;
+> -		int sl = r10_bio->read_slot;
+> +		int sl = slot;
+>   		int success = 0;
+>   		int start;
+>   
+> @@ -2790,7 +2790,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+>   			sl++;
+>   			if (sl == conf->copies)
+>   				sl = 0;
+> -		} while (!success && sl != r10_bio->read_slot);
+> +		} while (!success && sl != slot);
+>   		rcu_read_unlock();
+>   
+>   		if (!success) {
+> @@ -2798,16 +2798,16 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+>   			 * as bad on the first device to discourage future
+>   			 * reads.
+>   			 */
+> -			int dn = r10_bio->devs[r10_bio->read_slot].devnum;
+> +			int dn = r10_bio->devs[slot].devnum;
+>   			rdev = conf->mirrors[dn].rdev;
+>   
+>   			if (!rdev_set_badblocks(
+>   				    rdev,
+> -				    r10_bio->devs[r10_bio->read_slot].addr
+> +				    r10_bio->devs[slot].addr
+>   				    + sect,
+>   				    s, 0)) {
+>   				md_error(mddev, rdev);
+> -				r10_bio->devs[r10_bio->read_slot].bio
+> +				r10_bio->devs[slot].bio
+>   					= IO_BLOCKED;
+
+There is no need to split lines now.
+
+Thanks,
+Kuai
+>   			}
+>   			break;
+> @@ -2816,7 +2816,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+>   		start = sl;
+>   		/* write it back and re-read */
+>   		rcu_read_lock();
+> -		while (sl != r10_bio->read_slot) {
+> +		while (sl != slot) {
+>   			if (sl==0)
+>   				sl = conf->copies;
+>   			sl--;
+> @@ -2850,7 +2850,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
+>   			rcu_read_lock();
+>   		}
+>   		sl = start;
+> -		while (sl != r10_bio->read_slot) {
+> +		while (sl != slot) {
+>   			if (sl==0)
+>   				sl = conf->copies;
+>   			sl--;
+> 
+
