@@ -2,170 +2,42 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF01EB64DC
-	for <linux-raid@archiver.kernel.org>; Mon, 26 Jun 2023 02:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF066EB64D7
+	for <linux-raid@archiver.kernel.org>; Mon, 26 Jun 2023 15:51:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229776AbjFZCmR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 25 Jun 2023 22:42:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43150 "EHLO
+        id S231480AbjFZPvz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 26 Jun 2023 11:51:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229529AbjFZCmQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 25 Jun 2023 22:42:16 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DBC7F3;
-        Sun, 25 Jun 2023 19:42:14 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QqBvN3fywz4f3knj;
-        Mon, 26 Jun 2023 10:42:08 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBXwLMA+5hk6icyMg--.7443S3;
-        Mon, 26 Jun 2023 10:42:10 +0800 (CST)
-Subject: Re: [PATCH 3/3] md/raid10: handle replacement devices in
- fix_read_error
-To:     linan666@huaweicloud.com, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230623173236.2513554-1-linan666@huaweicloud.com>
- <20230623173236.2513554-4-linan666@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <55b4bebc-0e78-92d9-9b0e-5869c6c04479@huaweicloud.com>
-Date:   Mon, 26 Jun 2023 10:42:08 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S230504AbjFZPvv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 26 Jun 2023 11:51:51 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF4611704
+        for <linux-raid@vger.kernel.org>; Mon, 26 Jun 2023 08:51:48 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 465736732D; Mon, 26 Jun 2023 17:51:44 +0200 (CEST)
+Date:   Mon, 26 Jun 2023 17:51:43 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Song Liu <songliubraving@meta.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Li Nan <linan122@huawei.com>, Yu Kuai <yukuai3@huawei.com>
+Subject: Re: [GIT PULL] md-next 20230622
+Message-ID: <20230626155143.GA4180@lst.de>
+References: <BCD9738E-472D-4AA7-B4F9-CCF36B5DA0E1@fb.com> <83240030-681c-9ff5-6e2c-600e83b0cc71@kernel.dk> <392A5BF5-2961-4F2C-A1C6-D6532B5AAFC2@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <20230623173236.2513554-4-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBXwLMA+5hk6icyMg--.7443S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxAF4rtw1ktrW5Zr15XFyDGFg_yoWrJrW3pF
-        WDGa4YvrZrJrZrur1UtrWDCa9Y9ryftFWFkr18Aw1xuwn5tr98KF1DGryY9ryUAFZxCr10
-        qan0grsrCF9FgF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUp6w
-        ZUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <392A5BF5-2961-4F2C-A1C6-D6532B5AAFC2@fb.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Fri, Jun 23, 2023 at 03:08:52PM +0000, Song Liu wrote:
+> Please let me know if you need set #1 (deprecate file bitmap) to 
+> unblock other work. Otherwise, we will delay it until 6.6. 
 
-ÔÚ 2023/06/24 1:32, linan666@huaweicloud.com Ð´µÀ:
-> From: Li Nan <linan122@huawei.com>
-> 
-> In fix_read_error(), the handling of replacement devices is missing. If
-> read replacement device errors, we will attempt to fix 'mirror->rdev'.
-> It is wrong. Get rdev from r10bio to ensure that the fixed device is the
-> one which read error occurred.
-> 
-I'll suggest not to fix read error for replacement, it's better to error
-replacement directly instead of setting badblock, like what write does. 
-Otherwise, there is risk of losing data after replacement replace rdev.
-
-Thanks,
-Kuai
-
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/raid10.c | 32 +++++++++++++++++---------------
->   1 file changed, 17 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index a36e53fce21f..4a7c8eaf6ea0 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2726,15 +2726,10 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
->   {
->   	int sect = 0; /* Offset from r10_bio->sector */
->   	int sectors = r10_bio->sectors, slot = r10_bio->read_slot;
-> -	struct md_rdev *rdev;
-> +	struct md_rdev *rdev = r10_bio->devs[slot].rdev;
->   	int max_read_errors = atomic_read(&mddev->max_corr_read_errors);
->   	int d = r10_bio->devs[slot].devnum;
->   
-> -	/* still own a reference to this rdev, so it cannot
-> -	 * have been cleared recently.
-> -	 */
-> -	rdev = conf->mirrors[d].rdev;
-> -
->   	if (test_bit(Faulty, &rdev->flags))
->   		/* drive has already been failed, just ignore any
->   		   more fix_read_error() attempts */
-> @@ -2763,12 +2758,11 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
->   			s = PAGE_SIZE >> 9;
->   
->   		rcu_read_lock();
-> +		rdev = r10_bio->devs[slot].rdev;
->   		do {
->   			sector_t first_bad;
->   			int bad_sectors;
->   
-> -			d = r10_bio->devs[sl].devnum;
-> -			rdev = rcu_dereference(conf->mirrors[d].rdev);
->   			if (rdev &&
->   			    test_bit(In_sync, &rdev->flags) &&
->   			    !test_bit(Faulty, &rdev->flags) &&
-> @@ -2790,6 +2784,8 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
->   			sl++;
->   			if (sl == conf->copies)
->   				sl = 0;
-> +			d = r10_bio->devs[sl].devnum;
-> +			rdev = rcu_dereference(conf->mirrors[d].rdev);
->   		} while (sl != slot);
->   		rcu_read_unlock();
->   
-> @@ -2798,9 +2794,7 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
->   			 * as bad on the first device to discourage future
->   			 * reads.
->   			 */
-> -			int dn = r10_bio->devs[slot].devnum;
-> -			rdev = conf->mirrors[dn].rdev;
-> -
-> +			rdev = r10_bio->devs[slot].rdev;
->   			if (!rdev_set_badblocks(
->   				    rdev,
->   				    r10_bio->devs[slot].addr
-> @@ -2820,8 +2814,12 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
->   			if (sl==0)
->   				sl = conf->copies;
->   			sl--;
-> -			d = r10_bio->devs[sl].devnum;
-> -			rdev = rcu_dereference(conf->mirrors[d].rdev);
-> +			if (sl == slot) {
-> +				rdev = r10_bio->devs[slot].rdev;
-> +			} else {
-> +				d = r10_bio->devs[sl].devnum;
-> +				rdev = rcu_dereference(conf->mirrors[d].rdev);
-> +			}
->   			if (!rdev ||
->   			    test_bit(Faulty, &rdev->flags) ||
->   			    !test_bit(In_sync, &rdev->flags))
-> @@ -2854,8 +2852,12 @@ static void fix_read_error(struct r10conf *conf, struct mddev *mddev, struct r10
->   			if (sl==0)
->   				sl = conf->copies;
->   			sl--;
-> -			d = r10_bio->devs[sl].devnum;
-> -			rdev = rcu_dereference(conf->mirrors[d].rdev);
-> +			if (sl == slot) {
-> +				rdev = r10_bio->devs[slot].rdev;
-> +			} else {
-> +				d = r10_bio->devs[sl].devnum;
-> +				rdev = rcu_dereference(conf->mirrors[d].rdev);
-> +			}
->   			if (!rdev ||
->   			    test_bit(Faulty, &rdev->flags) ||
->   			    !test_bit(In_sync, &rdev->flags))
-> 
-
+It was intended so that we don't have to make all of md depend on
+the new config option for buffers heads I plan to introduce.  So it's
+a bit of a pity that we won't have it for 6.5, but not a deal breaker.
