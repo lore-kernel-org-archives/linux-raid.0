@@ -2,150 +2,188 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A545EB64D9
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Jun 2023 08:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C949EB64DC
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Jun 2023 13:43:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231391AbjF0I5R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 27 Jun 2023 04:57:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53630 "EHLO
+        id S230075AbjF0NnP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 27 Jun 2023 09:43:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230486AbjF0I5P (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 27 Jun 2023 04:57:15 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6BE10E2;
-        Tue, 27 Jun 2023 01:57:06 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Qqz9T0Rq7z4f3yrq;
-        Tue, 27 Jun 2023 16:57:01 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHcLNcpJpkTBKTMg--.3216S6;
-        Tue, 27 Jun 2023 16:57:03 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     logang@deltatee.com, hch@lst.de, song@kernel.org, shli@fb.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next 2/2] md/raid5-cache: fix null-ptr-deref in r5l_reclaim_thread()
-Date:   Tue, 27 Jun 2023 16:56:11 +0800
-Message-Id: <20230627085611.4186951-3-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230627085611.4186951-1-yukuai1@huaweicloud.com>
-References: <20230627085611.4186951-1-yukuai1@huaweicloud.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHcLNcpJpkTBKTMg--.3216S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxAr4fuw1rWF4DCrWDKr1xZrb_yoW5ZF17pa
-        1S93y3Ww48uryfAFnrWr1Dur4F93sF934xG3y5Cwn2yr43Xry8Ja4xCayUAFy5JFW8A3y3
-        XrW5ta4kWrnrtrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUc6pPUUUUU
-        =
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+        with ESMTP id S230284AbjF0NnN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 27 Jun 2023 09:43:13 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C4012D63
+        for <linux-raid@vger.kernel.org>; Tue, 27 Jun 2023 06:43:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1687873389; x=1719409389;
+  h=date:from:to:cc:subject:message-id;
+  bh=PBZUxGlhIuucRcr35Qa8g8bWK/RT74veZTxsuN5VOxI=;
+  b=N7W9JCDsb3dIHhco5JX3SL7ZS85D3JBGoqy+j0ufFKy1+BPVYnK3q9YZ
+   dWbEN6VLZb8G+rVNRL2gSXr4343tL9UJMSjF7S/eDkDWVy+N39ZCbdLfG
+   HJ0fMl5bQWnjiHc7P2XLl7J8tnyTnKVibITMOiniFu1zLEWXhOs548rft
+   3NKh/eyh0wqTnBokHniKDWWWAtFm/hFw0Xrqutq4UY0INKuBu198SxXx/
+   AOTTj13u9n36hEJ94pHlHH55P33Yu75lxdR5pgJMUDjQeUi1utqwFi3Ur
+   IIh/mCR/uKPBL32gTZhaSpoQ7F+xZrevzwpFS7+MjDOAymQsAYldJi0vu
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="361611335"
+X-IronPort-AV: E=Sophos;i="6.01,162,1684825200"; 
+   d="scan'208";a="361611335"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2023 06:43:08 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="890695091"
+X-IronPort-AV: E=Sophos;i="6.01,162,1684825200"; 
+   d="scan'208";a="890695091"
+Received: from lkp-server01.sh.intel.com (HELO 783282924a45) ([10.239.97.150])
+  by orsmga005.jf.intel.com with ESMTP; 27 Jun 2023 06:43:07 -0700
+Received: from kbuild by 783282924a45 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qE8yI-000Bwk-1t;
+        Tue, 27 Jun 2023 13:43:06 +0000
+Date:   Tue, 27 Jun 2023 21:42:57 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 01f1a8f85f3d1af6b8352a4f4004ab521294a22f
+Message-ID: <202306272155.8ruMog6Q-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 01f1a8f85f3d1af6b8352a4f4004ab521294a22f  md/raid1: prioritize adding disk to 'removed' mirror
 
-r5l_reclaim_thread() already check that 'conf->log' is not NULL in the
-beginning, however, r5c_do_reclaim() and r5c_do_reclaim() will
-dereference 'conf->log' again, which will cause null-ptr-deref if
-'conf->log' is set to NULL from r5l_exit_log() concurrently.
+elapsed time: 722m
 
-Fix this problem by don't dereference 'conf->log' again in
-r5c_do_reclaim() and r5c_do_reclaim().
+configs tested: 118
+configs skipped: 6
 
-Fixes: a39f7afde358 ("md/r5cache: write-out phase and reclaim support")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid5-cache.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 083288e36949..0cd95d9c3370 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1148,10 +1148,9 @@ static void r5l_run_no_space_stripes(struct r5l_log *log)
-  * for write through mode, returns log->next_checkpoint
-  * for write back, returns log_start of first sh in stripe_in_journal_list
-  */
--static sector_t r5c_calculate_new_cp(struct r5conf *conf)
-+static sector_t r5c_calculate_new_cp(struct r5l_log *log)
- {
- 	struct stripe_head *sh;
--	struct r5l_log *log = conf->log;
- 	sector_t new_cp;
- 	unsigned long flags;
- 
-@@ -1159,12 +1158,12 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- 		return log->next_checkpoint;
- 
- 	spin_lock_irqsave(&log->stripe_in_journal_lock, flags);
--	if (list_empty(&conf->log->stripe_in_journal_list)) {
-+	if (list_empty(&log->stripe_in_journal_list)) {
- 		/* all stripes flushed */
- 		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
- 		return log->next_checkpoint;
- 	}
--	sh = list_first_entry(&conf->log->stripe_in_journal_list,
-+	sh = list_first_entry(&log->stripe_in_journal_list,
- 			      struct stripe_head, r5c);
- 	new_cp = sh->log_start;
- 	spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
-@@ -1173,10 +1172,8 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- 
- static sector_t r5l_reclaimable_space(struct r5l_log *log)
- {
--	struct r5conf *conf = log->rdev->mddev->private;
--
- 	return r5l_ring_distance(log, log->last_checkpoint,
--				 r5c_calculate_new_cp(conf));
-+				 r5c_calculate_new_cp(log));
- }
- 
- static void r5l_run_no_mem_stripe(struct r5l_log *log)
-@@ -1419,9 +1416,9 @@ void r5c_flush_cache(struct r5conf *conf, int num)
- 	}
- }
- 
--static void r5c_do_reclaim(struct r5conf *conf)
-+static void r5c_do_reclaim(struct r5l_log *log)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5conf *conf = log->rdev->mddev->private;
- 	struct stripe_head *sh;
- 	int count = 0;
- 	unsigned long flags;
-@@ -1525,7 +1522,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
- 				    log->io_list_lock);
- 	}
- 
--	next_checkpoint = r5c_calculate_new_cp(conf);
-+	next_checkpoint = r5c_calculate_new_cp(log);
- 	spin_unlock_irq(&log->io_list_lock);
- 
- 	if (reclaimable == 0 || !write_super)
-@@ -1554,7 +1551,7 @@ static void r5l_reclaim_thread(struct md_thread *thread)
- 
- 	if (!log)
- 		return;
--	r5c_do_reclaim(conf);
-+	r5c_do_reclaim(log);
- 	r5l_do_reclaim(log);
- }
- 
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230627   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                        multi_v7_defconfig   gcc  
+arm                          pxa910_defconfig   gcc  
+arm                  randconfig-r005-20230627   clang
+arm                  randconfig-r015-20230627   gcc  
+arm                  randconfig-r031-20230627   clang
+arm                  randconfig-r035-20230627   clang
+arm                  randconfig-r046-20230627   gcc  
+arm                       spear13xx_defconfig   clang
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r011-20230627   gcc  
+hexagon              randconfig-r041-20230627   clang
+hexagon              randconfig-r045-20230627   clang
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-r004-20230627   gcc  
+i386         buildonly-randconfig-r005-20230627   gcc  
+i386         buildonly-randconfig-r006-20230627   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-i001-20230627   gcc  
+i386                 randconfig-i002-20230627   gcc  
+i386                 randconfig-i003-20230627   gcc  
+i386                 randconfig-i004-20230627   gcc  
+i386                 randconfig-i005-20230627   gcc  
+i386                 randconfig-i006-20230627   gcc  
+i386                 randconfig-i011-20230627   clang
+i386                 randconfig-i012-20230627   clang
+i386                 randconfig-i013-20230627   clang
+i386                 randconfig-i014-20230627   clang
+i386                 randconfig-i015-20230627   clang
+i386                 randconfig-i016-20230627   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r002-20230627   gcc  
+loongarch            randconfig-r032-20230627   gcc  
+m68k                             allmodconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                          sun3x_defconfig   gcc  
+microblaze                          defconfig   gcc  
+microblaze           randconfig-r013-20230627   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r025-20230627   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r001-20230627   gcc  
+nios2                randconfig-r016-20230627   gcc  
+openrisc             randconfig-r006-20230627   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r026-20230627   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                      makalu_defconfig   gcc  
+powerpc                 mpc836x_rdk_defconfig   clang
+powerpc                     tqm8548_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r042-20230627   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                          debug_defconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r004-20230627   gcc  
+s390                 randconfig-r012-20230627   clang
+s390                 randconfig-r044-20230627   clang
+sh                               allmodconfig   gcc  
+sh                               j2_defconfig   gcc  
+sh                   randconfig-r014-20230627   gcc  
+sh                   randconfig-r024-20230627   gcc  
+sh                          rsk7264_defconfig   gcc  
+sh                          sdk7780_defconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r003-20230627   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-r001-20230627   gcc  
+x86_64       buildonly-randconfig-r002-20230627   gcc  
+x86_64       buildonly-randconfig-r003-20230627   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-x001-20230627   clang
+x86_64               randconfig-x002-20230627   clang
+x86_64               randconfig-x003-20230627   clang
+x86_64               randconfig-x004-20230627   clang
+x86_64               randconfig-x005-20230627   clang
+x86_64               randconfig-x006-20230627   clang
+x86_64               randconfig-x011-20230627   gcc  
+x86_64               randconfig-x012-20230627   gcc  
+x86_64               randconfig-x013-20230627   gcc  
+x86_64               randconfig-x014-20230627   gcc  
+x86_64               randconfig-x015-20230627   gcc  
+x86_64               randconfig-x016-20230627   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                       common_defconfig   gcc  
+xtensa               randconfig-r022-20230627   gcc  
+xtensa               randconfig-r023-20230627   gcc  
+
 -- 
-2.39.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
