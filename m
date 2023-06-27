@@ -2,52 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D59EB64D7
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Jun 2023 01:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5978EB64D9
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Jun 2023 03:45:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229849AbjF0Bo1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 26 Jun 2023 21:44:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43722 "EHLO
+        id S230231AbjF0Dp0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 26 Jun 2023 23:45:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229597AbjF0Bo0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 26 Jun 2023 21:44:26 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0D071700;
-        Mon, 26 Jun 2023 18:44:24 -0700 (PDT)
+        with ESMTP id S230509AbjF0Dov (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 26 Jun 2023 23:44:51 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF47D3596;
+        Mon, 26 Jun 2023 20:42:19 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QqnZD3tllz4f3jqt;
-        Tue, 27 Jun 2023 09:44:20 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QqrBJ0rbmz4f3nKV;
+        Tue, 27 Jun 2023 11:42:16 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCHK5_zPppkR9B7Mg--.52784S4;
-        Tue, 27 Jun 2023 09:44:21 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7OXWppk2B6CMg--.877S4;
+        Tue, 27 Jun 2023 11:42:16 +0800 (CST)
 From:   linan666@huaweicloud.com
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
         houtao1@huawei.com, yangerkun@huawei.com
-Subject: [PATCH v2] md/raid1: prioritize adding disk to 'removed' mirror
-Date:   Tue, 27 Jun 2023 09:43:32 +0800
-Message-Id: <20230627014332.3810102-1-linan666@huaweicloud.com>
+Subject: [PATCH 0/2] md/raid10: handle replacement if recovery read error
+Date:   Tue, 27 Jun 2023 11:41:25 +0800
+Message-Id: <20230627034127.4000994-1-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCHK5_zPppkR9B7Mg--.52784S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFy7ArWDGF1ftFy7KF1fXrb_yoW8Cr17pa
-        nIqasxWF48Ar17KrsrJayUC3Wftw4kJFWkGFyfWw1j9FZIqrWrX3y8tFy5Gr1DAFWUAw13
-        J3WYkrZ8t3WUCFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkCb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
-        Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
-        AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4kE6xkIj40E
-        w7xC0wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwc_TUU
-        UUU
+X-CM-TRANSID: gCh0CgCnD7OXWppk2B6CMg--.877S4
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYB7kC6x804xWl14x267AKxVW8JVW5JwAF
+        c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
+        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xv
+        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
+        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY
+        6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr
+        0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0E
+        wIxGrwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_JF
+        0_Jw1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
+        jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
+        x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK
+        8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6x
+        kF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwc_TUUUUU
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -56,64 +54,13 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Li Nan <linan122@huawei.com>
 
-New disk should be added to "removed" position first instead of to be a
-replacement. Commit 6090368abcb4 ("md/raid10: prioritize adding disk to
-'removed' mirror") has fixed this issue for raid10. Fix it for raid1 now.
+Li Nan (2):
+  md/raid10: a simple cleanup for fix_recovery_read_error
+  md/raid10: handle replacement devices in fix_recovery_read_error
 
-Signed-off-by: Li Nan <linan122@huawei.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
----
-Changes in v2:
- - improve commit log.
+ drivers/md/raid10.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
- drivers/md/raid1.c | 26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 68a9e2d9985b..320bede4bfab 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1782,7 +1782,7 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	struct r1conf *conf = mddev->private;
- 	int err = -EEXIST;
--	int mirror = 0;
-+	int mirror = 0, repl_slot = -1;
- 	struct raid1_info *p;
- 	int first = 0;
- 	int last = conf->raid_disks - 1;
-@@ -1825,17 +1825,21 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			break;
- 		}
- 		if (test_bit(WantReplacement, &p->rdev->flags) &&
--		    p[conf->raid_disks].rdev == NULL) {
--			/* Add this device as a replacement */
--			clear_bit(In_sync, &rdev->flags);
--			set_bit(Replacement, &rdev->flags);
--			rdev->raid_disk = mirror;
--			err = 0;
--			conf->fullsync = 1;
--			rcu_assign_pointer(p[conf->raid_disks].rdev, rdev);
--			break;
--		}
-+		    p[conf->raid_disks].rdev == NULL && repl_slot < 0)
-+			repl_slot = mirror;
- 	}
-+
-+	if (err && repl_slot >= 0) {
-+		/* Add this device as a replacement */
-+		p = conf->mirrors + repl_slot;
-+		clear_bit(In_sync, &rdev->flags);
-+		set_bit(Replacement, &rdev->flags);
-+		rdev->raid_disk = repl_slot;
-+		err = 0;
-+		conf->fullsync = 1;
-+		rcu_assign_pointer(p[conf->raid_disks].rdev, rdev);
-+	}
-+
- 	print_conf(conf);
- 	return err;
- }
 -- 
 2.39.2
 
