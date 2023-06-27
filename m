@@ -2,199 +2,118 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6834EB64D7
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Jun 2023 01:28:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D59EB64D7
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Jun 2023 01:44:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbjF0B2t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 26 Jun 2023 21:28:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39938 "EHLO
+        id S229849AbjF0Bo1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 26 Jun 2023 21:44:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229727AbjF0B2s (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 26 Jun 2023 21:28:48 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1902E52
-        for <linux-raid@vger.kernel.org>; Mon, 26 Jun 2023 18:28:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687829327; x=1719365327;
-  h=date:from:to:cc:subject:message-id;
-  bh=39e3jsSg+8/Q2Tz/ZO5ILHg61+jW+IPYiDTxK0ZN3cM=;
-  b=h8Uq6AHukhKdf3PNZXGbXVvXbu/fYRfydREn/bhC1mEDzVEQE/vlw1pT
-   x0cxLbKp+EtYsBvtOi8gDQlciDqc87L/MGY/LaP3PxCstpXCMQKYZmh3d
-   +IyxZZ7G226rfjbcnRyF8gV1rfIdLqeDyFxRe4mGiaBPHUhpu5xOvKR/M
-   +4koiNKILbEQyoK6ZOWpJmGoEhTtcRNqp0G0yPUZKNFNIEVTlCGwi1610
-   k9oreFCDqut0RNohjTCDoEsphJsx7GvPh3qyDV4F9GyeFG5OfetxmncCK
-   P8saHIBbQKUThONL7yiJ1pGzVswkQvJ+FTVIWqD3tqEjfWD73AB3jZrCM
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10753"; a="361481454"
-X-IronPort-AV: E=Sophos;i="6.01,161,1684825200"; 
-   d="scan'208";a="361481454"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jun 2023 18:28:47 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10753"; a="786392435"
-X-IronPort-AV: E=Sophos;i="6.01,161,1684825200"; 
-   d="scan'208";a="786392435"
-Received: from lkp-server01.sh.intel.com (HELO 783282924a45) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 26 Jun 2023 18:28:46 -0700
-Received: from kbuild by 783282924a45 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qDxVd-000BWl-2R;
-        Tue, 27 Jun 2023 01:28:45 +0000
-Date:   Tue, 27 Jun 2023 09:27:47 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 41fb72ee7eeda723e619c6918dffaf05a55fc7dd
-Message-ID: <202306270946.WF2V3Dh9-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S229597AbjF0Bo0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 26 Jun 2023 21:44:26 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0D071700;
+        Mon, 26 Jun 2023 18:44:24 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QqnZD3tllz4f3jqt;
+        Tue, 27 Jun 2023 09:44:20 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgCHK5_zPppkR9B7Mg--.52784S4;
+        Tue, 27 Jun 2023 09:44:21 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH v2] md/raid1: prioritize adding disk to 'removed' mirror
+Date:   Tue, 27 Jun 2023 09:43:32 +0800
+Message-Id: <20230627014332.3810102-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCHK5_zPppkR9B7Mg--.52784S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WFy7ArWDGF1ftFy7KF1fXrb_yoW8Cr17pa
+        nIqasxWF48Ar17KrsrJayUC3Wftw4kJFWkGFyfWw1j9FZIqrWrX3y8tFy5Gr1DAFWUAw13
+        J3WYkrZ8t3WUCFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkCb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
+        Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
+        AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4kE6xkIj40E
+        w7xC0wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwc_TUU
+        UUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 41fb72ee7eeda723e619c6918dffaf05a55fc7dd  md/md-faulty: enable io accounting
+From: Li Nan <linan122@huawei.com>
 
-elapsed time: 5496m
+New disk should be added to "removed" position first instead of to be a
+replacement. Commit 6090368abcb4 ("md/raid10: prioritize adding disk to
+'removed' mirror") has fixed this issue for raid10. Fix it for raid1 now.
 
-configs tested: 129
-configs skipped: 5
+Signed-off-by: Li Nan <linan122@huawei.com>
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+---
+Changes in v2:
+ - improve commit log.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+ drivers/md/raid1.c | 26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r031-20230622   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r003-20230621   gcc  
-arc                  randconfig-r014-20230622   gcc  
-arc                  randconfig-r035-20230622   gcc  
-arc                  randconfig-r036-20230622   gcc  
-arc                  randconfig-r043-20230621   gcc  
-arc                  randconfig-r043-20230622   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                      integrator_defconfig   gcc  
-arm                          pxa3xx_defconfig   gcc  
-arm                  randconfig-r046-20230621   gcc  
-arm                  randconfig-r046-20230622   clang
-arm                         s5pv210_defconfig   clang
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r002-20230621   gcc  
-arm64                randconfig-r012-20230622   gcc  
-arm64                randconfig-r021-20230621   clang
-csky                                defconfig   gcc  
-csky                 randconfig-r001-20230621   gcc  
-csky                 randconfig-r016-20230622   gcc  
-hexagon              randconfig-r023-20230621   clang
-hexagon              randconfig-r041-20230621   clang
-hexagon              randconfig-r041-20230622   clang
-hexagon              randconfig-r045-20230621   clang
-hexagon              randconfig-r045-20230622   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r004-20230622   clang
-i386         buildonly-randconfig-r005-20230622   clang
-i386         buildonly-randconfig-r006-20230622   clang
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230621   gcc  
-i386                 randconfig-i001-20230622   clang
-i386                 randconfig-i002-20230621   gcc  
-i386                 randconfig-i002-20230622   clang
-i386                 randconfig-i003-20230621   gcc  
-i386                 randconfig-i003-20230622   clang
-i386                 randconfig-i004-20230621   gcc  
-i386                 randconfig-i004-20230622   clang
-i386                 randconfig-i005-20230621   gcc  
-i386                 randconfig-i005-20230622   clang
-i386                 randconfig-i006-20230621   gcc  
-i386                 randconfig-i006-20230622   clang
-i386                 randconfig-i011-20230621   clang
-i386                 randconfig-i011-20230622   gcc  
-i386                 randconfig-i012-20230621   clang
-i386                 randconfig-i012-20230622   gcc  
-i386                 randconfig-i013-20230621   clang
-i386                 randconfig-i013-20230622   gcc  
-i386                 randconfig-i014-20230621   clang
-i386                 randconfig-i014-20230622   gcc  
-i386                 randconfig-i015-20230621   clang
-i386                 randconfig-i015-20230622   gcc  
-i386                 randconfig-i016-20230621   clang
-i386                 randconfig-i016-20230622   gcc  
-i386                 randconfig-r033-20230622   clang
-loongarch                        alldefconfig   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze           randconfig-r015-20230622   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                           ip22_defconfig   clang
-mips                           ip28_defconfig   clang
-mips                       lemote2f_defconfig   clang
-mips                        qi_lb60_defconfig   clang
-nios2                         3c120_defconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r024-20230621   gcc  
-nios2                randconfig-r026-20230621   gcc  
-openrisc             randconfig-r022-20230621   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r011-20230622   gcc  
-parisc64                            defconfig   gcc  
-powerpc                    adder875_defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                      cm5200_defconfig   gcc  
-powerpc                     mpc512x_defconfig   clang
-powerpc                  mpc885_ads_defconfig   clang
-powerpc                     sequoia_defconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r005-20230621   gcc  
-riscv                randconfig-r042-20230621   clang
-riscv                randconfig-r042-20230622   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r034-20230622   clang
-s390                 randconfig-r044-20230621   clang
-s390                 randconfig-r044-20230622   gcc  
-sh                               allmodconfig   gcc  
-sh                               j2_defconfig   gcc  
-sh                   randconfig-r006-20230621   gcc  
-sh                           se7343_defconfig   gcc  
-sh                           se7780_defconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r032-20230622   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-r001-20230622   clang
-x86_64       buildonly-randconfig-r002-20230622   clang
-x86_64       buildonly-randconfig-r003-20230622   clang
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 68a9e2d9985b..320bede4bfab 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1782,7 +1782,7 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ {
+ 	struct r1conf *conf = mddev->private;
+ 	int err = -EEXIST;
+-	int mirror = 0;
++	int mirror = 0, repl_slot = -1;
+ 	struct raid1_info *p;
+ 	int first = 0;
+ 	int last = conf->raid_disks - 1;
+@@ -1825,17 +1825,21 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 			break;
+ 		}
+ 		if (test_bit(WantReplacement, &p->rdev->flags) &&
+-		    p[conf->raid_disks].rdev == NULL) {
+-			/* Add this device as a replacement */
+-			clear_bit(In_sync, &rdev->flags);
+-			set_bit(Replacement, &rdev->flags);
+-			rdev->raid_disk = mirror;
+-			err = 0;
+-			conf->fullsync = 1;
+-			rcu_assign_pointer(p[conf->raid_disks].rdev, rdev);
+-			break;
+-		}
++		    p[conf->raid_disks].rdev == NULL && repl_slot < 0)
++			repl_slot = mirror;
+ 	}
++
++	if (err && repl_slot >= 0) {
++		/* Add this device as a replacement */
++		p = conf->mirrors + repl_slot;
++		clear_bit(In_sync, &rdev->flags);
++		set_bit(Replacement, &rdev->flags);
++		rdev->raid_disk = repl_slot;
++		err = 0;
++		conf->fullsync = 1;
++		rcu_assign_pointer(p[conf->raid_disks].rdev, rdev);
++	}
++
+ 	print_conf(conf);
+ 	return err;
+ }
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.2
+
