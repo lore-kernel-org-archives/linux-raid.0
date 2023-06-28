@@ -2,114 +2,96 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F140FC0015E
-	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 01:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCBCEB64D7
+	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 07:58:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231288AbjF1B7B (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 27 Jun 2023 21:59:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55982 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231232AbjF1B6z (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 27 Jun 2023 21:58:55 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D35F02D63;
-        Tue, 27 Jun 2023 18:58:48 -0700 (PDT)
+        id S232184AbjF1H5z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 28 Jun 2023 03:57:55 -0400
+Received: from dggsgout12.his.huawei.com ([45.249.212.56]:11131 "EHLO
+        dggsgout12.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230422AbjF1Hzu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Jun 2023 03:55:50 -0400
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QrPrP39ySz4f3kpD;
-        Wed, 28 Jun 2023 09:58:45 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCH77LTk5tkJ6nJMg--.6175S7;
-        Wed, 28 Jun 2023 09:58:46 +0800 (CST)
-From:   linan666@huaweicloud.com
-To:     song@kernel.org, guoqing.jiang@cloud.ionos.com, colyli@suse.de,
-        xni@redhat.com
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QrX0T6ff5z4f3whf;
+        Wed, 28 Jun 2023 14:36:09 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAHvbDb1Jtkz4XYMg--.38460S3;
+        Wed, 28 Jun 2023 14:36:11 +0800 (CST)
+Subject: Re: [PATCH 1/3] md/raid10: check replacement and rdev to prevent
+ submit the same io twice
+To:     linan666@huaweicloud.com, song@kernel.org,
+        guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
-        houtao1@huawei.com, yangerkun@huawei.com
-Subject: [PATCH 3/3] md/raid10: use get_rdev_repl_from_mirror() to get devices
-Date:   Wed, 28 Jun 2023 09:57:52 +0800
-Message-Id: <20230628015752.102267-4-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230628015752.102267-1-linan666@huaweicloud.com>
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 References: <20230628015752.102267-1-linan666@huaweicloud.com>
+ <20230628015752.102267-2-linan666@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <cf66fbb5-8174-3baf-4a00-63f46a8e41a9@huaweicloud.com>
+Date:   Wed, 28 Jun 2023 14:36:10 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <20230628015752.102267-2-linan666@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCH77LTk5tkJ6nJMg--.6175S7
-X-Coremail-Antispam: 1UD129KBjvJXoW7CFyruw43WF45Jw1xtF45GFg_yoW8ur17pa
-        n8Ka4ftFWUW3yUJF1DJFWUGa4Fyry7tayfArZ5Z3y3uw13JrWrJ3W8Gry5Gr95ZFZ8uFyU
-        WF15KanYk3W8XFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUHmb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
-        A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-        6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
-        ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
-        JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2
-        ka0xkIwI1lw4CEc2x0rVAKj4xxMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48J
-        MxAqzxv26xkF7I0En4kS14v26r1q6r43MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-        8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
-        ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-        0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
-        PrcDUUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CM-TRANSID: gCh0CgAHvbDb1Jtkz4XYMg--.38460S3
+X-Coremail-Antispam: 1UD129KBjvJXoWrKry7Gr1ktF1xCF4UGFWktFb_yoW8JrW8pa
+        1kK3Wj9w1UCw42kFsFq34UCa40qw4kJrW3ArZ8X3yrXasxXFW5Cw4rG345Wr4DXr4Yga4U
+        XF1Uta1xJa1UXFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+        BIdaVFxhVjvjDU0xZFpf9x0JUZa9-UUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Li Nan <linan122@huawei.com>
+Hi,
 
-Commit 2ae6aaf76912 ("md/raid10: fix io loss while replacement replace
-rdev") reads replacement first to prevent io loss. However, there are same
-issue in wait_blocked_dev() and raid10_handle_discard(), too. Fix it by
-using get_rdev_repl_from_mirror() to get devices.
+ÔÚ 2023/06/28 9:57, linan666@huaweicloud.com Ð´µÀ:
+> From: Li Nan <linan122@huawei.com>
+> 
+> After commit 4ca40c2ce099 ("md/raid10: Allow replacement device to be
+> replace old drive."), 'rdev' and 'replacement' could appear to be
+> identical. There are already checks for that in wait_blocked_dev() and
+> raid10_write_request(). Add check for raid10_handle_discard() now.
+> 
 
-Fixes: d30588b2731f ("md/raid10: improve raid10 discard request")
-Fixes: f2e7e269a752 ("md/raid10: pull the code that wait for blocked dev into one function")
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/raid10.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+I'm working on synchronize io with array configuration, so that these
+checks is not necessary and can be removed, however, this might take
+some time, before that, this patch LGTM:
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index eaaf6307ddda..2d55374d8b22 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1376,11 +1376,9 @@ static void wait_blocked_dev(struct mddev *mddev, struct r10bio *r10_bio)
- 	blocked_rdev = NULL;
- 	rcu_read_lock();
- 	for (i = 0; i < conf->copies; i++) {
--		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
--		struct md_rdev *rrdev = rcu_dereference(
--			conf->mirrors[i].replacement);
--		if (rdev == rrdev)
--			rrdev = NULL;
-+		struct md_rdev *rdev, *rrdev;
-+
-+		get_rdev_repl_from_mirror(&conf->mirrors[i], &rdev, &rrdev);
- 		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
- 			atomic_inc(&rdev->nr_pending);
- 			blocked_rdev = rdev;
-@@ -1816,15 +1814,12 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
- 	 */
- 	rcu_read_lock();
- 	for (disk = 0; disk < geo->raid_disks; disk++) {
--		struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev);
--		struct md_rdev *rrdev = rcu_dereference(
--			conf->mirrors[disk].replacement);
-+		struct md_rdev *rdev, *rrdev;
- 
-+		get_rdev_repl_from_mirror(&conf->mirrors[disk], &rdev, &rrdev);
- 		r10_bio->devs[disk].bio = NULL;
- 		r10_bio->devs[disk].repl_bio = NULL;
- 
--		if (rdev == rrdev)
--			rrdev = NULL;
- 		if (rdev && (test_bit(Faulty, &rdev->flags)))
- 			rdev = NULL;
- 		if (rrdev && (test_bit(Faulty, &rrdev->flags)))
--- 
-2.39.2
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>   drivers/md/raid10.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index fabc340aae4f..3e6a09aaaba6 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1811,6 +1811,8 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
+>   		r10_bio->devs[disk].bio = NULL;
+>   		r10_bio->devs[disk].repl_bio = NULL;
+>   
+> +		if (rdev == rrdev)
+> +			rrdev = NULL;
+>   		if (rdev && (test_bit(Faulty, &rdev->flags)))
+>   			rdev = NULL;
+>   		if (rrdev && (test_bit(Faulty, &rrdev->flags)))
+> 
 
