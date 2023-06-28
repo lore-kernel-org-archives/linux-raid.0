@@ -2,96 +2,64 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCBCEB64D7
-	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 07:58:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45802EB64DA
+	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 08:11:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232184AbjF1H5z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 28 Jun 2023 03:57:55 -0400
-Received: from dggsgout12.his.huawei.com ([45.249.212.56]:11131 "EHLO
-        dggsgout12.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230422AbjF1Hzu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Jun 2023 03:55:50 -0400
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QrX0T6ff5z4f3whf;
-        Wed, 28 Jun 2023 14:36:09 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHvbDb1Jtkz4XYMg--.38460S3;
-        Wed, 28 Jun 2023 14:36:11 +0800 (CST)
-Subject: Re: [PATCH 1/3] md/raid10: check replacement and rdev to prevent
- submit the same io twice
-To:     linan666@huaweicloud.com, song@kernel.org,
-        guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230628015752.102267-1-linan666@huaweicloud.com>
- <20230628015752.102267-2-linan666@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <cf66fbb5-8174-3baf-4a00-63f46a8e41a9@huaweicloud.com>
-Date:   Wed, 28 Jun 2023 14:36:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S232133AbjF1ILA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 28 Jun 2023 04:11:00 -0400
+Received: from relay-b03.edpnet.be ([212.71.1.220]:52190 "EHLO
+        relay-b03.edpnet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233161AbjF1IF4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Jun 2023 04:05:56 -0400
+X-ASG-Debug-ID: 1687935176-24639c1bb149a40001-LoH05x
+Received: from [192.168.177.53] (212.233.33.219.adsl.dyn.edpnet.net [212.233.33.219]) by relay-b03.edpnet.be with ESMTP id dTAS1st7BaJMibzT for <linux-raid@vger.kernel.org>; Wed, 28 Jun 2023 08:52:56 +0200 (CEST)
+X-Barracuda-Envelope-From: janpieter.sollie@kabelmail.de
+X-Barracuda-Effective-Source-IP: 212.233.33.219.adsl.dyn.edpnet.net[212.233.33.219]
+X-Barracuda-Apparent-Source-IP: 212.233.33.219
+Message-ID: <ef8a467a-ebf6-96e9-c8fb-b7d83506b22f@kabelmail.de>
+Date:   Wed, 28 Jun 2023 08:52:42 +0200
 MIME-Version: 1.0
-In-Reply-To: <20230628015752.102267-2-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHvbDb1Jtkz4XYMg--.38460S3
-X-Coremail-Antispam: 1UD129KBjvJXoWrKry7Gr1ktF1xCF4UGFWktFb_yoW8JrW8pa
-        1kK3Wj9w1UCw42kFsFq34UCa40qw4kJrW3ArZ8X3yrXasxXFW5Cw4rG345Wr4DXr4Yga4U
-        XF1Uta1xJa1UXFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
-        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-        BIdaVFxhVjvjDU0xZFpf9x0JUZa9-UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Content-Language: en-US, nl-BE
+To:     linux-raid@vger.kernel.org
+From:   Janpieter Sollie <janpieter.sollie@kabelmail.de>
+Subject: md: timeout for kicking out devices when resuming from S3?
+Content-Type: text/plain; charset=UTF-8; format=flowed
+X-ASG-Orig-Subj: md: timeout for kicking out devices when resuming from S3?
+Content-Transfer-Encoding: 7bit
+X-Barracuda-Connect: 212.233.33.219.adsl.dyn.edpnet.net[212.233.33.219]
+X-Barracuda-Start-Time: 1687935176
+X-Barracuda-URL: https://212.71.1.220:443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at edpnet.be
+X-Barracuda-Scan-Msg-Size: 862
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Spam-Score: 0.00
+X-Barracuda-Spam-Status: No, SCORE=0.00 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=7.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.110631
+        Rule breakdown below
+         pts rule name              description
+        ---- ---------------------- --------------------------------------------------
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+Hello everyone,
 
-ÔÚ 2023/06/28 9:57, linan666@huaweicloud.com Ð´µÀ:
-> From: Li Nan <linan122@huawei.com>
-> 
-> After commit 4ca40c2ce099 ("md/raid10: Allow replacement device to be
-> replace old drive."), 'rdev' and 'replacement' could appear to be
-> identical. There are already checks for that in wait_blocked_dev() and
-> raid10_write_request(). Add check for raid10_handle_discard() now.
-> 
+Due to high electricity prices, I'm starting to experiment with pushing my linux NAS into ACPI 
+S3 at night.
+the embedded system has no other option than using "echo mem > /sys/power/state", or rtcwake.
+Unfortunately, when waking up (ether-wake or rtcwake), the MD driver starts kicking out SCSI 
+disks from a RAID6 array.
+SAS HBA initialization is slow due to a large nr of disks, so some are not yet available at that 
+time.
+when you see in dmesg, a few seconds later, they appear.
+Is there a way to tell the md raid subsystem "wait xx seconds after resuming from S3 before you 
+decide to kick out disks"?
+another option would be: the journal on the RAID volumes is a 60GB SSD partition,
+is there an option to kick out preventively and re-add when it appears, simply by replaying the 
+journal?
 
-I'm working on synchronize io with array configuration, so that these
-checks is not necessary and can be removed, however, this might take
-some time, before that, this patch LGTM:
+Thank you,
 
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/raid10.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index fabc340aae4f..3e6a09aaaba6 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1811,6 +1811,8 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->   		r10_bio->devs[disk].bio = NULL;
->   		r10_bio->devs[disk].repl_bio = NULL;
->   
-> +		if (rdev == rrdev)
-> +			rrdev = NULL;
->   		if (rdev && (test_bit(Faulty, &rdev->flags)))
->   			rdev = NULL;
->   		if (rrdev && (test_bit(Faulty, &rrdev->flags)))
-> 
-
+Janpieter Sollie
