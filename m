@@ -2,64 +2,106 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45802EB64DA
-	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 08:11:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F93AEB64D7
+	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 09:22:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232133AbjF1ILA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 28 Jun 2023 04:11:00 -0400
-Received: from relay-b03.edpnet.be ([212.71.1.220]:52190 "EHLO
-        relay-b03.edpnet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233161AbjF1IF4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Jun 2023 04:05:56 -0400
-X-ASG-Debug-ID: 1687935176-24639c1bb149a40001-LoH05x
-Received: from [192.168.177.53] (212.233.33.219.adsl.dyn.edpnet.net [212.233.33.219]) by relay-b03.edpnet.be with ESMTP id dTAS1st7BaJMibzT for <linux-raid@vger.kernel.org>; Wed, 28 Jun 2023 08:52:56 +0200 (CEST)
-X-Barracuda-Envelope-From: janpieter.sollie@kabelmail.de
-X-Barracuda-Effective-Source-IP: 212.233.33.219.adsl.dyn.edpnet.net[212.233.33.219]
-X-Barracuda-Apparent-Source-IP: 212.233.33.219
-Message-ID: <ef8a467a-ebf6-96e9-c8fb-b7d83506b22f@kabelmail.de>
-Date:   Wed, 28 Jun 2023 08:52:42 +0200
+        id S234798AbjF1JWT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 28 Jun 2023 05:22:19 -0400
+Received: from dggsgout12.his.huawei.com ([45.249.212.56]:11135 "EHLO
+        dggsgout12.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234895AbjF1Izt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Jun 2023 04:55:49 -0400
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QrWrn26mKz4f3why;
+        Wed, 28 Jun 2023 14:29:29 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgD3X7NJ05tkWyjYMg--.47347S3;
+        Wed, 28 Jun 2023 14:29:31 +0800 (CST)
+Subject: Re: [PATCH -next 1/2] md: don't quiesce in mddev_suspend()
+To:     Yu Kuai <yukuai1@huaweicloud.com>, xni@redhat.com, song@kernel.org,
+        colyli@suse.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230628012931.88911-1-yukuai1@huaweicloud.com>
+ <20230628012931.88911-2-yukuai1@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <10137916-9feb-8ab6-e157-8c66bbad1932@huaweicloud.com>
+Date:   Wed, 28 Jun 2023 14:29:29 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Content-Language: en-US, nl-BE
-To:     linux-raid@vger.kernel.org
-From:   Janpieter Sollie <janpieter.sollie@kabelmail.de>
-Subject: md: timeout for kicking out devices when resuming from S3?
-Content-Type: text/plain; charset=UTF-8; format=flowed
-X-ASG-Orig-Subj: md: timeout for kicking out devices when resuming from S3?
-Content-Transfer-Encoding: 7bit
-X-Barracuda-Connect: 212.233.33.219.adsl.dyn.edpnet.net[212.233.33.219]
-X-Barracuda-Start-Time: 1687935176
-X-Barracuda-URL: https://212.71.1.220:443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at edpnet.be
-X-Barracuda-Scan-Msg-Size: 862
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Spam-Score: 0.00
-X-Barracuda-Spam-Status: No, SCORE=0.00 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=7.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.110631
-        Rule breakdown below
-         pts rule name              description
-        ---- ---------------------- --------------------------------------------------
+In-Reply-To: <20230628012931.88911-2-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgD3X7NJ05tkWyjYMg--.47347S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7KF4rXr4rCrykury7Xw4rGrg_yoW8AF17p3
+        97tFW5Cr1UJF90kw12y3WDuFy5Xa1qgrZ2kFy3u34YywnFgryfGr1fuas8Xr9rC39YyrsI
+        yw4UJrWrJr10grDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
+        UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello everyone,
+Hi,
 
-Due to high electricity prices, I'm starting to experiment with pushing my linux NAS into ACPI 
-S3 at night.
-the embedded system has no other option than using "echo mem > /sys/power/state", or rtcwake.
-Unfortunately, when waking up (ether-wake or rtcwake), the MD driver starts kicking out SCSI 
-disks from a RAID6 array.
-SAS HBA initialization is slow due to a large nr of disks, so some are not yet available at that 
-time.
-when you see in dmesg, a few seconds later, they appear.
-Is there a way to tell the md raid subsystem "wait xx seconds after resuming from S3 before you 
-decide to kick out disks"?
-another option would be: the journal on the RAID volumes is a 60GB SSD partition,
-is there an option to kick out preventively and re-add when it appears, simply by replaying the 
-journal?
+ÔÚ 2023/06/28 9:29, Yu Kuai Ð´µÀ:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Some levels doesn't implement "pers->quiesce", for example
+> raid0_quiesce() is empty, and now that all levels will drop 'active_io'
+> until io is done, wait for 'active_io' to be 0 is enough to make sure all
+> normal io is done, and percpu_ref_kill() for 'active_io' will make sure
+> no new normal io can be dispatched. There is no need to call
+> "pers->quiesce" anymore from mddev_suspend().
 
-Thank you,
+Just found that this patch actually prevent null_ptr_deref in some cases
+that "pers->quiesce" is NULl for some personalities, and caller of
+mddev_suspend() doesn't check this. For example, suspend_lo_store()
+checks "pers->quiesce" is not NULL before calling mddev_suspend(), while
+suspend_hi_store() doesn't.
 
-Janpieter Sollie
+Thanks,
+Kuai
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   drivers/md/md.c | 2 --
+>   1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index abb616720393..962dacfd98cf 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -453,7 +453,6 @@ void mddev_suspend(struct mddev *mddev)
+>   		mddev->pers->prepare_suspend(mddev);
+>   
+>   	wait_event(mddev->sb_wait, percpu_ref_is_zero(&mddev->active_io));
+> -	mddev->pers->quiesce(mddev, 1);
+>   	clear_bit_unlock(MD_ALLOW_SB_UPDATE, &mddev->flags);
+>   	wait_event(mddev->sb_wait, !test_bit(MD_UPDATING_SB, &mddev->flags));
+>   
+> @@ -472,7 +471,6 @@ void mddev_resume(struct mddev *mddev)
+>   		return;
+>   	percpu_ref_resurrect(&mddev->active_io);
+>   	wake_up(&mddev->sb_wait);
+> -	mddev->pers->quiesce(mddev, 0);
+>   
+>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   	md_wakeup_thread(mddev->thread);
+> 
+
