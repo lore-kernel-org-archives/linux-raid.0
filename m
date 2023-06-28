@@ -2,106 +2,133 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F93AEB64D7
-	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 09:22:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E284C001DF
+	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 09:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234798AbjF1JWT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 28 Jun 2023 05:22:19 -0400
-Received: from dggsgout12.his.huawei.com ([45.249.212.56]:11135 "EHLO
-        dggsgout12.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234895AbjF1Izt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Jun 2023 04:55:49 -0400
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QrWrn26mKz4f3why;
-        Wed, 28 Jun 2023 14:29:29 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgD3X7NJ05tkWyjYMg--.47347S3;
-        Wed, 28 Jun 2023 14:29:31 +0800 (CST)
-Subject: Re: [PATCH -next 1/2] md: don't quiesce in mddev_suspend()
-To:     Yu Kuai <yukuai1@huaweicloud.com>, xni@redhat.com, song@kernel.org,
-        colyli@suse.de
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230628012931.88911-1-yukuai1@huaweicloud.com>
- <20230628012931.88911-2-yukuai1@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <10137916-9feb-8ab6-e157-8c66bbad1932@huaweicloud.com>
-Date:   Wed, 28 Jun 2023 14:29:29 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <20230628012931.88911-2-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+        id S231224AbjF1Js3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 28 Jun 2023 05:48:29 -0400
+Received: from mail-sgaapc01on2101.outbound.protection.outlook.com ([40.107.215.101]:60052
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S236017AbjF1JhL (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 28 Jun 2023 05:37:11 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MdDfkqR+/PF+cwiAUM/5BUMutgNMslzfb0oovB6FRwDMx9JwauVDhTdbkN93M2Rp3D3m1Na7IcW1dG1KsrfDt3nOBu2Ay351l0KktLnEWyz+c7BD8zT1swCcAaSZKyZ+zuBUsT1WfjbqzLHwmHaZlssD6BgtBOhbC5VEXQNuvcomseP6GtMTXOlU9xo24E7UroiwKWD8H5nYH2FuiaeEFXt1r2o7qlkmJc23X6nsSepXoM2Lo6azyu514YWcNXM6YxVwSPO/nVq6bWcXunZI2oIirVl+t/Gjrc5vt1c7RPxFYz+UH/Lwsqqd5/vqqySKe1C3ZoRWXy0tk2V2uohgWQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=kzEDgAEQVi5wCWL3HPqAmdNfo2Ud7DOfhWpTaRZRXCE=;
+ b=M0J1iDfdFVjxFlwUOasiRY3uwwNUiq+MaB9pvNurN9GiMNSrQnPnqFr5e/ItbBadHAz3RSzkjw/btn0tYeSqMbNobI8beC75lJ0DNN2u+0O12fM+0omCQtEcg+ayRcE+4Ct4iR30s6TuhjlDW2aaS078yzg8AoV7wdy1Wb4N85VaN1jUYFSnHt5Ng3eEILAk3fBj5U3JuQu5qZxl+LgK8ii8pK1NFi6cw8PDx7aOqfsa3dgbE2UhyShAVmE1OST0t07gDuOAr46bojkz31RWHab803Lfy+wnbNL7/Hi0mPr55yOYLUaF/28Pr45XmvmDEBGk0VZJ0EAGnrNkvUtubA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=kzEDgAEQVi5wCWL3HPqAmdNfo2Ud7DOfhWpTaRZRXCE=;
+ b=PQaKbU9ggfeZOuu/ajFDfGC0xZTVyELlwf8KdR61iEbRPgzDfy/y+C78MtlTX108H47M4JB6TTLGRWsIc75BXJJyeBuEHHcrEfM2vElQhgJDw0Y2EbxvUAzNGNuOjCsZDiGyDSq7MlQELF7TaEaYGQ4mFgGEN2rnLB7AK+sxIdEKdhx8iDGikXpKyLqSuHn75d6S4pONpqojksLPpZE2q/q4gvuYMwSQhC8PbgE5Cl4Qt8GjSo1/lh2JHDbSvjqpDz1cVUHkaglEILE/bKD2hnWcRQwrHQjzGuoOZZXvIP6FCFpZbcR6/zWZU2Bwn/KcOd/pN018fAcvTC/9qkrG6w==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from SEZPR06MB5269.apcprd06.prod.outlook.com (2603:1096:101:78::6)
+ by TYZPR06MB6144.apcprd06.prod.outlook.com (2603:1096:400:341::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.24; Wed, 28 Jun
+ 2023 09:35:30 +0000
+Received: from SEZPR06MB5269.apcprd06.prod.outlook.com
+ ([fe80::fa0e:6c06:7474:285c]) by SEZPR06MB5269.apcprd06.prod.outlook.com
+ ([fe80::fa0e:6c06:7474:285c%5]) with mapi id 15.20.6521.023; Wed, 28 Jun 2023
+ 09:35:30 +0000
+From:   Yangtao Li <frank.li@vivo.com>
+To:     axboe@kernel.dk, song@kernel.org, viro@zeniv.linux.org.uk,
+        brauner@kernel.org, xiang@kernel.org, chao@kernel.org,
+        huyue2@coolpad.com, jefflexu@linux.alibaba.com, hch@infradead.org,
+        djwong@kernel.org
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-xfs@vger.kernel.org,
+        Yangtao Li <frank.li@vivo.com>
+Subject: [PATCH 5/7] iomap: Convert to bdev_logical_block_mask()
+Date:   Wed, 28 Jun 2023 17:34:58 +0800
+Message-Id: <20230628093500.68779-5-frank.li@vivo.com>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230628093500.68779-1-frank.li@vivo.com>
+References: <20230628093500.68779-1-frank.li@vivo.com>
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3X7NJ05tkWyjYMg--.47347S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KF4rXr4rCrykury7Xw4rGrg_yoW8AF17p3
-        97tFW5Cr1UJF90kw12y3WDuFy5Xa1qgrZ2kFy3u34YywnFgryfGr1fuas8Xr9rC39YyrsI
-        yw4UJrWrJr10grDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
-        UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-ClientProxiedBy: SI2PR04CA0004.apcprd04.prod.outlook.com
+ (2603:1096:4:197::22) To SEZPR06MB5269.apcprd06.prod.outlook.com
+ (2603:1096:101:78::6)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SEZPR06MB5269:EE_|TYZPR06MB6144:EE_
+X-MS-Office365-Filtering-Correlation-Id: 72552399-3a38-49c0-4063-08db77bb037b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: x4mB9eMHQh1osKUvbomwi/OQODyyX/HTXoSlBrVToMj8uK9zfYxmZs2JYG6RUVZccXspJpm9GkYnlM+AYVOj+lGl6zumow4ucC50t60QiQmJ2p2NigNYB4cG/eRTHINKRtzMfCKIdRnLxlyxDZR0OC5ulmw5vOiFz+lDr3r52zndpBWybYMCDud4SGv496ZbRTsTDgseVq2iMHLOc5kjMxRGPdub0lvCioTMlow1a3IEWKy6cK293XyfkiB3/U2ieEyVsmfUrLUkkGPlhm8n7akiBwQo/lyR+ZehUGH2PnnruXMkzqWDFvdnh9CjQkERGXy2OKBw82gVxqeu8hS27uHSYUFO0nupXjgGd8Kqg9bz++tn4le97uVe/23XsNiOMJ2K+v5Q5sIU8jDlAQRst1emaAmA9AQdOt0IuOKf1HWu0EBZ74YSCV8B/tm/yslMuo2U5cW9FBqO/Sb1KCLih8WtQ/vS+FCV96FKtEK1aiF28sixrjFYotuHL/qCuCEsf+Jzhm0ztorX/t7aZT9E0M2CV2P4JryGBW6HREuvtpaQAbO9wuiSDTKqf0R4TpY6puTJ9O7WjouupEwvgT2MCWVuGqT2EUYzOoG2LSmd1SIRO+3hIswrwXNk2rJyEyDdZ5I2kNLKUViW8v3wbtVtag==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SEZPR06MB5269.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(396003)(346002)(39850400004)(376002)(366004)(136003)(451199021)(1076003)(6506007)(7416002)(5660300002)(66556008)(316002)(66946007)(36756003)(478600001)(4326008)(66476007)(8676002)(8936002)(86362001)(4744005)(2906002)(6512007)(26005)(41300700001)(6666004)(6486002)(52116002)(186003)(107886003)(38350700002)(38100700002)(921005)(2616005)(83380400001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Cak2CMvly5wIUHeSoMUiuA03PAjSv/FsSOsWwYE1RvBwPecqtRphG3mPXUxf?=
+ =?us-ascii?Q?/niRpghuoxuSFPJGvzp81A+WEiQ5ru4/2s929KeEhc7E+qpMuvZT9o+XTsF8?=
+ =?us-ascii?Q?0HquA3V5WgTcbb8ZsxVrbo4LhOT1FqjWhgczrWR4SG1S4ev1mvDT9hkR3id+?=
+ =?us-ascii?Q?v+/HZYoRTS9Sv/jt2UVme0Ag9yhU04bHmAffc0z64ZVkvLuUtvCRjZp2QyJP?=
+ =?us-ascii?Q?ikpLXh99NBhug1x4kuU3Xg6Qko58no7hBcwdbJzl/SCp3l2nAjLU/gbK3tIl?=
+ =?us-ascii?Q?Xh498rzxriIaFUG3dtRxBmgraBK6oCDpy+WXypnJG9XcGPQzcEnLE82gAAdd?=
+ =?us-ascii?Q?WVL1HqOpg3weITmqyhIi4bCEdoWSEdKbBgolfK44SCIMTa5dmDQruCsMBU60?=
+ =?us-ascii?Q?eI85jiCuE9iGpwA9Nn9X65Lk72aP1BLofxwpFWUIA1iWUIt31h5+xikoB+eu?=
+ =?us-ascii?Q?u2EqeuRaddWdhrLCpmb4aA5dFpNrZ/9nTsoeBiaqD8b91L0Ub/Q3oq8m7B/M?=
+ =?us-ascii?Q?0S2P8BxkR3tGPAzNsZCEwpWkd4KZ3LeMJqDk8VniCZPJu8q8NwvtitSp0VLZ?=
+ =?us-ascii?Q?Qim3wjsePxtu2DfScN3tD2ySunBqefjdojh1z2+e8JluC1tlQpjobVCSNrtX?=
+ =?us-ascii?Q?wxNPRawfeMgUlJIDBrEkKt16Teaj5Y5JGH/ihTTQX+IhEbbRfbyoQiKBLs08?=
+ =?us-ascii?Q?N+Vdwaw7cmH837uf1ETfOTtWvFSFLFgCx7b/kqJieRMQeMZw9n/yx/Xs71KB?=
+ =?us-ascii?Q?eKCxrL5Gw0hf5JqZwvZRKDIAD+7IAAEDxcRhpnEFkb93p6sQTvzb9kitp/6b?=
+ =?us-ascii?Q?EwHs/Nxz4WpqjAYjyBgk6aL4K1d1OF4QYJC1WU8uY/kqdT0pIxA3KCQDSKnk?=
+ =?us-ascii?Q?KcQ1OLAYhzjz8QqdP+UCCaIKG/vnb+FPJtWFGJcFN+Ime4wJtpWg3ETPq93s?=
+ =?us-ascii?Q?9C87/oLKe0HG7iNP3iSuEqETIznzpYcD+uZE40Kqx/ACOJmzt2fu44CO3o53?=
+ =?us-ascii?Q?Lch4KkoQDjgJvJFMPUBGfxdp1k/vo8Ap0yjFRF8yUO77RHvGUdETr9QtmdrX?=
+ =?us-ascii?Q?wWy5kPx+GFKJGyL72cwzvgXhhEllzMeJkDM1PpcCO5PL9jLRDIDZ2KNOqUdq?=
+ =?us-ascii?Q?/dMMjv5HxJkXq3DLTMBNuZjPPoKXoVYIkYHuckKV6FCOHKa5Kt57vWEXJQ47?=
+ =?us-ascii?Q?PHS7FoLJghqVpRMn7BtOfTB787GJiRViizwU/WEnN6Gv4sU0NHuDVq1gvCE4?=
+ =?us-ascii?Q?z9S/IxZYNo/E9Lsi8JNAhbAibxdkVI1EPapkLpXeurHQzpDzXEt5iUr4Isyd?=
+ =?us-ascii?Q?kxjTKwxmiD/48MOBZk672orv2sGwznqNP27cc2/QiuzTbMyQVbmgqwCOBv1W?=
+ =?us-ascii?Q?gOTm4K3lId3QRrOuR+VnPk7XNFnaiKfDrepQuw5yybnxxsbrDtwuOtVmxw1e?=
+ =?us-ascii?Q?xgD3MxkI3X5+4lIJjb78iUmBYvBTGX29bT7bJMuBkv7oCiuEJdNHlBr/Ujq9?=
+ =?us-ascii?Q?pExO6rAHb7KZ6RhokqBFevYFNcHyv6g6ZCLw4gK4fgEZauG86mtXHxwRLpFk?=
+ =?us-ascii?Q?2xPdRWs9q7P+AsxXYgZmh5k84hA0j0rzFgoKXzj7?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 72552399-3a38-49c0-4063-08db77bb037b
+X-MS-Exchange-CrossTenant-AuthSource: SEZPR06MB5269.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jun 2023 09:35:30.6164
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: u9DFoRu9kk9yAVbGXZLkcZ1NwU/3GOdxkJlPf6DKckHcu6m7zFenNVGP3TnK9oIfAqyEjbq77dP5vA3O3wH1PQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR06MB6144
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+Use bdev_logical_block_mask() to simplify code.
 
-ÔÚ 2023/06/28 9:29, Yu Kuai Ð´µÀ:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> Some levels doesn't implement "pers->quiesce", for example
-> raid0_quiesce() is empty, and now that all levels will drop 'active_io'
-> until io is done, wait for 'active_io' to be 0 is enough to make sure all
-> normal io is done, and percpu_ref_kill() for 'active_io' will make sure
-> no new normal io can be dispatched. There is no need to call
-> "pers->quiesce" anymore from mddev_suspend().
+Signed-off-by: Yangtao Li <frank.li@vivo.com>
+---
+ fs/iomap/direct-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Just found that this patch actually prevent null_ptr_deref in some cases
-that "pers->quiesce" is NULl for some personalities, and caller of
-mddev_suspend() doesn't check this. For example, suspend_lo_store()
-checks "pers->quiesce" is not NULL before calling mddev_suspend(), while
-suspend_hi_store() doesn't.
-
-Thanks,
-Kuai
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->   drivers/md/md.c | 2 --
->   1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index abb616720393..962dacfd98cf 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -453,7 +453,6 @@ void mddev_suspend(struct mddev *mddev)
->   		mddev->pers->prepare_suspend(mddev);
->   
->   	wait_event(mddev->sb_wait, percpu_ref_is_zero(&mddev->active_io));
-> -	mddev->pers->quiesce(mddev, 1);
->   	clear_bit_unlock(MD_ALLOW_SB_UPDATE, &mddev->flags);
->   	wait_event(mddev->sb_wait, !test_bit(MD_UPDATING_SB, &mddev->flags));
->   
-> @@ -472,7 +471,6 @@ void mddev_resume(struct mddev *mddev)
->   		return;
->   	percpu_ref_resurrect(&mddev->active_io);
->   	wake_up(&mddev->sb_wait);
-> -	mddev->pers->quiesce(mddev, 0);
->   
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->   	md_wakeup_thread(mddev->thread);
-> 
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index ea3b868c8355..8d4a06bc14b3 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -238,7 +238,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 	size_t copied = 0;
+ 	size_t orig_count;
+ 
+-	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
++	if ((pos | length) & bdev_logical_block_mask(iomap->bdev) ||
+ 	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
+ 		return -EINVAL;
+ 
+-- 
+2.39.0
 
