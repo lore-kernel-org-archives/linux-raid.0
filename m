@@ -2,56 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB35EB64D9
-	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 01:08:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CFB9EB64DC
+	for <linux-raid@archiver.kernel.org>; Wed, 28 Jun 2023 01:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229854AbjF1BI4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 27 Jun 2023 21:08:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41386 "EHLO
+        id S230063AbjF1BI5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 27 Jun 2023 21:08:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229719AbjF1BIy (ORCPT
+        with ESMTP id S229593AbjF1BIy (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Tue, 27 Jun 2023 21:08:54 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1638E1BD4;
-        Tue, 27 Jun 2023 18:08:53 -0700 (PDT)
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B60E9E5B;
+        Tue, 27 Jun 2023 18:08:52 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QrNkn4Xqfz4f3nTp;
-        Wed, 28 Jun 2023 09:08:49 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QrNkl30ctz4f3l26;
+        Wed, 28 Jun 2023 09:08:47 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKsfiJtk9u_GMg--.34640S6;
-        Wed, 28 Jun 2023 09:08:50 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKsfiJtk9u_GMg--.34640S4;
+        Wed, 28 Jun 2023 09:08:49 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, logang@deltatee.com, hch@lst.de, song@kernel.org,
         shli@fb.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawwe.com
-Subject: [PATCH -next v2 2/2] md/raid5-cache: fix null-ptr-deref in r5l_reclaim_thread()
-Date:   Wed, 28 Jun 2023 09:07:56 +0800
-Message-Id: <20230628010756.70649-3-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 0/2] md/raid5-cache: fix a deadlock in r5l_exit_log()
+Date:   Wed, 28 Jun 2023 09:07:54 +0800
+Message-Id: <20230628010756.70649-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230628010756.70649-1-yukuai1@huaweicloud.com>
-References: <20230628010756.70649-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKsfiJtk9u_GMg--.34640S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxAr4fuw1rtw1UXr4Uuw1ftFb_yoW5tw48pa
-        1Sg3y3Ww48urWfAFnrWr1Dur4F93sF934xG3y5Cwn2yr13Xry8Ja47CayUZFy5JFW8Ary3
-        XrZ8tF48WrnrtrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUHbyAUUUUU
-        =
+X-CM-TRANSID: gCh0CgAHuKsfiJtk9u_GMg--.34640S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7Wr45JF43Kw1UJFW5XF4DCFg_yoWftrcEqF
+        y8WF98Gw1rAF1akas5Cr1xGr97KrW8ZF4rtFy8tFWa9Fy3Xr1Fkr48Gr4rWa9xWFWDuF13
+        CrW8JFW8JrnFgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbxkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+        n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
+        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb
+        XdbUUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -60,101 +57,37 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-r5l_reclaim_thread() already check that 'conf->log' is not NULL in the
-beginning, however, r5c_do_reclaim() and r5l_do_reclaim() will
-dereference 'conf->log' again, which will cause null-ptr-deref if
-'conf->log' is set to NULL from r5l_exit_log() concurrently.
+Changes in v2:
+ - remove a now unused local variable in patch 2;
 
-Fix this problem by don't dereference 'conf->log' again in
-r5c_do_reclaim() and r5c_do_reclaim().
+Commit b13015af94cf ("md/raid5-cache: Clear conf->log after finishing
+work") introduce a new problem:
 
-Fixes: a39f7afde358 ("md/r5cache: write-out phase and reclaim support")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/raid5-cache.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
+// caller hold reconfig_mutex
+r5l_exit_log
+ flush_work(&log->disable_writeback_work)
+			r5c_disable_writeback_async
+			 wait_event
+			  /*
+			   * conf->log is not NULL, and mddev_trylock()
+			   * will fail, wait_event() can never pass.
+			   */
+ conf->log = NULL
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 083288e36949..ba6fc146d265 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1148,10 +1148,9 @@ static void r5l_run_no_space_stripes(struct r5l_log *log)
-  * for write through mode, returns log->next_checkpoint
-  * for write back, returns log_start of first sh in stripe_in_journal_list
-  */
--static sector_t r5c_calculate_new_cp(struct r5conf *conf)
-+static sector_t r5c_calculate_new_cp(struct r5l_log *log)
- {
- 	struct stripe_head *sh;
--	struct r5l_log *log = conf->log;
- 	sector_t new_cp;
- 	unsigned long flags;
- 
-@@ -1159,12 +1158,12 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- 		return log->next_checkpoint;
- 
- 	spin_lock_irqsave(&log->stripe_in_journal_lock, flags);
--	if (list_empty(&conf->log->stripe_in_journal_list)) {
-+	if (list_empty(&log->stripe_in_journal_list)) {
- 		/* all stripes flushed */
- 		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
- 		return log->next_checkpoint;
- 	}
--	sh = list_first_entry(&conf->log->stripe_in_journal_list,
-+	sh = list_first_entry(&log->stripe_in_journal_list,
- 			      struct stripe_head, r5c);
- 	new_cp = sh->log_start;
- 	spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
-@@ -1173,10 +1172,8 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- 
- static sector_t r5l_reclaimable_space(struct r5l_log *log)
- {
--	struct r5conf *conf = log->rdev->mddev->private;
--
- 	return r5l_ring_distance(log, log->last_checkpoint,
--				 r5c_calculate_new_cp(conf));
-+				 r5c_calculate_new_cp(log));
- }
- 
- static void r5l_run_no_mem_stripe(struct r5l_log *log)
-@@ -1419,9 +1416,9 @@ void r5c_flush_cache(struct r5conf *conf, int num)
- 	}
- }
- 
--static void r5c_do_reclaim(struct r5conf *conf)
-+static void r5c_do_reclaim(struct r5l_log *log)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5conf *conf = log->rdev->mddev->private;
- 	struct stripe_head *sh;
- 	int count = 0;
- 	unsigned long flags;
-@@ -1496,7 +1493,6 @@ static void r5c_do_reclaim(struct r5conf *conf)
- 
- static void r5l_do_reclaim(struct r5l_log *log)
- {
--	struct r5conf *conf = log->rdev->mddev->private;
- 	sector_t reclaim_target = xchg(&log->reclaim_target, 0);
- 	sector_t reclaimable;
- 	sector_t next_checkpoint;
-@@ -1525,7 +1521,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
- 				    log->io_list_lock);
- 	}
- 
--	next_checkpoint = r5c_calculate_new_cp(conf);
-+	next_checkpoint = r5c_calculate_new_cp(log);
- 	spin_unlock_irq(&log->io_list_lock);
- 
- 	if (reclaimable == 0 || !write_super)
-@@ -1554,7 +1550,7 @@ static void r5l_reclaim_thread(struct md_thread *thread)
- 
- 	if (!log)
- 		return;
--	r5c_do_reclaim(conf);
-+	r5c_do_reclaim(log);
- 	r5l_do_reclaim(log);
- }
- 
+patch 1 revert this patch, an patch 2 fix the original problem in a
+different way.
+
+Noted this problem is just found by code review, and I think this is
+probably the reason that some mdadm tests is broken.
+
+Yu Kuai (2):
+  md/raid5-cache: Revert "md/raid5-cache: Clear conf->log after
+    finishing work"
+  md/raid5-cache: fix null-ptr-deref in r5l_reclaim_thread()
+
+ drivers/md/raid5-cache.c | 25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
+
 -- 
 2.39.2
 
