@@ -2,85 +2,90 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 681D2EB64DD
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Jun 2023 13:32:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F34CEB64D9
+	for <linux-raid@archiver.kernel.org>; Thu, 29 Jun 2023 13:56:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230479AbjF2Ncr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 29 Jun 2023 09:32:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44956 "EHLO
+        id S230164AbjF2N4U (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 29 Jun 2023 09:56:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232033AbjF2Nc0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Jun 2023 09:32:26 -0400
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3DA8E72;
-        Thu, 29 Jun 2023 06:32:24 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-3fb4146e8ceso7028905e9.0;
-        Thu, 29 Jun 2023 06:32:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1688045543; x=1690637543;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=vCNFfEAbLHyMqZFM6llkFTJRY+kQekzRP0RrqaYUy78=;
-        b=HskV4C783dd9XjnLO3UPWQNHPOEgfdNsuYPbJAE7KjgNp8FtRl9zpGOg6Lsh8aUZmS
-         ftJgw15Hd2cnAwy6Gqo1x690oceBY+OoZ9OuP8RcBLnjmMcU3mzslAxeI8R1lsscUj/8
-         2lIQ/gf6nD4S6lMoq97jYGx0KMl2w9GoJ0+ONiS2X9WsmEC2liizlirxd5agDu7asJ3m
-         oQ79nmS/VM0UUmu2kFclu8oHLD0Gd6aWQryU3vAZWeAPx/k9rATpYABsusWzfelb2Kpi
-         Skq8P4m7DmZWUFg6qNxjmeZqsA2rH0xW0GvGITrZ/5V2ixqTwiddwuQQik0y9b/+YgZX
-         A4rA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688045543; x=1690637543;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vCNFfEAbLHyMqZFM6llkFTJRY+kQekzRP0RrqaYUy78=;
-        b=cBJg9KnNXjnoMUgZQmTUl2NSc+GxkEVCE6ftlUOWVf36yIohQoLlWVE9037t6wRrUi
-         zs3JW4sTAQxXTqVJxDgGePTXr2ATzChlPD30vbkZhhrG9i0ikXioCHFcXMmV8Q40t9CF
-         1EvLKkqpLe+4pn14lSIXSEs1Ryb+hIN/KOFf99SelqTUEskGYDyRhTaOBKl4iY2t4bI4
-         A05U8M5yhK23xvu87WV8u+B2bfV4OI/CNbP6MpsvI3SdH8QVtFjcnUVbG1IEB6+b8abc
-         mU7ady1j0MwDFADEj5w+KTFEY96mFGbT3pHklNQ+xsrMxzuO3Fp76RZVvfIqvcFfZCws
-         Nstw==
-X-Gm-Message-State: AC+VfDyzOuemeuseytOeonOGCVdX6eRcTHC11hxIUvOfP6lhbv/sPIkR
-        CwindHEnV6OPO1Z3ZHWCQS4qT7aKLufh1Q==
-X-Google-Smtp-Source: ACHHUZ6nJLsWqU4SPC+H50CZgItQBxSSpPEPOrwQtTyPsyZwAstUdKLEPtJpZvNoI90rcQnh3WcdGQ==
-X-Received: by 2002:a1c:e90d:0:b0:3f8:fc2a:c7eb with SMTP id q13-20020a1ce90d000000b003f8fc2ac7ebmr27588599wmc.5.1688045542818;
-        Thu, 29 Jun 2023 06:32:22 -0700 (PDT)
-Received: from debian ([167.98.27.226])
-        by smtp.gmail.com with ESMTPSA id m9-20020adff389000000b00313f551b032sm10122946wro.53.2023.06.29.06.32.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Jun 2023 06:32:22 -0700 (PDT)
-Date:   Thu, 29 Jun 2023 14:32:20 +0100
-From:   "Sudip Mukherjee (Codethink)" <sudipm.mukherjee@gmail.com>
-To:     Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>
+        with ESMTP id S229522AbjF2N4T (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Jun 2023 09:56:19 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D5BE3588;
+        Thu, 29 Jun 2023 06:56:18 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QsKjm6dh5z4f3mLl;
+        Thu, 29 Jun 2023 21:56:12 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgA30JN7jZ1kNf48Mw--.38969S3;
+        Thu, 29 Jun 2023 21:56:12 +0800 (CST)
+Subject: Re: mainline build failure due to 8295efbe68c0 ("md/raid1-10: factor
+ out a helper to submit normal write")
+To:     "Sudip Mukherjee (Codethink)" <sudipm.mukherjee@gmail.com>,
+        Song Liu <song@kernel.org>
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         Linus Torvalds <torvalds@linux-foundation.org>,
         regressions@lists.linux.dev
-Subject: mainline build failure due to 8295efbe68c0 ("md/raid1-10: factor out
- a helper to submit normal write")
-Message-ID: <ZJ2H5FWuo9oDMgPm@debian>
+References: <ZJ2H5FWuo9oDMgPm@debian>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <be9320b5-7613-be0f-ffcd-4b3041ea5836@huaweicloud.com>
+Date:   Thu, 29 Jun 2023 21:56:11 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <ZJ2H5FWuo9oDMgPm@debian>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgA30JN7jZ1kNf48Mw--.38969S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7WryUJFy3tr4fXF1Utw4Utwb_yoWDAFgEvF
+        4q9rWrKr1jyr10yw1SkF4S93s8tayUKFn3Xw4FqF18ur98Za15ur45ua4rG3WxJr9YgFnF
+        yryxG3s5tr1jgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbzAYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+        67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+        AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+        j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+        kEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAK
+        I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
+        xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xII
+        jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
+        0EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUrR6zUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi All,
+Hi,
 
-The latest mainline kernel branch fails to build x86_64, arm64 and arm allmodconfig
-with clang (version 16.0.1), and the error is:
+ÔÚ 2023/06/29 21:32, Sudip Mukherjee (Codethink) Ð´µÀ:
+> Hi All,
+> 
+> The latest mainline kernel branch fails to build x86_64, arm64 and arm allmodconfig
 
-In file included from drivers/md/raid1.c:52:
-drivers/md/raid1-10.c:119:25: error: casting from randomized structure pointer type 'struct block_device *' to 'struct md_rdev *'
-        struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
-                               ^
+Thanks for the testing, which branch are you testing?
 
-git bisect pointed to 8295efbe68c0 ("md/raid1-10: factor out a helper to submit normal write").
+This problem is already fixed in latest mainline kernel:
 
-Reverting the commit has fixed the build failure.
+https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?id=b5a99602b74bbfa655be509c615181dd95b0719e
 
-I will be happy to test any patch or provide any extra log if needed.
+Kuai
+> with clang (version 16.0.1), and the error is:
+> 
+> In file included from drivers/md/raid1.c:52:
+> drivers/md/raid1-10.c:119:25: error: casting from randomized structure pointer type 'struct block_device *' to 'struct md_rdev *'
+>          struct md_rdev *rdev = (struct md_rdev *)bio->bi_bdev;
+>                                 ^
+> 
+> git bisect pointed to 8295efbe68c0 ("md/raid1-10: factor out a helper to submit normal write").
+> 
+> Reverting the commit has fixed the build failure.
+> 
+> I will be happy to test any patch or provide any extra log if needed.
+> 
+> #regzbot introduced: 8295efbe68c080047e98d9c0eb5cb933b238a8cb
+> 
 
-#regzbot introduced: 8295efbe68c080047e98d9c0eb5cb933b238a8cb
-
--- 
-Regards
-Sudip
