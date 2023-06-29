@@ -2,55 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FA21C0015E
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Jun 2023 15:55:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E71D1EB64DC
+	for <linux-raid@archiver.kernel.org>; Thu, 29 Jun 2023 15:57:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232629AbjF2Pzz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 29 Jun 2023 11:55:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59878 "EHLO
+        id S232226AbjF2P5L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 29 Jun 2023 11:57:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232459AbjF2Pzt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Jun 2023 11:55:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A708F35A0;
-        Thu, 29 Jun 2023 08:55:48 -0700 (PDT)
+        with ESMTP id S232260AbjF2P4x (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Jun 2023 11:56:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A95091B2;
+        Thu, 29 Jun 2023 08:56:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3BEE16156B;
-        Thu, 29 Jun 2023 15:55:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FE28C433C0;
-        Thu, 29 Jun 2023 15:55:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CDE6461595;
+        Thu, 29 Jun 2023 15:56:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 404DBC433CC;
+        Thu, 29 Jun 2023 15:56:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688054147;
-        bh=92HydDe45AGDX9dynHzLshwuSsch3BNAxhqa/UjZaHk=;
+        s=k20201202; t=1688054205;
+        bh=ntaECX/FHsFFGgeyUbNZ1KY0K6UdfCSvUzLiI0C2pt4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=n1Gx1IW1T7DfRPDNYIGrKB5opyPVLvykoJxu869egG9sn4CgC9VEzGfVLEFV2UUfZ
-         E8zf+2xHglgfT3FWnkRR8PCSoucSI6TDSZ1FxCi1BlVP23QRAfaGL6z4cLTcGup47S
-         VkE2ftnUwIA0gl1EbFqyb9CBp4Vxsuc2vTVRbSBr0trv521ipGyxgfvVyayYaXkGz3
-         UP4lCZN2HE8acuAgilCTKepbEnJdDD0QALeq2JK7+zbmgYylmMjgDB0mBdMvWKtiHL
-         kUWmCD7seioZSgT0nShaf9Gp4atKrHi4rCLYZikUC9jSt294+YsjNebA5rU6LMXekC
-         WBOU8iwG4HDqA==
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2b698dd515dso12862531fa.3;
-        Thu, 29 Jun 2023 08:55:47 -0700 (PDT)
-X-Gm-Message-State: ABy/qLZcXeQ8HTJD5O+TOjp7EgHQ9rnhAunJVpUZo4OfOaaMutcuG9+V
-        tb8P6n3dGNpoRxCntflZCMQajt1XodA/SPV9Bac=
-X-Google-Smtp-Source: APBJJlFP2ARHuv/abBCve1LufqNBizctsmLOu0T/pB9oPTFpA4Ooj/qis7utDLa2lKr8qhXIN0qAX/4DwKDi7FvO9zM=
-X-Received: by 2002:a2e:980c:0:b0:2b6:9e83:73da with SMTP id
- a12-20020a2e980c000000b002b69e8373damr104154ljj.32.1688054145664; Thu, 29 Jun
- 2023 08:55:45 -0700 (PDT)
+        b=YTHh4lPKjfGm4V+jsNOOHqSOmSH8zECnAvx2QGaA5L9B+34BXHfyrjGH2ebNdQSCp
+         z24dISt9xo5dLoYDkB/md9Gen4WRvB7jUyHNamjzg0JjHbUZml0kvrBd5M5WCUIm4i
+         iuFiYaWkUnqrpFyZHP5qF9hzdBYTKjJwPMUgF82b/P3D+3JkByNBsX29aQG5ByQzin
+         x2bV+YblwKYmqqdGxYkre/iSGd2YUcqk+0SBFFgDSkmRRZIZuJGsozxhK2iH/1D0v/
+         0cpBza8IBYpPsX1CsOpkJMNCA/+9h1aag81UD8vU898NjppycKbcedMgkpiW/3OpfQ
+         HfU4U16uldiLQ==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-4fb7589b187so1366417e87.1;
+        Thu, 29 Jun 2023 08:56:45 -0700 (PDT)
+X-Gm-Message-State: ABy/qLbziwte0jDylUwgp0LxJMgyy90f9CVcCgEpIBo6DyZhRCpGdfcs
+        FglC+q7ROD9FXX8pY/ujL4NVWOAuKq4NYN/Ph/k=
+X-Google-Smtp-Source: APBJJlFdHyefES6tzfD8ZQrhvwBMBEgAqkQ8eU+Vus2nXzUOKIfYfGjX0nN2GzvafsphwqvMrE3PoOhQ+pDOJnBvQYw=
+X-Received: by 2002:ac2:58fb:0:b0:4fb:9772:6639 with SMTP id
+ v27-20020ac258fb000000b004fb97726639mr270266lfo.6.1688054203258; Thu, 29 Jun
+ 2023 08:56:43 -0700 (PDT)
 MIME-Version: 1.0
 References: <ZJ2H5FWuo9oDMgPm@debian> <be9320b5-7613-be0f-ffcd-4b3041ea5836@huaweicloud.com>
- <13abe42f-2f5f-cbaf-21b8-baa4516963aa@leemhuis.info>
-In-Reply-To: <13abe42f-2f5f-cbaf-21b8-baa4516963aa@leemhuis.info>
+ <13abe42f-2f5f-cbaf-21b8-baa4516963aa@leemhuis.info> <CAPhsuW4Wf+PLDCZ7JpHzVT81ubj1Y6MCyLm-BWcVmB1jRqYEGg@mail.gmail.com>
+In-Reply-To: <CAPhsuW4Wf+PLDCZ7JpHzVT81ubj1Y6MCyLm-BWcVmB1jRqYEGg@mail.gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 29 Jun 2023 08:55:33 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4Wf+PLDCZ7JpHzVT81ubj1Y6MCyLm-BWcVmB1jRqYEGg@mail.gmail.com>
-Message-ID: <CAPhsuW4Wf+PLDCZ7JpHzVT81ubj1Y6MCyLm-BWcVmB1jRqYEGg@mail.gmail.com>
+Date:   Thu, 29 Jun 2023 08:56:31 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7VK6O6RKQTAcAVk4XxUzNALUW5nKMnMFkm3pW+4F23yw@mail.gmail.com>
+Message-ID: <CAPhsuW7VK6O6RKQTAcAVk4XxUzNALUW5nKMnMFkm3pW+4F23yw@mail.gmail.com>
 Subject: Re: mainline build failure due to 8295efbe68c0 ("md/raid1-10: factor
  out a helper to submit normal write")
-To:     Linux regressions mailing list <regressions@lists.linux.dev>
+To:     Linux regressions mailing list <regressions@lists.linux.dev>,
+        Jens Axboe <axboe@kernel.dk>
 Cc:     Yu Kuai <yukuai1@huaweicloud.com>,
         "Sudip Mukherjee (Codethink)" <sudipm.mukherjee@gmail.com>,
         linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -61,55 +62,65 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-+ Jens,
+Oops, didn't really add Jens in the previous email.
 
-On Thu, Jun 29, 2023 at 7:10=E2=80=AFAM Linux regression tracking (Thorsten
-Leemhuis) <regressions@leemhuis.info> wrote:
+Add Jens now.
+
+On Thu, Jun 29, 2023 at 8:55=E2=80=AFAM Song Liu <song@kernel.org> wrote:
 >
-> On 29.06.23 15:56, Yu Kuai wrote:
+> + Jens,
+>
+> On Thu, Jun 29, 2023 at 7:10=E2=80=AFAM Linux regression tracking (Thorst=
+en
+> Leemhuis) <regressions@leemhuis.info> wrote:
 > >
-> > =E5=9C=A8 2023/06/29 21:32, Sudip Mukherjee (Codethink) =E5=86=99=E9=81=
-=93:
-> >> The latest mainline kernel branch fails to build x86_64, arm64 and arm
-> >> allmodconfig
->
-> Thx for the report.
->
-> > Thanks for the testing, which branch are you testing?
+> > On 29.06.23 15:56, Yu Kuai wrote:
+> > >
+> > > =E5=9C=A8 2023/06/29 21:32, Sudip Mukherjee (Codethink) =E5=86=99=E9=
+=81=93:
+> > >> The latest mainline kernel branch fails to build x86_64, arm64 and a=
+rm
+> > >> allmodconfig
 > >
-> > This problem is already fixed in latest mainline kernel:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/com=
-mit/?id=3Db5a99602b74bbfa655be509c615181dd95b0719e
-
-Hi Jens,
-
-The fix is in the for-6.5/block-late branch.
-
-https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commi=
-t/?h=3Dfor-6.5/block-late&id=3Db5a99602b74bbfa655be509c615181dd95b0719e
-
-Would you send a pull request with it? Or would you prefer
-some other solution for the issue?
-
-AFAICT, it will fix clang build with RANDSTRUCT.
-
-Thanks,
-Song
-
+> > Thx for the report.
+> >
+> > > Thanks for the testing, which branch are you testing?
+> > >
+> > > This problem is already fixed in latest mainline kernel:
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/c=
+ommit/?id=3Db5a99602b74bbfa655be509c615181dd95b0719e
 >
-> And thx for the reply. :-D
+> Hi Jens,
 >
-> FWIW, that fix afaics is still in -next and hasn't reached mainline yet.
-> But I guess that will change within a few days.
+> The fix is in the for-6.5/block-late branch.
 >
-> >> #regzbot introduced: 8295efbe68c080047e98d9c0eb5cb933b238a8cb
+> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/com=
+mit/?h=3Dfor-6.5/block-late&id=3Db5a99602b74bbfa655be509c615181dd95b0719e
 >
-> #regzbot fix: b5a99602b74bbfa6
-> #regzbot dup-of: https://lore.kernel.org/all/ZJ2M4yqnOCqqGWH0@debian/
-> #regzbot ignore-activity
+> Would you send a pull request with it? Or would you prefer
+> some other solution for the issue?
 >
-> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-> --
-> Everything you wanna know about Linux kernel regression tracking:
-> https://linux-regtracking.leemhuis.info/about/#tldr
-> If I did something stupid, please tell me, as explained on that page.
+> AFAICT, it will fix clang build with RANDSTRUCT.
+>
+> Thanks,
+> Song
+>
+> >
+> > And thx for the reply. :-D
+> >
+> > FWIW, that fix afaics is still in -next and hasn't reached mainline yet=
+.
+> > But I guess that will change within a few days.
+> >
+> > >> #regzbot introduced: 8295efbe68c080047e98d9c0eb5cb933b238a8cb
+> >
+> > #regzbot fix: b5a99602b74bbfa6
+> > #regzbot dup-of: https://lore.kernel.org/all/ZJ2M4yqnOCqqGWH0@debian/
+> > #regzbot ignore-activity
+> >
+> > Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat=
+)
+> > --
+> > Everything you wanna know about Linux kernel regression tracking:
+> > https://linux-regtracking.leemhuis.info/about/#tldr
+> > If I did something stupid, please tell me, as explained on that page.
