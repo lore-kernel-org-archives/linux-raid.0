@@ -2,82 +2,113 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D63C9EB64DA
-	for <linux-raid@archiver.kernel.org>; Sat,  1 Jul 2023 02:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80706C001B3
+	for <linux-raid@archiver.kernel.org>; Sat,  1 Jul 2023 08:06:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229632AbjGACMR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 30 Jun 2023 22:12:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41150 "EHLO
+        id S229985AbjGAIGm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 1 Jul 2023 04:06:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbjGACMQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 30 Jun 2023 22:12:16 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B936EB4
-        for <linux-raid@vger.kernel.org>; Fri, 30 Jun 2023 19:12:14 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6748a616e17so637752b3a.1
-        for <linux-raid@vger.kernel.org>; Fri, 30 Jun 2023 19:12:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1688177534; x=1690769534;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=4/EDsj4PlwF/xWAR4TDb9cVNGDCwaYrP9o0xdTMAM8M=;
-        b=1I+Kj/8FtWzVbEy7UUkLK8tVdk5uO9TdxLddvSvXJ53iA/uG2dANOXbqoED5FCLCaJ
-         WTP1l0TXBx1DnXYukq2+s+c1yiOHjIWxl15ISfxGkGVWmExJTsbzqvUta9PlM5kOBnHr
-         mVJ1rOFQqbsJYqAKw8GuI+y6PzSV+V9Wjdl33E5VmO3/2cY/pNyG43ElMbLs3VumeTZO
-         TmmXTETKPmzj7nJeUQGpQC91fHuhQksQvz4sA/jAUzil97AFCZt1gRELVuvQxgUPHwJt
-         nwqOlxPZILKQCRfj0LImcplMstrr6FIzIAcUhBOPTuc3DuuoKQT6NAWk2/yNPhCHtoX1
-         zH6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688177534; x=1690769534;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4/EDsj4PlwF/xWAR4TDb9cVNGDCwaYrP9o0xdTMAM8M=;
-        b=V4RjbQw1hZ/FHXqjmqlcphMSO0Cdrtj+E2XwrUqxgQz8YkobqqTCl9cyMHceNkeN0Y
-         +9VW7OrBd7/qcyzONvDFb4/soQn8cGX3obG9+4Wr3Mb+vnumYWCILiN7W+Wj0bOVmkxf
-         k4BO4E6DFSZePMoJdmzH702TOoAjy1ssS6liebez54EVypikRaMbpKUpoQinlgeHJODT
-         1FVT8V7IxM3DEcQSVfWMrWjVH/GuvRamCe/TJz7xDpyX5tH6n0tV+HrJFwxAMvDiukGo
-         K1SZgSW+SbRJiBMj581DQIJStyRiH09kPholypZLxqfqWlI97Lw+p8KIOKNYKGbuiSv5
-         Z1ng==
-X-Gm-Message-State: AC+VfDwaHV8GGfoUZo5mei5Ro16/4+yB1oN9Asa+PNt/+3JYQfv0AzQo
-        RWPsAdrWMlrkmtbEOe7byBrulw==
-X-Google-Smtp-Source: ACHHUZ71DJVFRI7TyMVM7pLw6gpU8T2aoAg/e3snxmJX1GDuANg1/vMCM04UV7sT/Rwo/MkYym8T5A==
-X-Received: by 2002:a05:6a20:8e08:b0:121:84ce:c629 with SMTP id y8-20020a056a208e0800b0012184cec629mr6128438pzj.0.1688177534190;
-        Fri, 30 Jun 2023 19:12:14 -0700 (PDT)
-Received: from [192.168.1.136] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id j6-20020aa78006000000b00643355ff6a6sm10941730pfi.99.2023.06.30.19.12.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Jun 2023 19:12:13 -0700 (PDT)
-Message-ID: <a2213cd8-0273-1943-f5aa-e38ca3a9beeb@kernel.dk>
-Date:   Fri, 30 Jun 2023 20:12:12 -0600
+        with ESMTP id S229891AbjGAIGk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 1 Jul 2023 04:06:40 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAF4FE50;
+        Sat,  1 Jul 2023 01:06:38 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QtPsN1sKQz4f3q32;
+        Sat,  1 Jul 2023 16:06:32 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgA30JOH3p9kdvLGMw--.57184S7;
+        Sat, 01 Jul 2023 16:06:34 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     song@kernel.org, guoqing.jiang@cloud.ionos.com, xni@redhat.com,
+        colyli@suse.de
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH v2 3/3] md/raid10: use dereference_rdev_and_rrdev() to get devices
+Date:   Sat,  1 Jul 2023 16:05:29 +0800
+Message-Id: <20230701080529.2684932-4-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230701080529.2684932-1-linan666@huaweicloud.com>
+References: <20230701080529.2684932-1-linan666@huaweicloud.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [GIT PULL] md-fixes 20230630
-To:     Song Liu <songliubraving@meta.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Jason Baron <jbaron@akamai.com>
-References: <A098F73A-40A2-4B8D-8BDC-BB228B4F70A0@fb.com>
-Content-Language: en-US
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <A098F73A-40A2-4B8D-8BDC-BB228B4F70A0@fb.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgA30JOH3p9kdvLGMw--.57184S7
+X-Coremail-Antispam: 1UD129KBjvJXoW7CFyruw43Jw4kXw15Xr47Arb_yoW8ur1xpa
+        n8Ka4ftF4UW3y7tF1DJF4UG3WFyr1xtayfAryfZ39xZ343JrWrJ3W8GryYqr98ZFZ5uFy5
+        Xr15Kan5Ga48Xa7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUmjb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
+        A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+        W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+        6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
+        ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
+        JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2
+        ka0xkIwI1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j
+        6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7
+        AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE
+        2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcV
+        C2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kfnx
+        nUUI43ZEXa7IU1BOJ7UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 6/30/23 6:12 PM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following change for md-fixes on top of your
-> block-6.5 branch. This patch fixes data corruption caused by discard on
-> raid0 array with original layout. 
+From: Li Nan <linan122@huawei.com>
 
-Pulled, thanks.
+Commit 2ae6aaf76912 ("md/raid10: fix io loss while replacement replace
+rdev") reads replacement first to prevent io loss. However, there are same
+issue in wait_blocked_dev() and raid10_handle_discard(), too. Fix it by
+using dereference_rdev_and_rrdev() to get devices.
 
+Fixes: d30588b2731f ("md/raid10: improve raid10 discard request")
+Fixes: f2e7e269a752 ("md/raid10: pull the code that wait for blocked dev into one function")
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/raid10.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a6c3806be903..cbaec6fce1d7 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1375,11 +1375,9 @@ static void wait_blocked_dev(struct mddev *mddev, struct r10bio *r10_bio)
+ 	blocked_rdev = NULL;
+ 	rcu_read_lock();
+ 	for (i = 0; i < conf->copies; i++) {
+-		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
+-		struct md_rdev *rrdev = rcu_dereference(
+-			conf->mirrors[i].replacement);
+-		if (rdev == rrdev)
+-			rrdev = NULL;
++		struct md_rdev *rdev, *rrdev;
++
++		rdev = dereference_rdev_and_rrdev(&conf->mirrors[i], &rrdev);
+ 		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
+ 			atomic_inc(&rdev->nr_pending);
+ 			blocked_rdev = rdev;
+@@ -1815,15 +1813,12 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
+ 	 */
+ 	rcu_read_lock();
+ 	for (disk = 0; disk < geo->raid_disks; disk++) {
+-		struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev);
+-		struct md_rdev *rrdev = rcu_dereference(
+-			conf->mirrors[disk].replacement);
++		struct md_rdev *rdev, *rrdev;
+ 
++		rdev = dereference_rdev_and_rrdev(&conf->mirrors[disk], &rrdev);
+ 		r10_bio->devs[disk].bio = NULL;
+ 		r10_bio->devs[disk].repl_bio = NULL;
+ 
+-		if (rdev == rrdev)
+-			rrdev = NULL;
+ 		if (rdev && (test_bit(Faulty, &rdev->flags)))
+ 			rdev = NULL;
+ 		if (rrdev && (test_bit(Faulty, &rrdev->flags)))
 -- 
-Jens Axboe
-
+2.39.2
 
