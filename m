@@ -2,115 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F95EB64DA
-	for <linux-raid@archiver.kernel.org>; Sat,  1 Jul 2023 01:40:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D63C9EB64DA
+	for <linux-raid@archiver.kernel.org>; Sat,  1 Jul 2023 02:12:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbjGABk2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 30 Jun 2023 21:40:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33686 "EHLO
+        id S229632AbjGACMR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 30 Jun 2023 22:12:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjGABk1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 30 Jun 2023 21:40:27 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEAF73C3F;
-        Fri, 30 Jun 2023 18:40:25 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QtFHm56mzz4f41xD;
-        Sat,  1 Jul 2023 09:40:20 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-        by APP4 (Coremail) with SMTP id gCh0CgD3rLADhJ9kqHixMw--.61619S3;
-        Sat, 01 Jul 2023 09:40:21 +0800 (CST)
-Message-ID: <0af5c40f-ccc5-0d4c-3371-6473da9083b7@huaweicloud.com>
-Date:   Sat, 1 Jul 2023 09:40:19 +0800
+        with ESMTP id S229520AbjGACMQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 30 Jun 2023 22:12:16 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B936EB4
+        for <linux-raid@vger.kernel.org>; Fri, 30 Jun 2023 19:12:14 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6748a616e17so637752b3a.1
+        for <linux-raid@vger.kernel.org>; Fri, 30 Jun 2023 19:12:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1688177534; x=1690769534;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=4/EDsj4PlwF/xWAR4TDb9cVNGDCwaYrP9o0xdTMAM8M=;
+        b=1I+Kj/8FtWzVbEy7UUkLK8tVdk5uO9TdxLddvSvXJ53iA/uG2dANOXbqoED5FCLCaJ
+         WTP1l0TXBx1DnXYukq2+s+c1yiOHjIWxl15ISfxGkGVWmExJTsbzqvUta9PlM5kOBnHr
+         mVJ1rOFQqbsJYqAKw8GuI+y6PzSV+V9Wjdl33E5VmO3/2cY/pNyG43ElMbLs3VumeTZO
+         TmmXTETKPmzj7nJeUQGpQC91fHuhQksQvz4sA/jAUzil97AFCZt1gRELVuvQxgUPHwJt
+         nwqOlxPZILKQCRfj0LImcplMstrr6FIzIAcUhBOPTuc3DuuoKQT6NAWk2/yNPhCHtoX1
+         zH6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688177534; x=1690769534;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4/EDsj4PlwF/xWAR4TDb9cVNGDCwaYrP9o0xdTMAM8M=;
+        b=V4RjbQw1hZ/FHXqjmqlcphMSO0Cdrtj+E2XwrUqxgQz8YkobqqTCl9cyMHceNkeN0Y
+         +9VW7OrBd7/qcyzONvDFb4/soQn8cGX3obG9+4Wr3Mb+vnumYWCILiN7W+Wj0bOVmkxf
+         k4BO4E6DFSZePMoJdmzH702TOoAjy1ssS6liebez54EVypikRaMbpKUpoQinlgeHJODT
+         1FVT8V7IxM3DEcQSVfWMrWjVH/GuvRamCe/TJz7xDpyX5tH6n0tV+HrJFwxAMvDiukGo
+         K1SZgSW+SbRJiBMj581DQIJStyRiH09kPholypZLxqfqWlI97Lw+p8KIOKNYKGbuiSv5
+         Z1ng==
+X-Gm-Message-State: AC+VfDwaHV8GGfoUZo5mei5Ro16/4+yB1oN9Asa+PNt/+3JYQfv0AzQo
+        RWPsAdrWMlrkmtbEOe7byBrulw==
+X-Google-Smtp-Source: ACHHUZ71DJVFRI7TyMVM7pLw6gpU8T2aoAg/e3snxmJX1GDuANg1/vMCM04UV7sT/Rwo/MkYym8T5A==
+X-Received: by 2002:a05:6a20:8e08:b0:121:84ce:c629 with SMTP id y8-20020a056a208e0800b0012184cec629mr6128438pzj.0.1688177534190;
+        Fri, 30 Jun 2023 19:12:14 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id j6-20020aa78006000000b00643355ff6a6sm10941730pfi.99.2023.06.30.19.12.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Jun 2023 19:12:13 -0700 (PDT)
+Message-ID: <a2213cd8-0273-1943-f5aa-e38ca3a9beeb@kernel.dk>
+Date:   Fri, 30 Jun 2023 20:12:12 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH 2/3] md/raid10: factor out get_rdev_repl_from_mirror()
-To:     Song Liu <song@kernel.org>, linan666@huaweicloud.com
-Cc:     guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
-        yangerkun@huawei.com
-References: <20230628015752.102267-1-linan666@huaweicloud.com>
- <20230628015752.102267-3-linan666@huaweicloud.com>
- <CAPhsuW7ySGEQtSHg0jxvRRDQWumF7DsVF8fro6MYCc_bY6Ssew@mail.gmail.com>
-From:   Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <CAPhsuW7ySGEQtSHg0jxvRRDQWumF7DsVF8fro6MYCc_bY6Ssew@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [GIT PULL] md-fixes 20230630
+To:     Song Liu <songliubraving@meta.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Jason Baron <jbaron@akamai.com>
+References: <A098F73A-40A2-4B8D-8BDC-BB228B4F70A0@fb.com>
+Content-Language: en-US
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <A098F73A-40A2-4B8D-8BDC-BB228B4F70A0@fb.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3rLADhJ9kqHixMw--.61619S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrtryxKw4kWw1DAF4rZF15XFb_yoWDtrX_uw
-        4qyw1UGF15tr1kAr15Gr1YyFZxJFZxGaykZrZayrWfK3s7WFWj9ryrGryxA343C3yxXr9a
-        kF1kGryYyrZ3ZjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbS8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
-        Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-        0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI
-        64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8Jw
-        Am72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7
-        M4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64
-        vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
-        jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
-        x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
-        8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-        CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQZ23UUUUU=
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 6/30/23 6:12 PM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following change for md-fixes on top of your
+> block-6.5 branch. This patch fixes data corruption caused by discard on
+> raid0 array with original layout. 
 
-
-在 2023/7/1 7:53, Song Liu 写道:
-> On Tue, Jun 27, 2023 at 6:58 PM <linan666@huaweicloud.com> wrote:
->>
-> [...]
-> 
->>
->> +static void get_rdev_repl_from_mirror(struct raid10_info *mirror,
->> +                                struct md_rdev **prdev,
->> +                                struct md_rdev **prrdev)
->> +{
->> +       struct md_rdev *rdev, *rrdev;
->> +
->> +       rrdev = rcu_dereference(mirror->replacement);
->> +       /*
->> +        * Read replacement first to prevent reading both rdev and
->> +        * replacement as NULL during replacement replace rdev.
->> +        */
->> +       smp_mb();
->> +       rdev = rcu_dereference(mirror->rdev);
->> +       if (rdev == rrdev)
->> +               rrdev = NULL;
->> +
->> +       *prrdev = rrdev;
->> +       *prdev = rdev;
-> 
-> I don't think the reduction in duplicated code justifies two output arguments.
-> 
-> How about
-> 
-> static struct md_rdev *dereference_rdev_and_rrdev(struct raid10_info *mirror,
->                                 struct md_rdev **prrdev)
-> {
->      ...
->      *prrdev = xxx;
->      return rdev;
-> }
-> 
-> So we only have one argument for output.
-> 
-> Also, "from_mirror" in the function name doesn't really add more value.
-> 
-> Thanks,
-> Song
-> .
-
-I agree. Let me improve this.
+Pulled, thanks.
 
 -- 
-Thanks,
-Nan
+Jens Axboe
+
 
