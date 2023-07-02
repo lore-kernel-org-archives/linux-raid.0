@@ -2,50 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 292A9EB64DA
-	for <linux-raid@archiver.kernel.org>; Sun,  2 Jul 2023 19:43:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04419EB64DD
+	for <linux-raid@archiver.kernel.org>; Sun,  2 Jul 2023 19:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232265AbjGBTnu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 2 Jul 2023 15:43:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52364 "EHLO
+        id S232523AbjGBToi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 2 Jul 2023 15:44:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232023AbjGBTnD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Jul 2023 15:43:03 -0400
+        with ESMTP id S231944AbjGBTnq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Jul 2023 15:43:46 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8992319BB;
-        Sun,  2 Jul 2023 12:42:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 909752698;
+        Sun,  2 Jul 2023 12:42:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 93AD860D56;
-        Sun,  2 Jul 2023 19:41:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B422C433C8;
-        Sun,  2 Jul 2023 19:41:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 41B6660D17;
+        Sun,  2 Jul 2023 19:41:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1723DC433CA;
+        Sun,  2 Jul 2023 19:41:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688326890;
-        bh=FyNZHDThtCmH2fNOWa5ZeWTS4+PHEiFkEvpKVKX4btk=;
+        s=k20201202; t=1688326865;
+        bh=5f8M3S1iTWgD/PToxdwzdfPxVr3f9VK9U6tXML3c7v8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WL83shFRaaXApNSRyOS8EzbTpJSee+E2uhFjMVtWUYcpXAp1SLSv9RY61w/JmGVjb
-         kjozkOEdO0dmzCQSDsA8smT7NPHpLjHjwzXr5cXkGnT4ZI3SE7X7IuRIi43SFYW84K
-         CEtaqvNCqI/sF/QnR9vLhDgP/DeqTygOMzCUNEoYgq0d0ATkKCXQXoOe1vYHyUsUm+
-         FlUDpEJANvhPMEtLl/o71TsM0w6LM4mddb/PtiV8XediY8YSI7p3CWR7zgWv2LoqN3
-         IzXiqPihnyjweFcgOflZSop/a29LJg7753/lY5JD3qeWMN5Rslp/6RhVn73UkcUlhD
-         R7Epp9JG7Y1KQ==
+        b=dSu8EmtXueCVpT6aokJH62H/jnvi6ZKde8It61eev05uaiO/juKv2llXPksvIaBZb
+         T50FqPTB9qzxgaX8BHUTzICNlIFroo4GpBj+9JklFJU+kcisXq5ySO8ATso3OXtvp5
+         /JsuZczRfcMOYieVJXlIRkn6St01GK/DAGOH7qnTNC6Nce2qjjTANgPgdyKmMUya74
+         XbbohuJrGoZcvfznSLvRCrIkd3JfmrMHx5tRdI3EcUZxsvWMqT08wzedgURok96uKY
+         sQwRHds+0r309S/90hvvZERfNiqLlpZp9dGW8vaGGyFWoGQYVB0B/+K7Ggm1K0Uz/y
+         SfHjTn4bWjoVA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 07/12] md/raid10: prevent soft lockup while flush writes
-Date:   Sun,  2 Jul 2023 15:41:12 -0400
-Message-Id: <20230702194118.1777794-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.3 07/14] md/raid10: prevent soft lockup while flush writes
+Date:   Sun,  2 Jul 2023 15:40:46 -0400
+Message-Id: <20230702194053.1777356-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230702194118.1777794-1-sashal@kernel.org>
-References: <20230702194118.1777794-1-sashal@kernel.org>
+In-Reply-To: <20230702194053.1777356-1-sashal@kernel.org>
+References: <20230702194053.1777356-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.37
+X-stable-base: Linux 6.3.11
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
@@ -103,7 +103,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 67398394cc9c9..dfe69420c0fbc 100644
+index ea6967aeaa02a..3be84c828e549 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
 @@ -921,6 +921,7 @@ static void flush_pending_writes(struct r10conf *conf)
