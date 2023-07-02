@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C6CCEB64DA
-	for <linux-raid@archiver.kernel.org>; Sun,  2 Jul 2023 19:42:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07558EB64D9
+	for <linux-raid@archiver.kernel.org>; Sun,  2 Jul 2023 19:42:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231704AbjGBTmK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 2 Jul 2023 15:42:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52904 "EHLO
+        id S231707AbjGBTmi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 2 Jul 2023 15:42:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231757AbjGBTl5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Jul 2023 15:41:57 -0400
+        with ESMTP id S231702AbjGBTmK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Jul 2023 15:42:10 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A4DAE79;
-        Sun,  2 Jul 2023 12:41:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CE7B173C;
+        Sun,  2 Jul 2023 12:41:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3D11060C91;
-        Sun,  2 Jul 2023 19:41:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2550C433CC;
-        Sun,  2 Jul 2023 19:41:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7143360B45;
+        Sun,  2 Jul 2023 19:40:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33E03C433CA;
+        Sun,  2 Jul 2023 19:40:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688326864;
-        bh=WO0Ml2/O+skVepODRvJCGfBcMItfxN1zQn69JFUQ0m8=;
+        s=k20201202; t=1688326839;
+        bh=Z92YERXKt3EpcjKH4xmFAbnh7i2EELBBDERjr4stugg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YYgm2K589Efk2v86uDnOyAbKcjuzJkfUshfK5uw8zPWjP7+p8yASBSMCW7xYv65OB
-         7/lAXAw45GQ9/LR/qn9GrivBOD3sOga0jw+c90wQcPm9m+4fpYIF0Jt+ZFnWxr0yBv
-         XfzJtXx5HQdEHul7tHzxqLePOYHq1Zo6mnN9f/Fwp/k4lwzRSuaZvdsTEUXkvskATk
-         X7gxx0ocC4u+O8ZU396mCRj2qcF+U4aE7Eti6v548hm12/hFBti2U5agrNTD4IU6ld
-         /5v2GRHQzL24mPQa+AC9U8b8O4VMnHESAhjTTrp+kFk+t0xQU5QQGmPlX+X5jagZeR
-         1U1Za2IKNd//Q==
+        b=Mbgu2yBKb+bvMXcCxJEmMz6b/ABTOaVaPxIEmfVBU5xmM18e6aahFzZ6vlG0249Gd
+         Yzh7YjK6b46Brx28pEvCy1Sy9Gbd3HuwMTJ6hdRPQPP9nEd5HZgWv9bbuIyGSu+Hrj
+         66+xI54sbSr6enA8oa5c5m0NzFFT/09g/b+7DSn9w47uRfiTzHlsh1pXkJxFR2KiGN
+         WfqU3EJJi9M6ihBolEpLYlyaRl1brG0Iwco4BVewNAddhcnOOeO7xbDZ4xrJr/sI+i
+         5VhAhYgy6DvOwavMJGmJmXxdJluWZJYEl5M8EN88MLO1xoqHLPjk2xBroOQRg4wWd5
+         VJbud0T7E0n5w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Yu Kuai <yukuai3@huawei.com>, Peter Neuwirth <reddunur@online.de>,
         Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.3 06/14] md: fix data corruption for raid456 when reshape restart while grow up
-Date:   Sun,  2 Jul 2023 15:40:45 -0400
-Message-Id: <20230702194053.1777356-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.4 07/15] md: fix data corruption for raid456 when reshape restart while grow up
+Date:   Sun,  2 Jul 2023 15:40:12 -0400
+Message-Id: <20230702194020.1776895-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230702194053.1777356-1-sashal@kernel.org>
-References: <20230702194053.1777356-1-sashal@kernel.org>
+In-Reply-To: <20230702194020.1776895-1-sashal@kernel.org>
+References: <20230702194020.1776895-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.3.11
+X-stable-base: Linux 6.4.1
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
@@ -76,10 +76,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d479e1656ef33..61529d14e4dd6 100644
+index 8e344b4b34446..544ccb4461a9e 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4824,11 +4824,21 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+@@ -4804,11 +4804,21 @@ action_store(struct mddev *mddev, const char *page, size_t len)
  			return -EINVAL;
  		err = mddev_lock(mddev);
  		if (!err) {
