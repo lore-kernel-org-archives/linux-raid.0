@@ -2,50 +2,51 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04419EB64DD
-	for <linux-raid@archiver.kernel.org>; Sun,  2 Jul 2023 19:44:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C78EB64DA
+	for <linux-raid@archiver.kernel.org>; Sun,  2 Jul 2023 19:45:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232523AbjGBToi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 2 Jul 2023 15:44:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53130 "EHLO
+        id S232563AbjGBTpC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 2 Jul 2023 15:45:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231944AbjGBTnq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Jul 2023 15:43:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 909752698;
-        Sun,  2 Jul 2023 12:42:13 -0700 (PDT)
+        with ESMTP id S232281AbjGBTnv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Jul 2023 15:43:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A9B32D78;
+        Sun,  2 Jul 2023 12:42:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 41B6660D17;
-        Sun,  2 Jul 2023 19:41:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1723DC433CA;
-        Sun,  2 Jul 2023 19:41:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 86B8260DBA;
+        Sun,  2 Jul 2023 19:41:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FC2AC433B8;
+        Sun,  2 Jul 2023 19:41:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688326865;
-        bh=5f8M3S1iTWgD/PToxdwzdfPxVr3f9VK9U6tXML3c7v8=;
+        s=k20201202; t=1688326906;
+        bh=yVHyuAQwbddOgOeH+c8P7Dgkm6CzNqDGXYcb2WkFfUM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dSu8EmtXueCVpT6aokJH62H/jnvi6ZKde8It61eev05uaiO/juKv2llXPksvIaBZb
-         T50FqPTB9qzxgaX8BHUTzICNlIFroo4GpBj+9JklFJU+kcisXq5ySO8ATso3OXtvp5
-         /JsuZczRfcMOYieVJXlIRkn6St01GK/DAGOH7qnTNC6Nce2qjjTANgPgdyKmMUya74
-         XbbohuJrGoZcvfznSLvRCrIkd3JfmrMHx5tRdI3EcUZxsvWMqT08wzedgURok96uKY
-         sQwRHds+0r309S/90hvvZERfNiqLlpZp9dGW8vaGGyFWoGQYVB0B/+K7Ggm1K0Uz/y
-         SfHjTn4bWjoVA==
+        b=j97GLtWr2YBSgqFcAcD2Q1Mtvz+v/1hUHxsKrEXNQwEtkIqXlR2AMGDvTpVRMMVn5
+         87MRgkYRo5o9V/Bb73ry1qYu4dDCgxwpDu3XkB0g2Y6L63W7f3Onv1/GYq4BnIZups
+         w0PR1a+6B/akMQssxze0zD0L21h6ac7j7lPeUzSaAnG63j3CJQSrMIsQhCDXe2lp87
+         kuRTs9snssyqtazWXPC6wtzpLn4lUk9ChliXDwRKLIva8sPtPQfg7f8l3N7EhsbiWN
+         7Bj4Dg/maryR4JfZ9LalgFkXQnFEX8SUzvF+bJkcZgRrsR9KlzSoeONqHZ2zS542Cl
+         rnzBtPFtdijoQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.3 07/14] md/raid10: prevent soft lockup while flush writes
-Date:   Sun,  2 Jul 2023 15:40:46 -0400
-Message-Id: <20230702194053.1777356-7-sashal@kernel.org>
+Cc:     Yu Kuai <yukuai3@huawei.com>, Peter Neuwirth <reddunur@online.de>,
+        Song Liu <song@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        linux-raid@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 04/10] md: fix data corruption for raid456 when reshape restart while grow up
+Date:   Sun,  2 Jul 2023 15:41:33 -0400
+Message-Id: <20230702194139.1778398-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230702194053.1777356-1-sashal@kernel.org>
-References: <20230702194053.1777356-1-sashal@kernel.org>
+In-Reply-To: <20230702194139.1778398-1-sashal@kernel.org>
+References: <20230702194139.1778398-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.3.11
+X-stable-base: Linux 5.15.119
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
@@ -53,75 +54,55 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-[ Upstream commit 010444623e7f4da6b4a4dd603a7da7469981e293 ]
+[ Upstream commit 873f50ece41aad5c4f788a340960c53774b5526e ]
 
-Currently, there is no limit for raid1/raid10 plugged bio. While flushing
-writes, raid1 has cond_resched() while raid10 doesn't, and too many
-writes can cause soft lockup.
+Currently, if reshape is interrupted, echo "reshape" to sync_action will
+restart reshape from scratch, for example:
 
-Follow up soft lockup can be triggered easily with writeback test for
-raid10 with ramdisks:
+echo frozen > sync_action
+echo reshape > sync_action
 
-watchdog: BUG: soft lockup - CPU#10 stuck for 27s! [md0_raid10:1293]
-Call Trace:
- <TASK>
- call_rcu+0x16/0x20
- put_object+0x41/0x80
- __delete_object+0x50/0x90
- delete_object_full+0x2b/0x40
- kmemleak_free+0x46/0xa0
- slab_free_freelist_hook.constprop.0+0xed/0x1a0
- kmem_cache_free+0xfd/0x300
- mempool_free_slab+0x1f/0x30
- mempool_free+0x3a/0x100
- bio_free+0x59/0x80
- bio_put+0xcf/0x2c0
- free_r10bio+0xbf/0xf0
- raid_end_bio_io+0x78/0xb0
- one_write_done+0x8a/0xa0
- raid10_end_write_request+0x1b4/0x430
- bio_endio+0x175/0x320
- brd_submit_bio+0x3b9/0x9b7 [brd]
- __submit_bio+0x69/0xe0
- submit_bio_noacct_nocheck+0x1e6/0x5a0
- submit_bio_noacct+0x38c/0x7e0
- flush_pending_writes+0xf0/0x240
- raid10d+0xac/0x1ed0
+This will corrupt data before reshape_position if the array is growing,
+fix the problem by continue reshape from reshape_position.
 
-Fix the problem by adding cond_resched() to raid10 like what raid1 did.
-
-Note that unlimited plugged bio still need to be optimized, for example,
-in the case of lots of dirty pages writeback, this will take lots of
-memory and io will spend a long time in plug, hence io latency is bad.
-
+Reported-by: Peter Neuwirth <reddunur@online.de>
+Link: https://lore.kernel.org/linux-raid/e2f96772-bfbc-f43b-6da1-f520e5164536@online.de/
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Signed-off-by: Song Liu <song@kernel.org>
-Link: https://lore.kernel.org/r/20230529131106.2123367-2-yukuai1@huaweicloud.com
+Link: https://lore.kernel.org/r/20230512015610.821290-3-yukuai1@huaweicloud.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/raid10.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/md/md.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index ea6967aeaa02a..3be84c828e549 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -921,6 +921,7 @@ static void flush_pending_writes(struct r10conf *conf)
- 			else
- 				submit_bio_noacct(bio);
- 			bio = next;
-+			cond_resched();
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index bd0c9dfac9815..8e5a566991fe7 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4869,11 +4869,21 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 			return -EINVAL;
+ 		err = mddev_lock(mddev);
+ 		if (!err) {
+-			if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
++			if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+ 				err =  -EBUSY;
+-			else {
++			} else if (mddev->reshape_position == MaxSector ||
++				   mddev->pers->check_reshape == NULL ||
++				   mddev->pers->check_reshape(mddev)) {
+ 				clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 				err = mddev->pers->start_reshape(mddev);
++			} else {
++				/*
++				 * If reshape is still in progress, and
++				 * md_check_recovery() can continue to reshape,
++				 * don't restart reshape because data can be
++				 * corrupted for raid456.
++				 */
++				clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 			}
+ 			mddev_unlock(mddev);
  		}
- 		blk_finish_plug(&plug);
- 	} else
-@@ -1140,6 +1141,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 		else
- 			submit_bio_noacct(bio);
- 		bio = next;
-+		cond_resched();
- 	}
- 	kfree(plug);
- }
 -- 
 2.39.2
 
