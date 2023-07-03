@@ -2,289 +2,234 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F17DEB64DC
-	for <linux-raid@archiver.kernel.org>; Mon,  3 Jul 2023 12:39:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A561AC0015E
+	for <linux-raid@archiver.kernel.org>; Mon,  3 Jul 2023 12:55:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230376AbjGCMjt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 3 Jul 2023 08:39:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53020 "EHLO
+        id S231132AbjGCMzd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 3 Jul 2023 08:55:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229818AbjGCMjt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 3 Jul 2023 08:39:49 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45A91FD
-        for <linux-raid@vger.kernel.org>; Mon,  3 Jul 2023 05:39:47 -0700 (PDT)
-Received: from kwepemm600009.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QvlpX5ymtzTlRJ;
-        Mon,  3 Jul 2023 20:38:44 +0800 (CST)
-Received: from [10.174.176.73] (10.174.176.73) by
- kwepemm600009.china.huawei.com (7.193.23.164) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Mon, 3 Jul 2023 20:39:43 +0800
-Subject: Re: Unacceptably Poor RAID1 Performance with Many CPU Cores
-To:     Ali Gholami Rudi <aligrudi@gmail.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>
-CC:     Xiao Ni <xni@redhat.com>, <linux-raid@vger.kernel.org>,
-        <song@kernel.org>, "yukuai (C)" <yukuai3@huawei.com>
-References: <20231506112411@laper.mirepesht>
- <82d2e7c4-1029-ec7b-a8c5-5a6deebfae31@huaweicloud.com>
- <CALTww28VaFnsBQhkbWMRvqQv6c9HyP-iSFPwG_tn2SqQVLB+7Q@mail.gmail.com>
- <20231606091224@laper.mirepesht> <20231606110134@laper.mirepesht>
- <8b288984-396a-6093-bd1f-266303a8d2b6@huaweicloud.com>
- <20231606115113@laper.mirepesht>
- <1117f940-6c7f-5505-f962-a06e3227ef24@huaweicloud.com>
- <20231606122233@laper.mirepesht> <20231606152106@laper.mirepesht>
- <cbc45f91-c341-2207-b3ec-81701a8651b5@huaweicloud.com>
- <CALTww2-Wkvxo3C2OCFrG9Wr_7RynjxnBMtPwR4GppbArZYNzsQ@mail.gmail.com>
- <2311bff8-232c-916b-98b6-7543bd48ecfa@huaweicloud.com>
- <20230107144743@tare.nit>
-From:   Yu Kuai <yukuai3@huawei.com>
-Message-ID: <a8d9e0e5-d0cc-bed5-8b65-fe9fcc4c7dc4@huawei.com>
-Date:   Mon, 3 Jul 2023 20:39:43 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229792AbjGCMzc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 3 Jul 2023 08:55:32 -0400
+Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B88BB3
+        for <linux-raid@vger.kernel.org>; Mon,  3 Jul 2023 05:55:30 -0700 (PDT)
+Received: by mail-ed1-x52c.google.com with SMTP id 4fb4d7f45d1cf-51dff848168so2772587a12.2
+        for <linux-raid@vger.kernel.org>; Mon, 03 Jul 2023 05:55:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1688388929; x=1690980929;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sF0jADkyDi/XsopRr0l/IQVrEppSkrlD13NNlT22f4g=;
+        b=cY7CS3ylTpxwIWSJ6Xvv2AFRTYpG4KmUlPBWmTcCe0KobNzDJjsGuuqP6AAIEaX/aC
+         BTEEF3JHhtCFI92o3+smWlZpEt8+LTHk8CpIP08PtVMzdG0dsqL93oHsd5RaZEK9b9mr
+         xPfpLaACrlcqICK/6+tpinL1YC3I5SvUn+qKEVOPfxcWbhjVShkqo+CPlgMbmWfZ9KoJ
+         IOmR4W/oDVbJd4D5W/WpbhKa2XmdG3m/0nNhGRfAqPrffar/CtN1UrfFF9uD1Fz2j0NA
+         zbpCtMh4Ugp2QbUHe5nRUrQOBNethGBcofSVlvztFBhOMDB527IETJCcB9uct1BlIZGv
+         FUcg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688388929; x=1690980929;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=sF0jADkyDi/XsopRr0l/IQVrEppSkrlD13NNlT22f4g=;
+        b=axQqSYljwokMROdizrNoKtdXWPhv36lmpItQAwYeVW5t51t8m4kxWbkNGo1KZwDapH
+         VOppNc8tyQ70upyldS6XFWwwFVeUk4IrL93u0shJAaL7CsxVJSufKBZKVDcby0ExaC5G
+         hkNRuF+RVlCKWL2uGtx2XbriAVG4BlvomA/d1KStzpl6h7Y0RW+x0768786JqZ7AxL04
+         opQ6bm3eWYtsBYjfWCfQyNPq4afAvwhwzxdrYLgypep6uYfY5i58M7+GtpT3YPTDS9/h
+         rSceLINpVWoCOnU9tClkuVlcdaE9SyQAxRUaeiWYpB4z3DIhq7/dOAopMw4puSVpuvSu
+         p21A==
+X-Gm-Message-State: ABy/qLb3kYuzSMDyzZ3wsTPq+PIF8N06eoUlFxLjv7gfKFlwq9IU7kN9
+        slgYKHSxTJBzoBqQu/8fZ7AD3wpHtCc+dv8VogzpPg==
+X-Google-Smtp-Source: APBJJlE8260+zMpVTihgxrzA9S2BZL1eRtdIfjA/Ss3DPefJg0XvBzpuupBAP+TdftzbI5GvujpAUi+GP6W9bGEZrGo=
+X-Received: by 2002:aa7:cd4c:0:b0:51d:982d:cb77 with SMTP id
+ v12-20020aa7cd4c000000b0051d982dcb77mr7558859edw.33.1688388929122; Mon, 03
+ Jul 2023 05:55:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20230107144743@tare.nit>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.176.73]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemm600009.china.huawei.com (7.193.23.164)
-X-CFilter-Loop: Reflected
+References: <20230703080119.11464-1-jinpu.wang@ionos.com> <8f42de3a-4b31-949b-4a00-1537d42d76c0@huawei.com>
+In-Reply-To: <8f42de3a-4b31-949b-4a00-1537d42d76c0@huawei.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Mon, 3 Jul 2023 14:55:17 +0200
+Message-ID: <CAMGffEn8j+63MN34_Lc-xAOz_=QCWvtEFnz+vo6dh7tHsxP1Ng@mail.gmail.com>
+Subject: Re: [PATCH] raid1: prevent unnecessary call to wake_up() in fast path
+To:     Yu Kuai <yukuai3@huawei.com>
+Cc:     linux-raid@vger.kernel.org, song@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+Hi Kuai,
 
-在 2023/07/01 19:17, Ali Gholami Rudi 写道:
-> 
+Thanks for your comment, see reply inline.
+
+On Mon, Jul 3, 2023 at 2:35=E2=80=AFPM Yu Kuai <yukuai3@huawei.com> wrote:
+>
 > Hi,
-> 
-> I repeated the test on a large array (14TB instead of 40GB):
-> 
-> $ cat /proc/mdstat
-> Personalities : [raid10] [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4]
-> md3 : active raid10 nvme1n1p5[1] nvme3n1p5[3] nvme0n1p5[0] nvme2n1p5[2]
->        14889424896 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
-> 
-> md0 : active raid10 nvme2n1p2[2] nvme3n1p2[3] nvme0n1p2[0] nvme1n1p2[1]
->        2091008 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
-> 
-> ..
-> 
-> I get these results.
-> 
-> On md0 (40GB):
-> READ:  IOPS=1563K BW=6109MiB/s
-> WRITE: IOPS= 670K BW=2745MiB/s
-> 
-> On md3 (14TB):
-> READ:  IOPS=1177K BW=4599MiB/s
-> WRITE: IOPS= 505K BW=1972MiB/s
-> 
-> On md3 but disabling mdadm bitmap (mdadm --grow --bitmap=none /dev/md3):
-> READ:  IOPS=1351K BW=5278MiB/s
-> WRITE: IOPS= 579K BW=2261MiB/s
-> 
+>
+> =E5=9C=A8 2023/07/03 16:01, Jack Wang =E5=86=99=E9=81=93:
+> > wake_up is called unconditionally in fast path such as make_request(),
+> > which cause lock contention under high concurrency
+> >      raid1_end_write_request
+> >       wake_up
+> >        __wake_up_common_lock
+> >         spin_lock_irqsave
+> >
+> > Improve performance by only call wake_up() if waitqueue is not empty
+> >
+> > Fio test script:
+> >
+> > [global]
+> > name=3Drandom reads and writes
+> > ioengine=3Dlibaio
+> > direct=3D1
+> > readwrite=3Drandrw
+> > rwmixread=3D70
+> > iodepth=3D64
+> > buffered=3D0
+> > filename=3D/dev/md0
+> > size=3D1G
+> > runtime=3D30
+> > time_based
+> > randrepeat=3D0
+> > norandommap
+> > refill_buffers
+> > ramp_time=3D10
+> > bs=3D4k
+> > numjobs=3D400
+> > group_reporting=3D1
+> > [job1]
+> >
+> > Test result with ramdisk raid1 on a EPYC:
+> >
+> >       Before this patch       With this patch
+> >       READ    BW=3D4621MB/s     BW=3D7337MB/s
+> >       WRITE   BW=3D1980MB/s     BW=3D1675MB/s
+This was copy mistake, checked the raw output, with patch write BW is 3144M=
+B/s.
 
-Currently, if bitmap is enabled, a bitmap level spinlock will be grabbed
-for each write, and sadly this will require a huge refactor to improve
-performance.
+will fix in next version.
 
-> The tests are performed on Debian-12 (kernel version 6.1).
-> 
-> Any room for improvement?
-> 
+will also adapt the subject with "md/raid1" prefix.
+
+
+>
+> This is weird, I don't understand how write can be worse.
+> >
+> > The patch is inspired by Yu Kuai's change for raid10:
+> > https://lore.kernel.org/r/20230621105728.1268542-1-yukuai1@huaweicloud.=
+com
+> >
+> > Cc: Yu Kuai <yukuai3@huawei.com>
+> > Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+> > ---
+> >   drivers/md/raid1.c | 17 ++++++++++++-----
+> >   1 file changed, 12 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > index f834d99a36f6..808c91f338e6 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -789,11 +789,17 @@ static int read_balance(struct r1conf *conf, stru=
+ct r1bio *r1_bio, int *max_sect
+> >       return best_disk;
+> >   }
+> >
+> > +static void wake_up_barrier(struct r1conf *conf)
+> > +{
+> > +     if (wq_has_sleeper(&conf->wait_barrier))
+> > +             wake_up(&conf->wait_barrier);
+> > +}
+> > +
+> >   static void flush_bio_list(struct r1conf *conf, struct bio *bio)
+> >   {
+> >       /* flush any pending bitmap writes to disk before proceeding w/ I=
+/O */
+> >       raid1_prepare_flush_writes(conf->mddev->bitmap);
+> > -     wake_up(&conf->wait_barrier);
+> > +     wake_up_barrier(conf);
+> >
+> >       while (bio) { /* submit pending writes */
+> >               struct bio *next =3D bio->bi_next;
+> > @@ -835,6 +841,7 @@ static void flush_pending_writes(struct r1conf *con=
+f)
+> >               spin_unlock_irq(&conf->device_lock);
+> >   }
+> >
+> > +
+>
+> Please remove this new line.
+> >   /* Barriers....
+> >    * Sometimes we need to suspend IO while we do something else,
+> >    * either some resync/recovery, or reconfigure the array.
+> > @@ -970,7 +977,7 @@ static bool _wait_barrier(struct r1conf *conf, int =
+idx, bool nowait)
+> >        * In case freeze_array() is waiting for
+> >        * get_unqueued_pending() =3D=3D extra
+> >        */
+> > -     wake_up(&conf->wait_barrier);
+> > +     wake_up_barrier(conf);
+>
+> This is not fast path, this is only called when array is frozen or
+> barrier is grabbed, and this is also called with 'resync_lock' held.
+
+No, this one is call from
+raid1_write_request->wait_barrier->_wait_barrier. and it can be seen
+via perf.
+
+
+> >       /* Wait for the barrier in same barrier unit bucket to drop. */
+> >
+> >       /* Return false when nowait flag is set */
+> > @@ -1013,7 +1020,7 @@ static bool wait_read_barrier(struct r1conf *conf=
+, sector_t sector_nr, bool nowa
+> >        * In case freeze_array() is waiting for
+> >        * get_unqueued_pending() =3D=3D extra
+> >        */
+> > -     wake_up(&conf->wait_barrier);
+> > +     wake_up_barrier(conf);
+>
+> same above.
+No, this one is call from raid1_read_request-> wait_read_barrier, it
+can be seen via perf results.
+
+> >       /* Wait for array to be unfrozen */
+> >
+> >       /* Return false when nowait flag is set */
+> > @@ -1042,7 +1049,7 @@ static bool wait_barrier(struct r1conf *conf, sec=
+tor_t sector_nr, bool nowait)
+> >   static void _allow_barrier(struct r1conf *conf, int idx)
+> >   {
+> >       atomic_dec(&conf->nr_pending[idx]);
+> > -     wake_up(&conf->wait_barrier);
+> > +     wake_up_barrier(conf);
+> >   }
+> >
+> >   static void allow_barrier(struct r1conf *conf, sector_t sector_nr)
+> > @@ -1171,7 +1178,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, =
+bool from_schedule)
+> >               spin_lock_irq(&conf->device_lock);
+> >               bio_list_merge(&conf->pending_bio_list, &plug->pending);
+> >               spin_unlock_irq(&conf->device_lock);
+> > -             wake_up(&conf->wait_barrier);
+> > +             wake_up_barrier(conf);
+> >               md_wakeup_thread(mddev->thread);
+> >               kfree(plug);
+> >               return;
+> >
+>
+> And you missed raid1_write_request().
+you meant this one:
+1583         /* In case raid1d snuck in to freeze_array */
+1584         wake_up(&conf->wait_barrier);
+1585 }
+
+perf result doesn't show it, I will add it too.
+
+>
 > Thanks,
-> Ali
-> 
-> This is perf's output; there are lock contentions.
-> 
-> +   95.25%     0.00%  fio      [unknown]               [k] 0xffffffffffffffff
-> +   95.00%     0.00%  fio      fio                     [.] 0x000055e073fcd117
-> +   93.68%     0.13%  fio      [kernel.kallsyms]       [k] entry_SYSCALL_64_after_hwframe
-> +   93.54%     0.03%  fio      [kernel.kallsyms]       [k] do_syscall_64
-> +   92.38%     0.03%  fio      libc.so.6               [.] syscall
-> +   92.18%     0.00%  fio      fio                     [.] 0x000055e073fcaceb
-> +   92.18%     0.08%  fio      fio                     [.] td_io_queue
-> +   92.04%     0.02%  fio      fio                     [.] td_io_commit
-> +   91.76%     0.00%  fio      fio                     [.] 0x000055e073fefe5e
-> -   91.76%     0.05%  fio      libaio.so.1.0.2         [.] io_submit
->     - 91.71% io_submit
->        - 91.69% syscall
->           - 91.58% entry_SYSCALL_64_after_hwframe
->              - 91.55% do_syscall_64
->                 - 91.06% __x64_sys_io_submit
->                    - 90.93% io_submit_one
->                       - 48.85% aio_write
->                          - 48.77% ext4_file_write_iter
->                             - 39.86% iomap_dio_rw
->                                - 39.85% __iomap_dio_rw
->                                   - 22.55% blk_finish_plug
->                                      - 22.55% __blk_flush_plug
->                                         - 21.67% raid10_unplug
->                                            - 16.54% submit_bio_noacct_nocheck
->                                               - 16.44% blk_mq_submit_bio
->                                                  - 16.17% __rq_qos_throttle
->                                                     - 16.01% wbt_wait
+> Kuai
 
-You can disable wbt to prevent overhead here.
-
-Thanks,
-Kuai
->                                                        - 15.93% rq_qos_wait
->                                                           - 14.52% prepare_to_wait_exclusive
->                                                              - 11.50% _raw_spin_lock_irqsave
->                                                                   11.49% native_queued_spin_lock_slowpath
->                                                              - 3.01% _raw_spin_unlock_irqrestore
->                                                                 - 2.29% asm_common_interrupt
->                                                                    - 2.29% common_interrupt
->                                                                       - 2.28% __common_interrupt
->                                                                          - 2.28% handle_edge_irq
->                                                                             - 2.26% handle_irq_event
->                                                                                - 2.26% __handle_irq_event_percpu
->                                                                                   - nvme_irq
->                                                                                      - 2.23% blk_mq_end_request_batch
->                                                                                         - 1.41% __rq_qos_done
->                                                                                            - wbt_done
->                                                                                               - 1.38% __wake_up_common_lock
->                                                                                                  - 1.36% _raw_spin_lock_irqsave
->                                                                                                       native_queued_spin_lock_slowpath
->                                                                                           0.51% raid10_end_read_request
->                                                                 - 0.61% asm_sysvec_apic_timer_interrupt
->                                                                    - sysvec_apic_timer_interrupt
->                                                                       - 0.57% __irq_exit_rcu
->                                                                          - 0.56% __softirqentry_text_start
->                                                                             - 0.55% asm_common_interrupt
->                                                                                - common_interrupt
->                                                                                   - 0.55% __common_interrupt
->                                                                                      - 0.55% handle_edge_irq
->                                                                                         - 0.54% handle_irq_event
->                                                                                            - 0.54% __handle_irq_event_percpu
->                                                                                               - nvme_irq
->                                                                                                    0.54% blk_mq_end_request_batch
->                                                           - 0.87% io_schedule
->                                                              - 0.85% schedule
->                                                                 - 0.84% __schedule
->                                                                    - 0.62% pick_next_task_fair
->                                                                       - 0.61% newidle_balance
->                                                                          - 0.60% load_balance
->                                                                               0.50% find_busiest_group
->                                            - 3.98% __wake_up_common_lock
->                                               - 3.21% _raw_spin_lock_irqsave
->                                                    3.02% native_queued_spin_lock_slowpath
->                                               - 0.77% _raw_spin_unlock_irqrestore
->                                                  - 0.64% asm_common_interrupt
->                                                     - common_interrupt
->                                                        - 0.63% __common_interrupt
->                                                           - 0.63% handle_edge_irq
->                                                              - 0.60% handle_irq_event
->                                                                 - 0.59% __handle_irq_event_percpu
->                                                                    - nvme_irq
->                                                                         0.58% blk_mq_end_request_batch
->                                           0.84% blk_mq_flush_plug_list
->                                   - 12.50% iomap_dio_bio_iter
->                                      - 10.79% submit_bio_noacct_nocheck
->                                         - 10.73% __submit_bio
->                                            - 9.77% md_handle_request
->                                               - 7.14% raid10_make_request
->                                                  - 2.98% raid10_write_one_disk
->                                                     - 0.52% asm_common_interrupt
->                                                        - common_interrupt
->                                                           - 0.51% __common_interrupt
->                                                                0.51% handle_edge_irq
->                                                    1.16% wait_blocked_dev
->                                                  - 0.83% regular_request_wait
->                                                       0.82% wait_barrier
->                                              0.95% md_submit_bio
->                                   - 3.54% iomap_iter
->                                      - 3.52% ext4_iomap_overwrite_begin
->                                         - 3.52% ext4_iomap_begin
->                                              1.80% ext4_set_iomap
->                             - 2.19% file_modified_flags
->                                  2.16% inode_needs_update_time.part.0
->                               1.82% up_read
->                               1.61% down_read
->                             - 0.88% ext4_generic_write_checks
->                                  0.57% generic_write_checks
->                       - 41.78% aio_read
->                          - 41.64% ext4_file_read_iter
->                             - 31.62% iomap_dio_rw
->                                - 31.61% __iomap_dio_rw
->                                   - 19.92% iomap_dio_bio_iter
->                                      - 16.26% submit_bio_noacct_nocheck
->                                         - 15.60% __submit_bio
->                                            - 13.31% md_handle_request
->                                               - 7.50% raid10_make_request
->                                                  - 6.14% raid10_read_request
->                                                     - 1.94% regular_request_wait
->                                                          1.92% wait_barrier
->                                                       1.12% read_balance
->                                                     - 0.53% asm_common_interrupt
->                                                        - 0.53% common_interrupt
->                                                           - 0.53% __common_interrupt
->                                                              - 0.53% handle_edge_irq
->                                                                   0.50% handle_irq_event
->                                               - 1.14% asm_common_interrupt
->                                                  - 1.14% common_interrupt
->                                                     - 1.13% __common_interrupt
->                                                        - 1.13% handle_edge_irq
->                                                           - 1.08% handle_irq_event
->                                                              - 1.07% __handle_irq_event_percpu
->                                                                 - nvme_irq
->                                                                      1.05% blk_mq_end_request_batch
->                                              2.22% md_submit_bio
->                                           0.52% blk_mq_submit_bio
->                                      - 0.67% asm_common_interrupt
->                                         - common_interrupt
->                                            - 0.66% __common_interrupt
->                                               - 0.66% handle_edge_irq
->                                                  - 0.62% handle_irq_event
->                                                     - 0.62% __handle_irq_event_percpu
->                                                        - nvme_irq
->                                                             0.61% blk_mq_end_request_batch
->                                   - 8.90% iomap_iter
->                                      - 8.86% ext4_iomap_begin
->                                         - 4.24% ext4_set_iomap
->                                            - 0.86% asm_common_interrupt
->                                               - 0.86% common_interrupt
->                                                  - 0.85% __common_interrupt
->                                                     - 0.85% handle_edge_irq
->                                                        - 0.81% handle_irq_event
->                                                           - 0.80% __handle_irq_event_percpu
->                                                              - nvme_irq
->                                                                   0.79% blk_mq_end_request_batch
->                                         - 0.88% ext4_map_blocks
->                                              0.68% ext4_es_lookup_extent
->                                         - 0.81% asm_common_interrupt
->                                            - 0.81% common_interrupt
->                                               - 0.81% __common_interrupt
->                                                  - 0.81% handle_edge_irq
->                                                     - 0.77% handle_irq_event
->                                                        - 0.76% __handle_irq_event_percpu
->                                                           - nvme_irq
->                                                                0.75% blk_mq_end_request_batch
->                             - 4.53% down_read
->                                - 0.87% asm_common_interrupt
->                                   - 0.86% common_interrupt
->                                      - 0.86% __common_interrupt
->                                         - 0.86% handle_edge_irq
->                                            - 0.81% handle_irq_event
->                                               - 0.81% __handle_irq_event_percpu
->                                                  - nvme_irq
->                                                       0.79% blk_mq_end_request_batch
->                             - 4.42% up_read
->                                - 0.82% asm_common_interrupt
->                                   - 0.82% common_interrupt
->                                      - 0.81% __common_interrupt
->                                         - 0.81% handle_edge_irq
->                                            - 0.77% handle_irq_event
->                                               - 0.77% __handle_irq_event_percpu
->                                                  - nvme_irq
->                                                       0.75% blk_mq_end_request_batch
->                             - 0.86% ext4_dio_alignment
->                                  0.83% ext4_inode_journal_mode
-> 
-> .
-> 
+Thx!
