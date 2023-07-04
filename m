@@ -2,300 +2,187 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 814E0C001DB
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Jul 2023 04:21:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35FAEEB64DD
+	for <linux-raid@archiver.kernel.org>; Tue,  4 Jul 2023 07:41:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230262AbjGDEVV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 4 Jul 2023 00:21:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52922 "EHLO
+        id S231450AbjGDHly (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Jul 2023 03:41:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229786AbjGDEVT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jul 2023 00:21:19 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5402E42
-        for <linux-raid@vger.kernel.org>; Mon,  3 Jul 2023 21:20:51 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1b7dfb95761so8348925ad.1
-        for <linux-raid@vger.kernel.org>; Mon, 03 Jul 2023 21:20:51 -0700 (PDT)
+        with ESMTP id S231237AbjGDHlx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jul 2023 03:41:53 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76627CA
+        for <linux-raid@vger.kernel.org>; Tue,  4 Jul 2023 00:41:52 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id 4fb4d7f45d1cf-51d805cb33aso6625441a12.3
+        for <linux-raid@vger.kernel.org>; Tue, 04 Jul 2023 00:41:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1688444450; x=1691036450;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GQygWmEkN5we1RDXz7pkswh4Aib1XAu/CfaGHRydgSY=;
-        b=XeuQJZi5Fn6Y2V9hGSigVM6DlY0AfUTIFIISI4oYWBRMzWCz140HUa7CQjaNBi14bE
-         cHtd8fLDIrCGQBIfQGMwnS/brInUQYbP7hBcfyGRIQ1PjMp/HYkTtUH566cUrbR/ECQ/
-         xgdHBwtI/eZZjW8JzcYMKGfCZEk7y3wKjAqCcQ/GPr5gBl0a/ckeJOpen9Ef2juxuc3/
-         wEqaGSNOBlDbpHGogDBoCGy9PU9WR6GNvGNEKT/s6Kr2TWWm2I0aMPMLKNDBQdCYrtki
-         T6Etm7ZpcAKi7am901F1VomiYro58/OdqGB/tQsJF9HxpWuWHjmLtutUj9PpgNQY85My
-         tCog==
+        d=ionos.com; s=google; t=1688456511; x=1691048511;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=xVwvYHw3xOjEWJL0O11gAIq6vskmzoOhFMid45tHxj8=;
+        b=RcwL9PdLa0rauAx8+6T6qawBggJxtaSLkYjOGYfkmr+VLmlpbMG6uxlBzsrlW5N6ed
+         eiQwbhCCire4zniXlSk4JMgpKGss9xEMu0BbHGVPtP0w3Hp/a6PJbkj8rm/UyXRuPu9J
+         WVz7XDHfj1MYOalit50QPCXZ+Fdk+JUeN18srCyNwEZR4mB8QcB5TLqBtcWtrf5nIL0M
+         EpTsmrIo3mCJbgxrBkaMUl4JPLZL/Xt1J9jMRixnQ3Mhp4ONnReCrhEfbSQtjNlosE/8
+         +HqSIPIRxs4UC88oVAzSWdsRc569edB3Rjdh5vJ68xyzCfNtQN2GYzMEQgzOefQOohqz
+         C0Kg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688444450; x=1691036450;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GQygWmEkN5we1RDXz7pkswh4Aib1XAu/CfaGHRydgSY=;
-        b=DPC+r/cUS0vHPXtiim4d8QsH6bgIvMVBcRZsgEEIWiXL1wwGJo7mrIzU0TnvN5bUi2
-         w16qWi2Fd0Nt2aq6N660M4o2WvzrOU1Fs/bsvGQ8YCB/fcatu/rrnUNDyLSk498/biy7
-         3i6mI1OP02RCTV0OEeoI9CDdyNIXxElitpdG/frEQAdoKXhFHmdZIDCvdbc4L+LX2Ae+
-         s7YHsFwu8q9BYfY2UshJg6boWp+FbGLTlMDeJbsXOgASmdksX1shtWMyU19N1fUlglEJ
-         Ikv2D6Ae7WbIOybF11ZjTqMqJF4KEUIjhHeZmjMu3BAu691VFmmRj/DEQtNBDJvSQ2SH
-         AC5w==
-X-Gm-Message-State: ABy/qLaJuCXJj7o1zxki3LtVi+OsZ2i565IyfQQaDajzK9bdt7RLG0D9
-        +CwCIiwOGMpoDqY+mUZOeu9rPA==
-X-Google-Smtp-Source: APBJJlGoap5rgOO/5AFt7nvyzJipf1m4SqVj/7RLWlsyusW9U2QREChVOt6WzCmgKb9akbjSddWJzw==
-X-Received: by 2002:a17:903:94:b0:1ac:40f7:8b5a with SMTP id o20-20020a170903009400b001ac40f78b5amr12672869pld.3.1688444450336;
-        Mon, 03 Jul 2023 21:20:50 -0700 (PDT)
-Received: from [10.70.252.135] ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id j6-20020a170902c3c600b001b8918da8d1sm3233936plj.80.2023.07.03.21.20.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Jul 2023 21:20:49 -0700 (PDT)
-Message-ID: <38b14080-4ce5-d300-8a0a-c630bca6806b@bytedance.com>
-Date:   Tue, 4 Jul 2023 12:20:41 +0800
+        d=1e100.net; s=20221208; t=1688456511; x=1691048511;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xVwvYHw3xOjEWJL0O11gAIq6vskmzoOhFMid45tHxj8=;
+        b=a6CnfQuGy1yj1t9BmJO0UiUGdPYQRhIAnNfn0WYxHTJePkn/zjR2hUW7U+Cgs5MHam
+         0BcfQ0XoWdSFF3aAl1txRMgAKMyVg4j0/IIUG4wHP3usCpa2qWWTvbIzLtBl5rsAnAcc
+         RlOqm+VkqKszmQ+2HewPBe7gAEtyF4uXIhAVVAYpattAwesV2KDJFWIW+r5sNjajr9eP
+         sOKIQ8KD5QUd/JuqIKRbHkjZ6/y3XuVACWO/esGqQummio1G1HIV7XH4yyCdbZoWfqyE
+         2STgGfjHJmjfetSs+aTPpV8gAfn+OL3gp2chaaDJ4PhKEqG17JX/8ZtHZA61WiRD9oDL
+         alhg==
+X-Gm-Message-State: ABy/qLZ7pdWSl5a/P+tFWuhND3ETdDpdNs5DVIviCbvJAwGNVbhxm/bQ
+        Vc360bI7jaqH28c/X0khkHICDIcLyVrO3UCK8YY5+p6Z
+X-Google-Smtp-Source: APBJJlEhcX6Ywf217fU9wOxhIKUkGgGv+6Vt3tpUiVk5FH1fz76y2jbd0VjOcN3WsG7wrj0rc2UNqA==
+X-Received: by 2002:aa7:d64e:0:b0:51e:cc7:534d with SMTP id v14-20020aa7d64e000000b0051e0cc7534dmr5277100edr.24.1688456510727;
+        Tue, 04 Jul 2023 00:41:50 -0700 (PDT)
+Received: from lb02065.fritz.box ([2001:9e8:1435:9200:c0c6:7201:e34a:3a])
+        by smtp.gmail.com with ESMTPSA id m16-20020aa7c2d0000000b0051e070cff76sm3310870edp.3.2023.07.04.00.41.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Jul 2023 00:41:50 -0700 (PDT)
+From:   Jack Wang <jinpu.wang@ionos.com>
+To:     linux-raid@vger.kernel.org, song@kernel.org
+Cc:     Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCHv2] md/raid1: Prevent unnecessary call to wake_up() in fast path
+Date:   Tue,  4 Jul 2023 09:41:49 +0200
+Message-Id: <20230704074149.58863-1-jinpu.wang@ionos.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
-Content-Language: en-US
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     paulmck@kernel.org, Vlastimil Babka <vbabka@suse.cz>,
-        akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
-        djwong@kernel.org, brauner@kernel.org, tytso@mit.edu,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-arm-msm@vger.kernel.org, dm-devel@redhat.com,
-        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
- <20230622085335.77010-25-zhengqi.arch@bytedance.com>
- <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
- <ZJU708VIyJ/3StAX@dread.disaster.area>
- <a21047bb-3b87-a50a-94a7-f3fa4847bc08@bytedance.com>
- <ZJYaYv4pACmCaBoT@dread.disaster.area>
- <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
-In-Reply-To: <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Dave,
+wake_up is called unconditionally in fast path such as make_request(),
+which cause lock contention under high concurrency
+    raid1_end_write_request
+     wake_up
+      __wake_up_common_lock
+       spin_lock_irqsave
 
-On 2023/6/24 19:08, Qi Zheng wrote:
-> Hi Dave,
-> 
-> On 2023/6/24 06:19, Dave Chinner wrote:
->> On Fri, Jun 23, 2023 at 09:10:57PM +0800, Qi Zheng wrote:
->>> On 2023/6/23 14:29, Dave Chinner wrote:
->>>> On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
->>>>> On 6/22/23 10:53, Qi Zheng wrote:
->>>> Yes, I suggested the IDR route because radix tree lookups under RCU
->>>> with reference counted objects are a known safe pattern that we can
->>>> easily confirm is correct or not.  Hence I suggested the unification
->>>> + IDR route because it makes the life of reviewers so, so much
->>>> easier...
->>>
->>> In fact, I originally planned to try the unification + IDR method you
->>> suggested at the beginning. But in the case of CONFIG_MEMCG disabled,
->>> the struct mem_cgroup is not even defined, and root_mem_cgroup and
->>> shrinker_info will not be allocated.  This required more code 
->>> changes, so
->>> I ended up keeping the shrinker_list and implementing the above pattern.
->>
->> Yes. Go back and read what I originally said needed to be done
->> first. In the case of CONFIG_MEMCG=n, a dummy root memcg still needs
->> to exist that holds all of the global shrinkers. Then shrink_slab()
->> is only ever passed a memcg that should be iterated.
->>
->> Yes, it needs changes external to the shrinker code itself to be
->> made to work. And even if memcg's are not enabled, we can still use
->> the memcg structures to ensure a common abstraction is used for the
->> shrinker tracking infrastructure....
-> 
-> Yeah, what I imagined before was to define a more concise struct
-> mem_cgroup in the case of CONFIG_MEMCG=n, then allocate a dummy root
-> memcg on system boot:
-> 
-> #ifdef !CONFIG_MEMCG
-> 
-> struct shrinker_info {
->      struct rcu_head rcu;
->      atomic_long_t *nr_deferred;
->      unsigned long *map;
->      int map_nr_max;
-> };
-> 
-> struct mem_cgroup_per_node {
->      struct shrinker_info __rcu    *shrinker_info;
-> };
-> 
-> struct mem_cgroup {
->      struct mem_cgroup_per_node *nodeinfo[];
-> };
-> 
-> #endif
+Improve performance by only call wake_up() if waitqueue is not empty
 
-These days I tried doing this:
+Fio test script:
 
-1. CONFIG_MEMCG && !mem_cgroup_disabled()
+[global]
+name=random reads and writes
+ioengine=libaio
+direct=1
+readwrite=randrw
+rwmixread=70
+iodepth=64
+buffered=0
+filename=/dev/md0
+size=1G
+runtime=30
+time_based
+randrepeat=0
+norandommap
+refill_buffers
+ramp_time=10
+bs=4k
+numjobs=400
+group_reporting=1
+[job1]
 
-    track all global shrinkers with root_mem_cgroup.
+Test result with 2 ramdisk in raid1 on a Intel Broadwell 56 cores server.
 
-2. CONFIG_MEMCG && mem_cgroup_disabled()
+	Before this patch       With this patch
+	READ	BW=4621MB/s	BW=7337MB/s
+	WRITE	BW=1980MB/s	BW=3144MB/s
 
-    the root_mem_cgroup is also allocated in this case, so still use
-    root_mem_cgroup to track all global shrinkers.
+The patch is inspired by Yu Kuai's change for raid10:
+https://lore.kernel.org/r/20230621105728.1268542-1-yukuai1@huaweicloud.com
 
-3. !CONFIG_MEMCG
+Cc: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+---
+v2: addressed comments from Kuai
+* Removed newline
+* change the missing case in raid1_write_request
+* I still kept the change for _wait_barrier and wait_read_barrier, as I did
+ performance tests without them there are still lock contention from
+ __wake_up_common_lock
 
-    allocate a dummy memcg during system startup (after cgroup_init())
-    and use it to track all global shrinkers
+ drivers/md/raid1.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-This works, but needs to modify the startup order of some subsystems,
-because some shrinkers will be registered before root_mem_cgroup is
-allocated, such as:
-
-1. rcu-kfree shrinker in rcu_init()
-2. super block shrinkers in vfs_caches_init()
-
-And cgroup_init() also depends on some file system infrastructure, so
-I made some changes (rough and unorganized):
-
-diff --git a/fs/namespace.c b/fs/namespace.c
-index e157efc54023..6a12d3d0064e 100644
---- a/fs/namespace.c
-+++ b/fs/namespace.c
-@@ -4706,7 +4706,7 @@ static void __init init_mount_tree(void)
-
-  void __init mnt_init(void)
-  {
--       int err;
-+       //int err;
-
-         mnt_cache = kmem_cache_create("mnt_cache", sizeof(struct mount),
-                         0, SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT, 
-NULL);
-@@ -4725,15 +4725,7 @@ void __init mnt_init(void)
-         if (!mount_hashtable || !mountpoint_hashtable)
-                 panic("Failed to allocate mount hash table\n");
-
--       kernfs_init();
--
--       err = sysfs_init();
--       if (err)
--               printk(KERN_WARNING "%s: sysfs_init error: %d\n",
--                       __func__, err);
--       fs_kobj = kobject_create_and_add("fs", NULL);
--       if (!fs_kobj)
--               printk(KERN_WARNING "%s: kobj create error\n", __func__);
-         shmem_init();
-         init_rootfs();
-         init_mount_tree();
-diff --git a/include/linux/rcupdate.h b/include/linux/rcupdate.h
-index 7d9c2a63b7cd..d87c67f6f66e 100644
---- a/include/linux/rcupdate.h
-+++ b/include/linux/rcupdate.h
-@@ -119,6 +119,7 @@ static inline void call_rcu_hurry(struct rcu_head 
-*head, rcu_callback_t func)
-
-  /* Internal to kernel */
-  void rcu_init(void);
-+void rcu_shrinker_init(void);
-  extern int rcu_scheduler_active;
-  void rcu_sched_clock_irq(int user);
-  void rcu_report_dead(unsigned int cpu);
-diff --git a/init/main.c b/init/main.c
-index ad920fac325c..4190fc6d10ad 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -1049,14 +1049,22 @@ void start_kernel(void)
-         security_init();
-         dbg_late_init();
-         net_ns_init();
-+       kernfs_init();
-+       if (sysfs_init())
-+               printk(KERN_WARNING "%s: sysfs_init error\n",
-+                       __func__);
-+       fs_kobj = kobject_create_and_add("fs", NULL);
-+       if (!fs_kobj)
-+               printk(KERN_WARNING "%s: kobj create error\n", __func__);
-+       proc_root_init();
-+       cgroup_init();
-         vfs_caches_init();
-         pagecache_init();
-         signals_init();
-         seq_file_init();
--       proc_root_init();
-         nsfs_init();
-         cpuset_init();
--       cgroup_init();
-+       rcu_shrinker_init();
-         taskstats_init_early();
-         delayacct_init();
-
-diff --git a/kernel/rcu/tree.c b/kernel/rcu/tree.c
-index d068ce3567fc..71a04ae8defb 100644
---- a/kernel/rcu/tree.c
-+++ b/kernel/rcu/tree.c
-@@ -4953,7 +4953,10 @@ static void __init kfree_rcu_batch_init(void)
-                 INIT_DELAYED_WORK(&krcp->page_cache_work, 
-fill_page_cache_func);
-                 krcp->initialized = true;
-         }
-+}
-
-+void __init rcu_shrinker_init(void)
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index f834d99a36f6..0c76c36d8cb1 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -789,11 +789,17 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	return best_disk;
+ }
+ 
++static void wake_up_barrier(struct r1conf *conf)
 +{
-         kfree_rcu_shrinker = shrinker_alloc(0, "rcu-kfree");
-         if (!kfree_rcu_shrinker) {
-                 pr_err("Failed to allocate kfree_rcu() shrinker!\n");
++	if (wq_has_sleeper(&conf->wait_barrier))
++		wake_up(&conf->wait_barrier);
++}
++
+ static void flush_bio_list(struct r1conf *conf, struct bio *bio)
+ {
+ 	/* flush any pending bitmap writes to disk before proceeding w/ I/O */
+ 	raid1_prepare_flush_writes(conf->mddev->bitmap);
+-	wake_up(&conf->wait_barrier);
++	wake_up_barrier(conf);
+ 
+ 	while (bio) { /* submit pending writes */
+ 		struct bio *next = bio->bi_next;
+@@ -970,7 +976,7 @@ static bool _wait_barrier(struct r1conf *conf, int idx, bool nowait)
+ 	 * In case freeze_array() is waiting for
+ 	 * get_unqueued_pending() == extra
+ 	 */
+-	wake_up(&conf->wait_barrier);
++	wake_up_barrier(conf);
+ 	/* Wait for the barrier in same barrier unit bucket to drop. */
+ 
+ 	/* Return false when nowait flag is set */
+@@ -1013,7 +1019,7 @@ static bool wait_read_barrier(struct r1conf *conf, sector_t sector_nr, bool nowa
+ 	 * In case freeze_array() is waiting for
+ 	 * get_unqueued_pending() == extra
+ 	 */
+-	wake_up(&conf->wait_barrier);
++	wake_up_barrier(conf);
+ 	/* Wait for array to be unfrozen */
+ 
+ 	/* Return false when nowait flag is set */
+@@ -1042,7 +1048,7 @@ static bool wait_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
+ static void _allow_barrier(struct r1conf *conf, int idx)
+ {
+ 	atomic_dec(&conf->nr_pending[idx]);
+-	wake_up(&conf->wait_barrier);
++	wake_up_barrier(conf);
+ }
+ 
+ static void allow_barrier(struct r1conf *conf, sector_t sector_nr)
+@@ -1171,7 +1177,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
+ 		spin_lock_irq(&conf->device_lock);
+ 		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+ 		spin_unlock_irq(&conf->device_lock);
+-		wake_up(&conf->wait_barrier);
++		wake_up_barrier(conf);
+ 		md_wakeup_thread(mddev->thread);
+ 		kfree(plug);
+ 		return;
+@@ -1574,7 +1580,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	r1_bio_write_done(r1_bio);
+ 
+ 	/* In case raid1d snuck in to freeze_array */
+-	wake_up(&conf->wait_barrier);
++	wake_up_barrier(conf);
+ }
+ 
+ static bool raid1_make_request(struct mddev *mddev, struct bio *bio)
+-- 
+2.34.1
 
-I adjusted it step by step according to the errors reported, and there
-may be hidden problems (needs more review and testing).
-
-In addition, unifying the processing of global and memcg slab shrink
-does have many benefits:
-
-1. shrinker::nr_deferred can be removed
-2. shrinker_list can be removed
-3. simplifies the existing code logic and subsequent lockless processing
-
-But I'm still a bit apprehensive about modifying the boot order. :(
-
-What do you think about this?
-
-Thanks,
-Qi
-
-
-> 
-> But I have a concern: if all global shrinkers are tracking with the
-> info->map of root memcg, a shrinker->id needs to be assigned to them,
-> which will cause info->map_nr_max to become larger than before, then
-> making the traversal of info->map slower.
-> 
->>
->>> If the above pattern is not safe, I will go back to the unification +
->>> IDR method.
->>
->> And that is exactly how we got into this mess in the first place....
-> 
-> I only found one similar pattern in the kernel:
-> 
-> fs/smb/server/oplock.c:find_same_lease_key/smb_break_all_levII_oplock/lookup_lease_in_table
-> 
-> But IIUC, the refcount here needs to be decremented after holding
-> rcu lock as I did above.
-> 
-> So regardless of whether we choose unification + IDR in the end, I still
-> want to confirm whether the pattern I implemented above is safe. :)
-> 
-> Thanks,
-> Qi
-> 
->>
->> -Dave
