@@ -2,187 +2,159 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35FAEEB64DD
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Jul 2023 07:41:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B1E3C04E69
+	for <linux-raid@archiver.kernel.org>; Tue,  4 Jul 2023 12:22:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231450AbjGDHly (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 4 Jul 2023 03:41:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53318 "EHLO
+        id S231608AbjGDMWj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Jul 2023 08:22:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231237AbjGDHlx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jul 2023 03:41:53 -0400
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76627CA
-        for <linux-raid@vger.kernel.org>; Tue,  4 Jul 2023 00:41:52 -0700 (PDT)
-Received: by mail-ed1-x543.google.com with SMTP id 4fb4d7f45d1cf-51d805cb33aso6625441a12.3
-        for <linux-raid@vger.kernel.org>; Tue, 04 Jul 2023 00:41:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1688456511; x=1691048511;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=xVwvYHw3xOjEWJL0O11gAIq6vskmzoOhFMid45tHxj8=;
-        b=RcwL9PdLa0rauAx8+6T6qawBggJxtaSLkYjOGYfkmr+VLmlpbMG6uxlBzsrlW5N6ed
-         eiQwbhCCire4zniXlSk4JMgpKGss9xEMu0BbHGVPtP0w3Hp/a6PJbkj8rm/UyXRuPu9J
-         WVz7XDHfj1MYOalit50QPCXZ+Fdk+JUeN18srCyNwEZR4mB8QcB5TLqBtcWtrf5nIL0M
-         EpTsmrIo3mCJbgxrBkaMUl4JPLZL/Xt1J9jMRixnQ3Mhp4ONnReCrhEfbSQtjNlosE/8
-         +HqSIPIRxs4UC88oVAzSWdsRc569edB3Rjdh5vJ68xyzCfNtQN2GYzMEQgzOefQOohqz
-         C0Kg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688456511; x=1691048511;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=xVwvYHw3xOjEWJL0O11gAIq6vskmzoOhFMid45tHxj8=;
-        b=a6CnfQuGy1yj1t9BmJO0UiUGdPYQRhIAnNfn0WYxHTJePkn/zjR2hUW7U+Cgs5MHam
-         0BcfQ0XoWdSFF3aAl1txRMgAKMyVg4j0/IIUG4wHP3usCpa2qWWTvbIzLtBl5rsAnAcc
-         RlOqm+VkqKszmQ+2HewPBe7gAEtyF4uXIhAVVAYpattAwesV2KDJFWIW+r5sNjajr9eP
-         sOKIQ8KD5QUd/JuqIKRbHkjZ6/y3XuVACWO/esGqQummio1G1HIV7XH4yyCdbZoWfqyE
-         2STgGfjHJmjfetSs+aTPpV8gAfn+OL3gp2chaaDJ4PhKEqG17JX/8ZtHZA61WiRD9oDL
-         alhg==
-X-Gm-Message-State: ABy/qLZ7pdWSl5a/P+tFWuhND3ETdDpdNs5DVIviCbvJAwGNVbhxm/bQ
-        Vc360bI7jaqH28c/X0khkHICDIcLyVrO3UCK8YY5+p6Z
-X-Google-Smtp-Source: APBJJlEhcX6Ywf217fU9wOxhIKUkGgGv+6Vt3tpUiVk5FH1fz76y2jbd0VjOcN3WsG7wrj0rc2UNqA==
-X-Received: by 2002:aa7:d64e:0:b0:51e:cc7:534d with SMTP id v14-20020aa7d64e000000b0051e0cc7534dmr5277100edr.24.1688456510727;
-        Tue, 04 Jul 2023 00:41:50 -0700 (PDT)
-Received: from lb02065.fritz.box ([2001:9e8:1435:9200:c0c6:7201:e34a:3a])
-        by smtp.gmail.com with ESMTPSA id m16-20020aa7c2d0000000b0051e070cff76sm3310870edp.3.2023.07.04.00.41.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Jul 2023 00:41:50 -0700 (PDT)
-From:   Jack Wang <jinpu.wang@ionos.com>
-To:     linux-raid@vger.kernel.org, song@kernel.org
-Cc:     Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCHv2] md/raid1: Prevent unnecessary call to wake_up() in fast path
-Date:   Tue,  4 Jul 2023 09:41:49 +0200
-Message-Id: <20230704074149.58863-1-jinpu.wang@ionos.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S231540AbjGDMWf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jul 2023 08:22:35 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA55810E2;
+        Tue,  4 Jul 2023 05:22:26 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 37C1422864;
+        Tue,  4 Jul 2023 12:22:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1688473345; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=fmLTdco5SVuopuSHDbZ7fgiCJT9fmPtnstwBD5O0cVs=;
+        b=LYS1cAt6t7JDeaXCZA2GfkFsvePsCKrBv683wLJKbeQdnB0RB5kex3lpjPlaO0WNrRIj/p
+        OKov+tjGtn08tmzrJU88unG7OZdlwokmKgdGkl+OG4epxE3GA77hqhJZhG3Z0dN3YI1cPw
+        0UrvrW8qrgzkAVKwdQJPDUFGAz/meEU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1688473345;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=fmLTdco5SVuopuSHDbZ7fgiCJT9fmPtnstwBD5O0cVs=;
+        b=Dse69eRRr1j+O/QtQVzrTyIAnqxKgXzcDp3QAv4KDKTfaZG4HjcsXtXKNaEGDfzmeYyIxx
+        WQrcOQN123NhV6Dg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1D4941346D;
+        Tue,  4 Jul 2023 12:22:25 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id j8gfBwEPpGQFMAAAMHmgww
+        (envelope-from <jack@suse.cz>); Tue, 04 Jul 2023 12:22:25 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 915DAA0722; Tue,  4 Jul 2023 14:22:24 +0200 (CEST)
+From:   Jan Kara <jack@suse.cz>
+To:     <linux-block@vger.kernel.org>
+Cc:     <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: [PATCH RFC 0/32] block: Make blkdev_get_by_*() return handle
+Date:   Tue,  4 Jul 2023 14:21:27 +0200
+Message-Id: <20230629165206.383-1-jack@suse.cz>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2471; i=jack@suse.cz; h=from:subject:message-id; bh=ceZQTtdZjpsFiBb9Fva7YX0lOa2i6Zx53n9hl/3+KQM=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkpA7DYrlV/5vfqjK0juEsCaKDoUZ39z4YDWexB9PO aQyP7ZaJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZKQOwwAKCRCcnaoHP2RA2S48B/ 476l3pggtn8igKmRoHswxXv63Ks68g/08HDzIZqCtDPA84BSKd93Nq0m/Wn76G+ubHQpfg8PMw5+DG uV+DOTR+NEYKAToQQ8YzmS6RAGasKKWUg3k1pr7jK23l+wcq16ImmBXmWM3nr2j85QcDZeB+vpUKHh bdQJQsBOqKsA+qlImgVwvMS+V4UTLQcIYQo2bDBl0TIbJB0UiXYMYHcvrEkwNZWybXBs+wfERrXuF1 XlXO6rWvLyW94kkpvaZTvPY+yZd7tOLd+W8gsz2uBFG9QJg57aDkZxf6NA+Qxf2O8uwfWiyb1XXBN8 I1wYA/sSduibCw4tF4sYb/wERvIAO+
+X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-wake_up is called unconditionally in fast path such as make_request(),
-which cause lock contention under high concurrency
-    raid1_end_write_request
-     wake_up
-      __wake_up_common_lock
-       spin_lock_irqsave
+Hello,
 
-Improve performance by only call wake_up() if waitqueue is not empty
+this patch series implements the idea of blkdev_get_by_*() calls returning
+bdev_handle which is then passed to blkdev_put() [1]. This makes the get
+and put calls for bdevs more obviously matching and allows us to propagate
+context from get to put without having to modify all the users (again!).
+In particular I need to propagate used open flags to blkdev_put() to be able
+count writeable opens and add support for blocking writes to mounted block
+devices. I'll send that series separately.
 
-Fio test script:
+The series is based on Linus' tree as of yesterday + two bcache fixes which are
+in the block tree. Patches have passed some basic testing, I plan to test more
+users once we agree this is the right way to go.
 
-[global]
-name=random reads and writes
-ioengine=libaio
-direct=1
-readwrite=randrw
-rwmixread=70
-iodepth=64
-buffered=0
-filename=/dev/md0
-size=1G
-runtime=30
-time_based
-randrepeat=0
-norandommap
-refill_buffers
-ramp_time=10
-bs=4k
-numjobs=400
-group_reporting=1
-[job1]
+								Honza
 
-Test result with 2 ramdisk in raid1 on a Intel Broadwell 56 cores server.
+[1] https://lore.kernel.org/all/ZJGNsVDhZx0Xgs2H@infradead.org
 
-	Before this patch       With this patch
-	READ	BW=4621MB/s	BW=7337MB/s
-	WRITE	BW=1980MB/s	BW=3144MB/s
-
-The patch is inspired by Yu Kuai's change for raid10:
-https://lore.kernel.org/r/20230621105728.1268542-1-yukuai1@huaweicloud.com
-
-Cc: Yu Kuai <yukuai3@huawei.com>
-Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
----
-v2: addressed comments from Kuai
-* Removed newline
-* change the missing case in raid1_write_request
-* I still kept the change for _wait_barrier and wait_read_barrier, as I did
- performance tests without them there are still lock contention from
- __wake_up_common_lock
-
- drivers/md/raid1.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f834d99a36f6..0c76c36d8cb1 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -789,11 +789,17 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 	return best_disk;
- }
- 
-+static void wake_up_barrier(struct r1conf *conf)
-+{
-+	if (wq_has_sleeper(&conf->wait_barrier))
-+		wake_up(&conf->wait_barrier);
-+}
-+
- static void flush_bio_list(struct r1conf *conf, struct bio *bio)
- {
- 	/* flush any pending bitmap writes to disk before proceeding w/ I/O */
- 	raid1_prepare_flush_writes(conf->mddev->bitmap);
--	wake_up(&conf->wait_barrier);
-+	wake_up_barrier(conf);
- 
- 	while (bio) { /* submit pending writes */
- 		struct bio *next = bio->bi_next;
-@@ -970,7 +976,7 @@ static bool _wait_barrier(struct r1conf *conf, int idx, bool nowait)
- 	 * In case freeze_array() is waiting for
- 	 * get_unqueued_pending() == extra
- 	 */
--	wake_up(&conf->wait_barrier);
-+	wake_up_barrier(conf);
- 	/* Wait for the barrier in same barrier unit bucket to drop. */
- 
- 	/* Return false when nowait flag is set */
-@@ -1013,7 +1019,7 @@ static bool wait_read_barrier(struct r1conf *conf, sector_t sector_nr, bool nowa
- 	 * In case freeze_array() is waiting for
- 	 * get_unqueued_pending() == extra
- 	 */
--	wake_up(&conf->wait_barrier);
-+	wake_up_barrier(conf);
- 	/* Wait for array to be unfrozen */
- 
- 	/* Return false when nowait flag is set */
-@@ -1042,7 +1048,7 @@ static bool wait_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
- static void _allow_barrier(struct r1conf *conf, int idx)
- {
- 	atomic_dec(&conf->nr_pending[idx]);
--	wake_up(&conf->wait_barrier);
-+	wake_up_barrier(conf);
- }
- 
- static void allow_barrier(struct r1conf *conf, sector_t sector_nr)
-@@ -1171,7 +1177,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 		spin_lock_irq(&conf->device_lock);
- 		bio_list_merge(&conf->pending_bio_list, &plug->pending);
- 		spin_unlock_irq(&conf->device_lock);
--		wake_up(&conf->wait_barrier);
-+		wake_up_barrier(conf);
- 		md_wakeup_thread(mddev->thread);
- 		kfree(plug);
- 		return;
-@@ -1574,7 +1580,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	r1_bio_write_done(r1_bio);
- 
- 	/* In case raid1d snuck in to freeze_array */
--	wake_up(&conf->wait_barrier);
-+	wake_up_barrier(conf);
- }
- 
- static bool raid1_make_request(struct mddev *mddev, struct bio *bio)
--- 
-2.34.1
+CC: Alasdair Kergon <agk@redhat.com>
+CC: Andrew Morton <akpm@linux-foundation.org>
+CC: Anna Schumaker <anna@kernel.org>
+CC: Chao Yu <chao@kernel.org>
+CC: Christian Borntraeger <borntraeger@linux.ibm.com>
+CC: Coly Li <colyli@suse.de
+CC: "Darrick J. Wong" <djwong@kernel.org>
+CC: Dave Kleikamp <shaggy@kernel.org>
+CC: David Sterba <dsterba@suse.com>
+CC: dm-devel@redhat.com
+CC: drbd-dev@lists.linbit.com
+CC: Gao Xiang <xiang@kernel.org>
+CC: Jack Wang <jinpu.wang@ionos.com>
+CC: Jaegeuk Kim <jaegeuk@kernel.org>
+CC: jfs-discussion@lists.sourceforge.net
+CC: Joern Engel <joern@lazybastard.org>
+CC: Joseph Qi <joseph.qi@linux.alibaba.com>
+CC: Kent Overstreet <kent.overstreet@gmail.com>
+CC: linux-bcache@vger.kernel.org
+CC: linux-btrfs@vger.kernel.org
+CC: linux-erofs@lists.ozlabs.org
+CC: <linux-ext4@vger.kernel.org>
+CC: linux-f2fs-devel@lists.sourceforge.net
+CC: linux-mm@kvack.org
+CC: linux-mtd@lists.infradead.org
+CC: linux-nfs@vger.kernel.org
+CC: linux-nilfs@vger.kernel.org
+CC: linux-nvme@lists.infradead.org
+CC: linux-pm@vger.kernel.org
+CC: linux-raid@vger.kernel.org
+CC: linux-s390@vger.kernel.org
+CC: linux-scsi@vger.kernel.org
+CC: linux-xfs@vger.kernel.org
+CC: "Md. Haris Iqbal" <haris.iqbal@ionos.com>
+CC: Mike Snitzer <snitzer@kernel.org>
+CC: Minchan Kim <minchan@kernel.org>
+CC: ocfs2-devel@oss.oracle.com
+CC: reiserfs-devel@vger.kernel.org
+CC: Sergey Senozhatsky <senozhatsky@chromium.org>
+CC: Song Liu <song@kernel.org>
+CC: Sven Schnelle <svens@linux.ibm.com>
+CC: target-devel@vger.kernel.org
+CC: Ted Tso <tytso@mit.edu>
+CC: Trond Myklebust <trond.myklebust@hammerspace.com>
+CC: xen-devel@lists.xenproject.org
 
