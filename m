@@ -2,138 +2,193 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B5B0C04A6A
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Jul 2023 16:28:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF61EB64D9
+	for <linux-raid@archiver.kernel.org>; Wed,  5 Jul 2023 02:53:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231578AbjGDQ2r (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 4 Jul 2023 12:28:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39582 "EHLO
+        id S230139AbjGECxW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Jul 2023 22:53:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230489AbjGDQ2o (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jul 2023 12:28:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1C05E7B;
-        Tue,  4 Jul 2023 09:28:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 20F4061302;
-        Tue,  4 Jul 2023 16:28:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A8C9C433C7;
-        Tue,  4 Jul 2023 16:28:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688488122;
-        bh=ZbfFFniWhSahnp7jSJ3oIaV9POCcbiLvynkhKSgpXe4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rYhrvsNpwqCJwn41eekT5X8PaPVwBQ6ub8Netmz5zCPt/qzVPnkLxH2Kjiq9nv1Cm
-         yUeZjhUrBrMq2ThgKqf6VqdUdYp1P2/zpT5yvYD7siJiybpmyKwoPpaa5gXpr6CMMv
-         akxinQnPPwXHrxodKNqiTb/6JTMYG4lY9mmxI0dhS9y7wawVJYcWdRHa64BuE/8weJ
-         eX7co1v82fmGWp5kKAm9BaeWX8/tRjFqKX1EDWvGtKd5aZ5LCCXaAY86lmuE5eezEu
-         Ix6OVXIAm9Wp1Cia2H4ClFO9rKC6nhjukt+dwjQnGXu6F26u0+VUNsprhPIs/s+nRo
-         qHwq5/jxHTM8Q==
-Date:   Tue, 4 Jul 2023 10:28:36 -0600
-From:   Keith Busch <kbusch@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-Message-ID: <ZKRItBRhm8f5Vba/@kbusch-mbp>
-References: <20230629165206.383-1-jack@suse.cz>
- <20230704122224.16257-1-jack@suse.cz>
+        with ESMTP id S229512AbjGECxV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jul 2023 22:53:21 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4053C10F8
+        for <linux-raid@vger.kernel.org>; Tue,  4 Jul 2023 19:53:19 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qwkk31CYRz4f3nbD
+        for <linux-raid@vger.kernel.org>; Wed,  5 Jul 2023 10:53:15 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCX_7IY26RkOVDvNA--.52644S3;
+        Wed, 05 Jul 2023 10:53:13 +0800 (CST)
+Subject: Re: [PATCHv2] md/raid1: Prevent unnecessary call to wake_up() in fast
+ path
+To:     Jack Wang <jinpu.wang@ionos.com>, linux-raid@vger.kernel.org,
+        song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230704074149.58863-1-jinpu.wang@ionos.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <63151b11-31d2-97f3-1d81-aa27158c074b@huaweicloud.com>
+Date:   Wed, 5 Jul 2023 10:53:12 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230704122224.16257-1-jack@suse.cz>
+In-Reply-To: <20230704074149.58863-1-jinpu.wang@ionos.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCX_7IY26RkOVDvNA--.52644S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxAw18Kw1DZFy5tr4rXFWDurg_yoWrCF43p3
+        yYqFWYqFWDJFyYqw4DJFWUu3WY9w1ktFyxCFyfK3s2vF1FqF9YvF1xGFy5uryDurZ3WrW7
+        AFsYy3sxKw1jvFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
+        6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUzsqWUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Jul 04, 2023 at 02:21:28PM +0200, Jan Kara wrote:
-> +struct bdev_handle *blkdev_get_handle_by_dev(dev_t dev, blk_mode_t mode,
-> +		void *holder, const struct blk_holder_ops *hops)
+Hi,
+
+ÔÚ 2023/07/04 15:41, Jack Wang Ð´µÀ:
+> wake_up is called unconditionally in fast path such as make_request(),
+> which cause lock contention under high concurrency
+>      raid1_end_write_request
+>       wake_up
+>        __wake_up_common_lock
+>         spin_lock_irqsave
+> 
+> Improve performance by only call wake_up() if waitqueue is not empty
+> 
+> Fio test script:
+> 
+> [global]
+> name=random reads and writes
+> ioengine=libaio
+> direct=1
+> readwrite=randrw
+> rwmixread=70
+> iodepth=64
+> buffered=0
+> filename=/dev/md0
+> size=1G
+> runtime=30
+> time_based
+> randrepeat=0
+> norandommap
+> refill_buffers
+> ramp_time=10
+> bs=4k
+> numjobs=400
+> group_reporting=1
+> [job1]
+> 
+> Test result with 2 ramdisk in raid1 on a Intel Broadwell 56 cores server.
+> 
+> 	Before this patch       With this patch
+> 	READ	BW=4621MB/s	BW=7337MB/s
+> 	WRITE	BW=1980MB/s	BW=3144MB/s
+> 
+> The patch is inspired by Yu Kuai's change for raid10:
+> https://lore.kernel.org/r/20230621105728.1268542-1-yukuai1@huaweicloud.com
+> 
+> Cc: Yu Kuai <yukuai3@huawei.com>
+> Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+> ---
+> v2: addressed comments from Kuai
+> * Removed newline
+> * change the missing case in raid1_write_request
+> * I still kept the change for _wait_barrier and wait_read_barrier, as I did
+>   performance tests without them there are still lock contention from
+>   __wake_up_common_lock
+> 
+>   drivers/md/raid1.c | 18 ++++++++++++------
+>   1 file changed, 12 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index f834d99a36f6..0c76c36d8cb1 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -789,11 +789,17 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+>   	return best_disk;
+>   }
+>   
+> +static void wake_up_barrier(struct r1conf *conf)
 > +{
-> +	struct bdev_handle *handle = kmalloc(sizeof(struct bdev_handle),
-> +					     GFP_KERNEL);
-
-I believe 'sizeof(*handle)' is the preferred style.
-
-> +	struct block_device *bdev;
-> +
-> +	if (!handle)
-> +		return ERR_PTR(-ENOMEM);
-> +	bdev = blkdev_get_by_dev(dev, mode, holder, hops);
-> +	if (IS_ERR(bdev))
-> +		return ERR_CAST(bdev);
-
-Need a 'kfree(handle)' before the error return. Or would it be simpler
-to get the bdev first so you can check the mode settings against a
-read-only bdev prior to the kmalloc?
-
-> +	handle->bdev = bdev;
-> +	handle->holder = holder;
-> +	return handle;
+> +	if (wq_has_sleeper(&conf->wait_barrier))
+> +		wake_up(&conf->wait_barrier);
 > +}
-> +EXPORT_SYMBOL(blkdev_get_handle_by_dev);
 > +
->  /**
->   * blkdev_get_by_path - open a block device by name
->   * @path: path to the block device to open
-> @@ -884,6 +902,28 @@ struct block_device *blkdev_get_by_path(const char *path, blk_mode_t mode,
->  }
->  EXPORT_SYMBOL(blkdev_get_by_path);
->  
-> +struct bdev_handle *blkdev_get_handle_by_path(const char *path, blk_mode_t mode,
-> +		void *holder, const struct blk_holder_ops *hops)
-> +{
-> +	struct bdev_handle *handle;
-> +	dev_t dev;
-> +	int error;
-> +
-> +	error = lookup_bdev(path, &dev);
-> +	if (error)
-> +		return ERR_PTR(error);
-> +
-> +	handle = blkdev_get_handle_by_dev(dev, mode, holder, hops);
-> +	if (!IS_ERR(handle) && (mode & BLK_OPEN_WRITE) &&
-> +	    bdev_read_only(handle->bdev)) {
-> +		blkdev_handle_put(handle);
-> +		return ERR_PTR(-EACCES);
-> +	}
-> +
-> +	return handle;
-> +}
-> +EXPORT_SYMBOL(blkdev_get_handle_by_path);
+>   static void flush_bio_list(struct r1conf *conf, struct bio *bio)
+>   {
+>   	/* flush any pending bitmap writes to disk before proceeding w/ I/O */
+>   	raid1_prepare_flush_writes(conf->mddev->bitmap);
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   
+>   	while (bio) { /* submit pending writes */
+>   		struct bio *next = bio->bi_next;
+> @@ -970,7 +976,7 @@ static bool _wait_barrier(struct r1conf *conf, int idx, bool nowait)
+>   	 * In case freeze_array() is waiting for
+>   	 * get_unqueued_pending() == extra
+>   	 */
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   	/* Wait for the barrier in same barrier unit bucket to drop. */
+>   
+>   	/* Return false when nowait flag is set */
+> @@ -1013,7 +1019,7 @@ static bool wait_read_barrier(struct r1conf *conf, sector_t sector_nr, bool nowa
+>   	 * In case freeze_array() is waiting for
+>   	 * get_unqueued_pending() == extra
+>   	 */
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+
+As I mentioned before, I don't think this is fast path, and this change
+won't be helpful because another lock is already grabbed.
+
+If you really want to change this, please emphasize this, your title and
+commit message indicate that you only want to change fast path.
+
+Thanks,
+Kuai
+>   	/* Wait for array to be unfrozen */
+>   
+>   	/* Return false when nowait flag is set */
+> @@ -1042,7 +1048,7 @@ static bool wait_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
+>   static void _allow_barrier(struct r1conf *conf, int idx)
+>   {
+>   	atomic_dec(&conf->nr_pending[idx]);
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   }
+>   
+>   static void allow_barrier(struct r1conf *conf, sector_t sector_nr)
+> @@ -1171,7 +1177,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
+>   		spin_lock_irq(&conf->device_lock);
+>   		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+>   		spin_unlock_irq(&conf->device_lock);
+> -		wake_up(&conf->wait_barrier);
+> +		wake_up_barrier(conf);
+>   		md_wakeup_thread(mddev->thread);
+>   		kfree(plug);
+>   		return;
+> @@ -1574,7 +1580,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>   	r1_bio_write_done(r1_bio);
+>   
+>   	/* In case raid1d snuck in to freeze_array */
+> -	wake_up(&conf->wait_barrier);
+> +	wake_up_barrier(conf);
+>   }
+>   
+>   static bool raid1_make_request(struct mddev *mddev, struct bio *bio)
+> 
+
