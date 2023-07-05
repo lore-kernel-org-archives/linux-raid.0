@@ -2,193 +2,299 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF61EB64D9
-	for <linux-raid@archiver.kernel.org>; Wed,  5 Jul 2023 02:53:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B825DEB64DD
+	for <linux-raid@archiver.kernel.org>; Wed,  5 Jul 2023 03:27:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230139AbjGECxW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 4 Jul 2023 22:53:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59246 "EHLO
+        id S229449AbjGED1o (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Jul 2023 23:27:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbjGECxV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jul 2023 22:53:21 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4053C10F8
-        for <linux-raid@vger.kernel.org>; Tue,  4 Jul 2023 19:53:19 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qwkk31CYRz4f3nbD
-        for <linux-raid@vger.kernel.org>; Wed,  5 Jul 2023 10:53:15 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCX_7IY26RkOVDvNA--.52644S3;
-        Wed, 05 Jul 2023 10:53:13 +0800 (CST)
-Subject: Re: [PATCHv2] md/raid1: Prevent unnecessary call to wake_up() in fast
- path
-To:     Jack Wang <jinpu.wang@ionos.com>, linux-raid@vger.kernel.org,
-        song@kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230704074149.58863-1-jinpu.wang@ionos.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <63151b11-31d2-97f3-1d81-aa27158c074b@huaweicloud.com>
-Date:   Wed, 5 Jul 2023 10:53:12 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229772AbjGED1n (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jul 2023 23:27:43 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C6531705
+        for <linux-raid@vger.kernel.org>; Tue,  4 Jul 2023 20:27:38 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-682a5465e9eso173059b3a.1
+        for <linux-raid@vger.kernel.org>; Tue, 04 Jul 2023 20:27:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1688527657; x=1691119657;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NOwOUvz1NPkWlBxAp0GPGGO2Nrixl73uZn6xROfOEj8=;
+        b=ifLsYO8F2I4MBHVlF2Or5hf7tTNep81Mx+BsSk/nCvCzxaPTLrQYJUCegbZ71CLvqI
+         jnwmhHljMYjJqvknT1p7Cvh4o3Zetn0nbYVkcxdIejyVlEmEoOc51mjv2rm9Oe7hCkmi
+         BhkEzv2gsaM2VKlzfD2ZXlb5JXn4cFBH6rlbCG9Gisi0SSs52NHZD0JL0DYBTusr279z
+         ECt8JJbhMcUgBeDhNudIJn3gOdFaKif3GEH22u6ET+bb2NCPdK1crIBUZU+UjNX2cqQu
+         Xo1u3OB8WsD6YcqowSF12wIwDOJl+hjeHnPzPy5ZJwY8SE6f5Rm09aAg64VyQm7gLUPN
+         jgMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688527657; x=1691119657;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=NOwOUvz1NPkWlBxAp0GPGGO2Nrixl73uZn6xROfOEj8=;
+        b=kbVbfxy+84VPojSxnDJ9+KrpHfEXXwO80DbkW6qKLFkNwZzEUeSnTHjvmxE5ro4zcH
+         CZaxyfhf3oc0JE2nbn/wu14jNgXW3R2CiI53XmqXtXcpm+xqA94897En5phrCkiWhkDi
+         WJf7dYnYuEDHzFoWPl5L6B6OtEZ2ZlRx5NX+OI5tHkWroVeajQb3+vbM79Oyzv24KtAz
+         y+MqXFwP31JN7Onz8J0ex37M39bD7Krdho8IqeNL47vzdKfme/GrFWFHI2AO+fF0bOj+
+         YVZ/tUerNiFVjHJSBvqUDYr/gSb3pMGfLELa7TwIdcP1Dugv+z1/+msGvo9N4+fkwEIX
+         zI1Q==
+X-Gm-Message-State: ABy/qLagDwE7mcJmTL7vhZlJSbDUZEpGv6EGihlmR67x8yGn5y5LV6SB
+        XeehQyxWlf/gaEY4/ikrgXfMpg==
+X-Google-Smtp-Source: APBJJlHJ/xdp2D4mprG7cOjZwHFFckWD0OnUdfulMpel6EsGVgn6d2uqpP3j7nke+gBKkBfRchiLhg==
+X-Received: by 2002:a05:6a00:1f90:b0:675:8627:a291 with SMTP id bg16-20020a056a001f9000b006758627a291mr16245087pfb.3.1688527657628;
+        Tue, 04 Jul 2023 20:27:37 -0700 (PDT)
+Received: from [10.70.252.135] ([203.208.167.147])
+        by smtp.gmail.com with ESMTPSA id fe10-20020a056a002f0a00b0064fde7ae1ffsm13136627pfb.38.2023.07.04.20.27.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Jul 2023 20:27:37 -0700 (PDT)
+Message-ID: <733af312-fb2d-3ec4-54c8-f154447c2051@bytedance.com>
+Date:   Wed, 5 Jul 2023 11:27:28 +0800
 MIME-Version: 1.0
-In-Reply-To: <20230704074149.58863-1-jinpu.wang@ionos.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.12.0
+Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
+Content-Language: en-US
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+To:     paulmck@kernel.org, Dave Chinner <david@fromorbit.com>
+Cc:     Vlastimil Babka <vbabka@suse.cz>, akpm@linux-foundation.org,
+        tkhai@ya.ru, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-25-zhengqi.arch@bytedance.com>
+ <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
+ <ZJU708VIyJ/3StAX@dread.disaster.area>
+ <cc894c77-717a-4e9f-b649-48bab40e7c60@paulmck-laptop>
+ <3efa68e0-b04f-5c11-4fe2-2db0784064fc@bytedance.com>
+In-Reply-To: <3efa68e0-b04f-5c11-4fe2-2db0784064fc@bytedance.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCX_7IY26RkOVDvNA--.52644S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxAw18Kw1DZFy5tr4rXFWDurg_yoWrCF43p3
-        yYqFWYqFWDJFyYqw4DJFWUu3WY9w1ktFyxCFyfK3s2vF1FqF9YvF1xGFy5uryDurZ3WrW7
-        AFsYy3sxKw1jvFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
-        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42
-        xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
-        6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUzsqWUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
 
-�� 2023/07/04 15:41, Jack Wang д��:
-> wake_up is called unconditionally in fast path such as make_request(),
-> which cause lock contention under high concurrency
->      raid1_end_write_request
->       wake_up
->        __wake_up_common_lock
->         spin_lock_irqsave
-> 
-> Improve performance by only call wake_up() if waitqueue is not empty
-> 
-> Fio test script:
-> 
-> [global]
-> name=random reads and writes
-> ioengine=libaio
-> direct=1
-> readwrite=randrw
-> rwmixread=70
-> iodepth=64
-> buffered=0
-> filename=/dev/md0
-> size=1G
-> runtime=30
-> time_based
-> randrepeat=0
-> norandommap
-> refill_buffers
-> ramp_time=10
-> bs=4k
-> numjobs=400
-> group_reporting=1
-> [job1]
-> 
-> Test result with 2 ramdisk in raid1 on a Intel Broadwell 56 cores server.
-> 
-> 	Before this patch       With this patch
-> 	READ	BW=4621MB/s	BW=7337MB/s
-> 	WRITE	BW=1980MB/s	BW=3144MB/s
-> 
-> The patch is inspired by Yu Kuai's change for raid10:
-> https://lore.kernel.org/r/20230621105728.1268542-1-yukuai1@huaweicloud.com
-> 
-> Cc: Yu Kuai <yukuai3@huawei.com>
-> Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
-> ---
-> v2: addressed comments from Kuai
-> * Removed newline
-> * change the missing case in raid1_write_request
-> * I still kept the change for _wait_barrier and wait_read_barrier, as I did
->   performance tests without them there are still lock contention from
->   __wake_up_common_lock
-> 
->   drivers/md/raid1.c | 18 ++++++++++++------
->   1 file changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index f834d99a36f6..0c76c36d8cb1 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -789,11 +789,17 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
->   	return best_disk;
->   }
->   
-> +static void wake_up_barrier(struct r1conf *conf)
-> +{
-> +	if (wq_has_sleeper(&conf->wait_barrier))
-> +		wake_up(&conf->wait_barrier);
-> +}
-> +
->   static void flush_bio_list(struct r1conf *conf, struct bio *bio)
->   {
->   	/* flush any pending bitmap writes to disk before proceeding w/ I/O */
->   	raid1_prepare_flush_writes(conf->mddev->bitmap);
-> -	wake_up(&conf->wait_barrier);
-> +	wake_up_barrier(conf);
->   
->   	while (bio) { /* submit pending writes */
->   		struct bio *next = bio->bi_next;
-> @@ -970,7 +976,7 @@ static bool _wait_barrier(struct r1conf *conf, int idx, bool nowait)
->   	 * In case freeze_array() is waiting for
->   	 * get_unqueued_pending() == extra
->   	 */
-> -	wake_up(&conf->wait_barrier);
-> +	wake_up_barrier(conf);
->   	/* Wait for the barrier in same barrier unit bucket to drop. */
->   
->   	/* Return false when nowait flag is set */
-> @@ -1013,7 +1019,7 @@ static bool wait_read_barrier(struct r1conf *conf, sector_t sector_nr, bool nowa
->   	 * In case freeze_array() is waiting for
->   	 * get_unqueued_pending() == extra
->   	 */
-> -	wake_up(&conf->wait_barrier);
-> +	wake_up_barrier(conf);
 
-As I mentioned before, I don't think this is fast path, and this change
-won't be helpful because another lock is already grabbed.
+On 2023/7/4 11:45, Qi Zheng wrote:
+> 
+> 
+> On 2023/7/4 00:39, Paul E. McKenney wrote:
+>> On Fri, Jun 23, 2023 at 04:29:39PM +1000, Dave Chinner wrote:
+>>> On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
+>>>> On 6/22/23 10:53, Qi Zheng wrote:
+>>>>> @@ -1067,33 +1068,27 @@ static unsigned long shrink_slab(gfp_t 
+>>>>> gfp_mask, int nid,
+>>>>>       if (!mem_cgroup_disabled() && !mem_cgroup_is_root(memcg))
+>>>>>           return shrink_slab_memcg(gfp_mask, nid, memcg, priority);
+>>>>> -    if (!down_read_trylock(&shrinker_rwsem))
+>>>>> -        goto out;
+>>>>> -
+>>>>> -    list_for_each_entry(shrinker, &shrinker_list, list) {
+>>>>> +    rcu_read_lock();
+>>>>> +    list_for_each_entry_rcu(shrinker, &shrinker_list, list) {
+>>>>>           struct shrink_control sc = {
+>>>>>               .gfp_mask = gfp_mask,
+>>>>>               .nid = nid,
+>>>>>               .memcg = memcg,
+>>>>>           };
+>>>>> +        if (!shrinker_try_get(shrinker))
+>>>>> +            continue;
+>>>>> +        rcu_read_unlock();
+>>>>
+>>>> I don't think you can do this unlock?
+>>
+>> Sorry to be slow to respond here, this one fell through the cracks.
+>> And thank you to Qi for reminding me!
+>>
+>> If you do this unlock, you had jolly well better nail down the current
+>> element (the one referenced by shrinker), for example, by acquiring an
+>> explicit reference count on the object.  And presumably this is exactly
+>> what shrinker_try_get() is doing.  And a look at your 24/29 confirms 
+>> this,
+>> at least assuming that shrinker->refcount is set to zero before the call
+>> to synchronize_rcu() in free_module() *and* that synchronize_rcu() 
+>> doesn't
+>> start until *after* shrinker_put() calls complete().  Plus, as always,
+>> the object must be removed from the list before the synchronize_rcu()
+>> starts.  (On these parts of the puzzle, I defer to those more familiar
+>> with this code path.  And I strongly suggest carefully commenting this
+>> type of action-at-a-distance design pattern.)
+> 
+> Yeah, I think I've done it like above. A more detailed timing diagram is
+> below.
+> 
+>>
+>> Why is this important?  Because otherwise that object might be freed
+>> before you get to the call to rcu_read_lock() at the end of this loop.
+>> And if that happens, list_for_each_entry_rcu() will be walking the
+>> freelist, which is quite bad for the health and well-being of your 
+>> kernel.
+>>
+>> There are a few other ways to make this sort of thing work:
+>>
+>> 1.    Defer the shrinker_put() to the beginning of the loop.
+>>     You would need a flag initially set to zero, and then set to
+>>     one just before (or just after) the rcu_read_lock() above.
+>>     You would also need another shrinker_old pointer to track the
+>>     old pointer.  Then at the top of the loop, if the flag is set,
+>>     invoke shrinker_put() on shrinker_old.    This ensures that the
+>>     previous shrinker structure stays around long enough to allow
+>>     the loop to find the next shrinker structure in the list.
+>>
+>>     This approach is attractive when the removal code path
+>>     can invoke shrinker_put() after the grace period ends.
+>>
+>> 2.    Make shrinker_put() invoke call_rcu() when ->refcount reaches
+>>     zero, and have the callback function free the object.  This of
+>>     course requires adding an rcu_head structure to the shrinker
+>>     structure, which might or might not be a reasonable course of
+>>     action.  If adding that rcu_head is reasonable, this simplifies
+>>     the logic quite a bit.
+>>
+>> 3.    For the shrinker-structure-removal code path, remove the shrinker
+>>     structure, then remove the initial count from ->refcount,
+>>     and then keep doing grace periods until ->refcount is zero,
+>>     then do one more.  Of course, if the result of removing the
+>>     initial count was zero, then only a single additional grace
+>>     period is required.
+>>
+>>     This would need to be carefully commented, as it is a bit
+>>     unconventional.
+> 
+> Thanks for such a detailed addition!
+> 
+>>
+>> There are probably many other ways, but just to give an idea of a few
+>> other ways to do this.
+>>
+>>>>> +
+>>>>>           ret = do_shrink_slab(&sc, shrinker, priority);
+>>>>>           if (ret == SHRINK_EMPTY)
+>>>>>               ret = 0;
+>>>>>           freed += ret;
+>>>>> -        /*
+>>>>> -         * Bail out if someone want to register a new shrinker to
+>>>>> -         * prevent the registration from being stalled for long 
+>>>>> periods
+>>>>> -         * by parallel ongoing shrinking.
+>>>>> -         */
+>>>>> -        if (rwsem_is_contended(&shrinker_rwsem)) {
+>>>>> -            freed = freed ? : 1;
+>>>>> -            break;
+>>>>> -        }
+>>>>> -    }
+>>>>> -    up_read(&shrinker_rwsem);
+>>>>> -out:
+>>>>> +        rcu_read_lock();
+>>>>
+>>>> That new rcu_read_lock() won't help AFAIK, the whole
+>>>> list_for_each_entry_rcu() needs to be under the single 
+>>>> rcu_read_lock() to be
+>>>> safe.
+>>>
+>>> Yeah, that's the pattern we've been taught and the one we can look
+>>> at and immediately say "this is safe".
+>>>
+>>> This is a different pattern, as has been explained bi Qi, and I
+>>> think it *might* be safe.
+>>>
+>>> *However.*
+>>>
+>>> Right now I don't have time to go through a novel RCU list iteration
+>>> pattern it one step at to determine the correctness of the
+>>> algorithm. I'm mostly worried about list manipulations that can
+>>> occur outside rcu_read_lock() section bleeding into the RCU
+>>> critical section because rcu_read_lock() by itself is not a memory
+>>> barrier.
+>>>
+>>> Maybe Paul has seen this pattern often enough he could simply tell
+>>> us what conditions it is safe in. But for me to work that out from
+>>> first principles? I just don't have the time to do that right now.
+>>
+>> If the code does just the right sequence of things on the removal path
+>> (remove, decrement reference, wait for reference to go to zero, wait for
+>> grace period, free), then it would work.  If this is what is happening,
+>> I would argue for more comments.  ;-)
+> 
+> The order of the removal path is slightly different from this:
+> 
+>      shrink_slab                 unregister_shrinker
+>      ===========                 ===================
+> 
+>     shrinker_try_get()
+>     rcu_read_unlock()
+>                                  1. decrement initial reference
+>                  shrinker_put()
+>                  2. wait for reference to go to zero
+>                  wait_for_completion()
+>     rcu_read_lock()
+> 
+>     shrinker_put()
+>                  3. remove the shrinker from list
+>                  list_del_rcu()
+>                                  4. wait for grace period
+>                  kfree_rcu()/synchronize_rcu()
+> 
+> 
+>     list_for_each_entry()
+> 
+>     shrinker_try_get()
+>     rcu_read_unlock()
+>                  5. free the shrinker
+> 
+> So the order is: decrement reference, wait for reference to go to zero,
+> remove, wait for grace period, free.
+> 
+> I think this can work. And we can only do the *step 3* after we hold the
+> RCU read lock again, right? Please let me know if I missed something.
 
-If you really want to change this, please emphasize this, your title and
-commit message indicate that you only want to change fast path.
+Oh, you are right, It would be better to move step 3 to step 1. We
+should first remove the shrinker from the shrinker_list to prevent
+other traversers from finding it again, otherwise the following
+situations may occur theoretically:
+
+CPU 0                 CPU 1
+
+shrinker_try_get()
+
+                       shrinker_try_get()
+
+shrinker_put()
+shrinker_try_get()
+                       shrinker_put()
 
 Thanks,
-Kuai
->   	/* Wait for array to be unfrozen */
->   
->   	/* Return false when nowait flag is set */
-> @@ -1042,7 +1048,7 @@ static bool wait_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
->   static void _allow_barrier(struct r1conf *conf, int idx)
->   {
->   	atomic_dec(&conf->nr_pending[idx]);
-> -	wake_up(&conf->wait_barrier);
-> +	wake_up_barrier(conf);
->   }
->   
->   static void allow_barrier(struct r1conf *conf, sector_t sector_nr)
-> @@ -1171,7 +1177,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
->   		spin_lock_irq(&conf->device_lock);
->   		bio_list_merge(&conf->pending_bio_list, &plug->pending);
->   		spin_unlock_irq(&conf->device_lock);
-> -		wake_up(&conf->wait_barrier);
-> +		wake_up_barrier(conf);
->   		md_wakeup_thread(mddev->thread);
->   		kfree(plug);
->   		return;
-> @@ -1574,7 +1580,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->   	r1_bio_write_done(r1_bio);
->   
->   	/* In case raid1d snuck in to freeze_array */
-> -	wake_up(&conf->wait_barrier);
-> +	wake_up_barrier(conf);
->   }
->   
->   static bool raid1_make_request(struct mddev *mddev, struct bio *bio)
-> 
+Qi
 
+> 
+> Thanks,
+> Qi
+> 
+>>
+>>                             Thanx, Paul
+>>
+>>>> IIUC this is why Dave in [4] suggests unifying shrink_slab() with
+>>>> shrink_slab_memcg(), as the latter doesn't iterate the list but uses 
+>>>> IDR.
+>>>
+>>> Yes, I suggested the IDR route because radix tree lookups under RCU
+>>> with reference counted objects are a known safe pattern that we can
+>>> easily confirm is correct or not.  Hence I suggested the unification
+>>> + IDR route because it makes the life of reviewers so, so much
+>>> easier...
+>>>
+>>> Cheers,
+>>>
+>>> Dave.
+>>> -- 
+>>> Dave Chinner
+>>> david@fromorbit.com
