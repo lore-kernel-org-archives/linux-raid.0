@@ -2,79 +2,96 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 343A3EB64D9
-	for <linux-raid@archiver.kernel.org>; Thu,  6 Jul 2023 13:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAC48C001DF
+	for <linux-raid@archiver.kernel.org>; Thu,  6 Jul 2023 14:55:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231609AbjGFNB5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 6 Jul 2023 09:01:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60070 "EHLO
+        id S233644AbjGFOzS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 6 Jul 2023 10:55:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229843AbjGFNB4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 Jul 2023 09:01:56 -0400
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC430E65;
-        Thu,  6 Jul 2023 06:01:53 -0700 (PDT)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 5C3AD61E5FE01;
-        Thu,  6 Jul 2023 15:01:05 +0200 (CEST)
-Message-ID: <37c7a3f7-f769-a313-3279-e8e415369ba4@molgen.mpg.de>
-Date:   Thu, 6 Jul 2023 15:01:05 +0200
+        with ESMTP id S233622AbjGFOzO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 Jul 2023 10:55:14 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88DBCB9;
+        Thu,  6 Jul 2023 07:54:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=fhykVYOZkzlXT4yh75rGeCVJ3cPkDr5sjhaxZXHjD+c=; b=zbagyQChudyQPE2bMPZfTnWPir
+        xEx+mIn+jmhXiSkClrK6vyYVxVucLdM5bush+XAhi1L8+RYYMWbrfI/PXNLKjNrWkvX1JuFMBGnvz
+        hobfOtgzfc30tNgXDTW5f735BiGierSS2sw4A5BsLsjO+NIDmCJaoqnJvjB6GpO63lTBhPw1Ktdzv
+        09/JTSE1nHQ4VXLt2IEwE6yDDWWPLCfOggEtJrOTiDfYzQXVq9m9NhYrAKw8aQvc7GPBw2+8hQS8A
+        80c0RawRFeosEEQrvmZs9gRIzWZlEHNQkGLdtR04aftBqsNeChaMLjpw0CwixmzDs5mdRTNLsZohR
+        2STEGtcw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qHQNf-001vuf-2T;
+        Thu, 06 Jul 2023 14:54:51 +0000
+Date:   Thu, 6 Jul 2023 07:54:51 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH RFC 0/32] block: Make blkdev_get_by_*() return handle
+Message-ID: <ZKbVuyn0jELh8UDM@infradead.org>
+References: <20230629165206.383-1-jack@suse.cz>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH -next 2/3] md/dm-raid: cleanup multiple equivalent goto
- tags from raid_ctr()
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
-        song@kernel.org, heinzm@redhat.com, neilb@suse.de,
-        jbrassow@redhat.com, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-References: <20230706071622.563073-1-yukuai1@huaweicloud.com>
- <20230706071622.563073-3-yukuai1@huaweicloud.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20230706071622.563073-3-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230629165206.383-1-jack@suse.cz>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Yu,
-
-
-Thank you for your patch. Some minor nits, if you are interested.
-
-Am 06.07.23 um 09:16 schrieb Yu Kuai:
-> From: Yu Kuai <yukuai3@huawei.com>
+On Tue, Jul 04, 2023 at 02:21:27PM +0200, Jan Kara wrote:
+> Hello,
 > 
-> There are four equivalent goto tags in raid_ctr(), clean them up to use
-> just one, there are no functional change and prepare to fix that
+> this patch series implements the idea of blkdev_get_by_*() calls returning
+> bdev_handle which is then passed to blkdev_put() [1]. This makes the get
+> and put calls for bdevs more obviously matching and allows us to propagate
+> context from get to put without having to modify all the users (again!).
+> In particular I need to propagate used open flags to blkdev_put() to be able
+> count writeable opens and add support for blocking writes to mounted block
+> devices. I'll send that series separately.
+> 
+> The series is based on Linus' tree as of yesterday + two bcache fixes which are
+> in the block tree. Patches have passed some basic testing, I plan to test more
+> users once we agree this is the right way to go.
 
-Maybe:
-
-There *is* no functional change, and is a preparation to fix an 
-unprotected `md_stop()`.
-
-> md_stop() is not protected.
-
-In the commit message summary/title, I’d spell the verb with a space:
-
-     Clean up four equivalent goto tags in raid_ctr()
-
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->   drivers/md/dm-raid.c | 27 +++++++++------------------
->   1 file changed, 9 insertions(+), 18 deletions(-)
-
-[…]
-
-
-Kind regards,
-
-Paul
+Can you post a link to a git branch for this and the follow up series?
+Especially with a fairly unstable base it's kinda hard to look at the
+result otherwise.
