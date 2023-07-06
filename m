@@ -2,109 +2,79 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAE1CC001DB
-	for <linux-raid@archiver.kernel.org>; Thu,  6 Jul 2023 08:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 343A3EB64D9
+	for <linux-raid@archiver.kernel.org>; Thu,  6 Jul 2023 13:01:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229489AbjGFIi6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 6 Jul 2023 04:38:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48626 "EHLO
+        id S231609AbjGFNB5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 6 Jul 2023 09:01:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229718AbjGFIiy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 Jul 2023 04:38:54 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28E851BC3;
-        Thu,  6 Jul 2023 01:38:53 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4QxVLH2QXhz4f3jY4;
-        Thu,  6 Jul 2023 16:38:47 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgA34qWWfaZkk+xQNQ--.47999S6;
-        Thu, 06 Jul 2023 16:38:49 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, guoqing.jiang@linux.dev, neilb@suse.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next 2/2] md/md-bitmap: hold 'reconfig_mutex' in backlog_store()
-Date:   Thu,  6 Jul 2023 16:37:27 +0800
-Message-Id: <20230706083727.608914-3-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230706083727.608914-1-yukuai1@huaweicloud.com>
-References: <20230706083727.608914-1-yukuai1@huaweicloud.com>
+        with ESMTP id S229843AbjGFNB4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 Jul 2023 09:01:56 -0400
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC430E65;
+        Thu,  6 Jul 2023 06:01:53 -0700 (PDT)
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 5C3AD61E5FE01;
+        Thu,  6 Jul 2023 15:01:05 +0200 (CEST)
+Message-ID: <37c7a3f7-f769-a313-3279-e8e415369ba4@molgen.mpg.de>
+Date:   Thu, 6 Jul 2023 15:01:05 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH -next 2/3] md/dm-raid: cleanup multiple equivalent goto
+ tags from raid_ctr()
+Content-Language: en-US
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
+        song@kernel.org, heinzm@redhat.com, neilb@suse.de,
+        jbrassow@redhat.com, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
+References: <20230706071622.563073-1-yukuai1@huaweicloud.com>
+ <20230706071622.563073-3-yukuai1@huaweicloud.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20230706071622.563073-3-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgA34qWWfaZkk+xQNQ--.47999S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr1kWFW7Xw48ZF1fArW3trb_yoW8Xw13pr
-        s7KFy5Grn5tFy3tr1DXF4DWFy5XanrXr9rtrW3W3W5uFy0vr9xKFyrWa4Yyryxta4fGF15
-        Xr45WFykAayrJrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9m14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2
-        IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
-        6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
-        AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
-        s7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
-        0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUc6pPUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+Dear Yu,
 
-Several reasons why 'reconfig_mutex' should be held:
 
-1) rdev_for_each() is not safe to be called without the lock, because
-   rdev can be removed concurrently.
-2) mddev_destroy_serial_pool() and mddev_create_serial_pool() should not
-   be called concurrently.
-3) mddev_suspend() from mddev_destroy/create_serial_pool() should be
-   protected by the lock.
+Thank you for your patch. Some minor nits, if you are interested.
 
-Fixes: 10c92fca636e ("md-bitmap: create and destroy wb_info_pool with the change of backlog")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md-bitmap.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Am 06.07.23 um 09:16 schrieb Yu Kuai:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> There are four equivalent goto tags in raid_ctr(), clean them up to use
+> just one, there are no functional change and prepare to fix that
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 1f3339961159..6f9ff14971f9 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2546,6 +2546,10 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (backlog > COUNTER_MAX)
- 		return -EINVAL;
- 
-+	rv = mddev_lock(mddev);
-+	if (rv)
-+		return rv;
-+
- 	/*
- 	 * Without write mostly device, it doesn't make sense to set
- 	 * backlog for max_write_behind.
-@@ -2559,6 +2563,7 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (!has_write_mostly) {
- 		pr_warn_ratelimited("%s: can't set backlog, no write mostly device available\n",
- 				    mdname(mddev));
-+		mddev_unlock(mddev);
- 		return -EINVAL;
- 	}
- 
-@@ -2574,6 +2579,8 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
- 	}
- 	if (old_mwb != backlog)
- 		md_bitmap_update_sb(mddev->bitmap);
-+
-+	mddev_unlock(mddev);
- 	return len;
- }
- 
--- 
-2.39.2
+Maybe:
 
+There *is* no functional change, and is a preparation to fix an 
+unprotected `md_stop()`.
+
+> md_stop() is not protected.
+
+In the commit message summary/title, I’d spell the verb with a space:
+
+     Clean up four equivalent goto tags in raid_ctr()
+
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   drivers/md/dm-raid.c | 27 +++++++++------------------
+>   1 file changed, 9 insertions(+), 18 deletions(-)
+
+[…]
+
+
+Kind regards,
+
+Paul
