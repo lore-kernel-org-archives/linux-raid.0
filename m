@@ -2,52 +2,52 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F364EB64D9
-	for <linux-raid@archiver.kernel.org>; Fri,  7 Jul 2023 08:28:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0B25EB64D9
+	for <linux-raid@archiver.kernel.org>; Fri,  7 Jul 2023 08:33:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232844AbjGGI2J (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 7 Jul 2023 04:28:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57866 "EHLO
+        id S232394AbjGGIdz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 7 Jul 2023 04:33:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232865AbjGGI2C (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Jul 2023 04:28:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A74121BF0;
-        Fri,  7 Jul 2023 01:28:00 -0700 (PDT)
+        with ESMTP id S231594AbjGGIdy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Jul 2023 04:33:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E04E113;
+        Fri,  7 Jul 2023 01:33:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 31610618A0;
-        Fri,  7 Jul 2023 08:28:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9318CC433CA;
-        Fri,  7 Jul 2023 08:27:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B770061873;
+        Fri,  7 Jul 2023 08:33:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19613C433C8;
+        Fri,  7 Jul 2023 08:33:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688718479;
-        bh=/iMTveEZljwI52ZgRhzAV3MJbhOZeyccgkmJqsyS8YE=;
+        s=k20201202; t=1688718830;
+        bh=jzj5w4oOeYiwchkKteHy4c/sygfhMRwo5+CFBhqVTR0=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=aI1YoY01SDjOdgitZwrSRiZWNOTQkAnU6ml4/KwFwNBUsHLUaMI+b5Ux/izMOsaOV
-         U9cMExCoLKws5B7v4T5x+fs9OKsY+MLopWdwUgbGPPtk9sgrO8jFHj3qdSzVmfH2qh
-         zvYYctwngFpqn+hbISe+KFy65pGisGSEmD0Sxw17gKYTPRTM2+FPXd7aCyPbCRIR18
-         XwVyqgG7adZFW9awjv7XvYBrc+2jjHq3v09KUf3lFgr0DCtbVsQrieTK2A3dRKZi2C
-         QXNEyQ6aOrenHVxE6mocDAYPbyHno3PImOVFIwE6hh7uYFlx/vfKBrgOBnel8j9xOL
-         a04U3EmHDhfYQ==
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-4fb7769f15aso2519833e87.0;
-        Fri, 07 Jul 2023 01:27:59 -0700 (PDT)
-X-Gm-Message-State: ABy/qLZ5wPUayZafVkYM8/08GvmdXypOdX9t6f+v0JW/XoL7wc1Pn8Ys
-        oKSm5zCsFvtyX8tXOQSi2vB+e94icEWC1juV74g=
-X-Google-Smtp-Source: APBJJlGL3fSpvVkBbl0Ya71Bb0Fg8XyhXiCunqnfu3VBHNGClDcDXc2vFXNpdP5hh/q43YiuixwngBDo8FsB1mRxMY0=
-X-Received: by 2002:ac2:5b9d:0:b0:4fb:9fa7:dcda with SMTP id
- o29-20020ac25b9d000000b004fb9fa7dcdamr3183778lfn.26.1688718477551; Fri, 07
- Jul 2023 01:27:57 -0700 (PDT)
+        b=IVwdS5MCk0nWjr6mRLAbGmU/vVF/Iy537G9Vr7zinEoHnLUng6bo59HSpH2cPO45+
+         d3Jl8B8EtWBN8JJT/uYjsH/pt99mGjvo4w7/jSDl28IUmkGhIBdu+bQ/qqYBD1u0Nb
+         dga1xTAU8X+vcJe/PlnI8025d0P0UQFhv2yJmEFWXUoyY8GIeSU4JH30vkuY07ouT3
+         RfWRUYbhgLzHELFPCj4nReqdCoPLOhUrHbR/dZe5Wbggjx4szXYiWpwQDgmMYwgBkX
+         rHoNW9hQvL3eRfnXsQhiDkugiUK686gADMV+qy2jpYsLBHSYsAwcCOiOIcHKORH/AO
+         YHnbLPGTAQUwA==
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-4fb9fd28025so2386879e87.2;
+        Fri, 07 Jul 2023 01:33:49 -0700 (PDT)
+X-Gm-Message-State: ABy/qLYfKzKzIPWBRvyxe9ivk0RV/tisZBXEnKolKg0pCDMmotP0ToN6
+        7ujnFI2tCuUa7Rg3LcnuCojs0qNNyr21Z4ywmFE=
+X-Google-Smtp-Source: APBJJlGuN5+W3WHpU1kMZ9BacN5ZgkNQyPVHGATgB/4QCbBY4VybJ6kNHMQaPFsCqHJRKmJW2PJYUmq3OpiCmQKMqwU=
+X-Received: by 2002:a19:7114:0:b0:4f9:56aa:26c5 with SMTP id
+ m20-20020a197114000000b004f956aa26c5mr3180376lfc.25.1688718828033; Fri, 07
+ Jul 2023 01:33:48 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230627034127.4000994-1-linan666@huaweicloud.com> <20230627034127.4000994-2-linan666@huaweicloud.com>
-In-Reply-To: <20230627034127.4000994-2-linan666@huaweicloud.com>
+References: <20230627034127.4000994-1-linan666@huaweicloud.com> <20230627034127.4000994-3-linan666@huaweicloud.com>
+In-Reply-To: <20230627034127.4000994-3-linan666@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 7 Jul 2023 16:27:45 +0800
-X-Gmail-Original-Message-ID: <CAPhsuW65svKXS4GDL6-tuFOEhEwst+0aLd-NA1_gf2LiOuKr_A@mail.gmail.com>
-Message-ID: <CAPhsuW65svKXS4GDL6-tuFOEhEwst+0aLd-NA1_gf2LiOuKr_A@mail.gmail.com>
-Subject: Re: [PATCH 1/2] md/raid10: a simple cleanup for fix_recovery_read_error
+Date:   Fri, 7 Jul 2023 16:33:35 +0800
+X-Gmail-Original-Message-ID: <CAPhsuW7+bWe9YDMnjRgb657Fz7Vs_4wnBcU9jVSXuofKhaO38Q@mail.gmail.com>
+Message-ID: <CAPhsuW7+bWe9YDMnjRgb657Fz7Vs_4wnBcU9jVSXuofKhaO38Q@mail.gmail.com>
+Subject: Re: [PATCH 2/2] md/raid10: handle replacement devices in fix_recovery_read_error
 To:     linan666@huaweicloud.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
@@ -62,40 +62,69 @@ On Tue, Jun 27, 2023 at 11:42=E2=80=AFAM <linan666@huaweicloud.com> wrote:
 >
 > From: Li Nan <linan122@huawei.com>
 >
-> There is no need to use a new variable 'rdev2' for write device since
-> 'rdev' is not used again later. Use 'rdev' directly. Assigning return
-> value to 'ok' is also unnecessary. Clean it up.
+> In fix_recovery_read_error(), the handling of replacement devices is
+> missing. Add it. If io error is from replacement, error this device
+> directly. If io error is from other device, just set badblocks for
+> replacement.
+>
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>  drivers/md/raid10.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 5105273f60e9..6d9025089455 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2551,7 +2551,7 @@ static void fix_recovery_read_error(struct r10bio *=
+r10_bio)
+>
+>         while (sectors) {
+>                 int s =3D sectors;
+> -               struct md_rdev *rdev;
+> +               struct md_rdev *rdev, *repl;
+>                 sector_t addr;
+>                 int ok;
+>
+> @@ -2559,6 +2559,7 @@ static void fix_recovery_read_error(struct r10bio *=
+r10_bio)
+>                         s =3D PAGE_SIZE >> 9;
+>
+>                 rdev =3D conf->mirrors[dr].rdev;
+> +               repl =3D conf->mirrors[dw].replacement;
+>                 addr =3D r10_bio->devs[0].addr + sect,
+>                 ok =3D sync_page_io(rdev,
+>                                   addr,
+> @@ -2580,6 +2581,9 @@ static void fix_recovery_read_error(struct r10bio *=
+r10_bio)
+>                                         set_bit(MD_RECOVERY_NEEDED,
+>                                                 &rdev->mddev->recovery);
+>                         }
+> +                       if (repl && !sync_page_io(repl, addr, s << 9,
+> +                           pages[idx], REQ_OP_WRITE, false))
+> +                               md_error(mddev, repl);
+>                 }
+>                 if (!ok) {
+>                         /* We don't worry if we cannot set a bad block -
+> @@ -2592,7 +2596,9 @@ static void fix_recovery_read_error(struct r10bio *=
+r10_bio)
+>                                 /* need bad block on destination too */
+>                                 rdev =3D conf->mirrors[dw].rdev;
+>                                 addr =3D r10_bio->devs[1].addr + sect;
+> -                               if (!rdev_set_badblocks(rdev, addr, s, 0)=
+) {
+> +                               if (!rdev_set_badblocks(rdev, addr, s, 0)=
+ ||
+> +                                   (repl &&
+> +                                   !rdev_set_badblocks(repl, addr, s, 0)=
+)) {
 
-I actually think rdev2 here makes the code easier to read. And the
-'ok' variable doesn't hurt the code readability either.
+Do we really want this in the if () statement? Shall we always set
+badblock on both rdev and repl?
 
 Thanks,
 Song
 
->
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->  drivers/md/raid10.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 4fcfcb350d2b..5105273f60e9 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2590,10 +2590,9 @@ static void fix_recovery_read_error(struct r10bio =
-*r10_bio)
->
->                         if (rdev !=3D conf->mirrors[dw].rdev) {
->                                 /* need bad block on destination too */
-> -                               struct md_rdev *rdev2 =3D conf->mirrors[d=
-w].rdev;
-> +                               rdev =3D conf->mirrors[dw].rdev;
->                                 addr =3D r10_bio->devs[1].addr + sect;
-> -                               ok =3D rdev_set_badblocks(rdev2, addr, s,=
- 0);
-> -                               if (!ok) {
-> +                               if (!rdev_set_badblocks(rdev, addr, s, 0)=
-) {
 >                                         /* just abort the recovery */
 >                                         pr_notice("md/raid10:%s: recovery=
  aborted due to read error\n",
