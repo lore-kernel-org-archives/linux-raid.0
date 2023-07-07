@@ -2,81 +2,92 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58DD7EB64D9
-	for <linux-raid@archiver.kernel.org>; Fri,  7 Jul 2023 09:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93ADEEB64DA
+	for <linux-raid@archiver.kernel.org>; Fri,  7 Jul 2023 09:37:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232680AbjGGJTT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 7 Jul 2023 05:19:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48566 "EHLO
+        id S232728AbjGGJhN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 7 Jul 2023 05:37:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232373AbjGGJTS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Jul 2023 05:19:18 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A33D11991;
-        Fri,  7 Jul 2023 02:19:16 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qy7BR0TBpz4f404N;
-        Fri,  7 Jul 2023 17:19:11 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgA30JOP2KdkjEChNQ--.15491S3;
-        Fri, 07 Jul 2023 17:19:11 +0800 (CST)
-Subject: Re: [PATCH -next v2 2/2] md/raid5-cache: fix null-ptr-deref in
- r5l_reclaim_thread()
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
+        with ESMTP id S232671AbjGGJhL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Jul 2023 05:37:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DB582105;
+        Fri,  7 Jul 2023 02:37:10 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0C445618DF;
+        Fri,  7 Jul 2023 09:37:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6375FC433D9;
+        Fri,  7 Jul 2023 09:37:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1688722629;
+        bh=LiQDwPwTkBNAq6Qw/pxa2ZzWigHnaTtJLG4PuMYRTg0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=lnqBvV0Y4ozrI0ckSNZOieXkU5tXT/O0IgcmbC6SqEPn17zehD74nBDRLuRmzwf7B
+         oah8TIlh9bYSwcRN/+V+kBqdOIW6nSnCT3khroTAc2PQzeWrT+6wqsKl7snZn9KlcC
+         LdwnvJLlZOLs5FkebVBmiXheGDk3YjbNLLi8fX2vJtDc1dW/510ZMWvc7ZJFV+6T3M
+         JkbpHfwMKK+CgH2kPuJIbp82RmX4So+jzK/zIewoPsQugMk+RCyx+Qo8U9BKugjf5u
+         wMVYEENf7L1irZ6rFBFNVQXzfuny0qI+YZ8jMtV/oXN1z3y9r0TdJSotWHXCxa6Hta
+         V32Qg9tu0w27A==
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-4fb8574a3a1so2500756e87.1;
+        Fri, 07 Jul 2023 02:37:09 -0700 (PDT)
+X-Gm-Message-State: ABy/qLY70ugQF/GoPeb9QhU84K9x3Vw8x3Z57ARWpww81oxnoBZtl/xc
+        J38in1aEE7+oYzginvDmKOKB5o/T3JVg399dwNk=
+X-Google-Smtp-Source: APBJJlHTmxouDwdCH2EEfJexLiCy9F8BTrk7JONjMu/+VY/8uZTK043qrMe0fyX49ipBmvXdDdeBpoufEemGsjSWHtw=
+X-Received: by 2002:a05:6512:3a82:b0:4f9:cd02:4af1 with SMTP id
+ q2-20020a0565123a8200b004f9cd024af1mr3851999lfu.34.1688722627389; Fri, 07 Jul
+ 2023 02:37:07 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230628010756.70649-1-yukuai1@huaweicloud.com>
+ <20230628010756.70649-3-yukuai1@huaweicloud.com> <CAPhsuW500i9LEcSsAchje46b2maKdj4EVaefPtinZfdP+AqELw@mail.gmail.com>
+ <e5d746d0-1d42-3d60-450b-2450f24f0915@huaweicloud.com> <4690dfff-ad72-bf83-7feb-75018712eb17@huaweicloud.com>
+ <d6a6ec52-3c33-726f-1ce2-40168bfa7e27@huaweicloud.com>
+In-Reply-To: <d6a6ec52-3c33-726f-1ce2-40168bfa7e27@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 7 Jul 2023 17:36:54 +0800
+X-Gmail-Original-Message-ID: <CAPhsuW5jy=SrWnGVPYQyLJBY3bN7uK1OnXQsh8J_ety=oieZeg@mail.gmail.com>
+Message-ID: <CAPhsuW5jy=SrWnGVPYQyLJBY3bN7uK1OnXQsh8J_ety=oieZeg@mail.gmail.com>
+Subject: Re: [PATCH -next v2 2/2] md/raid5-cache: fix null-ptr-deref in r5l_reclaim_thread()
+To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     xni@redhat.com, logang@deltatee.com, hch@lst.de, shli@fb.com,
         linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yi.zhang@huawei.com, yangerkun@huawwe.com,
         "yukuai (C)" <yukuai3@huawei.com>
-References: <20230628010756.70649-1-yukuai1@huaweicloud.com>
- <20230628010756.70649-3-yukuai1@huaweicloud.com>
- <CAPhsuW500i9LEcSsAchje46b2maKdj4EVaefPtinZfdP+AqELw@mail.gmail.com>
- <e5d746d0-1d42-3d60-450b-2450f24f0915@huaweicloud.com>
- <4690dfff-ad72-bf83-7feb-75018712eb17@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <d6a6ec52-3c33-726f-1ce2-40168bfa7e27@huaweicloud.com>
-Date:   Fri, 7 Jul 2023 17:19:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <4690dfff-ad72-bf83-7feb-75018712eb17@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgA30JOP2KdkjEChNQ--.15491S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYg7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-        Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-        6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72
-        CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4II
-        rI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr4
-        1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
-        67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
-        8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
-        wI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267
-        AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbE_M3UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Fri, Jul 7, 2023 at 5:19=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
+ote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/07/07 17:16, Yu Kuai =E5=86=99=E9=81=93:
+> > Perhaps you means this order?
+> >
+> > r5l_exit_log
+> >   flush_work(&log->disable_writeback_work)
+> >   conf->log =3D NULL
+> >   md_unregister_thread(&log->reclaim_thread)
+> >
+> > I think this is better indeed.
+> Never mind, this is wrong, I got confused...
+>
+> Please ignore this and take a look at my original fix.
 
-在 2023/07/07 17:16, Yu Kuai 写道:
-> Perhaps you means this order?
-> 
-> r5l_exit_log
->   flush_work(&log->disable_writeback_work)
->   conf->log = NULL
->   md_unregister_thread(&log->reclaim_thread)
-> 
-> I think this is better indeed.
-Never mind, this is wrong, I got confused...
+How about
 
-Please ignore this and take a look at my original fix.
+r5l_exit_log
+  md_unregister_thread(&log->reclaim_thread)
+  conf->log =3D NULL
+  flush_work(&log->disable_writeback_work)
+
+?
 
 Thanks,
-Kuai
-
+Song
