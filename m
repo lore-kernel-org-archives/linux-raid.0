@@ -2,92 +2,90 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93ADEEB64DA
-	for <linux-raid@archiver.kernel.org>; Fri,  7 Jul 2023 09:37:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D934C04E69
+	for <linux-raid@archiver.kernel.org>; Fri,  7 Jul 2023 11:29:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232728AbjGGJhN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 7 Jul 2023 05:37:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52688 "EHLO
+        id S232698AbjGGL3R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 7 Jul 2023 07:29:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232671AbjGGJhL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Jul 2023 05:37:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DB582105;
-        Fri,  7 Jul 2023 02:37:10 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0C445618DF;
-        Fri,  7 Jul 2023 09:37:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6375FC433D9;
-        Fri,  7 Jul 2023 09:37:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688722629;
-        bh=LiQDwPwTkBNAq6Qw/pxa2ZzWigHnaTtJLG4PuMYRTg0=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=lnqBvV0Y4ozrI0ckSNZOieXkU5tXT/O0IgcmbC6SqEPn17zehD74nBDRLuRmzwf7B
-         oah8TIlh9bYSwcRN/+V+kBqdOIW6nSnCT3khroTAc2PQzeWrT+6wqsKl7snZn9KlcC
-         LdwnvJLlZOLs5FkebVBmiXheGDk3YjbNLLi8fX2vJtDc1dW/510ZMWvc7ZJFV+6T3M
-         JkbpHfwMKK+CgH2kPuJIbp82RmX4So+jzK/zIewoPsQugMk+RCyx+Qo8U9BKugjf5u
-         wMVYEENf7L1irZ6rFBFNVQXzfuny0qI+YZ8jMtV/oXN1z3y9r0TdJSotWHXCxa6Hta
-         V32Qg9tu0w27A==
-Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-4fb8574a3a1so2500756e87.1;
-        Fri, 07 Jul 2023 02:37:09 -0700 (PDT)
-X-Gm-Message-State: ABy/qLY70ugQF/GoPeb9QhU84K9x3Vw8x3Z57ARWpww81oxnoBZtl/xc
-        J38in1aEE7+oYzginvDmKOKB5o/T3JVg399dwNk=
-X-Google-Smtp-Source: APBJJlHTmxouDwdCH2EEfJexLiCy9F8BTrk7JONjMu/+VY/8uZTK043qrMe0fyX49ipBmvXdDdeBpoufEemGsjSWHtw=
-X-Received: by 2002:a05:6512:3a82:b0:4f9:cd02:4af1 with SMTP id
- q2-20020a0565123a8200b004f9cd024af1mr3851999lfu.34.1688722627389; Fri, 07 Jul
- 2023 02:37:07 -0700 (PDT)
+        with ESMTP id S229695AbjGGL2r (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Jul 2023 07:28:47 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 317AC9E;
+        Fri,  7 Jul 2023 04:28:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=RUfYUy8/J6JDn9FoGNDP036sYhvQ7qr7NPrif4Grdk0=; b=W8BupQP6fTnw1maVtPw7n0FTsE
+        YYE/luqofOMT0IhbP2TwnItjey780Gaej+IMiW55ud+2XaULxiO0l44TVjXxHDze0xRAuH+mluyhr
+        7ui49FHiGFXBu/ov7yuPVdyKZ6eJKL+3QsdTV3Gb1KlNN/rv7nlB69UacHrPvm/XuXzbJNEgBM50m
+        lj+5xIDBkcqtRkKNokX0ONlo/QTCRQkdYA2xSwzuGzgo4ax7OTAfgkKR0gXaMSjd0fblhIFZkcy3O
+        uLWO9DupcrKt+pDlGpSx+Miz6qpzw/HtoMbVHr58WOYYIaYLstJnc/oPaBlHCJkaDsT5H35KaxEXD
+        vOIi6ADg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qHjdh-004Vpz-0w;
+        Fri, 07 Jul 2023 11:28:41 +0000
+Date:   Fri, 7 Jul 2023 04:28:41 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
+Message-ID: <ZKf26fYMDHnTCb29@infradead.org>
+References: <20230629165206.383-1-jack@suse.cz>
+ <20230704122224.16257-1-jack@suse.cz>
+ <ZKbgAG5OoHVyUKOG@infradead.org>
+ <20230706161433.lj4apushiwguzvdd@quack3>
 MIME-Version: 1.0
-References: <20230628010756.70649-1-yukuai1@huaweicloud.com>
- <20230628010756.70649-3-yukuai1@huaweicloud.com> <CAPhsuW500i9LEcSsAchje46b2maKdj4EVaefPtinZfdP+AqELw@mail.gmail.com>
- <e5d746d0-1d42-3d60-450b-2450f24f0915@huaweicloud.com> <4690dfff-ad72-bf83-7feb-75018712eb17@huaweicloud.com>
- <d6a6ec52-3c33-726f-1ce2-40168bfa7e27@huaweicloud.com>
-In-Reply-To: <d6a6ec52-3c33-726f-1ce2-40168bfa7e27@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 7 Jul 2023 17:36:54 +0800
-X-Gmail-Original-Message-ID: <CAPhsuW5jy=SrWnGVPYQyLJBY3bN7uK1OnXQsh8J_ety=oieZeg@mail.gmail.com>
-Message-ID: <CAPhsuW5jy=SrWnGVPYQyLJBY3bN7uK1OnXQsh8J_ety=oieZeg@mail.gmail.com>
-Subject: Re: [PATCH -next v2 2/2] md/raid5-cache: fix null-ptr-deref in r5l_reclaim_thread()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     xni@redhat.com, logang@deltatee.com, hch@lst.de, shli@fb.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawwe.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230706161433.lj4apushiwguzvdd@quack3>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Jul 7, 2023 at 5:19=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
-> Hi,
->
-> =E5=9C=A8 2023/07/07 17:16, Yu Kuai =E5=86=99=E9=81=93:
-> > Perhaps you means this order?
-> >
-> > r5l_exit_log
-> >   flush_work(&log->disable_writeback_work)
-> >   conf->log =3D NULL
-> >   md_unregister_thread(&log->reclaim_thread)
-> >
-> > I think this is better indeed.
-> Never mind, this is wrong, I got confused...
->
-> Please ignore this and take a look at my original fix.
+On Thu, Jul 06, 2023 at 06:14:33PM +0200, Jan Kara wrote:
+> > struct bdev_handle *bdev_open_by_path(dev_t dev, blk_mode_t mode,
+> > 		void *holder, const struct blk_holder_ops *hops);
+> > void bdev_release(struct bdev_handle *handle);
+> 
+> I'd maybe use bdev_close() instead of bdev_release() but otherwise I like
+> the new naming.
 
-How about
-
-r5l_exit_log
-  md_unregister_thread(&log->reclaim_thread)
-  conf->log =3D NULL
-  flush_work(&log->disable_writeback_work)
-
-?
-
-Thanks,
-Song
+We're using release everywhese else, but if Jens is fine with that I
+can live with close.
