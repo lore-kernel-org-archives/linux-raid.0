@@ -2,108 +2,111 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2F05EB64D9
-	for <linux-raid@archiver.kernel.org>; Sat,  8 Jul 2023 02:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F28C7EB64DA
+	for <linux-raid@archiver.kernel.org>; Sat,  8 Jul 2023 09:19:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230145AbjGHCmG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 7 Jul 2023 22:42:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50960 "EHLO
+        id S229788AbjGHJTD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 8 Jul 2023 05:19:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230036AbjGHCmE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 Jul 2023 22:42:04 -0400
+        with ESMTP id S229568AbjGHJTD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 8 Jul 2023 05:19:03 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D057DBA;
-        Fri,  7 Jul 2023 19:42:00 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QyZKb6s3Hz4f3lCr;
-        Sat,  8 Jul 2023 10:41:55 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCHLaHyzKhkbSHbNQ--.51207S3;
-        Sat, 08 Jul 2023 10:41:56 +0800 (CST)
-Subject: Re: [PATCH -next v2 2/2] md/raid5-cache: fix null-ptr-deref in
- r5l_reclaim_thread()
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     xni@redhat.com, logang@deltatee.com, hch@lst.de, shli@fb.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawwe.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230628010756.70649-1-yukuai1@huaweicloud.com>
- <20230628010756.70649-3-yukuai1@huaweicloud.com>
- <CAPhsuW500i9LEcSsAchje46b2maKdj4EVaefPtinZfdP+AqELw@mail.gmail.com>
- <e5d746d0-1d42-3d60-450b-2450f24f0915@huaweicloud.com>
- <4690dfff-ad72-bf83-7feb-75018712eb17@huaweicloud.com>
- <d6a6ec52-3c33-726f-1ce2-40168bfa7e27@huaweicloud.com>
- <CAPhsuW5jy=SrWnGVPYQyLJBY3bN7uK1OnXQsh8J_ety=oieZeg@mail.gmail.com>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D74291BD2;
+        Sat,  8 Jul 2023 02:19:01 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Qyl7f58Kmz4f3nbk;
+        Sat,  8 Jul 2023 17:18:54 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgA30JP9KalkALTwNQ--.64171S4;
+        Sat, 08 Jul 2023 17:18:55 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <b1b814c5-ad92-d398-a96a-31e0243e9bc1@huaweicloud.com>
-Date:   Sat, 8 Jul 2023 10:41:54 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+To:     song@kernel.org, logang@deltatee.com, axboe@kernel.dk
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next v3] md/raid5-cache: fix a deadlock in r5l_exit_log()
+Date:   Sat,  8 Jul 2023 17:17:27 +0800
+Message-Id: <20230708091727.1417894-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW5jy=SrWnGVPYQyLJBY3bN7uK1OnXQsh8J_ety=oieZeg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCHLaHyzKhkbSHbNQ--.51207S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrKw1kXw18JFykWry3Xw1kKrg_yoW3WFg_ur
-        WYvr1DKw47uF1akan7CF1Skwn7GFW5Ja4rXrW8JF4kKrWrZrW0gF4kZ393W3y3Cw4kG3Z3
-        WrWrX3ySq3yDGjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb3AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+X-CM-TRANSID: gCh0CgA30JP9KalkALTwNQ--.64171S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uw45Ar4DAw4UJF1kJFy5Arb_yoW8AF1Upa
+        ySqrWaq3y8uFyjvF4DC3WUCFyrCw48KryfGr15Cw4Yva4fWry8Gay8Ka409FWvyr4rtrWI
+        vFWFg34rGr10yr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
         Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
         I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
-        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
+        rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
+        vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IY
+        x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
+        xKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
+        67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: Yu Kuai <yukuai3@huawei.com>
 
-在 2023/07/07 17:36, Song Liu 写道:
-> On Fri, Jul 7, 2023 at 5:19 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> Hi,
->>
->> 在 2023/07/07 17:16, Yu Kuai 写道:
->>> Perhaps you means this order?
->>>
->>> r5l_exit_log
->>>    flush_work(&log->disable_writeback_work)
->>>    conf->log = NULL
->>>    md_unregister_thread(&log->reclaim_thread)
->>>
->>> I think this is better indeed.
->> Never mind, this is wrong, I got confused...
->>
->> Please ignore this and take a look at my original fix.
-> 
-> How about
-> 
-> r5l_exit_log
->    md_unregister_thread(&log->reclaim_thread)
->    conf->log = NULL
->    flush_work(&log->disable_writeback_work)
-> 
-> ?
+Commit b13015af94cf ("md/raid5-cache: Clear conf->log after finishing
+work") introduce a new problem:
 
-This looks correct, expect that wake_up() should be moved together.
+// caller hold reconfig_mutex
+r5l_exit_log
+ flush_work(&log->disable_writeback_work)
+			r5c_disable_writeback_async
+			 wait_event
+			  /*
+			   * conf->log is not NULL, and mddev_trylock()
+			   * will fail, wait_event() can never pass.
+			   */
+ conf->log = NULL
 
-I'll send a v2.
+Fix this problem by setting 'config->log' to NULL before wake_up() as it
+used to be, so that wait_event() from r5c_disable_writeback_async() can
+exist. In the meantime, move forward md_unregister_thread() so that
+null-ptr-deref this commit fixed can still be fixed.
 
-Thanks,
-Kuai
-> 
-> Thanks,
-> Song
-> .
-> 
+Fixes: b13015af94cf ("md/raid5-cache: Clear conf->log after finishing work")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+
+Changes in v3:
+ - Use a different solution.
+
+ drivers/md/raid5-cache.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 47ba7d9e81e1..2eac4a50d99b 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -3168,12 +3168,15 @@ void r5l_exit_log(struct r5conf *conf)
+ {
+ 	struct r5l_log *log = conf->log;
+ 
+-	/* Ensure disable_writeback_work wakes up and exits */
+-	wake_up(&conf->mddev->sb_wait);
+-	flush_work(&log->disable_writeback_work);
+ 	md_unregister_thread(&log->reclaim_thread);
+ 
++	/*
++	 * 'reconfig_mutex' is held by caller, set 'confg->log' to NULL to
++	 * ensure disable_writeback_work wakes up and exits.
++	 */
+ 	conf->log = NULL;
++	wake_up(&conf->mddev->sb_wait);
++	flush_work(&log->disable_writeback_work);
+ 
+ 	mempool_exit(&log->meta_pool);
+ 	bioset_exit(&log->bs);
+-- 
+2.39.2
 
