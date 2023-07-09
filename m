@@ -2,113 +2,86 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 751D5C001DC
-	for <linux-raid@archiver.kernel.org>; Sat,  8 Jul 2023 09:23:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B783CEB64DC
+	for <linux-raid@archiver.kernel.org>; Sun,  9 Jul 2023 10:30:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231586AbjGHJXa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 8 Jul 2023 05:23:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46740 "EHLO
+        id S230306AbjGIKaI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 9 Jul 2023 06:30:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230510AbjGHJX1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 8 Jul 2023 05:23:27 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 182E51FC6;
-        Sat,  8 Jul 2023 02:23:26 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QylDn6gh1z4f3p1H;
-        Sat,  8 Jul 2023 17:23:21 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKsHK6lkCfLwNQ--.65417S7;
-        Sat, 08 Jul 2023 17:23:22 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     pmenzel@molgen.mpg.de, agk@redhat.com, snitzer@kernel.org,
-        dm-devel@redhat.com, song@kernel.org, heinzm@redhat.com,
-        neilb@suse.de, jbrassow@redhat.com
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next v2 3/3] md/dm-raid: protect md_stop() with 'reconfig_mutex'
-Date:   Sat,  8 Jul 2023 17:21:53 +0800
-Message-Id: <20230708092153.1418570-4-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230708092153.1418570-1-yukuai1@huaweicloud.com>
-References: <20230708092153.1418570-1-yukuai1@huaweicloud.com>
+        with ESMTP id S229973AbjGIKaH (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 9 Jul 2023 06:30:07 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73A66F4
+        for <linux-raid@vger.kernel.org>; Sun,  9 Jul 2023 03:30:04 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1b8ad8383faso25592395ad.0
+        for <linux-raid@vger.kernel.org>; Sun, 09 Jul 2023 03:30:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1688898604; x=1691490604;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=EYBcAwEj7igEpTtAnhLF8RYOAyJ4EXppRkByVjvQ1Zc=;
+        b=HiXegT72DR1gfZUJGVqj7A13s9R8ezlsfnxSY5CmKQSlcXopytbzhlYSZ7VbIuoYY3
+         duX18S+YKCfGji4NjM1b/r40tLNpNl1t0rjkN70SdLx2W63O2PpL1JF97VWzd82qV2US
+         dK87FfUgGaCI9okQvi7jniJXxElctzd9/8QknO6tUburYpq8o12NESQgELEbOlFK01Br
+         UarJeS8KIoBDjQM+9LF6kGMris/+nwL+f0A7EE5V4967eX9LlOyjaZnaj+8RfPSECZwg
+         62dxnn99s9mftidxqIe3Q6ODO/97tbtLvSq+cmxaXo2FCWXJ64042xZeGwIqwzHlYAJp
+         oiKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688898604; x=1691490604;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=EYBcAwEj7igEpTtAnhLF8RYOAyJ4EXppRkByVjvQ1Zc=;
+        b=ETToTH/ju2w5FgNwEQSc5F8LDuzpUl4Z4gb+2sn1T3I0wY/qjQ6iwt585SgIY+Rg4P
+         Pdu1wTysQTkQRB7kdtyFxJxah5s8f1Zr9YosFsn/O3Iekknjxngqu2fwCBj/v3shorrf
+         6pCTdGf/1sAf5AirNT/AF/LfhqeQojnSiXctzXVjLZ98v3QwBBF757D7TCiOGj/KDGVy
+         YBpAN45xTHPF3l8uEDhAh1l4K7w3l8+Gg3VspAzvjDrlfRQHXGZvSCpLw4MkrjKQh9mQ
+         RgZ0MHYmVDVvI84KnltfmzD7PlRmILQU2LVBZhIRD9ukKyqSS0jVfpaXOUe3hBvKERhT
+         IGxw==
+X-Gm-Message-State: ABy/qLYmid8MJ/rvGZEIl/1swILmIYDGXwQo5owzezD501lSV3SMl7V4
+        eF55Ck0jWzsQ96i2Bwz0bJZcng==
+X-Google-Smtp-Source: APBJJlFv3XIptUN3LmIwP69GusJtKZlekr8ku0h3rVfR4qp3UkRIDad4HA29O3mZsjPLIefIzRa30w==
+X-Received: by 2002:a17:903:2584:b0:1b8:5fb4:1c82 with SMTP id jb4-20020a170903258400b001b85fb41c82mr9761964plb.50.1688898603899;
+        Sun, 09 Jul 2023 03:30:03 -0700 (PDT)
+Received: from localhost.localdomain ([47.75.78.161])
+        by smtp.googlemail.com with ESMTPSA id i19-20020a170902eb5300b001b9be2e2b3esm4479140pli.277.2023.07.09.03.30.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 09 Jul 2023 03:30:03 -0700 (PDT)
+From:   Xueshi Hu <xueshi.hu@smartx.com>
+X-Google-Original-From: Xueshi Hu <hubachelar@gmail.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, Xueshi Hu <xueshi.hu@smartx.com>
+Subject: [PATCH v2 0/3] md/raid1: don't change mempool if in-flight r1bio exists
+Date:   Sun,  9 Jul 2023 18:29:53 +0800
+Message-Id: <20230709102956.1716708-1-hubachelar@gmail.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKsHK6lkCfLwNQ--.65417S7
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr4ktFyDGrykWw4rAF1rtFb_yoW8Gw15pr
-        Z7Xry3Ar15X39rZa4DW3ykua45t3ZIgry0yr93Ca95Za429F43uan5KayUurWDJFy3K3ZF
-        vF4UXwn8Wa48KwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8Jw
-        CI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUFfHUDUUU
-        U
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Xueshi Hu <xueshi.hu@smartx.com>
 
-__md_stop_writes() and __md_stop() will modify many fields that is
-protected by 'reconfig_mutex', and all the callers will grab
-'reconfig_mtuex' expect for md_stop().
+All the r1bio should be freed before raid1_reshape() changes the
+mempool. However, freeze_array() doesn't guarantee there's no r1bio,
+as some r1bio maybe queued. Also, in raid1_write_request() and
+handle_read_error(), kernel shall not allow_barrier() before the r1bio is
+properly handled.
 
-Fixes: 9d09e663d550 ("dm: raid456 basic support")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/dm-raid.c | 4 +++-
- drivers/md/md.c      | 2 ++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+Changes in v2:
+	- fix the problem one by one instead of calling
+	blk_mq_freeze_queue() as suggested by Yu Kuai
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 33742f5e7ee5..5f9991765f27 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3298,8 +3298,8 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	return 0;
- 
- bad_unlock:
--	mddev_unlock(&rs->md);
- 	md_stop(&rs->md);
-+	mddev_unlock(&rs->md);
- bad:
- 	raid_set_free(rs);
- 
-@@ -3310,7 +3310,9 @@ static void raid_dtr(struct dm_target *ti)
- {
- 	struct raid_set *rs = ti->private;
- 
-+	mddev_lock_nointr(&rs->md);
- 	md_stop(&rs->md);
-+	mddev_unlock(&rs->md);
- 	raid_set_free(rs);
- }
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index a3d98273b295..ff40e362c927 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6290,6 +6290,8 @@ static void __md_stop(struct mddev *mddev)
- 
- void md_stop(struct mddev *mddev)
- {
-+	lockdep_assert_held(&mddev->reconfig_mutex);
-+
- 	/* stop the array and free an attached data structures.
- 	 * This is called from dm-raid
- 	 */
+Xueshi Hu (3):
+  md/raid1: gave up reshape in case there's queued io
+  md/raid1: free old r1bio before retry write
+  md/raid1: keep holding the barrier in handle_read_error()
+
+ drivers/md/raid1.c | 36 +++++++++++++++++++++---------------
+ 1 file changed, 21 insertions(+), 15 deletions(-)
+
 -- 
-2.39.2
+2.40.1
 
