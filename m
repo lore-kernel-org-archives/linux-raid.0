@@ -2,124 +2,143 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F8BCEB64DC
-	for <linux-raid@archiver.kernel.org>; Sun,  9 Jul 2023 10:30:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BC14EB64D9
+	for <linux-raid@archiver.kernel.org>; Mon, 10 Jul 2023 13:00:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230354AbjGIKaS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 9 Jul 2023 06:30:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55794 "EHLO
+        id S230234AbjGJNAl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 10 Jul 2023 09:00:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230351AbjGIKaO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 9 Jul 2023 06:30:14 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0FA2F4
-        for <linux-raid@vger.kernel.org>; Sun,  9 Jul 2023 03:30:13 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id d9443c01a7336-1b7e6512973so21804555ad.3
-        for <linux-raid@vger.kernel.org>; Sun, 09 Jul 2023 03:30:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1688898613; x=1691490613;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6TNN9QkcmsO3KPgQ0QUmXwgC+bPcPHbUo8MbhwOskXA=;
-        b=U2Z5xK6Gd4yg15x3O3BkvRhUyi/0KlDT3nXifbyDMaO1ymSr7R3QXn6ggAwNKGvkeq
-         dFgJDhdZT3xUJEruULDOBcqoH0+4j+B/D0kigDdJNQ6x5mVYxDLOtCB8l4bVkwhKl8sQ
-         ADL4+qy5bDaaWA+lsJCiHroQ6bJMVl4A7A2bL8SkXkb/5KT75dLIFXHDSrYHyRZdhN4V
-         HU4ol4Am53sSGg4la2usEIevnPh7sqMbsNNLeK2KnB34vcZg5wph4eVSr0h7guIE1PHJ
-         zI/KgkPx/P6LiZvZSyISR33hUN3pAGajTd9LFy1OtHms+P1XL+arhum9u2pZQfOm+liH
-         /MmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688898613; x=1691490613;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6TNN9QkcmsO3KPgQ0QUmXwgC+bPcPHbUo8MbhwOskXA=;
-        b=QJqgKzo7/9thahavDvm3zIMmpGLz7Ta1lTLRoq4c003xJ8h/bHq8a+xgfkJcvBMI3d
-         mi6mCQnSdGVTYM0RzXDMFuxm1vhscGnMaPy8O26crbVxN5TBDK2X/77xrDhn5hKZdP92
-         ugLlBr6G/JFR8ThU+lz0N9B8weMHkOFfu09B+Py8QoXNW+DG5PWPvwErv2MSyGTgt+87
-         Gza0pt3flNgjfVZE1HdCuA7qJTT2kNMZjpZz3Dfr5d69NPyEGEFjJrc+pq9jnNy7BGTf
-         TJFHCdCs6euJ0qEYuTGmH00G6jqbmfbYG4Tg4XHVgL6Uk3mmnXCdG7tWqozH88wd3eOW
-         hWwQ==
-X-Gm-Message-State: ABy/qLaYLcQ7VJhSIt7lxoVRMIFRPK5LpRVJRVKOM8BBfgLX6OZ8Hzba
-        Hb90a/OgCNnA/rA7GhTj1uk6b6ZAKpY3hxlSEj9UYAKDCnwgTYXn
-X-Google-Smtp-Source: APBJJlGD5F7LVnxIKEo1rFVhnZq8DCXM1TeLnpbZZaCyWB3juvOL3V0pm0BpHkWIeQvCFopqlpiVsw==
-X-Received: by 2002:a17:902:edca:b0:1b6:ab53:c7a5 with SMTP id q10-20020a170902edca00b001b6ab53c7a5mr7432716plk.46.1688898613162;
-        Sun, 09 Jul 2023 03:30:13 -0700 (PDT)
-Received: from localhost.localdomain ([47.75.78.161])
-        by smtp.googlemail.com with ESMTPSA id i19-20020a170902eb5300b001b9be2e2b3esm4479140pli.277.2023.07.09.03.30.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 09 Jul 2023 03:30:12 -0700 (PDT)
-From:   Xueshi Hu <xueshi.hu@smartx.com>
-X-Google-Original-From: Xueshi Hu <hubachelar@gmail.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, Xueshi Hu <xueshi.hu@smartx.com>
-Subject: [PATCH v2 3/3] md/raid1: keep holding the barrier in handle_read_error()
-Date:   Sun,  9 Jul 2023 18:29:56 +0800
-Message-Id: <20230709102956.1716708-4-hubachelar@gmail.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230709102956.1716708-1-hubachelar@gmail.com>
-References: <20230709102956.1716708-1-hubachelar@gmail.com>
+        with ESMTP id S229469AbjGJNAk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Jul 2023 09:00:40 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E450AA8;
+        Mon, 10 Jul 2023 06:00:37 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4R03yS1xDCz4f4XSD;
+        Mon, 10 Jul 2023 21:00:32 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCXaK_vAKxkCTebNg--.58698S3;
+        Mon, 10 Jul 2023 21:00:33 +0800 (CST)
+Subject: Re: [PATCH 2/2] md/raid10: handle replacement devices in
+ fix_recovery_read_error
+To:     Song Liu <song@kernel.org>, linan666@huaweicloud.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230627034127.4000994-1-linan666@huaweicloud.com>
+ <20230627034127.4000994-3-linan666@huaweicloud.com>
+ <CAPhsuW7+bWe9YDMnjRgb657Fz7Vs_4wnBcU9jVSXuofKhaO38Q@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <62e6e2bc-4fd2-0ee9-6215-609778e0289a@huaweicloud.com>
+Date:   Mon, 10 Jul 2023 21:00:31 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <CAPhsuW7+bWe9YDMnjRgb657Fz7Vs_4wnBcU9jVSXuofKhaO38Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCXaK_vAKxkCTebNg--.58698S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr17tw4rAFW3GFW3AF1xAFb_yoW5Jryfpw
+        1DG3Z0kryDJa4UZF1DZayDAasYkws3trW5Krn8J3W2k3saqrZxKFW7WrW5Cry8uF1a9F4Y
+        qan8WrW3ua4DKaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
+        UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Xueshi Hu <xueshi.hu@smartx.com>
+Hi,
 
-Raid reshape changes the r1conf::raid_disks and mempool. Keep holding the
-barrier in handle_read_error() to avoid raid reshape.
+在 2023/07/07 16:33, Song Liu 写道:
+> On Tue, Jun 27, 2023 at 11:42 AM <linan666@huaweicloud.com> wrote:
+>>
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> In fix_recovery_read_error(), the handling of replacement devices is
+>> missing. Add it. If io error is from replacement, error this device
+>> directly. If io error is from other device, just set badblocks for
+>> replacement.
+>>
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>>   drivers/md/raid10.c | 10 ++++++++--
+>>   1 file changed, 8 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 5105273f60e9..6d9025089455 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -2551,7 +2551,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+>>
+>>          while (sectors) {
+>>                  int s = sectors;
+>> -               struct md_rdev *rdev;
+>> +               struct md_rdev *rdev, *repl;
+>>                  sector_t addr;
+>>                  int ok;
+>>
+>> @@ -2559,6 +2559,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+>>                          s = PAGE_SIZE >> 9;
+>>
+>>                  rdev = conf->mirrors[dr].rdev;
+>> +               repl = conf->mirrors[dw].replacement;
+>>                  addr = r10_bio->devs[0].addr + sect,
+>>                  ok = sync_page_io(rdev,
+>>                                    addr,
+>> @@ -2580,6 +2581,9 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+>>                                          set_bit(MD_RECOVERY_NEEDED,
+>>                                                  &rdev->mddev->recovery);
+>>                          }
+>> +                       if (repl && !sync_page_io(repl, addr, s << 9,
+>> +                           pages[idx], REQ_OP_WRITE, false))
+>> +                               md_error(mddev, repl);
+>>                  }
+>>                  if (!ok) {
+>>                          /* We don't worry if we cannot set a bad block -
+>> @@ -2592,7 +2596,9 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
+>>                                  /* need bad block on destination too */
+>>                                  rdev = conf->mirrors[dw].rdev;
+>>                                  addr = r10_bio->devs[1].addr + sect;
+>> -                               if (!rdev_set_badblocks(rdev, addr, s, 0)) {
+>> +                               if (!rdev_set_badblocks(rdev, addr, s, 0) ||
+>> +                                   (repl &&
+>> +                                   !rdev_set_badblocks(repl, addr, s, 0))) {
+> 
+> Do we really want this in the if () statement? Shall we always set
+> badblock on both rdev and repl?
 
-Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
----
- drivers/md/raid1.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+I think this is wrong to set repl badblocks inside this, because if
+setting badblocks for rdev failed, repl is still not handled.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 6c54786067b4..43a9c095f94d 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1240,20 +1240,20 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
- 		rcu_read_unlock();
- 	}
- 
--	/*
--	 * Still need barrier for READ in case that whole
--	 * array is frozen.
--	 */
--	if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
--				bio->bi_opf & REQ_NOWAIT)) {
--		bio_wouldblock_error(bio);
--		return;
--	}
--
--	if (!r1_bio)
-+	if (!r1_bio) {
-+		/*
-+		 * Still need barrier for READ in case that whole
-+		 * array is frozen.
-+		 */
-+		if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
-+					bio->bi_opf & REQ_NOWAIT)) {
-+			bio_wouldblock_error(bio);
-+			return;
-+		}
- 		r1_bio = alloc_r1bio(mddev, bio);
--	else
-+	} else
- 		init_r1bio(r1_bio, mddev, bio);
-+
- 	r1_bio->sectors = max_read_sectors;
- 
- 	/*
-@@ -2527,7 +2527,6 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
- 	}
- 
- 	rdev_dec_pending(rdev, conf->mddev);
--	allow_barrier(conf, r1_bio->sector);
- 	bio = r1_bio->master_bio;
- 
- 	/* Reuse the old r1_bio so that the IO_BLOCKED settings are preserved */
--- 
-2.40.1
+By the way, I think it's better to at least try to read from all
+possible copies before setting badblocks for repl.
+
+Thanks,
+Kuai
+> 
+> Thanks,
+> Song
+> 
+>>                                          /* just abort the recovery */
+>>                                          pr_notice("md/raid10:%s: recovery aborted due to read error\n",
+>>                                                    mdname(mddev));
+>> --
+>> 2.39.2
+>>
+> .
+> 
 
