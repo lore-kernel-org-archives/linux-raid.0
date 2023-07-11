@@ -2,128 +2,124 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34BA2EB64D9
-	for <linux-raid@archiver.kernel.org>; Tue, 11 Jul 2023 00:40:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5670BEB64DD
+	for <linux-raid@archiver.kernel.org>; Tue, 11 Jul 2023 12:38:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229538AbjGKAkW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 10 Jul 2023 20:40:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39524 "EHLO
+        id S232530AbjGKMiw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 11 Jul 2023 08:38:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbjGKAkU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Jul 2023 20:40:20 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0E511AC
-        for <linux-raid@vger.kernel.org>; Mon, 10 Jul 2023 17:39:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689035974;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=o6HpwZnfr49cquFGvcuFiLt6/jJy1ahhoV//DTpoAHs=;
-        b=UDZRsjDTroJV4Pt9lC+IHnGlZVdbAgefbu7R9AppILfiIRmdVjhBNDE6iVL8iRF4FDw1N+
-        +TQ4X6Z27p0l5xnXuDIYXu8XyN730CFaWLlJsRiniYvrMN/hl1AqwouVA9r2MCAx5kj8ch
-        0+NdJGPrMnFKr9lx3v4S+1H3yv4RbG8=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-515-48iJi2zaMZS5rOwKAvUx0w-1; Mon, 10 Jul 2023 20:39:33 -0400
-X-MC-Unique: 48iJi2zaMZS5rOwKAvUx0w-1
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-682a4f1253aso8532262b3a.0
-        for <linux-raid@vger.kernel.org>; Mon, 10 Jul 2023 17:39:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689035972; x=1691627972;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from:subject
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=o6HpwZnfr49cquFGvcuFiLt6/jJy1ahhoV//DTpoAHs=;
-        b=MsEWj9di06BgOEf03YfPPM31KCTzCZmxqSlZ26Mz16mIVxCqj+68YvltuFmPUHAv7m
-         StlQFkP2pUF0q+4NoEpzUFaVnP5uszW51KbU198n//wbIG9YRoubVoQhb589jahobBA1
-         8aPPUCrj99MZHQmVHbPcmnmV/C/eU6g/zD98tZ7Yx7jJl9pkD/CcVh375cz6PPDI+p1M
-         3zApACndZjELIv3IuJOJENoN5ZOC3kJVVG6ubAVd6ycOLQuTvcgtmmMyJlwnr8pEpOr7
-         ctmMx5mxiOw2C7eRr8Jqp/5486USxRwAnMxTjqx/3nxd5oczVV1O2Hjp9HpX6VP87MYA
-         u0fA==
-X-Gm-Message-State: ABy/qLaeS6CPVEnISxSWzYFYKPMhmXODOEkuSbQedNZvQL53a3GTPc07
-        +N1mxJ2IyC8pVJZMOEIxdazK49SI+ca7kMosAju7Mosp2CKW++Vppzv2nE2ryiIT0Lp+ClVU5RR
-        7zNZb1BLF/Syg8is8LtXjIQ==
-X-Received: by 2002:a05:6a20:7294:b0:12c:1183:edb9 with SMTP id o20-20020a056a20729400b0012c1183edb9mr20522816pzk.3.1689035972443;
-        Mon, 10 Jul 2023 17:39:32 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlHr3KlTX9TeFnhToT2iCdd6B04WLLt+2XWLU6h2d230zcbyvTJpL8qbB/mGYSI2SCjaWmonzg==
-X-Received: by 2002:a05:6a20:7294:b0:12c:1183:edb9 with SMTP id o20-20020a056a20729400b0012c1183edb9mr20522802pzk.3.1689035972106;
-        Mon, 10 Jul 2023 17:39:32 -0700 (PDT)
-Received: from [10.72.12.51] ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id x22-20020aa793b6000000b006826c9e4397sm390986pff.48.2023.07.10.17.39.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 10 Jul 2023 17:39:31 -0700 (PDT)
-Message-ID: <1ad13b8c-7601-bbee-3197-cdfcd87173d6@redhat.com>
-Date:   Tue, 11 Jul 2023 08:39:27 +0800
+        with ESMTP id S232512AbjGKMio (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 Jul 2023 08:38:44 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF05D199F
+        for <linux-raid@vger.kernel.org>; Tue, 11 Jul 2023 05:38:20 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4R0gPl710Nz4f3pJY
+        for <linux-raid@vger.kernel.org>; Tue, 11 Jul 2023 20:37:47 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKscTa1keuHnNg--.19412S3;
+        Tue, 11 Jul 2023 20:37:48 +0800 (CST)
+Subject: Re: [PATCH v2 3/3] md/raid1: keep holding the barrier in
+ handle_read_error()
+To:     Xueshi Hu <xueshi.hu@smartx.com>, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230709102956.1716708-1-hubachelar@gmail.com>
+ <20230709102956.1716708-4-hubachelar@gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <8fef53f5-257f-ca0a-b8c5-b61d2db96f2b@huaweicloud.com>
+Date:   Tue, 11 Jul 2023 20:37:48 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: The read data is wrong from raid5 when recovery happens
-From:   Xiao Ni <xni@redhat.com>
-To:     Song Liu <song@kernel.org>
-Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>
-References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
- <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev>
- <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
- <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev>
- <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
- <20230526111312.000065f2@linux.intel.com>
- <CAPhsuW4XKYDsEJsbJJX7mDdq_hhF1D8YLN5oyBi746EUtYVv8A@mail.gmail.com>
- <CALTww29YU+ZtbJanzB0buFfofDMv2C68EL2C_Ocr375amCAh+w@mail.gmail.com>
-In-Reply-To: <CALTww29YU+ZtbJanzB0buFfofDMv2C68EL2C_Ocr375amCAh+w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20230709102956.1716708-4-hubachelar@gmail.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAHuKscTa1keuHnNg--.19412S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr17JrW5Gw18GryUZw1UKFg_yoW8Ar1kpw
+        srCFZ3Zr9rG34a93W3AFWDuF9Y9wsYgFW8ArWxAw1I9rnFqr90kFyDGr9Ygr98urWrG347
+        X3Z0k3srG3ZxtFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+        1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1QVy3UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi,
 
-在 2023/5/27 上午8:56, Xiao Ni 写道:
-> Hi all
->
-> The attachment is the scripts.
->
-> 1. It needs to modify the member disks and raid name in prepare_rebuild_env.sh
-> 2. It needs to modify the member disks and raid name in 01-test.sh
-> 3. Then run 01-test.sh directly
->
+�� 2023/07/09 18:29, Xueshi Hu д��:
+> From: Xueshi Hu <xueshi.hu@smartx.com>
+> 
+> Raid reshape changes the r1conf::raid_disks and mempool. Keep holding the
+> barrier in handle_read_error() to avoid raid reshape.
+> 
+> Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
+> ---
+>   drivers/md/raid1.c | 25 ++++++++++++-------------
+>   1 file changed, 12 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 6c54786067b4..43a9c095f94d 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1240,20 +1240,20 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+>   		rcu_read_unlock();
+>   	}
+>   
+> -	/*
+> -	 * Still need barrier for READ in case that whole
+> -	 * array is frozen.
+> -	 */
+> -	if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+> -				bio->bi_opf & REQ_NOWAIT)) {
+> -		bio_wouldblock_error(bio);
+> -		return;
+> -	}
+> -
+> -	if (!r1_bio)
+> +	if (!r1_bio) {
+> +		/*
+> +		 * Still need barrier for READ in case that whole
+> +		 * array is frozen.
+> +		 */
+> +		if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+> +					bio->bi_opf & REQ_NOWAIT)) {
+> +			bio_wouldblock_error(bio);
+> +			return;
+> +		}
+>   		r1_bio = alloc_r1bio(mddev, bio);
+> -	else
+> +	} else
+>   		init_r1bio(r1_bio, mddev, bio);
+> +
+>   	r1_bio->sectors = max_read_sectors;
+>   
+>   	/*
+> @@ -2527,7 +2527,6 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+>   	}
+>   
+>   	rdev_dec_pending(rdev, conf->mddev);
+> -	allow_barrier(conf, r1_bio->sector);
 
-Hi all
+I think it's better to just move allow_barrier() to after
+raid1_read_request().
 
-I have tried with a work around patch and can confirm this problem can't 
-be reproduced again with this patch.
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 4cdb35e54251..96d7f8048876 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6190,7 +6190,8 @@ static bool raid5_make_request(struct mddev 
-*mddev, struct bio * bi)
-                         md_write_end(mddev);
-                 return true;
-         }
--       md_account_bio(mddev, &bi);
-+       if (rw == WRITE)
-+               md_account_bio(mddev, &bi);
-
-         /*
-          * Lets start with the stripe with the lowest chunk offset in 
-the first
-
-
-This patch only disables the accounting for non-align read requests. I 
-know it's not a good one. But the data corruption is more
-
-serious than io accouting.
-
-Regards
-
-Xiao
+Thanks,
+Kuai
+>   	bio = r1_bio->master_bio;
+>   
+>   	/* Reuse the old r1_bio so that the IO_BLOCKED settings are preserved */
+> 
 
