@@ -2,143 +2,128 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BC14EB64D9
-	for <linux-raid@archiver.kernel.org>; Mon, 10 Jul 2023 13:00:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34BA2EB64D9
+	for <linux-raid@archiver.kernel.org>; Tue, 11 Jul 2023 00:40:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230234AbjGJNAl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 10 Jul 2023 09:00:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47314 "EHLO
+        id S229538AbjGKAkW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 10 Jul 2023 20:40:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbjGJNAk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Jul 2023 09:00:40 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E450AA8;
-        Mon, 10 Jul 2023 06:00:37 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4R03yS1xDCz4f4XSD;
-        Mon, 10 Jul 2023 21:00:32 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCXaK_vAKxkCTebNg--.58698S3;
-        Mon, 10 Jul 2023 21:00:33 +0800 (CST)
-Subject: Re: [PATCH 2/2] md/raid10: handle replacement devices in
- fix_recovery_read_error
-To:     Song Liu <song@kernel.org>, linan666@huaweicloud.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230627034127.4000994-1-linan666@huaweicloud.com>
- <20230627034127.4000994-3-linan666@huaweicloud.com>
- <CAPhsuW7+bWe9YDMnjRgb657Fz7Vs_4wnBcU9jVSXuofKhaO38Q@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <62e6e2bc-4fd2-0ee9-6215-609778e0289a@huaweicloud.com>
-Date:   Mon, 10 Jul 2023 21:00:31 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229512AbjGKAkU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 10 Jul 2023 20:40:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0E511AC
+        for <linux-raid@vger.kernel.org>; Mon, 10 Jul 2023 17:39:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689035974;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=o6HpwZnfr49cquFGvcuFiLt6/jJy1ahhoV//DTpoAHs=;
+        b=UDZRsjDTroJV4Pt9lC+IHnGlZVdbAgefbu7R9AppILfiIRmdVjhBNDE6iVL8iRF4FDw1N+
+        +TQ4X6Z27p0l5xnXuDIYXu8XyN730CFaWLlJsRiniYvrMN/hl1AqwouVA9r2MCAx5kj8ch
+        0+NdJGPrMnFKr9lx3v4S+1H3yv4RbG8=
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
+ [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-515-48iJi2zaMZS5rOwKAvUx0w-1; Mon, 10 Jul 2023 20:39:33 -0400
+X-MC-Unique: 48iJi2zaMZS5rOwKAvUx0w-1
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-682a4f1253aso8532262b3a.0
+        for <linux-raid@vger.kernel.org>; Mon, 10 Jul 2023 17:39:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689035972; x=1691627972;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=o6HpwZnfr49cquFGvcuFiLt6/jJy1ahhoV//DTpoAHs=;
+        b=MsEWj9di06BgOEf03YfPPM31KCTzCZmxqSlZ26Mz16mIVxCqj+68YvltuFmPUHAv7m
+         StlQFkP2pUF0q+4NoEpzUFaVnP5uszW51KbU198n//wbIG9YRoubVoQhb589jahobBA1
+         8aPPUCrj99MZHQmVHbPcmnmV/C/eU6g/zD98tZ7Yx7jJl9pkD/CcVh375cz6PPDI+p1M
+         3zApACndZjELIv3IuJOJENoN5ZOC3kJVVG6ubAVd6ycOLQuTvcgtmmMyJlwnr8pEpOr7
+         ctmMx5mxiOw2C7eRr8Jqp/5486USxRwAnMxTjqx/3nxd5oczVV1O2Hjp9HpX6VP87MYA
+         u0fA==
+X-Gm-Message-State: ABy/qLaeS6CPVEnISxSWzYFYKPMhmXODOEkuSbQedNZvQL53a3GTPc07
+        +N1mxJ2IyC8pVJZMOEIxdazK49SI+ca7kMosAju7Mosp2CKW++Vppzv2nE2ryiIT0Lp+ClVU5RR
+        7zNZb1BLF/Syg8is8LtXjIQ==
+X-Received: by 2002:a05:6a20:7294:b0:12c:1183:edb9 with SMTP id o20-20020a056a20729400b0012c1183edb9mr20522816pzk.3.1689035972443;
+        Mon, 10 Jul 2023 17:39:32 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlHr3KlTX9TeFnhToT2iCdd6B04WLLt+2XWLU6h2d230zcbyvTJpL8qbB/mGYSI2SCjaWmonzg==
+X-Received: by 2002:a05:6a20:7294:b0:12c:1183:edb9 with SMTP id o20-20020a056a20729400b0012c1183edb9mr20522802pzk.3.1689035972106;
+        Mon, 10 Jul 2023 17:39:32 -0700 (PDT)
+Received: from [10.72.12.51] ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id x22-20020aa793b6000000b006826c9e4397sm390986pff.48.2023.07.10.17.39.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 10 Jul 2023 17:39:31 -0700 (PDT)
+Message-ID: <1ad13b8c-7601-bbee-3197-cdfcd87173d6@redhat.com>
+Date:   Tue, 11 Jul 2023 08:39:27 +0800
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW7+bWe9YDMnjRgb657Fz7Vs_4wnBcU9jVSXuofKhaO38Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.12.0
+Subject: Re: The read data is wrong from raid5 when recovery happens
+From:   Xiao Ni <xni@redhat.com>
+To:     Song Liu <song@kernel.org>
+Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>
+References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
+ <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev>
+ <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
+ <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev>
+ <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
+ <20230526111312.000065f2@linux.intel.com>
+ <CAPhsuW4XKYDsEJsbJJX7mDdq_hhF1D8YLN5oyBi746EUtYVv8A@mail.gmail.com>
+ <CALTww29YU+ZtbJanzB0buFfofDMv2C68EL2C_Ocr375amCAh+w@mail.gmail.com>
+In-Reply-To: <CALTww29YU+ZtbJanzB0buFfofDMv2C68EL2C_Ocr375amCAh+w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCXaK_vAKxkCTebNg--.58698S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cr17tw4rAFW3GFW3AF1xAFb_yoW5Jryfpw
-        1DG3Z0kryDJa4UZF1DZayDAasYkws3trW5Krn8J3W2k3saqrZxKFW7WrW5Cry8uF1a9F4Y
-        qan8WrW3ua4DKaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
-        UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
 
-在 2023/07/07 16:33, Song Liu 写道:
-> On Tue, Jun 27, 2023 at 11:42 AM <linan666@huaweicloud.com> wrote:
->>
->> From: Li Nan <linan122@huawei.com>
->>
->> In fix_recovery_read_error(), the handling of replacement devices is
->> missing. Add it. If io error is from replacement, error this device
->> directly. If io error is from other device, just set badblocks for
->> replacement.
->>
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>   drivers/md/raid10.c | 10 ++++++++--
->>   1 file changed, 8 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index 5105273f60e9..6d9025089455 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -2551,7 +2551,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
->>
->>          while (sectors) {
->>                  int s = sectors;
->> -               struct md_rdev *rdev;
->> +               struct md_rdev *rdev, *repl;
->>                  sector_t addr;
->>                  int ok;
->>
->> @@ -2559,6 +2559,7 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
->>                          s = PAGE_SIZE >> 9;
->>
->>                  rdev = conf->mirrors[dr].rdev;
->> +               repl = conf->mirrors[dw].replacement;
->>                  addr = r10_bio->devs[0].addr + sect,
->>                  ok = sync_page_io(rdev,
->>                                    addr,
->> @@ -2580,6 +2581,9 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
->>                                          set_bit(MD_RECOVERY_NEEDED,
->>                                                  &rdev->mddev->recovery);
->>                          }
->> +                       if (repl && !sync_page_io(repl, addr, s << 9,
->> +                           pages[idx], REQ_OP_WRITE, false))
->> +                               md_error(mddev, repl);
->>                  }
->>                  if (!ok) {
->>                          /* We don't worry if we cannot set a bad block -
->> @@ -2592,7 +2596,9 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
->>                                  /* need bad block on destination too */
->>                                  rdev = conf->mirrors[dw].rdev;
->>                                  addr = r10_bio->devs[1].addr + sect;
->> -                               if (!rdev_set_badblocks(rdev, addr, s, 0)) {
->> +                               if (!rdev_set_badblocks(rdev, addr, s, 0) ||
->> +                                   (repl &&
->> +                                   !rdev_set_badblocks(repl, addr, s, 0))) {
-> 
-> Do we really want this in the if () statement? Shall we always set
-> badblock on both rdev and repl?
+在 2023/5/27 上午8:56, Xiao Ni 写道:
+> Hi all
+>
+> The attachment is the scripts.
+>
+> 1. It needs to modify the member disks and raid name in prepare_rebuild_env.sh
+> 2. It needs to modify the member disks and raid name in 01-test.sh
+> 3. Then run 01-test.sh directly
+>
 
-I think this is wrong to set repl badblocks inside this, because if
-setting badblocks for rdev failed, repl is still not handled.
+Hi all
 
-By the way, I think it's better to at least try to read from all
-possible copies before setting badblocks for repl.
+I have tried with a work around patch and can confirm this problem can't 
+be reproduced again with this patch.
 
-Thanks,
-Kuai
-> 
-> Thanks,
-> Song
-> 
->>                                          /* just abort the recovery */
->>                                          pr_notice("md/raid10:%s: recovery aborted due to read error\n",
->>                                                    mdname(mddev));
->> --
->> 2.39.2
->>
-> .
-> 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4cdb35e54251..96d7f8048876 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6190,7 +6190,8 @@ static bool raid5_make_request(struct mddev 
+*mddev, struct bio * bi)
+                         md_write_end(mddev);
+                 return true;
+         }
+-       md_account_bio(mddev, &bi);
++       if (rw == WRITE)
++               md_account_bio(mddev, &bi);
+
+         /*
+          * Lets start with the stripe with the lowest chunk offset in 
+the first
+
+
+This patch only disables the accounting for non-align read requests. I 
+know it's not a good one. But the data corruption is more
+
+serious than io accouting.
+
+Regards
+
+Xiao
 
