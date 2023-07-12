@@ -2,91 +2,58 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64DE7EB64DA
-	for <linux-raid@archiver.kernel.org>; Wed, 12 Jul 2023 16:49:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52672EB64DA
+	for <linux-raid@archiver.kernel.org>; Wed, 12 Jul 2023 16:50:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233278AbjGLQtf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 Jul 2023 12:49:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48496 "EHLO
+        id S233260AbjGLQu0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Jul 2023 12:50:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229636AbjGLQtd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Jul 2023 12:49:33 -0400
-Received: from out203-205-221-209.mail.qq.com (out203-205-221-209.mail.qq.com [203.205.221.209])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 553931994;
-        Wed, 12 Jul 2023 09:49:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1689180568;
-        bh=TN+gHkELlE+b7fR0rsA8ykrqd1Qxd9ihZcJeUSe8JKc=;
-        h=From:To:Cc:Subject:Date;
-        b=ozT6paZYQObN7vfys5Y0IfELpbYRfsM5bjx+QwU/Qy7jE74sFmDefv/gTudUR2UVl
-         lYKb7M4s7OsyoN945BIAGCx+bhH8HJ8iKUWT0FTXAa9UA3jcOmje4OvLxIFT45gz/T
-         C1fbUxTkLi2uJ/G4xJlV8TM++J/AbB6287I95MAU=
-Received: from KernelDevBox.byted.org ([180.184.103.200])
-        by newxmesmtplogicsvrszc5-0.qq.com (NewEsmtp) with SMTP
-        id B8689CAB; Thu, 13 Jul 2023 00:46:06 +0800
-X-QQ-mid: xmsmtpt1689180366tk232dq7r
-Message-ID: <tencent_E2C71605D88087940237AA9A44CC8D436D06@qq.com>
-X-QQ-XMAILINFO: OdIVOfqOaVcrAHz5k0LvYgpFo53uVrs3ixagjYrz1delAqK0lUOiGT7kYeLTw5
-         vwsPOASdUqbt5Op4YVNUFvBGi81Oi9ornl5eYajOYw7Yfw2Xm4KNgtmhrCY6d3M2hVxIfDwHb8XW
-         tNtRkbodUq3NsYvpeep1uwtO3xu1KPCHtKc8cY54+woRimhn/od0OqA+L2LKjNkAi3Wm9MpoFo0X
-         VydP7sMl45lSOaE9zxcnVN15jFKYVoMlMKyBPi3ZS7q451HPutjru0hqZF+pyBlQ8f6Ux1cbCJBZ
-         8EZHUO/4NqC8G8pUMndEAUVjRhIWzyvoQa0Ms1ddjThNtWcPBs+rHKG2q3qQUEq7Tk26XUG1NQkD
-         Ltd1roAH3wMdTU8T14BNts+9Q2bBrzI1LNHh3Bk2jkqv7vcq9vRL/WMeBLoTfO4CtZVYciYh82nv
-         vOu1s8yny1dlNOBkI2XS+KT2SHDprA2yo0W5bbsRg/MEVNhva79Yb7k7zzCsqSJ+bQvb+yPgNHIC
-         J4vpRq2qbK+966Ogg0rAN/NkKeQGCchNMvRHu6pZwLMD2gmKdn0/NHqRNi2cNm9XB5r0UR81QRq1
-         4jl2BP2LXaOTZ6WScRlEFhgtM5/JIhlxzxItl0vcpNIeJnSpViO8yIXG78AjNQIILvBUO1YjPmSH
-         DwmsZDnsQrvtrmusl1COI7BoUnm3aAXY/SYRUg2R9HkEArnyiuKAwIfTPn1sZfhTmYDaRmoAqysM
-         5WBhXX8evrxPQdoeiogt/4Ps2m5u7P1pZpsjn/GAkGqcxovSaYQNf5mF45W84kHTzQcqQj8ywp93
-         8bcvEDGNsV7LJDUcYd05ytWcTTTTDaUNxwa6l00ftGnvH8qL0TVhqD1hAbydDNM4qRdngB+c8sba
-         RO6pfIBVLLwJ2N9z+yvifFaKK+JVd4FH5JqIX2LzF3Kh1wwl8279wtI+B/jfTIMHx7ZC5PSzhM4n
-         2B+Rq0oFZHnGTEnl648gAruKmPGCbuNZYxT8iYq0w=
-X-QQ-XMRINFO: MSVp+SPm3vtS1Vd6Y4Mggwc=
-From:   Zhang Shurong <zhang_shurong@foxmail.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zhang Shurong <zhang_shurong@foxmail.com>
-Subject: [PATCH] md: fix potential OOB in multipath_remove_disk()
-Date:   Thu, 13 Jul 2023 00:46:05 +0800
-X-OQ-MSGID: <20230712164605.3902883-1-zhang_shurong@foxmail.com>
-X-Mailer: git-send-email 2.30.2
+        with ESMTP id S232457AbjGLQuZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Jul 2023 12:50:25 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C6DE10C7;
+        Wed, 12 Jul 2023 09:50:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=8saf6uV1XIVQipbIWGpCaD1a2vCHrR1UEMmL0zruzHc=; b=EMwk0Z3VA/RmH/RXU65HyyFpSK
+        759eq9vUP+uXU6TDEJpCv+lj2WeXVLfAvX0a9hZ+MoP02iybbXgyLOij1IcwD6Ox+jFNqkD+sRJ/i
+        KTeYlrxWqS0iDcwup1ydbgu7xi8Ajhz6t6tXq14yoqL0UOiA1vvpGi9bbIhtnaogN8LK6HQbe52YS
+        jhhsuGmKjSbcT6hYGXXXAdZUrs6ZgMutW/V3IB9U9Br99CYqragVWLFNKyRznt4As9lhxQo45S1bZ
+        Pgzcp4KsOouLXhnO1eoAjmXXXxSOEps0UP5IKvrGpuEmUWyGlhics0+n3dPziV00Wxf008KtMdpRT
+        nbCMl1bA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qJd2h-000eJe-1B;
+        Wed, 12 Jul 2023 16:50:19 +0000
+Date:   Wed, 12 Jul 2023 09:50:19 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Zhang Shurong <zhang_shurong@foxmail.com>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] md: fix potential OOB in multipath_remove_disk()
+Message-ID: <ZK7Zy2U86znezl+a@infradead.org>
+References: <tencent_E2C71605D88087940237AA9A44CC8D436D06@qq.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <tencent_E2C71605D88087940237AA9A44CC8D436D06@qq.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-If rddev->raid_disk is greater than mddev->raid_disks, there will be
-an out-of-bounds in multipath_remove_disk. We have already found
-similar reports as follows:
+On Thu, Jul 13, 2023 at 12:46:05AM +0800, Zhang Shurong wrote:
+> If rddev->raid_disk is greater than mddev->raid_disks, there will be
+> an out-of-bounds in multipath_remove_disk. We have already found
+> similar reports as follows:
+> 
+> 1) commit d17f744e883b ("md-raid10: fix KASAN warning")
+> 2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk")
+> 
+> Fix this bug by checking whether the "number" variable is
+> valid.
 
-1) commit d17f744e883b ("md-raid10: fix KASAN warning")
-2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk")
-
-Fix this bug by checking whether the "number" variable is
-valid.
-
-Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
----
- drivers/md/md-multipath.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
-index 92c45be203d7..7b6aadd8c1fb 100644
---- a/drivers/md/md-multipath.c
-+++ b/drivers/md/md-multipath.c
-@@ -245,7 +245,11 @@ static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	struct mpconf *conf = mddev->private;
- 	int err = 0;
- 	int number = rdev->raid_disk;
--	struct multipath_info *p = conf->multipaths + number;
-+	struct multipath_info *p;
-+
-+	if (unlikely(number >= mddev->raid_disks))
-+		return 0;
-+	p = conf->multipaths + number;
- 
- 	print_multipath_conf(conf);
- 
--- 
-2.30.2
-
+I think it might just be time to finally dropped the deprecated md
+multipath code instead..
