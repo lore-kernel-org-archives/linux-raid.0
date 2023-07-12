@@ -2,126 +2,91 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18713C04FE0
-	for <linux-raid@archiver.kernel.org>; Wed, 12 Jul 2023 16:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64DE7EB64DA
+	for <linux-raid@archiver.kernel.org>; Wed, 12 Jul 2023 16:49:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233276AbjGLQGy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 Jul 2023 12:06:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43582 "EHLO
+        id S233278AbjGLQtf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Jul 2023 12:49:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233133AbjGLQGu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Jul 2023 12:06:50 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DB8B1BF5
-        for <linux-raid@vger.kernel.org>; Wed, 12 Jul 2023 09:06:48 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-4f4b2bc1565so11508991e87.2
-        for <linux-raid@vger.kernel.org>; Wed, 12 Jul 2023 09:06:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1689178006; x=1691770006;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8X6ArMXh62A5UxRR3ZN+q1CvObhoeb8ltfmXU1xj+zw=;
-        b=V0Mwyzpfv5NHo344FebMkemb4OkDhqesSJzk3oLJrC1sXingJzi/DqoHJPX3cM7/kU
-         /daZbGumusx7p3ETz9bL+dV7+a249DzrdJ5ucaxUqFs1cH4q4UNK1aBbCP0kRMVezgvK
-         Gb0u18D1omT5qk875/bvJSIuyWWXlLKu5WnA0OT929rTcOY7rHqZVsWOvIcdQTq+Q4TI
-         Xty8IQiQ2uEFjkBqRHhjaYUeIIjdk3TlKuW6ZBNL29/kZI8LKdOXvAAi+FiRNxSMUXsG
-         92h/diWQ5jGfG/Pc/9JTOLcLZ2bS8Hyd3sIfxIs/rFITeR6YjIQmonhcUevYE5m/zN7s
-         SmPw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689178006; x=1691770006;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=8X6ArMXh62A5UxRR3ZN+q1CvObhoeb8ltfmXU1xj+zw=;
-        b=XiRe350cPtW26lyVppnonZWctyqtFPmwbUBl2Z33nXGr2PatZKCCU3Mv285bBpR+eV
-         h+DRcGDNtVUA89CZUjOkHu+ysRfXTsdRkOPvnHqyZJ5HNlM6JwwvN3FSkGwjxOh5ZBbE
-         6GPTw0hIZHObCF8c7ZLv63H0dUGj3tCZgVTG8ew8t189elpOMuA6GWRVi3a4b/4kHLZy
-         RYRbFz2xEegS+zL7h0PB8WhnBe5GHJ9YLvocREjyWmekfjJzwfTWKELIS2OjlMFblgvw
-         aCWtM1hD4U8y/LH8umPA5hliBc4olxnbgUbtAgq8+eIpLWbo5vDK57N368L7H9s0BgP+
-         kBHw==
-X-Gm-Message-State: ABy/qLZPhAkEMLhKNOIM6r3zQQfjdESMeGx5M/MOnrGRRGI3hyJd1y/n
-        eROeq+psWLoxigcETreRV7X2J3wUVi9iHgQOjbDhgA==
-X-Google-Smtp-Source: APBJJlHjPtNIqZNhhKZT3JSG1orBAozCwd3+TwwvFjulJuToD7D5iIrA7grwKZQU8Z67qc0UJ0oDxWof6WbkdfMRi3A=
-X-Received: by 2002:ac2:5b1d:0:b0:4fb:7a90:1abe with SMTP id
- v29-20020ac25b1d000000b004fb7a901abemr15797051lfn.49.1689178006211; Wed, 12
- Jul 2023 09:06:46 -0700 (PDT)
+        with ESMTP id S229636AbjGLQtd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Jul 2023 12:49:33 -0400
+Received: from out203-205-221-209.mail.qq.com (out203-205-221-209.mail.qq.com [203.205.221.209])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 553931994;
+        Wed, 12 Jul 2023 09:49:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+        s=s201512; t=1689180568;
+        bh=TN+gHkELlE+b7fR0rsA8ykrqd1Qxd9ihZcJeUSe8JKc=;
+        h=From:To:Cc:Subject:Date;
+        b=ozT6paZYQObN7vfys5Y0IfELpbYRfsM5bjx+QwU/Qy7jE74sFmDefv/gTudUR2UVl
+         lYKb7M4s7OsyoN945BIAGCx+bhH8HJ8iKUWT0FTXAa9UA3jcOmje4OvLxIFT45gz/T
+         C1fbUxTkLi2uJ/G4xJlV8TM++J/AbB6287I95MAU=
+Received: from KernelDevBox.byted.org ([180.184.103.200])
+        by newxmesmtplogicsvrszc5-0.qq.com (NewEsmtp) with SMTP
+        id B8689CAB; Thu, 13 Jul 2023 00:46:06 +0800
+X-QQ-mid: xmsmtpt1689180366tk232dq7r
+Message-ID: <tencent_E2C71605D88087940237AA9A44CC8D436D06@qq.com>
+X-QQ-XMAILINFO: OdIVOfqOaVcrAHz5k0LvYgpFo53uVrs3ixagjYrz1delAqK0lUOiGT7kYeLTw5
+         vwsPOASdUqbt5Op4YVNUFvBGi81Oi9ornl5eYajOYw7Yfw2Xm4KNgtmhrCY6d3M2hVxIfDwHb8XW
+         tNtRkbodUq3NsYvpeep1uwtO3xu1KPCHtKc8cY54+woRimhn/od0OqA+L2LKjNkAi3Wm9MpoFo0X
+         VydP7sMl45lSOaE9zxcnVN15jFKYVoMlMKyBPi3ZS7q451HPutjru0hqZF+pyBlQ8f6Ux1cbCJBZ
+         8EZHUO/4NqC8G8pUMndEAUVjRhIWzyvoQa0Ms1ddjThNtWcPBs+rHKG2q3qQUEq7Tk26XUG1NQkD
+         Ltd1roAH3wMdTU8T14BNts+9Q2bBrzI1LNHh3Bk2jkqv7vcq9vRL/WMeBLoTfO4CtZVYciYh82nv
+         vOu1s8yny1dlNOBkI2XS+KT2SHDprA2yo0W5bbsRg/MEVNhva79Yb7k7zzCsqSJ+bQvb+yPgNHIC
+         J4vpRq2qbK+966Ogg0rAN/NkKeQGCchNMvRHu6pZwLMD2gmKdn0/NHqRNi2cNm9XB5r0UR81QRq1
+         4jl2BP2LXaOTZ6WScRlEFhgtM5/JIhlxzxItl0vcpNIeJnSpViO8yIXG78AjNQIILvBUO1YjPmSH
+         DwmsZDnsQrvtrmusl1COI7BoUnm3aAXY/SYRUg2R9HkEArnyiuKAwIfTPn1sZfhTmYDaRmoAqysM
+         5WBhXX8evrxPQdoeiogt/4Ps2m5u7P1pZpsjn/GAkGqcxovSaYQNf5mF45W84kHTzQcqQj8ywp93
+         8bcvEDGNsV7LJDUcYd05ytWcTTTTDaUNxwa6l00ftGnvH8qL0TVhqD1hAbydDNM4qRdngB+c8sba
+         RO6pfIBVLLwJ2N9z+yvifFaKK+JVd4FH5JqIX2LzF3Kh1wwl8279wtI+B/jfTIMHx7ZC5PSzhM4n
+         2B+Rq0oFZHnGTEnl648gAruKmPGCbuNZYxT8iYq0w=
+X-QQ-XMRINFO: MSVp+SPm3vtS1Vd6Y4Mggwc=
+From:   Zhang Shurong <zhang_shurong@foxmail.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Zhang Shurong <zhang_shurong@foxmail.com>
+Subject: [PATCH] md: fix potential OOB in multipath_remove_disk()
+Date:   Thu, 13 Jul 2023 00:46:05 +0800
+X-OQ-MSGID: <20230712164605.3902883-1-zhang_shurong@foxmail.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-References: <20230629165206.383-1-jack@suse.cz> <20230704122224.16257-1-jack@suse.cz>
- <ZKbgAG5OoHVyUKOG@infradead.org>
-In-Reply-To: <ZKbgAG5OoHVyUKOG@infradead.org>
-From:   Haris Iqbal <haris.iqbal@ionos.com>
-Date:   Wed, 12 Jul 2023 18:06:35 +0200
-Message-ID: <CAJpMwyiUcw+mH0sZa8f8UJsaSZ7NSE65s2gZDEia+pASyP_gJQ@mail.gmail.com>
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jul 6, 2023 at 5:38=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
-> wrote:
->
-> On Tue, Jul 04, 2023 at 02:21:28PM +0200, Jan Kara wrote:
-> > Create struct bdev_handle that contains all parameters that need to be
-> > passed to blkdev_put() and provide blkdev_get_handle_* functions that
-> > return this structure instead of plain bdev pointer. This will
-> > eventually allow us to pass one more argument to blkdev_put() without
-> > too much hassle.
->
-> Can we use the opportunity to come up with better names?  blkdev_get_*
-> was always a rather horrible naming convention for something that
-> ends up calling into ->open.
->
-> What about:
->
-> struct bdev_handle *bdev_open_by_dev(dev_t dev, blk_mode_t mode, void *ho=
-lder,
->                 const struct blk_holder_ops *hops);
-> struct bdev_handle *bdev_open_by_path(dev_t dev, blk_mode_t mode,
->                 void *holder, const struct blk_holder_ops *hops);
-> void bdev_release(struct bdev_handle *handle);
+If rddev->raid_disk is greater than mddev->raid_disks, there will be
+an out-of-bounds in multipath_remove_disk. We have already found
+similar reports as follows:
 
-+1 to this.
-Also, if we are removing "handle" from the function, should the name
-of the structure it returns also change? Would something like bdev_ctx
-be better?
+1) commit d17f744e883b ("md-raid10: fix KASAN warning")
+2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk")
 
-(Apologies for the previous non-plaintext email)
+Fix this bug by checking whether the "number" variable is
+valid.
 
->
-> ?
+Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
+---
+ drivers/md/md-multipath.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
+index 92c45be203d7..7b6aadd8c1fb 100644
+--- a/drivers/md/md-multipath.c
++++ b/drivers/md/md-multipath.c
+@@ -245,7 +245,11 @@ static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	struct mpconf *conf = mddev->private;
+ 	int err = 0;
+ 	int number = rdev->raid_disk;
+-	struct multipath_info *p = conf->multipaths + number;
++	struct multipath_info *p;
++
++	if (unlikely(number >= mddev->raid_disks))
++		return 0;
++	p = conf->multipaths + number;
+ 
+ 	print_multipath_conf(conf);
+ 
+-- 
+2.30.2
+
