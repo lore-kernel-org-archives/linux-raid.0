@@ -2,103 +2,126 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ECA3EB64DC
-	for <linux-raid@archiver.kernel.org>; Tue, 11 Jul 2023 12:55:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18713C04FE0
+	for <linux-raid@archiver.kernel.org>; Wed, 12 Jul 2023 16:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230148AbjGKMzK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 11 Jul 2023 08:55:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55436 "EHLO
+        id S233276AbjGLQGy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Jul 2023 12:06:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232286AbjGKMyl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 Jul 2023 08:54:41 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0A8A19A9
-        for <linux-raid@vger.kernel.org>; Tue, 11 Jul 2023 05:54:25 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4R0gN14vSWz4f3m8r
-        for <linux-raid@vger.kernel.org>; Tue, 11 Jul 2023 20:36:17 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKvBTK1kjtDnNg--.19383S3;
-        Tue, 11 Jul 2023 20:36:18 +0800 (CST)
-Subject: Re: [PATCH v2 2/3] md/raid1: free old r1bio before retry write
-To:     Xueshi Hu <xueshi.hu@smartx.com>, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230709102956.1716708-1-hubachelar@gmail.com>
- <20230709102956.1716708-3-hubachelar@gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <9291a33b-d764-5890-ab39-0790cc8a211d@huaweicloud.com>
-Date:   Tue, 11 Jul 2023 20:36:17 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S233133AbjGLQGu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 Jul 2023 12:06:50 -0400
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DB8B1BF5
+        for <linux-raid@vger.kernel.org>; Wed, 12 Jul 2023 09:06:48 -0700 (PDT)
+Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-4f4b2bc1565so11508991e87.2
+        for <linux-raid@vger.kernel.org>; Wed, 12 Jul 2023 09:06:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1689178006; x=1691770006;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8X6ArMXh62A5UxRR3ZN+q1CvObhoeb8ltfmXU1xj+zw=;
+        b=V0Mwyzpfv5NHo344FebMkemb4OkDhqesSJzk3oLJrC1sXingJzi/DqoHJPX3cM7/kU
+         /daZbGumusx7p3ETz9bL+dV7+a249DzrdJ5ucaxUqFs1cH4q4UNK1aBbCP0kRMVezgvK
+         Gb0u18D1omT5qk875/bvJSIuyWWXlLKu5WnA0OT929rTcOY7rHqZVsWOvIcdQTq+Q4TI
+         Xty8IQiQ2uEFjkBqRHhjaYUeIIjdk3TlKuW6ZBNL29/kZI8LKdOXvAAi+FiRNxSMUXsG
+         92h/diWQ5jGfG/Pc/9JTOLcLZ2bS8Hyd3sIfxIs/rFITeR6YjIQmonhcUevYE5m/zN7s
+         SmPw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689178006; x=1691770006;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=8X6ArMXh62A5UxRR3ZN+q1CvObhoeb8ltfmXU1xj+zw=;
+        b=XiRe350cPtW26lyVppnonZWctyqtFPmwbUBl2Z33nXGr2PatZKCCU3Mv285bBpR+eV
+         h+DRcGDNtVUA89CZUjOkHu+ysRfXTsdRkOPvnHqyZJ5HNlM6JwwvN3FSkGwjxOh5ZBbE
+         6GPTw0hIZHObCF8c7ZLv63H0dUGj3tCZgVTG8ew8t189elpOMuA6GWRVi3a4b/4kHLZy
+         RYRbFz2xEegS+zL7h0PB8WhnBe5GHJ9YLvocREjyWmekfjJzwfTWKELIS2OjlMFblgvw
+         aCWtM1hD4U8y/LH8umPA5hliBc4olxnbgUbtAgq8+eIpLWbo5vDK57N368L7H9s0BgP+
+         kBHw==
+X-Gm-Message-State: ABy/qLZPhAkEMLhKNOIM6r3zQQfjdESMeGx5M/MOnrGRRGI3hyJd1y/n
+        eROeq+psWLoxigcETreRV7X2J3wUVi9iHgQOjbDhgA==
+X-Google-Smtp-Source: APBJJlHjPtNIqZNhhKZT3JSG1orBAozCwd3+TwwvFjulJuToD7D5iIrA7grwKZQU8Z67qc0UJ0oDxWof6WbkdfMRi3A=
+X-Received: by 2002:ac2:5b1d:0:b0:4fb:7a90:1abe with SMTP id
+ v29-20020ac25b1d000000b004fb7a901abemr15797051lfn.49.1689178006211; Wed, 12
+ Jul 2023 09:06:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20230709102956.1716708-3-hubachelar@gmail.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKvBTK1kjtDnNg--.19383S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zr17Zr13Ww4kGr4UZFWrKrg_yoW8GF4Dpa
-        1jgFy8urZ8GrWYvF4DAFWUuFyrZw4vqF92krWxGw18ZF12qryq93WUXryYgrn8uFy3CwsF
-        y3Z0k347G3y2vFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-        x7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
-        wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
-        80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0
-        I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
-        k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUrNtxDUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <20230629165206.383-1-jack@suse.cz> <20230704122224.16257-1-jack@suse.cz>
+ <ZKbgAG5OoHVyUKOG@infradead.org>
+In-Reply-To: <ZKbgAG5OoHVyUKOG@infradead.org>
+From:   Haris Iqbal <haris.iqbal@ionos.com>
+Date:   Wed, 12 Jul 2023 18:06:35 +0200
+Message-ID: <CAJpMwyiUcw+mH0sZa8f8UJsaSZ7NSE65s2gZDEia+pASyP_gJQ@mail.gmail.com>
+Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-ÔÚ 2023/07/09 18:29, Xueshi Hu Ð´µÀ:
-> From: Xueshi Hu <xueshi.hu@smartx.com>
-> 
-> allow_barrier() make reshape possible. Raid reshape changes the
-> r1conf::raid_disks and mempool, so free the old r1bio and alloc a new one
-> when retry write.
-> 
-LGTM, feel free to add:
+On Thu, Jul 6, 2023 at 5:38=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
+> wrote:
+>
+> On Tue, Jul 04, 2023 at 02:21:28PM +0200, Jan Kara wrote:
+> > Create struct bdev_handle that contains all parameters that need to be
+> > passed to blkdev_put() and provide blkdev_get_handle_* functions that
+> > return this structure instead of plain bdev pointer. This will
+> > eventually allow us to pass one more argument to blkdev_put() without
+> > too much hassle.
+>
+> Can we use the opportunity to come up with better names?  blkdev_get_*
+> was always a rather horrible naming convention for something that
+> ends up calling into ->open.
+>
+> What about:
+>
+> struct bdev_handle *bdev_open_by_dev(dev_t dev, blk_mode_t mode, void *ho=
+lder,
+>                 const struct blk_holder_ops *hops);
+> struct bdev_handle *bdev_open_by_path(dev_t dev, blk_mode_t mode,
+>                 void *holder, const struct blk_holder_ops *hops);
+> void bdev_release(struct bdev_handle *handle);
 
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-> Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
-> ---
->   drivers/md/raid1.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index ce48cb3af301..6c54786067b4 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1373,6 +1373,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->   		return;
->   	}
->   
-> + retry_write:
->   	r1_bio = alloc_r1bio(mddev, bio);
->   	r1_bio->sectors = max_write_sectors;
->   
-> @@ -1388,7 +1389,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->   	 */
->   
->   	disks = conf->raid_disks * 2;
-> - retry_write:
->   	blocked_rdev = NULL;
->   	rcu_read_lock();
->   	max_sectors = r1_bio->sectors;
-> @@ -1468,7 +1468,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->   		for (j = 0; j < i; j++)
->   			if (r1_bio->bios[j])
->   				rdev_dec_pending(conf->mirrors[j].rdev, mddev);
-> -		r1_bio->state = 0;
-> +		free_r1bio(r1_bio);
->   		allow_barrier(conf, bio->bi_iter.bi_sector);
->   
->   		if (bio->bi_opf & REQ_NOWAIT) {
-> 
++1 to this.
+Also, if we are removing "handle" from the function, should the name
+of the structure it returns also change? Would something like bdev_ctx
+be better?
 
+(Apologies for the previous non-plaintext email)
+
+>
+> ?
