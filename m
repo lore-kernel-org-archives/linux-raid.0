@@ -2,137 +2,80 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4F2C0015E
-	for <linux-raid@archiver.kernel.org>; Fri, 14 Jul 2023 01:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B388C0015E
+	for <linux-raid@archiver.kernel.org>; Sat, 15 Jul 2023 09:51:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232782AbjGNBaL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 13 Jul 2023 21:30:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56426 "EHLO
+        id S229729AbjGOJvQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 15 Jul 2023 05:51:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231905AbjGNBaK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 13 Jul 2023 21:30:10 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 005AF2D63
-        for <linux-raid@vger.kernel.org>; Thu, 13 Jul 2023 18:30:08 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4R2DRt2w1vz4f3mnw
-        for <linux-raid@vger.kernel.org>; Fri, 14 Jul 2023 09:30:02 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBnHbEbpbBkGlOtNw--.60166S3;
-        Fri, 14 Jul 2023 09:30:04 +0800 (CST)
-Subject: Re: The read data is wrong from raid5 when recovery happens
-To:     Xiao Ni <xni@redhat.com>, Song Liu <song@kernel.org>
-Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <CALTww28aV5CGXQAu46Rkc=fG1jK=ARzCT8VGoVyje8kQdqEXMg@mail.gmail.com>
- <ebe7fa31-2e9a-74da-bbbd-3d5238590a7c@linux.dev>
- <CALTww2_ks+Ac0hHkVS0mBaKi_E2r=Jq-7g2iubtCcKoVsZEbXQ@mail.gmail.com>
- <7e9fd8ba-aacd-3697-15fe-dc0b292bd177@linux.dev>
- <CALTww297Q+FAFMVBQd-1dT7neYrMjC-UZnAw8Q3UeuEoOCy6Yg@mail.gmail.com>
- <20230526111312.000065f2@linux.intel.com>
- <CAPhsuW4XKYDsEJsbJJX7mDdq_hhF1D8YLN5oyBi746EUtYVv8A@mail.gmail.com>
- <CALTww29YU+ZtbJanzB0buFfofDMv2C68EL2C_Ocr375amCAh+w@mail.gmail.com>
- <1ad13b8c-7601-bbee-3197-cdfcd87173d6@redhat.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <613f9d68-947a-2721-13eb-7fe682972607@huaweicloud.com>
-Date:   Fri, 14 Jul 2023 09:30:02 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229601AbjGOJvP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 15 Jul 2023 05:51:15 -0400
+Received: from out162-62-58-211.mail.qq.com (out162-62-58-211.mail.qq.com [162.62.58.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7797C26AF
+        for <linux-raid@vger.kernel.org>; Sat, 15 Jul 2023 02:51:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+        s=s201512; t=1689414669;
+        bh=ZONAthFr+ye2k1eUfPYC4LS9Wsbe2T52otZmFe3uvms=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=i7rNdrNrtGbzt/YlM4fql9al8snmcPNJoRECKGGDRgtUl8LZlZ9xWyOqnPyBEaWUu
+         bXVLlUKFLCcAaAZfjWnnc9t49hbGnjLTMa1v2dYCalUNUi2u9zpqP4LrhQTGey7UVj
+         z2IDjMpZg4XsZk/DEIEbaxGcOj+GWU/MmNrZxreo=
+Received: from localhost.localdomain ([220.243.191.12])
+        by newxmesmtplogicsvrszb9-0.qq.com (NewEsmtp) with SMTP
+        id B361F435; Sat, 15 Jul 2023 17:44:54 +0800
+X-QQ-mid: xmsmtpt1689414294tq60gmgma
+Message-ID: <tencent_0EDE0D522DF8161358B80786820BAAA5C406@qq.com>
+X-QQ-XMAILINFO: OR+iMM9v9RFuam7z+5bGLLUDhzWJebHyzAW9QR87s+VYiuWo1jPZNEDt9B30Hq
+         US5rCS7a5QURVijig1ubrm9WrctNAR7Jzwi1oBuzEqUuXi6KKjZTLjqaoK7Tdt7Tl7ipit711gcd
+         6Rm/u78HzOL2RzAwJES4g4xB5B4bYa/QGlO+Qn6sbV6lCRujHkjG3mAbvs85NfddynzxZfwHR8+f
+         MuAGLlCwyLrO8BwrYThGcjGvZ3jCbofEhGZTD+fjPc7NF0TkjprKZx16BkeWKvDZGKpgXzlxfEp/
+         1DjP4LicyGg2It8IUD2CZijtyDouYc77JKA5n9NXCTRWuJMv8xIHB3cQUm4NWzTI8ApzUkjTvYod
+         8/2mccUuehIg7DhbyanxrOTfdkG/p4tYgTJBA7AqZrkrmUCV1Mnugo7VdZdjaDmp+zZTJBOWraGQ
+         yoc/OPDg0WCL++f4wi6MTeIbaqTrJCSl0uNxCaBCXJLFZFmr7a7yFnh4NBEwXGG3Fp/xSVQXQgVF
+         rAQJph/nHSvpMvl69gxq+yzju9pV1HAwbUQwDSigAnCJzmJBiq3/EvnQ6DkpEEOJRIso9mbURi0J
+         6UP/h4xYrR+f+fc6zCi4o+w8slr4iD41bqwsJeHrBWr2q5OhQ+r9nkU0YUeyRpjs4cXcnBB9JaX7
+         bhyodnFJ1igKhQWNf0c/8XKZ16TXxICT8OkI2kvaMpgpa4NFNL8Lt+aQg0TbK2XK2SqjGPrxfv5f
+         JC/zlcTin7HIXLylaBRJl342GWAM183MCOdrh8jladKdx7eOPHHInaFZIbz/uM3qp6+tgqFGV5dc
+         gszsdnbhj+CmsCJWHHkGpTGrX8yCLmQqlS8qKWpgwZRB8uI3ck0BVk+Q9LYWVZvGvcCm9AvI8RfA
+         9ibqKjqAXGXVOqx/oZH0/QB3zB/AKVeDaF15ouxUaEphREz55gnjMnqbPLIb1NbNB1mdyjCH4wf7
+         RGYj4OMxNj0nI2wO1NHGpPVfNOIQMvyV+x94DdmuezshO14bsd2WMw8COedvNF8I4kmmjvc28=
+X-QQ-XMRINFO: MSVp+SPm3vtS1Vd6Y4Mggwc=
+From:   Zhang Shurong <zhang_shurong@foxmail.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] md: fix potential OOB in multipath_remove_disk()
+Date:   Sat, 15 Jul 2023 17:44:53 +0800
+X-OQ-MSGID: <5697119.DvuYhMxLoT@localhost.localdomain>
+In-Reply-To: <ZK7Zy2U86znezl+a@infradead.org>
+References: <tencent_E2C71605D88087940237AA9A44CC8D436D06@qq.com>
+ <ZK7Zy2U86znezl+a@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1ad13b8c-7601-bbee-3197-cdfcd87173d6@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBnHbEbpbBkGlOtNw--.60166S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WryDXF4DurWrXF48KF15Arb_yoW8ZFy3pF
-        4kt3W5ArWUXw1kJryDJ34UXFy5Jw1DG345GryUWFy7Aw4Yyr1qqrWUX3Z0gryDXFsYgw12
-        vr15WFWUZF1UKa7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
-        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-        xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-        c7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+=E5=9C=A8 2023=E5=B9=B47=E6=9C=8813=E6=97=A5=E6=98=9F=E6=9C=9F=E5=9B=9B CST=
+ =E4=B8=8A=E5=8D=8812:50:19=EF=BC=8CChristoph Hellwig =E5=86=99=E9=81=93=EF=
+=BC=9A
+> On Thu, Jul 13, 2023 at 12:46:05AM +0800, Zhang Shurong wrote:
+> > If rddev->raid_disk is greater than mddev->raid_disks, there will be
+> > an out-of-bounds in multipath_remove_disk. We have already found
+> > similar reports as follows:
+> >=20
+> > 1) commit d17f744e883b ("md-raid10: fix KASAN warning")
+> > 2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_dis=
+k")
+> >=20
+> > Fix this bug by checking whether the "number" variable is
+> > valid.
+>=20
+> I think it might just be time to finally dropped the deprecated md
+> multipath code instead..
+Should I write another patch to delete them?
 
-在 2023/07/11 8:39, Xiao Ni 写道:
-> 
-> 在 2023/5/27 上午8:56, Xiao Ni 写道:
->> Hi all
->>
->> The attachment is the scripts.
->>
->> 1. It needs to modify the member disks and raid name in 
->> prepare_rebuild_env.sh
->> 2. It needs to modify the member disks and raid name in 01-test.sh
->> 3. Then run 01-test.sh directly
->>
-> 
-> Hi all
-> 
-> I have tried with a work around patch and can confirm this problem can't 
-> be reproduced again with this patch.
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 4cdb35e54251..96d7f8048876 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6190,7 +6190,8 @@ static bool raid5_make_request(struct mddev 
-> *mddev, struct bio * bi)
->                          md_write_end(mddev);
->                  return true;
->          }
-> -       md_account_bio(mddev, &bi);
-> +       if (rw == WRITE)
-> +               md_account_bio(mddev, &bi);
 
-After spending sometime review related code, I still can't figure out
-what is wrong and how can this solves anything. ☹️
-
-I assume your testcase doesn't involved io error, and
-'rdev->recovery_offset' in only updated after sync io is done
-from md_do_sync(), and 'rdev->recovery_offset' is checked while choosing
-the rdev to read from analyse_stripe(). (There is a problem from
-raid5_read_one_chunk() about checking 'recovery_offset', but as you
-said chunk_aligned_read() is not involed here.) Hence I think it's not
-possible to read data from the disk that is not recovered.
-
-And again, I don't think there is a difference for what will be with or
-without this md_account_bio().
-
-Thanks,
-Kuai
-> 
->          /*
->           * Lets start with the stripe with the lowest chunk offset in 
-> the first
-> 
-> 
-> This patch only disables the accounting for non-align read requests. I 
-> know it's not a good one. But the data corruption is more
-> 
-> serious than io accouting.
-> 
-> Regards
-> 
-> Xiao
-> 
-> .
-> 
 
