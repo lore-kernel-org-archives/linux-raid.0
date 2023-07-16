@@ -2,90 +2,93 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BD8EC001DC
-	for <linux-raid@archiver.kernel.org>; Sat, 15 Jul 2023 16:11:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D20DEB64DD
+	for <linux-raid@archiver.kernel.org>; Sun, 16 Jul 2023 22:17:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229809AbjGOQLz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 15 Jul 2023 12:11:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43848 "EHLO
+        id S229954AbjGPWRt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 16 Jul 2023 18:17:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229472AbjGOQLy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 15 Jul 2023 12:11:54 -0400
-X-Greylist: delayed 23213 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 15 Jul 2023 09:11:52 PDT
-Received: from out203-205-221-236.mail.qq.com (out203-205-221-236.mail.qq.com [203.205.221.236])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D30FDE6;
-        Sat, 15 Jul 2023 09:11:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1689437510;
-        bh=s8ks3eeSwdZP/kAw1Tm5QXkjwLsrga9OXBVdd5sCVWM=;
-        h=From:To:Cc:Subject:Date;
-        b=MTuirVGLwssBMzA09M5cE5xzd0vZo/2Il3LDpBS5UWBghYl3MSgHT8/Id5Yh57iJc
-         aKj8q2WGRqrk3Vt0yw94kHSyS3+0BR0xxEgLU5KZomwxHvSklpP0211fudcLKS5azf
-         Mq2tWvRpcP/dStMC2Tct0FAgd46KizdRfnauEOJI=
-Received: from KernelDevBox.byted.org ([180.184.51.134])
-        by newxmesmtplogicsvrszb9-0.qq.com (NewEsmtp) with SMTP
-        id 2F092871; Sun, 16 Jul 2023 00:11:48 +0800
-X-QQ-mid: xmsmtpt1689437508thdkej1ho
-Message-ID: <tencent_59C6505725F46EF26BE7B6E8C0363C2A1509@qq.com>
-X-QQ-XMAILINFO: OIRGbLfEqjt/FC1bMx7byz9CDecV/+cSbj+TnCoJoHDoaOAYGVQWbUG6F5IaEr
-         tAERtQujzzG/mm0X3qoEoqgxjV6PbIe5r62sofdurWH6LBdgV7dJURO4m68o1EQV/DQOo3F56un4
-         3BrrOH3yMS6/4xbgSck5FO1jHFsKrlwLRJYK2lY7ls/bFrWLsydnyaZiLrO5E0/EBjm+WfL6yvlN
-         fZok+ezeA7MXJGl/0U+1lkXVZsPqf6GQqNw3XoaqOuZCY4jc7eEC+TqCYkhwugA5JIzC8BYTKCHt
-         aUPk4AOk1rrAbsJuR00v9btkiNA7Qvk4hCCQu02ooCdLUP3toxirbV/2Ie+O+SSob9VF6s1fvRUa
-         DKnJxfivL1zedysTQ+hAWvtk9gF6lTXM7N1qXiWLqt5UwC21kPGA4DoCZ/8YlG22MEwk5/BgzdBw
-         zF2snQ0piBZEvOHb62yZkMZBeVik2IlFIBg7FUfn/buBdRSJvLytzO/od6FpMqYI+tQkfeK+PKoW
-         DF38Xlp/ktEYrww423SjS46Ps0C5Gh25mTzYHLLj9bJq9HqC/EiT4Vfd9Ta6OFLSDG9E9ofh52uS
-         ibk2mPFMc203KdKMVHmOz2uu/ZICmwpSfkUcKhzMSvan/nNXSNOGidOnaXw2EWaEGrh/W0ryekeO
-         Jk6wfXTHItBP03Wo2phWTEKPw0iq2P3E6ELdnaUSDncFPfgH/ZQiU++ED3UYgVN3pSAJYYMRKmiO
-         uInJW/ypGXLFmUZ3Vf7PzoYXaRmF4N/HG47Tl80RyqcYVUOMhtTIIjri2ypdU9IqnMjxI4TgGpKx
-         +LLM2qoa3UMzbOaXdZNdgbQ9aeW+e7+3lEEgI4LiHkjb9+wA6gGdpGlCeQW5p+7sLF9aNM9LbWvg
-         XRiWBfu7J/GkyFjR2ZqiAJCUqs06i8rGhItmkuaZ7bkB51vw9d4FmVvoJ44eby+wf3MwqoO/l9vo
-         jkSZx9VR5Jqt8APG/xiRj9cQ0S1gYsl8YVOL2YIalvlqC/jVELfg==
-X-QQ-XMRINFO: NS+P29fieYNw95Bth2bWPxk=
-From:   Zhang Shurong <zhang_shurong@foxmail.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zhang Shurong <zhang_shurong@foxmail.com>
-Subject: [PATCH] md: raid1: fix potential OOB in raid1_remove_disk()
-Date:   Sun, 16 Jul 2023 00:11:47 +0800
-X-OQ-MSGID: <20230715161147.2333373-1-zhang_shurong@foxmail.com>
-X-Mailer: git-send-email 2.30.2
+        with ESMTP id S229585AbjGPWRs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 16 Jul 2023 18:17:48 -0400
+Received: from mail-oa1-x2d.google.com (mail-oa1-x2d.google.com [IPv6:2001:4860:4864:20::2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92C8B1A2
+        for <linux-raid@vger.kernel.org>; Sun, 16 Jul 2023 15:17:47 -0700 (PDT)
+Received: by mail-oa1-x2d.google.com with SMTP id 586e51a60fabf-1b441dd19eeso3076684fac.1
+        for <linux-raid@vger.kernel.org>; Sun, 16 Jul 2023 15:17:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1689545867; x=1692137867;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=LbloSl5BB2zrXzAAEpJ+DjipIGVNlYxWl6WG4myi8b0=;
+        b=eA60a89bG6+i8VvGoHN7E3RMDQZQtF+eZT+68S2U3E9XLUwiplNfd4IjaFH09MqAUn
+         itSWHBCcxkLYrMqlopoYU4ZMkbK0sbrjbU4IOmKmzziHV18rZwcx5xAeqPK9VKOjvR3d
+         Hc44AB+NZtsf4eHV8FZz7vPZZ8AMule5RNKxIh4P7K6t9G+T08H7pwjGcFi1L2lg7ba6
+         tAnee8Zao1ifAUdri0jjv+cG9dn4mH1jFGjDhoR+kzlIEOG/n27/4vNqF7h2jNWmDijZ
+         pGCjYa2btcLFgBjVlBRKStU+eJGZt2RPZRbFhC3TiDO5ZTCh3iJ0sfgAjaNZqJ5lZAWY
+         5tdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689545867; x=1692137867;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=LbloSl5BB2zrXzAAEpJ+DjipIGVNlYxWl6WG4myi8b0=;
+        b=B5BD0fkFglzBnnHkessGb0scgvLRJlvCB4Ou1cfLItDTt3CX7ojyar7MiDxpa6I/mj
+         sCU89m93756h/hWLrj8E9RPZEiSgu7r/sxWRsaFkq2sQVXQtoKyQzB4c3snevIeIuYAS
+         yioefuKqPpq3ard2KariE1S7FwBf/7iCAeJ9HSWIug3URh3RaYSSMotWiiKX/otSidsb
+         AUM+6UkiSnQTvJ1El5KJeW2guWnS6J2sze3aCZzzOtedYN/1T2s0DmQatM/lvfU4e7CJ
+         NV+j3yhnbc8vh48TACUTmlzyFhphar69DynHhEovcynQ7IguZe34CH6FFxuFXXhajLio
+         Dasw==
+X-Gm-Message-State: ABy/qLb3ORP+VWvOxJNE5L9KNadRj1foH+vqoTwS3LqqcQM2I81mwYEd
+        T2iHL5levFEyLMDss+Kuv6GgKXcvHL2s4TWzAlHl4oITY402Kw==
+X-Google-Smtp-Source: APBJJlG4pz/boklib1SQFL5E4rS+YCzgLJSV+jv+5ymqO6/QSobSHya2j3yUMO2DZMRGBnh6dpejZu+NmS+AoAPutTg=
+X-Received: by 2002:a05:6870:249a:b0:1b0:5218:cf07 with SMTP id
+ s26-20020a056870249a00b001b05218cf07mr12986723oaq.5.1689545866605; Sun, 16
+ Jul 2023 15:17:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   =?UTF-8?Q?Fran=C3=A7ois_RONVAUX?= <francois.ronvaux@gmail.com>
+Date:   Mon, 17 Jul 2023 00:17:37 +0200
+Message-ID: <CAMbPAZ4aKP_oXm8DgO03JTfDuqKWeTMBQSnwU5AdvVBUTa1prQ@mail.gmail.com>
+Subject: Option --write-journal
+To:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-If rddev->raid_disk is greater than mddev->raid_disks, there will be
-an out-of-bounds in raid1_remove_disk(). We have already found
-similar reports as follows:
+Hello,
 
-1) commit d17f744e883b ("md-raid10: fix KASAN warning")
-2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk")
 
-Fix this bug by checking whether the "number" variable is
-valid.
+I'm going to create a RAID6 (6+2) array with 12TB HDDs Seagate IronWolf.
 
-Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
----
- drivers/md/raid1.c | 4 ++++
- 1 file changed, 4 insertions(+)
+My system is installed on a SSD Samsung 970 EVO Plus NVMe with a
+capacity of 250GB.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index dd25832eb045..3e294dc408fa 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1829,6 +1829,10 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	struct r1conf *conf = mddev->private;
- 	int err = 0;
- 	int number = rdev->raid_disk;
-+
-+	if (unlikely(number >= mddev->raid_disks))
-+		goto abort;
-+
- 	struct raid1_info *p = conf->mirrors + number;
- 
- 	if (rdev != p->rdev)
--- 
-2.30.2
+According to the spec [1], the SSD has a write endurance of 150TB and
+as there is free capacity on the device, I plan to create a new
+partition and to place the write journal of the RAID array on it.
 
+About the usage of the array, it will be used to store video and audio
+files for long term storage, the I/Os will be mainly sequential and
+quite large (MB or hundreds of KB) and I will be the only user
+accessing to the array. No virtual machines, databases, etc.
+The file system will be ext4.
+
+The man page says "The journal device should be an SSD with a
+reasonable lifetime." I think to be good on the lifetime for my use
+case.
+
+But I do not know what is the required capacity for the journal.
+Can someone give me some clues about this ?
+
+All the config files of the system will be backed up so I will be able
+to reinstall it easly (and re-assemble the RAID array) but the journal
+can not be backed up.
+So in case of failure of the journal (bad sectors on the SSD or
+complete SSD failure), what are the risks on the integrity of the RAID
+Array ?
+
+
+[1] https://www.samsung.com/us/computing/memory-storage/solid-state-drives/ssd-970-evo-plus-nvme-m-2-250gb-mz-v7s250b-am/#specs
+
+
+Thanks for your guidance.
