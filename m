@@ -2,97 +2,155 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBCBBC0015E
-	for <linux-raid@archiver.kernel.org>; Mon, 17 Jul 2023 01:10:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F993EB64DC
+	for <linux-raid@archiver.kernel.org>; Mon, 17 Jul 2023 13:40:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230322AbjGQBKw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 16 Jul 2023 21:10:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33828 "EHLO
+        id S231215AbjGQNkn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 17 Jul 2023 09:40:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230251AbjGQBKv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 16 Jul 2023 21:10:51 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9CD21AD;
-        Sun, 16 Jul 2023 18:10:50 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4R43tG4TBfz4f3kKw;
-        Mon, 17 Jul 2023 09:10:46 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBn0LMVlbRknj+UOA--.49234S3;
-        Mon, 17 Jul 2023 09:10:47 +0800 (CST)
-Subject: Re: [PATCH] md: raid1: fix potential OOB in raid1_remove_disk()
-To:     Zhang Shurong <zhang_shurong@foxmail.com>, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <tencent_59C6505725F46EF26BE7B6E8C0363C2A1509@qq.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <84626f1f-d8ae-4d60-81f1-9e4656f8dcf6@huaweicloud.com>
-Date:   Mon, 17 Jul 2023 09:10:45 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S231246AbjGQNkl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 Jul 2023 09:40:41 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E256DA3
+        for <linux-raid@vger.kernel.org>; Mon, 17 Jul 2023 06:40:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1689601241; x=1721137241;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=5ofqwanZpun13N/YztoZ4d0JnasdVTc9nFGNbCteiGc=;
+  b=cbpT5zy3xqJa7mrta0dpVag27ZDC25nOnZ9ViIlJFrHPd792zgcDjUIG
+   oSSxoCpXXE/pIG4KIC9r0y5UHrF/GlXXDtKDgWOlls2XiRxCwXW/Mh3UJ
+   KJ2DbDoAIvTmfn4Ao4nMRzAO/8V8sSSi648UchRDcg6ygYZWfWvH5kjjP
+   hib7oupqhES67XUbqk04X4R3FzMBc8bmubzqabsP5Jl7X6EhxE6LG40cz
+   RzcTyFQEFIdfiPhvFZNDBNbOSn1jrL0H6UAfsOZYleTcCHQxB4ixjW8hR
+   gcnNHKiU6Kjx4MbCfO4N9BiTKwC/wh42X/Ok4cTCgelhlJ3mwcv0iIb6n
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10774"; a="350795420"
+X-IronPort-AV: E=Sophos;i="6.01,211,1684825200"; 
+   d="scan'208";a="350795420"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2023 06:40:40 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10774"; a="813337610"
+X-IronPort-AV: E=Sophos;i="6.01,211,1684825200"; 
+   d="scan'208";a="813337610"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.104.85])
+  by FMSMGA003.fm.intel.com with ESMTP; 17 Jul 2023 06:40:39 -0700
+From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org
+Subject: [PATCH] Add compiler defenses flags
+Date:   Mon, 17 Jul 2023 15:19:10 +0200
+Message-Id: <20230717131910.22713-1-mateusz.grzonka@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <tencent_59C6505725F46EF26BE7B6E8C0363C2A1509@qq.com>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBn0LMVlbRknj+UOA--.49234S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrKFykKryUJrW8Cw1rCF1kAFb_yoWkAFgEga
-        4UZa4fXr4Iqryvyw47Ww1fZr9Fy3s5Wws5ZayFgF98Was8uw4Fgry8u348WasIkry2vr47
-        Ar1UWw10yrn3ujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbzkYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20E
-        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-        67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
-        AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
-        j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
-        kEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAK
-        I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
-        xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xII
-        jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
-        0EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-        7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UE-erUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+It is essential to avoid buffer overflows and similar bugs as much as
+possible.
 
-ÔÚ 2023/07/16 0:11, Zhang Shurong Ð´µÀ:
-> If rddev->raid_disk is greater than mddev->raid_disks, there will be
-> an out-of-bounds in raid1_remove_disk(). We have already found
-> similar reports as follows:
-> 
-> 1) commit d17f744e883b ("md-raid10: fix KASAN warning")
-> 2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk")
-> 
-> Fix this bug by checking whether the "number" variable is
-> valid.
-> 
-> Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
-> ---
->   drivers/md/raid1.c | 4 ++++
->   1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index dd25832eb045..3e294dc408fa 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1829,6 +1829,10 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
->   	struct r1conf *conf = mddev->private;
->   	int err = 0;
->   	int number = rdev->raid_disk;
-> +
-> +	if (unlikely(number >= mddev->raid_disks))
-> +		goto abort;
-> +
-This looks correct, but I prefer to use conf->raid_disks directly.
+According to Intel rules we are obligated to verify certain
+compiler flags, so it will be much easier if they are added to the
+Makefile.
 
-Thanks,
-Kuai
+Add gcc flags for prevention of buffer overflows, format string vulnerabilities,
+stack protection to prevent stack overwrites and aslr enablement through -fPIE.
+Also make the flags configurable.
 
->   	struct raid1_info *p = conf->mirrors + number;
->   
->   	if (rdev != p->rdev)
-> 
+The changes were verified on gcc versions 7.5, 8.3, 9.2, 10 and 12.2.
+
+Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+---
+ Makefile | 41 +++++++++++++++++++++++++++++------------
+ 1 file changed, 29 insertions(+), 12 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 5eac1a4e..b3aa36f6 100644
+--- a/Makefile
++++ b/Makefile
+@@ -30,7 +30,7 @@
+ 
+ # define "CXFLAGS" to give extra flags to CC.
+ # e.g.  make CXFLAGS=-O to optimise
+-CXFLAGS ?=-O2
++CXFLAGS ?=-O2 -D_FORTIFY_SOURCE=2
+ TCC = tcc
+ UCLIBC_GCC = $(shell for nm in i386-uclibc-linux-gcc i386-uclibc-gcc; do which $$nm > /dev/null && { echo $$nm ; exit; } ; done; echo false No uclibc found )
+ #DIET_GCC = diet gcc
+@@ -50,14 +50,30 @@ ifeq ($(origin CC),default)
+ CC := $(CROSS_COMPILE)gcc
+ endif
+ CXFLAGS ?= -ggdb
+-CWFLAGS = -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
++CWFLAGS ?= -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -Wformat -Wformat-security -Werror=format-security -fstack-protector-strong -fPIE -Warray-bounds
+ ifdef WARN_UNUSED
+-CWFLAGS += -Wp,-D_FORTIFY_SOURCE=2 -O3
++CWFLAGS += -Wp -O3
+ endif
+ 
+-FALLTHROUGH := $(shell gcc -v --help 2>&1 | grep "implicit-fallthrough" | wc -l)
+-ifneq "$(FALLTHROUGH)"  "0"
+-CWFLAGS += -Wimplicit-fallthrough=0
++ifeq ($(origin FALLTHROUGH), undefined)
++	FALLTHROUGH := $(shell gcc -Q --help=warnings 2>&1 | grep "implicit-fallthrough" | wc -l)
++	ifneq "$(FALLTHROUGH)"  "0"
++	CWFLAGS += -Wimplicit-fallthrough=0
++	endif
++endif
++
++ifeq ($(origin FORMATOVERFLOW), undefined)
++	FORMATOVERFLOW := $(shell gcc -Q --help=warnings 2>&1 | grep "format-overflow" | wc -l)
++	ifneq "$(FORMATOVERFLOW)"  "0"
++	CWFLAGS += -Wformat-overflow
++	endif
++endif
++
++ifeq ($(origin STRINGOPOVERFLOW), undefined)
++	STRINGOPOVERFLOW := $(shell gcc -Q --help=warnings 2>&1 | grep "stringop-overflow" | wc -l)
++	ifneq "$(STRINGOPOVERFLOW)"  "0"
++	CWFLAGS += -Wstringop-overflow
++	endif
+ endif
+ 
+ ifdef DEBIAN
+@@ -116,10 +132,12 @@ CFLAGS += -DUSE_PTHREADS
+ MON_LDFLAGS += -pthread
+ endif
+ 
++LDFLAGS = -Wl,-z,now,-z,noexecstack
++
+ # If you want a static binary, you might uncomment these
+-# LDFLAGS = -static
++# LDFLAGS += -static
+ # STRIP = -s
+-LDLIBS = -ldl
++LDLIBS = -ldl -pie
+ 
+ # To explicitly disable libudev, set -DNO_LIBUDEV in CXFLAGS
+ ifeq (, $(findstring -DNO_LIBUDEV,  $(CXFLAGS)))
+@@ -209,14 +227,13 @@ mdadm.Os : $(SRCS) $(INCL)
+ 	$(CC) -o mdadm.Os $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -DHAVE_STDINT_H -Os $(SRCS) $(LDLIBS)
+ 
+ mdadm.O2 : $(SRCS) $(INCL) mdmon.O2
+-	$(CC) -o mdadm.O2 $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -DHAVE_STDINT_H -O2 -D_FORTIFY_SOURCE=2 $(SRCS) $(LDLIBS)
++	$(CC) -o mdadm.O2 $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -DHAVE_STDINT_H -O2 $(SRCS) $(LDLIBS)
+ 
+ mdmon.O2 : $(MON_SRCS) $(INCL) mdmon.h
+-	$(CC) -o mdmon.O2 $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(MON_LDFLAGS) -DHAVE_STDINT_H -O2 -D_FORTIFY_SOURCE=2 $(MON_SRCS) $(LDLIBS)
++	$(CC) -o mdmon.O2 $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(MON_LDFLAGS) -DHAVE_STDINT_H -O2 $(MON_SRCS) $(LDLIBS)
+ 
+-# use '-z now' to guarantee no dynamic linker interactions with the monitor thread
+ mdmon : $(MON_OBJS) | check_rundir
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(MON_LDFLAGS) -Wl,-z,now -o mdmon $(MON_OBJS) $(LDLIBS)
++	$(CC) $(CFLAGS) $(LDFLAGS) $(MON_LDFLAGS) -o mdmon $(MON_OBJS) $(LDLIBS)
+ msg.o: msg.c msg.h
+ 
+ test_stripe : restripe.c xmalloc.o mdadm.h
+-- 
+2.26.2
 
