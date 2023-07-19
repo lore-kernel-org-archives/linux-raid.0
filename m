@@ -2,90 +2,90 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5BD7EB64DC
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Jul 2023 17:02:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12B7AEB64DA
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Jul 2023 07:10:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233879AbjGRRCb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 Jul 2023 13:02:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35310 "EHLO
+        id S229665AbjGSHKL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Jul 2023 03:10:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233816AbjGRRCQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Jul 2023 13:02:16 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 080A62D52
-        for <linux-raid@vger.kernel.org>; Tue, 18 Jul 2023 10:01:17 -0700 (PDT)
-Received: from host86-180-115-107.range86-180.btcentralplus.com ([86.180.115.107] helo=[192.168.1.99])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1qLo3J-0008kU-6t;
-        Tue, 18 Jul 2023 17:59:57 +0100
-Message-ID: <92c5962f-86d1-3cf7-e157-96c953b6b164@youngman.org.uk>
-Date:   Tue, 18 Jul 2023 17:59:55 +0100
+        with ESMTP id S229587AbjGSHKF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Jul 2023 03:10:05 -0400
+Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22408A4
+        for <linux-raid@vger.kernel.org>; Wed, 19 Jul 2023 00:10:03 -0700 (PDT)
+Received: by mail-il1-x131.google.com with SMTP id e9e14a558f8ab-3463de183b0so37776355ab.2
+        for <linux-raid@vger.kernel.org>; Wed, 19 Jul 2023 00:10:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1689750602; x=1690355402;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=cz5JRgN+VfrEH3wYRTcWLfx4Kr4jBeCAC9PM0jXb9sM=;
+        b=wz3m6T7JMIIvw5SXtfc0HpljRHlQmrrJJ0cnBFMSVk5PL6b48zxtVfiDCZWq0REPJj
+         mLnjPgxShwoa+tCOIn8f8zZPT9et2tMPjbuPhakmHELJ49rFIxbqaUjH42Tp8WrFkS1J
+         3XigJLWts/tUlabGaqRZWaWG7F/A2x+P75FGD19/VP2RP++VMnDWJoMBFxpeV0HjX7TW
+         avMOWUXJqTirv+yRTjf7reGBCDB0t0rfEA3if8nOMUtjPd4pi6j4biTuusVlvVp5TUaf
+         B2USWWT1GIaROLIZw3O/JHx4JTRi0YgfYZe9c3SpuW8paWeveAW7RUDheFadA2h24Lw/
+         wqqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689750602; x=1690355402;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=cz5JRgN+VfrEH3wYRTcWLfx4Kr4jBeCAC9PM0jXb9sM=;
+        b=IAcehuXyogCU+FArasAzcbOIwzL9TdVC3G0d/KtcF5dHB9w3hwglmxMqd+VlGpWG4w
+         BbGx0RL6pH5B1mzOmOa/c6xPRHEUq0i5nuLE8AeLkZyW4SAP1K3mVosAaAXs1W5C+elC
+         OxpACTTIdPcj/q7+J8pDr4ml7yWFOC7DlAAOu5ilcdkE0w+LlZHZWfCdqDLvJwM9uP0P
+         fre9n6oono+Xjp2B7vGs8f4mLXfBvzA2LZuJ0hkC/osuiZUYXMIDlT+0N1zZVh2EqFVS
+         N/6DnSGbHf5Opo5cS9UBpom34NT4GYKkt306fXZ77Fy7uT3gNQQASvSQU6CH/dPDXlGW
+         2Y9g==
+X-Gm-Message-State: ABy/qLZLaHlST4irHCvgK7+2v9Rm5FHJlycvz0I9nUupQpfne586HC/g
+        L4gujzYdiyI1KCNZ3O/wacHeb876KJ73RvdHow71IAjURkc=
+X-Google-Smtp-Source: APBJJlEXwozvFnJWW4gfXlPMwaekjsvGVVBERIv6eabEYQBtFeo7xhTjCsd1lYD3yHSAYn+rHceIww==
+X-Received: by 2002:a05:6e02:b26:b0:345:dcc1:a1c4 with SMTP id e6-20020a056e020b2600b00345dcc1a1c4mr5660609ilu.4.1689750602413;
+        Wed, 19 Jul 2023 00:10:02 -0700 (PDT)
+Received: from nixos.tailf4e9e.ts.net ([47.75.78.161])
+        by smtp.googlemail.com with ESMTPSA id 11-20020a17090a194b00b002639c4f81cesm667453pjh.3.2023.07.19.00.10.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Jul 2023 00:10:02 -0700 (PDT)
+From:   Xueshi Hu <xueshi.hu@smartx.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, yukuai1@huaweicloud.com,
+        Xueshi Hu <xueshi.hu@smartx.com>
+Subject: [PATCH v3 0/3] don't change mempool if in-flight r1bio exists
+Date:   Wed, 19 Jul 2023 15:09:51 +0800
+Message-Id: <20230719070954.3084379-1-xueshi.hu@smartx.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: Corrupted RAID 1
-To:     Yu Kuai <yukuai1@huaweicloud.com>,
-        Leslie Rhorer <lesrhorer@att.net>,
-        Linux RAID <linux-raid@vger.kernel.org>
-Cc:     "yukuai (C)" <yukuai3@huawei.com>
-References: <d44dd435-46e8-f40c-e8cf-24e6c6e93687.ref@att.net>
- <d44dd435-46e8-f40c-e8cf-24e6c6e93687@att.net>
- <b4bd295a-25a2-c66d-0bdc-29cdf402bbbb@huaweicloud.com>
-Content-Language: en-GB
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <b4bd295a-25a2-c66d-0bdc-29cdf402bbbb@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 18/07/2023 10:25, Yu Kuai wrote:
-> Hi,
-> 
-> 在 2023/07/14 4:58, Leslie Rhorer 写道:
->>      I have a corrupted bootable RAID 1 array on a pair of SDD drives, 
->> and I fear I need some assistance.  Actually, there are four 
->> partitions on each drive, and two RAID 1 arrays were assembled from 
->> each drive. When working properly, the second pair of partitions were 
->> mounted as / and the first pair were mounted as /boot.  The OS is 
->> Debian Buster. When I attempt to boot the system, it goes directly to 
->> the GRUB prompt.
->>
->>      I pulled the drives and attached them to an active system.  Mdadm 
->> reports both partition tables to be intact with partition labels of 
->> fd, 83, ef, and 82, respectively and MBR magic of aa55.  When I try to 
->> assemble any array says the partitions exist but are not md arrays.
->>
->>      Fdisk reports the partition types as Linux raid autodetect, 
->> Linux, EFI, and Linux swap / Solaris.  The EFI partitions are marked 
->> bootable and contain the following:
->>
->> total 3472
->> -rwxr-xr-x 1 root root     108 May 28  2022 BOOTX64.CSV
->> -rwxr-xr-x 1 root root   84648 May 28  2022 fbx64.efi
->> -rwxr-xr-x 1 root root     152 May 28  2022 grub.cfg
->> -rwxr-xr-x 1 root root 1672576 May 28  2022 grubx64.efi
->> -rwxr-xr-x 1 root root  845480 May 28  2022 mmx64.efi
->> -rwxr-xr-x 1 root root  934240 May 28  2022 shimx64.efi
->>
->>      Any suggestions?  I should say that the running system
->> (Bullseye) is not the same version as the failed one (Buster).  Of 
->> course the failed system does need to be upgraded, but there are 
->> specific reasons why this is quite undesirable at this point.
->> .
-> 
-> There really is not enough information, what is the kernel version?
-> And in the active system, what mdadm cmds you're using and what's the
-> result? (And please show us the result of mdadm -E /dev/[partition]).
-> 
-@kuai
+All the r1bio should be freed before raid1_reshape() changes the
+mempool. However, freeze_array() doesn't guarantee there's no r1bio,
+as some r1bio maybe queued. Also, in raid1_write_request(), 
+handle_read_error() and raid_end_bio_io() , kernel shall not 
+allow_barrier() before the r1bio is properly handled.
 
-Point them at the wiki ...
+-> v2:
+	- fix the problem one by one instead of calling
+	blk_mq_freeze_queue() as suggested by Yu Kuai
+-> v3:
+	- add freeze_array_totally() to replace freeze_array() instead
+	  of gave up in raid1_reshape()
+	- add a missed fix in raid_end_bio_io()
+	- add a small check at the start of raid1_reshape()
 
-https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
 
-Cheers,
-Wol
+Xueshi Hu (3):
+  md/raid1: freeze array more strictly when reshape
+  md/raid1: don't allow_barrier() before r1bio got freed
+  md/raid1: check array size before reshape
+
+ drivers/md/raid1.c | 59 +++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 48 insertions(+), 11 deletions(-)
+
+-- 
+2.40.1
 
