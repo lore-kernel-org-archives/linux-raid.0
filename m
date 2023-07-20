@@ -2,112 +2,157 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1B79EB64DA
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Jul 2023 07:15:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 643D8C04FE1
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Jul 2023 09:44:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230127AbjGTHPx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Jul 2023 03:15:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47684 "EHLO
+        id S231222AbjGTJoS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Jul 2023 05:44:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229812AbjGTHPr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Jul 2023 03:15:47 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9143719A7
-        for <linux-raid@vger.kernel.org>; Thu, 20 Jul 2023 00:15:44 -0700 (PDT)
+        with ESMTP id S230076AbjGTJnz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 Jul 2023 05:43:55 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6322B2D55
+        for <linux-raid@vger.kernel.org>; Thu, 20 Jul 2023 02:40:16 -0700 (PDT)
 Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230720071542epoutp041746c2a9c093ac6f897c3aa664d816e6~zghwuSoqE0928009280epoutp04x
-        for <linux-raid@vger.kernel.org>; Thu, 20 Jul 2023 07:15:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230720071542epoutp041746c2a9c093ac6f897c3aa664d816e6~zghwuSoqE0928009280epoutp04x
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230720092959epoutp02dbfee0b8db6df7601a1891fc80dc5e5c~ziW-9PGWc0664706647epoutp02M
+        for <linux-raid@vger.kernel.org>; Thu, 20 Jul 2023 09:29:59 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230720092959epoutp02dbfee0b8db6df7601a1891fc80dc5e5c~ziW-9PGWc0664706647epoutp02M
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1689837342;
-        bh=3tl7faBvI9QEX5maxzKSbUjRYhYxM6dis+ORKWtEhb0=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=FiOp/+XN7DhIX0bCTNA3ch73DLRQKy1MNNhz7rOBdouiF4zVrXndVpjamsQR1GfO7
-         vCC+EKQLdFoBhSWfUyhlywJUwnRo5RAxgB++CK+EKc/h+TVDFkG0PlaRX8LTGe8bPB
-         bCdCvIRoP6l7b8UmRo2rVUtQG6gNN8E42xOE+wVY=
+        s=mail20170921; t=1689845399;
+        bh=nGeZCbqTKt9GUpDssg640prX0TVeJcRGPnCQlXxuDF8=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=U8XincyAfZcUCI+XG+PFDNayJLbUCum0RTEa2mov4A6em9Cc9isnWCZNAnP7wMbQD
+         tilFVJ/29kSiysiwIJgEWHSLZmIJHT7LLU0+D4N1YWVsUUlPGcVanLJm//sCg1gLsG
+         iAo2+g8VBL0HEmmHP+06It8LAbD3m4H0q5Jv8sLw=
 Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20230720071542epcas2p4f0406b7d295e694f18779ea70f7e8fac~zghwVbK1h2982529825epcas2p48;
-        Thu, 20 Jul 2023 07:15:42 +0000 (GMT)
-Received: from epsmgec2p1-new.samsung.com (unknown [182.195.36.102]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4R63qy06nWz4x9QD; Thu, 20 Jul
-        2023 07:15:42 +0000 (GMT)
-X-AuditID: b6c32a4d-637c170000047356-49-64b8df1d58cf
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmgec2p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        F0.8E.29526.D1FD8B46; Thu, 20 Jul 2023 16:15:41 +0900 (KST)
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20230720092958epcas2p337adc17ec76a86125b70561a74631592~ziW-Q5fAI3131731317epcas2p3s;
+        Thu, 20 Jul 2023 09:29:58 +0000 (GMT)
+Received: from epsmgec2p1.samsung.com (unknown [182.195.36.99]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4R66pt01VKz4x9Px; Thu, 20 Jul
+        2023 09:29:58 +0000 (GMT)
+X-AuditID: b6c32a43-2f3ff7000001d7ef-00-64b8fe9563f7
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmgec2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        14.B5.55279.59EF8B46; Thu, 20 Jul 2023 18:29:57 +0900 (KST)
 Mime-Version: 1.0
-Subject: RE:(2) [PATCH] md/bitmap: Fix bitmap page writing problem when
- using block integrity
+Subject: [PATCH v2] md/bitmap: Avoid protection error writing bitmap page
+ with block integrity
 Reply-To: j-young.choi@samsung.com
 Sender: Jinyoung Choi <j-young.choi@samsung.com>
 From:   Jinyoung Choi <j-young.choi@samsung.com>
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-CC:     "song@kernel.org" <song@kernel.org>, "shli@fb.com" <shli@fb.com>,
-        "neilb@suse.com" <neilb@suse.com>,
+To:     "song@kernel.org" <song@kernel.org>,
         "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     "pmenzel@molgen.mpg.de" <pmenzel@molgen.mpg.de>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <a658717c-8388-6e56-4d8d-096b0a1aefb9@molgen.mpg.de>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20230720071441epcms2p3af7d4941dd0a9ab8243e873af43791f8@epcms2p3>
-Date:   Thu, 20 Jul 2023 16:14:41 +0900
-X-CMS-MailID: 20230720071441epcms2p3af7d4941dd0a9ab8243e873af43791f8
+Message-ID: <20230720092957epcms2p6cbd0ecdf7f5bf0db3c04eefaf0a6644d@epcms2p6>
+Date:   Thu, 20 Jul 2023 18:29:57 +0900
+X-CMS-MailID: 20230720092957epcms2p6cbd0ecdf7f5bf0db3c04eefaf0a6644d
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 X-CPGSPASS: Y
 X-CPGSPASS: Y
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupkk+LIzCtJLcpLzFFi42LZdljTTFf2/o4Ug+W71SxeHtK0uLxrDptF
-        +/xdjBafNsZavJyVZrFsZz+LxfHlf9kc2D0mNr9j99i0qpPN48m5CcwefVtWMXqs33KVxePz
-        JrkAtqhsm4zUxJTUIoXUvOT8lMy8dFsl7+B453hTMwNDXUNLC3MlhbzE3FRbJRefAF23zByg
-        Q5QUyhJzSoFCAYnFxUr6djZF+aUlqQoZ+cUltkqpBSk5BeYFesWJucWleel6eaklVoYGBkam
-        QIUJ2Rmf1vayFTxkrli5aANTA+Nbpi5GTg4JAROJe/t+sXUxcnEICexhlLjzZCFLFyMHB6+A
-        oMTfHcIgNcIC8RK7Lr9jBrGFBJQkzq2ZxQgRN5Boud3GAmKzCehJ7Hi+mx3EFhFQl1j1uxss
-        zizwnFFi3elaiF28EjPan7JA2NIS25dvBZvDKeAo8XHjczaIuIbEj2W9zBC2qMTN1W/ZYez3
-        x+YzQtgiEq33zkLVCEo8+LkbKi4pcejQVzaQ8yUE8iU2HAiECNdItP16D1WuL3GtYyPYCbwC
-        vhKPfx4FG88ioCrR92M91GkuEh8vQ5zDLCAvsf3tHGaQkcwCmhLrd+lDTFeWOHIL6kE+iY7D
-        f9lhHmzY+Bsre8e8J0wQrWoSi5qMJjAqz0KE8iwkq2YhrFrAyLyKUSq1oDg3PTXZqMBQNy+1
-        HB65yfm5mxjBaVLLdwfj6/V/9Q4xMnEwHmKU4GBWEuF9dHlbihBvSmJlVWpRfnxRaU5q8SFG
-        U6BHJzJLiSbnAxN1Xkm8oYmlgYmZmaG5kamBuZI4773WuSlCAumJJanZqakFqUUwfUwcnFIN
-        TI1dGv5uN+43HwyoieN0yru7PP/W9DPfXav+V7yckp/IWqHakGDZcv1J4ENGz9CdPVaKTLus
-        5oRtrb+lUndgFaPf2dTNbpv28rn0H3qwQI2Ty9Ny6nKBFywMTv2952+JmBf9cyvf+Gp2ZsDG
-        vx/0bnJ9iLv82HLefpGSrwsTrPNzbq39Lr75EluTL8fLzjXuiUFRzKs2Jjw5yK2qtEbCVK08
-        5fnrKesWhvDO3jLTUP6k8vz46wurt0yMfLIjzuLa9dzbE4s2FGiJJXEfrrp4QHT7/A1NG9XC
-        y7vbKjx9FhzcxS/qe8yz8n7PovcGG+yi2KdKzNCvejJzXrdgyhtjkWt9HXrHzWZNjpoxIXVt
-        iBJLcUaioRZzUXEiAAmMStwcBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrGKsWRmVeSWpSXmKPExsWy7bCmhe7UfztSDP4vNrN4eUjTord/K5vF
+        5V1z2Cza5+9itHg5K83i+PK/bA5sHptWdbJ5PDk3gdmjb8sqRo/Pm+QCWKKybTJSE1NSixRS
+        85LzUzLz0m2VvIPjneNNzQwMdQ0tLcyVFPISc1NtlVx8AnTdMnOAVisplCXmlAKFAhKLi5X0
+        7WyK8ktLUhUy8otLbJVSC1JyCswL9IoTc4tL89L18lJLrAwNDIxMgQoTsjNWnYos2C9W8enu
+        L+YGxqcCXYycHBICJhJ3OtexdDFycQgJ7GCUuDbpBmsXIwcHr4CgxN8dwiA1wgIJEm3LN7CA
+        2EICShLn1sxihIgbSLTcbgOLswnoSex4vpsdxBYRWMoo8agbbD6zgLHE8tebmCF28UrMaH/K
+        AmFLS2xfvpURwtaQ+LGsF6pGVOLm6rfsMPb7Y/OhakQkWu+dhaoRlHjwczdUXFLi0KGvbCAn
+        SwjkS2w4EAgRrpFo+/Ueqlxf4lrHRrC1vAK+EkdfPAJrZRFQlejbsRVqlYvE/mXXmCFOlpfY
+        /nYOM8hIZgFNifW79CGmK0scucUCUcEn0XH4LzvMUw0bf2Nl75j3hAmiVU1iUZMRRFhG4uvh
+        +ewTGJVmIUJ5FpK1sxDWLmBkXsUollpQnJuemmxUYAiP1+T83E2M4ASo5byD8cr8f3qHGJk4
+        GA8xSnAwK4nwPrq8LUWINyWxsiq1KD++qDQntfgQoynQwxOZpUST84EpOK8k3tDE0sDEzMzQ
+        3MjUwFxJnPde69wUIYH0xJLU7NTUgtQimD4mDk6pBqY0HreiYl6f3xyfevb5/7yZNWlmo2vs
+        zl28DEtstPY0TQpmSLob+Pttge5Bu/ZUKbV94g9nFjxqcfJQ5r6mt7zjY+7ibXPPRN/e3S8h
+        ftTH7VngtYMPMn/4r8q9p2Z5/1MExx/Bu0/OyvY+cw7yZg8XniqvdeBRsOqlPT6cB/ednS/N
+        MH19iM3Rx5fk+6RkFqh1/3U4bcNWtmvFg0kbF3uqX8uYNykgbJVusZbv2VYvDq09XqeLVpqt
+        yZf50D7x5LJ+4XuOCo8Yv0cmLzwX2Rn+Z0qR2qyJU/72/T9acEVGsOP7e82XNw6VfA1bvvJh
+        ypSglmx5adYoG6UDZvve3w0pv1kpFMu7tVNLgXH+YlklluKMREMt5qLiRADA68L5CQQAAA==
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230720061234epcms2p32e02cd528fc834491816b379ae189012
-References: <a658717c-8388-6e56-4d8d-096b0a1aefb9@molgen.mpg.de>
-        <20230720061234epcms2p32e02cd528fc834491816b379ae189012@epcms2p3>
-        <CGME20230720061234epcms2p32e02cd528fc834491816b379ae189012@epcms2p3>
+X-CMS-RootMailID: 20230720092957epcms2p6cbd0ecdf7f5bf0db3c04eefaf0a6644d
+References: <CGME20230720092957epcms2p6cbd0ecdf7f5bf0db3c04eefaf0a6644d@epcms2p6>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Paul,
+Changing the bitmap page is also possible on the page where the DMA is
+being performed or scheduled in the MD.
 
-> Dear Jinyoung,
-> 
-> 
-> Thank you very much for your patch. Some minor comments, you can also 
-> ignore.
+When configuring raid1 (mirror) with devices that support block integrity,
+the same bitmap page is sent to the device twice during the resync process,
+causing the following problems.
+(When requeue is executed, integrity is not updated)
 
-I will reflect the advice you gave me regarding the commit message and send it again.
+             [Func 1]                          [Func 2]
 
-> Your From line spells it CHOI. Maybe you can update your git 
-> configuration to also use Choi?
+1     A(page) + a(integrity)
+2        (sq doorbell)
+3                                          A(page) -> A-1(page)
+4  A-1(page-updated) + a(integrity)     A-1(page) + a-1(integrity)
+5                                            (sq doorbell)
+6           (DMA)                                (DMA)
 
-It was being set like that in the company mail system. (CHOI)
-I will modify it to be seen as "Choi".
-Thank you for your comment. :)
+       I/O Fail and retry N                   I/O Success
+       To be Faulty Device
 
-Best Regards,
-Jinyoung.
+My Test Env: Two FIPS PM1743
+- nvme format /dev/nvme2n1 --force -n 1 -i 1 -p 0 -m 0 -l 1 -r
+- nvme format /dev/nvme3n1 --force -n 1 -i 1 -p 0 -m 0 -l 1 -r
+- mdadm -C /dev/md0 -l 1 -n 2 /dev/nvme2n1 /dev/nvme3n1
+
+The following is the log when a problem occurs. The problematic device
+is in the faulty device state.
+
+Log:
+[  135.037253] md/raid1:md0: active with 2 out of 2 mirrors
+[  135.038228] md0: detected capacity change from 0 to 7501212288
+[  135.038270] md: resync of RAID array md0
+[  151.252172] nvme2n1: I/O Cmd(0x1) @ LBA 16, 8 blocks, I/O Error (sct 0x2 / sc 0x82) MORE
+[  151.252180] protection error, dev nvme2n1, sector 16 op 0x1:(WRITE) flags 0x10800 phys_seg 1 prio class 2
+[  151.252185] md: super_written gets error=-84
+[  151.252187] md/raid1:md0: Disk failure on nvme2n1, disabling device.
+               md/raid1:md0: Operation continuing on 1 devices.
+[  151.267450] nvme3n1: I/O Cmd(0x1) @ LBA 16, 8 blocks, I/O Error (sct 0x2 / sc 0x82) MORE
+[  151.267457] protection error, dev nvme3n1, sector 16 op 0x1:(WRITE) flags 0x10800 phys_seg 1 prio class 2
+[  151.267460] md: super_written gets error=-84
+[  151.268458] md: md0: resync interrupted.
+[  151.320765] md: resync of RAID array md0
+[  151.321205] md: md0: resync done.
+
+Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+---
+ drivers/md/md-bitmap.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 1ff712889a3b..dfb7418ba48a 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -467,6 +467,13 @@ void md_bitmap_update_sb(struct bitmap *bitmap)
+ 		return;
+ 	if (!bitmap->storage.sb_page) /* no superblock */
+ 		return;
++
++	/*
++	 * Before modifying the bitmap page and re-issue it, wait for
++	 * the requests previously sent to the device to be completed.
++	 */
++	md_bitmap_wait_writes(bitmap);
++
+ 	sb = kmap_atomic(bitmap->storage.sb_page);
+ 	sb->events = cpu_to_le64(bitmap->mddev->events);
+ 	if (bitmap->mddev->events < bitmap->events_cleared)
+-- 
+2.34.1
