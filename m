@@ -2,194 +2,203 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 620B8C0015E
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Jul 2023 09:36:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C15DCC001DC
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Jul 2023 10:03:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233427AbjGZJgA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Jul 2023 05:36:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53366 "EHLO
+        id S231645AbjGZKDQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Jul 2023 06:03:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233312AbjGZJfb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Jul 2023 05:35:31 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B749744BD
-        for <linux-raid@vger.kernel.org>; Wed, 26 Jul 2023 02:33:50 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-66d6a9851f3so1489399b3a.0
-        for <linux-raid@vger.kernel.org>; Wed, 26 Jul 2023 02:33:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690364030; x=1690968830;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0oULOTnWb1HIc+jcDQkyDbPD+ewEuK6cRZsxNFZBJHs=;
-        b=QJhhRpaTfMAfucHkCz2d9TS31hpYk30s2kQKv681O+Sl1mLTZQhZq5VKb4l9mXe+gX
-         5Eax6ixoNcCSNY9H6aAkwgnBd/g9cM9X43ylT+UhHbYekfmlgjo/JXqlix6WaCFQ7jVV
-         2D4QfnYhGItzA17GFTgozRmivkdC7H5IwsXEWhmkOBzQK5UpXhnT6Ls+I4I3tsoeozxU
-         24KbqK2Cq3sIWZ8RaqWYBiX9Q9627K0AND5qR2t9+dtM8IjHsDiCPK6lh5ggLgTON/bP
-         sMZVbirBGOz1XlXtXsxmGmw+9U7+KmVQpZdmOnau0hPanAHKCfZx0jR+DbnWSE4a/7ep
-         yq9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690364030; x=1690968830;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0oULOTnWb1HIc+jcDQkyDbPD+ewEuK6cRZsxNFZBJHs=;
-        b=gzWaVj/CB4p90RGHxhVqOr+R8BFZGJ9kLi6Oml/4nureryX9IVvNCCdiNB2COiyqSf
-         JCguHHItOb1gw2pMLwWip1kghaP08bkEiOpk7ZE0qxDQdbJN0hIpaRoquR6qiNDjfmHe
-         BGPVzsySKytOdbCSnHGAIV35P/kw6FHphK1LTBLTPORQY2bhfkw7O17WlH32d/9J+ID+
-         imJdxTzfLL0fXyRSjgqeO0tpJvO8AupNJ+UIIis78+sjwJ9t6rOs4Rv9Gs8zZK0Vd3Hc
-         OFBeyUYOlZkc4d+MrXvcSDDyEGFj+DKn2t7efsY1kW0CeElLZ3EBOw6s3mVB22WDZi5Q
-         wwVg==
-X-Gm-Message-State: ABy/qLa+EUKvbhM0dAbKLoawoAsu0RT6Udl2Hz5WGv8Q5CUiJNir1dox
-        BH0RD9U9VDV4gJO5i6DydN+zqA==
-X-Google-Smtp-Source: APBJJlG8LKe8O0SB++JE7Hsj6dMankp6b2TdGG8KZmgQCX7ZvwrXNm6kysx08G1J6PXDjDRRJyafNA==
-X-Received: by 2002:a17:903:32c9:b0:1b8:5827:8763 with SMTP id i9-20020a17090332c900b001b858278763mr2037984plr.4.1690364030014;
-        Wed, 26 Jul 2023 02:33:50 -0700 (PDT)
-Received: from [10.70.252.135] ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id n5-20020a170902d2c500b001b89466a5f4sm12582766plc.105.2023.07.26.02.33.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 26 Jul 2023 02:33:49 -0700 (PDT)
-Message-ID: <0f12022e-5dd2-fb1c-f018-05f8ff0303ae@bytedance.com>
-Date:   Wed, 26 Jul 2023 17:33:36 +0800
+        with ESMTP id S231578AbjGZKDN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Jul 2023 06:03:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6675DBF
+        for <linux-raid@vger.kernel.org>; Wed, 26 Jul 2023 03:02:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1690365755;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=QxaSGBKWwKusAWuFQg+kqDTec3ra+7FZ31YmMAcoho4=;
+        b=Xy+bpLgWbZFACYZXok+M4RkkuR2i3m2FBT5P3IJN0+37HoBY0ku/Y1K/UOmc2n2DVxN8yA
+        LOKopEHUlg63hZXPJ8mZm6u86GPcdwnsIfswqOaLDsqkV6fajh4Z5pA2RdbIn9vgwmTmI4
+        HolmHGhLE7dpnlQugS8d77xe+ItCC1E=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-650-60OqMXRANEOtWuWkknBIdA-1; Wed, 26 Jul 2023 06:02:31 -0400
+X-MC-Unique: 60OqMXRANEOtWuWkknBIdA-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8BCEF185A792;
+        Wed, 26 Jul 2023 10:02:30 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.158])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AEA43492B01;
+        Wed, 26 Jul 2023 10:02:28 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+To:     "Theodore Ts'o" <tytso@mit.edu>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Song Liu <song@kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Alasdair Kergon <agk@redhat.com>
+cc:     dhowells@redhat.com, linux-ext4@vger.kernel.org,
+        linux-mm@kvack.org, linux-raid@vger.kernel.org,
+        dm-devel@redhat.com, linux-kernel@vger.kernel.org
+Subject: Processes hung in "D" state in ext4, mm, md and dmcrypt
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: [PATCH v2 28/47] bcache: dynamically allocate the md-bcache
- shrinker
-Content-Language: en-US
-To:     Muchun Song <muchun.song@linux.dev>
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
-        rcu@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
-        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
-        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
-        yujie.liu@intel.com, gregkh@linuxfoundation.org
-References: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
- <20230724094354.90817-29-zhengqi.arch@bytedance.com>
- <4ee26da4-314e-0517-5d9a-31fb107368ef@linux.dev>
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-In-Reply-To: <4ee26da4-314e-0517-5d9a-31fb107368ef@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <4918.1690365747.1@warthog.procyon.org.uk>
+Date:   Wed, 26 Jul 2023 11:02:27 +0100
+Message-ID: <4919.1690365747@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi,
 
+With 6.5-rc2 (6.5.0-0.rc2.20230721gitf7e3a1bafdea.20.fc39.x86_64), I'm seeing
+a bunch of processes getting stuck in the D state on my desktop after a few
+hours of reading email and compiling stuff.  It's happened every day this week
+so far and I managed to grab stack traces of the stuck processes this morning
+(see attached).
 
-On 2023/7/26 15:32, Muchun Song wrote:
-> 
-> 
-> On 2023/7/24 17:43, Qi Zheng wrote:
->> In preparation for implementing lockless slab shrink, use new APIs to
->> dynamically allocate the md-bcache shrinker, so that it can be freed
->> asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
->> read-side critical section when releasing the struct cache_set.
->>
->> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
->> ---
->>   drivers/md/bcache/bcache.h |  2 +-
->>   drivers/md/bcache/btree.c  | 27 ++++++++++++++++-----------
->>   drivers/md/bcache/sysfs.c  |  3 ++-
->>   3 files changed, 19 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/md/bcache/bcache.h b/drivers/md/bcache/bcache.h
->> index 5a79bb3c272f..c622bc50f81b 100644
->> --- a/drivers/md/bcache/bcache.h
->> +++ b/drivers/md/bcache/bcache.h
->> @@ -541,7 +541,7 @@ struct cache_set {
->>       struct bio_set        bio_split;
->>       /* For the btree cache */
->> -    struct shrinker        shrink;
->> +    struct shrinker        *shrink;
->>       /* For the btree cache and anything allocation related */
->>       struct mutex        bucket_lock;
->> diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
->> index fd121a61f17c..c176c7fc77d9 100644
->> --- a/drivers/md/bcache/btree.c
->> +++ b/drivers/md/bcache/btree.c
->> @@ -667,7 +667,7 @@ static int mca_reap(struct btree *b, unsigned int 
->> min_order, bool flush)
->>   static unsigned long bch_mca_scan(struct shrinker *shrink,
->>                     struct shrink_control *sc)
->>   {
->> -    struct cache_set *c = container_of(shrink, struct cache_set, 
->> shrink);
->> +    struct cache_set *c = shrink->private_data;
->>       struct btree *b, *t;
->>       unsigned long i, nr = sc->nr_to_scan;
->>       unsigned long freed = 0;
->> @@ -734,7 +734,7 @@ static unsigned long bch_mca_scan(struct shrinker 
->> *shrink,
->>   static unsigned long bch_mca_count(struct shrinker *shrink,
->>                      struct shrink_control *sc)
->>   {
->> -    struct cache_set *c = container_of(shrink, struct cache_set, 
->> shrink);
->> +    struct cache_set *c = shrink->private_data;
->>       if (c->shrinker_disabled)
->>           return 0;
->> @@ -752,8 +752,8 @@ void bch_btree_cache_free(struct cache_set *c)
->>       closure_init_stack(&cl);
->> -    if (c->shrink.list.next)
->> -        unregister_shrinker(&c->shrink);
->> +    if (c->shrink)
->> +        shrinker_unregister(c->shrink);
->>       mutex_lock(&c->bucket_lock);
->> @@ -828,14 +828,19 @@ int bch_btree_cache_alloc(struct cache_set *c)
->>           c->verify_data = NULL;
->>   #endif
->> -    c->shrink.count_objects = bch_mca_count;
->> -    c->shrink.scan_objects = bch_mca_scan;
->> -    c->shrink.seeks = 4;
->> -    c->shrink.batch = c->btree_pages * 2;
->> +    c->shrink = shrinker_alloc(0, "md-bcache:%pU", c->set_uuid);
->> +    if (!c->shrink) {
->> +        pr_warn("bcache: %s: could not allocate shrinker\n", __func__);
->> +        return -ENOMEM;
-> 
-> Seems you have cheanged the semantic of this. In the past,
-> it is better to have a shrinker, but now it becomes a mandatory.
-> Right? I don't know if it is acceptable. From my point of view,
-> just do the cleanup, don't change any behaviour.
+There are two blockdevs involved below, /dev/md2 and /dev/md3.  md3 is a raid1
+array with two partitions with an ext4 partition on it.  md2 is similar but
+it's dm-crypted and ext4 is on top of that.
 
-Oh, should return 0 here, will do.
+David
+---
 
-> 
->> +    }
->> +
->> +    c->shrink->count_objects = bch_mca_count;
->> +    c->shrink->scan_objects = bch_mca_scan;
->> +    c->shrink->seeks = 4;
->> +    c->shrink->batch = c->btree_pages * 2;
->> +    c->shrink->private_data = c;
->> -    if (register_shrinker(&c->shrink, "md-bcache:%pU", c->set_uuid))
->> -        pr_warn("bcache: %s: could not register shrinker\n",
->> -                __func__);
->> +    shrinker_register(c->shrink);
->>       return 0;
->>   }
->> diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
->> index 0e2c1880f60b..45d8af755de6 100644
->> --- a/drivers/md/bcache/sysfs.c
->> +++ b/drivers/md/bcache/sysfs.c
->> @@ -866,7 +866,8 @@ STORE(__bch_cache_set)
->>           sc.gfp_mask = GFP_KERNEL;
->>           sc.nr_to_scan = strtoul_or_return(buf);
->> -        c->shrink.scan_objects(&c->shrink, &sc);
->> +        if (c->shrink)
->> +            c->shrink->scan_objects(c->shrink, &sc);
->>       }
->>       sysfs_strtoul_clamp(congested_read_threshold_us,
-> 
+   1015 ?        D      0:04 [md2_raid1]
+   1074 ?        D      0:00 [jbd2/sda6-8]
+   1138 ?        D      0:00 [jbd2/md3-8]
+   1167 ?        D      0:10 [dmcrypt_write/253:0]
+   1202 ?        D      0:03 [jbd2/dm-0-8]
+ 117547 ?        D      5:12 [kworker/u16:8+flush-9:3]
+ 121540 ?        D      0:46 [kworker/u16:10+flush-253:0]
+ 125431 pts/2    Dl+    0:00 emacs .stgit-edit.txt
+ 125469 ?        D      0:00 /usr/libexec/nmh/rcvstore +kernel
+
+===1015===
+    PID TTY      STAT   TIME COMMAND
+   1015 ?        D      0:04 [md2_raid1]
+[<0>] md_super_wait+0xa2/0xe0
+[<0>] md_bitmap_daemon_work+0x183/0x3b0
+[<0>] md_check_recovery+0x42/0x5a0
+[<0>] raid1d+0x87/0x16f0 [raid1]
+[<0>] md_thread+0xab/0x190
+[<0>] kthread+0xe5/0x120
+[<0>] ret_from_fork+0x31/0x50
+[<0>] ret_from_fork_asm+0x1b/0x30
+
+===1074===
+    PID TTY      STAT   TIME COMMAND
+   1074 ?        D      0:00 [jbd2/sda6-8]
+[<0>] jbd2_journal_commit_transaction+0x11a6/0x1a20
+[<0>] kjournald2+0xad/0x280
+[<0>] kthread+0xe5/0x120
+[<0>] ret_from_fork+0x31/0x50
+[<0>] ret_from_fork_asm+0x1b/0x30
+
+===1138===
+    PID TTY      STAT   TIME COMMAND
+   1138 ?        D      0:00 [jbd2/md3-8]
+[<0>] jbd2_journal_commit_transaction+0x162d/0x1a20
+[<0>] kjournald2+0xad/0x280
+[<0>] kthread+0xe5/0x120
+[<0>] ret_from_fork+0x31/0x50
+[<0>] ret_from_fork_asm+0x1b/0x30
+
+===1167===
+    PID TTY      STAT   TIME COMMAND
+   1167 ?        D      0:10 [dmcrypt_write/253:0]
+[<0>] md_super_wait+0xa2/0xe0
+[<0>] md_bitmap_unplug+0xad/0x120
+[<0>] flush_bio_list+0xf3/0x100 [raid1]
+[<0>] raid1_unplug+0x3b/0xb0 [raid1]
+[<0>] __blk_flush_plug+0xd8/0x160
+[<0>] blk_finish_plug+0x29/0x40
+[<0>] dmcrypt_write+0x132/0x140 [dm_crypt]
+[<0>] kthread+0xe5/0x120
+[<0>] ret_from_fork+0x31/0x50
+[<0>] ret_from_fork_asm+0x1b/0x30
+
+===1202===
+    PID TTY      STAT   TIME COMMAND
+   1202 ?        D      0:03 [jbd2/dm-0-8]
+[<0>] jbd2_journal_commit_transaction+0x162d/0x1a20
+[<0>] kjournald2+0xad/0x280
+[<0>] kthread+0xe5/0x120
+[<0>] ret_from_fork+0x31/0x50
+[<0>] ret_from_fork_asm+0x1b/0x30
+
+===117547===
+    PID TTY      STAT   TIME COMMAND
+ 117547 ?        D      5:12 [kworker/u16:8+flush-9:3]
+[<0>] blk_mq_get_tag+0x11e/0x2b0
+[<0>] __blk_mq_alloc_requests+0x1bc/0x350
+[<0>] blk_mq_submit_bio+0x2c7/0x680
+[<0>] __submit_bio+0x8b/0x170
+[<0>] submit_bio_noacct_nocheck+0x159/0x370
+[<0>] __block_write_full_folio+0x1e1/0x400
+[<0>] writepage_cb+0x1a/0x70
+[<0>] write_cache_pages+0x144/0x3b0
+[<0>] do_writepages+0x164/0x1e0
+[<0>] __writeback_single_inode+0x3d/0x360
+[<0>] writeback_sb_inodes+0x1ed/0x4b0
+[<0>] __writeback_inodes_wb+0x4c/0xf0
+[<0>] wb_writeback+0x298/0x310
+[<0>] wb_workfn+0x35b/0x510
+[<0>] process_one_work+0x1de/0x3f0
+[<0>] worker_thread+0x51/0x390
+[<0>] kthread+0xe5/0x120
+[<0>] ret_from_fork+0x31/0x50
+[<0>] ret_from_fork_asm+0x1b/0x30
+
+===121540===
+    PID TTY      STAT   TIME COMMAND
+ 121540 ?        D      0:46 [kworker/u16:10+flush-253:0]
+[<0>] folio_wait_bit_common+0x13d/0x350
+[<0>] mpage_prepare_extent_to_map+0x309/0x4d0
+[<0>] ext4_do_writepages+0x25d/0xc90
+[<0>] ext4_writepages+0xad/0x180
+[<0>] do_writepages+0xcf/0x1e0
+[<0>] __writeback_single_inode+0x3d/0x360
+[<0>] writeback_sb_inodes+0x1ed/0x4b0
+[<0>] __writeback_inodes_wb+0x4c/0xf0
+[<0>] wb_writeback+0x298/0x310
+[<0>] wb_workfn+0x35b/0x510
+[<0>] process_one_work+0x1de/0x3f0
+[<0>] worker_thread+0x51/0x390
+[<0>] kthread+0xe5/0x120
+[<0>] ret_from_fork+0x31/0x50
+[<0>] ret_from_fork_asm+0x1b/0x30
+
+===125431===
+    PID TTY      STAT   TIME COMMAND
+ 125431 pts/2    Dl+    0:00 emacs .stgit-edit.txt
+[<0>] jbd2_log_wait_commit+0xd8/0x140
+[<0>] ext4_sync_file+0x1cc/0x380
+[<0>] __x64_sys_fsync+0x3b/0x70
+[<0>] do_syscall_64+0x5d/0x90
+[<0>] entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+
+===125469===
+    PID TTY      STAT   TIME COMMAND
+ 125469 ?        D      0:00 /usr/libexec/nmh/rcvstore +kernel
+[<0>] folio_wait_bit_common+0x13d/0x350
+[<0>] folio_wait_writeback+0x2c/0x90
+[<0>] truncate_inode_partial_folio+0x5e/0x1a0
+[<0>] truncate_inode_pages_range+0x1da/0x400
+[<0>] truncate_pagecache+0x47/0x60
+[<0>] ext4_setattr+0x685/0xba0
+[<0>] notify_change+0x1e0/0x4a0
+[<0>] do_truncate+0x98/0xf0
+[<0>] do_sys_ftruncate+0x15c/0x1b0
+[<0>] do_syscall_64+0x5d/0x90
+[<0>] entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+
