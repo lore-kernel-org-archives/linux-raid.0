@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 420DDC04E69
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 08:31:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9734C00528
+	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 08:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234622AbjG0Ibq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Jul 2023 04:31:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33718 "EHLO
+        id S234632AbjG0Ibt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 27 Jul 2023 04:31:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234475AbjG0I2Q (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 04:28:16 -0400
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59EC84ED6
+        with ESMTP id S234470AbjG0I2P (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 04:28:15 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35DA146A9
         for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:14:41 -0700 (PDT)
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6862d4a1376so189482b3a.0
-        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:14:41 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-682eef7d752so204942b3a.0
+        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:14:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690445550; x=1691050350;
+        d=bytedance.com; s=google; t=1690445637; x=1691050437;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=xVRvDV5EwClRaurogoo7jeCmWiPiam6NNimoVigpYsU=;
-        b=VWs5xsEpAgA4DYNqF8K/FN4j7udZSbXqCeXnxv3YTG0Ik0TL2nl/Ugga9u7R+ZJeNR
-         Wigeakgpk32H5TPwyUhkE7IqyM04zeUMVcePDa9eTKcIqF7mvyeMYMdU6pDKFeWcNWaR
-         qvQCy7Nu/xowW6gGi5vD7bu0NuXZ8UlBiffMC2ufEn1khdTpqjsjaFRzBjIrPJfwSFKG
-         LuwPnQLNAsZ+sSXWuMdy2i4BIcl75Eemb6JwQ/h/qU8W848mv79pSK1svvdUmrASzQOQ
-         aQzV7ZNEhcTzx5oZvxCfNrl/tTU7BbbCJB9SufDvnC5P9J0UXQ5a+DGx/aTVEKn/U2IP
-         9i7w==
+        bh=wkWZ9/xaCXa97bQ5JXnZc5xW9B3SNGrJMT1hKcCw6ws=;
+        b=EDfCdETq+fWum4Z4rVmLJcfO1jsg67VgnqiA/czndVSbNlSpbiLUxCCQQbrycQZD4N
+         jQ6ZzEztmrAV1/GQh0DPbs4MerEzMqTN5oUJT+1JgEVVCAFedy/wmgVhs7WN/b/b654/
+         J3bWoofyGEQUeJzT2evHimB9xJj54scgZA3ezNM1eyl//hvUHn6qW8m2jc5RxZ9Q53pq
+         qjYZmev8IqT72hXdHUOA71yDJ6nyeNuVcIJzjtWGkynPPHPpyqKgHAKZWC3Im8l22hhd
+         2mNa6yYVElvUfcaQGhKZMnwewb3KL70R9vxxm9ctoitBRKZ5V08UPUQRdkaKB4nkVDWK
+         NCpQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690445550; x=1691050350;
+        d=1e100.net; s=20221208; t=1690445637; x=1691050437;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=xVRvDV5EwClRaurogoo7jeCmWiPiam6NNimoVigpYsU=;
-        b=IbtXLN6sV1mSz8Pty2O/WMOtYMvWLERKtZrls2gvkoxTUJsLsHXfxpIPwhBL2f2RQi
-         9QmpN8fGqOzoBERA+Pp3EZHiJAWBZHk+y1q913/ixYphpWZan/aptVbvEn6yuPB/bW86
-         5ne9r1guBeaQ0rPrafO+3UlukmSz6tljNmV9/2Ki/RbgTsoT9CJ4rrNoFgrljNhHXic2
-         iFIeN3yhAKSKUAEIJk5BtT3sKxEH5j8ItZW+IeYosNplxztOrMNIi27pLTOMUjuosysG
-         CgO+F42DwntoEDcv+X6ERXZlS0YCl3WAtPHhFGHfx18TDMviFjAxUXD8h9ZfGiYGa1bO
-         59Xw==
-X-Gm-Message-State: ABy/qLadb8pLubcOMecoUDbRdfHNjcf50DGPvcPjvuee+yRJ3lo11BY2
-        1rrfDs39VaPyWuFDSLBmXjE8nA==
-X-Google-Smtp-Source: APBJJlF08KF/2Ja1GiYKXzi0SbMDWba0XluK8fJxZEI3QrufrkFF+7lpMuNnhPZU1iQtSxNfzq1jqw==
-X-Received: by 2002:a05:6a21:32a9:b0:136:f3ef:4d2 with SMTP id yt41-20020a056a2132a900b00136f3ef04d2mr6069372pzb.3.1690445550183;
-        Thu, 27 Jul 2023 01:12:30 -0700 (PDT)
+        bh=wkWZ9/xaCXa97bQ5JXnZc5xW9B3SNGrJMT1hKcCw6ws=;
+        b=C4gCos7Ws9s3r6GH9WoHYlkkBiCMTDX1b6c4we/VOroU9+RnK/i9lMSSaDSfB85qLo
+         ZtnJ8+pcaSxI+Q+t9ztiwElgB+2gUZoK1Sh9A25HOWJunSsOFucWLG/BK+W+SmY+vQP3
+         42HZ93pATyd/146iQASR8pg61CAiU1qLdF7kFBbQ6IUdUquHJsAFELlS8d7YyexU2+O/
+         DOgwH9nYyTJgD/5dx7SiHE9b+6x7YAHJ4mChSGvb5xAA8Xe+v9LjwbeLLvgaSndoqaXY
+         F7G8iw9iFv/2XHIZ4rfDBEIzSqmhniUmSY7txrUNXHyjbSkd5gfhuY/4KI91RM2DLY8z
+         4EUw==
+X-Gm-Message-State: ABy/qLagGH4bBuYKMnG65szJzRTbK8UXSSrZh0NQ1uql/msDeX/6jINr
+        UUJe7okTHS3aF2qh0DG+iNmppQ==
+X-Google-Smtp-Source: APBJJlHv3kehM44VAWCca2syD2CKM7i434EcumRqZh5gO/U3rxv+9ZnIssQP5Ien17rj+O8gWl3H0Q==
+X-Received: by 2002:a05:6a00:1586:b0:67f:8ef5:2643 with SMTP id u6-20020a056a00158600b0067f8ef52643mr5213351pfk.2.1690445637383;
+        Thu, 27 Jul 2023 01:13:57 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.12.18
+        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.13.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jul 2023 01:12:29 -0700 (PDT)
+        Thu, 27 Jul 2023 01:13:57 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -70,9 +70,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>,
         Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v3 33/49] mbcache: dynamically allocate the mbcache shrinker
-Date:   Thu, 27 Jul 2023 16:04:46 +0800
-Message-Id: <20230727080502.77895-34-zhengqi.arch@bytedance.com>
+Subject: [PATCH v3 40/49] xfs: dynamically allocate the xfs-qm shrinker
+Date:   Thu, 27 Jul 2023 16:04:53 +0800
+Message-Id: <20230727080502.77895-41-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
 References: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
@@ -83,83 +83,90 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 In preparation for implementing lockless slab shrink, use new APIs to
-dynamically allocate the mbcache shrinker, so that it can be freed
+dynamically allocate the xfs-qm shrinker, so that it can be freed
 asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
-read-side critical section when releasing the struct mb_cache.
+read-side critical section when releasing the struct xfs_quotainfo.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- fs/mbcache.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_qm.c | 26 +++++++++++++-------------
+ fs/xfs/xfs_qm.h |  2 +-
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/fs/mbcache.c b/fs/mbcache.c
-index 2a4b8b549e93..0d1e24e9a5e3 100644
---- a/fs/mbcache.c
-+++ b/fs/mbcache.c
-@@ -37,7 +37,7 @@ struct mb_cache {
- 	struct list_head	c_list;
- 	/* Number of entries in cache */
- 	unsigned long		c_entry_count;
--	struct shrinker		c_shrink;
-+	struct shrinker		*c_shrink;
- 	/* Work for shrinking when the cache has too many entries */
- 	struct work_struct	c_shrink_work;
- };
-@@ -293,8 +293,7 @@ EXPORT_SYMBOL(mb_cache_entry_touch);
- static unsigned long mb_cache_count(struct shrinker *shrink,
- 				    struct shrink_control *sc)
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 6abcc34fafd8..032f0a208bd2 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -504,8 +504,7 @@ xfs_qm_shrink_scan(
+ 	struct shrinker		*shrink,
+ 	struct shrink_control	*sc)
  {
--	struct mb_cache *cache = container_of(shrink, struct mb_cache,
--					      c_shrink);
-+	struct mb_cache *cache = shrink->private_data;
+-	struct xfs_quotainfo	*qi = container_of(shrink,
+-					struct xfs_quotainfo, qi_shrinker);
++	struct xfs_quotainfo	*qi = shrink->private_data;
+ 	struct xfs_qm_isolate	isol;
+ 	unsigned long		freed;
+ 	int			error;
+@@ -539,8 +538,7 @@ xfs_qm_shrink_count(
+ 	struct shrinker		*shrink,
+ 	struct shrink_control	*sc)
+ {
+-	struct xfs_quotainfo	*qi = container_of(shrink,
+-					struct xfs_quotainfo, qi_shrinker);
++	struct xfs_quotainfo	*qi = shrink->private_data;
  
- 	return cache->c_entry_count;
+ 	return list_lru_shrink_count(&qi->qi_lru, sc);
  }
-@@ -333,8 +332,7 @@ static unsigned long mb_cache_shrink(struct mb_cache *cache,
- static unsigned long mb_cache_scan(struct shrinker *shrink,
- 				   struct shrink_control *sc)
- {
--	struct mb_cache *cache = container_of(shrink, struct mb_cache,
--					      c_shrink);
-+	struct mb_cache *cache = shrink->private_data;
- 	return mb_cache_shrink(cache, sc->nr_to_scan);
- }
+@@ -680,16 +678,18 @@ xfs_qm_init_quotainfo(
+ 	if (XFS_IS_PQUOTA_ON(mp))
+ 		xfs_qm_set_defquota(mp, XFS_DQTYPE_PROJ, qinf);
  
-@@ -377,15 +375,20 @@ struct mb_cache *mb_cache_create(int bucket_bits)
- 	for (i = 0; i < bucket_count; i++)
- 		INIT_HLIST_BL_HEAD(&cache->c_hash[i]);
+-	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
+-	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
+-	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
+-	qinf->qi_shrinker.flags = SHRINKER_NUMA_AWARE;
+-
+-	error = register_shrinker(&qinf->qi_shrinker, "xfs-qm:%s",
+-				  mp->m_super->s_id);
+-	if (error)
++	qinf->qi_shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE, "xfs-qm:%s",
++					   mp->m_super->s_id);
++	if (!qinf->qi_shrinker)
+ 		goto out_free_inos;
  
--	cache->c_shrink.count_objects = mb_cache_count;
--	cache->c_shrink.scan_objects = mb_cache_scan;
--	cache->c_shrink.seeks = DEFAULT_SEEKS;
--	if (register_shrinker(&cache->c_shrink, "mbcache-shrinker")) {
-+	cache->c_shrink = shrinker_alloc(0, "mbcache-shrinker");
-+	if (!cache->c_shrink) {
- 		kfree(cache->c_hash);
- 		kfree(cache);
- 		goto err_out;
- 	}
- 
-+	cache->c_shrink->count_objects = mb_cache_count;
-+	cache->c_shrink->scan_objects = mb_cache_scan;
-+	cache->c_shrink->seeks = DEFAULT_SEEKS;
-+	cache->c_shrink->private_data = cache;
++	qinf->qi_shrinker->count_objects = xfs_qm_shrink_count;
++	qinf->qi_shrinker->scan_objects = xfs_qm_shrink_scan;
++	qinf->qi_shrinker->seeks = DEFAULT_SEEKS;
++	qinf->qi_shrinker->private_data = qinf;
 +
-+	shrinker_register(cache->c_shrink);
++	shrinker_register(qinf->qi_shrinker);
 +
- 	INIT_WORK(&cache->c_shrink_work, mb_cache_shrink_worker);
+ 	return 0;
  
- 	return cache;
-@@ -406,7 +409,7 @@ void mb_cache_destroy(struct mb_cache *cache)
- {
- 	struct mb_cache_entry *entry, *next;
+ out_free_inos:
+@@ -718,7 +718,7 @@ xfs_qm_destroy_quotainfo(
+ 	qi = mp->m_quotainfo;
+ 	ASSERT(qi != NULL);
  
--	unregister_shrinker(&cache->c_shrink);
-+	shrinker_free(cache->c_shrink);
+-	unregister_shrinker(&qi->qi_shrinker);
++	shrinker_free(qi->qi_shrinker);
+ 	list_lru_destroy(&qi->qi_lru);
+ 	xfs_qm_destroy_quotainos(qi);
+ 	mutex_destroy(&qi->qi_tree_lock);
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 9683f0457d19..d5c9fc4ba591 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -63,7 +63,7 @@ struct xfs_quotainfo {
+ 	struct xfs_def_quota	qi_usr_default;
+ 	struct xfs_def_quota	qi_grp_default;
+ 	struct xfs_def_quota	qi_prj_default;
+-	struct shrinker		qi_shrinker;
++	struct shrinker		*qi_shrinker;
  
- 	/*
- 	 * We don't bother with any locking. Cache must not be used at this
+ 	/* Minimum and maximum quota expiration timestamp values. */
+ 	time64_t		qi_expiry_min;
 -- 
 2.30.2
 
