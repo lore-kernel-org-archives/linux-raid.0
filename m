@@ -2,138 +2,200 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BA0DC04FE1
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 22:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEF3FC00528
+	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 23:07:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231605AbjG0W7p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Jul 2023 18:59:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32918 "EHLO
+        id S230160AbjG0XHf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 27 Jul 2023 19:07:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232711AbjG0W7o (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 18:59:44 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7BFB30C0
-        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 15:59:41 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-686f94328a4so673978b3a.0
-        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 15:59:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1690498781; x=1691103581;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=8CTrna5t3S7P99W+zrM1I2ApZYIkXTVQedDFVAI6oIw=;
-        b=X7pt5OuyEbf8f6R9fnvI9dxfnaaqjP1RGRY8ZMiJ1wEZkopGyRUZXV3N7HE87n67xj
-         XeLWxsKHlNX6ErnVJUF/xO5BY5VT61hhmCqWCbxit+6W6UUMx7WmvB86s0q+wgGSoL6W
-         koucWxrpBOYNBJME5+HxRa/lXlSreJXWQaoDeJrNnWxYMUw7bNkMz2551ucFVRtsjQZW
-         0ldvdZqoq1ohkP2t1Jbzv+uf1kwplqapkGN1TtrTmsgZICGsR0gfv1ElN5pvcVjNfGjj
-         OPatiCTf9mYCZ8F6QAcUCONXn7kELLjAWaYShbgFOaFFniHTDeIvjRJJRIf4kK+rSYkZ
-         RVyw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690498781; x=1691103581;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=8CTrna5t3S7P99W+zrM1I2ApZYIkXTVQedDFVAI6oIw=;
-        b=ZFEj+hy8yJUY20y2yfM8r67b14Tt4q930uuuUHh7dyUvw/YIUikVSphxZpeVWHNYt4
-         66oUUsIX5a1NsxJrgboWwA9uowRStwiSGxcDO3x6IaZ5gjiubTN0+D5HjAXSi/ZGU01k
-         w1HcBS5rkt9V5EjhssJqg5r1XZRpcRgo2BK4Abu4Q7hhIVMTdtGB1hdbAGf+PBdb9+91
-         U13P9qOsNFnq5twjZGxJRxvF7c3QEQl+wxp2s08ZEvW9VaC41iRKzztPHGGXxMvXUDbZ
-         6SDSHyZ8VdaNG01z+GMYh9LEfXfludv4uIiBqCnd1ZuqKthpriDYfeBOCzZyJq2nIrcU
-         TCAw==
-X-Gm-Message-State: ABy/qLYEF857F5sQeXZYKTdyCopbpqWrISW4GyRs4odRwQTKLdmm1vyo
-        9cra9iRAXjcqD90PANMeTXQeWQ==
-X-Google-Smtp-Source: APBJJlGFE8oAcAZu2XvzWjC5bjR81v7OIjjTfZ8m+EaEe6Rjpq3cuwvHN3I08mErFwOZJpneP9Ly1g==
-X-Received: by 2002:a05:6a00:17a8:b0:64d:42b9:6895 with SMTP id s40-20020a056a0017a800b0064d42b96895mr61072pfg.5.1690498780930;
-        Thu, 27 Jul 2023 15:59:40 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
-        by smtp.gmail.com with ESMTPSA id p24-20020aa78618000000b0068702b66ab1sm1115813pfn.174.2023.07.27.15.59.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jul 2023 15:59:40 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qP9xJ-00BKKZ-1O;
-        Fri, 28 Jul 2023 08:59:37 +1000
-Date:   Fri, 28 Jul 2023 08:59:37 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Qi Zheng <zhengqi.arch@bytedance.com>,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
-        rcu@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Muchun Song <songmuchun@bytedance.com>,
-        akpm@linux-foundation.org, tkhai@ya.ru, vbabka@suse.cz,
-        roman.gushchin@linux.dev, djwong@kernel.org, brauner@kernel.org,
-        paulmck@kernel.org, tytso@mit.edu, steven.price@arm.com,
-        cel@kernel.org, senozhatsky@chromium.org, yujie.liu@intel.com,
-        gregkh@linuxfoundation.org, muchun.song@linux.dev
-Subject: Re: [PATCH v3 28/49] dm zoned: dynamically allocate the
- dm-zoned-meta shrinker
-Message-ID: <ZML22YJi5vPBDEDj@dread.disaster.area>
-References: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
- <20230727080502.77895-29-zhengqi.arch@bytedance.com>
- <baaf7de4-9a0e-b953-2b6a-46e60c415614@kernel.org>
- <56ee1d92-28ee-81cb-9c41-6ca7ea6556b0@bytedance.com>
- <ba0868b2-9f90-3d81-1c91-8810057fb3ce@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ba0868b2-9f90-3d81-1c91-8810057fb3ce@kernel.org>
+        with ESMTP id S230221AbjG0XHe (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 19:07:34 -0400
+Received: from mgamail.intel.com (unknown [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36B1B30CF
+        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 16:07:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1690499253; x=1722035253;
+  h=date:from:to:cc:subject:message-id;
+  bh=kkaD8C3imDxbYPImXOujnIRIMtnkAV8z+GGhp8zA7KU=;
+  b=AgrmAAx8et9/4segJefHH+plMHH9ZOM0S8ZagkZj2rCK8RHOkM5jncgP
+   jxekV9wZHNROse0qDm3A+w5DQPq01KDnqC22JsDuN6H1h+TiY7RmMHwBL
+   zqcqLjJOwkfY78zfiuwKPqNhTmT1wyeCUg+rl7UdMV/WDsA97SJHsm/WV
+   ngq/oA0D734xx05nT0Zq/Nl02/tc9z7Awy/9lnr26Ybw3CDRjf3Z09Kwk
+   gUDgOt68Ei9menwpjRjsSq5ghlUsYDwfzuQ1JqvJEdN0LodoD34dtsFV5
+   LJCVJuGxyA3oqjaaAqT85EucT9zI21pMt/uZmFu1zuOs3FS2pWRPJj9wl
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10784"; a="365911065"
+X-IronPort-AV: E=Sophos;i="6.01,236,1684825200"; 
+   d="scan'208";a="365911065"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2023 16:07:31 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10784"; a="704316218"
+X-IronPort-AV: E=Sophos;i="6.01,236,1684825200"; 
+   d="scan'208";a="704316218"
+Received: from lkp-server02.sh.intel.com (HELO 953e8cd98f7d) ([10.239.97.151])
+  by orsmga006.jf.intel.com with ESMTP; 27 Jul 2023 16:07:30 -0700
+Received: from kbuild by 953e8cd98f7d with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qPA4v-0002gv-1r;
+        Thu, 27 Jul 2023 23:07:29 +0000
+Date:   Fri, 28 Jul 2023 07:06:43 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 44abfa6a95df425c0660d56043020b67e6d93ab8
+Message-ID: <202307280740.sVvpB7gd-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jul 27, 2023 at 07:20:46PM +0900, Damien Le Moal wrote:
-> On 7/27/23 17:55, Qi Zheng wrote:
-> >>>           goto err;
-> >>>       }
-> >>>   +    zmd->mblk_shrinker->count_objects = dmz_mblock_shrinker_count;
-> >>> +    zmd->mblk_shrinker->scan_objects = dmz_mblock_shrinker_scan;
-> >>> +    zmd->mblk_shrinker->seeks = DEFAULT_SEEKS;
-> >>> +    zmd->mblk_shrinker->private_data = zmd;
-> >>> +
-> >>> +    shrinker_register(zmd->mblk_shrinker);
-> >>
-> >> I fail to see how this new shrinker API is better... Why isn't there a
-> >> shrinker_alloc_and_register() function ? That would avoid adding all this code
-> >> all over the place as the new API call would be very similar to the current
-> >> shrinker_register() call with static allocation.
-> > 
-> > In some registration scenarios, memory needs to be allocated in advance.
-> > So we continue to use the previous prealloc/register_prepared()
-> > algorithm. The shrinker_alloc_and_register() is just a helper function
-> > that combines the two, and this increases the number of APIs that
-> > shrinker exposes to the outside, so I choose not to add this helper.
-> 
-> And that results in more code in many places instead of less code + a simple
-> inline helper in the shrinker header file...
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 44abfa6a95df425c0660d56043020b67e6d93ab8  md/md-bitmap: hold 'reconfig_mutex' in backlog_store()
 
-It's not just a "simple helper" - it's a function that has to take 6
-or 7 parameters with a return value that must be checked and
-handled.
+elapsed time: 727m
 
-This was done in the first versions of the patch set - the amount of
-code in each caller does not go down and, IMO, was much harder to
-read and determine "this is obviously correct" that what we have
-now.
+configs tested: 130
+configs skipped: 8
 
-> So not adding that super simple
-> helper is not exactly the best choice in my opinion.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Each to their own - I much prefer the existing style/API over having
-to go look up a helper function every time I want to check some
-random shrinker has been set up correctly....
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r012-20230727   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230727   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                         axm55xx_defconfig   gcc  
+arm                                 defconfig   gcc  
+arm                          exynos_defconfig   gcc  
+arm                  randconfig-r046-20230727   clang
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r016-20230727   gcc  
+arm64                randconfig-r034-20230727   clang
+csky                                defconfig   gcc  
+csky                 randconfig-r021-20230727   gcc  
+csky                 randconfig-r036-20230727   gcc  
+hexagon              randconfig-r036-20230727   clang
+hexagon              randconfig-r041-20230727   clang
+hexagon              randconfig-r045-20230727   clang
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-r004-20230727   clang
+i386         buildonly-randconfig-r005-20230727   clang
+i386         buildonly-randconfig-r006-20230727   clang
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-i001-20230727   clang
+i386                 randconfig-i002-20230727   clang
+i386                 randconfig-i003-20230727   clang
+i386                 randconfig-i004-20230727   clang
+i386                 randconfig-i005-20230727   clang
+i386                 randconfig-i006-20230727   clang
+i386                 randconfig-i011-20230727   gcc  
+i386                 randconfig-i012-20230727   gcc  
+i386                 randconfig-i013-20230727   gcc  
+i386                 randconfig-i014-20230727   gcc  
+i386                 randconfig-i015-20230727   gcc  
+i386                 randconfig-i016-20230727   gcc  
+i386                 randconfig-r001-20230727   clang
+i386                 randconfig-r006-20230727   clang
+i386                 randconfig-r023-20230727   gcc  
+i386                 randconfig-r032-20230727   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r005-20230727   gcc  
+loongarch            randconfig-r013-20230727   gcc  
+loongarch            randconfig-r014-20230727   gcc  
+loongarch            randconfig-r034-20230727   gcc  
+m68k                             allmodconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                       m5275evb_defconfig   gcc  
+m68k                 randconfig-r024-20230727   gcc  
+m68k                 randconfig-r031-20230727   gcc  
+microblaze           randconfig-r011-20230727   gcc  
+microblaze           randconfig-r013-20230727   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                           jazz_defconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r026-20230727   gcc  
+openrisc             randconfig-r014-20230727   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r004-20230727   gcc  
+parisc               randconfig-r035-20230727   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                       holly_defconfig   gcc  
+powerpc                    klondike_defconfig   gcc  
+powerpc                      pasemi_defconfig   gcc  
+powerpc                     rainier_defconfig   gcc  
+powerpc                     stx_gp3_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                    nommu_k210_defconfig   gcc  
+riscv                randconfig-r012-20230727   gcc  
+riscv                randconfig-r016-20230727   gcc  
+riscv                randconfig-r042-20230727   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                          debug_defconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r044-20230727   gcc  
+sh                               allmodconfig   gcc  
+sh                 kfr2r09-romimage_defconfig   gcc  
+sh                   randconfig-r003-20230727   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r015-20230727   gcc  
+sparc64              randconfig-r033-20230727   gcc  
+um                               alldefconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                   randconfig-r032-20230727   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-r001-20230727   clang
+x86_64       buildonly-randconfig-r002-20230727   clang
+x86_64       buildonly-randconfig-r003-20230727   clang
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-x001-20230727   gcc  
+x86_64               randconfig-x002-20230727   gcc  
+x86_64               randconfig-x003-20230727   gcc  
+x86_64               randconfig-x004-20230727   gcc  
+x86_64               randconfig-x005-20230727   gcc  
+x86_64               randconfig-x006-20230727   gcc  
+x86_64               randconfig-x011-20230727   clang
+x86_64               randconfig-x012-20230727   clang
+x86_64               randconfig-x013-20230727   clang
+x86_64               randconfig-x014-20230727   clang
+x86_64               randconfig-x015-20230727   clang
+x86_64               randconfig-x016-20230727   clang
+x86_64                           rhel-8.3-bpf   gcc  
+x86_64                         rhel-8.3-kunit   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa               randconfig-r002-20230727   gcc  
+xtensa               randconfig-r011-20230727   gcc  
 
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
