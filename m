@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A320FC04E69
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 08:27:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E6D1C04E69
+	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 08:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234267AbjG0I1v (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Jul 2023 04:27:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33828 "EHLO
+        id S234314AbjG0Ibf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 27 Jul 2023 04:31:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234082AbjG0I0x (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 04:26:53 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EA995255
-        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:14:12 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-682b1768a0bso175656b3a.0
-        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:14:12 -0700 (PDT)
+        with ESMTP id S235361AbjG0IaN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 04:30:13 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E57E4AD1C
+        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:16:42 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-6748a616e17so184182b3a.1
+        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:16:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690445576; x=1691050376;
+        d=bytedance.com; s=google; t=1690445722; x=1691050522;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=48waxWZGd1WUnLYaDrTSxvJywKXLcopaiUkWgt7j5Rg=;
-        b=h7BzAXWMeO6q413o2q8QBGFyYtSJJQDVtscFkPudih7uYq32KqAohX6ko7JdrT58zZ
-         jQesZevPWI16RJ584HoFfkctqZliFhC+Sy5DmGf4/p07EAXTPpKceV5c/mFhCQtFe2kc
-         GT00j/8cVqT7gjAO9UrE6yMmEVq+vAOowivD6U/C54ThBKsCCzPpN8b7GVd2fZWCigOk
-         vXp6v9qkHcNnCSidh0rHnK6MCacYxO0sYof9O+5/aUkm0GolyNtTHq/urdLytozqbZlU
-         y5SGivZA8rDsT4B1CBykaduW0zvqtcacoHqzhUYbcvZiZaKGJdqILCFM7NZx5HG0wVY2
-         fpkw==
+        bh=kfKKsEp61SZUnTy00HUcIO/dAXsDrrCBrc1q4f5gA2g=;
+        b=EAS6K8pjZHV2xJO1k0B0O2ENzb3/Vvl+c5sC6vZF5+RNctHPYXK3F4aD7Xzt8amvSX
+         Sp0sM3dY6nrfZgyX03OOoIKbasLRWXH327iv4+GYUr4WlO1QPIHvBbrRjUoddMLJYEtj
+         qslIbW38aWpZfadSfI+TaMUP7PcrUPJ3woAJMv4ugKgPJM767PAG7K9gWxMSKIL9CKj3
+         w5CY/SzoV5mu91kUw+3ztoEROa7i9Mv96qiOzuHElFUZjh2ImlDQY3RLu003MMnVyV3S
+         TQhJNq9ppxsbvsUjd927IP6iiwsq7VIfzEbkN9zPwoI9Valaw0w8Qu8JFGFsYg3rQsoY
+         gM7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690445576; x=1691050376;
+        d=1e100.net; s=20221208; t=1690445722; x=1691050522;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=48waxWZGd1WUnLYaDrTSxvJywKXLcopaiUkWgt7j5Rg=;
-        b=ILqhOWISG8hZk4u0bgMEiu3R1mpihO7nQrN//svihzQ3am3zy2kA9nSBm53lYgL3PF
-         Pl/DSaF4fI4ZaPN6KJgx1M5EyrytSAFduj5ztqaGT32ThaW89mYoqQ0WU5EXphfnHIDj
-         CrgSBvrPnsVu3VvYJCBoFsMRiCu1mkomjrkZY5QAsnx4RMwHw+wfF1h1BJ0KpFiLXDdF
-         ycVFJYhVWEMaGQk2YtCzs28tFCSItwSSlZhnPi32DEH7cidb3O+thKifBpPByQpbmk1Z
-         08eEZeu9R6O5OkAxC2DdS6EaMKo/gjoPPFpF0ajCTVyxPdY/40GDGuc4OJhVI+y63VdW
-         cr2A==
-X-Gm-Message-State: ABy/qLbnw8fMQ18YKrWZna+jZhdv53h9DOO7T+tFbFg/UeR1R0eppOuZ
-        LoWZmACA/tLkxhk9AfWeFs+haQ==
-X-Google-Smtp-Source: APBJJlGlNC1VbP/jxEyWXSRyFxMRuhVQW95Y9Ngz7T3+dCe8qyleorovPEoXgtcixk5kZ4l7rZv1Dg==
-X-Received: by 2002:a05:6a00:4a10:b0:686:b990:560f with SMTP id do16-20020a056a004a1000b00686b990560fmr4386534pfb.2.1690445576006;
-        Thu, 27 Jul 2023 01:12:56 -0700 (PDT)
+        bh=kfKKsEp61SZUnTy00HUcIO/dAXsDrrCBrc1q4f5gA2g=;
+        b=LXZN2UgBjISxd4eI92HcxdXQSRolDEEPG+fTEb1CgCGmEsGzdruDukRAfjjU0VDcUX
+         L9cr8DglHPJeYq2u0pK/iaNN0g/oG1SvToGAvPIF4xVFBa7KgRdvgToOj5JBrfil4YtI
+         cKAjPiefuy4mws3nPgaPpN4wOyqFay4iVtekKokV09J0/87FEbDSa7FfHXOoLYRE60Gc
+         +Obj6Bs5uqB4b7nD/oeUvYyRjDp7mI5G6h7gqnnwfXx1mz8/Kd/k+O1nmjAEJNgpMHj8
+         qdnP4Vpi4bsyRXvP9HCfNwChVXPpVPEYyY07UwvVfU2t/kFO0mkucY8D6Zc+HfDKd3Bm
+         LOpQ==
+X-Gm-Message-State: ABy/qLZNgnzUfApcnX6tdO7Ph07Nl+PHWb15RxMC8Z+8GhNCSu0rj6yt
+        6Co8wMIeEVu5PvmDOjBMw1kYaQ==
+X-Google-Smtp-Source: APBJJlGaIHiWHX80BWphqmbYYC2Qe9rA0t1NXuG9/ru/q26OnfFQXVEhM5bGyqGhtVnixSectLT5LA==
+X-Received: by 2002:a05:6a00:4792:b0:668:834d:4bd with SMTP id dh18-20020a056a00479200b00668834d04bdmr4689753pfb.0.1690445722143;
+        Thu, 27 Jul 2023 01:15:22 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.12.43
+        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.15.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jul 2023 01:12:55 -0700 (PDT)
+        Thu, 27 Jul 2023 01:15:21 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -68,11 +68,10 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         virtualization@lists.linux-foundation.org,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Qi Zheng <zhengqi.arch@bytedance.com>,
-        Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v3 35/49] jbd2,ext4: dynamically allocate the jbd2-journal shrinker
-Date:   Thu, 27 Jul 2023 16:04:48 +0800
-Message-Id: <20230727080502.77895-36-zhengqi.arch@bytedance.com>
+        Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH v3 47/49] mm: shrinker: make memcg slab shrink lockless
+Date:   Thu, 27 Jul 2023 16:05:00 +0800
+Message-Id: <20230727080502.77895-48-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
 References: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
@@ -82,98 +81,298 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-In preparation for implementing lockless slab shrink, use new APIs to
-dynamically allocate the jbd2-journal shrinker, so that it can be freed
-asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
-read-side critical section when releasing the struct journal_s.
+Like global slab shrink, this commit also uses refcount+RCU method to make
+memcg slab shrink lockless.
+
+Use the following script to do slab shrink stress test:
+
+```
+
+DIR="/root/shrinker/memcg/mnt"
+
+do_create()
+{
+    mkdir -p /sys/fs/cgroup/memory/test
+    echo 4G > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+    for i in `seq 0 $1`;
+    do
+        mkdir -p /sys/fs/cgroup/memory/test/$i;
+        echo $$ > /sys/fs/cgroup/memory/test/$i/cgroup.procs;
+        mkdir -p $DIR/$i;
+    done
+}
+
+do_mount()
+{
+    for i in `seq $1 $2`;
+    do
+        mount -t tmpfs $i $DIR/$i;
+    done
+}
+
+do_touch()
+{
+    for i in `seq $1 $2`;
+    do
+        echo $$ > /sys/fs/cgroup/memory/test/$i/cgroup.procs;
+        dd if=/dev/zero of=$DIR/$i/file$i bs=1M count=1 &
+    done
+}
+
+case "$1" in
+  touch)
+    do_touch $2 $3
+    ;;
+  test)
+    do_create 4000
+    do_mount 0 4000
+    do_touch 0 3000
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+```
+
+Save the above script, then run test and touch commands. Then we can use
+the following perf command to view hotspots:
+
+perf top -U -F 999
+
+1) Before applying this patchset:
+
+  40.44%  [kernel]            [k] down_read_trylock
+  17.59%  [kernel]            [k] up_read
+  13.64%  [kernel]            [k] pv_native_safe_halt
+  11.90%  [kernel]            [k] shrink_slab
+   8.21%  [kernel]            [k] idr_find
+   2.71%  [kernel]            [k] _find_next_bit
+   1.36%  [kernel]            [k] shrink_node
+   0.81%  [kernel]            [k] shrink_lruvec
+   0.80%  [kernel]            [k] __radix_tree_lookup
+   0.50%  [kernel]            [k] do_shrink_slab
+   0.21%  [kernel]            [k] list_lru_count_one
+   0.16%  [kernel]            [k] mem_cgroup_iter
+
+2) After applying this patchset:
+
+  60.17%  [kernel]           [k] shrink_slab
+  20.42%  [kernel]           [k] pv_native_safe_halt
+   3.03%  [kernel]           [k] do_shrink_slab
+   2.73%  [kernel]           [k] shrink_node
+   2.27%  [kernel]           [k] shrink_lruvec
+   2.00%  [kernel]           [k] __rcu_read_unlock
+   1.92%  [kernel]           [k] mem_cgroup_iter
+   0.98%  [kernel]           [k] __rcu_read_lock
+   0.91%  [kernel]           [k] osq_lock
+   0.63%  [kernel]           [k] mem_cgroup_calculate_protection
+   0.55%  [kernel]           [k] shrinker_put
+   0.46%  [kernel]           [k] list_lru_count_one
+
+We can see that the first perf hotspot becomes shrink_slab, which is what
+we expect.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- fs/jbd2/journal.c    | 27 +++++++++++++++++----------
- include/linux/jbd2.h |  2 +-
- 2 files changed, 18 insertions(+), 11 deletions(-)
+ mm/shrinker.c | 80 ++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 54 insertions(+), 26 deletions(-)
 
-diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
-index 1b5a45ab62b0..4c421da03fee 100644
---- a/fs/jbd2/journal.c
-+++ b/fs/jbd2/journal.c
-@@ -1298,7 +1298,7 @@ static int jbd2_min_tag_size(void)
- static unsigned long jbd2_journal_shrink_scan(struct shrinker *shrink,
- 					      struct shrink_control *sc)
+diff --git a/mm/shrinker.c b/mm/shrinker.c
+index d318f5621862..fee6f62904fb 100644
+--- a/mm/shrinker.c
++++ b/mm/shrinker.c
+@@ -107,6 +107,12 @@ static struct shrinker_info *shrinker_info_protected(struct mem_cgroup *memcg,
+ 					 lockdep_is_held(&shrinker_rwsem));
+ }
+ 
++static struct shrinker_info *shrinker_info_rcu(struct mem_cgroup *memcg,
++					       int nid)
++{
++	return rcu_dereference(memcg->nodeinfo[nid]->shrinker_info);
++}
++
+ static int expand_one_shrinker_info(struct mem_cgroup *memcg, int new_size,
+ 				    int old_size, int new_nr_max)
  {
--	journal_t *journal = container_of(shrink, journal_t, j_shrinker);
-+	journal_t *journal = shrink->private_data;
- 	unsigned long nr_to_scan = sc->nr_to_scan;
- 	unsigned long nr_shrunk;
- 	unsigned long count;
-@@ -1324,7 +1324,7 @@ static unsigned long jbd2_journal_shrink_scan(struct shrinker *shrink,
- static unsigned long jbd2_journal_shrink_count(struct shrinker *shrink,
- 					       struct shrink_control *sc)
+@@ -198,7 +204,7 @@ void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int shrinker_id)
+ 		struct shrinker_info_unit *unit;
+ 
+ 		rcu_read_lock();
+-		info = rcu_dereference(memcg->nodeinfo[nid]->shrinker_info);
++		info = shrinker_info_rcu(memcg, nid);
+ 		unit = info->unit[shriner_id_to_index(shrinker_id)];
+ 		if (!WARN_ON_ONCE(shrinker_id >= info->map_nr_max)) {
+ 			/* Pairs with smp mb in shrink_slab() */
+@@ -211,7 +217,7 @@ void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int shrinker_id)
+ 
+ static DEFINE_IDR(shrinker_idr);
+ 
+-static int prealloc_memcg_shrinker(struct shrinker *shrinker)
++static int shrinker_memcg_alloc(struct shrinker *shrinker)
  {
--	journal_t *journal = container_of(shrink, journal_t, j_shrinker);
-+	journal_t *journal = shrink->private_data;
- 	unsigned long count;
+ 	int id, ret = -ENOMEM;
  
- 	count = percpu_counter_read_positive(&journal->j_checkpoint_jh_count);
-@@ -1412,19 +1412,26 @@ static journal_t *journal_init_common(struct block_device *bdev,
- 	journal->j_superblock = (journal_superblock_t *)bh->b_data;
+@@ -219,7 +225,6 @@ static int prealloc_memcg_shrinker(struct shrinker *shrinker)
+ 		return -ENOSYS;
  
- 	journal->j_shrink_transaction = NULL;
--	journal->j_shrinker.scan_objects = jbd2_journal_shrink_scan;
--	journal->j_shrinker.count_objects = jbd2_journal_shrink_count;
--	journal->j_shrinker.seeks = DEFAULT_SEEKS;
--	journal->j_shrinker.batch = journal->j_max_transaction_buffers;
+ 	down_write(&shrinker_rwsem);
+-	/* This may call shrinker, so it must use down_read_trylock() */
+ 	id = idr_alloc(&shrinker_idr, shrinker, 0, 0, GFP_KERNEL);
+ 	if (id < 0)
+ 		goto unlock;
+@@ -237,7 +242,7 @@ static int prealloc_memcg_shrinker(struct shrinker *shrinker)
+ 	return ret;
+ }
  
- 	if (percpu_counter_init(&journal->j_checkpoint_jh_count, 0, GFP_KERNEL))
- 		goto err_cleanup;
+-static void unregister_memcg_shrinker(struct shrinker *shrinker)
++static void shrinker_memcg_remove(struct shrinker *shrinker)
+ {
+ 	int id = shrinker->id;
  
--	if (register_shrinker(&journal->j_shrinker, "jbd2-journal:(%u:%u)",
--			      MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev))) {
-+	journal->j_shrinker = shrinker_alloc(0, "jbd2-journal:(%u:%u)",
-+					     MAJOR(bdev->bd_dev),
-+					     MINOR(bdev->bd_dev));
-+	if (!journal->j_shrinker) {
- 		percpu_counter_destroy(&journal->j_checkpoint_jh_count);
- 		goto err_cleanup;
- 	}
+@@ -253,10 +258,15 @@ static long xchg_nr_deferred_memcg(int nid, struct shrinker *shrinker,
+ {
+ 	struct shrinker_info *info;
+ 	struct shrinker_info_unit *unit;
++	long nr_deferred;
+ 
+-	info = shrinker_info_protected(memcg, nid);
++	rcu_read_lock();
++	info = shrinker_info_rcu(memcg, nid);
+ 	unit = info->unit[shriner_id_to_index(shrinker->id)];
+-	return atomic_long_xchg(&unit->nr_deferred[shriner_id_to_offset(shrinker->id)], 0);
++	nr_deferred = atomic_long_xchg(&unit->nr_deferred[shriner_id_to_offset(shrinker->id)], 0);
++	rcu_read_unlock();
 +
-+	journal->j_shrinker->scan_objects = jbd2_journal_shrink_scan;
-+	journal->j_shrinker->count_objects = jbd2_journal_shrink_count;
-+	journal->j_shrinker->seeks = DEFAULT_SEEKS;
-+	journal->j_shrinker->batch = journal->j_max_transaction_buffers;
-+	journal->j_shrinker->private_data = journal;
-+
-+	shrinker_register(journal->j_shrinker);
-+
- 	return journal;
++	return nr_deferred;
+ }
  
- err_cleanup:
-@@ -2187,9 +2194,9 @@ int jbd2_journal_destroy(journal_t *journal)
- 		brelse(journal->j_sb_buffer);
+ static long add_nr_deferred_memcg(long nr, int nid, struct shrinker *shrinker,
+@@ -264,10 +274,16 @@ static long add_nr_deferred_memcg(long nr, int nid, struct shrinker *shrinker,
+ {
+ 	struct shrinker_info *info;
+ 	struct shrinker_info_unit *unit;
++	long nr_deferred;
+ 
+-	info = shrinker_info_protected(memcg, nid);
++	rcu_read_lock();
++	info = shrinker_info_rcu(memcg, nid);
+ 	unit = info->unit[shriner_id_to_index(shrinker->id)];
+-	return atomic_long_add_return(nr, &unit->nr_deferred[shriner_id_to_offset(shrinker->id)]);
++	nr_deferred =
++		atomic_long_add_return(nr, &unit->nr_deferred[shriner_id_to_offset(shrinker->id)]);
++	rcu_read_unlock();
++
++	return nr_deferred;
+ }
+ 
+ void reparent_shrinker_deferred(struct mem_cgroup *memcg)
+@@ -299,12 +315,12 @@ void reparent_shrinker_deferred(struct mem_cgroup *memcg)
+ 	up_read(&shrinker_rwsem);
+ }
+ #else
+-static int prealloc_memcg_shrinker(struct shrinker *shrinker)
++static int shrinker_memcg_alloc(struct shrinker *shrinker)
+ {
+ 	return -ENOSYS;
+ }
+ 
+-static void unregister_memcg_shrinker(struct shrinker *shrinker)
++static void shrinker_memcg_remove(struct shrinker *shrinker)
+ {
+ }
+ 
+@@ -464,18 +480,23 @@ static unsigned long shrink_slab_memcg(gfp_t gfp_mask, int nid,
+ 	if (!mem_cgroup_online(memcg))
+ 		return 0;
+ 
+-	if (!down_read_trylock(&shrinker_rwsem))
+-		return 0;
+-
+-	info = shrinker_info_protected(memcg, nid);
++again:
++	rcu_read_lock();
++	info = shrinker_info_rcu(memcg, nid);
+ 	if (unlikely(!info))
+ 		goto unlock;
+ 
+-	for (; index < shriner_id_to_index(info->map_nr_max); index++) {
++	if (index < shriner_id_to_index(info->map_nr_max)) {
+ 		struct shrinker_info_unit *unit;
+ 
+ 		unit = info->unit[index];
+ 
++		/*
++		 * The shrinker_info_unit will not be freed, so we can
++		 * safely release the RCU lock here.
++		 */
++		rcu_read_unlock();
++
+ 		for_each_set_bit(offset, unit->map, SHRINKER_UNIT_BITS) {
+ 			struct shrink_control sc = {
+ 				.gfp_mask = gfp_mask,
+@@ -485,12 +506,14 @@ static unsigned long shrink_slab_memcg(gfp_t gfp_mask, int nid,
+ 			struct shrinker *shrinker;
+ 			int shrinker_id = calc_shrinker_id(index, offset);
+ 
++			rcu_read_lock();
+ 			shrinker = idr_find(&shrinker_idr, shrinker_id);
+-			if (unlikely(!shrinker || !(shrinker->flags & SHRINKER_REGISTERED))) {
+-				if (!shrinker)
+-					clear_bit(offset, unit->map);
++			if (unlikely(!shrinker || !shrinker_try_get(shrinker))) {
++				clear_bit(offset, unit->map);
++				rcu_read_unlock();
+ 				continue;
+ 			}
++			rcu_read_unlock();
+ 
+ 			/* Call non-slab shrinkers even though kmem is disabled */
+ 			if (!memcg_kmem_online() &&
+@@ -523,15 +546,20 @@ static unsigned long shrink_slab_memcg(gfp_t gfp_mask, int nid,
+ 					set_shrinker_bit(memcg, nid, shrinker_id);
+ 			}
+ 			freed += ret;
+-
+-			if (rwsem_is_contended(&shrinker_rwsem)) {
+-				freed = freed ? : 1;
+-				goto unlock;
+-			}
++			shrinker_put(shrinker);
+ 		}
++
++		/*
++		 * We have already exited the read-side of rcu critical section
++		 * before calling do_shrink_slab(), the shrinker_info may be
++		 * released in expand_one_shrinker_info(), so reacquire the
++		 * shrinker_info.
++		 */
++		index++;
++		goto again;
+ 	}
+ unlock:
+-	up_read(&shrinker_rwsem);
++	rcu_read_unlock();
+ 	return freed;
+ }
+ #else /* !CONFIG_MEMCG */
+@@ -638,7 +666,7 @@ struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...)
+ 	shrinker->flags = flags | SHRINKER_ALLOCATED;
+ 
+ 	if (flags & SHRINKER_MEMCG_AWARE) {
+-		err = prealloc_memcg_shrinker(shrinker);
++		err = shrinker_memcg_alloc(shrinker);
+ 		if (err == -ENOSYS)
+ 			shrinker->flags &= ~SHRINKER_MEMCG_AWARE;
+ 		else if (err == 0)
+@@ -731,7 +759,7 @@ void shrinker_free(struct shrinker *shrinker)
  	}
  
--	if (journal->j_shrinker.flags & SHRINKER_REGISTERED) {
-+	if (journal->j_shrinker) {
- 		percpu_counter_destroy(&journal->j_checkpoint_jh_count);
--		unregister_shrinker(&journal->j_shrinker);
-+		shrinker_free(journal->j_shrinker);
- 	}
- 	if (journal->j_proc_entry)
- 		jbd2_stats_proc_exit(journal);
-diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
-index 44c298aa58d4..beb4c4586320 100644
---- a/include/linux/jbd2.h
-+++ b/include/linux/jbd2.h
-@@ -891,7 +891,7 @@ struct journal_s
- 	 * Journal head shrinker, reclaim buffer's journal head which
- 	 * has been written back.
- 	 */
--	struct shrinker		j_shrinker;
-+	struct shrinker		*j_shrinker;
+ 	if (shrinker->flags & SHRINKER_MEMCG_AWARE)
+-		unregister_memcg_shrinker(shrinker);
++		shrinker_memcg_remove(shrinker);
+ 	up_write(&shrinker_rwsem);
  
- 	/**
- 	 * @j_checkpoint_jh_count:
+ 	if (debugfs_entry)
 -- 
 2.30.2
 
