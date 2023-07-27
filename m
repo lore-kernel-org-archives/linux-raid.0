@@ -2,363 +2,209 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4D33C00528
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 03:34:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E803C001DC
+	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 07:34:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231152AbjG0Dev (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Jul 2023 23:34:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41982 "EHLO
+        id S233364AbjG0HeH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 27 Jul 2023 03:34:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229721AbjG0Det (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Jul 2023 23:34:49 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03E751BF4
-        for <linux-raid@vger.kernel.org>; Wed, 26 Jul 2023 20:34:47 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-682eef7d752so141131b3a.0
-        for <linux-raid@vger.kernel.org>; Wed, 26 Jul 2023 20:34:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690428886; x=1691033686;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=pSHiqW/1Kwa6XMfrutppYGKtzk0jA+6GZMwxRhGaywI=;
-        b=JH3Gdn8erluTpD0SiBv0fHlvH29QoJbVthZHImXx40T/IvgK0JIjZ0GSYiuzzLmgEA
-         bHXNFFpOY9uD+vNkdeoyqNVINpCZUHYDiHMEBDkcaaYiJnpqdxqxP9HCH+uCZSOxVPaX
-         a40KLwmD/5OmsTBlZF8d2TLCkDFfaCI3tBilLI9wA3S9O/RNu5Wh5IyCFOIuf9bbZc9M
-         BojY8O58Av3dHh2cjAZwQFUo45GIDCrR2qRfQCljzavnidON0gNgsmWW0OgyxUqV3yLa
-         +g0Rro6R0vH8urzZTF9hLw+CTeEMI8A36Bu5e/fFgdet0UR9Esy2HUMsL8V+5OEcbFBS
-         k6XQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690428886; x=1691033686;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=pSHiqW/1Kwa6XMfrutppYGKtzk0jA+6GZMwxRhGaywI=;
-        b=QXMgxMokD4DvmzkdEl7w167bh/ePwqpDB0CmtjsGoeECqw0zChadJD5CPSbCLVY862
-         Uy4Kc9TNV1sdFWLhGvjifar6zpCN9LA7W8Trrf3OyTrGXvKf+mE2uPuvkFUllDT6Q8oV
-         pMUI237JG8OtWwBgPZdQu24NnphiyISbKGyEq6hJrPQRQPduHh/rzNusS27hoZdLY4PY
-         BrNEGJkP+XsGDL7CX/oJRE/ePvUF5DPq0R6Hh2eDJhUSEYqBJBo17ralfCYsdsh7hBoE
-         zjaiNZqjPbW2dGdNXwZxuG2vyJiVn25b+sP9IQmgj3pOc+aUKu0PA7lI6MXvMARtjIdK
-         1YkA==
-X-Gm-Message-State: ABy/qLZTVN1J1zBwErwaqzCDPUotlbRBLuSRA32cpns6vaTexKFFYLvY
-        fALNRqtKSV2EIS6zbltQlEsxYA==
-X-Google-Smtp-Source: APBJJlGnfHXNUKtpZ8goterp0kPe1+GeF2c87BsTqhWXyrNp01VQ9DDS/+17IDHKN7LAqAttouOeag==
-X-Received: by 2002:a05:6a21:339b:b0:137:4fd0:e2e6 with SMTP id yy27-20020a056a21339b00b001374fd0e2e6mr5017607pzb.6.1690428886364;
-        Wed, 26 Jul 2023 20:34:46 -0700 (PDT)
-Received: from [10.70.252.135] ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id z25-20020aa791d9000000b006828ee9fa69sm328803pfa.206.2023.07.26.20.34.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 26 Jul 2023 20:34:46 -0700 (PDT)
-Message-ID: <c942e424-276d-4df7-4917-d61063ab8502@bytedance.com>
-Date:   Thu, 27 Jul 2023 11:34:30 +0800
+        with ESMTP id S233819AbjG0Hdq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 03:33:46 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 235789A9D;
+        Thu, 27 Jul 2023 00:23:24 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RBMgS2vcYz4f3jMb;
+        Thu, 27 Jul 2023 15:23:16 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgCXaK9mG8JkwjuoOw--.65260S4;
+        Thu, 27 Jul 2023 15:23:19 +0800 (CST)
+From:   Li Lingfeng <lilingfeng@huaweicloud.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, linan122@huawei.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com, lilingfeng@huaweicloud.com,
+        lilingfeng3@huawei.com
+Subject: [PATCH -next] md:ensure mddev->reconfig_mutex is hold when try to get mddev->sync_thread
+Date:   Thu, 27 Jul 2023 15:20:47 +0800
+Message-Id: <20230727072047.389637-1-lilingfeng@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: [PATCH v2 44/47] mm: shrinker: make global slab shrink lockless
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     akpm@linux-foundation.org, tkhai@ya.ru, vbabka@suse.cz,
-        roman.gushchin@linux.dev, djwong@kernel.org, brauner@kernel.org,
-        paulmck@kernel.org, tytso@mit.edu, steven.price@arm.com,
-        cel@kernel.org, senozhatsky@chromium.org, yujie.liu@intel.com,
-        gregkh@linuxfoundation.org, muchun.song@linux.dev,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
-        rcu@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org
-References: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
- <20230724094354.90817-45-zhengqi.arch@bytedance.com>
- <ZMDUkoIXUlTkCSYL@dread.disaster.area>
- <19ad6d06-8a14-6102-5eae-2134dc2c5061@bytedance.com>
- <ZMGnthZAh48JF+eV@dread.disaster.area>
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-In-Reply-To: <ZMGnthZAh48JF+eV@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCXaK9mG8JkwjuoOw--.65260S4
+X-Coremail-Antispam: 1UD129KBjvJXoW3Jr48GF4rJw47Xr13Ww1fXrb_yoW7tF4xpa
+        yrXFy3Ar4FvrW5Zr4DJayDuay5A3WIgFWjkryfC3yrA3WfW3y5JFWj9FyDXr1DZFyrAr4a
+        qa15KF48uFWvgr7anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+        AvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
+        67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VU1a9aPUUUUU==
+X-CM-SenderInfo: polox0xjih0w46kxt4xhlfz01xgou0bp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Dave,
+Commit ba9d9f1a707f ("Revert "md: unlock mddev before reap sync_thread in
+action_store"") removed the scenario of calling md_unregister_thread()
+without holding mddev->reconfig_mutex, so add a lock holding check before
+acquiring mddev->sync_thread.
 
-On 2023/7/27 07:09, Dave Chinner wrote:
-> On Wed, Jul 26, 2023 at 05:14:09PM +0800, Qi Zheng wrote:
->> On 2023/7/26 16:08, Dave Chinner wrote:
->>> On Mon, Jul 24, 2023 at 05:43:51PM +0800, Qi Zheng wrote:
->>>> @@ -122,6 +126,13 @@ void shrinker_free_non_registered(struct shrinker *shrinker);
->>>>    void shrinker_register(struct shrinker *shrinker);
->>>>    void shrinker_unregister(struct shrinker *shrinker);
->>>> +static inline bool shrinker_try_get(struct shrinker *shrinker)
->>>> +{
->>>> +	return READ_ONCE(shrinker->registered) &&
->>>> +	       refcount_inc_not_zero(&shrinker->refcount);
->>>> +}
->>>
->>> Why do we care about shrinker->registered here? If we don't set
->>> the refcount to 1 until we have fully initialised everything, then
->>> the shrinker code can key entirely off the reference count and
->>> none of the lookup code needs to care about whether the shrinker is
->>> registered or not.
->>
->> The purpose of checking shrinker->registered here is to stop running
->> shrinker after calling shrinker_free(), which can prevent the following
->> situations from happening:
->>
->> CPU 0                 CPU 1
->>
->> shrinker_try_get()
->>
->>                         shrinker_try_get()
->>
->> shrinker_put()
->> shrinker_try_get()
->>                         shrinker_put()
-> 
-> I don't see any race here? What is wrong with having multiple active
-> users at once?
+Signed-off-by: Li Lingfeng <lilingfeng@huaweicloud.com>
+---
+ drivers/md/md-cluster.c  | 8 ++++----
+ drivers/md/md.c          | 9 +++++----
+ drivers/md/md.h          | 2 +-
+ drivers/md/raid1.c       | 4 ++--
+ drivers/md/raid10.c      | 2 +-
+ drivers/md/raid5-cache.c | 2 +-
+ drivers/md/raid5.c       | 2 +-
+ 7 files changed, 15 insertions(+), 14 deletions(-)
 
-Maybe I'm overthinking. What I think is that if there are multiple users
-at once, it may cause the above-mentioned livelock, which will cause
-shrinker_free() to wait for a long time. But this probability should be
-very low.
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 3d9fd74233df..1e26eb223349 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -952,8 +952,8 @@ static int join(struct mddev *mddev, int nodes)
+ 	return 0;
+ err:
+ 	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
+-	md_unregister_thread(&cinfo->recovery_thread);
+-	md_unregister_thread(&cinfo->recv_thread);
++	md_unregister_thread(mddev, &cinfo->recovery_thread);
++	md_unregister_thread(mddev, &cinfo->recv_thread);
+ 	lockres_free(cinfo->message_lockres);
+ 	lockres_free(cinfo->token_lockres);
+ 	lockres_free(cinfo->ack_lockres);
+@@ -1015,8 +1015,8 @@ static int leave(struct mddev *mddev)
+ 		resync_bitmap(mddev);
+ 
+ 	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
+-	md_unregister_thread(&cinfo->recovery_thread);
+-	md_unregister_thread(&cinfo->recv_thread);
++	md_unregister_thread(mddev, &cinfo->recovery_thread);
++	md_unregister_thread(mddev, &cinfo->recv_thread);
+ 	lockres_free(cinfo->message_lockres);
+ 	lockres_free(cinfo->token_lockres);
+ 	lockres_free(cinfo->ack_lockres);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index a3d98273b295..5c3c19b8d509 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6258,7 +6258,7 @@ static void mddev_detach(struct mddev *mddev)
+ 		mddev->pers->quiesce(mddev, 1);
+ 		mddev->pers->quiesce(mddev, 0);
+ 	}
+-	md_unregister_thread(&mddev->thread);
++	md_unregister_thread(mddev, &mddev->thread);
+ 	if (mddev->queue)
+ 		blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
+ }
+@@ -7990,9 +7990,10 @@ struct md_thread *md_register_thread(void (*run) (struct md_thread *),
+ }
+ EXPORT_SYMBOL(md_register_thread);
+ 
+-void md_unregister_thread(struct md_thread __rcu **threadp)
++void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **threadp)
+ {
+-	struct md_thread *thread = rcu_dereference_protected(*threadp, true);
++	struct md_thread *thread = rcu_dereference_protected(*threadp,
++					lockdep_is_held(&mddev->reconfig_mutex));
+ 
+ 	if (!thread)
+ 		return;
+@@ -9484,7 +9485,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	bool is_reshaped = false;
+ 
+ 	/* resync has finished, collect result */
+-	md_unregister_thread(&mddev->sync_thread);
++	md_unregister_thread(mddev, &mddev->sync_thread);
+ 	atomic_inc(&mddev->sync_seq);
+ 
+ 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 8ae957480976..9bcb77bca963 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -761,7 +761,7 @@ extern struct md_thread *md_register_thread(
+ 	void (*run)(struct md_thread *thread),
+ 	struct mddev *mddev,
+ 	const char *name);
+-extern void md_unregister_thread(struct md_thread __rcu **threadp);
++extern void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **threadp);
+ extern void md_wakeup_thread(struct md_thread __rcu *thread);
+ extern void md_check_recovery(struct mddev *mddev);
+ extern void md_reap_sync_thread(struct mddev *mddev);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 23d211969565..581dfbdfca89 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3152,7 +3152,7 @@ static int raid1_run(struct mddev *mddev)
+ 	 * RAID1 needs at least one disk in active
+ 	 */
+ 	if (conf->raid_disks - mddev->degraded < 1) {
+-		md_unregister_thread(&conf->thread);
++		md_unregister_thread(mddev, &conf->thread);
+ 		ret = -EINVAL;
+ 		goto abort;
+ 	}
+@@ -3179,7 +3179,7 @@ static int raid1_run(struct mddev *mddev)
+ 
+ 	ret = md_integrity_register(mddev);
+ 	if (ret) {
+-		md_unregister_thread(&mddev->thread);
++		md_unregister_thread(mddev, &mddev->thread);
+ 		goto abort;
+ 	}
+ 	return 0;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 16aa9d735880..6188b71186f4 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4320,7 +4320,7 @@ static int raid10_run(struct mddev *mddev)
+ 	return 0;
+ 
+ out_free_conf:
+-	md_unregister_thread(&mddev->thread);
++	md_unregister_thread(mddev, &mddev->thread);
+ 	raid10_free_conf(conf);
+ 	mddev->private = NULL;
+ out:
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 47ba7d9e81e1..ce9b42fd54b9 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -3171,7 +3171,7 @@ void r5l_exit_log(struct r5conf *conf)
+ 	/* Ensure disable_writeback_work wakes up and exits */
+ 	wake_up(&conf->mddev->sb_wait);
+ 	flush_work(&log->disable_writeback_work);
+-	md_unregister_thread(&log->reclaim_thread);
++	md_unregister_thread(conf->mddev, &log->reclaim_thread);
+ 
+ 	conf->log = NULL;
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4cdb35e54251..f41f9b712d3d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8107,7 +8107,7 @@ static int raid5_run(struct mddev *mddev)
+ 
+ 	return 0;
+ abort:
+-	md_unregister_thread(&mddev->thread);
++	md_unregister_thread(mddev, &mddev->thread);
+ 	print_raid5_conf(conf);
+ 	free_conf(conf);
+ 	mddev->private = NULL;
+-- 
+2.39.2
 
-> 
->>>
->>> This should use a completion, then it is always safe under
->>> rcu_read_lock().  This also gets rid of the shrinker_lock spin lock,
->>> which only exists because we can't take a blocking lock under
->>> rcu_read_lock(). i.e:
->>>
->>>
->>> void shrinker_put(struct shrinker *shrinker)
->>> {
->>> 	if (refcount_dec_and_test(&shrinker->refcount))
->>> 		complete(&shrinker->done);
->>> }
->>>
->>> void shrinker_free()
->>> {
->>> 	.....
->>> 	refcount_dec(&shrinker->refcount);
->>
->> I guess what you mean is shrinker_put(), because here may be the last
->> refcount.
-> 
-> Yes, I did.
-> 
->>> 	wait_for_completion(&shrinker->done);
->>> 	/*
->>> 	 * lookups on the shrinker will now all fail as refcount has
->>> 	 * fallen to zero. We can now remove it from the lists and
->>> 	 * free it.
->>> 	 */
->>> 	down_write(shrinker_rwsem);
->>> 	list_del_rcu(&shrinker->list);
->>> 	up_write(&shrinker_rwsem);
->>> 	call_rcu(shrinker->rcu_head, shrinker_free_rcu_cb);
->>> }
->>>
->>> ....
->>>
->>>> @@ -686,11 +711,14 @@ EXPORT_SYMBOL(shrinker_free_non_registered);
->>>>    void shrinker_register(struct shrinker *shrinker)
->>>>    {
->>>> -	down_write(&shrinker_rwsem);
->>>> -	list_add_tail(&shrinker->list, &shrinker_list);
->>>> -	shrinker->flags |= SHRINKER_REGISTERED;
->>>> +	refcount_set(&shrinker->refcount, 1);
->>>> +
->>>> +	spin_lock(&shrinker_lock);
->>>> +	list_add_tail_rcu(&shrinker->list, &shrinker_list);
->>>> +	spin_unlock(&shrinker_lock);
->>>> +
->>>>    	shrinker_debugfs_add(shrinker);
->>>> -	up_write(&shrinker_rwsem);
->>>> +	WRITE_ONCE(shrinker->registered, true);
->>>>    }
->>>>    EXPORT_SYMBOL(shrinker_register);
->>>
->>> This just looks wrong - you are trying to use WRITE_ONCE() as a
->>> release barrier to indicate that the shrinker is now set up fully.
->>> That's not necessary - the refcount is an atomic and along with the
->>> rcu locks they should provides all the barriers we need. i.e.
->>
->> The reason I used WRITE_ONCE() here is because the shrinker->registered
->> will be read and written concurrently (read in shrinker_try_get() and
->> written in shrinker_free()), which is why I added shrinker::registered
->> field instead of using SHRINKER_REGISTERED flag (this can reduce the
->> addition of WRITE_ONCE()/READ_ONCE()).
-> 
-> Using WRITE_ONCE/READ_ONCE doesn't provide memory barriers needed to
-> use the field like this. You need release/acquire memory ordering
-> here. i.e. smp_store_release()/smp_load_acquire().
-> 
-> As it is, the refcount_inc_not_zero() provides a control dependency,
-> as documented in include/linux/refcount.h, refcount_dec_and_test()
-> provides release memory ordering. The only thing I think we may need
-> is a write barrier before refcount_set(), such that if
-> refcount_inc_not_zero() sees a non-zero value, it is guaranteed to
-> see an initialised structure...
-> 
-> i.e. refcounts provide all the existence and initialisation
-> guarantees. Hence I don't see the need to use shrinker->registered
-> like this and it can remain a bit flag protected by the
-> shrinker_rwsem().
-
-Ah, I didn't consider the memory order with refcount when I added
-WRITE_ONCE/READ_ONCE to shrinker->registered, just didn't want KCSAN
-to complain (there are multiple visitors at the same time, one of which
-is a writer).
-
-And the livelock case mentioned above is indeed unlikely to happen, so
-I will delete shrinker->registered in the next version.
-
-> 
-> 
->>> void shrinker_register(struct shrinker *shrinker)
->>> {
->>> 	down_write(&shrinker_rwsem);
->>> 	list_add_tail_rcu(&shrinker->list, &shrinker_list);
->>> 	shrinker->flags |= SHRINKER_REGISTERED;
->>> 	shrinker_debugfs_add(shrinker);
->>> 	up_write(&shrinker_rwsem);
->>>
->>> 	/*
->>> 	 * now the shrinker is fully set up, take the first
->>> 	 * reference to it to indicate that lookup operations are
->>> 	 * now allowed to use it via shrinker_try_get().
->>> 	 */
->>> 	refcount_set(&shrinker->refcount, 1);
->>> }
->>>
->>>> diff --git a/mm/shrinker_debug.c b/mm/shrinker_debug.c
->>>> index f1becfd45853..c5573066adbf 100644
->>>> --- a/mm/shrinker_debug.c
->>>> +++ b/mm/shrinker_debug.c
->>>> @@ -5,6 +5,7 @@
->>>>    #include <linux/seq_file.h>
->>>>    #include <linux/shrinker.h>
->>>>    #include <linux/memcontrol.h>
->>>> +#include <linux/rculist.h>
->>>>    /* defined in vmscan.c */
->>>>    extern struct rw_semaphore shrinker_rwsem;
->>>> @@ -161,17 +162,21 @@ int shrinker_debugfs_add(struct shrinker *shrinker)
->>>>    {
->>>>    	struct dentry *entry;
->>>>    	char buf[128];
->>>> -	int id;
->>>> -
->>>> -	lockdep_assert_held(&shrinker_rwsem);
->>>> +	int id, ret = 0;
->>>>    	/* debugfs isn't initialized yet, add debugfs entries later. */
->>>>    	if (!shrinker_debugfs_root)
->>>>    		return 0;
->>>> +	down_write(&shrinker_rwsem);
->>>> +	if (shrinker->debugfs_entry)
->>>> +		goto fail;
->>>> +
->>>>    	id = ida_alloc(&shrinker_debugfs_ida, GFP_KERNEL);
->>>> -	if (id < 0)
->>>> -		return id;
->>>> +	if (id < 0) {
->>>> +		ret = id;
->>>> +		goto fail;
->>>> +	}
->>>>    	shrinker->debugfs_id = id;
->>>>    	snprintf(buf, sizeof(buf), "%s-%d", shrinker->name, id);
->>>> @@ -180,7 +185,8 @@ int shrinker_debugfs_add(struct shrinker *shrinker)
->>>>    	entry = debugfs_create_dir(buf, shrinker_debugfs_root);
->>>>    	if (IS_ERR(entry)) {
->>>>    		ida_free(&shrinker_debugfs_ida, id);
->>>> -		return PTR_ERR(entry);
->>>> +		ret = PTR_ERR(entry);
->>>> +		goto fail;
->>>>    	}
->>>>    	shrinker->debugfs_entry = entry;
->>>> @@ -188,7 +194,10 @@ int shrinker_debugfs_add(struct shrinker *shrinker)
->>>>    			    &shrinker_debugfs_count_fops);
->>>>    	debugfs_create_file("scan", 0220, entry, shrinker,
->>>>    			    &shrinker_debugfs_scan_fops);
->>>> -	return 0;
->>>> +
->>>> +fail:
->>>> +	up_write(&shrinker_rwsem);
->>>> +	return ret;
->>>>    }
->>>>    int shrinker_debugfs_rename(struct shrinker *shrinker, const char *fmt, ...)
->>>> @@ -243,6 +252,11 @@ struct dentry *shrinker_debugfs_detach(struct shrinker *shrinker,
->>>>    	shrinker->name = NULL;
->>>>    	*debugfs_id = entry ? shrinker->debugfs_id : -1;
->>>> +	/*
->>>> +	 * Ensure that shrinker->registered has been set to false before
->>>> +	 * shrinker->debugfs_entry is set to NULL.
->>>> +	 */
->>>> +	smp_wmb();
->>>>    	shrinker->debugfs_entry = NULL;
->>>>    	return entry;
->>>> @@ -266,14 +280,26 @@ static int __init shrinker_debugfs_init(void)
->>>>    	shrinker_debugfs_root = dentry;
->>>>    	/* Create debugfs entries for shrinkers registered at boot */
->>>> -	down_write(&shrinker_rwsem);
->>>> -	list_for_each_entry(shrinker, &shrinker_list, list)
->>>> +	rcu_read_lock();
->>>> +	list_for_each_entry_rcu(shrinker, &shrinker_list, list) {
->>>> +		if (!shrinker_try_get(shrinker))
->>>> +			continue;
->>>> +		rcu_read_unlock();
->>>> +
->>>>    		if (!shrinker->debugfs_entry) {
->>>> -			ret = shrinker_debugfs_add(shrinker);
->>>> -			if (ret)
->>>> -				break;
->>>> +			/* Paired with smp_wmb() in shrinker_debugfs_detach() */
->>>> +			smp_rmb();
->>>> +			if (READ_ONCE(shrinker->registered))
->>>> +				ret = shrinker_debugfs_add(shrinker);
->>>>    		}
->>>> -	up_write(&shrinker_rwsem);
->>>> +
->>>> +		rcu_read_lock();
->>>> +		shrinker_put(shrinker);
->>>> +
->>>> +		if (ret)
->>>> +			break;
->>>> +	}
->>>> +	rcu_read_unlock();
->>>>    	return ret;
->>>>    }
->>>
->>> And all this churn and complexity can go away because the
->>> shrinker_rwsem is still used to protect shrinker_register()
->>> entirely....
->>
->> My consideration is that during this process, there may be a
->> driver probe failure and then shrinker_free() is called (the
->> shrinker_debugfs_init() is called in late_initcall stage). In
->> this case, we need to use RCU+refcount to ensure that the shrinker
->> is not freed.
-> 
-> Yeah, you're trying to work around the lack of a
-> wait_for_completion() call in shrinker_free().
-> 
-> With that, this doesn't need RCU at all, and the iteration can be
-> done fully under the shrinker_rwsem() safely and so none of this
-> code needs to change.
-
-Oh, indeed, here does not need to be changed.
-
-Thanks,
-Qi
-
-> 
-> Cheers,
-> 
-> Dave.
