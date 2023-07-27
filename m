@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA4CCC001DC
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 08:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84B99C00528
+	for <linux-raid@archiver.kernel.org>; Thu, 27 Jul 2023 08:31:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234327AbjG0Ibi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Jul 2023 04:31:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37462 "EHLO
+        id S234521AbjG0Ibl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 27 Jul 2023 04:31:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234245AbjG0I1j (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 04:27:39 -0400
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91FED4EF3
-        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:14:30 -0700 (PDT)
-Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-686f74a8992so78447b3a.1
-        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:14:30 -0700 (PDT)
+        with ESMTP id S235246AbjG0I34 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jul 2023 04:29:56 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D262E22E9C
+        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:16:54 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-66d6a9851f3so168972b3a.0
+        for <linux-raid@vger.kernel.org>; Thu, 27 Jul 2023 01:16:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690445625; x=1691050425;
+        d=bytedance.com; s=google; t=1690445734; x=1691050534;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=vAE6p5mA5n3yxm+4IPfXfMLc8MGv4J5wg3qHubren08=;
-        b=dkRrWVkSv9/U3+e6QsQd29dMPuttcg2M13ZLMDEEIMbfSamBJHJdLtNY2sbEZ+YzhY
-         5BtYLYzutGknAA+e956eNSlbl7nK+9UwGbTk4YjZb6fHHFpCk0FXoHpJAi6M0jM7aFZF
-         +CarAybA7Fmb9F2zoNtgG1DfzDYBp6eqgkICDj2Asy83tRT0LF5pvIpkdtR75UYStLmf
-         37kqliTWk9DV3Fw2NufQf0BV5/WVkKX05IEilefRJ/OwJCaH2LBTkZCCI3ZIC5RNHqLc
-         p1thIF8tkbzc9m+CHBYGB6mtVDqiYNqHlAVUDSIfQN8XwfU9rYwJVwEXJvC3bJUByZYt
-         Gdag==
+        bh=X5ij/O+E/bk/tTzX9mgxwiCynzBHcXx4EKtI9EsHayo=;
+        b=j4pDVeMcXcw7i7IAx1DNlz6iKEYUEIabVz59nN5q7bAhCS1y2gOKuzdzTgG4j/dBwO
+         H4HIbZq+pOLjZVM5UGP2bbBpIOa2ebzQlUp84F0j/JFisMPJqEmZ2hJuFivDCiuZb9qk
+         P5NgTQLX0gtg3X+vGmP6/3oCCgeQ9FljDUkAtb6pQhQ/VT+3lIzONbNoOLFITLjS+g+5
+         Vjj6M2H3z3FRG2iT9u3T7VH/LPW2zOuTNtSoF+jLae0SEMd2/P/I3VxNY7Hl9q3RH2MH
+         NSqRY7EFleJMoWuU3X7ly6d0/rJ15DhvMCCJQ4sCCtoszhR0yDF7rbG/n/mEuDtWN3AJ
+         wtVg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690445625; x=1691050425;
+        d=1e100.net; s=20221208; t=1690445734; x=1691050534;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=vAE6p5mA5n3yxm+4IPfXfMLc8MGv4J5wg3qHubren08=;
-        b=bA9C/cwfDWabz1C7/LILPkLS4KZPftgK6Yrn4Kw2AO3ucUsl+iNdE2yFtuCbCI/Zq5
-         6HMWChZDXgIwvZrLqK57rn58Hnj0Cjhpj2otEXdJCYZP/G6mp+AXZJhkSvjzlnSOdXv7
-         PFzCbOa6DXNfSlz5VCvJo/lLbHs+jTmgTngBmr6TBlW9BcIx8w6ivW2/g3H3UKEY358/
-         +AxtikWRZXp0yo3jLDRCyt7BZVUCYHJFhlPHZQbjrXbrtSIuQcq62nFLHOmVLORBjy1N
-         m6DcE4pvdE+rcW2IGBTklkhBhU475L6Tll9NJlHSal6bcqIVg7m6jR0vjKseUxbCS1RR
-         u+1Q==
-X-Gm-Message-State: ABy/qLab4nkwVZZDyGS1fjlm+KXJQBmPyPZiJG6hndr+qCWq1PjyJZDl
-        Aubv/Ts5MrN1/5H/rdONkvk4kg==
-X-Google-Smtp-Source: APBJJlGsGKc/yd3ypxFPLcm5JieT1oixTNIsPQhWBcbXzQEArQwAQppjIOSAREcWHLbqRGZH8ALcGA==
-X-Received: by 2002:a05:6a20:7d87:b0:12e:f6e6:882b with SMTP id v7-20020a056a207d8700b0012ef6e6882bmr6446407pzj.1.1690445625322;
-        Thu, 27 Jul 2023 01:13:45 -0700 (PDT)
+        bh=X5ij/O+E/bk/tTzX9mgxwiCynzBHcXx4EKtI9EsHayo=;
+        b=bEQekWafe4x5UlE//jFrvBbFn3j/wXeRJG28w9dPmyswvfsUFlpW9MkhhfASL+oqI5
+         qqXlXWhd0asEDovxcGt/hvC7OblD2AW8DwnuI+Zy0khcOG90al8302Qkb+EX4kM0P4t1
+         HHbm37bgV67jEbM6FHvULxmGyYJUDZimUK6jGvf9mNOz9Rc0RUZDrzz+v7HthN5lHhER
+         0pyGEJpV6pwY0GTg4TwxIslv//a+UnhPyIJiZ6yYBUsSj/jHG1IIZQPz78Oo95BFj5si
+         BPwwXeo8dqwavHNg3MPlVIOJcUVw3IKvI1p/yk87hw31doa1SzP6MRm1LZbzL/WNQAOs
+         aiXA==
+X-Gm-Message-State: ABy/qLbXp12J15exB2aQg10oKvkQoXg3hdcJkv1QpY1SKo9Lgco6285i
+        H1R/8yxEUxdZbOVPMjGnivOZcg==
+X-Google-Smtp-Source: APBJJlGCk2Vrs4jG84R1mGLjwsvlQmrr2Zz0KCmUr/tZ9etimLEYhkynVpF/d5AFiEeYea7/v2C0Wg==
+X-Received: by 2002:a05:6a20:7d87:b0:12e:f6e6:882b with SMTP id v7-20020a056a207d8700b0012ef6e6882bmr6451328pzj.1.1690445734330;
+        Thu, 27 Jul 2023 01:15:34 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.13.33
+        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.15.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jul 2023 01:13:44 -0700 (PDT)
+        Thu, 27 Jul 2023 01:15:33 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -68,11 +68,10 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         virtualization@lists.linux-foundation.org,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Qi Zheng <zhengqi.arch@bytedance.com>,
-        Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v3 39/49] xfs: dynamically allocate the xfs-inodegc shrinker
-Date:   Thu, 27 Jul 2023 16:04:52 +0800
-Message-Id: <20230727080502.77895-40-zhengqi.arch@bytedance.com>
+        Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH v3 48/49] mm: shrinker: hold write lock to reparent shrinker nr_deferred
+Date:   Thu, 27 Jul 2023 16:05:01 +0800
+Message-Id: <20230727080502.77895-49-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
 References: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
@@ -82,105 +81,40 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-In preparation for implementing lockless slab shrink, use new APIs to
-dynamically allocate the xfs-inodegc shrinker, so that it can be freed
-asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
-read-side critical section when releasing the struct xfs_mount.
+For now, reparent_shrinker_deferred() is the only holder of read lock of
+shrinker_rwsem. And it already holds the global cgroup_mutex, so it will
+not be called in parallel.
+
+Therefore, in order to convert shrinker_rwsem to shrinker_mutex later,
+here we change to hold the write lock of shrinker_rwsem to reparent.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- fs/xfs/xfs_icache.c | 26 +++++++++++++++-----------
- fs/xfs/xfs_mount.c  |  4 ++--
- fs/xfs/xfs_mount.h  |  2 +-
- 3 files changed, 18 insertions(+), 14 deletions(-)
+ mm/shrinker.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 453890942d9f..751c380afd5a 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -2225,8 +2225,7 @@ xfs_inodegc_shrinker_count(
- 	struct shrinker		*shrink,
- 	struct shrink_control	*sc)
- {
--	struct xfs_mount	*mp = container_of(shrink, struct xfs_mount,
--						   m_inodegc_shrinker);
-+	struct xfs_mount	*mp = shrink->private_data;
- 	struct xfs_inodegc	*gc;
- 	int			cpu;
+diff --git a/mm/shrinker.c b/mm/shrinker.c
+index fee6f62904fb..a12dede5d21f 100644
+--- a/mm/shrinker.c
++++ b/mm/shrinker.c
+@@ -299,7 +299,7 @@ void reparent_shrinker_deferred(struct mem_cgroup *memcg)
+ 		parent = root_mem_cgroup;
  
-@@ -2247,8 +2246,7 @@ xfs_inodegc_shrinker_scan(
- 	struct shrinker		*shrink,
- 	struct shrink_control	*sc)
- {
--	struct xfs_mount	*mp = container_of(shrink, struct xfs_mount,
--						   m_inodegc_shrinker);
-+	struct xfs_mount	*mp = shrink->private_data;
- 	struct xfs_inodegc	*gc;
- 	int			cpu;
- 	bool			no_items = true;
-@@ -2284,13 +2282,19 @@ int
- xfs_inodegc_register_shrinker(
- 	struct xfs_mount	*mp)
- {
--	struct shrinker		*shrink = &mp->m_inodegc_shrinker;
-+	mp->m_inodegc_shrinker = shrinker_alloc(SHRINKER_NONSLAB,
-+						"xfs-inodegc:%s",
-+						mp->m_super->s_id);
-+	if (!mp->m_inodegc_shrinker)
-+		return -ENOMEM;
-+
-+	mp->m_inodegc_shrinker->count_objects = xfs_inodegc_shrinker_count;
-+	mp->m_inodegc_shrinker->scan_objects = xfs_inodegc_shrinker_scan;
-+	mp->m_inodegc_shrinker->seeks = 0;
-+	mp->m_inodegc_shrinker->batch = XFS_INODEGC_SHRINKER_BATCH;
-+	mp->m_inodegc_shrinker->private_data = mp;
- 
--	shrink->count_objects = xfs_inodegc_shrinker_count;
--	shrink->scan_objects = xfs_inodegc_shrinker_scan;
--	shrink->seeks = 0;
--	shrink->flags = SHRINKER_NONSLAB;
--	shrink->batch = XFS_INODEGC_SHRINKER_BATCH;
-+	shrinker_register(mp->m_inodegc_shrinker);
- 
--	return register_shrinker(shrink, "xfs-inodegc:%s", mp->m_super->s_id);
-+	return 0;
+ 	/* Prevent from concurrent shrinker_info expand */
+-	down_read(&shrinker_rwsem);
++	down_write(&shrinker_rwsem);
+ 	for_each_node(nid) {
+ 		child_info = shrinker_info_protected(memcg, nid);
+ 		parent_info = shrinker_info_protected(parent, nid);
+@@ -312,7 +312,7 @@ void reparent_shrinker_deferred(struct mem_cgroup *memcg)
+ 			}
+ 		}
+ 	}
+-	up_read(&shrinker_rwsem);
++	up_write(&shrinker_rwsem);
  }
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index fb87ffb48f7f..640d09891a4e 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1018,7 +1018,7 @@ xfs_mountfs(
-  out_log_dealloc:
- 	xfs_log_mount_cancel(mp);
-  out_inodegc_shrinker:
--	unregister_shrinker(&mp->m_inodegc_shrinker);
-+	shrinker_free(mp->m_inodegc_shrinker);
-  out_fail_wait:
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
- 		xfs_buftarg_drain(mp->m_logdev_targp);
-@@ -1100,7 +1100,7 @@ xfs_unmountfs(
- #if defined(DEBUG)
- 	xfs_errortag_clearall(mp);
- #endif
--	unregister_shrinker(&mp->m_inodegc_shrinker);
-+	shrinker_free(mp->m_inodegc_shrinker);
- 	xfs_free_perag(mp);
- 
- 	xfs_errortag_del(mp);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e2866e7fa60c..562c294ca08e 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -217,7 +217,7 @@ typedef struct xfs_mount {
- 	atomic_t		m_agirotor;	/* last ag dir inode alloced */
- 
- 	/* Memory shrinker to throttle and reprioritize inodegc */
--	struct shrinker		m_inodegc_shrinker;
-+	struct shrinker		*m_inodegc_shrinker;
- 	/*
- 	 * Workqueue item so that we can coalesce multiple inode flush attempts
- 	 * into a single flush.
+ #else
+ static int shrinker_memcg_alloc(struct shrinker *shrinker)
 -- 
 2.30.2
 
