@@ -2,215 +2,198 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8172EEB64DD
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Jul 2023 07:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44A85C001E0
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Jul 2023 08:14:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234120AbjG1HWZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Jul 2023 03:22:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52442 "EHLO
+        id S234563AbjG1IOA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Jul 2023 04:14:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234109AbjG1HWX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Jul 2023 03:22:23 -0400
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 623D7170D;
-        Fri, 28 Jul 2023 00:22:19 -0700 (PDT)
-Received: from [192.168.0.2] (ip5f5ae990.dynamic.kabel-deutschland.de [95.90.233.144])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id D9C1561E5FE01;
-        Fri, 28 Jul 2023 09:21:31 +0200 (CEST)
-Message-ID: <fefca89d-2bf3-b732-4812-5341203c0818@molgen.mpg.de>
-Date:   Fri, 28 Jul 2023 09:21:31 +0200
+        with ESMTP id S234772AbjG1INi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Jul 2023 04:13:38 -0400
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2100.outbound.protection.outlook.com [40.107.236.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0861E3A94;
+        Fri, 28 Jul 2023 01:13:30 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Fu7do9vqFCgFsADyZ82hNoY/UZLzKuhqMcOnUosc7CU1gRARx52ZsmX/k3jQqqfWApVRnBmUWRhAjuU7NmXABoUauEcu+4BsFWL+iQvWctsSSd3J+OEl1nuojXV5LqlwQAV4O6Aa5FX6RS4QMHq9VxdUVQf3CIB3Lf+dyRKu2d6M6EqS2PnnmZOCYOXwHbqBewL1o/bOMaDqYjze38jxmFhs/Iv+br8SfT+8RW8ik5NSR8vaP81ZQYcdY76GopywsKtifA+tCByL5Om2pzeazLJ3uYUIjt8/7ob+IWLXdba180/f4usweAh8S07h9TWD5tHXBCqcmjq5lBKUTlV0hw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=yGPNEOQFiqYcBK63/Om9x23uvQtVmgPahFvNarchGnw=;
+ b=bxOPErCsni0aI6FEntZiPQijAIZDy0MW/IxPv639d8y+dZggkTNWOyuFAO/9SE+UgdXasAOUI3wVhzoH+CfaRJmbUIFqJoyEp9Ec5EP+Ir4UV9u4lZPJYEk9+IPq0p73BQdCtzT9xPvZQzKBaCZlGR3snCZTKSywAEhwAMI82788Emd6bxTcZGrPNH2SHdPb+Dy204vWYszNsqa4acgNtWNqodXyDEw0y7myqVcOxLuUrUTT8tRFt3FWyIgK8HDGppCS6jE0eN7Yc4E+jmEmxhvNTLrtTDOkbhwL/D9jHujspqJpRHY4R5d2byBVhKMu4+i1d28V1eeoN8H1OIizYg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=corigine.com; dmarc=pass action=none header.from=corigine.com;
+ dkim=pass header.d=corigine.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=corigine.onmicrosoft.com; s=selector2-corigine-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yGPNEOQFiqYcBK63/Om9x23uvQtVmgPahFvNarchGnw=;
+ b=m3prTWSXX6KZUhayrV91IRjMJI7ZwF62Kyc+RHKQ5wKJ5j5qAOm8WKXmDTLOzJZexS3MUHCg9Gn6vzAl1zOiXhoEipR2XxPt79A2JuBf25BGhqZ1DaFob4yfuccZFIJJgpycnIR7kUl05XAEhKT1pLB12AmPPln4yziKR08YR+A=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=corigine.com;
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com (2603:10b6:510:78::6)
+ by SJ0PR13MB5269.namprd13.prod.outlook.com (2603:10b6:a03:3e1::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.29; Fri, 28 Jul
+ 2023 08:13:25 +0000
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::fde7:9821:f2d9:101d]) by PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::fde7:9821:f2d9:101d%7]) with mapi id 15.20.6631.026; Fri, 28 Jul 2023
+ 08:13:24 +0000
+Date:   Fri, 28 Jul 2023 10:13:14 +0200
+From:   Simon Horman <simon.horman@corigine.com>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
+        yujie.liu@intel.com, gregkh@linuxfoundation.org,
+        muchun.song@linux.dev, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, x86@kernel.org, kvm@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-erofs@lists.ozlabs.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
+        rcu@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        Muchun Song <songmuchun@bytedance.com>
+Subject: Re: [PATCH v3 04/49] mm: shrinker: remove redundant shrinker_rwsem
+ in debugfs operations
+Message-ID: <ZMN4mjsF1QEsvW7D@corigine.com>
+References: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
+ <20230727080502.77895-5-zhengqi.arch@bytedance.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230727080502.77895-5-zhengqi.arch@bytedance.com>
+X-ClientProxiedBy: AM0PR02CA0114.eurprd02.prod.outlook.com
+ (2603:10a6:20b:28c::11) To PH0PR13MB4842.namprd13.prod.outlook.com
+ (2603:10b6:510:78::6)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.1
-Subject: Re: [PATCH -next] md:ensure mddev->reconfig_mutex is hold when try to
- get mddev->sync_thread
-To:     Li Lingfeng <lilingfeng@huaweicloud.com>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        linan122@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com,
-        lilingfeng3@huawei.com
-References: <20230727072047.389637-1-lilingfeng@huaweicloud.com>
-Content-Language: en-US
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20230727072047.389637-1-lilingfeng@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR13MB4842:EE_|SJ0PR13MB5269:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8611e466-4b59-4307-f46d-08db8f4283c5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: pwW465vo9hI5eC/8Ntm80OiPZIBHfs3VML+30ACZ6q1gKIiw07bi63fgQFFRLxhjeMOvYXvKDQCbhdJXvkJtuvlV+CXofrjYF/nUT4dPDX7q3opgHQdml0n1/4JWskU89OGJAciXmkpGNxgq9ry3pQOnhUiBe/rX017qs0avdKvOdhPtlbR+VQVKZn19geR1qa1unKg72RhRR53/MXIMsfQLudax4C3TSjl+Giz2dgx40XXbX34DzfbwIhH5bpBtGAGLaj3zSQAl3qvuVXHTkg909IcoX6oZGllYm2+Eps+5dhGhNgPCU1/7AU4O5pm4wOrjGhtYfZoZ9N02ekDRjKTQ4lquadIeum0uy/WYwMrctBR3EpkOJHSBHPG5+OYlhSGKYRuhxcaOuJyq9NPyXaRtIwoJbm2SQ2E3gbw5UzfYNh4+Zsdlyyf2fqz/nfuTulgnbDZUN06bw3dCKQlgorH/+ohWbaa1SQLbJzCxvKZOx/MJCh1pBm/F2VBIa/so2tKi49EA+ktn349EbCy+bMhrGONwPCzwf2MNJSruQNMUKPHUtE6Ber7adMWlIhvkRQnideoRjxmflS1kiPiAMuBzpM3AyXXbMb1u0RgXupI=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR13MB4842.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(396003)(39840400004)(136003)(376002)(346002)(366004)(451199021)(316002)(6486002)(6666004)(6512007)(38100700002)(66946007)(66476007)(66556008)(4326008)(6916009)(478600001)(83380400001)(44832011)(2616005)(36756003)(2906002)(86362001)(41300700001)(6506007)(186003)(7416002)(7406005)(8676002)(8936002)(5660300002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EwJcBo/2mvzDAcZlwWvTX9INa/Cd4/lFcnamw+5KB2J69OYpKA3aGp5Wd/XF?=
+ =?us-ascii?Q?Vjt1Q6FMtfkPT96kdcb4hxokRaLTkBreJ1T36jkKBbExivpNKSZ6veIvC/M4?=
+ =?us-ascii?Q?jrCBhciqYx3+6CIDSXOzrvyFcFGYL2Yoe1VQGDJ7NdDD5l0XwHG+93LniBR0?=
+ =?us-ascii?Q?AC3/KSBGGJTCJ06zamH3IV6dDULUlTJhzm/pIZUJ/EWtK7yxw+go6gb+7bsb?=
+ =?us-ascii?Q?GNmIfq+OCxbfIvLSus5tHnhiHP5OesDtsNHLDznFWUW/G/Lmo/+J1OFJzmoH?=
+ =?us-ascii?Q?RITysfiVBMj55kz7cS+ZPLvGIfm8kdkhOghNhMN3NBBLtXwtGwJo5omwrNVG?=
+ =?us-ascii?Q?J1vTaUl7LcWFEq2X1SOaK8K4/6Ia3JWLxWKLRxy3Ww4uBVp7+2i/SZa9mFbj?=
+ =?us-ascii?Q?frtZCGrY28gP1W0cOaS0pH73V5HmSCYk5cbij51ERGBgOpga0ADx0XHxbFwQ?=
+ =?us-ascii?Q?O5taUvqZVD+YUBO09GBwkxw/rXt9bZ3p+tl0GkMzDw3rMPNo5Iiqs8Q7YLtl?=
+ =?us-ascii?Q?QnIGVeXrT9dOvCPEFdcCjIdtTYbOTjdDHfbAbXIwEN2LEHFDx51xljpLnzoj?=
+ =?us-ascii?Q?q6JlISd8nfmBNuAE82FX2Lfg9cjoTaEPWWoVPZG72vP0TPQGCo5rg+N5xg5+?=
+ =?us-ascii?Q?RA9dMJEpTUcVArKtlxNThUjNr/lXLQD2djxQG4SygkFdNSbOIg+Py5fn4KMQ?=
+ =?us-ascii?Q?VM6sDlWNOXcbgtJIHGGZNj7fiUlUPxTpownfc1c4LE42xLPnRHtGXEP9gqSA?=
+ =?us-ascii?Q?snUmINmb3Px4hk0VdGXyakeqY6tNY5w5AGS+MUD7tSY9rFxMbnhmArg+UUZE?=
+ =?us-ascii?Q?i73ij7qu7+jTmwf34+LrI95qmZ0ttNUbtvojB+anPSnSbsSmKyG6GOyDgdDj?=
+ =?us-ascii?Q?1Q8qS+/Pk+qDjwjSV6oDR5KDVg31OLrvNp/zYuvlMlX0IhekWbiJFuhZcDzF?=
+ =?us-ascii?Q?AQLPFRIatsy4f+ShA4r06BfxUfqS9AM3xlDQDA/TuaCkS65hHcKnjG7ssGxV?=
+ =?us-ascii?Q?6wo/p/ORe67hNfAjMWhnJoVU5KB1cJ8ra6ei3E+v+SkG6SmMGtAv/0oPpPuU?=
+ =?us-ascii?Q?fk42VugnI0lugCDN1EQawQHpI+ocrjKTtJgfvf65Gj0bxKANcxVQOqbjWLID?=
+ =?us-ascii?Q?8oXHR6mTmC6ENdB5NHmG42BWQJwcowGxu+i9mU8n3S1/1JXFgKAEOfbrQd/5?=
+ =?us-ascii?Q?Cs8GeKBlj4ogqJ9DEvux/7uYG9mSmkqZBCtfXbYeCmm8POr37MhzLWkvTMRO?=
+ =?us-ascii?Q?TNw+7pHndTN8XIIottGRIXCDjsLjJkNK37QoW2iOVxgkXOaCDs4v/ZPvu2BS?=
+ =?us-ascii?Q?yItjrzpQ7Wv/V/T0mShaQr35yWensUSLg8kwArBLTM+1TpeUjQvlRTRa2QEM?=
+ =?us-ascii?Q?eBhHGQssV3+tngbS/tmYBR8K+ByZIKYtpZzqEUrHnOGBWuMmBorzNjocuLAI?=
+ =?us-ascii?Q?0pmuEP2b4mk3PLcri7AeHoHgZmpbghkq4M/UOwzgrfPl8rOdOFcanX9cAkZ6?=
+ =?us-ascii?Q?9QPpEusH9TeQH4ecp7Cjadc8dwuN5sJzzuVBs840pTrx8rCTXZtCWFBrdxH1?=
+ =?us-ascii?Q?GQ8aV1bM3szxVEZWi1L9tiLEBSSbrR18uuwppQLJFRySYRV8eMAQc/EPvB84?=
+ =?us-ascii?Q?YOmbXUzPIyQOL7toNCW5V83Ij8+QcxN+t1bzFJsRVsd7LA7EUFd9DTAbDPkv?=
+ =?us-ascii?Q?1A2tGA=3D=3D?=
+X-OriginatorOrg: corigine.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8611e466-4b59-4307-f46d-08db8f4283c5
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR13MB4842.namprd13.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2023 08:13:24.7088
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: fe128f2c-073b-4c20-818e-7246a585940c
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZO18g4iU6cCBfbXbdk05XK2h3U98gv1o0RvG8C19b61bZGM6zcodErQeQen1aIioiwU32nm1ls4To/v/MA7i5mi21rgU93wTSzMKCF+aMJ4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR13MB5269
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Li,
-
-
-Thank you for your patch.
-
-I notice two minor things in the summary:
-
-1.  Please add a space after the colon
-2.  “is hold” should be “is held”.
-
-Maybe even shorter:
-
-md: Hold mddev->reconfig_mutex when trying to get mddev->sync_thread
-
-Am 27.07.23 um 09:20 schrieb Li Lingfeng:
-> Commit ba9d9f1a707f ("Revert "md: unlock mddev before reap sync_thread in
-> action_store"") removed the scenario of calling md_unregister_thread()
-> without holding mddev->reconfig_mutex, so add a lock holding check before
-> acquiring mddev->sync_thread.
-
-Maybe also mention, that this is done by passing `mdev` to 
-`md_unregister_thread()`.
-
-Plesae add a Fixes: tag.
-
-> Signed-off-by: Li Lingfeng <lilingfeng@huaweicloud.com>
-> ---
->   drivers/md/md-cluster.c  | 8 ++++----
->   drivers/md/md.c          | 9 +++++----
->   drivers/md/md.h          | 2 +-
->   drivers/md/raid1.c       | 4 ++--
->   drivers/md/raid10.c      | 2 +-
->   drivers/md/raid5-cache.c | 2 +-
->   drivers/md/raid5.c       | 2 +-
->   7 files changed, 15 insertions(+), 14 deletions(-)
+On Thu, Jul 27, 2023 at 04:04:17PM +0800, Qi Zheng wrote:
+> The debugfs_remove_recursive() will wait for debugfs_file_put() to return,
+> so the shrinker will not be freed when doing debugfs operations (such as
+> shrinker_debugfs_count_show() and shrinker_debugfs_scan_write()), so there
+> is no need to hold shrinker_rwsem during debugfs operations.
 > 
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 3d9fd74233df..1e26eb223349 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -952,8 +952,8 @@ static int join(struct mddev *mddev, int nodes)
->   	return 0;
->   err:
->   	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
-> -	md_unregister_thread(&cinfo->recovery_thread);
-> -	md_unregister_thread(&cinfo->recv_thread);
-> +	md_unregister_thread(mddev, &cinfo->recovery_thread);
-> +	md_unregister_thread(mddev, &cinfo->recv_thread);
->   	lockres_free(cinfo->message_lockres);
->   	lockres_free(cinfo->token_lockres);
->   	lockres_free(cinfo->ack_lockres);
-> @@ -1015,8 +1015,8 @@ static int leave(struct mddev *mddev)
->   		resync_bitmap(mddev);
->   
->   	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
-> -	md_unregister_thread(&cinfo->recovery_thread);
-> -	md_unregister_thread(&cinfo->recv_thread);
-> +	md_unregister_thread(mddev, &cinfo->recovery_thread);
-> +	md_unregister_thread(mddev, &cinfo->recv_thread);
->   	lockres_free(cinfo->message_lockres);
->   	lockres_free(cinfo->token_lockres);
->   	lockres_free(cinfo->ack_lockres);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index a3d98273b295..5c3c19b8d509 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6258,7 +6258,7 @@ static void mddev_detach(struct mddev *mddev)
->   		mddev->pers->quiesce(mddev, 1);
->   		mddev->pers->quiesce(mddev, 0);
->   	}
-> -	md_unregister_thread(&mddev->thread);
-> +	md_unregister_thread(mddev, &mddev->thread);
->   	if (mddev->queue)
->   		blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
->   }
-> @@ -7990,9 +7990,10 @@ struct md_thread *md_register_thread(void (*run) (struct md_thread *),
->   }
->   EXPORT_SYMBOL(md_register_thread);
->   
-> -void md_unregister_thread(struct md_thread __rcu **threadp)
-> +void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **threadp)
->   {
-> -	struct md_thread *thread = rcu_dereference_protected(*threadp, true);
-> +	struct md_thread *thread = rcu_dereference_protected(*threadp,
-> +					lockdep_is_held(&mddev->reconfig_mutex));
->   
->   	if (!thread)
->   		return;
-> @@ -9484,7 +9485,7 @@ void md_reap_sync_thread(struct mddev *mddev)
->   	bool is_reshaped = false;
->   
->   	/* resync has finished, collect result */
-> -	md_unregister_thread(&mddev->sync_thread);
-> +	md_unregister_thread(mddev, &mddev->sync_thread);
->   	atomic_inc(&mddev->sync_seq);
->   
->   	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 8ae957480976..9bcb77bca963 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -761,7 +761,7 @@ extern struct md_thread *md_register_thread(
->   	void (*run)(struct md_thread *thread),
->   	struct mddev *mddev,
->   	const char *name);
-> -extern void md_unregister_thread(struct md_thread __rcu **threadp);
-> +extern void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **threadp);
->   extern void md_wakeup_thread(struct md_thread __rcu *thread);
->   extern void md_check_recovery(struct mddev *mddev);
->   extern void md_reap_sync_thread(struct mddev *mddev);
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 23d211969565..581dfbdfca89 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -3152,7 +3152,7 @@ static int raid1_run(struct mddev *mddev)
->   	 * RAID1 needs at least one disk in active
->   	 */
->   	if (conf->raid_disks - mddev->degraded < 1) {
-> -		md_unregister_thread(&conf->thread);
-> +		md_unregister_thread(mddev, &conf->thread);
->   		ret = -EINVAL;
->   		goto abort;
->   	}
-> @@ -3179,7 +3179,7 @@ static int raid1_run(struct mddev *mddev)
->   
->   	ret = md_integrity_register(mddev);
->   	if (ret) {
-> -		md_unregister_thread(&mddev->thread);
-> +		md_unregister_thread(mddev, &mddev->thread);
->   		goto abort;
->   	}
->   	return 0;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 16aa9d735880..6188b71186f4 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4320,7 +4320,7 @@ static int raid10_run(struct mddev *mddev)
->   	return 0;
->   
->   out_free_conf:
-> -	md_unregister_thread(&mddev->thread);
-> +	md_unregister_thread(mddev, &mddev->thread);
->   	raid10_free_conf(conf);
->   	mddev->private = NULL;
->   out:
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 47ba7d9e81e1..ce9b42fd54b9 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -3171,7 +3171,7 @@ void r5l_exit_log(struct r5conf *conf)
->   	/* Ensure disable_writeback_work wakes up and exits */
->   	wake_up(&conf->mddev->sb_wait);
->   	flush_work(&log->disable_writeback_work);
-> -	md_unregister_thread(&log->reclaim_thread);
-> +	md_unregister_thread(conf->mddev, &log->reclaim_thread);
->   
->   	conf->log = NULL;
->   
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 4cdb35e54251..f41f9b712d3d 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -8107,7 +8107,7 @@ static int raid5_run(struct mddev *mddev)
->   
->   	return 0;
->   abort:
-> -	md_unregister_thread(&mddev->thread);
-> +	md_unregister_thread(mddev, &mddev->thread);
->   	print_raid5_conf(conf);
->   	free_conf(conf);
->   	mddev->private = NULL;
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+> Reviewed-by: Muchun Song <songmuchun@bytedance.com>
+> ---
+>  mm/shrinker_debug.c | 14 --------------
+>  1 file changed, 14 deletions(-)
+> 
+> diff --git a/mm/shrinker_debug.c b/mm/shrinker_debug.c
+> index 3ab53fad8876..f1becfd45853 100644
+> --- a/mm/shrinker_debug.c
+> +++ b/mm/shrinker_debug.c
+> @@ -55,11 +55,6 @@ static int shrinker_debugfs_count_show(struct seq_file *m, void *v)
+>  	if (!count_per_node)
+>  		return -ENOMEM;
+>  
+> -	ret = down_read_killable(&shrinker_rwsem);
+> -	if (ret) {
+> -		kfree(count_per_node);
+> -		return ret;
+> -	}
+>  	rcu_read_lock();
+
+Hi Qi Zheng,
+
+As can be seen in the next hunk, this function returns 'ret'.
+However, with this change 'ret' is uninitialised unless
+signal_pending() returns non-zero in the while loop below.
+
+This is flagged in a clan-16 W=1 build.
+
+ mm/shrinker_debug.c:87:11: warning: variable 'ret' is used uninitialized whenever 'do' loop exits because its condition is false [-Wsometimes-uninitialized]
+         } while ((memcg = mem_cgroup_iter(NULL, memcg, NULL)) != NULL);
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ mm/shrinker_debug.c:92:9: note: uninitialized use occurs here
+         return ret;
+                ^~~
+ mm/shrinker_debug.c:87:11: note: remove the condition if it is always true
+         } while ((memcg = mem_cgroup_iter(NULL, memcg, NULL)) != NULL);
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                  1
+ mm/shrinker_debug.c:77:7: warning: variable 'ret' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
+                 if (!memcg_aware) {
+                     ^~~~~~~~~~~~
+ mm/shrinker_debug.c:92:9: note: uninitialized use occurs here
+         return ret;
+                ^~~
+ mm/shrinker_debug.c:77:3: note: remove the 'if' if its condition is always false
+                 if (!memcg_aware) {
+                 ^~~~~~~~~~~~~~~~~~~
+ mm/shrinker_debug.c:52:9: note: initialize the variable 'ret' to silence this warning
+         int ret, nid;
+                ^
+                 = 0
+
+>  
+>  	memcg_aware = shrinker->flags & SHRINKER_MEMCG_AWARE;
+> @@ -92,7 +87,6 @@ static int shrinker_debugfs_count_show(struct seq_file *m, void *v)
+>  	} while ((memcg = mem_cgroup_iter(NULL, memcg, NULL)) != NULL);
+>  
+>  	rcu_read_unlock();
+> -	up_read(&shrinker_rwsem);
+>  
+>  	kfree(count_per_node);
+>  	return ret;
+
+...
