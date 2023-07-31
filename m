@@ -2,37 +2,37 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07511C001DE
-	for <linux-raid@archiver.kernel.org>; Mon, 31 Jul 2023 10:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 311E6C001DE
+	for <linux-raid@archiver.kernel.org>; Mon, 31 Jul 2023 10:51:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230023AbjGaKu0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 31 Jul 2023 06:50:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39618 "EHLO
+        id S231823AbjGaKvM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 31 Jul 2023 06:51:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231339AbjGaKtw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 31 Jul 2023 06:49:52 -0400
+        with ESMTP id S231807AbjGaKut (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 31 Jul 2023 06:50:49 -0400
 Received: from mailbox.box.xen0n.name (mail.xen0n.name [115.28.160.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4C3A10E0;
-        Mon, 31 Jul 2023 03:49:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D45D01BDB;
+        Mon, 31 Jul 2023 03:50:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=xen0n.name; s=mail;
-        t=1690800562; bh=JGGtMrE57kUvgv6mo7tmcpGnIHxi87n9B+IU2cOpSMI=;
+        t=1690800563; bh=fZV1fPQDaoUXxVRY9TfX1xjDSukj+7ktchYSGtV8aSE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IJxUcEUfQfpGEWROn7cdMw1hixU6L6YhjdHvvkDecF3rT8pSTQh5Tp0WTrjH/ydCS
-         aESRGHF6y5yzexM6bTS/U2k6OEDZ+wS9uzLm9vMd6b4VirHzdPamgRZ+xLQy/aSLDr
-         VNup9aq9QC0plDwmOo2wXbgbfTwRWZcOo1TfdsrA=
+        b=wX0NIVvFJefytOowE9WrM4HpblaYyO+f40zMQV+9se7Rny8ZAaTnQKbuxgBs8aYbK
+         zqIbGyWU/5gZh1FE5Yu+6+JUKDZlHHMimTi+9JgpF+MKPPq7x97bP+bGzLW3UEpfYc
+         o15PXdUIiIuUfhdyvc5znN1GekOQQtdy8F99Ruho=
 Received: from ld50.lan (unknown [101.88.28.229])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by mailbox.box.xen0n.name (Postfix) with ESMTPSA id 17D3B6019D;
-        Mon, 31 Jul 2023 18:49:22 +0800 (CST)
+        by mailbox.box.xen0n.name (Postfix) with ESMTPSA id B296F60555;
+        Mon, 31 Jul 2023 18:49:23 +0800 (CST)
 From:   WANG Xuerui <kernel@xen0n.name>
 To:     Song Liu <song@kernel.org>
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         WANG Xuerui <git@xen0n.name>
-Subject: [PATCH 3/5] raid6: test: cosmetic cleanups for the test Makefile
-Date:   Mon, 31 Jul 2023 18:49:09 +0800
-Message-Id: <20230731104911.411964-4-kernel@xen0n.name>
+Subject: [PATCH 5/5] raid6: test: only check for Altivec if building on powerpc hosts
+Date:   Mon, 31 Jul 2023 18:49:11 +0800
+Message-Id: <20230731104911.411964-6-kernel@xen0n.name>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230731104911.411964-1-kernel@xen0n.name>
 References: <20230731104911.411964-1-kernel@xen0n.name>
@@ -44,79 +44,52 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: WANG Xuerui <git@xen0n.name>
 
-Use tabs/spaces consistently: hard tabs for marking recipe lines only,
-spaces for everything else.
-
-Also, the OPTFLAGS declaration actually included the tabs preceding the
-line comment, making compiler invocation lines unnecessarily long. As
-the entire block of declarations are meant for ad-hoc customization
-(otherwise they would probably make use of `?=` instead of `=`), move
-the "Adjust as desired" comment above the block too to fix the long
-invocation lines.
+Altivec is only available for powerpc hosts, so only check for its
+availability when the host is powerpc, to avoid error messages being
+shown on architectures other than x86, arm or powerpc.
 
 Signed-off-by: WANG Xuerui <git@xen0n.name>
 ---
- lib/raid6/test/Makefile | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ lib/raid6/test/Makefile | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
 diff --git a/lib/raid6/test/Makefile b/lib/raid6/test/Makefile
-index 4fb7700a741bd..143cda60faa12 100644
+index 143cda60faa12..1f693ea3b980c 100644
 --- a/lib/raid6/test/Makefile
 +++ b/lib/raid6/test/Makefile
-@@ -6,14 +6,15 @@
+@@ -35,6 +35,12 @@ ifeq ($(ARCH),aarch64)
+         HAS_NEON = yes
+ endif
  
- pound := \#
- 
--CC	 = gcc
--OPTFLAGS = -O2			# Adjust as desired
--CFLAGS	 = -I.. -I ../../../include -g $(OPTFLAGS)
--LD	 = ld
--AWK	 = awk -f
--AR	 = ar
--RANLIB	 = ranlib
--OBJS	 = int1.o int2.o int4.o int8.o int16.o int32.o recov.o algos.o tables.o
-+# Adjust as desired
-+CC       = gcc
-+OPTFLAGS = -O2
-+CFLAGS   = -I.. -I ../../../include -g $(OPTFLAGS)
-+LD       = ld
-+AWK      = awk -f
-+AR       = ar
-+RANLIB   = ranlib
-+OBJS     = int1.o int2.o int4.o int8.o int16.o int32.o recov.o algos.o tables.o
- 
- ARCH := $(shell uname -m 2>/dev/null | sed -e /s/i.86/i386/)
- ifeq ($(ARCH),i386)
-@@ -37,9 +38,9 @@ endif
++ifeq ($(findstring ppc,$(ARCH)),ppc)
++        CFLAGS += -I../../../arch/powerpc/include
++        HAS_ALTIVEC := $(shell printf '$(pound)include <altivec.h>\nvector int a;\n' |\
++                         gcc -c -x c - >/dev/null && rm ./-.o && echo yes)
++endif
++
  ifeq ($(IS_X86),yes)
          OBJS   += mmx.o sse1.o sse2.o avx2.o recov_ssse3.o recov_avx2.o avx512.o recov_avx512.o
          CFLAGS += -DCONFIG_X86
--	CFLAGS += $(shell echo "vpmovm2b %k1, %zmm5" |          \
--		    gcc -c -x assembler - >/dev/null 2>&1 &&	\
--		    rm ./-.o && echo -DCONFIG_AS_AVX512=1)
-+        CFLAGS += $(shell echo "vpmovm2b %k1, %zmm5" |          \
-+                    gcc -c -x assembler - >/dev/null 2>&1 &&    \
-+                    rm ./-.o && echo -DCONFIG_AS_AVX512=1)
+@@ -44,15 +50,10 @@ ifeq ($(IS_X86),yes)
  else ifeq ($(HAS_NEON),yes)
          OBJS   += neon.o neon1.o neon2.o neon4.o neon8.o recov_neon.o recov_neon_inner.o
          CFLAGS += -DCONFIG_KERNEL_MODE_NEON=1
-@@ -63,12 +64,12 @@ endif
- %.uc: ../%.uc
- 	cp -f $< $@
+-else
+-        HAS_ALTIVEC := $(shell printf '$(pound)include <altivec.h>\nvector int a;\n' |\
+-                         gcc -c -x c - >/dev/null && rm ./-.o && echo yes)
+-        ifeq ($(HAS_ALTIVEC),yes)
+-                CFLAGS += -I../../../arch/powerpc/include
+-                CFLAGS += -DCONFIG_ALTIVEC
+-                OBJS += altivec1.o altivec2.o altivec4.o altivec8.o \
+-                        vpermxor1.o vpermxor2.o vpermxor4.o vpermxor8.o
+-        endif
++else ifeq ($(HAS_ALTIVEC),yes)
++        CFLAGS += -DCONFIG_ALTIVEC
++        OBJS += altivec1.o altivec2.o altivec4.o altivec8.o \
++                vpermxor1.o vpermxor2.o vpermxor4.o vpermxor8.o
+ endif
  
--all:	raid6.a raid6test
-+all: raid6.a raid6test
- 
- raid6.a: $(OBJS)
--	 rm -f $@
--	 $(AR) cq $@ $^
--	 $(RANLIB) $@
-+	rm -f $@
-+	$(AR) cq $@ $^
-+	$(RANLIB) $@
- 
- raid6test: test.c raid6.a
- 	$(CC) $(CFLAGS) -o raid6test $^
+ .c.o:
 -- 
 2.40.0
 
