@@ -2,86 +2,184 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6386AC00528
-	for <linux-raid@archiver.kernel.org>; Mon, 31 Jul 2023 11:13:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99514C001DE
+	for <linux-raid@archiver.kernel.org>; Mon, 31 Jul 2023 14:06:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231401AbjGaLN0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 31 Jul 2023 07:13:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58096 "EHLO
+        id S232738AbjGaOGs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 31 Jul 2023 10:06:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229649AbjGaLNY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 31 Jul 2023 07:13:24 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCACFE52;
-        Mon, 31 Jul 2023 04:13:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=0eXexdRtzvf9o3AbbzOynMU9Oogrhvp6ybx0nEPZW1E=; b=vK1v9C4DYLEBKbiWf/PpEfbUOr
-        ea0tKbtUfw+UjBx/HoPf26wPnlNR3k7A4MsVaVkdar3OIBATfQ3zHFcbH8P9ZuG4qU9LC9N5j1WXI
-        1jFOwZPN5LFjM5C6XYSxyg6PIhoZ/4h6jEiKtDOt40sVd4EspDmE/0Bc3dDQT8tEqCoRhRKLz9maX
-        raBlJVeHQO4UUZTV20wa+PJqkvDnQQ8hd7GU+O68QfUa/DM2K0gl+HVXCe6+FZ5xjes5Du5sz8UQy
-        x/J/fQpupjKK/pfw7RVGPayWpw0xq+T79S7uS7ZMWJxaSbk7Su09Zyo3FaLXxQsJmvK1X6hzoRb5N
-        /XYneCLA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qQQpx-00FIz8-1F;
-        Mon, 31 Jul 2023 11:13:17 +0000
-Date:   Mon, 31 Jul 2023 04:13:17 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Haris Iqbal <haris.iqbal@ionos.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-Message-ID: <ZMeXTUUyrOnaxGNG@infradead.org>
-References: <20230629165206.383-1-jack@suse.cz>
- <20230704122224.16257-1-jack@suse.cz>
- <ZKbgAG5OoHVyUKOG@infradead.org>
- <CAJpMwyiUcw+mH0sZa8f8UJsaSZ7NSE65s2gZDEia+pASyP_gJQ@mail.gmail.com>
- <20230731105034.43skhi5ubze563c3@quack3>
+        with ESMTP id S232692AbjGaOG1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 31 Jul 2023 10:06:27 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB711986
+        for <linux-raid@vger.kernel.org>; Mon, 31 Jul 2023 07:02:18 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id d9443c01a7336-1bbdc05a93bso26878835ad.0
+        for <linux-raid@vger.kernel.org>; Mon, 31 Jul 2023 07:02:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1690812138; x=1691416938;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=DiBou5vLsb2flqzlwH9WqMl1tco7x4ou6o9H0RHBgqM=;
+        b=V7hZe26dRUDuz6LOflyh8tvburgueA319NDg5zyn8KJ7Y8NPP0b4Zv+jPb4MqHC0dE
+         GouFmpysWNeUp4j/byX+BSJzZGNxmgMAhzQwzDWFxPFLYB+U9goxEioVFfoTftwvrgYO
+         VgRGNAIYbg2skgajhCEk9a75UkqNiW/cQOEnhkkOQwfGGkTLxBrfOAMgMqzXbYWOtvue
+         /lsr1MYnnOOiA16hTYrmdE8UPvUMdgK0W7IMYU7sqolDOvvXvpNwASHxnyhHle4N3/pW
+         5oUhrLKymsPzbJYVXazrh1s9jxlbCnjLdIGdxuod71FBZR965g0/eY6sOANpcUK6CEAz
+         mvbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690812138; x=1691416938;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=DiBou5vLsb2flqzlwH9WqMl1tco7x4ou6o9H0RHBgqM=;
+        b=SivBs5FusoPQ4M6bsFoz0c0676icd06zKv1VP3yKNkH362fimVqjLs/bPy7ZQS4eZE
+         XBY50jL04HB6jiymFSdXPgO9IqmtU+7Hxm6tpeQsiJW0MAZZPSZPlviBYarp+BpniP7g
+         ala1CKGXhxvuCKDMYz12kGCEkdYFJx8crqeom7vu7lsHBW4C5PeeJsk5kBaW3dE6EoYm
+         o30pwwwQ4wdXvy4YC20+1SdmmDFfPfxClbj4VGL1pVxPcGVwYN0PgEgiP2XjYyc72FYg
+         /R0nasFdNvsP9AfNE+0j9lWkwJ0Hy7o1ucPnLT8qf0QM3w0vSl8fSh1g4qBUxIqV/VGj
+         IV0Q==
+X-Gm-Message-State: ABy/qLb/BYv6EXsV4Qt74r8BEXle4il8h/fNOb9ebau1F6uQVd/VQ7ak
+        gOFQ4njx1/nYk7RkxVXNuhP03PmrxuLocF7urCXX7piaA6XGqQ==
+X-Google-Smtp-Source: APBJJlHqUtvJZzw3I/1WCVyWyciM4xrDGsVgRhiFIBH/a6frT0tSmqrTkYm8sbcQ2ieu0decxhhxuw==
+X-Received: by 2002:a17:902:d2d1:b0:1bb:a55d:c6e7 with SMTP id n17-20020a170902d2d100b001bba55dc6e7mr11344402plc.55.1690812137696;
+        Mon, 31 Jul 2023 07:02:17 -0700 (PDT)
+Received: from nixos ([47.75.78.161])
+        by smtp.gmail.com with ESMTPSA id li11-20020a170903294b00b001b89f6550d1sm8617835plb.16.2023.07.31.07.02.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 Jul 2023 07:02:17 -0700 (PDT)
+Date:   Mon, 31 Jul 2023 22:02:13 +0800
+From:   Xueshi Hu <xueshi.hu@smartx.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     linux-raid@vger.kernel.org, pmenzel@molgen.mpg.de, song@kernel.org
+Subject: Re: [PATCH v3 1/3] md/raid1: freeze array more strictly when reshape
+Message-ID: <dxzuor2h2rkkzlkmbvgxcipvumsy7xlitxpnmgj4lcm3rclcuv@thwglgsryebj>
+References: <20230719070954.3084379-1-xueshi.hu@smartx.com>
+ <20230719070954.3084379-2-xueshi.hu@smartx.com>
+ <a3a45aa9-a54c-51ee-8a80-b663a418dc29@huaweicloud.com>
+ <c42b56ef-9652-ed41-b675-e972a88e930d@huaweicloud.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230731105034.43skhi5ubze563c3@quack3>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c42b56ef-9652-ed41-b675-e972a88e930d@huaweicloud.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jul 31, 2023 at 12:50:34PM +0200, Jan Kara wrote:
-> I think the bdev_handle name is fine for the struct. After all it is
-> equivalent of an open handle for the block device so IMHO bdev_handle
-> captures that better than bdev_ctx.
+On Thu, Jul 20, 2023 at 09:37:38AM +0800, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2023/07/20 9:36, Yu Kuai 写道:
+> > Hi,
+> > 
+> > 在 2023/07/19 15:09, Xueshi Hu 写道:
+> > > When an IO error happens, reschedule_retry() will increase
+> > > r1conf::nr_queued, which makes freeze_array() unblocked. However, before
+> > > all r1bio in the memory pool are released, the memory pool should not be
+> > > modified. Introduce freeze_array_totally() to solve the problem. Compared
+> > > to freeze_array(), it's more strict because any in-flight io needs to
+> > > complete including queued io.
+> > > 
+> > > Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
+> > > ---
+> > >   drivers/md/raid1.c | 35 +++++++++++++++++++++++++++++++++--
+> > >   1 file changed, 33 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > > index dd25832eb045..5605c9680818 100644
+> > > --- a/drivers/md/raid1.c
+> > > +++ b/drivers/md/raid1.c
+> > > @@ -1072,7 +1072,7 @@ static void freeze_array(struct r1conf *conf,
+> > > int extra)
+> > >       /* Stop sync I/O and normal I/O and wait for everything to
+> > >        * go quiet.
+> > >        * This is called in two situations:
+> > > -     * 1) management command handlers (reshape, remove disk, quiesce).
+> > > +     * 1) management command handlers (remove disk, quiesce).
+> > >        * 2) one normal I/O request failed.
+> > >        * After array_frozen is set to 1, new sync IO will be blocked at
+> > > @@ -1111,6 +1111,37 @@ static void unfreeze_array(struct r1conf *conf)
+> > >       wake_up(&conf->wait_barrier);
+> > >   }
+> > > +/* conf->resync_lock should be held */
+> > > +static int get_pending(struct r1conf *conf)
+> > > +{
+> > > +    int idx, ret;
+> > > +
+> > > +    ret = atomic_read(&conf->nr_sync_pending);
+> > > +    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> > > +        ret += atomic_read(&conf->nr_pending[idx]);
+> > > +
+> > > +    return ret;
+> > > +}
+> > > +
+> > > +static void freeze_array_totally(struct r1conf *conf)
+> > > +{
+> > > +    /*
+> > > +     * freeze_array_totally() is almost the same with
+> > > freeze_array() except
+> > > +     * it requires there's no queued io. Raid1's reshape will
+> > > destroy the
+> > > +     * old mempool and change r1conf::raid_disks, which are
+> > > necessary when
+> > > +     * freeing the queued io.
+> > > +     */
+> > > +    spin_lock_irq(&conf->resync_lock);
+> > > +    conf->array_frozen = 1;
+> > > +    raid1_log(conf->mddev, "freeze totally");
+> > > +    wait_event_lock_irq_cmd(
+> > > +            conf->wait_barrier,
+> > > +            get_pending(conf) == 0,
+> > > +            conf->resync_lock,
+> > > +            md_wakeup_thread(conf->mddev->thread));
+> > > +    spin_unlock_irq(&conf->resync_lock);
+> > > +}
+> > > +
+> > >   static void alloc_behind_master_bio(struct r1bio *r1_bio,
+> > >                          struct bio *bio)
+> > >   {
+> > > @@ -3296,7 +3327,7 @@ static int raid1_reshape(struct mddev *mddev)
+> > >           return -ENOMEM;
+> > >       }
+> > > -    freeze_array(conf, 0);
+> > > +    freeze_array_totally(conf);
+> > 
+> > I think this is wrong, raid1_reshape() can't be called with
+> Sorry about thi typo, I mean raid1_reshape() can be called with ...
+You're right, this is indeed a deadlock.
 
-Agreed.
+I am wondering whether this approach is viable
+
+	if (unlikely(atomic_read(conf->nr_queued))) {
+		kfree(newpoolinfo);
+		mempool_exit(&newpool);
+		unfreeze_array(conf);
+
+		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+		md_wakeup_thread(mddev->thread);
+		return -EBUSY;
+	}
+
+Thanks,
+Hu
+
+> 
+> Thanks,
+> Kuai
+> > 'reconfig_mutex' grabbed, and this will deadlock because failed io need
+> > this lock to be handled by daemon thread.(see details in [1]).
+> > 
+> > Be aware that never hold 'reconfig_mutex' to wait for io.
+> > 
+> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?h=md-next&id=c4fe7edfc73f750574ef0ec3eee8c2de95324463
+> > 
+> > >       /* ok, everything is stopped */
+> > >       oldpool = conf->r1bio_pool;
+> > > 
+> > 
+> > .
+> > 
+> 
