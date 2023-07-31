@@ -2,184 +2,116 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99514C001DE
-	for <linux-raid@archiver.kernel.org>; Mon, 31 Jul 2023 14:06:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BAECC001DC
+	for <linux-raid@archiver.kernel.org>; Mon, 31 Jul 2023 14:13:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232738AbjGaOGs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 31 Jul 2023 10:06:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54424 "EHLO
+        id S231731AbjGaONG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 31 Jul 2023 10:13:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232692AbjGaOG1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 31 Jul 2023 10:06:27 -0400
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB711986
-        for <linux-raid@vger.kernel.org>; Mon, 31 Jul 2023 07:02:18 -0700 (PDT)
-Received: by mail-pl1-x642.google.com with SMTP id d9443c01a7336-1bbdc05a93bso26878835ad.0
-        for <linux-raid@vger.kernel.org>; Mon, 31 Jul 2023 07:02:18 -0700 (PDT)
+        with ESMTP id S232641AbjGaOM5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 31 Jul 2023 10:12:57 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2DB7AF
+        for <linux-raid@vger.kernel.org>; Mon, 31 Jul 2023 07:12:55 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-68730bafa6bso773541b3a.1
+        for <linux-raid@vger.kernel.org>; Mon, 31 Jul 2023 07:12:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1690812138; x=1691416938;
+        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1690812775; x=1691417575;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=DiBou5vLsb2flqzlwH9WqMl1tco7x4ou6o9H0RHBgqM=;
-        b=V7hZe26dRUDuz6LOflyh8tvburgueA319NDg5zyn8KJ7Y8NPP0b4Zv+jPb4MqHC0dE
-         GouFmpysWNeUp4j/byX+BSJzZGNxmgMAhzQwzDWFxPFLYB+U9goxEioVFfoTftwvrgYO
-         VgRGNAIYbg2skgajhCEk9a75UkqNiW/cQOEnhkkOQwfGGkTLxBrfOAMgMqzXbYWOtvue
-         /lsr1MYnnOOiA16hTYrmdE8UPvUMdgK0W7IMYU7sqolDOvvXvpNwASHxnyhHle4N3/pW
-         5oUhrLKymsPzbJYVXazrh1s9jxlbCnjLdIGdxuod71FBZR965g0/eY6sOANpcUK6CEAz
-         mvbw==
+        bh=wUiBnR5pWDrH+RHNvXQMMYnMmO6T9AFz3AkOQS+0wRc=;
+        b=V0wAXlPc/9no/Pf/xaGA1hmBPfi65NTrusXWP2n1f9/t/06sdvkc733kGxSbB290WN
+         Wp7zCMps4hg+2Guo73OkjbrkUu83DcE/NOMKsa8sund7oihNn0y8MA5b+UP0WD7Ftz/J
+         mOVcvCUK3e18Sr842baFFLM2J5oCHcwHWC2kU1DaJbrq7q6flss19cnsJ4KU/lUKrxxf
+         hvSJALr0Dzsv689f/2HiBaXhxGuMqHhw/LadjITIpEZjICAxHsk1oi/e4jQE1OzdFftL
+         n2XHZiaMftO66Ao1Uz7fp+V6l9UKVzBXmwLvsrHv97WPaZ3PMoQqd7+QzVELqBwUIy2Y
+         2nTg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690812138; x=1691416938;
+        d=1e100.net; s=20221208; t=1690812775; x=1691417575;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=DiBou5vLsb2flqzlwH9WqMl1tco7x4ou6o9H0RHBgqM=;
-        b=SivBs5FusoPQ4M6bsFoz0c0676icd06zKv1VP3yKNkH362fimVqjLs/bPy7ZQS4eZE
-         XBY50jL04HB6jiymFSdXPgO9IqmtU+7Hxm6tpeQsiJW0MAZZPSZPlviBYarp+BpniP7g
-         ala1CKGXhxvuCKDMYz12kGCEkdYFJx8crqeom7vu7lsHBW4C5PeeJsk5kBaW3dE6EoYm
-         o30pwwwQ4wdXvy4YC20+1SdmmDFfPfxClbj4VGL1pVxPcGVwYN0PgEgiP2XjYyc72FYg
-         /R0nasFdNvsP9AfNE+0j9lWkwJ0Hy7o1ucPnLT8qf0QM3w0vSl8fSh1g4qBUxIqV/VGj
-         IV0Q==
-X-Gm-Message-State: ABy/qLb/BYv6EXsV4Qt74r8BEXle4il8h/fNOb9ebau1F6uQVd/VQ7ak
-        gOFQ4njx1/nYk7RkxVXNuhP03PmrxuLocF7urCXX7piaA6XGqQ==
-X-Google-Smtp-Source: APBJJlHqUtvJZzw3I/1WCVyWyciM4xrDGsVgRhiFIBH/a6frT0tSmqrTkYm8sbcQ2ieu0decxhhxuw==
-X-Received: by 2002:a17:902:d2d1:b0:1bb:a55d:c6e7 with SMTP id n17-20020a170902d2d100b001bba55dc6e7mr11344402plc.55.1690812137696;
-        Mon, 31 Jul 2023 07:02:17 -0700 (PDT)
+        bh=wUiBnR5pWDrH+RHNvXQMMYnMmO6T9AFz3AkOQS+0wRc=;
+        b=T8NLCCCUtoQugf5uYDvLSy+exoPrhmy6VZdxT9QSKJ4uMjmCNxF0jBxd0iwqmlvTfT
+         zBinBTCGo8AFHs+5u2qrH3kuFo4OWGjCzmX/iISslj4YQ6iwUoeAoEuz+W/SubzuNb76
+         Clhi/L+qcjl3s2nwQz938SM6rNWx6Tzw4ULxNrL5jpiqH3HO/peM1t8g+PKbn/vzdjcQ
+         Gu5WJR4HXxLDaqWpfWFXVi+0sFp4n9XF11IAiy4TbOhAgU3vZrVVM5QFaI8y2RnIlu1a
+         Hf92/uDpPLCPL7hr3ChdpZrPmsehNpNE/EuRjDXnh2NOGKVn0B9BtiMOUJCELHGFL176
+         LifA==
+X-Gm-Message-State: ABy/qLZO03PyeVp3DtXiqpha4OgiZuNKRn02UESUpmLF+GZ2bYTogDOe
+        wBCtoGULIEiCElZr+gycuvu6w77WJ8JuMWauv5/2rEjN458=
+X-Google-Smtp-Source: APBJJlElaDT7DFr8MHlqfRKg8pOviqcXZRgU8OmVZd+cqZZ16uXeW92GWsBnLVh9mMthYwhjkSTWqg==
+X-Received: by 2002:a17:903:41d1:b0:1b0:3ab6:5140 with SMTP id u17-20020a17090341d100b001b03ab65140mr11483136ple.4.1690812775340;
+        Mon, 31 Jul 2023 07:12:55 -0700 (PDT)
 Received: from nixos ([47.75.78.161])
-        by smtp.gmail.com with ESMTPSA id li11-20020a170903294b00b001b89f6550d1sm8617835plb.16.2023.07.31.07.02.15
+        by smtp.gmail.com with ESMTPSA id jn13-20020a170903050d00b001b80ed7b66fsm8636754plb.94.2023.07.31.07.12.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Jul 2023 07:02:17 -0700 (PDT)
-Date:   Mon, 31 Jul 2023 22:02:13 +0800
+        Mon, 31 Jul 2023 07:12:55 -0700 (PDT)
+Date:   Mon, 31 Jul 2023 22:12:39 +0800
 From:   Xueshi Hu <xueshi.hu@smartx.com>
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     linux-raid@vger.kernel.org, pmenzel@molgen.mpg.de, song@kernel.org
-Subject: Re: [PATCH v3 1/3] md/raid1: freeze array more strictly when reshape
-Message-ID: <dxzuor2h2rkkzlkmbvgxcipvumsy7xlitxpnmgj4lcm3rclcuv@thwglgsryebj>
-References: <20230719070954.3084379-1-xueshi.hu@smartx.com>
- <20230719070954.3084379-2-xueshi.hu@smartx.com>
- <a3a45aa9-a54c-51ee-8a80-b663a418dc29@huaweicloud.com>
- <c42b56ef-9652-ed41-b675-e972a88e930d@huaweicloud.com>
+Subject: Re: [PATCH v3 3/3] md/raid1: check array size before reshape
+Message-ID: <o75cstdf4qq3mnmq3iucxrfxwrshhzmvoz32ao4ksf2i42hzwx@vjcppf3ig454>
+References: <cd264593-2258-db9f-8ba7-0a0a1e2f0f77@huaweicloud.com>
+ <byhedo2kmchy6e676tfmpqvydlul5ad7kchqds2s34hmdlbu7g@5daabr77ntwb>
+ <e4dd94a5-0f03-9b7b-72cf-f0ce17441815@huaweicloud.com>
+ <443169b3-4e38-d4fe-0450-5d2698c65988@huaweicloud.com>
+ <honxxkye2lhuzkpty2hv3jlrhd72od3mc6rcb27koeo4hq66bs@qsczyfxupqd3>
+ <0d683096-5084-df23-8c6d-a1725f834b3d@huaweicloud.com>
+ <bkou447mvbzpka2xyzojdyywogm3ljdstnfuhf4c3zyribrw55@joxaoryhdiji>
+ <8085922e-403b-890e-8710-6ac3d09aa3d4@huaweicloud.com>
+ <jm5cxwosgfolegtnkdt7madecheukl73gpgpabgogie5irt74e@v7knmmj537py>
+ <b0a03f40-3e64-b906-c689-9c67b7618d53@huaweicloud.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <c42b56ef-9652-ed41-b675-e972a88e930d@huaweicloud.com>
+In-Reply-To: <b0a03f40-3e64-b906-c689-9c67b7618d53@huaweicloud.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jul 20, 2023 at 09:37:38AM +0800, Yu Kuai wrote:
+On Mon, Jul 31, 2023 at 02:22:31PM +0800, Yu Kuai wrote:
 > Hi,
 > 
-> 在 2023/07/20 9:36, Yu Kuai 写道:
-> > Hi,
-> > 
-> > 在 2023/07/19 15:09, Xueshi Hu 写道:
-> > > When an IO error happens, reschedule_retry() will increase
-> > > r1conf::nr_queued, which makes freeze_array() unblocked. However, before
-> > > all r1bio in the memory pool are released, the memory pool should not be
-> > > modified. Introduce freeze_array_totally() to solve the problem. Compared
-> > > to freeze_array(), it's more strict because any in-flight io needs to
-> > > complete including queued io.
-> > > 
-> > > Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
-> > > ---
-> > >   drivers/md/raid1.c | 35 +++++++++++++++++++++++++++++++++--
-> > >   1 file changed, 33 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > > index dd25832eb045..5605c9680818 100644
-> > > --- a/drivers/md/raid1.c
-> > > +++ b/drivers/md/raid1.c
-> > > @@ -1072,7 +1072,7 @@ static void freeze_array(struct r1conf *conf,
-> > > int extra)
-> > >       /* Stop sync I/O and normal I/O and wait for everything to
-> > >        * go quiet.
-> > >        * This is called in two situations:
-> > > -     * 1) management command handlers (reshape, remove disk, quiesce).
-> > > +     * 1) management command handlers (remove disk, quiesce).
-> > >        * 2) one normal I/O request failed.
-> > >        * After array_frozen is set to 1, new sync IO will be blocked at
-> > > @@ -1111,6 +1111,37 @@ static void unfreeze_array(struct r1conf *conf)
-> > >       wake_up(&conf->wait_barrier);
-> > >   }
-> > > +/* conf->resync_lock should be held */
-> > > +static int get_pending(struct r1conf *conf)
-> > > +{
-> > > +    int idx, ret;
-> > > +
-> > > +    ret = atomic_read(&conf->nr_sync_pending);
-> > > +    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
-> > > +        ret += atomic_read(&conf->nr_pending[idx]);
-> > > +
-> > > +    return ret;
-> > > +}
-> > > +
-> > > +static void freeze_array_totally(struct r1conf *conf)
-> > > +{
-> > > +    /*
-> > > +     * freeze_array_totally() is almost the same with
-> > > freeze_array() except
-> > > +     * it requires there's no queued io. Raid1's reshape will
-> > > destroy the
-> > > +     * old mempool and change r1conf::raid_disks, which are
-> > > necessary when
-> > > +     * freeing the queued io.
-> > > +     */
-> > > +    spin_lock_irq(&conf->resync_lock);
-> > > +    conf->array_frozen = 1;
-> > > +    raid1_log(conf->mddev, "freeze totally");
-> > > +    wait_event_lock_irq_cmd(
-> > > +            conf->wait_barrier,
-> > > +            get_pending(conf) == 0,
-> > > +            conf->resync_lock,
-> > > +            md_wakeup_thread(conf->mddev->thread));
-> > > +    spin_unlock_irq(&conf->resync_lock);
-> > > +}
-> > > +
-> > >   static void alloc_behind_master_bio(struct r1bio *r1_bio,
-> > >                          struct bio *bio)
-> > >   {
-> > > @@ -3296,7 +3327,7 @@ static int raid1_reshape(struct mddev *mddev)
-> > >           return -ENOMEM;
-> > >       }
-> > > -    freeze_array(conf, 0);
-> > > +    freeze_array_totally(conf);
-> > 
-> > I think this is wrong, raid1_reshape() can't be called with
-> Sorry about thi typo, I mean raid1_reshape() can be called with ...
-You're right, this is indeed a deadlock.
-
-I am wondering whether this approach is viable
-
-	if (unlikely(atomic_read(conf->nr_queued))) {
-		kfree(newpoolinfo);
-		mempool_exit(&newpool);
-		unfreeze_array(conf);
-
-		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-		md_wakeup_thread(mddev->thread);
-		return -EBUSY;
-	}
+> 在 2023/07/31 11:48, Xueshi Hu 写道:
+> > > Well... I just said reshape can continue is not possible for raid1, and
+> > > this patch will cause that recovery can't continue is some cases.
+> 
+> > I see. I will reread the relevant code to gain a better understanding of
+> > "some cases".
+> 
+> It's not that complex at all, the key point is whether your changes
+> introduce functional changes, if so, does the effect fully evaluated.
+> 
+> In this case, raid1_reshape(all the callers) will set
+> MD_RECOVERY_RECOVER and MD_RECOVERY_NEEDED to indicate that daemon
+> thread must check if recovery is needed, if so it will start recovery.
+> 
+> I agree that recovery is probably not needed in this case that
+> raid_disks is the same, however, note that recovery can be interrupted
+> by user, and raid1_reshape() can be triggered by user as well, this
+> means following procedures will end up different:
+> 
+> 1. trigger a recovery;
+> 2. interupt the recovery;
+> 3. trigger a raid1_reshape();
+Sincere gratitude for your detailed response. I have been consistently
+misunderstanding the concept of "interrupted recovery." I now understand
+your concerns.
 
 Thanks,
 Hu
-
+> 
+> Before this patch, the interupted recovery will continue;
+> 
+> This is minor, but I can't say that no user will be affected, and I
+> really prefer to keep this behaviour, which means this patch can just do
+> some cleanup without introducing functional changes.
 > 
 > Thanks,
 > Kuai
-> > 'reconfig_mutex' grabbed, and this will deadlock because failed io need
-> > this lock to be handled by daemon thread.(see details in [1]).
-> > 
-> > Be aware that never hold 'reconfig_mutex' to wait for io.
-> > 
-> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?h=md-next&id=c4fe7edfc73f750574ef0ec3eee8c2de95324463
-> > 
-> > >       /* ok, everything is stopped */
-> > >       oldpool = conf->r1bio_pool;
-> > > 
-> > 
-> > .
-> > 
 > 
