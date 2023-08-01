@@ -2,203 +2,106 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96F59C04A94
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Aug 2023 01:24:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72019C001DF
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Aug 2023 08:13:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231769AbjHABYZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 31 Jul 2023 21:24:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34886 "EHLO
+        id S232149AbjHAIN4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 1 Aug 2023 04:13:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231748AbjHABYY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 31 Jul 2023 21:24:24 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E10D114
-        for <linux-raid@vger.kernel.org>; Mon, 31 Jul 2023 18:24:21 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RFHSv0f20z4f3jHW
-        for <linux-raid@vger.kernel.org>; Tue,  1 Aug 2023 09:24:15 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCH77K9Xshk3pIhPQ--.39463S3;
-        Tue, 01 Aug 2023 09:24:15 +0800 (CST)
-Subject: Re: [PATCH v3 1/3] md/raid1: freeze array more strictly when reshape
-To:     Xueshi Hu <xueshi.hu@smartx.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     linux-raid@vger.kernel.org, pmenzel@molgen.mpg.de, song@kernel.org,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230719070954.3084379-1-xueshi.hu@smartx.com>
- <20230719070954.3084379-2-xueshi.hu@smartx.com>
- <a3a45aa9-a54c-51ee-8a80-b663a418dc29@huaweicloud.com>
- <c42b56ef-9652-ed41-b675-e972a88e930d@huaweicloud.com>
- <dxzuor2h2rkkzlkmbvgxcipvumsy7xlitxpnmgj4lcm3rclcuv@thwglgsryebj>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <1fbbf178-efdb-558e-685e-4e9ac785d5c0@huaweicloud.com>
-Date:   Tue, 1 Aug 2023 09:24:13 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S232130AbjHAINv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Aug 2023 04:13:51 -0400
+Received: from mailbox.box.xen0n.name (mail.xen0n.name [115.28.160.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 950FE131;
+        Tue,  1 Aug 2023 01:13:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=xen0n.name; s=mail;
+        t=1690877618; bh=mraxCdf54QCswqY/hVvj/lsk8PCBowrkVyh11XY1zrg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ZHhoH84x9LucBwVbW7ARUz47wTF+ZIwCImsaHs0hSezFLkuVGY3DX2jDEVIxb3t33
+         nwWxE7iEqCUDh5FAeyxALOEyx8lssi++gVG8OshaZYXw00DGpUjzbbIlUnT1coQ4hR
+         gRAd7W56iqhkbhEFYxbGWnhLxNELtrJ4uLCZ8Rz0=
+Received: from ld50.lan (unknown [101.88.28.229])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mailbox.box.xen0n.name (Postfix) with ESMTPSA id 66677600D4;
+        Tue,  1 Aug 2023 16:13:38 +0800 (CST)
+From:   WANG Xuerui <kernel@xen0n.name>
+To:     Song Liu <song@kernel.org>
+Cc:     Huacai Chen <chenhuacai@kernel.org>, linux-raid@vger.kernel.org,
+        loongarch@lists.linux.dev, linux-kernel@vger.kernel.org,
+        WANG Xuerui <git@xen0n.name>
+Subject: [PATCH 0/3] raid5, raid6: Accelerate RAID math with LoongArch SIMD
+Date:   Tue,  1 Aug 2023 16:13:32 +0800
+Message-Id: <20230801081335.523097-1-kernel@xen0n.name>
+X-Mailer: git-send-email 2.40.0
 MIME-Version: 1.0
-In-Reply-To: <dxzuor2h2rkkzlkmbvgxcipvumsy7xlitxpnmgj4lcm3rclcuv@thwglgsryebj>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCH77K9Xshk3pIhPQ--.39463S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3AF13trW3Ar18XF18Kw13CFg_yoW7GF1kpF
-        4ktFWYyrW5Jrn3tr1jqa45GF90yw48Ga4UGr1xXa4UArsrtF1S9r1UXr1qgr1kZr4kJr1j
-        q3y5XrZ3uFy5JrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
-        UUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+From: WANG Xuerui <git@xen0n.name>
+
 Hi,
 
-在 2023/07/31 22:02, Xueshi Hu 写道:
-> On Thu, Jul 20, 2023 at 09:37:38AM +0800, Yu Kuai wrote:
->> Hi,
->>
->> 在 2023/07/20 9:36, Yu Kuai 写道:
->>> Hi,
->>>
->>> 在 2023/07/19 15:09, Xueshi Hu 写道:
->>>> When an IO error happens, reschedule_retry() will increase
->>>> r1conf::nr_queued, which makes freeze_array() unblocked. However, before
->>>> all r1bio in the memory pool are released, the memory pool should not be
->>>> modified. Introduce freeze_array_totally() to solve the problem. Compared
->>>> to freeze_array(), it's more strict because any in-flight io needs to
->>>> complete including queued io.
->>>>
->>>> Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
->>>> ---
->>>>    drivers/md/raid1.c | 35 +++++++++++++++++++++++++++++++++--
->>>>    1 file changed, 33 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->>>> index dd25832eb045..5605c9680818 100644
->>>> --- a/drivers/md/raid1.c
->>>> +++ b/drivers/md/raid1.c
->>>> @@ -1072,7 +1072,7 @@ static void freeze_array(struct r1conf *conf,
->>>> int extra)
->>>>        /* Stop sync I/O and normal I/O and wait for everything to
->>>>         * go quiet.
->>>>         * This is called in two situations:
->>>> -     * 1) management command handlers (reshape, remove disk, quiesce).
->>>> +     * 1) management command handlers (remove disk, quiesce).
->>>>         * 2) one normal I/O request failed.
->>>>         * After array_frozen is set to 1, new sync IO will be blocked at
->>>> @@ -1111,6 +1111,37 @@ static void unfreeze_array(struct r1conf *conf)
->>>>        wake_up(&conf->wait_barrier);
->>>>    }
->>>> +/* conf->resync_lock should be held */
->>>> +static int get_pending(struct r1conf *conf)
->>>> +{
->>>> +    int idx, ret;
->>>> +
->>>> +    ret = atomic_read(&conf->nr_sync_pending);
->>>> +    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
->>>> +        ret += atomic_read(&conf->nr_pending[idx]);
->>>> +
->>>> +    return ret;
->>>> +}
->>>> +
->>>> +static void freeze_array_totally(struct r1conf *conf)
->>>> +{
->>>> +    /*
->>>> +     * freeze_array_totally() is almost the same with
->>>> freeze_array() except
->>>> +     * it requires there's no queued io. Raid1's reshape will
->>>> destroy the
->>>> +     * old mempool and change r1conf::raid_disks, which are
->>>> necessary when
->>>> +     * freeing the queued io.
->>>> +     */
->>>> +    spin_lock_irq(&conf->resync_lock);
->>>> +    conf->array_frozen = 1;
->>>> +    raid1_log(conf->mddev, "freeze totally");
->>>> +    wait_event_lock_irq_cmd(
->>>> +            conf->wait_barrier,
->>>> +            get_pending(conf) == 0,
->>>> +            conf->resync_lock,
->>>> +            md_wakeup_thread(conf->mddev->thread));
->>>> +    spin_unlock_irq(&conf->resync_lock);
->>>> +}
->>>> +
->>>>    static void alloc_behind_master_bio(struct r1bio *r1_bio,
->>>>                           struct bio *bio)
->>>>    {
->>>> @@ -3296,7 +3327,7 @@ static int raid1_reshape(struct mddev *mddev)
->>>>            return -ENOMEM;
->>>>        }
->>>> -    freeze_array(conf, 0);
->>>> +    freeze_array_totally(conf);
->>>
->>> I think this is wrong, raid1_reshape() can't be called with
->> Sorry about thi typo, I mean raid1_reshape() can be called with ...
-> You're right, this is indeed a deadlock.
-> 
-> I am wondering whether this approach is viable
-> 
-> 	if (unlikely(atomic_read(conf->nr_queued))) {
-> 		kfree(newpoolinfo);
-> 		mempool_exit(&newpool);
-> 		unfreeze_array(conf);
-> 
-> 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-> 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> 		md_wakeup_thread(mddev->thread);
-> 		return -EBUSY;
-> 	}
+Seeing the LoongArch port recently (finally!) gained the ability to use
+the vector units, I've subsequently ported the RAID5/6 math to LSX and
+LASX (which are LoongArch's 128-bit and 256-bit SIMD extensions), with
+nice speedups observed. They are reasonably straight-forward conversions
+of existing code, and I hope the comments I put in there are helpful
+enough for anyone not familiar with LoongArch assembly to get a rough
+picture of how things work here. Performance numbers are included in
+each commit's commit message.
 
-This is not okay, 'nr_queued' can be incresed at any time when normal io
-failed, read it once doesn't mean anything, and you need to
-freeze_array() before reading it:
+This series needs [1] ("LoongArch: Allow usage of LSX/LASX in the
+kernel") as a prerequisite, or the vector context would likely get
+corrupted by the vector-unaware kernel_fpu_{begin,end} calls. I tested
+the changes on top of next-20230731 with the raid6test build fixes [2]
+applied, but the series should apply cleanly to v6.5-rc4 (or maybe any
+other tag) too.
 
-freeze_array
-// guarantee new io won't be dispatched
-if (atomic_read(conf->nr_queued))
-  ...
-  unfreeze_array
-  return -EBUSY;
+[1]: https://lore.kernel.org/loongarch/20230722072201.2677516-1-chenhuacai@loongson.cn/
+[2]: https://lore.kernel.org/linux-raid/20230731104911.411964-1-kernel@xen0n.name/
 
-Fortunately, I'm working on another patchset to synchronize io with
-array configuration, which means all the callers of raid1_reshape() will
-suspend the array, and no normal io will be in progress, hence this
-problem won't exist as well.
+WANG Xuerui (3):
+  LoongArch: Add SIMD-optimized XOR routines
+  raid6: Add LoongArch SIMD syndrome calculation
+  raid6: Add LoongArch SIMD recovery implementation
 
-Thanks,
-Kuai
+ arch/loongarch/include/asm/xor.h      |  68 ++++
+ arch/loongarch/include/asm/xor_simd.h |  42 +++
+ arch/loongarch/lib/Makefile           |   3 +
+ arch/loongarch/lib/xor_simd.c         |  92 +++++
+ arch/loongarch/lib/xor_simd.h         |  46 +++
+ arch/loongarch/lib/xor_simd_glue.c    |  71 ++++
+ arch/loongarch/lib/xor_template.c     | 109 ++++++
+ include/linux/raid/pq.h               |   4 +
+ lib/raid6/Makefile                    |   1 +
+ lib/raid6/algos.c                     |  16 +
+ lib/raid6/loongarch.h                 |  38 ++
+ lib/raid6/loongarch_simd.c            | 417 +++++++++++++++++++++
+ lib/raid6/recov_loongarch_simd.c      | 501 ++++++++++++++++++++++++++
+ lib/raid6/test/Makefile               |  12 +
+ 14 files changed, 1420 insertions(+)
+ create mode 100644 arch/loongarch/include/asm/xor.h
+ create mode 100644 arch/loongarch/include/asm/xor_simd.h
+ create mode 100644 arch/loongarch/lib/xor_simd.c
+ create mode 100644 arch/loongarch/lib/xor_simd.h
+ create mode 100644 arch/loongarch/lib/xor_simd_glue.c
+ create mode 100644 arch/loongarch/lib/xor_template.c
+ create mode 100644 lib/raid6/loongarch.h
+ create mode 100644 lib/raid6/loongarch_simd.c
+ create mode 100644 lib/raid6/recov_loongarch_simd.c
 
-> 
-> Thanks,
-> Hu
-> 
->>
->> Thanks,
->> Kuai
->>> 'reconfig_mutex' grabbed, and this will deadlock because failed io need
->>> this lock to be handled by daemon thread.(see details in [1]).
->>>
->>> Be aware that never hold 'reconfig_mutex' to wait for io.
->>>
->>> [1] https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?h=md-next&id=c4fe7edfc73f750574ef0ec3eee8c2de95324463
->>>
->>>>        /* ok, everything is stopped */
->>>>        oldpool = conf->r1bio_pool;
->>>>
->>>
->>> .
->>>
->>
-> .
-> 
+
+base-commit: 5d0c230f1de8c7515b6567d9afba1f196fb4e2f4
+prerequisite-patch-id: 85d08a9828893250ae78dbca9d6e6f8dac755f61
+prerequisite-patch-id: fe0bba41e0bbc676454365ed16fb13fc0aac6ee0
+prerequisite-patch-id: 84ef8212b74e696ce019255bbfd9679d7516f7f7
+prerequisite-patch-id: b1f8fc4e4acdaff7f821a9fcbd063475178e037b
+prerequisite-patch-id: 82aacbf27f249fdefe40dd6bcc712e5795256926
+prerequisite-patch-id: ae4e026e18f92ffcc93f6b135a3bd48fbdded39a
+-- 
+2.40.0
 
