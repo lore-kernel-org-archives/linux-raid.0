@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84A31C04FDF
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA8F2EB64DD
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236291AbjHCNeN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:34:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53164 "EHLO
+        id S235632AbjHCNeO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:34:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235406AbjHCNdo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:44 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E99230D3;
-        Thu,  3 Aug 2023 06:32:32 -0700 (PDT)
+        with ESMTP id S235492AbjHCNdp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:45 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79F3C4C21;
+        Thu,  3 Aug 2023 06:32:34 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXD6ZP9z4f3lW7;
-        Thu,  3 Aug 2023 21:32:28 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqXC6nkVz4f3knM;
+        Thu,  3 Aug 2023 21:32:27 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S11;
-        Thu, 03 Aug 2023 21:32:29 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S13;
+        Thu, 03 Aug 2023 21:32:30 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 07/29] md: use new apis to suspend array for serialize_policy_store()
-Date:   Thu,  3 Aug 2023 21:29:08 +0800
-Message-Id: <20230803132930.2742286-8-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 09/29] md/md-bitmap: use new apis to suspend array for location_store()
+Date:   Thu,  3 Aug 2023 21:29:10 +0800
+Message-Id: <20230803132930.2742286-10-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S11
-X-Coremail-Antispam: 1UD129KBjvdXoWrZFWUZF4ftFW5XryUKF1xKrg_yoWkCwb_CF
-        s5u3yfJr9xXry5tr1IkwsavryFyrn5WwnrXFyftFW3AFZ8tF9Ykr95CrZ0qws2vayxWa4U
-        trya9w47Xr4DKjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S13
+X-Coremail-Antispam: 1UD129KBjvdXoWrZFWUZF4ftw17tF15ur1Utrb_yoWDXFXEka
+        1kZrWrJrnxurW5Jr13Kw4xZrW0kFs5W3Z7XFWSya4SvF9rW3Z5KrWFyr1Yq3yvvFWUC345
+        KryFv3y7Ar1jgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
         9fnUUIcSsGvfJTRUUUbf8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
         6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
         IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
@@ -64,39 +64,36 @@ This is not hot path, so performance is not concerned.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 6 ++----
+ drivers/md/md-bitmap.c | 6 ++----
  1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index fc1646f02ef3..765667b5fa59 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5548,7 +5548,7 @@ serialize_policy_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (value == mddev->serialize_policy)
- 		return len;
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 0c661e5036bb..7d21e2a5b06e 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2348,11 +2348,10 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
+ {
+ 	int rv;
  
--	err = mddev_lock(mddev);
-+	err = mddev_suspend_and_lock(mddev);
- 	if (err)
- 		return err;
- 	if (mddev->pers == NULL || (mddev->pers->level != 1)) {
-@@ -5557,15 +5557,13 @@ serialize_policy_store(struct mddev *mddev, const char *buf, size_t len)
- 		goto unlock;
- 	}
+-	rv = mddev_lock(mddev);
++	rv = mddev_suspend_and_lock(mddev);
+ 	if (rv)
+ 		return rv;
  
 -	mddev_suspend(mddev);
- 	if (value)
- 		mddev_create_serial_pool(mddev, NULL, true);
- 	else
- 		mddev_destroy_serial_pool(mddev, NULL, true);
- 	mddev->serialize_policy = value;
+ 	if (mddev->pers) {
+ 		if (mddev->recovery || mddev->sync_thread) {
+ 			rv = -EBUSY;
+@@ -2429,8 +2428,7 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
+ 	}
+ 	rv = 0;
+ out:
 -	mddev_resume(mddev);
- unlock:
 -	mddev_unlock(mddev);
 +	mddev_unlock_and_resume(mddev);
- 	return err ?: len;
- }
- 
+ 	if (rv)
+ 		return rv;
+ 	return len;
 -- 
 2.39.2
 
