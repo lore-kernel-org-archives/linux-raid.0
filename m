@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC2D1C04A6A
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:35:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5A34C001DF
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:35:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236422AbjHCNfW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:35:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53108 "EHLO
+        id S236271AbjHCNfZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:35:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236259AbjHCNeE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:34:04 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2587E4ECE;
-        Thu,  3 Aug 2023 06:32:36 -0700 (PDT)
+        with ESMTP id S236264AbjHCNeF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:34:05 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E903D5241;
+        Thu,  3 Aug 2023 06:32:40 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXF29S1z4f3lfF;
-        Thu,  3 Aug 2023 21:32:29 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqXK51Hxz4f4Hvt;
+        Thu,  3 Aug 2023 21:32:33 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S12;
-        Thu, 03 Aug 2023 21:32:30 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S28;
+        Thu, 03 Aug 2023 21:32:36 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 08/29] md/dm-raid: use new apis to suspend array
-Date:   Thu,  3 Aug 2023 21:29:09 +0800
-Message-Id: <20230803132930.2742286-9-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 24/29] md: suspend array in md_start_sync() if array need reconfiguration
+Date:   Thu,  3 Aug 2023 21:29:25 +0800
+Message-Id: <20230803132930.2742286-25-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S12
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF4fXFy5ZF1kZryxZrWUurg_yoW8ur4fpF
-        s5Ja98Ww48J343XFWDAw1DWFyYyw1Y9rZFyrWfua95J3WfKr13uF1rWr47XrWkta4xAF1j
-        yw4UA3yDuFW0g37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S28
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF1xCr4rZry7XFy7CF1UGFg_yoW8WFykpa
+        yxtF9Y9r4UJFWfZ3y5Xas5CFy5Jw109rZFyrW7Wa4rAas3Krn7Gr13ur1UXryqya93tF13
+        Xw4Yq3WkAr10k37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -47,7 +47,7 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7WF4fXFy5ZF1kZryxZrWUurg_yoW8ur4fpF
         M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
         CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
         14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVW5JVW7JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20E
+        IY67AKxVW7JVWDJwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20E
         Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267
         AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqiihUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
@@ -58,66 +58,60 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Convert to use new apis, the old apis will be removed eventually.
-
-These are not hot path, so performance is not concerned.
+So that io won't concurrent with array reconfiguration, and now that
+all callers of md_kick_rdev_from_array() suspend the array, change the
+second parameter to true and prepare to remove the mddev_suspend() from
+mddev_create/destroy_serial_pool().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/dm-raid.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/md/md.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 020598c10db0..2ff33b5d9a1b 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3244,7 +3244,7 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	set_bit(MD_RECOVERY_FROZEN, &rs->md.recovery);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index d5c061c87b2e..9bfa15b2fa97 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9358,12 +9358,20 @@ static void md_start_sync(struct work_struct *ws)
+ {
+ 	struct mddev *mddev = container_of(ws, struct mddev, sync_work);
+ 	int spares = 0;
++	bool suspended = false;
++
++	if (md_spares_need_change(mddev)) {
++		__mddev_suspend(mddev);
++		suspended = true;
++	}
  
- 	/* Has to be held on running the array */
--	mddev_lock_nointr(&rs->md);
-+	mddev_suspend_and_lock_nointr(&rs->md);
- 	r = md_run(&rs->md);
- 	rs->md.in_sync = 0; /* Assume already marked dirty */
- 	if (r) {
-@@ -3270,7 +3270,6 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		}
+ 	mddev_lock_nointr(mddev);
+ 
+ 	if (!md_is_rdwr(mddev)) {
+ 		remove_and_add_spares(mddev);
+ 		mddev_unlock(mddev);
++		if (suspended)
++			__mddev_resume(mddev);
+ 		return;
  	}
  
--	mddev_suspend(&rs->md);
- 	set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags);
- 
- 	/* Try to adjust the raid4/5/6 stripe cache size to the stripe size */
-@@ -3800,9 +3799,7 @@ static void raid_postsuspend(struct dm_target *ti)
- 		if (!test_bit(MD_RECOVERY_FROZEN, &rs->md.recovery))
- 			md_stop_writes(&rs->md);
- 
--		mddev_lock_nointr(&rs->md);
--		mddev_suspend(&rs->md);
--		mddev_unlock(&rs->md);
-+		__mddev_suspend(&rs->md);
- 	}
- }
- 
-@@ -4014,7 +4011,7 @@ static int raid_preresume(struct dm_target *ti)
+@@ -9412,6 +9420,9 @@ static void md_start_sync(struct work_struct *ws)
  	}
  
- 	/* Check for any resize/reshape on @rs and adjust/initiate */
--	/* Be prepared for mddev_resume() in raid_resume() */
-+	/* Be prepared for __mddev_resume() in raid_resume() */
- 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	if (mddev->recovery_cp && mddev->recovery_cp < MaxSector) {
- 		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-@@ -4061,8 +4058,7 @@ static void raid_resume(struct dm_target *ti)
- 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		mddev->ro = 0;
- 		mddev->in_sync = 0;
--		mddev_resume(mddev);
--		mddev_unlock(mddev);
-+		mddev_unlock_and_resume(mddev);
- 	}
- }
+ 	mddev_unlock(mddev);
++	if (suspended)
++		__mddev_resume(mddev);
++
+ 	md_wakeup_thread(mddev->sync_thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	md_new_event();
+@@ -9424,6 +9435,8 @@ static void md_start_sync(struct work_struct *ws)
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 	mddev_unlock(mddev);
++	if (suspended)
++		__mddev_resume(mddev);
  
+ 	wake_up(&resync_wait);
+ 	if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
 -- 
 2.39.2
 
