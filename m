@@ -2,54 +2,51 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24BABC41513
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 078DBEB64DD
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:32:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234956AbjHCN2h (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:28:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47552 "EHLO
+        id S235631AbjHCNcQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:32:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236006AbjHCN1m (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:27:42 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7AE12109;
-        Thu,  3 Aug 2023 06:27:35 -0700 (PDT)
+        with ESMTP id S235319AbjHCNcA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:32:00 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3445A2D69;
+        Thu,  3 Aug 2023 06:30:53 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqQR1nnrz4f3lwK;
-        Thu,  3 Aug 2023 21:27:27 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqVH20Tmz4f400M;
+        Thu,  3 Aug 2023 21:30:47 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7M6q8tk5SrlPQ--.7420S12;
-        Thu, 03 Aug 2023 21:27:29 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7MGrMtkNVvlPQ--.7517S4;
+        Thu, 03 Aug 2023 21:30:47 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 08/13] md: convert to use hot_remove_rdev() to hot remove one rdev
-Date:   Thu,  3 Aug 2023 21:24:21 +0800
-Message-Id: <20230803132426.2688608-9-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 0/7] md: initialize 'active_io' while allocating
+Date:   Thu,  3 Aug 2023 21:27:44 +0800
+Message-Id: <20230803132751.2741652-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230803132426.2688608-1-yukuai1@huaweicloud.com>
-References: <20230803132426.2688608-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7M6q8tk5SrlPQ--.7420S12
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtF1UJF1fCw1ftFb_yoW8uFWkpa
-        yxJas8Wr47Aw43Xw4UtF4DGa45tw10grZ2yry7ua4fZ3Z3Jr1kW3WrGFWUXr95Aa9YvF4r
-        JF48ta1Uu3yIkFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9K14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
-        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAv
-        wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
-        v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTYUUUUU
+X-CM-TRANSID: gCh0CgCnD7MGrMtkNVvlPQ--.7517S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ww1fXw17uw1Uuw1UGw1xZrb_yoW8CrWkp3
+        ySqFW3Zw1UWr1fJr43J3y8ur90qws3WrZrKr9xXw4rC3W3ua4kCw1fWa1Fqr9FyFy3A3ZI
+        yr98X348CF18ArDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+        cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1lIxAIcVCF04
+        k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF
+        7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VU1a9aPUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,73 +55,48 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-There are no functional changes, prepare to cleanup
-remove_and_add_spares().
+This is the 4th patchset to do some preparatory work to synchronize
+io with array reconfiguration.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+1) The first patchset refactor 'active_io', make sure that mddev_suspend()
+will wait for io to be done. [1]
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 3903bdfe5293..de7399769c8d 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -85,6 +85,7 @@ static struct workqueue_struct *md_wq;
- static struct workqueue_struct *md_misc_wq;
- struct workqueue_struct *md_bitmap_wq;
- 
-+static bool hot_remove_rdev(struct md_rdev *rdev);
- static int remove_and_add_spares(struct mddev *mddev,
- 				 struct md_rdev *this);
- static void mddev_detach(struct mddev *mddev);
-@@ -2887,9 +2888,13 @@ static int remove_rdev(struct md_rdev *rdev)
- {
- 	struct mddev *mddev = rdev->mddev;
- 
-+	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-+		return -EBUSY;
-+
- 	if (mddev->pers) {
- 		clear_bit(Blocked, &rdev->flags);
--		remove_and_add_spares(mddev, rdev);
-+		if (!hot_remove_rdev(rdev))
-+			return -EBUSY;
- 	}
- 
- 	if (rdev->raid_disk >= 0)
-@@ -3133,8 +3138,8 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
- 		if (rdev->mddev->pers->hot_remove_disk == NULL)
- 			return -EINVAL;
- 		clear_bit(Blocked, &rdev->flags);
--		remove_and_add_spares(rdev->mddev, rdev);
--		if (rdev->raid_disk >= 0)
-+		if (test_bit(MD_RECOVERY_RUNNING, &rdev->mddev->recovery) ||
-+		    !hot_remove_rdev(rdev))
- 			return -EBUSY;
- 		set_bit(MD_RECOVERY_NEEDED, &rdev->mddev->recovery);
- 		md_wakeup_thread(rdev->mddev->thread);
-@@ -6931,6 +6936,9 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
- 	if (!mddev->pers)
- 		return -ENODEV;
- 
-+	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-+		return -EBUSY;
-+
- 	rdev = find_rdev(mddev, dev);
- 	if (!rdev)
- 		return -ENXIO;
-@@ -6939,9 +6947,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
- 		goto kick_rdev;
- 
- 	clear_bit(Blocked, &rdev->flags);
--	remove_and_add_spares(mddev, rdev);
--
--	if (rdev->raid_disk >= 0)
-+	if (!hot_remove_rdev(rdev))
- 		goto busy;
- 
- kick_rdev:
+2) The second patchset remove 'quiesce' callback from mddev_suspend(), so
+that mddev_suspend() doesn't rely on 'quiesce' callback is registered,
+and can be used for all personalites; [2]
+
+3) Make array reconfiguration independent from daemon thread,
+and synchronize it with io will be much easier because io may rely on
+daemon thread to be done.
+
+4) This patchset move initialization of 'active_io' from md_run() to
+md_alloc(), so that mddev_suspend() won't rely on holding 'reconfig_mutex'
+to check if 'mddev->pers' is set, and it can be called at any time after
+mddev is allocated.(Done by patch 1, and other patches are cleanup)
+
+Yu Kuai (7):
+  md: initialize 'active_io' while allocating mddev
+  md: initialize 'writes_pending' while allocating mddev
+  md: don't rely on 'mddev->pers' to be set in mddev_suspend()
+  md-bitmap: remove the checking of 'pers->quiesce' from
+    location_store()
+  md-bitmap: suspend array earlier in location_store()
+  md: don't check 'mddev->pers' from suspend_hi_store()
+  md: don't check 'mddev->pers' and 'pers->quiesce' from
+    suspend_lo_store()
+
+[1] https://lore.kernel.org/all/20230621165110.1498313-1-yukuai1@huaweicloud.com/
+[2] https://lore.kernel.org/all/20230628012931.88911-2-yukuai1@huaweicloud.com/
+
+ drivers/md/dm-raid.c   |   7 ++-
+ drivers/md/md-bitmap.c |  47 +++++++++----------
+ drivers/md/md.c        | 100 ++++++++++++++++++++---------------------
+ drivers/md/md.h        |   4 +-
+ drivers/md/raid1.c     |   3 +-
+ drivers/md/raid10.c    |   3 --
+ drivers/md/raid5.c     |   3 --
+ 7 files changed, 78 insertions(+), 89 deletions(-)
+
 -- 
 2.39.2
 
