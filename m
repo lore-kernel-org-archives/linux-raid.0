@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24817C001DF
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4556DEB64DD
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:35:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236385AbjHCNfG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:35:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53452 "EHLO
+        id S236388AbjHCNfH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:35:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234875AbjHCNd4 (ORCPT
+        with ESMTP id S234884AbjHCNd4 (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:56 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00FEF4EE0;
-        Thu,  3 Aug 2023 06:32:38 -0700 (PDT)
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35BC14EED;
+        Thu,  3 Aug 2023 06:32:40 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqXJ1Jkpz4f3lJn;
-        Thu,  3 Aug 2023 21:32:32 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXM4VPbz4f41m6;
+        Thu,  3 Aug 2023 21:32:35 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S24;
-        Thu, 03 Aug 2023 21:32:34 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S27;
+        Thu, 03 Aug 2023 21:32:36 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 20/29] md: use new apis to suspend array for adding/removing rdev from state_store()
-Date:   Thu,  3 Aug 2023 21:29:21 +0800
-Message-Id: <20230803132930.2742286-21-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 23/29] md: use new apis to suspend array in backlog_store()
+Date:   Thu,  3 Aug 2023 21:29:24 +0800
+Message-Id: <20230803132930.2742286-24-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S24
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr4kXFWfAF4DCr48AFW5ZFb_yoW8ZF1kpa
-        17Ka4rWry7Jw45Gw4rZa1kua4Ygwn2grWqkrWa9w1Sy3WxGwnrGFy5tr4DAFyFv3ya9r13
-        Xw4UKw45G34fCrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S27
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4fAr15GrWUCr1fuF4xCrg_yoW8XFyUpr
+        sagaySgr4UZ34rGw1UZa1DCFyYqa18KrZrtrZxWayfua1aqwnxKr1rWa15tr17Xas5KF15
+        Jw15urWkAFyfGrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -58,66 +58,50 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-User can write 'remove' and 're-add' to trigger array reconfiguration
-through sysfs, suspend array in this case so that io won't concurrent
-with array reconfiguration.
+mddev_create/destroy_serial_pool() will be called from backlog_store(),
+and mddev_suspend() will be called later.
+
+Prepare to remove the mddev_suspend() from
+mddev_create/destroy_serial_pool().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ drivers/md/md-bitmap.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 66bb6a585291..4a522558a570 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2916,11 +2916,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
- 		 */
- 		super_types[mddev->major_version].
- 			validate_super(mddev, rdev);
--		if (add_journal)
--			mddev_suspend(mddev);
- 		err = mddev->pers->hot_add_disk(mddev, rdev);
--		if (add_journal)
--			mddev_resume(mddev);
- 		if (err) {
- 			md_kick_rdev_from_array(rdev);
- 			return err;
-@@ -3687,6 +3683,7 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
- 	struct rdev_sysfs_entry *entry = container_of(attr, struct rdev_sysfs_entry, attr);
- 	struct md_rdev *rdev = container_of(kobj, struct md_rdev, kobj);
- 	struct kernfs_node *kn = NULL;
-+	bool suspended = false;
- 	ssize_t rv;
- 	struct mddev *mddev = rdev->mddev;
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 7d21e2a5b06e..b3d701c5c461 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2537,7 +2537,7 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (backlog > COUNTER_MAX)
+ 		return -EINVAL;
  
-@@ -3695,8 +3692,14 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
+-	rv = mddev_lock(mddev);
++	rv = mddev_suspend_and_lock(mddev);
+ 	if (rv)
+ 		return rv;
  
--	if (entry->store == state_store && cmd_match(page, "remove"))
--		kn = sysfs_break_active_protection(kobj, attr);
-+	if (entry->store == state_store) {
-+		if (cmd_match(page, "remove"))
-+			kn = sysfs_break_active_protection(kobj, attr);
-+		if (cmd_match(page, "remove") || cmd_match(page, "re-add")) {
-+			__mddev_suspend(mddev);
-+			suspended = true;
-+		}
-+	}
- 
- 	rv = mddev ? mddev_lock(mddev) : -ENODEV;
- 	if (!rv) {
-@@ -3705,6 +3708,9 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
- 		else
- 			rv = entry->store(rdev, page, length);
- 		mddev_unlock(mddev);
-+
-+		if (suspended)
-+			__mddev_resume(mddev);
+@@ -2562,16 +2562,16 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (!backlog && mddev->serial_info_pool) {
+ 		/* serial_info_pool is not needed if backlog is zero */
+ 		if (!mddev->serialize_policy)
+-			mddev_destroy_serial_pool(mddev, NULL, false);
++			mddev_destroy_serial_pool(mddev, NULL, true);
+ 	} else if (backlog && !mddev->serial_info_pool) {
+ 		/* serial_info_pool is needed since backlog is not zero */
+ 		rdev_for_each(rdev, mddev)
+-			mddev_create_serial_pool(mddev, rdev, false);
++			mddev_create_serial_pool(mddev, rdev, true);
  	}
+ 	if (old_mwb != backlog)
+ 		md_bitmap_update_sb(mddev->bitmap);
  
- 	if (kn)
+-	mddev_unlock(mddev);
++	mddev_unlock_and_resume(mddev);
+ 	return len;
+ }
+ 
 -- 
 2.39.2
 
