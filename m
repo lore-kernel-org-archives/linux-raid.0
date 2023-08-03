@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C64EB64DD
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C11AC04A6A
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235181AbjHCNeG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:34:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53110 "EHLO
+        id S236083AbjHCNeH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:34:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235264AbjHCNdl (ORCPT
+        with ESMTP id S235248AbjHCNdl (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:41 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9311146AA;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C17C46A8;
         Thu,  3 Aug 2023 06:32:32 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXD3pLyz4f3lVX;
-        Thu,  3 Aug 2023 21:32:28 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXC2twxz4f3lW2;
+        Thu,  3 Aug 2023 21:32:27 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S10;
-        Thu, 03 Aug 2023 21:32:29 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S7;
+        Thu, 03 Aug 2023 21:32:28 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 06/29] md: use new apis to suspend array for level_store()
-Date:   Thu,  3 Aug 2023 21:29:07 +0800
-Message-Id: <20230803132930.2742286-7-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 03/29] md: add new helpers to suspend/resume array
+Date:   Thu,  3 Aug 2023 21:29:04 +0800
+Message-Id: <20230803132930.2742286-4-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S10
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF4DuF48CF1rJrykArW5Wrg_yoW8Gr17pa
-        1xKFWrGr1jv3ySqr1DGF4kCa45Jw1jgrWqkrZrZwn7ZF1xXr9rWw1ruFs8XFy8Ja4rArs8
-        Xw45Ga4rXrW8JaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
-        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVW5JVW7JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20E
-        Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267
-        AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqiihUUUUU=
+X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S7
+X-Coremail-Antispam: 1UD129KBjvJXoWxKrykZr47Gryxtw43Gry5twb_yoW7ZF1Up3
+        yIqFZ5t34UJFZxZw47t3srWa45Ww1rKFWDtrW3Wa13C3Wakr4rWr15Wr15Xr1vka4fAr4D
+        Jw48XayUCry8WFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9C14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2
+        IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
+        6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
+        AKxVW5JVW7JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v2
+        0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxV
+        W8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUyv38UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,52 +58,174 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Convert to use new apis, the old apis will be removed eventually.
-
-This is not hot path, so performance is not concerned.
+Advantages for new apis:
+ - reconfig_mutex is not required;
+ - the weird logical that suspend array hold 'reconfig_mutex' for
+   mddev_check_recovery() to update superblock is not needed;
+ - the specail handling, 'pers->prepare_suspend', for raid456 is not
+   needed;
+ - It's safe to be called at any time once mddev is allocated, and it's
+   designed to be used from slow path where array configuration is changed;
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/md/md.c | 85 +++++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/md/md.h |  3 ++
+ 2 files changed, 86 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e516c5000a00..fc1646f02ef3 100644
+index 89f5175b1295..3c98f253b980 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4001,7 +4001,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (slen == 0 || slen >= sizeof(clevel))
- 		return -EINVAL;
+@@ -442,12 +442,22 @@ void mddev_suspend(struct mddev *mddev)
+ 			lockdep_is_held(&mddev->reconfig_mutex));
  
--	rv = mddev_lock(mddev);
-+	rv = mddev_suspend_and_lock(mddev);
- 	if (rv)
- 		return rv;
+ 	WARN_ON_ONCE(thread && current == thread->tsk);
+-	if (mddev->suspended++)
++
++	/* can't concurrent with __mddev_suspend() and __mddev_resume() */
++	mutex_lock(&mddev->suspend_mutex);
++	if (mddev->suspended++) {
++		mutex_unlock(&mddev->suspend_mutex);
+ 		return;
++	}
++
+ 	wake_up(&mddev->sb_wait);
+ 	set_bit(MD_ALLOW_SB_UPDATE, &mddev->flags);
+ 	percpu_ref_kill(&mddev->active_io);
  
-@@ -4094,7 +4094,6 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
- 	}
++	/*
++	 * TODO: cleanup 'pers->prepare_suspend after all callers are replaced
++	 * by __mddev_suspend().
++	 */
+ 	if (mddev->pers && mddev->pers->prepare_suspend)
+ 		mddev->pers->prepare_suspend(mddev);
  
- 	/* Looks like we have a winner */
--	mddev_suspend(mddev);
- 	mddev_detach(mddev);
- 
- 	spin_lock(&mddev->lock);
-@@ -4180,14 +4179,13 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
- 	blk_set_stacking_limits(&mddev->queue->limits);
- 	pers->run(mddev);
- 	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
--	mddev_resume(mddev);
- 	if (!mddev->thread)
- 		md_update_sb(mddev, 1);
- 	sysfs_notify_dirent_safe(mddev->sysfs_level);
- 	md_new_event();
- 	rv = len;
- out_unlock:
--	mddev_unlock(mddev);
-+	mddev_unlock_and_resume(mddev);
- 	return rv;
+@@ -458,14 +468,21 @@ void mddev_suspend(struct mddev *mddev)
+ 	del_timer_sync(&mddev->safemode_timer);
+ 	/* restrict memory reclaim I/O during raid array is suspend */
+ 	mddev->noio_flag = memalloc_noio_save();
++
++	mutex_unlock(&mddev->suspend_mutex);
  }
+ EXPORT_SYMBOL_GPL(mddev_suspend);
  
+ void mddev_resume(struct mddev *mddev)
+ {
+ 	lockdep_assert_held(&mddev->reconfig_mutex);
+-	if (--mddev->suspended)
++
++	/* can't concurrent with __mddev_suspend() and __mddev_resume() */
++	mutex_lock(&mddev->suspend_mutex);
++	if (--mddev->suspended) {
++		mutex_unlock(&mddev->suspend_mutex);
+ 		return;
++	}
+ 
+ 	/* entred the memalloc scope from mddev_suspend() */
+ 	memalloc_noio_restore(mddev->noio_flag);
+@@ -476,9 +493,72 @@ void mddev_resume(struct mddev *mddev)
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
+ 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
++
++	mutex_unlock(&mddev->suspend_mutex);
+ }
+ EXPORT_SYMBOL_GPL(mddev_resume);
+ 
++void __mddev_suspend(struct mddev *mddev)
++{
++
++	/*
++	 * hold reconfig_mutex to wait for normal io will deadlock, because
++	 * other context can't update super_block, and normal io can rely on
++	 * updating super_block.
++	 */
++	lockdep_assert_not_held(&mddev->reconfig_mutex);
++
++	mutex_lock(&mddev->suspend_mutex);
++
++	if (mddev->suspended) {
++		WRITE_ONCE(mddev->suspended, mddev->suspended + 1);
++		mutex_unlock(&mddev->suspend_mutex);
++		return;
++	}
++
++	percpu_ref_kill(&mddev->active_io);
++	wait_event(mddev->sb_wait, percpu_ref_is_zero(&mddev->active_io));
++
++	/*
++	 * For raid456, io might be waiting for reshape to make progress,
++	 * allow new reshape to start while waiting for io to be done to
++	 * prevent deadlock.
++	 */
++	WRITE_ONCE(mddev->suspended, mddev->suspended + 1);
++
++	del_timer_sync(&mddev->safemode_timer);
++	/* restrict memory reclaim I/O during raid array is suspend */
++	mddev->noio_flag = memalloc_noio_save();
++
++	mutex_unlock(&mddev->suspend_mutex);
++}
++EXPORT_SYMBOL_GPL(__mddev_suspend);
++
++void __mddev_resume(struct mddev *mddev)
++{
++	lockdep_assert_not_held(&mddev->reconfig_mutex);
++
++	mutex_lock(&mddev->suspend_mutex);
++	WRITE_ONCE(mddev->suspended, mddev->suspended - 1);
++	if (mddev->suspended) {
++		mutex_unlock(&mddev->suspend_mutex);
++		return;
++	}
++
++	/* entred the memalloc scope from __mddev_suspend() */
++	memalloc_noio_restore(mddev->noio_flag);
++
++	percpu_ref_resurrect(&mddev->active_io);
++	wake_up(&mddev->sb_wait);
++
++	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++	md_wakeup_thread(mddev->thread);
++	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
++
++	mutex_unlock(&mddev->suspend_mutex);
++}
++EXPORT_SYMBOL_GPL(__mddev_resume);
++
+ /*
+  * Generic flush handling for md
+  */
+@@ -666,6 +746,7 @@ int mddev_init(struct mddev *mddev)
+ 	mutex_init(&mddev->open_mutex);
+ 	mutex_init(&mddev->reconfig_mutex);
+ 	mutex_init(&mddev->sync_mutex);
++	mutex_init(&mddev->suspend_mutex);
+ 	mutex_init(&mddev->bitmap_info.mutex);
+ 	INIT_LIST_HEAD(&mddev->disks);
+ 	INIT_LIST_HEAD(&mddev->all_mddevs);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 82d2c4ed9aca..32bfe0fe0d97 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -308,6 +308,7 @@ struct mddev {
+ 	unsigned long			sb_flags;
+ 
+ 	int				suspended;
++	struct mutex			suspend_mutex;
+ 	struct percpu_ref		active_io;
+ 	int				ro;
+ 	int				sysfs_active; /* set when sysfs deletes
+@@ -803,6 +804,8 @@ extern void md_rdev_clear(struct md_rdev *rdev);
+ extern void md_handle_request(struct mddev *mddev, struct bio *bio);
+ extern void mddev_suspend(struct mddev *mddev);
+ extern void mddev_resume(struct mddev *mddev);
++extern void __mddev_suspend(struct mddev *mddev);
++extern void __mddev_resume(struct mddev *mddev);
+ 
+ extern void md_reload_sb(struct mddev *mddev, int raid_disk);
+ extern void md_update_sb(struct mddev *mddev, int force);
 -- 
 2.39.2
 
