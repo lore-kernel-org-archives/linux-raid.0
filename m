@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DD93EB64DD
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2991DEB64DD
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236325AbjHCNea (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:34:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53268 "EHLO
+        id S236348AbjHCNeq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:34:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235933AbjHCNdu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:50 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A98464C38;
-        Thu,  3 Aug 2023 06:32:35 -0700 (PDT)
+        with ESMTP id S236101AbjHCNdv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:51 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 943E74ED0;
+        Thu,  3 Aug 2023 06:32:37 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqXD2R4Zz4f4Hw0;
-        Thu,  3 Aug 2023 21:32:28 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXJ6mJGz4f44wx;
+        Thu,  3 Aug 2023 21:32:32 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S14;
-        Thu, 03 Aug 2023 21:32:31 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S20;
+        Thu, 03 Aug 2023 21:32:33 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 10/29] md/raid5-cache: use READ_ONCE/WRITE_ONCE for 'conf->log'
-Date:   Thu,  3 Aug 2023 21:29:11 +0800
-Message-Id: <20230803132930.2742286-11-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 16/29] md/raid5: use new apis to suspend array for raid5_change_consistency_policy()
+Date:   Thu,  3 Aug 2023 21:29:17 +0800
+Message-Id: <20230803132930.2742286-17-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S14
-X-Coremail-Antispam: 1UD129KBjvJXoWxKFWxtrWftFWkCF1xJw1UWrg_yoWxtw4kpa
-        93ta43Xr4kJr9YvFnrCF4DuF4Sg3yv93s7JrW3G39ayF9a9rW8Ja4xJryfZFyrJFy8CrWf
-        uFZ8tryUWrn7Ar7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S20
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF4DuF4rZr1Uur4xCFyUKFg_yoW8ur48pa
+        1a9a4fur1Uury3Jryjya1qgFy8Jw1UKrZ7trW7Xwn3X3Wft34xGFyrZrZ7Wry8Aa4fJa48
+        Ja15K3W8CF4UJrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -58,217 +58,78 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-'conf->log' is set with 'reconfig_mutex' grabbed, however, readers are
-not procted, hence use READ_ONCE/WRITE_ONCE to prevent reading abnormal
-value.
+Convert to use new apis, the old apis will be removed eventually.
+
+This is not hot path, so performance is not concerned.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid5-cache.c | 47 +++++++++++++++++++++-------------------
- 1 file changed, 25 insertions(+), 22 deletions(-)
+ drivers/md/raid5.c | 19 ++++++-------------
+ 1 file changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 47ba7d9e81e1..b6e0a6bb3965 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -327,8 +327,9 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space);
- void r5c_check_stripe_cache_usage(struct r5conf *conf)
- {
- 	int total_cached;
-+	struct r5l_log *log = READ_ONCE(conf->log);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 11fcaa1f7de5..b4b2d0d5855d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8966,12 +8966,12 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
+ 	struct r5conf *conf;
+ 	int err;
  
--	if (!r5c_is_writeback(conf->log))
-+	if (!r5c_is_writeback(log))
- 		return;
- 
- 	total_cached = atomic_read(&conf->r5c_cached_partial_stripes) +
-@@ -344,7 +345,7 @@ void r5c_check_stripe_cache_usage(struct r5conf *conf)
- 	 */
- 	if (total_cached > conf->min_nr_stripes * 1 / 2 ||
- 	    atomic_read(&conf->empty_inactive_list_nr) > 0)
--		r5l_wake_reclaim(conf->log, 0);
-+		r5l_wake_reclaim(log, 0);
- }
- 
- /*
-@@ -353,7 +354,9 @@ void r5c_check_stripe_cache_usage(struct r5conf *conf)
-  */
- void r5c_check_cached_full_stripe(struct r5conf *conf)
- {
--	if (!r5c_is_writeback(conf->log))
-+	struct r5l_log *log = READ_ONCE(conf->log);
-+
-+	if (!r5c_is_writeback(log))
- 		return;
- 
- 	/*
-@@ -363,7 +366,7 @@ void r5c_check_cached_full_stripe(struct r5conf *conf)
- 	if (atomic_read(&conf->r5c_cached_full_stripes) >=
- 	    min(R5C_FULL_STRIPE_FLUSH_BATCH(conf),
- 		conf->chunk_sectors >> RAID5_STRIPE_SHIFT(conf)))
--		r5l_wake_reclaim(conf->log, 0);
-+		r5l_wake_reclaim(log, 0);
- }
- 
- /*
-@@ -396,7 +399,7 @@ void r5c_check_cached_full_stripe(struct r5conf *conf)
-  */
- static sector_t r5c_log_required_to_flush_cache(struct r5conf *conf)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	if (!r5c_is_writeback(log))
- 		return 0;
-@@ -449,7 +452,7 @@ static inline void r5c_update_log_state(struct r5l_log *log)
- void r5c_make_stripe_write_out(struct stripe_head *sh)
- {
- 	struct r5conf *conf = sh->raid_conf;
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	BUG_ON(!r5c_is_writeback(log));
- 
-@@ -491,7 +494,7 @@ static void r5c_handle_parity_cached(struct stripe_head *sh)
-  */
- static void r5c_finish_cache_stripe(struct stripe_head *sh)
- {
--	struct r5l_log *log = sh->raid_conf->log;
-+	struct r5l_log *log = READ_ONCE(sh->raid_conf->log);
- 
- 	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH) {
- 		BUG_ON(test_bit(STRIPE_R5C_CACHING, &sh->state));
-@@ -692,7 +695,7 @@ static void r5c_disable_writeback_async(struct work_struct *work)
- 
- 	/* wait superblock change before suspend */
- 	wait_event(mddev->sb_wait,
--		   conf->log == NULL ||
-+		   !READ_ONCE(conf->log) ||
- 		   (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) &&
- 		    (locked = mddev_trylock(mddev))));
- 	if (locked) {
-@@ -1151,7 +1154,7 @@ static void r5l_run_no_space_stripes(struct r5l_log *log)
- static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- {
- 	struct stripe_head *sh;
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	sector_t new_cp;
- 	unsigned long flags;
- 
-@@ -1159,12 +1162,12 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- 		return log->next_checkpoint;
- 
- 	spin_lock_irqsave(&log->stripe_in_journal_lock, flags);
--	if (list_empty(&conf->log->stripe_in_journal_list)) {
-+	if (list_empty(&log->stripe_in_journal_list)) {
- 		/* all stripes flushed */
- 		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
- 		return log->next_checkpoint;
+-	err = mddev_lock(mddev);
++	err = mddev_suspend_and_lock(mddev);
+ 	if (err)
+ 		return err;
+ 	conf = mddev->private;
+ 	if (!conf) {
+-		mddev_unlock(mddev);
++		mddev_unlock_and_resume(mddev);
+ 		return -ENODEV;
  	}
--	sh = list_first_entry(&conf->log->stripe_in_journal_list,
-+	sh = list_first_entry(&log->stripe_in_journal_list,
- 			      struct stripe_head, r5c);
- 	new_cp = sh->log_start;
- 	spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
-@@ -1400,7 +1403,7 @@ void r5c_flush_cache(struct r5conf *conf, int num)
- 	struct stripe_head *sh, *next;
  
- 	lockdep_assert_held(&conf->device_lock);
--	if (!conf->log)
-+	if (!READ_ONCE(conf->log))
- 		return;
+@@ -8981,19 +8981,14 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
+ 			err = log_init(conf, NULL, true);
+ 			if (!err) {
+ 				err = resize_stripes(conf, conf->pool_size);
+-				if (err) {
+-					mddev_suspend(mddev);
++				if (err)
+ 					log_exit(conf);
+-					mddev_resume(mddev);
+-				}
+ 			}
+ 		} else
+ 			err = -EINVAL;
+ 	} else if (strncmp(buf, "resync", 6) == 0) {
+ 		if (raid5_has_ppl(conf)) {
+-			mddev_suspend(mddev);
+ 			log_exit(conf);
+-			mddev_resume(mddev);
+ 			err = resize_stripes(conf, conf->pool_size);
+ 		} else if (test_bit(MD_HAS_JOURNAL, &conf->mddev->flags) &&
+ 			   r5l_log_disk_error(conf)) {
+@@ -9006,11 +9001,9 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
+ 					break;
+ 				}
  
- 	count = 0;
-@@ -1421,7 +1424,7 @@ void r5c_flush_cache(struct r5conf *conf, int num)
+-			if (!journal_dev_exists) {
+-				mddev_suspend(mddev);
++			if (!journal_dev_exists)
+ 				clear_bit(MD_HAS_JOURNAL, &mddev->flags);
+-				mddev_resume(mddev);
+-			} else  /* need remove journal device first */
++			else  /* need remove journal device first */
+ 				err = -EBUSY;
+ 		} else
+ 			err = -EINVAL;
+@@ -9021,7 +9014,7 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
+ 	if (!err)
+ 		md_update_sb(mddev, 1);
  
- static void r5c_do_reclaim(struct r5conf *conf)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	struct stripe_head *sh;
- 	int count = 0;
- 	unsigned long flags;
-@@ -1550,7 +1553,7 @@ static void r5l_reclaim_thread(struct md_thread *thread)
- {
- 	struct mddev *mddev = thread->mddev;
- 	struct r5conf *conf = mddev->private;
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
+-	mddev_unlock(mddev);
++	mddev_unlock_and_resume(mddev);
  
- 	if (!log)
- 		return;
-@@ -1592,7 +1595,7 @@ void r5l_quiesce(struct r5l_log *log, int quiesce)
- 
- bool r5l_log_disk_error(struct r5conf *conf)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	/* don't allow write if journal disk is missing */
- 	if (!log)
-@@ -2636,7 +2639,7 @@ int r5c_try_caching_write(struct r5conf *conf,
- 			  struct stripe_head_state *s,
- 			  int disks)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	int i;
- 	struct r5dev *dev;
- 	int to_cache = 0;
-@@ -2803,7 +2806,7 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 				 struct stripe_head *sh,
- 				 struct stripe_head_state *s)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	int i;
- 	int do_wakeup = 0;
- 	sector_t tree_index;
-@@ -2942,7 +2945,7 @@ int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh)
- /* check whether this big stripe is in write back cache. */
- bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	sector_t tree_index;
- 	void *slot;
- 
-@@ -3050,14 +3053,14 @@ int r5l_start(struct r5l_log *log)
- void r5c_update_on_rdev_error(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	struct r5conf *conf = mddev->private;
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	if (!log)
- 		return;
- 
- 	if ((raid5_calc_degraded(conf) > 0 ||
- 	     test_bit(Journal, &rdev->flags)) &&
--	    conf->log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
-+	    log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
- 		schedule_work(&log->disable_writeback_work);
+ 	return err;
  }
- 
-@@ -3146,7 +3149,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	spin_lock_init(&log->stripe_in_journal_lock);
- 	atomic_set(&log->stripe_in_journal_count, 0);
- 
--	conf->log = log;
-+	WRITE_ONCE(conf->log, log);
- 
- 	set_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
- 	return 0;
-@@ -3173,7 +3176,7 @@ void r5l_exit_log(struct r5conf *conf)
- 	flush_work(&log->disable_writeback_work);
- 	md_unregister_thread(&log->reclaim_thread);
- 
--	conf->log = NULL;
-+	WRITE_ONCE(conf->log, NULL);
- 
- 	mempool_exit(&log->meta_pool);
- 	bioset_exit(&log->bs);
 -- 
 2.39.2
 
