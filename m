@@ -2,42 +2,42 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB12C001DF
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E20A3EB64DD
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:28:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236201AbjHCN1t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:27:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47388 "EHLO
+        id S232883AbjHCN2e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:28:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235961AbjHCN1l (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:27:41 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A07C6273E;
-        Thu,  3 Aug 2023 06:27:35 -0700 (PDT)
+        with ESMTP id S236015AbjHCN1n (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:27:43 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 871E12D4E;
+        Thu,  3 Aug 2023 06:27:36 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqQV6gD1z4f3jMN;
-        Thu,  3 Aug 2023 21:27:30 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqQS0FBxz4f3lx7;
+        Thu,  3 Aug 2023 21:27:28 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7M6q8tk5SrlPQ--.7420S17;
-        Thu, 03 Aug 2023 21:27:31 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7M6q8tk5SrlPQ--.7420S14;
+        Thu, 03 Aug 2023 21:27:30 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 13/13] md: delay remove_and_add_spares() for read only array to md_start_sync()
-Date:   Thu,  3 Aug 2023 21:24:26 +0800
-Message-Id: <20230803132426.2688608-14-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 10/13] md: cleanup remove_and_add_spares()
+Date:   Thu,  3 Aug 2023 21:24:23 +0800
+Message-Id: <20230803132426.2688608-11-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132426.2688608-1-yukuai1@huaweicloud.com>
 References: <20230803132426.2688608-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7M6q8tk5SrlPQ--.7420S17
-X-Coremail-Antispam: 1UD129KBjvJXoWxZry5GFyrZryfZF17uw4fAFb_yoW5Zr15pr
-        4SyF909r4Dt34fZr47Gw1DWa4Fkr10qrZFyry3ua48Aw13Ars7G34rWa4DJryrJa4Sya13
-        Ja18KFs8CF18GaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgCnD7M6q8tk5SrlPQ--.7420S14
+X-Coremail-Antispam: 1UD129KBjvJXoWxJFW7KF45tr4DZr15AFyxXwb_yoW5XFy3pa
+        1Ik3ZxCr4UZ3yfZayjqr4DGa45Jr10qrZFyFy7ua4fZ3Wayr1vga4rZFy7ArZ5AasY9F43
+        Aw48Kw45ur18GF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9K14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
         z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
@@ -47,9 +47,9 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxZry5GFyrZryfZF17uw4fAFb_yoW5Zr15pr
         M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
         CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
         14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20E
-        Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267
-        AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkUUUUU=
+        IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAv
+        wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14
+        v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTYUUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,104 +58,85 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Before this patch, for read-only array:
-
-md_check_recovery() check that 'MD_RECOVERY_NEEDED' is set, then it will
-call remove_and_add_spares() directly to try to remove and add rdevs
-from array.
-
-After this patch:
-
-1) md_check_recovery() check that 'MD_RECOVERY_NEEDED' is set, and the
-   worker 'sync_work' is not pending, and there are rdevs can be added
-   or removed, then it will queue new work md_start_sync();
-2) md_start_sync() will call remove_and_add_spares() and exist;
-
-This change make sure that array reconfiguration is independent from
-daemon, and it'll be much easier to synchronize it with io, consier
-that io may rely on daemon thread to be done.
+Now that remove_and_add_spares() is only called from daemon thread, and
+the second parameter is always NULL, remove the second parameter.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 37 +++++++++++++++++++++++++++----------
- 1 file changed, 27 insertions(+), 10 deletions(-)
+ drivers/md/md.c | 22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ef88581d9a39..f6e024c15530 100644
+index 1dc26bb1e096..e64d1d0b4c5c 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9188,6 +9188,16 @@ static bool rdev_addable(struct md_rdev *rdev)
+@@ -86,8 +86,6 @@ static struct workqueue_struct *md_misc_wq;
+ struct workqueue_struct *md_bitmap_wq;
+ 
+ static bool hot_remove_rdev(struct md_rdev *rdev);
+-static int remove_and_add_spares(struct mddev *mddev,
+-				 struct md_rdev *this);
+ static void mddev_detach(struct mddev *mddev);
+ static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
+ static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
+@@ -9232,36 +9230,26 @@ static bool hot_add_rdev(struct md_rdev *rdev)
  	return true;
  }
  
-+static bool md_spares_need_change(struct mddev *mddev)
-+{
-+	struct md_rdev *rdev;
-+
-+	rdev_for_each(rdev, mddev)
-+		if (rdev_removeable(rdev) || rdev_addable(rdev))
-+			return true;
-+	return false;
-+}
-+
- static bool rdev_is_spare(struct md_rdev *rdev)
+-static int remove_and_add_spares(struct mddev *mddev,
+-				 struct md_rdev *this)
++static int remove_and_add_spares(struct mddev *mddev)
  {
- 	return !test_bit(Candidate, &rdev->flags) && rdev->raid_disk >= 0 &&
-@@ -9265,6 +9275,12 @@ static void md_start_sync(struct work_struct *ws)
+ 	struct md_rdev *rdev;
+ 	int spares = 0;
+ 	int removed = 0;
  
- 	mddev_lock_nointr(mddev);
+-	if (this && test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+-		/* Mustn't remove devices when resync thread is running */
+-		return 0;
+-
+ 	rdev_for_each(rdev, mddev)
+-		if ((this == NULL || rdev == this) && hot_remove_rdev(rdev))
++		if (hot_remove_rdev(rdev))
+ 			removed++;
  
-+	if (!md_is_rdwr(mddev)) {
-+		remove_and_add_spares(mddev);
-+		mddev_unlock(mddev);
-+		return;
-+	}
-+
- 	/*
- 	 * No recovery is running, remove any failed drives, then add spares if
- 	 * possible. Spares are also removed and re-added, to allow the
-@@ -9381,7 +9397,8 @@ void md_check_recovery(struct mddev *mddev)
+ 	if (removed && mddev->kobj.sd)
+ 		sysfs_notify_dirent_safe(mddev->sysfs_degraded);
+ 
+-	if (this && removed)
+-		goto no_add;
+-
+ 	rdev_for_each(rdev, mddev) {
+-		if (this && this != rdev)
+-			continue;
+ 		if (rdev_is_spare(rdev))
+ 			spares++;
+ 		if (hot_add_rdev(rdev) && !test_bit(Journal, &rdev->flags))
+ 			spares++;
  	}
- 
- 	if (!md_is_rdwr(mddev) &&
--	    !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
-+	    (!test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-+	     work_pending(&mddev->sync_work)))
- 		return;
- 	if ( ! (
- 		(mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
-@@ -9409,15 +9426,8 @@ void md_check_recovery(struct mddev *mddev)
- 				 */
- 				rdev_for_each(rdev, mddev)
- 					clear_bit(Blocked, &rdev->flags);
--			/* On a read-only array we can:
--			 * - remove failed devices
--			 * - add already-in_sync devices if the array itself
--			 *   is in-sync.
--			 * As we only add devices that are already in-sync,
--			 * we can activate the spares immediately.
--			 */
--			remove_and_add_spares(mddev);
--			/* There is no thread, but we need to call
-+			/*
-+			 * There is no thread, but we need to call
+-no_add:
++
+ 	if (removed)
+ 		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 	return spares;
+@@ -9381,7 +9369,7 @@ void md_check_recovery(struct mddev *mddev)
+ 			 * As we only add devices that are already in-sync,
+ 			 * we can activate the spares immediately.
+ 			 */
+-			remove_and_add_spares(mddev, NULL);
++			remove_and_add_spares(mddev);
+ 			/* There is no thread, but we need to call
  			 * ->spare_active and clear saved_raid_disk
  			 */
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-@@ -9425,6 +9435,13 @@ void md_check_recovery(struct mddev *mddev)
+@@ -9462,7 +9450,7 @@ void md_check_recovery(struct mddev *mddev)
+ 				goto not_running;
+ 			set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
  			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
- 			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
-+
-+			/*
-+			 * Let md_start_sync() to remove and add rdevs to the
-+			 * array.
-+			 */
-+			if (md_spares_need_change(mddev))
-+				queue_work(md_misc_wq, &mddev->sync_work);
- 			goto unlock;
- 		}
- 
+-		} else if ((spares = remove_and_add_spares(mddev, NULL))) {
++		} else if ((spares = remove_and_add_spares(mddev))) {
+ 			clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 			clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 			clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
 -- 
 2.39.2
 
