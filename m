@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 213F1C001DF
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB91FC04E69
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235873AbjHCNet (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:34:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53354 "EHLO
+        id S236358AbjHCNeu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:34:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236188AbjHCNdw (ORCPT
+        with ESMTP id S234697AbjHCNdw (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:52 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 064A34ECB;
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 065614ECD;
         Thu,  3 Aug 2023 06:32:36 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXG6131z4f3lD6;
-        Thu,  3 Aug 2023 21:32:30 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqXH0CgYz4f3kp1;
+        Thu,  3 Aug 2023 21:32:31 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S16;
-        Thu, 03 Aug 2023 21:32:31 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S21;
+        Thu, 03 Aug 2023 21:32:33 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 12/29] md/raid5-cache: use new apis to suspend array for r5c_journal_mode_store()
-Date:   Thu,  3 Aug 2023 21:29:13 +0800
-Message-Id: <20230803132930.2742286-13-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 17/29] md/raid5: replace suspend with quiesce() callback
+Date:   Thu,  3 Aug 2023 21:29:18 +0800
+Message-Id: <20230803132930.2742286-18-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S16
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cr1fWr4rArWkGF15Ar15CFg_yoW8Gr43pa
-        nFgayru3409rWrA3W8WF4DuF95J3y8KrZF9r9xC3Z3ua98Xry3GF1FgFyUWryvvFyfGa13
-        Jw4UJ3WkC348Kr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S21
+X-Coremail-Antispam: 1UD129KBjvJXoWxWFykZr18Cry7tr1kAw1fWFg_yoW5Xr4Dpw
+        sIgFsrXr4UWF9xu34Dua1kWFyFk3yUKrWktryxW39Yva47GrykurWfXw45Zry7G34rZFs7
+        t3y5J348ZFWvqrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -58,44 +58,76 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-r5c_journal_mode_set() will suspend array and it has only 2 caller, the
-other caller raid_ctl() already suspend the array with new apis.
+raid5 is the only personality to suspend array in check_reshape() and
+start_reshape() callback, suspend and quiesce() callback can both wait
+for all normal io to be done, and prevent new io to be dispatched, the
+difference is that suspend is implemented in common layer, and quiesce()
+callback is implemented in raid5.
 
-This is not hot path, so performance is not concerned.
+In order to cleanup all the usage of mddev_suspend(), the new apis
+__mddev_suspend() need to be called before 'reconfig_mutex' is held,
+and it's not good to affect all the personalities in common layer just
+for raid5. Hence replace suspend with quiesce() callaback, prepare to
+reomove all the users of mddev_suspend().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid5-cache.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/md/raid5.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index c71cb5c954e0..51a68fbc241c 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2585,9 +2585,7 @@ int r5c_journal_mode_set(struct mddev *mddev, int mode)
- 	    mode == R5C_JOURNAL_MODE_WRITE_BACK)
- 		return -EINVAL;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b4b2d0d5855d..4709b7ad0317 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -70,6 +70,8 @@ MODULE_PARM_DESC(devices_handle_discard_safely,
+ 		 "Set to Y if all devices in each array reliably return zeroes on reads from discarded regions");
+ static struct workqueue_struct *raid5_wq;
  
++static void raid5_quiesce(struct mddev *mddev, int quiesce);
++
+ static inline struct hlist_head *stripe_hash(struct r5conf *conf, sector_t sect)
+ {
+ 	int hash = (sect >> RAID5_STRIPE_SHIFT(conf)) & HASH_MASK;
+@@ -2492,15 +2494,12 @@ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
+ 	unsigned long cpu;
+ 	int err = 0;
+ 
+-	/*
+-	 * Never shrink. And mddev_suspend() could deadlock if this is called
+-	 * from raid5d. In that case, scribble_disks and scribble_sectors
+-	 * should equal to new_disks and new_sectors
+-	 */
++	/* Never shrink. */
+ 	if (conf->scribble_disks >= new_disks &&
+ 	    conf->scribble_sectors >= new_sectors)
+ 		return 0;
+-	mddev_suspend(conf->mddev);
++
++	raid5_quiesce(conf->mddev, true);
+ 	cpus_read_lock();
+ 
+ 	for_each_present_cpu(cpu) {
+@@ -2514,7 +2513,8 @@ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
+ 	}
+ 
+ 	cpus_read_unlock();
+-	mddev_resume(conf->mddev);
++	raid5_quiesce(conf->mddev, false);
++
+ 	if (!err) {
+ 		conf->scribble_disks = new_disks;
+ 		conf->scribble_sectors = new_sectors;
+@@ -8550,8 +8550,8 @@ static int raid5_start_reshape(struct mddev *mddev)
+ 	 * the reshape wasn't running - like Discard or Read - have
+ 	 * completed.
+ 	 */
 -	mddev_suspend(mddev);
- 	conf->log->r5c_journal_mode = mode;
 -	mddev_resume(mddev);
++	raid5_quiesce(mddev, true);
++	raid5_quiesce(mddev, false);
  
- 	pr_debug("md/raid:%s: setting r5c cache mode to %d: %s\n",
- 		 mdname(mddev), mode, r5c_journal_mode_str[mode]);
-@@ -2612,11 +2610,11 @@ static ssize_t r5c_journal_mode_store(struct mddev *mddev,
- 		if (strlen(r5c_journal_mode_str[mode]) == len &&
- 		    !strncmp(page, r5c_journal_mode_str[mode], len))
- 			break;
--	ret = mddev_lock(mddev);
-+	ret = mddev_suspend_and_lock(mddev);
- 	if (ret)
- 		return ret;
- 	ret = r5c_journal_mode_set(mddev, mode);
--	mddev_unlock(mddev);
-+	mddev_unlock_and_resume(mddev);
- 	return ret ?: length;
- }
- 
+ 	/* Add some new drives, as many as will fit.
+ 	 * We know there are enough to make the newly sized array work.
 -- 
 2.39.2
 
