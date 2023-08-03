@@ -2,217 +2,120 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A37CC001DF
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 07:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7871CC001DF
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 11:43:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233160AbjHCHUO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 03:20:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38264 "EHLO
+        id S234903AbjHCLmu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 07:42:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230228AbjHCHUM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 03:20:12 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37D362D5F;
-        Thu,  3 Aug 2023 00:20:11 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGgGZ2V9dz4f3vfH;
-        Thu,  3 Aug 2023 15:20:06 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgA30JMmVctkkDHRPQ--.36735S4;
-        Thu, 03 Aug 2023 15:20:07 +0800 (CST)
-From:   Li Lingfeng <lilingfeng@huaweicloud.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, linan122@huawei.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com, lilingfeng@huaweicloud.com,
-        lilingfeng3@huawei.com, pmenzel@molgen.mpg.de
-Subject: [PATCH -next v3] md: Hold mddev->reconfig_mutex when trying to get mddev->sync_thread
-Date:   Thu,  3 Aug 2023 15:17:11 +0800
-Message-Id: <20230803071711.2546560-1-lilingfeng@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S233875AbjHCLms (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 07:42:48 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D059F1B2
+        for <linux-raid@vger.kernel.org>; Thu,  3 Aug 2023 04:42:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691062921;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=c5ODUsR4mm908qnIEi7Vkb37sDA7MjaIlaTCiFjeyxU=;
+        b=IrdKgkr/hYAwX2FyTNFNHiOrOrsM1HHsoOFOeIp1VvPwE5Fu83kPccTvpgiqDuHRp0Xfs4
+        WfdEw5wLy79a0qj0isM7HywLUqfu9D9KwTWBumnxi49oqB26uGBFdGoLd/xKXhfmd+u0Pz
+        RjOAO5aBHaQGhqJqopGEae6wz72/J7o=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-449-UCuMSGIhPzidM16pWwnANA-1; Thu, 03 Aug 2023 07:42:00 -0400
+X-MC-Unique: UCuMSGIhPzidM16pWwnANA-1
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-268727b3197so665884a91.2
+        for <linux-raid@vger.kernel.org>; Thu, 03 Aug 2023 04:42:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691062919; x=1691667719;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=c5ODUsR4mm908qnIEi7Vkb37sDA7MjaIlaTCiFjeyxU=;
+        b=gxqkkZityDbvAc0/IsmqN6XyuMNZ7+20vYyXoRI0M8tZY3FxD4C9ltyf4SrEV9BSeu
+         9nDpZoacNk/NUkKmaG+dX50aTotY0k+P6yQcXBYacAMARPv2uWEITTIIfMvC4gju/WQ+
+         U9yFYEKJgcB2WnQ/mlvWJCRY5r2NLBQGZpirq1vS+mGXFUfmqnLVk+9AgDqyp9LFuVQP
+         LoHClrhxeSNnl+Zlb7qXYCDeORzPhwD6HF0C/YWxsIE8CDgPQcYTzTJqSr1r8nU6GJJY
+         fMXA0guEosxzlt5/xoupcnu/zTspVY6wzl+BsQ69UgXzC++k3BCgkvRFKE9tVhhKuv6d
+         Xs5A==
+X-Gm-Message-State: ABy/qLYapnZ605a4F4ka3a+tSPXLpR+7rbrkJqjpnIG7s5r9hUWG7IvL
+        0qhjGLHQmF9RRCCUMlkJWXxd0NNjNBZvANMGNABKTvpHcYuhgtPyEdCZ09/0sQIG9W/J+mJiWL8
+        DwOcUG1I+QzUHnOx67io3mbFn2j94t/2Mfb4kVoKTqP6Zxg==
+X-Received: by 2002:a17:90a:64c9:b0:267:f99f:492f with SMTP id i9-20020a17090a64c900b00267f99f492fmr15456764pjm.48.1691062919136;
+        Thu, 03 Aug 2023 04:41:59 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlEYZKl1xCNOOzCFWlGtmc5VxjkwX9W2HjfnebL4NJPDv70hv0Kgvj4+ay+Uz57iREKRtSLskStCNly4RHz//vI=
+X-Received: by 2002:a17:90a:64c9:b0:267:f99f:492f with SMTP id
+ i9-20020a17090a64c900b00267f99f492fmr15456750pjm.48.1691062918813; Thu, 03
+ Aug 2023 04:41:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgA30JMmVctkkDHRPQ--.36735S4
-X-Coremail-Antispam: 1UD129KBjvJXoW3Jr48GF4rJw47Xr13Ww1fXrb_yoW7Kw1rpa
-        yrXFy3Ar4FvrW5Zr4DJayDuay5Z3WIgFWjyryfC3yrA3WfW3y5tFWj9FyUXr1DZFyrAr4a
-        q3W5Ka18uF4vgr7anT9S1TB71UUUUjDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1ln4kS14v26r126r1DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-        6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWUJVW8JwAm72
-        CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7
-        M4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI4
-        8JMxC20s026xCaFVCjc4AY6r1j6r4UMxCIbckI1I0E14v26r1Y6r17MI8I3I0E5I8CrVAF
-        wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
-        0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AK
-        xVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Zr0_Wr1UMIIF0xvEx4A2jsIE14v26r1j6r
-        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUHWlkU
-        UUUU=
-X-CM-SenderInfo: polox0xjih0w46kxt4xhlfz01xgou0bp/
-X-CFilter-Loop: Reflected
+References: <CALTww2_FrkmafTkObCX4W1SXVeJiy45h7TR68iHUMpzfAOseHQ@mail.gmail.com>
+ <20230803090429.0000046a@linux.intel.com>
+In-Reply-To: <20230803090429.0000046a@linux.intel.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Thu, 3 Aug 2023 19:41:47 +0800
+Message-ID: <CALTww28VmeQXbTn4ONxE4Y9M3rR6OkQhcE6AMUkw_5LSOTPuLg@mail.gmail.com>
+Subject: Re: The imsm regression tests fail
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Li Lingfeng <lilingfeng3@huawei.com>
+On Thu, Aug 3, 2023 at 3:12=E2=80=AFPM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> On Thu, 3 Aug 2023 11:27:57 +0800
+> Xiao Ni <xni@redhat.com> wrote:
+>
+> > Hi Mariusz
+> >
+> > Now most imsm regression tests fail.
+> >
+> > +++ /home/mdadm/mdadm --quiet --create --run /dev/md/vol0 --auto=3Dmd
+> > --level=3D0 --size=3D5120 --chunk=3D64 --raid-disks=3D3 /dev/loop0 /dev=
+/loop1
+> > /dev/loop2 --auto=3Dyes
+> > +++ rv=3D0
+> > +++ case $* in
+> > +++ cat /var/tmp/stderr
+> > mdadm: timeout waiting for /dev/md/vol0
+> >
+> > +++ echo '**Fatal**: Array member /dev/md/vol0 not found'
+> > **Fatal**: Array member /dev/md/vol0 not found
+> >
+> > Could you have a look at this problem?
+> >
+> > Best Regards
+> > Xiao
+> >
+>
+> Hi Xiao,
+> Please provide (I guess it is md126):
+> # mdadm -D --export /dev/md126
+>
+> If there is no MD_DEVNAME property then udev has no content to make the l=
+ink.
+>
+> Do you have this one applied?
+> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3Def6236d=
+a232e968dcf08b486178cd20d5ea97e2a
+>
+> Thanks,
+> Mariusz
+>
 
-Commit ba9d9f1a707f ("Revert "md: unlock mddev before reap sync_thread in
-action_store"") removed the scenario of calling md_unregister_thread()
-without holding mddev->reconfig_mutex, so add a lock holding check before
-acquiring mddev->sync_thread by passing mdev to md_unregister_thread().
+Hi Mariusz
 
-Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
----
-  v1->v2: optimize summary
-  v2->v3: change email address and add "Reviewed-by"
+I re-complied the codes and the failure disappeared. Thanks for your feedba=
+ck.
 
- drivers/md/md-cluster.c  | 8 ++++----
- drivers/md/md.c          | 9 +++++----
- drivers/md/md.h          | 2 +-
- drivers/md/raid1.c       | 4 ++--
- drivers/md/raid10.c      | 2 +-
- drivers/md/raid5-cache.c | 2 +-
- drivers/md/raid5.c       | 2 +-
- 7 files changed, 15 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 3d9fd74233df..1e26eb223349 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -952,8 +952,8 @@ static int join(struct mddev *mddev, int nodes)
- 	return 0;
- err:
- 	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
--	md_unregister_thread(&cinfo->recovery_thread);
--	md_unregister_thread(&cinfo->recv_thread);
-+	md_unregister_thread(mddev, &cinfo->recovery_thread);
-+	md_unregister_thread(mddev, &cinfo->recv_thread);
- 	lockres_free(cinfo->message_lockres);
- 	lockres_free(cinfo->token_lockres);
- 	lockres_free(cinfo->ack_lockres);
-@@ -1015,8 +1015,8 @@ static int leave(struct mddev *mddev)
- 		resync_bitmap(mddev);
- 
- 	set_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state);
--	md_unregister_thread(&cinfo->recovery_thread);
--	md_unregister_thread(&cinfo->recv_thread);
-+	md_unregister_thread(mddev, &cinfo->recovery_thread);
-+	md_unregister_thread(mddev, &cinfo->recv_thread);
- 	lockres_free(cinfo->message_lockres);
- 	lockres_free(cinfo->token_lockres);
- 	lockres_free(cinfo->ack_lockres);
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index a3d98273b295..5c3c19b8d509 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6258,7 +6258,7 @@ static void mddev_detach(struct mddev *mddev)
- 		mddev->pers->quiesce(mddev, 1);
- 		mddev->pers->quiesce(mddev, 0);
- 	}
--	md_unregister_thread(&mddev->thread);
-+	md_unregister_thread(mddev, &mddev->thread);
- 	if (mddev->queue)
- 		blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
- }
-@@ -7990,9 +7990,10 @@ struct md_thread *md_register_thread(void (*run) (struct md_thread *),
- }
- EXPORT_SYMBOL(md_register_thread);
- 
--void md_unregister_thread(struct md_thread __rcu **threadp)
-+void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **threadp)
- {
--	struct md_thread *thread = rcu_dereference_protected(*threadp, true);
-+	struct md_thread *thread = rcu_dereference_protected(*threadp,
-+					lockdep_is_held(&mddev->reconfig_mutex));
- 
- 	if (!thread)
- 		return;
-@@ -9484,7 +9485,7 @@ void md_reap_sync_thread(struct mddev *mddev)
- 	bool is_reshaped = false;
- 
- 	/* resync has finished, collect result */
--	md_unregister_thread(&mddev->sync_thread);
-+	md_unregister_thread(mddev, &mddev->sync_thread);
- 	atomic_inc(&mddev->sync_seq);
- 
- 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 8ae957480976..9bcb77bca963 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -761,7 +761,7 @@ extern struct md_thread *md_register_thread(
- 	void (*run)(struct md_thread *thread),
- 	struct mddev *mddev,
- 	const char *name);
--extern void md_unregister_thread(struct md_thread __rcu **threadp);
-+extern void md_unregister_thread(struct mddev *mddev, struct md_thread __rcu **threadp);
- extern void md_wakeup_thread(struct md_thread __rcu *thread);
- extern void md_check_recovery(struct mddev *mddev);
- extern void md_reap_sync_thread(struct mddev *mddev);
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 23d211969565..581dfbdfca89 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -3152,7 +3152,7 @@ static int raid1_run(struct mddev *mddev)
- 	 * RAID1 needs at least one disk in active
- 	 */
- 	if (conf->raid_disks - mddev->degraded < 1) {
--		md_unregister_thread(&conf->thread);
-+		md_unregister_thread(mddev, &conf->thread);
- 		ret = -EINVAL;
- 		goto abort;
- 	}
-@@ -3179,7 +3179,7 @@ static int raid1_run(struct mddev *mddev)
- 
- 	ret = md_integrity_register(mddev);
- 	if (ret) {
--		md_unregister_thread(&mddev->thread);
-+		md_unregister_thread(mddev, &mddev->thread);
- 		goto abort;
- 	}
- 	return 0;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 16aa9d735880..6188b71186f4 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4320,7 +4320,7 @@ static int raid10_run(struct mddev *mddev)
- 	return 0;
- 
- out_free_conf:
--	md_unregister_thread(&mddev->thread);
-+	md_unregister_thread(mddev, &mddev->thread);
- 	raid10_free_conf(conf);
- 	mddev->private = NULL;
- out:
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 2eac4a50d99b..a29b9650260a 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -3168,7 +3168,7 @@ void r5l_exit_log(struct r5conf *conf)
- {
- 	struct r5l_log *log = conf->log;
- 
--	md_unregister_thread(&log->reclaim_thread);
-+	md_unregister_thread(conf->mddev, &log->reclaim_thread);
- 
- 	/*
- 	 * 'reconfig_mutex' is held by caller, set 'confg->log' to NULL to
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 32a87193bad7..4cb9c608ee19 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8107,7 +8107,7 @@ static int raid5_run(struct mddev *mddev)
- 
- 	return 0;
- abort:
--	md_unregister_thread(&mddev->thread);
-+	md_unregister_thread(mddev, &mddev->thread);
- 	print_raid5_conf(conf);
- 	free_conf(conf);
- 	mddev->private = NULL;
--- 
-2.39.2
+Regards
+Xiao
 
