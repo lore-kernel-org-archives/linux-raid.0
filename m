@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8290FC04A6A
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 531E3C001DF
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:34:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235136AbjHCNeE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:34:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53518 "EHLO
+        id S235364AbjHCNeF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:34:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235181AbjHCNdk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:40 -0400
+        with ESMTP id S235229AbjHCNdl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:41 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0200046A0;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0296146A1;
         Thu,  3 Aug 2023 06:32:32 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXD16Xwz4f3lVM;
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXD2NK6z4f44xM;
         Thu,  3 Aug 2023 21:32:28 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S9;
-        Thu, 03 Aug 2023 21:32:29 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S8;
+        Thu, 03 Aug 2023 21:32:28 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 05/29] md: use new apis to suspend array for suspend_lo/hi/store()
-Date:   Thu,  3 Aug 2023 21:29:06 +0800
-Message-Id: <20230803132930.2742286-6-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 04/29] md: add new helpers to suspend/resume and lock/unlock array
+Date:   Thu,  3 Aug 2023 21:29:05 +0800
+Message-Id: <20230803132930.2742286-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S9
-X-Coremail-Antispam: 1UD129KBjvJXoWrZFW8ur1UKr15KFyUCr47CFg_yoW8JF15pF
-        4xtFWfXr1jyrySqryqqa1vkFy5Jw17KrWqyrZruw1kGa4xJw13Gr15ursYqry09a4fGFn8
-        Ja15W3W8ZF48G37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S8
+X-Coremail-Antispam: 1UD129KBjvJXoWxJr1fGw18Gw4rKFy7GF47twb_yoW8Cr47pr
+        4IqFWrGr4jyFWfXrW3Aan7ua45Aw10grZFyrW3Gwn7ua47J347GF15Wr1UJrnYkayfJr1D
+        Ja1Yq348CrWUGFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -58,53 +58,79 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Convert to use new apis, the old apis will be removed eventually.
+The new helpers suspend the array first and then lock the array,
+
+Prepare to refactor from:
+
+mddev_lock/trylock/lock_nointr
+mddev_suspend/pers->quiesce
+mddev_resuem/pers->unquiesce
+mddev_lock
+
+With:
+
+mddev_suspend_and_lock/trylock/lock_nointr
+mddev_unlock_and_resume
+
+After all the use cases is refactored, mddev_suspend/resume() will be
+removed.
+
+And mddev_suspend_and_lock() will also replace mddev_lock() for the case
+that the array will be reconfigured, in order to synchronize with io to
+prevent problems in many corner cases.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
+ drivers/md/md.h | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 3c98f253b980..e516c5000a00 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5271,15 +5271,10 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (new != (sector_t)new)
- 		return -EINVAL;
- 
--	err = mddev_lock(mddev);
--	if (err)
--		return err;
--
--	mddev_suspend(mddev);
-+	__mddev_suspend(mddev);
- 	WRITE_ONCE(mddev->suspend_lo, new);
--	mddev_resume(mddev);
-+	__mddev_resume(mddev);
- 
--	mddev_unlock(mddev);
- 	return len;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 32bfe0fe0d97..3a2488231fd2 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -850,6 +850,42 @@ static inline void mddev_check_write_zeroes(struct mddev *mddev, struct bio *bio
+ 		mddev->queue->limits.max_write_zeroes_sectors = 0;
  }
- static struct md_sysfs_entry md_suspend_lo =
-@@ -5304,15 +5299,10 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (new != (sector_t)new)
- 		return -EINVAL;
  
--	err = mddev_lock(mddev);
--	if (err)
--		return err;
--
--	mddev_suspend(mddev);
++static inline int mddev_suspend_and_lock(struct mddev *mddev)
++{
++	int ret;
++
 +	__mddev_suspend(mddev);
- 	WRITE_ONCE(mddev->suspend_hi, new);
--	mddev_resume(mddev);
++	ret = mddev_lock(mddev);
++	if (ret)
++		__mddev_resume(mddev);
++
++	return ret;
++}
++
++static inline void mddev_suspend_and_lock_nointr(struct mddev *mddev)
++{
++	__mddev_suspend(mddev);
++	mutex_lock(&mddev->reconfig_mutex);
++}
++
++static inline int mddev_suspend_and_trylock(struct mddev *mddev)
++{
++	int ret;
++
++	__mddev_suspend(mddev);
++	ret = mutex_trylock(&mddev->reconfig_mutex);
++	if (ret)
++		__mddev_resume(mddev);
++
++	return ret;
++}
++
++static inline void mddev_unlock_and_resume(struct mddev *mddev)
++{
++	mddev_unlock(mddev);
 +	__mddev_resume(mddev);
++}
++
+ struct mdu_array_info_s;
+ struct mdu_disk_info_s;
  
--	mddev_unlock(mddev);
- 	return len;
- }
- static struct md_sysfs_entry md_suspend_hi =
 -- 
 2.39.2
 
