@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 796D3EB64DD
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:35:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16BB0EB64DD
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:35:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236372AbjHCNfB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:35:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53406 "EHLO
+        id S236379AbjHCNfD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:35:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236241AbjHCNdy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:54 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B842B4ED6;
-        Thu,  3 Aug 2023 06:32:37 -0700 (PDT)
+        with ESMTP id S234272AbjHCNdz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:33:55 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C1B6273E;
+        Thu,  3 Aug 2023 06:32:39 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqXK15YSz4f3lfP;
-        Thu,  3 Aug 2023 21:32:33 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqXJ3yv0z4f3lXd;
+        Thu,  3 Aug 2023 21:32:32 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S22;
-        Thu, 03 Aug 2023 21:32:34 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAHuKtqrMtkWHLlPQ--.49699S25;
+        Thu, 03 Aug 2023 21:32:35 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 18/29] md: quiesce before md_kick_rdev_from_array() for md-cluster
-Date:   Thu,  3 Aug 2023 21:29:19 +0800
-Message-Id: <20230803132930.2742286-19-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 21/29] md: use new apis to suspend array for bind_rdev_to_array()
+Date:   Thu,  3 Aug 2023 21:29:22 +0800
+Message-Id: <20230803132930.2742286-22-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S22
-X-Coremail-Antispam: 1UD129KBjvJXoWxAry5uF13ZrWruryfGw1rWFg_yoW5WrWDpa
-        y2gFyYgr4DXr13Jw13J3s8Ga45tw10krZ2y34fCa4Yya43KrZ8Cw1rXa45trZrAFWYyF1a
-        va15J39rWw1xCFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAHuKtqrMtkWHLlPQ--.49699S25
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF1xJF45WFW3uw13Jry7KFg_yoW5CFWxpr
+        s2ga4SgryjqrW3J34UZan29Fy5Jw12grZFkryfXa4xXa1fXw13Gr4Fgry5Jr109a4rAFn8
+        Xa15Xw4kZFyUGFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -58,97 +58,103 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-md_kick_rdev_from_array() can be called from md_check_recovery() and
-md_reload_sb() for md-cluster, it's very complicated to use new apis to
-suspend the array before holding 'reconfig_mutex' in this case.
+mddev_create_serial_pool() will be called from bind_rdev_to_array(), and
+mddev_suspend() will be called if serial pool is used.
 
-Fortunately, md-cluster is only supported for raid1 and raid10, and they
-both impelement quiesce() callback that is safe to be called from daemon
-thread. Hence use quiesce() callback to prevent io concurrent with
-removing rdev from the array.
+Prepare to remove the mddev_suspend() from mddev_create_serial_pool().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ drivers/md/md-autodetect.c |  4 ++--
+ drivers/md/md.c            | 14 +++++++-------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
+index 6eaa0eab40f9..4b80165afd23 100644
+--- a/drivers/md/md-autodetect.c
++++ b/drivers/md/md-autodetect.c
+@@ -175,7 +175,7 @@ static void __init md_setup_drive(struct md_setup_args *args)
+ 		return;
+ 	}
+ 
+-	err = mddev_lock(mddev);
++	err = mddev_suspend_and_lock(mddev);
+ 	if (err) {
+ 		pr_err("md: failed to lock array %s\n", name);
+ 		goto out_mddev_put;
+@@ -221,7 +221,7 @@ static void __init md_setup_drive(struct md_setup_args *args)
+ 	if (err)
+ 		pr_warn("md: starting %s failed\n", name);
+ out_unlock:
+-	mddev_unlock(mddev);
++	mddev_unlock_and_resume(mddev);
+ out_mddev_put:
+ 	mddev_put(mddev);
+ }
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 765667b5fa59..d550bacd0efc 100644
+index 4a522558a570..ca1fe1d17ec1 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9514,6 +9514,21 @@ void md_check_recovery(struct mddev *mddev)
+@@ -2534,7 +2534,7 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+ 	pr_debug("md: bind<%s>\n", b);
  
- 		if (mddev_is_clustered(mddev)) {
- 			struct md_rdev *rdev, *tmp;
-+			bool suspended = false;
-+
-+			/*
-+			 * md-cluster is used for raid1/raid10, and they both
-+			 * implement quiesce() callback that is safe to be
-+			 * called from daemon thread.
-+			 */
-+			rdev_for_each(rdev, mddev)
-+				if (test_bit(ClusterRemove, &rdev->flags) &&
-+				    rdev->raid_disk < 0) {
-+					mddev->pers->quiesce(mddev, true);
-+					suspended = true;
-+					break;
-+				}
-+
- 			/* kick the device if another node issued a
- 			 * remove disk.
- 			 */
-@@ -9522,6 +9537,9 @@ void md_check_recovery(struct mddev *mddev)
- 						rdev->raid_disk < 0)
- 					md_kick_rdev_from_array(rdev);
+ 	if (mddev->raid_disks)
+-		mddev_create_serial_pool(mddev, rdev, false);
++		mddev_create_serial_pool(mddev, rdev, true);
+ 
+ 	if ((err = kobject_add(&rdev->kobj, &mddev->kobj, "dev-%s", b)))
+ 		goto fail;
+@@ -4666,7 +4666,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ 	    minor != MINOR(dev))
+ 		return -EOVERFLOW;
+ 
+-	err = mddev_lock(mddev);
++	err = mddev_suspend_and_lock(mddev);
+ 	if (err)
+ 		return err;
+ 	if (mddev->persistent) {
+@@ -4687,14 +4687,14 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ 		rdev = md_import_device(dev, -1, -1);
+ 
+ 	if (IS_ERR(rdev)) {
+-		mddev_unlock(mddev);
++		mddev_unlock_and_resume(mddev);
+ 		return PTR_ERR(rdev);
+ 	}
+ 	err = bind_rdev_to_array(rdev, mddev);
+  out:
+ 	if (err)
+ 		export_rdev(rdev, mddev);
+-	mddev_unlock(mddev);
++	mddev_unlock_and_resume(mddev);
+ 	if (!err)
+ 		md_new_event();
+ 	return err ? err : len;
+@@ -6622,13 +6622,13 @@ static void autorun_devices(int part)
+ 		if (IS_ERR(mddev))
+ 			break;
+ 
+-		if (mddev_lock(mddev))
++		if (mddev_suspend_and_lock(mddev))
+ 			pr_warn("md: %s locked, cannot run\n", mdname(mddev));
+ 		else if (mddev->raid_disks || mddev->major_version
+ 			 || !list_empty(&mddev->disks)) {
+ 			pr_warn("md: %s already running, cannot run %pg\n",
+ 				mdname(mddev), rdev0->bdev);
+-			mddev_unlock(mddev);
++			mddev_unlock_and_resume(mddev);
+ 		} else {
+ 			pr_debug("md: created %s\n", mdname(mddev));
+ 			mddev->persistent = 1;
+@@ -6638,7 +6638,7 @@ static void autorun_devices(int part)
+ 					export_rdev(rdev, mddev);
  			}
-+
-+			if (suspended)
-+				mddev->pers->quiesce(mddev, false);
+ 			autorun_array(mddev);
+-			mddev_unlock(mddev);
++			mddev_unlock_and_resume(mddev);
  		}
- 
- 		if (try_set_sync && !mddev->external && !mddev->in_sync) {
-@@ -9814,6 +9832,7 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
- 	struct md_rdev *rdev2, *tmp;
-+	bool suspended = false;
- 	int role, ret;
- 
- 	/*
-@@ -9828,6 +9847,22 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 			md_bitmap_update_sb(mddev->bitmap);
- 	}
- 
-+	/*
-+	 * md-cluster is used for raid1/raid10, and they both
-+	 * implement quiesce() callback.
-+	 */
-+	rdev_for_each(rdev2, mddev) {
-+		if (test_bit(Faulty, &rdev2->flags))
-+			continue;
-+		role = le16_to_cpu(sb->dev_roles[rdev2->desc_nr]);
-+		if (test_bit(Candidate, &rdev2->flags) &&
-+		    role == MD_DISK_ROLE_FAULTY) {
-+			mddev->pers->quiesce(mddev, true);
-+			suspended = true;
-+			break;
-+		}
-+	}
-+
- 	/* Check for change of roles in the active devices */
- 	rdev_for_each_safe(rdev2, tmp, mddev) {
- 		if (test_bit(Faulty, &rdev2->flags))
-@@ -9883,6 +9918,9 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 		}
- 	}
- 
-+	if (suspended)
-+		mddev->pers->quiesce(mddev, false);
-+
- 	if (mddev->raid_disks != le32_to_cpu(sb->raid_disks)) {
- 		ret = update_raid_disks(mddev, le32_to_cpu(sb->raid_disks));
- 		if (ret)
+ 		/* on success, candidates will be empty, on error
+ 		 * it won't...
 -- 
 2.39.2
 
