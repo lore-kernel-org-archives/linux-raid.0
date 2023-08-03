@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92086C04A6A
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:27:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0504AEB64DD
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Aug 2023 13:27:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233496AbjHCN1o (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:27:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47394 "EHLO
+        id S236191AbjHCN1q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:27:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235499AbjHCN1f (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:27:35 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41BBEE70;
-        Thu,  3 Aug 2023 06:27:33 -0700 (PDT)
+        with ESMTP id S235788AbjHCN1l (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Aug 2023 09:27:41 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA6F52737;
+        Thu,  3 Aug 2023 06:27:34 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RGqQQ5zZ6z4f3lwY;
-        Thu,  3 Aug 2023 21:27:26 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RGqQT2fspz4f3l1p;
+        Thu,  3 Aug 2023 21:27:29 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgCnD7M6q8tk5SrlPQ--.7420S11;
-        Thu, 03 Aug 2023 21:27:29 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgCnD7M6q8tk5SrlPQ--.7420S13;
+        Thu, 03 Aug 2023 21:27:30 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 07/13] md: factor out a helper remove_rdev() from state_store()
-Date:   Thu,  3 Aug 2023 21:24:20 +0800
-Message-Id: <20230803132426.2688608-8-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 09/13] md: convert to use hot_add_rdev() to hot add one rdev
+Date:   Thu,  3 Aug 2023 21:24:22 +0800
+Message-Id: <20230803132426.2688608-10-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230803132426.2688608-1-yukuai1@huaweicloud.com>
 References: <20230803132426.2688608-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnD7M6q8tk5SrlPQ--.7420S11
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kw4fWrW8Jw15CFWDZry8AFb_yoW8uryfp3
-        yfKFy5Gr4UA343Jw43t3ykWa45Jr40qrZrtry3uw1S9anxArZ5Ja4FgF95Jr95Cayvvr45
-        Xa15Wa1rWryxWF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgCnD7M6q8tk5SrlPQ--.7420S13
+X-Coremail-Antispam: 1UD129KBjvJXoW7CrWDWw4xWFWfXF1rKw1Utrb_yoW8GF1fp3
+        yfJasIvrW7Zr43Aa17GFyDWFW5Aw10qrWUtFZxu393X3Wrtr4Fkw15KFyUJ34qyr93XF4r
+        tr15Jr4DCw18CF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUU9K14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -58,84 +58,46 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-state_store() is a very big function already, factor out a helper to
-prevent that following changes will make state_store() more complicated.
-
-There are no functional changes.
+Replace remove_and_add_spares() with hot_add_rdev() in
+check_sb_changes(), also handle the case that hot add rdev failed.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 50 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 30 insertions(+), 20 deletions(-)
+ drivers/md/md.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 77c48f7b605c..3903bdfe5293 100644
+index de7399769c8d..1dc26bb1e096 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -2883,6 +2883,35 @@ state_show(struct md_rdev *rdev, char *page)
- 	return len+sprintf(page+len, "\n");
- }
- 
-+static int remove_rdev(struct md_rdev *rdev)
-+{
-+	struct mddev *mddev = rdev->mddev;
-+
-+	if (mddev->pers) {
-+		clear_bit(Blocked, &rdev->flags);
-+		remove_and_add_spares(mddev, rdev);
-+	}
-+
-+	if (rdev->raid_disk >= 0)
-+		return -EBUSY;
-+
-+	if (mddev_is_clustered(mddev)) {
-+		int err = md_cluster_ops->remove_disk(mddev, rdev);
-+
-+		if (err)
-+			return err;
-+	}
-+
-+	md_kick_rdev_from_array(rdev);
-+	if (mddev->pers) {
-+		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-+		md_wakeup_thread(mddev->thread);
-+	}
-+	md_new_event();
-+
-+	return 0;
-+}
-+
- static ssize_t
- state_store(struct md_rdev *rdev, const char *buf, size_t len)
- {
-@@ -2913,26 +2942,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
- 		else
- 			err = 0;
- 	} else if (cmd_match(buf, "remove")) {
--		if (rdev->mddev->pers) {
--			clear_bit(Blocked, &rdev->flags);
--			remove_and_add_spares(rdev->mddev, rdev);
--		}
--		if (rdev->raid_disk >= 0)
--			err = -EBUSY;
--		else {
--			err = 0;
--			if (mddev_is_clustered(mddev))
--				err = md_cluster_ops->remove_disk(mddev, rdev);
--
--			if (err == 0) {
--				md_kick_rdev_from_array(rdev);
--				if (mddev->pers) {
--					set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
--					md_wakeup_thread(mddev->thread);
--				}
--				md_new_event();
--			}
--		}
-+		err = remove_rdev(rdev);
- 	} else if (cmd_match(buf, "writemostly")) {
- 		set_bit(WriteMostly, &rdev->flags);
- 		mddev_create_serial_pool(rdev->mddev, rdev, false);
+@@ -9773,13 +9773,20 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
+ 			    !(le32_to_cpu(sb->feature_map) &
+ 			      MD_FEATURE_RESHAPE_ACTIVE)) {
+ 				rdev2->saved_raid_disk = role;
+-				ret = remove_and_add_spares(mddev, rdev2);
+-				pr_info("Activated spare: %pg\n",
+-					rdev2->bdev);
+-				/* wakeup mddev->thread here, so array could
+-				 * perform resync with the new activated disk */
+-				set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-				md_wakeup_thread(mddev->thread);
++				if (!test_bit(MD_RECOVERY_RUNNING,
++					      &mddev->recovery) &&
++				    hot_add_rdev(rdev2)) {
++					pr_info("Activated spare: %pg\n",
++						rdev2->bdev);
++					/*
++					 * wakeup mddev->thread here, so array
++					 * could perform resync with the new
++					 * activated disk.
++					 */
++					set_bit(MD_RECOVERY_NEEDED,
++						&mddev->recovery);
++					md_wakeup_thread(mddev->thread);
++				}
+ 			}
+ 			/* device faulty
+ 			 * We just want to do the minimum to mark the disk
 -- 
 2.39.2
 
