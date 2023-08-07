@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61577C001B0
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:32:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA34EB64DD
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:33:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232670AbjHGLce (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Aug 2023 07:32:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41206 "EHLO
+        id S232824AbjHGLcs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Aug 2023 07:32:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232598AbjHGLcH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:32:07 -0400
-Received: from mail-qt1-x82e.google.com (mail-qt1-x82e.google.com [IPv6:2607:f8b0:4864:20::82e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DF42E53
-        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:29:29 -0700 (PDT)
-Received: by mail-qt1-x82e.google.com with SMTP id d75a77b69052e-4053d203c07so8370881cf.0
-        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:29:29 -0700 (PDT)
+        with ESMTP id S232835AbjHGLc2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:32:28 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F3E15BAD
+        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:29:26 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1bba9539a23so9316445ad.1
+        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:29:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1691407734; x=1692012534;
+        d=bytedance.com; s=google; t=1691407730; x=1692012530;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=4VJlLpDqVGiuvI83ez+3bl7yR5bVuWalBgtTU2vfBLE=;
-        b=XGyfk3IkvLUk7Hk0G8RCy+tQm4zP6nL4JV+t9pY86YfFxwIG/HeW+2wAC3/k1Xz73Z
-         9bDEiISRR5jfWBuIaVoGyNG6dh9bxKu6nA99nc3p8iUd0EMvSMrZHciSe5c9cdDCkGua
-         aZQM/coIsuGQp1ZIigwB7hd80v9iHLRXqonf6EFXUegyvyzllyt5+TZ+xIvcz8R5peI2
-         UssL+iMjPVTwrwYqz2ALM/SFXbRJjs76ZbVogXx20Yj8TKG7CG2HnuqNLmWxQoUpGdV0
-         Oe+kUf1NbE16LVGRxvUk7LhwYPws8lBQ86vrcTD6ZY2vF5yHdY9d2QZc9MdjztF/K4wu
-         3s4Q==
+        bh=xVRvDV5EwClRaurogoo7jeCmWiPiam6NNimoVigpYsU=;
+        b=B4In8lnF4O5Tl2T+6KESM38uO88G4UYl4M2UNBsTCTara4X9VLVO2JVm1TGKm4cNAb
+         SuJS2WaJsWlPQsDBkgd5cxxDVteeH+N2NjVcmJnRJX7l3ODwlDUlz0zuP8ttFplPd28L
+         X1o1AJgKCtO06nVrQYOcWgaN6tteAnkG7Rh7ZtH4bV9DanT98jTOuJenRHytBo53RyNV
+         KUezsosKQ7DoyKJonmmlVHjsj/4k5IH80V1gTyiGNiuL0UKpcQkiYDaGBMW3AZAJOP6p
+         ZsDKooQwsWd4Zkl9yrFUGaAjiEaKkgWUqtOrlt/8U7zZs5CC5JmOIrNtka6oMctxY86v
+         BDOQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691407734; x=1692012534;
+        d=1e100.net; s=20221208; t=1691407730; x=1692012530;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=4VJlLpDqVGiuvI83ez+3bl7yR5bVuWalBgtTU2vfBLE=;
-        b=NtwDWkHAUH9bRsRH2ZwiKA4qasENXWF1qjpjV31gaLnO986FQQXFR3pzmtbMBJDFaJ
-         wDLZaY9ZWNwgKjMC3tnQZuDewsoiMoM2/OyVZ3gNjL4QD/+IMqAWrWfuLw7q8pTJE5ws
-         2hD+WBlNWK28LG5ZSeaU+/Z4rPub/l6Lpo2U31G3XpWnr7WCuBVb8+0OiOZofrFO58dk
-         FuHazYHCP6mM9ihVctDT0Dv9bmRkhJ8VJBNzWBv7fQSqBdNV26/4JhUspyD/qykFexX1
-         Gptj711U+YG4QZnz7QQECN4UFStuqB3UgQjzlFf3NYSt1yZvpk2tgUJD26hSsJvSBxVh
-         pmNA==
-X-Gm-Message-State: ABy/qLY5EfkQZU5Sh74TIsX5VTqb3QlUpJ4SQVtIjFbi6qDqUlS+RyxN
-        HnoBURmyT1aTTuHGmHYWmAzMJruj+0H8QPiyCSc=
-X-Google-Smtp-Source: APBJJlG6KxjpSP18cuDMGPLwCal+2Q6XOYkRmOlR+93TSEU+QOz0TNU1VRvfHZPrdEq648UTFq+gsw==
-X-Received: by 2002:a92:d944:0:b0:349:3c78:fd14 with SMTP id l4-20020a92d944000000b003493c78fd14mr13499018ilq.1.1691406803912;
-        Mon, 07 Aug 2023 04:13:23 -0700 (PDT)
+        bh=xVRvDV5EwClRaurogoo7jeCmWiPiam6NNimoVigpYsU=;
+        b=hmBCzTe7eMRIJFB+av/s+bcyEplAsuzXMXLjqIOHQBannb8c363SmGF+8TzoTIYyAr
+         StsPpKl73/sfeSpFxlx2kQ41nh/przocIpw7eGoUjgzUX0kIZcBSm9ocX3LNqveVGF4b
+         MveUppvr/JPCD83vktzKXG48jjGYV/XtkC83M+e/8usuVIH7hEtQYiRnMzqR8fcsxwic
+         3I2aTh/Ke4npq7aiHcWMF/hrtj885xocXwnwGS7moNs5NgKqYBF8aMJnqGQcxSuqCMqa
+         v1DtsEKQW4cE8vh8JP737LOCp9Hbrh/zdLuFsHCF5zKJv5ZnX8f+yT42QU9d0k00EsKf
+         nX7Q==
+X-Gm-Message-State: ABy/qLYXFIBGPfqtk/KyFTiJVUFtJrYOTklfhjhR6hkAcKGJDTH/UDSk
+        t1qWne0xD3p6AsYflhxpoHYjiNTVafvAgJeQ0XM=
+X-Google-Smtp-Source: APBJJlGBV531Fc0h3gGTcYh+GrDchiBvn4r3DyO1GlE79UVq2Tiyx2gaPN4S9h+mnuBR5bsUMtGvYQ==
+X-Received: by 2002:a17:90a:ac2:b0:268:f977:848c with SMTP id r2-20020a17090a0ac200b00268f977848cmr15219032pje.2.1691407007341;
+        Mon, 07 Aug 2023 04:16:47 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.146])
-        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.13.11
+        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.16.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Aug 2023 04:13:23 -0700 (PDT)
+        Mon, 07 Aug 2023 04:16:47 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -71,9 +71,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>,
         Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v4 16/48] quota: dynamically allocate the dquota-cache shrinker
-Date:   Mon,  7 Aug 2023 19:09:04 +0800
-Message-Id: <20230807110936.21819-17-zhengqi.arch@bytedance.com>
+Subject: [PATCH v4 32/48] mbcache: dynamically allocate the mbcache shrinker
+Date:   Mon,  7 Aug 2023 19:09:20 +0800
+Message-Id: <20230807110936.21819-33-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
 References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
@@ -83,57 +83,84 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use new APIs to dynamically allocate the dquota-cache shrinker.
+In preparation for implementing lockless slab shrink, use new APIs to
+dynamically allocate the mbcache shrinker, so that it can be freed
+asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
+read-side critical section when releasing the struct mb_cache.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- fs/quota/dquot.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ fs/mbcache.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index 9e72bfe8bbad..c303cffdf433 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -791,12 +791,6 @@ dqcache_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
- 	percpu_counter_read_positive(&dqstats.counter[DQST_FREE_DQUOTS]));
- }
- 
--static struct shrinker dqcache_shrinker = {
--	.count_objects = dqcache_shrink_count,
--	.scan_objects = dqcache_shrink_scan,
--	.seeks = DEFAULT_SEEKS,
--};
--
- /*
-  * Safely release dquot and put reference to dquot.
-  */
-@@ -2956,6 +2950,7 @@ static int __init dquot_init(void)
+diff --git a/fs/mbcache.c b/fs/mbcache.c
+index 2a4b8b549e93..0d1e24e9a5e3 100644
+--- a/fs/mbcache.c
++++ b/fs/mbcache.c
+@@ -37,7 +37,7 @@ struct mb_cache {
+ 	struct list_head	c_list;
+ 	/* Number of entries in cache */
+ 	unsigned long		c_entry_count;
+-	struct shrinker		c_shrink;
++	struct shrinker		*c_shrink;
+ 	/* Work for shrinking when the cache has too many entries */
+ 	struct work_struct	c_shrink_work;
+ };
+@@ -293,8 +293,7 @@ EXPORT_SYMBOL(mb_cache_entry_touch);
+ static unsigned long mb_cache_count(struct shrinker *shrink,
+ 				    struct shrink_control *sc)
  {
- 	int i, ret;
- 	unsigned long nr_hash, order;
-+	struct shrinker *dqcache_shrinker;
+-	struct mb_cache *cache = container_of(shrink, struct mb_cache,
+-					      c_shrink);
++	struct mb_cache *cache = shrink->private_data;
  
- 	printk(KERN_NOTICE "VFS: Disk quotas %s\n", __DQUOT_VERSION__);
- 
-@@ -2990,8 +2985,15 @@ static int __init dquot_init(void)
- 	pr_info("VFS: Dquot-cache hash table entries: %ld (order %ld,"
- 		" %ld bytes)\n", nr_hash, order, (PAGE_SIZE << order));
- 
--	if (register_shrinker(&dqcache_shrinker, "dquota-cache"))
--		panic("Cannot register dquot shrinker");
-+	dqcache_shrinker = shrinker_alloc(0, "dquota-cache");
-+	if (!dqcache_shrinker)
-+		panic("Cannot allocate dquot shrinker");
-+
-+	dqcache_shrinker->count_objects = dqcache_shrink_count;
-+	dqcache_shrinker->scan_objects = dqcache_shrink_scan;
-+	dqcache_shrinker->seeks = DEFAULT_SEEKS;
-+
-+	shrinker_register(dqcache_shrinker);
- 
- 	return 0;
+ 	return cache->c_entry_count;
  }
+@@ -333,8 +332,7 @@ static unsigned long mb_cache_shrink(struct mb_cache *cache,
+ static unsigned long mb_cache_scan(struct shrinker *shrink,
+ 				   struct shrink_control *sc)
+ {
+-	struct mb_cache *cache = container_of(shrink, struct mb_cache,
+-					      c_shrink);
++	struct mb_cache *cache = shrink->private_data;
+ 	return mb_cache_shrink(cache, sc->nr_to_scan);
+ }
+ 
+@@ -377,15 +375,20 @@ struct mb_cache *mb_cache_create(int bucket_bits)
+ 	for (i = 0; i < bucket_count; i++)
+ 		INIT_HLIST_BL_HEAD(&cache->c_hash[i]);
+ 
+-	cache->c_shrink.count_objects = mb_cache_count;
+-	cache->c_shrink.scan_objects = mb_cache_scan;
+-	cache->c_shrink.seeks = DEFAULT_SEEKS;
+-	if (register_shrinker(&cache->c_shrink, "mbcache-shrinker")) {
++	cache->c_shrink = shrinker_alloc(0, "mbcache-shrinker");
++	if (!cache->c_shrink) {
+ 		kfree(cache->c_hash);
+ 		kfree(cache);
+ 		goto err_out;
+ 	}
+ 
++	cache->c_shrink->count_objects = mb_cache_count;
++	cache->c_shrink->scan_objects = mb_cache_scan;
++	cache->c_shrink->seeks = DEFAULT_SEEKS;
++	cache->c_shrink->private_data = cache;
++
++	shrinker_register(cache->c_shrink);
++
+ 	INIT_WORK(&cache->c_shrink_work, mb_cache_shrink_worker);
+ 
+ 	return cache;
+@@ -406,7 +409,7 @@ void mb_cache_destroy(struct mb_cache *cache)
+ {
+ 	struct mb_cache_entry *entry, *next;
+ 
+-	unregister_shrinker(&cache->c_shrink);
++	shrinker_free(cache->c_shrink);
+ 
+ 	/*
+ 	 * We don't bother with any locking. Cache must not be used at this
 -- 
 2.30.2
 
