@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D07EB64DD
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:17:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E624C04FE0
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:17:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232169AbjHGLRj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Aug 2023 07:17:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49350 "EHLO
+        id S232287AbjHGLRh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Aug 2023 07:17:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232217AbjHGLRY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:17:24 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D4373C23
-        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:15:35 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1bba9539a23so9299985ad.1
-        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:15:35 -0700 (PDT)
+        with ESMTP id S232160AbjHGLRW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:17:22 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40D403ABE
+        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:15:32 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id 98e67ed59e1d1-2680edb9767so930625a91.0
+        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:15:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1691406854; x=1692011654;
+        d=bytedance.com; s=google; t=1691406880; x=1692011680;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=UfFRGPeE2ZLo8C9JFiR7wWvNCzDdrS4O9P7I0rwozQE=;
-        b=ONEUI0IfFZms4FG9PetOl8bvKenOqN1nU77N5Qte1+jcUcBw58bz7f+hU+R7TeYF+V
-         lh6zqoEeFSpZcpg8mRig+kmjWUt6kfXbSu+9NeAXYfo3N+VsjNhMLOsuKkNQEOPAjcDK
-         uUyV00OaSrfiIXIqqcl52eWZs37Xm/4rryCSVvHnIArrw8ERrhcN4eSxoW+GqcL8/yIb
-         KwF9HiN5U8S+9tgj6CAiBWcQ9gvQLYdhSLPDQ8D4Yya1PGPZvz8SVg49P9ivLovoYGLT
-         Rib8AROfQ3COlCK0yM55x9RlvasI2HVvqoY8nt3eQf4jmVmec6kkSrsQ1MGHdEx91QwE
-         bHJA==
+        bh=uDu/4z0sff3MNLq2Hem41DvJLtW9HR7Ht2OY0+o3IBw=;
+        b=B1CW4rX5HR96iE4C61mcE8Vf6RLeUtYXgDxnwBceT7ft1IC5S++icQmFIFvrt4cG/L
+         0c/u6FKIvYpbVXU295bMslZ7j2rgVaXwSjJRaIMLa4dIqq6HefzeIHqMKw0/Lo0rsfaU
+         nsC5mn0wc4B6AcTwpHE7UQo4S/4ZAugQvuMvQEsWqhRZLmPoe9oa0Q7yCYFnuuapzCun
+         SWccc4DpmmmlhTogFq9P0LyJEl3ZRZ2cm803+AIasPp033eu68uxaCfAoKnHA+NQuDMw
+         Rtim+7y0rt6vcYQJO+qKgz5xgBY8yFO2AMQKXPDTy0z1fvoO5gByJOuvIrJQUEDpduII
+         rIFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691406854; x=1692011654;
+        d=1e100.net; s=20221208; t=1691406880; x=1692011680;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=UfFRGPeE2ZLo8C9JFiR7wWvNCzDdrS4O9P7I0rwozQE=;
-        b=hQqcjxQNdKylS9Ev/5IcE6vQ46GmQNtQVqv9m+ieG5Mjhm6FVLpiBwAQlPNm//3D9D
-         qLdKfLYLSmlNZ9B9WLRZtTD8SiHExVB3nuEyzctzqIIhFIjsPR/TLFHOJmDhHlLbKH7r
-         MPy9pBAoED5pTQu+ABkWgnDICJF/mKhf5D3ftZzSY4qrA8yMeAKmP2KRvsnziadjiA5k
-         wQz03BZLfSIvcwzZT09dB7xgIzJSbw1nbAdxhRHOkmTBkBtPy7635qm3FsfzZ1BVXddV
-         ObFuWDkC5r6OnzcXRtc/sGk4/+Mj8UyAeCkr2RRxHQOXwrn/Ex4trsv8abh01LzhGcU3
-         YbqQ==
-X-Gm-Message-State: ABy/qLboVF0aME95vgdF3s8XEIhWfAWB/CtS8/hnITYqJI6J5J5/zYDw
-        TJEBbqmQlocSYpVX16pz21j6Ww==
-X-Google-Smtp-Source: APBJJlFKEuLPG6rXvjHQ/xhYlF3mJA1G+qTCCufEjWmHi053bG2lxjJC7FtDeUsrnl72QxE+YEuj1g==
-X-Received: by 2002:a17:902:d503:b0:1bb:83ec:832 with SMTP id b3-20020a170902d50300b001bb83ec0832mr32625772plg.2.1691406854020;
-        Mon, 07 Aug 2023 04:14:14 -0700 (PDT)
+        bh=uDu/4z0sff3MNLq2Hem41DvJLtW9HR7Ht2OY0+o3IBw=;
+        b=jZTWRL/fRAtS+flhTqdPFu2SjJ6JdBp4PsgSySkrWtsYmf14Pw2BunKTV5Bixkjhre
+         d1JjTRffKNerZRzTzMiEDUki/2gqAbJ4h9jg4qiTCmJvBwloe5LMViXkvf5L4peN5vRY
+         5PQHx+4TV2iNqjUN0Uyi0lY9qcF53bDY3HF8bEkcmWHwpRas2H6HH0oAWoghRpqBQqxy
+         +hB+HjBTS11AreERqiGrmkwGpBQOettpt2owgdavbbPy0SAnnktzLgpbglGD2n5N7LDV
+         i6v2m6pRcwV0u64iEdNsGdlwhJ7FW7dyOHfNTyLPzBVDEdysf6/MXnJAF7SI9lV2ELYu
+         3vgw==
+X-Gm-Message-State: ABy/qLbuv8HWR3a0K7mSOq/YnTXXXyoo0jlnqKYymcu568AQysMsusDV
+        c/Bn6tCGm6ztmhoRkleM3AAcCw==
+X-Google-Smtp-Source: APBJJlE+JUQU2KnCMqxKRhVbnyE7g/MjXwiwJL23ihCwbN9GtK/yS0Snkx/m2fq2fyEzRCC+VQ52VA==
+X-Received: by 2002:a17:90a:1f83:b0:268:3dc6:f0c5 with SMTP id x3-20020a17090a1f8300b002683dc6f0c5mr25034377pja.0.1691406879873;
+        Mon, 07 Aug 2023 04:14:39 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.146])
-        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.14.01
+        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.14.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Aug 2023 04:14:13 -0700 (PDT)
+        Mon, 07 Aug 2023 04:14:39 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -70,9 +70,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH v4 20/48] mm: thp: dynamically allocate the thp-related shrinkers
-Date:   Mon,  7 Aug 2023 19:09:08 +0800
-Message-Id: <20230807110936.21819-21-zhengqi.arch@bytedance.com>
+Subject: [PATCH v4 22/48] mm: workingset: dynamically allocate the mm-shadow shrinker
+Date:   Mon,  7 Aug 2023 19:09:10 +0800
+Message-Id: <20230807110936.21819-23-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
 References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
@@ -82,137 +82,73 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use new APIs to dynamically allocate the thp-zero and thp-deferred_split
-shrinkers.
+Use new APIs to dynamically allocate the mm-shadow shrinker.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 ---
- mm/huge_memory.c | 69 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 45 insertions(+), 24 deletions(-)
+ mm/workingset.c | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 947001a7cd42..5d0c7a0b651c 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -65,7 +65,11 @@ unsigned long transparent_hugepage_flags __read_mostly =
- 	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_KHUGEPAGED_FLAG)|
- 	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
- 
--static struct shrinker deferred_split_shrinker;
-+static struct shrinker *deferred_split_shrinker;
-+static unsigned long deferred_split_count(struct shrinker *shrink,
-+					  struct shrink_control *sc);
-+static unsigned long deferred_split_scan(struct shrinker *shrink,
-+					 struct shrink_control *sc);
- 
- static atomic_t huge_zero_refcount;
- struct page *huge_zero_page __read_mostly;
-@@ -229,11 +233,7 @@ static unsigned long shrink_huge_zero_page_scan(struct shrinker *shrink,
- 	return 0;
+diff --git a/mm/workingset.c b/mm/workingset.c
+index da58a26d0d4d..3c53138903a7 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -763,13 +763,6 @@ static unsigned long scan_shadow_nodes(struct shrinker *shrinker,
+ 					NULL);
  }
  
--static struct shrinker huge_zero_page_shrinker = {
--	.count_objects = shrink_huge_zero_page_count,
--	.scan_objects = shrink_huge_zero_page_scan,
--	.seeks = DEFAULT_SEEKS,
--};
-+static struct shrinker *huge_zero_page_shrinker;
- 
- #ifdef CONFIG_SYSFS
- static ssize_t enabled_show(struct kobject *kobj,
-@@ -454,6 +454,40 @@ static inline void hugepage_exit_sysfs(struct kobject *hugepage_kobj)
- }
- #endif /* CONFIG_SYSFS */
- 
-+static int __init thp_shrinker_init(void)
-+{
-+	huge_zero_page_shrinker = shrinker_alloc(0, "thp-zero");
-+	if (!huge_zero_page_shrinker)
-+		return -ENOMEM;
-+
-+	deferred_split_shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE |
-+						 SHRINKER_MEMCG_AWARE |
-+						 SHRINKER_NONSLAB,
-+						 "thp-deferred_split");
-+	if (!deferred_split_shrinker) {
-+		shrinker_free(huge_zero_page_shrinker);
-+		return -ENOMEM;
-+	}
-+
-+	huge_zero_page_shrinker->count_objects = shrink_huge_zero_page_count;
-+	huge_zero_page_shrinker->scan_objects = shrink_huge_zero_page_scan;
-+	huge_zero_page_shrinker->seeks = DEFAULT_SEEKS;
-+	shrinker_register(huge_zero_page_shrinker);
-+
-+	deferred_split_shrinker->count_objects = deferred_split_count;
-+	deferred_split_shrinker->scan_objects = deferred_split_scan;
-+	deferred_split_shrinker->seeks = DEFAULT_SEEKS;
-+	shrinker_register(deferred_split_shrinker);
-+
-+	return 0;
-+}
-+
-+static void __init thp_shrinker_exit(void)
-+{
-+	shrinker_free(huge_zero_page_shrinker);
-+	shrinker_free(deferred_split_shrinker);
-+}
-+
- static int __init hugepage_init(void)
- {
- 	int err;
-@@ -482,12 +516,9 @@ static int __init hugepage_init(void)
- 	if (err)
- 		goto err_slab;
- 
--	err = register_shrinker(&huge_zero_page_shrinker, "thp-zero");
--	if (err)
--		goto err_hzp_shrinker;
--	err = register_shrinker(&deferred_split_shrinker, "thp-deferred_split");
-+	err = thp_shrinker_init();
- 	if (err)
--		goto err_split_shrinker;
-+		goto err_shrinker;
- 
- 	/*
- 	 * By default disable transparent hugepages on smaller systems,
-@@ -505,10 +536,8 @@ static int __init hugepage_init(void)
- 
- 	return 0;
- err_khugepaged:
--	unregister_shrinker(&deferred_split_shrinker);
--err_split_shrinker:
--	unregister_shrinker(&huge_zero_page_shrinker);
--err_hzp_shrinker:
-+	thp_shrinker_exit();
-+err_shrinker:
- 	khugepaged_destroy();
- err_slab:
- 	hugepage_exit_sysfs(hugepage_kobj);
-@@ -2834,7 +2863,7 @@ void deferred_split_folio(struct folio *folio)
- #ifdef CONFIG_MEMCG
- 		if (memcg)
- 			set_shrinker_bit(memcg, folio_nid(folio),
--					 deferred_split_shrinker.id);
-+					 deferred_split_shrinker->id);
- #endif
- 	}
- 	spin_unlock_irqrestore(&ds_queue->split_queue_lock, flags);
-@@ -2908,14 +2937,6 @@ static unsigned long deferred_split_scan(struct shrinker *shrink,
- 	return split;
- }
- 
--static struct shrinker deferred_split_shrinker = {
--	.count_objects = deferred_split_count,
--	.scan_objects = deferred_split_scan,
--	.seeks = DEFAULT_SEEKS,
--	.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE |
--		 SHRINKER_NONSLAB,
+-static struct shrinker workingset_shadow_shrinker = {
+-	.count_objects = count_shadow_nodes,
+-	.scan_objects = scan_shadow_nodes,
+-	.seeks = 0, /* ->count reports only fully expendable nodes */
+-	.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE,
 -};
 -
- #ifdef CONFIG_DEBUG_FS
- static void split_huge_pages_all(void)
+ /*
+  * Our list_lru->lock is IRQ-safe as it nests inside the IRQ-safe
+  * i_pages lock.
+@@ -778,9 +771,10 @@ static struct lock_class_key shadow_nodes_key;
+ 
+ static int __init workingset_init(void)
  {
++	struct shrinker *workingset_shadow_shrinker;
+ 	unsigned int timestamp_bits;
+ 	unsigned int max_order;
+-	int ret;
++	int ret = -ENOMEM;
+ 
+ 	BUILD_BUG_ON(BITS_PER_LONG < EVICTION_SHIFT);
+ 	/*
+@@ -797,17 +791,24 @@ static int __init workingset_init(void)
+ 	pr_info("workingset: timestamp_bits=%d max_order=%d bucket_order=%u\n",
+ 	       timestamp_bits, max_order, bucket_order);
+ 
+-	ret = prealloc_shrinker(&workingset_shadow_shrinker, "mm-shadow");
+-	if (ret)
++	workingset_shadow_shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE |
++						    SHRINKER_MEMCG_AWARE,
++						    "mm-shadow");
++	if (!workingset_shadow_shrinker)
+ 		goto err;
++
+ 	ret = __list_lru_init(&shadow_nodes, true, &shadow_nodes_key,
+-			      &workingset_shadow_shrinker);
++			      workingset_shadow_shrinker);
+ 	if (ret)
+ 		goto err_list_lru;
+-	register_shrinker_prepared(&workingset_shadow_shrinker);
++
++	workingset_shadow_shrinker->count_objects = count_shadow_nodes;
++	workingset_shadow_shrinker->scan_objects = scan_shadow_nodes;
++
++	shrinker_register(workingset_shadow_shrinker);
+ 	return 0;
+ err_list_lru:
+-	free_prealloced_shrinker(&workingset_shadow_shrinker);
++	shrinker_free(workingset_shadow_shrinker);
+ err:
+ 	return ret;
+ }
 -- 
 2.30.2
 
