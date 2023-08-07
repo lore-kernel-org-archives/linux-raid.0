@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A37A2EB64DD
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:25:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C12F6C001DF
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:25:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232643AbjHGLZY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Aug 2023 07:25:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60086 "EHLO
+        id S232558AbjHGLZi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Aug 2023 07:25:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232474AbjHGLYW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:24:22 -0400
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 346283C06
-        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:21:58 -0700 (PDT)
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-55b5a37acb6so362436a12.0
-        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:21:58 -0700 (PDT)
+        with ESMTP id S232559AbjHGLZF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:25:05 -0400
+Received: from mail-oa1-x2b.google.com (mail-oa1-x2b.google.com [IPv6:2001:4860:4864:20::2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6302C559D
+        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:22:18 -0700 (PDT)
+Received: by mail-oa1-x2b.google.com with SMTP id 586e51a60fabf-1a2dd615ddcso987111fac.0
+        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:22:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1691406956; x=1692011756;
+        d=bytedance.com; s=google; t=1691407287; x=1692012087;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=x1yZWn5jqhhXD5GlPCwn7Rqy/lqVgw4fKiPcfLbuAyw=;
-        b=AcIjUBUrPWg0UzvX5wfFusVN+dKafMdFSH2GRzDH1OvYCulGxI33IbPnGkf00jzcfm
-         4A2gtuaaMbbtp6GdbHcVvPsXNRG1dmOn4MOltHcp0lO1ZvH61PsHri+EHSBurlaP3++Q
-         4Ay4mp+CERsWHNo0m/mtiLtHugH42cl3pUwAYaJdXbMqhQOvO09TYlTgMkhLAJn4/X6x
-         i3g9KcsL+Xka9qDqamdAs09xw8L3SMlDoJ+EPUs9bBOqEWf8CI1XS8GEbt6nh07SwXhK
-         J3x/B99DfdJVBmu0rw2+YUXatA5oQZwE4RwMladVYflBE1HvjLGyTI12ejp5Woqr/FOF
-         LWLw==
+        bh=GSWsN00ewH1CUxuL2on0amogNZtYjpfZMPk3tXk1MLc=;
+        b=W9hsKSlVPECSuspYa9pCQ4y9F5WJIpxMvtwmXzz4BxHDWduvAax62wRQG40qAn9Pqn
+         NwsnyXt5oA0WCf5fvBQ/TgQ+DeAyvylyccHo5ikgkLueZqDZOXqfmVVXprWpLzrbxTIg
+         DctMkTop3VSQ9MDEzV0GLCXJld5za5CgxC48DqPc9APFjXBPhIcts7WHR2wj35655G/H
+         fXjAqKX9uK1dLNoruFRASzET5w4ksaeMdGWRuuUA26CNXeG/pXY0gEQXCksLM5ZLbKk+
+         P1U5I4laCbqexzrBNj6GX3sBCsliuYIFIO3+weoAf746dBObqellhdw7DGJayfLkI64X
+         1CKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691406956; x=1692011756;
+        d=1e100.net; s=20221208; t=1691407287; x=1692012087;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=x1yZWn5jqhhXD5GlPCwn7Rqy/lqVgw4fKiPcfLbuAyw=;
-        b=TJptxFgoxJmUo1RdEvf2838XtWFhnB7+L4S1mmT0Ffpn6+6X76HzHWTOroDkYhLLp/
-         8KCGQYuWCT/opT8ffms7DYMxwNv7YeCtVXK2uEJc5b6N6QCrTNyTzs6AhqHRLBCcMPuz
-         dz5V6ihQmbm0W8SGth5Vnb7AyeYuth87waUII0MJVg/zXPJCsxHfC36TJdyZVeAa0hbe
-         7A0sW7Jb7zwLfvhN8ooyqi8lq0ujVWT9gNm0dcM3jSdegul5YEl6V0A9Le14Iy//w+Go
-         LUhBCXT5GFNpf5thL+bt+wL3ZA6ecVyq+ZiWsSso6OMW0abVpVOUkswF2IiXLumm9cjt
-         JQnA==
-X-Gm-Message-State: AOJu0YyNAA9KCuT3/3AVxePLOmwhTN0ILnH8nKI+ercyw5p7nShY/fDg
-        kHCJ7dQfRoDCGadH9M4UBJTeqQ==
-X-Google-Smtp-Source: AGHT+IFmiFe8iRG7X1ND7nrFgfyiRFI3F00Omyk3P1Mi12alvC2oRACqfoDpuN1VIlTmyfJiX72rxw==
-X-Received: by 2002:a17:90a:2909:b0:269:5bf7:d79c with SMTP id g9-20020a17090a290900b002695bf7d79cmr2218056pjd.1.1691406956537;
-        Mon, 07 Aug 2023 04:15:56 -0700 (PDT)
+        bh=GSWsN00ewH1CUxuL2on0amogNZtYjpfZMPk3tXk1MLc=;
+        b=W/IYIiUrYehx3jPmm37QNHYYV4uThSMcuiuN36FjeBRi1eafF/NbzUNny2aio1QVRv
+         NP7UlBCKObr3GyKIwBH9CjJJht794mj0W5c3tnfkhBaoDI+Vz3h5J3XFxZSSc702gj7s
+         bF+2+7hg6ShVP6i/PY3RgPcJYJ5lnYcxtLrSPu530Jjqa6RVNmjc6+B8K1GVtqxqXFs1
+         yiu1UIhCG+fDJS7xOwlcvatetn5YxrNKbxFzsNzavfPxlCEPbcO4ADzmGI14mn1gxZzl
+         xOKKE3/ZmoZFI3Wzqo5Aqd6tYcWHx43JNXDyk+JL5Tm4K7B4KMy8+G9Sc/eyj6jCIKrY
+         4Q7A==
+X-Gm-Message-State: AOJu0YxCfAocle5s4iQ1DL9v5WHTf/g1cFuAk6rw0RBGTK5Bv9BS6dVB
+        dJ4XFURin/7E51hBlfrdEGdgDVsLTMIlxyizeY0=
+X-Google-Smtp-Source: APBJJlEEwhe0wjgrc7nxC5j9G5K3ZI0sWgwDykpBRAx7nLtKV2LZNd6jgA89VvGSaryf9LAeIFxakg==
+X-Received: by 2002:a17:90a:901:b0:268:3a31:3e4d with SMTP id n1-20020a17090a090100b002683a313e4dmr23070871pjn.2.1691406828996;
+        Mon, 07 Aug 2023 04:13:48 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.146])
-        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.15.43
+        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.13.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Aug 2023 04:15:55 -0700 (PDT)
+        Mon, 07 Aug 2023 04:13:48 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -69,11 +69,10 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         virtualization@lists.linux-foundation.org,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Qi Zheng <zhengqi.arch@bytedance.com>,
-        Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v4 28/48] md/raid5: dynamically allocate the md-raid5 shrinker
-Date:   Mon,  7 Aug 2023 19:09:16 +0800
-Message-Id: <20230807110936.21819-29-zhengqi.arch@bytedance.com>
+        Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH v4 18/48] rcu: dynamically allocate the rcu-lazy shrinker
+Date:   Mon,  7 Aug 2023 19:09:06 +0800
+Message-Id: <20230807110936.21819-19-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
 References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
@@ -83,93 +82,58 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-In preparation for implementing lockless slab shrink, use new APIs to
-dynamically allocate the md-raid5 shrinker, so that it can be freed
-asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
-read-side critical section when releasing the struct r5conf.
+Use new APIs to dynamically allocate the rcu-lazy shrinker.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- drivers/md/raid5.c | 26 +++++++++++++++-----------
- drivers/md/raid5.h |  2 +-
- 2 files changed, 16 insertions(+), 12 deletions(-)
+ kernel/rcu/tree_nocb.h | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 32a87193bad7..e284c2f7dbe4 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7401,7 +7401,7 @@ static void free_conf(struct r5conf *conf)
+diff --git a/kernel/rcu/tree_nocb.h b/kernel/rcu/tree_nocb.h
+index 5598212d1f27..e1c59c33738a 100644
+--- a/kernel/rcu/tree_nocb.h
++++ b/kernel/rcu/tree_nocb.h
+@@ -1396,13 +1396,6 @@ lazy_rcu_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
  
- 	log_exit(conf);
+ 	return count ? count : SHRINK_STOP;
+ }
+-
+-static struct shrinker lazy_rcu_shrinker = {
+-	.count_objects = lazy_rcu_shrink_count,
+-	.scan_objects = lazy_rcu_shrink_scan,
+-	.batch = 0,
+-	.seeks = DEFAULT_SEEKS,
+-};
+ #endif // #ifdef CONFIG_RCU_LAZY
  
--	unregister_shrinker(&conf->shrinker);
-+	shrinker_free(conf->shrinker);
- 	free_thread_groups(conf);
- 	shrink_stripes(conf);
- 	raid5_free_percpu(conf);
-@@ -7449,7 +7449,7 @@ static int raid5_alloc_percpu(struct r5conf *conf)
- static unsigned long raid5_cache_scan(struct shrinker *shrink,
- 				      struct shrink_control *sc)
- {
--	struct r5conf *conf = container_of(shrink, struct r5conf, shrinker);
-+	struct r5conf *conf = shrink->private_data;
- 	unsigned long ret = SHRINK_STOP;
+ void __init rcu_init_nohz(void)
+@@ -1410,6 +1403,7 @@ void __init rcu_init_nohz(void)
+ 	int cpu;
+ 	struct rcu_data *rdp;
+ 	const struct cpumask *cpumask = NULL;
++	struct shrinker * __maybe_unused lazy_rcu_shrinker;
  
- 	if (mutex_trylock(&conf->cache_size_mutex)) {
-@@ -7470,7 +7470,7 @@ static unsigned long raid5_cache_scan(struct shrinker *shrink,
- static unsigned long raid5_cache_count(struct shrinker *shrink,
- 				       struct shrink_control *sc)
- {
--	struct r5conf *conf = container_of(shrink, struct r5conf, shrinker);
-+	struct r5conf *conf = shrink->private_data;
+ #if defined(CONFIG_NO_HZ_FULL)
+ 	if (tick_nohz_full_running && !cpumask_empty(tick_nohz_full_mask))
+@@ -1436,8 +1430,16 @@ void __init rcu_init_nohz(void)
+ 		return;
  
- 	if (conf->max_nr_stripes < conf->min_nr_stripes)
- 		/* unlikely, but not impossible */
-@@ -7705,18 +7705,22 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	 * it reduces the queue depth and so can hurt throughput.
- 	 * So set it rather large, scaled by number of devices.
- 	 */
--	conf->shrinker.seeks = DEFAULT_SEEKS * conf->raid_disks * 4;
--	conf->shrinker.scan_objects = raid5_cache_scan;
--	conf->shrinker.count_objects = raid5_cache_count;
--	conf->shrinker.batch = 128;
--	conf->shrinker.flags = 0;
--	ret = register_shrinker(&conf->shrinker, "md-raid5:%s", mdname(mddev));
--	if (ret) {
--		pr_warn("md/raid:%s: couldn't register shrinker.\n",
-+	conf->shrinker = shrinker_alloc(0, "md-raid5:%s", mdname(mddev));
-+	if (!conf->shrinker) {
-+		ret = -ENOMEM;
-+		pr_warn("md/raid:%s: couldn't allocate shrinker.\n",
- 			mdname(mddev));
- 		goto abort;
- 	}
- 
-+	conf->shrinker->seeks = DEFAULT_SEEKS * conf->raid_disks * 4;
-+	conf->shrinker->scan_objects = raid5_cache_scan;
-+	conf->shrinker->count_objects = raid5_cache_count;
-+	conf->shrinker->batch = 128;
-+	conf->shrinker->private_data = conf;
+ #ifdef CONFIG_RCU_LAZY
+-	if (register_shrinker(&lazy_rcu_shrinker, "rcu-lazy"))
+-		pr_err("Failed to register lazy_rcu shrinker!\n");
++	lazy_rcu_shrinker = shrinker_alloc(0, "rcu-lazy");
++	if (!lazy_rcu_shrinker) {
++		pr_err("Failed to allocate lazy_rcu shrinker!\n");
++	} else {
++		lazy_rcu_shrinker->count_objects = lazy_rcu_shrink_count;
++		lazy_rcu_shrinker->scan_objects = lazy_rcu_shrink_scan;
++		lazy_rcu_shrinker->seeks = DEFAULT_SEEKS;
 +
-+	shrinker_register(conf->shrinker);
-+
- 	sprintf(pers_name, "raid%d", mddev->new_level);
- 	rcu_assign_pointer(conf->thread,
- 			   md_register_thread(raid5d, mddev, pers_name));
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 97a795979a35..22bea20eccbd 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -670,7 +670,7 @@ struct r5conf {
- 	wait_queue_head_t	wait_for_stripe;
- 	wait_queue_head_t	wait_for_overlap;
- 	unsigned long		cache_state;
--	struct shrinker		shrinker;
-+	struct shrinker		*shrinker;
- 	int			pool_size; /* number of disks in stripeheads in pool */
- 	spinlock_t		device_lock;
- 	struct disk_info	*disks;
++		shrinker_register(lazy_rcu_shrinker);
++	}
+ #endif // #ifdef CONFIG_RCU_LAZY
+ 
+ 	if (!cpumask_subset(rcu_nocb_mask, cpu_possible_mask)) {
 -- 
 2.30.2
 
