@@ -2,146 +2,62 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 205BBC04FE1
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 14:16:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7550BC001B0
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 21:17:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233131AbjHGOQP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Aug 2023 10:16:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33804 "EHLO
+        id S229897AbjHGVRy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Aug 2023 17:17:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232772AbjHGOQO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 10:16:14 -0400
-Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B8ECE79
-        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 07:16:10 -0700 (PDT)
-Received: by mail-lj1-x230.google.com with SMTP id 38308e7fff4ca-2b9d3dacb33so73440201fa.1
-        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 07:16:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=joelfernandes.org; s=google; t=1691417769; x=1692022569;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mVE/GJTe1IuiufpABjiYZn1olHI1ifx/I1TivYEBHQg=;
-        b=KDeUHSfDD3L4EI9ZDbXXnOCIgf36k4kTiyHRIIffaGRG3HCFl39GcfvKDi2APyBxt9
-         uIkOV41JjBWzvcfkl4hWbMoMF6B7yW2N6o4toZetNa+16q9cwIbk8dhp8WLMlbMnqtzs
-         lrCcsJN2ho/fqPCpmMmUqd/p18Lc2P1XhR9Zc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691417769; x=1692022569;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mVE/GJTe1IuiufpABjiYZn1olHI1ifx/I1TivYEBHQg=;
-        b=idFaRRDeSXajULDmW+OU9eRAjAKQjvulzJiXch+XyPlTgyGABqjbWrgMtrl4d5HSSn
-         BvIo6wVc1iYkpgzKxe9ghYx8vkU7ZIQ9NOGzRRF1My+IFduATbcnI20Lx0S3iSgaqy6I
-         3VMerfkoamEu1LjFV/H5hR9KpTB6YqbI4n0EGaLhYbZTuzWA9VbHszQsDsdvBj9DPGIr
-         D6SOS2pxG+ufyzYVDDhwUYRHHtIJvfmhEoEK3/3hcEWNic22EIq6bdcefQZqhJsxKoCh
-         Oz/MrEPTxs57WdXulOf3n1zzF5rVN6t9OLu2mPMhQkptClxX1uvlBx097Lorvtc27eZj
-         Rtfg==
-X-Gm-Message-State: AOJu0Yxjj6toPSAI9G1W26d3FpYVl50b4yt1iaG6DxmwWyB2R805dl1n
-        pA/9V5rpnONUdwy8l2M445cE7+GYW4p0mfhFA6Lu1g==
-X-Google-Smtp-Source: AGHT+IGOrJUhdG+ahMA8bObfIwJouhmkY47ZzUfvTwinDgzhZuBpH+4Q7OaueJuZRAHK8xn8XVlTzjWWvAUYbt+ovvQ=
-X-Received: by 2002:a2e:b166:0:b0:2b9:dd3b:cf43 with SMTP id
- a6-20020a2eb166000000b002b9dd3bcf43mr6572529ljm.13.1691417768626; Mon, 07 Aug
- 2023 07:16:08 -0700 (PDT)
+        with ESMTP id S229631AbjHGVRx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 17:17:53 -0400
+X-Greylist: delayed 904 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Aug 2023 14:17:52 PDT
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E4A11BC
+        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 14:17:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1691442159; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=XYw8orj/QCeg23VqHzcYC5Ey/pLZGk76NO9/iFHuN9y2+e9cE6TdFX3swcV853f70s0O8raCuLbLjTpUkjx5lwTvgzmNxcrFWLqVjNTIKH41JaI7KFif23RcL9ZVRYioVM/kix20emYgkstcgDQnT3sU/U5UheJIBel1PWHcDyQ=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1691442159; h=Content-Type:Content-Transfer-Encoding:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=gpDqOnZZcuyUJyRYdkY94peZ8dKJOMMGm4M0n1Uw+cA=; 
+        b=bE1wDnwLVh3OmGnA366QgiwyjLG8w6H2qJ1295m4LdCFp8GbGGB9+ADMMiqAGp6NSEIAEnQdWF3syoNQrtXBr1CetMBuRFm4r783dkawDoABontPS+L06a3FxdQlArCAMFz8o+SBBl7GZdosYBb8j9hezQmVC5MxM6IDiqm5QrU=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
+        with SMTPS id 1691442156063898.1849532229709; Mon, 7 Aug 2023 23:02:36 +0200 (CEST)
+Message-ID: <edb6432e-ed7c-dff6-2c63-a119b9254fcb@trained-monkey.org>
+Date:   Mon, 7 Aug 2023 17:02:33 -0400
 MIME-Version: 1.0
-References: <20230807110936.21819-1-zhengqi.arch@bytedance.com> <20230807110936.21819-19-zhengqi.arch@bytedance.com>
-In-Reply-To: <20230807110936.21819-19-zhengqi.arch@bytedance.com>
-From:   Joel Fernandes <joel@joelfernandes.org>
-Date:   Mon, 7 Aug 2023 10:16:03 -0400
-Message-ID: <CAEXW_YTKHUeZHWtzeSG5Tt7MscNKjVTScBWkVDkC4Orisa7w=Q@mail.gmail.com>
-Subject: Re: [PATCH v4 18/48] rcu: dynamically allocate the rcu-lazy shrinker
-To:     Qi Zheng <zhengqi.arch@bytedance.com>
-Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
-        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
-        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
-        yujie.liu@intel.com, gregkh@linuxfoundation.org,
-        muchun.song@linux.dev, simon.horman@corigine.com,
-        dlemoal@kernel.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, x86@kernel.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
-        rcu@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH] imsm: Fix possible segfault in check_no_platform()
+Content-Language: en-US
+To:     Mateusz Grzonka <mateusz.grzonka@intel.com>,
+        linux-raid@vger.kernel.org
+References: <20230705143456.20462-1-mateusz.grzonka@intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20230705143456.20462-1-mateusz.grzonka@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Aug 7, 2023 at 7:36=E2=80=AFAM Qi Zheng <zhengqi.arch@bytedance.com=
-> wrote:
->
-> Use new APIs to dynamically allocate the rcu-lazy shrinker.
->
-> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-
-For RCU:
-Reviewed-by: Joel Fernandes (Google) <joel@joelfernandes.org>
-
-thanks,
-
-- Joel
-
-
+On 7/5/23 10:34, Mateusz Grzonka wrote:
+> conf_line() may return NULL, which is not handled and might cause
+> segfault.
+> 
+> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
 > ---
->  kernel/rcu/tree_nocb.h | 20 +++++++++++---------
->  1 file changed, 11 insertions(+), 9 deletions(-)
->
-> diff --git a/kernel/rcu/tree_nocb.h b/kernel/rcu/tree_nocb.h
-> index 5598212d1f27..e1c59c33738a 100644
-> --- a/kernel/rcu/tree_nocb.h
-> +++ b/kernel/rcu/tree_nocb.h
-> @@ -1396,13 +1396,6 @@ lazy_rcu_shrink_scan(struct shrinker *shrink, stru=
-ct shrink_control *sc)
->
->         return count ? count : SHRINK_STOP;
->  }
-> -
-> -static struct shrinker lazy_rcu_shrinker =3D {
-> -       .count_objects =3D lazy_rcu_shrink_count,
-> -       .scan_objects =3D lazy_rcu_shrink_scan,
-> -       .batch =3D 0,
-> -       .seeks =3D DEFAULT_SEEKS,
-> -};
->  #endif // #ifdef CONFIG_RCU_LAZY
->
->  void __init rcu_init_nohz(void)
-> @@ -1410,6 +1403,7 @@ void __init rcu_init_nohz(void)
->         int cpu;
->         struct rcu_data *rdp;
->         const struct cpumask *cpumask =3D NULL;
-> +       struct shrinker * __maybe_unused lazy_rcu_shrinker;
->
->  #if defined(CONFIG_NO_HZ_FULL)
->         if (tick_nohz_full_running && !cpumask_empty(tick_nohz_full_mask)=
-)
-> @@ -1436,8 +1430,16 @@ void __init rcu_init_nohz(void)
->                 return;
->
->  #ifdef CONFIG_RCU_LAZY
-> -       if (register_shrinker(&lazy_rcu_shrinker, "rcu-lazy"))
-> -               pr_err("Failed to register lazy_rcu shrinker!\n");
-> +       lazy_rcu_shrinker =3D shrinker_alloc(0, "rcu-lazy");
-> +       if (!lazy_rcu_shrinker) {
-> +               pr_err("Failed to allocate lazy_rcu shrinker!\n");
-> +       } else {
-> +               lazy_rcu_shrinker->count_objects =3D lazy_rcu_shrink_coun=
-t;
-> +               lazy_rcu_shrinker->scan_objects =3D lazy_rcu_shrink_scan;
-> +               lazy_rcu_shrinker->seeks =3D DEFAULT_SEEKS;
-> +
-> +               shrinker_register(lazy_rcu_shrinker);
-> +       }
->  #endif // #ifdef CONFIG_RCU_LAZY
->
->         if (!cpumask_subset(rcu_nocb_mask, cpu_possible_mask)) {
-> --
-> 2.30.2
->
+>  super-intel.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+
+Applied!
+
+Thanks,
+Jes
+
+
