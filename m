@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19CD3EB64DD
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:39:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30207EB64DD
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:39:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232968AbjHGLjq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Aug 2023 07:39:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47356 "EHLO
+        id S233001AbjHGLjt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Aug 2023 07:39:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232969AbjHGLj0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:39:26 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CE455FD0
-        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:36:04 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id 41be03b00d2f7-56462258cdeso530685a12.1
-        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:36:04 -0700 (PDT)
+        with ESMTP id S233002AbjHGLjc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:39:32 -0400
+Received: from mail-ot1-x332.google.com (mail-ot1-x332.google.com [IPv6:2607:f8b0:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC0411BF1
+        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:36:11 -0700 (PDT)
+Received: by mail-ot1-x332.google.com with SMTP id 46e09a7af769-6bca018afe8so760636a34.0
+        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:36:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1691408112; x=1692012912;
+        d=bytedance.com; s=google; t=1691408119; x=1692012919;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=dp1PQp+5gTkm4DG/kxrQVAZ0rB7KyI/rGW6TiEnUaUw=;
-        b=XpD+SwVYFh5768FoAMKt5karIYjmC5U3uAN5OpEX6bnfeuwM/CkVMRbF1HZtH/xVnF
-         L9g6iH5lS4IlOTrKVgQewGNdWHNhqRP+lm5ux/HlRvQ49mG5xmeq5hQPXoA68q3TFOOq
-         9TyLewKYa/z1S16qU3x3RD4Qk92xTaVdSZq0omFR1nBeVRJ8ryMoSh4JVM5vPh/hnsOs
-         JoP8841uIAHBJf2Hyg99bNnOrIabRAmVrme7KS59xozT/TlJGcHZLj+9LrFoIZy/tmMi
-         sDipI7e9k17UGb/+Y68tvMB9JzphmJSuTFb+qZE94hVizCekSTY1UXo8G2gW8z8YSTPT
-         KuoQ==
+        bh=jaqVlo27zysQOw4inLaa7RWYi61naAqQm5GJ5upJpN4=;
+        b=Rlri0mWCVHW0V0erAy+8PksHCPfCw249vhq44EVKBSnJGEr/+hW1UOSoxY3B08l2je
+         eWT6hPjWYbNc0OBVeHYO613FLRNOHlPCBrgi5+X8BAuuejMo2lQAaN/vVVJRd6i4h1BY
+         0M8GEG1JyGyMMp5ON6qz7yQf9I63W61xG/bWZsHhqsGmVA5EkDcDOVJ4UZtaNGOcyZwB
+         +sX22o6fhPrr2zaT1B4Wg83m9hSjXdqW+V9RtbRNfx/cQCYcjHxgAkSY0jJSD9/5vV7Q
+         4XAkRJasmt0kbNKcN+33wY28FK1nQHpX/OQCkm4EVQnhMt+yHHFUHuCkkgkVPdzB5SB7
+         eOXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691408112; x=1692012912;
+        d=1e100.net; s=20221208; t=1691408119; x=1692012919;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=dp1PQp+5gTkm4DG/kxrQVAZ0rB7KyI/rGW6TiEnUaUw=;
-        b=CyMaCHyipts8V7cpWjCxdcIcmEPZKc3MzEKK8wCbzBcwV4+ZXuuFKi5IQI84nWYSRV
-         JAB37tCEx1t4pCbd/XGxMc89wJPg1k/p/U/tUKRhYYTvH1jJsf8/7KTxmvI3E+d/wOuK
-         PA/DeDmg0pHZwXaAOVEVzoTO3HMRWHedBxdhy4Fh1gAjnjA6EhiKJVTNan+auN24SNIS
-         VI2silXTwv1Fit6g5zKy7/873yJx6jFVSnpMt/8jnsVSaT1UdLYa3dMcv69jmEmTA/TG
-         0E207HY5BNNPtHQj+hvt/8w2CWHzq3UJJfbzKTMkFVwwsHSir29aAnxJRN9liCBI2NuO
-         Od2A==
-X-Gm-Message-State: ABy/qLbFErdsGZ8t3lqUsGfzoXSyPIbcKduNC7NKO11Fu0IdZqpWPV2Y
-        XSTg2j56Fmc8PtG7+M+Q7ARKc7gNr1IBjUI+65s=
-X-Google-Smtp-Source: APBJJlGWGDf3ZP6TvEF/B95Km+XRmBUarTmlKp42txasQQnYUyfeo2SyrhxLvRA3BfrSE4M4+QRzMg==
-X-Received: by 2002:a17:902:dace:b0:1b8:17e8:5472 with SMTP id q14-20020a170902dace00b001b817e85472mr32807567plx.1.1691407148534;
-        Mon, 07 Aug 2023 04:19:08 -0700 (PDT)
+        bh=jaqVlo27zysQOw4inLaa7RWYi61naAqQm5GJ5upJpN4=;
+        b=BNQLE+La6lIstZW6nSI1AsU6w0+PIfGPDQJNSfrZEEeJy8sBIKSKy3h+H8ZKEbJx+Q
+         Dp7JnxlNTtHHMvCuOI/8TR96c4zMWZyBtqg1voTSKWg500PqbEDALxif5TNOjvqPLqbP
+         pKTepjlVfjbJ7Ha8L303BeMYJqs+3vQBp/kofomGs7gYlnv/RFZspkzjEg9LSG5QdUAK
+         huRUJSBeQsdqM3mU8GjXO6Hskp1CxG4R74Lq6WVPpuj6BKZygO4UfiEWq+f28iCA3aim
+         PxVyG2XQfvQmwx1sB0HmhfM9dXoeDgKCF3dJkIVVptC5WdADoQuSvfsq5d3mPX66xNJv
+         udJw==
+X-Gm-Message-State: ABy/qLZj21soQziTYkgFfPDqDhlzYX0ad5GWhlXZ5X8vdPE4p+u828Fd
+        +y2ldap4j/Lh5xA2BqKN8Pjlh0xqMaR9NsDx7vM=
+X-Google-Smtp-Source: AGHT+IHBSjfm4qMxfKY1o30DsQrf62j+YLyyzQgOSjZX7MvZKQZkongUtrzUOFN5xrnWaoCKIehpOA==
+X-Received: by 2002:a17:90a:9c3:b0:269:41cf:7212 with SMTP id 61-20020a17090a09c300b0026941cf7212mr4969668pjo.4.1691407071669;
+        Mon, 07 Aug 2023 04:17:51 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.146])
-        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.18.56
+        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.17.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Aug 2023 04:19:07 -0700 (PDT)
+        Mon, 07 Aug 2023 04:17:51 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -71,9 +71,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>,
         Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v4 43/48] drm/ttm: introduce pool_shrink_rwsem
-Date:   Mon,  7 Aug 2023 19:09:31 +0800
-Message-Id: <20230807110936.21819-44-zhengqi.arch@bytedance.com>
+Subject: [PATCH v4 37/48] xfs: dynamically allocate the xfs-buf shrinker
+Date:   Mon,  7 Aug 2023 19:09:25 +0800
+Message-Id: <20230807110936.21819-38-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
 References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
@@ -83,107 +83,89 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Currently, the synchronize_shrinkers() is only used by TTM pool. It only
-requires that no shrinkers run in parallel.
-
-After we use RCU+refcount method to implement the lockless slab shrink,
-we can not use shrinker_rwsem or synchronize_rcu() to guarantee that all
-shrinker invocations have seen an update before freeing memory.
-
-So we introduce a new pool_shrink_rwsem to implement a private
-synchronize_shrinkers(), so as to achieve the same purpose.
+In preparation for implementing lockless slab shrink, use new APIs to
+dynamically allocate the xfs-buf shrinker, so that it can be freed
+asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
+read-side critical section when releasing the struct xfs_buftarg.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- drivers/gpu/drm/ttm/ttm_pool.c | 15 +++++++++++++++
- include/linux/shrinker.h       |  2 --
- mm/shrinker.c                  | 15 ---------------
- 3 files changed, 15 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_buf.c | 25 ++++++++++++++-----------
+ fs/xfs/xfs_buf.h |  2 +-
+ 2 files changed, 15 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/gpu/drm/ttm/ttm_pool.c b/drivers/gpu/drm/ttm/ttm_pool.c
-index c9c9618c0dce..38b4c280725c 100644
---- a/drivers/gpu/drm/ttm/ttm_pool.c
-+++ b/drivers/gpu/drm/ttm/ttm_pool.c
-@@ -74,6 +74,7 @@ static struct ttm_pool_type global_dma32_uncached[MAX_ORDER + 1];
- static spinlock_t shrinker_lock;
- static struct list_head shrinker_list;
- static struct shrinker *mm_shrinker;
-+static DECLARE_RWSEM(pool_shrink_rwsem);
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 15d1e5a7c2d3..715730fc91cb 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1906,8 +1906,7 @@ xfs_buftarg_shrink_scan(
+ 	struct shrinker		*shrink,
+ 	struct shrink_control	*sc)
+ {
+-	struct xfs_buftarg	*btp = container_of(shrink,
+-					struct xfs_buftarg, bt_shrinker);
++	struct xfs_buftarg	*btp = shrink->private_data;
+ 	LIST_HEAD(dispose);
+ 	unsigned long		freed;
  
- /* Allocate pages of size 1 << order with the given gfp_flags */
- static struct page *ttm_pool_alloc_page(struct ttm_pool *pool, gfp_t gfp_flags,
-@@ -317,6 +318,7 @@ static unsigned int ttm_pool_shrink(void)
- 	unsigned int num_pages;
- 	struct page *p;
- 
-+	down_read(&pool_shrink_rwsem);
- 	spin_lock(&shrinker_lock);
- 	pt = list_first_entry(&shrinker_list, typeof(*pt), shrinker_list);
- 	list_move_tail(&pt->shrinker_list, &shrinker_list);
-@@ -329,6 +331,7 @@ static unsigned int ttm_pool_shrink(void)
- 	} else {
- 		num_pages = 0;
- 	}
-+	up_read(&pool_shrink_rwsem);
- 
- 	return num_pages;
+@@ -1929,8 +1928,7 @@ xfs_buftarg_shrink_count(
+ 	struct shrinker		*shrink,
+ 	struct shrink_control	*sc)
+ {
+-	struct xfs_buftarg	*btp = container_of(shrink,
+-					struct xfs_buftarg, bt_shrinker);
++	struct xfs_buftarg	*btp = shrink->private_data;
+ 	return list_lru_shrink_count(&btp->bt_lru, sc);
  }
-@@ -572,6 +575,18 @@ void ttm_pool_init(struct ttm_pool *pool, struct device *dev,
- }
- EXPORT_SYMBOL(ttm_pool_init);
  
-+/**
-+ * synchronize_shrinkers - Wait for all running shrinkers to complete.
-+ *
-+ * This is useful to guarantee that all shrinker invocations have seen an
-+ * update, before freeing memory, similar to rcu.
-+ */
-+static void synchronize_shrinkers(void)
-+{
-+	down_write(&pool_shrink_rwsem);
-+	up_write(&pool_shrink_rwsem);
-+}
+@@ -1938,7 +1936,7 @@ void
+ xfs_free_buftarg(
+ 	struct xfs_buftarg	*btp)
+ {
+-	unregister_shrinker(&btp->bt_shrinker);
++	shrinker_free(btp->bt_shrinker);
+ 	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
+ 	percpu_counter_destroy(&btp->bt_io_count);
+ 	list_lru_destroy(&btp->bt_lru);
+@@ -2021,13 +2019,18 @@ xfs_alloc_buftarg(
+ 	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
+ 		goto error_lru;
+ 
+-	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
+-	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
+-	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
+-	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
+-	if (register_shrinker(&btp->bt_shrinker, "xfs-buf:%s",
+-			      mp->m_super->s_id))
++	btp->bt_shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE, "xfs-buf:%s",
++					  mp->m_super->s_id);
++	if (!btp->bt_shrinker)
+ 		goto error_pcpu;
 +
- /**
-  * ttm_pool_fini - Cleanup a pool
-  *
-diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-index c55c07c3f0cb..025c8070dd86 100644
---- a/include/linux/shrinker.h
-+++ b/include/linux/shrinker.h
-@@ -103,8 +103,6 @@ struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...);
- void shrinker_register(struct shrinker *shrinker);
- void shrinker_free(struct shrinker *shrinker);
++	btp->bt_shrinker->count_objects = xfs_buftarg_shrink_count;
++	btp->bt_shrinker->scan_objects = xfs_buftarg_shrink_scan;
++	btp->bt_shrinker->seeks = DEFAULT_SEEKS;
++	btp->bt_shrinker->private_data = btp;
++
++	shrinker_register(btp->bt_shrinker);
++
+ 	return btp;
  
--extern void synchronize_shrinkers(void);
--
- #ifdef CONFIG_SHRINKER_DEBUG
- extern int __printf(2, 3) shrinker_debugfs_rename(struct shrinker *shrinker,
- 						  const char *fmt, ...);
-diff --git a/mm/shrinker.c b/mm/shrinker.c
-index 3ab301ff122d..a27779ed3798 100644
---- a/mm/shrinker.c
-+++ b/mm/shrinker.c
-@@ -650,18 +650,3 @@ void shrinker_free(struct shrinker *shrinker)
- 	kfree(shrinker);
- }
- EXPORT_SYMBOL_GPL(shrinker_free);
--
--/**
-- * synchronize_shrinkers - Wait for all running shrinkers to complete.
-- *
-- * This is equivalent to calling unregister_shrink() and register_shrinker(),
-- * but atomically and with less overhead. This is useful to guarantee that all
-- * shrinker invocations have seen an update, before freeing memory, similar to
-- * rcu.
-- */
--void synchronize_shrinkers(void)
--{
--	down_write(&shrinker_rwsem);
--	up_write(&shrinker_rwsem);
--}
--EXPORT_SYMBOL(synchronize_shrinkers);
+ error_pcpu:
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 549c60942208..4e6969a675f7 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -102,7 +102,7 @@ typedef struct xfs_buftarg {
+ 	size_t			bt_logical_sectormask;
+ 
+ 	/* LRU control structures */
+-	struct shrinker		bt_shrinker;
++	struct shrinker		*bt_shrinker;
+ 	struct list_lru		bt_lru;
+ 
+ 	struct percpu_counter	bt_io_count;
 -- 
 2.30.2
 
