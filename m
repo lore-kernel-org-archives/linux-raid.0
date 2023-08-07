@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1865DC001DF
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:31:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6001FC001DF
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 11:32:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232821AbjHGLbO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Aug 2023 07:31:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37000 "EHLO
+        id S232834AbjHGLc2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Aug 2023 07:32:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232266AbjHGLan (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:30:43 -0400
-Received: from mail-ot1-x32e.google.com (mail-ot1-x32e.google.com [IPv6:2607:f8b0:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 340BB423F
-        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:27:32 -0700 (PDT)
-Received: by mail-ot1-x32e.google.com with SMTP id 46e09a7af769-6bb1133b063so699399a34.1
-        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:27:32 -0700 (PDT)
+        with ESMTP id S232824AbjHGLcG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 07:32:06 -0400
+Received: from mail-io1-f51.google.com (mail-io1-f51.google.com [209.85.166.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66BBB1BFF
+        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 04:29:28 -0700 (PDT)
+Received: by mail-io1-f51.google.com with SMTP id ca18e2360f4ac-7748ca56133so28640139f.0
+        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 04:29:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1691407597; x=1692012397;
+        d=bytedance.com; s=google; t=1691407649; x=1692012449;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=igblsYgdIrcTAL0swCZj529c9jjsKo5CwfFS1Qcng2s=;
-        b=Ynq3zJW6gLU8tXKQUmH+lpfJS3uXOj/HiSb88Eueu+FSipjwWOUj3IDIwYm+Ktiq4I
-         rvQLvoaUzQEpGFZ/w0+YWiyEGE/K7kqKWkBajE4eJU/v80/J7z/ZGtDygGiIDb1YDrhG
-         JngnZzicWt/waqK/UZN2I7raDPFDtsEnE5buGaV9guYbVwFOFFX66BO2Jm68CRGgRthy
-         C/uDYaypuhlIlI1LAspNIqK0Ql6VYT2TYkywECooCebHtboGrOmv/T/U5JVihXwaNpNc
-         oGMUmVYjFKq+lqNjsbFQOzzFfMf0K8N/E/Ojj86GAHNDBI0CC0qvUIkdVCqX5qDSodxC
-         x7ng==
+        bh=G6s8y0Dka4KE4srOwy3I0FSAaIGrcYmvE6JrVZfCpDs=;
+        b=ds8WX6DVm+Labrx8iO1CXmYhz+K5PSQ1cIX59w5OzH/rUdJexW90wpaAwx1pTgTIQe
+         nmaXrcin9DSL4d77y2HY6H1GwI+4HDUTqtaVOqZiqvFLC2O3wC1aMggfIeR619306TWV
+         JU0/Z0CKrCULqyal7UXNXx+wH3tXyo8KDWYP8VyMwx5f9PuNcqp7itrxas/XUzg4KgNA
+         3z5P0kMf22/tiWl5gaoUHl3i/SSucbZ86FfUKMZLMLXtFMCTf13td0EdOKHxCCyfrp8I
+         j4a63jDsxXrUg8coOU9rzvNTOsMcglRRxkBvLaY00VDjfrzQHYEKrlXXTVFO4cqQ4LA9
+         rpog==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691407597; x=1692012397;
+        d=1e100.net; s=20221208; t=1691407649; x=1692012449;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=igblsYgdIrcTAL0swCZj529c9jjsKo5CwfFS1Qcng2s=;
-        b=KYrnDdabg/s3rFqgGcU8CwYLSauTII5pzFnuhlJ+1TCSWvSGvDHVIN5T08NzkQHHZU
-         9Apy+a3D3c/2cgbFFn74B6cZ/khR0CJufTVzITP2I4BKJLSWXYUnueYqgiE4NzDbkWB6
-         tMG8kKa5XP7TDCacLT2gCh9Vm8/TvDMmOGSOBbsKn9L+B0LNqpWfg11UiDjsqVAkwH6n
-         hpfNWoCeA85GBglmuk96L2fT41Iuf0LuZ5KU0Vu0jTYtPoqCE7HijtC5PEANXt8UBf5Q
-         ECzJPyHeMpIQWzetorHU1CD/MOBqKI2W0XTtK+z0rm3OfoQ0n8K2OSf0gcxZkI7WjEdj
-         qriw==
-X-Gm-Message-State: ABy/qLYp9tScHdeSxHq5tLFOX5CyKcqTNLxwbwFijkAF9Qom69zrw8AP
-        JGEd/DreSTs9FB/PQr1V/1WGN9o1vSxe68BrDok=
-X-Google-Smtp-Source: APBJJlGEDKqK4nyUWs8xE2EOJL+ODt25deDnA1/u8sHRAURqC7uD6bjxMDwwed+SXn6y84Un7sE7wA==
-X-Received: by 2002:a17:90a:1090:b0:268:126c:8a8b with SMTP id c16-20020a17090a109000b00268126c8a8bmr24570134pja.3.1691406867003;
-        Mon, 07 Aug 2023 04:14:27 -0700 (PDT)
+        bh=G6s8y0Dka4KE4srOwy3I0FSAaIGrcYmvE6JrVZfCpDs=;
+        b=hxxQ1Nxf/i8hPgHGFwi9AfkVgrPeHpWG6qrfrJtShWr4BdiOXHTgZ6ql+fpPjU7kFp
+         kFYRMk4vPn9bM2BYFs9F/I/PqYC30LdwQTVbRjmwBj2C69X7ckA9xIIt9zl/zZQ0KykY
+         g+/l1Qj1JfxrXTcqMbFkhXXaETuRRHaYMteZcvQPcci4FiTbv9mt5ApdTCXt4a5onGlo
+         V0UGiHHgpPsUvGPIR2K6PEDstT8qM5m/i3uiU1EZns0AnZeMcHPBKpFZSOyCOZMd6mxq
+         cfq9mzB8Il92izCldC7qJoJbWupJDPy+EyvP2ggvAtqLS9QkEX9kl0ED98LgUJc6it9w
+         1NvA==
+X-Gm-Message-State: ABy/qLYaDFeL/eSNxBGzT36vg+T6TZ1fo1DXXQ6GCTFYBY6A7vO0+XJl
+        zzSTxQctCDvIbv9fxvvZuRbuOH5SwRVgra/phd0=
+X-Google-Smtp-Source: APBJJlENzs/96m+S7UnwJhfsSEKfLFwoWHJhRek0zeax/GsXgLjOrIeuu6U5nntKJfSobDso4iAXPQ==
+X-Received: by 2002:a17:90a:1f83:b0:268:3dc6:f0c5 with SMTP id x3-20020a17090a1f8300b002683dc6f0c5mr25042984pja.0.1691407135598;
+        Mon, 07 Aug 2023 04:18:55 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.146])
-        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.14.14
+        by smtp.gmail.com with ESMTPSA id y13-20020a17090aca8d00b0025be7b69d73sm5861191pjt.12.2023.08.07.04.18.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Aug 2023 04:14:26 -0700 (PDT)
+        Mon, 07 Aug 2023 04:18:55 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -71,9 +71,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>,
         Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v4 21/48] sunrpc: dynamically allocate the sunrpc_cred shrinker
-Date:   Mon,  7 Aug 2023 19:09:09 +0800
-Message-Id: <20230807110936.21819-22-zhengqi.arch@bytedance.com>
+Subject: [PATCH v4 42/48] mm: shrinker: remove old APIs
+Date:   Mon,  7 Aug 2023 19:09:30 +0800
+Message-Id: <20230807110936.21819-43-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
 References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
@@ -83,59 +83,187 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use new APIs to dynamically allocate the sunrpc_cred shrinker.
+Now no users are using the old APIs, just remove them.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- net/sunrpc/auth.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+ include/linux/shrinker.h |   7 --
+ mm/shrinker.c            | 143 ---------------------------------------
+ 2 files changed, 150 deletions(-)
 
-diff --git a/net/sunrpc/auth.c b/net/sunrpc/auth.c
-index 2f16f9d17966..0cc52e39f859 100644
---- a/net/sunrpc/auth.c
-+++ b/net/sunrpc/auth.c
-@@ -861,11 +861,7 @@ rpcauth_uptodatecred(struct rpc_task *task)
- 		test_bit(RPCAUTH_CRED_UPTODATE, &cred->cr_flags) != 0;
- }
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index cc23ff0aee20..c55c07c3f0cb 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -103,13 +103,6 @@ struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...);
+ void shrinker_register(struct shrinker *shrinker);
+ void shrinker_free(struct shrinker *shrinker);
  
--static struct shrinker rpc_cred_shrinker = {
--	.count_objects = rpcauth_cache_shrink_count,
--	.scan_objects = rpcauth_cache_shrink_scan,
--	.seeks = DEFAULT_SEEKS,
--};
-+static struct shrinker *rpc_cred_shrinker;
+-extern int __printf(2, 3) prealloc_shrinker(struct shrinker *shrinker,
+-					    const char *fmt, ...);
+-extern void register_shrinker_prepared(struct shrinker *shrinker);
+-extern int __printf(2, 3) register_shrinker(struct shrinker *shrinker,
+-					    const char *fmt, ...);
+-extern void unregister_shrinker(struct shrinker *shrinker);
+-extern void free_prealloced_shrinker(struct shrinker *shrinker);
+ extern void synchronize_shrinkers(void);
  
- int __init rpcauth_init_module(void)
- {
-@@ -874,9 +870,18 @@ int __init rpcauth_init_module(void)
- 	err = rpc_init_authunix();
- 	if (err < 0)
- 		goto out1;
--	err = register_shrinker(&rpc_cred_shrinker, "sunrpc_cred");
--	if (err < 0)
-+	rpc_cred_shrinker = shrinker_alloc(0, "sunrpc_cred");
-+	if (!rpc_cred_shrinker) {
-+		err = -ENOMEM;
- 		goto out2;
-+	}
-+
-+	rpc_cred_shrinker->count_objects = rpcauth_cache_shrink_count;
-+	rpc_cred_shrinker->scan_objects = rpcauth_cache_shrink_scan;
-+	rpc_cred_shrinker->seeks = DEFAULT_SEEKS;
-+
-+	shrinker_register(rpc_cred_shrinker);
-+
- 	return 0;
- out2:
- 	rpc_destroy_authunix();
-@@ -887,5 +892,5 @@ int __init rpcauth_init_module(void)
- void rpcauth_remove_module(void)
- {
- 	rpc_destroy_authunix();
--	unregister_shrinker(&rpc_cred_shrinker);
-+	shrinker_free(rpc_cred_shrinker);
+ #ifdef CONFIG_SHRINKER_DEBUG
+diff --git a/mm/shrinker.c b/mm/shrinker.c
+index 43a375f954f3..3ab301ff122d 100644
+--- a/mm/shrinker.c
++++ b/mm/shrinker.c
+@@ -651,149 +651,6 @@ void shrinker_free(struct shrinker *shrinker)
  }
+ EXPORT_SYMBOL_GPL(shrinker_free);
+ 
+-/*
+- * Add a shrinker callback to be called from the vm.
+- */
+-static int __prealloc_shrinker(struct shrinker *shrinker)
+-{
+-	unsigned int size;
+-	int err;
+-
+-	if (shrinker->flags & SHRINKER_MEMCG_AWARE) {
+-		err = prealloc_memcg_shrinker(shrinker);
+-		if (err != -ENOSYS)
+-			return err;
+-
+-		shrinker->flags &= ~SHRINKER_MEMCG_AWARE;
+-	}
+-
+-	size = sizeof(*shrinker->nr_deferred);
+-	if (shrinker->flags & SHRINKER_NUMA_AWARE)
+-		size *= nr_node_ids;
+-
+-	shrinker->nr_deferred = kzalloc(size, GFP_KERNEL);
+-	if (!shrinker->nr_deferred)
+-		return -ENOMEM;
+-
+-	return 0;
+-}
+-
+-#ifdef CONFIG_SHRINKER_DEBUG
+-int prealloc_shrinker(struct shrinker *shrinker, const char *fmt, ...)
+-{
+-	va_list ap;
+-	int err;
+-
+-	va_start(ap, fmt);
+-	shrinker->name = kvasprintf_const(GFP_KERNEL, fmt, ap);
+-	va_end(ap);
+-	if (!shrinker->name)
+-		return -ENOMEM;
+-
+-	err = __prealloc_shrinker(shrinker);
+-	if (err) {
+-		kfree_const(shrinker->name);
+-		shrinker->name = NULL;
+-	}
+-
+-	return err;
+-}
+-#else
+-int prealloc_shrinker(struct shrinker *shrinker, const char *fmt, ...)
+-{
+-	return __prealloc_shrinker(shrinker);
+-}
+-#endif
+-
+-void free_prealloced_shrinker(struct shrinker *shrinker)
+-{
+-#ifdef CONFIG_SHRINKER_DEBUG
+-	kfree_const(shrinker->name);
+-	shrinker->name = NULL;
+-#endif
+-	if (shrinker->flags & SHRINKER_MEMCG_AWARE) {
+-		down_write(&shrinker_rwsem);
+-		unregister_memcg_shrinker(shrinker);
+-		up_write(&shrinker_rwsem);
+-		return;
+-	}
+-
+-	kfree(shrinker->nr_deferred);
+-	shrinker->nr_deferred = NULL;
+-}
+-
+-void register_shrinker_prepared(struct shrinker *shrinker)
+-{
+-	down_write(&shrinker_rwsem);
+-	list_add_tail(&shrinker->list, &shrinker_list);
+-	shrinker->flags |= SHRINKER_REGISTERED;
+-	shrinker_debugfs_add(shrinker);
+-	up_write(&shrinker_rwsem);
+-}
+-
+-static int __register_shrinker(struct shrinker *shrinker)
+-{
+-	int err = __prealloc_shrinker(shrinker);
+-
+-	if (err)
+-		return err;
+-	register_shrinker_prepared(shrinker);
+-	return 0;
+-}
+-
+-#ifdef CONFIG_SHRINKER_DEBUG
+-int register_shrinker(struct shrinker *shrinker, const char *fmt, ...)
+-{
+-	va_list ap;
+-	int err;
+-
+-	va_start(ap, fmt);
+-	shrinker->name = kvasprintf_const(GFP_KERNEL, fmt, ap);
+-	va_end(ap);
+-	if (!shrinker->name)
+-		return -ENOMEM;
+-
+-	err = __register_shrinker(shrinker);
+-	if (err) {
+-		kfree_const(shrinker->name);
+-		shrinker->name = NULL;
+-	}
+-	return err;
+-}
+-#else
+-int register_shrinker(struct shrinker *shrinker, const char *fmt, ...)
+-{
+-	return __register_shrinker(shrinker);
+-}
+-#endif
+-EXPORT_SYMBOL(register_shrinker);
+-
+-/*
+- * Remove one
+- */
+-void unregister_shrinker(struct shrinker *shrinker)
+-{
+-	struct dentry *debugfs_entry;
+-	int debugfs_id;
+-
+-	if (!(shrinker->flags & SHRINKER_REGISTERED))
+-		return;
+-
+-	down_write(&shrinker_rwsem);
+-	list_del(&shrinker->list);
+-	shrinker->flags &= ~SHRINKER_REGISTERED;
+-	if (shrinker->flags & SHRINKER_MEMCG_AWARE)
+-		unregister_memcg_shrinker(shrinker);
+-	debugfs_entry = shrinker_debugfs_detach(shrinker, &debugfs_id);
+-	up_write(&shrinker_rwsem);
+-
+-	shrinker_debugfs_remove(debugfs_entry, debugfs_id);
+-
+-	kfree(shrinker->nr_deferred);
+-	shrinker->nr_deferred = NULL;
+-}
+-EXPORT_SYMBOL(unregister_shrinker);
+-
+ /**
+  * synchronize_shrinkers - Wait for all running shrinkers to complete.
+  *
 -- 
 2.30.2
 
