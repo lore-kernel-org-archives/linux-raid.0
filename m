@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25D56C05051
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 14:15:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 205BBC04FE1
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Aug 2023 14:16:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232950AbjHGOPB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Aug 2023 10:15:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32830 "EHLO
+        id S233131AbjHGOQP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Aug 2023 10:16:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232901AbjHGOO7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 10:14:59 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 871D110D4
-        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 07:14:55 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id 38308e7fff4ca-2b9db1de50cso69908951fa.3
-        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 07:14:55 -0700 (PDT)
+        with ESMTP id S232772AbjHGOQO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 10:16:14 -0400
+Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B8ECE79
+        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 07:16:10 -0700 (PDT)
+Received: by mail-lj1-x230.google.com with SMTP id 38308e7fff4ca-2b9d3dacb33so73440201fa.1
+        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 07:16:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=joelfernandes.org; s=google; t=1691417694; x=1692022494;
+        d=joelfernandes.org; s=google; t=1691417769; x=1692022569;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=miXhKIkPE3lmozcU/B+jO2gbohIQfxtvXQrL6JQrLaA=;
-        b=rUbGf+JZcp35dmq7w8slw0nHgKluYcuW30g35dHvkRNE8GAplx/bmohiweQc5R1m+t
-         n8zrOL6x18GLNviLyBdF1SBbwknD+YT0R92Z3r7ozf/LbxR/ZX+oGNC6AweYXTnFy1Td
-         qjM3KL4IzdURsMRiax7oRl3ig1sdRDyJ5+2Ck=
+        bh=mVE/GJTe1IuiufpABjiYZn1olHI1ifx/I1TivYEBHQg=;
+        b=KDeUHSfDD3L4EI9ZDbXXnOCIgf36k4kTiyHRIIffaGRG3HCFl39GcfvKDi2APyBxt9
+         uIkOV41JjBWzvcfkl4hWbMoMF6B7yW2N6o4toZetNa+16q9cwIbk8dhp8WLMlbMnqtzs
+         lrCcsJN2ho/fqPCpmMmUqd/p18Lc2P1XhR9Zc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691417694; x=1692022494;
+        d=1e100.net; s=20221208; t=1691417769; x=1692022569;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=miXhKIkPE3lmozcU/B+jO2gbohIQfxtvXQrL6JQrLaA=;
-        b=WeNH3qgr+eASFELe2+MBMzighr4Sk87rf8DtT7VlGoXmy7fvCZrL+Yb/Hw+f1ycGTH
-         XU5Y6bnwBT9PMxq9EYU6cW3/z2JwU/D+soUQb63xKZgqzYEkisaOHtlccMZZlBbDaB2R
-         j+tDuWQ2R/VIM6NChjmGXaCmu3h9Kwe/7QrWiJQ/Q5pV8jZx9+emoNTURf/LKP4uL4GU
-         234eS+DC9RLynbWqTuZ2vjLOz9chU8+j8txPKWGGJQYGqryYb9mDDjcXkbHmsEBb13bx
-         EjTyYD9zVJnRDhhKoRBxsKlfgreiOIqdlVsLAKLKdKL5skMZ+W0OzL0emG6WP19hIqcQ
-         l0pg==
-X-Gm-Message-State: AOJu0YxkITwP82ACbdp4v8uzedy+l94hSsd3umIsyxsVVgzxbtw2aWoy
-        0Cf3atXSDTe/S/RWtsJZDht4su0nBIQRSntIhQOQmw==
-X-Google-Smtp-Source: AGHT+IEUzxQ8uhfef4Gwj5w4R2S1a/fG2YmFdaAnrERcAODuTjnUg5MW8ffcyCI3WwFTK01hsv/WyE2OTkrmMwFZBOU=
-X-Received: by 2002:a2e:9254:0:b0:2b6:dfef:d526 with SMTP id
- v20-20020a2e9254000000b002b6dfefd526mr6547671ljg.11.1691417693488; Mon, 07
- Aug 2023 07:14:53 -0700 (PDT)
+        bh=mVE/GJTe1IuiufpABjiYZn1olHI1ifx/I1TivYEBHQg=;
+        b=idFaRRDeSXajULDmW+OU9eRAjAKQjvulzJiXch+XyPlTgyGABqjbWrgMtrl4d5HSSn
+         BvIo6wVc1iYkpgzKxe9ghYx8vkU7ZIQ9NOGzRRF1My+IFduATbcnI20Lx0S3iSgaqy6I
+         3VMerfkoamEu1LjFV/H5hR9KpTB6YqbI4n0EGaLhYbZTuzWA9VbHszQsDsdvBj9DPGIr
+         D6SOS2pxG+ufyzYVDDhwUYRHHtIJvfmhEoEK3/3hcEWNic22EIq6bdcefQZqhJsxKoCh
+         Oz/MrEPTxs57WdXulOf3n1zzF5rVN6t9OLu2mPMhQkptClxX1uvlBx097Lorvtc27eZj
+         Rtfg==
+X-Gm-Message-State: AOJu0Yxjj6toPSAI9G1W26d3FpYVl50b4yt1iaG6DxmwWyB2R805dl1n
+        pA/9V5rpnONUdwy8l2M445cE7+GYW4p0mfhFA6Lu1g==
+X-Google-Smtp-Source: AGHT+IGOrJUhdG+ahMA8bObfIwJouhmkY47ZzUfvTwinDgzhZuBpH+4Q7OaueJuZRAHK8xn8XVlTzjWWvAUYbt+ovvQ=
+X-Received: by 2002:a2e:b166:0:b0:2b9:dd3b:cf43 with SMTP id
+ a6-20020a2eb166000000b002b9dd3bcf43mr6572529ljm.13.1691417768626; Mon, 07 Aug
+ 2023 07:16:08 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230807110936.21819-1-zhengqi.arch@bytedance.com> <20230807110936.21819-20-zhengqi.arch@bytedance.com>
-In-Reply-To: <20230807110936.21819-20-zhengqi.arch@bytedance.com>
+References: <20230807110936.21819-1-zhengqi.arch@bytedance.com> <20230807110936.21819-19-zhengqi.arch@bytedance.com>
+In-Reply-To: <20230807110936.21819-19-zhengqi.arch@bytedance.com>
 From:   Joel Fernandes <joel@joelfernandes.org>
-Date:   Mon, 7 Aug 2023 10:14:48 -0400
-Message-ID: <CAEXW_YQHGBE2kKupLf12BGOEU5GnQsBUtVQcyMnzxUZ4y48QFA@mail.gmail.com>
-Subject: Re: [PATCH v4 19/48] rcu: dynamically allocate the rcu-kfree shrinker
+Date:   Mon, 7 Aug 2023 10:16:03 -0400
+Message-ID: <CAEXW_YTKHUeZHWtzeSG5Tt7MscNKjVTScBWkVDkC4Orisa7w=Q@mail.gmail.com>
+Subject: Re: [PATCH v4 18/48] rcu: dynamically allocate the rcu-lazy shrinker
 To:     Qi Zheng <zhengqi.arch@bytedance.com>
 Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -75,10 +75,10 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Aug 7, 2023 at 7:17=E2=80=AFAM Qi Zheng <zhengqi.arch@bytedance.com=
+On Mon, Aug 7, 2023 at 7:36=E2=80=AFAM Qi Zheng <zhengqi.arch@bytedance.com=
 > wrote:
 >
-> Use new APIs to dynamically allocate the rcu-kfree shrinker.
+> Use new APIs to dynamically allocate the rcu-lazy shrinker.
 >
 > Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 
@@ -91,58 +91,57 @@ thanks,
 
 
 > ---
->  kernel/rcu/tree.c | 22 +++++++++++++---------
->  1 file changed, 13 insertions(+), 9 deletions(-)
+>  kernel/rcu/tree_nocb.h | 20 +++++++++++---------
+>  1 file changed, 11 insertions(+), 9 deletions(-)
 >
-> diff --git a/kernel/rcu/tree.c b/kernel/rcu/tree.c
-> index 7c79480bfaa0..3b20fc46c514 100644
-> --- a/kernel/rcu/tree.c
-> +++ b/kernel/rcu/tree.c
-> @@ -3449,13 +3449,6 @@ kfree_rcu_shrink_scan(struct shrinker *shrink, str=
-uct shrink_control *sc)
->         return freed =3D=3D 0 ? SHRINK_STOP : freed;
+> diff --git a/kernel/rcu/tree_nocb.h b/kernel/rcu/tree_nocb.h
+> index 5598212d1f27..e1c59c33738a 100644
+> --- a/kernel/rcu/tree_nocb.h
+> +++ b/kernel/rcu/tree_nocb.h
+> @@ -1396,13 +1396,6 @@ lazy_rcu_shrink_scan(struct shrinker *shrink, stru=
+ct shrink_control *sc)
+>
+>         return count ? count : SHRINK_STOP;
 >  }
->
-> -static struct shrinker kfree_rcu_shrinker =3D {
-> -       .count_objects =3D kfree_rcu_shrink_count,
-> -       .scan_objects =3D kfree_rcu_shrink_scan,
+> -
+> -static struct shrinker lazy_rcu_shrinker =3D {
+> -       .count_objects =3D lazy_rcu_shrink_count,
+> -       .scan_objects =3D lazy_rcu_shrink_scan,
 > -       .batch =3D 0,
 > -       .seeks =3D DEFAULT_SEEKS,
 > -};
-> -
->  void __init kfree_rcu_scheduler_running(void)
->  {
->         int cpu;
-> @@ -4931,6 +4924,7 @@ static void __init kfree_rcu_batch_init(void)
->  {
->         int cpu;
->         int i, j;
-> +       struct shrinker *kfree_rcu_shrinker;
+>  #endif // #ifdef CONFIG_RCU_LAZY
 >
->         /* Clamp it to [0:100] seconds interval. */
->         if (rcu_delay_page_cache_fill_msec < 0 ||
-> @@ -4962,8 +4956,18 @@ static void __init kfree_rcu_batch_init(void)
->                 INIT_DELAYED_WORK(&krcp->page_cache_work, fill_page_cache=
-_func);
->                 krcp->initialized =3D true;
->         }
-> -       if (register_shrinker(&kfree_rcu_shrinker, "rcu-kfree"))
-> -               pr_err("Failed to register kfree_rcu() shrinker!\n");
+>  void __init rcu_init_nohz(void)
+> @@ -1410,6 +1403,7 @@ void __init rcu_init_nohz(void)
+>         int cpu;
+>         struct rcu_data *rdp;
+>         const struct cpumask *cpumask =3D NULL;
+> +       struct shrinker * __maybe_unused lazy_rcu_shrinker;
+>
+>  #if defined(CONFIG_NO_HZ_FULL)
+>         if (tick_nohz_full_running && !cpumask_empty(tick_nohz_full_mask)=
+)
+> @@ -1436,8 +1430,16 @@ void __init rcu_init_nohz(void)
+>                 return;
+>
+>  #ifdef CONFIG_RCU_LAZY
+> -       if (register_shrinker(&lazy_rcu_shrinker, "rcu-lazy"))
+> -               pr_err("Failed to register lazy_rcu shrinker!\n");
+> +       lazy_rcu_shrinker =3D shrinker_alloc(0, "rcu-lazy");
+> +       if (!lazy_rcu_shrinker) {
+> +               pr_err("Failed to allocate lazy_rcu shrinker!\n");
+> +       } else {
+> +               lazy_rcu_shrinker->count_objects =3D lazy_rcu_shrink_coun=
+t;
+> +               lazy_rcu_shrinker->scan_objects =3D lazy_rcu_shrink_scan;
+> +               lazy_rcu_shrinker->seeks =3D DEFAULT_SEEKS;
 > +
-> +       kfree_rcu_shrinker =3D shrinker_alloc(0, "rcu-kfree");
-> +       if (!kfree_rcu_shrinker) {
-> +               pr_err("Failed to allocate kfree_rcu() shrinker!\n");
-> +               return;
+> +               shrinker_register(lazy_rcu_shrinker);
 > +       }
-> +
-> +       kfree_rcu_shrinker->count_objects =3D kfree_rcu_shrink_count;
-> +       kfree_rcu_shrinker->scan_objects =3D kfree_rcu_shrink_scan;
-> +       kfree_rcu_shrinker->seeks =3D DEFAULT_SEEKS;
-> +
-> +       shrinker_register(kfree_rcu_shrinker);
->  }
+>  #endif // #ifdef CONFIG_RCU_LAZY
 >
->  void __init rcu_init(void)
+>         if (!cpumask_subset(rcu_nocb_mask, cpu_possible_mask)) {
 > --
 > 2.30.2
 >
