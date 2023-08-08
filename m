@@ -2,243 +2,175 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D71F7C04A94
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Aug 2023 02:44:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0579CC04A6A
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Aug 2023 15:38:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230060AbjHHCog (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Aug 2023 22:44:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60232 "EHLO
+        id S229521AbjHHPiO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Aug 2023 11:38:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231145AbjHHCoe (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Aug 2023 22:44:34 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 693DF1FF5
-        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 19:44:15 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1b8b4748fe4so33919515ad.1
-        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 19:44:15 -0700 (PDT)
+        with ESMTP id S229500AbjHHPhO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Aug 2023 11:37:14 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A838212C
+        for <linux-raid@vger.kernel.org>; Mon,  7 Aug 2023 20:32:28 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1bc3d94d40fso45587205ad.3
+        for <linux-raid@vger.kernel.org>; Mon, 07 Aug 2023 20:32:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1691462655; x=1692067455;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZZ3n364wJBBn5i6olC7X8xOphz5aoEwi3PPn9Humxy4=;
-        b=c9iOPpy41VC6QSzv5vLbmCPsxZB2K7hAItf8MEtryT/BAlfvdA0UPM4PAg3DtN7rr+
-         GFW2nm1AoLFEe5zmSSiqyIhn92P6iecybeuExkqa7jbnj+LEVM1LioV7SZGiR/8Kzy2+
-         mJYrJW8XMi2+dbRvP7Xg6QuSzUnp/yHkq29M7vbAYNrF1NokfShgkpn7COiSBb38dkF0
-         MWE0ZNG9ZS4LzaWgVeAy0Pmh7etHcKYaOYLW+oCVP3Q2zlcEbOnfLG0lI+GjqQwBJGqv
-         OKDqkP3u3mDYRaZI2hDArPl64kIP09oRYh791qhymi4aMBqJthtqlGcAIAw7e+Im4Q2d
-         AiTA==
+        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1691465547; x=1692070347;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=hmAKC7MUaEQY2uXPcmLs0knjPOeTmjxcMa0iPmgWtmE=;
+        b=Hy2ozxA0ZfJCSOPYh/WLSNUSNmXJKfKCJ4gIkzBMQ6Tvwh+Cz+SDEuyUqwaZytxpYI
+         nIOhKMbp8WpYThAGq5Y89QDFMKAk174QaS+uG80h3MPkB/Wjz5RXQAKRlYVfc8r/eHl4
+         ztq2CDMraMoGHV2jpEeV9UeO5724gfZnZa/1Ry3rCrOg4XV49ROhPvp7x5zIqXOjPCCv
+         FYZbPED/iy/7KmoWiTRDSqeJCj6Jmohvd8hvg4yuGsn8QCALzXf3xEeOgOkiF/A1nh40
+         /drD40/IufnVQ1ZuZKsIhl32MG8WHVCyQu0jJop4C7T52f5zjz3gQB6sqKqBbniIQ/c2
+         eFNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691462655; x=1692067455;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZZ3n364wJBBn5i6olC7X8xOphz5aoEwi3PPn9Humxy4=;
-        b=RNbSrDJK9QjG0tLbPRD+6lTP/BsTmFAH14vB1vNd2sCXnBnzp0kyjPtt25U+qMCNmA
-         B28WOlQYQQgLV4NZgR4+MDx2gY0kJa38VIO0UTTy6BPDQdpmNG9oyIfuqX+uKPeGlhDQ
-         0nBrjgKU2QVJYaX3A35FzXg+qA3j/H4FpDGP66EZCyjnPzMzr8rT/bvsO8IWC7Wdavtx
-         sePT/XJvv3S8SDU9ahXj4be5/XmjRDLTu31wGiwhk5LU7aOUmrgeKUiAP0FBl7La8paK
-         TnrRavDnqG/KF13QhWQ5vS8lrZev7YgTuCnFl3Bv5uYGuQYPptGyPst2E7JXHClBk0eJ
-         HzFw==
-X-Gm-Message-State: AOJu0Yxfsqnbsx7ZllLE5ofRwn5YWithc2mjc+y/ltbSNq5qNizv/9qe
-        97On34U2XC54cjPGOKhA7Nazag==
-X-Google-Smtp-Source: AGHT+IEZT2gUmOSYrkIbMjP5ySF6z1UEt5Q+o+GMN8zU98oO9pgzqqi+i8QK+swPthTlPTk4WQ36Qw==
-X-Received: by 2002:a17:902:7287:b0:1b3:f5c7:4e75 with SMTP id d7-20020a170902728700b001b3f5c74e75mr9699662pll.58.1691462654669;
-        Mon, 07 Aug 2023 19:44:14 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-166-213.pa.nsw.optusnet.com.au. [49.180.166.213])
-        by smtp.gmail.com with ESMTPSA id u2-20020a170902e80200b001b893b689a0sm7632067plg.84.2023.08.07.19.44.14
+        d=1e100.net; s=20221208; t=1691465547; x=1692070347;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=hmAKC7MUaEQY2uXPcmLs0knjPOeTmjxcMa0iPmgWtmE=;
+        b=DZOSAgqZQntfBNmyLPnVFIgHyD2BJe40dNjm9EF69kSupqi6EFmb8Kgp61XzwGCvcj
+         FNHBfxPre91Bupl2M3wegh/UDETCmotNQ1ymqoMcpksPtSlFeIx03Oz9WD6sHEc0L1Bc
+         t6ZpNz7iJcvAxdjUxWw7oKHFGsoVnkJww0SnLq80dopQ3n9ACLT/D6QTxaLZmb8crQwG
+         kVL6NYyfBaBXgYsNNAKQjChniSRjmUZEHO7GEmWUoTeJ8nSvaCQhT0CwKyVjZd5wlazw
+         /nCHuTVqIsYYkAc69N7Fbng5muPC8F5YSgB4FTAvMv5SufPxhuleQh7971S5RjOUsio1
+         fXpg==
+X-Gm-Message-State: AOJu0Yxvm2on+c6YlXP6/jz8vJ4n+GOxt22zE1EAa6i4cm3uraPVg3OR
+        WaIz8j3uWy6Gzvu2cSQBJqh43A==
+X-Google-Smtp-Source: AGHT+IFT2SrJ27yWt/omnEuK95KJUNBVK2fzA9dTM+ADujnvSoSA4KFJhwGLZhYbUsI21Lan1v1vIQ==
+X-Received: by 2002:a17:902:f801:b0:1b9:d335:2216 with SMTP id ix1-20020a170902f80100b001b9d3352216mr10215217plb.20.1691465547576;
+        Mon, 07 Aug 2023 20:32:27 -0700 (PDT)
+Received: from nixos.tailf4e9e.ts.net ([47.75.78.161])
+        by smtp.googlemail.com with ESMTPSA id p7-20020a170902bd0700b001b3bf8001a9sm7676272pls.48.2023.08.07.20.32.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Aug 2023 19:44:14 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qTChf-002XBg-27;
-        Tue, 08 Aug 2023 12:44:11 +1000
-Date:   Tue, 8 Aug 2023 12:44:11 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Qi Zheng <zhengqi.arch@bytedance.com>
-Cc:     akpm@linux-foundation.org, tkhai@ya.ru, vbabka@suse.cz,
-        roman.gushchin@linux.dev, djwong@kernel.org, brauner@kernel.org,
-        paulmck@kernel.org, tytso@mit.edu, steven.price@arm.com,
-        cel@kernel.org, senozhatsky@chromium.org, yujie.liu@intel.com,
-        gregkh@linuxfoundation.org, muchun.song@linux.dev,
-        simon.horman@corigine.com, dlemoal@kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
-        rcu@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v4 46/48] mm: shrinker: make memcg slab shrink lockless
-Message-ID: <ZNGr+1orhHaBORJG@dread.disaster.area>
-References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
- <20230807110936.21819-47-zhengqi.arch@bytedance.com>
+        Mon, 07 Aug 2023 20:32:27 -0700 (PDT)
+From:   Xueshi Hu <xueshi.hu@smartx.com>
+To:     song@kernel.org, djeffery@redhat.com, dan.j.williams@intel.com,
+        neilb@suse.de, akpm@linux-foundation.org, shli@fb.com,
+        neilb@suse.com
+Cc:     linux-raid@vger.kernel.org, Xueshi Hu <xueshi.hu@smartx.com>,
+        Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH v4] md/raid1: don't allow_barrier() before r1bio got freed
+Date:   Tue,  8 Aug 2023 11:32:11 +0800
+Message-Id: <20230808033211.197383-1-xueshi.hu@smartx.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230807110936.21819-47-zhengqi.arch@bytedance.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Aug 07, 2023 at 07:09:34PM +0800, Qi Zheng wrote:
-> Like global slab shrink, this commit also uses refcount+RCU method to make
-> memcg slab shrink lockless.
+Because raid reshape changes the r1conf::raid_disks and the mempool, it
+orders that there's no in-flight r1bio when reshaping. However, the
+current caller of allow_barrier() allows the reshape
+operation to proceed even if the old r1bio requests have not been freed.
 
-This patch does random code cleanups amongst the actual RCU changes.
-Can you please move the cleanups to a spearate patch to reduce the
-noise in this one?
+Free the r1bio firstly before allow_barrier()
 
-> diff --git a/mm/shrinker.c b/mm/shrinker.c
-> index d318f5621862..fee6f62904fb 100644
-> --- a/mm/shrinker.c
-> +++ b/mm/shrinker.c
-> @@ -107,6 +107,12 @@ static struct shrinker_info *shrinker_info_protected(struct mem_cgroup *memcg,
->  					 lockdep_is_held(&shrinker_rwsem));
->  }
->  
-> +static struct shrinker_info *shrinker_info_rcu(struct mem_cgroup *memcg,
-> +					       int nid)
-> +{
-> +	return rcu_dereference(memcg->nodeinfo[nid]->shrinker_info);
-> +}
+Fixes: c91114c2b89d ("md/raid1: release pending accounting for an I/O only after write-behind is also finished")
+Fixes: 6bfe0b499082 ("md: support blocking writes to an array on device failure")
+Fixes: 689389a06ce7 ("md/raid1: simplify handle_read_error().")
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
+---
+-> v2:
+	- fix the problem one by one instead of calling
+	blk_mq_freeze_queue() as suggested by Yu Kuai
+-> v3:
+	- add freeze_array_totally() to replace freeze_array() instead
+	  of gave up in raid1_reshape()
+	- add a missed fix in raid_end_bio_io()
+	- add a small check at the start of raid1_reshape()
+-> v4:
+	- add fix tag and revise the commit message
+	- drop patch 1 as there is an ongoing systematic fix for the bug
+	- drop patch 3 as it's unrelated which will be sent in
+	another patch
 
-This helper doesn't add value. It doesn't tell me that
-rcu_read_lock() needs to be held when it is called, for one....
+ drivers/md/raid1.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
->  static int expand_one_shrinker_info(struct mem_cgroup *memcg, int new_size,
->  				    int old_size, int new_nr_max)
->  {
-> @@ -198,7 +204,7 @@ void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int shrinker_id)
->  		struct shrinker_info_unit *unit;
->  
->  		rcu_read_lock();
-> -		info = rcu_dereference(memcg->nodeinfo[nid]->shrinker_info);
-> +		info = shrinker_info_rcu(memcg, nid);
-
-... whilst the original code here was obviously correct.
-
->  		unit = info->unit[shriner_id_to_index(shrinker_id)];
->  		if (!WARN_ON_ONCE(shrinker_id >= info->map_nr_max)) {
->  			/* Pairs with smp mb in shrink_slab() */
-> @@ -211,7 +217,7 @@ void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int shrinker_id)
->  
->  static DEFINE_IDR(shrinker_idr);
->  
-> -static int prealloc_memcg_shrinker(struct shrinker *shrinker)
-> +static int shrinker_memcg_alloc(struct shrinker *shrinker)
-
-Cleanups in a separate patch.
-
-> @@ -253,10 +258,15 @@ static long xchg_nr_deferred_memcg(int nid, struct shrinker *shrinker,
->  {
->  	struct shrinker_info *info;
->  	struct shrinker_info_unit *unit;
-> +	long nr_deferred;
->  
-> -	info = shrinker_info_protected(memcg, nid);
-> +	rcu_read_lock();
-> +	info = shrinker_info_rcu(memcg, nid);
->  	unit = info->unit[shriner_id_to_index(shrinker->id)];
-> -	return atomic_long_xchg(&unit->nr_deferred[shriner_id_to_offset(shrinker->id)], 0);
-> +	nr_deferred = atomic_long_xchg(&unit->nr_deferred[shriner_id_to_offset(shrinker->id)], 0);
-> +	rcu_read_unlock();
-> +
-> +	return nr_deferred;
->  }
-
-This adds two rcu_read_lock() sections to every call to
-do_shrink_slab(). It's not at all clear ifrom any of the other code
-that do_shrink_slab() now has internal rcu_read_lock() sections....
-
-> @@ -464,18 +480,23 @@ static unsigned long shrink_slab_memcg(gfp_t gfp_mask, int nid,
->  	if (!mem_cgroup_online(memcg))
->  		return 0;
->  
-> -	if (!down_read_trylock(&shrinker_rwsem))
-> -		return 0;
-> -
-> -	info = shrinker_info_protected(memcg, nid);
-> +again:
-> +	rcu_read_lock();
-> +	info = shrinker_info_rcu(memcg, nid);
->  	if (unlikely(!info))
->  		goto unlock;
->  
-> -	for (; index < shriner_id_to_index(info->map_nr_max); index++) {
-> +	if (index < shriner_id_to_index(info->map_nr_max)) {
->  		struct shrinker_info_unit *unit;
->  
->  		unit = info->unit[index];
->  
-> +		/*
-> +		 * The shrinker_info_unit will not be freed, so we can
-> +		 * safely release the RCU lock here.
-> +		 */
-> +		rcu_read_unlock();
-
-Why - what guarantees that the shrinker_info_unit exists at this
-point? We hold no reference to it, we hold no reference to any
-shrinker, etc. What provides this existence guarantee?
-
-> +
->  		for_each_set_bit(offset, unit->map, SHRINKER_UNIT_BITS) {
->  			struct shrink_control sc = {
->  				.gfp_mask = gfp_mask,
-> @@ -485,12 +506,14 @@ static unsigned long shrink_slab_memcg(gfp_t gfp_mask, int nid,
->  			struct shrinker *shrinker;
->  			int shrinker_id = calc_shrinker_id(index, offset);
->  
-> +			rcu_read_lock();
->  			shrinker = idr_find(&shrinker_idr, shrinker_id);
-> -			if (unlikely(!shrinker || !(shrinker->flags & SHRINKER_REGISTERED))) {
-> -				if (!shrinker)
-> -					clear_bit(offset, unit->map);
-> +			if (unlikely(!shrinker || !shrinker_try_get(shrinker))) {
-> +				clear_bit(offset, unit->map);
-> +				rcu_read_unlock();
->  				continue;
->  			}
-> +			rcu_read_unlock();
->  
->  			/* Call non-slab shrinkers even though kmem is disabled */
->  			if (!memcg_kmem_online() &&
-> @@ -523,15 +546,20 @@ static unsigned long shrink_slab_memcg(gfp_t gfp_mask, int nid,
->  					set_shrinker_bit(memcg, nid, shrinker_id);
->  			}
->  			freed += ret;
-> -
-> -			if (rwsem_is_contended(&shrinker_rwsem)) {
-> -				freed = freed ? : 1;
-> -				goto unlock;
-> -			}
-> +			shrinker_put(shrinker);
-
-Ok, so why is this safe to call without holding the rcu read lock?
-The global shrinker has to hold the rcu_read_lock() whilst calling
-shrinker_put() to guarantee the validity of the list next pointer,
-but we don't hold off RCU here so what guarantees a racing global
-shrinker walk doesn't trip over this shrinker_put() call dropping
-the refcount to zero and freeing occuring in a different context...
-
-
-> +		/*
-> +		 * We have already exited the read-side of rcu critical section
-> +		 * before calling do_shrink_slab(), the shrinker_info may be
-> +		 * released in expand_one_shrinker_info(), so reacquire the
-> +		 * shrinker_info.
-> +		 */
-> +		index++;
-> +		goto again;
-
-With that, what makes the use of shrinker_info in
-xchg_nr_deferred_memcg() in do_shrink_slab() coherent and valid?
-
--Dave.
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index dd25832eb045..5a5eb5f1a224 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -313,6 +313,7 @@ static void raid_end_bio_io(struct r1bio *r1_bio)
+ {
+ 	struct bio *bio = r1_bio->master_bio;
+ 	struct r1conf *conf = r1_bio->mddev->private;
++	sector_t sector = r1_bio->sector;
+ 
+ 	/* if nobody has done the final endio yet, do it now */
+ 	if (!test_and_set_bit(R1BIO_Returned, &r1_bio->state)) {
+@@ -323,13 +324,13 @@ static void raid_end_bio_io(struct r1bio *r1_bio)
+ 
+ 		call_bio_endio(r1_bio);
+ 	}
++
++	free_r1bio(r1_bio);
+ 	/*
+ 	 * Wake up any possible resync thread that waits for the device
+ 	 * to go idle.  All I/Os, even write-behind writes, are done.
+ 	 */
+-	allow_barrier(conf, r1_bio->sector);
+-
+-	free_r1bio(r1_bio);
++	allow_barrier(conf, sector);
+ }
+ 
+ /*
+@@ -1373,6 +1374,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		return;
+ 	}
+ 
++ retry_write:
+ 	r1_bio = alloc_r1bio(mddev, bio);
+ 	r1_bio->sectors = max_write_sectors;
+ 
+@@ -1388,7 +1390,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	 */
+ 
+ 	disks = conf->raid_disks * 2;
+- retry_write:
+ 	blocked_rdev = NULL;
+ 	rcu_read_lock();
+ 	max_sectors = r1_bio->sectors;
+@@ -1468,7 +1469,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		for (j = 0; j < i; j++)
+ 			if (r1_bio->bios[j])
+ 				rdev_dec_pending(conf->mirrors[j].rdev, mddev);
+-		r1_bio->state = 0;
++		free_r1bio(r1_bio);
+ 		allow_barrier(conf, bio->bi_iter.bi_sector);
+ 
+ 		if (bio->bi_opf & REQ_NOWAIT) {
+@@ -2498,6 +2499,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 	struct mddev *mddev = conf->mddev;
+ 	struct bio *bio;
+ 	struct md_rdev *rdev;
++	sector_t sector;
+ 
+ 	clear_bit(R1BIO_ReadError, &r1_bio->state);
+ 	/* we got a read error. Maybe the drive is bad.  Maybe just
+@@ -2527,12 +2529,13 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 	}
+ 
+ 	rdev_dec_pending(rdev, conf->mddev);
+-	allow_barrier(conf, r1_bio->sector);
++	sector = r1_bio->sector;
+ 	bio = r1_bio->master_bio;
+ 
+ 	/* Reuse the old r1_bio so that the IO_BLOCKED settings are preserved */
+ 	r1_bio->state = 0;
+ 	raid1_read_request(mddev, bio, r1_bio->sectors, r1_bio);
++	allow_barrier(conf, sector);
+ }
+ 
+ static void raid1d(struct md_thread *thread)
 -- 
-Dave Chinner
-david@fromorbit.com
+2.40.1
+
