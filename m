@@ -2,89 +2,82 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A795AEB64DD
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Aug 2023 13:23:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA281C001E0
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Aug 2023 17:18:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232582AbjHINX1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Aug 2023 09:23:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34526 "EHLO
+        id S229966AbjHIRS4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 9 Aug 2023 13:18:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231527AbjHINX0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Aug 2023 09:23:26 -0400
-Received: from mail-oo1-f44.google.com (mail-oo1-f44.google.com [209.85.161.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01022F1
-        for <linux-raid@vger.kernel.org>; Wed,  9 Aug 2023 06:23:25 -0700 (PDT)
-Received: by mail-oo1-f44.google.com with SMTP id 006d021491bc7-56c4457c82eso4506424eaf.0
-        for <linux-raid@vger.kernel.org>; Wed, 09 Aug 2023 06:23:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691587405; x=1692192205;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ejRL/AIVkJmSSvHsTVXbMbs+3cAK33dHTATA70GnFWM=;
-        b=DGf9fLRI3ygtrWK6VxeAJYuGt8KBxv/JJYYzSXim5br7IuHMArZtPeYRBiwdoeG+q0
-         DA13MjdwCXVYaIYoUmPMuZNEvwafrZZjw+wrMQo9vTc0Lswfr3qJoR42xgw2NBT54cbE
-         y3zKDLPqhxZjI5apW5Zk5nrbnn1qYBQL6ygTUPWdAufImWacfOqsmITpKk/kUgVp3EjH
-         5JK4Q38vJADyzAPmqI877v8hs4L8s7/WajFSNOVNu/detItyDJwU2QwwetOrc8If6ui7
-         KVsmU3qgx94It/ZVz3Ld/7SwbmiRrlU8vWNZsS+rVkf6UgDCVAQNB8uJZyvwENFYsR9s
-         CHVw==
-X-Gm-Message-State: AOJu0Yxujy2A5DFSVpOwREme9ly4GNiWxB0coZtQkdvdYsq0MB9rx9CE
-        TsSy3cGMc2dQXgnkM4BDp43V9xRmQQo1bg==
-X-Google-Smtp-Source: AGHT+IFkK+gv1Ib/b0vx78TKSz7LftN9XJHB+q0QPFkW660wrFnz3fzfNMx4aTFkUTZYiBgK0xi9Aw==
-X-Received: by 2002:a05:6808:10c:b0:3a7:624f:c212 with SMTP id b12-20020a056808010c00b003a7624fc212mr2358675oie.58.1691587405076;
-        Wed, 09 Aug 2023 06:23:25 -0700 (PDT)
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com. [209.85.216.47])
-        by smtp.gmail.com with ESMTPSA id p23-20020a17090adf9700b00267b7c5d232sm1426936pjv.48.2023.08.09.06.23.24
-        for <linux-raid@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Aug 2023 06:23:24 -0700 (PDT)
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-2685bcd046eso3582262a91.3
-        for <linux-raid@vger.kernel.org>; Wed, 09 Aug 2023 06:23:24 -0700 (PDT)
-X-Received: by 2002:a17:90a:6507:b0:268:3f2d:66e4 with SMTP id
- i7-20020a17090a650700b002683f2d66e4mr1819970pjj.37.1691587404697; Wed, 09 Aug
- 2023 06:23:24 -0700 (PDT)
+        with ESMTP id S229488AbjHIRSz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Aug 2023 13:18:55 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD2931FF5
+        for <linux-raid@vger.kernel.org>; Wed,  9 Aug 2023 10:18:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691601487;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=kDY9UB0U9bakE6hcTL079JSFJy0nukOGRdOsNTOQdZ4=;
+        b=XhS1FWPFN5ZNc+VStagdF4ehwMpo4eiiV2KbvP3Iq5qHWLde8NDofRViBkBgk9tmsUqF/V
+        LuK8w4FZ+4kGnYW8+n0l1Iln/LFrelT268JS3zyGZV3A58XHaIIrL/bzD5NiAPawntwRrH
+        pKxYWjXh8gQsmXfM5a2i8d23lhixcko=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-557-21XedBDOM6iVFkQffG_HKw-1; Wed, 09 Aug 2023 13:18:06 -0400
+X-MC-Unique: 21XedBDOM6iVFkQffG_HKw-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0311B8DC664;
+        Wed,  9 Aug 2023 17:18:06 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.16.146])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D469B1121314;
+        Wed,  9 Aug 2023 17:18:05 +0000 (UTC)
+From:   David Jeffery <djeffery@redhat.com>
+To:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Cc:     David Jeffery <djeffery@redhat.com>,
+        Laurence Oberman <loberman@redhat.com>
+Subject: [PATCH] md: raid0: account for split bio in iostat accounting
+Date:   Wed,  9 Aug 2023 13:16:31 -0400
+Message-ID: <20230809171722.11089-1-djeffery@redhat.com>
 MIME-Version: 1.0
-From:   Gilson Urbano Ferreira Dias <hello@gilsonurbano.com>
-Date:   Wed, 9 Aug 2023 15:22:47 +0200
-X-Gmail-Original-Message-ID: <CAAC0G-C-h_+c5n5egDEmTOz-OgNCN8-5-6fmbyksJfS3jp2yow@mail.gmail.com>
-Message-ID: <CAAC0G-C-h_+c5n5egDEmTOz-OgNCN8-5-6fmbyksJfS3jp2yow@mail.gmail.com>
-Subject: md mdcheck/checkarray degrading server
-To:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-We have an automatic check using checkarray being performed every
-Sunday of the month at 12:57 pm, but it is degrading the server, e.g.
-loadavg increases from ~5 to ~100 in minutes and makes the server
-unusable.
+When a bio is split by md raid0, the newly created bio will not be tracked
+by md for I/O accounting. Only the portion of I/O still assigned to the
+original bio which was reduced by the split will be accounted for. This
+results in md iostat data sometimes showing I/O values far below the actual
+amount of data being sent through md.
 
-From the Linux Raid mailing list and the internet, we found similar issues:
+md_account_bio() needs to be called for all bio generated by the bio split.
 
-- Configure speed of checkarray in mdadm?
-https://marc.info/?l=linux-raid&m=124138136430340&w=2
-checking md device parity (forced resync) - is it necessary?
-https://marc.info/?l=linux-raid&m=115744679317060&w=2
-- Importance of checkarray:
-https://serverfault.com/questions/199096/linux-software-raid-runs-checkarray-on-the-first-sunday-of-the-month-why
-- mdcheck: slow system issues:
-https://marc.info/?l=linux-raid&m=158557483523833&w=2
-- MDADM CONSISTENCY CHECKS: https://wmbuck.net/blog/?p=825 (Similar issue)
+Signed-off-by: David Jeffery <djeffery@redhat.com>
+Tested-by: Laurence Oberman <loberman@redhat.com>
+---
+ drivers/md/raid0.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-And some suggested lowering the value in
-'/sys/block/md127/md/sync_speed_max'. There is also some discussion
-about disabling mdcheck/checkrarray https://serverfault.com/a/199125.
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index d1ac73fcd852..1fd559ac8c68 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -597,8 +597,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+ 		bio = split;
+ 	}
+ 
+-	if (bio->bi_pool != &mddev->bio_set)
+-		md_account_bio(mddev, &bio);
++	md_account_bio(mddev, &bio);
+ 
+ 	orig_sector = sector;
+ 	zone = find_zone(mddev->private, &sector);
+-- 
+2.41.0
 
-Given the information above, I would like to ask:
-1 - What is the importance of mdcheck/checkarray in RAID 1 configuration?
-2 - What are the risks of disabling this functionality?
-3 - Does a decrease in sync_speed_max reduce performance degradation,
-and how does this change affect the overall system?
-
-Note: Debian-based OS
-Note: Server is running on RAID 1.
-Note: The same level of degradation seen in checkarray was seen using mdcheck.
-
-Thanks for considering my questions,
-
-Gilson Urbano
