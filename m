@@ -2,81 +2,78 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC0BCC001DB
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Aug 2023 06:42:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E374C001E0
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Aug 2023 12:12:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231704AbjHJGm2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Aug 2023 02:42:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60414 "EHLO
+        id S234188AbjHJMMR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Aug 2023 08:12:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229789AbjHJGm1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Aug 2023 02:42:27 -0400
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CE5FE4B
-        for <linux-raid@vger.kernel.org>; Wed,  9 Aug 2023 23:42:25 -0700 (PDT)
-Received: from [192.168.0.2] (unknown [95.91.208.105])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S230335AbjHJMMQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Aug 2023 08:12:16 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70B671704
+        for <linux-raid@vger.kernel.org>; Thu, 10 Aug 2023 05:11:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691669495;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=TpYnbvJHiBn5GPlTGiJdN6VmHzW1BkIuCw6pPI/4rqY=;
+        b=QMEDaB58JKkhUf9PcvWf05t/rPLb0BScRtRlIB05X1FxPJfx3467yu9PaVl+k/AxrLR/eG
+        Xx1Ql9orfixkuJovaVB2fBiRMklp8l7GCMiq5KkjgMGlcxUmolM2rCFNh/ODJTUL2d5ddR
+        ZUSRuUuDPZKf9T4JUGYexzfhv3nVsko=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-141-CzQVt2oYO0WOF0UNjydOeA-1; Thu, 10 Aug 2023 08:11:34 -0400
+X-MC-Unique: CzQVt2oYO0WOF0UNjydOeA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 526DB61E5FE07;
-        Thu, 10 Aug 2023 08:42:02 +0200 (CEST)
-Message-ID: <2c18c875-bc00-465a-9e19-c66d63c07987@molgen.mpg.de>
-Date:   Thu, 10 Aug 2023 08:42:01 +0200
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D39D9101A528;
+        Thu, 10 Aug 2023 12:11:33 +0000 (UTC)
+Received: from o.redhat.com (unknown [10.39.192.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 25D8640C2076;
+        Thu, 10 Aug 2023 12:11:33 +0000 (UTC)
+From:   heinzm@redhat.com
+To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc:     ncroxon@redhat.com, xni@redhat.com
+Subject: [PATCH 0/3] md raid1: Fix writebehind/writemostly
+Date:   Thu, 10 Aug 2023 14:11:29 +0200
+Message-ID: <cover.1691592775.git.heinzm@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md: raid0: account for split bio in iostat accounting
-Content-Language: en-US
-To:     David Jeffery <djeffery@redhat.com>
-Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Laurence Oberman <loberman@redhat.com>
-References: <20230809171722.11089-1-djeffery@redhat.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20230809171722.11089-1-djeffery@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear David,
+From: heinzm <heinzm@redhat.com>
 
+Writemostly was only respected if set on the first leg.
 
-Thank you for your patch.
+Set on any other leg(s) but not on the first one did
+not enable writebehind at all.
 
-Am 09.08.23 um 19:16 schrieb David Jeffery:
-> When a bio is split by md raid0, the newly created bio will not be tracked
-> by md for I/O accounting. Only the portion of I/O still assigned to the
-> original bio which was reduced by the split will be accounted for. This
-> results in md iostat data sometimes showing I/O values far below the actual
-> amount of data being sent through md.
-> 
-> md_account_bio() needs to be called for all bio generated by the bio split.
+Fix changes the logic using the already defind bool writebehind.
 
-Could you please add how you tested this?
+Whilst on this, also make first_clone a bool as write_behind for
+consistency and add an empty line.
 
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> ---
->   drivers/md/raid0.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index d1ac73fcd852..1fd559ac8c68 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -597,8 +597,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
->   		bio = split;
->   	}
->   
-> -	if (bio->bi_pool != &mddev->bio_set)
-> -		md_account_bio(mddev, &bio);
-> +	md_account_bio(mddev, &bio);
->   
->   	orig_sector = sector;
->   	zone = find_zone(mddev->private, &sector);
+Patches pass the MD test suite.
 
+heinzm (3):
+  md raid1: allow writebehind to work on any leg device set WriteMostly
+  md raid1: make first_clone a bool
+  md raid1: add empty line
 
-Kind regards,
+Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
+Tested-by: Xia Ni <xni@redhat.com>
 
-Paul
+ drivers/md/raid1.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+-- 
+2.41.0
+
