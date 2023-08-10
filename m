@@ -2,64 +2,49 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E61D4EB64DD
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Aug 2023 02:06:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC0BCC001DB
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Aug 2023 06:42:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231211AbjHJCGT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Aug 2023 22:06:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38062 "EHLO
+        id S231704AbjHJGm2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Aug 2023 02:42:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229611AbjHJCGS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Aug 2023 22:06:18 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E13CBF3
-        for <linux-raid@vger.kernel.org>; Wed,  9 Aug 2023 19:06:17 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RLqz9525Gz4f3pG5
-        for <linux-raid@vger.kernel.org>; Thu, 10 Aug 2023 10:06:13 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBH16kVRtRk+GlkAQ--.38934S3;
-        Thu, 10 Aug 2023 10:06:14 +0800 (CST)
-Subject: Re: [PATCH] md: raid0: account for split bio in iostat accounting
-To:     David Jeffery <djeffery@redhat.com>, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org
-Cc:     Laurence Oberman <loberman@redhat.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230809171722.11089-1-djeffery@redhat.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <1f28736f-49eb-5160-8469-0932bd0635e9@huaweicloud.com>
-Date:   Thu, 10 Aug 2023 10:06:13 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229789AbjHJGm1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Aug 2023 02:42:27 -0400
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CE5FE4B
+        for <linux-raid@vger.kernel.org>; Wed,  9 Aug 2023 23:42:25 -0700 (PDT)
+Received: from [192.168.0.2] (unknown [95.91.208.105])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 526DB61E5FE07;
+        Thu, 10 Aug 2023 08:42:02 +0200 (CEST)
+Message-ID: <2c18c875-bc00-465a-9e19-c66d63c07987@molgen.mpg.de>
+Date:   Thu, 10 Aug 2023 08:42:01 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] md: raid0: account for split bio in iostat accounting
+Content-Language: en-US
+To:     David Jeffery <djeffery@redhat.com>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Laurence Oberman <loberman@redhat.com>
+References: <20230809171722.11089-1-djeffery@redhat.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
 In-Reply-To: <20230809171722.11089-1-djeffery@redhat.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH16kVRtRk+GlkAQ--.38934S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7GFy8Ar47KFWUWr4kZw4xWFg_yoW8JrW3pw
-        4UWa1qyrykKay0kay7J34DZa4Fg39xXr9xCFZ5Xw1xuF1YvF90g3yjga98Zr9xJryfWa4f
-        XF1UKF17u3WYkrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
-        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-        xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-        c7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1CPfJUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+Dear David,
 
-ÔÚ 2023/08/10 1:16, David Jeffery Ð´µÀ:
+
+Thank you for your patch.
+
+Am 09.08.23 um 19:16 schrieb David Jeffery:
 > When a bio is split by md raid0, the newly created bio will not be tracked
 > by md for I/O accounting. Only the portion of I/O still assigned to the
 > original bio which was reduced by the split will be accounted for. This
@@ -67,13 +52,8 @@ Hi,
 > amount of data being sent through md.
 > 
 > md_account_bio() needs to be called for all bio generated by the bio split.
-> 
 
-After a fix tag:
-
-Fixes: 10764815ff47 ("md: add io accounting for raid0 and raid5")
-
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+Could you please add how you tested this?
 
 > Signed-off-by: David Jeffery <djeffery@redhat.com>
 > Tested-by: Laurence Oberman <loberman@redhat.com>
@@ -95,5 +75,8 @@ Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 >   
 >   	orig_sector = sector;
 >   	zone = find_zone(mddev->private, &sector);
-> 
 
+
+Kind regards,
+
+Paul
