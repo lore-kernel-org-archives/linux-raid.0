@@ -2,47 +2,47 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80DEAC001B0
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Aug 2023 12:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7819C001E0
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Aug 2023 12:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234479AbjHJMMZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Aug 2023 08:12:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42976 "EHLO
+        id S234782AbjHJMM0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Aug 2023 08:12:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234461AbjHJMMU (ORCPT
+        with ESMTP id S234410AbjHJMMU (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Aug 2023 08:12:20 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF52526B2
-        for <linux-raid@vger.kernel.org>; Thu, 10 Aug 2023 05:11:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC3AD268D
+        for <linux-raid@vger.kernel.org>; Thu, 10 Aug 2023 05:11:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691669499;
+        s=mimecast20190719; t=1691669498;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=d2mTwC/A1bemPLD8wVSu1bItAbEwKoB4ThQwlpab2yo=;
-        b=Nw2U7xGGGLZ/WCZf2efUAFkvbBnV4VgoDhK0GuTkMOjnQHo5Tg5m2sCvPEDgPG0lsKWXme
-        IB5cKbMr3Wf2cAaXx5BVb5DrA+bl9dRMgmzEgk+H1yvt9R5ysiizzoP0p6fjVc4oXxV8p9
-        EaZG9nmJcljYl28k8IzyfFmAUK2IU6A=
+        bh=MplB6YhphBAcNbfgEP4dpmv/8GnOMVzO201/lFbJ2Z4=;
+        b=LRmF04RR9cQJcQ7tK6FF6/K0Hp4NUohCv74jmmNuGhTZLDaNW84gDQtw8a9vKcT4K9d1Q8
+        +vilmTxVlh0lUalQKQAtd9xbwpUI/uNrSqShw6PInXTzsa+fm4r5wUASDEFNoYd/3B7wOk
+        yw0wPx3o+GWvggKxWCRhwnoCayoAMVc=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-348-Mi8AftagPdmWdIKfePxX9g-1; Thu, 10 Aug 2023 08:11:36 -0400
-X-MC-Unique: Mi8AftagPdmWdIKfePxX9g-1
+ us-mta-640-SU0nEepTNE-IarH6p96YHg-1; Thu, 10 Aug 2023 08:11:35 -0400
+X-MC-Unique: SU0nEepTNE-IarH6p96YHg-1
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id BB87285CBE7;
-        Thu, 10 Aug 2023 12:11:35 +0000 (UTC)
-Received: from o.redhat.com (unknown [10.39.192.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0FB0140C2076;
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CDCB4857A84;
         Thu, 10 Aug 2023 12:11:34 +0000 (UTC)
+Received: from o.redhat.com (unknown [10.39.192.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1F69C40C2077;
+        Thu, 10 Aug 2023 12:11:33 +0000 (UTC)
 From:   heinzm@redhat.com
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 Cc:     ncroxon@redhat.com, xni@redhat.com
-Subject: [PATCH 2/3] md raid1: make first_clone a bool
-Date:   Thu, 10 Aug 2023 14:11:31 +0200
-Message-ID: <d6913d99e76bb72d3561fc9665e089fa5c7a1fb3.1691592775.git.heinzm@redhat.com>
+Subject: [PATCH 1/3] md raid1: allow writebehind to work on any leg device set WriteMostly
+Date:   Thu, 10 Aug 2023 14:11:30 +0200
+Message-ID: <31b94de1196389c8d5e7a29d01ec1e7d20735d4e.1691592775.git.heinzm@redhat.com>
 In-Reply-To: <cover.1691592775.git.heinzm@redhat.com>
 References: <cover.1691592775.git.heinzm@redhat.com>
 MIME-Version: 1.0
@@ -54,46 +54,27 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: heinzm <heinzm@redhat.com>
 
-first_clone is used as a bool so make it one.
+As the WriteMostly flag can be set on any component device of a RAID1 array,
+remove the constraint that it only works if set on the first one.
 
 Signed-off-by: heinzm <heinzm@redhat.com>
 ---
- drivers/md/raid1.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/md/raid1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 913cd46b786b..0aed74efd758 100644
+index dd25832eb045..913cd46b786b 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -1337,9 +1337,8 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	struct bitmap *bitmap = mddev->bitmap;
- 	unsigned long flags;
- 	struct md_rdev *blocked_rdev;
--	int first_clone;
- 	int max_sectors;
--	bool write_behind = false;
-+	bool first_clone, write_behind = false;
- 
- 	if (mddev_is_clustered(mddev) &&
- 	     md_cluster_ops->area_resyncing(mddev, WRITE,
-@@ -1505,7 +1504,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	atomic_set(&r1_bio->remaining, 1);
- 	atomic_set(&r1_bio->behind_remaining, 0);
- 
--	first_clone = 1;
-+	first_clone = true;
- 
- 	for (i = 0; i < disks; i++) {
- 		struct bio *mbio = NULL;
-@@ -1528,7 +1527,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 
- 			md_bitmap_startwrite(bitmap, r1_bio->sector, r1_bio->sectors,
- 					     test_bit(R1BIO_BehindIO, &r1_bio->state));
--			first_clone = 0;
-+			first_clone = false;
- 		}
- 
- 		if (r1_bio->behind_master_bio) {
+@@ -1519,7 +1519,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 			 * allocate memory, or a reader on WriteMostly
+ 			 * is waiting for behind writes to flush */
+ 			if (bitmap &&
+-			    test_bit(WriteMostly, &rdev->flags) &&
++			    write_behind &&
+ 			    (atomic_read(&bitmap->behind_writes)
+ 			     < mddev->bitmap_info.max_write_behind) &&
+ 			    !waitqueue_active(&bitmap->behind_wait)) {
 -- 
 2.41.0
 
