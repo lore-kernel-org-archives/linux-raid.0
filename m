@@ -2,83 +2,301 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE672C04FDF
-	for <linux-raid@archiver.kernel.org>; Fri, 11 Aug 2023 12:27:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F0F1C0015E
+	for <linux-raid@archiver.kernel.org>; Fri, 11 Aug 2023 16:57:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236519AbjHKM1e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 11 Aug 2023 08:27:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40372 "EHLO
+        id S235284AbjHKQ5h (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 11 Aug 2023 12:57:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235414AbjHKM1c (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Aug 2023 08:27:32 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E55FE60;
-        Fri, 11 Aug 2023 05:27:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=96Jyxa0hgrG24aZgu2ilDmsPaDJbIFT8CvAcqFGq7ak=; b=Lt8QMt/qiwPklQXJKNxAAayl50
-        ejm5z3TauQQgWXDYeiy6ev7CoxuktCUjLml+tQTXB0FrmwYo9bGjhm2G8bwiVtr2qWkYfM3c8FNl1
-        cPDaz7ayPa6vktH3ev1ZeHUse0hr9sV3dSKzn62142iTuA8TTM4tDaiYAHOFhJAm7nP3aQxRbODoe
-        cl8s2GHmVFeXScu6jrXcZHGDTmN2udO8XZ0pPwfpsd5QoOiRLOiFHXD6KYR9f2MEyvA/KeT9RzHmF
-        DIvDgADu/AxqynsuMYC3hcwdLyXOsBeZQBLnrFNVOoRqDCMnS+8kcWICKZ1ml8I/4TT3bYAOcmKWy
-        N15IsxAA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qUREm-00Abyw-17;
-        Fri, 11 Aug 2023 12:27:28 +0000
-Date:   Fri, 11 Aug 2023 05:27:28 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <ZNYpMPM5o4q1xcIt@infradead.org>
-References: <20230810171429.31759-1-jack@suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230810171429.31759-1-jack@suse.cz>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+        with ESMTP id S231406AbjHKQ5g (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Aug 2023 12:57:36 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A59BC2D79;
+        Fri, 11 Aug 2023 09:57:31 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 581971F8AB;
+        Fri, 11 Aug 2023 16:57:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1691773050; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WRMLThMjRnza6cY+sDsGfPzEUxyI8oSxa4duiWVd80k=;
+        b=FbghrOIzbDN1yL/stHy7oCD0VkDUWJbv4AEqVn9m6pzODdQvGSXgFRDQv0jlC/SeXEH3Wt
+        YSC4S/7Fq9lSWL/YEc/oQHACvD8u5aRLBHpLzC8Y2qsa7nryieSffXoQucaKW0JTqVzdKx
+        dvX43/lEaj3uxepwMJ5e+/4uW2duKYg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1691773050;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WRMLThMjRnza6cY+sDsGfPzEUxyI8oSxa4duiWVd80k=;
+        b=sdPW/gvd4gu6Bh/BZ4mogeA1QXfLjy21xWdAWfW8TEH5gDNIc08oWYL7Rj+cnyMahkgIT1
+        8zrA4vKXTD/z+cAA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 568E4138E2;
+        Fri, 11 Aug 2023 16:57:28 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id A8ZrCnho1mSwVAAAMHmgww
+        (envelope-from <colyli@suse.de>); Fri, 11 Aug 2023 16:57:28 +0000
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.600.7\))
+Subject: Re: [PATCH v6 2/7] badblocks: add helper routines for badblock ranges
+ handling
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <CALTww2-Y6b+Ruqsux9e2gXSngzGioTwENAFsygj5Rbgipgy0wg@mail.gmail.com>
+Date:   Sat, 12 Aug 2023 00:57:15 +0800
+Cc:     linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Geliang Tang <geliang.tang@suse.com>,
+        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+        NeilBrown <neilb@suse.de>,
+        Vishal L Verma <vishal.l.verma@intel.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <C64D4553-13AC-4337-B7DA-8C68B85E0C91@suse.de>
+References: <20220721121152.4180-1-colyli@suse.de>
+ <20220721121152.4180-3-colyli@suse.de>
+ <CALTww2-Y6b+Ruqsux9e2gXSngzGioTwENAFsygj5Rbgipgy0wg@mail.gmail.com>
+To:     Xiao Ni <xni@redhat.com>
+X-Mailer: Apple Mail (2.3731.600.7)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Except for a mostly cosmetic nitpick this looks good to me:
 
-Acked-by: Christoph Hellwig <hch@lst.de>
 
-That's not eactly the deep review I'd like to do, but as I'm about to
-head out for vacation that's probably as good as it gets.
+> 2022=E5=B9=B49=E6=9C=8821=E6=97=A5 20:13=EF=BC=8CXiao Ni =
+<xni@redhat.com> =E5=86=99=E9=81=93=EF=BC=9A
+
+[snipped]
+
+>>=20
+>> +/*
+>> + * Find the range starts at-or-before bad->start. If 'hint' is =
+provided
+>> + * (hint >=3D 0) then search in the bad table from hint firstly. It =
+is
+>> + * very probably the wanted bad range can be found from the hint =
+index,
+>> + * then the unnecessary while-loop iteration can be avoided.
+>> + */
+>> +static int prev_badblocks(struct badblocks *bb, struct =
+badblocks_context *bad,
+>> +                         int hint)
+>> +{
+>> +       sector_t s =3D bad->start;
+>> +       int ret =3D -1;
+>> +       int lo, hi;
+>> +       u64 *p;
+>> +
+>> +       if (!bb->count)
+>> +               goto out;
+>> +
+>> +       if (hint >=3D 0) {
+>> +               ret =3D prev_by_hint(bb, s, hint);
+>> +               if (ret >=3D 0)
+>> +                       goto out;
+>> +       }
+>> +
+>> +       lo =3D 0;
+>> +       hi =3D bb->count;
+>> +       p =3D bb->page;
+>=20
+> Is it better to check something like this:
+>=20
+> if (BB_OFFSET(p[lo]) > s)
+>   return ret;
+
+
+Yeah, it is worthy to add such check to avoid the following bisect =
+search, if lucky.
+Will do it in next version.
+
+>=20
+>> +
+>> +       while (hi - lo > 1) {
+>> +               int mid =3D (lo + hi)/2;
+>> +               sector_t a =3D BB_OFFSET(p[mid]);
+>> +
+>> +               if (a =3D=3D s) {
+>> +                       ret =3D mid;
+>> +                       goto out;
+>> +               }
+>> +
+>> +               if (a < s)
+>> +                       lo =3D mid;
+>> +               else
+>> +                       hi =3D mid;
+>> +       }
+>> +
+>> +       if (BB_OFFSET(p[lo]) <=3D s)
+>> +               ret =3D lo;
+>> +out:
+>> +       return ret;
+>> +}
+>> +
+
+[snipped]
+
+>>=20
+>> +/*
+>> + * Combine the bad ranges indexed by 'prev' and 'prev - 1' (from bad
+>> + * table) into one larger bad range, and the new range is indexed by
+>> + * 'prev - 1'.
+>> + */
+>> +static void front_combine(struct badblocks *bb, int prev)
+>> +{
+>> +       u64 *p =3D bb->page;
+>> +
+>> +       p[prev - 1] =3D BB_MAKE(BB_OFFSET(p[prev - 1]),
+>> +                             BB_LEN(p[prev - 1]) + BB_LEN(p[prev]),
+>> +                             BB_ACK(p[prev]));
+>> +       if ((prev + 1) < bb->count)
+>> +               memmove(p + prev, p + prev + 1, (bb->count - prev - =
+1) * 8);
+>            else
+>                    p[prev] =3D 0;
+
+The caller of front_combine() will decrease bb->count by 1, so clearing =
+p[prev] here can be avoided. I will add code comments of front_combine =
+to explain this.
+Thanks.
+
+[snipped]
+
+>> +/*
+>> + * Return 'true' if the range indicated by 'bad' can overwrite the =
+bad
+>> + * range (from bad table) indexed by 'prev'.
+>> + *
+>> + * The range indicated by 'bad' can overwrite the bad range indexed =
+by
+>> + * 'prev' when,
+>> + * 1) The whole range indicated by 'bad' can cover partial or whole =
+bad
+>> + *    range (from bad table) indexed by 'prev'.
+>> + * 2) The ack value of 'bad' is larger or equal to the ack value of =
+bad
+>> + *    range 'prev'.
+>=20
+> In fact, it can overwrite only the ack value of 'bad' is larger than
+> the ack value of the bad range 'prev'.
+> If the ack values are equal, it should do a merge operation.
+
+Yes you are right, if extra is 0, it is indeed a merge operation. And if =
+extra is 1, or 2, it means bad blocks range split, I name such situation =
+as overwrite.
+
+[snipped]
+
+
+>> +/*
+>> + * Do the overwrite from the range indicated by 'bad' to the bad =
+range
+>> + * (from bad table) indexed by 'prev'.
+>> + * The previously called can_front_overwrite() will provide how many
+>> + * extra bad range(s) might be split and added into the bad table. =
+All
+>> + * the splitting cases in the bad table will be handled here.
+>> + */
+>> +static int front_overwrite(struct badblocks *bb, int prev,
+>> +                          struct badblocks_context *bad, int extra)
+>> +{
+>> +       u64 *p =3D bb->page;
+>> +       sector_t orig_end =3D BB_END(p[prev]);
+>> +       int orig_ack =3D BB_ACK(p[prev]);
+>> +
+>> +       switch (extra) {
+>> +       case 0:
+>> +               p[prev] =3D BB_MAKE(BB_OFFSET(p[prev]), =
+BB_LEN(p[prev]),
+>> +                                 bad->ack);
+>> +               break;
+>> +       case 1:
+>> +               if (BB_OFFSET(p[prev]) =3D=3D bad->start) {
+>> +                       p[prev] =3D BB_MAKE(BB_OFFSET(p[prev]),
+>> +                                         bad->len, bad->ack);
+>> +                       memmove(p + prev + 2, p + prev + 1,
+>> +                               (bb->count - prev - 1) * 8);
+>> +                       p[prev + 1] =3D BB_MAKE(bad->start + =
+bad->len,
+>> +                                             orig_end - =
+BB_END(p[prev]),
+>> +                                             orig_ack);
+>> +               } else {
+>> +                       p[prev] =3D BB_MAKE(BB_OFFSET(p[prev]),
+>> +                                         bad->start - =
+BB_OFFSET(p[prev]),
+>> +                                         BB_ACK(p[prev]));
+>=20
+> s/BB_ACK(p[prev])/orig_ack/g
+
+Yeah, this one is better. I will use it in next version.
+
+
+>> +                       /*
+>> +                        * prev +2 -> prev + 1 + 1, which is for,
+>> +                        * 1) prev + 1: the slot index of the =
+previous one
+>> +                        * 2) + 1: one more slot for extra being 1.
+>> +                        */
+>> +                       memmove(p + prev + 2, p + prev + 1,
+>> +                               (bb->count - prev - 1) * 8);
+>> +                       p[prev + 1] =3D BB_MAKE(bad->start, bad->len, =
+bad->ack);
+>> +               }
+>> +               break;
+>> +       case 2:
+>> +               p[prev] =3D BB_MAKE(BB_OFFSET(p[prev]),
+>> +                                 bad->start - BB_OFFSET(p[prev]),
+>> +                                 BB_ACK(p[prev]));
+>=20
+> s/BB_ACK(p[prev])/orig_ack/g
+
+It will be used in next version.
+
+>=20
+>> +               /*
+>> +                * prev + 3 -> prev + 1 + 2, which is for,
+>> +                * 1) prev + 1: the slot index of the previous one
+>> +                * 2) + 2: two more slots for extra being 2.
+>> +                */
+>> +               memmove(p + prev + 3, p + prev + 1,
+>> +                       (bb->count - prev - 1) * 8);
+>> +               p[prev + 1] =3D BB_MAKE(bad->start, bad->len, =
+bad->ack);
+>> +               p[prev + 2] =3D BB_MAKE(BB_END(p[prev + 1]),
+>> +                                     orig_end - BB_END(p[prev + 1]),
+>> +                                     BB_ACK(p[prev]));
+>=20
+> s/BB_ACK(p[prev])/orig_ack/g
+
+
+It will be used in next version.
+
+
+>> +               break;
+>> +       default:
+>> +               break;
+>> +       }
+>> +
+>> +       return bad->len;
+>> +}
+>> +
+>> +/*
+
+Thank you for the review!
+
+Coly Li
+
