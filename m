@@ -2,118 +2,94 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E5FAC001DB
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Aug 2023 12:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C57EC001B0
+	for <linux-raid@archiver.kernel.org>; Fri, 11 Aug 2023 01:14:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235212AbjHJM3p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Aug 2023 08:29:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49734 "EHLO
+        id S231962AbjHKBO5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Aug 2023 21:14:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235184AbjHJM3o (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Aug 2023 08:29:44 -0400
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B8A61B4
-        for <linux-raid@vger.kernel.org>; Thu, 10 Aug 2023 05:29:43 -0700 (PDT)
-Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 4922D61E5FE04;
-        Thu, 10 Aug 2023 14:29:27 +0200 (CEST)
-Message-ID: <3074f4bd-bef6-4929-99da-dc68a86d739f@molgen.mpg.de>
-Date:   Thu, 10 Aug 2023 14:29:26 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md: raid0: account for split bio in iostat accounting
-Content-Language: en-US
-To:     Laurence Oberman <loberman@redhat.com>
-Cc:     David Jeffery <djeffery@redhat.com>, Song Liu <song@kernel.org>,
+        with ESMTP id S229793AbjHKBO4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Aug 2023 21:14:56 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 209DE9F;
+        Thu, 10 Aug 2023 18:14:54 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RMQnM6N6yz4f3mJJ;
+        Fri, 11 Aug 2023 09:14:47 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgA3x6mJi9VkbmyxAQ--.10709S3;
+        Fri, 11 Aug 2023 09:14:50 +0800 (CST)
+Subject: Re: [PATCH 1/3] md raid1: allow writebehind to work on any leg device
+ set WriteMostly
+To:     heinzm@redhat.com, linux-kernel@vger.kernel.org,
         linux-raid@vger.kernel.org
-References: <20230809171722.11089-1-djeffery@redhat.com>
- <2c18c875-bc00-465a-9e19-c66d63c07987@molgen.mpg.de>
- <069a0758d1d2199c5231e920aed6dfff0a552d87.camel@redhat.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <069a0758d1d2199c5231e920aed6dfff0a552d87.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc:     ncroxon@redhat.com, xni@redhat.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <cover.1691592775.git.heinzm@redhat.com>
+ <31b94de1196389c8d5e7a29d01ec1e7d20735d4e.1691592775.git.heinzm@redhat.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <1b42c6ba-168d-4764-1eba-3f7050883e69@huaweicloud.com>
+Date:   Fri, 11 Aug 2023 09:14:49 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <31b94de1196389c8d5e7a29d01ec1e7d20735d4e.1691592775.git.heinzm@redhat.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgA3x6mJi9VkbmyxAQ--.10709S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gr13JFWxJrW8Gr45uFWUCFg_yoWDAFg_Kr
+        n093s2gr1rJrySv3W5ur13ur43Kwn5u3W7XFWft3WrXFn8XF9Y93sY9rW8Jw13Jay8JrW3
+        Wr4qq3WFyrZ8ZjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbzxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+        67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267
+        AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80
+        ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4
+        AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vI
+        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
+        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+        AvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7Cj
+        xVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Laurence,
+Hi,
 
-
-Am 10.08.23 um 14:12 schrieb Laurence Oberman:
-> On Thu, 2023-08-10 at 08:42 +0200, Paul Menzel wrote:
-
->> Am 09.08.23 um 19:16 schrieb David Jeffery:
->>> When a bio is split by md raid0, the newly created bio will not be
->>> tracked
->>> by md for I/O accounting. Only the portion of I/O still assigned to
->>> the
->>> original bio which was reduced by the split will be accounted for.
->>> This
->>> results in md iostat data sometimes showing I/O values far below
->>> the actual
->>> amount of data being sent through md.
->>>
->>> md_account_bio() needs to be called for all bio generated by the
->>> bio split.
->>
->> Could you please add how you tested this?
->>
->>> Signed-off-by: David Jeffery <djeffery@redhat.com>
->>> Tested-by: Laurence Oberman <loberman@redhat.com>
->>> ---
->>>    drivers/md/raid0.c | 3 +--
->>>    1 file changed, 1 insertion(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
->>> index d1ac73fcd852..1fd559ac8c68 100644
->>> --- a/drivers/md/raid0.c
->>> +++ b/drivers/md/raid0.c
->>> @@ -597,8 +597,7 @@ static bool raid0_make_request(struct mddev
->>> *mddev, struct bio *bio)
->>>                  bio = split;
->>>          }
->>>    
->>> -       if (bio->bi_pool != &mddev->bio_set)
->>> -               md_account_bio(mddev, &bio);
->>> +       md_account_bio(mddev, &bio);
->>>    
->>>          orig_sector = sector;
->>>          zone = find_zone(mddev->private, &sector);
-
-> This was actually reported by a customer on RHEL9.2 and the way this
-> played out is they were reading the md raid device directly using dd
-> buffered reads.
-> The md raid serves an LVM volume and file system.
+�� 2023/08/10 20:11, heinzm@redhat.com д��:
+> From: heinzm <heinzm@redhat.com>
 > 
-> Using dd if=/dev/md0 of=/dev/null bs=1024K count=10000 you would
-> sporadically see iostat report these numbers where the raid md0 shows
-> invalid stats.
+> As the WriteMostly flag can be set on any component device of a RAID1 array,
+> remove the constraint that it only works if set on the first one.
 > 
->       tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn Device
->     221.00       111.0M         0.0k     111.0M       0.0k dm-12
->     222.00       110.0M         0.0k     110.0M       0.0k dm-15
->     223.00       111.0M         0.0k     111.0M       0.0k dm-16
->     220.00       109.0M         0.0k     109.0M       0.0k dm-17
->     221.00       111.0M         0.0k     111.0M       0.0k dm-18
->     221.00       111.0M         0.0k     111.0M       0.0k dm-19
->     219.00       109.0M         0.0k     109.0M       0.0k dm-20
->     219.00       110.0M         0.0k     110.0M       0.0k dm-22
->     880.00         6.9M         0.0k       6.9M       0.0k md0
->                  ******
+> Signed-off-by: heinzm <heinzm@redhat.com>
+> ---
+>   drivers/md/raid1.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> After patching with David's patch the issue is no longer reproducible.
-> We tested using the same method that reproduced the issue reported by
-> the customer.
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index dd25832eb045..913cd46b786b 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1519,7 +1519,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>   			 * allocate memory, or a reader on WriteMostly
+>   			 * is waiting for behind writes to flush */
+>   			if (bitmap &&
+> -			    test_bit(WriteMostly, &rdev->flags) &&
+> +			    write_behind &&
 
-Thank you for the detailed reply. Should David resent, it’d be great, if 
-that information could be added.
+No need for a new line now.
 
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
-Kind regards,
+Thanks
+>   			    (atomic_read(&bitmap->behind_writes)
+>   			     < mddev->bitmap_info.max_write_behind) &&
+>   			    !waitqueue_active(&bitmap->behind_wait)) {
+> 
 
-Paul
