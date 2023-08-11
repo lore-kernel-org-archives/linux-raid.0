@@ -2,52 +2,52 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CFE9C04A94
-	for <linux-raid@archiver.kernel.org>; Fri, 11 Aug 2023 16:57:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A179C0015E
+	for <linux-raid@archiver.kernel.org>; Fri, 11 Aug 2023 16:59:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235664AbjHKQ5n (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 11 Aug 2023 12:57:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58048 "EHLO
+        id S235416AbjHKQ7D (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 11 Aug 2023 12:59:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235950AbjHKQ5m (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Aug 2023 12:57:42 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73FB12D79;
-        Fri, 11 Aug 2023 09:57:37 -0700 (PDT)
+        with ESMTP id S229447AbjHKQ7C (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Aug 2023 12:59:02 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 985821FE3;
+        Fri, 11 Aug 2023 09:59:01 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 203D421885;
-        Fri, 11 Aug 2023 16:57:36 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 593B71F896;
+        Fri, 11 Aug 2023 16:59:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1691773056; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1691773140; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
         bh=+RldD3Q47r+YYqib9ldiOtf7FKWGbNBt2vjIeJnkr34=;
-        b=2SUM8ZhA7Nc2dv53dwQOj4ViwBV7xpK/Pw99C5SNclbZAQJ5X6vXee6x0BUvITAkz5P8xq
-        CvGmmXWXYVq5nj3dfM8QsHkrVtXlaQy0Fgum9RojkTAgUeUjz//ZotuqyCtdSBYi3gaDvd
-        01LryTVNyeBQBsWvCQpy3tmJsP5UHPU=
+        b=IftfV24+mws4rBZgbzPEvWV/sVrJepIyJn8TwIBkPBSr6TcZtDdNueVzSAt/8EKUjmtPaK
+        ErMOa4pWjfM6zY2F4WmhIH8ws2eR1JaLzy/Vy73qbUmk1zanwjoTW/UR+35BOtnqo3h5Uj
+        kxVJX99lJ09jftdEzU3zHwE2zFZw3hs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1691773056;
+        s=susede2_ed25519; t=1691773140;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
         bh=+RldD3Q47r+YYqib9ldiOtf7FKWGbNBt2vjIeJnkr34=;
-        b=Q4lp1xym0HsLeXeadCTA2I55yNX5ubrSeun1dcxRFrKbQezd5Aierbxe12C1SYn0lnab4O
-        FwkNuXMSknesu+Cw==
+        b=95EN4SiB6II1zzDtuhjWcEv5P2l1WeUfSv2SrP44rgDGf+q6KCg/8GE8ehUiEG+NnBA8e0
+        QlERrm1bO3uTzFBQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 236B3138E3;
-        Fri, 11 Aug 2023 16:57:33 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1BAB6138E2;
+        Fri, 11 Aug 2023 16:58:57 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id kIizOH1o1mSwVAAAMHmgww
-        (envelope-from <colyli@suse.de>); Fri, 11 Aug 2023 16:57:33 +0000
+        id utaONtFo1mQ5VQAAMHmgww
+        (envelope-from <colyli@suse.de>); Fri, 11 Aug 2023 16:58:57 +0000
 Content-Type: text/plain;
         charset=us-ascii
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.600.7\))
@@ -55,7 +55,7 @@ Subject: Re: [PATCH v6 4/7] badblocks: improve badblocks_clear() for multiple
  ranges handling
 From:   Coly Li <colyli@suse.de>
 In-Reply-To: <CALTww2_-K4nf7wYsa6z4YsT=Ma-59iGkiKia6nZLAH4nreeMVQ@mail.gmail.com>
-Date:   Sat, 12 Aug 2023 00:57:23 +0800
+Date:   Sat, 12 Aug 2023 00:58:45 +0800
 Cc:     linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
         linux-raid <linux-raid@vger.kernel.org>,
         Dan Williams <dan.j.williams@intel.com>,
@@ -64,7 +64,7 @@ Cc:     linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
         NeilBrown <neilb@suse.de>,
         Vishal L Verma <vishal.l.verma@intel.com>
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <30102E9A-984D-40F3-8BEC-738095814C0C@suse.de>
+Message-Id: <1795F80B-514C-475C-8A03-6150B66E0001@suse.de>
 References: <20220721121152.4180-1-colyli@suse.de>
  <20220721121152.4180-5-colyli@suse.de>
  <CALTww2_-K4nf7wYsa6z4YsT=Ma-59iGkiKia6nZLAH4nreeMVQ@mail.gmail.com>
