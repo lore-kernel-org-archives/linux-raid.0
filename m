@@ -2,137 +2,83 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A324C04A6A
-	for <linux-raid@archiver.kernel.org>; Fri, 11 Aug 2023 11:05:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE672C04FDF
+	for <linux-raid@archiver.kernel.org>; Fri, 11 Aug 2023 12:27:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236041AbjHKLFj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 11 Aug 2023 07:05:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50548 "EHLO
+        id S236519AbjHKM1e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 11 Aug 2023 08:27:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235674AbjHKLFL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Aug 2023 07:05:11 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06162E65;
-        Fri, 11 Aug 2023 04:05:10 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D0CAA1F894;
-        Fri, 11 Aug 2023 11:05:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1691751905; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1sq/65j+CY9i3t8hL9bwXc39jHO7aQnHuaT66ofTFDw=;
-        b=1l25YOx6rv1s9C4rI0idkwKYVX2TInbGaE93NvGTkM6IGlqrAryuj7jdLsWE1dFt3W7FXK
-        VRkIM8aV3chI0DoxCMXjzKGVrzLViHa6tpQe0eFWv2gQkm/G6gb+JJg1hFFnvXcUN6Mg8R
-        0fRbMAr9j8S7T5CeZNd8KbgiRH8HIYQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1691751905;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1sq/65j+CY9i3t8hL9bwXc39jHO7aQnHuaT66ofTFDw=;
-        b=2/GRkkpP3FwV4zjlG58lb/M/n1gWj2Vk86fjJLulfRdqNWWIXfnsC1exIDihwIcDI9F9DQ
-        ol83lAvNFovsk0CQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C0D6F138E3;
-        Fri, 11 Aug 2023 11:05:05 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id SFsQL+EV1mRNRQAAMHmgww
-        (envelope-from <jack@suse.cz>); Fri, 11 Aug 2023 11:05:05 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 036D1A0789; Fri, 11 Aug 2023 13:05:05 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     <linux-fsdevel@vger.kernel.org>
-Cc:     <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>
-Subject: [PATCH 11/29] md: Convert to bdev_open_by_dev()
-Date:   Fri, 11 Aug 2023 13:04:42 +0200
-Message-Id: <20230811110504.27514-11-jack@suse.cz>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20230810171429.31759-1-jack@suse.cz>
+        with ESMTP id S235414AbjHKM1c (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Aug 2023 08:27:32 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E55FE60;
+        Fri, 11 Aug 2023 05:27:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=96Jyxa0hgrG24aZgu2ilDmsPaDJbIFT8CvAcqFGq7ak=; b=Lt8QMt/qiwPklQXJKNxAAayl50
+        ejm5z3TauQQgWXDYeiy6ev7CoxuktCUjLml+tQTXB0FrmwYo9bGjhm2G8bwiVtr2qWkYfM3c8FNl1
+        cPDaz7ayPa6vktH3ev1ZeHUse0hr9sV3dSKzn62142iTuA8TTM4tDaiYAHOFhJAm7nP3aQxRbODoe
+        cl8s2GHmVFeXScu6jrXcZHGDTmN2udO8XZ0pPwfpsd5QoOiRLOiFHXD6KYR9f2MEyvA/KeT9RzHmF
+        DIvDgADu/AxqynsuMYC3hcwdLyXOsBeZQBLnrFNVOoRqDCMnS+8kcWICKZ1ml8I/4TT3bYAOcmKWy
+        N15IsxAA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qUREm-00Abyw-17;
+        Fri, 11 Aug 2023 12:27:28 +0000
+Date:   Fri, 11 Aug 2023 05:27:28 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
+Message-ID: <ZNYpMPM5o4q1xcIt@infradead.org>
 References: <20230810171429.31759-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2193; i=jack@suse.cz; h=from:subject; bh=B0+iSj9jsLp41usXiwKwpFGHgEtk6xuIxKa3VQkGjLo=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBk1hXMG0hnHADMBdqV1Vbg/Q26yvvdN7RwrInxb4di dKrx4y+JATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZNYVzAAKCRCcnaoHP2RA2TgICA CWls3FPaqpXOzqMN4ezha85vqO0oTO5QKnXy+co7t//8/85YDV3bKzgwZrEP1e5kunrWyHC5lpb/mp Gk7/0ldBWyNjLsYO3kwzu4sK+NZdCowreYfPonRvYSplDNuPpwaDEG5jGU9iLhfy5tKtgoiJLUtxjx OPtr+a8dL8+2HuEEnSl1c6xZt/yooDkK5OddGPgzsf9ux/ptaPPnpWQgpGtzltlS0sh66WootqQ04a yZbTbtN7nMkDh0oTFCTtr3tqPnxhqPf8QNyJQRk38zb0TBcHqdQW7GePPpgXXMIQZu3jvk2M9nILXL xnPM+L0fxWk61luymUc6iUrgfcIUv9
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230810171429.31759-1-jack@suse.cz>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Convert md to use bdev_open_by_dev() and pass the handle around.
+Except for a mostly cosmetic nitpick this looks good to me:
 
-CC: linux-raid@vger.kernel.org
-CC: Song Liu <song@kernel.org>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- drivers/md/md.c | 12 +++++++-----
- drivers/md/md.h |  1 +
- 2 files changed, 8 insertions(+), 5 deletions(-)
+Acked-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 78be7811a89f..20d6cefda3e8 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2450,7 +2450,7 @@ static void export_rdev(struct md_rdev *rdev, struct mddev *mddev)
- 	if (test_bit(AutoDetected, &rdev->flags))
- 		md_autodetect_dev(rdev->bdev->bd_dev);
- #endif
--	blkdev_put(rdev->bdev, mddev->external ? &claim_rdev : rdev);
-+	bdev_release(rdev->bdev_handle);
- 	rdev->bdev = NULL;
- 	kobject_put(&rdev->kobj);
- }
-@@ -3644,14 +3644,16 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
- 	if (err)
- 		goto out_clear_rdev;
- 
--	rdev->bdev = blkdev_get_by_dev(newdev, BLK_OPEN_READ | BLK_OPEN_WRITE,
-+	rdev->bdev_handle = bdev_open_by_dev(newdev,
-+			BLK_OPEN_READ | BLK_OPEN_WRITE,
- 			super_format == -2 ? &claim_rdev : rdev, NULL);
--	if (IS_ERR(rdev->bdev)) {
-+	if (IS_ERR(rdev->bdev_handle)) {
- 		pr_warn("md: could not open device unknown-block(%u,%u).\n",
- 			MAJOR(newdev), MINOR(newdev));
--		err = PTR_ERR(rdev->bdev);
-+		err = PTR_ERR(rdev->bdev_handle);
- 		goto out_clear_rdev;
- 	}
-+	rdev->bdev = rdev->bdev_handle->bdev;
- 
- 	kobject_init(&rdev->kobj, &rdev_ktype);
- 
-@@ -3682,7 +3684,7 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
- 	return rdev;
- 
- out_blkdev_put:
--	blkdev_put(rdev->bdev, super_format == -2 ? &claim_rdev : rdev);
-+	bdev_release(rdev->bdev_handle);
- out_clear_rdev:
- 	md_rdev_clear(rdev);
- out_free_rdev:
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 1aef86bf3fc3..e8108845157b 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -59,6 +59,7 @@ struct md_rdev {
- 	 */
- 	struct block_device *meta_bdev;
- 	struct block_device *bdev;	/* block device handle */
-+	struct bdev_handle *bdev_handle;	/* Handle from open for bdev */
- 
- 	struct page	*sb_page, *bb_page;
- 	int		sb_loaded;
--- 
-2.35.3
-
+That's not eactly the deep review I'd like to do, but as I'm about to
+head out for vacation that's probably as good as it gets.
