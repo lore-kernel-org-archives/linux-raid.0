@@ -2,142 +2,96 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB334C001B0
-	for <linux-raid@archiver.kernel.org>; Sun, 13 Aug 2023 17:42:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D1D0C001DB
+	for <linux-raid@archiver.kernel.org>; Sun, 13 Aug 2023 17:57:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230059AbjHMRme (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 13 Aug 2023 13:42:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35160 "EHLO
+        id S230191AbjHMR5L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 13 Aug 2023 13:57:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229706AbjHMRmd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 13 Aug 2023 13:42:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4E181707
-        for <linux-raid@vger.kernel.org>; Sun, 13 Aug 2023 10:42:35 -0700 (PDT)
+        with ESMTP id S229682AbjHMR5K (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 13 Aug 2023 13:57:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02C2A10D;
+        Sun, 13 Aug 2023 10:57:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 76C5560B09
-        for <linux-raid@vger.kernel.org>; Sun, 13 Aug 2023 17:42:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2D0FC433C9
-        for <linux-raid@vger.kernel.org>; Sun, 13 Aug 2023 17:42:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 897B460F75;
+        Sun, 13 Aug 2023 17:57:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4DB7C433C9;
+        Sun, 13 Aug 2023 17:57:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691948554;
-        bh=WiVHhk0XYDcF/bw+HZf5fKE5BUKjbIoTA7qIyUpVX+Q=;
+        s=k20201202; t=1691949431;
+        bh=k5lD7vCeRXwPAKQRKx6H/8mU6AyZG6pRFYxxrUzGUFY=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=SrZErNkCZc7OMxeoZOLA0TEQp6Hbc1nHjVvnPZ/drqHNjXo9DeR+AFKhwuclTnFJe
-         egz1RHMDVUz4IL9ORrLs1r42DcWPgmfliLJehLrdPHznr0KwH+Qq+XUfSqOYLGa1Vw
-         iLnarkHJEgivixXXLCuH/sAfAvH6KlpdgFpLxVDgnBx3NRHQPRc40BV/H1W0DynpgU
-         WSxQXq1LyVLgphrpK3Ls5Nv1uXiR+NtXbZlpAFrxR/snhHTXIh2pg3M4IrnsCMlT/Z
-         fpDCXl+KorYrlunZx3xCXXMQAlpoN7cMbEWINrsPrpS6pOGiROXVQjhqm91IX6joMs
-         a+WKyAQGvMQSg==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-4fe216edaf7so5506683e87.0
-        for <linux-raid@vger.kernel.org>; Sun, 13 Aug 2023 10:42:34 -0700 (PDT)
-X-Gm-Message-State: AOJu0YzUb1ftduldnppaslnLFTCqDa+3W0Y3QEX3dBgMPymHh32jXMj3
-        eJrcocvmlQ6D7HUzCMP0N4FfmaBANR+23iIriEs=
-X-Google-Smtp-Source: AGHT+IEu2nOwEtAcAE4VJfUycocXGfubvK6DAs0XIRErM3a3VEtmb/qA4C/mB9ODXh9tBDXVbdflC7H1N6cBrQjSI3w=
-X-Received: by 2002:a05:6512:398f:b0:4fb:7f45:bcb6 with SMTP id
- j15-20020a056512398f00b004fb7f45bcb6mr3719606lfu.16.1691948552766; Sun, 13
- Aug 2023 10:42:32 -0700 (PDT)
+        b=d8hgvqWMP9KJhO6evZJ7EiRTpe20swIMGOfy8NxJ2TV/uYI6r98uD4bvS+Uk0Qj/Q
+         QLMvAMQjqEufCPjLpZvXjXc3ON7193u19+lKdgOo0wLS74RnhX4OP5I4r89ZLNSpCR
+         uDR/EAfMixQ48IFwgm54qJzKZKi9pCvatPEVtiBcPDQI22d/H86NGL4WSBjB6GQIwM
+         HMX1lrPqUXL1FYyyp/Sh6UJEU6oakgRU1CXHpmDnOBoRFUgLTrO0KDpD6V5GcbTVBs
+         cxQiSEKPzyOXWgtMm20Aofm6DWOdpbuXFMW+cdVPuboXlvVrZ9hXZP7EOQQ/BNzgFE
+         rjXtiPPNOiyCg==
+Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-4fe0d5f719dso5876395e87.2;
+        Sun, 13 Aug 2023 10:57:11 -0700 (PDT)
+X-Gm-Message-State: AOJu0Yw0i06V6Z747wfgzgVQL+Qs9JC9kf1wHKZuRO0Yf+PsISfKcP1s
+        zpYhzmPzZjNvvrW7ECL4HzZ2ynHUuOiYSRwi2Jc=
+X-Google-Smtp-Source: AGHT+IFC45xBypdazAR+t+jNSc9y+vXI+XuaBvQngfXKCFRqNc4wEehRJPJfv5Tjaqap6iaeRXFIEILnGSyHN7Fc0D0=
+X-Received: by 2002:a05:6512:3b1:b0:4fe:589a:857d with SMTP id
+ v17-20020a05651203b100b004fe589a857dmr4578778lfp.34.1691949429853; Sun, 13
+ Aug 2023 10:57:09 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230809171722.11089-1-djeffery@redhat.com> <2c18c875-bc00-465a-9e19-c66d63c07987@molgen.mpg.de>
- <069a0758d1d2199c5231e920aed6dfff0a552d87.camel@redhat.com> <3074f4bd-bef6-4929-99da-dc68a86d739f@molgen.mpg.de>
-In-Reply-To: <3074f4bd-bef6-4929-99da-dc68a86d739f@molgen.mpg.de>
+References: <cover.1691592775.git.heinzm@redhat.com>
+In-Reply-To: <cover.1691592775.git.heinzm@redhat.com>
 From:   Song Liu <song@kernel.org>
-Date:   Sun, 13 Aug 2023 21:42:18 +0400
-X-Gmail-Original-Message-ID: <CAPhsuW4Mhgs4DiRaxetAhXXcc6ax3kWzvh=DBqr8gYSTkCCQig@mail.gmail.com>
-Message-ID: <CAPhsuW4Mhgs4DiRaxetAhXXcc6ax3kWzvh=DBqr8gYSTkCCQig@mail.gmail.com>
-Subject: Re: [PATCH] md: raid0: account for split bio in iostat accounting
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     Laurence Oberman <loberman@redhat.com>,
-        David Jeffery <djeffery@redhat.com>, linux-raid@vger.kernel.org
+Date:   Sun, 13 Aug 2023 21:56:56 +0400
+X-Gmail-Original-Message-ID: <CAPhsuW7Huk5aEzVwGjyjHQhZ88N+Fyprdwb3jZ+0oNyBc23TUw@mail.gmail.com>
+Message-ID: <CAPhsuW7Huk5aEzVwGjyjHQhZ88N+Fyprdwb3jZ+0oNyBc23TUw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] md raid1: Fix writebehind/writemostly
+To:     heinzm@redhat.com
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        ncroxon@redhat.com, xni@redhat.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 10, 2023 at 4:29=E2=80=AFPM Paul Menzel <pmenzel@molgen.mpg.de>=
- wrote:
+On Thu, Aug 10, 2023 at 4:12=E2=80=AFPM <heinzm@redhat.com> wrote:
 >
-> Dear Laurence,
+> From: heinzm <heinzm@redhat.com>
 >
+> Writemostly was only respected if set on the first leg.
 >
-> Am 10.08.23 um 14:12 schrieb Laurence Oberman:
-> > On Thu, 2023-08-10 at 08:42 +0200, Paul Menzel wrote:
+> Set on any other leg(s) but not on the first one did
+> not enable writebehind at all.
 >
-> >> Am 09.08.23 um 19:16 schrieb David Jeffery:
-> >>> When a bio is split by md raid0, the newly created bio will not be
-> >>> tracked
-> >>> by md for I/O accounting. Only the portion of I/O still assigned to
-> >>> the
-> >>> original bio which was reduced by the split will be accounted for.
-> >>> This
-> >>> results in md iostat data sometimes showing I/O values far below
-> >>> the actual
-> >>> amount of data being sent through md.
-> >>>
-> >>> md_account_bio() needs to be called for all bio generated by the
-> >>> bio split.
-> >>
-> >> Could you please add how you tested this?
-> >>
-> >>> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> >>> Tested-by: Laurence Oberman <loberman@redhat.com>
-> >>> ---
-> >>>    drivers/md/raid0.c | 3 +--
-> >>>    1 file changed, 1 insertion(+), 2 deletions(-)
-> >>>
-> >>> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> >>> index d1ac73fcd852..1fd559ac8c68 100644
-> >>> --- a/drivers/md/raid0.c
-> >>> +++ b/drivers/md/raid0.c
-> >>> @@ -597,8 +597,7 @@ static bool raid0_make_request(struct mddev
-> >>> *mddev, struct bio *bio)
-> >>>                  bio =3D split;
-> >>>          }
-> >>>
-> >>> -       if (bio->bi_pool !=3D &mddev->bio_set)
-> >>> -               md_account_bio(mddev, &bio);
-> >>> +       md_account_bio(mddev, &bio);
-> >>>
-> >>>          orig_sector =3D sector;
-> >>>          zone =3D find_zone(mddev->private, &sector);
+> Fix changes the logic using the already defind bool writebehind.
 >
-> > This was actually reported by a customer on RHEL9.2 and the way this
-> > played out is they were reading the md raid device directly using dd
-> > buffered reads.
-> > The md raid serves an LVM volume and file system.
-> >
-> > Using dd if=3D/dev/md0 of=3D/dev/null bs=3D1024K count=3D10000 you woul=
-d
-> > sporadically see iostat report these numbers where the raid md0 shows
-> > invalid stats.
-> >
-> >       tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn Device
-> >     221.00       111.0M         0.0k     111.0M       0.0k dm-12
-> >     222.00       110.0M         0.0k     110.0M       0.0k dm-15
-> >     223.00       111.0M         0.0k     111.0M       0.0k dm-16
-> >     220.00       109.0M         0.0k     109.0M       0.0k dm-17
-> >     221.00       111.0M         0.0k     111.0M       0.0k dm-18
-> >     221.00       111.0M         0.0k     111.0M       0.0k dm-19
-> >     219.00       109.0M         0.0k     109.0M       0.0k dm-20
-> >     219.00       110.0M         0.0k     110.0M       0.0k dm-22
-> >     880.00         6.9M         0.0k       6.9M       0.0k md0
-> >                  ******
-> >
-> > After patching with David's patch the issue is no longer reproducible.
-> > We tested using the same method that reproduced the issue reported by
-> > the customer.
+> Whilst on this, also make first_clone a bool as write_behind for
+> consistency and add an empty line.
 >
-> Thank you for the detailed reply. Should David resent, it=E2=80=99d be gr=
-eat, if
-> that information could be added.
+> Patches pass the MD test suite.
+>
+> heinzm (3):
+>   md raid1: allow writebehind to work on any leg device set WriteMostly
 
-Hi David,
+1/3 looks good. But please resend with your full name.
 
-Please resend the set with testing information and the Fixes tag.
+>   md raid1: make first_clone a bool
+>   md raid1: add empty line
+
+2/3 and 3/3 are not necessary. I would rather keep git-blame clean.
 
 Thanks,
 Song
+>
+> Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
+> Tested-by: Xia Ni <xni@redhat.com>
+>
+>  drivers/md/raid1.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> --
+> 2.41.0
+>
