@@ -2,76 +2,77 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50632C001DB
-	for <linux-raid@archiver.kernel.org>; Sun, 13 Aug 2023 16:57:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2100BC001DB
+	for <linux-raid@archiver.kernel.org>; Sun, 13 Aug 2023 17:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231194AbjHMQ45 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 13 Aug 2023 12:56:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32966 "EHLO
+        id S230313AbjHMRFJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 13 Aug 2023 13:05:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbjHMQ44 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 13 Aug 2023 12:56:56 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80E4D1B5;
-        Sun, 13 Aug 2023 09:56:58 -0700 (PDT)
+        with ESMTP id S229451AbjHMRFI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 13 Aug 2023 13:05:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF061E63;
+        Sun, 13 Aug 2023 10:05:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1DD9B61587;
-        Sun, 13 Aug 2023 16:56:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EB0CC433CA;
-        Sun, 13 Aug 2023 16:56:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 65F4C61DCC;
+        Sun, 13 Aug 2023 17:05:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0129C433C7;
+        Sun, 13 Aug 2023 17:05:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691945817;
-        bh=jPGHBks+9tU5ZVyCU3jAeAHzS27CSIO4RJ/C8+mXZ5s=;
+        s=k20201202; t=1691946309;
+        bh=4vlvVfBgckgn5ntKY0ITHZk2Jw//8hLoO8W6fuI9CjQ=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=P3bVp4uddON2p3N8iPP7P0DUiLcOdLma1MQK/gIBVlOou6/5dnwIBduzHF6Lc1eo+
-         69yAzvC5pg5vlvFi0peCu7In93D7BDHwRDhJV2GsKroVz3BfEnYvNU7ayL1VwSvxYx
-         U6xkX5gSqjNI/lkCjpoMMqMBo/gIu1vqyzLkVa9zgkrh3mGr17SHa84kRapK6UBWW5
-         gnRYNwu+ptO+ySpybU/Fzl5eZvYP8vHlMn8lJplzWLra/Mtvy003Nkxndn/3YSz8V5
-         Cx189BpwgqLnr2ROQ10Sq/j/VnNl3T3AzVxQPZDybZtFuD6g9at3tyMO2JK3F7ysDy
-         bSKgKKWIShNqQ==
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-4fe85fd3d27so5850865e87.0;
-        Sun, 13 Aug 2023 09:56:57 -0700 (PDT)
-X-Gm-Message-State: AOJu0YwiQsGYx8UgVhEhVFmZ/FfCoeVUzGmdoisbh9goim3F5qjkvfIr
-        Epw+U6+n1oqp76KyT/PTCZ8AtYz/VRkseHFhNPs=
-X-Google-Smtp-Source: AGHT+IFcV8ot7nktcVhIoofXOBNiVFtlqaPUZTG1hsholLeFrBQ4chBp0L7qmHEX8djtY1fZB3kod9HOSkpMmAqHXzc=
-X-Received: by 2002:a05:6512:2396:b0:4fc:3756:754e with SMTP id
- c22-20020a056512239600b004fc3756754emr5911701lfv.56.1691945815508; Sun, 13
- Aug 2023 09:56:55 -0700 (PDT)
+        b=bkJNXvSKL+uOgM8U32E784pGt27FuNp6ecJCHmdAGhQxpr7Vz1q2gw1xMa3SfpxWT
+         GkviXRYLOR0cokLKP/gxFP3O0g7uD/rwrjlJgEsWpkdw8o9GfzlkBf3TNCJVtxprCB
+         sf+v30UGb44S5SUkd2EGmkcGWy/6+rpL3RLDXvcv7WyHS9PrWTl4CkqLOltf7ZA8jg
+         O1vQHDVmMQ3P5afxDb4v7wAoIZ8nYusoa78EmqoVT/SCNMJqMABAK/BraeHDhuO00z
+         6DJuzNUmGFxYaIRaCais9Z873g5McdPMvpVgVGpk20PWfXIWUeea5VxFpgxrNwe3mB
+         c4ZgR6LDvFCfg==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-4fe0eb0ca75so5275234e87.2;
+        Sun, 13 Aug 2023 10:05:09 -0700 (PDT)
+X-Gm-Message-State: AOJu0Ywrty10dFP/hWaUH07c3NVb8SoaH2kktcSHUOcO+tO1ZbZl7e5/
+        Z32xBg3mmtkxR4hh9JnF753T8GVdg0tGeyoE+lE=
+X-Google-Smtp-Source: AGHT+IEkzc38T/uiq+/d/YONasCbYpzFA9SRX0yQlVEvaUbZ01afAJAQ3U2dbCPyPA3csQKMVH75iM8dOrTdbYiE6tE=
+X-Received: by 2002:a05:6512:5d4:b0:4fe:193c:de74 with SMTP id
+ o20-20020a05651205d400b004fe193cde74mr5066921lfo.18.1691946307763; Sun, 13
+ Aug 2023 10:05:07 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230731022800.1424902-1-yukuai1@huaweicloud.com> <20327acc-e203-9a16-0ff4-f4e49e44c899@molgen.mpg.de>
-In-Reply-To: <20327acc-e203-9a16-0ff4-f4e49e44c899@molgen.mpg.de>
+References: <20230803071711.2546560-1-lilingfeng@huaweicloud.com>
+In-Reply-To: <20230803071711.2546560-1-lilingfeng@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Sun, 13 Aug 2023 20:56:42 +0400
-X-Gmail-Original-Message-ID: <CAPhsuW6DBuLV1KvDtLHTAX1uE-YOdR1snnUvAVU6HzX2O6OOLQ@mail.gmail.com>
-Message-ID: <CAPhsuW6DBuLV1KvDtLHTAX1uE-YOdR1snnUvAVU6HzX2O6OOLQ@mail.gmail.com>
-Subject: Re: [PATCH -next] md/raid10: fix a 'conf->barrier' leakage in raid10_takeover()
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>, yukuai3@huawei.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com
+Date:   Sun, 13 Aug 2023 21:04:54 +0400
+X-Gmail-Original-Message-ID: <CAPhsuW6W3ia3zYVZjVKLND7oGpVQt0qgO3=7nCXTuDmoT3Mzxg@mail.gmail.com>
+Message-ID: <CAPhsuW6W3ia3zYVZjVKLND7oGpVQt0qgO3=7nCXTuDmoT3Mzxg@mail.gmail.com>
+Subject: Re: [PATCH -next v3] md: Hold mddev->reconfig_mutex when trying to
+ get mddev->sync_thread
+To:     Li Lingfeng <lilingfeng@huaweicloud.com>
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, linan122@huawei.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com, lilingfeng3@huawei.com, pmenzel@molgen.mpg.de
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jul 31, 2023 at 9:50=E2=80=AFAM Paul Menzel <pmenzel@molgen.mpg.de>=
- wrote:
-[...]
-> >       return conf;
+On Thu, Aug 3, 2023 at 11:20=E2=80=AFAM Li Lingfeng <lilingfeng@huaweicloud=
+.com> wrote:
 >
-> Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+> From: Li Lingfeng <lilingfeng3@huawei.com>
 >
+> Commit ba9d9f1a707f ("Revert "md: unlock mddev before reap sync_thread in
+> action_store"") removed the scenario of calling md_unregister_thread()
+> without holding mddev->reconfig_mutex, so add a lock holding check before
+> acquiring mddev->sync_thread by passing mdev to md_unregister_thread().
+>
+> Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
+> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
-Applied to md-next after incorporating Paul's recommendations.
+Applied to md-next.
 
 Thanks,
 Song
-
->
-> Kind regards,
->
-> Paul
