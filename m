@@ -2,91 +2,142 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC62C001DB
-	for <linux-raid@archiver.kernel.org>; Sun, 13 Aug 2023 17:22:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB334C001B0
+	for <linux-raid@archiver.kernel.org>; Sun, 13 Aug 2023 17:42:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230334AbjHMRV4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 13 Aug 2023 13:21:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59636 "EHLO
+        id S230059AbjHMRme (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 13 Aug 2023 13:42:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229684AbjHMRVz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 13 Aug 2023 13:21:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC3AA10D0;
-        Sun, 13 Aug 2023 10:21:57 -0700 (PDT)
+        with ESMTP id S229706AbjHMRmd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 13 Aug 2023 13:42:33 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4E181707
+        for <linux-raid@vger.kernel.org>; Sun, 13 Aug 2023 10:42:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7A60D60FBE;
-        Sun, 13 Aug 2023 17:21:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2FD7C433C7;
-        Sun, 13 Aug 2023 17:21:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 76C5560B09
+        for <linux-raid@vger.kernel.org>; Sun, 13 Aug 2023 17:42:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2D0FC433C9
+        for <linux-raid@vger.kernel.org>; Sun, 13 Aug 2023 17:42:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691947316;
-        bh=HRw1zHhveSGkgHF3bY3fnQnq7o9pcZwlmNxSaVaKEZQ=;
+        s=k20201202; t=1691948554;
+        bh=WiVHhk0XYDcF/bw+HZf5fKE5BUKjbIoTA7qIyUpVX+Q=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=lrZoVa3etfrl7/8UMbghLJDsF1VX9k6zxzizlix54dRnZwQ00CHnk05M9HDGw03nQ
-         ojZTaVDuqJ/Ee2c9dD1hdCc1zGTNJ403760Z5SxwiaKjh7Da9FbacQUdlfqa648Y+2
-         0bsg6Govb+PsHjIx17xKPawDwC4kQNgYZr8f5LseydVPWZoOtpcC2ITa6sGQcGqK/m
-         OKWmUJm7qDsC54n3Xz4hRZtc51VdQWdLm1HTZIqv91xMwZ5Qgu4nzOl6e7n25Djjwm
-         El2jqcp3oE6Hza62YKjKWa8cls5+iho8jl0zCz4LVM8ClT91qH/gE7mv1E2OBUOkV2
-         2+SKpp47+Mkyw==
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-4fe28f92d8eso5565346e87.1;
-        Sun, 13 Aug 2023 10:21:56 -0700 (PDT)
-X-Gm-Message-State: AOJu0YzGsoNDnZQTI36GYgMIDfqD7Mdl1AX2ve+poUHaYzNc598uffhV
-        nlxXghVtusH6w2+SgZOEDpAoWVK/K3UKd6ZQ/1E=
-X-Google-Smtp-Source: AGHT+IFmzCAccwRwvRv3YHhEs1pQjc18KGaerDfD8Q6+ZV4oFi6yPiUqxSzdGFPJexpuiMD9HQUXK9V5GRNHXEKbhE4=
-X-Received: by 2002:a05:6512:304c:b0:4fb:9f93:365f with SMTP id
- b12-20020a056512304c00b004fb9f93365fmr5926430lfb.38.1691947314937; Sun, 13
- Aug 2023 10:21:54 -0700 (PDT)
+        b=SrZErNkCZc7OMxeoZOLA0TEQp6Hbc1nHjVvnPZ/drqHNjXo9DeR+AFKhwuclTnFJe
+         egz1RHMDVUz4IL9ORrLs1r42DcWPgmfliLJehLrdPHznr0KwH+Qq+XUfSqOYLGa1Vw
+         iLnarkHJEgivixXXLCuH/sAfAvH6KlpdgFpLxVDgnBx3NRHQPRc40BV/H1W0DynpgU
+         WSxQXq1LyVLgphrpK3Ls5Nv1uXiR+NtXbZlpAFrxR/snhHTXIh2pg3M4IrnsCMlT/Z
+         fpDCXl+KorYrlunZx3xCXXMQAlpoN7cMbEWINrsPrpS6pOGiROXVQjhqm91IX6joMs
+         a+WKyAQGvMQSg==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-4fe216edaf7so5506683e87.0
+        for <linux-raid@vger.kernel.org>; Sun, 13 Aug 2023 10:42:34 -0700 (PDT)
+X-Gm-Message-State: AOJu0YzUb1ftduldnppaslnLFTCqDa+3W0Y3QEX3dBgMPymHh32jXMj3
+        eJrcocvmlQ6D7HUzCMP0N4FfmaBANR+23iIriEs=
+X-Google-Smtp-Source: AGHT+IEu2nOwEtAcAE4VJfUycocXGfubvK6DAs0XIRErM3a3VEtmb/qA4C/mB9ODXh9tBDXVbdflC7H1N6cBrQjSI3w=
+X-Received: by 2002:a05:6512:398f:b0:4fb:7f45:bcb6 with SMTP id
+ j15-20020a056512398f00b004fb7f45bcb6mr3719606lfu.16.1691948552766; Sun, 13
+ Aug 2023 10:42:32 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230731104911.411964-1-kernel@xen0n.name> <20230731104911.411964-5-kernel@xen0n.name>
-In-Reply-To: <20230731104911.411964-5-kernel@xen0n.name>
+References: <20230809171722.11089-1-djeffery@redhat.com> <2c18c875-bc00-465a-9e19-c66d63c07987@molgen.mpg.de>
+ <069a0758d1d2199c5231e920aed6dfff0a552d87.camel@redhat.com> <3074f4bd-bef6-4929-99da-dc68a86d739f@molgen.mpg.de>
+In-Reply-To: <3074f4bd-bef6-4929-99da-dc68a86d739f@molgen.mpg.de>
 From:   Song Liu <song@kernel.org>
-Date:   Sun, 13 Aug 2023 21:21:42 +0400
-X-Gmail-Original-Message-ID: <CAPhsuW4msFL6WO1TFj-amJW2pkztLCruc8UGUVUXz4rftD8dng@mail.gmail.com>
-Message-ID: <CAPhsuW4msFL6WO1TFj-amJW2pkztLCruc8UGUVUXz4rftD8dng@mail.gmail.com>
-Subject: Re: [PATCH 4/5] raid6: test: make sure all intermediate and artifact
- files are .gitignored
-To:     WANG Xuerui <kernel@xen0n.name>
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        WANG Xuerui <git@xen0n.name>
+Date:   Sun, 13 Aug 2023 21:42:18 +0400
+X-Gmail-Original-Message-ID: <CAPhsuW4Mhgs4DiRaxetAhXXcc6ax3kWzvh=DBqr8gYSTkCCQig@mail.gmail.com>
+Message-ID: <CAPhsuW4Mhgs4DiRaxetAhXXcc6ax3kWzvh=DBqr8gYSTkCCQig@mail.gmail.com>
+Subject: Re: [PATCH] md: raid0: account for split bio in iostat accounting
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     Laurence Oberman <loberman@redhat.com>,
+        David Jeffery <djeffery@redhat.com>, linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jul 31, 2023 at 2:49=E2=80=AFPM WANG Xuerui <kernel@xen0n.name> wro=
-te:
+On Thu, Aug 10, 2023 at 4:29=E2=80=AFPM Paul Menzel <pmenzel@molgen.mpg.de>=
+ wrote:
 >
-> From: WANG Xuerui <git@xen0n.name>
+> Dear Laurence,
 >
-> Currently when the raid6test utility is built, the resulting binary and
-> an int.uc file are not being ignored, which can get inadvertently
-> committed as a result when one works on the raid6 code. Ignore them to
-> make `git status` clean at all times.
 >
-> Signed-off-by: WANG Xuerui <git@xen0n.name>
-> ---
->  lib/raid6/test/.gitignore | 2 ++
->  1 file changed, 2 insertions(+)
->  create mode 100644 lib/raid6/test/.gitignore
+> Am 10.08.23 um 14:12 schrieb Laurence Oberman:
+> > On Thu, 2023-08-10 at 08:42 +0200, Paul Menzel wrote:
 >
-> diff --git a/lib/raid6/test/.gitignore b/lib/raid6/test/.gitignore
-> new file mode 100644
-> index 0000000000000..bb92e11396c6e
-> --- /dev/null
-> +++ b/lib/raid6/test/.gitignore
-> @@ -0,0 +1,2 @@
-> +/int.uc
+> >> Am 09.08.23 um 19:16 schrieb David Jeffery:
+> >>> When a bio is split by md raid0, the newly created bio will not be
+> >>> tracked
+> >>> by md for I/O accounting. Only the portion of I/O still assigned to
+> >>> the
+> >>> original bio which was reduced by the split will be accounted for.
+> >>> This
+> >>> results in md iostat data sometimes showing I/O values far below
+> >>> the actual
+> >>> amount of data being sent through md.
+> >>>
+> >>> md_account_bio() needs to be called for all bio generated by the
+> >>> bio split.
+> >>
+> >> Could you please add how you tested this?
+> >>
+> >>> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> >>> Tested-by: Laurence Oberman <loberman@redhat.com>
+> >>> ---
+> >>>    drivers/md/raid0.c | 3 +--
+> >>>    1 file changed, 1 insertion(+), 2 deletions(-)
+> >>>
+> >>> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> >>> index d1ac73fcd852..1fd559ac8c68 100644
+> >>> --- a/drivers/md/raid0.c
+> >>> +++ b/drivers/md/raid0.c
+> >>> @@ -597,8 +597,7 @@ static bool raid0_make_request(struct mddev
+> >>> *mddev, struct bio *bio)
+> >>>                  bio =3D split;
+> >>>          }
+> >>>
+> >>> -       if (bio->bi_pool !=3D &mddev->bio_set)
+> >>> -               md_account_bio(mddev, &bio);
+> >>> +       md_account_bio(mddev, &bio);
+> >>>
+> >>>          orig_sector =3D sector;
+> >>>          zone =3D find_zone(mddev->private, &sector);
+>
+> > This was actually reported by a customer on RHEL9.2 and the way this
+> > played out is they were reading the md raid device directly using dd
+> > buffered reads.
+> > The md raid serves an LVM volume and file system.
+> >
+> > Using dd if=3D/dev/md0 of=3D/dev/null bs=3D1024K count=3D10000 you woul=
+d
+> > sporadically see iostat report these numbers where the raid md0 shows
+> > invalid stats.
+> >
+> >       tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn Device
+> >     221.00       111.0M         0.0k     111.0M       0.0k dm-12
+> >     222.00       110.0M         0.0k     110.0M       0.0k dm-15
+> >     223.00       111.0M         0.0k     111.0M       0.0k dm-16
+> >     220.00       109.0M         0.0k     109.0M       0.0k dm-17
+> >     221.00       111.0M         0.0k     111.0M       0.0k dm-18
+> >     221.00       111.0M         0.0k     111.0M       0.0k dm-19
+> >     219.00       109.0M         0.0k     109.0M       0.0k dm-20
+> >     219.00       110.0M         0.0k     110.0M       0.0k dm-22
+> >     880.00         6.9M         0.0k       6.9M       0.0k md0
+> >                  ******
+> >
+> > After patching with David's patch the issue is no longer reproducible.
+> > We tested using the same method that reproduced the issue reported by
+> > the customer.
+>
+> Thank you for the detailed reply. Should David resent, it=E2=80=99d be gr=
+eat, if
+> that information could be added.
 
-We also need neon.uc, right?
+Hi David,
 
+Please resend the set with testing information and the Fixes tag.
+
+Thanks,
 Song
-
-> +/raid6test
-> --
-> 2.40.0
->
