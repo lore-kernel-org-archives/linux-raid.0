@@ -2,80 +2,147 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4842DC04A6A
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 12:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81557C001B0
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 12:17:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231668AbjHNMDq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Aug 2023 08:03:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50932 "EHLO
+        id S231630AbjHNMQm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 08:16:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231467AbjHNMDO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 08:03:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F5DA10F4
-        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 05:02:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692014478;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=kgb1jw0bzFWkffgnm96Ld5vnVs7PAmnVM7ePjYfLhG0=;
-        b=MiJAu+BfH1uo13cLYa95YwW8rl/EttRqhrNF3rQKVb75O603agUZ5bt1xOfkGRKm4Ktw6D
-        b1NSrSoc5KiB0N0R+hpLW5vFAwBcWioesDmT/349GU5/DlL+BHxiZPe2e24jUTtU9H5Qim
-        /Rwajk4jmr5xfJXbQWPze78J/1tOUGk=
-Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-488-4dYH5Rj3P0qmCT4XJv9qrQ-1; Mon, 14 Aug 2023 08:01:17 -0400
-X-MC-Unique: 4dYH5Rj3P0qmCT4XJv9qrQ-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id E45A53802131;
-        Mon, 14 Aug 2023 12:01:16 +0000 (UTC)
-Received: from o.redhat.com (unknown [10.39.192.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 387441121314;
-        Mon, 14 Aug 2023 12:01:16 +0000 (UTC)
-From:   heinzm@redhat.com
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc:     xni@redhat.com, ncroxon@redhat.com
-Subject: [PATCH v2] md raid1: allow writebehind to work on any leg device set WriteMostly
-Date:   Mon, 14 Aug 2023 14:01:15 +0200
-Message-ID: <2a9592bf3340f34bf588eec984b23ee219f3985e.1692013451.git.heinzm@redhat.com>
+        with ESMTP id S229767AbjHNMQJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 08:16:09 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B09A399
+        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 05:16:07 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RPYJt6BBjz4f3nJt
+        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 20:15:58 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAnBaj+GtpkXTrGAg--.62113S3;
+        Mon, 14 Aug 2023 20:15:59 +0800 (CST)
+Subject: Re: [PATCH 2/2] md/raid0: Fix performance regression for large
+ sequential writes
+To:     Jan Kara <jack@suse.cz>, Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230814091452.9670-1-jack@suse.cz>
+ <20230814092720.3931-2-jack@suse.cz>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <7cf84094-c63f-374e-6a24-f35d0816266f@huaweicloud.com>
+Date:   Mon, 14 Aug 2023 20:15:58 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <20230814092720.3931-2-jack@suse.cz>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
+X-CM-TRANSID: gCh0CgAnBaj+GtpkXTrGAg--.62113S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGw4fur18Jw18Kr1DZryrWFg_yoW5ZFW3pr
+        W5ZF1Fva1kGrn5Kan7JFW7KF4Ika17XrWxCFyfK3srZ3ZxZryqkay8ZrW8Xrnxury8Ca4Y
+        yrWFv3WDWFyDZ37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkjb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
+        c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UE-erUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Heinz Mauelshagen <heinzm@redhat.com>
+Hi,
 
-This is version 2 replacing my previous patch series as requested by Song Liu.
+ÔÚ 2023/08/14 17:27, Jan Kara Ð´µÀ:
+> Commit f00d7c85be9e ("md/raid0: fix up bio splitting.") among other
+> things changed how bio that needs to be split is submitted. Before this
+> commit, we have split the bio, mapped and submitted each part. After
+> this commit, we map only the first part of the split bio and submit the
+> second part unmapped. Due to bio sorting in __submit_bio_noacct() this
+> results in the following request ordering:
+> 
+>    9,0   18     1181     0.525037895 15995  Q  WS 1479315464 + 63392
+> 
+>    Split off chunk-sized (1024 sectors) request:
+> 
+>    9,0   18     1182     0.629019647 15995  X  WS 1479315464 / 1479316488
+> 
+>    Request is unaligned to the chunk so it's split in
+>    raid0_make_request().  This is the first part mapped and punted to
+>    bio_list:
+> 
+>    8,0   18     7053     0.629020455 15995  A  WS 739921928 + 1016 <- (9,0) 1479315464
+> 
+>    Now raid0_make_request() returns, second part is postponed on
+>    bio_list. __submit_bio_noacct() resorts the bio_list, mapped request
+>    is submitted to the underlying device:
+> 
+>    8,0   18     7054     0.629022782 15995  G  WS 739921928 + 1016
+> 
+>    Now we take another request from the bio_list which is the remainder
+>    of the original huge request. Split off another chunk-sized bit from
+>    it and the situation repeats:
+> 
+>    9,0   18     1183     0.629024499 15995  X  WS 1479316488 / 1479317512
+>    8,16  18     6998     0.629025110 15995  A  WS 739921928 + 1016 <- (9,0) 1479316488
+>    8,16  18     6999     0.629026728 15995  G  WS 739921928 + 1016
+>    ...
+>    9,0   18     1184     0.629032940 15995  X  WS 1479317512 / 1479318536 [libnetacq-write]
+>    8,0   18     7059     0.629033294 15995  A  WS 739922952 + 1016 <- (9,0) 1479317512
+>    8,0   18     7060     0.629033902 15995  G  WS 739922952 + 1016
+>    ...
+> 
+>    This repeats until we consume the whole original huge request. Now we
+>    finally get to processing the second parts of the split off requests
+>    (in reverse order):
+> 
+>    8,16  18     7181     0.629161384 15995  A  WS 739952640 + 8 <- (9,0) 1479377920
+>    8,0   18     7239     0.629162140 15995  A  WS 739952640 + 8 <- (9,0) 1479376896
+>    8,16  18     7186     0.629163881 15995  A  WS 739951616 + 8 <- (9,0) 1479375872
+>    8,0   18     7242     0.629164421 15995  A  WS 739951616 + 8 <- (9,0) 1479374848
+>    ...
+> 
+> I guess it is obvious that this IO pattern is extremely inefficient way
+> to perform sequential IO. It also makes bio_list to grow to rather long
+> lengths.
+> 
+> Change raid0_make_request() to map both parts of the split bio. Since we
+> know we are provided with at most chunk-sized bios, we will always need
+> to split the incoming bio at most once.
 
-As the WriteMostly flag can be set on any component device of a RAID1
-array, remove the constraint that it only works if set on the first one.
+I understand the problem now, but I'm lost here, can you explain why "at
+most once" more ? Do you mean that the original bio won't be splited
+again?
 
+Thanks,
+Kuai
 
-Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
-Tested-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/raid1.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index dd25832eb045..913cd46b786b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1519,7 +1519,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			 * allocate memory, or a reader on WriteMostly
- 			 * is waiting for behind writes to flush */
- 			if (bitmap &&
--			    test_bit(WriteMostly, &rdev->flags) &&
-+			    write_behind &&
- 			    (atomic_read(&bitmap->behind_writes)
- 			     < mddev->bitmap_info.max_write_behind) &&
- 			    !waitqueue_active(&bitmap->behind_wait)) {
--- 
-2.41.0
+> 
+> Fixes: f00d7c85be9e ("md/raid0: fix up bio splitting.")
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>   drivers/md/raid0.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index d3c55f2e9b18..595856948dff 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -626,7 +626,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+>   		struct bio *split = bio_split(bio, sectors, GFP_NOIO,
+>   					      &mddev->bio_set);
+>   		bio_chain(split, bio);
+> -		submit_bio_noacct(bio);
+> +		raid0_map_submit_bio(mddev, bio);
+>   		bio = split;
+>   	}
+>   
+> 
 
