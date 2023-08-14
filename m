@@ -2,73 +2,177 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27EB2C001DB
-	for <linux-raid@archiver.kernel.org>; Sun, 13 Aug 2023 18:05:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C27C001E0
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 07:07:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230519AbjHMSFi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 13 Aug 2023 14:05:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53342 "EHLO
+        id S233203AbjHNHHN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 03:07:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229682AbjHMSFh (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 13 Aug 2023 14:05:37 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A772119F;
-        Sun, 13 Aug 2023 11:05:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3C9C660C17;
-        Sun, 13 Aug 2023 18:05:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95682C433C7;
-        Sun, 13 Aug 2023 18:05:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691949938;
-        bh=6CxxC2X/bSrbG1oSNI+Vc2RwjrYKIPxi63YQco6hIEQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=ifTdvqQdMdMeJUATcgGcbDL/Nk4K+WdeXyNNMwyX1e4uwozat2V7dg+fIpyq8n8RN
-         HVpyEdd5bdju0gnC++16RBZIdsYQqrP/eNR/KxazR63q4+B42UtvaoSt4lqUQvbmgA
-         rjI1pPV33HPwGiktqIsdcnXbxSWJURScGEAZ9QR9vS/ApAZPh8bRGVB3l5NSeBdjvF
-         fa5y2nur/P8OcB7gpicXNf6G46rPrrcd6RGl2WcY6P6RUEkqiyJEN+1W0x0u5QGnW/
-         PA+5XPkpKoRWH6xioV7Gk2PXaMHrZO04EZ04tUstFGyd0tJXC8/Socs0J5xRqxZxgW
-         r7cqmkjYk4tYQ==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-4fe7e1ef45dso5683244e87.1;
-        Sun, 13 Aug 2023 11:05:38 -0700 (PDT)
-X-Gm-Message-State: AOJu0YwnUBXeTLJ7ohfuYrcQhKqBVE//No0NEgEgLtN71v6I0B58RGDh
-        noP5eWbb/TpBovrkfkn5CfpcA2ex00tcA/U2jD0=
-X-Google-Smtp-Source: AGHT+IEFggOgCUVUmx/8KdVSMus4JSQxEgEt1R34d708vA0praW+DI2t3s60NXMHKdIZl9o2KLud/JfSxRRJsIC0hiI=
-X-Received: by 2002:a05:6512:3085:b0:4fe:347c:874b with SMTP id
- z5-20020a056512308500b004fe347c874bmr6778041lfd.8.1691949936659; Sun, 13 Aug
- 2023 11:05:36 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230808104912.1254342-1-yukuai1@huaweicloud.com> <20230808160520.GA16024@lst.de>
-In-Reply-To: <20230808160520.GA16024@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Sun, 13 Aug 2023 22:05:23 +0400
-X-Gmail-Original-Message-ID: <CAPhsuW5eJ2snSoJ4SryYhjteBYUM9W9MtVQq5w8noOEAvBj+fA@mail.gmail.com>
-Message-ID: <CAPhsuW5eJ2snSoJ4SryYhjteBYUM9W9MtVQq5w8noOEAvBj+fA@mail.gmail.com>
-Subject: Re: [PATCH -next] md/raid5-cache: fix null-ptr-deref for r5l_flush_stripe_to_raid()
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>, bugfood-ml@fatooh.org,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S234042AbjHNHHJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 03:07:09 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4D7FE63
+        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 00:07:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1691996828; x=1723532828;
+  h=date:from:to:cc:subject:message-id;
+  bh=cDRKaMo6DwO9hx9eJ4CqMgO/xDER9UQ8IYffgoAXVKw=;
+  b=UcZG0yL1gv/4si0ADa2ukk8+RD3Nfrw5AN15jsb4ehZGwMySirctwELI
+   vvUIerwz7Wjo9SLSTUggqFjika5etEheziky588jbrZmbtz/vbG50edCR
+   EaFBTLRAGf46uoa0k5WUrRT7WSnAV9jI6VjZC/iPMwzOaGSZza88riP4P
+   bTT3DElOZLc3RjGZlH5NBFEuPLIjNb1ztrErX4tjHGLqgyedKoq6kwcr4
+   yX71wqaLH7dkfw6ywKlDnDJrVmTvndP4OcyMXQLvo4upoMkOzfHWBhfsC
+   GcxDbrBCS/aVekggYy9eRw+Pn0S2HyfE1aqAb5LrNwwclhADBdseIwJr6
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10801"; a="370878116"
+X-IronPort-AV: E=Sophos;i="6.01,171,1684825200"; 
+   d="scan'208";a="370878116"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Aug 2023 00:07:08 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10801"; a="1063962521"
+X-IronPort-AV: E=Sophos;i="6.01,172,1684825200"; 
+   d="scan'208";a="1063962521"
+Received: from lkp-server01.sh.intel.com (HELO d1ccc7e87e8f) ([10.239.97.150])
+  by fmsmga005.fm.intel.com with ESMTP; 14 Aug 2023 00:06:44 -0700
+Received: from kbuild by d1ccc7e87e8f with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qVRf1-0009P2-2O;
+        Mon, 14 Aug 2023 07:06:43 +0000
+Date:   Mon, 14 Aug 2023 15:06:05 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 733fd910ffa5cdc26776c98cc4612b0ce3e2bbfd
+Message-ID: <202308141502.TKaGobvr-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Aug 8, 2023 at 8:05=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrote=
-:
->
-> Looks good:
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
->
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 733fd910ffa5cdc26776c98cc4612b0ce3e2bbfd  md/raid5-cache: fix null-ptr-deref for r5l_flush_stripe_to_raid()
 
-Applied to md-next. Thanks!
+elapsed time: 723m
 
-Song
+configs tested: 107
+configs skipped: 4
 
-PS: The first email didn't make it to lore, and it didn't show up in
-patchwork. :(
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r031-20230814   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230814   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                  randconfig-r046-20230814   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r016-20230814   clang
+csky                                defconfig   gcc  
+hexagon              randconfig-r012-20230814   clang
+hexagon              randconfig-r041-20230814   clang
+hexagon              randconfig-r045-20230814   clang
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-r004-20230814   gcc  
+i386         buildonly-randconfig-r005-20230814   gcc  
+i386         buildonly-randconfig-r006-20230814   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-i001-20230814   gcc  
+i386                 randconfig-i002-20230814   gcc  
+i386                 randconfig-i003-20230814   gcc  
+i386                 randconfig-i004-20230814   gcc  
+i386                 randconfig-i005-20230814   gcc  
+i386                 randconfig-i006-20230814   gcc  
+i386                 randconfig-i011-20230814   clang
+i386                 randconfig-i012-20230814   clang
+i386                 randconfig-i013-20230814   clang
+i386                 randconfig-i014-20230814   clang
+i386                 randconfig-i015-20230814   clang
+i386                 randconfig-i016-20230814   clang
+i386                 randconfig-r022-20230814   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r026-20230814   gcc  
+m68k                             allmodconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r033-20230814   gcc  
+microblaze           randconfig-r032-20230814   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r006-20230814   gcc  
+openrisc             randconfig-r024-20230814   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r036-20230814   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r003-20230814   gcc  
+riscv                randconfig-r021-20230814   clang
+riscv                randconfig-r034-20230814   gcc  
+riscv                randconfig-r042-20230814   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r023-20230814   clang
+s390                 randconfig-r044-20230814   clang
+sh                               allmodconfig   gcc  
+sh                   randconfig-r035-20230814   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r025-20230814   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                   randconfig-r004-20230814   clang
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-r001-20230814   gcc  
+x86_64       buildonly-randconfig-r002-20230814   gcc  
+x86_64       buildonly-randconfig-r003-20230814   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-r005-20230814   gcc  
+x86_64               randconfig-x001-20230814   clang
+x86_64               randconfig-x002-20230814   clang
+x86_64               randconfig-x003-20230814   clang
+x86_64               randconfig-x004-20230814   clang
+x86_64               randconfig-x005-20230814   clang
+x86_64               randconfig-x006-20230814   clang
+x86_64               randconfig-x011-20230814   gcc  
+x86_64               randconfig-x012-20230814   gcc  
+x86_64               randconfig-x013-20230814   gcc  
+x86_64               randconfig-x014-20230814   gcc  
+x86_64               randconfig-x015-20230814   gcc  
+x86_64               randconfig-x016-20230814   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa               randconfig-r001-20230814   gcc  
+xtensa               randconfig-r002-20230814   gcc  
+xtensa               randconfig-r013-20230814   gcc  
+xtensa               randconfig-r015-20230814   gcc  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
