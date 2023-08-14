@@ -2,109 +2,105 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17FA5C04E69
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 13:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E3BC001E0
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 16:26:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231660AbjHNNyl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Aug 2023 09:54:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56400 "EHLO
+        id S231176AbjHNQ00 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 12:26:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231712AbjHNNyX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 09:54:23 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81FCDE7D
-        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 06:54:22 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-688142a392eso3166245b3a.3
-        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 06:54:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1692021262; x=1692626062;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lxdE2Q9T1UX2QI7uu1gFMik2XpiMuGjdCiq1TVfU6V0=;
-        b=tGWHk+X5xic9wmoatJ059bBc5+bAlv/iXTBYwinz/0cP93jW2bj4RVhWhfB1qBYuCP
-         95bFy2IaM7uFETzxIipK8y3VWwUsgJH7f/jhfQg8xn4uzbk6IGU4sSt2Bs04x2esKnsX
-         302imBbTbMjuxQ5rVD4cx4XwajSMeIq+oOPIQgfryyboWsAT9heslGHSHo775pnjl+9I
-         SZeBrOgAiUlHKBnPOgBz2xUk3UVOAcL4ZgKwolvddAiamf6uqEUQpi/ghhzgltjf3PEo
-         SqKt0SZJsaimH0dGgjIZRgZcQbkxWy4z88+JSY1wu3NMJHs4qG9NuOw/KJafZ5d/iNW4
-         Wdnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692021262; x=1692626062;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=lxdE2Q9T1UX2QI7uu1gFMik2XpiMuGjdCiq1TVfU6V0=;
-        b=d/aiK4vUvLbIIK4AYpQL/vsQK3BERsz8Pv0dEc+JO4rv3TQgw9C2PwRehCZjQD0b9e
-         lnNAGv5U8j2nqP9+XF3plGzC3gtlh7/jN1MmFjwEjuAjVVX6bP8ibsSjTiXB24962DGE
-         08jjCQpZJkrOez9H0lT3imX/Bh1FVsvO5FHVd+BvmQnPCHgrlZRBhPlbp6NL+5cAGg5c
-         HwSFniGpXAEgzAdKkfPavgBJeqXAEy+im2IvsViLyY5MpSxYIfTVe7iPeb5faZCCGBi8
-         WzGju5lT0kT9Niho+1fPlfmpNJ6k3fFOL/XAzQIvQJNlsAAeUtBDNJsAXEPlCqAhxuqO
-         dHHg==
-X-Gm-Message-State: AOJu0YweY8Hj4ZQZk7NPyn4JoIopRXQ4KLA5ZcOTyqWptsYuvddSb0n8
-        /b0a3y9BRwRLaZ1EuJMZeg2xBQ==
-X-Google-Smtp-Source: AGHT+IGyxBs1Am1hZ6Ysv3NF3J2PmmouELd2lJvBLjzWavaypnWGaYdXMu4Ay/HKYFFnGzI46Ljrlw==
-X-Received: by 2002:a05:6a00:134c:b0:682:a6c5:6f28 with SMTP id k12-20020a056a00134c00b00682a6c56f28mr14455219pfu.32.1692021261937;
-        Mon, 14 Aug 2023 06:54:21 -0700 (PDT)
-Received: from nixos.tailf4e9e.ts.net ([47.75.78.161])
-        by smtp.googlemail.com with ESMTPSA id m26-20020a056a00165a00b006874a6850e9sm7962122pfc.215.2023.08.14.06.54.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Aug 2023 06:54:21 -0700 (PDT)
-From:   Xueshi Hu <xueshi.hu@smartx.com>
-To:     yukuai3@huawei.com, song@kernel.org, dan.j.williams@intel.com,
-        neilb@suse.de, akpm@linux-foundation.org, neilb@suse.com
-Cc:     linux-raid@vger.kernel.org, Xueshi Hu <xueshi.hu@smartx.com>
-Subject: [PATCH v6 1/3] md/raid1: call free_r1bio() before allow_barrier()
-Date:   Mon, 14 Aug 2023 21:53:54 +0800
-Message-Id: <20230814135356.1113639-2-xueshi.hu@smartx.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230814135356.1113639-1-xueshi.hu@smartx.com>
-References: <20230814135356.1113639-1-xueshi.hu@smartx.com>
+        with ESMTP id S230397AbjHNQ0L (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 12:26:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22A6CA8;
+        Mon, 14 Aug 2023 09:26:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B443B621AB;
+        Mon, 14 Aug 2023 16:26:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2065FC433C7;
+        Mon, 14 Aug 2023 16:26:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692030367;
+        bh=5lsPZ8SK0Jh8HjHHDJJGtSSEohvEECM6ocPfbzBa/04=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=JEgyhuiSU3m4Jia4n6ZxTEVjZ9SXkbTCEU6TEdWOeBkswm2lfFlnQ1LPia6CcB2ey
+         ZFEeHfs0RkBQeTcQbPbfApglNo9xbZUisjv97Ev4c5JkIkIOIefvwObJ8EdhUgm+KZ
+         SSyHAtcOCp9pqgGJZPY8ZWAILkXmMKRU9lI07ckBjD937VPW5mjf5LhYcZZ7r3JzL0
+         pBomIyDOLhDt6I24EGUyn+Uhzwqnh6edAGrmi23WOBw3krwfWvu4+kPl9J5AZLFmNt
+         LcnhWtbC4uLIsBtPBLdYjv1BHahFRhGF0+ESjULhvUhteqJGFA/vX3rNamYzkcqY1B
+         YWrBfoCjNHtZQ==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-4fe21e7f3d1so7188403e87.3;
+        Mon, 14 Aug 2023 09:26:07 -0700 (PDT)
+X-Gm-Message-State: AOJu0Yx7DPID2MlP6Hbh5tCyyoAkoKwYvu7BtsHP2iyiSOAF6A7WsUJg
+        yqTSdUaVZlvlHBcnl1HolNqfJpolrVjqtFcaPeU=
+X-Google-Smtp-Source: AGHT+IHC3kpfPeGs64G5sojfuXHX9s6bcS0IXNoKiElquATEzVdi0tTCdyqu4T+k5XfbN7PC+uu6YP6HQKvpkfzRDPA=
+X-Received: by 2002:ac2:491a:0:b0:4fe:1e74:3f3e with SMTP id
+ n26-20020ac2491a000000b004fe1e743f3emr6143823lfi.48.1692030365117; Mon, 14
+ Aug 2023 09:26:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <2a9592bf3340f34bf588eec984b23ee219f3985e.1692013451.git.heinzm@redhat.com>
+In-Reply-To: <2a9592bf3340f34bf588eec984b23ee219f3985e.1692013451.git.heinzm@redhat.com>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 15 Aug 2023 00:25:52 +0800
+X-Gmail-Original-Message-ID: <CAPhsuW7VXegx5+q0L5UHcRMRAyyJHBM_6ag4Y-o4fSiK1yDjCQ@mail.gmail.com>
+Message-ID: <CAPhsuW7VXegx5+q0L5UHcRMRAyyJHBM_6ag4Y-o4fSiK1yDjCQ@mail.gmail.com>
+Subject: Re: [PATCH v2] md raid1: allow writebehind to work on any leg device
+ set WriteMostly
+To:     heinzm@redhat.com
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        xni@redhat.com, ncroxon@redhat.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-After allow_barrier(), an concurrent raid1_reshape() will replace old
-mempool and r1conf::raid_disks, which are necessary when freeing the
-r1bio. Change the execution order of free_r1bio() and allow_barrier() so
-that kernel can free r1bio safely.
+On Mon, Aug 14, 2023 at 8:04=E2=80=AFPM <heinzm@redhat.com> wrote:
+>
+> From: Heinz Mauelshagen <heinzm@redhat.com>
+>
+> This is version 2 replacing my previous patch series as requested by Song=
+ Liu.
 
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
----
- drivers/md/raid1.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+For future patches, you can move the line above to ...
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index dd25832eb045..dbbee0c14a5b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -313,6 +313,7 @@ static void raid_end_bio_io(struct r1bio *r1_bio)
- {
- 	struct bio *bio = r1_bio->master_bio;
- 	struct r1conf *conf = r1_bio->mddev->private;
-+	sector_t sector = r1_bio->sector;
- 
- 	/* if nobody has done the final endio yet, do it now */
- 	if (!test_and_set_bit(R1BIO_Returned, &r1_bio->state)) {
-@@ -323,13 +324,13 @@ static void raid_end_bio_io(struct r1bio *r1_bio)
- 
- 		call_bio_endio(r1_bio);
- 	}
-+
-+	free_r1bio(r1_bio);
- 	/*
- 	 * Wake up any possible resync thread that waits for the device
- 	 * to go idle.  All I/Os, even write-behind writes, are done.
- 	 */
--	allow_barrier(conf, r1_bio->sector);
--
--	free_r1bio(r1_bio);
-+	allow_barrier(conf, sector);
- }
- 
- /*
--- 
-2.40.1
+>
+> As the WriteMostly flag can be set on any component device of a RAID1
+> array, remove the constraint that it only works if set on the first one.
+>
+>
+> Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
+> Tested-by: Xiao Ni <xni@redhat.com>
+> ---
 
+... here, below an extra "---" so that git-am will remove it automatically.
+
+Other than this, applied to md-next.
+
+Thanks,
+Song
+
+> ---
+>  drivers/md/raid1.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index dd25832eb045..913cd46b786b 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1519,7 +1519,7 @@ static void raid1_write_request(struct mddev *mddev=
+, struct bio *bio,
+>                          * allocate memory, or a reader on WriteMostly
+>                          * is waiting for behind writes to flush */
+>                         if (bitmap &&
+> -                           test_bit(WriteMostly, &rdev->flags) &&
+> +                           write_behind &&
+>                             (atomic_read(&bitmap->behind_writes)
+>                              < mddev->bitmap_info.max_write_behind) &&
+>                             !waitqueue_active(&bitmap->behind_wait)) {
+> --
+> 2.41.0
+>
