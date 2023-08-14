@@ -2,105 +2,168 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46179C04A6A
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 12:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B1D4C001B0
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 13:16:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229515AbjHNMii (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Aug 2023 08:38:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57140 "EHLO
+        id S229786AbjHNNPp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 09:15:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230499AbjHNMib (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 08:38:31 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21D741703
-        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 05:38:22 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RPYpc2z75z4f3mKy
-        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 20:38:16 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgA3x6k6INpk_krHAg--.41276S3;
-        Mon, 14 Aug 2023 20:38:19 +0800 (CST)
-Subject: Re: [PATCH v5 3/3] md/raid1: keep the barrier held until
- handle_read_error() finished
-To:     Xueshi Hu <xueshi.hu@smartx.com>, song@kernel.org,
-        djeffery@redhat.com, dan.j.williams@intel.com, neilb@suse.de,
-        akpm@linux-foundation.org, neilb@suse.com
-Cc:     linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230814085108.991040-1-xueshi.hu@smartx.com>
- <20230814085108.991040-4-xueshi.hu@smartx.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <4d7938bf-07e7-608b-8b0a-c7707e7b5e6c@huaweicloud.com>
-Date:   Mon, 14 Aug 2023 20:38:18 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229916AbjHNNPm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 09:15:42 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3215CF5
+        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 06:15:41 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id E7B6D1F7AB;
+        Mon, 14 Aug 2023 13:15:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1692018939; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=6m2Z0ju/fZJ8FXk1GwQeLIjXcf3CnTBaj778JLDwqK0=;
+        b=bQqVnm6CCR3cyW5fNj6MJsma6Qm0nm/AFpw1QFeerbdrmFWBcigH0qHSRSRjmM7hFOP3rE
+        oxAn3IxdK03crpd6ntY4S5zw+zSZBRFGKK7xJhMpML6SW7esFme6A/9CPc8w8MdCawHMWB
+        2k9oYNuxmFV6KPUCBBrpU+VuwD3hnLg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1692018939;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=6m2Z0ju/fZJ8FXk1GwQeLIjXcf3CnTBaj778JLDwqK0=;
+        b=mgXQQGjoLDERccmKfIAIBYWCCr/Zim5WQiDTC9j6M5E/cSZNs5xz7jNXhcKfhrSgU+ALsV
+        m/l5JWSjs5p/8SAQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D89E4138E2;
+        Mon, 14 Aug 2023 13:15:39 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id rondNPso2mRKVgAAMHmgww
+        (envelope-from <jack@suse.cz>); Mon, 14 Aug 2023 13:15:39 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 72DDFA0769; Mon, 14 Aug 2023 15:15:39 +0200 (CEST)
+Date:   Mon, 14 Aug 2023 15:15:39 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Jan Kara <jack@suse.cz>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>,
+        "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH 2/2] md/raid0: Fix performance regression for large
+ sequential writes
+Message-ID: <20230814131539.qlsj774c7zxzyiet@quack3>
+References: <20230814091452.9670-1-jack@suse.cz>
+ <20230814092720.3931-2-jack@suse.cz>
+ <7cf84094-c63f-374e-6a24-f35d0816266f@huaweicloud.com>
 MIME-Version: 1.0
-In-Reply-To: <20230814085108.991040-4-xueshi.hu@smartx.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgA3x6k6INpk_krHAg--.41276S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KF18XF4kAr17WFW8JF48Crg_yoW8Xr43pa
-        1UGas7ZrWDJFWY93WqyFWDua4Fv3sYgFW8CrWkWwn7uF1vqrZ0kFWUWa45Wrn8Cr45W342
-        qF1DK39rAF4jyFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-        x7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
-        wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
-        80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0
-        I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04
-        k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-        7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUrcTmDUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+In-Reply-To: <7cf84094-c63f-374e-6a24-f35d0816266f@huaweicloud.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-ÔÚ 2023/08/14 16:51, Xueshi Hu Ð´µÀ:
-> handle_read_error() will call allow_barrier() to match the former barrier
-> raising. However, it should put the allow_barrier() at the end to avoid an
-> concurrent raid reshape.
+On Mon 14-08-23 20:15:58, Yu Kuai wrote:
+> Hi,
 > 
-> Fixes: 689389a06ce7 ("md/raid1: simplify handle_read_error().")
-
-LGTM
-
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-
-> Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
-> ---
->   drivers/md/raid1.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
+> åœ¨ 2023/08/14 17:27, Jan Kara å†™é“:
+> > Commit f00d7c85be9e ("md/raid0: fix up bio splitting.") among other
+> > things changed how bio that needs to be split is submitted. Before this
+> > commit, we have split the bio, mapped and submitted each part. After
+> > this commit, we map only the first part of the split bio and submit the
+> > second part unmapped. Due to bio sorting in __submit_bio_noacct() this
+> > results in the following request ordering:
+> > 
+> >    9,0   18     1181     0.525037895 15995  Q  WS 1479315464 + 63392
+> > 
+> >    Split off chunk-sized (1024 sectors) request:
+> > 
+> >    9,0   18     1182     0.629019647 15995  X  WS 1479315464 / 1479316488
+> > 
+> >    Request is unaligned to the chunk so it's split in
+> >    raid0_make_request().  This is the first part mapped and punted to
+> >    bio_list:
+> > 
+> >    8,0   18     7053     0.629020455 15995  A  WS 739921928 + 1016 <- (9,0) 1479315464
+> > 
+> >    Now raid0_make_request() returns, second part is postponed on
+> >    bio_list. __submit_bio_noacct() resorts the bio_list, mapped request
+> >    is submitted to the underlying device:
+> > 
+> >    8,0   18     7054     0.629022782 15995  G  WS 739921928 + 1016
+> > 
+> >    Now we take another request from the bio_list which is the remainder
+> >    of the original huge request. Split off another chunk-sized bit from
+> >    it and the situation repeats:
+> > 
+> >    9,0   18     1183     0.629024499 15995  X  WS 1479316488 / 1479317512
+> >    8,16  18     6998     0.629025110 15995  A  WS 739921928 + 1016 <- (9,0) 1479316488
+> >    8,16  18     6999     0.629026728 15995  G  WS 739921928 + 1016
+> >    ...
+> >    9,0   18     1184     0.629032940 15995  X  WS 1479317512 / 1479318536 [libnetacq-write]
+> >    8,0   18     7059     0.629033294 15995  A  WS 739922952 + 1016 <- (9,0) 1479317512
+> >    8,0   18     7060     0.629033902 15995  G  WS 739922952 + 1016
+> >    ...
+> > 
+> >    This repeats until we consume the whole original huge request. Now we
+> >    finally get to processing the second parts of the split off requests
+> >    (in reverse order):
+> > 
+> >    8,16  18     7181     0.629161384 15995  A  WS 739952640 + 8 <- (9,0) 1479377920
+> >    8,0   18     7239     0.629162140 15995  A  WS 739952640 + 8 <- (9,0) 1479376896
+> >    8,16  18     7186     0.629163881 15995  A  WS 739951616 + 8 <- (9,0) 1479375872
+> >    8,0   18     7242     0.629164421 15995  A  WS 739951616 + 8 <- (9,0) 1479374848
+> >    ...
+> > 
+> > I guess it is obvious that this IO pattern is extremely inefficient way
+> > to perform sequential IO. It also makes bio_list to grow to rather long
+> > lengths.
+> > 
+> > Change raid0_make_request() to map both parts of the split bio. Since we
+> > know we are provided with at most chunk-sized bios, we will always need
+> > to split the incoming bio at most once.
 > 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 5f17f30a00a9..5a5eb5f1a224 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2499,6 +2499,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
->   	struct mddev *mddev = conf->mddev;
->   	struct bio *bio;
->   	struct md_rdev *rdev;
-> +	sector_t sector;
->   
->   	clear_bit(R1BIO_ReadError, &r1_bio->state);
->   	/* we got a read error. Maybe the drive is bad.  Maybe just
-> @@ -2528,12 +2529,13 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
->   	}
->   
->   	rdev_dec_pending(rdev, conf->mddev);
-> -	allow_barrier(conf, r1_bio->sector);
-> +	sector = r1_bio->sector;
->   	bio = r1_bio->master_bio;
->   
->   	/* Reuse the old r1_bio so that the IO_BLOCKED settings are preserved */
->   	r1_bio->state = 0;
->   	raid1_read_request(mddev, bio, r1_bio->sectors, r1_bio);
-> +	allow_barrier(conf, sector);
->   }
->   
->   static void raid1d(struct md_thread *thread)
-> 
+> I understand the problem now, but I'm lost here, can you explain why "at
+> most once" more ? Do you mean that the original bio won't be splited
+> again?
 
+Yes. md_submit_bio() splits the incoming bio by bio_split_to_limits() so we
+are guaranteed raid0_make_request() gets bio at most chunk_sectors long.
+If this bio is misaligned, it will be split in raid0_make_request(). But
+after that we are sure both parts of the bio are meeting requirements of
+the raid0 code so we can just directly map them to the underlying device and
+submit them.
+
+								Honza
+
+> > Fixes: f00d7c85be9e ("md/raid0: fix up bio splitting.")
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >   drivers/md/raid0.c | 2 +-
+> >   1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> > index d3c55f2e9b18..595856948dff 100644
+> > --- a/drivers/md/raid0.c
+> > +++ b/drivers/md/raid0.c
+> > @@ -626,7 +626,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+> >   		struct bio *split = bio_split(bio, sectors, GFP_NOIO,
+> >   					      &mddev->bio_set);
+> >   		bio_chain(split, bio);
+> > -		submit_bio_noacct(bio);
+> > +		raid0_map_submit_bio(mddev, bio);
+> >   		bio = split;
+> >   	}
+> > 
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
