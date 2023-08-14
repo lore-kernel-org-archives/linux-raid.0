@@ -2,56 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81557C001B0
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 12:17:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 981E3C001DB
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Aug 2023 12:35:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231630AbjHNMQm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Aug 2023 08:16:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51416 "EHLO
+        id S229800AbjHNMf0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 08:35:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229767AbjHNMQJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 08:16:09 -0400
+        with ESMTP id S231332AbjHNMfN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 08:35:13 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B09A399
-        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 05:16:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0700E10C1
+        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 05:35:07 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RPYJt6BBjz4f3nJt
-        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 20:15:58 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RPYkv4V3rz4f3lXw
+        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 20:35:03 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAnBaj+GtpkXTrGAg--.62113S3;
-        Mon, 14 Aug 2023 20:15:59 +0800 (CST)
-Subject: Re: [PATCH 2/2] md/raid0: Fix performance regression for large
- sequential writes
-To:     Jan Kara <jack@suse.cz>, Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230814091452.9670-1-jack@suse.cz>
- <20230814092720.3931-2-jack@suse.cz>
+        by APP4 (Coremail) with SMTP id gCh0CgBH16l2H9pkFiTHAg--.52952S3;
+        Mon, 14 Aug 2023 20:35:03 +0800 (CST)
+Subject: Re: [PATCH v5 1/3] md/raid1: call free_r1bio() before allow_barrier()
+To:     Xueshi Hu <xueshi.hu@smartx.com>, song@kernel.org,
+        djeffery@redhat.com, dan.j.williams@intel.com, neilb@suse.de,
+        akpm@linux-foundation.org, neilb@suse.com
+Cc:     linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230814085108.991040-1-xueshi.hu@smartx.com>
+ <20230814085108.991040-2-xueshi.hu@smartx.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <7cf84094-c63f-374e-6a24-f35d0816266f@huaweicloud.com>
-Date:   Mon, 14 Aug 2023 20:15:58 +0800
+Message-ID: <76f086c8-17e9-2336-a241-6c030a8ccd9b@huaweicloud.com>
+Date:   Mon, 14 Aug 2023 20:35:02 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20230814092720.3931-2-jack@suse.cz>
+In-Reply-To: <20230814085108.991040-2-xueshi.hu@smartx.com>
 Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnBaj+GtpkXTrGAg--.62113S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxGw4fur18Jw18Kr1DZryrWFg_yoW5ZFW3pr
-        W5ZF1Fva1kGrn5Kan7JFW7KF4Ika17XrWxCFyfK3srZ3ZxZryqkay8ZrW8Xrnxury8Ca4Y
-        yrWFv3WDWFyDZ37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkjb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+X-CM-TRANSID: gCh0CgBH16l2H9pkFiTHAg--.52952S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7ur17urW7JF4DtFyxKF1xZrb_yoW8AFyUpa
+        1UG3sa93ykJFya9w4DtF4UuFyrZanYgFyrC393Wws5WFn2qFZ8KF1UXF15Wr18ZFs3KF47
+        t3Z5C3y3X3yYyaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
         6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
-        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-        xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-        c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UE-erUUUUU=
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
+        wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
+        80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0
+        I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
+        k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
+        c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UWE__UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -60,89 +60,57 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/08/14 17:27, Jan Kara 写道:
-> Commit f00d7c85be9e ("md/raid0: fix up bio splitting.") among other
-> things changed how bio that needs to be split is submitted. Before this
-> commit, we have split the bio, mapped and submitted each part. After
-> this commit, we map only the first part of the split bio and submit the
-> second part unmapped. Due to bio sorting in __submit_bio_noacct() this
-> results in the following request ordering:
+在 2023/08/14 16:51, Xueshi Hu 写道:
+> After allow_barrier(), an concurrent raid1_reshape() will replace old
+> mempool and r1conf::raid_disks, which are necessary when freeing the
+> r1bio. Change the execution order of free_r1bio() and allow_barrier() so
+> that kernel can free r1bio safely.
 > 
->    9,0   18     1181     0.525037895 15995  Q  WS 1479315464 + 63392
-> 
->    Split off chunk-sized (1024 sectors) request:
-> 
->    9,0   18     1182     0.629019647 15995  X  WS 1479315464 / 1479316488
-> 
->    Request is unaligned to the chunk so it's split in
->    raid0_make_request().  This is the first part mapped and punted to
->    bio_list:
-> 
->    8,0   18     7053     0.629020455 15995  A  WS 739921928 + 1016 <- (9,0) 1479315464
-> 
->    Now raid0_make_request() returns, second part is postponed on
->    bio_list. __submit_bio_noacct() resorts the bio_list, mapped request
->    is submitted to the underlying device:
-> 
->    8,0   18     7054     0.629022782 15995  G  WS 739921928 + 1016
-> 
->    Now we take another request from the bio_list which is the remainder
->    of the original huge request. Split off another chunk-sized bit from
->    it and the situation repeats:
-> 
->    9,0   18     1183     0.629024499 15995  X  WS 1479316488 / 1479317512
->    8,16  18     6998     0.629025110 15995  A  WS 739921928 + 1016 <- (9,0) 1479316488
->    8,16  18     6999     0.629026728 15995  G  WS 739921928 + 1016
->    ...
->    9,0   18     1184     0.629032940 15995  X  WS 1479317512 / 1479318536 [libnetacq-write]
->    8,0   18     7059     0.629033294 15995  A  WS 739922952 + 1016 <- (9,0) 1479317512
->    8,0   18     7060     0.629033902 15995  G  WS 739922952 + 1016
->    ...
-> 
->    This repeats until we consume the whole original huge request. Now we
->    finally get to processing the second parts of the split off requests
->    (in reverse order):
-> 
->    8,16  18     7181     0.629161384 15995  A  WS 739952640 + 8 <- (9,0) 1479377920
->    8,0   18     7239     0.629162140 15995  A  WS 739952640 + 8 <- (9,0) 1479376896
->    8,16  18     7186     0.629163881 15995  A  WS 739951616 + 8 <- (9,0) 1479375872
->    8,0   18     7242     0.629164421 15995  A  WS 739951616 + 8 <- (9,0) 1479374848
->    ...
-> 
-> I guess it is obvious that this IO pattern is extremely inefficient way
-> to perform sequential IO. It also makes bio_list to grow to rather long
-> lengths.
-> 
-> Change raid0_make_request() to map both parts of the split bio. Since we
-> know we are provided with at most chunk-sized bios, we will always need
-> to split the incoming bio at most once.
+> Fixes: c91114c2b89d ("md/raid1: release pending accounting for an I/O only after write-behind is also finished")
 
-I understand the problem now, but I'm lost here, can you explain why "at
-most once" more ? Do you mean that the original bio won't be splited
-again?
+This fix tag is not correct, before c91114c2b89d, allow_barrier() is
+still called before free_r1bio(). And this behaviour goes all the way
+back to Linux-2.6.12-rc2.
 
-Thanks,
-Kuai
+I think it's okay just to remove the fix tag for this patch.
 
-> 
-> Fixes: f00d7c85be9e ("md/raid0: fix up bio splitting.")
-> Signed-off-by: Jan Kara <jack@suse.cz>
+After removing the tag, feel free to add
+
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+
+> Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
 > ---
->   drivers/md/raid0.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   drivers/md/raid1.c | 7 ++++---
+>   1 file changed, 4 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index d3c55f2e9b18..595856948dff 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -626,7 +626,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
->   		struct bio *split = bio_split(bio, sectors, GFP_NOIO,
->   					      &mddev->bio_set);
->   		bio_chain(split, bio);
-> -		submit_bio_noacct(bio);
-> +		raid0_map_submit_bio(mddev, bio);
->   		bio = split;
->   	}
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index dd25832eb045..dbbee0c14a5b 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -313,6 +313,7 @@ static void raid_end_bio_io(struct r1bio *r1_bio)
+>   {
+>   	struct bio *bio = r1_bio->master_bio;
+>   	struct r1conf *conf = r1_bio->mddev->private;
+> +	sector_t sector = r1_bio->sector;
 >   
+>   	/* if nobody has done the final endio yet, do it now */
+>   	if (!test_and_set_bit(R1BIO_Returned, &r1_bio->state)) {
+> @@ -323,13 +324,13 @@ static void raid_end_bio_io(struct r1bio *r1_bio)
+>   
+>   		call_bio_endio(r1_bio);
+>   	}
+> +
+> +	free_r1bio(r1_bio);
+>   	/*
+>   	 * Wake up any possible resync thread that waits for the device
+>   	 * to go idle.  All I/Os, even write-behind writes, are done.
+>   	 */
+> -	allow_barrier(conf, r1_bio->sector);
+> -
+> -	free_r1bio(r1_bio);
+> +	allow_barrier(conf, sector);
+>   }
+>   
+>   /*
 > 
 
