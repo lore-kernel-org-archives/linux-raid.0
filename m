@@ -2,127 +2,125 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11582C0015E
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 08:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47360C04E69
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 08:37:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232758AbjHOIIi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Aug 2023 04:08:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59432 "EHLO
+        id S235702AbjHOIhT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Aug 2023 04:37:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234493AbjHOIIV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Aug 2023 04:08:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51AAA10D8
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 01:08:20 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D533762584
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 08:08:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CF03C433C7
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 08:08:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692086899;
-        bh=tYR/mWt9+XcWnjEIZC34o/6dbrO1fAJ530t13e/uy4k=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=KldN/6DqgLk2Om0CZk6crO9Y16bXTTU46U9dY1OIYJzfA49ozgiSbi/H++z5dRvfh
-         Mc3lmHab1wGG8LbKwwi4lvhVGUQqSKzS0arr2bvz+B2gu5EHRvHAsEYTIioBv2W3C9
-         KBNVk3q5F6UF46mUwNcOlU9LTF+BJ3msuu1dAYrjDwC9fZUO/KrnxpDbor3jdj40tP
-         GsUTPDXAjrozGLGyopPWBWesTJguvvHm6wL4df1nkXeQWN0PPqIa4oWJZFOHaxLELW
-         5+by7DfS+55JGdktlhAtvrXQUxzifPGi2qz3+FaEFV8qiD7z+aeThQai0Mae12kQcZ
-         XXUFgrGQ0p+zA==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-4fe3b86cec1so8017882e87.2
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 01:08:19 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yyd7xaMqAXhTp6LIDbcPz0mhbj7u08bjw0HxogbaJBjv6WuJDmn
-        Iaps04pBY9TAwUTKHOZrwcgl415l15wFrO6srH0=
-X-Google-Smtp-Source: AGHT+IGEt/gwOFDZm3nxEVOQbrI/2gKuSy6cb2mpTGwpr6Jg647YCh47UEG2gT9IHLDznvIQCetBs2P/crkBQznEr0c=
-X-Received: by 2002:a19:5f05:0:b0:4f8:6d99:f4f3 with SMTP id
- t5-20020a195f05000000b004f86d99f4f3mr6256121lfb.52.1692086897097; Tue, 15 Aug
- 2023 01:08:17 -0700 (PDT)
+        with ESMTP id S235685AbjHOIhN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Aug 2023 04:37:13 -0400
+Received: from out-27.mta0.migadu.com (out-27.mta0.migadu.com [IPv6:2001:41d0:1004:224b::1b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0997133
+        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 01:37:08 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1692088626;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uBmn5bY96EnmwKJFlv+WltFrhGvpjIbZEKIiYirKvRY=;
+        b=vz0KHcPQmyiJWfmlN0KqRtShPV8OO94S7Ve+8NAyKaJzlfD3l3Gwdcs50vzwkyJwFeNk42
+        wWmdUe83i5yu+zc+P73iwMyGZC6f36VMufdeZyZpMS2xcjecgpOeJWBucmjek3/RmzHbqM
+        Esg+z/IvqlGN9dYsqiRnMi0+1ICkj/k=
 MIME-Version: 1.0
-References: <20230814205347.17891-1-djeffery@redhat.com>
-In-Reply-To: <20230814205347.17891-1-djeffery@redhat.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 15 Aug 2023 16:08:04 +0800
-X-Gmail-Original-Message-ID: <CAPhsuW7972qrXAPv=QFhFNnuvWcJiypgM_h+UFrB31SDBTWxWA@mail.gmail.com>
-Message-ID: <CAPhsuW7972qrXAPv=QFhFNnuvWcJiypgM_h+UFrB31SDBTWxWA@mail.gmail.com>
-Subject: Re: [PATCH RESEND] md: raid0: account for split bio in iostat accounting
-To:     David Jeffery <djeffery@redhat.com>
-Cc:     linux-raid@vger.kernel.org, Laurence Oberman <loberman@redhat.com>,
-        Yu Kuai <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v4 01/48] mm: move some shrinker-related function
+ declarations to mm/internal.h
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20230807110936.21819-2-zhengqi.arch@bytedance.com>
+Date:   Tue, 15 Aug 2023 16:36:31 +0800
+Cc:     Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com,
+        tkhai@ya.ru, Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>, djwong@kernel.org,
+        Christian Brauner <brauner@kernel.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        yujie.liu@intel.com, Greg KH <gregkh@linuxfoundation.org>,
+        simon.horman@corigine.com, dlemoal@kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>, x86@kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-erofs@lists.ozlabs.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
+        rcu@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <FC3AE898-443D-4ACB-BCB4-0F8F2F48CDD0@linux.dev>
+References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
+ <20230807110936.21819-2-zhengqi.arch@bytedance.com>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Aug 15, 2023 at 4:54=E2=80=AFAM David Jeffery <djeffery@redhat.com>=
- wrote:
->
-> When a bio is split by md raid0, the newly created bio will not be tracke=
-d
-> by md for I/O accounting. Only the portion of I/O still assigned to the
-> original bio which was reduced by the split will be accounted for. This
-> results in md iostat data sometimes showing I/O values far below the actu=
-al
-> amount of data being sent through md.
->
-> md_account_bio() needs to be called for all bio generated by the bio spli=
-t.
->
-> Fixes: 10764815ff47 ("md: add io accounting for raid0 and raid5")
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> Reviewed-by: Laurence Oberman <loberman@redhat.com>
-> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
-It appears this patch conflicts with Jan's set:
 
-https://lore.kernel.org/linux-raid/20230814091452.9670-1-jack@suse.cz/
+> On Aug 7, 2023, at 19:08, Qi Zheng <zhengqi.arch@bytedance.com> wrote:
+>=20
+> The following functions are only used inside the mm subsystem, so it's
+> better to move their declarations to the mm/internal.h file.
+>=20
+> 1. shrinker_debugfs_add()
+> 2. shrinker_debugfs_detach()
+> 3. shrinker_debugfs_remove()
+>=20
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 
-Please rebase on top of md-next and resubmit the patch:
+Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 
-https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-nex=
-t
+One nit bellow.
 
-> ---
->
-> No change to the patch itself. Added Fixes and Reviewed-by lines.
->
-> A simple example of the issue was generated using a raid0 device on parti=
-tions
-> to the same device. Since all raid0 I/O then goes to one device, it makes=
- it
-> easy to see a gap between the md device and its sd storage. Reading an lv=
-m
-> device on top of the md device, the iostat output (some 0 columns and ext=
-ra
-> devices removed to make the data more compact) was:
->
-> Device             tps    kB_read/s    kB_wrtn/s    kB_dscd/s    kB_read
-> md2               0.00         0.00         0.00         0.00          0
-> sde               0.00         0.00         0.00         0.00          0
-> md2            1364.00    411496.00         0.00         0.00     411496
-> sde            1734.00    646144.00         0.00         0.00     646144
-> md2            1699.00    510680.00         0.00         0.00     510680
-> sde            2155.00    802784.00         0.00         0.00     802784
-> md2             803.00    241480.00         0.00         0.00     241480
-> sde            1016.00    377888.00         0.00         0.00     377888
-> md2               0.00         0.00         0.00         0.00          0
-> sde               0.00         0.00         0.00         0.00          0
->
-> I/O was generated doing large direct I/O reads (12M) with dd to a linear
-> lvm volume on top of the 4 leg raid0 device.
->
-> The md2 reads were showing as roughly 2/3 of the reads to the sde device
-> containing all of md2's raid partitions. The sum of reads to sde was
-> 1826816 kB, which was the expected amount as it was the amount read by
-> dd. With the patch, the total reads from md will match the reads from
-> sde and be consistent with the amount of I/O generated.
+[...]
 
-We can include this part in the commit log to keep more context for future
-reference.
+> +
+> +/*
+> + * shrinker related functions
+> + */
 
-Thanks,
-Song
+This is a multi-comment format. "/* shrinker related functions. */" is
+the right one-line format of comment.
+
+> +
+> +#ifdef CONFIG_SHRINKER_DEBUG
+> +extern int shrinker_debugfs_add(struct shrinker *shrinker);
+> +extern struct dentry *shrinker_debugfs_detach(struct shrinker =
+*shrinker,
+> +      int *debugfs_id);
+> +extern void shrinker_debugfs_remove(struct dentry *debugfs_entry,
+> +    int debugfs_id);
+> +#else /* CONFIG_SHRINKER_DEBUG */
+> +static inline int shrinker_debugfs_add(struct shrinker *shrinker)
+> +{
+> +	return 0;
+> +}
+> +static inline struct dentry *shrinker_debugfs_detach(struct shrinker =
+*shrinker,
+> +     int *debugfs_id)
+> +{
+> +	*debugfs_id =3D -1;
+> +	return NULL;
+> +}
+> +static inline void shrinker_debugfs_remove(struct dentry =
+*debugfs_entry,
+> +	int debugfs_id)
+> +{
+> +}
+> +#endif /* CONFIG_SHRINKER_DEBUG */
+> +
+> #endif /* __MM_INTERNAL_H */
+> --=20
+> 2.30.2
+>=20
+
