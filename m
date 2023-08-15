@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E181C04FE0
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 03:15:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 471A3C04A6A
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 03:15:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234419AbjHODPE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Aug 2023 23:15:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60776 "EHLO
+        id S234423AbjHODPH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 23:15:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234341AbjHODOW (ORCPT
+        with ESMTP id S234238AbjHODOW (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 23:14:22 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CA651991;
-        Mon, 14 Aug 2023 20:13:38 -0700 (PDT)
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4609D1998;
+        Mon, 14 Aug 2023 20:13:40 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RPxDZ4zGdz4f3vdk;
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RPxDZ1nQ1z4f3khv;
         Tue, 15 Aug 2023 11:13:34 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAXp6ld7dpknET3Ag--.64666S5;
-        Tue, 15 Aug 2023 11:13:35 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAXp6ld7dpknET3Ag--.64666S9;
+        Tue, 15 Aug 2023 11:13:37 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 1/7] md: use separate work_struct for md_start_sync()
-Date:   Tue, 15 Aug 2023 11:09:51 +0800
-Message-Id: <20230815030957.509535-2-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 5/7] md: factor out a helper rdev_is_spare() from remove_and_add_spares()
+Date:   Tue, 15 Aug 2023 11:09:55 +0800
+Message-Id: <20230815030957.509535-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230815030957.509535-1-yukuai1@huaweicloud.com>
 References: <20230815030957.509535-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAXp6ld7dpknET3Ag--.64666S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ary3ur4xKr18JFykJF4Utwb_yoW5JFyfpa
-        ySgFy3JrW8J390qw4UWFWDC3Wagw1vyryDtryfCw4FvF9xtr1UGa1FgayqqF98CayFkr1a
-        va1FqFW5ur18Gr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9v14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-        x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6rxdM2
-        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
-        026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
-        JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
-        v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
-        j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8JV
-        W8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbec_DUUUUU==
+X-CM-TRANSID: gCh0CgAXp6ld7dpknET3Ag--.64666S9
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtr13KF4fCF1fCrg_yoW8GF17pa
+        yIgFWYkw4UZayUWa1vgryUGa43K3W0g3yIkFyxCa4fZas8Jry5Kws5CF90qFn8AFWFvF45
+        Za1Uta1kCF1rKF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9C14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6r
+        xdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMx
+        C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
+        wI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
+        vE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v2
+        0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxV
+        W8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,79 +58,49 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-It's a little weird to borrow 'del_work' for md_start_sync(), declare
-a new work_struct 'sync_work' for md_start_sync().
+There are no functional changes, just to make the code simpler and
+prepare to delay remove_and_add_spares() to md_start_sync().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 10 ++++++----
- drivers/md/md.h |  5 ++++-
- 2 files changed, 10 insertions(+), 5 deletions(-)
+ drivers/md/md.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5c3c19b8d509..90815be1e80f 100644
+index ea091eef23d1..6baaa4d314b3 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -631,13 +631,13 @@ void mddev_put(struct mddev *mddev)
- 		 * flush_workqueue() after mddev_find will succeed in waiting
- 		 * for the work to be done.
- 		 */
--		INIT_WORK(&mddev->del_work, mddev_delayed_delete);
- 		queue_work(md_misc_wq, &mddev->del_work);
- 	}
- 	spin_unlock(&all_mddevs_lock);
+@@ -9169,6 +9169,14 @@ static bool rdev_removeable(struct md_rdev *rdev)
+ 	return true;
  }
  
- static void md_safemode_timeout(struct timer_list *t);
-+static void md_start_sync(struct work_struct *ws);
- 
- void mddev_init(struct mddev *mddev)
- {
-@@ -662,6 +662,9 @@ void mddev_init(struct mddev *mddev)
- 	mddev->resync_min = 0;
- 	mddev->resync_max = MaxSector;
- 	mddev->level = LEVEL_NONE;
++static bool rdev_is_spare(struct md_rdev *rdev)
++{
++	return !test_bit(Candidate, &rdev->flags) && rdev->raid_disk >= 0 &&
++	       !test_bit(In_sync, &rdev->flags) &&
++	       !test_bit(Journal, &rdev->flags) &&
++	       !test_bit(Faulty, &rdev->flags);
++}
 +
-+	INIT_WORK(&mddev->sync_work, md_start_sync);
-+	INIT_WORK(&mddev->del_work, mddev_delayed_delete);
- }
- EXPORT_SYMBOL_GPL(mddev_init);
- 
-@@ -9245,7 +9248,7 @@ static int remove_and_add_spares(struct mddev *mddev,
- 
- static void md_start_sync(struct work_struct *ws)
+ static int remove_and_add_spares(struct mddev *mddev,
+ 				 struct md_rdev *this)
  {
--	struct mddev *mddev = container_of(ws, struct mddev, del_work);
-+	struct mddev *mddev = container_of(ws, struct mddev, sync_work);
- 
- 	rcu_assign_pointer(mddev->sync_thread,
- 			   md_register_thread(md_do_sync, mddev, "resync"));
-@@ -9458,8 +9461,7 @@ void md_check_recovery(struct mddev *mddev)
- 				 */
- 				md_bitmap_write_all(mddev->bitmap);
- 			}
--			INIT_WORK(&mddev->del_work, md_start_sync);
--			queue_work(md_misc_wq, &mddev->del_work);
-+			queue_work(md_misc_wq, &mddev->sync_work);
- 			goto unlock;
- 		}
- 	not_running:
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 9bcb77bca963..64d05cb65287 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -450,7 +450,10 @@ struct mddev {
- 	struct kernfs_node		*sysfs_degraded;	/*handle for 'degraded' */
- 	struct kernfs_node		*sysfs_level;		/*handle for 'level' */
- 
--	struct work_struct del_work;	/* used for delayed sysfs removal */
-+	/* used for delayed sysfs removal */
-+	struct work_struct del_work;
-+	/* used for register new sync thread */
-+	struct work_struct sync_work;
- 
- 	/* "lock" protects:
- 	 *   flush_bio transition from NULL to !NULL
+@@ -9217,13 +9225,10 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 	rdev_for_each(rdev, mddev) {
+ 		if (this && this != rdev)
+ 			continue;
++		if (rdev_is_spare(rdev))
++			spares++;
+ 		if (test_bit(Candidate, &rdev->flags))
+ 			continue;
+-		if (rdev->raid_disk >= 0 &&
+-		    !test_bit(In_sync, &rdev->flags) &&
+-		    !test_bit(Journal, &rdev->flags) &&
+-		    !test_bit(Faulty, &rdev->flags))
+-			spares++;
+ 		if (rdev->raid_disk >= 0)
+ 			continue;
+ 		if (test_bit(Faulty, &rdev->flags))
 -- 
 2.39.2
 
