@@ -2,85 +2,308 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 725B6C001B0
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 00:23:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62C80C001B0
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 01:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233702AbjHOAXT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Aug 2023 20:23:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32942 "EHLO
+        id S233810AbjHOBFI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 21:05:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233696AbjHOAXP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 20:23:15 -0400
-Received: from mx.treblig.org (unknown [IPv6:2a00:1098:5b::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05E41E7;
-        Mon, 14 Aug 2023 17:23:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-        ; s=bytemarkmx; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID
-        :Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID
-        :Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:
-        Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe
-        :List-Post:List-Owner:List-Archive;
-        bh=at/YNp1sTXjMfFJHp9NjljLZGOIZ2zX2T4jq1tox7DI=; b=DEIqSzNGhDjDdnSu/p8BKmWtVT
-        g0e2nFLy+OcECGemA8qme0/xm/AAx9lEsQx+g3IiQibP7WK7UxBlGMNYdFvr/89v9izY5WRhE7dRq
-        u4xY8snHyY2oZfnWiYkjPlARTIKXbWUMNd4xGIDA+irT9VjtooNH9muUS/AFkBn76yJwX9TgB60+J
-        wSWuB7yVrSqh47NIJnsJxwCv31eTsZMhZNJChRPDIQ2AUybxGM5nECC/J1WeWkxACQGPKYngsBxD2
-        URMBiRmN49TdMZom4vhw0xwpuRZVU3NiawnAwQuI/V7hcPJbghcuHuwZVidptiN6t9XTOfPWOi00M
-        kLr7Kkcg==;
-Received: from dg by mx.treblig.org with local (Exim 4.94.2)
-        (envelope-from <dg@treblig.org>)
-        id 1qVhq1-006xXT-NL; Tue, 15 Aug 2023 00:23:09 +0000
-Date:   Tue, 15 Aug 2023 00:23:09 +0000
-From:   "Dr. David Alan Gilbert" <dave@treblig.org>
-To:     Bagas Sanjaya <bagasdotme@gmail.com>
-Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, song@kernel.org,
+        with ESMTP id S233876AbjHOBFB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 21:05:01 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5F0B10C1;
+        Mon, 14 Aug 2023 18:04:59 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RPtN80GBxz4f3pBr;
+        Tue, 15 Aug 2023 09:04:56 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgA3x6k2z9pknmDwAg--.14153S3;
+        Tue, 15 Aug 2023 09:04:56 +0800 (CST)
+Subject: Re: [PATCH -next 01/13] md: remove rdev flag 'RemoveSynchronized'
+To:     NeilBrown <neil@brown.name>, Song Liu <song@kernel.org>
+Cc:     Yu Kuai <yukuai1@huaweicloud.com>, xni@redhat.com,
         linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ext4@vger.kernel.org,
-        Linux Regressions <regressions@lists.linux.dev>
-Subject: Re: 6.5.0rc5 fs hang - ext4? raid?
-Message-ID: <ZNrFbXw4dhlZsMNJ@gallifrey>
-References: <ZNqWfQPTScJDkmpX@gallifrey>
- <ZNrD1BBvDVh-npz4@debian.me>
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230803132426.2688608-1-yukuai1@huaweicloud.com>
+ <169204900650.11073.14374074900186832485@noble.neil.brown.name>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <b69baaa5-ca00-fb70-4e65-06ba601d864e@huaweicloud.com>
+Date:   Tue, 15 Aug 2023 09:04:54 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <ZNrD1BBvDVh-npz4@debian.me>
-X-Chocolate: 70 percent or better cocoa solids preferably
-X-Operating-System: Linux/5.10.0-23-amd64 (x86_64)
-X-Uptime: 00:20:36 up 39 days,  9:52,  1 user,  load average: 0.00, 0.00, 0.00
-User-Agent: Mutt/2.0.5 (2021-01-21)
+In-Reply-To: <169204900650.11073.14374074900186832485@noble.neil.brown.name>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgA3x6k2z9pknmDwAg--.14153S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3WF47uFy7Wry5tFyfCr45Wrg_yoW3uw13p3
+        yfJFy3CF4UXryUCw4qqw45Ka4Fgw17KrW8Cr9xA34Sv3savryDXry8JFWUur95ZFZ3Xw40
+        vF1UGws3CF10vFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0xIA0c2IEe2xFo4CEbIxv
+        r21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
+        WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI
+        7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
+        1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4U
+        MIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUU
+        U==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-* Bagas Sanjaya (bagasdotme@gmail.com) wrote:
-> On Mon, Aug 14, 2023 at 09:02:53PM +0000, Dr. David Alan Gilbert wrote:
-> > Hi,
-> >   I'm seeing a few hangs on a fs after upgrading to fedora 39's bleeding
-> > edge; which is running kernel 6.5.0-0.rc5.20230808git14f9643dc90a.37.fc39.x86_64
-> > It was always solid prior to that.  It seems to trigger on heavy IO
-> > on this fs.
+Hi,
+
+在 2023/08/15 5:36, NeilBrown 写道:
+> On Mon, 14 Aug 2023, Song Liu wrote:
+>> + Neil
+>>
+>> RemoveSynchronized was added by Neil not too long ago. I wonder whether
+>> we still need it in some cases (large raid10 losing a large set of disks).
 > 
-> What kernel version prior to this upgrade?
-
-The Fedora 38 kernel, 6.4.10-200.fc38.x86_64  seems happy with the same
-userspace as the broken kernel.
-
-> Also, it'd been great if you can also bisect this regression using kernel
-> tree obtained with git. See Documentation/admin-guide/bug-bisect.rst in
-> the kernel tree for how to perform bisection.
-
-Sure; I can do bisects.
-
-Dave
-
-> Thanks.
+> We have customers with thousands of members in a raid10.  They do
+> sometimes need to remove half of them.  Dropping RemoveSynchronized
+> would significantly increase the time it takes to do that.
 > 
-> -- 
-> An old man doll... just what I always wanted! - Clara
+> Removing an rdev is not often a hot path.  But sometimes it can be.
+> 
 
+Thanks for the explanation, and soory that I didn't mention that in this
+commit message, the way that rdev is protected through rcu is not safe,
+and refer to the implementation of 'q_usage_counter' in block layer, I'm
+planing to refactor the way that rdev is protected and rcu is not needed
+anymore:
 
--- 
- -----Open up your eyes, open up your mind, open up your code -------   
-/ Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
-\        dave @ treblig.org |                               | In Hex /
- \ _________________________|_____ http://www.treblig.org   |_______/
+1. refactor mddev_suspend(), and make sure it's called by all the caller
+of remove_and_add_spares().
+2. factor out a helper md_array_enter() from md_handle_request, this
+helper will grab 'active_io' and wait for mddev_suspend() to be done.
+3. in the fastpath, before accessing rdev, make sure md_array_enter() is
+called.
+
+Thanks,
+Kuai
+
+> NeilBrown
+> 
+> 
+>>
+>> Thanks,
+>> Song
+>>
+>>
+>> On Thu, Aug 3, 2023 at 9:27 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>
+>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>
+>>> When multiple rdevs are removed from array in remove_and_add_spares(),
+>>> which is only possible from daemon thread(user can only remove one rdev
+>>> through ioctl/sysfs at one time), the flag is used to avoid calling
+>>> synchronize_rcu() multiple times for each rdev.
+>>>
+>>> However, remove rdev from daemon thread really is super cold path, while
+>>> removing n rdevs, it doesn't matter sync rcu n times or just one time.
+>>> Hence remove this flag and make code simpler.
+>>>
+>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>> ---
+>>>   drivers/md/md-multipath.c | 15 +++++++--------
+>>>   drivers/md/md.c           | 26 ++------------------------
+>>>   drivers/md/md.h           |  5 -----
+>>>   drivers/md/raid1.c        | 15 +++++++--------
+>>>   drivers/md/raid10.c       | 15 +++++++--------
+>>>   drivers/md/raid5.c        | 15 +++++++--------
+>>>   6 files changed, 30 insertions(+), 61 deletions(-)
+>>>
+>>> diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
+>>> index d22276870283..9e4ddd5240cd 100644
+>>> --- a/drivers/md/md-multipath.c
+>>> +++ b/drivers/md/md-multipath.c
+>>> @@ -258,14 +258,13 @@ static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+>>>                          goto abort;
+>>>                  }
+>>>                  p->rdev = NULL;
+>>> -               if (!test_bit(RemoveSynchronized, &rdev->flags)) {
+>>> -                       synchronize_rcu();
+>>> -                       if (atomic_read(&rdev->nr_pending)) {
+>>> -                               /* lost the race, try later */
+>>> -                               err = -EBUSY;
+>>> -                               p->rdev = rdev;
+>>> -                               goto abort;
+>>> -                       }
+>>> +
+>>> +               synchronize_rcu();
+>>> +               if (atomic_read(&rdev->nr_pending)) {
+>>> +                       /* lost the race, try later */
+>>> +                       err = -EBUSY;
+>>> +                       p->rdev = rdev;
+>>> +                       goto abort;
+>>>                  }
+>>>                  err = md_integrity_register(mddev);
+>>>          }
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index a3d98273b295..cd7ac1dee3b8 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -9155,7 +9155,6 @@ static int remove_and_add_spares(struct mddev *mddev,
+>>>          struct md_rdev *rdev;
+>>>          int spares = 0;
+>>>          int removed = 0;
+>>> -       bool remove_some = false;
+>>>
+>>>          if (this && test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+>>>                  /* Mustn't remove devices when resync thread is running */
+>>> @@ -9165,28 +9164,9 @@ static int remove_and_add_spares(struct mddev *mddev,
+>>>                  if ((this == NULL || rdev == this) &&
+>>>                      rdev->raid_disk >= 0 &&
+>>>                      !test_bit(Blocked, &rdev->flags) &&
+>>> -                   test_bit(Faulty, &rdev->flags) &&
+>>> +                   !test_bit(In_sync, &rdev->flags) &&
+>>> +                   !test_bit(Journal, &rdev->flags) &&
+>>>                      atomic_read(&rdev->nr_pending)==0) {
+>>> -                       /* Faulty non-Blocked devices with nr_pending == 0
+>>> -                        * never get nr_pending incremented,
+>>> -                        * never get Faulty cleared, and never get Blocked set.
+>>> -                        * So we can synchronize_rcu now rather than once per device
+>>> -                        */
+>>> -                       remove_some = true;
+>>> -                       set_bit(RemoveSynchronized, &rdev->flags);
+>>> -               }
+>>> -       }
+>>> -
+>>> -       if (remove_some)
+>>> -               synchronize_rcu();
+>>> -       rdev_for_each(rdev, mddev) {
+>>> -               if ((this == NULL || rdev == this) &&
+>>> -                   rdev->raid_disk >= 0 &&
+>>> -                   !test_bit(Blocked, &rdev->flags) &&
+>>> -                   ((test_bit(RemoveSynchronized, &rdev->flags) ||
+>>> -                    (!test_bit(In_sync, &rdev->flags) &&
+>>> -                     !test_bit(Journal, &rdev->flags))) &&
+>>> -                   atomic_read(&rdev->nr_pending)==0)) {
+>>>                          if (mddev->pers->hot_remove_disk(
+>>>                                      mddev, rdev) == 0) {
+>>>                                  sysfs_unlink_rdev(mddev, rdev);
+>>> @@ -9195,8 +9175,6 @@ static int remove_and_add_spares(struct mddev *mddev,
+>>>                                  removed++;
+>>>                          }
+>>>                  }
+>>> -               if (remove_some && test_bit(RemoveSynchronized, &rdev->flags))
+>>> -                       clear_bit(RemoveSynchronized, &rdev->flags);
+>>>          }
+>>>
+>>>          if (removed && mddev->kobj.sd)
+>>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>>> index 8ae957480976..b25b6d061372 100644
+>>> --- a/drivers/md/md.h
+>>> +++ b/drivers/md/md.h
+>>> @@ -189,11 +189,6 @@ enum flag_bits {
+>>>                                   * than other devices in the array
+>>>                                   */
+>>>          ClusterRemove,
+>>> -       RemoveSynchronized,     /* synchronize_rcu() was called after
+>>> -                                * this device was known to be faulty,
+>>> -                                * so it is safe to remove without
+>>> -                                * another synchronize_rcu() call.
+>>> -                                */
+>>>          ExternalBbl,            /* External metadata provides bad
+>>>                                   * block management for a disk
+>>>                                   */
+>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>>> index 23d211969565..acb6d6542619 100644
+>>> --- a/drivers/md/raid1.c
+>>> +++ b/drivers/md/raid1.c
+>>> @@ -1859,15 +1859,14 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+>>>                          goto abort;
+>>>                  }
+>>>                  p->rdev = NULL;
+>>> -               if (!test_bit(RemoveSynchronized, &rdev->flags)) {
+>>> -                       synchronize_rcu();
+>>> -                       if (atomic_read(&rdev->nr_pending)) {
+>>> -                               /* lost the race, try later */
+>>> -                               err = -EBUSY;
+>>> -                               p->rdev = rdev;
+>>> -                               goto abort;
+>>> -                       }
+>>> +               synchronize_rcu();
+>>> +               if (atomic_read(&rdev->nr_pending)) {
+>>> +                       /* lost the race, try later */
+>>> +                       err = -EBUSY;
+>>> +                       p->rdev = rdev;
+>>> +                       goto abort;
+>>>                  }
+>>> +
+>>>                  if (conf->mirrors[conf->raid_disks + number].rdev) {
+>>>                          /* We just removed a device that is being replaced.
+>>>                           * Move down the replacement.  We drain all IO before
+>>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>>> index 7704a4c7f469..64dd5cb6133e 100644
+>>> --- a/drivers/md/raid10.c
+>>> +++ b/drivers/md/raid10.c
+>>> @@ -2247,15 +2247,14 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+>>>                  goto abort;
+>>>          }
+>>>          *rdevp = NULL;
+>>> -       if (!test_bit(RemoveSynchronized, &rdev->flags)) {
+>>> -               synchronize_rcu();
+>>> -               if (atomic_read(&rdev->nr_pending)) {
+>>> -                       /* lost the race, try later */
+>>> -                       err = -EBUSY;
+>>> -                       *rdevp = rdev;
+>>> -                       goto abort;
+>>> -               }
+>>> +       synchronize_rcu();
+>>> +       if (atomic_read(&rdev->nr_pending)) {
+>>> +               /* lost the race, try later */
+>>> +               err = -EBUSY;
+>>> +               *rdevp = rdev;
+>>> +               goto abort;
+>>>          }
+>>> +
+>>>          if (p->replacement) {
+>>>                  /* We must have just cleared 'rdev' */
+>>>                  p->rdev = p->replacement;
+>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>>> index 4cdb35e54251..37d9865b180a 100644
+>>> --- a/drivers/md/raid5.c
+>>> +++ b/drivers/md/raid5.c
+>>> @@ -8267,15 +8267,14 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+>>>                  goto abort;
+>>>          }
+>>>          *rdevp = NULL;
+>>> -       if (!test_bit(RemoveSynchronized, &rdev->flags)) {
+>>> -               lockdep_assert_held(&mddev->reconfig_mutex);
+>>> -               synchronize_rcu();
+>>> -               if (atomic_read(&rdev->nr_pending)) {
+>>> -                       /* lost the race, try later */
+>>> -                       err = -EBUSY;
+>>> -                       rcu_assign_pointer(*rdevp, rdev);
+>>> -               }
+>>> +       lockdep_assert_held(&mddev->reconfig_mutex);
+>>> +       synchronize_rcu();
+>>> +       if (atomic_read(&rdev->nr_pending)) {
+>>> +               /* lost the race, try later */
+>>> +               err = -EBUSY;
+>>> +               rcu_assign_pointer(*rdevp, rdev);
+>>>          }
+>>> +
+>>>          if (!err) {
+>>>                  err = log_modify(conf, rdev, false);
+>>>                  if (err)
+>>> --
+>>> 2.39.2
+>>>
+>>
+> 
+> 
+> .
+> 
+
