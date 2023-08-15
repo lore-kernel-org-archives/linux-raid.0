@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0223C001B0
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 03:15:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FE18C04A6A
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 03:15:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234395AbjHODOx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Aug 2023 23:14:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49030 "EHLO
+        id S234409AbjHODO5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 23:14:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234187AbjHODOH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 23:14:07 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 320DF198D;
-        Mon, 14 Aug 2023 20:13:38 -0700 (PDT)
+        with ESMTP id S233905AbjHODOT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 23:14:19 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32B701990;
+        Mon, 14 Aug 2023 20:13:39 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RPxDY13jkz4f3jXy;
-        Tue, 15 Aug 2023 11:13:33 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RPxDb5lW5z4f3vdd;
+        Tue, 15 Aug 2023 11:13:35 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAXp6ld7dpknET3Ag--.64666S6;
+        by APP4 (Coremail) with SMTP id gCh0CgAXp6ld7dpknET3Ag--.64666S8;
         Tue, 15 Aug 2023 11:13:36 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 2/7] md: factor out a helper to choose sync direction from md_check_recovery()
-Date:   Tue, 15 Aug 2023 11:09:52 +0800
-Message-Id: <20230815030957.509535-3-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 4/7] md: factor out a helper rdev_removeable() from remove_and_add_spares()
+Date:   Tue, 15 Aug 2023 11:09:54 +0800
+Message-Id: <20230815030957.509535-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230815030957.509535-1-yukuai1@huaweicloud.com>
 References: <20230815030957.509535-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAXp6ld7dpknET3Ag--.64666S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxur1UJF1Dur1kCw18KF4fGrg_yoW5Kr43pa
-        1fJFn8Cr4UJayfAr42q3WDXrW5Cr48trWDtFy3W34kAFn0yF1fGa45W3W7AryDGas2qa12
-        qw4kJFZrur1YgwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9m14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6rxdM2
-        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
-        026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
-        JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
-        v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
-        j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr
-        0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUc6pPUUUUU=
+X-CM-TRANSID: gCh0CgAXp6ld7dpknET3Ag--.64666S8
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtr13KF4fuw4Uurg_yoW8KFyfpa
+        1fKFyYkr4UA3yaqw1kGrn5Ga45Xa18KayIkFyfGa4rZasxAr90qw1rKFy5Xr90yFZ3ZF4Y
+        vF15Jw4rCr1xuF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9C14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6r
+        xdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMx
+        C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
+        wI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
+        vE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v2
+        0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxV
+        W8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,105 +58,76 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-There are no functional changes, on the one hand make the code cleaner,
-on the other hand prevent following checkpatch error in the next patch to
-delay choosing sync direction to md_start_sync().
-
-ERROR: do not use assignment in if condition
-+       } else if ((spares = remove_and_add_spares(mddev, NULL))) {
+There are no functional changes, just to make the code simpler and
+prepare to delay remove_and_add_spares() to md_start_sync().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 68 +++++++++++++++++++++++++++++++------------------
- 1 file changed, 43 insertions(+), 25 deletions(-)
+ drivers/md/md.c | 33 +++++++++++++++++++--------------
+ 1 file changed, 19 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 90815be1e80f..4846ff6d25b0 100644
+index 03615b0e9fe1..ea091eef23d1 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9246,6 +9246,48 @@ static int remove_and_add_spares(struct mddev *mddev,
- 	return spares;
+@@ -9153,6 +9153,22 @@ void md_do_sync(struct md_thread *thread)
  }
+ EXPORT_SYMBOL_GPL(md_do_sync);
  
-+static bool md_choose_sync_direction(struct mddev *mddev, int *spares)
++static bool rdev_removeable(struct md_rdev *rdev)
 +{
-+	/* check reshape first */
-+	if (mddev->reshape_position != MaxSector) {
-+		if (mddev->pers->check_reshape == NULL ||
-+		    mddev->pers->check_reshape(mddev) != 0)
-+			return false;
++	if (rdev->raid_disk < 0 || test_bit(Blocked, &rdev->flags) ||
++	    atomic_read(&rdev->nr_pending))
++		return false;
 +
-+		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-+		clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-+		return true;
-+	}
-+
-+	/*
-+	 * remove any failed drives, then add spares if possible. Spares are
-+	 * also removed and re-added, to allow the personality to fail the
-+	 * re-add.
-+	 */
-+	*spares = remove_and_add_spares(mddev, NULL);
-+	if (*spares) {
-+		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-+		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-+		clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-+		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-+		return true;
-+	}
-+
-+	/* check recovery */
-+	if (mddev->recovery_cp < MaxSector) {
-+		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-+		clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-+		return true;
-+	}
-+
-+	/* check resync */
-+	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
++	if (test_bit(RemoveSynchronized, &rdev->flags))
 +		return true;
 +
-+	/* nothing to be done */
-+	return false;
++	if (test_bit(In_sync, &rdev->flags) ||
++	    test_bit(Journal, &rdev->flags))
++		return false;
++
++	return true;
 +}
 +
- static void md_start_sync(struct work_struct *ws)
+ static int remove_and_add_spares(struct mddev *mddev,
+ 				 struct md_rdev *this)
  {
- 	struct mddev *mddev = container_of(ws, struct mddev, sync_work);
-@@ -9427,32 +9469,8 @@ void md_check_recovery(struct mddev *mddev)
- 		if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
- 		    test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
- 			goto not_running;
--		/* no recovery is running.
--		 * remove any failed drives, then
--		 * add spares if possible.
--		 * Spares are also removed and re-added, to allow
--		 * the personality to fail the re-add.
--		 */
--
--		if (mddev->reshape_position != MaxSector) {
--			if (mddev->pers->check_reshape == NULL ||
--			    mddev->pers->check_reshape(mddev) != 0)
--				/* Cannot proceed */
--				goto not_running;
--			set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
--			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
--		} else if ((spares = remove_and_add_spares(mddev, NULL))) {
--			clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
--			clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
--			clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
--			set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
--		} else if (mddev->recovery_cp < MaxSector) {
--			set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
--			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
--		} else if (!test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
--			/* nothing to be done ... */
-+		if (!md_choose_sync_direction(mddev, &spares))
- 			goto not_running;
--
- 		if (mddev->pers->sync_request) {
- 			if (spares) {
- 				/* We are adding a device or devices to an array
+@@ -9166,11 +9182,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 		return 0;
+ 
+ 	rdev_for_each(rdev, mddev) {
+-		if ((this == NULL || rdev == this) &&
+-		    rdev->raid_disk >= 0 &&
+-		    !test_bit(Blocked, &rdev->flags) &&
+-		    test_bit(Faulty, &rdev->flags) &&
+-		    atomic_read(&rdev->nr_pending)==0) {
++		if ((this == NULL || rdev == this) && rdev_removeable(rdev)) {
+ 			/* Faulty non-Blocked devices with nr_pending == 0
+ 			 * never get nr_pending incremented,
+ 			 * never get Faulty cleared, and never get Blocked set.
+@@ -9185,19 +9197,12 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 		synchronize_rcu();
+ 	rdev_for_each(rdev, mddev) {
+ 		if ((this == NULL || rdev == this) &&
+-		    rdev->raid_disk >= 0 &&
+-		    !test_bit(Blocked, &rdev->flags) &&
+-		    ((test_bit(RemoveSynchronized, &rdev->flags) ||
+-		     (!test_bit(In_sync, &rdev->flags) &&
+-		      !test_bit(Journal, &rdev->flags))) &&
+-		    atomic_read(&rdev->nr_pending)==0)) {
+-			if (mddev->pers->hot_remove_disk(
+-				    mddev, rdev) == 0) {
++		    rdev_removeable(rdev) &&
++		    mddev->pers->hot_remove_disk(mddev, rdev) == 0) {
+ 				sysfs_unlink_rdev(mddev, rdev);
+ 				rdev->saved_raid_disk = rdev->raid_disk;
+ 				rdev->raid_disk = -1;
+ 				removed++;
+-			}
+ 		}
+ 		if (remove_some && test_bit(RemoveSynchronized, &rdev->flags))
+ 			clear_bit(RemoveSynchronized, &rdev->flags);
 -- 
 2.39.2
 
