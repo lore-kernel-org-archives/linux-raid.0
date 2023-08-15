@@ -2,78 +2,98 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1A6C41513
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 18:27:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35A63C001E0
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 18:55:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239100AbjHOS1R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Aug 2023 14:27:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48230 "EHLO
+        id S239502AbjHOSyo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Aug 2023 14:54:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239141AbjHOS0z (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Aug 2023 14:26:55 -0400
-X-Greylist: delayed 319 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 15 Aug 2023 11:26:50 PDT
-Received: from hoggar.fisica.ufpr.br (hoggar.fisica.ufpr.br [IPv6:2801:82:80ff:7fff::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B7161BC3;
-        Tue, 15 Aug 2023 11:26:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=fisica.ufpr.br;
-        s=201705; t=1692123684;
-        bh=TkKvsvTvLj1lSaJ4bUsIIoSnianpIUv77sSM6JDMvWs=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=VOXL8isBfWIm+K7u4j8y147AIL2NW7xcmABqRBGXslTE6DA42AoGkwlX7HIdXoUmD
-         sAIofZmygjS6NZUhBSdzNg8gxQWAtvwgJ5pCkywciLT5M7D4q/xtvvKjDe9EZInbj3
-         58La+bGroMVqezoRJHQOtQW+98hi0tuqfG/vVwuNFAzbo1Mvl+OEYEqOtfRgHygHd/
-         YadD7iR4W15IYl8TxCQ8iSUv4TMUMbTLaP0d1HSzWp9ZJ3G1JWl5g7doEfVwJUCpcB
-         AMpo17ljbfCh+/ePtgC07kZr92pq8+RZZE+qpzIGHHI9BHkIH4URe1NAp4px/kI7ti
-         Qtwc9OzIA08aQ==
-Received: by hoggar.fisica.ufpr.br (Postfix, from userid 577)
-        id 8B4113620851; Tue, 15 Aug 2023 15:21:24 -0300 (-03)
-Date:   Tue, 15 Aug 2023 15:21:24 -0300
-From:   Carlos Carvalho <carlos@fisica.ufpr.br>
-To:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+        with ESMTP id S239536AbjHOSyU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Aug 2023 14:54:20 -0400
+Received: from mx.treblig.org (unknown [IPv6:2a00:1098:5b::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD49C2123;
+        Tue, 15 Aug 2023 11:53:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
+        ; s=bytemarkmx; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID
+        :Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID
+        :Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:
+        Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe
+        :List-Post:List-Owner:List-Archive;
+        bh=//toRj/PKXJjaN9Lb1xLslhcEFyKob0fP3zRV2NepOY=; b=mCWSJQ3+0FPdTBBgkanltHH+rS
+        rX61emmsNMIugv+6Tk4t48w3LC91RVFaSll2gmoJs0D7Hw25uL6zETFZQ/EzE4M4Iqotd6iVbK0dj
+        ISvu1aPpkqNBzPnBilvnU1ofAUfLY7+pJeg4r8fyS69t6EdyoG9zMqyCbtGZYmaam8XtCxQMNZIYK
+        wQGsTgw9y5pYdQd1L9XuvkqpTLhW8mf5K905JwJScL4prcbhGOaQ3GVNxgp73kHK75In9ag/LeAZi
+        xUu89BGEG3Mv1T6Xrb6W6v2j7NACUQXHy6BJlpz+tdicBAERNe+Z0v70wLzZI5A6uIE/GLKq/UN3l
+        7Jy0OXCA==;
+Received: from dg by mx.treblig.org with local (Exim 4.94.2)
+        (envelope-from <dg@treblig.org>)
+        id 1qVz9Q-0076hZ-EE; Tue, 15 Aug 2023 18:52:20 +0000
+Date:   Tue, 15 Aug 2023 18:52:20 +0000
+From:   "Dr. David Alan Gilbert" <dave@treblig.org>
+To:     Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: 6.5.0rc5 fs hang - ext4? raid?
-Message-ID: <ZNvCJAclBEJf7uUA@fisica.ufpr.br>
+Message-ID: <ZNvJZIXIHJERRtwP@gallifrey>
 References: <ZNqWfQPTScJDkmpX@gallifrey>
+ <ZNvCJAclBEJf7uUA@fisica.ufpr.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <ZNqWfQPTScJDkmpX@gallifrey>
+In-Reply-To: <ZNvCJAclBEJf7uUA@fisica.ufpr.br>
+X-Chocolate: 70 percent or better cocoa solids preferably
+X-Operating-System: Linux/5.10.0-23-amd64 (x86_64)
+X-Uptime: 18:49:52 up 40 days,  4:21,  1 user,  load average: 0.02, 0.03, 0.00
+User-Agent: Mutt/2.0.5 (2021-01-21)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dr. David Alan Gilbert (dave@treblig.org) wrote on Mon, Aug 14, 2023 at 06:02:53PM -03:
->   I'm seeing a few hangs on a fs after upgrading to fedora 39's bleeding
-> edge; which is running kernel 6.5.0-0.rc5.20230808git14f9643dc90a.37.fc39.x86_64
-> It was always solid prior to that.  It seems to trigger on heavy IO
-> on this fs.
+* Carlos Carvalho (carlos@fisica.ufpr.br) wrote:
+> Dr. David Alan Gilbert (dave@treblig.org) wrote on Mon, Aug 14, 2023 at 06:02:53PM -03:
+> >   I'm seeing a few hangs on a fs after upgrading to fedora 39's bleeding
+> > edge; which is running kernel 6.5.0-0.rc5.20230808git14f9643dc90a.37.fc39.x86_64
+> > It was always solid prior to that.  It seems to trigger on heavy IO
+> > on this fs.
+> 
+> Good news! No, I didn't forget the smiley... Maybe now the problem has become
+> sufficiently bad to be visible/solvable...
+> 
+> 6.4.* also doesn't run in one of our machines, which has heavy I/O load. The
+> first symptom is that rsync downloads hang and abort with timeout. 1 or 2
+> days later the amount of modified pages waiting to go to disk reaches several
+> GB, as reported by /proc/meminfo, but disks remain idle. Finally reading from
+> the arrays collapses.
 
-Good news! No, I didn't forget the smiley... Maybe now the problem has become
-sufficiently bad to be visible/solvable...
+I'm not sure this is a related fault - I mean it might be, but my
+failure is much more deterministic; it seems solid on 6.4.x to me, but
+just fails reliably somewhere in 6.5.
 
-6.4.* also doesn't run in one of our machines, which has heavy I/O load. The
-first symptom is that rsync downloads hang and abort with timeout. 1 or 2
-days later the amount of modified pages waiting to go to disk reaches several
-GB, as reported by /proc/meminfo, but disks remain idle. Finally reading from
-the arrays collapses.
+Dave
 
-This is just the worst case. Since early 5.* I/O performance has dropped
-absurdly. In all our disk servers this is easy to see: just generate lots of
-writes quickly (for example expanding a kernel tarball). Using top I see that
-kworker starts using 100% cpu but disks stay idle (as seen by dstat or sar). If
-you do a sync or umount it takes looooong to reach ~0 modified pages for the
-sync or umount to return.
-
-In the server I mentioned above where 6.4.* don't stand the load, which is one
-of the largest free software mirrors of the world, even sometimes 6.1
-collapses: I/O becomes so slow that service (apache) stops.
-
-The problem gets progressively worse with time after booting. It's hardly
-noticeable in the first hour after boot, and easily seen after ~3-4 days of
-uptime. The higher the (write) I/O load the faster it appears.
-
-All this is with ext4 and raid6 with >~ 14 disks in the arrays.
-
-I don't have debug info because these are production machines and I only
-compile in the kernel the bare minimum essential for operation. It's always
-pure kernel.org releases; gcc versions vary, for 6.4* it's gcc-13, for 6.1*
-gcc-12 is used, on Debian unstable updated more than 4 times/week.
+> This is just the worst case. Since early 5.* I/O performance has dropped
+> absurdly. In all our disk servers this is easy to see: just generate lots of
+> writes quickly (for example expanding a kernel tarball). Using top I see that
+> kworker starts using 100% cpu but disks stay idle (as seen by dstat or sar). If
+> you do a sync or umount it takes looooong to reach ~0 modified pages for the
+> sync or umount to return.
+> 
+> In the server I mentioned above where 6.4.* don't stand the load, which is one
+> of the largest free software mirrors of the world, even sometimes 6.1
+> collapses: I/O becomes so slow that service (apache) stops.
+> 
+> The problem gets progressively worse with time after booting. It's hardly
+> noticeable in the first hour after boot, and easily seen after ~3-4 days of
+> uptime. The higher the (write) I/O load the faster it appears.
+> 
+> All this is with ext4 and raid6 with >~ 14 disks in the arrays.
+> 
+> I don't have debug info because these are production machines and I only
+> compile in the kernel the bare minimum essential for operation. It's always
+> pure kernel.org releases; gcc versions vary, for 6.4* it's gcc-13, for 6.1*
+> gcc-12 is used, on Debian unstable updated more than 4 times/week.
+-- 
+ -----Open up your eyes, open up your mind, open up your code -------   
+/ Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
+\        dave @ treblig.org |                               | In Hex /
+ \ _________________________|_____ http://www.treblig.org   |_______/
