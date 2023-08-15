@@ -2,78 +2,127 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 755C5C0015E
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 07:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11582C0015E
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 08:09:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235209AbjHOHjN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Aug 2023 03:39:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56816 "EHLO
+        id S232758AbjHOIIi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Aug 2023 04:08:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235284AbjHOHig (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Aug 2023 03:38:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04E5810F9
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 00:38:36 -0700 (PDT)
+        with ESMTP id S234493AbjHOIIV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Aug 2023 04:08:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51AAA10D8
+        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 01:08:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 903F762FD2
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 07:38:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD387C433C9
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 07:38:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D533762584
+        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 08:08:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CF03C433C7
+        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 08:08:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692085114;
-        bh=8C6SP4QUk+x0kV6GZcbbe5j1fWr08csvJqE6vlczAlA=;
+        s=k20201202; t=1692086899;
+        bh=tYR/mWt9+XcWnjEIZC34o/6dbrO1fAJ530t13e/uy4k=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=UPoGaGaM2ng9DFDAP3tg4eFN8DdzOIl0vAZnuQVg1lpYhde7WAtDMtmC7BK0wweJR
-         fzUN6yVC9gdpGGkykal6jZOwvNRWKiGqM5vbNH5+gaYGadexruxo48JKKRh7NrVsSm
-         KtodAe8fMKdAXzbT97apFeEHTlw0aZr/MZKv+UTWZEwSQgz9vHuuEzuAMCx4DYwqDE
-         xAIz6meEQzP6ozQfq/SCZYk8EKUbVlTGDPylypjxC7bO2A9WqBq5dX0GiAq+JVFFRe
-         BpmrELJNTe+RFmWOrly3FbWbo7sgPRfnF4AuTYx+pDaz6aRQSKcFEMXbFZzGSfmGfl
-         Ni1+/nDcYJuBg==
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-4ff72830927so3058418e87.3
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 00:38:34 -0700 (PDT)
-X-Gm-Message-State: AOJu0YwhcNPHNqAKvkCoWqMcm9DmkB1SARmog+Cwhc37vmKBtoAepYas
-        LrxlQl7ME5Of+cX9xBTcjfbNsRIRoylm9S/hbD0=
-X-Google-Smtp-Source: AGHT+IHpPNyOvvuEBSuoOwuq8a7lNwWSY9dLAQspR7DytrCZx8c+VpdO1bwxlybWhHX/zWWaQi7MRJXoL+r+QbY4QU0=
-X-Received: by 2002:ac2:51a4:0:b0:4f6:1779:b1c1 with SMTP id
- f4-20020ac251a4000000b004f61779b1c1mr7030158lfk.48.1692085112848; Tue, 15 Aug
- 2023 00:38:32 -0700 (PDT)
+        b=KldN/6DqgLk2Om0CZk6crO9Y16bXTTU46U9dY1OIYJzfA49ozgiSbi/H++z5dRvfh
+         Mc3lmHab1wGG8LbKwwi4lvhVGUQqSKzS0arr2bvz+B2gu5EHRvHAsEYTIioBv2W3C9
+         KBNVk3q5F6UF46mUwNcOlU9LTF+BJ3msuu1dAYrjDwC9fZUO/KrnxpDbor3jdj40tP
+         GsUTPDXAjrozGLGyopPWBWesTJguvvHm6wL4df1nkXeQWN0PPqIa4oWJZFOHaxLELW
+         5+by7DfS+55JGdktlhAtvrXQUxzifPGi2qz3+FaEFV8qiD7z+aeThQai0Mae12kQcZ
+         XXUFgrGQ0p+zA==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-4fe3b86cec1so8017882e87.2
+        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 01:08:19 -0700 (PDT)
+X-Gm-Message-State: AOJu0Yyd7xaMqAXhTp6LIDbcPz0mhbj7u08bjw0HxogbaJBjv6WuJDmn
+        Iaps04pBY9TAwUTKHOZrwcgl415l15wFrO6srH0=
+X-Google-Smtp-Source: AGHT+IGEt/gwOFDZm3nxEVOQbrI/2gKuSy6cb2mpTGwpr6Jg647YCh47UEG2gT9IHLDznvIQCetBs2P/crkBQznEr0c=
+X-Received: by 2002:a19:5f05:0:b0:4f8:6d99:f4f3 with SMTP id
+ t5-20020a195f05000000b004f86d99f4f3mr6256121lfb.52.1692086897097; Tue, 15 Aug
+ 2023 01:08:17 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230814091452.9670-1-jack@suse.cz> <20230814092720.3931-1-jack@suse.cz>
- <15c8b08c-96f3-e862-73e8-e5a25228e87f@huaweicloud.com>
-In-Reply-To: <15c8b08c-96f3-e862-73e8-e5a25228e87f@huaweicloud.com>
+References: <20230814205347.17891-1-djeffery@redhat.com>
+In-Reply-To: <20230814205347.17891-1-djeffery@redhat.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 15 Aug 2023 15:38:19 +0800
-X-Gmail-Original-Message-ID: <CAPhsuW68xWFrydjiA6aY1Zot3Ts_YxeTyco9G7PCeZdT8pVLOA@mail.gmail.com>
-Message-ID: <CAPhsuW68xWFrydjiA6aY1Zot3Ts_YxeTyco9G7PCeZdT8pVLOA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] md/raid0: Factor out helper for mapping and
- submitting a bio
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Jan Kara <jack@suse.cz>, linux-raid@vger.kernel.org,
-        Neil Brown <neilb@suse.de>, "yukuai (C)" <yukuai3@huawei.com>
+Date:   Tue, 15 Aug 2023 16:08:04 +0800
+X-Gmail-Original-Message-ID: <CAPhsuW7972qrXAPv=QFhFNnuvWcJiypgM_h+UFrB31SDBTWxWA@mail.gmail.com>
+Message-ID: <CAPhsuW7972qrXAPv=QFhFNnuvWcJiypgM_h+UFrB31SDBTWxWA@mail.gmail.com>
+Subject: Re: [PATCH RESEND] md: raid0: account for split bio in iostat accounting
+To:     David Jeffery <djeffery@redhat.com>
+Cc:     linux-raid@vger.kernel.org, Laurence Oberman <loberman@redhat.com>,
+        Yu Kuai <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Aug 15, 2023 at 9:33=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
+On Tue, Aug 15, 2023 at 4:54=E2=80=AFAM David Jeffery <djeffery@redhat.com>=
+ wrote:
 >
-> =E5=9C=A8 2023/08/14 17:27, Jan Kara =E5=86=99=E9=81=93:
-> > Factor out helper function for mapping and submitting a bio out of
-> > raid0_make_request(). We will use it later for submitting both parts of
-> > a split bio.
-> >
-> LGTM
+> When a bio is split by md raid0, the newly created bio will not be tracke=
+d
+> by md for I/O accounting. Only the portion of I/O still assigned to the
+> original bio which was reduced by the split will be accounted for. This
+> results in md iostat data sometimes showing I/O values far below the actu=
+al
+> amount of data being sent through md.
 >
+> md_account_bio() needs to be called for all bio generated by the bio spli=
+t.
+>
+> Fixes: 10764815ff47 ("md: add io accounting for raid0 and raid5")
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> Tested-by: Laurence Oberman <loberman@redhat.com>
+> Reviewed-by: Laurence Oberman <loberman@redhat.com>
 > Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+
+It appears this patch conflicts with Jan's set:
+
+https://lore.kernel.org/linux-raid/20230814091452.9670-1-jack@suse.cz/
+
+Please rebase on top of md-next and resubmit the patch:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-nex=
+t
+
+> ---
 >
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
+> No change to the patch itself. Added Fixes and Reviewed-by lines.
+>
+> A simple example of the issue was generated using a raid0 device on parti=
+tions
+> to the same device. Since all raid0 I/O then goes to one device, it makes=
+ it
+> easy to see a gap between the md device and its sd storage. Reading an lv=
+m
+> device on top of the md device, the iostat output (some 0 columns and ext=
+ra
+> devices removed to make the data more compact) was:
+>
+> Device             tps    kB_read/s    kB_wrtn/s    kB_dscd/s    kB_read
+> md2               0.00         0.00         0.00         0.00          0
+> sde               0.00         0.00         0.00         0.00          0
+> md2            1364.00    411496.00         0.00         0.00     411496
+> sde            1734.00    646144.00         0.00         0.00     646144
+> md2            1699.00    510680.00         0.00         0.00     510680
+> sde            2155.00    802784.00         0.00         0.00     802784
+> md2             803.00    241480.00         0.00         0.00     241480
+> sde            1016.00    377888.00         0.00         0.00     377888
+> md2               0.00         0.00         0.00         0.00          0
+> sde               0.00         0.00         0.00         0.00          0
+>
+> I/O was generated doing large direct I/O reads (12M) with dd to a linear
+> lvm volume on top of the 4 leg raid0 device.
+>
+> The md2 reads were showing as roughly 2/3 of the reads to the sde device
+> containing all of md2's raid partitions. The sum of reads to sde was
+> 1826816 kB, which was the expected amount as it was the amount read by
+> dd. With the patch, the total reads from md will match the reads from
+> sde and be consistent with the amount of I/O generated.
 
-Applied the set to md-next. Thanks!
+We can include this part in the commit log to keep more context for future
+reference.
 
+Thanks,
 Song
