@@ -2,163 +2,195 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72022C001DB
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 01:28:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFF97C001DB
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Aug 2023 01:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233555AbjHOB1a (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Aug 2023 21:27:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36632 "EHLO
+        id S233819AbjHOBd4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Aug 2023 21:33:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233721AbjHOB10 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 21:27:26 -0400
+        with ESMTP id S233830AbjHOBdb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Aug 2023 21:33:31 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FE71B2
-        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 18:27:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CFE410D1
+        for <linux-raid@vger.kernel.org>; Mon, 14 Aug 2023 18:33:29 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RPtt04WByz4f3pFK
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 09:27:20 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RPv112LHsz4f3tP0
+        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 09:33:25 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgCXc6Z41NpkeHvxAg--.46850S3;
-        Tue, 15 Aug 2023 09:27:21 +0800 (CST)
-Subject: Re: [PATCH 2/2] md/raid0: Fix performance regression for large
- sequential writes
-To:     Jan Kara <jack@suse.cz>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Neil Brown <neilb@suse.de>, "yukuai (C)" <yukuai3@huawei.com>
+        by APP4 (Coremail) with SMTP id gCh0CgAXp6nl1dpkcs_xAg--.59748S3;
+        Tue, 15 Aug 2023 09:33:26 +0800 (CST)
+Subject: Re: [PATCH 1/2] md/raid0: Factor out helper for mapping and
+ submitting a bio
+To:     Jan Kara <jack@suse.cz>, Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>,
+        "yukuai (C)" <yukuai3@huawei.com>
 References: <20230814091452.9670-1-jack@suse.cz>
- <20230814092720.3931-2-jack@suse.cz>
- <7cf84094-c63f-374e-6a24-f35d0816266f@huaweicloud.com>
- <20230814131539.qlsj774c7zxzyiet@quack3>
+ <20230814092720.3931-1-jack@suse.cz>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <4fe591b2-7460-6b8e-4746-cba0a3be1828@huaweicloud.com>
-Date:   Tue, 15 Aug 2023 09:27:20 +0800
+Message-ID: <15c8b08c-96f3-e862-73e8-e5a25228e87f@huaweicloud.com>
+Date:   Tue, 15 Aug 2023 09:33:25 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20230814131539.qlsj774c7zxzyiet@quack3>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20230814092720.3931-1-jack@suse.cz>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCXc6Z41NpkeHvxAg--.46850S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWryUAFWfWFyUCw18KryrtFb_yoWrXw1fpr
-        WUX3WYva1kXr9Ikws7tFWjka1Iy3W7Xr47WFWrK3s7u3Z0vr1DKayUXr409FnxXry8C34Y
-        vr4jvasxWFyqv37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
-        DUUUUU=
+X-CM-TRANSID: gCh0CgAXp6nl1dpkcs_xAg--.59748S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGw4DXr45ZF4UWw4fCF4fuFg_yoWrGF48pw
+        4ag3ZxZFWrJFW3t3W5Ja4DK3WFyryFqrW7tFW7u34xGrn7urnrKF15Ww1FvF15CFy5Gry3
+        Jw1kCrsrCasxKFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
+        6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUrNtxDUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi, Jan!
-
-åœ¨ 2023/08/14 21:15, Jan Kara å†™é“:
-> On Mon 14-08-23 20:15:58, Yu Kuai wrote:
->> Hi,
->>
->> åœ¨ 2023/08/14 17:27, Jan Kara å†™é“:
->>> Commit f00d7c85be9e ("md/raid0: fix up bio splitting.") among other
->>> things changed how bio that needs to be split is submitted. Before this
->>> commit, we have split the bio, mapped and submitted each part. After
->>> this commit, we map only the first part of the split bio and submit the
->>> second part unmapped. Due to bio sorting in __submit_bio_noacct() this
->>> results in the following request ordering:
->>>
->>>     9,0   18     1181     0.525037895 15995  Q  WS 1479315464 + 63392
->>>
->>>     Split off chunk-sized (1024 sectors) request:
->>>
->>>     9,0   18     1182     0.629019647 15995  X  WS 1479315464 / 1479316488
->>>
->>>     Request is unaligned to the chunk so it's split in
->>>     raid0_make_request().  This is the first part mapped and punted to
->>>     bio_list:
->>>
->>>     8,0   18     7053     0.629020455 15995  A  WS 739921928 + 1016 <- (9,0) 1479315464
->>>
->>>     Now raid0_make_request() returns, second part is postponed on
->>>     bio_list. __submit_bio_noacct() resorts the bio_list, mapped request
->>>     is submitted to the underlying device:
->>>
->>>     8,0   18     7054     0.629022782 15995  G  WS 739921928 + 1016
->>>
->>>     Now we take another request from the bio_list which is the remainder
->>>     of the original huge request. Split off another chunk-sized bit from
->>>     it and the situation repeats:
->>>
->>>     9,0   18     1183     0.629024499 15995  X  WS 1479316488 / 1479317512
->>>     8,16  18     6998     0.629025110 15995  A  WS 739921928 + 1016 <- (9,0) 1479316488
->>>     8,16  18     6999     0.629026728 15995  G  WS 739921928 + 1016
->>>     ...
->>>     9,0   18     1184     0.629032940 15995  X  WS 1479317512 / 1479318536 [libnetacq-write]
->>>     8,0   18     7059     0.629033294 15995  A  WS 739922952 + 1016 <- (9,0) 1479317512
->>>     8,0   18     7060     0.629033902 15995  G  WS 739922952 + 1016
->>>     ...
->>>
->>>     This repeats until we consume the whole original huge request. Now we
->>>     finally get to processing the second parts of the split off requests
->>>     (in reverse order):
->>>
->>>     8,16  18     7181     0.629161384 15995  A  WS 739952640 + 8 <- (9,0) 1479377920
->>>     8,0   18     7239     0.629162140 15995  A  WS 739952640 + 8 <- (9,0) 1479376896
->>>     8,16  18     7186     0.629163881 15995  A  WS 739951616 + 8 <- (9,0) 1479375872
->>>     8,0   18     7242     0.629164421 15995  A  WS 739951616 + 8 <- (9,0) 1479374848
->>>     ...
->>>
->>> I guess it is obvious that this IO pattern is extremely inefficient way
->>> to perform sequential IO. It also makes bio_list to grow to rather long
->>> lengths.
->>>
->>> Change raid0_make_request() to map both parts of the split bio. Since we
->>> know we are provided with at most chunk-sized bios, we will always need
->>> to split the incoming bio at most once.
->>
->> I understand the problem now, but I'm lost here, can you explain why "at
->> most once" more ? Do you mean that the original bio won't be splited
->> again?
+ÔÚ 2023/08/14 17:27, Jan Kara Ð´µÀ:
+> Factor out helper function for mapping and submitting a bio out of
+> raid0_make_request(). We will use it later for submitting both parts of
+> a split bio.
 > 
-> Yes. md_submit_bio() splits the incoming bio by bio_split_to_limits() so we
-> are guaranteed raid0_make_request() gets bio at most chunk_sectors long.
-> If this bio is misaligned, it will be split in raid0_make_request(). But
-> after that we are sure both parts of the bio are meeting requirements of
-> the raid0 code so we can just directly map them to the underlying device and
-> submit them.
+LGTM
 
-Thanks for the explanation, I understand this now.
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
-Kuai
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>   drivers/md/raid0.c | 79 +++++++++++++++++++++++-----------------------
+>   1 file changed, 40 insertions(+), 39 deletions(-)
 > 
-> 								Honza
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index d1ac73fcd852..d3c55f2e9b18 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -557,54 +557,21 @@ static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
+>   	bio_endio(bio);
+>   }
+>   
+> -static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+> +static void raid0_map_submit_bio(struct mddev *mddev, struct bio *bio)
+>   {
+>   	struct r0conf *conf = mddev->private;
+>   	struct strip_zone *zone;
+>   	struct md_rdev *tmp_dev;
+> -	sector_t bio_sector;
+> -	sector_t sector;
+> -	sector_t orig_sector;
+> -	unsigned chunk_sects;
+> -	unsigned sectors;
+> -
+> -	if (unlikely(bio->bi_opf & REQ_PREFLUSH)
+> -	    && md_flush_request(mddev, bio))
+> -		return true;
+> -
+> -	if (unlikely((bio_op(bio) == REQ_OP_DISCARD))) {
+> -		raid0_handle_discard(mddev, bio);
+> -		return true;
+> -	}
+> -
+> -	bio_sector = bio->bi_iter.bi_sector;
+> -	sector = bio_sector;
+> -	chunk_sects = mddev->chunk_sectors;
+> -
+> -	sectors = chunk_sects -
+> -		(likely(is_power_of_2(chunk_sects))
+> -		 ? (sector & (chunk_sects-1))
+> -		 : sector_div(sector, chunk_sects));
+> -
+> -	/* Restore due to sector_div */
+> -	sector = bio_sector;
+> -
+> -	if (sectors < bio_sectors(bio)) {
+> -		struct bio *split = bio_split(bio, sectors, GFP_NOIO,
+> -					      &mddev->bio_set);
+> -		bio_chain(split, bio);
+> -		submit_bio_noacct(bio);
+> -		bio = split;
+> -	}
+> +	sector_t bio_sector = bio->bi_iter.bi_sector;
+> +	sector_t sector = bio_sector;
+>   
+>   	if (bio->bi_pool != &mddev->bio_set)
+>   		md_account_bio(mddev, &bio);
+>   
+> -	orig_sector = sector;
+>   	zone = find_zone(mddev->private, &sector);
+>   	switch (conf->layout) {
+>   	case RAID0_ORIG_LAYOUT:
+> -		tmp_dev = map_sector(mddev, zone, orig_sector, &sector);
+> +		tmp_dev = map_sector(mddev, zone, bio_sector, &sector);
+>   		break;
+>   	case RAID0_ALT_MULTIZONE_LAYOUT:
+>   		tmp_dev = map_sector(mddev, zone, sector, &sector);
+> @@ -612,13 +579,13 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+>   	default:
+>   		WARN(1, "md/raid0:%s: Invalid layout\n", mdname(mddev));
+>   		bio_io_error(bio);
+> -		return true;
+> +		return;
+>   	}
+>   
+>   	if (unlikely(is_rdev_broken(tmp_dev))) {
+>   		bio_io_error(bio);
+>   		md_error(mddev, tmp_dev);
+> -		return true;
+> +		return;
+>   	}
+>   
+>   	bio_set_dev(bio, tmp_dev->bdev);
+> @@ -630,6 +597,40 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+>   				      bio_sector);
+>   	mddev_check_write_zeroes(mddev, bio);
+>   	submit_bio_noacct(bio);
+> +}
+> +
+> +static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+> +{
+> +	sector_t sector;
+> +	unsigned chunk_sects;
+> +	unsigned sectors;
+> +
+> +	if (unlikely(bio->bi_opf & REQ_PREFLUSH)
+> +	    && md_flush_request(mddev, bio))
+> +		return true;
+> +
+> +	if (unlikely((bio_op(bio) == REQ_OP_DISCARD))) {
+> +		raid0_handle_discard(mddev, bio);
+> +		return true;
+> +	}
+> +
+> +	sector = bio->bi_iter.bi_sector;
+> +	chunk_sects = mddev->chunk_sectors;
+> +
+> +	sectors = chunk_sects -
+> +		(likely(is_power_of_2(chunk_sects))
+> +		 ? (sector & (chunk_sects-1))
+> +		 : sector_div(sector, chunk_sects));
+> +
+> +	if (sectors < bio_sectors(bio)) {
+> +		struct bio *split = bio_split(bio, sectors, GFP_NOIO,
+> +					      &mddev->bio_set);
+> +		bio_chain(split, bio);
+> +		submit_bio_noacct(bio);
+> +		bio = split;
+> +	}
+> +
+> +	raid0_map_submit_bio(mddev, bio);
+>   	return true;
+>   }
+>   
 > 
->>> Fixes: f00d7c85be9e ("md/raid0: fix up bio splitting.")
->>> Signed-off-by: Jan Kara <jack@suse.cz>
->>> ---
->>>    drivers/md/raid0.c | 2 +-
->>>    1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
->>> index d3c55f2e9b18..595856948dff 100644
->>> --- a/drivers/md/raid0.c
->>> +++ b/drivers/md/raid0.c
->>> @@ -626,7 +626,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
->>>    		struct bio *split = bio_split(bio, sectors, GFP_NOIO,
->>>    					      &mddev->bio_set);
->>>    		bio_chain(split, bio);
->>> -		submit_bio_noacct(bio);
->>> +		raid0_map_submit_bio(mddev, bio);
->>>    		bio = split;
->>>    	}
->>>
->>
 
