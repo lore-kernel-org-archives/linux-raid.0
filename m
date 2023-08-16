@@ -2,193 +2,113 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3A3BC04A94
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 07:20:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37460C41513
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 09:38:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242333AbjHPHUA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 16 Aug 2023 03:20:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38582 "EHLO
+        id S243402AbjHPJhj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Aug 2023 05:37:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242348AbjHPHTk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Aug 2023 03:19:40 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61C392117
-        for <linux-raid@vger.kernel.org>; Wed, 16 Aug 2023 00:18:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692170335;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Y9YpilQCL3ynVImiYsoeiobJXH6We3bG9cGLYb4gSg0=;
-        b=DFlVB9V7/Gw77zq9wHKFn8WqnU7Wk1Wdv3MZn/mU1gKOgXC+Lc2qI6IR3d5CjZ5nHCgrx5
-        KJfokQv8OVhhg20CPZ8+t+weVt3N9RZ0dwU6eiGeII20vMUXJ6Fx5WFiZFzNAhpXI6CchC
-        vyYw4YanmGoi3e6zNxU7zZ8bC8EeClk=
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
- [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-126-GMgsN7v1MH6a_9-SoFtN7A-1; Wed, 16 Aug 2023 03:18:53 -0400
-X-MC-Unique: GMgsN7v1MH6a_9-SoFtN7A-1
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-68877684da1so1222176b3a.1
-        for <linux-raid@vger.kernel.org>; Wed, 16 Aug 2023 00:18:53 -0700 (PDT)
+        with ESMTP id S243455AbjHPJhb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Aug 2023 05:37:31 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A4DF26A4;
+        Wed, 16 Aug 2023 02:37:30 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1bb84194bf3so39158015ad.3;
+        Wed, 16 Aug 2023 02:37:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1692178650; x=1692783450;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1lS1r+gat9gKV1Ap/cgPo1okEN4ipNq1TwCugcvDik0=;
+        b=p9vcUD7SG77yUjMoY4NXQ+ZkQjjj7s7oNy2iUAz+wM9vTKo45qPNzO9dsjJ9YxWsXU
+         4bl4dOOmDm1KHlBvFoaXmYQimcShmpiHLhQuT7GJTZJyCjI/z6kH5I2/ahA4SeNagndD
+         xl+loyaQVE0TpFvRzOEXw83qeBY67QOMj7DBFdU4nb5B/lU9ALwPIim9kOOdkYmW64MW
+         /I/yHNlMMEI6aKsEROR/rt3OanyYe2ZrWSYwBf5XopMNsilqGL0OtDgGo1eoF3cSOaXm
+         CYa/xDH73140/MZQQ4CW1815P2i31hfteCvGOFfLcZkdSn8vOHFvt4YMUY2CuL5vSIHk
+         r+dw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692170332; x=1692775132;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Y9YpilQCL3ynVImiYsoeiobJXH6We3bG9cGLYb4gSg0=;
-        b=PEwzYHJwgXkA2lItZ9TyiLWsfrbc+b0ob8yfwGrbNgGxSg6nBzyd9S9aKRjD78UHSM
-         JpPtZd+zXMjhuaKFK8HzhyuBruvx37tU0JJa/3GS5/aU07QIxQ03Djt7iQV2kN0OZhjN
-         q27JaHJeyPjWsweKlUpPp58UC3/tnhbn8dJgF4rP4qJeC65LAuhrG0X2YGNAqxiI+X4H
-         7eo87TlD7yrQJ3g2Tt9AhJU73zjBg2xw+Xp3LaTIzXjhI4VKfdBlXjxTjP+9UBmhFhV5
-         OU946Pn818oLLXZxnA5cSyjl92JukRS4mnwJwdotVbT9ihiMzu4G8LdgZ/BIIO5cRCgD
-         kTpw==
-X-Gm-Message-State: AOJu0YzyfMqSpfW/YFdUrljkiJm/3/wnZezJxrdGvw8bfJEV9j0IpXH3
-        ZUqLM2CgIy0woZxfEmhATuY8e/BPPmjUIozKsvev5mIWnisn1gh4Fw/m4kcEdl0i0VKSa3jkIFk
-        o/6tk+WJkJs8XrCJ1hFHrBwsNKLJGWrUvjx08gf2lEZzF83I45PI=
-X-Received: by 2002:a05:6a20:914d:b0:132:79da:385a with SMTP id x13-20020a056a20914d00b0013279da385amr1199085pzc.23.1692170332422;
-        Wed, 16 Aug 2023 00:18:52 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGKG3xiXPLtvSBOy7UTZ4AJ+JKycafKj/HYMUsWrsaKDAi3ZvRcMzimuYXdqRkXCl1oe3Fr7TH132EJgtc4jh4=
-X-Received: by 2002:a05:6a20:914d:b0:132:79da:385a with SMTP id
- x13-20020a056a20914d00b0013279da385amr1199071pzc.23.1692170332143; Wed, 16
- Aug 2023 00:18:52 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1692178650; x=1692783450;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=1lS1r+gat9gKV1Ap/cgPo1okEN4ipNq1TwCugcvDik0=;
+        b=NDwW335Uuas05v2KU+xRmDxJIbNsWjjw9/RgEHDVkxE4juKhItPbHeVrLVp8ro180j
+         wfe1R0Dzz13G6NDclIeojlE+o+wjF+0d+kH4mjZEDWmYF+cNEoyYdPjFFvHvL2wSQsyG
+         GQyFV5DR81UmXBv6AO0XmU/Q1BbxAIYK13VnGXphDuxgYHTv0dLC9G6KCH6Y+dLrK2WS
+         9TMKhgpHkiifd4z4Pk9QiPNhMaL2sMVBaXZFlmdWggZ2hhs+S5gOrQ+a468C1TZEpYbf
+         5kPd95/mpYUtqUbBAsy2CQYrdu6AMIpGocYfwoVWXe2tvAjcIHIUzyIEcTX95SPhBD9G
+         0vdA==
+X-Gm-Message-State: AOJu0YwZYyosBz1sYLmzlfEC4RWb5Gwl5MR39CL+oGblhmWRsy274nko
+        Y68rrDANIen1riyhgURpWgk=
+X-Google-Smtp-Source: AGHT+IHGoKGbh8REsOj7FWUiAtyf3Z/SSp0bH7SDpB1ScBpX2GzKpd9GEewooAZU8xvsVHYNUiYs2g==
+X-Received: by 2002:a17:902:6b86:b0:1bc:56c3:ebb7 with SMTP id p6-20020a1709026b8600b001bc56c3ebb7mr949752plk.20.1692178649825;
+        Wed, 16 Aug 2023 02:37:29 -0700 (PDT)
+Received: from [192.168.0.105] ([103.124.138.83])
+        by smtp.gmail.com with ESMTPSA id n4-20020a170902d2c400b001bb6c5ff4edsm12670642plc.173.2023.08.16.02.37.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Aug 2023 02:37:29 -0700 (PDT)
+Message-ID: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
+Date:   Wed, 16 Aug 2023 16:37:26 +0700
 MIME-Version: 1.0
-References: <20230815030957.509535-1-yukuai1@huaweicloud.com> <20230815030957.509535-8-yukuai1@huaweicloud.com>
-In-Reply-To: <20230815030957.509535-8-yukuai1@huaweicloud.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 16 Aug 2023 15:18:40 +0800
-Message-ID: <CALTww28yBsGucpaPO9BiQO-gU3+F25MaNVgGhnOA3Mi+9enFjQ@mail.gmail.com>
-Subject: Re: [PATCH -next v2 7/7] md: delay remove_and_add_spares() for read
- only array to md_start_sync()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>,
+        AceLan Kao <acelan@gmail.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux RAID <linux-raid@vger.kernel.org>
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: Fwd: Infiniate systemd loop when power off the machine with multiple
+ MD RAIDs
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Aug 15, 2023 at 11:13=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> =
-wrote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Before this patch, for read-only array:
->
-> md_check_recovery() check that 'MD_RECOVERY_NEEDED' is set, then it will
-> call remove_and_add_spares() directly to try to remove and add rdevs
-> from array.
->
-> After this patch:
->
-> 1) md_check_recovery() check that 'MD_RECOVERY_NEEDED' is set, and the
->    worker 'sync_work' is not pending, and there are rdevs can be added
->    or removed, then it will queue new work md_start_sync();
-> 2) md_start_sync() will call remove_and_add_spares() and exist;
+Hi,
 
-Hi Kuai
+I notice a regression report on Bugzilla [1]. Quoting from it:
 
-If md_check_recovery returns and md_starts_sync doesn't start, during
-the window the raid changes to read-write, the sync thread can be run
-but MD_RECOVERY_RUNNING isn't set. Is there such a problem?
+> It needs to build at least 2 different RAIDs(eg. RAID0 and RAID10, RAID5 and RAID10) and then you will see below error repeatly(need to use serial console to see it)
+> 
+> [ 205.360738] systemd-shutdown[1]: Stopping MD devices.
+> [ 205.366384] systemd-shutdown[1]: sd-device-enumerator: Scan all dirs
+> [ 205.373327] systemd-shutdown[1]: sd-device-enumerator: Scanning /sys/bus
+> [ 205.380427] systemd-shutdown[1]: sd-device-enumerator: Scanning /sys/class
+> [ 205.388257] systemd-shutdown[1]: Stopping MD /dev/md127 (9:127).
+> [ 205.394880] systemd-shutdown[1]: Failed to sync MD block device /dev/md127, ignoring: Input/output error
+> [ 205.404975] md: md127 stopped.
+> [ 205.470491] systemd-shutdown[1]: Stopping MD /dev/md126 (9:126).
+> [ 205.770179] md: md126: resync interrupted.
+> [ 205.776258] md126: detected capacity change from 1900396544 to 0
+> [ 205.783349] md: md126 stopped.
+> [ 205.862258] systemd-shutdown[1]: Stopping MD /dev/md125 (9:125).
+> [ 205.862435] md: md126 stopped.
+> [ 205.868376] systemd-shutdown[1]: Failed to sync MD block device /dev/md125, ignoring: Input/output error
+> [ 205.872845] block device autoloading is deprecated and will be removed.
+> [ 205.880955] md: md125 stopped.
+> [ 205.934349] systemd-shutdown[1]: Stopping MD /dev/md124p2 (259:7).
+> [ 205.947707] systemd-shutdown[1]: Could not stop MD /dev/md124p2: Device or resource busy
+> [ 205.957004] systemd-shutdown[1]: Stopping MD /dev/md124p1 (259:6).
+> [ 205.964177] systemd-shutdown[1]: Could not stop MD /dev/md124p1: Device or resource busy
+> [ 205.973155] systemd-shutdown[1]: Stopping MD /dev/md124 (9:124).
+> [ 205.979789] systemd-shutdown[1]: Could not stop MD /dev/md124: Device or resource busy
+> [ 205.988475] systemd-shutdown[1]: Not all MD devices stopped, 4 left.
 
-Regards
-Xiao
+See Bugzilla for the full thread and attached full journalctl log.
 
->
-> This change make sure that array reconfiguration is independent from
-> daemon, and it'll be much easier to synchronize it with io, consier
-> that io may rely on daemon thread to be done.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.c | 37 +++++++++++++++++++++++++++----------
->  1 file changed, 27 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d26d2c35f9af..74d529479fcf 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9191,6 +9191,16 @@ static bool rdev_addable(struct md_rdev *rdev)
->         return true;
->  }
->
-> +static bool md_spares_need_change(struct mddev *mddev)
-> +{
-> +       struct md_rdev *rdev;
-> +
-> +       rdev_for_each(rdev, mddev)
-> +               if (rdev_removeable(rdev) || rdev_addable(rdev))
-> +                       return true;
-> +       return false;
-> +}
-> +
->  static int remove_and_add_spares(struct mddev *mddev,
->                                  struct md_rdev *this)
->  {
-> @@ -9309,6 +9319,12 @@ static void md_start_sync(struct work_struct *ws)
->
->         mddev_lock_nointr(mddev);
->
-> +       if (!md_is_rdwr(mddev)) {
-> +               remove_and_add_spares(mddev, NULL);
-> +               mddev_unlock(mddev);
-> +               return;
-> +       }
-> +
->         if (!md_choose_sync_direction(mddev, &spares))
->                 goto not_running;
->
-> @@ -9403,7 +9419,8 @@ void md_check_recovery(struct mddev *mddev)
->         }
->
->         if (!md_is_rdwr(mddev) &&
-> -           !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
-> +           (!test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-> +            work_pending(&mddev->sync_work)))
->                 return;
->         if ( ! (
->                 (mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
-> @@ -9431,15 +9448,8 @@ void md_check_recovery(struct mddev *mddev)
->                                  */
->                                 rdev_for_each(rdev, mddev)
->                                         clear_bit(Blocked, &rdev->flags);
-> -                       /* On a read-only array we can:
-> -                        * - remove failed devices
-> -                        * - add already-in_sync devices if the array its=
-elf
-> -                        *   is in-sync.
-> -                        * As we only add devices that are already in-syn=
-c,
-> -                        * we can activate the spares immediately.
-> -                        */
-> -                       remove_and_add_spares(mddev, NULL);
-> -                       /* There is no thread, but we need to call
-> +                       /*
-> +                        * There is no thread, but we need to call
->                          * ->spare_active and clear saved_raid_disk
->                          */
->                         set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> @@ -9447,6 +9457,13 @@ void md_check_recovery(struct mddev *mddev)
->                         clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->                         clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->                         clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)=
-;
-> +
-> +                       /*
-> +                        * Let md_start_sync() to remove and add rdevs to=
- the
-> +                        * array.
-> +                        */
-> +                       if (md_spares_need_change(mddev))
-> +                               queue_work(md_misc_wq, &mddev->sync_work)=
-;
->                         goto unlock;
->                 }
->
-> --
-> 2.39.2
->
+Anyway, I'm adding this regression to be tracked by regzbot:
 
+#regzbot introduced: 12a6caf273240a https://bugzilla.kernel.org/show_bug.cgi?id=217798
+#regzbot title: systemd shutdown hang on machine with different RAID levels
+
+Thanks.
+
+[1]: https://bugzilla.kernel.org/show_bug.cgi?id=217798
+
+-- 
+An old man doll... just what I always wanted! - Clara
