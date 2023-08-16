@@ -2,113 +2,190 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37460C41513
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 09:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15642C001B0
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 14:35:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243402AbjHPJhj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 16 Aug 2023 05:37:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52710 "EHLO
+        id S1343666AbjHPOfA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Aug 2023 10:35:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243455AbjHPJhb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Aug 2023 05:37:31 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A4DF26A4;
-        Wed, 16 Aug 2023 02:37:30 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1bb84194bf3so39158015ad.3;
-        Wed, 16 Aug 2023 02:37:30 -0700 (PDT)
+        with ESMTP id S1343739AbjHPOex (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Aug 2023 10:34:53 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED38F271D
+        for <linux-raid@vger.kernel.org>; Wed, 16 Aug 2023 07:34:51 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id 98e67ed59e1d1-2690803a368so921749a91.1
+        for <linux-raid@vger.kernel.org>; Wed, 16 Aug 2023 07:34:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692178650; x=1692783450;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1lS1r+gat9gKV1Ap/cgPo1okEN4ipNq1TwCugcvDik0=;
-        b=p9vcUD7SG77yUjMoY4NXQ+ZkQjjj7s7oNy2iUAz+wM9vTKo45qPNzO9dsjJ9YxWsXU
-         4bl4dOOmDm1KHlBvFoaXmYQimcShmpiHLhQuT7GJTZJyCjI/z6kH5I2/ahA4SeNagndD
-         xl+loyaQVE0TpFvRzOEXw83qeBY67QOMj7DBFdU4nb5B/lU9ALwPIim9kOOdkYmW64MW
-         /I/yHNlMMEI6aKsEROR/rt3OanyYe2ZrWSYwBf5XopMNsilqGL0OtDgGo1eoF3cSOaXm
-         CYa/xDH73140/MZQQ4CW1815P2i31hfteCvGOFfLcZkdSn8vOHFvt4YMUY2CuL5vSIHk
-         r+dw==
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1692196491; x=1692801291;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NScA+PcQZhcEVersyfhdbefEy+tNTcLh+PJYZN6zQJY=;
+        b=q/RxBKZSnukRvIDE0HYoCV4LgKpFAYqMpW+27qXlHUQKSf5Fs6m5Xttjc9/BTz0qFa
+         EnYmRE/ypCWNUC825ADvHK0GyceBhxWCpdQkwcTireVpf7IktBoDQYYMQK10U0r1fPan
+         ks2KyM/LgWV97fVodqrURGLMtPIZgVZsJZUuRRxf6PmivrG0xxd/Z1gPjXP0KEn4F0o9
+         F17r0+ZduirB3SWwwcdEfG61OXZtdptrXD6aC5ClUKiFpUZ1KRYKYaESmqucnc14Blvc
+         WPMgI0zGIL+g0WRCgsFGyPSdyqJgBqayLXujFx04YlFE0DfLqhb99btgSOQlz5U2VNzK
+         YfRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692178650; x=1692783450;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=1lS1r+gat9gKV1Ap/cgPo1okEN4ipNq1TwCugcvDik0=;
-        b=NDwW335Uuas05v2KU+xRmDxJIbNsWjjw9/RgEHDVkxE4juKhItPbHeVrLVp8ro180j
-         wfe1R0Dzz13G6NDclIeojlE+o+wjF+0d+kH4mjZEDWmYF+cNEoyYdPjFFvHvL2wSQsyG
-         GQyFV5DR81UmXBv6AO0XmU/Q1BbxAIYK13VnGXphDuxgYHTv0dLC9G6KCH6Y+dLrK2WS
-         9TMKhgpHkiifd4z4Pk9QiPNhMaL2sMVBaXZFlmdWggZ2hhs+S5gOrQ+a468C1TZEpYbf
-         5kPd95/mpYUtqUbBAsy2CQYrdu6AMIpGocYfwoVWXe2tvAjcIHIUzyIEcTX95SPhBD9G
-         0vdA==
-X-Gm-Message-State: AOJu0YwZYyosBz1sYLmzlfEC4RWb5Gwl5MR39CL+oGblhmWRsy274nko
-        Y68rrDANIen1riyhgURpWgk=
-X-Google-Smtp-Source: AGHT+IHGoKGbh8REsOj7FWUiAtyf3Z/SSp0bH7SDpB1ScBpX2GzKpd9GEewooAZU8xvsVHYNUiYs2g==
-X-Received: by 2002:a17:902:6b86:b0:1bc:56c3:ebb7 with SMTP id p6-20020a1709026b8600b001bc56c3ebb7mr949752plk.20.1692178649825;
-        Wed, 16 Aug 2023 02:37:29 -0700 (PDT)
-Received: from [192.168.0.105] ([103.124.138.83])
-        by smtp.gmail.com with ESMTPSA id n4-20020a170902d2c400b001bb6c5ff4edsm12670642plc.173.2023.08.16.02.37.27
+        d=1e100.net; s=20221208; t=1692196491; x=1692801291;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=NScA+PcQZhcEVersyfhdbefEy+tNTcLh+PJYZN6zQJY=;
+        b=X0OATtxFhuiq1X7vpQZMiJ2A08Dlkn/5GLJ0FBKJ8HrjdnStV5JePwPBCySgSzzVRa
+         0/oMJtLpAXL+e5tYpnmN3Bf+mp+ODt3tsgucfByElz+xC6et8Bs/PZrZmLZ4S7zsPjr8
+         xwn+OX8Qmz55pc0Vx+9zGM5Zw1FJt56DKhBblsZYKiUyJp/finEYO6deXO+JysTG1QWA
+         EyqYqtdlK7WiEZ3MIbzii8hn9Kkz1830hCb5qfma0KO1T9ohIuemsQQ51aAbJIDI0Hqa
+         R43nx80/5z/HPhEK9yKtJaRkgOKQ4LsFvqFpo7CBibWVvpwPjyxsLOyLZaTUOWV0j5oT
+         MGPg==
+X-Gm-Message-State: AOJu0YzW4ObmVPwLW9X2AE+F2nJARD9zNZsgtt1GK3jtM+UVGbe+LhLb
+        zhZx6pMWlCt4gZnm1rjNxh1hJA==
+X-Google-Smtp-Source: AGHT+IG53xkS59ODIviBNRX/zHspgxoqmaG7VcA2xXmb5Q9LAQUUTyxr4spMWPcEPQPdtmxrEmfdaw==
+X-Received: by 2002:a17:90a:3ee5:b0:26b:27f6:90cc with SMTP id k92-20020a17090a3ee500b0026b27f690ccmr1710801pjc.2.1692196491224;
+        Wed, 16 Aug 2023 07:34:51 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id y22-20020a1709027c9600b001b8a85489a3sm13164080pll.262.2023.08.16.07.34.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Aug 2023 02:37:29 -0700 (PDT)
-Message-ID: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
-Date:   Wed, 16 Aug 2023 16:37:26 +0700
+        Wed, 16 Aug 2023 07:34:50 -0700 (PDT)
+Message-ID: <324fc71c-dead-4418-af81-6817e1f41c39@kernel.dk>
+Date:   Wed, 16 Aug 2023 08:34:49 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: 6.5.0rc5 fs hang - ext4? raid?
 Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>,
-        AceLan Kao <acelan@gmail.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux RAID <linux-raid@vger.kernel.org>
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: Fwd: Infiniate systemd loop when power off the machine with multiple
- MD RAIDs
+To:     "Dr. David Alan Gilbert" <dave@treblig.org>,
+        Theodore Ts'o <tytso@mit.edu>, hch@lst.de
+Cc:     adilger.kernel@dilger.ca, song@kernel.org,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+References: <ZNqWfQPTScJDkmpX@gallifrey> <20230815125146.GA1508930@mit.edu>
+ <ZNt11WbPn7LCXPvB@gallifrey> <ZNu668KGiNcwCSVe@gallifrey>
+ <ZNwm7Mo9yv7uIkno@gallifrey>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <ZNwm7Mo9yv7uIkno@gallifrey>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-I notice a regression report on Bugzilla [1]. Quoting from it:
-
-> It needs to build at least 2 different RAIDs(eg. RAID0 and RAID10, RAID5 and RAID10) and then you will see below error repeatly(need to use serial console to see it)
+On 8/15/23 7:31 PM, Dr. David Alan Gilbert wrote:
+> (Copying in Christoph and Jens)
 > 
-> [ 205.360738] systemd-shutdown[1]: Stopping MD devices.
-> [ 205.366384] systemd-shutdown[1]: sd-device-enumerator: Scan all dirs
-> [ 205.373327] systemd-shutdown[1]: sd-device-enumerator: Scanning /sys/bus
-> [ 205.380427] systemd-shutdown[1]: sd-device-enumerator: Scanning /sys/class
-> [ 205.388257] systemd-shutdown[1]: Stopping MD /dev/md127 (9:127).
-> [ 205.394880] systemd-shutdown[1]: Failed to sync MD block device /dev/md127, ignoring: Input/output error
-> [ 205.404975] md: md127 stopped.
-> [ 205.470491] systemd-shutdown[1]: Stopping MD /dev/md126 (9:126).
-> [ 205.770179] md: md126: resync interrupted.
-> [ 205.776258] md126: detected capacity change from 1900396544 to 0
-> [ 205.783349] md: md126 stopped.
-> [ 205.862258] systemd-shutdown[1]: Stopping MD /dev/md125 (9:125).
-> [ 205.862435] md: md126 stopped.
-> [ 205.868376] systemd-shutdown[1]: Failed to sync MD block device /dev/md125, ignoring: Input/output error
-> [ 205.872845] block device autoloading is deprecated and will be removed.
-> [ 205.880955] md: md125 stopped.
-> [ 205.934349] systemd-shutdown[1]: Stopping MD /dev/md124p2 (259:7).
-> [ 205.947707] systemd-shutdown[1]: Could not stop MD /dev/md124p2: Device or resource busy
-> [ 205.957004] systemd-shutdown[1]: Stopping MD /dev/md124p1 (259:6).
-> [ 205.964177] systemd-shutdown[1]: Could not stop MD /dev/md124p1: Device or resource busy
-> [ 205.973155] systemd-shutdown[1]: Stopping MD /dev/md124 (9:124).
-> [ 205.979789] systemd-shutdown[1]: Could not stop MD /dev/md124: Device or resource busy
-> [ 205.988475] systemd-shutdown[1]: Not all MD devices stopped, 4 left.
+> * Dr. David Alan Gilbert (dave@treblig.org) wrote:
+>> * Dr. David Alan Gilbert (dave@treblig.org) wrote:
+>>> * Theodore Ts'o (tytso@mit.edu) wrote:
+>>>> On Mon, Aug 14, 2023 at 09:02:53PM +0000, Dr. David Alan Gilbert wrote:
+>>>>> dg         29594   29592  0 18:40 pts/0    00:00:00 /usr/bin/ar --plugin /usr/libexec/gcc/x86_64-redhat-linux/13/liblto_plugin.so -csrDT src/intel/perf/libintel_perf.a src/intel/perf/libintel_perf.a.p/meson-generated_.._intel_perf_metrics.c.o src/intel/perf/libintel_perf.a.p/intel_perf.c.o src/intel/perf/libintel_perf.a.p/intel_perf_query.c.o src/intel/perf/libintel_perf.a.p/intel_perf_mdapi.c.o
+>>>>>
+>>>>> [root@dalek dg]# cat /proc/29594/stack 
+>>>>> [<0>] md_super_wait+0xa2/0xe0
+>>>>> [<0>] md_bitmap_unplug+0xd2/0x120
+>>>>> [<0>] flush_bio_list+0xf3/0x100 [raid1]
+>>>>> [<0>] raid1_unplug+0x3b/0xb0 [raid1]
+>>>>> [<0>] __blk_flush_plug+0xd7/0x150
+>>>>> [<0>] blk_finish_plug+0x29/0x40
+>>>>> [<0>] ext4_do_writepages+0x401/0xc90
+>>>>> [<0>] ext4_writepages+0xad/0x180
+>>>>
+>>>> If you want a few seconds and try grabbing cat /proc/29594/stack
+>>>> again, what does the stack trace stay consistent as above?
+>>>
+>>> I'll get back to that and retry it.
+>>
+>> Yeh, the stack is consistent; this time around it's an 'ar' in a kernel
+>> build:
+>>
+>> [root@dalek dg]# cat /proc/17970/stack
+>> [<0>] md_super_wait+0xa2/0xe0
+>> [<0>] md_bitmap_unplug+0xad/0x120
+>> [<0>] flush_bio_list+0xf3/0x100 [raid1]
+>> [<0>] raid1_unplug+0x3b/0xb0 [raid1]
+>> [<0>] __blk_flush_plug+0xd7/0x150
+>> [<0>] blk_finish_plug+0x29/0x40
+>> [<0>] ext4_do_writepages+0x401/0xc90
+>> [<0>] ext4_writepages+0xad/0x180
+>> [<0>] do_writepages+0xd2/0x1e0
+>> [<0>] filemap_fdatawrite_wbc+0x63/0x90
+>> [<0>] __filemap_fdatawrite_range+0x5c/0x80
+>> [<0>] ext4_release_file+0x74/0xb0
+>> [<0>] __fput+0xf5/0x2a0
+>> [<0>] task_work_run+0x5d/0x90
+>> [<0>] exit_to_user_mode_prepare+0x1e6/0x1f0
+>> [<0>] syscall_exit_to_user_mode+0x1b/0x40
+>> [<0>] do_syscall_64+0x6c/0x90
+>> [<0>] entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+>> [root@dalek dg]# cat /proc/17970/stack
+>> [<0>] md_super_wait+0xa2/0xe0
+>> [<0>] md_bitmap_unplug+0xad/0x120
+>> [<0>] flush_bio_list+0xf3/0x100 [raid1]
+>> [<0>] raid1_unplug+0x3b/0xb0 [raid1]
+>> [<0>] __blk_flush_plug+0xd7/0x150
+>> [<0>] blk_finish_plug+0x29/0x40
+>> [<0>] ext4_do_writepages+0x401/0xc90
+>> [<0>] ext4_writepages+0xad/0x180
+>> [<0>] do_writepages+0xd2/0x1e0
+>> [<0>] filemap_fdatawrite_wbc+0x63/0x90
+>> [<0>] __filemap_fdatawrite_range+0x5c/0x80
+>> [<0>] ext4_release_file+0x74/0xb0
+>> [<0>] __fput+0xf5/0x2a0
+>> [<0>] task_work_run+0x5d/0x90
+>> [<0>] exit_to_user_mode_prepare+0x1e6/0x1f0
+>> [<0>] syscall_exit_to_user_mode+0x1b/0x40
+>> [<0>] do_syscall_64+0x6c/0x90
+>> [<0>] entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+>>
+>>>> Also, if you have iostat installed (usually part of the sysstat
+>>>> package), does "iostat 1" show any I/O activity on the md device?
+>>
+>> iostat is showing something odd, most devices are at 0,
+>> except for 3 of the dm's that are stuck at 100% utilisation with
+>> apparently nothing going on:
+>>
+>> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+>>            0.06    0.00    0.03   53.06    0.00   46.84
+>>
+>> Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dkB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
+>> ...
+>> dm-16            0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00 100.00
+>> dm-17            0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00 100.00
+>> dm-18            0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+>> dm-19            0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+>> dm-2             0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+>> dm-20            0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00 100.00
+>> ....
+>>
+>> dm-20 is the /dev/mapper/main-more which is the RAID on which the
+>> fs runs, 16 and 17 are main-more_rmeta_0 and main-more_rimage_0
+>> so something screwy is going on there.
+> 
+> I've just finished a bisect of this hang, and got to:
+> 
+> 615939a2ae734e3e68c816d6749d1f5f79c62ab7 is the first bad commit
+> commit 615939a2ae734e3e68c816d6749d1f5f79c62ab7
+> Author: Christoph Hellwig <hch@lst.de>
+> Date:   Fri May 19 06:40:48 2023 +0200
+> 
+>     blk-mq: defer to the normal submission path for post-flush requests
+> 
+>     Requests with the FUA bit on hardware without FUA support need a post
+>     flush before returning to the caller, but they can still be sent using
+>     the normal I/O path after initializing the flush-related fields and
+>     end I/O handler.
+> 
+>     Signed-off-by: Christoph Hellwig <hch@lst.de>
+>     Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+>     Link: https://lore.kernel.org/r/20230519044050.107790-6-hch@lst.de
+>     Signed-off-by: Jens Axboe <axboe@kernel.dk>
 
-See Bugzilla for the full thread and attached full journalctl log.
+Can you try and pull in:
 
-Anyway, I'm adding this regression to be tracked by regzbot:
+https://git.kernel.dk/cgit/linux/commit/?h=block-6.5&id=5ff3213a5387e076af2b87f796f94b36965e8c3a
 
-#regzbot introduced: 12a6caf273240a https://bugzilla.kernel.org/show_bug.cgi?id=217798
-#regzbot title: systemd shutdown hang on machine with different RAID levels
-
-Thanks.
-
-[1]: https://bugzilla.kernel.org/show_bug.cgi?id=217798
+and see if that helps?
 
 -- 
-An old man doll... just what I always wanted! - Clara
+Jens Axboe
+
