@@ -2,112 +2,143 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88603C04A6A
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 00:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BE28C04A6A
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 01:08:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240862AbjHPAn5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Aug 2023 20:43:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59544 "EHLO
+        id S240926AbjHPBH5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Aug 2023 21:07:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240860AbjHPAn5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Aug 2023 20:43:57 -0400
-Received: from mx.treblig.org (unknown [IPv6:2a00:1098:5b::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0467199B;
-        Tue, 15 Aug 2023 17:43:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-        ; s=bytemarkmx; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID
-        :Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID
-        :Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:
-        Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe
-        :List-Post:List-Owner:List-Archive;
-        bh=p7r3uREoQh2baDnpVSadnAlYXwW8BFeYAnWiNEnk194=; b=fH7FUKI3yL1QXeZHZyf70tvtyb
-        rdSNCIJCCtaFl1qKxWGADDgz1WE3vjmcNhhsv0L4ajhQST6t7Cox9kGoq/4OpfSpd3SX4pIpNCbt5
-        253G9qLd721Lw2on8F/+SyLNtpQXd/aJZxb8wUqa387LXQRl68a5qeubFZCN9GRXyz9VfHX2G3bKk
-        SBlSi7dhQpcj9IzIKeANCGNCTZPOyWoa/WKQg4QraHXrYX0bKS4swuRZX7RTmsTTcrdFdBmnl1ECK
-        8RRtAKc0N2ifAvEMqN0LGIWWR/zVKXR4YJQAIn9SQXJyISilCxX1kQjtZHQ7oM0qjx+eqiJdwq2jx
-        emUB2bAg==;
-Received: from dg by mx.treblig.org with local (Exim 4.94.2)
-        (envelope-from <dg@treblig.org>)
-        id 1qW4dd-0079SV-B5; Wed, 16 Aug 2023 00:43:53 +0000
-Date:   Wed, 16 Aug 2023 00:43:53 +0000
-From:   "Dr. David Alan Gilbert" <dave@treblig.org>
-To:     Carlos Carvalho <carlos@fisica.ufpr.br>
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 6.5.0rc5 fs hang - ext4? raid?
-Message-ID: <ZNwbyTLdcnVHL+Vy@gallifrey>
-References: <ZNqWfQPTScJDkmpX@gallifrey>
- <ZNvCJAclBEJf7uUA@fisica.ufpr.br>
- <ZNvJZIXIHJERRtwP@gallifrey>
+        with ESMTP id S240923AbjHPBHc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Aug 2023 21:07:32 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD686211E;
+        Tue, 15 Aug 2023 18:07:30 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RQVNY67Ssz4f3pHm;
+        Wed, 16 Aug 2023 09:07:25 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAHl6lNIdxkR5k_Aw--.16538S3;
+        Wed, 16 Aug 2023 09:07:26 +0800 (CST)
+Subject: Re: [PATCH -next v2 3/7] md: delay choosing sync direction to
+ md_start_sync()
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230815030957.509535-1-yukuai1@huaweicloud.com>
+ <20230815030957.509535-4-yukuai1@huaweicloud.com>
+ <bb11d6ca-978a-8e1d-e721-d9d84c9dc5e3@huaweicloud.com>
+ <CAPhsuW65Hxq=+D6M6zV8n+k4FarTHui=pSs2YPNKs9MYBD4MHA@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <bd0a6f0f-2766-deb9-bbfd-5310d3f18e12@huaweicloud.com>
+Date:   Wed, 16 Aug 2023 09:07:25 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <ZNvJZIXIHJERRtwP@gallifrey>
-X-Chocolate: 70 percent or better cocoa solids preferably
-X-Operating-System: Linux/5.10.0-23-amd64 (x86_64)
-X-Uptime: 00:43:19 up 40 days, 10:14,  2 users,  load average: 0.01, 0.00,
- 0.00
-User-Agent: Mutt/2.0.5 (2021-01-21)
+In-Reply-To: <CAPhsuW65Hxq=+D6M6zV8n+k4FarTHui=pSs2YPNKs9MYBD4MHA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAHl6lNIdxkR5k_Aw--.16538S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr4UKrWkZFWrZr18tFWrKrg_yoW5JF1Upa
+        yfJFn8GrW7XFy3XrW2q3Z0qayj9r1jqrZrJF43Wa4fJrnaqF1fKF1rWF17CFWDJa929a1r
+        Zw48Ja9xZFyFgF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8
+        JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUU
+        UU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-* Dr. David Alan Gilbert (dave@treblig.org) wrote:
-> * Carlos Carvalho (carlos@fisica.ufpr.br) wrote:
-> > Dr. David Alan Gilbert (dave@treblig.org) wrote on Mon, Aug 14, 2023 at 06:02:53PM -03:
-> > >   I'm seeing a few hangs on a fs after upgrading to fedora 39's bleeding
-> > > edge; which is running kernel 6.5.0-0.rc5.20230808git14f9643dc90a.37.fc39.x86_64
-> > > It was always solid prior to that.  It seems to trigger on heavy IO
-> > > on this fs.
-> > 
-> > Good news! No, I didn't forget the smiley... Maybe now the problem has become
-> > sufficiently bad to be visible/solvable...
-> > 
-> > 6.4.* also doesn't run in one of our machines, which has heavy I/O load. The
-> > first symptom is that rsync downloads hang and abort with timeout. 1 or 2
-> > days later the amount of modified pages waiting to go to disk reaches several
-> > GB, as reported by /proc/meminfo, but disks remain idle. Finally reading from
-> > the arrays collapses.
+Hi,
+
+在 2023/08/15 23:54, Song Liu 写道:
+> On Tue, Aug 15, 2023 at 2:00 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> [...]
+>>> +
+>>> +not_running:
+>>> +     clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+>>> +     clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+>>> +     clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+>>> +     clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+>>> +     clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+>>> +     mddev_unlock(mddev);
+>>> +
+>>> +     wake_up(&resync_wait);
+>>> +     if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
+>>> +         mddev->sysfs_action)
+>>> +             sysfs_notify_dirent_safe(mddev->sysfs_action);
+>>>    }
+>>>
+>>>    /*
+>>> @@ -9379,7 +9402,6 @@ void md_check_recovery(struct mddev *mddev)
+>>>                return;
+>>>
+>>>        if (mddev_trylock(mddev)) {
+>>> -             int spares = 0;
+>>>                bool try_set_sync = mddev->safemode != 0;
+>>>
+>>>                if (!mddev->external && mddev->safemode == 1)
+>>> @@ -9467,29 +9489,11 @@ void md_check_recovery(struct mddev *mddev)
+>>>                clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+>>>
+>>>                if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+>>> -                 test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
+>>> -                     goto not_running;
+>>> -             if (!md_choose_sync_direction(mddev, &spares))
+>>> -                     goto not_running;
+>>> -             if (mddev->pers->sync_request) {
+>>> -                     if (spares) {
+>>> -                             /* We are adding a device or devices to an array
+>>> -                              * which has the bitmap stored on all devices.
+>>> -                              * So make sure all bitmap pages get written
+>>> -                              */
+>>> -                             md_bitmap_write_all(mddev->bitmap);
+>>> -                     }
+>>> +                 test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+>>
+>> Sorry that I made a mistake here while rebasing v2, here should be
+>>
+>> !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)
+>>
+>> With this fixed, there are no new regression for mdadm tests using loop
+>> devicein my VM.
 > 
-> I'm not sure this is a related fault - I mean it might be, but my
-> failure is much more deterministic; it seems solid on 6.4.x to me, but
-> just fails reliably somewhere in 6.5.
-
-Actually, you know your description smells a lot closer to the one
-Rishabh has just posted today:
-   https://lore.kernel.org/lkml/153d081d-e738-b916-4f72-364b2c1cc36a@amazon.com/
-
-Dave
-
-> Dave
+>                  if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+>                      !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+>                          queue_work(md_misc_wq, &mddev->sync_work);
+>                  } else {
 > 
-> > This is just the worst case. Since early 5.* I/O performance has dropped
-> > absurdly. In all our disk servers this is easy to see: just generate lots of
-> > writes quickly (for example expanding a kernel tarball). Using top I see that
-> > kworker starts using 100% cpu but disks stay idle (as seen by dstat or sar). If
-> > you do a sync or umount it takes looooong to reach ~0 modified pages for the
-> > sync or umount to return.
-> > 
-> > In the server I mentioned above where 6.4.* don't stand the load, which is one
-> > of the largest free software mirrors of the world, even sometimes 6.1
-> > collapses: I/O becomes so slow that service (apache) stops.
-> > 
-> > The problem gets progressively worse with time after booting. It's hardly
-> > noticeable in the first hour after boot, and easily seen after ~3-4 days of
-> > uptime. The higher the (write) I/O load the faster it appears.
-> > 
-> > All this is with ext4 and raid6 with >~ 14 disks in the arrays.
-> > 
-> > I don't have debug info because these are production machines and I only
-> > compile in the kernel the bare minimum essential for operation. It's always
-> > pure kernel.org releases; gcc versions vary, for 6.4* it's gcc-13, for 6.1*
-> > gcc-12 is used, on Debian unstable updated more than 4 times/week.
-> -- 
->  -----Open up your eyes, open up your mind, open up your code -------   
-> / Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
-> \        dave @ treblig.org |                               | In Hex /
->  \ _________________________|_____ http://www.treblig.org   |_______/
--- 
- -----Open up your eyes, open up your mind, open up your code -------   
-/ Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
-\        dave @ treblig.org |                               | In Hex /
- \ _________________________|_____ http://www.treblig.org   |_______/
+> This doesn't look right. Should we do
+> 
+>                  if (test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) &&
+>                      !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+>                          queue_work(md_misc_wq, &mddev->sync_work);
+>                  } else {
+> 
+> instead?
+> 
+
+Yes you're right, this is exactly what I did in v1, sorry that I keep
+making mistake while rebasing.
+
+Thanks,
+Kuai
+
+> Thanks,
+> Song
+> .
+> 
+
