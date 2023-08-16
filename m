@@ -2,89 +2,116 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4096FC001B0
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 15:31:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C630CC05052
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 18:16:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344175AbjHPPb0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 16 Aug 2023 11:31:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50742 "EHLO
+        id S1345433AbjHPSQC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Aug 2023 14:16:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344111AbjHPPa6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Aug 2023 11:30:58 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F91E210D
-        for <linux-raid@vger.kernel.org>; Wed, 16 Aug 2023 08:30:56 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1bf095e1becso90335ad.1
-        for <linux-raid@vger.kernel.org>; Wed, 16 Aug 2023 08:30:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1692199856; x=1692804656;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=8FAroCm/x/V+kCSERRsXoQnOWxNJEuoINbdKbSDokX0=;
-        b=N997JOw8RanRWoU/w4WqlW5HHkU6YTHzuSXsY9VPhj0kozw7LvhdbDWwFOIjxIl8sc
-         dHu3epc4ZGArHgJUh1niGoKCXHolAEnl0Pi3F0P5XjDbA8hV8kTOyjbs4sNo0WqwlZgY
-         ky2T6FGMUIRIPEjSVVIFfkEvogzeTAKoJHYHoKHn/+sf5WWJGy0C+QB/rHPBNIyRv0b8
-         2Dpe+grhiE5AnFT1yT8fvJPrFD/MF/W1ac6KA7Yj67h94kn3D/2TyiuARTTogE2NKvH7
-         9MrrO/qaWHbVwIqwskakgOwaHPXqP1MyGYktqhvFmOMQDC/nKYwwBKaY8UbogGC2DAGd
-         AdWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692199856; x=1692804656;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=8FAroCm/x/V+kCSERRsXoQnOWxNJEuoINbdKbSDokX0=;
-        b=MlXe3uV9EK15DQLfY/zWHPUaKlbV1EA9q4VRI7W2F0BLTHGIhXRSQaC7vOwLAIgcSk
-         +nqdyGi4exhQsdfYtEELn0tbIvXSIVESl3IOVIpQZv8StxTNIDO8oIMnGfTueoqmWBZ3
-         MCPIz2RUmeLU1PTfl0kmvzAJ69K5py5vNWoVtMJBKuBkvEYZUJX9tRtQTx9n1APPAOWf
-         eE4bL62/iRKXcsM6B+bxauBGeXnsrvETH5EeyczEjqQ5/NdNQfKXnnYjlbthrz3qQ/tY
-         imSk/hqndt11ag/yW5HtFXKv1o2Wl/4GPreEMzTNrgVWsH/fePfOOSlaZiye2Mj5flKk
-         n8uQ==
-X-Gm-Message-State: AOJu0Yy2+rDtrFkz2xAGnJaOm+NIKKYFbxSUtUbcunkGH0NS+CuR9gMJ
-        n0HiON1w6oByKbZ7VYdiiLQXYg==
-X-Google-Smtp-Source: AGHT+IH5RUhyB9ZLzvA+kszEEebVshT+QZzQ+UeEWfqPTJD+ti5AAkxFboEWjXeu0PY40WQp5XJMVg==
-X-Received: by 2002:a17:902:d48e:b0:1b1:9272:55e2 with SMTP id c14-20020a170902d48e00b001b1927255e2mr2594377plg.3.1692199855792;
-        Wed, 16 Aug 2023 08:30:55 -0700 (PDT)
-Received: from [192.168.1.136] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id b1-20020a170902d50100b001bc445e249asm13278741plg.124.2023.08.16.08.30.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Aug 2023 08:30:55 -0700 (PDT)
-Message-ID: <f9074f2c-9d31-4ead-a99f-4c4b6ae5a24d@kernel.dk>
-Date:   Wed, 16 Aug 2023 09:30:53 -0600
+        with ESMTP id S229580AbjHPSPa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Aug 2023 14:15:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3180C2698
+        for <linux-raid@vger.kernel.org>; Wed, 16 Aug 2023 11:14:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1692209682;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=cRFMFLEA/y9urwlUkYfYB8wJ+QIdz4LX1Akn7KTI54I=;
+        b=fA3qvb7vhiQWkFTp6iR6YQheGwHOCJXAOc/n18cHyKVp7N+8hCxpUDsYbxU6nO0MwF42IL
+        tVIrhjRfVpcfdPG4GBefySKUP8Cz50Neoq3+ky3PnckI18TbnXcoadZQMazMWigKighBEN
+        yDUqme6M0EBcvuMD3Pk4tuDo6NKYB5Y=
+Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-605-U7kXPsJ0NiGLPyHmOUeq4Q-1; Wed, 16 Aug 2023 14:14:38 -0400
+X-MC-Unique: U7kXPsJ0NiGLPyHmOUeq4Q-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 757913C100B3;
+        Wed, 16 Aug 2023 18:14:38 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.18.203])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 04F0F2166B2D;
+        Wed, 16 Aug 2023 18:14:37 +0000 (UTC)
+From:   David Jeffery <djeffery@redhat.com>
+To:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Cc:     David Jeffery <djeffery@redhat.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH v2] md: raid0: account for split bio in iostat accounting
+Date:   Wed, 16 Aug 2023 14:13:55 -0400
+Message-ID: <20230816181433.13289-1-djeffery@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: 6.5.0rc5 fs hang - ext4? raid?
-Content-Language: en-US
-To:     "Dr. David Alan Gilbert" <dave@treblig.org>
-Cc:     Theodore Ts'o <tytso@mit.edu>, hch@lst.de,
-        adilger.kernel@dilger.ca, song@kernel.org,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ext4@vger.kernel.org
-References: <ZNqWfQPTScJDkmpX@gallifrey> <20230815125146.GA1508930@mit.edu>
- <ZNt11WbPn7LCXPvB@gallifrey> <ZNu668KGiNcwCSVe@gallifrey>
- <ZNwm7Mo9yv7uIkno@gallifrey> <324fc71c-dead-4418-af81-6817e1f41c39@kernel.dk>
- <ZNzg1/zhxYV2EkBX@gallifrey> <ZNzl2Sq9UJ3FiTgV@gallifrey>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <ZNzl2Sq9UJ3FiTgV@gallifrey>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/16/23 9:06 AM, Dr. David Alan Gilbert wrote:
->>> Can you try and pull in:
->>>
->>> https://git.kernel.dk/cgit/linux/commit/?h=block-6.5&id=5ff3213a5387e076af2b87f796f94b36965e8c3a
->>>
->>> and see if that helps?
->>
->> <testing....>
-> 
-> Yes it seems to fix it - thanks!
+When a bio is split by md raid0, the newly created bio will not be tracked
+by md for I/O accounting. Only the portion of I/O still assigned to the
+original bio which was reduced by the split will be accounted for. This
+results in md iostat data sometimes showing I/O values far below the actual
+amount of data being sent through md.
 
-OK good, it'll be going upstream before the next -rc.
+md_account_bio() needs to be called for all bio generated by the bio split.
 
+A simple example of the issue was generated using a raid0 device on partitions
+to the same device. Since all raid0 I/O then goes to one device, it makes it
+easy to see a gap between the md device and its sd storage. Reading an lvm
+device on top of the md device, the iostat output (some 0 columns and extra
+devices removed to make the data more compact) was:
+
+Device             tps    kB_read/s    kB_wrtn/s    kB_dscd/s    kB_read
+md2               0.00         0.00         0.00         0.00          0
+sde               0.00         0.00         0.00         0.00          0
+md2            1364.00    411496.00         0.00         0.00     411496
+sde            1734.00    646144.00         0.00         0.00     646144
+md2            1699.00    510680.00         0.00         0.00     510680
+sde            2155.00    802784.00         0.00         0.00     802784
+md2             803.00    241480.00         0.00         0.00     241480
+sde            1016.00    377888.00         0.00         0.00     377888
+md2               0.00         0.00         0.00         0.00          0
+sde               0.00         0.00         0.00         0.00          0
+
+I/O was generated doing large direct I/O reads (12M) with dd to a linear
+lvm volume on top of the 4 leg raid0 device.
+
+The md2 reads were showing as roughly 2/3 of the reads to the sde device
+containing all of md2's raid partitions. The sum of reads to sde was
+1826816 kB, which was the expected amount as it was the amount read by
+dd. With the patch, the total reads from md will match the reads from
+sde and be consistent with the amount of I/O generated.
+
+Fixes: 10764815ff47 ("md: add io accounting for raid0 and raid5") 
+Signed-off-by: David Jeffery <djeffery@redhat.com>
+Tested-by: Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+---
+
+Patch v2: ported to apply on top of md-next
+
+ drivers/md/raid0.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index abbd77977f98..c50a7abda744 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -553,8 +553,7 @@ static void raid0_map_submit_bio(struct mddev *mddev, struct bio *bio)
+ 	sector_t bio_sector = bio->bi_iter.bi_sector;
+ 	sector_t sector = bio_sector;
+ 
+-	if (bio->bi_pool != &mddev->bio_set)
+-		md_account_bio(mddev, &bio);
++	md_account_bio(mddev, &bio);
+ 
+ 	zone = find_zone(mddev->private, &sector);
+ 	switch (conf->layout) {
 -- 
-Jens Axboe
+2.41.0
 
