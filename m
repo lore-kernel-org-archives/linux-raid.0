@@ -2,201 +2,251 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D571CC04A94
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 05:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3719CC001B0
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Aug 2023 06:40:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241956AbjHPFzJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 16 Aug 2023 01:55:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37758 "EHLO
+        id S242152AbjHPGkC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Aug 2023 02:40:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241951AbjHPFyj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Aug 2023 01:54:39 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D23C19B9
-        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 22:54:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692165278; x=1723701278;
-  h=date:from:to:cc:subject:message-id;
-  bh=f+K5Lzg1MaKJvTeK9R8rNVi7+eM6QFI0lqCgXC7mNII=;
-  b=dgzj7sNubG8RNG6Cqh2UPisxeWWN/9Q360sVC3k6336wCTBppcWfkQ5O
-   ZKUew7iznzfAxVeTfrn5TiAvsVAMsz4AjBMtjfLxn6wEWZe2qBw+7vNWc
-   POkSpmYut7m+vXOUT9fT7JNhhRq50rj3tasMaOe0/pre7w/LmbBhxV0HY
-   eGMnWNP/9aTDfOUnLva5oh/VNH2nGb3O/8rKAvV+URKzl9SZnrfiogajL
-   Kuf9OUNojbXC00EejxZCzEygqI0B9/TV9NyYrjRitttNV8pxgmoAcnLZZ
-   78B8aHE983DsUwXKjuNDTcz5yQbAgSPx3M98wASFNH8gOJ3Vz40m+J9+3
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="357424375"
-X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="357424375"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Aug 2023 22:54:37 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="799447307"
-X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="799447307"
-Received: from lkp-server02.sh.intel.com (HELO a9caf1a0cf30) ([10.239.97.151])
-  by fmsmga008.fm.intel.com with ESMTP; 15 Aug 2023 22:54:35 -0700
-Received: from kbuild by a9caf1a0cf30 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qW9UI-000028-2G;
-        Wed, 16 Aug 2023 05:54:34 +0000
-Date:   Wed, 16 Aug 2023 13:54:02 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- a85e83948c4087dade3443042b20ab9e07f1e735
-Message-ID: <202308161300.lZLLla0f-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S242134AbjHPGjb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Aug 2023 02:39:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66BD51FC3
+        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 23:38:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1692167928;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KmJHjQ292lqN87qzle3ANyA09jD7wHhM+sI6dQ6S1ZE=;
+        b=fqsVw8bOCAaV8Z7gNP/2ZY+curJE0hh2p2/HfGJxF/Uu1wRqle+UoHwRwlKwKnGXKmVsg2
+        /18/9+nde1BNYrXClotG1/eRVSUY3gXmq0z68vO9QsVT155mWEESS3adLjQN3yLr+bzq29
+        CkCy3WRKMCd4tipYD7PiZ8KLyFKXGWo=
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
+ [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-297-Tqi4X-zzMqOVT5j1yNrKTg-1; Wed, 16 Aug 2023 02:38:47 -0400
+X-MC-Unique: Tqi4X-zzMqOVT5j1yNrKTg-1
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-6889273f99bso179874b3a.3
+        for <linux-raid@vger.kernel.org>; Tue, 15 Aug 2023 23:38:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692167926; x=1692772726;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=KmJHjQ292lqN87qzle3ANyA09jD7wHhM+sI6dQ6S1ZE=;
+        b=gKqX1QJ1F6Gh6t2HINMpNJ84tay8kWNQ8lNmyDXF/3tRtpQd2ptY0IKR3M99rV36m+
+         mwwdxJMRuDo4i0FP73VsJCcfB7I3SBTJQhFsREySA27jH65NH2Ng0QGbsJuXwdNQbbTJ
+         29WktGLV545WWejX6ZwoIzyzKhXC3+9QriXUhb64Cj2XnaKzOyC3Rzz/efJRl8F7hIjy
+         00p5EjZA2qCQi0DIpQUif9oMngdSPjeRtUvD5aBHpTKSHn45S//RTeMjzpjAUTO0k989
+         J65PIfQNwJS7UL+tQTH+knwxZFgnM69oCyLoBuuyub11TlE0O26FmfqhoAJSU2u3lcNG
+         G5kw==
+X-Gm-Message-State: AOJu0YyQvqiUqPzgZP+Jg8bnpTFvwsBR4a1Qfc5H0R92lZJ3Fr8VvLsK
+        t6ZYmEKAswwszPOXDrKee013NifwuDZE6ZbbbMTZdyxPdl0BXCA8pzA4XNdppait751CzXrhO/7
+        fkdBpNUf8iED5EVaPZCR1ejd/cgPWL+h6vVBI34uNUQIU5sxFNZTwHA==
+X-Received: by 2002:a05:6a00:194b:b0:688:4c21:a6f0 with SMTP id s11-20020a056a00194b00b006884c21a6f0mr1079195pfk.18.1692167925741;
+        Tue, 15 Aug 2023 23:38:45 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEWfcq431Do8loQK17HGXw7niLwHH+ell6c5jaAO7JHWDgH8Cd1TSfBBc4udvpHVXz5GOIPzZUri9WA2GizgcY=
+X-Received: by 2002:a05:6a00:194b:b0:688:4c21:a6f0 with SMTP id
+ s11-20020a056a00194b00b006884c21a6f0mr1079182pfk.18.1692167925441; Tue, 15
+ Aug 2023 23:38:45 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230815030957.509535-1-yukuai1@huaweicloud.com> <20230815030957.509535-4-yukuai1@huaweicloud.com>
+In-Reply-To: <20230815030957.509535-4-yukuai1@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 16 Aug 2023 14:38:33 +0800
+Message-ID: <CALTww2-LzW76_=vH+TKjZGzChrsz_JJKJxh1-+SCNZ9NHv0N2A@mail.gmail.com>
+Subject: Re: [PATCH -next v2 3/7] md: delay choosing sync direction to md_start_sync()
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: a85e83948c4087dade3443042b20ab9e07f1e735  md/raid0: Fix performance regression for large sequential writes
+On Tue, Aug 15, 2023 at 11:13=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Before this patch, for read-write array:
+>
+> 1) md_check_recover() found that something need to be done, and it'll
+>    try to grab 'reconfig_mutex'. The case that md_check_recover() need
+>    to do something:
+>    - array is not suspend;
+>    - super_block need to be updated;
+>    - 'MD_RECOVERY_NEEDED' or ''MD_RECOVERY_DONE' is set;
+>    - unusual case related to safemode;
+>
+> 2) if 'MD_RECOVERY_RUNNING' is not set, and 'MD_RECOVERY_NEEDED' is set,
+>    md_check_recover() will try to choose a sync direction, and then
+>    queue a work md_start_sync().
+>
+> 3) md_start_sync() register sync_thread;
+>
+> After this patch,
+>
+> 1) is the same;
+> 2) if 'MD_RECOVERY_RUNNING' is not set, and 'MD_RECOVERY_NEEDED' is set,
+>    queue a work md_start_sync() directly;
+> 3) md_start_sync() will try to choose a sync direction, and then
+>    register sync_thread();
+>
+> Because 'MD_RECOVERY_RUNNING' is cleared when sync_thread is done, 2)
+> and 3) is always ran in serial and they can never concurrent, this
+> change should not introduce any behavior change for now.
+>
+> Also fix a problem that md_start_sync() can clear 'MD_RECOVERY_RUNNING'
+> without protection in error path, which might affect the logical in
+> md_check_recovery().
+>
+> The advantage to change this is that array reconfiguration is
+> independent from daemon now, and it'll be much easier to synchronize it
+> with io, consider that io may rely on daemon thread to be done.
 
-elapsed time: 722m
+Hi Kuai
 
-configs tested: 130
-configs skipped: 13
+What's the meaning of "array reconfiguration" here? "mdadm -f/-r/-a"
+something like this, right?. Because before and after this patch, only
+one sync thread can be running, so If we don't do this change, are
+there bugs or performance problems?
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+If it's only a patch that wants to make md_check_recovery more clearer
+and easier, I'm good with this idea too.
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r016-20230816   gcc  
-alpha                randconfig-r022-20230816   gcc  
-alpha                randconfig-r025-20230816   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r002-20230816   gcc  
-arc                  randconfig-r006-20230816   gcc  
-arc                  randconfig-r021-20230816   gcc  
-arc                  randconfig-r043-20230816   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                       multi_v4t_defconfig   gcc  
-arm                  randconfig-r003-20230816   clang
-arm                  randconfig-r036-20230816   clang
-arm                  randconfig-r046-20230816   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r026-20230816   gcc  
-csky                 randconfig-r032-20230816   gcc  
-hexagon              randconfig-r011-20230816   clang
-hexagon              randconfig-r033-20230816   clang
-hexagon              randconfig-r041-20230816   clang
-hexagon              randconfig-r045-20230816   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r004-20230816   gcc  
-i386         buildonly-randconfig-r005-20230816   gcc  
-i386         buildonly-randconfig-r006-20230816   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230816   gcc  
-i386                 randconfig-i002-20230816   gcc  
-i386                 randconfig-i003-20230816   gcc  
-i386                 randconfig-i004-20230816   gcc  
-i386                 randconfig-i005-20230816   gcc  
-i386                 randconfig-i006-20230816   gcc  
-i386                 randconfig-i011-20230816   clang
-i386                 randconfig-i012-20230816   clang
-i386                 randconfig-i013-20230816   clang
-i386                 randconfig-i014-20230816   clang
-i386                 randconfig-i015-20230816   clang
-i386                 randconfig-i016-20230816   clang
-i386                 randconfig-r001-20230816   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             alldefconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze           randconfig-r022-20230816   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                         cobalt_defconfig   gcc  
-mips                         rt305x_defconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r031-20230816   gcc  
-openrisc             randconfig-r002-20230816   gcc  
-openrisc             randconfig-r012-20230816   gcc  
-openrisc             randconfig-r023-20230816   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                generic-64bit_defconfig   gcc  
-parisc               randconfig-r024-20230816   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                     ksi8560_defconfig   clang
-powerpc                 mpc834x_itx_defconfig   gcc  
-powerpc                      tqm8xx_defconfig   gcc  
-powerpc                 xes_mpc85xx_defconfig   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r042-20230816   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r044-20230816   clang
-sh                               allmodconfig   gcc  
-sh                   randconfig-r001-20230816   gcc  
-sh                   randconfig-r004-20230816   gcc  
-sh                   randconfig-r013-20230816   gcc  
-sh                   randconfig-r021-20230816   gcc  
-sh                   randconfig-r025-20230816   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r021-20230816   gcc  
-sparc                randconfig-r023-20230816   gcc  
-sparc                randconfig-r024-20230816   gcc  
-sparc                randconfig-r026-20230816   gcc  
-sparc64              randconfig-r004-20230816   gcc  
-sparc64              randconfig-r006-20230816   gcc  
-sparc64              randconfig-r035-20230816   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                   randconfig-r033-20230816   clang
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-r001-20230816   gcc  
-x86_64       buildonly-randconfig-r002-20230816   gcc  
-x86_64       buildonly-randconfig-r003-20230816   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-r025-20230816   clang
-x86_64               randconfig-x001-20230816   clang
-x86_64               randconfig-x002-20230816   clang
-x86_64               randconfig-x003-20230816   clang
-x86_64               randconfig-x004-20230816   clang
-x86_64               randconfig-x005-20230816   clang
-x86_64               randconfig-x006-20230816   clang
-x86_64               randconfig-x011-20230816   gcc  
-x86_64               randconfig-x012-20230816   gcc  
-x86_64               randconfig-x013-20230816   gcc  
-x86_64               randconfig-x014-20230816   gcc  
-x86_64               randconfig-x015-20230816   gcc  
-x86_64               randconfig-x016-20230816   gcc  
-x86_64                           rhel-8.3-bpf   gcc  
-x86_64                         rhel-8.3-kunit   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa               randconfig-r005-20230816   gcc  
+Best Regards
+Xiao
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.c | 70 ++++++++++++++++++++++++++-----------------------
+>  1 file changed, 37 insertions(+), 33 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 4846ff6d25b0..03615b0e9fe1 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -9291,6 +9291,22 @@ static bool md_choose_sync_direction(struct mddev =
+*mddev, int *spares)
+>  static void md_start_sync(struct work_struct *ws)
+>  {
+>         struct mddev *mddev =3D container_of(ws, struct mddev, sync_work)=
+;
+> +       int spares =3D 0;
+> +
+> +       mddev_lock_nointr(mddev);
+> +
+> +       if (!md_choose_sync_direction(mddev, &spares))
+> +               goto not_running;
+> +
+> +       if (!mddev->pers->sync_request)
+> +               goto not_running;
+> +
+> +       /*
+> +        * We are adding a device or devices to an array which has the bi=
+tmap
+> +        * stored on all devices. So make sure all bitmap pages get writt=
+en.
+> +        */
+> +       if (spares)
+> +               md_bitmap_write_all(mddev->bitmap);
+>
+>         rcu_assign_pointer(mddev->sync_thread,
+>                            md_register_thread(md_do_sync, mddev, "resync"=
+));
+> @@ -9298,20 +9314,27 @@ static void md_start_sync(struct work_struct *ws)
+>                 pr_warn("%s: could not start resync thread...\n",
+>                         mdname(mddev));
+>                 /* leave the spares where they are, it shouldn't hurt */
+> -               clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+> -               clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+> -               clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+> -               clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+> -               clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+> -               wake_up(&resync_wait);
+> -               if (test_and_clear_bit(MD_RECOVERY_RECOVER,
+> -                                      &mddev->recovery))
+> -                       if (mddev->sysfs_action)
+> -                               sysfs_notify_dirent_safe(mddev->sysfs_act=
+ion);
+> -       } else
+> -               md_wakeup_thread(mddev->sync_thread);
+> +               goto not_running;
+> +       }
+> +
+> +       mddev_unlock(mddev);
+> +       md_wakeup_thread(mddev->sync_thread);
+>         sysfs_notify_dirent_safe(mddev->sysfs_action);
+>         md_new_event();
+> +       return;
+> +
+> +not_running:
+> +       clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+> +       clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+> +       clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+> +       clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+> +       clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+> +       mddev_unlock(mddev);
+> +
+> +       wake_up(&resync_wait);
+> +       if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
+> +           mddev->sysfs_action)
+> +               sysfs_notify_dirent_safe(mddev->sysfs_action);
+>  }
+>
+>  /*
+> @@ -9379,7 +9402,6 @@ void md_check_recovery(struct mddev *mddev)
+>                 return;
+>
+>         if (mddev_trylock(mddev)) {
+> -               int spares =3D 0;
+>                 bool try_set_sync =3D mddev->safemode !=3D 0;
+>
+>                 if (!mddev->external && mddev->safemode =3D=3D 1)
+> @@ -9467,29 +9489,11 @@ void md_check_recovery(struct mddev *mddev)
+>                 clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+>
+>                 if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recov=
+ery) ||
+> -                   test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
+> -                       goto not_running;
+> -               if (!md_choose_sync_direction(mddev, &spares))
+> -                       goto not_running;
+> -               if (mddev->pers->sync_request) {
+> -                       if (spares) {
+> -                               /* We are adding a device or devices to a=
+n array
+> -                                * which has the bitmap stored on all dev=
+ices.
+> -                                * So make sure all bitmap pages get writ=
+ten
+> -                                */
+> -                               md_bitmap_write_all(mddev->bitmap);
+> -                       }
+> +                   test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+>                         queue_work(md_misc_wq, &mddev->sync_work);
+> -                       goto unlock;
+> -               }
+> -       not_running:
+> -               if (!mddev->sync_thread) {
+> +               } else {
+>                         clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+>                         wake_up(&resync_wait);
+> -                       if (test_and_clear_bit(MD_RECOVERY_RECOVER,
+> -                                              &mddev->recovery))
+> -                               if (mddev->sysfs_action)
+> -                                       sysfs_notify_dirent_safe(mddev->s=
+ysfs_action);
+>                 }
+>         unlock:
+>                 wake_up(&mddev->sb_wait);
+> --
+> 2.39.2
+>
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
