@@ -2,95 +2,138 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 650E7C41513
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Aug 2023 07:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2422CC64EC0
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Aug 2023 21:29:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348669AbjHQH6r (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Aug 2023 03:58:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35408 "EHLO
+        id S1355352AbjHQV2j (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Aug 2023 17:28:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348664AbjHQH6Z (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Aug 2023 03:58:25 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72CC81AE;
-        Thu, 17 Aug 2023 00:58:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692259104; x=1723795104;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=ZtNC0dQl0IK7DsZFeYyjmaf30kbws2e2ns5LGtsrbho=;
-  b=dpLFp+bjrscsaO1ku61TQyEi4/1Ri1E/bqYZSmVt4mpyz6xa0RdypHoI
-   XpuleVEPvwgt8Joz7YKegdH0vOMbxe/Zsn8vx2Qyt7Yb+SvA1Zldo8pH2
-   lo5aY4U84JYDYOmqJcZkAorsv/1oMdNTubP9m5a+VZbrqplGfZTYHY0MQ
-   4ZB6Duyy1GZ/Y+IK6DOZPbitmiWelY9Oxc4dN0baGo4pcOkIbIK2/lekH
-   M3hZo1pSGfQj2SctoffrOsbTLqVDTvYU7Nzjq6hKqG/ySjPxdDym4levM
-   mmTg6lfYVlQYm6tb1/1Q852It+4cKCmcQZJPZjRatKmiBh9R1YJJdeP8Y
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="375509434"
-X-IronPort-AV: E=Sophos;i="6.01,179,1684825200"; 
-   d="scan'208";a="375509434"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 00:58:21 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="908312458"
-X-IronPort-AV: E=Sophos;i="6.01,179,1684825200"; 
-   d="scan'208";a="908312458"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.138.165])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 00:58:19 -0700
-Date:   Thu, 17 Aug 2023 09:58:14 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     xni@redhat.com, song@kernel.org, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH -next v2 2/7] md: factor out a helper to choose sync
- direction from md_check_recovery()
-Message-ID: <20230817095814.00005530@linux.intel.com>
-In-Reply-To: <20230815030957.509535-3-yukuai1@huaweicloud.com>
-References: <20230815030957.509535-1-yukuai1@huaweicloud.com>
-        <20230815030957.509535-3-yukuai1@huaweicloud.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S1355360AbjHQV2f (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Aug 2023 17:28:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8513E4F
+        for <linux-raid@vger.kernel.org>; Thu, 17 Aug 2023 14:28:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 555A7620D3
+        for <linux-raid@vger.kernel.org>; Thu, 17 Aug 2023 21:28:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1B07C433C9
+        for <linux-raid@vger.kernel.org>; Thu, 17 Aug 2023 21:28:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692307713;
+        bh=xC9+iIl6NA7XHP8GfCJt/ndhLbJEhkcv/O6pRhm2ztk=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Mueq7rp8yv9ru5AsVn1Ou8FnYr1qpW4tfL4A3p2ElgDAoBSyYjL/nALRJKdkndHDl
+         +Sj5jyxi7fBIX1eMbtJAmAyjDlPpKm5QLYiDCEGM/kPQM+4YIGbAmt2SQfTq2Kd7RV
+         QLZYVJ85aqinGdCJYKzN6V/GoQ8sqX6n+qXh8xL4PrxtBW+BXKPRwFj7NExJYAgvNj
+         /WiR+Pzk8lbzp2x3my5DSTc89D6bE1D3+hch/LAYCLxIlM0hpMwNse0GpCOYZOh8cD
+         nTzRb0FFTHhMndE5FPYGnJ6BJ3xJAaxRInD1i9US1r5OBJjh9HcKtrw+eC3allir+u
+         lE2m3GIuE4MwQ==
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-4fe0d5f719dso276804e87.2
+        for <linux-raid@vger.kernel.org>; Thu, 17 Aug 2023 14:28:33 -0700 (PDT)
+X-Gm-Message-State: AOJu0YzXLAVuoghbTvXn5DQQULENxJSyqlfjS0YnpN6XtLq9xLnQKNNs
+        zmT7fMGqk3Rs5nkH4xuv4wbqznLEzmFU1jl2rvw=
+X-Google-Smtp-Source: AGHT+IFnuHktpsbKqqkwJSL8WOW14u4YfvbdWHBkBjZSEmLPK0YAotlKdKfrwxEVv22BIXZ+z8q/fY2ESc32pEm99kY=
+X-Received: by 2002:a05:6512:2215:b0:4fe:2c6:1d76 with SMTP id
+ h21-20020a056512221500b004fe02c61d76mr413480lfu.21.1692307711719; Thu, 17 Aug
+ 2023 14:28:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20230816181433.13289-1-djeffery@redhat.com>
+In-Reply-To: <20230816181433.13289-1-djeffery@redhat.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 17 Aug 2023 14:28:19 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6-_fysGmx+o=GnXBuHLSzF79MxVDpmuWDckVOC-KGgRg@mail.gmail.com>
+Message-ID: <CAPhsuW6-_fysGmx+o=GnXBuHLSzF79MxVDpmuWDckVOC-KGgRg@mail.gmail.com>
+Subject: Re: [PATCH v2] md: raid0: account for split bio in iostat accounting
+To:     David Jeffery <djeffery@redhat.com>
+Cc:     linux-raid@vger.kernel.org, Laurence Oberman <loberman@redhat.com>,
+        Yu Kuai <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 15 Aug 2023 11:09:52 +0800
-Yu Kuai <yukuai1@huaweicloud.com> wrote:
+On Wed, Aug 16, 2023 at 11:14=E2=80=AFAM David Jeffery <djeffery@redhat.com=
+> wrote:
+>
+> When a bio is split by md raid0, the newly created bio will not be tracke=
+d
+> by md for I/O accounting. Only the portion of I/O still assigned to the
+> original bio which was reduced by the split will be accounted for. This
+> results in md iostat data sometimes showing I/O values far below the actu=
+al
+> amount of data being sent through md.
+>
+> md_account_bio() needs to be called for all bio generated by the bio spli=
+t.
+>
+> A simple example of the issue was generated using a raid0 device on parti=
+tions
+> to the same device. Since all raid0 I/O then goes to one device, it makes=
+ it
+> easy to see a gap between the md device and its sd storage. Reading an lv=
+m
+> device on top of the md device, the iostat output (some 0 columns and ext=
+ra
+> devices removed to make the data more compact) was:
+>
+> Device             tps    kB_read/s    kB_wrtn/s    kB_dscd/s    kB_read
+> md2               0.00         0.00         0.00         0.00          0
+> sde               0.00         0.00         0.00         0.00          0
+> md2            1364.00    411496.00         0.00         0.00     411496
+> sde            1734.00    646144.00         0.00         0.00     646144
+> md2            1699.00    510680.00         0.00         0.00     510680
+> sde            2155.00    802784.00         0.00         0.00     802784
+> md2             803.00    241480.00         0.00         0.00     241480
+> sde            1016.00    377888.00         0.00         0.00     377888
+> md2               0.00         0.00         0.00         0.00          0
+> sde               0.00         0.00         0.00         0.00          0
+>
+> I/O was generated doing large direct I/O reads (12M) with dd to a linear
+> lvm volume on top of the 4 leg raid0 device.
+>
+> The md2 reads were showing as roughly 2/3 of the reads to the sde device
+> containing all of md2's raid partitions. The sum of reads to sde was
+> 1826816 kB, which was the expected amount as it was the amount read by
+> dd. With the patch, the total reads from md will match the reads from
+> sde and be consistent with the amount of I/O generated.
+>
+> Fixes: 10764815ff47 ("md: add io accounting for raid0 and raid5")
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> Tested-by: Laurence Oberman <loberman@redhat.com>
+> Reviewed-by: Laurence Oberman <loberman@redhat.com>
+> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
 
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> There are no functional changes, on the one hand make the code cleaner,
-> on the other hand prevent following checkpatch error in the next patch to
-> delay choosing sync direction to md_start_sync().
-> 
-> ERROR: do not use assignment in if condition
-> +       } else if ((spares = remove_and_add_spares(mddev, NULL))) {
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Applied to md-next. Thanks!
+
+Song
+
 > ---
->  drivers/md/md.c | 68 +++++++++++++++++++++++++++++++------------------
->  1 file changed, 43 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 90815be1e80f..4846ff6d25b0 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9246,6 +9246,48 @@ static int remove_and_add_spares(struct mddev *mddev,
->  	return spares;
->  }
->  
-> +static bool md_choose_sync_direction(struct mddev *mddev, int *spares)
-
-The naming is little confusing because as a direction I would expect forward or
-backward - from end to start or or from start to end. In this case you are
-determining the type of the background operation needed. Assuming that reshape
-is a kind of "sync" operation I would say "md_choose_sync_action".
-
-Anyway, it looks good to me.
-
-Thanks,
-Mariusz
+>
+> Patch v2: ported to apply on top of md-next
+>
+>  drivers/md/raid0.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index abbd77977f98..c50a7abda744 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -553,8 +553,7 @@ static void raid0_map_submit_bio(struct mddev *mddev,=
+ struct bio *bio)
+>         sector_t bio_sector =3D bio->bi_iter.bi_sector;
+>         sector_t sector =3D bio_sector;
+>
+> -       if (bio->bi_pool !=3D &mddev->bio_set)
+> -               md_account_bio(mddev, &bio);
+> +       md_account_bio(mddev, &bio);
+>
+>         zone =3D find_zone(mddev->private, &sector);
+>         switch (conf->layout) {
+> --
+> 2.41.0
+>
