@@ -2,105 +2,153 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5106FC677C4
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Aug 2023 21:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35912C64EDA
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Aug 2023 21:54:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355434AbjHQVt4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Aug 2023 17:49:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45282 "EHLO
+        id S1355446AbjHQVyQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Aug 2023 17:54:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355463AbjHQVtc (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Aug 2023 17:49:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AF38123;
-        Thu, 17 Aug 2023 14:49:31 -0700 (PDT)
+        with ESMTP id S1355441AbjHQVxv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Aug 2023 17:53:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBB6E26A5;
+        Thu, 17 Aug 2023 14:53:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 28E726340A;
-        Thu, 17 Aug 2023 21:49:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C074C433C9;
-        Thu, 17 Aug 2023 21:49:30 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 741D764EBE;
+        Thu, 17 Aug 2023 21:53:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD8AEC433C7;
+        Thu, 17 Aug 2023 21:53:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692308970;
-        bh=Vh7ns8nXAs6t160DrytAoo4IiSGWxufrYdnLXab9+3E=;
+        s=k20201202; t=1692309228;
+        bh=PIkPtcVuTQ4fow5tuKu+Z1UsUidKJ3VdnJ65htCV/LM=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=sMJs4cvFuiuLTXFmInpnmeR5WxEX8KInYEzqK7ckfyvBPzE/dFtzdYTTpr+BuUc5+
-         w/FBRS+WbB0i4G4v30ig8W2SgATGpPFSu4+eHUuCn/Idma8Zob0PPBgiOVZGSu8GzC
-         RvnqA6NdjXoVF3u7KAGI5/sZu4532Vtr+h4Hz+xxibz3QyN2xKCsrIrJwK3gI0KWCE
-         sElRKiHjoP7WbCOQCRYUFBkifjBAFHs+EI9Z+pNmkMMKojfJfM/KsuCJg0oxQHsGkG
-         XVCKNUbk1OfGiDnoXTiXYKKgATRnR7QSAz6nlaAk5Bn/YW4F7lVb8fABbQRBeghuNm
-         D67/5LPfkZQYA==
-Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-4fe21e7f3d1so300111e87.3;
-        Thu, 17 Aug 2023 14:49:30 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yw6GBM1oYVwCis5zu/SwNn9RwAj8PZbzfsOxa82ww2WToSNHArm
-        yS1qCB8trYVXx5VOiRdUV1a/7sKEpAj8jIFd/cI=
-X-Google-Smtp-Source: AGHT+IF7Hh8zabSpoEV+PXJbowP74S1cypCv6tqd0qkD8+wO1bb8d+3FfVVkROtC2rGTnFzFtdDePqSxikvpv9wTFxo=
-X-Received: by 2002:a05:6512:2822:b0:4f6:2317:f387 with SMTP id
- cf34-20020a056512282200b004f62317f387mr443850lfb.35.1692308968522; Thu, 17
- Aug 2023 14:49:28 -0700 (PDT)
+        b=fxvroAxGXA6y4sooGpWKcJfOmYpfqKB4GL+vD+AqMtK65bphykV533DnKVM4LkFSf
+         lLqs9Qn379KSCiWcPJNEAiMT0ksXYeBQUZU9JjhaBgjW/72don9oOKDatyb6Q3efTB
+         k6JrcccuMUj2TZFlm+Hj8Igu0EIyPO1DoUn0Hmtk5e35OC05D4UuU27Eg1/Bgxzdy1
+         wbW7CRJe48MOFHF9pnuxKd2JRgGGFGOOlNu2QOOad9u1AflVZKUpYA4+HRv99fQ4qQ
+         Vm3j3UlvIELiXS0IE9BLYgHP9RyzQZe2vgxqieCsORDE6dnHZguLDOMeplRDznqs7c
+         o0cHC+lkhwFXQ==
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-4fe85fd3d27so337235e87.0;
+        Thu, 17 Aug 2023 14:53:48 -0700 (PDT)
+X-Gm-Message-State: AOJu0YwtchG1saE1m+NIBBTmXn7D1jtXzXKSHFi5DBUOfenqlMRnXwi1
+        SNuQdzPurVyj30fypphteZ6ESlC8yZBV7W2qkso=
+X-Google-Smtp-Source: AGHT+IFVppjEdzaJSuap4dY9p5XayMzYRDmhzLSVtEMwi3dFNgOYhSJHVgW6PF6u7sZiuE8ujqsKgTb9xEtfcOHcRNY=
+X-Received: by 2002:a05:6512:2520:b0:4fb:889c:c53d with SMTP id
+ be32-20020a056512252000b004fb889cc53dmr376761lfb.10.1692309226819; Thu, 17
+ Aug 2023 14:53:46 -0700 (PDT)
 MIME-Version: 1.0
 References: <20230815030957.509535-1-yukuai1@huaweicloud.com>
- <20230815030957.509535-3-yukuai1@huaweicloud.com> <20230817095814.00005530@linux.intel.com>
-In-Reply-To: <20230817095814.00005530@linux.intel.com>
+ <20230815030957.509535-4-yukuai1@huaweicloud.com> <bb11d6ca-978a-8e1d-e721-d9d84c9dc5e3@huaweicloud.com>
+ <CAPhsuW65Hxq=+D6M6zV8n+k4FarTHui=pSs2YPNKs9MYBD4MHA@mail.gmail.com> <bd0a6f0f-2766-deb9-bbfd-5310d3f18e12@huaweicloud.com>
+In-Reply-To: <bd0a6f0f-2766-deb9-bbfd-5310d3f18e12@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 17 Aug 2023 14:49:16 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5Nn4gPv6EKaxHqtJfRFXMLg3bEBTNknLBR3tNuxFyVMQ@mail.gmail.com>
-Message-ID: <CAPhsuW5Nn4gPv6EKaxHqtJfRFXMLg3bEBTNknLBR3tNuxFyVMQ@mail.gmail.com>
-Subject: Re: [PATCH -next v2 2/7] md: factor out a helper to choose sync
- direction from md_check_recovery()
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>, xni@redhat.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Date:   Thu, 17 Aug 2023 14:53:34 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5a6+x6k3x6jvz7L5oVbHCd-EdmfXc4E4v5i0kCs6WPkw@mail.gmail.com>
+Message-ID: <CAPhsuW5a6+x6k3x6jvz7L5oVbHCd-EdmfXc4E4v5i0kCs6WPkw@mail.gmail.com>
+Subject: Re: [PATCH -next v2 3/7] md: delay choosing sync direction to md_start_sync()
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 17, 2023 at 12:58=E2=80=AFAM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
+On Tue, Aug 15, 2023 at 6:07=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
 >
-> On Tue, 15 Aug 2023 11:09:52 +0800
-> Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> Hi,
 >
-> > From: Yu Kuai <yukuai3@huawei.com>
+> =E5=9C=A8 2023/08/15 23:54, Song Liu =E5=86=99=E9=81=93:
+> > On Tue, Aug 15, 2023 at 2:00=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.co=
+m> wrote:
+> > [...]
+> >>> +
+> >>> +not_running:
+> >>> +     clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+> >>> +     clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+> >>> +     clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+> >>> +     clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+> >>> +     clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+> >>> +     mddev_unlock(mddev);
+> >>> +
+> >>> +     wake_up(&resync_wait);
+> >>> +     if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &=
+&
+> >>> +         mddev->sysfs_action)
+> >>> +             sysfs_notify_dirent_safe(mddev->sysfs_action);
+> >>>    }
+> >>>
+> >>>    /*
+> >>> @@ -9379,7 +9402,6 @@ void md_check_recovery(struct mddev *mddev)
+> >>>                return;
+> >>>
+> >>>        if (mddev_trylock(mddev)) {
+> >>> -             int spares =3D 0;
+> >>>                bool try_set_sync =3D mddev->safemode !=3D 0;
+> >>>
+> >>>                if (!mddev->external && mddev->safemode =3D=3D 1)
+> >>> @@ -9467,29 +9489,11 @@ void md_check_recovery(struct mddev *mddev)
+> >>>                clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+> >>>
+> >>>                if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->re=
+covery) ||
+> >>> -                 test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
+> >>> -                     goto not_running;
+> >>> -             if (!md_choose_sync_direction(mddev, &spares))
+> >>> -                     goto not_running;
+> >>> -             if (mddev->pers->sync_request) {
+> >>> -                     if (spares) {
+> >>> -                             /* We are adding a device or devices to=
+ an array
+> >>> -                              * which has the bitmap stored on all d=
+evices.
+> >>> -                              * So make sure all bitmap pages get wr=
+itten
+> >>> -                              */
+> >>> -                             md_bitmap_write_all(mddev->bitmap);
+> >>> -                     }
+> >>> +                 test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+> >>
+> >> Sorry that I made a mistake here while rebasing v2, here should be
+> >>
+> >> !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)
+> >>
+> >> With this fixed, there are no new regression for mdadm tests using loo=
+p
+> >> devicein my VM.
 > >
-> > There are no functional changes, on the one hand make the code cleaner,
-> > on the other hand prevent following checkpatch error in the next patch =
-to
-> > delay choosing sync direction to md_start_sync().
+> >                  if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->re=
+covery) ||
+> >                      !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+> >                          queue_work(md_misc_wq, &mddev->sync_work);
+> >                  } else {
 > >
-> > ERROR: do not use assignment in if condition
-> > +       } else if ((spares =3D remove_and_add_spares(mddev, NULL))) {
+> > This doesn't look right. Should we do
 > >
-> > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> > ---
-> >  drivers/md/md.c | 68 +++++++++++++++++++++++++++++++------------------
-> >  1 file changed, 43 insertions(+), 25 deletions(-)
+> >                  if (test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->rec=
+overy) &&
+> >                      !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+> >                          queue_work(md_misc_wq, &mddev->sync_work);
+> >                  } else {
 > >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 90815be1e80f..4846ff6d25b0 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -9246,6 +9246,48 @@ static int remove_and_add_spares(struct mddev *m=
-ddev,
-> >       return spares;
-> >  }
+> > instead?
 > >
-> > +static bool md_choose_sync_direction(struct mddev *mddev, int *spares)
 >
-> The naming is little confusing because as a direction I would expect forw=
-ard or
-> backward - from end to start or or from start to end. In this case you ar=
-e
-> determining the type of the background operation needed. Assuming that re=
-shape
-> is a kind of "sync" operation I would say "md_choose_sync_action".
+> Yes you're right, this is exactly what I did in v1, sorry that I keep
+> making mistake while rebasing.
 
-Yeah, md_choose_sync_direction is indeed confusing.
+Please fix this, address comments from other reviews, and resend the
+patches. Also, there are some typos in the commit logs, please also fix the=
+m.
+
+Unfortunately, we won't ship this (and the two other big sets) in 6.6.
 
 Thanks,
 Song
