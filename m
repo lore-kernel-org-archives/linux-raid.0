@@ -2,85 +2,115 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1CB1C7115C
-	for <linux-raid@archiver.kernel.org>; Fri, 18 Aug 2023 15:31:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C6AEE49A3
+	for <linux-raid@archiver.kernel.org>; Sun, 20 Aug 2023 02:43:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352457AbjHRPaz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 18 Aug 2023 11:30:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58170 "EHLO
+        id S229947AbjHTCn6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 19 Aug 2023 22:43:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378240AbjHRPak (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 18 Aug 2023 11:30:40 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 851324213
-        for <linux-raid@vger.kernel.org>; Fri, 18 Aug 2023 08:30:36 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-68895e1fcc7so241567b3a.1
-        for <linux-raid@vger.kernel.org>; Fri, 18 Aug 2023 08:30:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1692372636; x=1692977436;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=1RNb0ecmY74sWmnc1SPv0PzO7TIw7Mgwb+xVpKXD5NE=;
-        b=z0fD8lofrcHrsOn0kCsNRc2auhXGKC1Ya1v3P8qXXIggzeo+4MQhSTeBiEkVD7aSpo
-         cgbBN1H8G/5uvDC0YztuTma7PhcmDJnvbExvGE7j6MJwgT3+mcDSlnZrpdr9Lfh2zKkQ
-         DgADr1cEYtm4I/ba3Hw8lsPAty/npoK1pmBoMrH1ame+mSoqHtSRz28A73s3LC9cW+Ku
-         pcPjLhkM8qK6NTOKjWe9ovNwc8ahjvBN7eZ+KFSYRXKGxWbW6Ms3uktJE+oIRpUb6G63
-         +nIzGIJyGMYsRXdv3SgnHtTKqjxUvFeCB1FV56H/5mQbQ4sqGZ4AYwehRubaF/yqJsfD
-         /90A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692372636; x=1692977436;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1RNb0ecmY74sWmnc1SPv0PzO7TIw7Mgwb+xVpKXD5NE=;
-        b=CgmkEsRZ34LC6dUO3ihDwT6T2fWrkHXN5lKZ+5BUXE7RVTHyMA4RrOu/FPd8Gk+0+n
-         WUkmMn+sf82jw8MOPw1H5zpyjZgXzxJHTT4JfnNUwPphGW1ZkDHg73VmvMG/Y1Y6PDdg
-         SVUamYbuWNLX7T4Vv7AMNn35Jg1+PtOkuyFG4dP//iu5l6/u8s1aAQFXbQtXSLcGnaR8
-         7GHXuY9LZDqj1iwvX9YI1K6mTN9XGPdRWZW9AYa9DgP0jPlPTfqudYsweKT05cB0qWEV
-         476+b8a2AHiNqH7jBuNZelEkDgrxBASuY/QjI4fuu7qEuNWxhstS2pewGNThcR+U7Q1X
-         jHIQ==
-X-Gm-Message-State: AOJu0Yya3039AJP0MNaBmJk8rFcTZBpaQUB8mjRr+Xl/DD5G0FUa2lRf
-        FDV/ZNVRYm6m+vukhqcWgQCaVQ==
-X-Google-Smtp-Source: AGHT+IEuTODbJ0rkN7aK+7gjqAocUDrxeD1pKZPZL4XGdf4SamqQDk81hV79qEPoSCe+WzSbln+EYQ==
-X-Received: by 2002:a05:6a00:1c97:b0:686:bf43:60fa with SMTP id y23-20020a056a001c9700b00686bf4360famr3184077pfw.0.1692372635879;
-        Fri, 18 Aug 2023 08:30:35 -0700 (PDT)
-Received: from [192.168.1.136] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id i3-20020aa787c3000000b0068790c41ca2sm1689299pfo.27.2023.08.18.08.30.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Aug 2023 08:30:35 -0700 (PDT)
-Message-ID: <9766d333-d233-48c3-9b6b-e511d7a094d4@kernel.dk>
-Date:   Fri, 18 Aug 2023 09:30:33 -0600
+        with ESMTP id S229799AbjHTCnq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 19 Aug 2023 22:43:46 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AA59399D1;
+        Sat, 19 Aug 2023 18:44:21 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RSz1C1mV5z4f3jZd;
+        Sun, 20 Aug 2023 09:44:15 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgBH1qjub+Fka8+BBA--.16221S3;
+        Sun, 20 Aug 2023 09:44:15 +0800 (CST)
+Subject: Re: [PATCH -next v2 2/7] md: factor out a helper to choose sync
+ direction from md_check_recovery()
+To:     Song Liu <song@kernel.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     Yu Kuai <yukuai1@huaweicloud.com>, xni@redhat.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230815030957.509535-1-yukuai1@huaweicloud.com>
+ <20230815030957.509535-3-yukuai1@huaweicloud.com>
+ <20230817095814.00005530@linux.intel.com>
+ <CAPhsuW5Nn4gPv6EKaxHqtJfRFXMLg3bEBTNknLBR3tNuxFyVMQ@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <716511c3-9252-dba6-0902-a8231bf444fa@huaweicloud.com>
+Date:   Sun, 20 Aug 2023 09:44:13 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-next 20230817
-Content-Language: en-US
-To:     Song Liu <songliubraving@meta.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, David Jeffery <djeffery@redhat.com>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Xueshi Hu <xueshi.hu@smartx.com>
-References: <F71A83B2-C4A5-4168-915C-546CF34CFF34@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <F71A83B2-C4A5-4168-915C-546CF34CFF34@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CAPhsuW5Nn4gPv6EKaxHqtJfRFXMLg3bEBTNknLBR3tNuxFyVMQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgBH1qjub+Fka8+BBA--.16221S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tFWDCrW5ZFWDKF43WrW7Jwb_yoW8WF1DpF
+        47Ga13Cr4UJ3y7Jw1Sqw1kCa4Fkw4xtrWUtry7J3W8XFn8ZryvgFyfKF4vgr95Cry3Gr15
+        ur4UtFyfCF10yrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
+        UUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/17/23 10:51 PM, Song Liu wrote:
-> Hi Jens,
-> 
-> Please consider pulling the following changes for md-next on top of your
-> for-6.6/block branch. The major changes are:
-> 
-> 1. Fix perf regression for raid0 large sequential writes, by Jan Kara;
-> 2. Fix split bio iostat for raid0, by David Jeffery;
-> 3. Various raid1 fixes, by Heinz Mauelshagen and Xueshi Hu. 
+Hi,
 
-Pulled, thanks.
+在 2023/08/18 5:49, Song Liu 写道:
+> On Thu, Aug 17, 2023 at 12:58 AM Mariusz Tkaczyk
+> <mariusz.tkaczyk@linux.intel.com> wrote:
+>>
+>> On Tue, 15 Aug 2023 11:09:52 +0800
+>> Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>
+>>> There are no functional changes, on the one hand make the code cleaner,
+>>> on the other hand prevent following checkpatch error in the next patch to
+>>> delay choosing sync direction to md_start_sync().
+>>>
+>>> ERROR: do not use assignment in if condition
+>>> +       } else if ((spares = remove_and_add_spares(mddev, NULL))) {
+>>>
+>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>> ---
+>>>   drivers/md/md.c | 68 +++++++++++++++++++++++++++++++------------------
+>>>   1 file changed, 43 insertions(+), 25 deletions(-)
+>>>
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index 90815be1e80f..4846ff6d25b0 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -9246,6 +9246,48 @@ static int remove_and_add_spares(struct mddev *mddev,
+>>>        return spares;
+>>>   }
+>>>
+>>> +static bool md_choose_sync_direction(struct mddev *mddev, int *spares)
+>>
+>> The naming is little confusing because as a direction I would expect forward or
+>> backward - from end to start or or from start to end. In this case you are
+>> determining the type of the background operation needed. Assuming that reshape
+>> is a kind of "sync" operation I would say "md_choose_sync_action".
+> 
+> Yeah, md_choose_sync_direction is indeed confusing.
+> 
 
--- 
-Jens Axboe
+Thanks for the suggestion, I'll update this in the new version.
+
+Kuai,
+
+> Thanks,
+> Song
+> .
+> 
 
