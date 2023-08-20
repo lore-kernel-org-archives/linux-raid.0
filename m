@@ -2,193 +2,103 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2F97EE49A3
-	for <linux-raid@archiver.kernel.org>; Sun, 20 Aug 2023 02:47:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5E6DEE49A4
+	for <linux-raid@archiver.kernel.org>; Sun, 20 Aug 2023 09:16:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229649AbjHTCrG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 19 Aug 2023 22:47:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54240 "EHLO
+        id S230206AbjHTJQa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 20 Aug 2023 05:16:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229971AbjHTCqx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 19 Aug 2023 22:46:53 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D4E349320;
-        Sat, 19 Aug 2023 19:20:00 -0700 (PDT)
+        with ESMTP id S230194AbjHTJQ2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 20 Aug 2023 05:16:28 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D97A149F3;
+        Sun, 20 Aug 2023 02:13:49 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RSzpK405Qz4f3mJ0;
-        Sun, 20 Aug 2023 10:19:53 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgBH1qhJeOFkadqDBA--.18182S3;
-        Sun, 20 Aug 2023 10:19:54 +0800 (CST)
-Subject: Re: [PATCH -next v2 7/7] md: delay remove_and_add_spares() for read
- only array to md_start_sync()
-To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230815030957.509535-1-yukuai1@huaweicloud.com>
- <20230815030957.509535-8-yukuai1@huaweicloud.com>
- <CALTww28yBsGucpaPO9BiQO-gU3+F25MaNVgGhnOA3Mi+9enFjQ@mail.gmail.com>
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RT8zq1qhfz4f3tCm;
+        Sun, 20 Aug 2023 17:13:43 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgAnBahH2eFkmXibBA--.44158S4;
+        Sun, 20 Aug 2023 17:13:45 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <fc27ff4e-a572-c70c-ab2f-be47d2cb8044@huaweicloud.com>
-Date:   Sun, 20 Aug 2023 10:19:52 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+To:     song@kernel.org, xni@redhat.com, mariusz.tkaczyk@linux.intel.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next v3 0/7] md: make rdev addition and removal independent from daemon thread
+Date:   Sun, 20 Aug 2023 17:09:42 +0800
+Message-Id: <20230820090949.2874537-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-In-Reply-To: <CALTww28yBsGucpaPO9BiQO-gU3+F25MaNVgGhnOA3Mi+9enFjQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgBH1qhJeOFkadqDBA--.18182S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJF4fuF4kuF4UJr1UXry5urg_yoWrXrWDpr
-        WxAFn0krWUX34xXr12gF1DWa4rtr10qrZFkry3ua4xZwnIyrn7G34rWayUWry5Aa4S9a10
-        va18tFZxuF1rCFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgAnBahH2eFkmXibBA--.44158S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxJryfWFyUtw15XFW5GrWrGrg_yoW8Cryfpr
+        yaqF1agrWUXFnrGrZxGw17Wa4Fgw4fXrZrJFy3W34rCw15urykur97ta1UuF90yFyak347
+        Wr1jqF95C3WDAFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
-        DUUUUU=
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
+        rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
+        vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IY
+        x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
+        xKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
+        67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: Yu Kuai <yukuai3@huawei.com>
 
-在 2023/08/16 15:18, Xiao Ni 写道:
-> On Tue, Aug 15, 2023 at 11:13 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Before this patch, for read-only array:
->>
->> md_check_recovery() check that 'MD_RECOVERY_NEEDED' is set, then it will
->> call remove_and_add_spares() directly to try to remove and add rdevs
->> from array.
->>
->> After this patch:
->>
->> 1) md_check_recovery() check that 'MD_RECOVERY_NEEDED' is set, and the
->>     worker 'sync_work' is not pending, and there are rdevs can be added
->>     or removed, then it will queue new work md_start_sync();
->> 2) md_start_sync() will call remove_and_add_spares() and exist;
-> 
-> Hi Kuai
-> 
-> If md_check_recovery returns and md_starts_sync doesn't start, during
-> the window the raid changes to read-write, the sync thread can be run
-> but MD_RECOVERY_RUNNING isn't set. Is there such a problem?
+Changes in v3:
+ - rename md_choose_sync_direction() to md_choose_sync_action() in patch 2;
+ - fix an error in patch 3;
+ - add flush_work(&mddev->sync_work) while change read-only array to
+ read-write;
 
-That's a good question, looks like this is possible. Read-only array
-doesn't test or set MD_RECOVERY_RUNNING at all in md_check_recovery().
-I'll use MD_RECOVERY_RUNNING to prevent such concurrent scenario in
-the new version.
+Changes in v2:
+ - remove patch 1 from v1 and some related patches, those patches will
+ be sent later when rcu protection for rdev is removed.
+ - add patch 2.
 
-Thanks,
-Kuai
+This is the third patchset to do some preparatory work to synchronize
+io with array reconfiguration.
 
-> 
-> Regards
-> Xiao
-> 
->>
->> This change make sure that array reconfiguration is independent from
->> daemon, and it'll be much easier to synchronize it with io, consier
->> that io may rely on daemon thread to be done.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   drivers/md/md.c | 37 +++++++++++++++++++++++++++----------
->>   1 file changed, 27 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index d26d2c35f9af..74d529479fcf 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -9191,6 +9191,16 @@ static bool rdev_addable(struct md_rdev *rdev)
->>          return true;
->>   }
->>
->> +static bool md_spares_need_change(struct mddev *mddev)
->> +{
->> +       struct md_rdev *rdev;
->> +
->> +       rdev_for_each(rdev, mddev)
->> +               if (rdev_removeable(rdev) || rdev_addable(rdev))
->> +                       return true;
->> +       return false;
->> +}
->> +
->>   static int remove_and_add_spares(struct mddev *mddev,
->>                                   struct md_rdev *this)
->>   {
->> @@ -9309,6 +9319,12 @@ static void md_start_sync(struct work_struct *ws)
->>
->>          mddev_lock_nointr(mddev);
->>
->> +       if (!md_is_rdwr(mddev)) {
->> +               remove_and_add_spares(mddev, NULL);
->> +               mddev_unlock(mddev);
->> +               return;
->> +       }
->> +
->>          if (!md_choose_sync_direction(mddev, &spares))
->>                  goto not_running;
->>
->> @@ -9403,7 +9419,8 @@ void md_check_recovery(struct mddev *mddev)
->>          }
->>
->>          if (!md_is_rdwr(mddev) &&
->> -           !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
->> +           (!test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
->> +            work_pending(&mddev->sync_work)))
->>                  return;
->>          if ( ! (
->>                  (mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
->> @@ -9431,15 +9448,8 @@ void md_check_recovery(struct mddev *mddev)
->>                                   */
->>                                  rdev_for_each(rdev, mddev)
->>                                          clear_bit(Blocked, &rdev->flags);
->> -                       /* On a read-only array we can:
->> -                        * - remove failed devices
->> -                        * - add already-in_sync devices if the array itself
->> -                        *   is in-sync.
->> -                        * As we only add devices that are already in-sync,
->> -                        * we can activate the spares immediately.
->> -                        */
->> -                       remove_and_add_spares(mddev, NULL);
->> -                       /* There is no thread, but we need to call
->> +                       /*
->> +                        * There is no thread, but we need to call
->>                           * ->spare_active and clear saved_raid_disk
->>                           */
->>                          set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->> @@ -9447,6 +9457,13 @@ void md_check_recovery(struct mddev *mddev)
->>                          clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->>                          clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->>                          clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
->> +
->> +                       /*
->> +                        * Let md_start_sync() to remove and add rdevs to the
->> +                        * array.
->> +                        */
->> +                       if (md_spares_need_change(mddev))
->> +                               queue_work(md_misc_wq, &mddev->sync_work);
->>                          goto unlock;
->>                  }
->>
->> --
->> 2.39.2
->>
-> 
-> .
-> 
+1) The first patchset refactor 'active_io', make sure that mddev_suspend()
+will wait for io to be done. [1]
+
+2) The second patchset remove 'quiesce' callback from mddev_suspend(), so
+that mddev_suspend() doesn't rely on 'quiesce' callback is registered,
+and can be used for all personalites; [2]
+
+3) This patchset make array reconfiguration independent from daemon thread,
+and synchronize it with io will be much easier because io may rely on
+daemon thread to be done.
+
+More patchset on the way!
+
+[1] https://lore.kernel.org/all/20230621165110.1498313-1-yukuai1@huaweicloud.com/
+[2] https://lore.kernel.org/all/20230628012931.88911-2-yukuai1@huaweicloud.com/
+
+Yu Kuai (7):
+  md: use separate work_struct for md_start_sync()
+  md: factor out a helper to choose sync action from md_check_recovery()
+  md: delay choosing sync action to md_start_sync()
+  md: factor out a helper rdev_removeable() from remove_and_add_spares()
+  md: factor out a helper rdev_is_spare() from remove_and_add_spares()
+  md: factor out a helper rdev_addable() from remove_and_add_spares()
+  md: delay remove_and_add_spares() for read only array to
+    md_start_sync()
+
+ drivers/md/md.c | 268 ++++++++++++++++++++++++++++++------------------
+ drivers/md/md.h |   5 +-
+ 2 files changed, 170 insertions(+), 103 deletions(-)
+
+-- 
+2.39.2
 
