@@ -2,175 +2,115 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45338EE49A0
-	for <linux-raid@archiver.kernel.org>; Mon, 21 Aug 2023 03:24:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14797EE4993
+	for <linux-raid@archiver.kernel.org>; Mon, 21 Aug 2023 13:18:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232629AbjHUDYG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 20 Aug 2023 23:24:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44362 "EHLO
+        id S235139AbjHUNSk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 21 Aug 2023 09:18:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232615AbjHUDYF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 20 Aug 2023 23:24:05 -0400
-Received: from mail-ot1-x32a.google.com (mail-ot1-x32a.google.com [IPv6:2607:f8b0:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD71C9D;
-        Sun, 20 Aug 2023 20:24:00 -0700 (PDT)
-Received: by mail-ot1-x32a.google.com with SMTP id 46e09a7af769-6bd6a34474cso2198805a34.3;
-        Sun, 20 Aug 2023 20:24:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692588240; x=1693193040;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2dwP756RQWeaJUheDspLg4gz0IMnHyBo7z6aeWKm5to=;
-        b=ikAQcJ4pWR7NAzM1i/Bgbnlbkj024BEWnn91N44/NzFa9swQlRwFAaNY39ydO6Yu27
-         UIadmkqHoNqErOR+9fp4V+LQo5C86utCfJfTyqRMBDN5iUYmd23obEmipmiHvulSLn8O
-         frmwgwufGqKHQrUtuTa92RDTheTr2jpCPVsFjkKh4BGb/5a7wtoJuH/slxCz67N3VcyJ
-         iLNts3eW0vYlf5yl3QUPUBBx2zXThPW3yCzxw4nPdaZbWNE36hqNW3iYV8rsT47nLNSz
-         uJ/eU8lOg460Mx+dAMARgvr1xuZbBpBKEG+p9dVZkiewPmVHxzpdwd+UK6ho+K0YrZlD
-         UJag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692588240; x=1693193040;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=2dwP756RQWeaJUheDspLg4gz0IMnHyBo7z6aeWKm5to=;
-        b=gmCVzRthV9tpr87/ewAfIv44CuEVUMUX+9rBnQPHCj6SclIt1mB0XUh3RGRZfsYt9h
-         hkT9eXVnvYQW5SHTzD2z3zxo+qLjX5gFFUSVtsugmnKyUYv8d1S0FONqh8QNvtVwUK9A
-         A05Pca9Et/YMPu+Nd/GQjizEFMugEbT19zPFPr00tJ9umHAUp+tJo33u5B9QHCx1gyS5
-         1x9dygkdKpOK1xzc13eNrk8rYn4jEviE+YVfDZz9+vO0baCnRIQNs0aAfaseNFeO9AXk
-         vG+m/E4aUlrRgsMSIKGslHZCIl198KOhUPv1lbGVyswRp/1/haUpHPI9bP+XYDaCv8ZH
-         0Q1Q==
-X-Gm-Message-State: AOJu0YzZ1txsmC75q+dsJFWfbZDY3Z4LlB5q8gjhdz3PXAkr9wcl55dL
-        jgzqKbThJSYNQUlHkXUzVXA1LDn4X2E84kKKOrM=
-X-Google-Smtp-Source: AGHT+IGgEE6tM7judRJSXqnBK33LYdSELpr0YKoHweeIXfDb1yhLZ1CzJS6GH8YXCJhIfW/wV7rvwXw3FbU9cGjr6ys=
-X-Received: by 2002:a05:6870:b4ac:b0:1be:cf5d:6f7b with SMTP id
- y44-20020a056870b4ac00b001becf5d6f7bmr8318594oap.17.1692588239918; Sun, 20
- Aug 2023 20:23:59 -0700 (PDT)
-MIME-Version: 1.0
-References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
- <20230818101630.000027f4@linux.intel.com> <1b2166ab-e788-475e-a8e2-a6cef26f2524@suse.de>
-In-Reply-To: <1b2166ab-e788-475e-a8e2-a6cef26f2524@suse.de>
-From:   AceLan Kao <acelan@gmail.com>
-Date:   Mon, 21 Aug 2023 11:23:47 +0800
-Message-ID: <CAMz9Wg_Homvy7KSSV5kFJKatVCA0_kmG96h577Ak1qv88CHD6g@mail.gmail.com>
-Subject: Re: Infiniate systemd loop when power off the machine with multiple
- MD RAIDs
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
+        with ESMTP id S232488AbjHUNSj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Aug 2023 09:18:39 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B864A8;
+        Mon, 21 Aug 2023 06:18:37 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RTtMp5TDSz4f3lKX;
+        Mon, 21 Aug 2023 21:18:30 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgD3hqklZONkve76BA--.48806S3;
+        Mon, 21 Aug 2023 21:18:30 +0800 (CST)
+Subject: Re: Fwd: Infiniate systemd loop when power off the machine with
+ multiple MD RAIDs
+To:     Bagas Sanjaya <bagasdotme@gmail.com>,
         Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        AceLan Kao <acelan@gmail.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Linux Regressions <regressions@lists.linux.dev>,
-        Linux RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Linux RAID <linux-raid@vger.kernel.org>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <433392a3-5ec4-cd63-fa5b-58e24deb56b9@huaweicloud.com>
+Date:   Mon, 21 Aug 2023 21:18:28 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgD3hqklZONkve76BA--.48806S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJw1DWr4kWFy5ur1rAr1rCrg_yoW5Jw1Upr
+        1UZFn09rsIqr47KF4IkF4IgF15twnayws5KryF9w4a934rtFyxA3Wftry5Ja4UGw1F9rWD
+        Ar1qv34kWFWqv3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
+        c7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hannes Reinecke <hare@suse.de> =E6=96=BC 2023=E5=B9=B48=E6=9C=8818=E6=97=A5=
- =E9=80=B1=E4=BA=94 =E4=B8=8B=E5=8D=885:21=E5=AF=AB=E9=81=93=EF=BC=9A
->
-> On 8/18/23 10:16, Mariusz Tkaczyk wrote:
-> > On Wed, 16 Aug 2023 16:37:26 +0700
-> > Bagas Sanjaya <bagasdotme@gmail.com> wrote:
-> >
-> >> Hi,
-> >>
-> >> I notice a regression report on Bugzilla [1]. Quoting from it:
-> >>
-> >>> It needs to build at least 2 different RAIDs(eg. RAID0 and RAID10, RA=
-ID5
-> >>> and RAID10) and then you will see below error repeatly(need to use se=
-rial
-> >>> console to see it)
-> >>>
-> >>> [ 205.360738] systemd-shutdown[1]: Stopping MD devices.
-> >>> [ 205.366384] systemd-shutdown[1]: sd-device-enumerator: Scan all dir=
-s
-> >>> [ 205.373327] systemd-shutdown[1]: sd-device-enumerator: Scanning /sy=
-s/bus
-> >>> [ 205.380427] systemd-shutdown[1]: sd-device-enumerator: Scanning /sy=
-s/class
-> >>> [ 205.388257] systemd-shutdown[1]: Stopping MD /dev/md127 (9:127).
-> >>> [ 205.394880] systemd-shutdown[1]: Failed to sync MD block device
-> >>> /dev/md127, ignoring: Input/output error [ 205.404975] md: md127 stop=
-ped.
-> >>> [ 205.470491] systemd-shutdown[1]: Stopping MD /dev/md126 (9:126).
-> >>> [ 205.770179] md: md126: resync interrupted.
-> >>> [ 205.776258] md126: detected capacity change from 1900396544 to 0
-> >>> [ 205.783349] md: md126 stopped.
-> >>> [ 205.862258] systemd-shutdown[1]: Stopping MD /dev/md125 (9:125).
-> >>> [ 205.862435] md: md126 stopped.
-> >>> [ 205.868376] systemd-shutdown[1]: Failed to sync MD block device
-> >>> /dev/md125, ignoring: Input/output error [ 205.872845] block device
-> >>> autoloading is deprecated and will be removed. [ 205.880955] md: md12=
-5
-> >>> stopped. [ 205.934349] systemd-shutdown[1]: Stopping MD /dev/md124p2
-> >>> (259:7). [ 205.947707] systemd-shutdown[1]: Could not stop MD /dev/md=
-124p2:
-> >>> Device or resource busy [ 205.957004] systemd-shutdown[1]: Stopping M=
-D
-> >>> /dev/md124p1 (259:6). [ 205.964177] systemd-shutdown[1]: Could not st=
-op MD
-> >>> /dev/md124p1: Device or resource busy [ 205.973155] systemd-shutdown[=
-1]:
-> >>> Stopping MD /dev/md124 (9:124). [ 205.979789] systemd-shutdown[1]: Co=
-uld
-> >>> not stop MD /dev/md124: Device or resource busy [ 205.988475]
-> >>> systemd-shutdown[1]: Not all MD devices stopped, 4 left.
-> >>
-> >> See Bugzilla for the full thread and attached full journalctl log.
-> >>
-> >> Anyway, I'm adding this regression to be tracked by regzbot:
-> >>
-> >> #regzbot introduced: 12a6caf273240a
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=3D217798 #regzbot title: s=
-ystemd
-> >> shutdown hang on machine with different RAID levels
-> >>
-> >> Thanks.
-> >>
-> >> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=3D217798
-> >>
-> >
-> > Hello,
-> > The issue is reproducible with IMSM metadata too, around 20% of reboot =
-hangs. I
-> > will try to raise the priority in the bug because it is valid high- the
-> > base functionality of the system is affected.
-> >
-> > Christoph, could you take a look in short term?
-> >
-> Does this help?
->
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 78be7811a89f..b3661c8def8c 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9575,6 +9575,7 @@ static int md_notify_reboot(struct notifier_block
-> *this,
->          struct mddev *mddev, *n;
->          int need_delay =3D 0;
->
-> +       flush_workqueue(md_misc_wq);
->          spin_lock(&all_mddevs_lock);
->          list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
->                  if (!mddev_get(mddev))
->
-> Cheers,
->
-> Hannes
->
+Hi,
 
-Hi Hannes,
+在 2023/08/16 17:37, Bagas Sanjaya 写道:
+> Hi,
+> 
+> I notice a regression report on Bugzilla [1]. Quoting from it:
+> 
+>> It needs to build at least 2 different RAIDs(eg. RAID0 and RAID10, RAID5 and RAID10) and then you will see below error repeatly(need to use serial console to see it)
+>>
+>> [ 205.360738] systemd-shutdown[1]: Stopping MD devices.
+>> [ 205.366384] systemd-shutdown[1]: sd-device-enumerator: Scan all dirs
+>> [ 205.373327] systemd-shutdown[1]: sd-device-enumerator: Scanning /sys/bus
+>> [ 205.380427] systemd-shutdown[1]: sd-device-enumerator: Scanning /sys/class
+>> [ 205.388257] systemd-shutdown[1]: Stopping MD /dev/md127 (9:127).
+>> [ 205.394880] systemd-shutdown[1]: Failed to sync MD block device /dev/md127, ignoring: Input/output error
+>> [ 205.404975] md: md127 stopped.
+>> [ 205.470491] systemd-shutdown[1]: Stopping MD /dev/md126 (9:126).
+>> [ 205.770179] md: md126: resync interrupted.
+>> [ 205.776258] md126: detected capacity change from 1900396544 to 0
+>> [ 205.783349] md: md126 stopped.
+>> [ 205.862258] systemd-shutdown[1]: Stopping MD /dev/md125 (9:125).
+>> [ 205.862435] md: md126 stopped.
+>> [ 205.868376] systemd-shutdown[1]: Failed to sync MD block device /dev/md125, ignoring: Input/output error
+>> [ 205.872845] block device autoloading is deprecated and will be removed.
+>> [ 205.880955] md: md125 stopped.
+>> [ 205.934349] systemd-shutdown[1]: Stopping MD /dev/md124p2 (259:7).
+>> [ 205.947707] systemd-shutdown[1]: Could not stop MD /dev/md124p2: Device or resource busy
+>> [ 205.957004] systemd-shutdown[1]: Stopping MD /dev/md124p1 (259:6).
+>> [ 205.964177] systemd-shutdown[1]: Could not stop MD /dev/md124p1: Device or resource busy
+>> [ 205.973155] systemd-shutdown[1]: Stopping MD /dev/md124 (9:124).
+>> [ 205.979789] systemd-shutdown[1]: Could not stop MD /dev/md124: Device or resource busy
+>> [ 205.988475] systemd-shutdown[1]: Not all MD devices stopped, 4 left.
 
-The patch doesn't work, I still can reproduce the issue after applied
-the patch on top of v6.5-rc7
-706a74159504 Linux 6.5-rc7
+Without the problem, did the log complain about this?
 
---=20
-Chia-Lin Kao(AceLan)
-http://blog.acelan.idv.tw/
-E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+Could not stop MD...Device or resource busy
+
+Thanks,
+Kuai
+
+> 
+> See Bugzilla for the full thread and attached full journalctl log.
+> 
+> Anyway, I'm adding this regression to be tracked by regzbot:
+> 
+> #regzbot introduced: 12a6caf273240a https://bugzilla.kernel.org/show_bug.cgi?id=217798
+> #regzbot title: systemd shutdown hang on machine with different RAID levels
+> 
+> Thanks.
+> 
+> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=217798
+> 
+
