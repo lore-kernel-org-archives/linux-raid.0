@@ -2,118 +2,175 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47099EE49A8
-	for <linux-raid@archiver.kernel.org>; Sun, 20 Aug 2023 09:17:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45338EE49A0
+	for <linux-raid@archiver.kernel.org>; Mon, 21 Aug 2023 03:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230243AbjHTJRK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 20 Aug 2023 05:17:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34270 "EHLO
+        id S232629AbjHUDYG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 20 Aug 2023 23:24:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230209AbjHTJRH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 20 Aug 2023 05:17:07 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC5F249FE;
-        Sun, 20 Aug 2023 02:13:51 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RT8zw27Mbz4f3jqB;
-        Sun, 20 Aug 2023 17:13:48 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnBahH2eFkmXibBA--.44158S10;
-        Sun, 20 Aug 2023 17:13:48 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, xni@redhat.com, mariusz.tkaczyk@linux.intel.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH -next v3 6/7] md: factor out a helper rdev_addable() from remove_and_add_spares()
-Date:   Sun, 20 Aug 2023 17:09:48 +0800
-Message-Id: <20230820090949.2874537-7-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230820090949.2874537-1-yukuai1@huaweicloud.com>
-References: <20230820090949.2874537-1-yukuai1@huaweicloud.com>
+        with ESMTP id S232615AbjHUDYF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 20 Aug 2023 23:24:05 -0400
+Received: from mail-ot1-x32a.google.com (mail-ot1-x32a.google.com [IPv6:2607:f8b0:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD71C9D;
+        Sun, 20 Aug 2023 20:24:00 -0700 (PDT)
+Received: by mail-ot1-x32a.google.com with SMTP id 46e09a7af769-6bd6a34474cso2198805a34.3;
+        Sun, 20 Aug 2023 20:24:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1692588240; x=1693193040;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2dwP756RQWeaJUheDspLg4gz0IMnHyBo7z6aeWKm5to=;
+        b=ikAQcJ4pWR7NAzM1i/Bgbnlbkj024BEWnn91N44/NzFa9swQlRwFAaNY39ydO6Yu27
+         UIadmkqHoNqErOR+9fp4V+LQo5C86utCfJfTyqRMBDN5iUYmd23obEmipmiHvulSLn8O
+         frmwgwufGqKHQrUtuTa92RDTheTr2jpCPVsFjkKh4BGb/5a7wtoJuH/slxCz67N3VcyJ
+         iLNts3eW0vYlf5yl3QUPUBBx2zXThPW3yCzxw4nPdaZbWNE36hqNW3iYV8rsT47nLNSz
+         uJ/eU8lOg460Mx+dAMARgvr1xuZbBpBKEG+p9dVZkiewPmVHxzpdwd+UK6ho+K0YrZlD
+         UJag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692588240; x=1693193040;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=2dwP756RQWeaJUheDspLg4gz0IMnHyBo7z6aeWKm5to=;
+        b=gmCVzRthV9tpr87/ewAfIv44CuEVUMUX+9rBnQPHCj6SclIt1mB0XUh3RGRZfsYt9h
+         hkT9eXVnvYQW5SHTzD2z3zxo+qLjX5gFFUSVtsugmnKyUYv8d1S0FONqh8QNvtVwUK9A
+         A05Pca9Et/YMPu+Nd/GQjizEFMugEbT19zPFPr00tJ9umHAUp+tJo33u5B9QHCx1gyS5
+         1x9dygkdKpOK1xzc13eNrk8rYn4jEviE+YVfDZz9+vO0baCnRIQNs0aAfaseNFeO9AXk
+         vG+m/E4aUlrRgsMSIKGslHZCIl198KOhUPv1lbGVyswRp/1/haUpHPI9bP+XYDaCv8ZH
+         0Q1Q==
+X-Gm-Message-State: AOJu0YzZ1txsmC75q+dsJFWfbZDY3Z4LlB5q8gjhdz3PXAkr9wcl55dL
+        jgzqKbThJSYNQUlHkXUzVXA1LDn4X2E84kKKOrM=
+X-Google-Smtp-Source: AGHT+IGgEE6tM7judRJSXqnBK33LYdSELpr0YKoHweeIXfDb1yhLZ1CzJS6GH8YXCJhIfW/wV7rvwXw3FbU9cGjr6ys=
+X-Received: by 2002:a05:6870:b4ac:b0:1be:cf5d:6f7b with SMTP id
+ y44-20020a056870b4ac00b001becf5d6f7bmr8318594oap.17.1692588239918; Sun, 20
+ Aug 2023 20:23:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnBahH2eFkmXibBA--.44158S10
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtr13KF4ftr13Jwb_yoW8Ary8pa
-        yrKFy3K3yUAF13W3WDKryUGa4Yqa10grWIkry2ka4rXas8Jrn8Kw4rCF90qF98JFZY9F45
-        ZF15tw48ur1agFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9K14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
-        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-        IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAv
-        wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14
-        v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTYUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
+ <20230818101630.000027f4@linux.intel.com> <1b2166ab-e788-475e-a8e2-a6cef26f2524@suse.de>
+In-Reply-To: <1b2166ab-e788-475e-a8e2-a6cef26f2524@suse.de>
+From:   AceLan Kao <acelan@gmail.com>
+Date:   Mon, 21 Aug 2023 11:23:47 +0800
+Message-ID: <CAMz9Wg_Homvy7KSSV5kFJKatVCA0_kmG96h577Ak1qv88CHD6g@mail.gmail.com>
+Subject: Re: Infiniate systemd loop when power off the machine with multiple
+ MD RAIDs
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hannes Reinecke <hare@suse.de> =E6=96=BC 2023=E5=B9=B48=E6=9C=8818=E6=97=A5=
+ =E9=80=B1=E4=BA=94 =E4=B8=8B=E5=8D=885:21=E5=AF=AB=E9=81=93=EF=BC=9A
+>
+> On 8/18/23 10:16, Mariusz Tkaczyk wrote:
+> > On Wed, 16 Aug 2023 16:37:26 +0700
+> > Bagas Sanjaya <bagasdotme@gmail.com> wrote:
+> >
+> >> Hi,
+> >>
+> >> I notice a regression report on Bugzilla [1]. Quoting from it:
+> >>
+> >>> It needs to build at least 2 different RAIDs(eg. RAID0 and RAID10, RA=
+ID5
+> >>> and RAID10) and then you will see below error repeatly(need to use se=
+rial
+> >>> console to see it)
+> >>>
+> >>> [ 205.360738] systemd-shutdown[1]: Stopping MD devices.
+> >>> [ 205.366384] systemd-shutdown[1]: sd-device-enumerator: Scan all dir=
+s
+> >>> [ 205.373327] systemd-shutdown[1]: sd-device-enumerator: Scanning /sy=
+s/bus
+> >>> [ 205.380427] systemd-shutdown[1]: sd-device-enumerator: Scanning /sy=
+s/class
+> >>> [ 205.388257] systemd-shutdown[1]: Stopping MD /dev/md127 (9:127).
+> >>> [ 205.394880] systemd-shutdown[1]: Failed to sync MD block device
+> >>> /dev/md127, ignoring: Input/output error [ 205.404975] md: md127 stop=
+ped.
+> >>> [ 205.470491] systemd-shutdown[1]: Stopping MD /dev/md126 (9:126).
+> >>> [ 205.770179] md: md126: resync interrupted.
+> >>> [ 205.776258] md126: detected capacity change from 1900396544 to 0
+> >>> [ 205.783349] md: md126 stopped.
+> >>> [ 205.862258] systemd-shutdown[1]: Stopping MD /dev/md125 (9:125).
+> >>> [ 205.862435] md: md126 stopped.
+> >>> [ 205.868376] systemd-shutdown[1]: Failed to sync MD block device
+> >>> /dev/md125, ignoring: Input/output error [ 205.872845] block device
+> >>> autoloading is deprecated and will be removed. [ 205.880955] md: md12=
+5
+> >>> stopped. [ 205.934349] systemd-shutdown[1]: Stopping MD /dev/md124p2
+> >>> (259:7). [ 205.947707] systemd-shutdown[1]: Could not stop MD /dev/md=
+124p2:
+> >>> Device or resource busy [ 205.957004] systemd-shutdown[1]: Stopping M=
+D
+> >>> /dev/md124p1 (259:6). [ 205.964177] systemd-shutdown[1]: Could not st=
+op MD
+> >>> /dev/md124p1: Device or resource busy [ 205.973155] systemd-shutdown[=
+1]:
+> >>> Stopping MD /dev/md124 (9:124). [ 205.979789] systemd-shutdown[1]: Co=
+uld
+> >>> not stop MD /dev/md124: Device or resource busy [ 205.988475]
+> >>> systemd-shutdown[1]: Not all MD devices stopped, 4 left.
+> >>
+> >> See Bugzilla for the full thread and attached full journalctl log.
+> >>
+> >> Anyway, I'm adding this regression to be tracked by regzbot:
+> >>
+> >> #regzbot introduced: 12a6caf273240a
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=3D217798 #regzbot title: s=
+ystemd
+> >> shutdown hang on machine with different RAID levels
+> >>
+> >> Thanks.
+> >>
+> >> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=3D217798
+> >>
+> >
+> > Hello,
+> > The issue is reproducible with IMSM metadata too, around 20% of reboot =
+hangs. I
+> > will try to raise the priority in the bug because it is valid high- the
+> > base functionality of the system is affected.
+> >
+> > Christoph, could you take a look in short term?
+> >
+> Does this help?
+>
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 78be7811a89f..b3661c8def8c 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -9575,6 +9575,7 @@ static int md_notify_reboot(struct notifier_block
+> *this,
+>          struct mddev *mddev, *n;
+>          int need_delay =3D 0;
+>
+> +       flush_workqueue(md_misc_wq);
+>          spin_lock(&all_mddevs_lock);
+>          list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
+>                  if (!mddev_get(mddev))
+>
+> Cheers,
+>
+> Hannes
+>
 
-There are no functional changes, just to make the code simpler and
-prepare to delay remove_and_add_spares() to md_start_sync().
+Hi Hannes,
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+The patch doesn't work, I still can reproduce the issue after applied
+the patch on top of v6.5-rc7
+706a74159504 Linux 6.5-rc7
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 11d27c934fdd..cdc361c521d4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9177,6 +9177,20 @@ static bool rdev_is_spare(struct md_rdev *rdev)
- 	       !test_bit(Faulty, &rdev->flags);
- }
- 
-+static bool rdev_addable(struct md_rdev *rdev)
-+{
-+	if (test_bit(Candidate, &rdev->flags) || rdev->raid_disk >= 0 ||
-+	    test_bit(Faulty, &rdev->flags))
-+		return false;
-+
-+	if (!test_bit(Journal, &rdev->flags) && !md_is_rdwr(rdev->mddev) &&
-+	    !(rdev->saved_raid_disk >= 0 &&
-+	      !test_bit(Bitmap_sync, &rdev->flags)))
-+		return false;
-+
-+	return true;
-+}
-+
- static int remove_and_add_spares(struct mddev *mddev,
- 				 struct md_rdev *this)
- {
-@@ -9227,20 +9241,10 @@ static int remove_and_add_spares(struct mddev *mddev,
- 			continue;
- 		if (rdev_is_spare(rdev))
- 			spares++;
--		if (test_bit(Candidate, &rdev->flags))
-+		if (!rdev_addable(rdev))
- 			continue;
--		if (rdev->raid_disk >= 0)
--			continue;
--		if (test_bit(Faulty, &rdev->flags))
--			continue;
--		if (!test_bit(Journal, &rdev->flags)) {
--			if (!md_is_rdwr(mddev) &&
--			    !(rdev->saved_raid_disk >= 0 &&
--			      !test_bit(Bitmap_sync, &rdev->flags)))
--				continue;
--
-+		if (!test_bit(Journal, &rdev->flags))
- 			rdev->recovery_offset = 0;
--		}
- 		if (mddev->pers->hot_add_disk(mddev, rdev) == 0) {
- 			/* failure here is OK */
- 			sysfs_link_rdev(mddev, rdev);
--- 
-2.39.2
-
+--=20
+Chia-Lin Kao(AceLan)
+http://blog.acelan.idv.tw/
+E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
