@@ -2,93 +2,226 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78190EE49A5
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 20:54:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A588EE49AB
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 21:23:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229880AbjHVUy3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Aug 2023 16:54:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51502 "EHLO
+        id S231233AbjHVVXO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Aug 2023 17:23:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229562AbjHVUy3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 16:54:29 -0400
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B935F1BE
-        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 13:54:26 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1692737642; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=ZbUlI+RDCnL/1owGcEbXbRD0xOCgKvnQRKmczXs92qkY4oOvUcEaQjz2CpXAlNzVzmkGc4xqyzb1X1wGwpwHB8RUrlCmH8Bs3tSnkNYfCPFdsrRzRl21Amrdx9KjDeC07kV58h5F9XlYZDe6VK7GOOc15LErUgBp+UfrGOI8YHw=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1692737642; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=LxsKo8q6uMSuJcw7dON52kxujNXYZ3DMvV+VI8AUXWY=; 
-        b=Mbg31ugnq2mO/qJyoQ0K53ibogHzdHQM4ujmZ56XyeJFl7KSXJV+I7FUT0V/W36qD9n9um3YxF3X6N4wuQKAcw41AUFFkiauDcYTnOJ1OPNJGk6FHraMnjZu/qzL6IRSngTl0pjHqUNcqoYXVqF5zp6rYuNte0gZPr0sEZaLuVQ=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 1692737641820451.6538615909391; Tue, 22 Aug 2023 22:54:01 +0200 (CEST)
-Message-ID: <24acd8dc-e3c6-cfb1-3fba-42d1d0699b39@trained-monkey.org>
-Date:   Tue, 22 Aug 2023 16:54:00 -0400
+        with ESMTP id S231178AbjHVVXO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 17:23:14 -0400
+Received: from bee.birch.relay.mailchannels.net (bee.birch.relay.mailchannels.net [23.83.209.14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 058C7187;
+        Tue, 22 Aug 2023 14:23:10 -0700 (PDT)
+X-Sender-Id: dreamhost|x-authsender|dragan@stancevic.com
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+        by relay.mailchannels.net (Postfix) with ESMTP id 377D81002A0;
+        Tue, 22 Aug 2023 21:16:30 +0000 (UTC)
+Received: from pdx1-sub0-mail-a249.dreamhost.com (unknown [127.0.0.6])
+        (Authenticated sender: dreamhost)
+        by relay.mailchannels.net (Postfix) with ESMTPA id CAC40101F89;
+        Tue, 22 Aug 2023 21:16:29 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1692738989; a=rsa-sha256;
+        cv=none;
+        b=8lm7OpfOwqr4VyIH8oG9anXaQnKt2xuVT2KkRz00dxdCsZlBsyimwwVa55npzbdnPoG/ac
+        lrZvWuDv8wf5BjY1rc6L6Jkv/A6T0NK53N2XwzJ6eGspO4TktA5tNsG2RCpDgv9NYRcwJ1
+        mKvmmPjRWfeAWChuwAqMmUgRH7UnzLh72r9RFFO8Ot7OT8/s+knY91Xrq3Ohq6rHgWGZ/k
+        x/Ov3ZXjCIrMfYogZOVHDmVvHJdUlVyW3ltBN8i+aMHtvPZkMct10RiEQui0dM4bdCIVjQ
+        rDE/rr/t49mebMuu6RoC5mAepe6PopeGna1KYeQ1Ybxmde+acfgm4UI5tdHPJw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+        s=arc-2022; t=1692738989;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references:dkim-signature;
+        bh=HTp3iPmIl17r1yijZ+2KZ1A0mhKpvCahgxzlnf2MJmk=;
+        b=3ZdYs3ZcQ2XDK9xzk25uj9SQOwTpVtvZ/aq3+oxdvAiKna4QO2WIZHwYSZNStChq/6cN8/
+        8GAZz3zymhEDb0HlmCs8mwpeUXb4wcoSd/1WDnN3nEH8t3FoptoqXqnSmRV8WJBwU4eUMY
+        wbMcx6RbgyeFbpgUCLHOnHgBB2iejq/ts3HaiArdh0pML/Lth7wYzzKFcWzU2WjcZgEt5A
+        eohO2iRSo+0GhyhFBp+/N07WFOElIpKH87r63w75e94c99eJLZ9G3dXK1b6GhPSWuxfrKo
+        4wzk7lx6JsKE3gtfuqS8lPVfmPfNL3F4g0MxUNJukGRripPwbkjsXmGKPs6TQA==
+ARC-Authentication-Results: i=1;
+        rspamd-7878b5d4b5-2vh85;
+        auth=pass smtp.auth=dreamhost smtp.mailfrom=dragan@stancevic.com
+X-Sender-Id: dreamhost|x-authsender|dragan@stancevic.com
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|dragan@stancevic.com
+X-MailChannels-Auth-Id: dreamhost
+X-Supply-Bitter: 534ca5b26f43d748_1692738990044_3850399868
+X-MC-Loop-Signature: 1692738990044:3831377830
+X-MC-Ingress-Time: 1692738990044
+Received: from pdx1-sub0-mail-a249.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+        by 100.115.61.237 (trex/6.9.1);
+        Tue, 22 Aug 2023 21:16:30 +0000
+Received: from localhost.localdomain (99-160-136-52.lightspeed.nsvltn.sbcglobal.net [99.160.136.52])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dragan@stancevic.com)
+        by pdx1-sub0-mail-a249.dreamhost.com (Postfix) with ESMTPSA id 4RVhwr5Ffbz3J;
+        Tue, 22 Aug 2023 14:16:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stancevic.com;
+        s=dreamhost; t=1692738989;
+        bh=HTp3iPmIl17r1yijZ+2KZ1A0mhKpvCahgxzlnf2MJmk=;
+        h=From:To:Cc:Subject:Date:Content-Transfer-Encoding;
+        b=hBizyDmo6eMbZBnjC2C3taL0p4UpPVuTNWnJQPm9AdcK1jAbZE98G4tacWh6gOxPz
+         GJQzkLrK2B2c8lpWDWwI0+uZH/DYm6AL3FTJE8SfM57wGjR2QZS34rLfnUOG40Iq/C
+         KssNJvK8cECLEc9XT9cBxcAGlrBhaSgkjnxFf0G5eVvI6AdyoMHG8ubYPOoBwkSLJh
+         j2Njk3YrOuSMqTWaEkX61+hYrpm8JYQ2FxeXVgmVWZGW1+OWljT3LF7/27aYZY91n7
+         uZiKIxmanFEGqXb+fObW119pF5D88r6tahwmze9manajJZbZ3kvPM33Kt85eugnMvd
+         c/j8pCm5uZjQg==
+From:   Dragan Stancevic <dragan@stancevic.com>
+To:     song@kernel.org
+Cc:     buczek@molgen.mpg.de, guoqing.jiang@linux.dev,
+        it+raid@molgen.mpg.de, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, msmith626@gmail.com,
+        yukuai1@huaweicloud.com
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle" transition
+Date:   Tue, 22 Aug 2023 16:16:27 -0500
+Message-Id: <20230822211627.1389410-1-dragan@stancevic.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
+References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: libsed in mdadm
-Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Xiao Ni <xni@redhat.com>,
-        Paul E Luse <paul.e.luse@linux.intel.com>,
-        Coly Li <colyli@suse.de>
-Cc:     linux-raid@vger.kernel.org
-References: <20230821161604.000048c7@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20230821161604.000048c7@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/21/23 10:16, Mariusz Tkaczyk wrote:
-> Hello,
-> IMSM/VROC is going to support self-encrypted drives. With this feature you need
-> to unlock the drives during boot-up in UEFI first. It is kind of protection
-> from physical stealing.
+On Tue, 3/28/23 17:01 Song Liu wrote:
+> On Thu, Mar 16, 2023 at 8:25=E2=80=AFAM Marc Smith <msmith626@gmail.com> 
+> wr=
+> ote:
+>  >
+>  > On Tue, Mar 14, 2023 at 10:45=E2=80=AFAM Marc Smith 
+> <msmith626@gmail.com>=
+>   wrote:
+>  > >
+>  > > On Tue, Mar 14, 2023 at 9:55=E2=80=AFAM Guoqing Jiang 
+> <guoqing.jiang@li=
+> nux.dev> wrote:
+>  > > >
+>  > > >
+>  > > >
+>  > > > On 3/14/23 21:25, Marc Smith wrote:
+>  > > > > On Mon, Feb 8, 2021 at 7:49=E2=80=AFPM Guoqing Jiang
+>  > > > > <guoqing.jiang@cloud.ionos.com> wrote:
+>  > > > >> Hi Donald,
+>  > > > >>
+>  > > > >> On 2/8/21 19:41, Donald Buczek wrote:
+>  > > > >>> Dear Guoqing,
+>  > > > >>>
+>  > > > >>> On 08.02.21 15:53, Guoqing Jiang wrote:
+>  > > > >>>>
+>  > > > >>>> On 2/8/21 12:38, Donald Buczek wrote:
+>  > > > >>>>>> 5. maybe don't hold reconfig_mutex when try to unregister
+>  > > > >>>>>> sync_thread, like this.
+>  > > > >>>>>>
+>  > > > >>>>>>           /* resync has finished, collect result */
+>  > > > >>>>>>           mddev_unlock(mddev);
+>  > > > >>>>>>           md_unregister_thread(&mddev->sync_thread);
+>  > > > >>>>>>           mddev_lock(mddev);
+>  > > > >>>>> As above: While we wait for the sync thread to terminate, 
+> would=
+> n't it
+>  > > > >>>>> be a problem, if another user space operation takes the mutex?
+>  > > > >>>> I don't think other places can be blocked while hold mutex, 
+> othe=
+> rwise
+>  > > > >>>> these places can cause potential deadlock. Please try above 
+> two =
+> lines
+>  > > > >>>> change. And perhaps others have better idea.
+>  > > > >>> Yes, this works. No deadlock after >11000 seconds,
+>  > > > >>>
+>  > > > >>> (Time till deadlock from previous runs/seconds: 1723, 37, 
+> 434, 12=
+> 65,
+>  > > > >>> 3500, 1136, 109, 1892, 1060, 664, 84, 315, 12, 820 )
+>  > > > >> Great. I will send a formal patch with your reported-by and 
+> tested=
+> -by.
+>  > > > >>
+>  > > > >> Thanks,
+>  > > > >> Guoqing
+>  > > > > I'm still hitting this issue with Linux 5.4.229 -- it looks 
+> like 1/=
+> 2
+>  > > > > of the patches that supposedly resolve this were applied to the 
+> sta=
+> ble
+>  > > > > kernels, however, one was omitted due to a regression:
+>  > > > > md: don't unregister sync_thread with reconfig_mutex held 
+> (upstream
+>  > > > > commit 8b48ec23cc51a4e7c8dbaef5f34ebe67e1a80934)
+>  > > > >
+>  > > > > I don't see any follow-up on the thread from June 8th 2022 
+> asking f=
+> or
+>  > > > > this patch to be dropped from all stable kernels since it caused a
+>  > > > > regression.
+>  > > > >
+>  > > > > The patch doesn't appear to be present in the current mainline 
+> kern=
+> el
+>  > > > > (6.3-rc2) either. So I assume this issue is still present 
+> there, or=
+>   it
+>  > > > > was resolved differently and I just can't find the commit/patch.
+>  > > >
+>  > > > It should be fixed by commit 9dfbdafda3b3"md: unlock mddev before 
+> rea=
+> p
+>  > > > sync_thread in action_store".
+>  > >
+>  > > Okay, let me try applying that patch... it does not appear to be
+>  > > present in my 5.4.229 kernel source. Thanks.
+>  >
+>  > Yes, applying this '9dfbdafda3b3 "md: unlock mddev before reap
+>  > sync_thread in action_store"' patch on top of vanilla 5.4.229 source
+>  > appears to fix the problem for me -- I can't reproduce the issue with
+>  > the script, and it's been running for >24 hours now. (Previously I was
+>  > able to induce the issue within a matter of minutes.)
 > 
-> To ensure security, Linux have to respect that. It means that we need to
-> determine if the drive support locking and do not allow to mix locked and
-> unlocked drives in one IMSM array.
+> Hi Marc,
 > 
-> To grab that information we will need to impose the "magic commands" to the
-> drives. There is a libsed library, designed for such purposes:
-> https://github.com/sedcli/sedcli
+> Could you please run your reproducer on the md-tmp branch?
 > 
-> So far I know, this library is not released under distributions (not handled by
-> package managers) and that will bring not user friendly dependency- you will
-> need to compile and install the lib first to build mdadm.
+> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-tmp
 > 
-> The sedcli project is maintained in Intel, currently it is not in active
-> development but there are no plans to drop it, interest around it is growing as
-> you can see. It seems to be great opportunity for this project to
-> become integrated with mainstream distributions when mdadm will start to
-> require it.
+> This contains a different version of the fix by Yu Kuai.
 > 
-> So, my questions are: Are we fine with adding this dependency? Are there big
-> cons you see?
-> Obviously, I will make it optional like libudev is.
+> Thanks,
+> Song
 > 
-> I can try to re-implement the functionality I need in mdadm but it is like
-> reinventing the wheel.
-> 
-> Any feedback will be appreciated.
 
-Hi Mariusz,
+Hi Song, I can easily reproduce this issue on 5.10.133 and 5.10.53. The change
+"9dfbdafda3b3 "md: unlock mddev before reap" does not fix the issue for me.
 
-I am not against adding it to mdadm, though I think a better approach is
-to try and get the library built as a package for the distros.
+But I did pull the changes from the md-tmp branch you are refering:
+https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-tmp
 
-Did you look into that yet?
+I was not totally clear on which change exactly to pull, but I pulled
+the following changes:
+2023-03-28 md: enhance checking in md_check_recovery()md-tmp	Yu Kuai	1 -7/+15
+2023-03-28 md: wake up 'resync_wait' at last in md_reap_sync_thread()	Yu Kuai	1 -1/+1
+2023-03-28 md: refactor idle/frozen_sync_thread()	Yu Kuai	2 -4/+22
+2023-03-28 md: add a mutex to synchronize idle and frozen in action_store()	Yu Kuai	2 -0/+8
+2023-03-28 md: refactor action_store() for 'idle' and 'frozen'	Yu Kuai	1 -16/+45
 
-Thanks,
-Jes
+I used to be able to reproduce the lockup within minutes, but with those
+changes the test system has been running for more than 120 hours.
+
+When you said a "different fix", can you confirm that I grabbed the right
+changes and that I need all 5 of them.
+
+And second question was, has this fix been submitted upstream yet?
+If so which kernel version?
+
+Thank you
 
 
