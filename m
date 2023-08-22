@@ -2,240 +2,161 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05CA1EE4996
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 08:14:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FAD4EE4996
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 10:05:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233701AbjHVIOE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Aug 2023 04:14:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48352 "EHLO
+        id S234590AbjHVKFL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Aug 2023 06:05:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233700AbjHVIOC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 04:14:02 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B19F19A;
-        Tue, 22 Aug 2023 01:14:00 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id 98e67ed59e1d1-26f38171174so1661461a91.3;
-        Tue, 22 Aug 2023 01:14:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692692040; x=1693296840;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BwxiBeDcoEfjxHyLx/YtIfeLMp3A+ec/F6ReskGMLXc=;
-        b=HThE9kN+7jf8RJfftViPpYzqQ8ngRWyzTx/TGqSavkIrwNwXJjw7G80N9aJjuDw8Ba
-         5omVwMciJhjb4xAQgzCvNnnXA37RXjKKOEC3KEHo7jAvU1OTWiF4RbHUFbkTQ6nWd4BW
-         UlIjTeI8kx2Gy27+trg/UQ1lJihrrD08bfl6pCKxyY/d8dyUTjHP2tXuTe8Q+4EC6EM6
-         tfNp+1nZnLXclDyiubLY6B2YU/7wMJO1ND3nzhVa7aWw19NDt+m4YkATePqOyOzDUUMq
-         6UlaPKJYKwcuvtQO0XFhgroezzOzdofRZOsRZF9JP0Adp0Dj8Y0WxZ8U7XhZ4C0cjzLX
-         RE5w==
+        with ESMTP id S234579AbjHVKFK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 06:05:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17AD5CE4
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 03:04:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1692698658;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=eunSjqXebVmPJQFHfHymAQbG2gyuuDWNReWk5LCjmQE=;
+        b=h2YwcOb+cQTT98aAN5XZ14o2ztTVP0UYCyen3odfj5UFMefpfmdYpyec+eVqLSO9euGsVB
+        MuMM4PIAcheB27WMOqfEQhGrQfFlsmDbL0s/ynVn7w4dTlCwk+cgqDaI1jcEaEqyigwqbS
+        SvNdWU1aaulx/enj7tyBfWZqoDuIPa0=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-477-IuIEt99BM_-Qx48MRBkRCQ-1; Tue, 22 Aug 2023 06:04:14 -0400
+X-MC-Unique: IuIEt99BM_-Qx48MRBkRCQ-1
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-26cf9b8f209so4505880a91.0
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 03:04:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692692040; x=1693296840;
+        d=1e100.net; s=20221208; t=1692698654; x=1693303454;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=BwxiBeDcoEfjxHyLx/YtIfeLMp3A+ec/F6ReskGMLXc=;
-        b=gr9TrInnVik0RmfXvVx/pIwn/Ll/JzAdSDG2BZq5hJ6i0nQoKf6vsYxWZcifXQpF86
-         zjtY0oeiSwt0BIO9rnpfSxidKpG2FQ3k6gcli2HH22s2aXV9ojE7vG/i2CTT+oDqCCid
-         L6BBN/6YfDR1mkOTOA1rQXly2T23W+KU9SLmORsixYq2hchOPUkXpjVw4A4+H4vARSNh
-         0YKV1YbgIopR/5mZkWQKGD8WBvcsmsMG89LSN4wXUpwtVc5TYEjn6z5QCjhWwYDelKlr
-         VC+wV5JifgAhb1gdiXFnWFuDEkY8248+iAQ+1qIdMQLRwMVp+7TRi5HKtXVFCTCe0pJ0
-         u6MQ==
-X-Gm-Message-State: AOJu0Ywe1LdxLOOeON7T+9rRdBmnT8/3qhUESOlnPInWEhhf+nSOPfC4
-        1bXqp/gZxKYapHBvbL5Hv2UEwaDhuG75hzuA2xc=
-X-Google-Smtp-Source: AGHT+IGOVXKDbj5W9DpLYjMonS6xODRpZvmTPWASdKq2gj/glZLPLyPpr5nC7uv4B1DL1sLt8thrH5LwCa2okSOpbvQ=
-X-Received: by 2002:a17:90a:4ec2:b0:268:f987:305f with SMTP id
- v2-20020a17090a4ec200b00268f987305fmr8157642pjl.46.1692692039649; Tue, 22 Aug
- 2023 01:13:59 -0700 (PDT)
+        bh=eunSjqXebVmPJQFHfHymAQbG2gyuuDWNReWk5LCjmQE=;
+        b=MN9PUCKeBA1R2KZDl1k3wUwWH7EeDPrTNsUDk3CmvU9KcBgVz2HPNyG8ndFscxY/ad
+         nxoQQBAI88qHmsM2RMMRkrFGfmBhGkLIztQDLqtLECHro9hLx/ES0a6HKFY0BDo9gahN
+         YTmHiR1ng+fp+lxCv3ZWWXF39j7c76+RsuhSb24hfTO2kgP3ScNic4IchxzAo3tu0wfY
+         Jf7yVRSajoxo08q7D6rPKV8L14xeTS9/vIGHzW8C8fsZ1I00h+9ZfzvxPsrrxb4WU51f
+         ld/R4gbAPqs+sa84UJ902b58LyajzKFdST3v32bLnu84eTNsMNbrjBxT9OWG/ICZa0nH
+         6fRA==
+X-Gm-Message-State: AOJu0YyQRit7UHxRUvyBBrz/OMsz5gCUVzaYdcmBwJd4m5BdLgT4z8jr
+        qrkuWS636bUPcyjFLEDjZe2BXd7dqN+XpM3QIKSQ2mfMbT8r/Ag5FtG9dveXjtaGbJjUk3Ftm98
+        o9M0LRcc7eJRxR+B40WRUm9snOfXZmh0MTyB9Nw==
+X-Received: by 2002:a17:90a:8681:b0:267:fba3:ed96 with SMTP id p1-20020a17090a868100b00267fba3ed96mr5698305pjn.3.1692698653958;
+        Tue, 22 Aug 2023 03:04:13 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFQAyUGLu26v0m9FhbT8nXHCmebwasow1EknDEE9+bi+15V6BUlty4S6j9T52Z0FdgUC5Ho6Jjv+/2I19wxkQc=
+X-Received: by 2002:a17:90a:8681:b0:267:fba3:ed96 with SMTP id
+ p1-20020a17090a868100b00267fba3ed96mr5698287pjn.3.1692698653590; Tue, 22 Aug
+ 2023 03:04:13 -0700 (PDT)
 MIME-Version: 1.0
-References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
- <20230818101630.000027f4@linux.intel.com> <b0488ff7-10c8-4b4e-28b8-01809133c297@linux.dev>
- <CAPhsuW6cSLqwRVO_EpFyimvc7hgi1rb3T8-NA+stHdwrqrScBA@mail.gmail.com> <20230822083923.00007fb6@linux.intel.com>
-In-Reply-To: <20230822083923.00007fb6@linux.intel.com>
-From:   AceLan Kao <acelan@gmail.com>
-Date:   Tue, 22 Aug 2023 16:13:46 +0800
-Message-ID: <CAMz9Wg8KE1rDkSaQnUTJ5ikzH7YGGYbkLM3AcrVue3=JgK+14w@mail.gmail.com>
-Subject: Re: Infiniate systemd loop when power off the machine with multiple
- MD RAIDs
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     Song Liu <song@kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux RAID <linux-raid@vger.kernel.org>
+References: <20230820090949.2874537-1-yukuai1@huaweicloud.com> <20230820090949.2874537-2-yukuai1@huaweicloud.com>
+In-Reply-To: <20230820090949.2874537-2-yukuai1@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Tue, 22 Aug 2023 18:04:02 +0800
+Message-ID: <CALTww2_XL7j_OMjNMNdCti8TyOxC_U69v6Dg1UXHfajaWeN4Cg@mail.gmail.com>
+Subject: Re: [PATCH -next v3 1/7] md: use separate work_struct for md_start_sync()
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, mariusz.tkaczyk@linux.intel.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> =E6=96=BC 2023=E5=B9=B48=
-=E6=9C=8822=E6=97=A5 =E9=80=B1=E4=BA=8C =E4=B8=8B=E5=8D=882:39=E5=AF=AB=E9=
-=81=93=EF=BC=9A
+On Sun, Aug 20, 2023 at 5:13=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
 >
-> On Mon, 21 Aug 2023 23:17:54 -0700
-> Song Liu <song@kernel.org> wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> > On Mon, Aug 21, 2023 at 8:51=E2=80=AFPM Guoqing Jiang <guoqing.jiang@li=
-nux.dev> wrote:
-> > >
-> > >
-> > >
-> > > On 8/18/23 16:16, Mariusz Tkaczyk wrote:
-> > > > On Wed, 16 Aug 2023 16:37:26 +0700
-> > > > Bagas Sanjaya<bagasdotme@gmail.com>  wrote:
-> > > >
-> > > >> Hi,
-> > > >>
-> > > >> I notice a regression report on Bugzilla [1]. Quoting from it:
-> > > >>
-> > > >>> It needs to build at least 2 different RAIDs(eg. RAID0 and RAID10=
-, RAID5
-> > > >>> and RAID10) and then you will see below error repeatly(need to us=
-e
-> > > >>> serial console to see it)
-> > > >>>
-> > > >>> [ 205.360738] systemd-shutdown[1]: Stopping MD devices.
-> > > >>> [ 205.366384] systemd-shutdown[1]: sd-device-enumerator: Scan all=
- dirs
-> > > >>> [ 205.373327] systemd-shutdown[1]: sd-device-enumerator: Scanning
-> > > >>> /sys/bus [ 205.380427] systemd-shutdown[1]: sd-device-enumerator:
-> > > >>> Scanning /sys/class [ 205.388257] systemd-shutdown[1]: Stopping M=
-D
-> > > >>> /dev/md127 (9:127). [ 205.394880] systemd-shutdown[1]: Failed to =
-sync
-> > > >>> MD block device /dev/md127, ignoring: Input/output error [ 205.40=
-4975]
-> > > >>> md: md127 stopped. [ 205.470491] systemd-shutdown[1]: Stopping MD
-> > > >>> /dev/md126 (9:126). [ 205.770179] md: md126: resync interrupted.
-> > > >>> [ 205.776258] md126: detected capacity change from 1900396544 to =
-0
-> > > >>> [ 205.783349] md: md126 stopped.
-> > > >>> [ 205.862258] systemd-shutdown[1]: Stopping MD /dev/md125 (9:125)=
-.
-> > > >>> [ 205.862435] md: md126 stopped.
-> > > >>> [ 205.868376] systemd-shutdown[1]: Failed to sync MD block device
-> > > >>> /dev/md125, ignoring: Input/output error [ 205.872845] block devi=
-ce
-> > > >>> autoloading is deprecated and will be removed. [ 205.880955] md: =
-md125
-> > > >>> stopped. [ 205.934349] systemd-shutdown[1]: Stopping MD /dev/md12=
-4p2
-> > > >>> (259:7). [ 205.947707] systemd-shutdown[1]: Could not stop MD
-> > > >>> /dev/md124p2: Device or resource busy [ 205.957004]
-> > > >>> systemd-shutdown[1]: Stopping MD /dev/md124p1 (259:6). [ 205.9641=
-77]
-> > > >>> systemd-shutdown[1]: Could not stop MD /dev/md124p1: Device or re=
-source
-> > > >>> busy [ 205.973155] systemd-shutdown[1]: Stopping MD /dev/md124 (9=
-:124).
-> > > >>> [ 205.979789] systemd-shutdown[1]: Could not stop MD /dev/md124: =
-Device
-> > > >>> or resource busy [ 205.988475] systemd-shutdown[1]: Not all MD de=
-vices
-> > > >>> stopped, 4 left.
-> > > >> See Bugzilla for the full thread and attached full journalctl log.
-> > > >>
-> > > >> Anyway, I'm adding this regression to be tracked by regzbot:
-> > > >>
-> > > >> #regzbot introduced: 12a6caf273240a
-> > > >> https://bugzilla.kernel.org/show_bug.cgi?id=3D217798  #regzbot tit=
-le:
-> > > >> systemd shutdown hang on machine with different RAID levels
-> > > >>
-> > > >> Thanks.
-> > > >>
-> > > >> [1]:https://bugzilla.kernel.org/show_bug.cgi?id=3D217798
-> > > >>
-> > > > Hello,
-> > > > The issue is reproducible with IMSM metadata too, around 20% of reb=
-oot
-> > > > hangs. I will try to raise the priority in the bug because it is va=
-lid
-> > > > high- the base functionality of the system is affected.
-> > >
-> > > Since it it reproducible from your side, is it possible to turn the
-> > > reproduce steps into a test case
-> > > given the importance?
+> It's a little weird to borrow 'del_work' for md_start_sync(), declare
+> a new work_struct 'sync_work' for md_start_sync().
 >
-> I didn't try to reproduce it locally yet because customer was able to
-> bisect the regression and it pointed them to the same patch so I connecte=
-d it
-> and asked author to take a look first. At a first glance, I wanted to get
-> community voice to see if it is not something obvious.
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.c | 10 ++++++----
+>  drivers/md/md.h |  5 ++++-
+>  2 files changed, 10 insertions(+), 5 deletions(-)
 >
-> So far I know, customer is creating 3 IMSM raid arrays, one is the system
-> volume and do a reboot and it sporadically fails (around 20%). That is al=
-l.
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 5c3c19b8d509..90815be1e80f 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -631,13 +631,13 @@ void mddev_put(struct mddev *mddev)
+>                  * flush_workqueue() after mddev_find will succeed in wai=
+ting
+>                  * for the work to be done.
+>                  */
+> -               INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+>                 queue_work(md_misc_wq, &mddev->del_work);
+>         }
+>         spin_unlock(&all_mddevs_lock);
+>  }
 >
-> > >
-> > > I guess If all arrays are set with MD_DELETED flag, then reboot might
-> > > hang, not sure whether
-> > > below (maybe need to flush wq as well  before list_del) helps or not,
-> > > just FYI.
-> > >
-> > > @@ -9566,8 +9566,10 @@ static int md_notify_reboot(struct notifier_bl=
-ock
-> > > *this,
-> > >
-> > >          spin_lock(&all_mddevs_lock);
-> > >          list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) =
-{
-> > > -               if (!mddev_get(mddev))
-> > > +               if (!mddev_get(mddev)) {
-> > > +                       list_del(&mddev->all_mddevs);
-> > >                          continue;
-> > > +               }
-> >
-> > I am still not able to reproduce this, probably due to differences in t=
-he
-> > timing. Maybe we only need something like:
-> >
-> > diff --git i/drivers/md/md.c w/drivers/md/md.c
-> > index 5c3c19b8d509..ebb529b0faf8 100644
-> > --- i/drivers/md/md.c
-> > +++ w/drivers/md/md.c
-> > @@ -9619,8 +9619,10 @@ static int md_notify_reboot(struct notifier_bloc=
-k
-> > *this,
-> >
-> >         spin_lock(&all_mddevs_lock);
-> >         list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
-> > -               if (!mddev_get(mddev))
-> > +               if (!mddev_get(mddev)) {
-> > +                       need_delay =3D 1;
-> >                         continue;
-> > +               }
-> >                 spin_unlock(&all_mddevs_lock);
-> >                 if (mddev_trylock(mddev)) {
-> >                         if (mddev->pers)
-> >
-> >
-> > Thanks,
-> > Song
+>  static void md_safemode_timeout(struct timer_list *t);
+> +static void md_start_sync(struct work_struct *ws);
 >
-> I will try to reproduce issue at Intel lab to check this.
+>  void mddev_init(struct mddev *mddev)
+>  {
+> @@ -662,6 +662,9 @@ void mddev_init(struct mddev *mddev)
+>         mddev->resync_min =3D 0;
+>         mddev->resync_max =3D MaxSector;
+>         mddev->level =3D LEVEL_NONE;
+> +
+> +       INIT_WORK(&mddev->sync_work, md_start_sync);
+> +       INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+>  }
+>  EXPORT_SYMBOL_GPL(mddev_init);
 >
-> Thanks,
-> Mariusz
-Hi Guoqing,
+> @@ -9245,7 +9248,7 @@ static int remove_and_add_spares(struct mddev *mdde=
+v,
+>
+>  static void md_start_sync(struct work_struct *ws)
+>  {
+> -       struct mddev *mddev =3D container_of(ws, struct mddev, del_work);
+> +       struct mddev *mddev =3D container_of(ws, struct mddev, sync_work)=
+;
+>
+>         rcu_assign_pointer(mddev->sync_thread,
+>                            md_register_thread(md_do_sync, mddev, "resync"=
+));
+> @@ -9458,8 +9461,7 @@ void md_check_recovery(struct mddev *mddev)
+>                                  */
+>                                 md_bitmap_write_all(mddev->bitmap);
+>                         }
+> -                       INIT_WORK(&mddev->del_work, md_start_sync);
+> -                       queue_work(md_misc_wq, &mddev->del_work);
+> +                       queue_work(md_misc_wq, &mddev->sync_work);
+>                         goto unlock;
+>                 }
+>         not_running:
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 9bcb77bca963..64d05cb65287 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -450,7 +450,10 @@ struct mddev {
+>         struct kernfs_node              *sysfs_degraded;        /*handle =
+for 'degraded' */
+>         struct kernfs_node              *sysfs_level;           /*handle =
+for 'level' */
+>
+> -       struct work_struct del_work;    /* used for delayed sysfs removal=
+ */
+> +       /* used for delayed sysfs removal */
+> +       struct work_struct del_work;
+> +       /* used for register new sync thread */
+> +       struct work_struct sync_work;
+>
+>         /* "lock" protects:
+>          *   flush_bio transition from NULL to !NULL
+> --
+> 2.39.2
+>
 
-Here is the command how I trigger the issue, have to do it around 10
-times to make sure the issue is reproducible
+Reviewed-by: Xiao Ni <xni@redhat.com>
 
-echo "repair" | sudo tee /sys/class/block/md12?/md/sync_action && sudo
-grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 6.5.0-rc77
-06a74159504-dirty" && head -c 1G < /dev/urandom > myfile1 && sleep 180
-&& head -c 1G < /dev/urandom > myfile2 && sleep 1 && cat /proc/mdstat
-&& sleep 1 && rm myfile1 &&
-sudo reboot
-
-And the patch to add need_delay doesn't work.
-
-
-
---
-Chia-Lin Kao(AceLan)
-http://blog.acelan.idv.tw/
-E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
