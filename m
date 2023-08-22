@@ -2,75 +2,88 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7737EE49AA
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 00:15:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D2DDEE4996
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 01:29:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231821AbjHVAPY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 21 Aug 2023 20:15:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50114 "EHLO
+        id S232021AbjHVB3l (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 21 Aug 2023 21:29:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231825AbjHVAPT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Aug 2023 20:15:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3C35180;
-        Mon, 21 Aug 2023 17:15:17 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7A66F64D02;
-        Tue, 22 Aug 2023 00:15:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEF75C433C8;
-        Tue, 22 Aug 2023 00:15:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692663316;
-        bh=W4oSTCBfgCbCR8ZY3PEmgCF2Gxgb1kitL4a1Al3j5Wc=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=jJnTKwsT30Ic800K9ovfDEsMSfOowL/3sGbGbVlvDpdPJmZSMiAWrfwMjlPRIcOtC
-         8ArkC8hqi/T08PwLLTlxvbwmwGlSC69VF8c9YsC4jVuJ1Bb4KYxjsCVb58Fxfvxv71
-         5OdS0xBkNztMhFeYb/EIutiJ6wdOmrr5rIio2BxeaX85LllI6pwZwldi8zHSZqbx72
-         m8cQUQ3PRNWdqSOkyZd16gHMXBP7rp59rxLcDIS7zCLafI+jOUMnB7LK8Kd7BoV3yM
-         xeMoO9aatzUGl/uvsnK6bnQbGpoZEzmF7DOwdhgccwcx0mkzDuGLQwTe5qvGlNstHG
-         cMYaXxpnIw5Xw==
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-4ff9b389677so5903735e87.3;
-        Mon, 21 Aug 2023 17:15:16 -0700 (PDT)
-X-Gm-Message-State: AOJu0YwmePG94wQ82hlZu2rMVOy72VRC+q/ioM+w5aAZJTyREsA8f28Q
-        I+i2uIGXd67zBS1d7uFTe2XP2uONUtYPO240xOk=
-X-Google-Smtp-Source: AGHT+IEeFxFioF0G2cL3tsfU/Cpp/t4yLBC9M/itJ7p/wfDyYdA2tSFNIxFMPZ0TDLHMVZcUPN5gwMly0UY+PAPm+lY=
-X-Received: by 2002:ac2:5a0a:0:b0:4fb:745e:dd01 with SMTP id
- q10-20020ac25a0a000000b004fb745edd01mr5363415lfn.45.1692663314926; Mon, 21
- Aug 2023 17:15:14 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230803132930.2742286-1-yukuai1@huaweicloud.com> <20230803132930.2742286-11-yukuai1@huaweicloud.com>
-In-Reply-To: <20230803132930.2742286-11-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 21 Aug 2023 17:15:02 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7P0czQSQ88bt-+Dp3kMFErK2GOd_a70GGU5CS7Ks+MZQ@mail.gmail.com>
-Message-ID: <CAPhsuW7P0czQSQ88bt-+Dp3kMFErK2GOd_a70GGU5CS7Ks+MZQ@mail.gmail.com>
-Subject: Re: [PATCH -next 10/29] md/raid5-cache: use READ_ONCE/WRITE_ONCE for 'conf->log'
-To:     Yu Kuai <yukuai1@huaweicloud.com>
+        with ESMTP id S231976AbjHVB3k (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Aug 2023 21:29:40 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE6211D;
+        Mon, 21 Aug 2023 18:29:38 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RVBbM3Z8lz4f3k69;
+        Tue, 22 Aug 2023 09:29:35 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAHl6l+D+Rkf6UiBQ--.9232S3;
+        Tue, 22 Aug 2023 09:29:35 +0800 (CST)
+Subject: Re: [PATCH -next 10/29] md/raid5-cache: use READ_ONCE/WRITE_ONCE for
+ 'conf->log'
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230803132930.2742286-1-yukuai1@huaweicloud.com>
+ <20230803132930.2742286-11-yukuai1@huaweicloud.com>
+ <CAPhsuW7P0czQSQ88bt-+Dp3kMFErK2GOd_a70GGU5CS7Ks+MZQ@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <e9742233-e3f7-1c14-b26b-c6507c9ef903@huaweicloud.com>
+Date:   Tue, 22 Aug 2023 09:29:34 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <CAPhsuW7P0czQSQ88bt-+Dp3kMFErK2GOd_a70GGU5CS7Ks+MZQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAHl6l+D+Rkf6UiBQ--.9232S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYF7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
+        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+        Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
+        6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
+        CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
+        xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
+        1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
+        14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
+        IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvE
+        x4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnU
+        UI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 3, 2023 at 6:32=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> 'conf->log' is set with 'reconfig_mutex' grabbed, however, readers are
-> not procted, hence use READ_ONCE/WRITE_ONCE to prevent reading abnormal
-> value.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Hi,
 
-It appears to me that this patch doesn't apply to md-next. Please rebase
-and resend all 3 sets.
+在 2023/08/22 8:15, Song Liu 写道:
+> On Thu, Aug 3, 2023 at 6:32 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> 'conf->log' is set with 'reconfig_mutex' grabbed, however, readers are
+>> not procted, hence use READ_ONCE/WRITE_ONCE to prevent reading abnormal
+>> value.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> 
+> It appears to me that this patch doesn't apply to md-next. Please rebase
+> and resend all 3 sets.
+
+Yes, I'll rebase previous 2 sets first, and wait for then before rebase
+this set.
 
 Thanks,
-Song
+Kuai
+
+> 
+> Thanks,
+> Song
+> .
+> 
+
