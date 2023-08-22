@@ -2,163 +2,146 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FE71EE4996
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 10:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C38EE49A4
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 12:47:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234725AbjHVKUT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Aug 2023 06:20:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51624 "EHLO
+        id S235813AbjHVMrm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Aug 2023 08:47:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234712AbjHVKUS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 06:20:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB0BC18B
-        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 03:19:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692699569;
+        with ESMTP id S233303AbjHVMrm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 08:47:42 -0400
+X-Greylist: delayed 366 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 22 Aug 2023 05:47:31 PDT
+Received: from out-55.mta1.migadu.com (out-55.mta1.migadu.com [95.215.58.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C30A0CE8
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 05:47:31 -0700 (PDT)
+Message-ID: <35130b3f-c0fd-e2d6-e849-a5ceb6a2895f@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1692708082;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=sBfhKxkrMmsGIzpY/0/vS1cgmtOXfCWjIYyuonQhTsA=;
-        b=VVUBNjlVGz3yzHtZ5sswZ/vYCA++qAzjKHKBiU28BZpjwUeIp4+/cWFDXViuHGPR8IR2Dd
-        vOMJlrR8H56qWuIs4VYGr0n2j0CBGj3F4TCm9Dibl+FtvRcENUEoY+qwavfM8bU8t0JVMs
-        heUttD3sevbsCQkkh3zFTfB+5eSe030=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-336-jdIvL7Z_NyyV-Fji5WGx-Q-1; Tue, 22 Aug 2023 06:19:28 -0400
-X-MC-Unique: jdIvL7Z_NyyV-Fji5WGx-Q-1
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-267f00f6876so4644655a91.3
-        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 03:19:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692699567; x=1693304367;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=sBfhKxkrMmsGIzpY/0/vS1cgmtOXfCWjIYyuonQhTsA=;
-        b=N0PEDlpkZOvjfTpocdqSJTYhA7JNfnTfwJlXozVu5gynl21JQhBgDqUq9xYaODNPaM
-         +vHVY6I6RZal4g+47RgBnEwl6hXdKYpkPekftyou9XwxLf+PEXin5YD1BnygPJRjX5Sv
-         Zcuu6gqdD/bBYtdFe3pj9LNpmbWT/Flcc3Vo2u9uQcR7Q7/UntVxvxhdI3Yuwld6YjNU
-         JR3T/UhICNOc5B89pfh3OEeEqn+NWotNHyyatnftjUyNxmwHMJ5EeBW6+rkrvxbbJKs4
-         y2eDTGXaVG6S7U1QIOaW+Klca7K7b/0DHW7fWxJLgAkakQKvYp9CYZvvMMHZTDWLWa33
-         Kchw==
-X-Gm-Message-State: AOJu0YwFKCQvNevhFN5a0gYccTC/MI+mlVtciWe4bhvyAx0sd6n+Vv6Z
-        oDoOvHIna0Xr2yrJkk2tfdOUST89V7+g2NmuCp5yFVZvfqDH5A1ub2Usgv1zan0QCdrDR8rC+GY
-        5k0omlSXPepFas0MHsE078w8nDw7vYx1t3xEOGQ==
-X-Received: by 2002:a17:90b:4b82:b0:269:2356:19fb with SMTP id lr2-20020a17090b4b8200b00269235619fbmr6028274pjb.15.1692699567348;
-        Tue, 22 Aug 2023 03:19:27 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEhrxNdfMXnk16axJ2zWyGj7XP3x5wGyIuVvaTa3xh1G5lcPseQp05Y7UWtFr1Un5KLIHBv8FbCEavHO6u+CnI=
-X-Received: by 2002:a17:90b:4b82:b0:269:2356:19fb with SMTP id
- lr2-20020a17090b4b8200b00269235619fbmr6028263pjb.15.1692699567027; Tue, 22
- Aug 2023 03:19:27 -0700 (PDT)
+        bh=JTilMz2CDbWouopIuwfNHDClbeAzVoPD8IX4A7TLmJg=;
+        b=V+rO3XA6g+qXgDjsX2bSBOmgY5YMmpipQgY/LG+XTKtSm5Yv1DM8fb6u1H5/+c2rpw2F/C
+        Ma2bt34R/cOTEZPOF0/xtsa11/pMSZTD+gI/CCwiRlaxNIfFSB7bB/SZ/A9wK6Y58bIst1
+        1kp1z0KAI8OnEZPTlyxZlWtqiz0fI6A=
+Date:   Tue, 22 Aug 2023 20:41:15 +0800
 MIME-Version: 1.0
-References: <20230820090949.2874537-1-yukuai1@huaweicloud.com> <20230820090949.2874537-5-yukuai1@huaweicloud.com>
-In-Reply-To: <20230820090949.2874537-5-yukuai1@huaweicloud.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 22 Aug 2023 18:19:16 +0800
-Message-ID: <CALTww2-mH7SW3Dz0DOd+NyBpZAZzB8r50UCBOkMipNtV4VxWTw@mail.gmail.com>
-Subject: Re: [PATCH -next v3 4/7] md: factor out a helper rdev_removeable()
- from remove_and_add_spares()
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     song@kernel.org, mariusz.tkaczyk@linux.intel.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: Infiniate systemd loop when power off the machine with multiple
+ MD RAIDs
+To:     AceLan Kao <acelan@gmail.com>
+Cc:     Song Liu <song@kernel.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux RAID <linux-raid@vger.kernel.org>
+References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
+ <20230818101630.000027f4@linux.intel.com>
+ <b0488ff7-10c8-4b4e-28b8-01809133c297@linux.dev>
+ <CAPhsuW6cSLqwRVO_EpFyimvc7hgi1rb3T8-NA+stHdwrqrScBA@mail.gmail.com>
+ <20230822083923.00007fb6@linux.intel.com>
+ <CAMz9Wg8KE1rDkSaQnUTJ5ikzH7YGGYbkLM3AcrVue3=JgK+14w@mail.gmail.com>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+In-Reply-To: <CAMz9Wg8KE1rDkSaQnUTJ5ikzH7YGGYbkLM3AcrVue3=JgK+14w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sun, Aug 20, 2023 at 5:13=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> There are no functional changes, just to make the code simpler and
-> prepare to delay remove_and_add_spares() to md_start_sync().
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.c | 33 +++++++++++++++++++--------------
->  1 file changed, 19 insertions(+), 14 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 561cac13ff96..ceace5ffadd6 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9153,6 +9153,22 @@ void md_do_sync(struct md_thread *thread)
->  }
->  EXPORT_SYMBOL_GPL(md_do_sync);
->
-> +static bool rdev_removeable(struct md_rdev *rdev)
-> +{
-> +       if (rdev->raid_disk < 0 || test_bit(Blocked, &rdev->flags) ||
-> +           atomic_read(&rdev->nr_pending))
-> +               return false;
-> +
-> +       if (test_bit(RemoveSynchronized, &rdev->flags))
-> +               return true;
-> +
-> +       if (test_bit(In_sync, &rdev->flags) ||
-> +           test_bit(Journal, &rdev->flags))
-> +               return false;
-> +
-> +       return true;
-> +}
-> +
->  static int remove_and_add_spares(struct mddev *mddev,
->                                  struct md_rdev *this)
->  {
-> @@ -9166,11 +9182,7 @@ static int remove_and_add_spares(struct mddev *mdd=
-ev,
->                 return 0;
->
->         rdev_for_each(rdev, mddev) {
-> -               if ((this =3D=3D NULL || rdev =3D=3D this) &&
-> -                   rdev->raid_disk >=3D 0 &&
-> -                   !test_bit(Blocked, &rdev->flags) &&
-> -                   test_bit(Faulty, &rdev->flags) &&
-> -                   atomic_read(&rdev->nr_pending)=3D=3D0) {
-> +               if ((this =3D=3D NULL || rdev =3D=3D this) && rdev_remove=
-able(rdev)) {
+Hi Acelan,
 
-There is a small change with the original method. Before this patch,
-it checks the Faulty flag when setting RemoveSynchronized and it
-checks RemoveSynchronized and "!In_sync && !Journal". I'm not sure if
-it's right or not.
+On 8/22/23 16:13, AceLan Kao wrote:
+>>>>> Hello,
+>>>>> The issue is reproducible with IMSM metadata too, around 20% of reboot
+>>>>> hangs. I will try to raise the priority in the bug because it is valid
+>>>>> high- the base functionality of the system is affected.
+>>>> Since it it reproducible from your side, is it possible to turn the
+>>>> reproduce steps into a test case
+>>>> given the importance?
+>> I didn't try to reproduce it locally yet because customer was able to
+>> bisect the regression and it pointed them to the same patch so I connected it
+>> and asked author to take a look first. At a first glance, I wanted to get
+>> community voice to see if it is not something obvious.
+>>
+>> So far I know, customer is creating 3 IMSM raid arrays, one is the system
+>> volume and do a reboot and it sporadically fails (around 20%). That is all.
+>>
+>>>> I guess If all arrays are set with MD_DELETED flag, then reboot might
+>>>> hang, not sure whether
+>>>> below (maybe need to flush wq as well  before list_del) helps or not,
+>>>> just FYI.
+>>>>
+>>>> @@ -9566,8 +9566,10 @@ static int md_notify_reboot(struct notifier_block
+>>>> *this,
+>>>>
+>>>>           spin_lock(&all_mddevs_lock);
+>>>>           list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
+>>>> -               if (!mddev_get(mddev))
+>>>> +               if (!mddev_get(mddev)) {
+>>>> +                       list_del(&mddev->all_mddevs);
+>>>>                           continue;
+>>>> +               }
 
->                         /* Faulty non-Blocked devices with nr_pending =3D=
-=3D 0
->                          * never get nr_pending incremented,
->                          * never get Faulty cleared, and never get Blocke=
-d set.
-> @@ -9185,19 +9197,12 @@ static int remove_and_add_spares(struct mddev *md=
-dev,
->                 synchronize_rcu();
->         rdev_for_each(rdev, mddev) {
->                 if ((this =3D=3D NULL || rdev =3D=3D this) &&
-> -                   rdev->raid_disk >=3D 0 &&
-> -                   !test_bit(Blocked, &rdev->flags) &&
-> -                   ((test_bit(RemoveSynchronized, &rdev->flags) ||
-> -                    (!test_bit(In_sync, &rdev->flags) &&
-> -                     !test_bit(Journal, &rdev->flags))) &&
-> -                   atomic_read(&rdev->nr_pending)=3D=3D0)) {
-> -                       if (mddev->pers->hot_remove_disk(
-> -                                   mddev, rdev) =3D=3D 0) {
-> +                   rdev_removeable(rdev) &&
-> +                   mddev->pers->hot_remove_disk(mddev, rdev) =3D=3D 0) {
->                                 sysfs_unlink_rdev(mddev, rdev);
->                                 rdev->saved_raid_disk =3D rdev->raid_disk=
-;
->                                 rdev->raid_disk =3D -1;
->                                 removed++;
-> -                       }
->                 }
->                 if (remove_some && test_bit(RemoveSynchronized, &rdev->fl=
-ags))
->                         clear_bit(RemoveSynchronized, &rdev->flags);
-> --
-> 2.39.2
+My suggestion is delete the list node under this scenario, did you try 
+above?
+
+>>> I am still not able to reproduce this, probably due to differences in the
+>>> timing. Maybe we only need something like:
+>>>
+>>> diff --git i/drivers/md/md.c w/drivers/md/md.c
+>>> index 5c3c19b8d509..ebb529b0faf8 100644
+>>> --- i/drivers/md/md.c
+>>> +++ w/drivers/md/md.c
+>>> @@ -9619,8 +9619,10 @@ static int md_notify_reboot(struct notifier_block
+>>> *this,
+>>>
+>>>          spin_lock(&all_mddevs_lock);
+>>>          list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
+>>> -               if (!mddev_get(mddev))
+>>> +               if (!mddev_get(mddev)) {
+>>> +                       need_delay = 1;
+>>>                          continue;
+>>> +               }
+>>>                  spin_unlock(&all_mddevs_lock);
+>>>                  if (mddev_trylock(mddev)) {
+>>>                          if (mddev->pers)
+>>>
+>>>
+>>> Thanks,
+>>> Song
+>> I will try to reproduce issue at Intel lab to check this.
+>>
+>> Thanks,
+>> Mariusz
+> Hi Guoqing,
 >
+> Here is the command how I trigger the issue, have to do it around 10
+> times to make sure the issue is reproducible
+>
+> echo "repair" | sudo tee /sys/class/block/md12?/md/sync_action && sudo
+> grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 6.5.0-rc77
+> 06a74159504-dirty" && head -c 1G < /dev/urandom > myfile1 && sleep 180
+> && head -c 1G < /dev/urandom > myfile2 && sleep 1 && cat /proc/mdstat
+> && sleep 1 && rm myfile1 &&
+> sudo reboot
 
+Is the issue still reproducible with remove below from cmd?
+
+echo "repair" | sudo tee /sys/class/block/md12?/md/sync_action
+
+Just want to know if resync thread is related with the issue or not.
+
+> And the patch to add need_delay doesn't work.
+
+My assumption is that mddev_get always returns NULL, so set need_delay
+wouldn't help.
+
+Thanks,
+Guoqing
