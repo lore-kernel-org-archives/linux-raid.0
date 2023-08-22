@@ -2,146 +2,218 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C38EE49A4
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 12:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BE19EE49AF
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 13:56:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235813AbjHVMrm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Aug 2023 08:47:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54388 "EHLO
+        id S236202AbjHVN4i (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Aug 2023 09:56:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233303AbjHVMrm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 08:47:42 -0400
-X-Greylist: delayed 366 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 22 Aug 2023 05:47:31 PDT
-Received: from out-55.mta1.migadu.com (out-55.mta1.migadu.com [95.215.58.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C30A0CE8
-        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 05:47:31 -0700 (PDT)
-Message-ID: <35130b3f-c0fd-e2d6-e849-a5ceb6a2895f@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1692708082;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=JTilMz2CDbWouopIuwfNHDClbeAzVoPD8IX4A7TLmJg=;
-        b=V+rO3XA6g+qXgDjsX2bSBOmgY5YMmpipQgY/LG+XTKtSm5Yv1DM8fb6u1H5/+c2rpw2F/C
-        Ma2bt34R/cOTEZPOF0/xtsa11/pMSZTD+gI/CCwiRlaxNIfFSB7bB/SZ/A9wK6Y58bIst1
-        1kp1z0KAI8OnEZPTlyxZlWtqiz0fI6A=
-Date:   Tue, 22 Aug 2023 20:41:15 +0800
+        with ESMTP id S236208AbjHVN42 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 09:56:28 -0400
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53484CD9
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 06:56:24 -0700 (PDT)
+Received: by mail-wr1-x436.google.com with SMTP id ffacd0b85a97d-31c5ee810e3so184742f8f.0
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 06:56:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google; t=1692712583; x=1693317383;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:from:date:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=LXzMnEM8moHL5KfliVx5cD1lb3aAd5NGNjk14fqFYLY=;
+        b=OvQvaauBf9P71X6OM3iV6zJjVstVKwDXVeR2TcNPjDcJz2f399JP5BZxFUiXHkTWc/
+         r5lP7XQ7vkvpSMptW40PFm8KnzYip/IftCKI/V7U1LWv+OZcsOEZqcqKXDKRf7oBDJOP
+         RNOespNYAQNJ9FavrWx3YuWYiBeKAeIF+XsTA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692712583; x=1693317383;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=LXzMnEM8moHL5KfliVx5cD1lb3aAd5NGNjk14fqFYLY=;
+        b=WJthHcKcUVufSnE9tS9HmWXHzNWIX2q08527OUgBmzlmGHQoiWWrrPQFB0TjXdRuLl
+         ijgAEpjg6M2meLsJ3mMU6OBH/IKdX6hgFB72cf/H09tGAEfD4VBzqQre4wgxz/Ebmd1k
+         dS2lEEWSXz9CDZ6tP2wkmlSbId5U8dW02JpCoq2fOQkMXRTft+eAA8Tgfm8/4RSVN7L3
+         fhSEn2pF2rKTkBBjrAji17Zn0E1TrY/0xZ5l+tGe/wHZUbOCpSHrIvKKM4HNBPCWlP0M
+         6gxHFdyWHYrKAlELjHo9+FN7CdB027aNYobiG7MaxisZXEYJ9W8og6f5eaiUVtx+TrRa
+         c7IQ==
+X-Gm-Message-State: AOJu0Yyzqd/KFML4FJXWWLSUnxBT6qWGRUsixoO1XXGDbXQyv4fR7yTK
+        R85/O43lOfaubeEUOR+4gnC0TQ==
+X-Google-Smtp-Source: AGHT+IHJQrlSrCu8WgUX5s8XkdDm6/hR/jwfxds8mVBdQgFEL5tBYnuf/oIT+VMpj8Z6S8wRiH/+Kw==
+X-Received: by 2002:a5d:65c5:0:b0:319:8dcf:5c10 with SMTP id e5-20020a5d65c5000000b003198dcf5c10mr6979657wrw.6.1692712582669;
+        Tue, 22 Aug 2023 06:56:22 -0700 (PDT)
+Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
+        by smtp.gmail.com with ESMTPSA id u5-20020a05600c210500b003fc02e8ea68sm19456835wml.13.2023.08.22.06.56.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Aug 2023 06:56:22 -0700 (PDT)
+Date:   Tue, 22 Aug 2023 15:56:19 +0200
+From:   Daniel Vetter <daniel@ffwll.ch>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
+        yujie.liu@intel.com, gregkh@linuxfoundation.org,
+        muchun.song@linux.dev, simon.horman@corigine.com,
+        dlemoal@kernel.org, kvm@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, linux-mtd@lists.infradead.org, x86@kernel.org,
+        cluster-devel@redhat.com, xen-devel@lists.xenproject.org,
+        linux-ext4@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        rcu@vger.kernel.org, linux-bcache@vger.kernel.org,
+        Muchun Song <songmuchun@bytedance.com>,
+        linux-raid@vger.kernel.org, linux-nfs@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH v4 43/48] drm/ttm: introduce pool_shrink_rwsem
+Message-ID: <ZOS+g51Yx9PsYkGU@phenom.ffwll.local>
+Mail-Followup-To: Qi Zheng <zhengqi.arch@bytedance.com>,
+        akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
+        yujie.liu@intel.com, gregkh@linuxfoundation.org,
+        muchun.song@linux.dev, simon.horman@corigine.com,
+        dlemoal@kernel.org, kvm@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, linux-mtd@lists.infradead.org, x86@kernel.org,
+        cluster-devel@redhat.com, xen-devel@lists.xenproject.org,
+        linux-ext4@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        rcu@vger.kernel.org, linux-bcache@vger.kernel.org,
+        Muchun Song <songmuchun@bytedance.com>, linux-raid@vger.kernel.org,
+        linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org
+References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
+ <20230807110936.21819-44-zhengqi.arch@bytedance.com>
 MIME-Version: 1.0
-Subject: Re: Infiniate systemd loop when power off the machine with multiple
- MD RAIDs
-To:     AceLan Kao <acelan@gmail.com>
-Cc:     Song Liu <song@kernel.org>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux RAID <linux-raid@vger.kernel.org>
-References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
- <20230818101630.000027f4@linux.intel.com>
- <b0488ff7-10c8-4b4e-28b8-01809133c297@linux.dev>
- <CAPhsuW6cSLqwRVO_EpFyimvc7hgi1rb3T8-NA+stHdwrqrScBA@mail.gmail.com>
- <20230822083923.00007fb6@linux.intel.com>
- <CAMz9Wg8KE1rDkSaQnUTJ5ikzH7YGGYbkLM3AcrVue3=JgK+14w@mail.gmail.com>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-In-Reply-To: <CAMz9Wg8KE1rDkSaQnUTJ5ikzH7YGGYbkLM3AcrVue3=JgK+14w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230807110936.21819-44-zhengqi.arch@bytedance.com>
+X-Operating-System: Linux phenom 6.3.0-2-amd64 
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Acelan,
+On Mon, Aug 07, 2023 at 07:09:31PM +0800, Qi Zheng wrote:
+> Currently, the synchronize_shrinkers() is only used by TTM pool. It only
+> requires that no shrinkers run in parallel.
+> 
+> After we use RCU+refcount method to implement the lockless slab shrink,
+> we can not use shrinker_rwsem or synchronize_rcu() to guarantee that all
+> shrinker invocations have seen an update before freeing memory.
+> 
+> So we introduce a new pool_shrink_rwsem to implement a private
+> synchronize_shrinkers(), so as to achieve the same purpose.
+> 
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+> Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 
-On 8/22/23 16:13, AceLan Kao wrote:
->>>>> Hello,
->>>>> The issue is reproducible with IMSM metadata too, around 20% of reboot
->>>>> hangs. I will try to raise the priority in the bug because it is valid
->>>>> high- the base functionality of the system is affected.
->>>> Since it it reproducible from your side, is it possible to turn the
->>>> reproduce steps into a test case
->>>> given the importance?
->> I didn't try to reproduce it locally yet because customer was able to
->> bisect the regression and it pointed them to the same patch so I connected it
->> and asked author to take a look first. At a first glance, I wanted to get
->> community voice to see if it is not something obvious.
->>
->> So far I know, customer is creating 3 IMSM raid arrays, one is the system
->> volume and do a reboot and it sporadically fails (around 20%). That is all.
->>
->>>> I guess If all arrays are set with MD_DELETED flag, then reboot might
->>>> hang, not sure whether
->>>> below (maybe need to flush wq as well  before list_del) helps or not,
->>>> just FYI.
->>>>
->>>> @@ -9566,8 +9566,10 @@ static int md_notify_reboot(struct notifier_block
->>>> *this,
->>>>
->>>>           spin_lock(&all_mddevs_lock);
->>>>           list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
->>>> -               if (!mddev_get(mddev))
->>>> +               if (!mddev_get(mddev)) {
->>>> +                       list_del(&mddev->all_mddevs);
->>>>                           continue;
->>>> +               }
+On the 5 drm patches (I counted 2 ttm and 3 drivers) for merging through
+some other tree (since I'm assuming that's how this will land):
 
-My suggestion is delete the list node under this scenario, did you try 
-above?
+Acked-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 
->>> I am still not able to reproduce this, probably due to differences in the
->>> timing. Maybe we only need something like:
->>>
->>> diff --git i/drivers/md/md.c w/drivers/md/md.c
->>> index 5c3c19b8d509..ebb529b0faf8 100644
->>> --- i/drivers/md/md.c
->>> +++ w/drivers/md/md.c
->>> @@ -9619,8 +9619,10 @@ static int md_notify_reboot(struct notifier_block
->>> *this,
->>>
->>>          spin_lock(&all_mddevs_lock);
->>>          list_for_each_entry_safe(mddev, n, &all_mddevs, all_mddevs) {
->>> -               if (!mddev_get(mddev))
->>> +               if (!mddev_get(mddev)) {
->>> +                       need_delay = 1;
->>>                          continue;
->>> +               }
->>>                  spin_unlock(&all_mddevs_lock);
->>>                  if (mddev_trylock(mddev)) {
->>>                          if (mddev->pers)
->>>
->>>
->>> Thanks,
->>> Song
->> I will try to reproduce issue at Intel lab to check this.
->>
->> Thanks,
->> Mariusz
-> Hi Guoqing,
->
-> Here is the command how I trigger the issue, have to do it around 10
-> times to make sure the issue is reproducible
->
-> echo "repair" | sudo tee /sys/class/block/md12?/md/sync_action && sudo
-> grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 6.5.0-rc77
-> 06a74159504-dirty" && head -c 1G < /dev/urandom > myfile1 && sleep 180
-> && head -c 1G < /dev/urandom > myfile2 && sleep 1 && cat /proc/mdstat
-> && sleep 1 && rm myfile1 &&
-> sudo reboot
+> ---
+>  drivers/gpu/drm/ttm/ttm_pool.c | 15 +++++++++++++++
+>  include/linux/shrinker.h       |  2 --
+>  mm/shrinker.c                  | 15 ---------------
+>  3 files changed, 15 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/gpu/drm/ttm/ttm_pool.c b/drivers/gpu/drm/ttm/ttm_pool.c
+> index c9c9618c0dce..38b4c280725c 100644
+> --- a/drivers/gpu/drm/ttm/ttm_pool.c
+> +++ b/drivers/gpu/drm/ttm/ttm_pool.c
+> @@ -74,6 +74,7 @@ static struct ttm_pool_type global_dma32_uncached[MAX_ORDER + 1];
+>  static spinlock_t shrinker_lock;
+>  static struct list_head shrinker_list;
+>  static struct shrinker *mm_shrinker;
+> +static DECLARE_RWSEM(pool_shrink_rwsem);
+>  
+>  /* Allocate pages of size 1 << order with the given gfp_flags */
+>  static struct page *ttm_pool_alloc_page(struct ttm_pool *pool, gfp_t gfp_flags,
+> @@ -317,6 +318,7 @@ static unsigned int ttm_pool_shrink(void)
+>  	unsigned int num_pages;
+>  	struct page *p;
+>  
+> +	down_read(&pool_shrink_rwsem);
+>  	spin_lock(&shrinker_lock);
+>  	pt = list_first_entry(&shrinker_list, typeof(*pt), shrinker_list);
+>  	list_move_tail(&pt->shrinker_list, &shrinker_list);
+> @@ -329,6 +331,7 @@ static unsigned int ttm_pool_shrink(void)
+>  	} else {
+>  		num_pages = 0;
+>  	}
+> +	up_read(&pool_shrink_rwsem);
+>  
+>  	return num_pages;
+>  }
+> @@ -572,6 +575,18 @@ void ttm_pool_init(struct ttm_pool *pool, struct device *dev,
+>  }
+>  EXPORT_SYMBOL(ttm_pool_init);
+>  
+> +/**
+> + * synchronize_shrinkers - Wait for all running shrinkers to complete.
+> + *
+> + * This is useful to guarantee that all shrinker invocations have seen an
+> + * update, before freeing memory, similar to rcu.
+> + */
+> +static void synchronize_shrinkers(void)
+> +{
+> +	down_write(&pool_shrink_rwsem);
+> +	up_write(&pool_shrink_rwsem);
+> +}
+> +
+>  /**
+>   * ttm_pool_fini - Cleanup a pool
+>   *
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index c55c07c3f0cb..025c8070dd86 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -103,8 +103,6 @@ struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...);
+>  void shrinker_register(struct shrinker *shrinker);
+>  void shrinker_free(struct shrinker *shrinker);
+>  
+> -extern void synchronize_shrinkers(void);
+> -
+>  #ifdef CONFIG_SHRINKER_DEBUG
+>  extern int __printf(2, 3) shrinker_debugfs_rename(struct shrinker *shrinker,
+>  						  const char *fmt, ...);
+> diff --git a/mm/shrinker.c b/mm/shrinker.c
+> index 3ab301ff122d..a27779ed3798 100644
+> --- a/mm/shrinker.c
+> +++ b/mm/shrinker.c
+> @@ -650,18 +650,3 @@ void shrinker_free(struct shrinker *shrinker)
+>  	kfree(shrinker);
+>  }
+>  EXPORT_SYMBOL_GPL(shrinker_free);
+> -
+> -/**
+> - * synchronize_shrinkers - Wait for all running shrinkers to complete.
+> - *
+> - * This is equivalent to calling unregister_shrink() and register_shrinker(),
+> - * but atomically and with less overhead. This is useful to guarantee that all
+> - * shrinker invocations have seen an update, before freeing memory, similar to
+> - * rcu.
+> - */
+> -void synchronize_shrinkers(void)
+> -{
+> -	down_write(&shrinker_rwsem);
+> -	up_write(&shrinker_rwsem);
+> -}
+> -EXPORT_SYMBOL(synchronize_shrinkers);
+> -- 
+> 2.30.2
+> 
 
-Is the issue still reproducible with remove below from cmd?
-
-echo "repair" | sudo tee /sys/class/block/md12?/md/sync_action
-
-Just want to know if resync thread is related with the issue or not.
-
-> And the patch to add need_delay doesn't work.
-
-My assumption is that mddev_get always returns NULL, so set need_delay
-wouldn't help.
-
-Thanks,
-Guoqing
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
