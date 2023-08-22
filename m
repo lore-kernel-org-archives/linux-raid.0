@@ -2,63 +2,64 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA814EE4996
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 10:07:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FE71EE4996
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Aug 2023 10:20:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234610AbjHVKHX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Aug 2023 06:07:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37918 "EHLO
+        id S234725AbjHVKUT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Aug 2023 06:20:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233400AbjHVKHW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 06:07:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04EB61BD
-        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 03:06:30 -0700 (PDT)
+        with ESMTP id S234712AbjHVKUS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 06:20:18 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB0BC18B
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 03:19:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692698790;
+        s=mimecast20190719; t=1692699569;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DTCXOZTKWlBtgR3TiOF1G26BD/6V7FvJx/9Suzf/Oc8=;
-        b=jMRkZTkU+A9mBK6ugSTqP8Th5OoK4Ec4yW0Yw1xWYGBpbgnMu9afuF90Bz8QIUBn9RYNHe
-        Xa0iaQ8zWCbXY+/y4B8ETgz/m5Y3TJzBDhVH9TEn1nOFTIn9/T3zrgQ4oQgoNe2tNC2RQ3
-        inrVUk7Oje1VrAL6W5Ac9haMlAMl47M=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=sBfhKxkrMmsGIzpY/0/vS1cgmtOXfCWjIYyuonQhTsA=;
+        b=VVUBNjlVGz3yzHtZ5sswZ/vYCA++qAzjKHKBiU28BZpjwUeIp4+/cWFDXViuHGPR8IR2Dd
+        vOMJlrR8H56qWuIs4VYGr0n2j0CBGj3F4TCm9Dibl+FtvRcENUEoY+qwavfM8bU8t0JVMs
+        heUttD3sevbsCQkkh3zFTfB+5eSe030=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-513-JfbEQV2PMeWoD78QEjuHYQ-1; Tue, 22 Aug 2023 06:06:29 -0400
-X-MC-Unique: JfbEQV2PMeWoD78QEjuHYQ-1
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-26d52dc97e3so3996523a91.2
-        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 03:06:28 -0700 (PDT)
+ us-mta-336-jdIvL7Z_NyyV-Fji5WGx-Q-1; Tue, 22 Aug 2023 06:19:28 -0400
+X-MC-Unique: jdIvL7Z_NyyV-Fji5WGx-Q-1
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-267f00f6876so4644655a91.3
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 03:19:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692698788; x=1693303588;
+        d=1e100.net; s=20221208; t=1692699567; x=1693304367;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=DTCXOZTKWlBtgR3TiOF1G26BD/6V7FvJx/9Suzf/Oc8=;
-        b=B5A45sXYB18fg/Qfk4aKRvRMuwdymLEt3yff/Lu/KnoGPtoAryM3sx+2/aDDpyZNXF
-         H8fESrPnM8ESMUI5dUiDMIe9ftmZuRi0y3bt2l04kbysbSFNUDMD30g8g8JtbIAtQvYJ
-         QhcfzgpPnkANBcSuac8xkBfidINAv7n1Cgrz0Gv+OL5VwHbnZUAkZOklxiCleYZkzg4s
-         hoepL9rTphH+PDhRMoNCljDg1jYjKWIFP7W9g8tuVrrhuXiw9NCTYFP/ObEMgrbYYvWk
-         ddtVboF8LAQuE9hCOeCUuqKqHKN5MYd7XGHrGK3BzGFyekF3tTJEVs54lgX04RS8TL8j
-         yOig==
-X-Gm-Message-State: AOJu0Yx3lwI9cLjo2b1bT7JM18vjs8P8+a2EwxpFpgfWUXBdSqlYpw4S
-        prHNOXzHP3isjHB4I+nAjhFXkWNRQvifjo9uS5YXiKaKHpsAnIOFSunn5QKhlDCImo2BoT75iAr
-        ijlToGfwTJBQskANLCI7U/7M/RUdlcGCZ/5CPWw==
-X-Received: by 2002:a17:90a:6c01:b0:262:ba7f:30cd with SMTP id x1-20020a17090a6c0100b00262ba7f30cdmr5951015pjj.31.1692698788026;
-        Tue, 22 Aug 2023 03:06:28 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IE1ih15dx7UEER54HYcyFQ/f5Z5OJgACYYaHpKoHSaIrCZPcA37bKoALopiqPe1QeOHVgAad4/1tZEZtdvbL2Y=
-X-Received: by 2002:a17:90a:6c01:b0:262:ba7f:30cd with SMTP id
- x1-20020a17090a6c0100b00262ba7f30cdmr5950998pjj.31.1692698787718; Tue, 22 Aug
- 2023 03:06:27 -0700 (PDT)
+        bh=sBfhKxkrMmsGIzpY/0/vS1cgmtOXfCWjIYyuonQhTsA=;
+        b=N0PEDlpkZOvjfTpocdqSJTYhA7JNfnTfwJlXozVu5gynl21JQhBgDqUq9xYaODNPaM
+         +vHVY6I6RZal4g+47RgBnEwl6hXdKYpkPekftyou9XwxLf+PEXin5YD1BnygPJRjX5Sv
+         Zcuu6gqdD/bBYtdFe3pj9LNpmbWT/Flcc3Vo2u9uQcR7Q7/UntVxvxhdI3Yuwld6YjNU
+         JR3T/UhICNOc5B89pfh3OEeEqn+NWotNHyyatnftjUyNxmwHMJ5EeBW6+rkrvxbbJKs4
+         y2eDTGXaVG6S7U1QIOaW+Klca7K7b/0DHW7fWxJLgAkakQKvYp9CYZvvMMHZTDWLWa33
+         Kchw==
+X-Gm-Message-State: AOJu0YwFKCQvNevhFN5a0gYccTC/MI+mlVtciWe4bhvyAx0sd6n+Vv6Z
+        oDoOvHIna0Xr2yrJkk2tfdOUST89V7+g2NmuCp5yFVZvfqDH5A1ub2Usgv1zan0QCdrDR8rC+GY
+        5k0omlSXPepFas0MHsE078w8nDw7vYx1t3xEOGQ==
+X-Received: by 2002:a17:90b:4b82:b0:269:2356:19fb with SMTP id lr2-20020a17090b4b8200b00269235619fbmr6028274pjb.15.1692699567348;
+        Tue, 22 Aug 2023 03:19:27 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEhrxNdfMXnk16axJ2zWyGj7XP3x5wGyIuVvaTa3xh1G5lcPseQp05Y7UWtFr1Un5KLIHBv8FbCEavHO6u+CnI=
+X-Received: by 2002:a17:90b:4b82:b0:269:2356:19fb with SMTP id
+ lr2-20020a17090b4b8200b00269235619fbmr6028263pjb.15.1692699567027; Tue, 22
+ Aug 2023 03:19:27 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230820090949.2874537-1-yukuai1@huaweicloud.com> <20230820090949.2874537-4-yukuai1@huaweicloud.com>
-In-Reply-To: <20230820090949.2874537-4-yukuai1@huaweicloud.com>
+References: <20230820090949.2874537-1-yukuai1@huaweicloud.com> <20230820090949.2874537-5-yukuai1@huaweicloud.com>
+In-Reply-To: <20230820090949.2874537-5-yukuai1@huaweicloud.com>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 22 Aug 2023 18:06:17 +0800
-Message-ID: <CALTww28ikBeeP+8Q=CS2iWd07rRM7QrvNk+yfE9OGV1De5=_Qw@mail.gmail.com>
-Subject: Re: [PATCH -next v3 3/7] md: delay choosing sync action to md_start_sync()
+Date:   Tue, 22 Aug 2023 18:19:16 +0800
+Message-ID: <CALTww2-mH7SW3Dz0DOd+NyBpZAZzB8r50UCBOkMipNtV4VxWTw@mail.gmail.com>
+Subject: Re: [PATCH -next v3 4/7] md: factor out a helper rdev_removeable()
+ from remove_and_add_spares()
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     song@kernel.org, mariusz.tkaczyk@linux.intel.com,
         linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -74,175 +75,90 @@ rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> Before this patch, for read-write array:
->
-> 1) md_check_recover() found that something need to be done, and it'll
->    try to grab 'reconfig_mutex'. The case that md_check_recover() need
->    to do something:
->    - array is not suspend;
->    - super_block need to be updated;
->    - 'MD_RECOVERY_NEEDED' or ''MD_RECOVERY_DONE' is set;
->    - unusual case related to safemode;
->
-> 2) if 'MD_RECOVERY_RUNNING' is not set, and 'MD_RECOVERY_NEEDED' is set,
->    md_check_recover() will try to choose a sync action, and then queue a
->    work md_start_sync().
->
-> 3) md_start_sync() register sync_thread;
->
-> After this patch,
->
-> 1) is the same;
-> 2) if 'MD_RECOVERY_RUNNING' is not set, and 'MD_RECOVERY_NEEDED' is set,
->    queue a work md_start_sync() directly;
-> 3) md_start_sync() will try to choose a sync action, and then register
->    sync_thread();
->
-> Because 'MD_RECOVERY_RUNNING' is cleared when sync_thread is done, 2)
-> and 3) and md_do_sync() is always ran in serial and they can never
-> concurrent, this change should not introduce any behavior change for now.
->
-> Also fix a problem that md_start_sync() can clear 'MD_RECOVERY_RUNNING'
-> without protection in error path, which might affect the logical in
-> md_check_recovery().
->
-> The advantage to change this is that array reconfiguration is
-> independent from daemon now, and it'll be much easier to synchronize it
-> with io, consider that io may rely on daemon thread to be done.
+> There are no functional changes, just to make the code simpler and
+> prepare to delay remove_and_add_spares() to md_start_sync().
 >
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/md/md.c | 73 ++++++++++++++++++++++++++-----------------------
->  1 file changed, 39 insertions(+), 34 deletions(-)
+>  drivers/md/md.c | 33 +++++++++++++++++++--------------
+>  1 file changed, 19 insertions(+), 14 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 0cb9fa703a0c..561cac13ff96 100644
+> index 561cac13ff96..ceace5ffadd6 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -9293,6 +9293,22 @@ static bool md_choose_sync_action(struct mddev *md=
-dev, int *spares)
->  static void md_start_sync(struct work_struct *ws)
->  {
->         struct mddev *mddev =3D container_of(ws, struct mddev, sync_work)=
-;
-> +       int spares =3D 0;
-> +
-> +       mddev_lock_nointr(mddev);
-> +
-> +       if (!md_choose_sync_action(mddev, &spares))
-> +               goto not_running;
-> +
-> +       if (!mddev->pers->sync_request)
-> +               goto not_running;
-> +
-> +       /*
-> +        * We are adding a device or devices to an array which has the bi=
-tmap
-> +        * stored on all devices. So make sure all bitmap pages get writt=
-en.
-> +        */
-> +       if (spares)
-> +               md_bitmap_write_all(mddev->bitmap);
->
->         rcu_assign_pointer(mddev->sync_thread,
->                            md_register_thread(md_do_sync, mddev, "resync"=
-));
-> @@ -9300,20 +9316,27 @@ static void md_start_sync(struct work_struct *ws)
->                 pr_warn("%s: could not start resync thread...\n",
->                         mdname(mddev));
->                 /* leave the spares where they are, it shouldn't hurt */
-> -               clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-> -               clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-> -               clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-> -               clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-> -               clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-> -               wake_up(&resync_wait);
-> -               if (test_and_clear_bit(MD_RECOVERY_RECOVER,
-> -                                      &mddev->recovery))
-> -                       if (mddev->sysfs_action)
-> -                               sysfs_notify_dirent_safe(mddev->sysfs_act=
-ion);
-> -       } else
-> -               md_wakeup_thread(mddev->sync_thread);
-> +               goto not_running;
-> +       }
-> +
-> +       mddev_unlock(mddev);
-> +       md_wakeup_thread(mddev->sync_thread);
->         sysfs_notify_dirent_safe(mddev->sysfs_action);
->         md_new_event();
-> +       return;
-> +
-> +not_running:
-> +       clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-> +       clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-> +       clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-> +       clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-> +       clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-> +       mddev_unlock(mddev);
-> +
-> +       wake_up(&resync_wait);
-> +       if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
-> +           mddev->sysfs_action)
-> +               sysfs_notify_dirent_safe(mddev->sysfs_action);
+> @@ -9153,6 +9153,22 @@ void md_do_sync(struct md_thread *thread)
 >  }
+>  EXPORT_SYMBOL_GPL(md_do_sync);
 >
->  /*
-> @@ -9381,7 +9404,6 @@ void md_check_recovery(struct mddev *mddev)
->                 return;
->
->         if (mddev_trylock(mddev)) {
-> -               int spares =3D 0;
->                 bool try_set_sync =3D mddev->safemode !=3D 0;
->
->                 if (!mddev->external && mddev->safemode =3D=3D 1)
-> @@ -9468,31 +9490,14 @@ void md_check_recovery(struct mddev *mddev)
->                 clear_bit(MD_RECOVERY_INTR, &mddev->recovery);
->                 clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
->
-> -               if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recov=
-ery) ||
-> -                   test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
-> -                       goto not_running;
-> -               if (!md_choose_sync_action(mddev, &spares))
-> -                       goto not_running;
-> -               if (mddev->pers->sync_request) {
-> -                       if (spares) {
-> -                               /* We are adding a device or devices to a=
-n array
-> -                                * which has the bitmap stored on all dev=
-ices.
-> -                                * So make sure all bitmap pages get writ=
-ten
-> -                                */
-> -                               md_bitmap_write_all(mddev->bitmap);
-> -                       }
-> +               if (test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recove=
-ry) &&
-> +                   !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
->                         queue_work(md_misc_wq, &mddev->sync_work);
-> -                       goto unlock;
-> -               }
-> -       not_running:
-> -               if (!mddev->sync_thread) {
-> +               } else {
->                         clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
->                         wake_up(&resync_wait);
-> -                       if (test_and_clear_bit(MD_RECOVERY_RECOVER,
-> -                                              &mddev->recovery))
-> -                               if (mddev->sysfs_action)
-> -                                       sysfs_notify_dirent_safe(mddev->s=
-ysfs_action);
->                 }
+> +static bool rdev_removeable(struct md_rdev *rdev)
+> +{
+> +       if (rdev->raid_disk < 0 || test_bit(Blocked, &rdev->flags) ||
+> +           atomic_read(&rdev->nr_pending))
+> +               return false;
 > +
->         unlock:
->                 wake_up(&mddev->sb_wait);
->                 mddev_unlock(mddev);
+> +       if (test_bit(RemoveSynchronized, &rdev->flags))
+> +               return true;
+> +
+> +       if (test_bit(In_sync, &rdev->flags) ||
+> +           test_bit(Journal, &rdev->flags))
+> +               return false;
+> +
+> +       return true;
+> +}
+> +
+>  static int remove_and_add_spares(struct mddev *mddev,
+>                                  struct md_rdev *this)
+>  {
+> @@ -9166,11 +9182,7 @@ static int remove_and_add_spares(struct mddev *mdd=
+ev,
+>                 return 0;
+>
+>         rdev_for_each(rdev, mddev) {
+> -               if ((this =3D=3D NULL || rdev =3D=3D this) &&
+> -                   rdev->raid_disk >=3D 0 &&
+> -                   !test_bit(Blocked, &rdev->flags) &&
+> -                   test_bit(Faulty, &rdev->flags) &&
+> -                   atomic_read(&rdev->nr_pending)=3D=3D0) {
+> +               if ((this =3D=3D NULL || rdev =3D=3D this) && rdev_remove=
+able(rdev)) {
+
+There is a small change with the original method. Before this patch,
+it checks the Faulty flag when setting RemoveSynchronized and it
+checks RemoveSynchronized and "!In_sync && !Journal". I'm not sure if
+it's right or not.
+
+>                         /* Faulty non-Blocked devices with nr_pending =3D=
+=3D 0
+>                          * never get nr_pending incremented,
+>                          * never get Faulty cleared, and never get Blocke=
+d set.
+> @@ -9185,19 +9197,12 @@ static int remove_and_add_spares(struct mddev *md=
+dev,
+>                 synchronize_rcu();
+>         rdev_for_each(rdev, mddev) {
+>                 if ((this =3D=3D NULL || rdev =3D=3D this) &&
+> -                   rdev->raid_disk >=3D 0 &&
+> -                   !test_bit(Blocked, &rdev->flags) &&
+> -                   ((test_bit(RemoveSynchronized, &rdev->flags) ||
+> -                    (!test_bit(In_sync, &rdev->flags) &&
+> -                     !test_bit(Journal, &rdev->flags))) &&
+> -                   atomic_read(&rdev->nr_pending)=3D=3D0)) {
+> -                       if (mddev->pers->hot_remove_disk(
+> -                                   mddev, rdev) =3D=3D 0) {
+> +                   rdev_removeable(rdev) &&
+> +                   mddev->pers->hot_remove_disk(mddev, rdev) =3D=3D 0) {
+>                                 sysfs_unlink_rdev(mddev, rdev);
+>                                 rdev->saved_raid_disk =3D rdev->raid_disk=
+;
+>                                 rdev->raid_disk =3D -1;
+>                                 removed++;
+> -                       }
+>                 }
+>                 if (remove_some && test_bit(RemoveSynchronized, &rdev->fl=
+ags))
+>                         clear_bit(RemoveSynchronized, &rdev->flags);
 > --
 > 2.39.2
 >
-
-I like the idea. Thanks for the effort.
-
-Reviewed-by: Xiao Ni <xni@redhat.com>
 
