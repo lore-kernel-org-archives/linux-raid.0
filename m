@@ -2,211 +2,174 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71FE6EE49AD
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 02:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 064DAEE49A5
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 03:04:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232362AbjHWC7y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Aug 2023 22:59:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43080 "EHLO
+        id S231678AbjHWDE4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Aug 2023 23:04:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230231AbjHWC7x (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 22:59:53 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63D9CE53
-        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 19:59:49 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1b89b0c73d7so9079245ad.1
-        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 19:59:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1692759588; x=1693364388;
-        h=content-transfer-encoding:in-reply-to:cc:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=bhgEqLuvf9ApSnTvUwn1L76c2o2W1Ei/QD6yE6yt7Vo=;
-        b=RzbIwpF/0rWWCHIbil/kmvbYsiH+zzV8cteo0NeX4iqS5Th3aMObOrBBZ5QIYYiYNO
-         EzLvxXnwaU3C6HJ66DVx0SYeH6DBUUXE/parOT0tZRTGaLZHY6BYCVv0BWvKsae2+Z4V
-         HEkSBtQA++hJt6hjIX8coUzQJXYdSMU0EhPZnC3wJk9rsU5aMcdQM2J2gdrxRnnAl7ZG
-         8NIlks8SUC7HZyd+TSNVs6GUNYerNVLSzTLDuAq02G7Vh6n7NQtQV5W2S/tTxnIxqdnK
-         Yk0AUrfOj+V8sxulrYV9L4sfBNDgKCkzUecP9KTfiIS3EGmzpdtRXoZ4mpHHvApm3vtv
-         04iw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692759588; x=1693364388;
-        h=content-transfer-encoding:in-reply-to:cc:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bhgEqLuvf9ApSnTvUwn1L76c2o2W1Ei/QD6yE6yt7Vo=;
-        b=SAtaZY4F9eKqkBwjwBxYJEXHIRI0HXbQK/XVewIEhEXW5BcL33ORezG62RqlHKgWFN
-         xbLdcmRhkWdoa1pti8GGKvWZ8F1E+0lnPyhYufxMZudEbG5i3iUdy19IVxTm49lrNwCd
-         guG14tdESpuUwfBd4tFfomUKrSkgRl9NYcQrKsvz/+c1gmQB8IyaEonMRDjU42Fp13oL
-         VQ/Zok52o1tNVHL89lqJGTG5As0/Q2VaqJxqLY/2qsBkQASORZTOxVGFcTN5n/I4a1dI
-         EuDU4Dib8XAh/qOIcEtaHiUFa0M87K6WF5TgFo3tlrm4m/an81V3KwIw9maXdrOB/k+d
-         UdKg==
-X-Gm-Message-State: AOJu0YwzjQ/BXVJZYtQRAaYbD97UlwhdnxiKco3aj0qeuRulMEfAJ+Vn
-        havjAAtr5yQNhZj2XIVkZI4A9A==
-X-Google-Smtp-Source: AGHT+IEfrTZGJtg+pRH2EfLUkWhGiT4SJbELosEEcEbXeeoUMWHqtsVXqJsCto+j1ri8qfTaL4v/sQ==
-X-Received: by 2002:a17:90a:2f41:b0:26d:4ade:fcf0 with SMTP id s59-20020a17090a2f4100b0026d4adefcf0mr10521410pjd.4.1692759588304;
-        Tue, 22 Aug 2023 19:59:48 -0700 (PDT)
-Received: from ?IPV6:fdbd:ff1:ce00:1c25:884:3ed:e1db:b610? ([2408:8000:b001:1:1f:58ff:f102:103])
-        by smtp.gmail.com with ESMTPSA id z2-20020a17090a1fc200b00262ca945cecsm11045048pjz.54.2023.08.22.19.59.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Aug 2023 19:59:47 -0700 (PDT)
-Message-ID: <63dc1d86-2a15-6b7e-f63a-63fccb25eae2@bytedance.com>
-Date:   Wed, 23 Aug 2023 10:59:34 +0800
+        with ESMTP id S231223AbjHWDEz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 23:04:55 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E152D93;
+        Tue, 22 Aug 2023 20:04:52 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RVrfn0M8Fz4f3lgS;
+        Wed, 23 Aug 2023 11:04:49 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAHl6lQd+Vk5mJ2BQ--.19817S3;
+        Wed, 23 Aug 2023 11:04:50 +0800 (CST)
+Subject: Re: [PATCH -next v3 6/7] md: factor out a helper rdev_addable() from
+ remove_and_add_spares()
+To:     Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
+Cc:     xni@redhat.com, mariusz.tkaczyk@linux.intel.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yi.zhang@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230820090949.2874537-1-yukuai1@huaweicloud.com>
+ <20230820090949.2874537-7-yukuai1@huaweicloud.com>
+ <CAPhsuW74MEFjNTNErYfOT1gX+BUdbDwaV1oTmmcz=_76Ym3ZuA@mail.gmail.com>
+ <c7a82fb2-cf4b-2095-e813-84aed2418ff0@huaweicloud.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <2766d001-f618-d224-f8a9-ec38ed1dc2a7@huaweicloud.com>
+Date:   Wed, 23 Aug 2023 11:04:47 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.14.0
-Subject: Re: [PATCH v4 43/48] drm/ttm: introduce pool_shrink_rwsem
-Content-Language: en-US
-To:     daniel@ffwll.ch
-References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
- <20230807110936.21819-44-zhengqi.arch@bytedance.com>
- <ZOS+g51Yx9PsYkGU@phenom.ffwll.local>
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
-        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
-        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
-        yujie.liu@intel.com, gregkh@linuxfoundation.org,
-        muchun.song@linux.dev, simon.horman@corigine.com,
-        dlemoal@kernel.org, kvm@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, linux-mtd@lists.infradead.org, x86@kernel.org,
-        cluster-devel@redhat.com, xen-devel@lists.xenproject.org,
-        linux-ext4@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        rcu@vger.kernel.org, linux-bcache@vger.kernel.org,
-        Muchun Song <songmuchun@bytedance.com>,
-        linux-raid@vger.kernel.org, linux-nfs@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, daniel.vetter@ffwll.ch
-In-Reply-To: <ZOS+g51Yx9PsYkGU@phenom.ffwll.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <c7a82fb2-cf4b-2095-e813-84aed2418ff0@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAHl6lQd+Vk5mJ2BQ--.19817S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJF4xuFy8Xr15uw4xCFy3Jwb_yoWrZr1kpr
+        18JFWUGryUAr18Jr1Utr1UJFyUtr1UJw1UJr1xJF1UJw1DJr1jgr1UXryqgr1UJr48Jr1U
+        Jr1UJr17Zr1UJrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4U
+        JVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
+        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
+        UUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Daniel,
+Hi,
 
-On 2023/8/22 21:56, Daniel Vetter wrote:
-> On Mon, Aug 07, 2023 at 07:09:31PM +0800, Qi Zheng wrote:
->> Currently, the synchronize_shrinkers() is only used by TTM pool. It only
->> requires that no shrinkers run in parallel.
->>
->> After we use RCU+refcount method to implement the lockless slab shrink,
->> we can not use shrinker_rwsem or synchronize_rcu() to guarantee that all
->> shrinker invocations have seen an update before freeing memory.
->>
->> So we introduce a new pool_shrink_rwsem to implement a private
->> synchronize_shrinkers(), so as to achieve the same purpose.
->>
->> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
->> Reviewed-by: Muchun Song <songmuchun@bytedance.com>
+在 2023/08/22 10:17, Yu Kuai 写道:
+> Hi,
 > 
-> On the 5 drm patches (I counted 2 ttm and 3 drivers) for merging through
-> some other tree (since I'm assuming that's how this will land):
-
-Yeah, there are 5 drm patches: PATCH v4 07/48 23/48 24/48 25/48 43/48.
-
-> 
-> Acked-by: Daniel Vetter <daniel.vetter@ffwll.ch>
-
-Thanks for your review!
-
-Qi
-
-> 
->> ---
->>   drivers/gpu/drm/ttm/ttm_pool.c | 15 +++++++++++++++
->>   include/linux/shrinker.h       |  2 --
->>   mm/shrinker.c                  | 15 ---------------
->>   3 files changed, 15 insertions(+), 17 deletions(-)
+> 在 2023/08/22 7:22, Song Liu 写道:
+>> On Sun, Aug 20, 2023 at 2:13 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>>
+>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>
+>>> There are no functional changes, just to make the code simpler and
+>>> prepare to delay remove_and_add_spares() to md_start_sync().
+>>>
+>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>>> ---
+>>>   drivers/md/md.c | 28 ++++++++++++++++------------
+>>>   1 file changed, 16 insertions(+), 12 deletions(-)
+>>>
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index 11d27c934fdd..cdc361c521d4 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -9177,6 +9177,20 @@ static bool rdev_is_spare(struct md_rdev *rdev)
+>>>                 !test_bit(Faulty, &rdev->flags);
+>>>   }
+>>>
+>>> +static bool rdev_addable(struct md_rdev *rdev)
+>>> +{
+>>> +       if (test_bit(Candidate, &rdev->flags) || rdev->raid_disk >= 0 ||
+>>> +           test_bit(Faulty, &rdev->flags))
+>>> +               return false;
+>>> +
+>>> +       if (!test_bit(Journal, &rdev->flags) && 
+>>> !md_is_rdwr(rdev->mddev) &&
 >>
->> diff --git a/drivers/gpu/drm/ttm/ttm_pool.c b/drivers/gpu/drm/ttm/ttm_pool.c
->> index c9c9618c0dce..38b4c280725c 100644
->> --- a/drivers/gpu/drm/ttm/ttm_pool.c
->> +++ b/drivers/gpu/drm/ttm/ttm_pool.c
->> @@ -74,6 +74,7 @@ static struct ttm_pool_type global_dma32_uncached[MAX_ORDER + 1];
->>   static spinlock_t shrinker_lock;
->>   static struct list_head shrinker_list;
->>   static struct shrinker *mm_shrinker;
->> +static DECLARE_RWSEM(pool_shrink_rwsem);
->>   
->>   /* Allocate pages of size 1 << order with the given gfp_flags */
->>   static struct page *ttm_pool_alloc_page(struct ttm_pool *pool, gfp_t gfp_flags,
->> @@ -317,6 +318,7 @@ static unsigned int ttm_pool_shrink(void)
->>   	unsigned int num_pages;
->>   	struct page *p;
->>   
->> +	down_read(&pool_shrink_rwsem);
->>   	spin_lock(&shrinker_lock);
->>   	pt = list_first_entry(&shrinker_list, typeof(*pt), shrinker_list);
->>   	list_move_tail(&pt->shrinker_list, &shrinker_list);
->> @@ -329,6 +331,7 @@ static unsigned int ttm_pool_shrink(void)
->>   	} else {
->>   		num_pages = 0;
->>   	}
->> +	up_read(&pool_shrink_rwsem);
->>   
->>   	return num_pages;
->>   }
->> @@ -572,6 +575,18 @@ void ttm_pool_init(struct ttm_pool *pool, struct device *dev,
->>   }
->>   EXPORT_SYMBOL(ttm_pool_init);
->>   
->> +/**
->> + * synchronize_shrinkers - Wait for all running shrinkers to complete.
->> + *
->> + * This is useful to guarantee that all shrinker invocations have seen an
->> + * update, before freeing memory, similar to rcu.
->> + */
->> +static void synchronize_shrinkers(void)
->> +{
->> +	down_write(&pool_shrink_rwsem);
->> +	up_write(&pool_shrink_rwsem);
->> +}
->> +
->>   /**
->>    * ttm_pool_fini - Cleanup a pool
->>    *
->> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
->> index c55c07c3f0cb..025c8070dd86 100644
->> --- a/include/linux/shrinker.h
->> +++ b/include/linux/shrinker.h
->> @@ -103,8 +103,6 @@ struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...);
->>   void shrinker_register(struct shrinker *shrinker);
->>   void shrinker_free(struct shrinker *shrinker);
->>   
->> -extern void synchronize_shrinkers(void);
->> -
->>   #ifdef CONFIG_SHRINKER_DEBUG
->>   extern int __printf(2, 3) shrinker_debugfs_rename(struct shrinker *shrinker,
->>   						  const char *fmt, ...);
->> diff --git a/mm/shrinker.c b/mm/shrinker.c
->> index 3ab301ff122d..a27779ed3798 100644
->> --- a/mm/shrinker.c
->> +++ b/mm/shrinker.c
->> @@ -650,18 +650,3 @@ void shrinker_free(struct shrinker *shrinker)
->>   	kfree(shrinker);
->>   }
->>   EXPORT_SYMBOL_GPL(shrinker_free);
->> -
->> -/**
->> - * synchronize_shrinkers - Wait for all running shrinkers to complete.
->> - *
->> - * This is equivalent to calling unregister_shrink() and register_shrinker(),
->> - * but atomically and with less overhead. This is useful to guarantee that all
->> - * shrinker invocations have seen an update, before freeing memory, similar to
->> - * rcu.
->> - */
->> -void synchronize_shrinkers(void)
->> -{
->> -	down_write(&shrinker_rwsem);
->> -	up_write(&shrinker_rwsem);
->> -}
->> -EXPORT_SYMBOL(synchronize_shrinkers);
->> -- 
->> 2.30.2
+>> Instead of straightforward refactoring, I hope we can make these rdev_*
+>> helpers more meaningful, and hopefullly reusable. For example, let's 
+>> define
+>> the meaning of "addable", and write the function to match that 
+>> meaning. In
+>> this case, I think we shouldn't check md_is_rdwr() inside rdev_addable().
+>>
+>> Does this make sense?
+> 
+> Yes, this make sense, rdev can be added to read-only array.
+> 
+> There are total three callers of pers->hot_add_sisk, I'll try to find if
+> they have common conditions.
+
+Unfortunately, the conditions is quite different, and It's difficult to
+factor out a common helper for them to use.
+
+In this case, !md_is_rdwr() is one of the four conditions, which means
+if the array is read-only, there is a special case that rdev can't be
+added to the configuration. Perhaps it's okay to keep this?
+
+Thanks,
+Kuai
+> 
+> Thanks,
+> Kuai
+> 
+>>
+>> Thanks,
+>> Song
+>>
+>>
+>>> +           !(rdev->saved_raid_disk >= 0 &&
+>>> +             !test_bit(Bitmap_sync, &rdev->flags)))
+>>> +               return false;
+>>> +
+>>> +       return true;
+>>> +}
+>>> +
+>>>   static int remove_and_add_spares(struct mddev *mddev,
+>>>                                   struct md_rdev *this)
+>>>   {
+>>> @@ -9227,20 +9241,10 @@ static int remove_and_add_spares(struct mddev 
+>>> *mddev,
+>>>                          continue;
+>>>                  if (rdev_is_spare(rdev))
+>>>                          spares++;
+>>> -               if (test_bit(Candidate, &rdev->flags))
+>>> +               if (!rdev_addable(rdev))
+>>>                          continue;
+>>> -               if (rdev->raid_disk >= 0)
+>>> -                       continue;
+>>> -               if (test_bit(Faulty, &rdev->flags))
+>>> -                       continue;
+>>> -               if (!test_bit(Journal, &rdev->flags)) {
+>>> -                       if (!md_is_rdwr(mddev) &&
+>>> -                           !(rdev->saved_raid_disk >= 0 &&
+>>> -                             !test_bit(Bitmap_sync, &rdev->flags)))
+>>> -                               continue;
+>>> -
+>>> +               if (!test_bit(Journal, &rdev->flags))
+>>>                          rdev->recovery_offset = 0;
+>>> -               }
+>>>                  if (mddev->pers->hot_add_disk(mddev, rdev) == 0) {
+>>>                          /* failure here is OK */
+>>>                          sysfs_link_rdev(mddev, rdev);
+>>> -- 
+>>> 2.39.2
+>>>
+>> .
 >>
 > 
+> .
+> 
+
