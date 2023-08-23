@@ -2,60 +2,63 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F25EAEE49A5
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 01:22:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFDD4EE49A3
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 01:28:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231990AbjHWBWR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Aug 2023 21:22:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46736 "EHLO
+        id S232024AbjHWB2e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Aug 2023 21:28:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229609AbjHWBWR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 21:22:17 -0400
+        with ESMTP id S230100AbjHWB2d (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 21:28:33 -0400
 Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A14EE45;
-        Tue, 22 Aug 2023 18:22:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA895E45;
+        Tue, 22 Aug 2023 18:28:31 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RVpND5h7Nz4f40Qx;
-        Wed, 23 Aug 2023 09:22:04 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RVpWY1QMfz4f403L;
+        Wed, 23 Aug 2023 09:28:25 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgDHVqk+X+VkH9VwBQ--.54452S3;
-        Wed, 23 Aug 2023 09:22:07 +0800 (CST)
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-To:     Dragan Stancevic <dragan@stancevic.com>, song@kernel.org
-Cc:     buczek@molgen.mpg.de, guoqing.jiang@linux.dev,
-        it+raid@molgen.mpg.de, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, msmith626@gmail.com,
-        yukuai1@huaweicloud.com, "yukuai (C)" <yukuai3@huawei.com>,
+        by APP4 (Coremail) with SMTP id gCh0CgAHl6m7YOVkVzFxBQ--.15372S3;
+        Wed, 23 Aug 2023 09:28:28 +0800 (CST)
+Subject: Re: Infiniate systemd loop when power off the machine with multiple
+ MD RAIDs
+To:     Carlos Carvalho <carlos@fisica.ufpr.br>, Song Liu <song@kernel.org>
+Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, AceLan Kao <acelan@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux RAID <linux-raid@vger.kernel.org>,
+        "yukuai (C)" <yukuai3@huawei.com>,
         "yangerkun@huawei.com" <yangerkun@huawei.com>
-References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
- <20230822211627.1389410-1-dragan@stancevic.com>
+References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
+ <CAPhsuW5Od9tczboEBxC8gn+2XLkEbirfCUm7WuJBey5MKQjwDA@mail.gmail.com>
+ <ZOUI9yDzjxuFP68E@fisica.ufpr.br>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
-Date:   Wed, 23 Aug 2023 09:22:05 +0800
+Message-ID: <909a6669-01af-dbe7-b64b-84a5f3bc75a3@huaweicloud.com>
+Date:   Wed, 23 Aug 2023 09:28:27 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20230822211627.1389410-1-dragan@stancevic.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+In-Reply-To: <ZOUI9yDzjxuFP68E@fisica.ufpr.br>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgDHVqk+X+VkH9VwBQ--.54452S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWr45GrWUKryDtFWrXrWkJFb_yoW7JF1Upr
-        y5KF13tF4UJr1UAr1xtw10qay8tw1rXr1rXry5Xr18Xr1qgrnxtry7GrWUuFyDXr1Skr1j
-        qF1Iqa9xZr1DArJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
-        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-        BIdaVFxhVjvjDU0xZFpf9x0JUZa9-UUUUU=
+X-CM-TRANSID: gCh0CgAHl6m7YOVkVzFxBQ--.15372S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kw4DKrW3Xry5JF4fKFy3Jwb_yoW8tr43p3
+        yI9FZ8KrnrXF4qqr4vya4xXryY9ryv9an8AFy7uF1UZ398ZrnrCr1rtr90gw1UA34rur4j
+        qa10vayUuFZrAaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvab4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+        e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
+        Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
+        6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
+        kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv
+        67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyT
+        uYvjxUOyCJDUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -64,149 +67,64 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-ÔÚ 2023/08/23 5:16, Dragan Stancevic Ð´µÀ:
-> On Tue, 3/28/23 17:01 Song Liu wrote:
->> On Thu, Mar 16, 2023 at 8:25=E2=80=AFAM Marc Smith <msmith626@gmail.com>
->> wr=
->> ote:
->>   >
->>   > On Tue, Mar 14, 2023 at 10:45=E2=80=AFAM Marc Smith
->> <msmith626@gmail.com>=
->>    wrote:
->>   > >
->>   > > On Tue, Mar 14, 2023 at 9:55=E2=80=AFAM Guoqing Jiang
->> <guoqing.jiang@li=
->> nux.dev> wrote:
->>   > > >
->>   > > >
->>   > > >
->>   > > > On 3/14/23 21:25, Marc Smith wrote:
->>   > > > > On Mon, Feb 8, 2021 at 7:49=E2=80=AFPM Guoqing Jiang
->>   > > > > <guoqing.jiang@cloud.ionos.com> wrote:
->>   > > > >> Hi Donald,
->>   > > > >>
->>   > > > >> On 2/8/21 19:41, Donald Buczek wrote:
->>   > > > >>> Dear Guoqing,
->>   > > > >>>
->>   > > > >>> On 08.02.21 15:53, Guoqing Jiang wrote:
->>   > > > >>>>
->>   > > > >>>> On 2/8/21 12:38, Donald Buczek wrote:
->>   > > > >>>>>> 5. maybe don't hold reconfig_mutex when try to unregister
->>   > > > >>>>>> sync_thread, like this.
->>   > > > >>>>>>
->>   > > > >>>>>>           /* resync has finished, collect result */
->>   > > > >>>>>>           mddev_unlock(mddev);
->>   > > > >>>>>>           md_unregister_thread(&mddev->sync_thread);
->>   > > > >>>>>>           mddev_lock(mddev);
->>   > > > >>>>> As above: While we wait for the sync thread to terminate,
->> would=
->> n't it
->>   > > > >>>>> be a problem, if another user space operation takes the mutex?
->>   > > > >>>> I don't think other places can be blocked while hold mutex,
->> othe=
->> rwise
->>   > > > >>>> these places can cause potential deadlock. Please try above
->> two =
->> lines
->>   > > > >>>> change. And perhaps others have better idea.
->>   > > > >>> Yes, this works. No deadlock after >11000 seconds,
->>   > > > >>>
->>   > > > >>> (Time till deadlock from previous runs/seconds: 1723, 37,
->> 434, 12=
->> 65,
->>   > > > >>> 3500, 1136, 109, 1892, 1060, 664, 84, 315, 12, 820 )
->>   > > > >> Great. I will send a formal patch with your reported-by and
->> tested=
->> -by.
->>   > > > >>
->>   > > > >> Thanks,
->>   > > > >> Guoqing
->>   > > > > I'm still hitting this issue with Linux 5.4.229 -- it looks
->> like 1/=
->> 2
->>   > > > > of the patches that supposedly resolve this were applied to the
->> sta=
->> ble
->>   > > > > kernels, however, one was omitted due to a regression:
->>   > > > > md: don't unregister sync_thread with reconfig_mutex held
->> (upstream
->>   > > > > commit 8b48ec23cc51a4e7c8dbaef5f34ebe67e1a80934)
->>   > > > >
->>   > > > > I don't see any follow-up on the thread from June 8th 2022
->> asking f=
->> or
->>   > > > > this patch to be dropped from all stable kernels since it caused a
->>   > > > > regression.
->>   > > > >
->>   > > > > The patch doesn't appear to be present in the current mainline
->> kern=
->> el
->>   > > > > (6.3-rc2) either. So I assume this issue is still present
->> there, or=
->>    it
->>   > > > > was resolved differently and I just can't find the commit/patch.
->>   > > >
->>   > > > It should be fixed by commit 9dfbdafda3b3"md: unlock mddev before
->> rea=
->> p
->>   > > > sync_thread in action_store".
->>   > >
->>   > > Okay, let me try applying that patch... it does not appear to be
->>   > > present in my 5.4.229 kernel source. Thanks.
->>   >
->>   > Yes, applying this '9dfbdafda3b3 "md: unlock mddev before reap
->>   > sync_thread in action_store"' patch on top of vanilla 5.4.229 source
->>   > appears to fix the problem for me -- I can't reproduce the issue with
->>   > the script, and it's been running for >24 hours now. (Previously I was
->>   > able to induce the issue within a matter of minutes.)
+åœ¨ 2023/08/23 3:13, Carlos Carvalho å†™é“:
+> Song Liu (song@kernel.org) wrote on Tue, Aug 22, 2023 at 03:56:04PM -03:
+>> >From systemd code, i.e. function delete_md(), this error:
 >>
->> Hi Marc,
+>> [ 205.957004] systemd-shutdown[1]: Stopping MD /dev/md124p1 (259:6).
+>> [ 205.964177] systemd-shutdown[1]: Could not stop MD /dev/md124p1:
+>> Device or resource busy
 >>
->> Could you please run your reproducer on the md-tmp branch?
+>> is most likely triggered by ioctl(STOP_ARRAY).
 >>
->> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-tmp
+>> And based on the code, I think the ioctl fails here:
 >>
->> This contains a different version of the fix by Yu Kuai.
->>
->> Thanks,
->> Song
->>
-> 
-> Hi Song, I can easily reproduce this issue on 5.10.133 and 5.10.53. The change
-> "9dfbdafda3b3 "md: unlock mddev before reap" does not fix the issue for me.
-> 
-> But I did pull the changes from the md-tmp branch you are refering:
-> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-tmp
-> 
-> I was not totally clear on which change exactly to pull, but I pulled
-> the following changes:
-> 2023-03-28 md: enhance checking in md_check_recovery()md-tmp	Yu Kuai	1 -7/+15
-> 2023-03-28 md: wake up 'resync_wait' at last in md_reap_sync_thread()	Yu Kuai	1 -1/+1
-> 2023-03-28 md: refactor idle/frozen_sync_thread()	Yu Kuai	2 -4/+22
-> 2023-03-28 md: add a mutex to synchronize idle and frozen in action_store()	Yu Kuai	2 -0/+8
-> 2023-03-28 md: refactor action_store() for 'idle' and 'frozen'	Yu Kuai	1 -16/+45
-> 
-> I used to be able to reproduce the lockup within minutes, but with those
-> changes the test system has been running for more than 120 hours.
-> 
-> When you said a "different fix", can you confirm that I grabbed the right
-> changes and that I need all 5 of them.
+>>          if (cmd == STOP_ARRAY || cmd == STOP_ARRAY_RO) {
+>>                  /* Need to flush page cache, and ensure no-one else opens
+>>                   * and writes
+>>                   */
+>>                  mutex_lock(&mddev->open_mutex);
+>>                  if (mddev->pers && atomic_read(&mddev->openers) > 1) {
+>>                          mutex_unlock(&mddev->open_mutex);
+>>                          err = -EBUSY;
+>>                          goto out;        ////////////////////// HERE
 
-Yes, you grabbed the right changes, and these patches is merged to
-linux-next as well.
-> 
-> And second question was, has this fix been submitted upstream yet?
-> If so which kernel version?
+Yes, I suspect here as well, but I do some test with error injection to
+gurantee that ioctl(STOP_ARRAY) always return -EBUSY, but I found that
+system reboot didn't hang, it'll try a few times but eventually reboot
+finished.
 
-This fix is currently in linux-next, and will be applied to v6.6-rc1
-soon.
+>>                  }
+>>                  if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
+>>                          mutex_unlock(&mddev->open_mutex);
+>>                          err = -EBUSY;
+>>                          goto out;
+>>                  }
+>>                  did_set_md_closing = true;
+>>                  mutex_unlock(&mddev->open_mutex);
+>>                  sync_blockdev(bdev);
+>>          }
+> 
+> Probably. The problem is why doesn't it manage to flush the page cache? I find
+> strange that the problem appears only when trying to stop the array, I get it
+> when trying to umount the filesystem, where it also hangs because of the same
+> reason. The kworker thread runs continuously using 100% cpu of only 1 core.
+
+The kworker do you mean the daemon thread or the sync thread?  runs
+continuously using 100% cpu doen't sounds correct to me.
 
 Thanks,
 Kuai
 
 > 
-> Thank you
+> These are all similar symptoms of the underlying problem which I complained
+> about days ago: the system doesn't manage to write to the disks, which stay
+> nearly idle. If you wait long enough without issuing writes, which can be
+> several hours, it'll eventually flush the page cache and proceed to a "normal"
+> umount or reboot.
 > 
+> The bug is dependent on the rate of writes and also on uptime; it rarely
+> appears soon after boot, and increases as times passes.
 > 
 > .
 > 
