@@ -2,71 +2,143 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A30E7EE49A0
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 12:54:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F3D0EE4993
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 13:25:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235213AbjHWMyl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 23 Aug 2023 08:54:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39154 "EHLO
+        id S235670AbjHWNZv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 23 Aug 2023 09:25:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232211AbjHWMyk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Aug 2023 08:54:40 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AD4BE47
-        for <linux-raid@vger.kernel.org>; Wed, 23 Aug 2023 05:54:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692795278; x=1724331278;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=4iSiLQWF/bOdgOzR1YULA4BoP6lOCmqeNdY+H5PmeK0=;
-  b=E8kII9jFKtUO2aLLTEtmraPKULEwVGZj3cLmHsGsYrBlQLTNLnc7ORDc
-   DaT9tyMRwyMIuE2ATxH7XwqR0ZXq7C4Npw0puHeLzF+EC/TX5h97ogwvq
-   mFZmF1jB/VAJ81JraSQzxOwUgdSB0mLSaI2kC5TDyKCZolERW3PoqGGnR
-   8FrXbs+iAr/BUN6AIqM+R/qFsld5ojUsreeEB5ZTaOigVI30yYXci8kod
-   JkZr1glbbpM5ltUk9wf/p0LI2CM6K6soSrmkiE5ssAl0/bKP7hU02KLfF
-   KP578mJhWlCI49o33g0fwZymG+N8M42PIlXh10p7t6MpI809B2e9ZH5FF
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10810"; a="364324851"
-X-IronPort-AV: E=Sophos;i="6.01,195,1684825200"; 
-   d="scan'208";a="364324851"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2023 05:53:02 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10810"; a="806687224"
-X-IronPort-AV: E=Sophos;i="6.01,195,1684825200"; 
-   d="scan'208";a="806687224"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.143.195])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2023 05:53:01 -0700
-Date:   Wed, 23 Aug 2023 14:52:56 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Khem Raj <raj.khem@gmail.com>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: [PATCH] restripe.c: Use _FILE_OFFSET_BITS to enable largefile
- support
-Message-ID: <20230823145256.00001103@linux.intel.com>
-In-Reply-To: <20221110225546.337164-1-raj.khem@gmail.com>
-References: <20221110225546.337164-1-raj.khem@gmail.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S235614AbjHWNZv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Aug 2023 09:25:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3235E10D0;
+        Wed, 23 Aug 2023 06:25:26 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4F65066287;
+        Wed, 23 Aug 2023 13:25:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 935BBC433C7;
+        Wed, 23 Aug 2023 13:25:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692797123;
+        bh=jEGoO/SIqTMm5IlTmQZnmSfRF3IDKY2mxs9mRNzX6OQ=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Q3o6S2BYEEa9SBrfzumW+pOFwcr5iOtKQfUWJjQhpoNvo1nmSJtXoz5NSjPigftJT
+         wAFCTme3aZwxqhJKiUrSc0uxM5/Q+Uq8Q7yRLdNVKY3i7kxobXjEqVQJ4UIqjkCY+f
+         2luu6xif70GQQt8NIOL7WSKCZ1wqkIroqghVVgE7CXC22HZmyfDCbBtuKKfSSF9zqn
+         NSUSCHPbY7TJAxOF7VIg51yLWJ0nalE10wMUXWmIG67xjTqO2fydd1p61KJUjYV1ZM
+         ztozSPc+4CL2Bz1bkOvhXLd3t1wjHdWgOXDJ16VOFd57HQomwsGMxAUTEPQlOaoBax
+         IJiUGdG0lC91g==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-50078e52537so5787667e87.1;
+        Wed, 23 Aug 2023 06:25:23 -0700 (PDT)
+X-Gm-Message-State: AOJu0YzM3nRwBgno6Qoo5ZsH1DCNTSNcLn6JK/05RzB7CUB1GKdjjVeK
+        QUx9Q9MKbrNduMVUmPbvEPo2j4aoOLBDy5E9NiA=
+X-Google-Smtp-Source: AGHT+IGX9g86c71yNCwbKrv9G6HYy2Z2bkkDKT/Q72uRs//FLM6Cse0jXp/Uz7zyES9jM9n0j6gH9X/Tiqt0EwZbVxw=
+X-Received: by 2002:ac2:4d90:0:b0:4f8:5905:8e0a with SMTP id
+ g16-20020ac24d90000000b004f859058e0amr8355947lfe.6.1692797121470; Wed, 23 Aug
+ 2023 06:25:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
+ <20230818101630.000027f4@linux.intel.com> <b0488ff7-10c8-4b4e-28b8-01809133c297@linux.dev>
+ <CAPhsuW6cSLqwRVO_EpFyimvc7hgi1rb3T8-NA+stHdwrqrScBA@mail.gmail.com>
+ <20230822083923.00007fb6@linux.intel.com> <CAMz9Wg8KE1rDkSaQnUTJ5ikzH7YGGYbkLM3AcrVue3=JgK+14w@mail.gmail.com>
+ <35130b3f-c0fd-e2d6-e849-a5ceb6a2895f@linux.dev> <CAMz9Wg_zKSJ2vL=r2zAtLBOv4GSMT63+ZQGXfYTjVJsE+DLQGA@mail.gmail.com>
+In-Reply-To: <CAMz9Wg_zKSJ2vL=r2zAtLBOv4GSMT63+ZQGXfYTjVJsE+DLQGA@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 23 Aug 2023 06:25:09 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6W0XgFjH1zNC+EFYjujd4smEiWs+-nYCWQ+KaFmbuvkg@mail.gmail.com>
+Message-ID: <CAPhsuW6W0XgFjH1zNC+EFYjujd4smEiWs+-nYCWQ+KaFmbuvkg@mail.gmail.com>
+Subject: Re: Infiniate systemd loop when power off the machine with multiple
+ MD RAIDs
+To:     AceLan Kao <acelan@gmail.com>
+Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 10 Nov 2022 14:55:46 -0800
-Khem Raj <raj.khem@gmail.com> wrote:
+Hi AceLan,
 
-> Instead of using the lseek64 and friends, its better to enable it via
-> the feature macro _FILE_OFFSET_BITS = 64 and let the C library deal with
-> the width of types
-> 
+On Wed, Aug 23, 2023 at 1:03=E2=80=AFAM AceLan Kao <acelan@gmail.com> wrote=
+:
+>
+[...]
+> >
+> > My suggestion is delete the list node under this scenario, did you try
+> > above?
+> Still no luck, the patch doesn't work, the sympton is the same.
+[...]
+> >
+> > Is the issue still reproducible with remove below from cmd?
+> >
+> > echo "repair" | sudo tee /sys/class/block/md12?/md/sync_action
+> >
+> > Just want to know if resync thread is related with the issue or not.
+> Probably not, we can reproduce the issue without resync, just feel
+> it's easier to reproduce the issue, so I put the command in my script.
+>
 
-LGTM. There are several style issues but you are not an author of them so I see
-this as good to go.
+Could you please run the follow two experiments?
 
-Sorry, for long response time, I totally lost this one.
+1. Confirm 12a6caf273240a triggers this. Specifically:
+   git checkout 12a6caf273240a =3D> repros
+   git checkout 12a6caf273240a~1 =3D> cannot repro
 
-Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+2. Try with the following change (add debug messages), which hopefully
+   shows which command is holding a reference on mddev->openers.
 
+Thanks,
+Song
+
+diff --git i/drivers/md/md.c w/drivers/md/md.c
+index 78be7811a89f..3e9b718b32c1 100644
+--- i/drivers/md/md.c
++++ w/drivers/md/md.c
+@@ -7574,11 +7574,15 @@ static int md_ioctl(struct block_device *bdev,
+blk_mode_t mode,
+                if (mddev->pers && atomic_read(&mddev->openers) > 1) {
+                        mutex_unlock(&mddev->open_mutex);
+                        err =3D -EBUSY;
++                       pr_warn("%s return -EBUSY for %s with
+mddev->openers =3D %d\n",
++                               __func__, mdname(mddev),
+atomic_read(&mddev->openers));
+                        goto out;
+                }
+                if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
+                        mutex_unlock(&mddev->open_mutex);
+                        err =3D -EBUSY;
++                       pr_warn("%s return -EBUSY for %s with
+MD_CLOSING bit set\n",
++                               __func__, mdname(mddev));
+                        goto out;
+                }
+                did_set_md_closing =3D true;
+@@ -7789,6 +7793,8 @@ static int md_open(struct gendisk *disk, blk_mode_t m=
+ode)
+                goto out_unlock;
+
+        atomic_inc(&mddev->openers);
++       pr_info("%s:%s openers++ =3D %d by %s\n", __func__, mdname(mddev),
++               atomic_read(&mddev->openers), current->comm);
+        mutex_unlock(&mddev->open_mutex);
+
+        disk_check_media_change(disk);
+@@ -7807,6 +7813,8 @@ static void md_release(struct gendisk *disk)
+
+        BUG_ON(!mddev);
+        atomic_dec(&mddev->openers);
++       pr_info("%s:%s openers-- =3D %d by %s\n", __func__, mdname(mddev),
++               atomic_read(&mddev->openers), current->comm);
+        mddev_put(mddev);
+ }
