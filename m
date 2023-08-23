@@ -2,143 +2,69 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F3D0EE4993
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 13:25:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32DEBEE49B2
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 13:43:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235670AbjHWNZv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 23 Aug 2023 09:25:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59474 "EHLO
+        id S234832AbjHWNnL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 23 Aug 2023 09:43:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235614AbjHWNZv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Aug 2023 09:25:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3235E10D0;
-        Wed, 23 Aug 2023 06:25:26 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4F65066287;
-        Wed, 23 Aug 2023 13:25:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 935BBC433C7;
-        Wed, 23 Aug 2023 13:25:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692797123;
-        bh=jEGoO/SIqTMm5IlTmQZnmSfRF3IDKY2mxs9mRNzX6OQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Q3o6S2BYEEa9SBrfzumW+pOFwcr5iOtKQfUWJjQhpoNvo1nmSJtXoz5NSjPigftJT
-         wAFCTme3aZwxqhJKiUrSc0uxM5/Q+Uq8Q7yRLdNVKY3i7kxobXjEqVQJ4UIqjkCY+f
-         2luu6xif70GQQt8NIOL7WSKCZ1wqkIroqghVVgE7CXC22HZmyfDCbBtuKKfSSF9zqn
-         NSUSCHPbY7TJAxOF7VIg51yLWJ0nalE10wMUXWmIG67xjTqO2fydd1p61KJUjYV1ZM
-         ztozSPc+4CL2Bz1bkOvhXLd3t1wjHdWgOXDJ16VOFd57HQomwsGMxAUTEPQlOaoBax
-         IJiUGdG0lC91g==
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-50078e52537so5787667e87.1;
-        Wed, 23 Aug 2023 06:25:23 -0700 (PDT)
-X-Gm-Message-State: AOJu0YzM3nRwBgno6Qoo5ZsH1DCNTSNcLn6JK/05RzB7CUB1GKdjjVeK
-        QUx9Q9MKbrNduMVUmPbvEPo2j4aoOLBDy5E9NiA=
-X-Google-Smtp-Source: AGHT+IGX9g86c71yNCwbKrv9G6HYy2Z2bkkDKT/Q72uRs//FLM6Cse0jXp/Uz7zyES9jM9n0j6gH9X/Tiqt0EwZbVxw=
-X-Received: by 2002:ac2:4d90:0:b0:4f8:5905:8e0a with SMTP id
- g16-20020ac24d90000000b004f859058e0amr8355947lfe.6.1692797121470; Wed, 23 Aug
- 2023 06:25:21 -0700 (PDT)
+        with ESMTP id S232593AbjHWNnK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Aug 2023 09:43:10 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE96CCCB
+        for <linux-raid@vger.kernel.org>; Wed, 23 Aug 2023 06:43:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692798188; x=1724334188;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=FCLMlcFQW4fEzGsmbS1UnwlkubNcAGtDjqs/0Ngqces=;
+  b=W6XBBvCqr9zHQiY1+QGRy8Foh/hazelNvTkHmeEjBhBAx4qltYfn4UR3
+   z2Rlr6+6W/ep/ySHE7ZXZ7BpW2/mILK58kJ0Rt6zGlL+e3Nr45NglndVu
+   kGZ7aDTQMevLhnrg0n0CCJSewFxmKMo9j/nqA0C4p8MGDhx9tfXOGAcRH
+   DiIn4g2RycpJewfMPrL2lQW5act3tAmViyGqw6Z8K7J6H6BqNuA18DAaw
+   aSKRf8og7WE5uXs8+p6UpoQoO1xcmhWtLqM+oKyKn2JQKzgMoCs/uRDIF
+   A1SXaOAULAeRmY1XeMKHdD2NbPmcL/tyntJL5JKWKxd9m5hisyvzPnV51
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10811"; a="373048935"
+X-IronPort-AV: E=Sophos;i="6.01,195,1684825200"; 
+   d="scan'208";a="373048935"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2023 06:43:08 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10811"; a="713579519"
+X-IronPort-AV: E=Sophos;i="6.01,195,1684825200"; 
+   d="scan'208";a="713579519"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.143.195])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2023 06:43:05 -0700
+Date:   Wed, 23 Aug 2023 15:43:01 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Guanqin Miao <miaoguanqin@huawei.com>
+Cc:     <jes@trained-monkey.org>, <pmenzel@molgen.mpg.de>,
+        <linux-raid@vger.kernel.org>, <linfeilong@huawei.com>,
+        <lixiaokeng@huawei.com>, <louhongxiang@huawei.com>
+Subject: Re: [PATCH 1/4] Fix memory leak in file Assemble
+Message-ID: <20230823154301.00006d16@linux.intel.com>
+In-Reply-To: <20230424080637.2152893-2-miaoguanqin@huawei.com>
+References: <20230424080637.2152893-1-miaoguanqin@huawei.com>
+        <20230424080637.2152893-2-miaoguanqin@huawei.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
- <20230818101630.000027f4@linux.intel.com> <b0488ff7-10c8-4b4e-28b8-01809133c297@linux.dev>
- <CAPhsuW6cSLqwRVO_EpFyimvc7hgi1rb3T8-NA+stHdwrqrScBA@mail.gmail.com>
- <20230822083923.00007fb6@linux.intel.com> <CAMz9Wg8KE1rDkSaQnUTJ5ikzH7YGGYbkLM3AcrVue3=JgK+14w@mail.gmail.com>
- <35130b3f-c0fd-e2d6-e849-a5ceb6a2895f@linux.dev> <CAMz9Wg_zKSJ2vL=r2zAtLBOv4GSMT63+ZQGXfYTjVJsE+DLQGA@mail.gmail.com>
-In-Reply-To: <CAMz9Wg_zKSJ2vL=r2zAtLBOv4GSMT63+ZQGXfYTjVJsE+DLQGA@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 23 Aug 2023 06:25:09 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6W0XgFjH1zNC+EFYjujd4smEiWs+-nYCWQ+KaFmbuvkg@mail.gmail.com>
-Message-ID: <CAPhsuW6W0XgFjH1zNC+EFYjujd4smEiWs+-nYCWQ+KaFmbuvkg@mail.gmail.com>
-Subject: Re: Infiniate systemd loop when power off the machine with multiple
- MD RAIDs
-To:     AceLan Kao <acelan@gmail.com>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi AceLan,
+On Mon, 24 Apr 2023 16:06:34 +0800
+Guanqin Miao <miaoguanqin@huawei.com> wrote:
 
-On Wed, Aug 23, 2023 at 1:03=E2=80=AFAM AceLan Kao <acelan@gmail.com> wrote=
-:
->
-[...]
-> >
-> > My suggestion is delete the list node under this scenario, did you try
-> > above?
-> Still no luck, the patch doesn't work, the sympton is the same.
-[...]
-> >
-> > Is the issue still reproducible with remove below from cmd?
-> >
-> > echo "repair" | sudo tee /sys/class/block/md12?/md/sync_action
-> >
-> > Just want to know if resync thread is related with the issue or not.
-> Probably not, we can reproduce the issue without resync, just feel
-> it's easier to reproduce the issue, so I put the command in my script.
->
+> When we test mdadm with asan, we found some memory leaks in Assemble.c
+> We fix these memory leaks based on code logic.
+> 
+> Signed-off-by: Guanqin Miao <miaoguanqin@huawei.com>
+> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
+> ---
 
-Could you please run the follow two experiments?
-
-1. Confirm 12a6caf273240a triggers this. Specifically:
-   git checkout 12a6caf273240a =3D> repros
-   git checkout 12a6caf273240a~1 =3D> cannot repro
-
-2. Try with the following change (add debug messages), which hopefully
-   shows which command is holding a reference on mddev->openers.
-
-Thanks,
-Song
-
-diff --git i/drivers/md/md.c w/drivers/md/md.c
-index 78be7811a89f..3e9b718b32c1 100644
---- i/drivers/md/md.c
-+++ w/drivers/md/md.c
-@@ -7574,11 +7574,15 @@ static int md_ioctl(struct block_device *bdev,
-blk_mode_t mode,
-                if (mddev->pers && atomic_read(&mddev->openers) > 1) {
-                        mutex_unlock(&mddev->open_mutex);
-                        err =3D -EBUSY;
-+                       pr_warn("%s return -EBUSY for %s with
-mddev->openers =3D %d\n",
-+                               __func__, mdname(mddev),
-atomic_read(&mddev->openers));
-                        goto out;
-                }
-                if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
-                        mutex_unlock(&mddev->open_mutex);
-                        err =3D -EBUSY;
-+                       pr_warn("%s return -EBUSY for %s with
-MD_CLOSING bit set\n",
-+                               __func__, mdname(mddev));
-                        goto out;
-                }
-                did_set_md_closing =3D true;
-@@ -7789,6 +7793,8 @@ static int md_open(struct gendisk *disk, blk_mode_t m=
-ode)
-                goto out_unlock;
-
-        atomic_inc(&mddev->openers);
-+       pr_info("%s:%s openers++ =3D %d by %s\n", __func__, mdname(mddev),
-+               atomic_read(&mddev->openers), current->comm);
-        mutex_unlock(&mddev->open_mutex);
-
-        disk_check_media_change(disk);
-@@ -7807,6 +7813,8 @@ static void md_release(struct gendisk *disk)
-
-        BUG_ON(!mddev);
-        atomic_dec(&mddev->openers);
-+       pr_info("%s:%s openers-- =3D %d by %s\n", __func__, mdname(mddev),
-+               atomic_read(&mddev->openers), current->comm);
-        mddev_put(mddev);
- }
+Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
