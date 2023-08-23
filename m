@@ -2,174 +2,219 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 064DAEE49A5
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 03:04:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C635EE49A0
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Aug 2023 03:25:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231678AbjHWDE4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Aug 2023 23:04:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58712 "EHLO
+        id S232265AbjHWDZN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Aug 2023 23:25:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231223AbjHWDEz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 23:04:55 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E152D93;
-        Tue, 22 Aug 2023 20:04:52 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RVrfn0M8Fz4f3lgS;
-        Wed, 23 Aug 2023 11:04:49 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAHl6lQd+Vk5mJ2BQ--.19817S3;
-        Wed, 23 Aug 2023 11:04:50 +0800 (CST)
-Subject: Re: [PATCH -next v3 6/7] md: factor out a helper rdev_addable() from
- remove_and_add_spares()
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>
-Cc:     xni@redhat.com, mariusz.tkaczyk@linux.intel.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230820090949.2874537-1-yukuai1@huaweicloud.com>
- <20230820090949.2874537-7-yukuai1@huaweicloud.com>
- <CAPhsuW74MEFjNTNErYfOT1gX+BUdbDwaV1oTmmcz=_76Ym3ZuA@mail.gmail.com>
- <c7a82fb2-cf4b-2095-e813-84aed2418ff0@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <2766d001-f618-d224-f8a9-ec38ed1dc2a7@huaweicloud.com>
-Date:   Wed, 23 Aug 2023 11:04:47 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229952AbjHWDZM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Aug 2023 23:25:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7A17CD6
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 20:24:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1692761063;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SnQ+N+1/jGHTpLOSLvg0zVfzIC9bNsC+FTYOKHkdiUg=;
+        b=WO04iP5oDpB211qI5grgxJ8MwkFL7JSxlSqrI6rhT6d9FqzTWTymgGl59F5eFFg6bFx1Tm
+        Cs9+lq57bJ4rJUOZpDVWbHPbiPPnoIS6aF/KswL/wrAQKRdtisiKqjCY6MzvYB+8XdVdUE
+        I4JxyZ1fPqOdqwINdWgSOybJLFVxHvI=
+Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
+ [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-636-PqSjOuxvPoy1BSk49luMwQ-1; Tue, 22 Aug 2023 23:24:22 -0400
+X-MC-Unique: PqSjOuxvPoy1BSk49luMwQ-1
+Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-3a850ee02c8so3817580b6e.2
+        for <linux-raid@vger.kernel.org>; Tue, 22 Aug 2023 20:24:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692761062; x=1693365862;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=SnQ+N+1/jGHTpLOSLvg0zVfzIC9bNsC+FTYOKHkdiUg=;
+        b=glx76jjkiyT3VNKk+D4H45q0Rjdc5Wt0EiyeMfpTl940vCQQSKA31F7pv2T9R83H8W
+         gYprkskfBdfY+JBW4PRS8thflFsvYDMf8Kh45ue76LdW3hRHrCWWiVpa9TQJY2X3kBEP
+         +bZcCmEwwFZzFc+xfUHPXHR9A2Ow+L0BdLnHDZ1oC34aDfY0RsIyIHWikys4HAQp5As8
+         Tq2mvq7oJoe8Y+RHXIrI8t5cqMZuvM5q9EzKSywL9g/pu7sZVSus8j4ZCTaOFX/wUJWq
+         FEAB16diaexV53wfvJucpwcf7mEUJvbBFb7vYnD4apqUf/+J9nG+Bym8teyml/qCoi3l
+         5XjQ==
+X-Gm-Message-State: AOJu0Yw1VeWGQGOc8OvasIr7hTAjzTpMsDJ+DTzEWzl5plALIPkUDlHJ
+        JwJpHKEoPhikAY3+6N4A5cgBNjXs8N1INb0OxlNzLi5xn+yUjOs+WL53B/XaG5NBn64fjJtGsKX
+        UKTL00VXT1eXAgTp/lXj1QTLOtSs+1+ZSJXF8Qg==
+X-Received: by 2002:a05:6808:4097:b0:3a7:3ce0:1ad7 with SMTP id db23-20020a056808409700b003a73ce01ad7mr11785870oib.20.1692761061987;
+        Tue, 22 Aug 2023 20:24:21 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH3BvmEA+Fq04AGrvCF1QWh/VASudRFeyrJzHuSDWKoUq7hCy4S3UK5FrAyIIwcu5F9t+fu87Z79/a6R7XW0t4=
+X-Received: by 2002:a05:6808:4097:b0:3a7:3ce0:1ad7 with SMTP id
+ db23-20020a056808409700b003a73ce01ad7mr11785854oib.20.1692761061761; Tue, 22
+ Aug 2023 20:24:21 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <c7a82fb2-cf4b-2095-e813-84aed2418ff0@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHl6lQd+Vk5mJ2BQ--.19817S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJF4xuFy8Xr15uw4xCFy3Jwb_yoWrZr1kpr
-        18JFWUGryUAr18Jr1Utr1UJFyUtr1UJw1UJr1xJF1UJw1DJr1jgr1UXryqgr1UJr48Jr1U
-        Jr1UJr17Zr1UJrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4U
-        JVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
-        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbU
-        UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <20230820090949.2874537-1-yukuai1@huaweicloud.com> <20230820090949.2874537-8-yukuai1@huaweicloud.com>
+In-Reply-To: <20230820090949.2874537-8-yukuai1@huaweicloud.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 23 Aug 2023 11:24:10 +0800
+Message-ID: <CALTww2_=-q5r0+XsDiHBHFMovD0002dYoa3gL2w3DPbruJpEOQ@mail.gmail.com>
+Subject: Re: [PATCH -next v3 7/7] md: delay remove_and_add_spares() for read
+ only array to md_start_sync()
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, mariusz.tkaczyk@linux.intel.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Sun, Aug 20, 2023 at 5:13=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Before this patch, for read-only array:
+>
+> md_check_recovery() check that 'MD_RECOVERY_NEEDED' is set, then it will
+> call remove_and_add_spares() directly to try to remove and add rdevs
+> from array.
+>
+> After this patch:
+>
+> 1) md_check_recovery() check that 'MD_RECOVERY_NEEDED' is set, and the
+>    worker 'sync_work' is not pending, and there are rdevs can be added
+>    or removed, then it will queue new work md_start_sync();
+> 2) md_start_sync() will call remove_and_add_spares() and exist;
+>
+> This change make sure that array reconfiguration is independent from
+> daemon, and it'll be much easier to synchronize it with io, consier
+> that io may rely on daemon thread to be done.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.c | 43 +++++++++++++++++++++++++++++++++----------
+>  1 file changed, 33 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index cdc361c521d4..f08b683f724f 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -4866,6 +4866,7 @@ action_store(struct mddev *mddev, const char *page,=
+ size_t len)
+>                 /* A write to sync_action is enough to justify
+>                  * canceling read-auto mode
+>                  */
+> +               flush_work(&mddev->sync_work);
+>                 mddev->ro =3D MD_RDWR;
+>                 md_wakeup_thread(mddev->sync_thread);
+>         }
+> @@ -7638,6 +7639,10 @@ static int md_ioctl(struct block_device *bdev, blk=
+_mode_t mode,
+>                 mutex_unlock(&mddev->open_mutex);
+>                 sync_blockdev(bdev);
+>         }
+> +
+> +       if (!md_is_rdwr(mddev))
+> +               flush_work(&mddev->sync_work);
+> +
+>         err =3D mddev_lock(mddev);
+>         if (err) {
+>                 pr_debug("md: ioctl lock interrupted, reason %d, cmd %d\n=
+",
+> @@ -8562,6 +8567,7 @@ bool md_write_start(struct mddev *mddev, struct bio=
+ *bi)
+>         BUG_ON(mddev->ro =3D=3D MD_RDONLY);
+>         if (mddev->ro =3D=3D MD_AUTO_READ) {
+>                 /* need to switch to read/write */
+> +               flush_work(&mddev->sync_work);
+>                 mddev->ro =3D MD_RDWR;
+>                 set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>                 md_wakeup_thread(mddev->thread);
+> @@ -9191,6 +9197,16 @@ static bool rdev_addable(struct md_rdev *rdev)
+>         return true;
+>  }
+>
+> +static bool md_spares_need_change(struct mddev *mddev)
+> +{
+> +       struct md_rdev *rdev;
+> +
+> +       rdev_for_each(rdev, mddev)
+> +               if (rdev_removeable(rdev) || rdev_addable(rdev))
+> +                       return true;
+> +       return false;
+> +}
+> +
+>  static int remove_and_add_spares(struct mddev *mddev,
+>                                  struct md_rdev *this)
+>  {
+> @@ -9311,6 +9327,12 @@ static void md_start_sync(struct work_struct *ws)
+>
+>         mddev_lock_nointr(mddev);
+>
+> +       if (!md_is_rdwr(mddev)) {
+> +               remove_and_add_spares(mddev, NULL);
+> +               mddev_unlock(mddev);
+> +               return;
+> +       }
+> +
+>         if (!md_choose_sync_action(mddev, &spares))
+>                 goto not_running;
+>
+> @@ -9405,7 +9427,8 @@ void md_check_recovery(struct mddev *mddev)
+>         }
+>
+>         if (!md_is_rdwr(mddev) &&
+> -           !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
+> +           (!test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+> +            work_pending(&mddev->sync_work)))
+>                 return;
+>         if ( ! (
+>                 (mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING)) ||
+> @@ -9433,15 +9456,8 @@ void md_check_recovery(struct mddev *mddev)
+>                                  */
+>                                 rdev_for_each(rdev, mddev)
+>                                         clear_bit(Blocked, &rdev->flags);
+> -                       /* On a read-only array we can:
+> -                        * - remove failed devices
+> -                        * - add already-in_sync devices if the array its=
+elf
+> -                        *   is in-sync.
+> -                        * As we only add devices that are already in-syn=
+c,
+> -                        * we can activate the spares immediately.
+> -                        */
 
-在 2023/08/22 10:17, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2023/08/22 7:22, Song Liu 写道:
->> On Sun, Aug 20, 2023 at 2:13 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>>
->>> From: Yu Kuai <yukuai3@huawei.com>
->>>
->>> There are no functional changes, just to make the code simpler and
->>> prepare to delay remove_and_add_spares() to md_start_sync().
->>>
->>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>> ---
->>>   drivers/md/md.c | 28 ++++++++++++++++------------
->>>   1 file changed, 16 insertions(+), 12 deletions(-)
->>>
->>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>> index 11d27c934fdd..cdc361c521d4 100644
->>> --- a/drivers/md/md.c
->>> +++ b/drivers/md/md.c
->>> @@ -9177,6 +9177,20 @@ static bool rdev_is_spare(struct md_rdev *rdev)
->>>                 !test_bit(Faulty, &rdev->flags);
->>>   }
->>>
->>> +static bool rdev_addable(struct md_rdev *rdev)
->>> +{
->>> +       if (test_bit(Candidate, &rdev->flags) || rdev->raid_disk >= 0 ||
->>> +           test_bit(Faulty, &rdev->flags))
->>> +               return false;
->>> +
->>> +       if (!test_bit(Journal, &rdev->flags) && 
->>> !md_is_rdwr(rdev->mddev) &&
->>
->> Instead of straightforward refactoring, I hope we can make these rdev_*
->> helpers more meaningful, and hopefullly reusable. For example, let's 
->> define
->> the meaning of "addable", and write the function to match that 
->> meaning. In
->> this case, I think we shouldn't check md_is_rdwr() inside rdev_addable().
->>
->> Does this make sense?
-> 
-> Yes, this make sense, rdev can be added to read-only array.
-> 
-> There are total three callers of pers->hot_add_sisk, I'll try to find if
-> they have common conditions.
+Can we keep those comments?
 
-Unfortunately, the conditions is quite different, and It's difficult to
-factor out a common helper for them to use.
+> -                       remove_and_add_spares(mddev, NULL);
+> -                       /* There is no thread, but we need to call
+> +                       /*
+> +                        * There is no thread, but we need to call
+>                          * ->spare_active and clear saved_raid_disk
+>                          */
+>                         set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> @@ -9449,6 +9465,13 @@ void md_check_recovery(struct mddev *mddev)
+>                         clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>                         clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>                         clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags)=
+;
+> +
+> +                       /*
+> +                        * Let md_start_sync() to remove and add rdevs to=
+ the
+> +                        * array.
+> +                        */
+> +                       if (md_spares_need_change(mddev))
+> +                               queue_work(md_misc_wq, &mddev->sync_work)=
+;
+>                         goto unlock;
+>                 }
+>
+> --
+> 2.39.2
+>
 
-In this case, !md_is_rdwr() is one of the four conditions, which means
-if the array is read-only, there is a special case that rdev can't be
-added to the configuration. Perhaps it's okay to keep this?
-
-Thanks,
-Kuai
-> 
-> Thanks,
-> Kuai
-> 
->>
->> Thanks,
->> Song
->>
->>
->>> +           !(rdev->saved_raid_disk >= 0 &&
->>> +             !test_bit(Bitmap_sync, &rdev->flags)))
->>> +               return false;
->>> +
->>> +       return true;
->>> +}
->>> +
->>>   static int remove_and_add_spares(struct mddev *mddev,
->>>                                   struct md_rdev *this)
->>>   {
->>> @@ -9227,20 +9241,10 @@ static int remove_and_add_spares(struct mddev 
->>> *mddev,
->>>                          continue;
->>>                  if (rdev_is_spare(rdev))
->>>                          spares++;
->>> -               if (test_bit(Candidate, &rdev->flags))
->>> +               if (!rdev_addable(rdev))
->>>                          continue;
->>> -               if (rdev->raid_disk >= 0)
->>> -                       continue;
->>> -               if (test_bit(Faulty, &rdev->flags))
->>> -                       continue;
->>> -               if (!test_bit(Journal, &rdev->flags)) {
->>> -                       if (!md_is_rdwr(mddev) &&
->>> -                           !(rdev->saved_raid_disk >= 0 &&
->>> -                             !test_bit(Bitmap_sync, &rdev->flags)))
->>> -                               continue;
->>> -
->>> +               if (!test_bit(Journal, &rdev->flags))
->>>                          rdev->recovery_offset = 0;
->>> -               }
->>>                  if (mddev->pers->hot_add_disk(mddev, rdev) == 0) {
->>>                          /* failure here is OK */
->>>                          sysfs_link_rdev(mddev, rdev);
->>> -- 
->>> 2.39.2
->>>
->> .
->>
-> 
-> .
-> 
+Reviewed-by: Xiao Ni <xni@redhat.com>
 
