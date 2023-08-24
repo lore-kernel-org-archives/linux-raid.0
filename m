@@ -2,267 +2,166 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7F8CC27C40
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Aug 2023 01:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A676AC71145
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Aug 2023 03:50:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239006AbjHXBTf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 23 Aug 2023 21:19:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52402 "EHLO
+        id S239678AbjHXDto (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 23 Aug 2023 23:49:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239003AbjHXBTG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Aug 2023 21:19:06 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93530DB;
-        Wed, 23 Aug 2023 18:19:03 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RWQGC0NPtz4f3jLG;
-        Thu, 24 Aug 2023 09:18:59 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAH5KYCsOZkIO_ABQ--.2269S3;
-        Thu, 24 Aug 2023 09:18:59 +0800 (CST)
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-To:     Dragan Stancevic <dragan@stancevic.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
-Cc:     buczek@molgen.mpg.de, guoqing.jiang@linux.dev,
-        it+raid@molgen.mpg.de, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, msmith626@gmail.com,
-        "yangerkun@huawei.com" <yangerkun@huawei.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
- <20230822211627.1389410-1-dragan@stancevic.com>
- <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
- <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
-Date:   Thu, 24 Aug 2023 09:18:58 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S239719AbjHXDs0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Aug 2023 23:48:26 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFEAECD0
+        for <linux-raid@vger.kernel.org>; Wed, 23 Aug 2023 20:47:34 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-68a32506e90so1062658b3a.1
+        for <linux-raid@vger.kernel.org>; Wed, 23 Aug 2023 20:47:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1692848850; x=1693453650;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rDzcwqaIquIVzn8OsvZGliHXRbA8ENN1qRnYnmk/Xe8=;
+        b=DVQw6x+wRokChvzx3mB2d4JjmEZ8a52hJE0l07W8P8nNrlDhrotmyt3pUv3GQHPCXs
+         1BrfBypCNsEERgBF0IuI0x1Xr96Fhh2+gAJZZ0EK/1xIsaeYYxT6/EN1k9efrylQkcM1
+         zJ6XM0kKzaSamlFOt/zlkCHRnLHEfp7PkHOGXd5kLYVg7nejR+dkAMm4O/6awNT3a3Qc
+         xgwMhP+Jmrs8A3VyzQgEal/ZVI5LfCXDTSkiUmeyykfwpxK0jmaWMGlHcl5rKNUdpgen
+         WbYpfAOHKT2MQ9cGHKqu8Hq5a4pOBrfkWUy88QExaDxN1iywSQ8vpGlmHWNB0IOXICaV
+         VZBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692848850; x=1693453650;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rDzcwqaIquIVzn8OsvZGliHXRbA8ENN1qRnYnmk/Xe8=;
+        b=aYbw6QaolLhzy35Wmy1O/tUmKrfF8QGerZ6dl1F7BjhPXYt64O8pGcKmXFByq0ebk0
+         pebJ7atSRWNq5Ft6NkqsQMvoy4mJtGEBoTHD9D4ckrfvwT+hm3kVEyp2t1Im0XlYPliM
+         skfoZOfGeZvbyejzGQhUGIJ/JBNK7OX0b3+DAbiOgl/KixkdduRx9/XxxOzg5llPaQGO
+         mZIdQCKJnLNZnKALJ4gchTUxBMBiPAwVNJef6PFjDdYaxw+r/6IqgzhVx9iC6Fv2C8GE
+         D0cZ0d7zog8NkyiY6fVC9gFzl0+M2oTIlOCAjIUn6LE/tdF5iimMCmGU3YdNT89j6k9z
+         uvCw==
+X-Gm-Message-State: AOJu0YwOZmht/B6HpIMnMVCEAFKn0dXv1CvpB/Q4cEoK0LWJviY1ofWd
+        O5SmM+XCWCyql1cReepw+fPl9Q==
+X-Google-Smtp-Source: AGHT+IHnOiXJrClBMOyGTENJi9JIt4dG4SRfFKrPyHzsQUg0+5rqtXlfzEqyCDyUa5PDhlr05atJeA==
+X-Received: by 2002:a05:6a00:1791:b0:68a:42d0:6b9b with SMTP id s17-20020a056a00179100b0068a42d06b9bmr11893102pfg.3.1692848849886;
+        Wed, 23 Aug 2023 20:47:29 -0700 (PDT)
+Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.146])
+        by smtp.gmail.com with ESMTPSA id t6-20020a63b246000000b005579f12a238sm10533157pgo.86.2023.08.23.20.47.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Aug 2023 20:47:29 -0700 (PDT)
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
+        yujie.liu@intel.com, gregkh@linuxfoundation.org,
+        muchun.song@linux.dev
+Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org,
+        Qi Zheng <zhengqi.arch@bytedance.com>,
+        Muchun Song <songmuchun@bytedance.com>,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Subject: [PATCH v5 25/45] md/raid5: dynamically allocate the md-raid5 shrinker
+Date:   Thu, 24 Aug 2023 11:42:44 +0800
+Message-Id: <20230824034304.37411-26-zhengqi.arch@bytedance.com>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
+In-Reply-To: <20230824034304.37411-1-zhengqi.arch@bytedance.com>
+References: <20230824034304.37411-1-zhengqi.arch@bytedance.com>
 MIME-Version: 1.0
-In-Reply-To: <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAH5KYCsOZkIO_ABQ--.2269S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3Wr15AFW8uF17GF4kuryUKFg_yoWxWw1rpr
-        ykJFy3tr45Cr4kAr17Kr1xWFy8tryUXw15Xr1UJF18JrZFqr1Ygr1UXr4q9a4kJr4Fkr1U
-        tr15Ja47Zr4UZrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWU
-        JwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjfUF9a9DUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+In preparation for implementing lockless slab shrink, use new APIs to
+dynamically allocate the md-raid5 shrinker, so that it can be freed
+asynchronously via RCU. Then it doesn't need to wait for RCU read-side
+critical section when releasing the struct r5conf.
 
-在 2023/08/23 23:33, Dragan Stancevic 写道:
-> Hi Kuai-
-> 
-> On 8/22/23 20:22, Yu Kuai wrote:
->> Hi,
->>
->> 在 2023/08/23 5:16, Dragan Stancevic 写道:
->>> On Tue, 3/28/23 17:01 Song Liu wrote:
->>>> On Thu, Mar 16, 2023 at 8:25=E2=80=AFAM Marc Smith 
->>>> <msmith626@gmail.com>
->>>> wr=
->>>> ote:
->>>>   >
->>>>   > On Tue, Mar 14, 2023 at 10:45=E2=80=AFAM Marc Smith
->>>> <msmith626@gmail.com>=
->>>>    wrote:
->>>>   > >
->>>>   > > On Tue, Mar 14, 2023 at 9:55=E2=80=AFAM Guoqing Jiang
->>>> <guoqing.jiang@li=
->>>> nux.dev> wrote:
->>>>   > > >
->>>>   > > >
->>>>   > > >
->>>>   > > > On 3/14/23 21:25, Marc Smith wrote:
->>>>   > > > > On Mon, Feb 8, 2021 at 7:49=E2=80=AFPM Guoqing Jiang
->>>>   > > > > <guoqing.jiang@cloud.ionos.com> wrote:
->>>>   > > > >> Hi Donald,
->>>>   > > > >>
->>>>   > > > >> On 2/8/21 19:41, Donald Buczek wrote:
->>>>   > > > >>> Dear Guoqing,
->>>>   > > > >>>
->>>>   > > > >>> On 08.02.21 15:53, Guoqing Jiang wrote:
->>>>   > > > >>>>
->>>>   > > > >>>> On 2/8/21 12:38, Donald Buczek wrote:
->>>>   > > > >>>>>> 5. maybe don't hold reconfig_mutex when try to 
->>>> unregister
->>>>   > > > >>>>>> sync_thread, like this.
->>>>   > > > >>>>>>
->>>>   > > > >>>>>>           /* resync has finished, collect result */
->>>>   > > > >>>>>>           mddev_unlock(mddev);
->>>>   > > > >>>>>>           md_unregister_thread(&mddev->sync_thread);
->>>>   > > > >>>>>>           mddev_lock(mddev);
->>>>   > > > >>>>> As above: While we wait for the sync thread to terminate,
->>>> would=
->>>> n't it
->>>>   > > > >>>>> be a problem, if another user space operation takes 
->>>> the mutex?
->>>>   > > > >>>> I don't think other places can be blocked while hold 
->>>> mutex,
->>>> othe=
->>>> rwise
->>>>   > > > >>>> these places can cause potential deadlock. Please try 
->>>> above
->>>> two =
->>>> lines
->>>>   > > > >>>> change. And perhaps others have better idea.
->>>>   > > > >>> Yes, this works. No deadlock after >11000 seconds,
->>>>   > > > >>>
->>>>   > > > >>> (Time till deadlock from previous runs/seconds: 1723, 37,
->>>> 434, 12=
->>>> 65,
->>>>   > > > >>> 3500, 1136, 109, 1892, 1060, 664, 84, 315, 12, 820 )
->>>>   > > > >> Great. I will send a formal patch with your reported-by and
->>>> tested=
->>>> -by.
->>>>   > > > >>
->>>>   > > > >> Thanks,
->>>>   > > > >> Guoqing
->>>>   > > > > I'm still hitting this issue with Linux 5.4.229 -- it looks
->>>> like 1/=
->>>> 2
->>>>   > > > > of the patches that supposedly resolve this were applied 
->>>> to the
->>>> sta=
->>>> ble
->>>>   > > > > kernels, however, one was omitted due to a regression:
->>>>   > > > > md: don't unregister sync_thread with reconfig_mutex held
->>>> (upstream
->>>>   > > > > commit 8b48ec23cc51a4e7c8dbaef5f34ebe67e1a80934)
->>>>   > > > >
->>>>   > > > > I don't see any follow-up on the thread from June 8th 2022
->>>> asking f=
->>>> or
->>>>   > > > > this patch to be dropped from all stable kernels since it 
->>>> caused a
->>>>   > > > > regression.
->>>>   > > > >
->>>>   > > > > The patch doesn't appear to be present in the current 
->>>> mainline
->>>> kern=
->>>> el
->>>>   > > > > (6.3-rc2) either. So I assume this issue is still present
->>>> there, or=
->>>>    it
->>>>   > > > > was resolved differently and I just can't find the 
->>>> commit/patch.
->>>>   > > >
->>>>   > > > It should be fixed by commit 9dfbdafda3b3"md: unlock mddev 
->>>> before
->>>> rea=
->>>> p
->>>>   > > > sync_thread in action_store".
->>>>   > >
->>>>   > > Okay, let me try applying that patch... it does not appear to be
->>>>   > > present in my 5.4.229 kernel source. Thanks.
->>>>   >
->>>>   > Yes, applying this '9dfbdafda3b3 "md: unlock mddev before reap
->>>>   > sync_thread in action_store"' patch on top of vanilla 5.4.229 
->>>> source
->>>>   > appears to fix the problem for me -- I can't reproduce the issue 
->>>> with
->>>>   > the script, and it's been running for >24 hours now. (Previously 
->>>> I was
->>>>   > able to induce the issue within a matter of minutes.)
->>>>
->>>> Hi Marc,
->>>>
->>>> Could you please run your reproducer on the md-tmp branch?
->>>>
->>>> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-tmp 
->>>>
->>>>
->>>> This contains a different version of the fix by Yu Kuai.
->>>>
->>>> Thanks,
->>>> Song
->>>>
->>>
->>> Hi Song, I can easily reproduce this issue on 5.10.133 and 5.10.53. 
->>> The change
->>> "9dfbdafda3b3 "md: unlock mddev before reap" does not fix the issue 
->>> for me.
->>>
->>> But I did pull the changes from the md-tmp branch you are refering:
->>> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/log/?h=3Dmd-tmp 
->>>
->>>
->>> I was not totally clear on which change exactly to pull, but I pulled
->>> the following changes:
->>> 2023-03-28 md: enhance checking in md_check_recovery()md-tmp    Yu 
->>> Kuai    1 -7/+15
->>> 2023-03-28 md: wake up 'resync_wait' at last in 
->>> md_reap_sync_thread()    Yu Kuai    1 -1/+1
->>> 2023-03-28 md: refactor idle/frozen_sync_thread()    Yu Kuai    2 -4/+22
->>> 2023-03-28 md: add a mutex to synchronize idle and frozen in 
->>> action_store()    Yu Kuai    2 -0/+8
->>> 2023-03-28 md: refactor action_store() for 'idle' and 'frozen'    Yu 
->>> Kuai    1 -16/+45
->>>
->>> I used to be able to reproduce the lockup within minutes, but with those
->>> changes the test system has been running for more than 120 hours.
->>>
->>> When you said a "different fix", can you confirm that I grabbed the 
->>> right
->>> changes and that I need all 5 of them.
->>
->> Yes, you grabbed the right changes, and these patches is merged to
->> linux-next as well.
->>>
->>> And second question was, has this fix been submitted upstream yet?
->>> If so which kernel version?
->>
->> This fix is currently in linux-next, and will be applied to v6.6-rc1
->> soon.
-> 
-> Thank you, that is great news. I'd like to see this change backported to 
-> 5.10 and 6.1, do you have any plans of backporting to any of the 
-> previous kernels?
-> 
-> If not, I would like to try to get your changes into 5.10 and 6.1 if 
-> Greg will accept them.
-> 
+Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+Reviewed-by: Muchun Song <songmuchun@bytedance.com>
+CC: Song Liu <song@kernel.org>
+CC: linux-raid@vger.kernel.org
+---
+ drivers/md/raid5.c | 26 +++++++++++++++-----------
+ drivers/md/raid5.h |  2 +-
+ 2 files changed, 16 insertions(+), 12 deletions(-)
 
-I don't have plans yet, so feel free to do this, I guess these patches
-won't be picked automatically due to the conflict. Feel free to ask if
-you meet any problems.
-
-Thanks,
-Kuai
-
-> 
-> Four out of five of your changes were a straight cherry-pick into 5.10, 
-> one needed a minor conflict resolution. But I can definitely confirm 
-> that your changes fix the lockup issue on 5.10
-> 
-> I am now switching to 6.1 and will test the changes there too.
-> 
-> 
-> Thanks
-> 
-> 
-> -- 
-> Peace can only come as a natural consequence
-> of universal enlightenment -Dr. Nikola Tesla
-> 
-> 
-> .
-> 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4cb9c608ee19..c8d2c6e50aa1 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7401,7 +7401,7 @@ static void free_conf(struct r5conf *conf)
+ 
+ 	log_exit(conf);
+ 
+-	unregister_shrinker(&conf->shrinker);
++	shrinker_free(conf->shrinker);
+ 	free_thread_groups(conf);
+ 	shrink_stripes(conf);
+ 	raid5_free_percpu(conf);
+@@ -7449,7 +7449,7 @@ static int raid5_alloc_percpu(struct r5conf *conf)
+ static unsigned long raid5_cache_scan(struct shrinker *shrink,
+ 				      struct shrink_control *sc)
+ {
+-	struct r5conf *conf = container_of(shrink, struct r5conf, shrinker);
++	struct r5conf *conf = shrink->private_data;
+ 	unsigned long ret = SHRINK_STOP;
+ 
+ 	if (mutex_trylock(&conf->cache_size_mutex)) {
+@@ -7470,7 +7470,7 @@ static unsigned long raid5_cache_scan(struct shrinker *shrink,
+ static unsigned long raid5_cache_count(struct shrinker *shrink,
+ 				       struct shrink_control *sc)
+ {
+-	struct r5conf *conf = container_of(shrink, struct r5conf, shrinker);
++	struct r5conf *conf = shrink->private_data;
+ 
+ 	if (conf->max_nr_stripes < conf->min_nr_stripes)
+ 		/* unlikely, but not impossible */
+@@ -7705,18 +7705,22 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	 * it reduces the queue depth and so can hurt throughput.
+ 	 * So set it rather large, scaled by number of devices.
+ 	 */
+-	conf->shrinker.seeks = DEFAULT_SEEKS * conf->raid_disks * 4;
+-	conf->shrinker.scan_objects = raid5_cache_scan;
+-	conf->shrinker.count_objects = raid5_cache_count;
+-	conf->shrinker.batch = 128;
+-	conf->shrinker.flags = 0;
+-	ret = register_shrinker(&conf->shrinker, "md-raid5:%s", mdname(mddev));
+-	if (ret) {
+-		pr_warn("md/raid:%s: couldn't register shrinker.\n",
++	conf->shrinker = shrinker_alloc(0, "md-raid5:%s", mdname(mddev));
++	if (!conf->shrinker) {
++		ret = -ENOMEM;
++		pr_warn("md/raid:%s: couldn't allocate shrinker.\n",
+ 			mdname(mddev));
+ 		goto abort;
+ 	}
+ 
++	conf->shrinker->seeks = DEFAULT_SEEKS * conf->raid_disks * 4;
++	conf->shrinker->scan_objects = raid5_cache_scan;
++	conf->shrinker->count_objects = raid5_cache_count;
++	conf->shrinker->batch = 128;
++	conf->shrinker->private_data = conf;
++
++	shrinker_register(conf->shrinker);
++
+ 	sprintf(pers_name, "raid%d", mddev->new_level);
+ 	rcu_assign_pointer(conf->thread,
+ 			   md_register_thread(raid5d, mddev, pers_name));
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 97a795979a35..22bea20eccbd 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -670,7 +670,7 @@ struct r5conf {
+ 	wait_queue_head_t	wait_for_stripe;
+ 	wait_queue_head_t	wait_for_overlap;
+ 	unsigned long		cache_state;
+-	struct shrinker		shrinker;
++	struct shrinker		*shrinker;
+ 	int			pool_size; /* number of disks in stripeheads in pool */
+ 	spinlock_t		device_lock;
+ 	struct disk_info	*disks;
+-- 
+2.30.2
 
