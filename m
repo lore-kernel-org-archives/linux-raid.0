@@ -2,135 +2,130 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D2C8C71133
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 06:41:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39300C3DA66
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 06:45:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242260AbjHYGlR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Aug 2023 02:41:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46312 "EHLO
+        id S235055AbjHYGpC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 25 Aug 2023 02:45:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242264AbjHYGk7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Aug 2023 02:40:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE4B1BDB;
-        Thu, 24 Aug 2023 23:40:57 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 409BB63435;
-        Fri, 25 Aug 2023 06:40:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5815C433CA;
-        Fri, 25 Aug 2023 06:40:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692945656;
-        bh=sBMIVekm7z5dJED9CCKgiR+YzYCHzNiyNOpOdEkw/uU=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=UU86Lyz7bEs4FeSBM++1RO2akLfMte4Ax6tJnviZdEsHxGA+VC824QjLqnT1C9agk
-         FOHL879E/Mv/SwPC03Va4qwpJihf8q5fQiPYsIDH1szmwg//U8v4BQ9KOdpGFPw2s1
-         Lv0sQqHwx0B7oExm4wxK/OSQn6F9ZPtBFx8y+Fa3z1BahkoKx9pbig8d/4UPxih1sX
-         BTZcsqCt905XJ/nzdwvzuFbcsXG8uLZHdj/x3Y7bl1TCk/wosUI/6yJFc531CaATOY
-         bAMM3JiOAUmt4rR6lQ4UdBXwjlQKeladpYrlkZzY+ON3UCGDStYTkd/jiNby9927tz
-         ysJKHFDCZmvkg==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-4fe8c16c1b4so817806e87.2;
-        Thu, 24 Aug 2023 23:40:56 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yz7OJ7pS7FAby+U1D7jBAa1bomwU8C7dwJ2vFQaro7MgbrslNOS
-        uqypKNLPVJuaDdOyUVE97frQEyNolOFTlO6JoKo=
-X-Google-Smtp-Source: AGHT+IGPD2aEMvFaklo3jAklk1fPCfCMIW5CcacHp0PxUv2igIzNHi2IlxZxuK4troY9ylLDd3v70bdKU+nHof0qYUU=
-X-Received: by 2002:a05:6512:3b0b:b0:500:a08e:2fd3 with SMTP id
- f11-20020a0565123b0b00b00500a08e2fd3mr3250301lfv.21.1692945654672; Thu, 24
- Aug 2023 23:40:54 -0700 (PDT)
+        with ESMTP id S234441AbjHYGom (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Aug 2023 02:44:42 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E06FACD5;
+        Thu, 24 Aug 2023 23:44:37 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RX9RP0Fclz4f3jZg;
+        Fri, 25 Aug 2023 14:44:33 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgDHVqnPTehky60iBg--.23128S3;
+        Fri, 25 Aug 2023 14:44:33 +0800 (CST)
+Subject: Re: [PATCH -next v4 0/7] md: make rdev addition and removal
+ independent from daemon thread
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
+ <CAPhsuW4rQ1V7EHgfpfx9rL2=pUAcjr+Eint2iD0_EfVAbzcKOQ@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <2832ee84-4365-d35d-1ae4-fa260a1beb9f@huaweicloud.com>
+Date:   Fri, 25 Aug 2023 14:44:31 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <20230825030956.1527023-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230825030956.1527023-1-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Thu, 24 Aug 2023 23:40:42 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7dYaJYx8xa-CAG1YSwggZdGRfcQWqTBY0915=_UdL49Q@mail.gmail.com>
-Message-ID: <CAPhsuW7dYaJYx8xa-CAG1YSwggZdGRfcQWqTBY0915=_UdL49Q@mail.gmail.com>
-Subject: Re: [PATCH -next v2 0/7] md: initialize 'active_io' while allocating mddev
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
-        xni@redhat.com, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CAPhsuW4rQ1V7EHgfpfx9rL2=pUAcjr+Eint2iD0_EfVAbzcKOQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgDHVqnPTehky60iBg--.23128S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cw17CrW5WryUKryUCF1UGFg_yoW8uw17p3
+        4aq3W3KrWDXFsrCr93Ja47W3s5Kws3XrZrJF9xWw1fCw15ur10vryxtF4kur90yrySkry2
+        9r4rtF95C3WvyFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Gr0_
+        Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHU
+        DUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 24, 2023 at 8:14=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Changes in v2:
->  - rebase for md-next;
->  - update commit message for patch 3;
+Hi,
 
-Applied v2 to md-next. But this set won't go into 6.6.
+在 2023/08/25 14:39, Song Liu 写道:
+> On Thu, Aug 24, 2023 at 8:20 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Changes in v4:
+>>   - add some review tag;
+>>   - add comments to make code more readadble for patch 4,6;
+>>   - rework patch 7 a litter;
+> 
+> Applied v4 to md-next. But this set won't go into 6.6.
+> 
+Thanks! I'll work on rebasing the next huge patchset.
 
-Thanks,
-Song
+Kuai
 
->
-> This is the 4th patchset to do some preparatory work to synchronize
-> io with array reconfiguration.
->
-> 1) The first patchset refactor 'active_io', make sure that mddev_suspend(=
-)
-> will wait for io to be done. [1]
->
-> 2) The second patchset remove 'quiesce' callback from mddev_suspend(), so
-> that mddev_suspend() doesn't rely on 'quiesce' callback is registered,
-> and can be used for all personalites; [2]
->
-> 3) Make array reconfiguration independent from daemon thread,
-> and synchronize it with io will be much easier because io may rely on
-> daemon thread to be done.
->
-> 4) This patchset move initialization of 'active_io' from md_run() to
-> md_alloc(), so that mddev_suspend() won't rely on holding 'reconfig_mutex=
-'
-> to check if 'mddev->pers' is set, and it can be called at any time after
-> mddev is allocated.(Done by patch 1, and other patches are cleanup)
->
-> Yu Kuai (7):
->   md: initialize 'active_io' while allocating mddev
->   md: initialize 'writes_pending' while allocating mddev
->   md: don't rely on 'mddev->pers' to be set in mddev_suspend()
->   md-bitmap: remove the checking of 'pers->quiesce' from
->     location_store()
->   md-bitmap: suspend array earlier in location_store()
->   md: don't check 'mddev->pers' from suspend_hi_store()
->   md: don't check 'mddev->pers' and 'pers->quiesce' from
->     suspend_lo_store()
->
-> [1] https://lore.kernel.org/all/20230621165110.1498313-1-yukuai1@huaweicl=
-oud.com/
-> [2] https://lore.kernel.org/all/20230628012931.88911-2-yukuai1@huaweiclou=
-d.com/
->
-> Yu Kuai (7):
->   md: initialize 'active_io' while allocating mddev
->   md: initialize 'writes_pending' while allocating mddev
->   md: don't rely on 'mddev->pers' to be set in mddev_suspend()
->   md-bitmap: remove the checking of 'pers->quiesce' from
->     location_store()
->   md-bitmap: suspend array earlier in location_store()
->   md: don't check 'mddev->pers' from suspend_hi_store()
->   md: don't check 'mddev->pers' and 'pers->quiesce' from
->     suspend_lo_store()
->
->  drivers/md/dm-raid.c   |   7 ++-
->  drivers/md/md-bitmap.c |  47 +++++++++----------
->  drivers/md/md.c        | 100 ++++++++++++++++++++---------------------
->  drivers/md/md.h        |   4 +-
->  drivers/md/raid1.c     |   3 +-
->  drivers/md/raid10.c    |   3 --
->  drivers/md/raid5.c     |   3 --
->  7 files changed, 78 insertions(+), 89 deletions(-)
->
-> --
-> 2.39.2
->
+> Thanks,
+> Song
+> 
+>>
+>> Changes in v3:
+>>   - rename md_choose_sync_direction() to md_choose_sync_action() in patch 2;
+>>   - fix an error in patch 3;
+>>   - add flush_work(&mddev->sync_work) while change read-only array to
+>>   read-write;
+>>
+>> Changes in v2:
+>>   - remove patch 1 from v1 and some related patches, those patches will
+>>   be sent later when rcu protection for rdev is removed.
+>>   - add patch 2.
+>>
+>> This is the third patchset to do some preparatory work to synchronize
+>> io with array reconfiguration.
+>>
+>> 1) The first patchset refactor 'active_io', make sure that mddev_suspend()
+>> will wait for io to be done. [1]
+>>
+>> 2) The second patchset remove 'quiesce' callback from mddev_suspend(), so
+>> that mddev_suspend() doesn't rely on 'quiesce' callback is registered,
+>> and can be used for all personalites; [2]
+>>
+>> 3) This patchset make array reconfiguration independent from daemon thread,
+>> and synchronize it with io will be much easier because io may rely on
+>> daemon thread to be done.
+>>
+>> More patchset on the way!
+>>
+>> Yu Kuai (7):
+>>    md: use separate work_struct for md_start_sync()
+>>    md: factor out a helper to choose sync action from md_check_recovery()
+>>    md: delay choosing sync action to md_start_sync()
+>>    md: factor out a helper rdev_removeable() from remove_and_add_spares()
+>>    md: factor out a helper rdev_is_spare() from remove_and_add_spares()
+>>    md: factor out a helper rdev_addable() from remove_and_add_spares()
+>>    md: delay remove_and_add_spares() for read only array to
+>>      md_start_sync()
+>>
+>>   drivers/md/md.c | 308 +++++++++++++++++++++++++++++++++---------------
+>>   drivers/md/md.h |   5 +-
+>>   2 files changed, 218 insertions(+), 95 deletions(-)
+>>
+>> --
+>> 2.39.2
+>>
+> .
+> 
+
