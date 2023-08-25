@@ -2,116 +2,201 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF0BCEE49B0
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 01:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5883C71153
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 03:00:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240330AbjHYB73 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Aug 2023 21:59:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43294 "EHLO
+        id S231764AbjHYC76 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Aug 2023 22:59:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229797AbjHYB6z (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Aug 2023 21:58:55 -0400
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A012B1BD1;
-        Thu, 24 Aug 2023 18:58:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=GqmLor0hgV4H3x7IuvuyaB/m3hDiUm8Yzrd7b9keFg8=; b=bxxlNJ96rsx4L2kKszQ8LF6ai5
-        iNtBNOQ6lzvCMPjrA8d2B5SKpMA8ehWy3QlKX8FPouK+kPzVIEZKx+nUetaQRW5JSdDZgZ40B7sUp
-        hz637OO4Su1eEUgn8Gl/dIA4NQM5w6cHamU5x0h4uc+j+8uZ5OMjiX5dOjWaEByfsbwcty7NjoKFy
-        3XYbSKjy+5wYC+oyCRnyAV7fQupk+8Mu6cgtvaubPBjXdneuinMhpNkKRGbKhUYZMh2pnc+qlSq3t
-        /phSE0e2tky2IO5H3c5MgeU2/J9SsgCPwQOsXy7U4/wxiV2850iLaIsQdHEKmyDTGxCmoecJk/YQG
-        iXEtALAQ==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qZM5z-000dvR-0M;
-        Fri, 25 Aug 2023 01:58:43 +0000
-Date:   Fri, 25 Aug 2023 02:58:43 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <20230825015843.GB95084@ZenIV>
-References: <20230810171429.31759-1-jack@suse.cz>
+        with ESMTP id S239151AbjHYC7w (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Aug 2023 22:59:52 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC9851991;
+        Thu, 24 Aug 2023 19:59:49 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RX4Ry5Nzjz4f4XWf;
+        Fri, 25 Aug 2023 10:59:42 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgAHl6kfGehkow4WBg--.35864S6;
+        Fri, 25 Aug 2023 10:59:46 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org, yukuai3@huawei.com
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: [PATCH -next 2/2] md: fix warning for holder mismatch from export_rdev()
+Date:   Fri, 25 Aug 2023 10:55:32 +0800
+Message-Id: <20230825025532.1523008-3-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230825025532.1523008-1-yukuai1@huaweicloud.com>
+References: <20230825025532.1523008-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230810171429.31759-1-jack@suse.cz>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAHl6kfGehkow4WBg--.35864S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxCrWDAFW8Aw1xCrWUJryfCrg_yoWrAr4xpF
+        4SyFWftr4fG3W7XanrXa18WFyYq3WayrWxAFyS93yfAa90vr1UKF18JFy5Zr95GFWrZFs5
+        JF1UGayxZw1kuw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9v14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
+        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
+        026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
+        JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
+        v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
+        j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JV
+        W8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjYiiDUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Aug 11, 2023 at 01:04:31PM +0200, Jan Kara wrote:
-> Hello,
-> 
-> this is a v2 of the patch series which implements the idea of blkdev_get_by_*()
-> calls returning bdev_handle which is then passed to blkdev_put() [1]. This
-> makes the get and put calls for bdevs more obviously matching and allows us to
-> propagate context from get to put without having to modify all the users
-> (again!).  In particular I need to propagate used open flags to blkdev_put() to
-> be able count writeable opens and add support for blocking writes to mounted
-> block devices. I'll send that series separately.
-> 
-> The series is based on Christian's vfs tree as of yesterday as there is quite
-> some overlap. Patches have passed some reasonable testing - I've tested block
-> changes, md, dm, bcache, xfs, btrfs, ext4, swap. This obviously doesn't cover
-> everything so I'd like to ask respective maintainers to review / test their
-> changes. Thanks! I've pushed out the full branch to:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
-> 
-> to ease review / testing.
+From: Yu Kuai <yukuai3@huawei.com>
 
-Hmm...  Completely Insane Idea(tm): how about turning that thing inside out and
-having your bdev_open_by... return an actual opened struct file?
+Commit a1d767191096 ("md: use mddev->external to select holder in
+export_rdev()") fix the problem that 'claim_rdev' is used for
+blkdev_get_by_dev() while 'rdev' is used for blkdev_put().
 
-After all, we do that for sockets and pipes just fine and that's a whole lot
-hotter area.
+However, if mddev->external is changed from 0 to 1, then 'rdev' is used
+for blkdev_get_by_dev() while 'claim_rdev' is used for blkdev_put(). And
+this problem can be reporduced reliably by following:
 
-Suppose we leave blkdev_open()/blkdev_release() as-is.  No need to mess with
-what we have for normal opened files for block devices.  And have block_open_by_dev()
-that would find bdev, etc., same yours does and shove it into anon file.
+New file: mdadm/tests/23rdev-lifetime
 
-Paired with plain fput() - no need to bother with new primitives for closing.
-With a helper returning I_BDEV(bdev_file_inode(file)) to get from those to bdev.
+devname=${dev0##*/}
+devt=`cat /sys/block/$devname/dev`
+pid=""
+runtime=2
 
-NOTE: I'm not suggesting replacing ->s_bdev with struct file * if we do that -
-we want that value cached, obviously.  Just store both...
+clean_up_test() {
+        pill -9 $pid
+        echo clear > /sys/block/md0/md/array_state
+}
 
-Not saying it's a good idea, but... might be interesting to look into.
-Comments?
+trap 'clean_up_test' EXIT
+
+add_by_sysfs() {
+        while true; do
+                echo $devt > /sys/block/md0/md/new_dev
+        done
+}
+
+remove_by_sysfs(){
+        while true; do
+                echo remove > /sys/block/md0/md/dev-${devname}/state
+        done
+}
+
+echo md0 > /sys/module/md_mod/parameters/new_array || die "create md0 failed"
+
+add_by_sysfs &
+pid="$pid $!"
+
+remove_by_sysfs &
+pid="$pid $!"
+
+sleep $runtime
+exit 0
+
+Test cmd:
+
+./test --save-logs --logdir=/tmp/ --keep-going --dev=loop --tests=23rdev-lifetime
+
+Test result:
+
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 960 at block/bdev.c:618 blkdev_put+0x27c/0x330
+Modules linked in: multipath md_mod loop
+CPU: 0 PID: 960 Comm: test Not tainted 6.5.0-rc2-00121-g01e55c376936-dirty #50
+RIP: 0010:blkdev_put+0x27c/0x330
+Call Trace:
+ <TASK>
+ export_rdev.isra.23+0x50/0xa0 [md_mod]
+ mddev_unlock+0x19d/0x300 [md_mod]
+ rdev_attr_store+0xec/0x190 [md_mod]
+ sysfs_kf_write+0x52/0x70
+ kernfs_fop_write_iter+0x19a/0x2a0
+ vfs_write+0x3b5/0x770
+ ksys_write+0x74/0x150
+ __x64_sys_write+0x22/0x30
+ do_syscall_64+0x40/0x90
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Fix the problem by recording if 'rdev' is used as holder.
+
+Fixes: a1d767191096 ("md: use mddev->external to select holder in export_rdev()")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 15 ++++++++++++---
+ drivers/md/md.h |  3 +++
+ 2 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3bb0d9ce0d28..278a6e9aad93 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2494,7 +2494,8 @@ static void export_rdev(struct md_rdev *rdev, struct mddev *mddev)
+ 	if (test_bit(AutoDetected, &rdev->flags))
+ 		md_autodetect_dev(rdev->bdev->bd_dev);
+ #endif
+-	blkdev_put(rdev->bdev, mddev->external ? &claim_rdev : rdev);
++	blkdev_put(rdev->bdev,
++		   test_bit(Holder, &rdev->flags) ? rdev : &claim_rdev);
+ 	rdev->bdev = NULL;
+ 	kobject_put(&rdev->kobj);
+ }
+@@ -3674,6 +3675,7 @@ EXPORT_SYMBOL_GPL(md_rdev_init);
+ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int super_minor)
+ {
+ 	struct md_rdev *rdev;
++	struct md_rdev *holder;
+ 	sector_t size;
+ 	int err;
+ 
+@@ -3688,8 +3690,15 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
+ 	if (err)
+ 		goto out_clear_rdev;
+ 
++	if (super_format == -2) {
++		holder = &claim_rdev;
++	} else {
++		holder = rdev;
++		set_bit(Holder, &rdev->flags);
++	}
++
+ 	rdev->bdev = blkdev_get_by_dev(newdev, BLK_OPEN_READ | BLK_OPEN_WRITE,
+-			super_format == -2 ? &claim_rdev : rdev, NULL);
++				       holder, NULL);
+ 	if (IS_ERR(rdev->bdev)) {
+ 		pr_warn("md: could not open device unknown-block(%u,%u).\n",
+ 			MAJOR(newdev), MINOR(newdev));
+@@ -3726,7 +3735,7 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
+ 	return rdev;
+ 
+ out_blkdev_put:
+-	blkdev_put(rdev->bdev, super_format == -2 ? &claim_rdev : rdev);
++	blkdev_put(rdev->bdev, holder);
+ out_clear_rdev:
+ 	md_rdev_clear(rdev);
+ out_free_rdev:
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b365226a4183..b628c292506e 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -211,6 +211,9 @@ enum flag_bits {
+ 				 * check if there is collision between raid1
+ 				 * serial bios.
+ 				 */
++	Holder,			/* rdev is used as holder while opening
++				 * underlying disk exclusively.
++				 */
+ };
+ 
+ static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
+-- 
+2.39.2
+
