@@ -2,85 +2,107 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E5BCC71133
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 12:57:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39A62EE49A6
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 13:33:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244904AbjHYM4l (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Aug 2023 08:56:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56456 "EHLO
+        id S245144AbjHYNdZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 25 Aug 2023 09:33:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245076AbjHYM4i (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Aug 2023 08:56:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3329C2119
-        for <linux-raid@vger.kernel.org>; Fri, 25 Aug 2023 05:55:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692968147;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=NDxRjgO5mrxxt6j3TrodLbP1d/T2WrUB6f8dsRaj19g=;
-        b=QjV5TbZ8h3Ez4Rz9OGphzGrkMcHt2iNo51vVjLciAsWQyMEFgcCQncNFGugw5XAOmbr4wW
-        rgn3v6WwRDlcnoPSb87qx3pN3HEbJ64evlo2mRvRdMquAaZTnPW45XdBJpHT6x25bj+n30
-        S9bO38FlJ8fkLyGlMMczQQNk/G/Z0e4=
-Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-102-TFXiFCLIN1u3ivIrf2i1hA-1; Fri, 25 Aug 2023 08:55:45 -0400
-X-MC-Unique: TFXiFCLIN1u3ivIrf2i1hA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S245082AbjHYNdC (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Aug 2023 09:33:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D3FB1FF0;
+        Fri, 25 Aug 2023 06:33:00 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 5DF8D38210AD;
-        Fri, 25 Aug 2023 12:55:45 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.72.112.220])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 94AFF112131B;
-        Fri, 25 Aug 2023 12:55:43 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com
-Subject: [PATCH V2 1/1] mdadm: Stop mdcheck_continue timer when mdcheck_start service can finish check
-Date:   Fri, 25 Aug 2023 20:55:41 +0800
-Message-Id: <20230825125541.76501-1-xni@redhat.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1D58567A14;
+        Fri, 25 Aug 2023 13:33:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E70AEC433C8;
+        Fri, 25 Aug 2023 13:32:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692970379;
+        bh=T3WCgKJR+2I3SNciRzSe5NGE9AO6KZcdR6qXwGAgd9M=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=BOzM2QQ1MZDAriB3IMOamPdHV+2S3m2FC6tyT1pwI/9DF+WhlbPxDXE6fFDwe1gQn
+         nTHB+ewwdyxJVq1cwfq3lRDi07qJcCHvh+nPPtQwtyRFhMG1ktBk1+a5CxpNbFHlMo
+         Es+8l14bPK+nfmT+9Vs7IvZUfkPWFzk8wOkU0sT7FJdKR3BT4c1FwZN9woHNBuu5tc
+         jHLMCNsuGW/YHncoWpwLVgQ93zfRJ93+ghRIza8tLelTozCObl43Fv+mmuqvzrkB+C
+         SdJZ6/x4IFa4j6NBHHUKQ0uLY4RqtzEgYesuRGMfUi0q6xmwPRpi/3TpKuwt6YF2IT
+         8BYUF/YAoocgw==
+Date:   Fri, 25 Aug 2023 15:32:47 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v3 0/29] block: Make blkdev_get_by_*() return handle
+Message-ID: <20230825-hubraum-gedreht-8c5c4db9330a@brauner>
+References: <20230818123232.2269-1-jack@suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20230818123232.2269-1-jack@suse.cz>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-mdcheck_continue is triggered by mdcheck_start timer. It's used to
-continue check action if the raid is too big and mdcheck_start
-service can't finish check action. If mdcheck start can finish check
-action, it doesn't need to mdcheck continue service anymore. So stop
-it when mdcheck start service can finish check action.
+On Wed, Aug 23, 2023 at 12:48:11PM +0200, Jan Kara wrote:
+> Hello,
+> 
+> this is a v3 of the patch series which implements the idea of blkdev_get_by_*()
+> calls returning bdev_handle which is then passed to blkdev_put() [1]. This
+> makes the get and put calls for bdevs more obviously matching and allows us to
+> propagate context from get to put without having to modify all the users
+> (again!). In particular I need to propagate used open flags to blkdev_put() to
+> be able count writeable opens and add support for blocking writes to mounted
+> block devices. I'll send that series separately.
+> 
+> The series is based on Christian's vfs tree as of today as there is quite
+> some overlap. Patches have passed some reasonable testing - I've tested block
+> changes, md, dm, bcache, xfs, btrfs, ext4, swap. More testing or review is
+> always welcome. Thanks! I've pushed out the full branch to:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
+> 
+> to ease review / testing. Since there were not many comments for v2 and
+> Christoph has acked the series I think we should start discussing how to merge
+> the series. Most collisions with this series seem to happen in the filesystems
+> area so VFS tree would seem as the least painful way to merge this. Jens,
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
-Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
----
-v2: fix typo errors and add spaces at the beginning of comments
- misc/mdcheck | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/misc/mdcheck b/misc/mdcheck
-index 700c3e252e72..f87999d3e797 100644
---- a/misc/mdcheck
-+++ b/misc/mdcheck
-@@ -140,7 +140,13 @@ do
- 		echo $a > $fl
- 		any=yes
- 	done
--	if [ -z "$any" ]; then exit 0; fi
-+	# mdcheck_continue.timer is started by mdcheck_start.timer.
-+	# When the check action can be finished in mdcheck_start.service,
-+	# it doesn't need mdcheck_continue anymore.
-+	if [ -z "$any" ]; then
-+		systemctl stop mdcheck_continue.timer
-+		exit 0;
-+	fi
- 	sleep 120
- done
- 
--- 
-2.32.0 (Apple Git-132)
-
+I really do like this series especially struct bdev_handle and moving
+the mode bits in there. I'll happily take this. So far there have only
+been minor things that can easily be fixed.
