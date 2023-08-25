@@ -2,23 +2,23 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7351AEE49A6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A711AEE49B2
 	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 03:15:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237211AbjHYDOg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        id S237176AbjHYDOg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
         Thu, 24 Aug 2023 23:14:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47692 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234593AbjHYDOT (ORCPT
+        with ESMTP id S234716AbjHYDOT (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Aug 2023 23:14:19 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7D241997;
-        Thu, 24 Aug 2023 20:14:16 -0700 (PDT)
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86BCFD3;
+        Thu, 24 Aug 2023 20:14:17 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RX4mj4d6fz4f3kq3;
-        Fri, 25 Aug 2023 11:14:13 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RX4mg50kDz4f3tD5;
+        Fri, 25 Aug 2023 11:14:11 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnBah_HOhkveEWBg--.3212S9;
+        by APP4 (Coremail) with SMTP id gCh0CgAnBah_HOhkveEWBg--.3212S11;
         Fri, 25 Aug 2023 11:14:14 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
@@ -26,31 +26,31 @@ To:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 5/7] md-bitmap: suspend array earlier in location_store()
-Date:   Fri, 25 Aug 2023 11:09:54 +0800
-Message-Id: <20230825030956.1527023-6-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 7/7] md: don't check 'mddev->pers' and 'pers->quiesce' from suspend_lo_store()
+Date:   Fri, 25 Aug 2023 11:09:56 +0800
+Message-Id: <20230825030956.1527023-8-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230825030956.1527023-1-yukuai1@huaweicloud.com>
 References: <20230825030956.1527023-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnBah_HOhkveEWBg--.3212S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kry7KFW7KrWUAr1kJrWkWFg_yoW5Jr48pa
-        n3ta4rtr1rXFW3Xr17t3yv9FyrWw4kKrZrtrWxWwn5G3ZaywnxWF4rWF15J348K34rAFs8
-        Jw45JF18Gr1UWFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6r
-        xdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
-        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
-        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
-        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
-        IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
-        wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
-        0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AK
-        xVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r
-        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkU
+X-CM-TRANSID: gCh0CgAnBah_HOhkveEWBg--.3212S11
+X-Coremail-Antispam: 1UD129KBjvdXoW7XFWUWry3Ar15Kr1rtFy3twb_yoWDAFcEgF
+        nY9F93Jr1fWry7trn0kws7ZryUtF1kW3ZrW3W3KryYyF15tFy8tFyFka45X3savFWUZa4U
+        tryqyr47Xr4DCjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbDAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+        IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+        F7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_Gc
+        Wl84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
+        e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
+        8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
+        jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0x
+        kIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
+        xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
+        kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v2
+        6F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr
+        1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkU
         UUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
@@ -61,98 +61,41 @@ X-Mailing-List: linux-raid@vger.kernel.org
 From: Yu Kuai <yukuai3@huawei.com>
 
 Now that mddev_suspend() doean't rely on 'mddev->pers' to be set, it's
-safe to call mddev_suspend() earlier.
+safe to remove such checking.
 
-This will also be helper to refactor mddev_suspend() later.
+This will also allow the array to be suspended even before the array
+is ran.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-bitmap.c | 43 ++++++++++++++++++++----------------------
- 1 file changed, 20 insertions(+), 23 deletions(-)
+ drivers/md/md.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index f38c7f3156cb..0c661e5036bb 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2351,6 +2351,8 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 	rv = mddev_lock(mddev);
- 	if (rv)
- 		return rv;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 558cc752eb00..470986943e74 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5180,18 +5180,13 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
+ 	err = mddev_lock(mddev);
+ 	if (err)
+ 		return err;
+-	err = -EINVAL;
+-	if (mddev->pers == NULL ||
+-	    mddev->pers->quiesce == NULL)
+-		goto unlock;
 +
-+	mddev_suspend(mddev);
- 	if (mddev->pers) {
- 		if (mddev->recovery || mddev->sync_thread) {
- 			rv = -EBUSY;
-@@ -2365,11 +2367,8 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 			rv = -EBUSY;
- 			goto out;
- 		}
--		if (mddev->pers) {
--			mddev_suspend(mddev);
--			md_bitmap_destroy(mddev);
--			mddev_resume(mddev);
--		}
-+
-+		md_bitmap_destroy(mddev);
- 		mddev->bitmap_info.offset = 0;
- 		if (mddev->bitmap_info.file) {
- 			struct file *f = mddev->bitmap_info.file;
-@@ -2379,6 +2378,8 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 	} else {
- 		/* No bitmap, OK to set a location */
- 		long long offset;
-+		struct bitmap *bitmap;
-+
- 		if (strncmp(buf, "none", 4) == 0)
- 			/* nothing to be done */;
- 		else if (strncmp(buf, "file:", 5) == 0) {
-@@ -2402,25 +2403,20 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 				rv = -EINVAL;
- 				goto out;
- 			}
-+
- 			mddev->bitmap_info.offset = offset;
--			if (mddev->pers) {
--				struct bitmap *bitmap;
--				bitmap = md_bitmap_create(mddev, -1);
--				mddev_suspend(mddev);
--				if (IS_ERR(bitmap))
--					rv = PTR_ERR(bitmap);
--				else {
--					mddev->bitmap = bitmap;
--					rv = md_bitmap_load(mddev);
--					if (rv)
--						mddev->bitmap_info.offset = 0;
--				}
--				if (rv) {
--					md_bitmap_destroy(mddev);
--					mddev_resume(mddev);
--					goto out;
--				}
--				mddev_resume(mddev);
-+			bitmap = md_bitmap_create(mddev, -1);
-+			if (IS_ERR(bitmap)) {
-+				rv = PTR_ERR(bitmap);
-+				goto out;
-+			}
-+
-+			mddev->bitmap = bitmap;
-+			rv = md_bitmap_load(mddev);
-+			if (rv) {
-+				mddev->bitmap_info.offset = 0;
-+				md_bitmap_destroy(mddev);
-+				goto out;
- 			}
- 		}
- 	}
-@@ -2433,6 +2429,7 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 	}
- 	rv = 0;
- out:
-+	mddev_resume(mddev);
+ 	mddev_suspend(mddev);
+ 	mddev->suspend_lo = new;
+ 	mddev_resume(mddev);
+ 
+-	err = 0;
+-unlock:
  	mddev_unlock(mddev);
- 	if (rv)
- 		return rv;
+-	return err ?: len;
++	return len;
+ }
+ static struct md_sysfs_entry md_suspend_lo =
+ __ATTR(suspend_lo, S_IRUGO|S_IWUSR, suspend_lo_show, suspend_lo_store);
 -- 
 2.39.2
 
