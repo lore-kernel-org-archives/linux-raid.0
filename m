@@ -2,56 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17D36C71133
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 06:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D2C8C71133
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 06:41:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242115AbjHYGkp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Aug 2023 02:40:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54408 "EHLO
+        id S242260AbjHYGlR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 25 Aug 2023 02:41:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242192AbjHYGkN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Aug 2023 02:40:13 -0400
+        with ESMTP id S242264AbjHYGk7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Aug 2023 02:40:59 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B41A92133;
-        Thu, 24 Aug 2023 23:39:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE4B1BDB;
+        Thu, 24 Aug 2023 23:40:57 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 270CF65D38;
-        Fri, 25 Aug 2023 06:39:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9087DC433C9;
-        Fri, 25 Aug 2023 06:39:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 409BB63435;
+        Fri, 25 Aug 2023 06:40:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5815C433CA;
+        Fri, 25 Aug 2023 06:40:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692945597;
-        bh=+s9Koxy+TTugL21cIgmab6DIs5KPUzfsaLnpEMPjvp0=;
+        s=k20201202; t=1692945656;
+        bh=sBMIVekm7z5dJED9CCKgiR+YzYCHzNiyNOpOdEkw/uU=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=PftxFfPsqmjM96yXBpsER0XAs1j2lNUhEx2JdTIu55RGddcad4EGCynCy5aUnXuyx
-         eXs/xTgmkOZTt2MkQDDrkrBIvrZlQ37Qw5fU4dx+4EMZRbg/mba4DEBOTxfLz27+MB
-         NW88zbxmdUjdGWfNDZtTqVkWRtPFEY+Azne0i96/Se8HnpVaNxP8dVKqf1nYEeH9v1
-         i/CudMJ9rS2H+OmInNs6Ef5L6dIKjYD+i2UI6C1C2CXOAPj3kbUilLVHU9fORHioSi
-         1DmfCBeMhvADgk8l10TbVZKDwkgSYXl81RLMjhzCCiIsH906sObZvd8IvOqbgS/usT
-         2tt1nJ4ahnR8A==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5007abb15e9so860899e87.0;
-        Thu, 24 Aug 2023 23:39:57 -0700 (PDT)
-X-Gm-Message-State: AOJu0YyPvAgix6OSbp4jNpsUqUPmwzxQWNqJ0RjTzhVgHmPtkQ1Bs3nh
-        P45Jr1HosFxGGdXtYVs4Whgjj63Ea2+vgJJF5tc=
-X-Google-Smtp-Source: AGHT+IGObpDVPkI2f3gHr+eNk39SieeXXdBFR5o42FZlpllf6UoziXUH5g+xRTGeYzlJmnL15n5EctIxGgedfI8pCCE=
-X-Received: by 2002:ac2:4f15:0:b0:4fb:911b:4e19 with SMTP id
- k21-20020ac24f15000000b004fb911b4e19mr14250662lfr.35.1692945595602; Thu, 24
- Aug 2023 23:39:55 -0700 (PDT)
+        b=UU86Lyz7bEs4FeSBM++1RO2akLfMte4Ax6tJnviZdEsHxGA+VC824QjLqnT1C9agk
+         FOHL879E/Mv/SwPC03Va4qwpJihf8q5fQiPYsIDH1szmwg//U8v4BQ9KOdpGFPw2s1
+         Lv0sQqHwx0B7oExm4wxK/OSQn6F9ZPtBFx8y+Fa3z1BahkoKx9pbig8d/4UPxih1sX
+         BTZcsqCt905XJ/nzdwvzuFbcsXG8uLZHdj/x3Y7bl1TCk/wosUI/6yJFc531CaATOY
+         bAMM3JiOAUmt4rR6lQ4UdBXwjlQKeladpYrlkZzY+ON3UCGDStYTkd/jiNby9927tz
+         ysJKHFDCZmvkg==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-4fe8c16c1b4so817806e87.2;
+        Thu, 24 Aug 2023 23:40:56 -0700 (PDT)
+X-Gm-Message-State: AOJu0Yz7OJ7pS7FAby+U1D7jBAa1bomwU8C7dwJ2vFQaro7MgbrslNOS
+        uqypKNLPVJuaDdOyUVE97frQEyNolOFTlO6JoKo=
+X-Google-Smtp-Source: AGHT+IGPD2aEMvFaklo3jAklk1fPCfCMIW5CcacHp0PxUv2igIzNHi2IlxZxuK4troY9ylLDd3v70bdKU+nHof0qYUU=
+X-Received: by 2002:a05:6512:3b0b:b0:500:a08e:2fd3 with SMTP id
+ f11-20020a0565123b0b00b00500a08e2fd3mr3250301lfv.21.1692945654672; Thu, 24
+ Aug 2023 23:40:54 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
+References: <20230825030956.1527023-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20230825030956.1527023-1-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 24 Aug 2023 23:39:43 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4rQ1V7EHgfpfx9rL2=pUAcjr+Eint2iD0_EfVAbzcKOQ@mail.gmail.com>
-Message-ID: <CAPhsuW4rQ1V7EHgfpfx9rL2=pUAcjr+Eint2iD0_EfVAbzcKOQ@mail.gmail.com>
-Subject: Re: [PATCH -next v4 0/7] md: make rdev addition and removal
- independent from daemon thread
+Date:   Thu, 24 Aug 2023 23:40:42 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7dYaJYx8xa-CAG1YSwggZdGRfcQWqTBY0915=_UdL49Q@mail.gmail.com>
+Message-ID: <CAPhsuW7dYaJYx8xa-CAG1YSwggZdGRfcQWqTBY0915=_UdL49Q@mail.gmail.com>
+Subject: Re: [PATCH -next v2 0/7] md: initialize 'active_io' while allocating mddev
 To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+Cc:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
+        xni@redhat.com, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yukuai3@huawei.com,
         yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
@@ -59,35 +59,22 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 24, 2023 at 8:20=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+On Thu, Aug 24, 2023 at 8:14=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
 rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> Changes in v4:
->  - add some review tag;
->  - add comments to make code more readadble for patch 4,6;
->  - rework patch 7 a litter;
+> Changes in v2:
+>  - rebase for md-next;
+>  - update commit message for patch 3;
 
-Applied v4 to md-next. But this set won't go into 6.6.
+Applied v2 to md-next. But this set won't go into 6.6.
 
 Thanks,
 Song
 
 >
-> Changes in v3:
->  - rename md_choose_sync_direction() to md_choose_sync_action() in patch =
-2;
->  - fix an error in patch 3;
->  - add flush_work(&mddev->sync_work) while change read-only array to
->  read-write;
->
-> Changes in v2:
->  - remove patch 1 from v1 and some related patches, those patches will
->  be sent later when rcu protection for rdev is removed.
->  - add patch 2.
->
-> This is the third patchset to do some preparatory work to synchronize
+> This is the 4th patchset to do some preparatory work to synchronize
 > io with array reconfiguration.
 >
 > 1) The first patchset refactor 'active_io', make sure that mddev_suspend(=
@@ -98,26 +85,51 @@ Song
 > that mddev_suspend() doesn't rely on 'quiesce' callback is registered,
 > and can be used for all personalites; [2]
 >
-> 3) This patchset make array reconfiguration independent from daemon threa=
-d,
+> 3) Make array reconfiguration independent from daemon thread,
 > and synchronize it with io will be much easier because io may rely on
 > daemon thread to be done.
 >
-> More patchset on the way!
+> 4) This patchset move initialization of 'active_io' from md_run() to
+> md_alloc(), so that mddev_suspend() won't rely on holding 'reconfig_mutex=
+'
+> to check if 'mddev->pers' is set, and it can be called at any time after
+> mddev is allocated.(Done by patch 1, and other patches are cleanup)
 >
 > Yu Kuai (7):
->   md: use separate work_struct for md_start_sync()
->   md: factor out a helper to choose sync action from md_check_recovery()
->   md: delay choosing sync action to md_start_sync()
->   md: factor out a helper rdev_removeable() from remove_and_add_spares()
->   md: factor out a helper rdev_is_spare() from remove_and_add_spares()
->   md: factor out a helper rdev_addable() from remove_and_add_spares()
->   md: delay remove_and_add_spares() for read only array to
->     md_start_sync()
+>   md: initialize 'active_io' while allocating mddev
+>   md: initialize 'writes_pending' while allocating mddev
+>   md: don't rely on 'mddev->pers' to be set in mddev_suspend()
+>   md-bitmap: remove the checking of 'pers->quiesce' from
+>     location_store()
+>   md-bitmap: suspend array earlier in location_store()
+>   md: don't check 'mddev->pers' from suspend_hi_store()
+>   md: don't check 'mddev->pers' and 'pers->quiesce' from
+>     suspend_lo_store()
 >
->  drivers/md/md.c | 308 +++++++++++++++++++++++++++++++++---------------
->  drivers/md/md.h |   5 +-
->  2 files changed, 218 insertions(+), 95 deletions(-)
+> [1] https://lore.kernel.org/all/20230621165110.1498313-1-yukuai1@huaweicl=
+oud.com/
+> [2] https://lore.kernel.org/all/20230628012931.88911-2-yukuai1@huaweiclou=
+d.com/
+>
+> Yu Kuai (7):
+>   md: initialize 'active_io' while allocating mddev
+>   md: initialize 'writes_pending' while allocating mddev
+>   md: don't rely on 'mddev->pers' to be set in mddev_suspend()
+>   md-bitmap: remove the checking of 'pers->quiesce' from
+>     location_store()
+>   md-bitmap: suspend array earlier in location_store()
+>   md: don't check 'mddev->pers' from suspend_hi_store()
+>   md: don't check 'mddev->pers' and 'pers->quiesce' from
+>     suspend_lo_store()
+>
+>  drivers/md/dm-raid.c   |   7 ++-
+>  drivers/md/md-bitmap.c |  47 +++++++++----------
+>  drivers/md/md.c        | 100 ++++++++++++++++++++---------------------
+>  drivers/md/md.h        |   4 +-
+>  drivers/md/raid1.c     |   3 +-
+>  drivers/md/raid10.c    |   3 --
+>  drivers/md/raid5.c     |   3 --
+>  7 files changed, 78 insertions(+), 89 deletions(-)
 >
 > --
 > 2.39.2
