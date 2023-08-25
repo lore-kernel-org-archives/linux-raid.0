@@ -2,48 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE77FC7EE2C
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 03:00:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F5ECC3DA66
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 03:15:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233590AbjHYC77 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Aug 2023 22:59:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43080 "EHLO
+        id S235827AbjHYDOd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Aug 2023 23:14:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238835AbjHYC7u (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Aug 2023 22:59:50 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1360E78;
-        Thu, 24 Aug 2023 19:59:48 -0700 (PDT)
+        with ESMTP id S234002AbjHYDOS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Aug 2023 23:14:18 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EA351FCB;
+        Thu, 24 Aug 2023 20:14:16 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RX4S06WvJz4f3jpq;
-        Fri, 25 Aug 2023 10:59:44 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RX4mf2cPLz4f3tDZ;
+        Fri, 25 Aug 2023 11:14:10 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAHl6kfGehkow4WBg--.35864S4;
-        Fri, 25 Aug 2023 10:59:45 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnBah_HOhkveEWBg--.3212S8;
+        Fri, 25 Aug 2023 11:14:13 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org, yukuai3@huawei.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: [PATCH -next 0/2] md: fix two regressions related to export_rdev()
-Date:   Fri, 25 Aug 2023 10:55:30 +0800
-Message-Id: <20230825025532.1523008-1-yukuai1@huaweicloud.com>
+To:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
+        song@kernel.org, xni@redhat.com
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next v2 4/7] md-bitmap: remove the checking of 'pers->quiesce' from location_store()
+Date:   Fri, 25 Aug 2023 11:09:53 +0800
+Message-Id: <20230825030956.1527023-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230825030956.1527023-1-yukuai1@huaweicloud.com>
+References: <20230825030956.1527023-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAHl6kfGehkow4WBg--.35864S4
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUU5M7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2js
-        IEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE
-        5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeV
-        CFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l
-        42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJV
-        WUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAK
-        I48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r
-        4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF
-        0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-TRANSID: gCh0CgAnBah_HOhkveEWBg--.3212S8
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gw18Xr45WFW7KF1DJr1rtFb_yoW3XrgE9a
+        1kZry3tr17CrWUAr13tw1xZryjkw1kWan7XFWSgrWSvFnxG348GryFkF17Xw4IvFZxCasx
+        Xryjgr48Zr4rtjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbDkFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+        IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+        F7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_Gc
+        Wl84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
+        e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
+        8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
+        jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0x
+        kIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
+        xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
+        kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v2
+        6F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr
+        1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZX7UU
+        UUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -52,18 +60,30 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Those problems are found by a new mdadm test(see details in commit message)
-in my VM, it's not 100% reproducible but run this test in a loop, I can
-always reporduce them within 10 min.
+After commit 4d27e927344a ("md: don't quiesce in mddev_suspend()"),
+there is no need to check 'pers->quiesce' before calling
+mddev_suspend().
 
-Yu Kuai (2):
-  md: don't dereference mddev after export_rdev()
-  md: fix warning for holder mismatch from export_rdev()
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md-bitmap.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
- drivers/md/md.c | 21 +++++++++++++++------
- drivers/md/md.h |  3 +++
- 2 files changed, 18 insertions(+), 6 deletions(-)
-
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 6f9ff14971f9..f38c7f3156cb 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2352,10 +2352,6 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (rv)
+ 		return rv;
+ 	if (mddev->pers) {
+-		if (!mddev->pers->quiesce) {
+-			rv = -EBUSY;
+-			goto out;
+-		}
+ 		if (mddev->recovery || mddev->sync_thread) {
+ 			rv = -EBUSY;
+ 			goto out;
 -- 
 2.39.2
 
