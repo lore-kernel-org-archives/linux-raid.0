@@ -2,84 +2,122 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 389F5C71133
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 06:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17D36C71133
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 06:41:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238355AbjHYGjI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Aug 2023 02:39:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34124 "EHLO
+        id S242115AbjHYGkp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 25 Aug 2023 02:40:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231443AbjHYGig (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Aug 2023 02:38:36 -0400
+        with ESMTP id S242192AbjHYGkN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Aug 2023 02:40:13 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A1451FD4;
-        Thu, 24 Aug 2023 23:38:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B41A92133;
+        Thu, 24 Aug 2023 23:39:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C1C8763325;
-        Fri, 25 Aug 2023 06:38:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2796CC433CA;
-        Fri, 25 Aug 2023 06:38:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 270CF65D38;
+        Fri, 25 Aug 2023 06:39:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9087DC433C9;
+        Fri, 25 Aug 2023 06:39:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692945514;
-        bh=4cEp/6KzHQizRDijVJvbQ5QBccVlujjp1hrBrw0pho4=;
+        s=k20201202; t=1692945597;
+        bh=+s9Koxy+TTugL21cIgmab6DIs5KPUzfsaLnpEMPjvp0=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=btlmsO07f7TXE7eVzge3rVB56h5HAu/P5P8ovEW++HZoYSPN5RmUMu4HwMmlOJ14/
-         t/m0NC9bh+USn9Hh/VyE3yjB1SgaVTsaciInBeDXi63ZL3Mno0D4qR63r1FWA/Atbn
-         WG2GgLKtSGbCTT/bfv1bSV8uYkpx2iAEPazNVRXMVo08N1gprZOmgGYR8mNKNTeknk
-         oEvHby7rowffKYndt7hsqKqFK/6vfwXm1vmE/ClmmhIFOL6LVH2Djc3KvvdTK/SQRU
-         iPT5dHfxBRsf3CP2Dwiw/l1ehzayrUY1u/FXE0l5yLFfsvcekz4TC5AFS5+w/TeQfW
-         DOANh9qNb/jwg==
-Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-4ff933f9ca8so858866e87.1;
-        Thu, 24 Aug 2023 23:38:34 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yyk8sqWkDT24XaQ/c2tAXccM5v7k7fRLxOPneWp8lnFTM1mueBP
-        fMWGYYof2qT2o99zc8qjX0TZlN1P5oceGcBNXaA=
-X-Google-Smtp-Source: AGHT+IEJ/fLHq7+nyt6vu29hGtadaIPPWVUHPGGMJbZOfrA1o7MZOmrnr0mVGOCAKg3Bd7U1xPrhKkKMaIHEJ1MOV7k=
-X-Received: by 2002:a05:6512:615:b0:4fd:d9dd:7a1a with SMTP id
- b21-20020a056512061500b004fdd9dd7a1amr12280848lfe.31.1692945512098; Thu, 24
- Aug 2023 23:38:32 -0700 (PDT)
+        b=PftxFfPsqmjM96yXBpsER0XAs1j2lNUhEx2JdTIu55RGddcad4EGCynCy5aUnXuyx
+         eXs/xTgmkOZTt2MkQDDrkrBIvrZlQ37Qw5fU4dx+4EMZRbg/mba4DEBOTxfLz27+MB
+         NW88zbxmdUjdGWfNDZtTqVkWRtPFEY+Azne0i96/Se8HnpVaNxP8dVKqf1nYEeH9v1
+         i/CudMJ9rS2H+OmInNs6Ef5L6dIKjYD+i2UI6C1C2CXOAPj3kbUilLVHU9fORHioSi
+         1DmfCBeMhvADgk8l10TbVZKDwkgSYXl81RLMjhzCCiIsH906sObZvd8IvOqbgS/usT
+         2tt1nJ4ahnR8A==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5007abb15e9so860899e87.0;
+        Thu, 24 Aug 2023 23:39:57 -0700 (PDT)
+X-Gm-Message-State: AOJu0YyPvAgix6OSbp4jNpsUqUPmwzxQWNqJ0RjTzhVgHmPtkQ1Bs3nh
+        P45Jr1HosFxGGdXtYVs4Whgjj63Ea2+vgJJF5tc=
+X-Google-Smtp-Source: AGHT+IGObpDVPkI2f3gHr+eNk39SieeXXdBFR5o42FZlpllf6UoziXUH5g+xRTGeYzlJmnL15n5EctIxGgedfI8pCCE=
+X-Received: by 2002:ac2:4f15:0:b0:4fb:911b:4e19 with SMTP id
+ k21-20020ac24f15000000b004fb911b4e19mr14250662lfr.35.1692945595602; Thu, 24
+ Aug 2023 23:39:55 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230825025532.1523008-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20230825025532.1523008-1-yukuai1@huaweicloud.com>
+References: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 24 Aug 2023 23:38:19 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW724NzpM1xMaT-L_xt+8yn6pvf5udrnUwArx921+b0r1g@mail.gmail.com>
-Message-ID: <CAPhsuW724NzpM1xMaT-L_xt+8yn6pvf5udrnUwArx921+b0r1g@mail.gmail.com>
-Subject: Re: [PATCH -next 0/2] md: fix two regressions related to export_rdev()
+Date:   Thu, 24 Aug 2023 23:39:43 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4rQ1V7EHgfpfx9rL2=pUAcjr+Eint2iD0_EfVAbzcKOQ@mail.gmail.com>
+Message-ID: <CAPhsuW4rQ1V7EHgfpfx9rL2=pUAcjr+Eint2iD0_EfVAbzcKOQ@mail.gmail.com>
+Subject: Re: [PATCH -next v4 0/7] md: make rdev addition and removal
+ independent from daemon thread
 To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     yukuai3@huawei.com, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com
+Cc:     xni@redhat.com, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 24, 2023 at 7:59=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+On Thu, Aug 24, 2023 at 8:20=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
 rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> Those problems are found by a new mdadm test(see details in commit messag=
-e)
-> in my VM, it's not 100% reproducible but run this test in a loop, I can
-> always reporduce them within 10 min.
+> Changes in v4:
+>  - add some review tag;
+>  - add comments to make code more readadble for patch 4,6;
+>  - rework patch 7 a litter;
 
-Applied to md-next. Thanks!
+Applied v4 to md-next. But this set won't go into 6.6.
 
+Thanks,
 Song
 
 >
-> Yu Kuai (2):
->   md: don't dereference mddev after export_rdev()
->   md: fix warning for holder mismatch from export_rdev()
+> Changes in v3:
+>  - rename md_choose_sync_direction() to md_choose_sync_action() in patch =
+2;
+>  - fix an error in patch 3;
+>  - add flush_work(&mddev->sync_work) while change read-only array to
+>  read-write;
 >
->  drivers/md/md.c | 21 +++++++++++++++------
->  drivers/md/md.h |  3 +++
->  2 files changed, 18 insertions(+), 6 deletions(-)
+> Changes in v2:
+>  - remove patch 1 from v1 and some related patches, those patches will
+>  be sent later when rcu protection for rdev is removed.
+>  - add patch 2.
+>
+> This is the third patchset to do some preparatory work to synchronize
+> io with array reconfiguration.
+>
+> 1) The first patchset refactor 'active_io', make sure that mddev_suspend(=
+)
+> will wait for io to be done. [1]
+>
+> 2) The second patchset remove 'quiesce' callback from mddev_suspend(), so
+> that mddev_suspend() doesn't rely on 'quiesce' callback is registered,
+> and can be used for all personalites; [2]
+>
+> 3) This patchset make array reconfiguration independent from daemon threa=
+d,
+> and synchronize it with io will be much easier because io may rely on
+> daemon thread to be done.
+>
+> More patchset on the way!
+>
+> Yu Kuai (7):
+>   md: use separate work_struct for md_start_sync()
+>   md: factor out a helper to choose sync action from md_check_recovery()
+>   md: delay choosing sync action to md_start_sync()
+>   md: factor out a helper rdev_removeable() from remove_and_add_spares()
+>   md: factor out a helper rdev_is_spare() from remove_and_add_spares()
+>   md: factor out a helper rdev_addable() from remove_and_add_spares()
+>   md: delay remove_and_add_spares() for read only array to
+>     md_start_sync()
+>
+>  drivers/md/md.c | 308 +++++++++++++++++++++++++++++++++---------------
+>  drivers/md/md.h |   5 +-
+>  2 files changed, 218 insertions(+), 95 deletions(-)
 >
 > --
 > 2.39.2
