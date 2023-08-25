@@ -2,41 +2,41 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB6A4C3DA66
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 03:21:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05EB9C7EE2C
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 03:21:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229449AbjHYDVA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Aug 2023 23:21:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49268 "EHLO
+        id S238037AbjHYDVB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Aug 2023 23:21:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232055AbjHYDUl (ORCPT
+        with ESMTP id S231917AbjHYDUl (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Aug 2023 23:20:41 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E70C11FCE;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 868D81FCB;
         Thu, 24 Aug 2023 20:20:38 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RX4w36LGkz4f3mW5;
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RX4w33dhLz4f3mVw;
         Fri, 25 Aug 2023 11:20:35 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgDHoqUBHuhkPT4XBg--.14533S9;
-        Fri, 25 Aug 2023 11:20:36 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgDHoqUBHuhkPT4XBg--.14533S8;
+        Fri, 25 Aug 2023 11:20:35 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v4 5/7] md: factor out a helper rdev_is_spare() from remove_and_add_spares()
-Date:   Fri, 25 Aug 2023 11:16:20 +0800
-Message-Id: <20230825031622.1530464-6-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v4 4/7] md: factor out a helper rdev_removeable() from remove_and_add_spares()
+Date:   Fri, 25 Aug 2023 11:16:19 +0800
+Message-Id: <20230825031622.1530464-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
 References: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgDHoqUBHuhkPT4XBg--.14533S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtr13KF4DJrWrKrg_yoW8GFWkpa
-        yxKFyakrWUZFyjga1qgryUGa43Ka10g3yIkFy7Ca4xZas8Jry5Kw4FkF90qrn8AFWFvF45
-        ZF45tw48C3WFgF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgDHoqUBHuhkPT4XBg--.14533S8
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtr13KF4fZFWUArb_yoW8tF1kpF
+        4fKFy5Cr4UAw47tw43tr1rG3WSqa18tayIkry3ua4fZasxGr4Ygw18Ka45Xr98tFWfZF4a
+        qF15tw4rCF1xCF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -62,46 +62,72 @@ There are no functional changes, just to make the code simpler and
 prepare to delay remove_and_add_spares() to md_start_sync().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Xiao Ni <xni@redhat.com>
 ---
- drivers/md/md.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/md/md.c | 44 ++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 38 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5dbc2efc8a0d..6d413979ad74 100644
+index 561cac13ff96..5dbc2efc8a0d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9189,6 +9189,14 @@ static bool rdev_removeable(struct md_rdev *rdev)
- 	return false;
+@@ -9153,6 +9153,42 @@ void md_do_sync(struct md_thread *thread)
  }
+ EXPORT_SYMBOL_GPL(md_do_sync);
  
-+static bool rdev_is_spare(struct md_rdev *rdev)
++static bool rdev_removeable(struct md_rdev *rdev)
 +{
-+	return !test_bit(Candidate, &rdev->flags) && rdev->raid_disk >= 0 &&
-+	       !test_bit(In_sync, &rdev->flags) &&
-+	       !test_bit(Journal, &rdev->flags) &&
-+	       !test_bit(Faulty, &rdev->flags);
++	/* rdev is not used. */
++	if (rdev->raid_disk < 0)
++		return false;
++
++	/* There are still inflight io, don't remove this rdev. */
++	if (atomic_read(&rdev->nr_pending))
++		return false;
++
++	/*
++	 * An error occurred but has not yet been acknowledged by the metadata
++	 * handler, don't remove this rdev.
++	 */
++	if (test_bit(Blocked, &rdev->flags))
++		return false;
++
++	/* Fautly rdev is not used, it's safe to remove it. */
++	if (test_bit(Faulty, &rdev->flags))
++		return true;
++
++	/* Journal disk can only be removed if it's faulty. */
++	if (test_bit(Journal, &rdev->flags))
++		return false;
++
++	/*
++	 * 'In_sync' is cleared while 'raid_disk' is valid, which means
++	 * replacement has just become active from pers->spare_active(), and
++	 * then pers->hot_remove_disk() will replace this rdev with replacement.
++	 */
++	if (!test_bit(In_sync, &rdev->flags))
++		return true;
++
++	return false;
 +}
 +
  static int remove_and_add_spares(struct mddev *mddev,
  				 struct md_rdev *this)
  {
-@@ -9244,13 +9252,10 @@ static int remove_and_add_spares(struct mddev *mddev,
+@@ -9185,12 +9221,8 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 		synchronize_rcu();
  	rdev_for_each(rdev, mddev) {
- 		if (this && this != rdev)
- 			continue;
-+		if (rdev_is_spare(rdev))
-+			spares++;
- 		if (test_bit(Candidate, &rdev->flags))
- 			continue;
--		if (rdev->raid_disk >= 0 &&
--		    !test_bit(In_sync, &rdev->flags) &&
--		    !test_bit(Journal, &rdev->flags) &&
--		    !test_bit(Faulty, &rdev->flags))
--			spares++;
- 		if (rdev->raid_disk >= 0)
- 			continue;
- 		if (test_bit(Faulty, &rdev->flags))
+ 		if ((this == NULL || rdev == this) &&
+-		    rdev->raid_disk >= 0 &&
+-		    !test_bit(Blocked, &rdev->flags) &&
+-		    ((test_bit(RemoveSynchronized, &rdev->flags) ||
+-		     (!test_bit(In_sync, &rdev->flags) &&
+-		      !test_bit(Journal, &rdev->flags))) &&
+-		    atomic_read(&rdev->nr_pending)==0)) {
++		    (test_bit(RemoveSynchronized, &rdev->flags) ||
++		     rdev_removeable(rdev))) {
+ 			if (mddev->pers->hot_remove_disk(
+ 				    mddev, rdev) == 0) {
+ 				sysfs_unlink_rdev(mddev, rdev);
 -- 
 2.39.2
 
