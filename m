@@ -2,51 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F6D2C71133
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB6A4C3DA66
 	for <linux-raid@archiver.kernel.org>; Fri, 25 Aug 2023 03:21:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234399AbjHYDU5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Aug 2023 23:20:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58684 "EHLO
+        id S229449AbjHYDVA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Aug 2023 23:21:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjHYDUi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Aug 2023 23:20:38 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DC35D3;
-        Thu, 24 Aug 2023 20:20:37 -0700 (PDT)
+        with ESMTP id S232055AbjHYDUl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Aug 2023 23:20:41 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E70C11FCE;
+        Thu, 24 Aug 2023 20:20:38 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RX4vz1QLnz4f3tDS;
-        Fri, 25 Aug 2023 11:20:31 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RX4w36LGkz4f3mW5;
+        Fri, 25 Aug 2023 11:20:35 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgDHoqUBHuhkPT4XBg--.14533S4;
-        Fri, 25 Aug 2023 11:20:34 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgDHoqUBHuhkPT4XBg--.14533S9;
+        Fri, 25 Aug 2023 11:20:36 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v4 0/7] md: make rdev addition and removal independent from daemon thread
-Date:   Fri, 25 Aug 2023 11:16:15 +0800
-Message-Id: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v4 5/7] md: factor out a helper rdev_is_spare() from remove_and_add_spares()
+Date:   Fri, 25 Aug 2023 11:16:20 +0800
+Message-Id: <20230825031622.1530464-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
+References: <20230825031622.1530464-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgDHoqUBHuhkPT4XBg--.14533S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr4kJrW8ZFykCry5Wr13CFg_yoW8AFy3pr
-        yaqF1agw4UZFZrGF9xJ3W7W34Fgw4fXrZrJFy3Ww18Cw15WrW0vryxJa1DZrWYy34akry7
-        uF4jqF95C3WkAFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
-        r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-        cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw2
-        0EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY
-        1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZa9-UUUUU=
+X-CM-TRANSID: gCh0CgDHoqUBHuhkPT4XBg--.14533S9
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtr13KF4DJrWrKrg_yoW8GFWkpa
+        yxKFyakrWUZFyjga1qgryUGa43Ka10g3yIkFy7Ca4xZas8Jry5Kw4FkF90qrn8AFWFvF45
+        ZF45tw48C3WFgF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+        IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
+        CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
+        14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
+        IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20E
+        Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267
+        AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUArcfUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -55,52 +58,50 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v4:
- - add some review tag;
- - add comments to make code more readadble for patch 4,6;
- - rework patch 7 a litter;
+There are no functional changes, just to make the code simpler and
+prepare to delay remove_and_add_spares() to md_start_sync().
 
-Changes in v3:
- - rename md_choose_sync_direction() to md_choose_sync_action() in patch 2;
- - fix an error in patch 3;
- - add flush_work(&mddev->sync_work) while change read-only array to
- read-write;
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Xiao Ni <xni@redhat.com>
+---
+ drivers/md/md.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-Changes in v2:
- - remove patch 1 from v1 and some related patches, those patches will
- be sent later when rcu protection for rdev is removed.
- - add patch 2.
-
-This is the third patchset to do some preparatory work to synchronize
-io with array reconfiguration.
-
-1) The first patchset refactor 'active_io', make sure that mddev_suspend()
-will wait for io to be done. [1]
-
-2) The second patchset remove 'quiesce' callback from mddev_suspend(), so
-that mddev_suspend() doesn't rely on 'quiesce' callback is registered,
-and can be used for all personalites; [2]
-
-3) This patchset make array reconfiguration independent from daemon thread,
-and synchronize it with io will be much easier because io may rely on
-daemon thread to be done.
-
-More patchset on the way!
-
-Yu Kuai (7):
-  md: use separate work_struct for md_start_sync()
-  md: factor out a helper to choose sync action from md_check_recovery()
-  md: delay choosing sync action to md_start_sync()
-  md: factor out a helper rdev_removeable() from remove_and_add_spares()
-  md: factor out a helper rdev_is_spare() from remove_and_add_spares()
-  md: factor out a helper rdev_addable() from remove_and_add_spares()
-  md: delay remove_and_add_spares() for read only array to
-    md_start_sync()
-
- drivers/md/md.c | 308 +++++++++++++++++++++++++++++++++---------------
- drivers/md/md.h |   5 +-
- 2 files changed, 218 insertions(+), 95 deletions(-)
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5dbc2efc8a0d..6d413979ad74 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9189,6 +9189,14 @@ static bool rdev_removeable(struct md_rdev *rdev)
+ 	return false;
+ }
+ 
++static bool rdev_is_spare(struct md_rdev *rdev)
++{
++	return !test_bit(Candidate, &rdev->flags) && rdev->raid_disk >= 0 &&
++	       !test_bit(In_sync, &rdev->flags) &&
++	       !test_bit(Journal, &rdev->flags) &&
++	       !test_bit(Faulty, &rdev->flags);
++}
++
+ static int remove_and_add_spares(struct mddev *mddev,
+ 				 struct md_rdev *this)
+ {
+@@ -9244,13 +9252,10 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 	rdev_for_each(rdev, mddev) {
+ 		if (this && this != rdev)
+ 			continue;
++		if (rdev_is_spare(rdev))
++			spares++;
+ 		if (test_bit(Candidate, &rdev->flags))
+ 			continue;
+-		if (rdev->raid_disk >= 0 &&
+-		    !test_bit(In_sync, &rdev->flags) &&
+-		    !test_bit(Journal, &rdev->flags) &&
+-		    !test_bit(Faulty, &rdev->flags))
+-			spares++;
+ 		if (rdev->raid_disk >= 0)
+ 			continue;
+ 		if (test_bit(Faulty, &rdev->flags))
 -- 
 2.39.2
 
