@@ -2,228 +2,130 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9AFFC83F10
-	for <linux-raid@archiver.kernel.org>; Sun, 27 Aug 2023 09:24:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46DBFC83F14
+	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 02:05:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230290AbjH0JYF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 27 Aug 2023 05:24:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46632 "EHLO
+        id S229767AbjH1CFK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 27 Aug 2023 22:05:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230487AbjH0JXr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 05:23:47 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31EDAE1
-        for <linux-raid@vger.kernel.org>; Sun, 27 Aug 2023 02:23:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693128225; x=1724664225;
-  h=date:from:to:cc:subject:message-id;
-  bh=1dP8K4H4gOzLYiIUXnfjffnVpaht6GYf7/AEZrK3eD0=;
-  b=UbOmuoXWLMQVsj382XA9g8v5YSMTiTDDbcxZ2AF34nX9mp5vFAPFeGvE
-   R7mEyW21z52ADvY0umusTAgBtKhp9go/F9px8KxAD4N/le3k+Whp/23+C
-   CZWBVCws6Q0IvIZj3xbVD7i72qJaTHUH5ayQ1BryuX1yLgYIrckOOLB7C
-   p4OKDs2zAKYnU3waY/xIbpbPKMZIL80kj8/YnBZZvrs4KIlN/+kwl3nBi
-   nca/guy67FRyxSfbBKW6HQllc+psx+NpsBgzC5sCnzuduq7rU557CKEYz
-   ZgGhgb3hIUHzi1EKRs6jUagKTe/xZtxvwW8+nknPmSZegezbWTM4R9qjY
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10814"; a="378713455"
-X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
-   d="scan'208";a="378713455"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 02:23:44 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10814"; a="687768615"
-X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
-   d="scan'208";a="687768615"
-Received: from lkp-server02.sh.intel.com (HELO daf8bb0a381d) ([10.239.97.151])
-  by orsmga003.jf.intel.com with ESMTP; 27 Aug 2023 02:23:43 -0700
-Received: from kbuild by daf8bb0a381d with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qaBzi-0005bp-28;
-        Sun, 27 Aug 2023 09:23:42 +0000
-Date:   Sun, 27 Aug 2023 17:23:38 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- e3b2f62786a02b217038ba18e4b77bf6bc1bb831
-Message-ID: <202308271737.Ej3cR18b-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S229598AbjH1CEv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 22:04:51 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BCC5D8;
+        Sun, 27 Aug 2023 19:04:48 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.169])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RYv560f0bz4f3nqh;
+        Mon, 28 Aug 2023 10:04:42 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S5;
+        Mon, 28 Aug 2023 10:04:45 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
+        song@kernel.org, xni@redhat.com
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next v2 01/28] md: use READ_ONCE/WRITE_ONCE for 'suspend_lo' and 'suspend_hi'
+Date:   Mon, 28 Aug 2023 09:59:54 +0800
+Message-Id: <20230828020021.2489641-2-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
+References: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7CF4fAw13JF4xAFyfAF1DWrg_yoW8tw4rp3
+        yIqFWYgw45Jas5A34Ut3WkCFy5XwsxKrWqyrZrWry7A3W7Gw1rGr15XF43XFyF9as7CFsx
+        Gws8A3W8A348GFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
+        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU2_M3UUUUU
+        =
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: e3b2f62786a02b217038ba18e4b77bf6bc1bb831  md: don't check 'mddev->pers' and 'pers->quiesce' from suspend_lo_store()
+From: Yu Kuai <yukuai3@huawei.com>
 
-elapsed time: 3039m
+Because reading 'suspend_lo' and 'suspend_hi' from md_handle_request()
+is not protected, use READ_ONCE/WRITE_ONCE to prevent reading abnormal
+value.
 
-configs tested: 158
-configs skipped: 2
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r014-20230825   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20230825   gcc  
-arc                  randconfig-r011-20230825   gcc  
-arc                  randconfig-r022-20230825   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                   randconfig-001-20230825   clang
-arm64                            allmodconfig   gcc  
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-hexagon               randconfig-001-20230825   clang
-hexagon               randconfig-002-20230825   clang
-hexagon              randconfig-r005-20230825   clang
-hexagon              randconfig-r034-20230825   clang
-i386         buildonly-randconfig-001-20230825   clang
-i386         buildonly-randconfig-002-20230825   clang
-i386         buildonly-randconfig-003-20230825   clang
-i386         buildonly-randconfig-004-20230825   clang
-i386         buildonly-randconfig-005-20230825   clang
-i386         buildonly-randconfig-006-20230825   clang
-i386                                defconfig   gcc  
-i386                  randconfig-001-20230825   clang
-i386                  randconfig-002-20230825   clang
-i386                  randconfig-003-20230825   clang
-i386                  randconfig-004-20230825   clang
-i386                  randconfig-005-20230825   clang
-i386                  randconfig-006-20230825   clang
-i386                  randconfig-011-20230825   gcc  
-i386                  randconfig-012-20230825   gcc  
-i386                  randconfig-013-20230825   gcc  
-i386                  randconfig-014-20230825   gcc  
-i386                  randconfig-015-20230825   gcc  
-i386                  randconfig-016-20230825   gcc  
-i386                 randconfig-r021-20230825   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20230825   gcc  
-loongarch            randconfig-r033-20230825   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                        m5407c3_defconfig   gcc  
-m68k                 randconfig-r024-20230825   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-microblaze           randconfig-r004-20230825   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r015-20230825   gcc  
-nios2                randconfig-r035-20230825   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-openrisc             randconfig-r032-20230825   gcc  
-openrisc             randconfig-r036-20230825   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r012-20230825   gcc  
-parisc               randconfig-r016-20230825   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   gcc  
-powerpc                      katmai_defconfig   clang
-powerpc                      ppc64e_defconfig   clang
-powerpc              randconfig-r006-20230825   clang
-powerpc              randconfig-r023-20230825   gcc  
-powerpc64            randconfig-r002-20230825   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20230825   clang
-riscv                randconfig-r001-20230825   clang
-riscv                randconfig-r025-20230825   gcc  
-riscv                randconfig-r026-20230825   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20230825   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                         apsh4a3a_defconfig   gcc  
-sh                                  defconfig   gcc  
-sh                   randconfig-r031-20230825   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r003-20230825   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                   randconfig-r013-20230825   clang
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64       buildonly-randconfig-001-20230825   clang
-x86_64       buildonly-randconfig-002-20230825   clang
-x86_64       buildonly-randconfig-003-20230825   clang
-x86_64       buildonly-randconfig-004-20230825   clang
-x86_64       buildonly-randconfig-005-20230825   clang
-x86_64       buildonly-randconfig-006-20230825   clang
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20230825   gcc  
-x86_64                randconfig-002-20230825   gcc  
-x86_64                randconfig-003-20230825   gcc  
-x86_64                randconfig-004-20230825   gcc  
-x86_64                randconfig-005-20230825   gcc  
-x86_64                randconfig-006-20230825   gcc  
-x86_64                randconfig-011-20230825   clang
-x86_64                randconfig-012-20230825   clang
-x86_64                randconfig-013-20230825   clang
-x86_64                randconfig-014-20230825   clang
-x86_64                randconfig-015-20230825   clang
-x86_64                randconfig-016-20230825   clang
-x86_64                randconfig-071-20230825   clang
-x86_64                randconfig-072-20230825   clang
-x86_64                randconfig-073-20230825   clang
-x86_64                randconfig-074-20230825   clang
-x86_64                randconfig-075-20230825   clang
-x86_64                randconfig-076-20230825   clang
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 46badd13a687..9d8dff9d923c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -359,11 +359,11 @@ static bool is_suspended(struct mddev *mddev, struct bio *bio)
+ 		return true;
+ 	if (bio_data_dir(bio) != WRITE)
+ 		return false;
+-	if (mddev->suspend_lo >= mddev->suspend_hi)
++	if (READ_ONCE(mddev->suspend_lo) >= READ_ONCE(mddev->suspend_hi))
+ 		return false;
+-	if (bio->bi_iter.bi_sector >= mddev->suspend_hi)
++	if (bio->bi_iter.bi_sector >= READ_ONCE(mddev->suspend_hi))
+ 		return false;
+-	if (bio_end_sector(bio) < mddev->suspend_lo)
++	if (bio_end_sector(bio) < READ_ONCE(mddev->suspend_lo))
+ 		return false;
+ 	return true;
+ }
+@@ -5171,7 +5171,8 @@ __ATTR(sync_max, S_IRUGO|S_IWUSR, max_sync_show, max_sync_store);
+ static ssize_t
+ suspend_lo_show(struct mddev *mddev, char *page)
+ {
+-	return sprintf(page, "%llu\n", (unsigned long long)mddev->suspend_lo);
++	return sprintf(page, "%llu\n",
++		       (unsigned long long)READ_ONCE(mddev->suspend_lo));
+ }
+ 
+ static ssize_t
+@@ -5191,7 +5192,7 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
+ 		return err;
+ 
+ 	mddev_suspend(mddev);
+-	mddev->suspend_lo = new;
++	WRITE_ONCE(mddev->suspend_lo, new);
+ 	mddev_resume(mddev);
+ 
+ 	mddev_unlock(mddev);
+@@ -5203,7 +5204,8 @@ __ATTR(suspend_lo, S_IRUGO|S_IWUSR, suspend_lo_show, suspend_lo_store);
+ static ssize_t
+ suspend_hi_show(struct mddev *mddev, char *page)
+ {
+-	return sprintf(page, "%llu\n", (unsigned long long)mddev->suspend_hi);
++	return sprintf(page, "%llu\n",
++		       (unsigned long long)READ_ONCE(mddev->suspend_hi));
+ }
+ 
+ static ssize_t
+@@ -5223,7 +5225,7 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
+ 		return err;
+ 
+ 	mddev_suspend(mddev);
+-	mddev->suspend_hi = new;
++	WRITE_ONCE(mddev->suspend_hi, new);
+ 	mddev_resume(mddev);
+ 
+ 	mddev_unlock(mddev);
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.2
+
