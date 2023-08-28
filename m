@@ -2,42 +2,42 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66ADBC83F10
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5CA6C83F1C
 	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 02:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229897AbjH1CFV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 27 Aug 2023 22:05:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45344 "EHLO
+        id S229935AbjH1CFY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 27 Aug 2023 22:05:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229739AbjH1CE6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 22:04:58 -0400
+        with ESMTP id S229747AbjH1CE7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 22:04:59 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27503D8;
-        Sun, 27 Aug 2023 19:04:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5F3DDA;
+        Sun, 27 Aug 2023 19:04:57 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RYv5J2Y5Bz4f3nKN;
-        Mon, 28 Aug 2023 10:04:52 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RYv5L69Tmz4f3kpS;
+        Mon, 28 Aug 2023 10:04:54 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S23;
-        Mon, 28 Aug 2023 10:04:53 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S27;
+        Mon, 28 Aug 2023 10:04:55 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
         song@kernel.org, xni@redhat.com
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 19/28] md: use new apis to suspend array for ioctls involed array reconfiguration
-Date:   Mon, 28 Aug 2023 10:00:12 +0800
-Message-Id: <20230828020021.2489641-20-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 23/28] md: use new apis to suspend array in backlog_store()
+Date:   Mon, 28 Aug 2023 10:00:16 +0800
+Message-Id: <20230828020021.2489641-24-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
 References: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S23
-X-Coremail-Antispam: 1UD129KBjvJXoWxGF13Cw43KryDXr1rJFWkZwb_yoW5CF4Dpr
-        WxtanYkr45tFy3WrWUJa4v9a4Fqwn7KrZFyrWxu343GF1fJrnxuF1rWF1rXr1093s3JFn8
-        Jw4Yka48Ca1UWFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S27
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4fAr15GrWUCr1fuF4xCrg_yoW8XFyUpr
+        sagaySgr4UZ34rGw1UZa1DCFyYqa18KrZrtrZxWayfua1aqwnxKr1rWa15tr17Xas5KF15
+        Jw15urWkAFyfGrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -48,7 +48,7 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxGF13Cw43KryDXr1rJFWkZwb_yoW5CF4Dpr
         M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
         kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
         14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAF
+        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW5JVW7JwCI42IY6xIIjxv20xvEc7CjxVAF
         wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
         0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
         SdkUUUUU=
@@ -60,110 +60,50 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-'reconfig_mutex' will be grabbed before these ioctls, suspend array
-before holding the lock, so that io won't concurrent with array
-reconfiguration through ioctls.
+mddev_create/destroy_serial_pool() will be called from backlog_store(),
+and mddev_suspend() will be called later.
 
-This is not hot path, so performance is not concerned.
+Prepare to remove the mddev_suspend() from
+mddev_create/destroy_serial_pool().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 29 ++++++++++++++++++++---------
- 1 file changed, 20 insertions(+), 9 deletions(-)
+ drivers/md/md-bitmap.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 3343767882bb..81c7b9d1cc36 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7179,7 +7179,6 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
- 			struct bitmap *bitmap;
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 7d21e2a5b06e..b3d701c5c461 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2537,7 +2537,7 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (backlog > COUNTER_MAX)
+ 		return -EINVAL;
  
- 			bitmap = md_bitmap_create(mddev, -1);
--			mddev_suspend(mddev);
- 			if (!IS_ERR(bitmap)) {
- 				mddev->bitmap = bitmap;
- 				err = md_bitmap_load(mddev);
-@@ -7189,11 +7188,8 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
- 				md_bitmap_destroy(mddev);
- 				fd = -1;
- 			}
--			mddev_resume(mddev);
- 		} else if (fd < 0) {
--			mddev_suspend(mddev);
- 			md_bitmap_destroy(mddev);
--			mddev_resume(mddev);
- 		}
+-	rv = mddev_lock(mddev);
++	rv = mddev_suspend_and_lock(mddev);
+ 	if (rv)
+ 		return rv;
+ 
+@@ -2562,16 +2562,16 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (!backlog && mddev->serial_info_pool) {
+ 		/* serial_info_pool is not needed if backlog is zero */
+ 		if (!mddev->serialize_policy)
+-			mddev_destroy_serial_pool(mddev, NULL, false);
++			mddev_destroy_serial_pool(mddev, NULL, true);
+ 	} else if (backlog && !mddev->serial_info_pool) {
+ 		/* serial_info_pool is needed since backlog is not zero */
+ 		rdev_for_each(rdev, mddev)
+-			mddev_create_serial_pool(mddev, rdev, false);
++			mddev_create_serial_pool(mddev, rdev, true);
  	}
- 	if (fd < 0) {
-@@ -7482,7 +7478,6 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 			mddev->bitmap_info.space =
- 				mddev->bitmap_info.default_space;
- 			bitmap = md_bitmap_create(mddev, -1);
--			mddev_suspend(mddev);
- 			if (!IS_ERR(bitmap)) {
- 				mddev->bitmap = bitmap;
- 				rv = md_bitmap_load(mddev);
-@@ -7490,7 +7485,6 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 				rv = PTR_ERR(bitmap);
- 			if (rv)
- 				md_bitmap_destroy(mddev);
--			mddev_resume(mddev);
- 		} else {
- 			/* remove the bitmap */
- 			if (!mddev->bitmap) {
-@@ -7515,9 +7509,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 				module_put(md_cluster_mod);
- 				mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
- 			}
--			mddev_suspend(mddev);
- 			md_bitmap_destroy(mddev);
--			mddev_resume(mddev);
- 			mddev->bitmap_info.offset = 0;
- 		}
- 	}
-@@ -7588,6 +7580,20 @@ static inline bool md_ioctl_valid(unsigned int cmd)
- 	}
+ 	if (old_mwb != backlog)
+ 		md_bitmap_update_sb(mddev->bitmap);
+ 
+-	mddev_unlock(mddev);
++	mddev_unlock_and_resume(mddev);
+ 	return len;
  }
  
-+static bool md_ioctl_need_suspend(unsigned int cmd)
-+{
-+	switch (cmd) {
-+	case ADD_NEW_DISK:
-+	case HOT_ADD_DISK:
-+	case HOT_REMOVE_DISK:
-+	case SET_BITMAP_FILE:
-+	case SET_ARRAY_INFO:
-+		return true;
-+	default:
-+		return false;
-+	}
-+}
-+
- static int __md_set_array_info(struct mddev *mddev, void __user *argp)
- {
- 	mdu_array_info_t info;
-@@ -7720,7 +7726,8 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	if (!md_is_rdwr(mddev))
- 		flush_work(&mddev->sync_work);
- 
--	err = mddev_lock(mddev);
-+	err = md_ioctl_need_suspend(cmd) ? mddev_suspend_and_lock(mddev) :
-+					   mddev_lock(mddev);
- 	if (err) {
- 		pr_debug("md: ioctl lock interrupted, reason %d, cmd %d\n",
- 			 err, cmd);
-@@ -7848,7 +7855,11 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	if (mddev->hold_active == UNTIL_IOCTL &&
- 	    err != -EINVAL)
- 		mddev->hold_active = 0;
-+
- 	mddev_unlock(mddev);
-+	if (md_ioctl_need_suspend(cmd))
-+		__mddev_resume(mddev);
-+
- out:
- 	if(did_set_md_closing)
- 		clear_bit(MD_CLOSING, &mddev->flags);
 -- 
 2.39.2
 
