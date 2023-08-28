@@ -2,98 +2,95 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DBA2C83F11
-	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 13:56:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70A70C83F18
+	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 14:01:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230403AbjH1N4L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 28 Aug 2023 09:56:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50590 "EHLO
+        id S231135AbjH1OA7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 28 Aug 2023 10:00:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230499AbjH1Nzo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 28 Aug 2023 09:55:44 -0400
-Received: from mail-io1-xd2a.google.com (mail-io1-xd2a.google.com [IPv6:2607:f8b0:4864:20::d2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A45AC4
-        for <linux-raid@vger.kernel.org>; Mon, 28 Aug 2023 06:55:40 -0700 (PDT)
-Received: by mail-io1-xd2a.google.com with SMTP id ca18e2360f4ac-760dff4b701so31440239f.0
-        for <linux-raid@vger.kernel.org>; Mon, 28 Aug 2023 06:55:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1693230939; x=1693835739;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=RqPkGcsk4FuV+HMwkCm5TjJ0nUyn4er318TkaWcu7eU=;
-        b=C4VpQu7oHbFFg0/6ofyDMcosnb5QZ2R6qrHVoZUOQ0W+mVHNTazVGA/M+dVzU1rs5b
-         EDIbB8kQfsZa0QceQIjpWIQnQSJXSlXg3ogqJGak2RJb5RcdqUD3gkw/qpQkQcsW3/5H
-         kQsTyzM6OHQucfWrfCnhrm5Ugow6wU4WANw5w+v7eYMkMwsEGvRxPYiFREXEJXuz6FXR
-         +9ArjDGQZnfj5h+qoyHj+JACXwV9axzyy0oYAxJXZGlg3qNq9LKzxT+e0dPMaxPrRgVL
-         EdnsWJhVlaLQFeXw4odqxEodubl1hGJ5Ntc4kqK3mKIgB1iO+yfSTgXqGmMPydKkLZSR
-         j7hA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693230939; x=1693835739;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RqPkGcsk4FuV+HMwkCm5TjJ0nUyn4er318TkaWcu7eU=;
-        b=bycya3lWAlt1Z9YZZSszdaIZMxk5bSrhb5w6/wz3Ub5TydMElADkLlshKXVapQeey5
-         QsmOdiNIVH1+PLF8KdmoSga7LTAmPDeZWcjKZNK5M9s5I337INZCmNjIL8bZJP58tFuR
-         U+SpdfvRts2n+zjJgCGgo/8SWtG9AjS7Bvm6zBgO9xAqs5S6zDHKjwRy52M2M3CLwOcC
-         DW4nX9APgTvvg9kIMNs5tUmAQ7VKrAjkDNRu6ZLD27RcD3jMULDDT45XsJreK3O1yho4
-         EXcuSIMOXEPq1pbf073mLdPsEFJ6SM49iexapiFdDVWZT2+1fz9G1eursGcv+ZtUcUqz
-         MolA==
-X-Gm-Message-State: AOJu0Ywxn3ecK9dczuenFa8uBE+LmFC08qWWSUVOpJ9sL5bAxCQje0GT
-        lLwF3UEbCe2AK1mwtdVvyCGBCg==
-X-Google-Smtp-Source: AGHT+IEZrYYmE2kyP+/ZWXWBFkncsQpTodgqMGVqRJXLmCNYekGBhdn8fuNayoi1iANMe7tqGsLSPQ==
-X-Received: by 2002:a92:4b0d:0:b0:345:e438:7381 with SMTP id m13-20020a924b0d000000b00345e4387381mr25049882ilg.2.1693230939593;
-        Mon, 28 Aug 2023 06:55:39 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id a2-20020a02ac02000000b0042b39b2289asm2489029jao.102.2023.08.28.06.55.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Aug 2023 06:55:38 -0700 (PDT)
-Message-ID: <285df093-dd85-4d5f-8151-6d9f54a994b5@kernel.dk>
-Date:   Mon, 28 Aug 2023 07:55:37 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: 6.5.0rc5 fs hang - ext4? raid?
-Content-Language: en-US
-To:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        "Dr. David Alan Gilbert" <dave@treblig.org>
-Cc:     Theodore Ts'o <tytso@mit.edu>, hch@lst.de,
+        with ESMTP id S231171AbjH1OAy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 28 Aug 2023 10:00:54 -0400
+Received: from mx.treblig.org (mx.treblig.org [IPv6:2a00:1098:5b::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE328BA;
+        Mon, 28 Aug 2023 07:00:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
+        ; s=bytemarkmx; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID
+        :Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID
+        :Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:
+        Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe
+        :List-Post:List-Owner:List-Archive;
+        bh=vbDRtOVyo+nc5RTMfV+JT3H4Yd9qc1cB8kzq0DZ6Y10=; b=T2xOcDeh+GpCbwb0D8fFODzhwB
+        aysuoA7MwDfh0bbGL1ijkotXr2s6owsn4HBbkGL/RgTZd2iavRgAHCOs1nnQ9mFxr0aKgN0VyzEvb
+        6IwCyj7+12LslxBO2m2+NUHcLET55LAEsWN8cmRjIqVk6n7DgdD/vjy3rMhiikZTVGzjSnok4dp3/
+        5DGiDwiisB7vP/8cukWkWtX549bSMaWduJedik+sz4oqULxNPr+pk0WOYO0CbAK34UmnVqEaJOBNy
+        7WP9KQ5sI6qgzAhjeZcYvG15j62QC1b257Qp2rf/Rf6HVQkoDK+caKRlEmifv1Eg/DSF853ZvuG37
+        ckPaRX8A==;
+Received: from dg by mx.treblig.org with local (Exim 4.94.2)
+        (envelope-from <dg@treblig.org>)
+        id 1qacnH-008vfM-5C; Mon, 28 Aug 2023 14:00:39 +0000
+Date:   Mon, 28 Aug 2023 14:00:39 +0000
+From:   "Dr. David Alan Gilbert" <dave@treblig.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Theodore Ts'o <tytso@mit.edu>, hch@lst.de,
         adilger.kernel@dilger.ca, song@kernel.org,
         linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ext4@vger.kernel.org
-References: <ZNqWfQPTScJDkmpX@gallifrey> <20230815125146.GA1508930@mit.edu>
- <ZNt11WbPn7LCXPvB@gallifrey> <ZNu668KGiNcwCSVe@gallifrey>
- <ZNwm7Mo9yv7uIkno@gallifrey> <324fc71c-dead-4418-af81-6817e1f41c39@kernel.dk>
- <ZNzg1/zhxYV2EkBX@gallifrey> <ZNzl2Sq9UJ3FiTgV@gallifrey>
+Subject: Re: 6.5.0rc5 fs hang - ext4? raid?
+Message-ID: <ZOyoh9mhqvxDxOcb@gallifrey>
+References: <ZNqWfQPTScJDkmpX@gallifrey>
+ <20230815125146.GA1508930@mit.edu>
+ <ZNt11WbPn7LCXPvB@gallifrey>
+ <ZNu668KGiNcwCSVe@gallifrey>
+ <ZNwm7Mo9yv7uIkno@gallifrey>
+ <324fc71c-dead-4418-af81-6817e1f41c39@kernel.dk>
+ <ZNzg1/zhxYV2EkBX@gallifrey>
+ <ZNzl2Sq9UJ3FiTgV@gallifrey>
  <ZOymtgiZYGQ6QlxN@debian.me>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <ZOymtgiZYGQ6QlxN@debian.me>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <285df093-dd85-4d5f-8151-6d9f54a994b5@kernel.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <285df093-dd85-4d5f-8151-6d9f54a994b5@kernel.dk>
+X-Chocolate: 70 percent or better cocoa solids preferably
+X-Operating-System: Linux/5.10.0-23-amd64 (x86_64)
+X-Uptime: 14:00:09 up 52 days, 23:31,  1 user,  load average: 0.00, 0.00, 0.00
+User-Agent: Mutt/2.0.5 (2021-01-21)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/28/23 7:52 AM, Bagas Sanjaya wrote:
-> On Wed, Aug 16, 2023 at 03:06:01PM +0000, Dr. David Alan Gilbert wrote:
->>>> Can you try and pull in:
->>>>
->>>> https://git.kernel.dk/cgit/linux/commit/?h=block-6.5&id=5ff3213a5387e076af2b87f796f94b36965e8c3a
->>>>
->>>> and see if that helps?
->>>
->>> <testing....>
->>
->> Yes it seems to fix it - thanks!
->>
+* Jens Axboe (axboe@kernel.dk) wrote:
+> On 8/28/23 7:52 AM, Bagas Sanjaya wrote:
+> > On Wed, Aug 16, 2023 at 03:06:01PM +0000, Dr. David Alan Gilbert wrote:
+> >>>> Can you try and pull in:
+> >>>>
+> >>>> https://git.kernel.dk/cgit/linux/commit/?h=block-6.5&id=5ff3213a5387e076af2b87f796f94b36965e8c3a
+> >>>>
+> >>>> and see if that helps?
+> >>>
+> >>> <testing....>
+> >>
+> >> Yes it seems to fix it - thanks!
+> >>
+> > 
+> > #regzbot fix: 5ff3213a5387e076af2b87f796f94b36965e8c3a
+> > 
+> > Yet, I don't see that fix commit on v6.5 release...
 > 
-> #regzbot fix: 5ff3213a5387e076af2b87f796f94b36965e8c3a
+> That's because it's e5c0ca13659e9d18f53368d651ed7e6e433ec1cf
+
+and it seems to be working nicely here (on rc7).
+
+Dave
+
+> -- 
+> Jens Axboe
 > 
-> Yet, I don't see that fix commit on v6.5 release...
-
-That's because it's e5c0ca13659e9d18f53368d651ed7e6e433ec1cf
-
+> 
 -- 
-Jens Axboe
-
-
+ -----Open up your eyes, open up your mind, open up your code -------   
+/ Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
+\        dave @ treblig.org |                               | In Hex /
+ \ _________________________|_____ http://www.treblig.org   |_______/
