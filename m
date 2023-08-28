@@ -2,42 +2,42 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B31E2C83F1A
-	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 02:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ADE7C83F17
+	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 02:05:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbjH1CFW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 27 Aug 2023 22:05:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45368 "EHLO
+        id S229924AbjH1CFX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 27 Aug 2023 22:05:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229746AbjH1CE7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 22:04:59 -0400
+        with ESMTP id S229749AbjH1CFA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 22:05:00 -0400
 Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 584ADD8;
-        Sun, 27 Aug 2023 19:04:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BBFA123;
+        Sun, 27 Aug 2023 19:04:58 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RYv5H3m4yz4f3nqf;
-        Mon, 28 Aug 2023 10:04:51 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RYv5J2lw0z4f3nqr;
+        Mon, 28 Aug 2023 10:04:52 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S26;
-        Mon, 28 Aug 2023 10:04:54 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S28;
+        Mon, 28 Aug 2023 10:04:55 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
         song@kernel.org, xni@redhat.com
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 22/28] md: use new apis to suspend array related to serial pool in state_store()
-Date:   Mon, 28 Aug 2023 10:00:15 +0800
-Message-Id: <20230828020021.2489641-23-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 24/28] md: suspend array in md_start_sync() if array need reconfiguration
+Date:   Mon, 28 Aug 2023 10:00:17 +0800
+Message-Id: <20230828020021.2489641-25-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
 References: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S26
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZF13Zw47Xw1xWFy7GFy5CFg_yoW8WF13pa
-        y3KFWagryxZw1UJwsxua1Dury5KF4qqrZFk347uw4fZ3W5G3s3Krs5Ka95tr1Duasaqr1Y
-        qa1UWa95Cw1fGFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S28
+X-Coremail-Antispam: 1UD129KBjvJXoW7AF13ZryrJw1rZFWxGrWrAFb_yoW8GF4kpa
+        1IyF9Ygr45Aa93Z3yUXa4kuFy5Jw109rWqyrW3uas8AF93trnrGF13u34UJrWDtayftFy3
+        Xws0qF1Uuw10krUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -60,47 +60,51 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-mddev_create/destroy_serial_pool() will be called from state_store() if
-user write 'writemostly'/'-writemostly', and mddev_suspend() will be
-called later.
-
-Prepare to remove the mddev_suspend() from
-mddev_create/destroy_serial_pool().
+So that io won't concurrent with array reconfiguration, and it's safe to
+suspend the array directly because normal io won't rely on
+md_start_sync().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/md/md.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 43bd7274b705..305694b67fd7 100644
+index 305694b67fd7..0bb4c59543aa 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -3055,11 +3055,11 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
- 		}
- 	} else if (cmd_match(buf, "writemostly")) {
- 		set_bit(WriteMostly, &rdev->flags);
--		mddev_create_serial_pool(rdev->mddev, rdev, false);
-+		mddev_create_serial_pool(rdev->mddev, rdev, true);
- 		need_update_sb = true;
- 		err = 0;
- 	} else if (cmd_match(buf, "-writemostly")) {
--		mddev_destroy_serial_pool(rdev->mddev, rdev, false);
-+		mddev_destroy_serial_pool(rdev->mddev, rdev, true);
- 		clear_bit(WriteMostly, &rdev->flags);
- 		need_update_sb = true;
- 		err = 0;
-@@ -3683,7 +3683,9 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
- 	if (entry->store == state_store) {
- 		if (cmd_match(page, "remove"))
- 			kn = sysfs_break_active_protection(kobj, attr);
--		if (cmd_match(page, "remove") || cmd_match(page, "re-add")) {
-+		if (cmd_match(page, "remove") || cmd_match(page, "re-add") ||
-+		    cmd_match(page, "writemostly") ||
-+		    cmd_match(page, "-writemostly")) {
- 			__mddev_suspend(mddev);
- 			suspended = true;
- 		}
+@@ -9457,6 +9457,12 @@ static void md_start_sync(struct work_struct *ws)
+ {
+ 	struct mddev *mddev = container_of(ws, struct mddev, sync_work);
+ 	int spares = 0;
++	bool suspended = false;
++
++	if (md_spares_need_change(mddev)) {
++		__mddev_suspend(mddev);
++		suspended = true;
++	}
+ 
+ 	mddev_lock_nointr(mddev);
+ 
+@@ -9495,6 +9501,9 @@ static void md_start_sync(struct work_struct *ws)
+ 	}
+ 
+ 	mddev_unlock(mddev);
++	if (suspended)
++		__mddev_resume(mddev);
++
+ 	md_wakeup_thread(mddev->sync_thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	md_new_event();
+@@ -9507,6 +9516,8 @@ static void md_start_sync(struct work_struct *ws)
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 	mddev_unlock(mddev);
++	if (suspended)
++		__mddev_resume(mddev);
+ 
+ 	wake_up(&resync_wait);
+ 	if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
 -- 
 2.39.2
 
