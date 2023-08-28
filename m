@@ -2,56 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82C51C83F1B
-	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 02:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B9B4C83F16
+	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 02:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229829AbjH1CFP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 27 Aug 2023 22:05:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45274 "EHLO
+        id S229872AbjH1CFT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 27 Aug 2023 22:05:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229728AbjH1CEy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 22:04:54 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB6C9123;
-        Sun, 27 Aug 2023 19:04:51 -0700 (PDT)
+        with ESMTP id S229734AbjH1CEz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 22:04:55 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D827CDA;
+        Sun, 27 Aug 2023 19:04:53 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RYv5B10czz4f3mLR;
-        Mon, 28 Aug 2023 10:04:46 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RYv5G6RSGz4f3kpJ;
+        Mon, 28 Aug 2023 10:04:50 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S14;
-        Mon, 28 Aug 2023 10:04:49 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S18;
+        Mon, 28 Aug 2023 10:04:51 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
         song@kernel.org, xni@redhat.com
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 10/28] md/raid5-cache: use READ_ONCE/WRITE_ONCE for 'conf->log'
-Date:   Mon, 28 Aug 2023 10:00:03 +0800
-Message-Id: <20230828020021.2489641-11-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 14/28] md/raid5: use new apis to suspend array for raid5_store_skip_copy()
+Date:   Mon, 28 Aug 2023 10:00:07 +0800
+Message-Id: <20230828020021.2489641-15-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
 References: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S14
-X-Coremail-Antispam: 1UD129KBjvJXoWxKFWxtrWftFWkCF1xJw1UWrg_yoWxKrWfpa
-        93ta43Xr4kJr9YvFnrCF4DuF4Sg3yv93s7JrW3Ga9ayF9a9rW8Ja4fJry3ZFyrJFy8CrWf
-        WrZ8tryUWrn7Ar7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-        kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAF
-        wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
-        0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-        SdkUUUUU=
+X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S18
+X-Coremail-Antispam: 1UD129KBjvdXoWrZFWUZF4ftFWrKr45Kr1rZwb_yoWkurc_K3
+        Z3uFW3trySgry5Xw15K3WfZr18t3WkWwn7Xa4Yyayjvr45XF1rKr95Xr4rJrs2vFyjgrW8
+        Kry0vw4UZr4jgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbqxFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+        IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+        F7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
+        1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+        M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+        v20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+        F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
+        IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
+        wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
+        0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r4j6ryUMIIF0xvE2Ix0cI8IcVCY1x0267AK
+        xVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JV
+        WxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZ
+        X7UUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -60,216 +60,44 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-'conf->log' is set with 'reconfig_mutex' grabbed, however, readers are
-not procted, hence use READ_ONCE/WRITE_ONCE to prevent reading abnormal
-value.
+Convert to use new apis, the old apis will be removed eventually.
+
+This is not hot path, so performance is not concerned.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid5-cache.c | 47 +++++++++++++++++++++-------------------
- 1 file changed, 25 insertions(+), 22 deletions(-)
+ drivers/md/raid5.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 518b7cfa78b9..889bba60d6ff 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -327,8 +327,9 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space);
- void r5c_check_stripe_cache_usage(struct r5conf *conf)
- {
- 	int total_cached;
-+	struct r5l_log *log = READ_ONCE(conf->log);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f1c32b4d190f..c937716fed01 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7151,7 +7151,7 @@ raid5_store_skip_copy(struct mddev *mddev, const char *page, size_t len)
+ 		return -EINVAL;
+ 	new = !!new;
  
--	if (!r5c_is_writeback(conf->log))
-+	if (!r5c_is_writeback(log))
- 		return;
+-	err = mddev_lock(mddev);
++	err = mddev_suspend_and_lock(mddev);
+ 	if (err)
+ 		return err;
+ 	conf = mddev->private;
+@@ -7160,15 +7160,13 @@ raid5_store_skip_copy(struct mddev *mddev, const char *page, size_t len)
+ 	else if (new != conf->skip_copy) {
+ 		struct request_queue *q = mddev->queue;
  
- 	total_cached = atomic_read(&conf->r5c_cached_partial_stripes) +
-@@ -344,7 +345,7 @@ void r5c_check_stripe_cache_usage(struct r5conf *conf)
- 	 */
- 	if (total_cached > conf->min_nr_stripes * 1 / 2 ||
- 	    atomic_read(&conf->empty_inactive_list_nr) > 0)
--		r5l_wake_reclaim(conf->log, 0);
-+		r5l_wake_reclaim(log, 0);
- }
- 
- /*
-@@ -353,7 +354,9 @@ void r5c_check_stripe_cache_usage(struct r5conf *conf)
-  */
- void r5c_check_cached_full_stripe(struct r5conf *conf)
- {
--	if (!r5c_is_writeback(conf->log))
-+	struct r5l_log *log = READ_ONCE(conf->log);
-+
-+	if (!r5c_is_writeback(log))
- 		return;
- 
- 	/*
-@@ -363,7 +366,7 @@ void r5c_check_cached_full_stripe(struct r5conf *conf)
- 	if (atomic_read(&conf->r5c_cached_full_stripes) >=
- 	    min(R5C_FULL_STRIPE_FLUSH_BATCH(conf),
- 		conf->chunk_sectors >> RAID5_STRIPE_SHIFT(conf)))
--		r5l_wake_reclaim(conf->log, 0);
-+		r5l_wake_reclaim(log, 0);
- }
- 
- /*
-@@ -396,7 +399,7 @@ void r5c_check_cached_full_stripe(struct r5conf *conf)
-  */
- static sector_t r5c_log_required_to_flush_cache(struct r5conf *conf)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	if (!r5c_is_writeback(log))
- 		return 0;
-@@ -449,7 +452,7 @@ static inline void r5c_update_log_state(struct r5l_log *log)
- void r5c_make_stripe_write_out(struct stripe_head *sh)
- {
- 	struct r5conf *conf = sh->raid_conf;
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	BUG_ON(!r5c_is_writeback(log));
- 
-@@ -491,7 +494,7 @@ static void r5c_handle_parity_cached(struct stripe_head *sh)
-  */
- static void r5c_finish_cache_stripe(struct stripe_head *sh)
- {
--	struct r5l_log *log = sh->raid_conf->log;
-+	struct r5l_log *log = READ_ONCE(sh->raid_conf->log);
- 
- 	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH) {
- 		BUG_ON(test_bit(STRIPE_R5C_CACHING, &sh->state));
-@@ -692,7 +695,7 @@ static void r5c_disable_writeback_async(struct work_struct *work)
- 
- 	/* wait superblock change before suspend */
- 	wait_event(mddev->sb_wait,
--		   conf->log == NULL ||
-+		   !READ_ONCE(conf->log) ||
- 		   (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) &&
- 		    (locked = mddev_trylock(mddev))));
- 	if (locked) {
-@@ -1151,7 +1154,7 @@ static void r5l_run_no_space_stripes(struct r5l_log *log)
- static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- {
- 	struct stripe_head *sh;
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	sector_t new_cp;
- 	unsigned long flags;
- 
-@@ -1159,12 +1162,12 @@ static sector_t r5c_calculate_new_cp(struct r5conf *conf)
- 		return log->next_checkpoint;
- 
- 	spin_lock_irqsave(&log->stripe_in_journal_lock, flags);
--	if (list_empty(&conf->log->stripe_in_journal_list)) {
-+	if (list_empty(&log->stripe_in_journal_list)) {
- 		/* all stripes flushed */
- 		spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
- 		return log->next_checkpoint;
+-		mddev_suspend(mddev);
+ 		conf->skip_copy = new;
+ 		if (new)
+ 			blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, q);
+ 		else
+ 			blk_queue_flag_clear(QUEUE_FLAG_STABLE_WRITES, q);
+-		mddev_resume(mddev);
  	}
--	sh = list_first_entry(&conf->log->stripe_in_journal_list,
-+	sh = list_first_entry(&log->stripe_in_journal_list,
- 			      struct stripe_head, r5c);
- 	new_cp = sh->log_start;
- 	spin_unlock_irqrestore(&log->stripe_in_journal_lock, flags);
-@@ -1399,7 +1402,7 @@ void r5c_flush_cache(struct r5conf *conf, int num)
- 	struct stripe_head *sh, *next;
- 
- 	lockdep_assert_held(&conf->device_lock);
--	if (!conf->log)
-+	if (!READ_ONCE(conf->log))
- 		return;
- 
- 	count = 0;
-@@ -1420,7 +1423,7 @@ void r5c_flush_cache(struct r5conf *conf, int num)
- 
- static void r5c_do_reclaim(struct r5conf *conf)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	struct stripe_head *sh;
- 	int count = 0;
- 	unsigned long flags;
-@@ -1549,7 +1552,7 @@ static void r5l_reclaim_thread(struct md_thread *thread)
- {
- 	struct mddev *mddev = thread->mddev;
- 	struct r5conf *conf = mddev->private;
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	if (!log)
- 		return;
-@@ -1591,7 +1594,7 @@ void r5l_quiesce(struct r5l_log *log, int quiesce)
- 
- bool r5l_log_disk_error(struct r5conf *conf)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	/* don't allow write if journal disk is missing */
- 	if (!log)
-@@ -2635,7 +2638,7 @@ int r5c_try_caching_write(struct r5conf *conf,
- 			  struct stripe_head_state *s,
- 			  int disks)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	int i;
- 	struct r5dev *dev;
- 	int to_cache = 0;
-@@ -2802,7 +2805,7 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 				 struct stripe_head *sh,
- 				 struct stripe_head_state *s)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	int i;
- 	int do_wakeup = 0;
- 	sector_t tree_index;
-@@ -2941,7 +2944,7 @@ int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh)
- /* check whether this big stripe is in write back cache. */
- bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect)
- {
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 	sector_t tree_index;
- 	void *slot;
- 
-@@ -3049,14 +3052,14 @@ int r5l_start(struct r5l_log *log)
- void r5c_update_on_rdev_error(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	struct r5conf *conf = mddev->private;
--	struct r5l_log *log = conf->log;
-+	struct r5l_log *log = READ_ONCE(conf->log);
- 
- 	if (!log)
- 		return;
- 
- 	if ((raid5_calc_degraded(conf) > 0 ||
- 	     test_bit(Journal, &rdev->flags)) &&
--	    conf->log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
-+	    log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_BACK)
- 		schedule_work(&log->disable_writeback_work);
+-	mddev_unlock(mddev);
++	mddev_unlock_and_resume(mddev);
+ 	return err ?: len;
  }
- 
-@@ -3145,7 +3148,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	spin_lock_init(&log->stripe_in_journal_lock);
- 	atomic_set(&log->stripe_in_journal_count, 0);
- 
--	conf->log = log;
-+	WRITE_ONCE(conf->log, log);
- 
- 	set_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
- 	return 0;
-@@ -3173,7 +3176,7 @@ void r5l_exit_log(struct r5conf *conf)
- 	 * 'reconfig_mutex' is held by caller, set 'confg->log' to NULL to
- 	 * ensure disable_writeback_work wakes up and exits.
- 	 */
--	conf->log = NULL;
-+	WRITE_ONCE(conf->log, NULL);
- 	wake_up(&conf->mddev->sb_wait);
- 	flush_work(&log->disable_writeback_work);
  
 -- 
 2.39.2
