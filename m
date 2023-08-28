@@ -2,56 +2,53 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D270EC83F10
-	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 02:05:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31EF5C83F16
+	for <linux-raid@archiver.kernel.org>; Mon, 28 Aug 2023 02:05:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229762AbjH1CFJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 27 Aug 2023 22:05:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48798 "EHLO
+        id S229789AbjH1CFM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 27 Aug 2023 22:05:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229600AbjH1CEv (ORCPT
+        with ESMTP id S229642AbjH1CEv (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Aug 2023 22:04:51 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C15D123;
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F2D4DA;
         Sun, 27 Aug 2023 19:04:48 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4RYv563tnkz4f3lx6;
-        Mon, 28 Aug 2023 10:04:42 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RYv5847Sjz4f3jqY;
+        Mon, 28 Aug 2023 10:04:44 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S6;
-        Mon, 28 Aug 2023 10:04:45 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnBai7AOxk9qcCBw--.25880S4;
+        Mon, 28 Aug 2023 10:04:44 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
         song@kernel.org, xni@redhat.com
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 02/28] md: use 'mddev->suspended' for is_md_suspended()
-Date:   Mon, 28 Aug 2023 09:59:55 +0800
-Message-Id: <20230828020021.2489641-3-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 00/28] md: synchronize io with array reconfiguration
+Date:   Mon, 28 Aug 2023 09:59:53 +0800
+Message-Id: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
-References: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kw18JryUAFWfCFyxAF1UJrb_yoW8Gry8pF
-        WIqFWFvrWUAFyayw4DJa4kua45Z3ZxKrWvyry3Can3u3W3Zrn8WF1fuFZ0vr1v9FySkrnx
-        Xw4Ut348CF18Cr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-        x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUHbyAUUUUU
-        =
+X-CM-TRANSID: gCh0CgAnBai7AOxk9qcCBw--.25880S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxZFWxCw1UWF1ruFyUAw18Xwb_yoW5tFWUp3
+        9rtFZIvw48JFy5Ar4xX34DGF95Jw4rKrZFkr9xCw1rC3W3GryrArW8Gr98XrZYkFyfAr9r
+        Ja4DX34rGr18Aa7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+        Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+        0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v2
+        6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
+        UdHUDUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -60,43 +57,93 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-'pers->prepare_suspend' is introduced to prevent a deadlock for raid456,
-this change prepares to clean this up in later patches while refactoring
-mddev_suspend(). Specifically allow reshape to make progress while
-waiting for 'active_io' to be 0.
+Changes in v2:
+ - rebase with latest md-next
+ - remove some follow up cleanup patches, these patches will be sent
+ later after this patchset.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 2 +-
- drivers/md/md.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+After previous four patchset of preparatory work, this patchset impelement
+a new version of mddev_suspend(), the new apis:
+ - reconfig_mutex is not required;
+ - the weird logical that suspend array hold 'reconfig_mutex' for
+   mddev_check_recovery() to update superblock is not needed;
+ - the special handling, 'pers->prepare_suspend', for raid456 is not
+   needed;
+ - It's safe to be called at any time once mddev is allocated, and it's
+   designed to be used from slow path where array configuration is changed;
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9d8dff9d923c..7fa311a14317 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -355,7 +355,7 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
-  */
- static bool is_suspended(struct mddev *mddev, struct bio *bio)
- {
--	if (is_md_suspended(mddev))
-+	if (is_md_suspended(mddev) || percpu_ref_is_dying(&mddev->active_io))
- 		return true;
- 	if (bio_data_dir(bio) != WRITE)
- 		return false;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index b628c292506e..fb3b123f16dd 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -584,7 +584,7 @@ static inline bool md_is_rdwr(struct mddev *mddev)
- 
- static inline bool is_md_suspended(struct mddev *mddev)
- {
--	return percpu_ref_is_dying(&mddev->active_io);
-+	return READ_ONCE(mddev->suspended);
- }
- 
- static inline int __must_check mddev_lock(struct mddev *mddev)
+And use the new api to replace:
+
+mddev_lock
+mddev_suspend or not
+// array reconfiguration
+mddev_resume or not
+mddev_unlock
+
+With:
+
+mddev_suspend
+mddev_lock
+// array reconfiguration
+mddev_unlock
+mddev_resume
+
+However, the above change is not possible for raid5 and raid-cluster in
+some corner cases, and mddev_suspend/resume() is replaced with quiesce()
+callback, which will suspend the array as well.
+
+This patchset is tested in my VM with mdadm testsuite with loop device
+except for 10ddf tests(they always fail before this patchset).
+
+A lot of cleanups will be started after this patchset.
+
+Yu Kuai (28):
+  md: use READ_ONCE/WRITE_ONCE for 'suspend_lo' and 'suspend_hi'
+  md: use 'mddev->suspended' for is_md_suspended()
+  md: add new helpers to suspend/resume array
+  md: add new helpers to suspend/resume and lock/unlock array
+  md: use new apis to suspend array for suspend_lo/hi_store()
+  md: use new apis to suspend array for level_store()
+  md: use new apis to suspend array for serialize_policy_store()
+  md/dm-raid: use new apis to suspend array
+  md/md-bitmap: use new apis to suspend array for location_store()
+  md/raid5-cache: use READ_ONCE/WRITE_ONCE for 'conf->log'
+  md/raid5-cache: use new apis to suspend array for
+    r5c_disable_writeback_async()
+  md/raid5-cache: use new apis to suspend array for
+    r5c_journal_mode_store()
+  md/raid5: use new apis to suspend array for raid5_store_stripe_size()
+  md/raid5: use new apis to suspend array for raid5_store_skip_copy()
+  md/raid5: use new apis to suspend array for
+    raid5_store_group_thread_cnt()
+  md/raid5: use new apis to suspend array for
+    raid5_change_consistency_policy()
+  md/raid5: replace suspend with quiesce() callback
+  md: quiesce before md_kick_rdev_from_array() for md-cluster
+  md: use new apis to suspend array for ioctls involed array
+    reconfiguration
+  md: use new apis to suspend array for adding/removing rdev from
+    state_store()
+  md: use new apis to suspend array for bind_rdev_to_array()
+  md: use new apis to suspend array related to serial pool in
+    state_store()
+  md: use new apis to suspend array in backlog_store()
+  md: suspend array in md_start_sync() if array need reconfiguration
+  md: cleanup mddev_create/destroy_serial_pool()
+  md/md-linear: cleanup linear_add()
+  md: remove old apis to suspend the array
+  md: rename __mddev_suspend/resume() back to mddev_suspend/resume()
+
+ drivers/md/dm-raid.c       |   8 +-
+ drivers/md/md-autodetect.c |   4 +-
+ drivers/md/md-bitmap.c     |  18 ++-
+ drivers/md/md-linear.c     |   2 -
+ drivers/md/md.c            | 250 ++++++++++++++++++++++---------------
+ drivers/md/md.h            |  52 ++++++--
+ drivers/md/raid5-cache.c   |  61 +++++----
+ drivers/md/raid5.c         |  56 ++++-----
+ 8 files changed, 253 insertions(+), 198 deletions(-)
+
 -- 
 2.39.2
 
