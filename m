@@ -2,54 +2,54 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0358C83F21
-	for <linux-raid@archiver.kernel.org>; Wed, 30 Aug 2023 18:48:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00559C83F1A
+	for <linux-raid@archiver.kernel.org>; Wed, 30 Aug 2023 18:48:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243274AbjH3SrY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:47:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35248 "EHLO
+        id S243293AbjH3Sr0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:47:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242771AbjH3Jdj (ORCPT
+        with ESMTP id S242769AbjH3Jdj (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 30 Aug 2023 05:33:39 -0400
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB5B5CCB;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FA121A1;
         Wed, 30 Aug 2023 02:33:36 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RbJy54gs1z4f3pBl;
-        Wed, 30 Aug 2023 17:33:33 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RbJy43C8pz4f3pHy;
+        Wed, 30 Aug 2023 17:33:32 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgD3hqnrDO9kkRu9Bw--.49032S6;
-        Wed, 30 Aug 2023 17:33:34 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgD3hqnrDO9kkRu9Bw--.49032S5;
+        Wed, 30 Aug 2023 17:33:33 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 2/2] md: fix potential hang for mddev_suspend()
-Date:   Wed, 30 Aug 2023 17:29:02 +0800
-Message-Id: <20230830092902.1236950-3-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 1/2] md: factor out helpers to grab and put 'active_io'
+Date:   Wed, 30 Aug 2023 17:29:01 +0800
+Message-Id: <20230830092902.1236950-2-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230830092902.1236950-1-yukuai1@huaweicloud.com>
 References: <20230830092902.1236950-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3hqnrDO9kkRu9Bw--.49032S6
-X-Coremail-Antispam: 1UD129KBjvdXoWrKr1ktF4DXFW7Wr15Ww1fXrb_yoWkXFgE9F
-        s0v34xWF17ur18Kr1UZa1SvrWFkan8Wr4kWFWSgr43AF93X3y0yF9Yk3s8X34fuFWIyasa
-        yw1jqF1rZFsrJjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb-kFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY02
-        0Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
-        wVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
-        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
-        026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
-        JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
-        v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
-        j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JV
-        W8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjYiiDUUUUU==
+X-CM-TRANSID: gCh0CgD3hqnrDO9kkRu9Bw--.49032S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr47Kr4xtryDurWxtrW3GFg_yoW8uryxpa
+        yIqa90yrWDJrZxKw43JFyDWa4rWr1vgFZ7KrWxGa4fA3W2vr95Ka1Yga10qrn5Cayfuwnx
+        Aw1vqF17GF1xArUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9m14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+        x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+        Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2
+        IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
+        6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
+        AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
+        s7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
+        0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqAp5UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,34 +58,86 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Commit 72adae23a72c ("md: Change active_io to percpu") drop that if
-'active_io' is decreased to 0 and array is suspended, 'sb_wait' will be
-woke up. This is wrong, however, there is no regression reported and I
-think this is probably because 'sb_wait' is used in many scenarios and
-it's woke up from other context.
+There are no functional changes, prepare to fix a problem that 'sb_wait'
+is not woke up while 'active_io' is decreased to 0.
 
-Anyway, fix this potential problem by waking up 'sb_wait' in this case.
-
-Fixes: 72adae23a72c ("md: Change active_io to percpu")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/md/md.c | 33 +++++++++++++++++++++++++++------
+ 1 file changed, 27 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0d69b1a2e2d5..1c7eb3cfadb4 100644
+index 0fe7ab6e8ab9..0d69b1a2e2d5 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -399,6 +399,9 @@ static bool md_array_enter(struct mddev *mddev, struct bio *bio)
- static void md_array_exit(struct mddev *mddev)
- {
- 	percpu_ref_put(&mddev->active_io);
-+	if (percpu_ref_is_zero(&mddev->active_io) &&
-+	    wq_has_sleeper(&mddev->sb_wait))
-+		wake_up(&mddev->sb_wait);
+@@ -368,16 +368,18 @@ static bool is_suspended(struct mddev *mddev, struct bio *bio)
+ 	return true;
  }
  
- void md_handle_request(struct mddev *mddev, struct bio *bio)
+-void md_handle_request(struct mddev *mddev, struct bio *bio)
++static bool md_array_enter(struct mddev *mddev, struct bio *bio)
+ {
+ check_suspended:
+ 	if (is_suspended(mddev, bio)) {
+ 		DEFINE_WAIT(__wait);
++
+ 		/* Bail out if REQ_NOWAIT is set for the bio */
+ 		if (bio->bi_opf & REQ_NOWAIT) {
+ 			bio_wouldblock_error(bio);
+-			return;
++			return false;
+ 		}
++
+ 		for (;;) {
+ 			prepare_to_wait(&mddev->sb_wait, &__wait,
+ 					TASK_UNINTERRUPTIBLE);
+@@ -387,15 +389,34 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
+ 		}
+ 		finish_wait(&mddev->sb_wait, &__wait);
+ 	}
++
+ 	if (!percpu_ref_tryget_live(&mddev->active_io))
+ 		goto check_suspended;
+ 
++	return true;
++}
++
++static void md_array_exit(struct mddev *mddev)
++{
++	percpu_ref_put(&mddev->active_io);
++}
++
++void md_handle_request(struct mddev *mddev, struct bio *bio)
++{
++retry:
++	if (!md_array_enter(mddev, bio))
++		return;
++
+ 	if (!mddev->pers->make_request(mddev, bio)) {
+-		percpu_ref_put(&mddev->active_io);
+-		goto check_suspended;
++		md_array_exit(mddev);
++		goto retry;
+ 	}
+ 
+-	percpu_ref_put(&mddev->active_io);
++	/*
++	 * pers->make_request() will grab additional reference until bio is
++	 * done.
++	 */
++	md_array_exit(mddev);
+ }
+ EXPORT_SYMBOL(md_handle_request);
+ 
+@@ -8667,7 +8688,7 @@ static void md_end_clone_io(struct bio *bio)
+ 
+ 	bio_put(bio);
+ 	bio_endio(orig_bio);
+-	percpu_ref_put(&mddev->active_io);
++	md_array_exit(mddev);
+ }
+ 
+ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
 -- 
 2.39.2
 
