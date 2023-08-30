@@ -2,89 +2,100 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E911C83F20
-	for <linux-raid@archiver.kernel.org>; Tue, 29 Aug 2023 11:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D48C8C83F18
+	for <linux-raid@archiver.kernel.org>; Wed, 30 Aug 2023 01:37:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235294AbjH2LDi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 29 Aug 2023 07:03:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36964 "EHLO
+        id S241585AbjH3BhQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 29 Aug 2023 21:37:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235370AbjH2LDP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 29 Aug 2023 07:03:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07E8DCDA;
-        Tue, 29 Aug 2023 04:03:00 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 54FF9654FA;
-        Tue, 29 Aug 2023 11:03:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A91DC433C8;
-        Tue, 29 Aug 2023 11:02:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693306979;
-        bh=U8tO0dLFljDnktuq80r4afitP93wv2ZaRihVU0Qyu2I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Zpf44oWH5Z2L6QhPNIGp7PeBhJpnP4KfVurKgcL9DEj/BIRmEq8ijJzbb6q5k8Ovs
-         9bWmbNzBkJw5MyDAxRy27lwjHGda6NbScABpEWJtXeah3765gQ9TUqIkk0ScRRsr4B
-         pgJc/+HtIStX4e0zZcs6Mgm/y0cAQCiR+vX0i9HUCQ2jW21Dvj1m5KvDe2xJG8sZD9
-         7J/ySnM4IatjDikdEeiDLegDHPGVAKFz5CZJOY4FIoLRlouJhKb12RDwuxVPSp/21Q
-         Im6ZTKLVuSh6T0hvwNEhJP5WmzsfCpgy49EfIICESoo8yOH/FPp5HVYEAtlfB2KJ19
-         jLNduaFs+ry8A==
-Date:   Tue, 29 Aug 2023 13:02:47 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v3 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <20230829-stark-trapez-2251bf78c6a9@brauner>
-References: <20230818123232.2269-1-jack@suse.cz>
- <20230825-hubraum-gedreht-8c5c4db9330a@brauner>
- <20230828170744.iifdmaw732cfiauf@quack3>
+        with ESMTP id S241582AbjH3BhF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 29 Aug 2023 21:37:05 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A5BBCCF;
+        Tue, 29 Aug 2023 18:37:02 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rb6N73cMFz4f4XWd;
+        Wed, 30 Aug 2023 09:36:55 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgAXp6k1ne5kuWmhBw--.59943S3;
+        Wed, 30 Aug 2023 09:36:55 +0800 (CST)
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+To:     Dragan Stancevic <dragan@stancevic.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+Cc:     buczek@molgen.mpg.de, guoqing.jiang@linux.dev,
+        it+raid@molgen.mpg.de, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, msmith626@gmail.com,
+        "yangerkun@huawei.com" <yangerkun@huawei.com>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
+ <20230822211627.1389410-1-dragan@stancevic.com>
+ <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
+ <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
+ <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
+ <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
+Date:   Wed, 30 Aug 2023 09:36:53 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20230828170744.iifdmaw732cfiauf@quack3>
+In-Reply-To: <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAXp6k1ne5kuWmhBw--.59943S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7XFyxXryfCr4rZF1kAFykAFb_yoWfuFX_ur
+        45KFyxKw13J3Wjya1UGFnavFs3KFy7W34kJrW0kFsF9r1fZan3CFsagr98Ca48Kan5Zwsx
+        ta98Jw4DXr1YyjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb3AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq
+        3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+        nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-> replacement) I think we can go ahead with the series as is. As you said
-> there will be some conflicts in btrfs and I've learned about f2fs conflicts
-> as well so I can rebase & repost the series on top of rc1 to make life
-> easier for you.
+Hi,
 
-That is be much appreciated. Thank you!
+在 2023/08/29 4:32, Dragan Stancevic 写道:
+
+> Just a followup on 6.1 testing. I tried reproducing this problem for 5 
+> days with 6.1.42 kernel without your patches and I was not able to 
+> reproduce it.
+> 
+> It seems that 6.1 has some other code that prevents this from happening.
+> 
+
+I see that there are lots of patches for raid456 between 5.10 and 6.1,
+however, I remember that I used to reporduce the deadlock after 6.1, and
+it's true it's not easy to reporduce, see below:
+
+https://lore.kernel.org/linux-raid/e9067438-d713-f5f3-0d3d-9e6b0e9efa0e@huaweicloud.com/
+
+My guess is that 6.1 is harder to reporduce than 5.10 due to some
+changes inside raid456.
+
+By the way, raid10 had a similiar deadlock, and can be fixed the same
+way, so it make sense to backport these patches.
+
+https://lore.kernel.org/r/20230529132037.2124527-5-yukuai1@huaweicloud.com
+
+Thanks,
+Kuai
+
+
+> On 5.10 I can reproduce it within minutes to an hour.
+> 
+
