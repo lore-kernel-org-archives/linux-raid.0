@@ -2,69 +2,98 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37C93CA0FE4
-	for <linux-raid@archiver.kernel.org>; Fri,  1 Sep 2023 16:16:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EB9ACA0FF3
+	for <linux-raid@archiver.kernel.org>; Fri,  1 Sep 2023 20:24:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344971AbjIAQQk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 1 Sep 2023 12:16:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53308 "EHLO
+        id S1350716AbjIAUYC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 1 Sep 2023 16:24:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345362AbjIAQQj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 1 Sep 2023 12:16:39 -0400
-Received: from sender-op-o10.zoho.eu (sender-op-o10.zoho.eu [136.143.169.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66CF010FA
-        for <linux-raid@vger.kernel.org>; Fri,  1 Sep 2023 09:16:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1693584988; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=cnNd+8KKo7V7a/qGBalX/YD4R5zPDhhwugWxILQCl0clFik/vZeszxY/TKQRQFzp2bpshLHHsNrePY/GlbJgNtkdXDXNnFAE2ZkhEc6+mzQXJF6y9LswIPokfaO7dFspFrP2XaVA385ap613YC+QKr93chXCTVQxeKLAkOcRIFA=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1693584988; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-        bh=AnRnXKr8cgAarVJ7VLvC4nm7tT0FFScWn4xEKt7gGi8=; 
-        b=Gpn0dyuWBcOO6hVn95wMfp54vymAA0gdmB0neA3XUT1LL51lN0tepIAIseMqkTjXYREURkqBy9/ekAFoVyKFtH5wf1WYHAar3tKV6H9HmMc+k0Ays37buFm/AOzW1+vTuZVWvPsSTOC1bMyQ/eOr5avHonzcPauPM03gjCLzQkY=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.50] (pool-98-113-67-206.nycmny.fios.verizon.net [98.113.67.206]) by mx.zoho.eu
-        with SMTPS id 169358498619037.95035511125877; Fri, 1 Sep 2023 18:16:26 +0200 (CEST)
-Message-ID: <cd03eb71-8dc8-3c42-f5ad-1c6ad1ea4b8f@trained-monkey.org>
-Date:   Fri, 1 Sep 2023 12:16:24 -0400
+        with ESMTP id S244443AbjIAUYC (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 1 Sep 2023 16:24:02 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84B42E7E
+        for <linux-raid@vger.kernel.org>; Fri,  1 Sep 2023 13:23:58 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-500760b296aso469616e87.0
+        for <linux-raid@vger.kernel.org>; Fri, 01 Sep 2023 13:23:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1693599836; x=1694204636; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=4zU8YFCJfrESduucsXqptkeesw4nMd1tzfSfc8JxrL0=;
+        b=QKqgVChp7IX5gXH/TUxBhCgv+WSuoC8FrObKVpq4CQ46jvAmzxai2+q31/Mkp10Wim
+         gv6tefBnzQEoJfL3/YODIyfkWY2YUsL7YwQSBwANHA6uDBXS9RLV2SPDv3nVLUkfHE5i
+         oJUZtJA3ToBe0Yh0KNBBPtNQzuTaknoTlI8mX1cA/YIEO2Yww3Q5jQWnFFQfuvhILYDu
+         63OIioqSpPi9ObHIk0Kb8f6EvbF3aPw9H8PUNiFadehRKlrkWzErgrEvkKpgqN8vvk3v
+         WIWSG4AdbcjJ/l7KM0+I7NYW/N1Hix5Ayb19W/A/q5XyFkA6WHar8+H/Z1BnIdwWXHmj
+         1Y3g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693599836; x=1694204636;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=4zU8YFCJfrESduucsXqptkeesw4nMd1tzfSfc8JxrL0=;
+        b=YMPUzegkj8n4+Wt0ZC+Bt8gKqH6ZmneHxDmqbHENkqjNwtHQwlTX+n+e2An9pVKWXo
+         pGwpcWsD/EqAwbrkC+cSas+Oj7Uhl846zI0Wpk7K8QT8YY7Un2DVuygUJL12lBn7YANY
+         aqps8tiOERyJDDkU0jpr3N9gNJolqpCrAv7/Lbc0G/+RyGAeICzaQTjqvL0ERUXMT1m3
+         93ojybBRzO3u0F62pp2TUNm2ZedR2k9139QtckJalIG8a8XrUV3iwdMq7JOcVBdkMYSy
+         ZxfNdxxoeMidcVhaNkWepCnqdkDP9Rgbq7saiHwCnMb+j57EkmJYKdPoa5GbHHfofEfh
+         xmkw==
+X-Gm-Message-State: AOJu0Ywe87fseRWJi52bT6YA1v0ICK8bhTzmUFogYf5HHaeAvVbI38Xe
+        5MN5/qAsfaCTlhGYhmBDIpXoLMrrjyYEY20JuGUmep3GYFPQ5A==
+X-Google-Smtp-Source: AGHT+IHPjkcU2aDHjRfin4mi9wnfPF9CiaMjWlGyITHhZuXHlMAaPAc25lewW1fDNTbPvVl47cLR7ZOYvMgdvwSgJ98=
+X-Received: by 2002:a05:6512:39c5:b0:500:7bf0:2b91 with SMTP id
+ k5-20020a05651239c500b005007bf02b91mr2571325lfu.13.1693599836350; Fri, 01 Sep
+ 2023 13:23:56 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] Add compiler defenses flags
-Content-Language: en-US
-To:     Mateusz Grzonka <mateusz.grzonka@intel.com>,
-        linux-raid@vger.kernel.org
-References: <20230717131910.22713-1-mateusz.grzonka@intel.com>
-Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20230717131910.22713-1-mateusz.grzonka@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+From:   CoolCold <coolthecold@gmail.com>
+Date:   Sat, 2 Sep 2023 03:23:00 +0700
+Message-ID: <CAGqmV7qBPeW0Ua1xgiU+p9aDwWMTvc-28iC8kuTzc654wrnmgQ@mail.gmail.com>
+Subject: raid10, far layout initial sync slow + XFS question
+To:     Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 7/17/23 09:19, Mateusz Grzonka wrote:
-> It is essential to avoid buffer overflows and similar bugs as much as
-> possible.
-> 
-> According to Intel rules we are obligated to verify certain
-> compiler flags, so it will be much easier if they are added to the
-> Makefile.
-> 
-> Add gcc flags for prevention of buffer overflows, format string vulnerabilities,
-> stack protection to prevent stack overwrites and aslr enablement through -fPIE.
-> Also make the flags configurable.
-> 
-> The changes were verified on gcc versions 7.5, 8.3, 9.2, 10 and 12.2.
-> 
-> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+Good day!
 
-Seems reasonable and fairly broad testing, so applied!
+I have 4 NVMe new drives which are planned to replace 2 current NVMe
+drives, serving primarily as MYSQL storage, Hetzner dedicated server
+AX161 if it matters. Drives are SAMSUNG MZQL23T8HCLS-00A07, 3.8TB .
+System - Ubuntu 20.04 / 5.4.0-153-generic #170-Ubuntu
 
-Thanks,
-Jes
+So the strange thing I do observe, is its initial raid sync speed.
+Created with:
+mdadm --create /dev/md3 --run -b none --level=10 --layout=f2
+--chunk=16 --raid-devices=4 /dev/nvme0n1 /dev/nvme4n1 /dev/nvme3n1
+/dev/nvme5n1
 
+sync speed:
 
+md3 : active raid10 nvme5n1[3] nvme3n1[2] nvme4n1[1] nvme0n1[0]
+      7501212288 blocks super 1.2 16K chunks 2 far-copies [4/4] [UUUU]
+      [=>...................]  resync =  6.2% (466905632/7501212288)
+finish=207.7min speed=564418K/sec
+
+If I try to create RAID1 with just two drives - sync speed is around
+3.2GByte per second, sysclt is tuned of course:
+dev.raid.speed_limit_max = 8000000
+
+Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5]
+[raid4] [raid10]
+md70 : active raid1 nvme4n1[1] nvme5n1[0]
+      3750606144 blocks super 1.2 [2/2] [UU]
+      [>....................]  resync =  1.5% (58270272/3750606144)
+finish=19.0min speed=3237244K/sec
+
+From iostat, drives are basically doing just READs, no writes.
+Quick tests with fio, mounting single drive shows it can do around 30k
+IOPS with 16kb ( fio --rw=write --ioengine=sync --fdatasync=1
+--directory=test-data --size=8200m --bs=16k --name=mytest ) so likely
+issue are not drives themselves.
+
+Not sure where to look further, please advise.
+
+-- 
+Best regards,
+[COOLCOLD-RIPN]
