@@ -2,890 +2,166 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D7DC71153
-	for <linux-raid@archiver.kernel.org>; Mon,  4 Sep 2023 16:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 410F2CA0FFB
+	for <linux-raid@archiver.kernel.org>; Tue,  5 Sep 2023 16:04:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239364AbjIDQjP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 4 Sep 2023 12:39:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40420 "EHLO
+        id S237016AbjIEQDo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:03:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234344AbjIDQjM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Sep 2023 12:39:12 -0400
-Received: from mail-yb1-xb2f.google.com (mail-yb1-xb2f.google.com [IPv6:2607:f8b0:4864:20::b2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD88E1B7
-        for <linux-raid@vger.kernel.org>; Mon,  4 Sep 2023 09:39:00 -0700 (PDT)
-Received: by mail-yb1-xb2f.google.com with SMTP id 3f1490d57ef6-d71dd633f33so1382152276.2
-        for <linux-raid@vger.kernel.org>; Mon, 04 Sep 2023 09:39:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693845540; x=1694450340; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eoxi9OxCKHxoRMqs+1TtQez8axi+DTF1pafJXhU66Xk=;
-        b=lVmNYUI2eOueWk8OId/AsDMy92L4fADRJZQLkcNX4fHB7ND0yz+3XY25CBDyYCFKlz
-         X8+LWXzJQlHzsQb+ruVrXnTcNAAsghfIw+JnTsqOj7Npnlo5ofNJ/gmGjQqiCPb6HjMM
-         nwchyONr8T19hZU7m8E0BnykV4/fSLOpc5DdxbdtAFPJKm29WrlyTH1wALuNoLQvH7Ml
-         1gwLmk6z08melqkzzSRM888kDiBaGnyN3Y6HS4tqG5fTKuZyaNgELAXJQFEKivWaLynV
-         VKqMD+tPcvMLcV+zFKGw2S5U5LTGr4z5Mv7u9hvYte/RAcQxY+jW5VFx7zgHvj+SiUoK
-         fRqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693845540; x=1694450340;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eoxi9OxCKHxoRMqs+1TtQez8axi+DTF1pafJXhU66Xk=;
-        b=kwM0lVCZDhme3NkxV4W2CCuvZJj3vjCbNsQnSpoZtS8R1XYlKO4lhxNWM5W7UeQTfe
-         xQD5DioGpWjZbjhH8/iZxiPSACdYtdvfhJViJhOJULuUR/LiQc4wDvG+/EC0SEQvbQ3c
-         BVMqzst0fxWUYGK22V5h1yhFGphrfAlXvNhOM4S/BeVN1apL0C+4xmOsBpxDKDU+56m8
-         tI/BKt9UXiMqVztehj8mRFJj4+O14AmqHBro8XX/gSmdaEIZuCMesrpwbiisuOcN+xUT
-         qK0DgboGu+FkLe2vHlx/t8lYFbcOaCp+zQQ3AkoQrhaPRzS9cmZNCM9Ed6ERyi0hTNZ2
-         WNdw==
-X-Gm-Message-State: AOJu0Yyyr9YkmHZet2v0FTR4Iog7egzVANnXONnRaYV1ZbezkUYkOyXt
-        2cfzXQPFlA2mccGQrRym9saxXBhjwAha6WJ7uw==
-X-Google-Smtp-Source: AGHT+IFJlbeuD2i2kunP8kcJ0/go0GSo+JXuqwM5ApHjFLrV03mYxcQrHmX9httX/HNzS5o+JAKccaTx1aAmh3L6BCc=
-X-Received: by 2002:a25:554:0:b0:d7b:97e0:14ab with SMTP id
- 81-20020a250554000000b00d7b97e014abmr9922045ybf.57.1693845539548; Mon, 04 Sep
- 2023 09:38:59 -0700 (PDT)
+        with ESMTP id S1354732AbjIENye (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Sep 2023 09:54:34 -0400
+Received: from bee.birch.relay.mailchannels.net (bee.birch.relay.mailchannels.net [23.83.209.14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C8C6197;
+        Tue,  5 Sep 2023 06:54:30 -0700 (PDT)
+X-Sender-Id: dreamhost|x-authsender|dragan@stancevic.com
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+        by relay.mailchannels.net (Postfix) with ESMTP id 631BE6C1B64;
+        Tue,  5 Sep 2023 13:54:30 +0000 (UTC)
+Received: from pdx1-sub0-mail-a249.dreamhost.com (unknown [127.0.0.6])
+        (Authenticated sender: dreamhost)
+        by relay.mailchannels.net (Postfix) with ESMTPA id EB55D6C0A37;
+        Tue,  5 Sep 2023 13:54:27 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1693922068; a=rsa-sha256;
+        cv=none;
+        b=sfCdsw5E7KRHfj6qb6YmO0BB4kOSq1ntVsk3HDwmsQJck6haIW/8iUKzPmcIXyhpt5vBH7
+        VTjGmv/72bIT6LlgcbX1Md07B4Wf+YsfgvZXPjCth/2v2b3+SMDl1UimP3LBY9eGgNnbKl
+        Whxxc3kDAPysmpIW7HP/alr/kHYvZ4oapBBO4v+4zmwVKeCSr8D6TcVPZlDwoVnQsXwSpK
+        xob4R0G+N2CTdgJJ+dJTxXku0Xf2kJVywzPuKX42gDGBCDY2utcDvDmx9899lBnVBJ0YU4
+        JSRtGqp5z2b8OCPnAEtAdsfIYKlUGeax4rTdKxynqtSDjCPgG9HXM+w2qvHkXA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+        s=arc-2022; t=1693922068;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references:dkim-signature;
+        bh=YSrH/KnkOMtWbkKTTQFyMqEbfklmyppO1MILJK4fgqs=;
+        b=vq16WH467qElQg1T6C3st3Wj8VSqGT6UEEKI8vrS8kOPXgsp5gVJdMyFqq0KaYqlkZ/uZg
+        O/F26JUOGdDV4KCbbjIMC4Ilwd+yZm8DijKRcvObd400cLfjbrXXeU3irSIGazVpE9+VE9
+        3YxB7Qh+iNT6egJRtGyVFagEiZtUn0zH3ArZCQAxENPFhcazs/+qmFYvIamBPWK3KuBbvP
+        6HgJKYJmlBQlZkHJZOiGxEUEuwz0PSKl8+eOPQUEeUuKEDf1c8LZvFIzzthMFwy8kzlNZ+
+        sVCShbUwHxI5VkEX/m2V6VNqvNnvmgHXGKSpZ4N7SD3YsdVFzVHLq4X7EKzXvw==
+ARC-Authentication-Results: i=1;
+        rspamd-6fd95854bb-lb46n;
+        auth=pass smtp.auth=dreamhost smtp.mailfrom=dragan@stancevic.com
+X-Sender-Id: dreamhost|x-authsender|dragan@stancevic.com
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|dragan@stancevic.com
+X-MailChannels-Auth-Id: dreamhost
+X-Abiding-Macabre: 3b4a416e5ee73ca8_1693922068939_3873094390
+X-MC-Loop-Signature: 1693922068939:3117084652
+X-MC-Ingress-Time: 1693922068939
+Received: from pdx1-sub0-mail-a249.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+        by 100.120.143.185 (trex/6.9.1);
+        Tue, 05 Sep 2023 13:54:28 +0000
+Received: from [192.168.1.36] (99-160-136-52.lightspeed.nsvltn.sbcglobal.net [99.160.136.52])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dragan@stancevic.com)
+        by pdx1-sub0-mail-a249.dreamhost.com (Postfix) with ESMTPSA id 4Rg6SL751Rz1b;
+        Tue,  5 Sep 2023 06:54:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stancevic.com;
+        s=dreamhost; t=1693922067;
+        bh=YSrH/KnkOMtWbkKTTQFyMqEbfklmyppO1MILJK4fgqs=;
+        h=Date:Subject:To:Cc:From:Content-Type:Content-Transfer-Encoding;
+        b=byyMlp3+1fl5LGzbfN+YOL6wXZCQgOTBOG5ipX8gUSEV5aBIGNLAGUa0qOaDEpUjM
+         Y2otfwCbqxr5cEL4zZz8Gor4fXvs6PIC4Hs89+fF94NJmErxUG1Q9ytGovsXwCyK0A
+         2vBUCAWQ+npgZBemO+yJo5xYRUnvrPSckmnUnMGP768hidm4JwYswMuCpi7uyanPdc
+         L/dkujl4izMS183NDMUedFoNKSLq5GJz2yqhRb5qdRN8rdVa5vffj7k+P8Yzkf1Ey2
+         cjxY1jRHbM9osKzbt8ABD7QUYvVUT8NgqAeCUYUKBguhhjqKMZ0dox4SKCG2cIwR5j
+         zULsCfiaIa+JQ==
+Message-ID: <07ef7b78-66d4-d3de-4e25-8a889b902e14@stancevic.com>
+Date:   Tue, 5 Sep 2023 08:54:25 -0500
 MIME-Version: 1.0
-References: <CA+w1tCeQw5STTQAEoTHTcpT4s_nT0zdgGSce6n-CT24BbNmukA@mail.gmail.com>
- <afb56bef-4547-d7f1-d3c2-730b7d7658f2@huaweicloud.com>
-In-Reply-To: <afb56bef-4547-d7f1-d3c2-730b7d7658f2@huaweicloud.com>
-From:   Jason Moss <phate408@gmail.com>
-Date:   Mon, 4 Sep 2023 09:38:48 -0700
-Message-ID: <CA+w1tCeZmqreX_HRrsGRqq9-MmjNyo6VAt6sDEQgpS2R4=DxoA@mail.gmail.com>
-Subject: Re: Reshape Failure
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     linux-raid@vger.kernel.org,
-        "yangerkun@huawei.com" <yangerkun@huawei.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+Content-Language: en-US
+To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+Cc:     buczek@molgen.mpg.de, guoqing.jiang@linux.dev,
+        it+raid@molgen.mpg.de, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, msmith626@gmail.com,
+        "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
+ <20230822211627.1389410-1-dragan@stancevic.com>
+ <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
+ <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
+ <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
+ <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
+ <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
+ <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
+From:   Dragan Stancevic <dragan@stancevic.com>
+In-Reply-To: <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Kuai,
-
-Thank you for the suggestion, I was previously on 5.15.0. I've built
-an environment with 6.5.0.1 now and assembled the array there, but the
-same problem happens. It reshaped for 20-30 seconds, then completely
-stopped.
-
-Processes and /proc/<PID>/stack output:
-root       24593  0.0  0.0      0     0 ?        I<   09:22   0:00 [raid5wq=
-]
-root       24594 96.5  0.0      0     0 ?        R    09:22   2:29 [md0_rai=
-d6]
-root       24595  0.3  0.0      0     0 ?        D    09:22   0:00 [md0_res=
-hape]
-
-[root@arch ~]# cat /proc/24593/stack
-[<0>] rescuer_thread+0x2b0/0x3b0
-[<0>] kthread+0xe8/0x120
-[<0>] ret_from_fork+0x34/0x50
-[<0>] ret_from_fork_asm+0x1b/0x30
-
-[root@arch ~]# cat /proc/24594/stack
-
-[root@arch ~]# cat /proc/24595/stack
-[<0>] reshape_request+0x416/0x9f0 [raid456]
-[<0>] raid5_sync_request+0x2fc/0x3d0 [raid456]
-[<0>] md_do_sync+0x7d6/0x11d0 [md_mod]
-[<0>] md_thread+0xae/0x190 [md_mod]
-[<0>] kthread+0xe8/0x120
-[<0>] ret_from_fork+0x34/0x50
-[<0>] ret_from_fork_asm+0x1b/0x30
-
-Please let me know if there's a better way to provide the stack info.
-
-Thank you
-
-On Sun, Sep 3, 2023 at 6:41=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
+On 9/4/23 22:50, Yu Kuai wrote:
 > Hi,
->
-> =E5=9C=A8 2023/09/04 5:39, Jason Moss =E5=86=99=E9=81=93:
-> > Hello,
-> >
-> > I recently attempted to add a new drive to my 8-drive RAID 6 array,
-> > growing it to 9 drives. I've done similar before with the same array,
-> > having previously grown it from 6 drives to 7 and then from 7 to 8
-> > with no issues. Drives are WD Reds, most older than 2019, some
-> > (including the newest) newer, but all confirmed CMR and not SMR.
-> >
-> > Process used to expand the array:
-> > mdadm --add /dev/md0 /dev/sdb1
-> > mdadm --grow --raid-devices=3D9 --backup-file=3D/root/grow_md0.bak /dev=
-/md0
-> >
-> > The reshape started off fine, the process was underway, and the volume
-> > was still usable as expected. However, 15-30 minutes into the reshape,
-> > I lost access to the contents of the drive. Checking /proc/mdstat, the
-> > reshape was stopped at 0.6% with the counter not incrementing at all.
-> > Any process accessing the array would just hang until killed. I waited
->
-> What kernel version are you using? And it'll be very helpful if you can
-> collect the stack of all stuck thread. There is a known deadlock for
-> raid5 related to reshape, and it's fixed in v6.5:
->
-> https://lore.kernel.org/r/20230512015610.821290-6-yukuai1@huaweicloud.com
->
-> > a half hour and there was still no further change to the counter. At
-> > this point, I restarted the server and found that when it came back up
-> > it would begin reshaping again, but only very briefly, under 30
-> > seconds, but the counter would be increasing during that time.
-> >
-> > I searched furiously for ideas and tried stopping and reassembling the
-> > array, assembling with an invalid-backup flag, echoing "frozen" then
-> > "reshape" to the sync_action file, and echoing "max" to the sync_max
-> > file. Nothing ever seemed to make a difference.
-> >
->
-> Don't do this before v6.5, echo "reshape" while reshape is still in
-> progress will corrupt your data:
->
-> https://lore.kernel.org/r/20230512015610.821290-3-yukuai1@huaweicloud.com
->
+> 
+> 在 2023/08/30 9:36, Yu Kuai 写道:
+>> Hi,
+>>
+>> 在 2023/08/29 4:32, Dragan Stancevic 写道:
+>>
+>>> Just a followup on 6.1 testing. I tried reproducing this problem for 
+>>> 5 days with 6.1.42 kernel without your patches and I was not able to 
+>>> reproduce it.
+> 
+> oops, I forgot that you need to backport this patch first to reporduce
+> this problem:
+> 
+> https://lore.kernel.org/all/20230529132037.2124527-2-yukuai1@huaweicloud.com/
+> 
+> The patch fix the deadlock as well, but it introduce some regressions.
+
+Ha, jinx :) I was about to email you that I isolated that change with 
+the testing over the weekend that made it more difficult to reproduce in 
+6.1 and that the original change must be reverted :)
+
+
+
+> 
 > Thanks,
 > Kuai
->
-> > Here is where I slightly panicked, worried that I'd borked my array,
-> > and powered off the server again and disconnected the new drive that
-> > was just added, assuming that since it was the change, it may be the
-> > problem despite having burn-in tested it, and figuring that I'll rush
-> > order a new drive, so long as the reshape continues and I can just
-> > rebuild onto a new drive once the reshape finishes. However, this made
-> > no difference and the array continued to not rebuild.
-> >
-> > Much searching later, I'd found nothing substantially different then
-> > I'd already tried and one of the common threads in other people's
-> > issues was bad drives, so I ran a self-test against each of the
-> > existing drives and found one drive that failed the read test.
-> > Thinking I had the culprit now, I dropped that drive out of the array
-> > and assembled the array again, but the same behavior persists. The
-> > array reshapes very briefly, then completely stops.
-> >
-> > Down to 0 drives of redundancy (in the reshaped section at least), not
-> > finding any new ideas on any of the forums, mailing list, wiki, etc,
-> > and very frustrated, I took a break, bought all new drives to build a
-> > new array in another server and restored from a backup. However, there
-> > is still some data not captured by the most recent backup that I would
-> > like to recover, and I'd also like to solve the problem purely to
-> > understand what happened and how to recover in the future.
-> >
-> > Is there anything else I should try to recover this array, or is this
-> > a lost cause?
-> >
-> > Details requested by the wiki to follow and I'm happy to collect any
-> > further data that would assist. /dev/sdb is the new drive that was
-> > added, then disconnected. /dev/sdh is the drive that failed a
-> > self-test and was removed from the array.
-> >
-> > Thank you in advance for any help provided!
-> >
-> >
-> > $ uname -a
-> > Linux Blyth 5.15.0-76-generic #83-Ubuntu SMP Thu Jun 15 19:16:32 UTC
-> > 2023 x86_64 x86_64 x86_64 GNU/Linux
-> >
-> > $ mdadm --version
-> > mdadm - v4.2 - 2021-12-30
-> >
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sda
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68EUZN0
-> > Serial Number:    WD-WCC4N7AT7R7X
-> > LU WWN Device Id: 5 0014ee 268545f93
-> > Firmware Version: 82.00A82
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Rotation Rate:    5400 rpm
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:27:55 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sda
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68EUZN0
-> > Serial Number:    WD-WCC4N7AT7R7X
-> > LU WWN Device Id: 5 0014ee 268545f93
-> > Firmware Version: 82.00A82
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Rotation Rate:    5400 rpm
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:16 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sdb
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68EUZN0
-> > Serial Number:    WD-WXG1A8UGLS42
-> > LU WWN Device Id: 5 0014ee 2b75ef53b
-> > Firmware Version: 80.00A80
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Rotation Rate:    5400 rpm
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:19 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sdc
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68EUZN0
-> > Serial Number:    WD-WCC4N4HYL32Y
-> > LU WWN Device Id: 5 0014ee 2630752f8
-> > Firmware Version: 82.00A82
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Rotation Rate:    5400 rpm
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:20 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sdd
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68N32N0
-> > Serial Number:    WD-WCC7K1FF6DYK
-> > LU WWN Device Id: 5 0014ee 2ba952a30
-> > Firmware Version: 82.00A82
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Rotation Rate:    5400 rpm
-> > Form Factor:      3.5 inches
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-3 T13/2161-D revision 5
-> > SATA Version is:  SATA 3.1, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:21 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sde
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68EUZN0
-> > Serial Number:    WD-WCC4N5ZHTRJF
-> > LU WWN Device Id: 5 0014ee 2b88b83bb
-> > Firmware Version: 82.00A82
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Rotation Rate:    5400 rpm
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:22 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sdf
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68AX9N0
-> > Serial Number:    WD-WMC1T3804790
-> > LU WWN Device Id: 5 0014ee 6036b6826
-> > Firmware Version: 80.00A80
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:23 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sdg
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68EUZN0
-> > Serial Number:    WD-WMC4N0H692Z9
-> > LU WWN Device Id: 5 0014ee 65af39740
-> > Firmware Version: 82.00A82
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Rotation Rate:    5400 rpm
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:24 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sdh
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68EUZN0
-> > Serial Number:    WD-WMC4N0K5S750
-> > LU WWN Device Id: 5 0014ee 6b048d9ca
-> > Firmware Version: 82.00A82
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Rotation Rate:    5400 rpm
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:24 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> > $ sudo smartctl -H -i -l scterc /dev/sdi
-> > smartctl 7.2 2020-12-30 r5155 [x86_64-linux-5.15.0-76-generic] (local b=
-uild)
-> > Copyright (C) 2002-20, Bruce Allen, Christian Franke, www.smartmontools=
-.org
-> >
-> > =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-> > Model Family:     Western Digital Red
-> > Device Model:     WDC WD30EFRX-68AX9N0
-> > Serial Number:    WD-WMC1T1502475
-> > LU WWN Device Id: 5 0014ee 058d2e5cb
-> > Firmware Version: 80.00A80
-> > User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-> > Sector Sizes:     512 bytes logical, 4096 bytes physical
-> > Device is:        In smartctl database [for details use: -P show]
-> > ATA Version is:   ACS-2 (minor revision not indicated)
-> > SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
-> > Local Time is:    Sun Sep  3 13:28:27 2023 PDT
-> > SMART support is: Available - device has SMART capability.
-> > SMART support is: Enabled
-> >
-> > =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> > SMART overall-health self-assessment test result: PASSED
-> >
-> > SCT Error Recovery Control:
-> >             Read:     70 (7.0 seconds)
-> >            Write:     70 (7.0 seconds)
-> >
-> >
-> > $ sudo mdadm --examine /dev/sda
-> > /dev/sda:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sda1
-> > /dev/sda1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0xd
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856376832 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247728 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : 8ca60ad5:60d19333:11b24820:91453532
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124311040 (118.55 GiB 127.29 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 23:12:08 2023
-> >    Bad Block Log : 512 entries available at offset 24 sectors - bad
-> > blocks present.
-> >         Checksum : b6d8f4d1 - correct
-> >           Events : 181105
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 7
-> >     Array State : AA.AAAAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --examine /dev/sdb
-> > /dev/sdb:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sdb1
-> > /dev/sdb1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x5
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856376832 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247728 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : 386d3001:16447e43:4d2a5459:85618d11
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124207104 (118.45 GiB 127.19 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 00:02:59 2023
-> >    Bad Block Log : 512 entries available at offset 24 sectors
-> >         Checksum : b544a39 - correct
-> >           Events : 181077
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 8
-> >     Array State : AAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --examine /dev/sdc
-> > /dev/sdc:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sdc1
-> > /dev/sdc1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0xd
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856376832 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247720 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : 1798ec4f:72c56905:4e74ea61:2468db75
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124311040 (118.55 GiB 127.29 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 23:12:08 2023
-> >    Bad Block Log : 512 entries available at offset 72 sectors - bad
-> > blocks present.
-> >         Checksum : 88d8b8fc - correct
-> >           Events : 181105
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 4
-> >     Array State : AA.AAAAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --examine /dev/sdd
-> > /dev/sdd:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sdd1
-> > /dev/sdd1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x5
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856376832 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247728 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : a198095b:f54d26a9:deb3be8f:d6de9be1
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124311040 (118.55 GiB 127.29 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 23:12:08 2023
-> >    Bad Block Log : 512 entries available at offset 24 sectors
-> >         Checksum : d1471d9d - correct
-> >           Events : 181105
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 6
-> >     Array State : AA.AAAAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --examine /dev/sde
-> > /dev/sde:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sde1
-> > /dev/sde1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x5
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856376832 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247720 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : acf7ba2e:35d2fa91:6b12b0ce:33a73af5
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124311040 (118.55 GiB 127.29 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 23:12:08 2023
-> >    Bad Block Log : 512 entries available at offset 72 sectors
-> >         Checksum : e05d0278 - correct
-> >           Events : 181105
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 5
-> >     Array State : AA.AAAAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --examine /dev/sdf
-> > /dev/sdf:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sdf1
-> > /dev/sdf1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x5
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856373760 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247720 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : 31e7b86d:c274ff45:aa6dab50:2ff058c6
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124311040 (118.55 GiB 127.29 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 23:12:08 2023
-> >    Bad Block Log : 512 entries available at offset 72 sectors
-> >         Checksum : 26792cc0 - correct
-> >           Events : 181105
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 0
-> >     Array State : AA.AAAAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --examine /dev/sdg
-> > /dev/sdg:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sdg1
-> > /dev/sdg1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x5
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856373760 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247720 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : 74476ce7:4edc23f6:08120711:ba281425
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124311040 (118.55 GiB 127.29 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 23:12:08 2023
-> >    Bad Block Log : 512 entries available at offset 72 sectors
-> >         Checksum : 6f67d179 - correct
-> >           Events : 181105
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 1
-> >     Array State : AA.AAAAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --examine /dev/sdh
-> > /dev/sdh:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sdh1
-> > /dev/sdh1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0xd
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856373760 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247720 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : 31c08263:b135f0f5:763bc86b:f81d7296
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124207104 (118.45 GiB 127.19 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 20:09:14 2023
-> >    Bad Block Log : 512 entries available at offset 72 sectors - bad
-> > blocks present.
-> >         Checksum : b7696b68 - correct
-> >           Events : 181089
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 2
-> >     Array State : AAAAAAAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --examine /dev/sdi
-> > /dev/sdi:
-> >     MBR Magic : aa55
-> > Partition[0] :   4294967295 sectors at            1 (type ee)
-> > $ sudo mdadm --examine /dev/sdi1
-> > /dev/sdi1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x5
-> >       Array UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >             Name : Blyth:0  (local to host Blyth)
-> >    Creation Time : Tue Aug  4 23:47:57 2015
-> >       Raid Level : raid6
-> >     Raid Devices : 9
-> >
-> >   Avail Dev Size : 5856373760 sectors (2.73 TiB 3.00 TB)
-> >       Array Size : 20497268736 KiB (19.09 TiB 20.99 TB)
-> >    Used Dev Size : 5856362496 sectors (2.73 TiB 3.00 TB)
-> >      Data Offset : 247808 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D247720 sectors, after=3D14336 sectors
-> >            State : clean
-> >      Device UUID : ac1063fc:d9d66e6d:f3de33da:b396f483
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >    Reshape pos'n : 124311040 (118.55 GiB 127.29 GB)
-> >    Delta Devices : 1 (8->9)
-> >
-> >      Update Time : Tue Jul 11 23:12:08 2023
-> >    Bad Block Log : 512 entries available at offset 72 sectors
-> >         Checksum : 23b6d024 - correct
-> >           Events : 181105
-> >
-> >           Layout : left-symmetric
-> >       Chunk Size : 512K
-> >
-> >     Device Role : Active device 3
-> >     Array State : AA.AAAAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
-> >
-> > $ sudo mdadm --detail /dev/md0
-> > /dev/md0:
-> >             Version : 1.2
-> >          Raid Level : raid6
-> >       Total Devices : 9
-> >         Persistence : Superblock is persistent
-> >
-> >               State : inactive
-> >     Working Devices : 9
-> >
-> >       Delta Devices : 1, (-1->0)
-> >           New Level : raid6
-> >          New Layout : left-symmetric
-> >       New Chunksize : 512K
-> >
-> >                Name : Blyth:0  (local to host Blyth)
-> >                UUID : 440dc11e:079308b1:131eda79:9a74c670
-> >              Events : 181105
-> >
-> >      Number   Major   Minor   RaidDevice
-> >
-> >         -       8        1        -        /dev/sda1
-> >         -       8      129        -        /dev/sdi1
-> >         -       8      113        -        /dev/sdh1
-> >         -       8       97        -        /dev/sdg1
-> >         -       8       81        -        /dev/sdf1
-> >         -       8       65        -        /dev/sde1
-> >         -       8       49        -        /dev/sdd1
-> >         -       8       33        -        /dev/sdc1
-> >         -       8       17        -        /dev/sdb1
-> >
-> > $ cat /proc/mdstat
-> > Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> > [raid4] [raid10]
-> > md0 : inactive sdb1[9](S) sdi1[4](S) sdf1[0](S) sdg1[1](S) sdh1[3](S)
-> > sda1[8](S) sdd1[7](S) sdc1[6](S) sde1[5](S)
-> >        26353689600 blocks super 1.2
-> >
-> > unused devices: <none>
-> >
-> > .
-> >
->
+> 
+>>>
+>>> It seems that 6.1 has some other code that prevents this from happening.
+>>>
+>>
+>> I see that there are lots of patches for raid456 between 5.10 and 6.1,
+>> however, I remember that I used to reporduce the deadlock after 6.1, and
+>> it's true it's not easy to reporduce, see below:
+>>
+>> https://lore.kernel.org/linux-raid/e9067438-d713-f5f3-0d3d-9e6b0e9efa0e@huaweicloud.com/
+>>
+>> My guess is that 6.1 is harder to reporduce than 5.10 due to some
+>> changes inside raid456.
+>>
+>> By the way, raid10 had a similiar deadlock, and can be fixed the same
+>> way, so it make sense to backport these patches.
+>>
+>> https://lore.kernel.org/r/20230529132037.2124527-5-yukuai1@huaweicloud.com
+>>
+>> Thanks,
+>> Kuai
+>>
+>>
+>>> On 5.10 I can reproduce it within minutes to an hour.
+>>>
+>>
+>> .
+>>
+> 
+
+-- 
+Peace can only come as a natural consequence
+of universal enlightenment -Dr. Nikola Tesla
+
