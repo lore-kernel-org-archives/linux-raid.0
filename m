@@ -2,87 +2,28 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 410F2CA0FFB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A0CCA0FFC
 	for <linux-raid@archiver.kernel.org>; Tue,  5 Sep 2023 16:04:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237016AbjIEQDo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:03:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45920 "EHLO
+        id S237084AbjIEQDv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:03:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354732AbjIENye (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Sep 2023 09:54:34 -0400
-Received: from bee.birch.relay.mailchannels.net (bee.birch.relay.mailchannels.net [23.83.209.14])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C8C6197;
-        Tue,  5 Sep 2023 06:54:30 -0700 (PDT)
-X-Sender-Id: dreamhost|x-authsender|dragan@stancevic.com
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 631BE6C1B64;
-        Tue,  5 Sep 2023 13:54:30 +0000 (UTC)
-Received: from pdx1-sub0-mail-a249.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id EB55D6C0A37;
-        Tue,  5 Sep 2023 13:54:27 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1693922068; a=rsa-sha256;
-        cv=none;
-        b=sfCdsw5E7KRHfj6qb6YmO0BB4kOSq1ntVsk3HDwmsQJck6haIW/8iUKzPmcIXyhpt5vBH7
-        VTjGmv/72bIT6LlgcbX1Md07B4Wf+YsfgvZXPjCth/2v2b3+SMDl1UimP3LBY9eGgNnbKl
-        Whxxc3kDAPysmpIW7HP/alr/kHYvZ4oapBBO4v+4zmwVKeCSr8D6TcVPZlDwoVnQsXwSpK
-        xob4R0G+N2CTdgJJ+dJTxXku0Xf2kJVywzPuKX42gDGBCDY2utcDvDmx9899lBnVBJ0YU4
-        JSRtGqp5z2b8OCPnAEtAdsfIYKlUGeax4rTdKxynqtSDjCPgG9HXM+w2qvHkXA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1693922068;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=YSrH/KnkOMtWbkKTTQFyMqEbfklmyppO1MILJK4fgqs=;
-        b=vq16WH467qElQg1T6C3st3Wj8VSqGT6UEEKI8vrS8kOPXgsp5gVJdMyFqq0KaYqlkZ/uZg
-        O/F26JUOGdDV4KCbbjIMC4Ilwd+yZm8DijKRcvObd400cLfjbrXXeU3irSIGazVpE9+VE9
-        3YxB7Qh+iNT6egJRtGyVFagEiZtUn0zH3ArZCQAxENPFhcazs/+qmFYvIamBPWK3KuBbvP
-        6HgJKYJmlBQlZkHJZOiGxEUEuwz0PSKl8+eOPQUEeUuKEDf1c8LZvFIzzthMFwy8kzlNZ+
-        sVCShbUwHxI5VkEX/m2V6VNqvNnvmgHXGKSpZ4N7SD3YsdVFzVHLq4X7EKzXvw==
-ARC-Authentication-Results: i=1;
-        rspamd-6fd95854bb-lb46n;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dragan@stancevic.com
-X-Sender-Id: dreamhost|x-authsender|dragan@stancevic.com
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dragan@stancevic.com
-X-MailChannels-Auth-Id: dreamhost
-X-Abiding-Macabre: 3b4a416e5ee73ca8_1693922068939_3873094390
-X-MC-Loop-Signature: 1693922068939:3117084652
-X-MC-Ingress-Time: 1693922068939
-Received: from pdx1-sub0-mail-a249.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.120.143.185 (trex/6.9.1);
-        Tue, 05 Sep 2023 13:54:28 +0000
-Received: from [192.168.1.36] (99-160-136-52.lightspeed.nsvltn.sbcglobal.net [99.160.136.52])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dragan@stancevic.com)
-        by pdx1-sub0-mail-a249.dreamhost.com (Postfix) with ESMTPSA id 4Rg6SL751Rz1b;
-        Tue,  5 Sep 2023 06:54:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stancevic.com;
-        s=dreamhost; t=1693922067;
-        bh=YSrH/KnkOMtWbkKTTQFyMqEbfklmyppO1MILJK4fgqs=;
-        h=Date:Subject:To:Cc:From:Content-Type:Content-Transfer-Encoding;
-        b=byyMlp3+1fl5LGzbfN+YOL6wXZCQgOTBOG5ipX8gUSEV5aBIGNLAGUa0qOaDEpUjM
-         Y2otfwCbqxr5cEL4zZz8Gor4fXvs6PIC4Hs89+fF94NJmErxUG1Q9ytGovsXwCyK0A
-         2vBUCAWQ+npgZBemO+yJo5xYRUnvrPSckmnUnMGP768hidm4JwYswMuCpi7uyanPdc
-         L/dkujl4izMS183NDMUedFoNKSLq5GJz2yqhRb5qdRN8rdVa5vffj7k+P8Yzkf1Ey2
-         cjxY1jRHbM9osKzbt8ABD7QUYvVUT8NgqAeCUYUKBguhhjqKMZ0dox4SKCG2cIwR5j
-         zULsCfiaIa+JQ==
-Message-ID: <07ef7b78-66d4-d3de-4e25-8a889b902e14@stancevic.com>
-Date:   Tue, 5 Sep 2023 08:54:25 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
+        with ESMTP id S1344611AbjIEDuV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Sep 2023 23:50:21 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01E20E6;
+        Mon,  4 Sep 2023 20:50:16 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rfs38422bz4f3vdX;
+        Tue,  5 Sep 2023 11:50:12 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgD3hqlypfZkvoWYCQ--.31883S3;
+        Tue, 05 Sep 2023 11:50:11 +0800 (CST)
 Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
  transition
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+To:     Yu Kuai <yukuai1@huaweicloud.com>,
+        Dragan Stancevic <dragan@stancevic.com>, song@kernel.org
 Cc:     buczek@molgen.mpg.de, guoqing.jiang@linux.dev,
         it+raid@molgen.mpg.de, linux-kernel@vger.kernel.org,
         linux-raid@vger.kernel.org, msmith626@gmail.com,
@@ -94,74 +35,85 @@ References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
  <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
  <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
  <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
- <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
-From:   Dragan Stancevic <dragan@stancevic.com>
-In-Reply-To: <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
+Date:   Tue, 5 Sep 2023 11:50:10 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgD3hqlypfZkvoWYCQ--.31883S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4DXF1UuFWUXrW3GrW7Arb_yoW8JFy7pF
+        WrXa1akw4UZrnrA34xJr4q9a409wsxAr9xGrn5Gw4xAay5uF9F9FWI9a1YgF9xGrs2gr90
+        vwnaqF1Dtry8X3JanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 9/4/23 22:50, Yu Kuai wrote:
+Hi,
+
+在 2023/08/30 9:36, Yu Kuai 写道:
 > Hi,
 > 
-> 在 2023/08/30 9:36, Yu Kuai 写道:
->> Hi,
+> 在 2023/08/29 4:32, Dragan Stancevic 写道:
+> 
+>> Just a followup on 6.1 testing. I tried reproducing this problem for 5 
+>> days with 6.1.42 kernel without your patches and I was not able to 
+>> reproduce it.
+
+oops, I forgot that you need to backport this patch first to reporduce
+this problem:
+
+https://lore.kernel.org/all/20230529132037.2124527-2-yukuai1@huaweicloud.com/
+
+The patch fix the deadlock as well, but it introduce some regressions.
+
+Thanks,
+Kuai
+
 >>
->> 在 2023/08/29 4:32, Dragan Stancevic 写道:
+>> It seems that 6.1 has some other code that prevents this from happening.
 >>
->>> Just a followup on 6.1 testing. I tried reproducing this problem for 
->>> 5 days with 6.1.42 kernel without your patches and I was not able to 
->>> reproduce it.
 > 
-> oops, I forgot that you need to backport this patch first to reporduce
-> this problem:
+> I see that there are lots of patches for raid456 between 5.10 and 6.1,
+> however, I remember that I used to reporduce the deadlock after 6.1, and
+> it's true it's not easy to reporduce, see below:
 > 
-> https://lore.kernel.org/all/20230529132037.2124527-2-yukuai1@huaweicloud.com/
+> https://lore.kernel.org/linux-raid/e9067438-d713-f5f3-0d3d-9e6b0e9efa0e@huaweicloud.com/ 
 > 
-> The patch fix the deadlock as well, but it introduce some regressions.
-
-Ha, jinx :) I was about to email you that I isolated that change with 
-the testing over the weekend that made it more difficult to reproduce in 
-6.1 and that the original change must be reverted :)
-
-
-
+> 
+> My guess is that 6.1 is harder to reporduce than 5.10 due to some
+> changes inside raid456.
+> 
+> By the way, raid10 had a similiar deadlock, and can be fixed the same
+> way, so it make sense to backport these patches.
+> 
+> https://lore.kernel.org/r/20230529132037.2124527-5-yukuai1@huaweicloud.com
 > 
 > Thanks,
 > Kuai
 > 
->>>
->>> It seems that 6.1 has some other code that prevents this from happening.
->>>
->>
->> I see that there are lots of patches for raid456 between 5.10 and 6.1,
->> however, I remember that I used to reporduce the deadlock after 6.1, and
->> it's true it's not easy to reporduce, see below:
->>
->> https://lore.kernel.org/linux-raid/e9067438-d713-f5f3-0d3d-9e6b0e9efa0e@huaweicloud.com/
->>
->> My guess is that 6.1 is harder to reporduce than 5.10 due to some
->> changes inside raid456.
->>
->> By the way, raid10 had a similiar deadlock, and can be fixed the same
->> way, so it make sense to backport these patches.
->>
->> https://lore.kernel.org/r/20230529132037.2124527-5-yukuai1@huaweicloud.com
->>
->> Thanks,
->> Kuai
->>
->>
->>> On 5.10 I can reproduce it within minutes to an hour.
->>>
->>
->> .
+> 
+>> On 5.10 I can reproduce it within minutes to an hour.
 >>
 > 
-
--- 
-Peace can only come as a natural consequence
-of universal enlightenment -Dr. Nikola Tesla
+> .
+> 
 
