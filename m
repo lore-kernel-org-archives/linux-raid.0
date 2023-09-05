@@ -2,118 +2,164 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A0CCA0FFC
-	for <linux-raid@archiver.kernel.org>; Tue,  5 Sep 2023 16:04:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07842CA1001
+	for <linux-raid@archiver.kernel.org>; Tue,  5 Sep 2023 16:04:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237084AbjIEQDv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:03:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40508 "EHLO
+        id S237064AbjIEQDs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:03:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344611AbjIEDuV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Sep 2023 23:50:21 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01E20E6;
-        Mon,  4 Sep 2023 20:50:16 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rfs38422bz4f3vdX;
-        Tue,  5 Sep 2023 11:50:12 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgD3hqlypfZkvoWYCQ--.31883S3;
-        Tue, 05 Sep 2023 11:50:11 +0800 (CST)
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-To:     Yu Kuai <yukuai1@huaweicloud.com>,
-        Dragan Stancevic <dragan@stancevic.com>, song@kernel.org
-Cc:     buczek@molgen.mpg.de, guoqing.jiang@linux.dev,
-        it+raid@molgen.mpg.de, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, msmith626@gmail.com,
-        "yangerkun@huawei.com" <yangerkun@huawei.com>
-References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
- <20230822211627.1389410-1-dragan@stancevic.com>
- <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
- <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
- <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
- <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
- <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
-Date:   Tue, 5 Sep 2023 11:50:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S1354856AbjIEPHT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Sep 2023 11:07:19 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E0B818D
+        for <linux-raid@vger.kernel.org>; Tue,  5 Sep 2023 08:07:15 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id D367221BF4;
+        Tue,  5 Sep 2023 15:07:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1693926433; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aYBioI7hDw6gZmrpEGH9M6jXBsJjL4gB/otP/tCbPcs=;
+        b=FRXejz7AcTaXSMSAf2cf1TfiTolBmJTliCnDVtNo2HFNFL6jK1PDPCnL4YBeROiNW4vg8a
+        YnKetBBVl32/b20zNWdOdwRm3lA5aCucjvtkn3WH7sxkOb/l65pflM3oBgeCQE/Dh2cJ+N
+        wv/CAzdS1xkcMcCVgYtSOEroGrTt+Iw=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9860D13911;
+        Tue,  5 Sep 2023 15:07:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id aYWaIyFE92TbbgAAMHmgww
+        (envelope-from <mwilck@suse.com>); Tue, 05 Sep 2023 15:07:13 +0000
+Message-ID: <f22989f511b55e200f63a27ff60d14951bfb139c.camel@suse.com>
+Subject: Re: [PATCH v2] Fix race of "mdadm --add" and "mdadm --incremental"
+From:   Martin Wilck <mwilck@suse.com>
+To:     Li Xiao Keng <lixiaokeng@huawei.com>,
+        Jes Sorensen <jes@trained-monkey.org>,
+        Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org
+Cc:     louhongxiang@huawei.com, miaoguanqin <miaoguanqin@huawei.com>
+Date:   Tue, 05 Sep 2023 17:07:12 +0200
+In-Reply-To: <bcc2d161-521b-ea19-b090-9822925645e5@huawei.com>
+References: <bcc2d161-521b-ea19-b090-9822925645e5@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.48.4 
 MIME-Version: 1.0
-In-Reply-To: <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3hqlypfZkvoWYCQ--.31883S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4DXF1UuFWUXrW3GrW7Arb_yoW8JFy7pF
-        WrXa1akw4UZrnrA34xJr4q9a409wsxAr9xGrn5Gw4xAay5uF9F9FWI9a1YgF9xGrs2gr90
-        vwnaqF1Dtry8X3JanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-        3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-在 2023/08/30 9:36, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2023/08/29 4:32, Dragan Stancevic 写道:
-> 
->> Just a followup on 6.1 testing. I tried reproducing this problem for 5 
->> days with 6.1.42 kernel without your patches and I was not able to 
->> reproduce it.
-
-oops, I forgot that you need to backport this patch first to reporduce
-this problem:
-
-https://lore.kernel.org/all/20230529132037.2124527-2-yukuai1@huaweicloud.com/
-
-The patch fix the deadlock as well, but it introduce some regressions.
-
-Thanks,
-Kuai
-
->>
->> It seems that 6.1 has some other code that prevents this from happening.
->>
-> 
-> I see that there are lots of patches for raid456 between 5.10 and 6.1,
-> however, I remember that I used to reporduce the deadlock after 6.1, and
-> it's true it's not easy to reporduce, see below:
-> 
-> https://lore.kernel.org/linux-raid/e9067438-d713-f5f3-0d3d-9e6b0e9efa0e@huaweicloud.com/ 
-> 
-> 
-> My guess is that 6.1 is harder to reporduce than 5.10 due to some
-> changes inside raid456.
-> 
-> By the way, raid10 had a similiar deadlock, and can be fixed the same
-> way, so it make sense to backport these patches.
-> 
-> https://lore.kernel.org/r/20230529132037.2124527-5-yukuai1@huaweicloud.com
-> 
-> Thanks,
-> Kuai
-> 
-> 
->> On 5.10 I can reproduce it within minutes to an hour.
->>
-> 
-> .
-> 
+T24gVHVlLCAyMDIzLTA5LTA1IGF0IDIwOjAyICswODAwLCBMaSBYaWFvIEtlbmcgd3JvdGU6Cj4g
+V2hlbiB3ZSBhZGQgYSBuZXcgZGlzayB0byBhIHJhaWQsIGl0IG1heSByZXR1cm4gLUVCVVNZLgo+
+IAo+IFRoZSBtYWluIHByb2Nlc3Mgb2YgLS1hZGQ6Cj4gMS4gZGV2X29wZW4KPiAyLiBzdG9yZV9z
+dXBlcjEoc3QsIGRpLT5mZCkgaW4gd3JpdGVfaW5pdF9zdXBlcjEKPiAzLiBmc3luYyhkaS0+ZmQp
+IGluIHdyaXRlX2luaXRfc3VwZXIxCj4gNC4gY2xvc2UoZGktPmZkKQo+IDUuIGlvY3RsKEFERF9O
+RVdfRElTSykKPiAKPiBIb3dldmVyLCB0aGVyZSB3aWxsIGJlIHNvbWUgdWRldihjaGFuZ2UpIGV2
+ZW50IGFmdGVyIHN0ZXA0LiBUaGVuCj4gIi91c3Ivc2Jpbi9tZGFkbSAtLWluY3JlbWVudGFsIC4u
+LiIgd2lsbCBiZSBydW4sIGFuZCB0aGUgbmV3IGRpc2sKPiB3aWxsIGJlIGFkZCB0byBtZCBkZXZp
+Y2UuIEFmdGVyIHRoYXQsIGlvY3RsIHdpbGwgcmV0dXJuIC1FQlVTWS4KPiAKPiBIZXJlIHdlIGFk
+ZCBtYXBfbG9jayBiZWZvcmUgd3JpdGVfaW5pdF9zdXBlciBpbiAibWRhZG0gLS1hZGQiCj4gdG8g
+Zml4IHRoaXMgcmFjZS4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBMaSBYaWFvIEtlbmcgPGxpeGlhb2tl
+bmdAaHVhd2VpLmNvbT4KPiBTaWduZWQtb2ZmLWJ5OiBHdWFucWluIE1pYW8gPG1pYW9ndWFucWlu
+QGh1YXdlaS5jb20+CgpSZXZpZXdlZC1ieTogTWFydGluIFdpbGNrIDxtd2lsY2tAc3VzZS5jb20+
+Cgo+IC0tLQo+IKBBc3NlbWJsZS5jIHygIDUgKysrKy0KPiCgTWFuYWdlLmOgoCB8IDI1ICsrKysr
+KysrKysrKysrKysrLS0tLS0tLS0KPiCgMiBmaWxlcyBjaGFuZ2VkLCAyMSBpbnNlcnRpb25zKCsp
+LCA5IGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9Bc3NlbWJsZS5jIGIvQXNzZW1ibGUu
+Ywo+IGluZGV4IDQ5ODA0OTQxLi4wODY4OTBlZCAxMDA2NDQKPiAtLS0gYS9Bc3NlbWJsZS5jCj4g
+KysrIGIvQXNzZW1ibGUuYwo+IEBAIC0xNDc5LDggKzE0NzksMTEgQEAgdHJ5X2FnYWluOgo+IKCg
+oKCgoKCgICogdG8gb3VyIGxpc3QuoCBXZSBmbGFnIHRoZW0gc28gdGhhdCB3ZSBkb24ndCB0cnkg
+dG8gcmUtYWRkLAo+IKCgoKCgoKCgICogYnV0IGNhbiByZW1vdmUgaWYgdGhleSB0dXJuIG91dCB0
+byBub3QgYmUgd2FudGVkLgo+IKCgoKCgoKCgICovCj4gLaCgoKCgoKBpZiAobWFwX2xvY2soJm1h
+cCkpCj4gK6CgoKCgoKBpZiAobWFwX2xvY2soJm1hcCkpIHsKPiCgoKCgoKCgoKCgoKCgoKCgcHJf
+ZXJyKCJmYWlsZWQgdG8gZ2V0IGV4Y2x1c2l2ZSBsb2NrIG9uIG1hcGZpbGUgLQo+IGNvbnRpbnVl
+IGFueXdheS4uLlxuIik7Cj4gK6CgoKCgoKCgoKCgoKCgoHJldHVybiAxOwo+ICugoKCgoKCgfQo+
+ICsKPiCgoKCgoKCgoGlmIChjLT51cGRhdGUgPT0gVU9QVF9VVUlEKQo+IKCgoKCgoKCgoKCgoKCg
+oKBtcCA9IE5VTEw7Cj4goKCgoKCgoKBlbHNlCj4gZGlmZiAtLWdpdCBhL01hbmFnZS5jIGIvTWFu
+YWdlLmMKPiBpbmRleCBmNTRkZTdjNi4uNmExMDFiYWUgMTAwNjQ0Cj4gLS0tIGEvTWFuYWdlLmMK
+PiArKysgYi9NYW5hZ2UuYwo+IEBAIC03MDMsNiArNzAzLDcgQEAgaW50IE1hbmFnZV9hZGQoaW50
+IGZkLCBpbnQgdGZkLCBzdHJ1Y3QgbWRkZXZfZGV2Cj4gKmR2LAo+IKCgoKCgoKCgc3RydWN0IHN1
+cGVydHlwZSAqZGV2X3N0Owo+IKCgoKCgoKCgaW50IGo7Cj4goKCgoKCgoKBtZHVfZGlza19pbmZv
+X3QgZGlzYzsKPiAroKCgoKCgoHN0cnVjdCBtYXBfZW50ICptYXAgPSBOVUxMOwo+IAo+IKCgoKCg
+oKCgaWYgKCFnZXRfZGV2X3NpemUodGZkLCBkdi0+ZGV2bmFtZSwgJmxkc2l6ZSkpIHsKPiCgoKCg
+oKCgoKCgoKCgoKCgaWYgKGR2LT5kaXNwb3NpdGlvbiA9PSAnTScpCj4gQEAgLTkwMCw2ICs5MDEs
+MTAgQEAgaW50IE1hbmFnZV9hZGQoaW50IGZkLCBpbnQgdGZkLCBzdHJ1Y3QgbWRkZXZfZGV2Cj4g
+KmR2LAo+IKCgoKCgoKCgoKCgoKCgoKBkaXNjLnJhaWRfZGlzayA9IDA7Cj4goKCgoKCgoKB9Cj4g
+Cj4gK6CgoKCgoKBpZiAobWFwX2xvY2soJm1hcCkpIHsKPiAroKCgoKCgoKCgoKCgoKCgcHJfZXJy
+KCJmYWlsZWQgdG8gZ2V0IGV4Y2x1c2l2ZSBsb2NrIG9uIG1hcGZpbGUgd2hlbgo+IGFkZCBkaXNr
+XG4iKTsKPiAroKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCgoKCgfQo+IKCgoKCgoKCg
+aWYgKGFycmF5LT5ub3RfcGVyc2lzdGVudD09MCkgewo+IKCgoKCgoKCgoKCgoKCgoKBpbnQgZGZk
+Owo+IKCgoKCgoKCgoKCgoKCgoKBpZiAoZHYtPmRpc3Bvc2l0aW9uID09ICdqJykKPiBAQCAtOTEx
+LDkgKzkxNiw5IEBAIGludCBNYW5hZ2VfYWRkKGludCBmZCwgaW50IHRmZCwgc3RydWN0IG1kZGV2
+X2Rldgo+ICpkdiwKPiCgoKCgoKCgoKCgoKCgoKCgZGZkID0gZGV2X29wZW4oZHYtPmRldm5hbWUs
+IE9fUkRXUiB8Cj4gT19FWENMfE9fRElSRUNUKTsKPiCgoKCgoKCgoKCgoKCgoKCgaWYgKHRzdC0+
+c3MtPmFkZF90b19zdXBlcih0c3QsICZkaXNjLCBkZmQsCj4goKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKAgZHYtPmRldm5hbWUsCj4gSU5WQUxJRF9TRUNUT1JTKSkKPiAt
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKByZXR1cm4gLTE7Cj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgZ290byB1bmxvY2s7Cj4goKCgoKCgoKCgoKCgoKCgoGlmICh0c3QtPnNzLT53cml0ZV9pbml0
+X3N1cGVyKHRzdCkpCj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCgfSBlbHNlIGlmIChkdi0+
+ZGlzcG9zaXRpb24gPT0gJ0EnKSB7Cj4goKCgoKCgoKCgoKCgoKCgoC8qoCB0aGlzIGhhZCBiZXR0
+ZXIgYmUgcmFpZDEuCj4goKCgoKCgoKCgoKCgoKCgoCAqIEFzIHdlIGFyZSAiLS1yZS1hZGQiaW5n
+IHdlIG11c3QgZmluZCBhIHNwYXJlIHNsb3QKPiBAQCAtOTcxLDE0ICs5NzYsMTQgQEAgaW50IE1h
+bmFnZV9hZGQoaW50IGZkLCBpbnQgdGZkLCBzdHJ1Y3QKPiBtZGRldl9kZXYgKmR2LAo+IKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoHByX2VycigiYWRkIGZhaWxlZCBmb3IgJXM6IGNvdWxkIG5vdCBn
+ZXQKPiBleGNsdXNpdmUgYWNjZXNzIHRvIGNvbnRhaW5lclxuIiwKPiCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKAgZHYtPmRldm5hbWUpOwo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoHRz
+dC0+c3MtPmZyZWVfc3VwZXIodHN0KTsKPiAtoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKByZXR1cm4g
+LTE7Cj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgZ290byB1bmxvY2s7Cj4goKCgoKCgoKCgoKCg
+oKCgoH0KPiAKPiCgoKCgoKCgoKCgoKCgoKCgLyogQ2hlY2sgaWYgbWV0YWRhdGEgaGFuZGxlciBp
+cyBhYmxlIHRvIGFjY2VwdCB0aGUKPiBkcml2ZSAqLwo+IKCgoKCgoKCgoKCgoKCgoKBpZiAoIXRz
+dC0+c3MtPnZhbGlkYXRlX2dlb21ldHJ5KHRzdCwgTEVWRUxfQ09OVEFJTkVSLAo+IDAsIDEsIE5V
+TEwsCj4goKCgoKCgoKCgoKCgoKCgoKCgoCAwLCAwLCBkdi0+ZGV2bmFtZSwgTlVMTCwgMCwgMSkp
+IHsKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKBjbG9zZShjb250YWluZXJfZmQpOwo+IC2goKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoHJldHVybiAtMTsKPiAroKCgoKCgoKCgoKCgoKCgoKCgoKCgoKBn
+b3RvIHVubG9jazsKPiCgoKCgoKCgoKCgoKCgoKCgfQo+IAo+IKCgoKCgoKCgoKCgoKCgoKBLaWxs
+KGR2LT5kZXZuYW1lLCBOVUxMLCAwLCAtMSwgMCk7Cj4gQEAgLTk4Nyw3ICs5OTIsNyBAQCBpbnQg
+TWFuYWdlX2FkZChpbnQgZmQsIGludCB0ZmQsIHN0cnVjdCBtZGRldl9kZXYKPiAqZHYsCj4goKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgZHYtPmRldm5hbWUsCj4gSU5W
+QUxJRF9TRUNUT1JTKSkgewo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGNsb3NlKGRmZCk7Cj4g
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgY2xvc2UoY29udGFpbmVyX2ZkKTsKPiAtoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKByZXR1cm4gLTE7Cj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgZ290byB1
+bmxvY2s7Cj4goKCgoKCgoKCgoKCgoKCgoH0KPiCgoKCgoKCgoKCgoKCgoKCgaWYgKCFtZG1vbl9y
+dW5uaW5nKHRzdC0+Y29udGFpbmVyX2Rldm5tKSkKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKB0
+c3QtPnNzLT5zeW5jX21ldGFkYXRhKHRzdCk7Cj4gQEAgLTk5OCw3ICsxMDAzLDcgQEAgaW50IE1h
+bmFnZV9hZGQoaW50IGZkLCBpbnQgdGZkLCBzdHJ1Y3QgbWRkZXZfZGV2Cj4gKmR2LAo+IKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCBkdi0+ZGV2bmFtZSk7Cj4goKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgY2xvc2UoY29udGFpbmVyX2ZkKTsKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKB0
+c3QtPnNzLT5mcmVlX3N1cGVyKHRzdCk7Cj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJu
+IC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGdvdG8gdW5sb2NrOwo+IKCgoKCgoKCgoKCg
+oKCgoKB9Cj4goKCgoKCgoKCgoKCgoKCgoHNyYS0+YXJyYXkubGV2ZWwgPSBMRVZFTF9DT05UQUlO
+RVI7Cj4goKCgoKCgoKCgoKCgoKCgoC8qIE5lZWQgdG8gc2V0IGRhdGFfb2Zmc2V0IGFuZCBjb21w
+b25lbnRfc2l6ZSAqLwo+IEBAIC0xMDEzLDcgKzEwMTgsNyBAQCBpbnQgTWFuYWdlX2FkZChpbnQg
+ZmQsIGludCB0ZmQsIHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgcHJfZXJyKCJhZGQgbmV3IGRldmljZSB0byBleHRlcm5hbCBtZXRhZGF0YQo+IGZhaWxl
+ZCBmb3IgJXNcbiIsIGR2LT5kZXZuYW1lKTsKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKBjbG9z
+ZShjb250YWluZXJfZmQpOwo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoHN5c2ZzX2ZyZWUoc3Jh
+KTsKPiAtoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKByZXR1cm4gLTE7Cj4gK6CgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgZ290byB1bmxvY2s7Cj4goKCgoKCgoKCgoKCgoKCgoH0KPiCgoKCgoKCgoKCgoKCg
+oKCgcGluZ19tb25pdG9yKGRldm5tKTsKPiCgoKCgoKCgoKCgoKCgoKCgc3lzZnNfZnJlZShzcmEp
+Owo+IEBAIC0xMDI3LDcgKzEwMzIsNyBAQCBpbnQgTWFuYWdlX2FkZChpbnQgZmQsIGludCB0ZmQs
+IHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgZWxzZQo+
+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcHJfZXJyKCJhZGQgbmV3IGRldmljZSBm
+YWlsZWQgZm9yICVzCj4gYXMgJWQ6ICVzXG4iLAo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgIGR2LT5kZXZuYW1lLCBqLAo+IHN0cmVycm9yKGVycm5vKSk7Cj4gLaCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgcmV0dXJuIC0xOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoGdv
+dG8gdW5sb2NrOwo+IKCgoKCgoKCgoKCgoKCgoKB9Cj4goKCgoKCgoKCgoKCgoKCgoGlmIChkdi0+
+ZGlzcG9zaXRpb24gPT0gJ2onKSB7Cj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgcHJfZXJyKCJK
+b3VybmFsIGFkZGVkIHN1Y2Nlc3NmdWxseSwgbWFraW5nICVzCj4gcmVhZC13cml0ZVxuIiwgZGV2
+bmFtZSk7Cj4gQEAgLTEwMzgsNyArMTA0MywxMSBAQCBpbnQgTWFuYWdlX2FkZChpbnQgZmQsIGlu
+dCB0ZmQsIHN0cnVjdAo+IG1kZGV2X2RldiAqZHYsCj4goKCgoKCgoKB9Cj4goKCgoKCgoKBpZiAo
+dmVyYm9zZSA+PSAwKQo+IKCgoKCgoKCgoKCgoKCgoKBwcl9lcnIoImFkZGVkICVzXG4iLCBkdi0+
+ZGV2bmFtZSk7Cj4gK6CgoKCgoKBtYXBfdW5sb2NrKCZtYXApOwo+IKCgoKCgoKCgcmV0dXJuIDE7
+Cj4gK3VubG9jazoKPiAroKCgoKCgoG1hcF91bmxvY2soJm1hcCk7Cj4gK6CgoKCgoKByZXR1cm4g
+LTE7Cj4goH0KPiAKPiCgaW50IE1hbmFnZV9yZW1vdmUoc3RydWN0IHN1cGVydHlwZSAqdHN0LCBp
+bnQgZmQsIHN0cnVjdCBtZGRldl9kZXYKPiAqZHYsCgo=
 
