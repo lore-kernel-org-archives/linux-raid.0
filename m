@@ -2,191 +2,191 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 683C4EE14A9
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Sep 2023 02:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92BF7EE14D3
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Sep 2023 03:02:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240770AbjIGCEp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Sep 2023 22:04:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50324 "EHLO
+        id S235771AbjIGDCp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Sep 2023 23:02:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231430AbjIGCEn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Sep 2023 22:04:43 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4AA719A0;
-        Wed,  6 Sep 2023 19:04:16 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rh2bw1n4Lz4f3pFc;
-        Thu,  7 Sep 2023 10:04:12 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAXp6mbL_lkF5I2Cg--.12332S3;
-        Thu, 07 Sep 2023 10:04:13 +0800 (CST)
-Subject: Re: Infiniate systemd loop when power off the machine with multiple
- MD RAIDs
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        AceLan Kao <acelan@gmail.com>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>, Song Liu <song@kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux RAID <linux-raid@vger.kernel.org>,
-        "yukuai (C)" <yukuai3@huawei.com>,
-        "yangerkun@huawei.com" <yangerkun@huawei.com>
-References: <028a21df-4397-80aa-c2a5-7c754560f595@gmail.com>
- <20230818101630.000027f4@linux.intel.com>
- <b0488ff7-10c8-4b4e-28b8-01809133c297@linux.dev>
- <CAPhsuW6cSLqwRVO_EpFyimvc7hgi1rb3T8-NA+stHdwrqrScBA@mail.gmail.com>
- <20230822083923.00007fb6@linux.intel.com>
- <CAMz9Wg8KE1rDkSaQnUTJ5ikzH7YGGYbkLM3AcrVue3=JgK+14w@mail.gmail.com>
- <35130b3f-c0fd-e2d6-e849-a5ceb6a2895f@linux.dev>
- <CAMz9Wg_zKSJ2vL=r2zAtLBOv4GSMT63+ZQGXfYTjVJsE+DLQGA@mail.gmail.com>
- <CAPhsuW6W0XgFjH1zNC+EFYjujd4smEiWs+-nYCWQ+KaFmbuvkg@mail.gmail.com>
- <CAMz9Wg9y52iuxJRSQFC2N5Katt72v-o=JvEjegJt-MwORmw9tQ@mail.gmail.com>
- <CAPhsuW7XEy4q3XR389F7CUvXvJ=0JR0QkMOr4LU03avT0erAfg@mail.gmail.com>
- <354004ce-ad4e-5ad5-8fe6-303216647e0c@huaweicloud.com>
- <03b79ab0-0bb0-ac29-4a70-37d902f9a05b@huaweicloud.com>
- <20230831085057.00001795@linux.intel.com>
- <CAMz9Wg8bhCG=qSLia943dwr=LV7Kum=bZPq2s_2coV6a_bmDeA@mail.gmail.com>
- <20230906122751.00001e5b@linux.intel.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <43b0b2f4-17c0-61d2-9c41-0595fb6f2efc@huaweicloud.com>
-Date:   Thu, 7 Sep 2023 10:04:11 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S237084AbjIGDCp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Sep 2023 23:02:45 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDA79CF2
+        for <linux-raid@vger.kernel.org>; Wed,  6 Sep 2023 20:02:40 -0700 (PDT)
+Received: from kwepemm600010.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Rh3ph1tmmzhZMM;
+        Thu,  7 Sep 2023 10:58:36 +0800 (CST)
+Received: from [10.174.177.197] (10.174.177.197) by
+ kwepemm600010.china.huawei.com (7.193.23.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Thu, 7 Sep 2023 11:02:35 +0800
+Subject: Re: [PATCH v2] Fix race of "mdadm --add" and "mdadm --incremental"
+To:     Martin Wilck <mwilck@suse.com>, Coly Li <colyli@suse.de>
+CC:     Jes Sorensen <jes@trained-monkey.org>,
+        <linux-raid@vger.kernel.org>, <louhongxiang@huawei.com>,
+        miaoguanqin <miaoguanqin@huawei.com>
+References: <bcc2d161-521b-ea19-b090-9822925645e5@huawei.com>
+ <kjdwwbkqj6fuaijow2nldh5ofbxymto2mzqcullb57jtx6q6h2@46kropdd4lql>
+ <12823520a0fe774908bd0830f59d05d2e7c06126.camel@suse.com>
+ <a56df487-ef9a-9c90-87a6-5ae0a0ffe9f0@huawei.com>
+ <a839c1d1ad6df3a0ab60a1ea2d83ace7d7e7979b.camel@suse.com>
+From:   Li Xiao Keng <lixiaokeng@huawei.com>
+Message-ID: <c12c0bbb-285b-c7e8-bf0a-beb95669d4d0@huawei.com>
+Date:   Thu, 7 Sep 2023 11:02:35 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20230906122751.00001e5b@linux.intel.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+In-Reply-To: <a839c1d1ad6df3a0ab60a1ea2d83ace7d7e7979b.camel@suse.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-GB
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAXp6mbL_lkF5I2Cg--.12332S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxGF45Gw18XFy7ZrWruFWkXrb_yoW5tr4xpF
-        Z5XF1YkrnrWw17AayUXry8X3Z3Kasaya98Kry3K39Iy34fJryxGw13Wr45WFZxWF4Skr42
-        vw1DtF4jvwnYga7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3
-        Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-Originating-IP: [10.174.177.197]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemm600010.china.huawei.com (7.193.23.86)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
 
-�� 2023/09/06 18:27, Mariusz Tkaczyk д��:
-> On Wed, 6 Sep 2023 14:26:30 +0800
-> AceLan Kao <acelan@gmail.com> wrote:
-> 
->>  From previous testing, I don't think it's an issue in systemd, so I
->> did a simple test and found the issue is gone.
->> You only need to add a small delay in md_release(), then the issue
->> can't be reproduced.
+
+On 2023/9/6 21:31, Martin Wilck wrote:
+> On Wed, 2023-09-06 at 16:51 +0800, Li Xiao Keng wrote:
 >>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 78be7811a89f..ef47e34c1af5 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -7805,6 +7805,7 @@ static void md_release(struct gendisk *disk)
->> {
->>         struct mddev *mddev = disk->private_data;
 >>
->> +       msleep(10);
->>         BUG_ON(!mddev);
->>         atomic_dec(&mddev->openers);
->>         mddev_put(mddev);
+>> On 2023/9/6 3:08, Martin Wilck wrote:
+>>> On Wed, 2023-09-06 at 00:17 +0800, Coly Li wrote:
+>>>> Hi Xiao Keng,
+>>>>
+>>>> Thanks for the updated version, I add my comments inline.
+>>>>
+>>>> On Tue, Sep 05, 2023 at 08:02:06PM +0800, Li Xiao Keng wrote:
+>>>>> When we add a new disk to a raid, it may return -EBUSY.
+>>>>
+>>>> Where is above -EBUSY from? do you mean mdadm command returns
+>>>> -EBUSY or it is returned by some specific function in mdadm
+>>>> source code.
+>>>>
+>>
+>> Because the new disk is added to the raid by "mdadm --incremental",
+>> the "mdadm --add" will return the err.
+>>
+>>>>>
+>>>>> The main process of --add:
+>>>>> 1. dev_open
+>>>>> 2. store_super1(st, di->fd) in write_init_super1
+>>>>> 3. fsync(di->fd) in write_init_super1
+>>>>> 4. close(di->fd)
+>>>>> 5. ioctl(ADD_NEW_DISK)
+>>>>>
+>>>>> However, there will be some udev(change) event after step4.
+>>>>> Then
+>>>>> "/usr/sbin/mdadm --incremental ..." will be run, and the new
+>>>>> disk
+>>>>> will be add to md device. After that, ioctl will return -EBUSY.
+>>>>>
+>>>>
+>>>> Dose returning -EBUSY hurt anything? Or only returns -EBUSY and
+>>>> other stuffs all work as expected?
+>>>
+>>> IIUC, it does not. The manual --add command will fail. Li Xiao Keng
+>>> has
+>>> described the problem in earlier emails.
+>> Yes！ The disk is add to the raid, but the manual --add command will
+>> fail.
+>> We will decide the next action based on the return value.
+>>
+>>>  
+>>>>> Here we add map_lock before write_init_super in "mdadm --add"
+>>>>> to fix this race.
+>>>>>
+>>>>
+>>>> I am not familiar this part of code, but I see ignoring the
+>>>> failure
+>>>> from map_lock() in Assemble() is on purpose by Neil. Therefore I
+>>>> just guess simply return from Assemble when map_lock() fails
+>>>> might
+>>>> not be what you wanted.
+>>>>
+>>>>
+>>>>> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
+>>>>> Signed-off-by: Guanqin Miao <miaoguanqin@huawei.com>
+>>>>> ---
+>>>>>  Assemble.c |  5 ++++-
+>>>>>  Manage.c   | 25 +++++++++++++++++--------
+>>>>>  2 files changed, 21 insertions(+), 9 deletions(-)
+>>>>>
+>>>>> diff --git a/Assemble.c b/Assemble.c
+>>>>> index 49804941..086890ed 100644
+>>>>> --- a/Assemble.c
+>>>>> +++ b/Assemble.c
+>>>>> @@ -1479,8 +1479,11 @@ try_again:
+>>>>>          * to our list.  We flag them so that we don't try to
+>>>>> re-
+>>>>> add,
+>>>>>          * but can remove if they turn out to not be wanted.
+>>>>>          */
+>>>>> -       if (map_lock(&map))
+>>>>> +       if (map_lock(&map)) {
+>>>>>                 pr_err("failed to get exclusive lock on mapfile
+>>>>> -
+>>>>> continue anyway...\n");
+>>>>> +               return 1;
+>>>>
+>>>> Especially when the error message noticed "continue anyway" but a
+>>>> return 1
+>>>> followed, the behavior might be still confusing.
+>>>
+>>> Now as you're saying it, I recall I had the same comment last time
+>>> ;-)
+>>>
+>> I'm very sorry for this stupid mistake. I I find I send v1 patch but
+>> not
+>> v2. I will send patch v2 to instead of it.
+>>
+>> -       if (map_lock(&map))
+>> -               pr_err("failed to get exclusive lock on mapfile -
+>> continue anyway...\n");
+>> +       if (map_lock(&map)) {
+>> +               pr_err("failed to get exclusive lock on mapfile when
+>> assemble raid.\n");
+>> +               return 1;
+>> +       }
+>>
+>>> I might add that "return 1" is dangerous, as it pretends that
+>>> Manage_add() was successful and actually added a device, which is
+>>> not
+>>> the case. In the special case that Li Xiao Keng wants to fix, it's
+>>> true
+>>> (sort of) because the asynchronous "mdadm -I" will have added the
+>>> device already. But there could be other races where Assemble_map()
+>>> can't obtain the lock and still the device will not be added later.
+>>>
+>>
+>> Do I missunstandings
+>> "AFAICS it would only help if the code snipped above did not only
+>> pr_err() but exit if it can't get an exclusive lock." ?
+>>
 > 
-> I have repro and I tested it on my setup. It is not working for me.
-> My setup could be more "advanced" to maximalize chance of reproduction:
+>> Anyway, map_lock is a blocking function. If it can't get the lock, it
+> blocks.
+>> If map_lock() return error, Assemble() return 1. When -add unlock it,
+>> Assemble() will go ahead but not return at map_lock().
 > 
-> # cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4] [raid10] [raid0]
-> md121 : active raid0 nvme2n1[1] nvme5n1[0]
->        7126394880 blocks super external:/md127/0 128k chunks
+> Maybe *I* was misunderstanding. I thought map_lock() returned error if
+> the lock was held by the other process. What exactly does an error
+> return from map_lock() mean? If it does not mean "lock held by another
+> process", why does your patch solve the race issue?
 > 
-> md122 : active raid10 nvme6n1[3] nvme4n1[2] nvme1n1[1] nvme7n1[0]
->        104857600 blocks super external:/md126/0 64K chunks 2 near-copies [4/4]
-> [UUUU]
-> 
-> md123 : active raid5 nvme6n1[3] nvme4n1[2] nvme1n1[1] nvme7n1[0]
->        2655765504 blocks super external:/md126/1 level 5, 32k chunk, algorithm 0
-> [4/4] [UUUU]
-> 
-> md124 : active raid1 nvme0n1[1] nvme3n1[0]
->        99614720 blocks super external:/md125/0 [2/2] [UU]
-> 
-> md125 : inactive nvme3n1[1](S) nvme0n1[0](S)
->        10402 blocks super external:imsm
-> 
-> md126 : inactive nvme7n1[3](S) nvme1n1[2](S) nvme6n1[1](S) nvme4n1[0](S)
->        20043 blocks super external:imsm
-> 
-> md127 : inactive nvme2n1[1](S) nvme5n1[0](S)
->        10402 blocks super external:imsm
-> 
-> I have almost 99% repro ratio, slowly moving forward..
-> 
-> It is endless loop because systemd-shutdown sends ioctl "stop_array" which is
-> successful but array is not stopped. For that reason it sets "changed = true".
 
-How does systemd-shutdown judge if array is stopped? cat /proc/mdstat or
-ls /dev/md* or other way?
+The -add locks map_lock() before udev(change) event happen, and unlocks it
+until ioctl(ADD_NEW_DISK) finishing to solve the race issue. This makes
+manual -add return success and -incremental (triggered by uevent) will
+fail, which is same as the previous successful execution of the -add command.
+
+> Martin
 > 
-> Systemd-shutdown see the change and retries to check if there is something else
-> which can be stopped now, and again, again...
-> 
-> I will check what is returned first, it could be 0 or it could be positive
-> errno (nit?) because systemd cares "if(r < 0)".
-
-I do noticed that there are lots of log about md123 stopped:
-
-[ 1371.834034] md122:systemd-shutdow bd_prepare_to_claim return -16
-[ 1371.840294] md122:systemd-shutdow blkdev_get_by_dev return -16
-[ 1371.846845] md: md123 stopped.
-[ 1371.850155] md122:systemd-shutdow bd_prepare_to_claim return -16
-[ 1371.856411] md122:systemd-shutdow blkdev_get_by_dev return -16
-[ 1371.862941] md: md123 stopped.
-
-And md_ioctl->do_md_stop doesn't have error path after printing this
-log, hence 0 will be returned to user.
-
-The normal case is that:
-
-open md123
-ioctl STOP_ARRAY -> all rdev should be removed from array
-close md123 -> mddev will finally be freed by:
-	md_release
-	 mddev_put
-	  set_bit(MD_DELETED, &mddev->flags) -> user shound not see this mddev
-	  queue_work(md_misc_wq, &mddev->del_work)
-
-	mddev_delayed_delete
-	 kobject_put(&mddev->kobj)
-
-	md_kobj_release
-	 del_gendisk
-	  md_free_disk
-	   mddev_free
-
-Now that you can reporduce this problem 99%, can you dig deeper and find
-out what is wrong?
-
-Thanks,
-Kuai
-
-> 
-> Thanks,
-> Mariusz
 > 
 > .
 > 
-
