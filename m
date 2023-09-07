@@ -2,242 +2,241 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E69EC8741
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Sep 2023 15:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3509DEC873F
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Sep 2023 15:54:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235286AbjIGPrL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Sep 2023 11:47:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52098 "EHLO
+        id S233336AbjIGPy3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Sep 2023 11:54:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239158AbjIGPi0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Sep 2023 11:38:26 -0400
-Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24814210B
-        for <linux-raid@vger.kernel.org>; Thu,  7 Sep 2023 08:37:09 -0700 (PDT)
-Received: by mail-wr1-x42d.google.com with SMTP id ffacd0b85a97d-31c479ede21so1099819f8f.2
-        for <linux-raid@vger.kernel.org>; Thu, 07 Sep 2023 08:37:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1694100997; x=1694705797; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GTBDC0NtQ86OlxmzNZkq0p3yRwTevFGZ90eicV4tpVs=;
-        b=rjs77/kmbPTxtGgDw1u8YxjKB2jhAQJcpk5VkKz6pB1VRR8JyuV51FO3VE/18xNKSA
-         j1m6YErMPJhgsDSR+iGrgoe9eggW0Lu9dvzwCjCVfOU996sUhU0MNjgz7hClvvsbHdXE
-         Rt8TmQ7CQjDJhuYfoMAhNlZlw8ypk+1YlXmCd6JYmFAYdQWSKj2IqZq+Ya9FyFedxDYZ
-         axvEN4EuPb+BDbpGDb8TrmC4pV50eeVN6w2tX/wbfQFSSA/CJKv16cV/QPdRpZPR3d4r
-         wyrMTX3LvstzUVYv2uafobz3v+Zw+CCRPs/0fx/JGttX/psdIJkV/Ewiv5EksS+jqdZd
-         HmNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1694100997; x=1694705797;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=GTBDC0NtQ86OlxmzNZkq0p3yRwTevFGZ90eicV4tpVs=;
-        b=DkMzBf4xsu/JqZFNgRjgAez+/BoUDb5xH+Y5oW4I0gh3epWnlDx7lZvKNUX08mdIHt
-         aSjEJbRrCWnnkFJZ0+G2G48UA3e56c7USyZZ2m/N5D8Xnhc+09y+vCEVN37x+6d0Pk6E
-         iFGdYXcGt+uPW/zbs7PQAGSzwve5TUCrl6kUVOSN4MLlLH+HdVU/KtLR09b0ap/P4YsD
-         PZJPk50pK+yTH3r0S+23lY2cxQngGTk1Z78ZwfLIFOseB4DSQNBgvZnpnkWfK9LmUhoS
-         wTrKNwyDlbTmPwXwp09Ig3yS50+7n16r5n2lVnMmwVbvxo1K2h/z3MLUS+FN6BFFdDta
-         Syuw==
-X-Gm-Message-State: AOJu0YwtpQwEwTefXAqgpEO45tb9lHRlfK13uRkFEgD92YXu0Zx9gA0P
-        +vB37OoQciFI7s1E1QV1mAEDFRVWNiCSZYlB3zuILW/9l+hyDA==
-X-Google-Smtp-Source: AGHT+IGZZBZjOZiibbT6zP5QW/5w+3Cg4dcRVzZfr/twCorcJ3RKfYjJvqs4xWLT7dOI/erdqu4ev0psZkkbsOcOiSg=
-X-Received: by 2002:a05:6512:104a:b0:4fe:8c1d:9e81 with SMTP id
- c10-20020a056512104a00b004fe8c1d9e81mr5771001lfb.36.1694086213514; Thu, 07
- Sep 2023 04:30:13 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAGqmV7ojxmsMVStS2LWzfeN+A565z4U=d9kUBUnAfCGq5TGtsw@mail.gmail.com>
- <c22e4c16-ad15-b358-ac42-778675aeb5ad@huaweicloud.com>
-In-Reply-To: <c22e4c16-ad15-b358-ac42-778675aeb5ad@huaweicloud.com>
-From:   CoolCold <coolthecold@gmail.com>
-Date:   Thu, 7 Sep 2023 18:29:13 +0700
-Message-ID: <CAGqmV7obHLD5FOT_jL05gw5-kMLXsWJpvv6VfoHce9-Pz6i74Q@mail.gmail.com>
-Subject: Re: RADI10 slower than SINGLE drive - tests with fio for block device
- (no filesystem in use) - 18.5k vs 26k iops
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     Linux RAID <linux-raid@vger.kernel.org>,
-        "yukuai (C)" <yukuai3@huawei.com>,
-        "yangerkun@huawei.com" <yangerkun@huawei.com>
+        with ESMTP id S241963AbjIGPtg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Sep 2023 11:49:36 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D0A34EEC
+        for <linux-raid@vger.kernel.org>; Thu,  7 Sep 2023 08:40:22 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id B8B3D1F895;
+        Thu,  7 Sep 2023 08:33:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1694075602; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ts0zaBSaHNIdYXr4oVqmF/9y5bzo0R8W5Y99uqp5GUY=;
+        b=TiPEHMVwPXmHgoBaVWgAZEOJ8YpASOZZYpTdjf6ELkGj76qJZnvxODjkbl7o9ImugGbVLc
+        4ODKyN0iHcXArATBM7tNagWiNudWwq9PAg5W6YixCjS+2huYuN43sZkBrcim8wYgTk90QO
+        aKH50IsaCiTxzhs94srH2NwA/awYiOk=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7A2B0138FA;
+        Thu,  7 Sep 2023 08:33:22 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id C+sUHNKK+WTNGgAAMHmgww
+        (envelope-from <mwilck@suse.com>); Thu, 07 Sep 2023 08:33:22 +0000
+Message-ID: <fdec055a28c19fe288f4c3588da6b27646c225c9.camel@suse.com>
+Subject: Re: [PATCH v2] Fix race of "mdadm --add" and "mdadm --incremental"
+From:   Martin Wilck <mwilck@suse.com>
+To:     Li Xiao Keng <lixiaokeng@huawei.com>, Coly Li <colyli@suse.de>
+Cc:     Jes Sorensen <jes@trained-monkey.org>, linux-raid@vger.kernel.org,
+        louhongxiang@huawei.com, miaoguanqin <miaoguanqin@huawei.com>
+Date:   Thu, 07 Sep 2023 10:33:21 +0200
+In-Reply-To: <c12c0bbb-285b-c7e8-bf0a-beb95669d4d0@huawei.com>
+References: <bcc2d161-521b-ea19-b090-9822925645e5@huawei.com>
+         <kjdwwbkqj6fuaijow2nldh5ofbxymto2mzqcullb57jtx6q6h2@46kropdd4lql>
+         <12823520a0fe774908bd0830f59d05d2e7c06126.camel@suse.com>
+         <a56df487-ef9a-9c90-87a6-5ae0a0ffe9f0@huawei.com>
+         <a839c1d1ad6df3a0ab60a1ea2d83ace7d7e7979b.camel@suse.com>
+         <c12c0bbb-285b-c7e8-bf0a-beb95669d4d0@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Good day!
+On Thu, 2023-09-07 at 11:02 +0800, Li Xiao Keng wrote:
+>=20
+>=20
+> On 2023/9/6 21:31, Martin Wilck wrote:
+> > On Wed, 2023-09-06 at 16:51 +0800, Li Xiao Keng wrote:
+> > >=20
+> > >=20
+> > > On 2023/9/6 3:08, Martin Wilck wrote:
+> > > > On Wed, 2023-09-06 at 00:17 +0800, Coly Li wrote:
+> > > > > Hi Xiao Keng,
+> > > > >=20
+> > > > > Thanks for the updated version, I add my comments inline.
+> > > > >=20
+> > > > > On Tue, Sep 05, 2023 at 08:02:06PM +0800, Li Xiao Keng wrote:
+> > > > > > When we add a new disk to a raid, it may return -EBUSY.
+> > > > >=20
+> > > > > Where is above -EBUSY from? do you mean mdadm command returns
+> > > > > -EBUSY or it is returned by some specific function in mdadm
+> > > > > source code.
+> > > > >=20
+> > >=20
+> > > Because the new disk is added to the raid by "mdadm --
+> > > incremental",
+> > > the "mdadm --add" will return the err.
+> > >=20
+> > > > > >=20
+> > > > > > The main process of --add:
+> > > > > > 1. dev_open
+> > > > > > 2. store_super1(st, di->fd) in write_init_super1
+> > > > > > 3. fsync(di->fd) in write_init_super1
+> > > > > > 4. close(di->fd)
+> > > > > > 5. ioctl(ADD_NEW_DISK)
+> > > > > >=20
+> > > > > > However, there will be some udev(change) event after step4.
+> > > > > > Then
+> > > > > > "/usr/sbin/mdadm --incremental ..." will be run, and the
+> > > > > > new
+> > > > > > disk
+> > > > > > will be add to md device. After that, ioctl will return -
+> > > > > > EBUSY.
+> > > > > >=20
+> > > > >=20
+> > > > > Dose returning -EBUSY hurt anything? Or only returns -EBUSY
+> > > > > and
+> > > > > other stuffs all work as expected?
+> > > >=20
+> > > > IIUC, it does not. The manual --add command will fail. Li Xiao
+> > > > Keng
+> > > > has
+> > > > described the problem in earlier emails.
+> > > Yes=EF=BC=81 The disk is add to the raid, but the manual --add comman=
+d
+> > > will
+> > > fail.
+> > > We will decide the next action based on the return value.
+> > >=20
+> > > > =C2=A0
+> > > > > > Here we add map_lock before write_init_super in "mdadm --
+> > > > > > add"
+> > > > > > to fix this race.
+> > > > > >=20
+> > > > >=20
+> > > > > I am not familiar this part of code, but I see ignoring the
+> > > > > failure
+> > > > > from map_lock() in Assemble() is on purpose by Neil.
+> > > > > Therefore I
+> > > > > just guess simply return from Assemble when map_lock() fails
+> > > > > might
+> > > > > not be what you wanted.
+> > > > >=20
+> > > > >=20
+> > > > > > Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
+> > > > > > Signed-off-by: Guanqin Miao <miaoguanqin@huawei.com>
+> > > > > > ---
+> > > > > > =C2=A0Assemble.c |=C2=A0 5 ++++-
+> > > > > > =C2=A0Manage.c=C2=A0=C2=A0 | 25 +++++++++++++++++--------
+> > > > > > =C2=A02 files changed, 21 insertions(+), 9 deletions(-)
+> > > > > >=20
+> > > > > > diff --git a/Assemble.c b/Assemble.c
+> > > > > > index 49804941..086890ed 100644
+> > > > > > --- a/Assemble.c
+> > > > > > +++ b/Assemble.c
+> > > > > > @@ -1479,8 +1479,11 @@ try_again:
+> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * to our list.=
+=C2=A0 We flag them so that we don't try
+> > > > > > to
+> > > > > > re-
+> > > > > > add,
+> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * but can remo=
+ve if they turn out to not be
+> > > > > > wanted.
+> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
+> > > > > > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (map_lock(&map))
+> > > > > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (map_lock(&map)) =
+{
+> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0pr_err("failed to get exclusive lock on
+> > > > > > mapfile
+> > > > > > -
+> > > > > > continue anyway...\n");
+> > > > > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return 1;
+> > > > >=20
+> > > > > Especially when the error message noticed "continue anyway"
+> > > > > but a
+> > > > > return 1
+> > > > > followed, the behavior might be still confusing.
+> > > >=20
+> > > > Now as you're saying it, I recall I had the same comment last
+> > > > time
+> > > > ;-)
+> > > >=20
+> > > I'm very sorry for this stupid mistake. I I find I send v1 patch
+> > > but
+> > > not
+> > > v2. I will send patch v2 to instead of it.
+> > >=20
+> > > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (map_lock(&map))
+> > > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0pr_err("failed to get exclusive lock on mapfile -
+> > > continue anyway...\n");
+> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (map_lock(&map)) {
+> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0pr_err("failed to get exclusive lock on mapfile
+> > > when
+> > > assemble raid.\n");
+> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0return 1;
+> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
+> > >=20
+> > > > I might add that "return 1" is dangerous, as it pretends that
+> > > > Manage_add() was successful and actually added a device, which
+> > > > is
+> > > > not
+> > > > the case. In the special case that Li Xiao Keng wants to fix,
+> > > > it's
+> > > > true
+> > > > (sort of) because the asynchronous "mdadm -I" will have added
+> > > > the
+> > > > device already. But there could be other races where
+> > > > Assemble_map()
+> > > > can't obtain the lock and still the device will not be added
+> > > > later.
+> > > >=20
+> > >=20
+> > > Do I missunstandings
+> > > "AFAICS it would only help if the code snipped above did not only
+> > > pr_err() but exit if it can't get an exclusive lock." ?
+> > >=20
+> >=20
+> > > Anyway, map_lock is a blocking function. If it can't get the
+> > > lock, it
+> > blocks.
+> > > If map_lock() return error, Assemble() return 1. When -add unlock
+> > > it,
+> > > Assemble() will go ahead but not return at map_lock().
+> >=20
+> > Maybe *I* was misunderstanding. I thought map_lock() returned error
+> > if
+> > the lock was held by the other process. What exactly does an error
+> > return from map_lock() mean? If it does not mean "lock held by
+> > another
+> > process", why does your patch solve the race issue?
+> >=20
+>=20
+> The -add locks map_lock() before udev(change) event happen, and
+> unlocks it
+> until ioctl(ADD_NEW_DISK) finishing to solve the race issue. This
+> makes
+> manual -add return success and -incremental (triggered by uevent)
+> will
+> fail, which is same as the previous successful execution of the -add
+> command.
 
-On Mon, Sep 4, 2023 at 2:16=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
-> Hi,
->
-> =E5=9C=A8 2023/09/02 14:56, CoolCold =E5=86=99=E9=81=93:
-> > Good day!
-> > 2nd part of the question, in relation of hardware/system from previous
-> > thread -  "raid10, far layout initial sync slow + XFS question"
-> > https://www.spinics.net/lists/raid/msg74907.html - Ubuntu 20.04 with
-> > kernel "5.4.0-153-generic #170-Ubuntu" on Hetzner AX161 / AMD EPYC
-> > 7502P 32-Core Processor
-> >
-> > Gist: issuing the same load on RAID10 4 drives N2 16kb chunk is slower
-> > than running the same load on a single member of that RAID
-> > Question: is such kind of behavior normal and expected? Am I doing
-> > something terribly wrong?
->
-> Write will be slower is normal, because each write to the array must
-> write to all the rdev and wait for these write be be done.
+OK. Then maybe you should just leave the code for handling the
+map_lock() error condition as-is. It tends to confuse readers.
 
-This contradicts with common wisdom and basically eliminates one of
-the points of having striped setups - having N stripes, excepted to
-give up to N/2 improvement in iops.
+Martin
 
-Say, 3Ware "hardware" RAID has public benchmarks -
-https://www.broadcom.com/support/knowledgebase/1211161476065/what-kind-of-r=
-esults-can-i-expect-to-see-under-windows-with-3war
-, test: 2K Random Writes (IOs/sec)(256 outstanding I/Os)
-showing single drive ( 203.0 iops )  vs RAID10 4 drives ( 299.8 iops )
-, which is roughly 1.5 times better, no WORSE as we see it with mdadm
-
-I've done slightly different test, with fio numjobs=3D4 , result it 20k
-(single job) vs 35k iops, which is just on par with single drive
-performance.
-
->
-> On the other hand, read should be faster, because raid10 only need to
-> choose one rdev to read.
->
-> Thanks,
-> Kuai
->
-> >
-> > RAID10: 18.5k iops
-> > SINGLE DRIVE: 26k iops
-> >
-> > raw data:
-> >
-> > RAID config
-> > root@node2:/data# cat /proc/mdstat
-> > Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5]
-> > [raid4] [raid10]
-> > md3 : active raid10 nvme5n1[3] nvme3n1[2] nvme4n1[1] nvme0n1[0]
-> >        7501212320 blocks super 1.2 16K chunks 2 near-copies [4/4] [UUUU=
-]
-> >
-> > Single drive with:
-> > root@node2:/data# mdadm /dev/md3 --fail /dev/nvme5n1 --remove /dev/nvme=
-5n1
-> > mdadm: set /dev/nvme5n1 faulty in /dev/md3
-> > mdadm: hot removed /dev/nvme5n1 from /dev/md3
-> >
-> > mdadm --zero-superblock /dev/nvme5n1
-> >
-> > TEST COMMANDS
-> > RADI10:              fio --rw=3Dwrite --ioengine=3Dsync --fdatasync=3D1
-> > --filename=3D/dev/md3 --size=3D8200m --bs=3D16k --name=3Dmytest
-> > SINGLE DRIVE: fio --rw=3Dwrite --ioengine=3Dsync --fdatasync=3D1
-> > --filename=3D/dev/nvme5n1 --size=3D8200m --bs=3D16k --name=3Dmytest
-> >
-> > FIO output:
-> >
-> > RAID10:
-> > root@node2:/mnt# fio --rw=3Dwrite --ioengine=3Dsync --fdatasync=3D1
-> > --filename=3D/dev/md3 --size=3D8200m --bs=3D16k --name=3Dmytest
-> > mytest: (g=3D0): rw=3Dwrite, bs=3D(R) 16.0KiB-16.0KiB, (W) 16.0KiB-16.0=
-KiB,
-> > (T) 16.0KiB-16.0KiB, ioengine=3Dsync, iodepth=3D1
-> > fio-3.16
-> > Starting 1 process
-> > Jobs: 1 (f=3D1): [W(1)][100.0%][w=3D298MiB/s][w=3D19.0k IOPS][eta 00m:0=
-0s]
-> > mytest: (groupid=3D0, jobs=3D1): err=3D 0: pid=3D2130392: Sat Sep  2 08=
-:21:39 2023
-> >    write: IOPS=3D18.5k, BW=3D290MiB/s (304MB/s)(8200MiB/28321msec); 0 z=
-one resets
-> >      clat (usec): min=3D5, max=3D745, avg=3D12.12, stdev=3D 7.30
-> >       lat (usec): min=3D6, max=3D746, avg=3D12.47, stdev=3D 7.34
-> >      clat percentiles (usec):
-> >       |  1.00th=3D[    8],  5.00th=3D[    9], 10.00th=3D[   10], 20.00t=
-h=3D[   10],
-> >       | 30.00th=3D[   10], 40.00th=3D[   11], 50.00th=3D[   11], 60.00t=
-h=3D[   11],
-> >       | 70.00th=3D[   12], 80.00th=3D[   13], 90.00th=3D[   16], 95.00t=
-h=3D[   20],
-> >       | 99.00th=3D[   39], 99.50th=3D[   55], 99.90th=3D[  100], 99.95t=
-h=3D[  116],
-> >       | 99.99th=3D[  147]
-> >     bw (  KiB/s): min=3D276160, max=3D308672, per=3D99.96%, avg=3D29635=
-4.86,
-> > stdev=3D6624.06, samples=3D56
-> >     iops        : min=3D17260, max=3D19292, avg=3D18522.18, stdev=3D414=
-.00, samples=3D56
-> >
-> > Run status group 0 (all jobs):
-> >    WRITE: bw=3D290MiB/s (304MB/s), 290MiB/s-290MiB/s (304MB/s-304MB/s),
-> > io=3D8200MiB (8598MB), run=3D28321-28321msec
-> >
-> >
-> >                                                Disk stats (read/write):
-> >
-> >                                       md3: ios=3D0/2604727, merge=3D0/0=
-,
-> > ticks=3D0/0, in_queue=3D0, util=3D0.00%, aggrios=3D25/262403,
-> > aggrmerge=3D0/787199, aggrticks=3D1/5563, aggrin_queue=3D0, aggrutil=3D=
-98.10%
-> >    nvme0n1: ios=3D40/262402, merge=3D1/787200, ticks=3D3/5092, in_queue=
-=3D0, util=3D98.09%
-> >    nvme3n1: ios=3D33/262404, merge=3D1/787198, ticks=3D2/5050, in_queue=
-=3D0, util=3D98.08%
-> >    nvme5n1: ios=3D15/262404, merge=3D0/787198, ticks=3D1/6061, in_queue=
-=3D0, util=3D98.08%
-> >    nvme4n1: ios=3D12/262402, merge=3D0/787200, ticks=3D1/6052, in_queue=
-=3D0, util=3D98.10%
-> >
-> >
-> > SINGLE DRIVE:
-> > root@node2:/mnt# fio --rw=3Dwrite --ioengine=3Dsync --fdatasync=3D1
-> > --filename=3D/dev/nvme5n1 --size=3D8200m --bs=3D16k --name=3Dmytest
-> > mytest: (g=3D0): rw=3Dwrite, bs=3D(R) 16.0KiB-16.0KiB, (W) 16.0KiB-16.0=
-KiB,
-> > (T) 16.0KiB-16.0KiB, ioengine=3Dsync, iodepth=3D1
-> > fio-3.16
-> > Starting 1 process
-> > Jobs: 1 (f=3D1): [W(1)][100.0%][w=3D414MiB/s][w=3D26.5k IOPS][eta 00m:0=
-0s]
-> > mytest: (groupid=3D0, jobs=3D1): err=3D 0: pid=3D2155313: Sat Sep  2 08=
-:26:23 2023
-> >    write: IOPS=3D26.2k, BW=3D410MiB/s (430MB/s)(8200MiB/20000msec); 0 z=
-one resets
-> >      clat (usec): min=3D4, max=3D848, avg=3D11.25, stdev=3D 7.15
-> >       lat (usec): min=3D5, max=3D848, avg=3D11.50, stdev=3D 7.17
-> >      clat percentiles (usec):
-> >       |  1.00th=3D[    7],  5.00th=3D[    9], 10.00th=3D[    9], 20.00t=
-h=3D[    9],
-> >       | 30.00th=3D[   10], 40.00th=3D[   10], 50.00th=3D[   10], 60.00t=
-h=3D[   11],
-> >       | 70.00th=3D[   11], 80.00th=3D[   12], 90.00th=3D[   15], 95.00t=
-h=3D[   18],
-> >       | 99.00th=3D[   43], 99.50th=3D[   62], 99.90th=3D[   95], 99.95t=
-h=3D[  108],
-> >       | 99.99th=3D[  133]
-> >     bw (  KiB/s): min=3D395040, max=3D464480, per=3D99.90%, avg=3D41943=
-8.95,
-> > stdev=3D17496.05, samples=3D39
-> >     iops        : min=3D24690, max=3D29030, avg=3D26214.92, stdev=3D109=
-3.56, samples=3D39
-> >
-> > Run status group 0 (all jobs):
-> >    WRITE: bw=3D423MiB/s (444MB/s), 423MiB/s-423MiB/s (444MB/s-444MB/s),
-> > io=3D8200MiB (8598MB), run=3D19379-19379msec
-> >
-> > Disk stats (read/write):
-> >    nvme5n1: ios=3D49/518250, merge=3D0/1554753, ticks=3D2/10629, in_que=
-ue=3D0,
-> > util=3D99.61%
-> >
->
-
-
---=20
-Best regards,
-[COOLCOLD-RIPN]
