@@ -2,46 +2,46 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45E73EEB56D
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Sep 2023 20:30:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35432EEB56E
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Sep 2023 20:42:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239550AbjIHUaR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Sep 2023 16:30:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41144 "EHLO
+        id S231994AbjIHUmb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Sep 2023 16:42:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235365AbjIHUaR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Sep 2023 16:30:17 -0400
+        with ESMTP id S229755AbjIHUma (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Sep 2023 16:42:30 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A36AD8E;
-        Fri,  8 Sep 2023 13:30:13 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34CC8C433C9;
-        Fri,  8 Sep 2023 20:30:13 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6C6A9C;
+        Fri,  8 Sep 2023 13:42:26 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67468C433C9;
+        Fri,  8 Sep 2023 20:42:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694205013;
-        bh=UBZzVIWBiQ4B80C/9DQ9Ox8AvmoOm/T3gLFsaf19zZs=;
+        s=k20201202; t=1694205746;
+        bh=ul+CBQpfMlZflOKb70XP4HN0iC7et/ZQ6zPMxvlfJOo=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=iLoOfmHXxNNwVVf2qphHX8MXI4dKegtEkIKseIl1C4RcXahodPnJgeooRZRP9n5jR
-         rhec8E1IGYW9EtCasxaFDVZ6qlzt/jzbcuOajph2c0h36gLR+32q3ZJ+k7SNyZtPvN
-         TQZqVZWHqjM+5DujPcZXNHbEO1l3OmjdrD6XjbSqnC4sa4DCezKiv44xiAq3ut+14T
-         fvnZ7uoJG6x4MjsVGVPTGWNPnngpfh/2oFlIpPGoT1KJEzilA2geBl7BDBEumVHulk
-         2KwahNyBY3Mws8mjqmqjtIJqGAPmtYSQqtULC2VA9+0NUu0//BEORywuQBQxKy6g2H
-         hQ52wrsEFwJcg==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-501b9f27eb2so4396889e87.0;
-        Fri, 08 Sep 2023 13:30:13 -0700 (PDT)
-X-Gm-Message-State: AOJu0YwbxY7909ZUx1uJzyO6JF8ghnBS0yUTrXxonG00Dsl3yHjOsxoc
-        NgV1F0FxU+NDJ2Qfu2GarESKHlrC1QG4BUr+wzU=
-X-Google-Smtp-Source: AGHT+IG84feGJ719OKNXJC70DM/+7y+vFk1L1QqAZu4eCHVvSr6aA0o2BbV+76w80o1f96Tt138l/0tn802rn29qPbA=
-X-Received: by 2002:a05:6512:2033:b0:4fe:3724:fdb6 with SMTP id
- s19-20020a056512203300b004fe3724fdb6mr1014010lfs.30.1694205011415; Fri, 08
- Sep 2023 13:30:11 -0700 (PDT)
+        b=uiShtJXH3VttMe0N1du+nWy/tsFHr7pLHDHailnzHa4OhIYfSV3bWqYoz/knbsfkT
+         EBzA3Fnp8si5p3WchfC2teLyZXoOYOSGsLU5Oi5J9nr2S3iQTqbAgBhmtQztVHD4iE
+         5LeSTLEw+WwnTdQKHg104KKyN0i5DAwCQi1g3Gk+YapbtjMF/0nMPM1q8K/fz1IR2R
+         ywmOt5I02/Z5ISEDDIsj4xT3JGvnSggVvG82Klyos3lvfhZQf1TOK0lqH8noUp699L
+         2uiNcnogNK3BqIUZBIjNtVYQPNzu5Zie2BSpm1fdVPIUW0jmOMucdhGLItWEZ0bGTF
+         gMejFjhOB6uNw==
+Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2bd0d135ca3so43257431fa.3;
+        Fri, 08 Sep 2023 13:42:26 -0700 (PDT)
+X-Gm-Message-State: AOJu0YzEWvq/HDVS0mjiX/eTIIp8wquhNU51MnknJpS6Pv3C+mL27X5p
+        Zng9igvnJnsDIJlARG3CZEcE8s9Fz309a2tetFg=
+X-Google-Smtp-Source: AGHT+IHK4R7sPxhWaKKBStUGMciJ+DDN0gdADBvUSA5XMRd90dI3BrXenqc44gyUikLiypaRf+p3ETA/Qo1q30EqBhk=
+X-Received: by 2002:a19:9148:0:b0:4f9:cd02:4af1 with SMTP id
+ y8-20020a199148000000b004f9cd024af1mr2458118lfj.34.1694205744584; Fri, 08 Sep
+ 2023 13:42:24 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230906084401.1027358-1-linan122@huawei.com> <e2befbc6-dfc4-f469-78f0-b648d0ad205d@huaweicloud.com>
-In-Reply-To: <e2befbc6-dfc4-f469-78f0-b648d0ad205d@huaweicloud.com>
+References: <20230906093720.1070929-1-linan122@huawei.com> <e67775c0-2d41-5541-a644-e5239ada3333@huaweicloud.com>
+In-Reply-To: <e67775c0-2d41-5541-a644-e5239ada3333@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 8 Sep 2023 13:29:59 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4FjWohGYzWGocF+zxMcLRk7N3J8T45=QXzAmdqFFuNTA@mail.gmail.com>
-Message-ID: <CAPhsuW4FjWohGYzWGocF+zxMcLRk7N3J8T45=QXzAmdqFFuNTA@mail.gmail.com>
-Subject: Re: [PATCH] md: use interruptible apis in idle/frozen_sync_thread
+Date:   Fri, 8 Sep 2023 13:42:11 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5+Qxa4SKoaFrqZWKDmLaR0arXV7vqDX-Hy_OCEjmtA1w@mail.gmail.com>
+Message-ID: <CAPhsuW5+Qxa4SKoaFrqZWKDmLaR0arXV7vqDX-Hy_OCEjmtA1w@mail.gmail.com>
+Subject: Re: [PATCH] md/raid1: only update stack limits with the device in use
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
@@ -53,76 +53,91 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Sep 6, 2023 at 11:31=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+On Wed, Sep 6, 2023 at 11:30=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
 rote:
 >
-> =E5=9C=A8 2023/09/06 16:44, Li Nan =E5=86=99=E9=81=93:
-> > Before refactoring idle and frozen from action_store, interruptible api=
-s
-> > is used so that hungtask warning won't be triggered if it takes too lon=
-g
-> > to finish indle/frozen sync_thread. So change to use interruptible apis=
-.
+> Hi,
+>
+> =E5=9C=A8 2023/09/06 17:37, Li Nan =E5=86=99=E9=81=93:
+> > Spare device affects array stack limits is unreasonable. For example,
+> > create a raid1 with two 512 byte devices, the logical_block_size of arr=
+ay
+> > will be 512. But after add a 4k devcie as spare, logical_block_size of
+> > array will change as follows.
 > >
-> LGTM
->
-> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
->
+> >    mdadm -C /dev/md0 -n 2 -l 10 /dev/sd[ab]   //sd[ab] is 512
+> >    //logical_block_size of md0: 512
+> >
+> >    mdadm --add /dev/md0 /dev/sdc                      //sdc is 4k
+> >    //logical_block_size of md0: 512
+> >
+> >    mdadm -S /dev/md0
+> >    mdadm -A /dev/md0 /dev/sd[ab]
+> >    //logical_block_size of md0: 4k
+> >
+> > This will confuse users, as nothing has been changed, why did the
+> > logical_block_size of array change?
+> >
+> > Now, only update logical_block_size of array with the device in use.
+> >
 > > Signed-off-by: Li Nan <linan122@huawei.com>
+> > ---
+> >   drivers/md/raid1.c | 19 ++++++++-----------
+> >   1 file changed, 8 insertions(+), 11 deletions(-)
+> >
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > index 95504612b7e2..d75c5dd89e86 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -3140,19 +3140,16 @@ static int raid1_run(struct mddev *mddev)
+>
+> I'm not sure about this behaviour, 'logical_block_size' can be
+> increased while adding new underlying disk, the key point is not when
+> to increase 'logical_block_size'. If there is a mounted fs, or
+> partition in the array, I think the array will be corrupted.
 
-I think we will need a fix tag and send this via md-fixes branch (to 6.6)?
+How common is such fs/partition corruption? I think some fs and partition
+table can work properly with 512=3D>4096 change?
 
 Thanks,
 Song
 
-
-
-> > ---
-> >   drivers/md/md.c | 13 +++++++++----
-> >   1 file changed, 9 insertions(+), 4 deletions(-)
+>
+> Perhaps once that array is started, logical_block_size should not be
+> changed anymore, this will require 'logical_block_size' to be metadate
+> inside raid superblock. And the array should deny any new disk with
+> bigger logical_block_size.
+>
+> Thanks,
+> Kuai
+>
+>
+> >       if (mddev->queue)
+> >               blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
 > >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 46badd13a687..52689adfa37f 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -4834,11 +4834,14 @@ static void idle_sync_thread(struct mddev *mdde=
-v)
-> >   {
-> >       int sync_seq =3D atomic_read(&mddev->sync_seq);
-> >
-> > -     mutex_lock(&mddev->sync_mutex);
-> > +     if (mutex_lock_interruptible(&mddev->sync_mutex))
-> > +             return;
-> > +
-> >       clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> >       stop_sync_thread(mddev);
-> >
-> > -     wait_event(resync_wait, sync_seq !=3D atomic_read(&mddev->sync_se=
-q) ||
-> > +     wait_event_interruptible(resync_wait,
-> > +                     sync_seq !=3D atomic_read(&mddev->sync_seq) ||
-> >                       !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))=
-;
-> >
-> >       mutex_unlock(&mddev->sync_mutex);
-> > @@ -4846,11 +4849,13 @@ static void idle_sync_thread(struct mddev *mdde=
-v)
-> >
-> >   static void frozen_sync_thread(struct mddev *mddev)
-> >   {
-> > -     mutex_lock(&mddev->sync_mutex);
-> > +     if (mutex_lock_interruptible(&mddev->sync_mutex))
-> > +             return;
-> > +
-> >       set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> >       stop_sync_thread(mddev);
-> >
-> > -     wait_event(resync_wait, mddev->sync_thread =3D=3D NULL &&
-> > +     wait_event_interruptible(resync_wait, mddev->sync_thread =3D=3D N=
-ULL &&
-> >                       !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))=
-;
-> >
-> >       mutex_unlock(&mddev->sync_mutex);
+> > -     rdev_for_each(rdev, mddev) {
+> > -             if (!mddev->gendisk)
+> > -                     continue;
+> > -             disk_stack_limits(mddev->gendisk, rdev->bdev,
+> > -                               rdev->data_offset << 9);
+> > -     }
+> > -
+> >       mddev->degraded =3D 0;
+> > -     for (i =3D 0; i < conf->raid_disks; i++)
+> > -             if (conf->mirrors[i].rdev =3D=3D NULL ||
+> > -                 !test_bit(In_sync, &conf->mirrors[i].rdev->flags) ||
+> > -                 test_bit(Faulty, &conf->mirrors[i].rdev->flags))
+> > +     for (i =3D 0; i < conf->raid_disks; i++) {
+> > +             rdev =3D conf->mirrors[i].rdev;
+> > +             if (rdev && mddev->gendisk)
+> > +                     disk_stack_limits(mddev->gendisk, rdev->bdev,
+> > +                                       rdev->data_offset << 9);
+> > +             if (!rdev || !test_bit(In_sync, &rdev->flags) ||
+> > +                 test_bit(Faulty, &rdev->flags))
+> >                       mddev->degraded++;
+> > +     }
+> >       /*
+> >        * RAID1 needs at least one disk in active
+> >        */
 > >
 >
