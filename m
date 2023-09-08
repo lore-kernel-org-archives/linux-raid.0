@@ -2,88 +2,150 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA1FEEEB56F
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Sep 2023 20:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2239EEB56D
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Sep 2023 20:22:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344387AbjIHUCU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Sep 2023 16:02:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56056 "EHLO
+        id S240003AbjIHUWj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Sep 2023 16:22:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230457AbjIHUCT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Sep 2023 16:02:19 -0400
+        with ESMTP id S232427AbjIHUWi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Sep 2023 16:22:38 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 958A5B9;
-        Fri,  8 Sep 2023 13:02:15 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 660D7C116AF;
-        Fri,  8 Sep 2023 19:36:06 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 671C98E;
+        Fri,  8 Sep 2023 13:22:34 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5E88C433C7;
+        Fri,  8 Sep 2023 20:22:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694201767;
-        bh=/+U7vK2l/Vz6gYSB1Dor6YlWyc9Do0vycQyHbHRI+b0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iC8A16KPhWicVOweVdiRwegeT1qI8vq6eG26WxF12r/M9S6JADQe5ymu2tubXp2hB
-         NoonBcA8vA0gBgHPGqVfPJtu2gzNMJGuUNjF6O+zpd/N+wfJHUEzY8Kvsaj3TM8VNP
-         11brah2ZGz9YJ/1AsBqzPXB8xYNakmbATA/4Q2fp3HmPZh9Yk+EkCXvFWwUBae4lwL
-         p9K+wJOTxGI1ui9XitxGqIAagNHoDL4KiNq63gx8pIWewI+C65jnnRfAPlXysxGQPD
-         ERnSbJI1NEZ1IdsVccADRWEhJ8HKW5TGlm0yoEo69JB6Bv6eG7sSQvh0n5qSEK4YDd
-         bJg84JQCZxIAg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zhang Shurong <zhang_shurong@foxmail.com>,
-        Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 12/13] md: raid1: fix potential OOB in raid1_remove_disk()
-Date:   Fri,  8 Sep 2023 15:35:28 -0400
-Message-Id: <20230908193530.3463647-12-sashal@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908193530.3463647-1-sashal@kernel.org>
-References: <20230908193530.3463647-1-sashal@kernel.org>
+        s=k20201202; t=1694204553;
+        bh=e16P9xW9C+d4tSLnP+okZqHGPvQNrZo/ehkhKcvH+1Y=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=k+d8zrVmlgo5BbTvTUjz9ywe8/kX7mPycN4GcRjnwV3INi3SlFARanzsrBobH49zq
+         wfHa+jF6/wSOwiMBi8B1eXTBhsfEzFlXrjX2c0Hvt22LF3sBGIh+H/cHwyFItCj3Dj
+         YC/KPBUoe32fxkizDfL6TOjfhYimARZG/Uj1mXZKici1ATEuJKIWacX/wd8L7GdA6E
+         mx3vOtZvm2l5jhvw5cpRv/f7OI2cKouP+WI7z9qFoi6Vp25/dLKq970n6JdjdMmrWK
+         ZBBtRYZbI3m7nxcfyIfa+QqYpyHz+vqProWJlD2kSAq+K1rJ+bmqPRXyxgnRx61jrT
+         rAnQlE5bkEx7g==
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-502a7e1bdc7so263531e87.0;
+        Fri, 08 Sep 2023 13:22:33 -0700 (PDT)
+X-Gm-Message-State: AOJu0YyBSwgKroRWAVW3Uo3OgrEP44Tq6ts/7boAXFl2B5aomduHvK1q
+        0L1F7CdxEBZ+92RVi9CGEwRo+YMpts6fwYmTtro=
+X-Google-Smtp-Source: AGHT+IGSdkZj1l/XvKWToISgZ9w4muU6hYTmhbPfDa3yJQt+XxcvxldKyDqHZy3mN+070us8dp/tNoKXhAZ9WfPxBpY=
+X-Received: by 2002:a05:6512:788:b0:4fb:9e1a:e592 with SMTP id
+ x8-20020a056512078800b004fb9e1ae592mr2478517lfr.4.1694204552130; Fri, 08 Sep
+ 2023 13:22:32 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.131
-Content-Transfer-Encoding: 8bit
+References: <tencent_0D24426FAC6A21B69AC0C03CE4143A508F09@qq.com> <bd46efce-07ee-4cb3-a5d0-f133a1e79fd9@redhat.com>
+In-Reply-To: <bd46efce-07ee-4cb3-a5d0-f133a1e79fd9@redhat.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 8 Sep 2023 13:22:19 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7FOt7FJ_01i5NgaEoNRG7URAcNdAb=sKVxiMpdK_QfsQ@mail.gmail.com>
+Message-ID: <CAPhsuW7FOt7FJ_01i5NgaEoNRG7URAcNdAb=sKVxiMpdK_QfsQ@mail.gmail.com>
+Subject: Re: [PATCH v2] md: raid1: fix potential OOB in raid1_remove_disk()
+To:     Nigel Croxon <ncroxon@redhat.com>
+Cc:     Zhang Shurong <zhang_shurong@foxmail.com>, yukuai1@huaweicloud.com,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Zhang Shurong <zhang_shurong@foxmail.com>
+On Fri, Sep 8, 2023 at 6:48=E2=80=AFAM Nigel Croxon <ncroxon@redhat.com> wr=
+ote:
+>
+>
+> On 7/22/23 3:53 AM, Zhang Shurong wrote:
+>
+> If rddev->raid_disk is greater than mddev->raid_disks, there will be
+> an out-of-bounds in raid1_remove_disk(). We have already found
+> similar reports as follows:
+>
+> 1) commit d17f744e883b ("md-raid10: fix KASAN warning")
+> 2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk"=
+)
+>
+> Fix this bug by checking whether the "number" variable is
+> valid.
+>
+> Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
+> ---
+> Changes in v2:
+>  - Using conf->raid_disks instead of mddev->raid_disks.
+>
+>  drivers/md/raid1.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index dd25832eb045..80aeee63dfb7 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1829,6 +1829,10 @@ static int raid1_remove_disk(struct mddev *mddev, =
+struct md_rdev *rdev)
+>   struct r1conf *conf =3D mddev->private;
+>   int err =3D 0;
+>   int number =3D rdev->raid_disk;
+> +
+> + if (unlikely(number >=3D conf->raid_disks))
+> + goto abort;
+> +
+>   struct raid1_info *p =3D conf->mirrors + number;
+>
+>   if (rdev !=3D p->rdev)
+>
+> When compiling this patch.. I get the following error
+>
+> drivers/md/raid1.c: In function 'raid1_remove_disk':
+> drivers/md/raid1.c:1844:9: error: ISO C90 forbids mixed declarations and =
+code [-Werror=3Ddeclaration-after-statement]
+>  1844 |         struct raid1_info *p =3D conf->mirrors + number;
+>       |         ^~~~~~
+>
+> And that's because the new code was inserted before the struct.
+> Here is a fix:
+>
+>     raid1: fix error: ISO C90 forbids mixed declarations
+>
+>     There is a compile error when commit is added:
+>     md: raid1: fix potential OOB in raid1_remove_disk()
+>
+>     drivers/md/raid1.c: In function 'raid1_remove_disk':
+>     drivers/md/raid1.c:1844:9: error: ISO C90 forbids mixed declarations
+>     and code [-Werror=3Ddeclaration-after-statement]
+>      1844 |         struct raid1_info *p =3D conf->mirrors + number;
+>           |         ^~~~~~
+>
+>     And that's because the new code was inserted before the struct.
+>     The change is move the struct command above the new commit.
+>
+>     Fixes: md: raid1: fix potential OOB in raid1_remove_disk()
+>     commit 8b0472b50bcf
+>
+>     Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
 
-[ Upstream commit 8b0472b50bcf0f19a5119b00a53b63579c8e1e4d ]
+Thanks for catching this! Would you mind sending an official patch for it?
 
-If rddev->raid_disk is greater than mddev->raid_disks, there will be
-an out-of-bounds in raid1_remove_disk(). We have already found
-similar reports as follows:
+Song
 
-1) commit d17f744e883b ("md-raid10: fix KASAN warning")
-2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk")
-
-Fix this bug by checking whether the "number" variable is
-valid.
-
-Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-Link: https://lore.kernel.org/r/tencent_0D24426FAC6A21B69AC0C03CE4143A508F09@qq.com
-Signed-off-by: Song Liu <song@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/md/raid1.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 47997a9a3ca18..447ceb86367ec 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1811,6 +1811,10 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	struct r1conf *conf = mddev->private;
- 	int err = 0;
- 	int number = rdev->raid_disk;
-+
-+	if (unlikely(number >= conf->raid_disks))
-+		goto abort;
-+
- 	struct raid1_info *p = conf->mirrors + number;
- 
- 	if (rdev != p->rdev)
--- 
-2.40.1
-
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index a5453b126aab..4f1483bb708b 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1846,11 +1846,11 @@ static int raid1_remove_disk(struct mddev *mddev,=
+ struct md_rdev *rdev)
+>         int err =3D 0;
+>         int number =3D rdev->raid_disk;
+>
+> +       struct raid1_info *p =3D conf->mirrors + number;
+> +
+>         if (unlikely(number >=3D conf->raid_disks))
+>                 goto abort;
+>
+> -       struct raid1_info *p =3D conf->mirrors + number;
+> -
+>         if (rdev !=3D p->rdev)
+>                 p =3D conf->mirrors + conf->raid_disks + number;
+>
+>
