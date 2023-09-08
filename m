@@ -2,52 +2,88 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74032EE7FF1
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Sep 2023 13:08:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE0FAEEB56C
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Sep 2023 19:32:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238627AbjIHNIO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Sep 2023 09:08:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33664 "EHLO
+        id S1344828AbjIHTcM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Sep 2023 15:32:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbjIHNIO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Sep 2023 09:08:14 -0400
-X-Greylist: delayed 483 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 08 Sep 2023 06:08:09 PDT
-Received: from vps.thesusis.net (unknown [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A26291BF0
-        for <linux-raid@vger.kernel.org>; Fri,  8 Sep 2023 06:08:09 -0700 (PDT)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id 8BC66138141; Fri,  8 Sep 2023 09:00:05 -0400 (EDT)
-References: <CAGqmV7ojxmsMVStS2LWzfeN+A565z4U=d9kUBUnAfCGq5TGtsw@mail.gmail.com>
- <c22e4c16-ad15-b358-ac42-778675aeb5ad@huaweicloud.com>
- <CAGqmV7obHLD5FOT_jL05gw5-kMLXsWJpvv6VfoHce9-Pz6i74Q@mail.gmail.com>
-User-agent: mu4e 1.7.12; emacs 27.1
-From:   Phillip Susi <phill@thesusis.net>
-To:     CoolCold <coolthecold@gmail.com>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>,
-        Linux RAID <linux-raid@vger.kernel.org>,
-        "yukuai (C)" <yukuai3@huawei.com>,
-        "yangerkun@huawei.com" <yangerkun@huawei.com>
-Subject: Re: RADI10 slower than SINGLE drive - tests with fio for block
- device (no filesystem in use) - 18.5k vs 26k iops
-Date:   Fri, 08 Sep 2023 08:54:30 -0400
-In-reply-to: <CAGqmV7obHLD5FOT_jL05gw5-kMLXsWJpvv6VfoHce9-Pz6i74Q@mail.gmail.com>
-Message-ID: <878r9gddm2.fsf@vps.thesusis.net>
+        with ESMTP id S1344876AbjIHTcD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Sep 2023 15:32:03 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09C521FE1;
+        Fri,  8 Sep 2023 12:31:39 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 156E9C433CD;
+        Fri,  8 Sep 2023 19:31:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694201498;
+        bh=2BPao6F13avXvfkjVnx2fCbLk4Pej0moqpHIfmsz8hM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=sesTYo9KgmPM7eskQk7Dc7f01CgeyxvhASbDjRRDvliRGuRBjPieb7VKGk1EHfyvX
+         hOCWUCVyWyBFrDlDf0L+X7+ZN3jIFdKVTR6JU9TnZElHP6nlZvxXZmThTLRpyoJlkt
+         G/lMHxHMxGRE87ZgbIgGgdIhmtTdnS7bIfFw2Xg2nyumLBni5q/HmEaUuul8fyPIy+
+         zBkfexMw/cIFsscsmOPHJOQkawiwWMxRgZ92nyhTzRkcHv3K8n5fYyG86S3yErN6aH
+         kF68pS3K3g9et6rJWTWuLH57NegAFQM6Ew60z5skzCGwejfl8s2CIT0t2Rhak0J69q
+         Sr8xXYWAc7JYQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Zhang Shurong <zhang_shurong@foxmail.com>,
+        Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 32/36] md: raid1: fix potential OOB in raid1_remove_disk()
+Date:   Fri,  8 Sep 2023 15:28:43 -0400
+Message-Id: <20230908192848.3462476-32-sashal@kernel.org>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230908192848.3462476-1-sashal@kernel.org>
+References: <20230908192848.3462476-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.5.2
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+From: Zhang Shurong <zhang_shurong@foxmail.com>
 
-CoolCold <coolthecold@gmail.com> writes:
+[ Upstream commit 8b0472b50bcf0f19a5119b00a53b63579c8e1e4d ]
 
->> Write will be slower is normal, because each write to the array must
->> write to all the rdev and wait for these write be be done.
->
-> This contradicts with common wisdom and basically eliminates one of
-> the points of having striped setups - having N stripes, excepted to
-> give up to N/2 improvement in iops.
+If rddev->raid_disk is greater than mddev->raid_disks, there will be
+an out-of-bounds in raid1_remove_disk(). We have already found
+similar reports as follows:
 
-Striping is raid0.  Radi10 is striping, AND mirroring.  In the case of
-only two drives in the default near layout, it is identical to raid1, so
-you only have a single stripe.
+1) commit d17f744e883b ("md-raid10: fix KASAN warning")
+2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk")
+
+Fix this bug by checking whether the "number" variable is
+valid.
+
+Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+Link: https://lore.kernel.org/r/tencent_0D24426FAC6A21B69AC0C03CE4143A508F09@qq.com
+Signed-off-by: Song Liu <song@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/raid1.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index dd25832eb0452..80aeee63dfb78 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1829,6 +1829,10 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	struct r1conf *conf = mddev->private;
+ 	int err = 0;
+ 	int number = rdev->raid_disk;
++
++	if (unlikely(number >= conf->raid_disks))
++		goto abort;
++
+ 	struct raid1_info *p = conf->mirrors + number;
+ 
+ 	if (rdev != p->rdev)
+-- 
+2.40.1
+
