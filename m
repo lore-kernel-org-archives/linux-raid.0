@@ -2,45 +2,45 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE0FAEEB56C
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Sep 2023 19:32:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DDBCEEB56B
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Sep 2023 19:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344828AbjIHTcM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Sep 2023 15:32:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35612 "EHLO
+        id S240535AbjIHTea (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Sep 2023 15:34:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344876AbjIHTcD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Sep 2023 15:32:03 -0400
+        with ESMTP id S232003AbjIHTeU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Sep 2023 15:34:20 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09C521FE1;
-        Fri,  8 Sep 2023 12:31:39 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 156E9C433CD;
-        Fri,  8 Sep 2023 19:31:37 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCF7C1BEA;
+        Fri,  8 Sep 2023 12:33:57 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53BAAC43395;
+        Fri,  8 Sep 2023 19:33:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694201498;
-        bh=2BPao6F13avXvfkjVnx2fCbLk4Pej0moqpHIfmsz8hM=;
+        s=k20201202; t=1694201626;
+        bh=sv26YkO+2CC8jbPrQi8prVP0gL6+twprUuqvin5F9mk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sesTYo9KgmPM7eskQk7Dc7f01CgeyxvhASbDjRRDvliRGuRBjPieb7VKGk1EHfyvX
-         hOCWUCVyWyBFrDlDf0L+X7+ZN3jIFdKVTR6JU9TnZElHP6nlZvxXZmThTLRpyoJlkt
-         G/lMHxHMxGRE87ZgbIgGgdIhmtTdnS7bIfFw2Xg2nyumLBni5q/HmEaUuul8fyPIy+
-         zBkfexMw/cIFsscsmOPHJOQkawiwWMxRgZ92nyhTzRkcHv3K8n5fYyG86S3yErN6aH
-         kF68pS3K3g9et6rJWTWuLH57NegAFQM6Ew60z5skzCGwejfl8s2CIT0t2Rhak0J69q
-         Sr8xXYWAc7JYQ==
+        b=JrRFNugdEoxFG+GaH+YBD1VxlsP8BH6Ie14g6kEJ+2wJhEQbg/oS3JnpjmOWpTgep
+         gYTVQATL5dPf0+BY0YG6e6RRg84uC7UjSojzB3RP+bAKSdCqrle8ePgvOcdaclFRYU
+         X+yeaPkUmxI2+oGK1dvqmW4fAPLkEnkY8vZJVXfWuQC5PsIey1/Xd4zqIxAyOhfNwg
+         fIOk02yziO3/k94NF40ms61z4GyckpExhco5ZpsTvMAsdrdt3gCQnlurWSCK4Pl5gx
+         IIEgytRG+fRK/vD5fzODRobGAMcz+1a2xtYKzYlG3XlCUlVKa5X5BfonrBre3z0veh
+         I/kJN5D35yUGQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Zhang Shurong <zhang_shurong@foxmail.com>,
         Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 32/36] md: raid1: fix potential OOB in raid1_remove_disk()
-Date:   Fri,  8 Sep 2023 15:28:43 -0400
-Message-Id: <20230908192848.3462476-32-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.4 27/31] md: raid1: fix potential OOB in raid1_remove_disk()
+Date:   Fri,  8 Sep 2023 15:31:56 -0400
+Message-Id: <20230908193201.3462957-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908192848.3462476-1-sashal@kernel.org>
-References: <20230908192848.3462476-1-sashal@kernel.org>
+In-Reply-To: <20230908193201.3462957-1-sashal@kernel.org>
+References: <20230908193201.3462957-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.5.2
+X-stable-base: Linux 6.4.15
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
@@ -70,10 +70,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index dd25832eb0452..80aeee63dfb78 100644
+index e51b77a3a8397..d890e15230d21 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -1829,6 +1829,10 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+@@ -1826,6 +1826,10 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
  	struct r1conf *conf = mddev->private;
  	int err = 0;
  	int number = rdev->raid_disk;
