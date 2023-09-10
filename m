@@ -2,82 +2,165 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CA7DEE14AA
-	for <linux-raid@archiver.kernel.org>; Sat,  9 Sep 2023 21:31:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C8AEE57CD
+	for <linux-raid@archiver.kernel.org>; Sun, 10 Sep 2023 02:24:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242373AbjIIVbC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 9 Sep 2023 17:31:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52538 "EHLO
+        id S1345397AbjIJCYx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 9 Sep 2023 22:24:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239339AbjIIVbC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 9 Sep 2023 17:31:02 -0400
-X-Greylist: delayed 10961 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 09 Sep 2023 14:30:56 PDT
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7FD4197
-        for <linux-raid@vger.kernel.org>; Sat,  9 Sep 2023 14:30:56 -0700 (PDT)
-Received: from host86-155-223-197.range86-155.btcentralplus.com ([86.155.223.197] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1qf2gn-0002e1-Ds;
-        Sat, 09 Sep 2023 19:28:13 +0100
-Message-ID: <ed6b9df8-93c6-6f5e-3a1c-7aa5b9d51352@youngman.org.uk>
-Date:   Sat, 9 Sep 2023 19:28:11 +0100
+        with ESMTP id S233350AbjIJCYw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 9 Sep 2023 22:24:52 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF8801A5;
+        Sat,  9 Sep 2023 19:24:47 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rjtw95qwyz4f3mW7;
+        Sun, 10 Sep 2023 10:24:41 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgD3jd3oKP1kixFWAA--.29639S3;
+        Sun, 10 Sep 2023 10:24:42 +0800 (CST)
+Subject: Re: [PATCH] md/raid1: only update stack limits with the device in use
+To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20230906093720.1070929-1-linan122@huawei.com>
+ <e67775c0-2d41-5541-a644-e5239ada3333@huaweicloud.com>
+ <CAPhsuW5+Qxa4SKoaFrqZWKDmLaR0arXV7vqDX-Hy_OCEjmtA1w@mail.gmail.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <5e08c3aa-7bd5-f5dd-3d38-b93fb772ea56@huaweicloud.com>
+Date:   Sun, 10 Sep 2023 10:24:40 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: all of my drives are spares
-To:     David T-G <davidtg-robot@justpickone.org>,
-        Linux RAID list <linux-raid@vger.kernel.org>
-References: <20230908025035.GB1085@jpo> <20230909112656.GC1085@jpo>
-Content-Language: en-GB
-From:   Wol <antlists@youngman.org.uk>
-In-Reply-To: <20230909112656.GC1085@jpo>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CAPhsuW5+Qxa4SKoaFrqZWKDmLaR0arXV7vqDX-Hy_OCEjmtA1w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgD3jd3oKP1kixFWAA--.29639S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF45try5XF4rAFyxWw17KFg_yoW5ZFyUp3
+        yfJF1aka47XryI9r1IvryrWF1Fgw4UGFW8Kry7K342v34Dtry7Kr4xGrW5WryYqrs3Ar10
+        vrn8KrZxCF1F9FJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0xIA0c2IEe2xFo4CEbIxv
+        r21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
+        WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI
+        7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
+        1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4U
+        MIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUU
+        U==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 09/09/2023 12:26, David T-G wrote:
-> Hi, all --
-> 
-> ...and then David T-G home said...
-> % Hi, all --
-> %
-> % After a surprise reboot the other day, I came home to find diskfarm's
-> % RAID5 arrays all offline with all disks marked as spares.  wtf?!?
-> [snip]
-> 
-> Wow ...  I'm used to responses pointing out either what I've left
-> out or how stupid my setup is, but total silence ...  How did I
-> offend and how can I fix it?
+Hi,
 
-Sorry, it's usually me that's the quick response, everyone else takes 
-ages, and I'm feeling a bit burnt out with life in general at the moment.
+在 2023/09/09 4:42, Song Liu 写道:
+> On Wed, Sep 6, 2023 at 11:30 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+>>
+>> Hi,
+>>
+>> 在 2023/09/06 17:37, Li Nan 写道:
+>>> Spare device affects array stack limits is unreasonable. For example,
+>>> create a raid1 with two 512 byte devices, the logical_block_size of array
+>>> will be 512. But after add a 4k devcie as spare, logical_block_size of
+>>> array will change as follows.
+>>>
+>>>     mdadm -C /dev/md0 -n 2 -l 10 /dev/sd[ab]   //sd[ab] is 512
+>>>     //logical_block_size of md0: 512
+>>>
+>>>     mdadm --add /dev/md0 /dev/sdc                      //sdc is 4k
+>>>     //logical_block_size of md0: 512
+>>>
+>>>     mdadm -S /dev/md0
+>>>     mdadm -A /dev/md0 /dev/sd[ab]
+>>>     //logical_block_size of md0: 4k
+>>>
+>>> This will confuse users, as nothing has been changed, why did the
+>>> logical_block_size of array change?
+>>>
+>>> Now, only update logical_block_size of array with the device in use.
+>>>
+>>> Signed-off-by: Li Nan <linan122@huawei.com>
+>>> ---
+>>>    drivers/md/raid1.c | 19 ++++++++-----------
+>>>    1 file changed, 8 insertions(+), 11 deletions(-)
+>>>
+>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>>> index 95504612b7e2..d75c5dd89e86 100644
+>>> --- a/drivers/md/raid1.c
+>>> +++ b/drivers/md/raid1.c
+>>> @@ -3140,19 +3140,16 @@ static int raid1_run(struct mddev *mddev)
+>>
+>> I'm not sure about this behaviour, 'logical_block_size' can be
+>> increased while adding new underlying disk, the key point is not when
+>> to increase 'logical_block_size'. If there is a mounted fs, or
+>> partition in the array, I think the array will be corrupted.
 > 
-> I sure could use advice on the current hangup before perhaps just
-> destroying my entire array with the wrong commands ...
+> How common is such fs/partition corruption? I think some fs and partition
+> table can work properly with 512=>4096 change?
+
+For fs, that should depend on fs bs that is usually set in mkfs, if bs
+is less than 4096, then such fs can't be mounted.
+
+For partition, that is much worse, start sector and end sector will stay
+the same, while sector size is changed. And 4096 -> 512 change is the
+same.
+
+Thanks,
+Kuai
+
 > 
-I wonder if a controlled reboot would fix it. Or just do a --stop 
-followed by an assemble. The big worry is the wildly varying event 
-counts. Do your arrays have journals.
+> Thanks,
+> Song
 > 
-> With fingers crossed,
-> :-D
+>>
+>> Perhaps once that array is started, logical_block_size should not be
+>> changed anymore, this will require 'logical_block_size' to be metadate
+>> inside raid superblock. And the array should deny any new disk with
+>> bigger logical_block_size.
+>>
+>> Thanks,
+>> Kuai
+>>
+>>
+>>>        if (mddev->queue)
+>>>                blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
+>>>
+>>> -     rdev_for_each(rdev, mddev) {
+>>> -             if (!mddev->gendisk)
+>>> -                     continue;
+>>> -             disk_stack_limits(mddev->gendisk, rdev->bdev,
+>>> -                               rdev->data_offset << 9);
+>>> -     }
+>>> -
+>>>        mddev->degraded = 0;
+>>> -     for (i = 0; i < conf->raid_disks; i++)
+>>> -             if (conf->mirrors[i].rdev == NULL ||
+>>> -                 !test_bit(In_sync, &conf->mirrors[i].rdev->flags) ||
+>>> -                 test_bit(Faulty, &conf->mirrors[i].rdev->flags))
+>>> +     for (i = 0; i < conf->raid_disks; i++) {
+>>> +             rdev = conf->mirrors[i].rdev;
+>>> +             if (rdev && mddev->gendisk)
+>>> +                     disk_stack_limits(mddev->gendisk, rdev->bdev,
+>>> +                                       rdev->data_offset << 9);
+>>> +             if (!rdev || !test_bit(In_sync, &rdev->flags) ||
+>>> +                 test_bit(Faulty, &rdev->flags))
+>>>                        mddev->degraded++;
+>>> +     }
+>>>        /*
+>>>         * RAID1 needs at least one disk in active
+>>>         */
+>>>
+>>
+> .
+> 
 
-If the worst comes to the worst, try a forced assemble with the minimum 
-possible drives (no redundancy). Pick the drives with the highest event 
-counts. You can then re-add the remaining ones if that works.
-
-Iirc this is actually not uncommon and it shouldn't be hard to recover 
-from. I really ought to go through the archives, find a bunch of 
-occasions, and write it up.
-
-The only real worry is that the varying event counts mean that some data 
-corruption is likely. Recent files, hopefully nothing important. One 
-thing that's just struck me, this is often caused by a drive failing 
-some while back, and then a glitch on a second drive brings the whole 
-thing down. When did you last check your array was fully functional?
-
-Cheers,
-Wol
