@@ -2,95 +2,232 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 791A3CA0EC7
-	for <linux-raid@archiver.kernel.org>; Mon, 11 Sep 2023 22:00:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 623DECA0ECB
+	for <linux-raid@archiver.kernel.org>; Mon, 11 Sep 2023 22:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243899AbjIKV7M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:59:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39156 "EHLO
+        id S240223AbjIKV7L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:59:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236057AbjIKJty (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 11 Sep 2023 05:49:54 -0400
-Received: from jabberwock.ucw.cz (jabberwock.ucw.cz [46.255.230.98])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B88D1ED;
-        Mon, 11 Sep 2023 02:49:50 -0700 (PDT)
-Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
-        id 80CBA1C0006; Mon, 11 Sep 2023 11:49:49 +0200 (CEST)
-Date:   Mon, 11 Sep 2023 11:49:49 +0200
-From:   Pavel Machek <pavel@denx.de>
-To:     Sasha Levin <sashal@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Zhang Shurong <zhang_shurong@foxmail.com>,
-        Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 4.14 2/3] md: raid1: fix potential OOB in
- raid1_remove_disk()
-Message-ID: <ZP7ivTQR0bjM6WU/@duo.ucw.cz>
-References: <20230908193656.3464052-1-sashal@kernel.org>
- <20230908193656.3464052-2-sashal@kernel.org>
+        with ESMTP id S238843AbjIKOFx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 11 Sep 2023 10:05:53 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58DADCF0;
+        Mon, 11 Sep 2023 07:05:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1694441148; x=1725977148;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=0EJMEqElL7ywCI2JEL1bG0Qg/pB1AH4gYay1JxvZNmk=;
+  b=XN5cHsCT0K9RIeF/ruQiurp3eZWcJYlsAfuWTpbBuu4zo9/GJCaRkAuY
+   AEBi3AUcDLwmN/mFAFOz0dpobYaHxweATKupEameVjlg2fYZduSt2c7vY
+   axE3+SBl1mJs1VZajUQaj6Lwlb0oNqG1cpPCMfdxo7jHENjFJflTbFU4W
+   HMBv7c5IKcdlI9H0JiRz28xS1pgbPctis6uyRo+ZMJF25P/nb2npXJZO7
+   bsULOXPHIQTudMLz86SzCMZELl4gxdEiN1PA20+WnFBh7fYRBUw3p+H3G
+   +9KFU5I5w8rE68XnbhwUz1CZH/3fZ4DYaCrAjX83fMjB9HidvQ1pVbb2C
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="381894222"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="381894222"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 07:05:47 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="886522450"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="886522450"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.141.71])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 07:05:21 -0700
+Date:   Mon, 11 Sep 2023 16:05:40 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH -next] md: simplify md_seq_ops
+Message-ID: <20230911160540.0000060e@linux.intel.com>
+In-Reply-To: <20230911065010.3530461-1-yukuai1@huaweicloud.com>
+References: <20230911065010.3530461-1-yukuai1@huaweicloud.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="OGjEqHIQQgjcf3XB"
-Content-Disposition: inline
-In-Reply-To: <20230908193656.3464052-2-sashal@kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Mon, 11 Sep 2023 14:50:10 +0800
+Yu Kuai <yukuai1@huaweicloud.com> wrote:
 
---OGjEqHIQQgjcf3XB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi!
-
-> From: Zhang Shurong <zhang_shurong@foxmail.com>
->=20
-> [ Upstream commit 8b0472b50bcf0f19a5119b00a53b63579c8e1e4d ]
->=20
-> If rddev->raid_disk is greater than mddev->raid_disks, there will be
-> an out-of-bounds in raid1_remove_disk(). We have already found
-> similar reports as follows:
->=20
-> 1) commit d17f744e883b ("md-raid10: fix KASAN warning")
-> 2) commit 1ebc2cec0b7d ("dm raid: fix KASAN warning in raid5_remove_disk")
->=20
-> Fix this bug by checking whether the "number" variable is
-> valid.
-
-> +++ b/drivers/md/raid1.c
-> @@ -1775,6 +1775,10 @@ static int raid1_remove_disk(struct mddev *mddev, =
-struct md_rdev *rdev)
->  	struct r1conf *conf =3D mddev->private;
->  	int err =3D 0;
->  	int number =3D rdev->raid_disk;
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Use seq_list_start/next/stop() directly. Move printing "Personalities"
+> to md_sep_start() and "unsed devices" to md_seq_stop().
+> 
+> Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.c | 124 ++++++++++++------------------------------------
+>  1 file changed, 31 insertions(+), 93 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 0fe7ab6e8ab9..9c1155042335 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8192,105 +8192,14 @@ static int status_resync(struct seq_file *seq,
+> struct mddev *mddev) return 1;
+>  }
+>  
+> -static void *md_seq_start(struct seq_file *seq, loff_t *pos)
+> -{
+> -	struct list_head *tmp;
+> -	loff_t l = *pos;
+> -	struct mddev *mddev;
+> -
+> -	if (l == 0x10000) {
+> -		++*pos;
+> -		return (void *)2;
+> -	}
+> -	if (l > 0x10000)
+> -		return NULL;
+> -	if (!l--)
+> -		/* header */
+> -		return (void*)1;
+> -
+> -	spin_lock(&all_mddevs_lock);
+> -	list_for_each(tmp,&all_mddevs)
+> -		if (!l--) {
+> -			mddev = list_entry(tmp, struct mddev, all_mddevs);
+> -			if (!mddev_get(mddev))
+> -				continue;
+> -			spin_unlock(&all_mddevs_lock);
+> -			return mddev;
+> -		}
+> -	spin_unlock(&all_mddevs_lock);
+> -	if (!l--)
+> -		return (void*)2;/* tail */
+> -	return NULL;
+> -}
+> -
+> -static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+> -{
+> -	struct list_head *tmp;
+> -	struct mddev *next_mddev, *mddev = v;
+> -	struct mddev *to_put = NULL;
+> -
+> -	++*pos;
+> -	if (v == (void*)2)
+> -		return NULL;
+> -
+> -	spin_lock(&all_mddevs_lock);
+> -	if (v == (void*)1) {
+> -		tmp = all_mddevs.next;
+> -	} else {
+> -		to_put = mddev;
+> -		tmp = mddev->all_mddevs.next;
+> -	}
+> -
+> -	for (;;) {
+> -		if (tmp == &all_mddevs) {
+> -			next_mddev = (void*)2;
+> -			*pos = 0x10000;
+> -			break;
+> -		}
+> -		next_mddev = list_entry(tmp, struct mddev, all_mddevs);
+> -		if (mddev_get(next_mddev))
+> -			break;
+> -		mddev = next_mddev;
+> -		tmp = mddev->all_mddevs.next;
+> -	}
+> -	spin_unlock(&all_mddevs_lock);
+> -
+> -	if (to_put)
+> -		mddev_put(mddev);
+> -	return next_mddev;
+> -
+> -}
+> -
+> -static void md_seq_stop(struct seq_file *seq, void *v)
+> -{
+> -	struct mddev *mddev = v;
+> -
+> -	if (mddev && v != (void*)1 && v != (void*)2)
+> -		mddev_put(mddev);
+> -}
+> -
+>  static int md_seq_show(struct seq_file *seq, void *v)
+>  {
+> -	struct mddev *mddev = v;
+> +	struct mddev *mddev = list_entry(v, struct mddev, all_mddevs);
+>  	sector_t sectors;
+>  	struct md_rdev *rdev;
+>  
+> -	if (v == (void*)1) {
+> -		struct md_personality *pers;
+> -		seq_printf(seq, "Personalities : ");
+> -		spin_lock(&pers_lock);
+> -		list_for_each_entry(pers, &pers_list, list)
+> -			seq_printf(seq, "[%s] ", pers->name);
+> -
+> -		spin_unlock(&pers_lock);
+> -		seq_printf(seq, "\n");
+> -		seq->poll_event = atomic_read(&md_event_count);
+> -		return 0;
+> -	}
+> -	if (v == (void*)2) {
+> -		status_unused(seq);
+> +	if (test_bit(MD_DELETED, &mddev->flags))
+>  		return 0;
+> -	}
+>  
+>  	spin_lock(&mddev->lock);
+>  	if (mddev->pers || mddev->raid_disks || !list_empty(&mddev->disks)) {
+> @@ -8366,6 +8275,35 @@ static int md_seq_show(struct seq_file *seq, void *v)
+>  	return 0;
+>  }
+>  
+> +static void *md_seq_start(struct seq_file *seq, loff_t *pos)
+> +{
+> +	struct md_personality *pers;
 > +
-> +	if (unlikely(number >=3D conf->raid_disks))
-> +		goto abort;
+> +	seq_puts(seq, "Personalities : ");
+> +	spin_lock(&pers_lock);
+> +	list_for_each_entry(pers, &pers_list, list)
+> +		seq_printf(seq, "[%s] ", pers->name);
 > +
->  	struct raid1_info *p =3D conf->mirrors + number;
-> =20
->  	if (rdev !=3D p->rdev)
+> +	spin_unlock(&pers_lock);
+> +	seq_puts(seq, "\n");
+> +	seq->poll_event = atomic_read(&md_event_count);
+> +
+> +	spin_lock(&all_mddevs_lock);
 
-Wow. Mixing declarations and code. I'm pretty sure that's not ok
-according to our coding style, and I'd be actually surprised if all
-our compiler configurations allowed this.
+I would prefer to increase "active" instead holding lock when enumerating over
+the devices. the main reason is that parsing mdstat is implemented in mdadm, so
+it could kind of blocker action- for example mdmon follows mdstat so it is read
+frequently. The time of getting other actions done can highly increase because
+every open or sysfs_read/write requires this lock.
 
-Best regards,
-								Pavel=09
---=20
-DENX Software Engineering GmbH,        Managing Director: Erika Unter
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+> +
+> +	return seq_list_start(&all_mddevs, *pos);
+> +}
+> +
+> +static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+> +{
+> +	return seq_list_next(v, &all_mddevs, pos);
+> +}
+Can it be so simple? Why previous versions takes care of holding "(void)*1" and
+"(void)*2" then? Could you elaborate?
 
---OGjEqHIQQgjcf3XB
-Content-Type: application/pgp-signature; name="signature.asc"
+> +
+> +static void md_seq_stop(struct seq_file *seq, void *v)
+> +{
+> +	status_unused(seq);
+> +	spin_unlock(&all_mddevs_lock);
+> +}
+> +
+>  static const struct seq_operations md_seq_ops = {
+>  	.start  = md_seq_start,
+>  	.next   = md_seq_next,
 
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQRPfPO7r0eAhk010v0w5/Bqldv68gUCZP7ivQAKCRAw5/Bqldv6
-8le7AKCgrKgcgGkSi2I67IFDj1QPs5ZO5gCeMTHbL+GKcdVrmS8czxZCE2n+SaI=
-=Qad9
------END PGP SIGNATURE-----
-
---OGjEqHIQQgjcf3XB--
+Thanks,
+Mariusz
