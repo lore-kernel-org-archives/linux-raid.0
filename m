@@ -2,138 +2,251 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E029CA0ED2
-	for <linux-raid@archiver.kernel.org>; Mon, 11 Sep 2023 22:00:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0636CA0EC7
+	for <linux-raid@archiver.kernel.org>; Tue, 12 Sep 2023 01:45:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355428AbjIKV7d (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:59:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35746 "EHLO
+        id S232380AbjILBpa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 11 Sep 2023 21:45:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242868AbjIKQ10 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 11 Sep 2023 12:27:26 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63589CCD
-        for <linux-raid@vger.kernel.org>; Mon, 11 Sep 2023 09:27:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694449641; x=1725985641;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=fLe1eVF0AyQjKFE2tRHJ1P6Lg3GSKkOCJmYP0mm4GKo=;
-  b=ZlV/pDFwkxOEVp7I7+uu70+I5g+t+RlARjLclYzNdaNcN1nrzIn21SAF
-   nbu9+kjkyR/uSf0wlALRI+Z4ohuHSGP5vVAxzPq/F0d9zAtcu5bG1pBfJ
-   Z+SLc4NXLMHJzOyC29SM6sPOHXO6O341hJPY+aie94sHSP+oisO0SP2nD
-   CdGL8CnXzJUOBzPrt+bOyVH/BajSaIksJKlcDojs2/cGxu0Q0YDE3B3HT
-   jAWDRga19YiHw3YCR/PSHXkR+l1VOXkQGWDsptSy/gJRxRp8YeAgRyoXq
-   o5AMuUVPPWBHCg5ru/LYCNU2usJxoECfYyHz88WZ+99DC8nAw9KiYmwxe
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="380829242"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="380829242"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 09:00:39 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="990139590"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="990139590"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.141.71])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 09:00:36 -0700
-Date:   Mon, 11 Sep 2023 18:00:32 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Li Xiao Keng <lixiaokeng@huawei.com>
-Cc:     Jes Sorensen <jes@trained-monkey.org>,
-        Martin Wilck <mwilck@suse.com>, Coly Li <colyli@suse.de>,
-        <linux-raid@vger.kernel.org>, <louhongxiang@huawei.com>,
-        miaoguanqin <miaoguanqin@huawei.com>
-Subject: Re: [PATCH v3] Fix race of "mdadm --add" and "mdadm --incremental"
-Message-ID: <20230911180032.00007bbb@linux.intel.com>
-In-Reply-To: <a25e4d75-ebc3-0841-832c-34b8e5f4cbb7@huawei.com>
-References: <a25e4d75-ebc3-0841-832c-34b8e5f4cbb7@huawei.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S232880AbjILBpO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 11 Sep 2023 21:45:14 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6B9AA0A60;
+        Mon, 11 Sep 2023 18:21:17 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rl50914Cbz4f3jYQ;
+        Tue, 12 Sep 2023 09:02:17 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+        by APP4 (Coremail) with SMTP id gCh0CgCHHt6buP9kMlr7AA--.14108S3;
+        Tue, 12 Sep 2023 09:02:21 +0800 (CST)
+Subject: Re: [PATCH -next] md: simplify md_seq_ops
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230911065010.3530461-1-yukuai1@huaweicloud.com>
+ <20230911160540.0000060e@linux.intel.com>
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <b2754d8e-dfe7-ffff-66ac-052f366530e4@huaweicloud.com>
+Date:   Tue, 12 Sep 2023 09:02:19 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20230911160540.0000060e@linux.intel.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgCHHt6buP9kMlr7AA--.14108S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxKF1UKF4DWr43XF1rZr18Krg_yoW7Gw1xpF
+        ZIqFW5Ar4rXFWrXr1DXa1kuFyFqwn7Grn2gr9xGa95Cr1qqrn3AF1Sgw4fu3sI9ayxGrnY
+        vw4DKa47Wr18G37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
+        UUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 7 Sep 2023 19:37:44 +0800
-Li Xiao Keng <lixiaokeng@huawei.com> wrote:
+Hi,
 
-> There is a raid1 with sda and sdb. And we add sdc to this raid,
-> it may return -EBUSY.
->=20
-> The main process of --add:
-> 1. dev_open=EF=BC=88sdc) in Manage_add
-> 2. store_super1(st, di->fd) in write_init_super1
-> 3. fsync(fd) in store_super1
-> 4. close(di->fd) in write_init_super1
-> 5. ioctl(ADD_NEW_DISK)
->=20
-> Step 2 and 3 will add sdc to metadata of raid1. There will be
-> udev(change of sdc) event after step4. Then "/usr/sbin/mdadm
-> --incremental --export $devnode --offroot $env{DEVLINKS}"
-> will be run, and the sdc will be added to the raid1. Then
-> step 5 will return -EBUSY because it checks if device isn't
-> claimed in md_import_device()->lock_rdev()->blkdev_get_by_dev()
-> ->blkdev_get(). =20
->=20
-> It will be confusing for users because sdc is added first time.
-> The "incremental" will get map_lock before add sdc to raid1.
-> So we add map_lock before write_init_super in "mdadm --add"
-> to fix the race of "add" and "incremental".
->=20
-> Signed-off-by: Li Xiao Keng <lixiaokeng@huawei.com>
-> Signed-off-by: Guanqin Miao <miaoguanqin@huawei.com>
+ÔÚ 2023/09/11 22:05, Mariusz Tkaczyk Ð´µÀ:
+> On Mon, 11 Sep 2023 14:50:10 +0800
+> Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> 
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Use seq_list_start/next/stop() directly. Move printing "Personalities"
+>> to md_sep_start() and "unsed devices" to md_seq_stop().
+>>
+>> Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/md.c | 124 ++++++++++++------------------------------------
+>>   1 file changed, 31 insertions(+), 93 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 0fe7ab6e8ab9..9c1155042335 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -8192,105 +8192,14 @@ static int status_resync(struct seq_file *seq,
+>> struct mddev *mddev) return 1;
+>>   }
+>>   
+>> -static void *md_seq_start(struct seq_file *seq, loff_t *pos)
+>> -{
+>> -	struct list_head *tmp;
+>> -	loff_t l = *pos;
+>> -	struct mddev *mddev;
+>> -
+>> -	if (l == 0x10000) {
+>> -		++*pos;
+>> -		return (void *)2;
+>> -	}
+>> -	if (l > 0x10000)
+>> -		return NULL;
+>> -	if (!l--)
+>> -		/* header */
+>> -		return (void*)1;
+>> -
+>> -	spin_lock(&all_mddevs_lock);
+>> -	list_for_each(tmp,&all_mddevs)
+>> -		if (!l--) {
+>> -			mddev = list_entry(tmp, struct mddev, all_mddevs);
+>> -			if (!mddev_get(mddev))
+>> -				continue;
+>> -			spin_unlock(&all_mddevs_lock);
+>> -			return mddev;
+>> -		}
+>> -	spin_unlock(&all_mddevs_lock);
+>> -	if (!l--)
+>> -		return (void*)2;/* tail */
+>> -	return NULL;
+>> -}
+>> -
+>> -static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+>> -{
+>> -	struct list_head *tmp;
+>> -	struct mddev *next_mddev, *mddev = v;
+>> -	struct mddev *to_put = NULL;
+>> -
+>> -	++*pos;
+>> -	if (v == (void*)2)
+>> -		return NULL;
+>> -
+>> -	spin_lock(&all_mddevs_lock);
+>> -	if (v == (void*)1) {
+>> -		tmp = all_mddevs.next;
+>> -	} else {
+>> -		to_put = mddev;
+>> -		tmp = mddev->all_mddevs.next;
+>> -	}
+>> -
+>> -	for (;;) {
+>> -		if (tmp == &all_mddevs) {
+>> -			next_mddev = (void*)2;
+>> -			*pos = 0x10000;
+>> -			break;
+>> -		}
+>> -		next_mddev = list_entry(tmp, struct mddev, all_mddevs);
+>> -		if (mddev_get(next_mddev))
+>> -			break;
+>> -		mddev = next_mddev;
+>> -		tmp = mddev->all_mddevs.next;
+>> -	}
+>> -	spin_unlock(&all_mddevs_lock);
+>> -
+>> -	if (to_put)
+>> -		mddev_put(mddev);
+>> -	return next_mddev;
+>> -
+>> -}
+>> -
+>> -static void md_seq_stop(struct seq_file *seq, void *v)
+>> -{
+>> -	struct mddev *mddev = v;
+>> -
+>> -	if (mddev && v != (void*)1 && v != (void*)2)
+>> -		mddev_put(mddev);
+>> -}
+>> -
+>>   static int md_seq_show(struct seq_file *seq, void *v)
+>>   {
+>> -	struct mddev *mddev = v;
+>> +	struct mddev *mddev = list_entry(v, struct mddev, all_mddevs);
+>>   	sector_t sectors;
+>>   	struct md_rdev *rdev;
+>>   
+>> -	if (v == (void*)1) {
+>> -		struct md_personality *pers;
+>> -		seq_printf(seq, "Personalities : ");
+>> -		spin_lock(&pers_lock);
+>> -		list_for_each_entry(pers, &pers_list, list)
+>> -			seq_printf(seq, "[%s] ", pers->name);
+>> -
+>> -		spin_unlock(&pers_lock);
+>> -		seq_printf(seq, "\n");
+>> -		seq->poll_event = atomic_read(&md_event_count);
+>> -		return 0;
+>> -	}
+>> -	if (v == (void*)2) {
+>> -		status_unused(seq);
+>> +	if (test_bit(MD_DELETED, &mddev->flags))
+>>   		return 0;
+>> -	}
+>>   
+>>   	spin_lock(&mddev->lock);
+>>   	if (mddev->pers || mddev->raid_disks || !list_empty(&mddev->disks)) {
+>> @@ -8366,6 +8275,35 @@ static int md_seq_show(struct seq_file *seq, void *v)
+>>   	return 0;
+>>   }
+>>   
+>> +static void *md_seq_start(struct seq_file *seq, loff_t *pos)
+>> +{
+>> +	struct md_personality *pers;
+>> +
+>> +	seq_puts(seq, "Personalities : ");
+>> +	spin_lock(&pers_lock);
+>> +	list_for_each_entry(pers, &pers_list, list)
+>> +		seq_printf(seq, "[%s] ", pers->name);
+>> +
+>> +	spin_unlock(&pers_lock);
+>> +	seq_puts(seq, "\n");
+>> +	seq->poll_event = atomic_read(&md_event_count);
+>> +
+>> +	spin_lock(&all_mddevs_lock);
+> 
+> I would prefer to increase "active" instead holding lock when enumerating over
+> the devices. the main reason is that parsing mdstat is implemented in mdadm, so
+> it could kind of blocker action- for example mdmon follows mdstat so it is read
+> frequently. The time of getting other actions done can highly increase because
+> every open or sysfs_read/write requires this lock.
+> 
+>> +
+>> +	return seq_list_start(&all_mddevs, *pos);
+>> +}
+>> +
+>> +static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+>> +{
+>> +	return seq_list_next(v, &all_mddevs, pos);
+>> +}
+> Can it be so simple? Why previous versions takes care of holding "(void)*1" and
+> "(void)*2" then? Could you elaborate?
 
-Hello Li Xiao Keng,
-Thanks for the patch, I'm trying to get my head around this.
-As I understand, you added a mapfile locking and you are failing when the l=
-og
-is already claimed, but you prefer to return -1 and print error instead of
-returning EBUSY, right?
-
-If yes, it has nothing to do with fixing. It is just a obscure hack to make=
- it,
-let say more reliable. We can either get EBUSY and know that is expected. I
-see no difference, your solution is same confusing as current implementatio=
-n.
-
-Also, you used map_lock(). I remember that initially I proposed - my bad.
-We also rejected udev locking, as a buggy. In fact- I don't see ready
-synchronization method to avoid this race in mdadm right now.
-
-The best way, I see is:
-1. Write metadata.
-2. Give udev chance to process the device.
-3. Add it manually if udev failed (or D_NO_UDEV).
-
-If it does not work for you, we need to add synchronization, I know that th=
-ere
-is pidfile used for mdmon, perhaps we can reuse it? We don't need something
-fancy, just something to keep all synchronised and block incremental to led
---add finish the action.
-
-We cannot use map_lock() and map_unlock() in this context. It claims lock on
-mapfile which describes every array in your system (base details, there is =
-no
-info about members), see /var/run/mdadm. Add is just a tiny action to add d=
-isk
-and we are not going to update the map. Taking this lock will make --add
-more vulnerable, for example it will fail because another array is assemble=
-d or
-created in the same time (I know that it will be hard to achieve but it is
-another race - we don't want it).
-
-And we cannot allow for partially done action, you added this lock after
-writing metadata (according to description), we are not taking this lock to
-complete the action, just to hide race. Lock should be taken before
-writing metadata, but we know that it will not hide an issue.
-
-In this for it cannot be merged I don't see a gain, we are returning -1 ins=
-tead
--22, what is the difference? I don't see error message as more meaningful n=
-ow.
+"1" means printing "Personalities", which is now moved to md_seq_start,
+and "2" means printing "unsed devices" which is now moved to
+md_seq_stop. And now md_seq_next is only used to iterate the mddev list.
 
 Thanks,
-Mariusz
+Kuai
+
+> 
+>> +
+>> +static void md_seq_stop(struct seq_file *seq, void *v)
+>> +{
+>> +	status_unused(seq);
+>> +	spin_unlock(&all_mddevs_lock);
+>> +}
+>> +
+>>   static const struct seq_operations md_seq_ops = {
+>>   	.start  = md_seq_start,
+>>   	.next   = md_seq_next,
+> 
+> Thanks,
+> Mariusz
+> 
+> .
+> 
+
