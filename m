@@ -2,135 +2,125 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3BA1CA5511
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Sep 2023 08:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29775CA5512
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Sep 2023 09:09:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239100AbjIMIzc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Sep 2023 04:55:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48612 "EHLO
+        id S239202AbjIMJJF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Sep 2023 05:09:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230267AbjIMIzb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Sep 2023 04:55:31 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B880196
-        for <linux-raid@vger.kernel.org>; Wed, 13 Sep 2023 01:55:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694595327; x=1726131327;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=gOsEBqZcQ8Pk6V7Io6n7J5Ycd/rwXODPGQIxawAS564=;
-  b=nGosWoGf9+NN+eY/7RbMrGPA5lYYskrLKdYJNjHW/0hUadrWm3CIj0wR
-   IgPzqjjaQ5PGZcNoHORNksfqQsBOZqCCq3ISZTBJbHl59lvBXzn0yYBqB
-   vuf/2cdAex1NUBtQaaBem0z/2XlE7J11LzkKZsCs6myRD+yPtg3WsCsE7
-   MTcZQ2tDHAcTGbf2M4g5jQo2gK634WNVtTOz+55Fr/IKeJWdREaQ5Vlff
-   xjQ1FTo522J1TFI9z4iQYwe1yU01YMK4nblQh8fm7xB4uaDTZSoY0nDNh
-   rr0LAq1nHgn9n8a6WpVxbz+MHZnSBpmQMQmaGDVkMgdezyjVr/5bzzT8x
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10831"; a="375935118"
-X-IronPort-AV: E=Sophos;i="6.02,142,1688454000"; 
-   d="scan'208";a="375935118"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2023 01:55:26 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10831"; a="737415646"
-X-IronPort-AV: E=Sophos;i="6.02,142,1688454000"; 
-   d="scan'208";a="737415646"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.105.40])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2023 01:55:25 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Subject: [PATCH] md: do not require mddev_lock() for all options
-Date:   Wed, 13 Sep 2023 10:55:02 +0200
-Message-Id: <20230913085502.17856-1-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S230322AbjIMJJE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Sep 2023 05:09:04 -0400
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ED641993;
+        Wed, 13 Sep 2023 02:09:00 -0700 (PDT)
+Received: from theinternet.molgen.mpg.de (theinternet.molgen.mpg.de [141.14.31.7])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id BC06861E5FE03;
+        Wed, 13 Sep 2023 11:08:12 +0200 (CEST)
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+To:     Dragan Stancevic <dragan@stancevic.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+Cc:     guoqing.jiang@linux.dev, it+raid@molgen.mpg.de,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        msmith626@gmail.com, "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
+ <20230822211627.1389410-1-dragan@stancevic.com>
+ <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
+ <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
+ <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
+ <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
+ <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
+ <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
+ <07ef7b78-66d4-d3de-4e25-8a889b902e14@stancevic.com>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <63c63d93-30fc-0175-0033-846b93fe9eff@molgen.mpg.de>
+Date:   Wed, 13 Sep 2023 11:08:12 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
+In-Reply-To: <07ef7b78-66d4-d3de-4e25-8a889b902e14@stancevic.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-We don't need to lock device to reject not supported request
-in array_state_store().
-Main motivation is to make a room for action does not require lock yet,
-like prepare to stop (see md_ioctl()).
+On 9/5/23 3:54 PM, Dragan Stancevic wrote:
+> On 9/4/23 22:50, Yu Kuai wrote:
+>> Hi,
+>>
+>> 在 2023/08/30 9:36, Yu Kuai 写道:
+>>> Hi,
+>>>
+>>> 在 2023/08/29 4:32, Dragan Stancevic 写道:
+>>>
+>>>> Just a followup on 6.1 testing. I tried reproducing this problem for 5 days with 6.1.42 kernel without your patches and I was not able to reproduce it.
+>>
+>> oops, I forgot that you need to backport this patch first to reporduce
+>> this problem:
+>>
+>> https://lore.kernel.org/all/20230529132037.2124527-2-yukuai1@huaweicloud.com/
+>>
+>> The patch fix the deadlock as well, but it introduce some regressions.
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
----
-Code refactor, submitting it now because work in this area will be
-postponed- we have the issue root caused.
+We've just got an unplanned lock up on "check" to "idle" transition with 6.1.52 after a few hours on a backup server. For the last 2 1/2 years we used the patch I originally proposed with multiple kernel versions [1]. But this no longer seems to be valid or maybe its even destructive in combination with the other changes.
 
- drivers/md/md.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+But I totally lost track of the further development. As I understood, there are patches queue up in mainline, which might go into 6.1, too, but have not landed there which should fix the problem?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index bb654ff62765..3b1a28a753e5 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4365,6 +4365,18 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 	int err = 0;
- 	enum array_state st = match_word(buf, array_states);
- 
-+	/* No lock dependent actions */
-+	switch (st) {
-+	case suspended:		/* not supported yet */
-+	case write_pending:	/* cannot be set */
-+	case active_idle:	/* cannot be set */
-+	case broken:		/* cannot be set */
-+	case bad_word:
-+		return -EINVAL;
-+	default:
-+		break;
-+	}
-+
- 	if (mddev->pers && (st == active || st == clean) &&
- 	    mddev->ro != MD_RDONLY) {
- 		/* don't take reconfig_mutex when toggling between
-@@ -4389,23 +4401,16 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 	err = mddev_lock(mddev);
- 	if (err)
- 		return err;
--	err = -EINVAL;
--	switch(st) {
--	case bad_word:
--		break;
--	case clear:
--		/* stopping an active array */
--		err = do_md_stop(mddev, 0, NULL);
--		break;
-+
-+	switch (st) {
- 	case inactive:
--		/* stopping an active array */
-+		/* stop an active array, return 0 otherwise */
- 		if (mddev->pers)
- 			err = do_md_stop(mddev, 2, NULL);
--		else
--			err = 0; /* already inactive */
- 		break;
--	case suspended:
--		break; /* not supported yet */
-+	case clear:
-+		err = do_md_stop(mddev, 0, NULL);
-+		break;
- 	case readonly:
- 		if (mddev->pers)
- 			err = md_set_readonly(mddev, NULL);
-@@ -4456,10 +4461,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 			err = do_md_run(mddev);
- 		}
- 		break;
--	case write_pending:
--	case active_idle:
--	case broken:
--		/* these cannot be set */
-+	default:
-+		err = -EINVAL;
- 		break;
- 	}
- 
+Can anyone give me exact references to the patches I'd need to apply to 6.1.52, so that I could probably fix my problem and also test the patches for you those on production systems with a load which tends to run into that problem easily?
+
+Thanks
+
+  Donald
+
+[1]: https://lore.kernel.org/linux-raid/bc342de0-98d2-1733-39cd-cc1999777ff3@molgen.mpg.de/
+
+> Ha, jinx :) I was about to email you that I isolated that change with the testing over the weekend that made it more difficult to reproduce in 6.1 and that the original change must be reverted :)
+> 
+> 
+> 
+>>
+>> Thanks,
+>> Kuai
+>>
+>>>>
+>>>> It seems that 6.1 has some other code that prevents this from happening.
+>>>>
+>>>
+>>> I see that there are lots of patches for raid456 between 5.10 and 6.1,
+>>> however, I remember that I used to reporduce the deadlock after 6.1, and
+>>> it's true it's not easy to reporduce, see below:
+>>>
+>>> https://lore.kernel.org/linux-raid/e9067438-d713-f5f3-0d3d-9e6b0e9efa0e@huaweicloud.com/
+>>>
+>>> My guess is that 6.1 is harder to reporduce than 5.10 due to some
+>>> changes inside raid456.
+>>>
+>>> By the way, raid10 had a similiar deadlock, and can be fixed the same
+>>> way, so it make sense to backport these patches.
+>>>
+>>> https://lore.kernel.org/r/20230529132037.2124527-5-yukuai1@huaweicloud.com
+>>>
+>>> Thanks,
+>>> Kuai
+>>>
+>>>
+>>>> On 5.10 I can reproduce it within minutes to an hour.
+>>>>
+>>>
+>>> .
+>>>
+>>
+> 
+
+
 -- 
-2.26.2
-
+Donald Buczek
+buczek@molgen.mpg.de
+Tel: +49 30 8413 1433
