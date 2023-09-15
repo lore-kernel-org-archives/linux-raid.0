@@ -2,219 +2,157 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB08AEE3F01
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Sep 2023 05:42:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90851CD37A7
+	for <linux-raid@archiver.kernel.org>; Fri, 15 Sep 2023 20:04:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231978AbjIOFmz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 15 Sep 2023 01:42:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38224 "EHLO
+        id S237058AbjIOUDw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 15 Sep 2023 16:03:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229527AbjIOFmz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Sep 2023 01:42:55 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30B0A2715
-        for <linux-raid@vger.kernel.org>; Thu, 14 Sep 2023 22:42:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694756570; x=1726292570;
-  h=date:from:to:cc:subject:message-id;
-  bh=tPp/Y3zihjHBN4t17nZ6STnIwqkT2thOPKcKBeC4YOw=;
-  b=HXasNrXQUJ6sh24gUzZahYNqTR7kp1JiW0oOVawcFcnIDHLFc7KUol8X
-   RYwoGTte7oYFw32eadusKbTkw8t6M9460iQEq3R+7ct6jgDpYciG2b+4c
-   OSwDQxOSvu1ys/7nqyvZLbtzYQI2zfOZ4X/o+AhtCcwwgzr0XMcPStsTZ
-   8zcNwfX8JYUGRLZEymx/ePe98OETKd/dc85UzKS/SdWuLV6iYKUof0VMm
-   QWCc675yTYHgLMOw5ga8TgkV8xxXl2AShgmlnk64Qq+5LbnqogsP0BN7g
-   jKVuze6/+1I44okba5owazxH0YDPHge+q8FNzZU12YEML0NfUjPmv9D76
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10833"; a="379082623"
-X-IronPort-AV: E=Sophos;i="6.02,148,1688454000"; 
-   d="scan'208";a="379082623"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2023 22:42:49 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10833"; a="694598023"
-X-IronPort-AV: E=Sophos;i="6.02,148,1688454000"; 
-   d="scan'208";a="694598023"
-Received: from lkp-server02.sh.intel.com (HELO 9ef86b2655e5) ([10.239.97.151])
-  by orsmga003.jf.intel.com with ESMTP; 14 Sep 2023 22:42:48 -0700
-Received: from kbuild by 9ef86b2655e5 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qh1bJ-0002UD-1t;
-        Fri, 15 Sep 2023 05:42:45 +0000
-Date:   Fri, 15 Sep 2023 13:41:56 +0800
-From:   kernel test robot <lkp@intel.com>
+        with ESMTP id S237024AbjIOUDh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Sep 2023 16:03:37 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62A3A2121
+        for <linux-raid@vger.kernel.org>; Fri, 15 Sep 2023 13:03:31 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1bf7a6509deso20215185ad.3
+        for <linux-raid@vger.kernel.org>; Fri, 15 Sep 2023 13:03:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1694808211; x=1695413011; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=SosbTcKl/5I1PV+lrT9yDJJKNex4T51jnpPA720MDZU=;
+        b=gsFImH+r6qpHa8+zQQueIhNnrEQEVEyc9VFY1BOVXHdgRbYXMffG38RWM2I1dbbeod
+         hsO1T6Y5NU82OWCtB3D6eY4G8JQ/202RlnOtCm88worl6zVvjJPpNxkVdcAbTD9EaztD
+         5cedbI9qOTxeNqrSQU8C8dFFwG4YO2tnvO7Q4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694808211; x=1695413011;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=SosbTcKl/5I1PV+lrT9yDJJKNex4T51jnpPA720MDZU=;
+        b=A1QUwGPnOag58tNConqlCQoVvLxh1bRUUZCrM6j2tbmwpdwUUG8q2JhVb9S6LqAqFe
+         fm+1yRZqWBTa8J3Z1mP4R0wVqIk5Fr5AWZg8JnqEep4OO0wT+H4H4Dfai1JkIzW9eeHm
+         FjGxzFUtimNHAfvpTs6AKZAw2q0oO1Grl3lgfdxJX8VOMj2wU0SAxRvbz7VIlU+ipLZG
+         eXLJpKgnmdGvHuST4f1gipLhviwDuXSI92K2YYBr3L5wbnPFNoLXpkvl3mWl01mH8WrC
+         /HRVCENRYYZPQuVY2RwD/q+Z9kIjGerfjAtGPCDJxlSIyjLxR4xpt2q2URZud2tIxDaw
+         Kd2w==
+X-Gm-Message-State: AOJu0YxMRsdu7LGEzZDLvYrGN2JrgEkg3E2bREFgotyrDuvrgTKjCz1W
+        2zmLMEO6ZZNhstqmlJy8lGKq8A==
+X-Google-Smtp-Source: AGHT+IEOQ2lcwtuhw63TPr12BTkAZ2vOLMAc0/d5J0bOWzH8ffo1YR777tngzNTZgKuRYw8HWobCKw==
+X-Received: by 2002:a17:902:e5d2:b0:1c2:5db:7f16 with SMTP id u18-20020a170902e5d200b001c205db7f16mr2968709plf.67.1694808210853;
+        Fri, 15 Sep 2023 13:03:30 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id z14-20020a170902d54e00b001bd28b9c3ddsm3856917plf.299.2023.09.15.13.03.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 Sep 2023 13:03:30 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
 To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-fixes] BUILD SUCCESS
- c8870379a21fbd9ad14ca36204ccfbe9d25def43
-Message-ID: <202309151354.arCtHFi6-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+Cc:     Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, linux-hardening@vger.kernel.org
+Subject: [PATCH] md/md-linear: Annotate struct linear_conf with __counted_by
+Date:   Fri, 15 Sep 2023 13:03:28 -0700
+Message-Id: <20230915200328.never.064-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3030; i=keescook@chromium.org;
+ h=from:subject:message-id; bh=mHf9KJ3h9Dhk5paRlWrtgrLWQTsMLrfhnSPVfMSBb64=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBlBLiQXfFuDkTYwAb1eIwKAUqGWKpMaXqd9cGQi
+ R5dxa9UYAaJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZQS4kAAKCRCJcvTf3G3A
+ JsXqD/wKUnbZHahdgumMZjjArgJmZqnGpwPIzL69Kn3lUZnQrQMt0KfRSnb02kD5OXo3wi9ZEUP
+ P3uqJLz4U7jqO1SZzIxMjmYvmepGzlUnahBVWXbXtLqiPQx9u4wdLNaIwSEW4P3WS4POsuFWxYB
+ Mrm00qIj8a6q6L+9US0fRnFGnam7yYUyGDRoLMkzVuJvxSe0sh19+nzhn27QC/r4ju6pgMsM2o4
+ ewYYPkzumFt/tguEdxFax1AGz3aPpee/LWIUcfYNAZ8oefAQeBDBM8fK3M06zvNPxqThyC5JpNr
+ ZF15n2uj89sAv8ZsjayB1c0LwqG4giEz3UEdB0Qxle/Im7aEYQmEPApO6meGHwlmfKravrNj7IS
+ 8WlL+OBZM5Rby6CcdruSt/mmPOSMIslGI0c/OL+lCtgsBZcs1EfrVAonbI5vqNix3bA9Ojj6Ryb
+ N6WVanstIBM6/XABftYGqZw50OF7zw5DBLLlS62L3kGdqCXYB8exgRBmmdINZ3mh/gdCixMmXB/
+ pBbWqhBkitswbnGXCwM49Xfo53Bg/dgi9ycKh95Fz2c1hojweBdm5vbOuF4EvzumIeDv/xRGiC1
+ GFGKEFccMyCtOyBHGZEyobz1DMg2AHQemK7clDpXKY/tkidK/YsKqf0iy8GJGuxNAmT8HkLMEba
+ Lv/anPt ijBf0Fzw==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
-branch HEAD: c8870379a21fbd9ad14ca36204ccfbe9d25def43  md: Put the right device in md_seq_next
+Prepare for the coming implementation by GCC and Clang of the __counted_by
+attribute. Flexible array members annotated with __counted_by can have
+their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
+(for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
+functions).
 
-elapsed time: 725m
+As found with Coccinelle[1], add __counted_by for struct linear_conf.
+Additionally, since the element count member must be set before accessing
+the annotated flexible array member, move its initialization earlier.
 
-configs tested: 149
-configs skipped: 2
+[1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Cc: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/md/md-linear.c | 26 +++++++++++++-------------
+ drivers/md/md-linear.h |  2 +-
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20230915   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                         lpc18xx_defconfig   gcc  
-arm                        mvebu_v5_defconfig   clang
-arm                   randconfig-001-20230915   gcc  
-arm64                            allmodconfig   gcc  
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20230915   gcc  
-i386         buildonly-randconfig-002-20230915   gcc  
-i386         buildonly-randconfig-003-20230915   gcc  
-i386         buildonly-randconfig-004-20230915   gcc  
-i386         buildonly-randconfig-005-20230915   gcc  
-i386         buildonly-randconfig-006-20230915   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                  randconfig-001-20230915   gcc  
-i386                  randconfig-002-20230915   gcc  
-i386                  randconfig-003-20230915   gcc  
-i386                  randconfig-004-20230915   gcc  
-i386                  randconfig-005-20230915   gcc  
-i386                  randconfig-006-20230915   gcc  
-i386                  randconfig-011-20230915   gcc  
-i386                  randconfig-012-20230915   gcc  
-i386                  randconfig-013-20230915   gcc  
-i386                  randconfig-014-20230915   gcc  
-i386                  randconfig-015-20230915   gcc  
-i386                  randconfig-016-20230915   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20230915   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                          malta_defconfig   clang
-mips                        omega2p_defconfig   clang
-nios2                            alldefconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   gcc  
-powerpc                          g5_defconfig   clang
-powerpc                      mgcoge_defconfig   gcc  
-powerpc                     mpc83xx_defconfig   gcc  
-powerpc                         wii_defconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20230915   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20230915   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                         ecovec24_defconfig   gcc  
-sh                        edosk7705_defconfig   gcc  
-sh                          rsk7269_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                 randconfig-001-20230915   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-001-20230915   gcc  
-x86_64       buildonly-randconfig-002-20230915   gcc  
-x86_64       buildonly-randconfig-003-20230915   gcc  
-x86_64       buildonly-randconfig-004-20230915   gcc  
-x86_64       buildonly-randconfig-005-20230915   gcc  
-x86_64       buildonly-randconfig-006-20230915   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20230915   gcc  
-x86_64                randconfig-002-20230915   gcc  
-x86_64                randconfig-003-20230915   gcc  
-x86_64                randconfig-004-20230915   gcc  
-x86_64                randconfig-005-20230915   gcc  
-x86_64                randconfig-006-20230915   gcc  
-x86_64                randconfig-011-20230915   gcc  
-x86_64                randconfig-012-20230915   gcc  
-x86_64                randconfig-013-20230915   gcc  
-x86_64                randconfig-014-20230915   gcc  
-x86_64                randconfig-015-20230915   gcc  
-x86_64                randconfig-016-20230915   gcc  
-x86_64                randconfig-071-20230915   gcc  
-x86_64                randconfig-072-20230915   gcc  
-x86_64                randconfig-073-20230915   gcc  
-x86_64                randconfig-074-20230915   gcc  
-x86_64                randconfig-075-20230915   gcc  
-x86_64                randconfig-076-20230915   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                         virt_defconfig   gcc  
-
+diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
+index 71ac99646827..ae2826e9645b 100644
+--- a/drivers/md/md-linear.c
++++ b/drivers/md/md-linear.c
+@@ -69,6 +69,19 @@ static struct linear_conf *linear_conf(struct mddev *mddev, int raid_disks)
+ 	if (!conf)
+ 		return NULL;
+ 
++	/*
++	 * conf->raid_disks is copy of mddev->raid_disks. The reason to
++	 * keep a copy of mddev->raid_disks in struct linear_conf is,
++	 * mddev->raid_disks may not be consistent with pointers number of
++	 * conf->disks[] when it is updated in linear_add() and used to
++	 * iterate old conf->disks[] earray in linear_congested().
++	 * Here conf->raid_disks is always consitent with number of
++	 * pointers in conf->disks[] array, and mddev->private is updated
++	 * with rcu_assign_pointer() in linear_addr(), such race can be
++	 * avoided.
++	 */
++	conf->raid_disks = raid_disks;
++
+ 	cnt = 0;
+ 	conf->array_sectors = 0;
+ 
+@@ -112,19 +125,6 @@ static struct linear_conf *linear_conf(struct mddev *mddev, int raid_disks)
+ 			conf->disks[i-1].end_sector +
+ 			conf->disks[i].rdev->sectors;
+ 
+-	/*
+-	 * conf->raid_disks is copy of mddev->raid_disks. The reason to
+-	 * keep a copy of mddev->raid_disks in struct linear_conf is,
+-	 * mddev->raid_disks may not be consistent with pointers number of
+-	 * conf->disks[] when it is updated in linear_add() and used to
+-	 * iterate old conf->disks[] earray in linear_congested().
+-	 * Here conf->raid_disks is always consitent with number of
+-	 * pointers in conf->disks[] array, and mddev->private is updated
+-	 * with rcu_assign_pointer() in linear_addr(), such race can be
+-	 * avoided.
+-	 */
+-	conf->raid_disks = raid_disks;
+-
+ 	return conf;
+ 
+ out:
+diff --git a/drivers/md/md-linear.h b/drivers/md/md-linear.h
+index 24e97db50ebb..5587eeedb882 100644
+--- a/drivers/md/md-linear.h
++++ b/drivers/md/md-linear.h
+@@ -12,6 +12,6 @@ struct linear_conf
+ 	struct rcu_head		rcu;
+ 	sector_t		array_sectors;
+ 	int			raid_disks; /* a copy of mddev->raid_disks */
+-	struct dev_info		disks[];
++	struct dev_info		disks[] __counted_by(raid_disks);
+ };
+ #endif
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.34.1
+
