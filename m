@@ -2,220 +2,153 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E8E6CD37B4
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Sep 2023 08:57:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87A02CD13CF
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Sep 2023 00:19:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234453AbjIQI5C (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 17 Sep 2023 04:57:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40944 "EHLO
+        id S232544AbjIRAS4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 17 Sep 2023 20:18:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235998AbjIQI46 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 17 Sep 2023 04:56:58 -0400
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AAAE185;
-        Sun, 17 Sep 2023 01:56:51 -0700 (PDT)
-Received: from [192.168.1.122] (ip5b41a963.dynamic.kabel-deutschland.de [91.65.169.99])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 3DBCA61E5FE01;
-        Sun, 17 Sep 2023 10:55:45 +0200 (CEST)
-Message-ID: <f79867f5-befb-0d7d-0c01-a42caa5d1466@molgen.mpg.de>
-Date:   Sun, 17 Sep 2023 10:55:44 +0200
+        with ESMTP id S231491AbjIRASj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 17 Sep 2023 20:18:39 -0400
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C9A3114;
+        Sun, 17 Sep 2023 17:18:33 -0700 (PDT)
+Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1c572c9c852so1778185ad.2;
+        Sun, 17 Sep 2023 17:18:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1694996313; x=1695601113; darn=vger.kernel.org;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RUPk+p0QAVCnpQhxJ51mj1aAsktRcEm6wqkgKlUt8Ro=;
+        b=Fyd9ObiLQAVsavWN3XDBUZIYFpVVGstVoefRjH7Kbzc88bP1GgvHY0CVb8GsB27HY+
+         G8ly2bSg5hoXe3kJCk3tU8C4vizc0PziNiFkO/UVcwv4x24QQOboeu+zEDw9abnuAs6q
+         GE4HDngVmOziknvWGToicTMNWvUUyHVXzLaY/Fdbvx0sfdo25meLD/xR302tX5jpJUlq
+         Un7iISpPFlkztHksEXxtZfgKlA8ezOLKrEdC5xetSHKtBE0zjdyFtUKgZxx2aVd1qlCu
+         DZpN1Yr6p71oMOfPb5fyYH5eFenzcmoZtcDl2TIWssACn9bjUaRKwTniyghS9jOv6li0
+         Erpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694996313; x=1695601113;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=RUPk+p0QAVCnpQhxJ51mj1aAsktRcEm6wqkgKlUt8Ro=;
+        b=hmCJswQ7tnPHteoTb683Bg67IbqAznd8kmeFq18oOP7qiATHOi5GKjGmu39cCqq8gI
+         H+wshLOrfo7oTavgIT8Z/wLp77B15VowVIaCg/M0rZxSQRMz+FCyZuJ5rFOZY17fSV4m
+         AVKJy/g7qOnJixRiliBm+dlhl3h62DRh17usfzxJ20jYNtJK+isyURzqLiJjqvzj2Cu2
+         aXtBQbt0829+dP8cW1yEeHbFOZXsKpZsLlikPsirXrSVzvy6Tzcr3Ngb6xzRhjCW5Kd9
+         7cvQU0VRafVX65XzCDNEEPt5r9XD2iBpu8TeAYCPXEHi9czyJ2iFbiobAilKt9joCNMd
+         2m1w==
+X-Gm-Message-State: AOJu0YwmwkvLorjGAMekCs74FqWN03oB9YhLJe728/7pPLmwqGpQq77h
+        HfnA+PtcislsbzUWR3ILVwQ=
+X-Google-Smtp-Source: AGHT+IEWKwK1dEKmbphBbSDaopdfK4ADTEiaqrSqgNoT4Tjxj47WkeJDg+U2SzyAohkw6JZUKRGhsw==
+X-Received: by 2002:a17:903:455:b0:1c2:702:61af with SMTP id iw21-20020a170903045500b001c2070261afmr6121780plb.38.1694996312752;
+        Sun, 17 Sep 2023 17:18:32 -0700 (PDT)
+Received: from [192.168.0.106] ([103.124.138.83])
+        by smtp.gmail.com with ESMTPSA id l7-20020a170903120700b001bd99fd1114sm7148063plh.288.2023.09.17.17.18.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 17 Sep 2023 17:18:32 -0700 (PDT)
+Message-ID: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
+Date:   Mon, 18 Sep 2023 07:18:28 +0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-From:   Donald Buczek <buczek@molgen.mpg.de>
-To:     Dragan Stancevic <dragan@stancevic.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
-Cc:     guoqing.jiang@linux.dev, it+raid@molgen.mpg.de,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        msmith626@gmail.com, "yangerkun@huawei.com" <yangerkun@huawei.com>
-References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
- <20230822211627.1389410-1-dragan@stancevic.com>
- <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
- <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
- <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
- <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
- <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
- <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
- <07ef7b78-66d4-d3de-4e25-8a889b902e14@stancevic.com>
- <63c63d93-30fc-0175-0033-846b93fe9eff@molgen.mpg.de>
- <de7f6fba-c6e0-7549-199e-36548b68a862@stancevic.com>
- <d48c6c4a-9b0e-20bc-7d40-2a88aa37524a@molgen.mpg.de>
+User-Agent: Mozilla Thunderbird
 Content-Language: en-US
-In-Reply-To: <d48c6c4a-9b0e-20bc-7d40-2a88aa37524a@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Linux IDE and libata <linux-ide@vger.kernel.org>,
+        Linux RAID <linux-raid@vger.kernel.org>
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: Fwd: Marvell RAID Controller issues since 6.5.x
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 9/14/23 08:03, Donald Buczek wrote:
-> On 9/13/23 16:16, Dragan Stancevic wrote:
->> Hi Donald-
->> [...]
->> Here is a list of changes for 6.1:
->>
->> e5e9b9cb71a0 md: factor out a helper to wake up md_thread directly
->> f71209b1f21c md: enhance checking in md_check_recovery()
->> 753260ed0b46 md: wake up 'resync_wait' at last in md_reap_sync_thread()
->> 130443d60b1b md: refactor idle/frozen_sync_thread() to fix deadlock
->> 6f56f0c4f124 md: add a mutex to synchronize idle and frozen in action_store()
->> 64e5e09afc14 md: refactor action_store() for 'idle' and 'frozen'
->> a865b96c513b Revert "md: unlock mddev before reap sync_thread in action_store"
+Hi,
+
+I notice a regression report on Bugzilla [1]. Quoting from it:
+
+> Hardware is a HPE ProLiant Microserver Gen10 X3216 with
 > 
-> Thanks!
+> # lspci | grep SATA
+> 00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD] FCH SATA Controller [AHCI mode] (rev 49)
+> 01:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230 PCIe 2.0 x2 4-port SATA 6 Gb/s RAID Controller (rev 11)
 > 
-> I've put these patches on v6.1.52. I've started a script which transitions the three md-devices of a very active backup server through idle->check->idle every 6 minutes a few ours ago.  It went through ~400 iterations till now. No lock-ups so far.
+> # dmesg | grep ATA
+> [    0.015106] NODE_DATA(0) allocated [mem 0x1feffc000-0x1feffffff]
+> [    0.569868] ahci 0000:00:11.0: AHCI 0001.0300 32 slots 1 ports 6 Gbps 0x1 impl SATA mode
+> [    0.570560] ata1: SATA max UDMA/133 abar m1024@0xfeb69000 port 0xfeb69100 irq 19
+> [    0.581964] ahci 0000:01:00.0: AHCI 0001.0200 32 slots 8 ports 6 Gbps 0xff impl SATA mode
+> [    0.586488] ata2: SATA max UDMA/133 abar m2048@0xfea40000 port 0xfea40100 irq 28
+> [    0.586554] ata3: SATA max UDMA/133 abar m2048@0xfea40000 port 0xfea40180 irq 28
+> [    0.586617] ata4: SATA max UDMA/133 abar m2048@0xfea40000 port 0xfea40200 irq 28
+> [    0.586681] ata5: SATA max UDMA/133 abar m2048@0xfea40000 port 0xfea40280 irq 28
+> [    0.586742] ata6: SATA max UDMA/133 abar m2048@0xfea40000 port 0xfea40300 irq 28
+> [    0.586804] ata7: SATA max UDMA/133 abar m2048@0xfea40000 port 0xfea40380 irq 28
+> [    0.586866] ata8: SATA max UDMA/133 abar m2048@0xfea40000 port 0xfea40400 irq 28
+> [    0.586927] ata9: SATA max UDMA/133 abar m2048@0xfea40000 port 0xfea40480 irq 28
+> [    0.882680] ata1: SATA link down (SStatus 0 SControl 300)
+> [    0.896665] ata8: SATA link down (SStatus 0 SControl 310)
+> [    0.896979] ata7: SATA link down (SStatus 0 SControl 310)
+> [    0.897660] ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [    0.897986] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [    0.899615] ata6: SATA link down (SStatus 0 SControl 310)
+> [    1.052964] ata3: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [    1.312890] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [    1.477997] ata9.00: ATAPI: MARVELL VIRTUAL, 1.09, max UDMA/66
+> [    1.478613] ata3.00: ATA-10: WDC WD40EFZX-68AWUN0, 81.00B81, max UDMA/133
+> [    1.478720] ata4.00: ATA-10: WDC WD40EFZX-68AWUN0, 81.00A81, max UDMA/133
+> [    1.478912] ata2.00: ATA-9: Samsung SSD 840 EVO 120GB, EXT0DB6Q, max UDMA/133
+> [    1.482260] scsi 1:0:0:0: Direct-Access     ATA      Samsung SSD 840  DB6Q PQ: 0 ANSI: 5
+> [    1.483793] scsi 2:0:0:0: Direct-Access     ATA      WDC WD40EFZX-68A 0B81 PQ: 0 ANSI: 5
+> [    1.485746] scsi 3:0:0:0: Direct-Access     ATA      WDC WD40EFZX-68A 0A81 PQ: 0 ANSI: 5
+> [    1.520882] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [    1.521779] ata5.00: ATA-9: WDC WD30EFRX-68EUZN0, 82.00A82, max UDMA/133
+> [    1.523463] scsi 4:0:0:0: Direct-Access     ATA      WDC WD30EFRX-68E 0A82 PQ: 0 ANSI: 
+> 
+> I don't use the RAID features but make use of software RAID instead, on the first port I have a SSD with the operating system and the three others have HDDs plugged in.
+> 
+> These days I noticed extensive load and when looking at dmesg I could see the following lines getting repeated constantly.
+> 
+> [396495.764520] ata9.00: configured for UDMA/66
+> [396496.092239] ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [396496.092584] ata9.00: configured for UDMA/66
+> [396496.420123] ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [396496.420464] ata9.00: configured for UDMA/66
+> [396496.748016] ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [396496.748320] ata9.00: configured for UDMA/66
+> [396497.076285] ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [396497.076609] ata9.00: configured for UDMA/66
+> 
+> First I thought it'a disk issue as I already had some of them dying and replaced, however after leaving only the SSD connected I still recieved the same dmesg spam immediatelly during boot. So my guess was that the SSD is faulty then, so I replaced my long running
+> 
+> [    1.036030] ata2.00: ATA-9: SanDisk SDSSDP064G, 2.0.0, max UDMA/133
+> 
+> with with an older spare one I had lying around (using Clonezilla to clone the drive)
+> 
+> [    1.478912] ata2.00: ATA-9: Samsung SSD 840 EVO 120GB, EXT0DB6Q, max UDMA/133
+> 
+> and still hit the same problem with that one. After thinking about what I changed lately besides distribution package updates it came to my mind that I upgraded from kernel 6.4.x to 6.5.x lately (kernels and their upgrades are manual on my distribution so no package was used). I used an arch linux iso to boot my system which also used a previous kernel and worked fine, compiled a 6.4.x kernel again on the system, specifically the latest 6.4.16 one. Rebootet and everything is up and running fine again so after half a day I'm pretty sure none of my hardware is faulty and it's indeed a kernel issue/regression.
+> 
+> I hope I chose the correct component as I wasn't sure if it should be either SCSI or IO/Storage instead. Please let me know if you need further details. I can't guarantee to be able to do any actual testing like bisecting as I use the system in production.
 
-Oh dear, looks like the deadlock problem is _not_fixed with these patches.
+See Bugzilla for the full thread.
 
-We've had a lockup again after ~3 days of operation. Again, the `echo idle > $sys/md/sync_action` is hanging:
+Anyway, I'm adding this regression to be tracked by regzbot:
 
-# # /proc/70554/task/70554: mdcheck.safe : /bin/bash /usr/bin/mdcheck.safe --continue --duration 06:00
-# cat /proc/70554/task/70554/stack
+#regzbot introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cgi?id=217920
+#regzbot title: UDMA configured spam on Marvell RAID controller
 
-[<0>] action_store+0x17f/0x390
-[<0>] md_attr_store+0x83/0xf0
-[<0>] kernfs_fop_write_iter+0x117/0x1b0
-[<0>] vfs_write+0x2ce/0x400
-[<0>] ksys_write+0x5f/0xe0
-[<0>] do_syscall_64+0x43/0x90
-[<0>] entry_SYSCALL_64_after_hwframe+0x64/0xce
+Thanks.
 
-And everything else going to that specific raid (md0) is dead, too. No task is busy looping.
-
-So as it looks now, we cant go from 5.15.X to 6.1.X as we would like to do. These patches don't fix the problem and our own patch no longer works with 6.1. Unfortunately, this happened on a production system which I need to reboot and is not available for further analysis. We'd need to reproduce the problem on a dedicated machine to really work on it.
-
-Here's some more possibly interesting procfs output and some examples of tasks.
-
-/sys/devices/virtual/block/md0/inflight : 0 3936
-
-#/proc/mdstat
-
-Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
-md1 : active raid6 sdae[0] sdad[15] sdac[14] sdab[13] sdaa[12] sdz[11] sdy[10] sdx[9] sdw[8] sdv[7] sdu[6] sdt[5] sds[4] sdah[3] sdag[2] sdaf[1]
-       109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
-       bitmap: 0/59 pages [0KB], 65536KB chunk
-
-md0 : active raid6 sdc[0] sdr[17] sdq[16] sdp[13] sdo[12] sdn[11] sdm[10] sdl[9] sdk[8] sdj[7] sdi[6] sdh[5] sdg[4] sdf[3] sde[2] sdd[1]
-       109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
-       [===>.................]  check = 15.9% (1242830396/7813894144) finish=14788.4min speed=7405K/sec
-       bitmap: 53/59 pages [212KB], 65536KB chunk
-
-unused devices: <none>
-
-# # /proc/66024/task/66024: md0_resync :
-# cat /proc/66024/task/66024/stack
-
-[<0>] raid5_get_active_stripe+0x20f/0x4d0
-[<0>] raid5_sync_request+0x38b/0x3b0
-[<0>] md_do_sync.cold+0x40c/0x985
-[<0>] md_thread+0xb1/0x160
-[<0>] kthread+0xe7/0x110
-[<0>] ret_from_fork+0x22/0x30
-
-# # /proc/939/task/939: md0_raid6 :
-# cat /proc/939/task/939/stack
-
-[<0>] md_thread+0x12d/0x160
-[<0>] kthread+0xe7/0x110
-[<0>] ret_from_fork+0x22/0x30
-
-# # /proc/1228/task/1228: xfsaild/md0 :
-# cat /proc/1228/task/1228/stack
-
-[<0>] raid5_get_active_stripe+0x20f/0x4d0
-[<0>] raid5_make_request+0x24c/0x1170
-[<0>] md_handle_request+0x131/0x220
-[<0>] __submit_bio+0x89/0x130
-[<0>] submit_bio_noacct_nocheck+0x160/0x360
-[<0>] _xfs_buf_ioapply+0x26c/0x420
-[<0>] __xfs_buf_submit+0x64/0x1d0
-[<0>] xfs_buf_delwri_submit_buffers+0xc5/0x1e0
-[<0>] xfsaild+0x2a0/0x880
-[<0>] kthread+0xe7/0x110
-[<0>] ret_from_fork+0x22/0x30
-
-# # /proc/49747/task/49747: kworker/24:2+xfs-inodegc/md0 :
-# cat /proc/49747/task/49747/stack
-
-[<0>] xfs_buf_lock+0x35/0xf0
-[<0>] xfs_buf_find_lock+0x45/0xf0
-[<0>] xfs_buf_get_map+0x17d/0xa60
-[<0>] xfs_buf_read_map+0x52/0x280
-[<0>] xfs_trans_read_buf_map+0x115/0x350
-[<0>] xfs_btree_read_buf_block.constprop.0+0x9a/0xd0
-[<0>] xfs_btree_lookup_get_block+0x97/0x170
-[<0>] xfs_btree_lookup+0xc4/0x4a0
-[<0>] xfs_difree_finobt+0x62/0x250
-[<0>] xfs_difree+0x130/0x1c0
-[<0>] xfs_ifree+0x86/0x510
-[<0>] xfs_inactive_ifree.isra.0+0xa2/0x1c0
-[<0>] xfs_inactive+0xf8/0x170
-[<0>] xfs_inodegc_worker+0x90/0x140
-[<0>] process_one_work+0x1c7/0x3c0
-[<0>] worker_thread+0x4d/0x3c0
-[<0>] kthread+0xe7/0x110
-[<0>] ret_from_fork+0x22/0x30
-
-# # /proc/49844/task/49844: kworker/30:3+xfs-sync/md0 :
-# cat /proc/49844/task/49844/stack
-
-[<0>] __flush_workqueue+0x10e/0x390
-[<0>] xlog_cil_push_now.isra.0+0x25/0x90
-[<0>] xlog_cil_force_seq+0x7c/0x240
-[<0>] xfs_log_force+0x83/0x240
-[<0>] xfs_log_worker+0x3b/0xd0
-[<0>] process_one_work+0x1c7/0x3c0
-[<0>] worker_thread+0x4d/0x3c0
-[<0>] kthread+0xe7/0x110
-[<0>] ret_from_fork+0x22/0x30
-
-
-# # /proc/52646/task/52646: kworker/u263:2+xfs-cil/md0 :
-# cat /proc/52646/task/52646/stack
-
-[<0>] raid5_get_active_stripe+0x20f/0x4d0
-[<0>] raid5_make_request+0x24c/0x1170
-[<0>] md_handle_request+0x131/0x220
-[<0>] __submit_bio+0x89/0x130
-[<0>] submit_bio_noacct_nocheck+0x160/0x360
-[<0>] xlog_state_release_iclog+0xf6/0x1d0
-[<0>] xlog_write_get_more_iclog_space+0x79/0xf0
-[<0>] xlog_write+0x334/0x3b0
-[<0>] xlog_cil_push_work+0x501/0x740
-[<0>] process_one_work+0x1c7/0x3c0
-[<0>] worker_thread+0x4d/0x3c0
-[<0>] kthread+0xe7/0x110
-[<0>] ret_from_fork+0x22/0x30
-
-# # /proc/52753/task/52753: rm : rm -rf /project/pbackup_gone/data/C8029/home_Cyang/home_Cyang:202306011248:C3019.BEING_DELETED
-# cat /proc/52753/task/52753/stack
-
-[<0>] xfs_buf_lock+0x35/0xf0
-[<0>] xfs_buf_find_lock+0x45/0xf0
-[<0>] xfs_buf_get_map+0x17d/0xa60
-[<0>] xfs_buf_read_map+0x52/0x280
-[<0>] xfs_trans_read_buf_map+0x115/0x350
-[<0>] xfs_read_agi+0x98/0x140
-[<0>] xfs_iunlink+0x63/0x1f0
-[<0>] xfs_remove+0x280/0x3a0
-[<0>] xfs_vn_unlink+0x53/0xa0
-[<0>] vfs_rmdir.part.0+0x5e/0x1e0
-[<0>] do_rmdir+0x15c/0x1c0
-[<0>] __x64_sys_unlinkat+0x4b/0x60
-[<0>] do_syscall_64+0x43/0x90
-[<0>] entry_SYSCALL_64_after_hwframe+0x64/0xce
-
-Best
-   Donald
+[1]: https://bugzilla.kernel.org/show_bug.cgi?id=217920
 
 -- 
-Donald Buczek
-buczek@molgen.mpg.de
-Tel: +49 30 8413 1433
+An old man doll... just what I always wanted! - Clara
