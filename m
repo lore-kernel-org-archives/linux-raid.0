@@ -2,68 +2,124 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89FAEC46CA1
-	for <linux-raid@archiver.kernel.org>; Mon, 18 Sep 2023 17:07:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D19CD3440
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Sep 2023 06:54:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230353AbjIRRHK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 18 Sep 2023 13:07:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43030 "EHLO
+        id S231609AbjISGyF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Sep 2023 02:54:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230359AbjIRRHJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Sep 2023 13:07:09 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 860D1AD
-        for <linux-raid@vger.kernel.org>; Mon, 18 Sep 2023 10:07:00 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1ED84C433C9
-        for <linux-raid@vger.kernel.org>; Mon, 18 Sep 2023 17:07:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695056820;
-        bh=tq81aizpw12bI3WqjM9ysYmYpZTc41RGEzF+jhlhOIE=;
-        h=From:Date:Subject:To:Cc:From;
-        b=iL38DMxMID1XVRTDO7bBr8aj8cHbD2E403Xv/X+6LxpTxJeGX6oDYhpIOAqvbHYzh
-         khvlvd4QL7Lk/yU+nxuea5S2RfWs2jkbgNOaeWQPxo8YtAv3/eWwQy8OwL8NF+4s12
-         rlNfNlmppd5CyuckxNR1NC1GD48pZ0cM9iyun7W6Sd6q5QGHrWr5lx68I57Ni4Ejn5
-         9HRCzED2QdA+NHV/H6Pzo/UC5zMCQIeZEh+31IjscSpa3fgA8y1zMDPqLp/HLjDhtp
-         0VnlHHb0Sqb16zbN9M1QGG4Qd2nzHJ4XP5vP5h4D3MfphtkdLbmlcMYeadaqosDz0K
-         5Wh42UJl7lhBg==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-50325ce89e9so778878e87.0
-        for <linux-raid@vger.kernel.org>; Mon, 18 Sep 2023 10:07:00 -0700 (PDT)
-X-Gm-Message-State: AOJu0YwcGVcizl3FmL6DGWJ1wcSegydmdtdVja/9qgmPuzgI+S1VBcLf
-        wS6kofU4n3IjRYuFl4bTKJyls6C7xuZvJFAP6QU=
-X-Google-Smtp-Source: AGHT+IH4qFKsbI/KWD9tE/X30ov4TZ9DS3up6MKeSvteHPf61KatQDe/m1gcLBBpMfS5EF/15miGKBBTzJBLP/aFUVc=
-X-Received: by 2002:ac2:5e67:0:b0:501:c17c:fdae with SMTP id
- a7-20020ac25e67000000b00501c17cfdaemr7210870lfr.31.1695056818281; Mon, 18 Sep
- 2023 10:06:58 -0700 (PDT)
+        with ESMTP id S229803AbjISGyF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Sep 2023 02:54:05 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2CA4102;
+        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1c39f2b4f5aso38513465ad.0;
+        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695106439; x=1695711239; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=4JrZnIbFr81fyCrGJLUv7gvnp4WA+u4UAg0ITzEeBQA=;
+        b=V0HulJtnyd287prA7csMZJ1DEhcH9lGSlYuXptrtZxfNSGEHUM0uusEVsxyBSR/SDe
+         yAxtCeOEYZ/e2/uCu7LkVj/ovpWocEd4DRr0e5sbUfFx4CErxxDqDzzXyzNM7EmZRYPF
+         PCYU3NxLxcgO0HU7ET/EX+UfFMNcIy4C69kQE5m33tUlvH2EUiqJQP2iVJh4kO+fU50z
+         ZxLHUJ0uUtEe3s495dRNA5PaMLqBJml4r4YHKqTBYv6XosimKtNRA5lgW+WOzcMVIsEz
+         7etzsqBvYToKlvCJ435kHSaBRsxYJk0MZScoH2u4Y9gbC1S9vihbXL5NVO96CsvtJF5U
+         YFFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695106439; x=1695711239;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4JrZnIbFr81fyCrGJLUv7gvnp4WA+u4UAg0ITzEeBQA=;
+        b=wb9Rie1A1EdarcWSPQqNrEuof1Q7RaUT+KY/NIz5KqKW+FcCGSn6Pb37/+YeDsAeXk
+         /dyIo9W1Ny7Smlwx6/uzMn6Fw9qLbUF8plY0brC2zDtXPE6nVWSArfiEdviw9XOLbLZ/
+         XpQL8u0AXG1xXkoiMdLZ33OY/VDhFxHax9KDK7ZFNKoAMAL+PBIQu4Ius0NGD18AdAnW
+         X8yMW73VEgWItNr2OZFHaJbBKAwj6qycKsJeEiZ+Y+OQdAh0gShLlH/5hTSgrfBSxEpP
+         4csZD4tEpablyFgtBdKuyd3HrQf8+FpB/Wi6kns95CN+xdWBCcWPe/G3G2eATjgEo9yL
+         axLg==
+X-Gm-Message-State: AOJu0Yz6yd9NE79+fUxXnM2+eAWFmffhESb8COWFsFO98RDfvZUN1uX8
+        eoEs3CHZjZ6jH6u8cGQ4fnQ=
+X-Google-Smtp-Source: AGHT+IGMP5NsHVZjmSi0Vp0O55hNYbTudKLiyCcpM3EX+lbrIZBfzGSRrcHKVwGrQqLqcbzPEIvN+g==
+X-Received: by 2002:a17:902:ea0f:b0:1bf:557c:5a2c with SMTP id s15-20020a170902ea0f00b001bf557c5a2cmr10880147plg.44.1695106439085;
+        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
+Received: from debian.me ([103.124.138.83])
+        by smtp.gmail.com with ESMTPSA id l7-20020a170902f68700b001bda30ecaa6sm9338288plg.51.2023.09.18.23.53.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Sep 2023 23:53:58 -0700 (PDT)
+Received: by debian.me (Postfix, from userid 1000)
+        id 2DDEF81B96EC; Tue, 19 Sep 2023 13:53:56 +0700 (WIB)
+Date:   Tue, 19 Sep 2023 13:53:55 +0700
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Linux IDE and libata <linux-ide@vger.kernel.org>,
+        Linux RAID <linux-raid@vger.kernel.org>
+Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
+Message-ID: <ZQlFg4GsULu633P1@debian.me>
+References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
+ <ZQf9mh3v5qfN5Tm0@x1-carbon>
+ <ZQgCoJ17UioOtdOJ@debian.me>
 MIME-Version: 1.0
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 18 Sep 2023 10:06:46 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7yHE6HwsGfLBxqpvDh53g9deD9Y9SH58HVU5HCLqLefg@mail.gmail.com>
-Message-ID: <CAPhsuW7yHE6HwsGfLBxqpvDh53g9deD9Y9SH58HVU5HCLqLefg@mail.gmail.com>
-Subject: Slack workspace for md/raid collaboration
-To:     linux-raid <linux-raid@vger.kernel.org>
-Cc:     "Luse, Paul E" <paul.e.luse@intel.com>,
-        Jes Sorensen <jes@trained-monkey.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="6jU0HxXziu/VyJx9"
+Content-Disposition: inline
+In-Reply-To: <ZQgCoJ17UioOtdOJ@debian.me>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi folks,
 
-We have created a Slack workspace to coordinate work in the md/raid space.
-The workspace is primarily used by developers to discuss issues and plans.
-Please use the mail list for general questions and other topics.
+--6jU0HxXziu/VyJx9
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-If you would like to join the workspace, please use the following link:
+On Mon, Sep 18, 2023 at 02:56:16PM +0700, Bagas Sanjaya wrote:
+> On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
+> > On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
+> >=20
+> > Hello Bagas,
+> >=20
+> > This is a duplicate of:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D217902
+> >=20
+> > Problem is solved by:
+> > https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kern=
+el.org/
+> >=20
+> >=20
+>=20
+> I have asked the reporter on Bugzilla to check the fix above. When he
+> reports back successfully, I'll mark this report as fixed.
+>=20
 
-https://join.slack.com/t/linuxsoftwareraid/shared_invite/zt-22tjz32og-uIKvG3jql5PBilId7Y3MqQ
+Another user has confirmed the fix (see Bugzilla), so:
 
-This link is valid for a limited time. Please let me or Paul know if
-you have any
-problem with the link.
+#regzbot fix: https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dl=
+emoal@kernel.org/
 
-Special thanks to Paul Luse for initiating this effort and setting up
-the workspace!
+Thanks.
 
-Best,
-Song
+--=20
+An old man doll... just what I always wanted! - Clara
+
+--6jU0HxXziu/VyJx9
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZQlFfgAKCRD2uYlJVVFO
+owDyAP0RHtQvjlMD6aj+pXaLGlKI2/uSHkRaBy0v0QW8rlurUQEArZwuCVUahkRb
+pL10drC+YaEem5L2bn6mk4iPiP+U4QA=
+=8Uj2
+-----END PGP SIGNATURE-----
+
+--6jU0HxXziu/VyJx9--
