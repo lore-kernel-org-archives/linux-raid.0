@@ -2,57 +2,29 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D19CD3440
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Sep 2023 06:54:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB74CD54AF
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Sep 2023 11:32:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231609AbjISGyF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Sep 2023 02:54:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40556 "EHLO
+        id S230513AbjISLcf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Sep 2023 07:32:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229803AbjISGyF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Sep 2023 02:54:05 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2CA4102;
-        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1c39f2b4f5aso38513465ad.0;
-        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695106439; x=1695711239; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4JrZnIbFr81fyCrGJLUv7gvnp4WA+u4UAg0ITzEeBQA=;
-        b=V0HulJtnyd287prA7csMZJ1DEhcH9lGSlYuXptrtZxfNSGEHUM0uusEVsxyBSR/SDe
-         yAxtCeOEYZ/e2/uCu7LkVj/ovpWocEd4DRr0e5sbUfFx4CErxxDqDzzXyzNM7EmZRYPF
-         PCYU3NxLxcgO0HU7ET/EX+UfFMNcIy4C69kQE5m33tUlvH2EUiqJQP2iVJh4kO+fU50z
-         ZxLHUJ0uUtEe3s495dRNA5PaMLqBJml4r4YHKqTBYv6XosimKtNRA5lgW+WOzcMVIsEz
-         7etzsqBvYToKlvCJ435kHSaBRsxYJk0MZScoH2u4Y9gbC1S9vihbXL5NVO96CsvtJF5U
-         YFFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695106439; x=1695711239;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4JrZnIbFr81fyCrGJLUv7gvnp4WA+u4UAg0ITzEeBQA=;
-        b=wb9Rie1A1EdarcWSPQqNrEuof1Q7RaUT+KY/NIz5KqKW+FcCGSn6Pb37/+YeDsAeXk
-         /dyIo9W1Ny7Smlwx6/uzMn6Fw9qLbUF8plY0brC2zDtXPE6nVWSArfiEdviw9XOLbLZ/
-         XpQL8u0AXG1xXkoiMdLZ33OY/VDhFxHax9KDK7ZFNKoAMAL+PBIQu4Ius0NGD18AdAnW
-         X8yMW73VEgWItNr2OZFHaJbBKAwj6qycKsJeEiZ+Y+OQdAh0gShLlH/5hTSgrfBSxEpP
-         4csZD4tEpablyFgtBdKuyd3HrQf8+FpB/Wi6kns95CN+xdWBCcWPe/G3G2eATjgEo9yL
-         axLg==
-X-Gm-Message-State: AOJu0Yz6yd9NE79+fUxXnM2+eAWFmffhESb8COWFsFO98RDfvZUN1uX8
-        eoEs3CHZjZ6jH6u8cGQ4fnQ=
-X-Google-Smtp-Source: AGHT+IGMP5NsHVZjmSi0Vp0O55hNYbTudKLiyCcpM3EX+lbrIZBfzGSRrcHKVwGrQqLqcbzPEIvN+g==
-X-Received: by 2002:a17:902:ea0f:b0:1bf:557c:5a2c with SMTP id s15-20020a170902ea0f00b001bf557c5a2cmr10880147plg.44.1695106439085;
-        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
-Received: from debian.me ([103.124.138.83])
-        by smtp.gmail.com with ESMTPSA id l7-20020a170902f68700b001bda30ecaa6sm9338288plg.51.2023.09.18.23.53.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Sep 2023 23:53:58 -0700 (PDT)
-Received: by debian.me (Postfix, from userid 1000)
-        id 2DDEF81B96EC; Tue, 19 Sep 2023 13:53:56 +0700 (WIB)
-Date:   Tue, 19 Sep 2023 13:53:55 +0700
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+        with ESMTP id S229497AbjISLce (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Sep 2023 07:32:34 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9A894;
+        Tue, 19 Sep 2023 04:32:27 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qiYxq-0007SV-K9; Tue, 19 Sep 2023 13:32:22 +0200
+Message-ID: <9c791f68-bbfe-4722-9cbb-5e791ce042ec@leemhuis.info>
+Date:   Tue, 19 Sep 2023 13:32:21 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
+Content-Language: en-US, de-DE
+To:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>
 Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Damien Le Moal <dlemoal@kernel.org>,
@@ -62,64 +34,53 @@ Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Linux SCSI <linux-scsi@vger.kernel.org>,
         Linux IDE and libata <linux-ide@vger.kernel.org>,
         Linux RAID <linux-raid@vger.kernel.org>
-Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
-Message-ID: <ZQlFg4GsULu633P1@debian.me>
 References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
- <ZQf9mh3v5qfN5Tm0@x1-carbon>
- <ZQgCoJ17UioOtdOJ@debian.me>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="6jU0HxXziu/VyJx9"
-Content-Disposition: inline
-In-Reply-To: <ZQgCoJ17UioOtdOJ@debian.me>
+ <ZQf9mh3v5qfN5Tm0@x1-carbon> <ZQgCoJ17UioOtdOJ@debian.me>
+ <ZQlFg4GsULu633P1@debian.me>
+From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <ZQlFg4GsULu633P1@debian.me>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1695123147;844ed6a3;
+X-HE-SMSGID: 1qiYxq-0007SV-K9
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+[TLDR: This mail in primarily relevant for Linux kernel regression
+tracking. See link in footer if these mails annoy you.]
 
---6jU0HxXziu/VyJx9
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 19.09.23 08:53, Bagas Sanjaya wrote:
+> On Mon, Sep 18, 2023 at 02:56:16PM +0700, Bagas Sanjaya wrote:
+>> On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
+>>> On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
+>>>
+>>> This is a duplicate of:
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=217902
+>>>
+>>> Problem is solved by:
+>>> https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
+>>
+>> I have asked the reporter on Bugzilla to check the fix above. When he
+>> reports back successfully, I'll mark this report as fixed.
+>>
+> 
+> Another user has confirmed the fix (see Bugzilla), so:
+> 
+> #regzbot fix: https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
 
-On Mon, Sep 18, 2023 at 02:56:16PM +0700, Bagas Sanjaya wrote:
-> On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
-> > On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
-> >=20
-> > Hello Bagas,
-> >=20
-> > This is a duplicate of:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D217902
-> >=20
-> > Problem is solved by:
-> > https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kern=
-el.org/
-> >=20
-> >=20
->=20
-> I have asked the reporter on Bugzilla to check the fix above. When he
-> reports back successfully, I'll mark this report as fixed.
->=20
+Bagas, FWIW, using "#regzbot fix" is not supported (maybe it should, but
+I have other priorities currently), hence let me fix this up:
 
-Another user has confirmed the fix (see Bugzilla), so:
+#regzbot fix: scsi: Do no try to probe for CDL on old drives
+#regzbot monitor:
+https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
+#regzbot ignore-activity
 
-#regzbot fix: https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dl=
-emoal@kernel.org/
-
-Thanks.
-
---=20
-An old man doll... just what I always wanted! - Clara
-
---6jU0HxXziu/VyJx9
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZQlFfgAKCRD2uYlJVVFO
-owDyAP0RHtQvjlMD6aj+pXaLGlKI2/uSHkRaBy0v0QW8rlurUQEArZwuCVUahkRb
-pL10drC+YaEem5L2bn6mk4iPiP+U4QA=
-=8Uj2
------END PGP SIGNATURE-----
-
---6jU0HxXziu/VyJx9--
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
