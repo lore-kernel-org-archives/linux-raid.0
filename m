@@ -2,85 +2,101 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB74CD54AF
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Sep 2023 11:32:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B893CD5BA5
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Sep 2023 12:09:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230513AbjISLcf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Sep 2023 07:32:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33730 "EHLO
+        id S231416AbjISMJC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Sep 2023 08:09:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbjISLce (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Sep 2023 07:32:34 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9A894;
-        Tue, 19 Sep 2023 04:32:27 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1qiYxq-0007SV-K9; Tue, 19 Sep 2023 13:32:22 +0200
-Message-ID: <9c791f68-bbfe-4722-9cbb-5e791ce042ec@leemhuis.info>
-Date:   Tue, 19 Sep 2023 13:32:21 +0200
+        with ESMTP id S231465AbjISMI7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Sep 2023 08:08:59 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77B87F7;
+        Tue, 19 Sep 2023 05:08:53 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-690bc3f82a7so1073100b3a.0;
+        Tue, 19 Sep 2023 05:08:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695125333; x=1695730133; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=S6xhmX02krfuudIK/kDSdYE25699Zi1WYmFbMkp7FRE=;
+        b=hnoI0P+M+YUOpP1FT4yzhvNM6inN2zyXMfAAiSOt5Dl9lgLs/aM0A+/SozgjgGm6Ft
+         a8y33cuSZO+t+2UjVjUekFd9Dimscqgisygr2F7f5KaVZxbmVA0qsB3ieCVuBJTxLxWW
+         RJs/wqWS2hEzL51S7CPKUOgwXmsDU+kPNhvlfmuIW6V3p8OAN5R1QqB6aNI9vTOKPTIa
+         Ke7/e1yNeLfJA33hjfa5njzVla1Gg7NXs8oFdI0e7NUaZl1+ncEfFoFJBvB+OHBzQMwJ
+         LIgZZrn4u1bPrXlJE0SozC4lDtcGSq9fV8/rpQ2vLVrom2HpFcxS29m1bH8Kvy8zVRYq
+         ch1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695125333; x=1695730133;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=S6xhmX02krfuudIK/kDSdYE25699Zi1WYmFbMkp7FRE=;
+        b=S53DXxbKYIN4A+dF1rxRvj3xZuCsfkI8ZY1aIpd4lHwgmu+8sDN4Wl68Ub9OX9LR1F
+         8DOo6/xCGNkNvGGD0C6SXClBBbG/uKhK3lI3ZMmHv33foAtvrsgnjvBC5+LBOFD1M8IN
+         ATiOsdTKFQpzuZp/t7oybnCS5oDRXvO0rYqU3qv7OyxtjJLbqxAvU884VAwTbesZKlM6
+         LLu5AHh0PSyI83OneFDIAHQrr1s/lSwEh7LJuCMNWiK5fklscThiYtHnZezIfN/MKjKO
+         BDRIV/reaCMa6xqFd3yBBJqqg5+Sxu10y93E3pUQi2dzQ1g3im47IX7szpbAXAk/t2dV
+         aCDA==
+X-Gm-Message-State: AOJu0YzIbjdtCjctyRa8plHBvKwDOvDRm+sNn9u4ws4B4k4mg9k+qWTx
+        HTZP1ujombDQdeERB9HOOZo=
+X-Google-Smtp-Source: AGHT+IGWrKUt1gJtfuwgclUNdSACapHw0G929wnxRxw67DgRvp8vDesvlYLDs+VGKnIIi/plOt67HA==
+X-Received: by 2002:a05:6a00:813:b0:68e:39b5:7e63 with SMTP id m19-20020a056a00081300b0068e39b57e63mr12467455pfk.16.1695125332780;
+        Tue, 19 Sep 2023 05:08:52 -0700 (PDT)
+Received: from [192.168.0.106] ([103.124.138.83])
+        by smtp.gmail.com with ESMTPSA id c21-20020aa781d5000000b0068fe68de4e1sm8758513pfn.145.2023.09.19.05.08.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Sep 2023 05:08:52 -0700 (PDT)
+Message-ID: <bbc73924-299d-4de5-a06c-995a49e5f27e@gmail.com>
+Date:   Tue, 19 Sep 2023 19:08:41 +0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
-Content-Language: en-US, de-DE
-To:     Bagas Sanjaya <bagasdotme@gmail.com>,
+To:     Linux regressions mailing list <regressions@lists.linux.dev>,
         Niklas Cassel <Niklas.Cassel@wdc.com>
 Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Damien Le Moal <dlemoal@kernel.org>,
         Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
         Linux SCSI <linux-scsi@vger.kernel.org>,
         Linux IDE and libata <linux-ide@vger.kernel.org>,
         Linux RAID <linux-raid@vger.kernel.org>
 References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
  <ZQf9mh3v5qfN5Tm0@x1-carbon> <ZQgCoJ17UioOtdOJ@debian.me>
  <ZQlFg4GsULu633P1@debian.me>
-From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <ZQlFg4GsULu633P1@debian.me>
+ <9c791f68-bbfe-4722-9cbb-5e791ce042ec@leemhuis.info>
+Content-Language: en-US
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+In-Reply-To: <9c791f68-bbfe-4722-9cbb-5e791ce042ec@leemhuis.info>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1695123147;844ed6a3;
-X-HE-SMSGID: 1qiYxq-0007SV-K9
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-[TLDR: This mail in primarily relevant for Linux kernel regression
-tracking. See link in footer if these mails annoy you.]
-
-On 19.09.23 08:53, Bagas Sanjaya wrote:
-> On Mon, Sep 18, 2023 at 02:56:16PM +0700, Bagas Sanjaya wrote:
->> On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
->>> On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
->>>
->>> This is a duplicate of:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=217902
->>>
->>> Problem is solved by:
->>> https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
->>
->> I have asked the reporter on Bugzilla to check the fix above. When he
->> reports back successfully, I'll mark this report as fixed.
->>
+On 19/09/2023 18:32, Linux regression tracking #update (Thorsten Leemhuis) wrote:
+> [TLDR: This mail in primarily relevant for Linux kernel regression
+> tracking. See link in footer if these mails annoy you.]
 > 
-> Another user has confirmed the fix (see Bugzilla), so:
+> On 19.09.23 08:53, Bagas Sanjaya wrote:
+>> Another user has confirmed the fix (see Bugzilla), so:
+>>
+>> #regzbot fix: https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
 > 
-> #regzbot fix: https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
+> Bagas, FWIW, using "#regzbot fix" is not supported (maybe it should, but
+> I have other priorities currently), hence let me fix this up:
+> 
+> #regzbot fix: scsi: Do no try to probe for CDL on old drives
+> #regzbot monitor:
+> https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
+> #regzbot ignore-activity
+> 
 
-Bagas, FWIW, using "#regzbot fix" is not supported (maybe it should, but
-I have other priorities currently), hence let me fix this up:
+Duh! I should have read regzbot doc then. Thanks anyway.
 
-#regzbot fix: scsi: Do no try to probe for CDL on old drives
-#regzbot monitor:
-https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
-#regzbot ignore-activity
+-- 
+An old man doll... just what I always wanted! - Clara
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-That page also explains what to do if mails like this annoy you.
