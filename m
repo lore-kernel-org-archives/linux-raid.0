@@ -2,42 +2,42 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB05CCE7A88
-	for <linux-raid@archiver.kernel.org>; Sat, 23 Sep 2023 15:45:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 286E6CE7A88
+	for <linux-raid@archiver.kernel.org>; Sat, 23 Sep 2023 18:49:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231895AbjIWPp7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 23 Sep 2023 11:45:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50512 "EHLO
+        id S229636AbjIWStP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 23 Sep 2023 14:49:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231853AbjIWPp6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 23 Sep 2023 11:45:58 -0400
+        with ESMTP id S229634AbjIWStO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 23 Sep 2023 14:49:14 -0400
 Received: from micaiah.parthemores.com (micaiah.parthemores.com [199.26.172.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F296A19A
-        for <linux-raid@vger.kernel.org>; Sat, 23 Sep 2023 08:45:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59D40113
+        for <linux-raid@vger.kernel.org>; Sat, 23 Sep 2023 11:49:08 -0700 (PDT)
 Received: from [192.168.50.170] (h-155-4-132-6.NA.cust.bahnhof.se [155.4.132.6])
-        by micaiah.parthemores.com (Postfix) with ESMTPSA id 4A7ED300A6B;
-        Sat, 23 Sep 2023 17:44:53 +0200 (CEST)
+        by micaiah.parthemores.com (Postfix) with ESMTPSA id 754F9300A6B;
+        Sat, 23 Sep 2023 20:48:08 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=parthemores.com;
-        s=micaiah; t=1695483893;
-        bh=uQv4hdQrSa45So1K5vKB5tKO4rmORgIhQSVseu1+tlM=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To;
-        b=Va/rg4upFH2NwnPFGgQMzC+wNzyBkEO8JI/5QvZPffvniHnyL0GxXpw3nSoks4w3A
-         vgM163ajN/5eOHAPxlQWanKA3sYudepr4ODbqVbWnx9dtEUHVRW2bhi7ZY0N+jzdCG
-         8bveXV6KO9alHXVps41jWLZ3T+v4w25T+q0Tp8kc=
-Message-ID: <b0a940ad-adac-0df4-6654-7b6e1c535616@parthemores.com>
-Date:   Sat, 23 Sep 2023 17:45:49 +0200
+        s=micaiah; t=1695494889;
+        bh=8LBw3MzK7DjOVt903pO9ht8YMQmdc30we/54Ptw0QDY=;
+        h=Date:From:Subject:To:Cc:References:In-Reply-To;
+        b=X4kgkZScSTr53WSIMELJEDJr+aafILlYt5LHjw6ksvRZsz1SYyaUCr+znrjoQuiQC
+         rRdtN73P7X50zG+px/Cyz83Shy51BEUYM14MBTrlFqWyp6IyyCFSc/qmMPUCaREYCO
+         eCzR6mdNpSir6Fa44cpc6N75yRbxB/rRIa5z/auU=
+Message-ID: <72388663-3997-a410-76f0-066dcd7d2a63@parthemores.com>
+Date:   Sat, 23 Sep 2023 20:49:04 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.15.1
+From:   Joel Parthemore <joel@parthemores.com>
 Subject: Re: request for help on IMSM-metadata RAID-5 array
-Content-Language: en-GB
 To:     Roman Mamedov <rm@romanrm.net>
 Cc:     linux-raid@vger.kernel.org
 References: <507b6ab0-fd8f-d770-ba82-28def5f53d25@parthemores.com>
  <20230923162449.3ea0d586@nvm>
  <4095b51a-1038-2fd0-6503-64c0daa913d8@parthemores.com>
  <20230923203512.581fcd7d@nvm>
-From:   Joel Parthemore <joel@parthemores.com>
+Content-Language: en-GB
 In-Reply-To: <20230923203512.581fcd7d@nvm>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -45,8 +45,18 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+So, dd finally sped up and finished. It appears that I have lost none of 
+my data. I am a very happy man. A question: is there anything useful I 
+am likely to discover from keeping the RAID array as it is a bit longer 
+before I recreate it and copy the data back?
+
+Joel
+
+-----------------------------------------------------------------------------
+
 I have been wondering about HDD issues all along, of course, though I 
 didn't see any smoking gun.
+
 
 I ran iostat -x 2 /dev/sdX on all three drives. All show an idle rate of 
 just under 90%. So I don't think that's the problem.
@@ -82,13 +92,16 @@ Den 2023-09-23 kl. 17:35, skrev Roman Mamedov:
 >>
 >> By the way, I'm using kernel 6.5.3, which isn't the latest (that would
 >> be 6.5.5) but is close.
-> Maybe it's an HDD issue, one of them did have some unreadable sectors in the
-> past, although the firmware has not decided to do anything about that, such
+> Maybe it's an HDD issue, one of them did have some unreadable sectors 
+> in the
+> past, although the firmware has not decided to do anything about that, 
+> such
 > as reallocating them and recording that in SMART.
 >
 > Check if one of the drives is holding up things, with a command like
 >
->    iostat -x 2 /dev/sd?
+> iostat -x 2 /dev/sd?
 >
-> If you see 100% next to one of the drives, and much less for others, that one
+> If you see 100% next to one of the drives, and much less for others, 
+> that one
 > might be culprit.
