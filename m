@@ -2,138 +2,101 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D90CCE7A88
-	for <linux-raid@archiver.kernel.org>; Sun, 24 Sep 2023 02:57:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BE8CE7A8A
+	for <linux-raid@archiver.kernel.org>; Sun, 24 Sep 2023 14:37:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbjIXC5R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 23 Sep 2023 22:57:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50580 "EHLO
+        id S229921AbjIXOhL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 24 Sep 2023 10:37:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjIXC5Q (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 23 Sep 2023 22:57:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA00C127
-        for <linux-raid@vger.kernel.org>; Sat, 23 Sep 2023 19:56:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1695524184;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=drnMR4f81eF1iT4Qc7JdBdiCj9DRJ/L18uClMjiBEG0=;
-        b=FfrLB63pCie662iwFCWr8FKHCb/oop5fkUJA2l5nnnJgaSzNm1JdkitQu7TPa92wJVeKu9
-        qDcnVBFfyKhKm/FZMdYhK5uPwILS7lVHl0Y1Mbmc96kuv2i2yxA+WK48Ug5sAU4ALSqkC/
-        AtG3IR0bwKn0W4HE0vaYI5joPQObB3w=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-616-zDmN3V5lNm-UQIhEnUOMpQ-1; Sat, 23 Sep 2023 22:56:22 -0400
-X-MC-Unique: zDmN3V5lNm-UQIhEnUOMpQ-1
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-274bc2cb2dbso3139842a91.0
-        for <linux-raid@vger.kernel.org>; Sat, 23 Sep 2023 19:56:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695524181; x=1696128981;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=drnMR4f81eF1iT4Qc7JdBdiCj9DRJ/L18uClMjiBEG0=;
-        b=QzCvGGFk9m48VDP4+4npeOAz6tPq9GzkxDjTm48ZazsyTpsaKhAMCbmfzBnJFBkxYw
-         p1ciEWnuztXawG6HuvO/xjJCnhkt74GXgzpopFlQmkvkmvGGBtFKn/YfRWtpP1jwrSWH
-         zJB7hhCcyH9w37IOCuErefktKyQr34PPLW6e88V2CytGcMkJ8jDoTDh3F5MJse6jRtJ6
-         GpztKwIx4jqg3u7tN+K1rF4Ki4VEZRRo8fRtnJyOgIaDFjAlLfnVdok952F9h/LIYCm8
-         t4Ht5TlTR//FzcYHA8Y1JTx5MqiJ5dLArQo/+MRrUOk9y3hMRtD8d34goWwmTu0j94g9
-         Xx6A==
-X-Gm-Message-State: AOJu0YyFl6FJIiQBDSxUJYvKf/ie232XrjJZ4Z7I+lm1VurWWSsKMnd6
-        FTkRdkFrkORYAwQHJZGrJMn3ognW+QHTCiVsqzx+D6xXY8fkntICum2kn92xh4559c2x7pFkzcU
-        zaisrgd60WI/aQqQj6hRZ6HAn0/asOH4ETzdKC1v8W/FGlDc4vWZz2g==
-X-Received: by 2002:a17:902:d894:b0:1c0:a5c9:e072 with SMTP id b20-20020a170902d89400b001c0a5c9e072mr2243099plz.11.1695524181098;
-        Sat, 23 Sep 2023 19:56:21 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGojcT7eZRm3obLtfNge0+7aNUfOu9ZBozEx4G38mY+EQK6sqWSh+lYhd+HidrLHfLNFdTTTvwWlNL3KmCgqCI=
-X-Received: by 2002:a17:902:d894:b0:1c0:a5c9:e072 with SMTP id
- b20-20020a170902d89400b001c0a5c9e072mr2243089plz.11.1695524180693; Sat, 23
- Sep 2023 19:56:20 -0700 (PDT)
+        with ESMTP id S229795AbjIXOhK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 24 Sep 2023 10:37:10 -0400
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7514FA;
+        Sun, 24 Sep 2023 07:37:02 -0700 (PDT)
+Received: from [192.168.1.122] (ip5b41a963.dynamic.kabel-deutschland.de [91.65.169.99])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 64C5761E5FE03;
+        Sun, 24 Sep 2023 16:36:00 +0200 (CEST)
+Message-ID: <fb261b77-4859-07bb-e586-8589741e0c9e@molgen.mpg.de>
+Date:   Sun, 24 Sep 2023 16:35:59 +0200
 MIME-Version: 1.0
-References: <9b21efef0bc1457c89250761b2b6cf2c@TW-EX2013-MBX1.supermicro.com>
- <CALTww29MWS9GY+kc+0nTJywBZVk=aNnzujbNXkPHAjKoO5ZJDw@mail.gmail.com> <1d1fafd557ef4e82a27a3192ffd5dfda@TW-EX2013-MBX1.supermicro.com>
-In-Reply-To: <1d1fafd557ef4e82a27a3192ffd5dfda@TW-EX2013-MBX1.supermicro.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Sun, 24 Sep 2023 10:56:08 +0800
-Message-ID: <CALTww2_Bwkhf0XT6hAy2VzFYf5h+Ai9NRPhCBu3n5R7Yc4LAAg@mail.gmail.com>
-Subject: Re: bblog overlap internal bitmap?
-To:     Stan Liao <StanL@supermicro.com>
-Cc:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+Content-Language: en-US
+From:   Donald Buczek <buczek@molgen.mpg.de>
+To:     Dragan Stancevic <dragan@stancevic.com>,
+        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
+Cc:     guoqing.jiang@linux.dev, it+raid@molgen.mpg.de,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        msmith626@gmail.com, "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
+ <20230822211627.1389410-1-dragan@stancevic.com>
+ <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
+ <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
+ <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
+ <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
+ <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
+ <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
+ <07ef7b78-66d4-d3de-4e25-8a889b902e14@stancevic.com>
+ <63c63d93-30fc-0175-0033-846b93fe9eff@molgen.mpg.de>
+ <de7f6fba-c6e0-7549-199e-36548b68a862@stancevic.com>
+ <d48c6c4a-9b0e-20bc-7d40-2a88aa37524a@molgen.mpg.de>
+ <f79867f5-befb-0d7d-0c01-a42caa5d1466@molgen.mpg.de>
+In-Reply-To: <f79867f5-befb-0d7d-0c01-a42caa5d1466@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Sep 22, 2023 at 10:36=E2=80=AFAM Stan Liao <StanL@supermicro.com> w=
-rote:
->
-> Xiao Ni wrote:
-> > On Thu, Sep 21, 2023 at 11:22=E2=80=AFAM Stan Liao <StanL@supermicro.co=
-m> wrote:
-> > >
-> > > Hi,
-> > > A md-raid (level 1) is created with 5 nvme drives and the metadata ve=
-rsion
-> > is specified as 1.2. The following command is used.
-> > > sudo mdadm --create /dev/md0 --level=3D1 --raid-devices=3D5
-> > > /dev/nvme{1,2,3,4}n1 /dev/nvme4n2 --metadata=3D1.2 The capacities of
-> > nvme{1,2,3,4}n1 and nvme4n2 are 3.2TB, 1.92TB, 3.2TB, 512GB, and 512GB.
-> > > OS: 20.04.1-Ubuntu
-> > > mdadm version: v4.1 - 2018-10-01
-> > > After creation, we found that the size of the bitmap_super_t and inte=
-rnal
-> > bitmap is 16KB (this is concluded by observing FF value is filled from =
-around
-> > byte offset 0x100 of LBA 0x10 to byte offset 0x1FF of LBA 0x1F), but th=
-e
-> > mdp_superblock_1.bblog_offset value is 0x10. As a result, the
-> > mdp_superblock_1 occupies LBA 0x08 ~ 0x0F; bitmap_super_t and internal
-> > bitmap occupy LBA 0x10 ~ 0x20; bblog occupies LBA 0x18 ~ 0x20.
-> > > If bblog and bitmap do overlap, I would like to know the size value u=
-sed to
-> > calculate bitmap size and bblog_offset. The size value used to calculat=
-e
-> > bitmap size and bblog_offset is mdp_superblock_1.size or
-> > mdp_superblock_1.data_size? Thanks a lot.
-> > >
-> >
-> > Hi
-> >
-> > For super1.2 the layout should be:
-> > |    4KB    |    4KB    |    bitmap space    |    head room    |
-> > data |
-> >
-> > The first 4KB is empty from the beginning of the disk. The second 4KB i=
-s for
-> > md superblock. Then is bitmap suerblock. So if you want to see the cont=
-ent
-> > of bitmap_super_t, the offset should be 0x2000?
-> >
-> > Regards
-> > Xiao
->
-> Right. The bitmap_super_t is at offset 0x2000 (absolute LBA address 0x10)=
-.
-> And mdadm write bitmap_super_t and bitmap from LBA 0x10 to LBA 0x1F.
-> Including bblog, super1.2 layout would be:
-> |  4KB  |  4KB  |  bitmap space  |  bblog  |  head room  | data |
-> We observe the bblog_offset value, which resides in mdp_superblock_1, is =
-0x10.
-> So we think there is an overlap between bitmap and bblog.
->
+On 9/17/23 10:55, Donald Buczek wrote:
+> On 9/14/23 08:03, Donald Buczek wrote:
+>> On 9/13/23 16:16, Dragan Stancevic wrote:
+>>> Hi Donald-
+>>> [...]
+>>> Here is a list of changes for 6.1:
+>>>
+>>> e5e9b9cb71a0 md: factor out a helper to wake up md_thread directly
+>>> f71209b1f21c md: enhance checking in md_check_recovery()
+>>> 753260ed0b46 md: wake up 'resync_wait' at last in md_reap_sync_thread()
+>>> 130443d60b1b md: refactor idle/frozen_sync_thread() to fix deadlock
+>>> 6f56f0c4f124 md: add a mutex to synchronize idle and frozen in action_store()
+>>> 64e5e09afc14 md: refactor action_store() for 'idle' and 'frozen'
+>>> a865b96c513b Revert "md: unlock mddev before reap sync_thread in action_store"
+>>
+>> Thanks!
+>>
+>> I've put these patches on v6.1.52. I've started a script which transitions the three md-devices of a very active backup server through idle->check->idle every 6 minutes a few ours ago.  It went through ~400 iterations till now. No lock-ups so far.
+> 
+> Oh dear, looks like the deadlock problem is _not_fixed with these patches.
 
-Because the bblog_offset is based on the start of superblock. So if
-you want to calculate the offset based on the start of the disk, it
-needs to add 4KB on bblog_offset. Now your bblog_offset is 0x10. It
-means from the start of the superblock, it's 4K(superblock) +
-4K(bitmap space). So your raid only has one page, right?
+Some more info after another incident:
 
-You can also you mdadm -E $member to check the "Bad Block Log"
+- We've hit the deadlock with 5.15.131 (so it is NOT introduced by any of the above patches)
+- The symptoms are not exactly the same as with the original year-old problem. Differences:
+- - mdX_raid6 is NOT busy looping
+- - /sys/devices/virtual/block/mdX/md/array_state says "active" not "write pending"
+- - `echo active > /sys/devices/virtual/block/mdX/md/array_state` does not resolve the deadlock
+- - After hours in the deadlock state the system resumed operation when a script of mine read(!) lots of sysfs files.
+- But in both cases, `echo idle > /sys/devices/virtual/block/mdX/md/sync_action` hangs as does all I/O operation on the raid.
 
-Regards
-Xiao
+The fact that we didn't hit the problem for many month on 5.15.94 might hint that it was introduced between 5.15.94 and 5.15.131
 
+We'll try to reproduce the problem on a test machine for analysis, but this make take time (vacation imminent for one...).
+
+But its not like these patches caused the problem. Any maybe they _did_ fix the original problem, as we didn't hit that one.
+
+Best
+
+   Donald
+
+-- 
+Donald Buczek
+buczek@molgen.mpg.de
+Tel: +49 30 8413 1433
