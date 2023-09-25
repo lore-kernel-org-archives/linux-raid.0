@@ -2,98 +2,135 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70AB5CE7AA3
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Sep 2023 16:43:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 037B7CD3431
+	for <linux-raid@archiver.kernel.org>; Mon, 25 Sep 2023 18:22:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229905AbjIYQn2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 25 Sep 2023 12:43:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52872 "EHLO
+        id S232723AbjIYSWj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 25 Sep 2023 14:22:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjIYQn1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Sep 2023 12:43:27 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 518799F
-        for <linux-raid@vger.kernel.org>; Mon, 25 Sep 2023 09:43:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695660201; x=1727196201;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=NVs6G6jfZ4Ie3AAywOophirly7mPgBbToBKdol5PeUg=;
-  b=GJrZ9OBJg410dZg2uOVBqzyNiQDAFiTtvBJaVWIZt/GohzOwPnaLb0Ym
-   PckTTO5jjF73xpjDx/PhOAXZ6IBCp3vs6IlxKcDLjH2o1XymQraOu4z3B
-   boyzf3atDDvJuCC8OYIwacn46g6+E3nzhfdfiAQedldRiJteYhf2Zj25S
-   Oh5ngizXR3WLEb7fg8fAfiH9Vuh8hockvU5yQps5ChgQGkIgSL3ExgMsz
-   zDD8jfetj44YQpUKV9gxZE3H8WEesfJCMRL9wptsz2l2n/LaOZI3ZctF9
-   u5crM3pgdEo71ibVJLtwWjtfVgaJSNnzULeCZJloX1zmrzg46j9Nw+33n
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10843"; a="371619338"
-X-IronPort-AV: E=Sophos;i="6.03,175,1694761200"; 
-   d="scan'208";a="371619338"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2023 09:43:20 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10843"; a="814035115"
-X-IronPort-AV: E=Sophos;i="6.03,175,1694761200"; 
-   d="scan'208";a="814035115"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.130.218])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2023 09:43:19 -0700
-Date:   Mon, 25 Sep 2023 18:43:14 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Joel Parthemore <joel@parthemores.com>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: request for help on IMSM-metadata RAID-5 array
-Message-ID: <20230925184314.00005d58@linux.intel.com>
-In-Reply-To: <e8fbc585-9367-a865-8c18-bf9e4fc7562f@parthemores.com>
-References: <507b6ab0-fd8f-d770-ba82-28def5f53d25@parthemores.com>
-        <20230925114420.0000302f@linux.intel.com>
-        <e8fbc585-9367-a865-8c18-bf9e4fc7562f@parthemores.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S230347AbjIYSWh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Sep 2023 14:22:37 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B89DD115
+        for <linux-raid@vger.kernel.org>; Mon, 25 Sep 2023 11:22:30 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6910ea9cca1so5210132b3a.1
+        for <linux-raid@vger.kernel.org>; Mon, 25 Sep 2023 11:22:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1695666150; x=1696270950; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=SpNbWbvzS2q57dWxeknHKSNngDyC+YXA3SyUyIcqgV0=;
+        b=oEdicces7SIKnRCNSI+ZmPuThpa0jogvbZ/fpoOl9Pkw2L+opVdOwVeI85NQGP/dHv
+         vAdlU91eRrWLRkphF5JVOvrs7K4MV+L/YH0RVXyxGP8SkM/UjFg3CGSykotzbIU9xnis
+         E9Y1p6I2tJWluky7QdVy3jEdw7oQR4IcrONQk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695666150; x=1696270950;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SpNbWbvzS2q57dWxeknHKSNngDyC+YXA3SyUyIcqgV0=;
+        b=Cw7DMTgqgg2AbU7m6AWb8hpfaSsaKdmi0i7Xnr3OhmoQoXnrzExW4zdKDypBR1HniD
+         tU+tXJDgmZFE50lBy/NaPhUD2NqDSlh1359ogQdQ2Nb9+y85NyYDI59k3gbBku+9a78X
+         zb8GcE7EChFmZ80KdjPD6zXOjsnyX8HLzzHZcbaGeSlySYhYWfD0I8fciIokjfHcWeMa
+         Dg7pY3djJCMZk8whryN/JFLwkh+KwCcgw7qiQuKNY3OKTev4/8ex8ToHQtOZE888rD86
+         w4OijmcYJFP1wCDPTCmdM56ePiQv095XWss4sPshQPisKuHmY4CVTz/V/JaNRRdsovBU
+         tNcA==
+X-Gm-Message-State: AOJu0Ywe6BaqPE9xCHNiEFJzG6pmVg/oGIm/L9ByC2CZydb4nNqcbMFT
+        wmynefzQYMDPODh/INNpKRSf+m884xAqKpOdLHY=
+X-Google-Smtp-Source: AGHT+IHd4QFtesolKcSPxo1IJZdVv7PWj/npeJjsBWAqDvfwr0jS1184WR5bwEWepbECZb+2TGN04g==
+X-Received: by 2002:a05:6a00:134b:b0:692:780a:de89 with SMTP id k11-20020a056a00134b00b00692780ade89mr6391028pfu.33.1695666150071;
+        Mon, 25 Sep 2023 11:22:30 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id fk22-20020a056a003a9600b0068a30f6cf32sm8604713pfb.143.2023.09.25.11.22.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Sep 2023 11:22:29 -0700 (PDT)
+Date:   Mon, 25 Sep 2023 11:22:29 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Justin Stitt <justinstitt@google.com>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] md: replace deprecated strncpy with memcpy
+Message-ID: <202309251122.6E3E678140@keescook>
+References: <20230925-strncpy-drivers-md-md-c-v1-1-2b0093b89c2b@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230925-strncpy-drivers-md-md-c-v1-1-2b0093b89c2b@google.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, 25 Sep 2023 17:52:41 +0200
-Joel Parthemore <joel@parthemores.com> wrote:
+On Mon, Sep 25, 2023 at 09:49:17AM +0000, Justin Stitt wrote:
+> `strncpy` is deprecated for use on NUL-terminated destination strings
+> [1] and as such we should prefer more robust and less ambiguous string
+> interfaces.
+> 
+> There are three such strncpy uses that this patch addresses:
+> 
+> The respective destination buffers are:
+> 1) mddev->clevel
+> 2) clevel
+> 3) mddev->metadata_type
+> 
+> We expect mddev->clevel to be NUL-terminated due to its use with format
+> strings:
+> |       ret = sprintf(page, "%s\n", mddev->clevel);
+> 
+> Furthermore, we can see that mddev->clevel is not expected to be
+> NUL-padded as `md_clean()` merely set's its first byte to NULL -- not
+> the entire buffer:
+> |       static void md_clean(struct mddev *mddev)
+> |       {
+> |       	mddev->array_sectors = 0;
+> |       	mddev->external_size = 0;
+> |               ...
+> |       	mddev->level = LEVEL_NONE;
+> |       	mddev->clevel[0] = 0;
+> |               ...
+> 
+> A suitable replacement for this instance is `memcpy` as we know the
+> number of bytes to copy and perform manual NUL-termination at a
+> specified offset. This really decays to just a byte copy from one buffer
+> to another. `strscpy` is also a considerable replacement but using
+> `slen` as the length argument would result in truncation of the last
+> byte unless something like `slen + 1` was provided which isn't the most
+> idiomatic strscpy usage.
+> 
+> For the next case, the destination buffer `clevel` is expected to be
+> NUL-terminated based on its usage within kstrtol() which expects
+> NUL-terminated strings. Note that, in context, this code removes a
+> trailing newline which is seemingly not required as kstrtol() can handle
+> trailing newlines implicitly. However, there exists further usage of
+> clevel (or buf) that would also like to have the newline removed. All in
+> all, with similar reasoning to the first case, let's just use memcpy as
+> this is just a byte copy and NUL-termination is handled manually.
+> 
+> The third and final case concerning `mddev->metadata_type` is more or
+> less the same as the other two. We expect that it be NUL-terminated
+> based on its usage with seq_printf:
+> |       seq_printf(seq, " super external:%s",
+> |       	   mddev->metadata_type);
+> ... and we can surmise that NUL-padding isn't required either due to how
+> it is handled in md_clean():
+> |       static void md_clean(struct mddev *mddev)
+> |       {
+> |       ...
+> |       mddev->metadata_type[0] = 0;
+> |       ...
+> 
+> So really, all these instances have precisely calculated lengths and
+> purposeful NUL-termination so we can just use memcpy to remove ambiguity
+> surrounding strncpy.
+> 
+> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+> Link: https://github.com/KSPP/linux/issues/90
+> Cc: linux-hardening@vger.kernel.org
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
 
-> Den 2023-09-25 kl. 11:44, skrev Mariusz Tkaczyk:
-> 
-> > Hi Joel,
-> > sorry for late response, I see that you were able to recover the data!  
-> 
-> 
-> Yes. I just wanted to proceed as slowly and carefully as possible so 
-> that I would not make an awkward situation worse. ;-) The advice I got 
-> from the list gave me the assurance to go ahead.
-> 
-> 
-> > I think that metadata manager is down or broken from some reasons.
-> > #systemctl status mdmon@md127.service  
-> 
-> 
-> I forgot to say with my earlier post that I'm not running systemd but 
-> rather openrc. Gentoo supports both, and I have my reasons for 
-> preferring not to make the switch to systemd. Therefore...
-> 
-> 
-> > I you will get the problem again, please try (but do not abuse- use it as
-> > last resort!!):
-> > #systemctl restart mdmon@md127.service  
-> 
-> 
-> ...That solution won't work. ;-)
-> 
-> If I do have the problem again, maybe I can come to understand better 
-> how/why it's happening.
-> 
-Ohh, ok. Please note that VROC solution is not validated with openrc and we
-have userspace metadata manager, it requires to be careful even with systemd.
-In this case native metadata is safer option because the metadata management is
-done by kernel. But... you used this for years with no issues so I seems to be
-not so bad. Anyway you can always try # mdmon -at to gentle ask metadata daemon
-to fork and restart for every IMSM array in your system.
+I agree on the analysis of the replacements. Thanks for all the detail!
 
-Mariusz
+Reviewed-by: Kees Cook <keescook@chromium.org>
+
+-- 
+Kees Cook
