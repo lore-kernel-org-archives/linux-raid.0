@@ -2,73 +2,60 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 136C8CE7A91
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Sep 2023 01:11:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10745CE7A8B
+	for <linux-raid@archiver.kernel.org>; Mon, 25 Sep 2023 01:18:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231468AbjIYBLX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 24 Sep 2023 21:11:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38308 "EHLO
+        id S231445AbjIYBSY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 24 Sep 2023 21:18:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231390AbjIYBLW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 24 Sep 2023 21:11:22 -0400
+        with ESMTP id S230360AbjIYBSX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 24 Sep 2023 21:18:23 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B0BBEE;
-        Sun, 24 Sep 2023 18:11:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8271DF;
+        Sun, 24 Sep 2023 18:18:16 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rv4ZS1yQLz4f3kJs;
-        Mon, 25 Sep 2023 09:11:12 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rv4kX2m4Bz4f3kKH;
+        Mon, 25 Sep 2023 09:18:12 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAnvdww3hBllLtIBQ--.16291S3;
-        Mon, 25 Sep 2023 09:11:13 +0800 (CST)
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-To:     Donald Buczek <buczek@molgen.mpg.de>,
-        Dragan Stancevic <dragan@stancevic.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org
-Cc:     guoqing.jiang@linux.dev, it+raid@molgen.mpg.de,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        msmith626@gmail.com, "yangerkun@huawei.com" <yangerkun@huawei.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <CAPhsuW6R11y6vETeZ4vmFGmV6DRrj2gwhp1-Nm+csvtHb2nQYg@mail.gmail.com>
- <20230822211627.1389410-1-dragan@stancevic.com>
- <ab757e2b-3ff0-33d9-d30c-61669b738664@huaweicloud.com>
- <2061b123-6332-1456-e7c3-b713752527fb@stancevic.com>
- <07d5c7c2-c444-8747-ed6d-ca24231decd8@huaweicloud.com>
- <cf765117-7270-1b98-7e82-82a1ca1daa2a@stancevic.com>
- <0d79d1f9-00e8-93be-3c7c-244030521cd7@huaweicloud.com>
- <ff996ffb-cba5-cc9b-2740-49ba4a1869b5@huaweicloud.com>
- <07ef7b78-66d4-d3de-4e25-8a889b902e14@stancevic.com>
- <63c63d93-30fc-0175-0033-846b93fe9eff@molgen.mpg.de>
- <de7f6fba-c6e0-7549-199e-36548b68a862@stancevic.com>
- <d48c6c4a-9b0e-20bc-7d40-2a88aa37524a@molgen.mpg.de>
- <f79867f5-befb-0d7d-0c01-a42caa5d1466@molgen.mpg.de>
- <fb261b77-4859-07bb-e586-8589741e0c9e@molgen.mpg.de>
+        by APP4 (Coremail) with SMTP id gCh0CgB3BdXT3xBlhCZJBQ--.61915S3;
+        Mon, 25 Sep 2023 09:18:13 +0800 (CST)
+Subject: Re: [PATCH -next v2 01/28] md: use READ_ONCE/WRITE_ONCE for
+ 'suspend_lo' and 'suspend_hi'
+To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
+        song@kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
+ <20230828020021.2489641-2-yukuai1@huaweicloud.com>
+ <CALTww28MiiWTOyLYHErAZWTzn8iGif5=adY7yohxmn1OxrpK=w@mail.gmail.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <80e0f8aa-6d53-3109-37c0-b07c5a4b558c@huaweicloud.com>
-Date:   Mon, 25 Sep 2023 09:11:12 +0800
+Message-ID: <4d8fc562-5e9a-3932-90d4-c7566696d965@huaweicloud.com>
+Date:   Mon, 25 Sep 2023 09:18:11 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <fb261b77-4859-07bb-e586-8589741e0c9e@molgen.mpg.de>
+In-Reply-To: <CALTww28MiiWTOyLYHErAZWTzn8iGif5=adY7yohxmn1OxrpK=w@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnvdww3hBllLtIBQ--.16291S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF45AF4rtF4DGrW8uFyxuFg_yoW5GF15p3
-        4Fv3W5tr4DJr1kuws2qw48uay0yw1xXay5GrykuwnYk3WY9rZYvFy5AF45ua4DC3Z3uF1I
-        vFy5JFZxXFyUZaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgB3BdXT3xBlhCZJBQ--.61915S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJF4fuFyUZF1fuF4rXF17GFg_yoW5Cry8p3
+        yIgFW5Cr4UtasxA34jq3WkCFyrXw4aqrWqyrZrW3W7C3WxGrn3GF15Wry3Wr9YvF97CFs3
+        Ga1UA3WUA348GFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWU
-        JwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-        nIWIevJa73UjIFyTuYvjfUouWlDUUUU
+        1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+        c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+        17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+        IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3
+        Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+        sGvfC2KfnxnUUI43ZEXa7VUbE_M3UUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -77,73 +64,111 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/09/24 22:35, Donald Buczek 写道:
-> On 9/17/23 10:55, Donald Buczek wrote:
->> On 9/14/23 08:03, Donald Buczek wrote:
->>> On 9/13/23 16:16, Dragan Stancevic wrote:
->>>> Hi Donald-
->>>> [...]
->>>> Here is a list of changes for 6.1:
->>>>
->>>> e5e9b9cb71a0 md: factor out a helper to wake up md_thread directly
->>>> f71209b1f21c md: enhance checking in md_check_recovery()
->>>> 753260ed0b46 md: wake up 'resync_wait' at last in md_reap_sync_thread()
->>>> 130443d60b1b md: refactor idle/frozen_sync_thread() to fix deadlock
->>>> 6f56f0c4f124 md: add a mutex to synchronize idle and frozen in 
->>>> action_store()
->>>> 64e5e09afc14 md: refactor action_store() for 'idle' and 'frozen'
->>>> a865b96c513b Revert "md: unlock mddev before reap sync_thread in 
->>>> action_store"
->>>
->>> Thanks!
->>>
->>> I've put these patches on v6.1.52. I've started a script which 
->>> transitions the three md-devices of a very active backup server 
->>> through idle->check->idle every 6 minutes a few ours ago.  It went 
->>> through ~400 iterations till now. No lock-ups so far.
+在 2023/09/14 10:53, Xiao Ni 写道:
+> On Mon, Aug 28, 2023 at 10:04 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
 >>
->> Oh dear, looks like the deadlock problem is _not_fixed with these 
->> patches.
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Because reading 'suspend_lo' and 'suspend_hi' from md_handle_request()
+>> is not protected, use READ_ONCE/WRITE_ONCE to prevent reading abnormal
+>> value.
 > 
-> Some more info after another incident:
+> Hi Kuai
 > 
-> - We've hit the deadlock with 5.15.131 (so it is NOT introduced by any 
-> of the above patches)
-> - The symptoms are not exactly the same as with the original year-old 
-> problem. Differences:
-> - - mdX_raid6 is NOT busy looping
-> - - /sys/devices/virtual/block/mdX/md/array_state says "active" not 
-> "write pending"
-> - - `echo active > /sys/devices/virtual/block/mdX/md/array_state` does 
-> not resolve the deadlock
-> - - After hours in the deadlock state the system resumed operation when 
-> a script of mine read(!) lots of sysfs files.
-> - But in both cases, `echo idle > 
-> /sys/devices/virtual/block/mdX/md/sync_action` hangs as does all I/O 
-> operation on the raid.
-> 
-> The fact that we didn't hit the problem for many month on 5.15.94 might 
-> hint that it was introduced between 5.15.94 and 5.15.131
-> 
-> We'll try to reproduce the problem on a test machine for analysis, but 
-> this make take time (vacation imminent for one...).
-> 
-> But its not like these patches caused the problem. Any maybe they _did_ 
-> fix the original problem, as we didn't hit that one.
+> If we don't use READ_ONCE/WRITE_ONCE, What's the risk here? Could you
+> explain in detail or give an example?
 
-Sorry for the late reply, yes, this looks like a different problem. I'm
-pretty confident that the orignal problem is fixed since that echo
-idle/frozen doesn't hold the lock 'reconfig_mutex' to wait for
-sync_thread to be done.
+Sorry for the late reply.
 
-I'll check patches between 5.15.94 and 5.15.131.
+That depends on the architecture, a load/store may not be atomice,
+for example:
+
+// assume a is 10
+t1 write 01
+// write half first
+a = 11
+		t2 read
+		//read
+		a = 11 -> read abnormal value.
+// write other half
+a = 01
+
+READ_ONCE/WRITE_ONCE can guarantee that either old value or new value is
+read.
 
 Thanks,
 Kuai
 
 > 
-> Best
+> Regards
+> Xiao
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   drivers/md/md.c | 16 +++++++++-------
+>>   1 file changed, 9 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 46badd13a687..9d8dff9d923c 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -359,11 +359,11 @@ static bool is_suspended(struct mddev *mddev, struct bio *bio)
+>>                  return true;
+>>          if (bio_data_dir(bio) != WRITE)
+>>                  return false;
+>> -       if (mddev->suspend_lo >= mddev->suspend_hi)
+>> +       if (READ_ONCE(mddev->suspend_lo) >= READ_ONCE(mddev->suspend_hi))
+>>                  return false;
+>> -       if (bio->bi_iter.bi_sector >= mddev->suspend_hi)
+>> +       if (bio->bi_iter.bi_sector >= READ_ONCE(mddev->suspend_hi))
+>>                  return false;
+>> -       if (bio_end_sector(bio) < mddev->suspend_lo)
+>> +       if (bio_end_sector(bio) < READ_ONCE(mddev->suspend_lo))
+>>                  return false;
+>>          return true;
+>>   }
+>> @@ -5171,7 +5171,8 @@ __ATTR(sync_max, S_IRUGO|S_IWUSR, max_sync_show, max_sync_store);
+>>   static ssize_t
+>>   suspend_lo_show(struct mddev *mddev, char *page)
+>>   {
+>> -       return sprintf(page, "%llu\n", (unsigned long long)mddev->suspend_lo);
+>> +       return sprintf(page, "%llu\n",
+>> +                      (unsigned long long)READ_ONCE(mddev->suspend_lo));
+>>   }
+>>
+>>   static ssize_t
+>> @@ -5191,7 +5192,7 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
+>>                  return err;
+>>
+>>          mddev_suspend(mddev);
+>> -       mddev->suspend_lo = new;
+>> +       WRITE_ONCE(mddev->suspend_lo, new);
+>>          mddev_resume(mddev);
+>>
+>>          mddev_unlock(mddev);
+>> @@ -5203,7 +5204,8 @@ __ATTR(suspend_lo, S_IRUGO|S_IWUSR, suspend_lo_show, suspend_lo_store);
+>>   static ssize_t
+>>   suspend_hi_show(struct mddev *mddev, char *page)
+>>   {
+>> -       return sprintf(page, "%llu\n", (unsigned long long)mddev->suspend_hi);
+>> +       return sprintf(page, "%llu\n",
+>> +                      (unsigned long long)READ_ONCE(mddev->suspend_hi));
+>>   }
+>>
+>>   static ssize_t
+>> @@ -5223,7 +5225,7 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
+>>                  return err;
+>>
+>>          mddev_suspend(mddev);
+>> -       mddev->suspend_hi = new;
+>> +       WRITE_ONCE(mddev->suspend_hi, new);
+>>          mddev_resume(mddev);
+>>
+>>          mddev_unlock(mddev);
+>> --
+>> 2.39.2
+>>
 > 
->    Donald
+> .
 > 
 
