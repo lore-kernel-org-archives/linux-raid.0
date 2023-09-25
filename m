@@ -2,60 +2,58 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C285CE7A8B
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Sep 2023 01:34:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D6BCE7A91
+	for <linux-raid@archiver.kernel.org>; Mon, 25 Sep 2023 01:43:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231209AbjIYBfB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 24 Sep 2023 21:35:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53732 "EHLO
+        id S229524AbjIYBnu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 24 Sep 2023 21:43:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbjIYBfB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 24 Sep 2023 21:35:01 -0400
+        with ESMTP id S229480AbjIYBnt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 24 Sep 2023 21:43:49 -0400
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73B8ECA;
-        Sun, 24 Sep 2023 18:34:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D38DABD
+        for <linux-raid@vger.kernel.org>; Sun, 24 Sep 2023 18:43:42 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rv55d6bZtz4f3jrc;
-        Mon, 25 Sep 2023 09:34:45 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rv5Hq4FRVz4f3kGD
+        for <linux-raid@vger.kernel.org>; Mon, 25 Sep 2023 09:43:35 +0800 (CST)
 Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgDHXd244xBlPSFKBQ--.7589S3;
-        Mon, 25 Sep 2023 09:34:50 +0800 (CST)
-Subject: Re: [PATCH -next v2 02/28] md: use 'mddev->suspended' for
- is_md_suspended()
-To:     Xiao Ni <xni@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com,
-        song@kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230828020021.2489641-1-yukuai1@huaweicloud.com>
- <20230828020021.2489641-3-yukuai1@huaweicloud.com>
- <CALTww29iHX_GHogGFEfzdaDjohBr8ycfiz2=E_ru4JYvmrTYdA@mail.gmail.com>
+        by APP4 (Coremail) with SMTP id gCh0CgAnvdzL5RBlZKdKBQ--.18403S3;
+        Mon, 25 Sep 2023 09:43:40 +0800 (CST)
+Subject: Re: request for help on IMSM-metadata RAID-5 array
+To:     Joel Parthemore <joel@parthemores.com>,
+        Roman Mamedov <rm@romanrm.net>
+Cc:     linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <507b6ab0-fd8f-d770-ba82-28def5f53d25@parthemores.com>
+ <20230923162449.3ea0d586@nvm>
+ <4095b51a-1038-2fd0-6503-64c0daa913d8@parthemores.com>
+ <20230923203512.581fcd7d@nvm>
+ <72388663-3997-a410-76f0-066dcd7d2a63@parthemores.com>
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <1407f90d-d608-6059-7381-adb230585e3d@huaweicloud.com>
-Date:   Mon, 25 Sep 2023 09:34:48 +0800
+Message-ID: <4d606b3d-ccec-e791-97ba-2cb5af0cc226@huaweicloud.com>
+Date:   Mon, 25 Sep 2023 09:43:39 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <CALTww29iHX_GHogGFEfzdaDjohBr8ycfiz2=E_ru4JYvmrTYdA@mail.gmail.com>
+In-Reply-To: <72388663-3997-a410-76f0-066dcd7d2a63@parthemores.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgDHXd244xBlPSFKBQ--.7589S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF1rKrW5AF15ZrWUurW5trb_yoW5KF17p3
-        yIqFWYyrWUJF9Ik3yDtw1kua45uwn8KrW0yr9xW3W7C3W3Wr1rGF4furs8Xr1vk3Z3Gw1D
-        Ja1Ut34fAF109FJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-        kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-        67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-        CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
-        Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-        BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-TRANSID: gCh0CgAnvdzL5RBlZKdKBQ--.18403S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJw4fJF45tr13CF1kJF4rAFb_yoW5Xw15pF
+        W3KFZIkrsxJr47Aw12vr18Ga4Yyr45ZrZxGrn8GrWkAwn0vrnrWr4xKryruF9rurW8Gw4j
+        vr18ArW7CrZ8AaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
+        6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUrNtxDUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -64,122 +62,75 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi,
 
-在 2023/09/20 16:46, Xiao Ni 写道:
-> On Mon, Aug 28, 2023 at 10:04 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> 'pers->prepare_suspend' is introduced to prevent a deadlock for raid456,
->> this change prepares to clean this up in later patches while refactoring
->> mddev_suspend(). Specifically allow reshape to make progress while
->> waiting for 'active_io' to be 0.
-> 
-> Hi Kuai
-> 
->>From my side, I can't understand the comments. The change has
-> relationship with pers->prepare_suspend? And why this change can
-> affect reshape? If this change indeed can affect these two things, can
-> you explain more?
+在 2023/09/24 2:49, Joel Parthemore 写道:
+> So, dd finally sped up and finished. It appears that I have lost none of 
+> my data. I am a very happy man. A question: is there anything useful I 
+> am likely to discover from keeping the RAID array as it is a bit longer 
+> before I recreate it and copy the data back?
 
-First of all, 'prepare_suspend' is used to fix a deadlock in raid456:
-
-1) suspend is waiting for normal io to be done.
-
-mddev_suspend
-  mddev->suspended++ -> new sync_thread can't start
-  percpu_ref_kill(active_io)
-  wait_event(percpu_ref_is_zero(active_io))
-
-2) normal io is waiting for reshape to make progress.
-3) reshape is waiting for suspended array to be resumed.
-
-md_check_recovery
-  if (is_md_suspended(mddev))
-   return
-
-Then prepare_suspend will failed the io that is waiting for reshape to
-make progress:
-
-mddev_suspend
-  mddev->suspended++
-  percpu_ref_kill(active_io)
-   -> new io will be stuck in md_handle_request
-  pers->prepare_suspend() -> raid5_prepare_suspend
-   -> wake_up(wait_for_overlap)
-		// woke up
-		raid5_make_request
-		 make_stripe_request
-		  !reshape_inprogress(mddev) && reshape_disabled(mddev)
-		   // return io error for the io that is waiting for
-		   // reshape to make progress
-
-  wait_event(percpu_ref_is_zero(active_io))
-
-With this patch and the new api to suspend array:
-
-mddev_suspend
-  percpu_ref_kill(active_io)
-  wait_event(percpu_ref_is_zero(active_io))
-  -> while waiting for normal io to be done, new sync_thread can still
-     start, and reshape can still make progress.
-  mddev->suspended++
-
-> 
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   drivers/md/md.c | 2 +-
->>   drivers/md/md.h | 2 +-
->>   2 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 9d8dff9d923c..7fa311a14317 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -355,7 +355,7 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
->>    */
->>   static bool is_suspended(struct mddev *mddev, struct bio *bio)
->>   {
->> -       if (is_md_suspended(mddev))
->> +       if (is_md_suspended(mddev) || percpu_ref_is_dying(&mddev->active_io))
-> 
-> If we use mddev->suspended to judge if the raid is suspended, it
-> should be enough? Because mddev->suspended must be true when active_io
-> is dying.
-
-In the new api, active_io is killed before increasing suspended, and the
-difference is that the timing that array is suspended will be delayed
-from the start of mddev_suspend() to when all dispatched io is done.
-
-I think this is OK because this doesn't change behaviour when
-mddev_suspend() returns.
+It'll be much helper for developers to collect kernel stack for all
+stuck thread(and it'll be much better to use add2line).
 
 Thanks,
 Kuai
-`
+
 > 
-> Best Regards
-> Xiao
->>                  return true;
->>          if (bio_data_dir(bio) != WRITE)
->>                  return false;
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index b628c292506e..fb3b123f16dd 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -584,7 +584,7 @@ static inline bool md_is_rdwr(struct mddev *mddev)
->>
->>   static inline bool is_md_suspended(struct mddev *mddev)
->>   {
->> -       return percpu_ref_is_dying(&mddev->active_io);
->> +       return READ_ONCE(mddev->suspended);
->>   }
->>
->>   static inline int __must_check mddev_lock(struct mddev *mddev)
->> --
->> 2.39.2
->>
+> Joel
 > 
+> ----------------------------------------------------------------------------- 
+> 
+> 
+> I have been wondering about HDD issues all along, of course, though I 
+> didn't see any smoking gun.
+> 
+> 
+> I ran iostat -x 2 /dev/sdX on all three drives. All show an idle rate of 
+> just under 90%. So I don't think that's the problem.
+> 
+> Joel
+> 
+> Den 2023-09-23 kl. 17:35, skrev Roman Mamedov:
+>> On Sat, 23 Sep 2023 17:18:00 +0200
+>> Joel Parthemore <joel@parthemores.com> wrote:
+>>
+>>> I didn't want to try that again until I had confirmation that the
+>>> out-of-sync wouldn't (or shouldn't) be an issue. (I had tried it once
+>>> before, but the system had somehow swapped /dev/md126 and /dev/md127 so
+>>> that /dev/md126 became the container and /dev/md127 the RAID-5 array,
+>>> which confused me. So I stopped experimenting further until I had a
+>>> chance to write to the list.)
+>>>
+>>> The array is assembled read only, and this time both /dev/md126 and
+>>> /dev/md127 are looking like I expect them to. I started dd to make a
+>>> backup image using dd if=/dev/md126 of=/dev/sdc bs=64K
+>>> conv=noerror,sync. (The EXT4 file store on the 2TB RAID-5 array is about
+>>> 900GB full.) At first, it was running most of the time and just
+>>> occasionally in uninterruptible sleep, but the periods of
+>>> uninterruptible sleep quickly started getting longer. Now it seems to be
+>>> spending most but not quite all of its time in uninterruptible sleep. Is
+>>> this some kind of race condition? Anyway, I'll leave it running
+>>> overnight to see if it completes.
+>>>
+>>> Accessing the RAID array definitely isn't locking things up this time. I
+>>> can go in and look at the partition table, for example, no problem.
+>>> Access is awfully slow, but I assume that's because of whatever dd is or
+>>> isn't doing.
+>>>
+>>> By the way, I'm using kernel 6.5.3, which isn't the latest (that would
+>>> be 6.5.5) but is close.
+>> Maybe it's an HDD issue, one of them did have some unreadable sectors 
+>> in the
+>> past, although the firmware has not decided to do anything about that, 
+>> such
+>> as reallocating them and recording that in SMART.
+>>
+>> Check if one of the drives is holding up things, with a command like
+>>
+>> iostat -x 2 /dev/sd?
+>>
+>> If you see 100% next to one of the drives, and much less for others, 
+>> that one
+>> might be culprit.
 > .
 > 
 
