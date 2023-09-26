@@ -2,246 +2,99 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 620C0E7E64F
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Sep 2023 16:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD328E7F124
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Sep 2023 20:27:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234905AbjIZQjI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Sep 2023 12:39:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34350 "EHLO
+        id S235439AbjIZU2C (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Sep 2023 16:28:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235302AbjIZQjG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Sep 2023 12:39:06 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4691519A
-        for <linux-raid@vger.kernel.org>; Tue, 26 Sep 2023 09:38:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695746333; x=1727282333;
-  h=date:from:to:cc:subject:message-id;
-  bh=PA+6fsc8PchFt4B2FQ6zcZ8xPMco0GB+ffJ078UNxSY=;
-  b=LfAbXWiUO4MEi2sLJS/8neThJG1I6xG626CPFunr+4B3LJJrZtrRAsVJ
-   jMIlmzt5evhtbCRKKOlkLsWL9sGXfHvQ+AU38MvK7jS4XmFktP1vZsmsN
-   pZNIhCmucC+plFR2FwyAvtPDKPxjMLWh34tijPvfDQYrR7UWk5iF4pUPL
-   cxLvYZJEdq3kTsCa9QGhbmaEbDDo99UANCZPj9hDw9mIl2GlwDaDWGXx5
-   tANQh0lj3w5fJL/TTBu68djhzjPNYbS3VduG0ahE+CEpIgr3p7P0METbN
-   MfuQ2xG7Tbjx2+/bVa6qRMlioh+A4+mGvC+alVK82eyZv1RzcUQHcSOQG
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10845"; a="378890410"
-X-IronPort-AV: E=Sophos;i="6.03,178,1694761200"; 
-   d="scan'208";a="378890410"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2023 09:38:52 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10845"; a="864459672"
-X-IronPort-AV: E=Sophos;i="6.03,178,1694761200"; 
-   d="scan'208";a="864459672"
-Received: from lkp-server02.sh.intel.com (HELO 32c80313467c) ([10.239.97.151])
-  by fmsmga002.fm.intel.com with ESMTP; 26 Sep 2023 09:38:51 -0700
-Received: from kbuild by 32c80313467c with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qlB5E-000377-2b;
-        Tue, 26 Sep 2023 16:38:49 +0000
-Date:   Wed, 27 Sep 2023 00:38:31 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-test-28] BUILD SUCCESS
- 448dba62e466653a8e7ea218ab47c044eff7e568
-Message-ID: <202309270029.olIokJTk-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S234911AbjIZU2B (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Sep 2023 16:28:01 -0400
+Received: from mail.ultracoder.org (unknown [188.227.94.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A47912A
+        for <linux-raid@vger.kernel.org>; Tue, 26 Sep 2023 13:27:53 -0700 (PDT)
+Message-ID: <7c0bc9ff-767c-c1a7-49ab-37312a0fe803@ultracoder.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ultracoder.org;
+        s=mail; t=1695760070;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=YOPBgMwKx+h+YpKL2ZjQpEHN9Z0g2fgJVUO8Rd+K6uI=;
+        b=bdgaDpBGMKQtSIuWddScP0GPe3VDvlZyB/3127giQPXV5TNG2L3iXtYFr17NfjGBrP3iNi
+        KEjLsCuF5bWvkzbZ36hKebjaATMnNPU/c21oFRDraOFu9yeqctbjgvkR5SMN+JQLRkFV3d
+        an1QOC+TmQEuJMto0kCjfvoiL7khHKxhVsxKQ5viYgxlxdCjKbHQxGkMbeFbXDh20YqF8f
+        Sek38Hn+HMsk4GxaVbRFXx4KIve/MuuyNGODmtp4LHwetV1e2UJExNxWbufO+BeRJEBGkF
+        PggXb9S2ouDFh1y0JVjrxvykfh/ga01l+q8Pfmqr1MN00EAn7y6EZqFuSZOORg==
+Date:   Tue, 26 Sep 2023 23:27:50 +0300
+MIME-Version: 1.0
+Subject: Re: fstrim on raid1 LV with writemostly PV leads to system freeze
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     Song Liu <song@kernel.org>, "yukuai (C)" <yukuai3@huawei.com>,
+        linux-raid@vger.kernel.org, dm-devel@redhat.com
+References: <0e15b760-2d5f-f639-0fc7-eed67f8c385c@ultracoder.org>
+ <ZQy5dClooWaZoS/N@redhat.com> <20230922030340.2eaa46bc@nvm>
+ <6b7c6377-c4be-a1bc-d05d-37680175f84c@huaweicloud.com>
+ <6a1165f7-c792-c054-b8f0-1ad4f7b8ae01@ultracoder.org>
+ <d45ffbcd-cf55-f07c-c406-0cf762a4b4ec@huaweicloud.com>
+ <a4d3f9b0-15d5-4a90-f2c1-cad633badbbf@ultracoder.org>
+ <3bc0af74-95cd-e175-830c-6030a768e64f@huaweicloud.com>
+Content-Language: ru-RU, en-US
+From:   Kirill Kirilenko <kirill@ultracoder.org>
+In-Reply-To: <3bc0af74-95cd-e175-830c-6030a768e64f@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-test-28
-branch HEAD: 448dba62e466653a8e7ea218ab47c044eff7e568  md: rename __mddev_suspend/resume() back to mddev_suspend/resume()
+On 26.09.2023 16:21 +0300, Yu Kuai wrote:
+> This means cpu is busy with something, in this case you must use top or
+> perf to figure out what all your cpus are doing, probably issue io and
+> handle io interrupt.
 
-elapsed time: 1459m
+OK, here is the last output of 'perf top -d 1' before system froze:
 
-configs tested: 174
-configs skipped: 2
+4.00%  [kernel]  ledtrig_disk_activity
+3.86%  [kernel]  led_trigger_blink_oneshot
+1.93%  [kernel]  read_tsc
+1.68%  perf      hist_entry__sort
+1.62%  [kernel]  menu_select
+1.57%  [kernel]  psi_group_change
+1.19%  [kernel]  native_sched_clock
+0.96%  [kernel]  scsi_complete
+0.94%  [kernel]  __raw_spin_lock_irqsave
+0.80%  perf      perf_hpp__is_dynamic_entry
+...
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+And here is the last output of 'top':
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20230926   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                         assabet_defconfig   gcc  
-arm                                 defconfig   gcc  
-arm                           h3600_defconfig   gcc  
-arm                        multi_v7_defconfig   gcc  
-arm                         mv78xx0_defconfig   clang
-arm                           omap1_defconfig   clang
-arm                   randconfig-001-20230926   gcc  
-arm                        spear6xx_defconfig   gcc  
-arm                        vexpress_defconfig   clang
-arm64                            allmodconfig   gcc  
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20230926   gcc  
-i386         buildonly-randconfig-002-20230926   gcc  
-i386         buildonly-randconfig-003-20230926   gcc  
-i386         buildonly-randconfig-004-20230926   gcc  
-i386         buildonly-randconfig-005-20230926   gcc  
-i386         buildonly-randconfig-006-20230926   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                  randconfig-001-20230926   gcc  
-i386                  randconfig-002-20230926   gcc  
-i386                  randconfig-003-20230926   gcc  
-i386                  randconfig-004-20230926   gcc  
-i386                  randconfig-005-20230926   gcc  
-i386                  randconfig-006-20230926   gcc  
-i386                  randconfig-011-20230926   gcc  
-i386                  randconfig-012-20230926   gcc  
-i386                  randconfig-013-20230926   gcc  
-i386                  randconfig-014-20230926   gcc  
-i386                  randconfig-015-20230926   gcc  
-i386                  randconfig-016-20230926   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20230926   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                        m5272c3_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                          ath25_defconfig   clang
-mips                        bcm63xx_defconfig   clang
-mips                  cavium_octeon_defconfig   clang
-mips                     cu1830-neo_defconfig   clang
-mips                     loongson1b_defconfig   gcc  
-mips                      maltasmvp_defconfig   gcc  
-mips                        qi_lb60_defconfig   clang
-mips                           xway_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                         alldefconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                          allyesconfig   gcc  
-powerpc                   bluestone_defconfig   clang
-powerpc                      chrp32_defconfig   gcc  
-powerpc                      katmai_defconfig   clang
-powerpc                     kilauea_defconfig   clang
-powerpc                      pmac32_defconfig   clang
-powerpc                      ppc44x_defconfig   clang
-powerpc                     tqm8560_defconfig   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20230926   gcc  
-riscv                          rv32_defconfig   clang
-riscv                          rv32_defconfig   gcc  
-s390                             alldefconfig   clang
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                          debug_defconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20230926   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                        edosk7760_defconfig   gcc  
-sh                          rsk7264_defconfig   gcc  
-sh                          sdk7786_defconfig   gcc  
-sh                   sh7770_generic_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                 randconfig-001-20230926   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-001-20230926   gcc  
-x86_64       buildonly-randconfig-002-20230926   gcc  
-x86_64       buildonly-randconfig-003-20230926   gcc  
-x86_64       buildonly-randconfig-004-20230926   gcc  
-x86_64       buildonly-randconfig-005-20230926   gcc  
-x86_64       buildonly-randconfig-006-20230926   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                randconfig-001-20230926   gcc  
-x86_64                randconfig-002-20230926   gcc  
-x86_64                randconfig-003-20230926   gcc  
-x86_64                randconfig-004-20230926   gcc  
-x86_64                randconfig-005-20230926   gcc  
-x86_64                randconfig-006-20230926   gcc  
-x86_64                randconfig-011-20230926   gcc  
-x86_64                randconfig-012-20230926   gcc  
-x86_64                randconfig-013-20230926   gcc  
-x86_64                randconfig-014-20230926   gcc  
-x86_64                randconfig-015-20230926   gcc  
-x86_64                randconfig-016-20230926   gcc  
-x86_64                randconfig-071-20230926   gcc  
-x86_64                randconfig-072-20230926   gcc  
-x86_64                randconfig-073-20230926   gcc  
-x86_64                randconfig-074-20230926   gcc  
-x86_64                randconfig-075-20230926   gcc  
-x86_64                randconfig-076-20230926   gcc  
-x86_64                           rhel-8.3-bpf   gcc  
-x86_64                          rhel-8.3-func   gcc  
-x86_64                    rhel-8.3-kselftests   gcc  
-x86_64                         rhel-8.3-kunit   gcc  
-x86_64                           rhel-8.3-ltp   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                  nommu_kc705_defconfig   gcc  
-xtensa                         virt_defconfig   gcc  
+load average: 1.48, 0.90, 0.38
+%Cpu(s): 0.1 us, 0.1 sy, 0.0 ni, 93.5 id, 6.3 wa, 0.0 hi, 0.1 si, 0.0 st
+MiB Mem:  32005.3 total, 29138.3 free, 1327.0 used,   1540.0 buff/cache
+MiB Swap: 16382.0 total, 16382.0 free,    0.0 used.  30244.5 avail Mem
+S %CPU COMMAND
+S 0.7  [mdX_raid1]
+S 0.7  cinnamon --replace
+I 0.3  [kworker/u64:2-events_unbound]
+I 0.3  [kworker/u64:6-events_freezable_power_]
+S 0.3  [gfx_low]
+S 0.3  /usr/bin/containerd
+S 0.3  /usr/lib/xorg/Xorg -core :0 ...
+S 0.3  /usr/libexec/gnome-terminal-server
+R 0.3  top
+D 0.3  fstrim /home
+...
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+I think, there are only two possibilities: either CPU is not that busy,
+or it gets busy very quickly, so we can not see it like that. I have no
+experience in kernel debugging. Maybe someone knows, how I can get
+more accurate data when system freezes?
+
+On 26.09.2023 16:21 +0300, Yu Kuai wrote:
+> I'm not sure what 'disk activity indicator goes off' means
+
+It means, the LED on my computer case, indicating disk activity, goes off.
+According to 'perf' output, LED control is the largest contributor to
+CPU load. :)
