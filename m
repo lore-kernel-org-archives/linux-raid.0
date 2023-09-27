@@ -2,161 +2,134 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BDD2E810B2
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Sep 2023 09:35:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36FB6E80AB2
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Sep 2023 14:20:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231179AbjI0JfB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 27 Sep 2023 05:35:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33022 "EHLO
+        id S232222AbjI0OUZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 27 Sep 2023 10:20:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230500AbjI0Jev (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 27 Sep 2023 05:34:51 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86F9A194;
-        Wed, 27 Sep 2023 02:34:49 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 508FD1FD66;
-        Wed, 27 Sep 2023 09:34:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1695807284; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=U4dB9ig4ggBCrP5xrdUKqzYP3gsOmFjqW6i32KzYP6A=;
-        b=snoqKmlXC5YY8armbezrKIMHCNT8GpIjZ6rqyxymDgItE1Lb4PhyPPBD1E5heYU492k5ac
-        +8k/zy+r3NhBf4gKmgCPccQAn/siG1oKYOpMkZh/3JjgJXBPZuRJm7zJi+VG5AMRzSWHB9
-        29CJAqCO0E8PsN4tkUM5S/HclO8QcYg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1695807284;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=U4dB9ig4ggBCrP5xrdUKqzYP3gsOmFjqW6i32KzYP6A=;
-        b=8LyGifM76qH9SvqQ/7lx7SbKWlFMSFJ6KZT/hmLtcpsejcGg/lFfcGs97uXWLeB7rLR20S
-        TiIVpOJGJqlAMjDA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3E9C31338F;
-        Wed, 27 Sep 2023 09:34:44 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id cbxaDzT3E2UcEwAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 27 Sep 2023 09:34:44 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 353DBA07DC; Wed, 27 Sep 2023 11:34:43 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     <linux-fsdevel@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/29] md: Convert to bdev_open_by_dev()
-Date:   Wed, 27 Sep 2023 11:34:17 +0200
-Message-Id: <20230927093442.25915-11-jack@suse.cz>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20230818123232.2269-1-jack@suse.cz>
-References: <20230818123232.2269-1-jack@suse.cz>
+        with ESMTP id S232115AbjI0OTq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 27 Sep 2023 10:19:46 -0400
+Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5E8ACDA
+        for <linux-raid@vger.kernel.org>; Wed, 27 Sep 2023 07:19:40 -0700 (PDT)
+Received: by mail-lj1-x229.google.com with SMTP id 38308e7fff4ca-2c18b0569b6so549081fa.1
+        for <linux-raid@vger.kernel.org>; Wed, 27 Sep 2023 07:19:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1695824379; x=1696429179; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Wwk46okUDVQfnnelgDDAXJI2PyNHcNwKe3ka13udWbU=;
+        b=DeI+ndmzygXiV26g14+sM5/i8LsgL9CgDy9VB19Br8mLYRZAuIXT5fRRQQG6dlR8uL
+         ZHHEpTz9ZokFgwqp34n75yS1PY5jIPS2kExh12XhknOQ2eKCYOv28dsCXeJAXJsi1HEl
+         F2Zx2jmfkSiekVnLkJ+WFP/RjHCF0P4hSSv/TEmiFoZUevCIhKJiTrNv3PuTvlSLSujz
+         Wf0VyalzJuC9m/i5NNQ2Jq1nDpP2QrA8a1dJThFB6+d4PeMeHZ2KUcdfKMEpuuI5ak06
+         ZG9/SXQPZ7P5UXbdQF7zqfmdxHWvYx4R5uZ/etWrlX8CR5WPQ2foeStaY5DOJOnP6vcl
+         LLCw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695824379; x=1696429179;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Wwk46okUDVQfnnelgDDAXJI2PyNHcNwKe3ka13udWbU=;
+        b=stAhm76GcE+az+CKXF1IwSTwT/aUevaoBT2TXN8Q7nj8EyrLOoG2uFVkp+Fi4DeUfa
+         S2J1yuPQZcBFqixI/drC5fRQAFpVRZyOdTVceyewEWnCsGqDexgbTr1pdsF3JGsuplib
+         p6woVp6Onse9vSyQLA2/hxHNKbx65iFvM6I6BpvDn5WBWpjtJL3fGf9Q0PcJkazSw7Bu
+         95LXHfv4ldNXxPyZdOeh65R2pPf/pSrFxZYg43TIj5WqWpogizB5olmLwkN8sFGWFdiE
+         e6DikDzskSobhrlMWgOQJe2V9pq4Yt26n8knWBp/K5okeL9NB0ETXnsz0uHKMHXbxqDd
+         POeA==
+X-Gm-Message-State: AOJu0YyvvzXU8WFZE20RfryfS6k/U2eYt2J6008m8IrKzxlKQSi1hGiR
+        Bi9ke1nCOYGOdKoo5x6jiMmJFw==
+X-Google-Smtp-Source: AGHT+IExVCqrFIxKzo43T8FMa/9T5rz6/xdccYRyI4cqxFk27k3RqgKqbk6x0v1Y5TMyg8NtKFdEkg==
+X-Received: by 2002:a05:651c:3cf:b0:2b6:cd7f:5ea8 with SMTP id f15-20020a05651c03cf00b002b6cd7f5ea8mr1801740ljp.1.1695824378667;
+        Wed, 27 Sep 2023 07:19:38 -0700 (PDT)
+Received: from [172.20.13.88] ([45.147.210.162])
+        by smtp.gmail.com with ESMTPSA id mh2-20020a170906eb8200b00992b2c55c67sm9370253ejb.156.2023.09.27.07.19.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Sep 2023 07:19:37 -0700 (PDT)
+Message-ID: <9cc59d88-4b77-4e56-ae54-737baca1d435@kernel.dk>
+Date:   Wed, 27 Sep 2023 08:19:36 -0600
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2852; i=jack@suse.cz; h=from:subject; bh=iHmk7lxm2ajjhyf9s9kxjTX+VLWmyIDLO+LUGycrl+0=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBlE/catFvJOspSxxf9Vw/R71KwGi9Qg0LUG5wAlHnV gh0DaOqJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZRP3GgAKCRCcnaoHP2RA2TgUCA DFdiUWH8QHDhVg4ddp7fnDRFO2ToOULu3fT5If84ClTM6JkL9mEL6p7MaUVZ4FHjfGMahRCy/+TUKd iRBRM2m/wJgB/pXsStOKUCGAXJlS24aenxj61fFIfq86fnYLJT+EI5ML9MLAocGMdxe8PH9ar1l6/8 mMtuRZG7e7uD5iKrfzNXvtItTT++GTzHbTwn1wvQ+A9cpLZ4xJt/bsfVhwjMFHPhAymrdzQYn6+Yoa Xu/AEo3K/RxbYCKOwzEzSkBgQH+vkvmk+hRMItaZ4dul6zAuBaKIAic3JDFcjgsA4t60BYheL2rHMF vTztPXvejVXM58JAr1GVIZ1xcmGdLg
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From:   Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v4 0/29] block: Make blkdev_get_by_*() return handle
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christian Brauner <brauner@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+References: <20230818123232.2269-1-jack@suse.cz>
+Content-Language: en-US
+In-Reply-To: <20230818123232.2269-1-jack@suse.cz>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Convert md to use bdev_open_by_dev() and pass the handle around. We also
-don't need the 'Holder' flag anymore so remove it.
+On Wed, Sep 27, 2023 at 3:34?AM Jan Kara <jack@suse.cz> wrote:
+>
+> Hello,
+>
+> this is a v3 of the patch series which implements the idea of blkdev_get_by_*()
 
-CC: linux-raid@vger.kernel.org
-CC: Song Liu <song@kernel.org>
-Acked-by: Song Liu <song@kernel.org>
-Acked-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Christian Brauner <brauner@kernel.org>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- drivers/md/md.c | 22 ++++++++--------------
- drivers/md/md.h |  4 +---
- 2 files changed, 9 insertions(+), 17 deletions(-)
+v4?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index a104a025084d..5ed8cad3f4fa 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2452,8 +2452,7 @@ static void export_rdev(struct md_rdev *rdev, struct mddev *mddev)
- 	if (test_bit(AutoDetected, &rdev->flags))
- 		md_autodetect_dev(rdev->bdev->bd_dev);
- #endif
--	blkdev_put(rdev->bdev,
--		   test_bit(Holder, &rdev->flags) ? rdev : &claim_rdev);
-+	bdev_release(rdev->bdev_handle);
- 	rdev->bdev = NULL;
- 	kobject_put(&rdev->kobj);
- }
-@@ -3648,21 +3647,16 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
- 	if (err)
- 		goto out_clear_rdev;
- 
--	if (super_format == -2) {
--		holder = &claim_rdev;
--	} else {
--		holder = rdev;
--		set_bit(Holder, &rdev->flags);
--	}
--
--	rdev->bdev = blkdev_get_by_dev(newdev, BLK_OPEN_READ | BLK_OPEN_WRITE,
--				       holder, NULL);
--	if (IS_ERR(rdev->bdev)) {
-+	rdev->bdev_handle = bdev_open_by_dev(newdev,
-+			BLK_OPEN_READ | BLK_OPEN_WRITE,
-+			super_format == -2 ? &claim_rdev : rdev, NULL);
-+	if (IS_ERR(rdev->bdev_handle)) {
- 		pr_warn("md: could not open device unknown-block(%u,%u).\n",
- 			MAJOR(newdev), MINOR(newdev));
--		err = PTR_ERR(rdev->bdev);
-+		err = PTR_ERR(rdev->bdev_handle);
- 		goto out_clear_rdev;
- 	}
-+	rdev->bdev = rdev->bdev_handle->bdev;
- 
- 	kobject_init(&rdev->kobj, &rdev_ktype);
- 
-@@ -3693,7 +3687,7 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
- 	return rdev;
- 
- out_blkdev_put:
--	blkdev_put(rdev->bdev, holder);
-+	bdev_release(rdev->bdev_handle);
- out_clear_rdev:
- 	md_rdev_clear(rdev);
- out_free_rdev:
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 7c9c13abd7ca..274e7d61d19f 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -59,6 +59,7 @@ struct md_rdev {
- 	 */
- 	struct block_device *meta_bdev;
- 	struct block_device *bdev;	/* block device handle */
-+	struct bdev_handle *bdev_handle;	/* Handle from open for bdev */
- 
- 	struct page	*sb_page, *bb_page;
- 	int		sb_loaded;
-@@ -211,9 +212,6 @@ enum flag_bits {
- 				 * check if there is collision between raid1
- 				 * serial bios.
- 				 */
--	Holder,			/* rdev is used as holder while opening
--				 * underlying disk exclusively.
--				 */
- };
- 
- static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
+> calls returning bdev_handle which is then passed to blkdev_put() [1]. This
+> makes the get and put calls for bdevs more obviously matching and allows us to
+> propagate context from get to put without having to modify all the users
+> (again!). In particular I need to propagate used open flags to blkdev_put() to
+> be able count writeable opens and add support for blocking writes to mounted
+> block devices. I'll send that series separately.
+>
+> The series is based on Btrfs tree's for-next branch [2] as of today as the
+> series depends on Christoph's changes to btrfs device handling.  Patches have
+> passed some reasonable testing - I've tested block changes, md, dm, bcache,
+> xfs, btrfs, ext4, swap. More testing or review is always welcome. Thanks! I've
+> pushed out the full branch to:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
+>
+> to ease review / testing. Christian, can you pull the patches to your tree
+> to get some exposure in linux-next as well? Thanks!
+
+For the block bits:
+
+Acked-by: Jens Axboe <axboe@kernel.dk>
+
 -- 
-2.35.3
+Jens Axboe
 
