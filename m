@@ -2,132 +2,115 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C2EE7F14B
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Sep 2023 01:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 773EEE7F154
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Sep 2023 03:00:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235204AbjI0BtM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Sep 2023 21:49:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37980 "EHLO
+        id S229960AbjI0DAq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Sep 2023 23:00:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234484AbjI0BrI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Sep 2023 21:47:08 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEC6ACF7;
-        Tue, 26 Sep 2023 17:54:59 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RwJ6l5pMzz4f3k6X;
-        Wed, 27 Sep 2023 08:54:55 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgDHXd1ffRNlJNruBQ--.41325S3;
-        Wed, 27 Sep 2023 08:54:56 +0800 (CST)
+        with ESMTP id S234137AbjI0C6p (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Sep 2023 22:58:45 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79DD019781;
+        Tue, 26 Sep 2023 17:15:28 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F719C433CA;
+        Wed, 27 Sep 2023 00:15:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695773727;
+        bh=Fsvg0F3lnuo5kK+BZq/zqgC2Z48DcX4ehDUq6zNzreo=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=sRu55kdVDEzBlTb4zAOUbXj0BTlPCL0Rrj94Us9wJKFyPwgdaEm3FixpHOuXhWqNo
+         Fe+6mvKFcoNV+lDqqucRFOKmX3QYu42VTMaQtXCIbSKJPSY3/IWo80W2m1r9FQNcvi
+         Jo00owrcTF2zURSaY459/yYcAmOUbPztZn1xFpiFFn9fESnSfqFUd/t57GyPKvUBmM
+         p298XY8liHGtdKRFXBpcFwH9gZA+DKfKEDVR7PUHodtK9jMtdgiRa9x3trWV6ea1Bn
+         utS/yV3glld7xMh4GKbWKi7sc87SV7uHZI8fN4lRyNlcuCi9gsAa5XZs8Bv4u7GIFP
+         M747ozhHrvJGQ==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5046bf37ec1so6606642e87.1;
+        Tue, 26 Sep 2023 17:15:27 -0700 (PDT)
+X-Gm-Message-State: AOJu0YwJHxK4i2TIAKBf9rBUpWSWwFo4WCnmyu+Pk97BfCKZY7VBcJZF
+        4cvC9gpJlRsr0cl7n+5pe/Frt+R+iFoZsaO8/DY=
+X-Google-Smtp-Source: AGHT+IFcLtBR93JZVmluOSkW5V/3fhryuI/xVKz9YCUlCelbPB+zXfpruHV7zhafNWKM1kRufSUbrXxg0JBgy1maNR0=
+X-Received: by 2002:a05:6512:ac5:b0:503:3707:66ed with SMTP id
+ n5-20020a0565120ac500b00503370766edmr340401lfu.34.1695773725474; Tue, 26 Sep
+ 2023 17:15:25 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230926025827.671407-1-yukuai1@huaweicloud.com> <20230926025827.671407-2-yukuai1@huaweicloud.com>
+In-Reply-To: <20230926025827.671407-2-yukuai1@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 26 Sep 2023 17:15:13 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4dXrwt7VTifcdbdwH6Uz3b4m4Z54fBfD3LDjXy89PTkQ@mail.gmail.com>
+Message-ID: <CAPhsuW4dXrwt7VTifcdbdwH6Uz3b4m4Z54fBfD3LDjXy89PTkQ@mail.gmail.com>
 Subject: Re: [PATCH v2 1/2] md: factor out a new helper to put mddev
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     mariusz.tkaczyk@linux.intel.com, xni@redhat.com,
         linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, yangerkun@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20230926025827.671407-1-yukuai1@huaweicloud.com>
- <20230926025827.671407-2-yukuai1@huaweicloud.com>
- <CAPhsuW4dXrwt7VTifcdbdwH6Uz3b4m4Z54fBfD3LDjXy89PTkQ@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <94ef3ef4-0580-416b-f672-250a91b39e10@huaweicloud.com>
-Date:   Wed, 27 Sep 2023 08:54:54 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <CAPhsuW4dXrwt7VTifcdbdwH6Uz3b4m4Z54fBfD3LDjXy89PTkQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgDHXd1ffRNlJNruBQ--.41325S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7ArWxWF48Kw1rXFy5GF17Jrb_yoW8Zr1Dpa
-        ySqa90kr4DXFy3W39rZanru3WYqws2grWktryfKwn8ZFy5Wr1DWw1Fgws5Wr1DAw1fJFs0
-        v3WUK3y7Cr1UtrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-        6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-        4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCYjI0SjxkI62AI1cAE67vI
-        Y487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
-        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-        WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8
-        JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUU
-        UU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Mon, Sep 25, 2023 at 8:04=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> There are no functional changes, the new helper will still hold
+> 'all_mddevs_lock' after putting mddev, and it will be used to simplify
+> md_seq_ops.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/md/md.c | 18 +++++++++++++++---
+>  1 file changed, 15 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 10cb4dfbf4ae..a5ef6f7da8ec 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -616,10 +616,15 @@ static inline struct mddev *mddev_get(struct mddev =
+*mddev)
+>
+>  static void mddev_delayed_delete(struct work_struct *ws);
+>
+> -void mddev_put(struct mddev *mddev)
+> +static void __mddev_put(struct mddev *mddev, bool locked)
+>  {
+> -       if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
+> +       if (locked) {
+> +               spin_lock(&all_mddevs_lock);
+> +               if (!atomic_dec_and_test(&mddev->active))
+> +                       return;
+> +       } else if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock)=
+)
+>                 return;
+> +
 
-在 2023/09/27 8:15, Song Liu 写道:
-> On Mon, Sep 25, 2023 at 8:04 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> There are no functional changes, the new helper will still hold
->> 'all_mddevs_lock' after putting mddev, and it will be used to simplify
->> md_seq_ops.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   drivers/md/md.c | 18 +++++++++++++++---
->>   1 file changed, 15 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 10cb4dfbf4ae..a5ef6f7da8ec 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -616,10 +616,15 @@ static inline struct mddev *mddev_get(struct mddev *mddev)
->>
->>   static void mddev_delayed_delete(struct work_struct *ws);
->>
->> -void mddev_put(struct mddev *mddev)
->> +static void __mddev_put(struct mddev *mddev, bool locked)
->>   {
->> -       if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
->> +       if (locked) {
->> +               spin_lock(&all_mddevs_lock);
->> +               if (!atomic_dec_and_test(&mddev->active))
->> +                       return;
->> +       } else if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
->>                  return;
->> +
-> 
-> This condition is indeed very confusing. No matter whether we call the
-> flag "locked" or "do_lock", it is not really accurate.
-> 
-> How about we factor out a helper with the following logic:
-> 
->          if (!mddev->raid_disks && list_empty(&mddev->disks) &&
->              mddev->ctime == 0 && !mddev->hold_active) {
->                  /* Array is not configured at all, and not held active,
->                   * so destroy it */
->                  set_bit(MD_DELETED, &mddev->flags);
-> 
->                  /*
->                   * Call queue_work inside the spinlock so that
->                   * flush_workqueue() after mddev_find will succeed in waiting
->                   * for the work to be done.
->                   */
->                  queue_work(md_misc_wq, &mddev->del_work);
->          }
-> 
-> and then use it at the two callers?
-> 
-> Does this make sense?
+This condition is indeed very confusing. No matter whether we call the
+flag "locked" or "do_lock", it is not really accurate.
 
-Yes, that sounds great. I'll do this in v3.
+How about we factor out a helper with the following logic:
+
+        if (!mddev->raid_disks && list_empty(&mddev->disks) &&
+            mddev->ctime =3D=3D 0 && !mddev->hold_active) {
+                /* Array is not configured at all, and not held active,
+                 * so destroy it */
+                set_bit(MD_DELETED, &mddev->flags);
+
+                /*
+                 * Call queue_work inside the spinlock so that
+                 * flush_workqueue() after mddev_find will succeed in waiti=
+ng
+                 * for the work to be done.
+                 */
+                queue_work(md_misc_wq, &mddev->del_work);
+        }
+
+and then use it at the two callers?
+
+Does this make sense?
 
 Thanks,
-Kuai
-
-> 
-> Thanks,
-> Song
-> .
-> 
-
+Song
