@@ -2,115 +2,78 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 773EEE7F154
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Sep 2023 03:00:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A22EBE7F158
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Sep 2023 03:27:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229960AbjI0DAq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Sep 2023 23:00:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60838 "EHLO
+        id S229570AbjI0D1s (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Sep 2023 23:27:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234137AbjI0C6p (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Sep 2023 22:58:45 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79DD019781;
-        Tue, 26 Sep 2023 17:15:28 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F719C433CA;
-        Wed, 27 Sep 2023 00:15:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695773727;
-        bh=Fsvg0F3lnuo5kK+BZq/zqgC2Z48DcX4ehDUq6zNzreo=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=sRu55kdVDEzBlTb4zAOUbXj0BTlPCL0Rrj94Us9wJKFyPwgdaEm3FixpHOuXhWqNo
-         Fe+6mvKFcoNV+lDqqucRFOKmX3QYu42VTMaQtXCIbSKJPSY3/IWo80W2m1r9FQNcvi
-         Jo00owrcTF2zURSaY459/yYcAmOUbPztZn1xFpiFFn9fESnSfqFUd/t57GyPKvUBmM
-         p298XY8liHGtdKRFXBpcFwH9gZA+DKfKEDVR7PUHodtK9jMtdgiRa9x3trWV6ea1Bn
-         utS/yV3glld7xMh4GKbWKi7sc87SV7uHZI8fN4lRyNlcuCi9gsAa5XZs8Bv4u7GIFP
-         M747ozhHrvJGQ==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5046bf37ec1so6606642e87.1;
-        Tue, 26 Sep 2023 17:15:27 -0700 (PDT)
-X-Gm-Message-State: AOJu0YwJHxK4i2TIAKBf9rBUpWSWwFo4WCnmyu+Pk97BfCKZY7VBcJZF
-        4cvC9gpJlRsr0cl7n+5pe/Frt+R+iFoZsaO8/DY=
-X-Google-Smtp-Source: AGHT+IFcLtBR93JZVmluOSkW5V/3fhryuI/xVKz9YCUlCelbPB+zXfpruHV7zhafNWKM1kRufSUbrXxg0JBgy1maNR0=
-X-Received: by 2002:a05:6512:ac5:b0:503:3707:66ed with SMTP id
- n5-20020a0565120ac500b00503370766edmr340401lfu.34.1695773725474; Tue, 26 Sep
- 2023 17:15:25 -0700 (PDT)
+        with ESMTP id S229458AbjI0DZx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Sep 2023 23:25:53 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2845A199A
+        for <linux-raid@vger.kernel.org>; Tue, 26 Sep 2023 19:52:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1695783148;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=GhWLW/J+wF3IfDCX1bJmdtWkTTbZeKmfcEYf9lSNTG8=;
+        b=L2ceD6rsxtFOlPAF7K8K1b1PZF5+Xu295W1+hh0TES2Afl2c2wJia2cznaQnyGMUhkZJNR
+        an6W8mACPJDDG1cWps1yoGa/MevEzG94smTLgTRa/UtkRPDe0DMBMh9s+nGbrcc+0XyP7l
+        J2TvWlJraNTcVt163Owclwj1bzPgUIE=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-609-i3H4KY5KMpuW5B9HcwaS3w-1; Tue, 26 Sep 2023 22:52:25 -0400
+X-MC-Unique: i3H4KY5KMpuW5B9HcwaS3w-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CD94B101A529;
+        Wed, 27 Sep 2023 02:52:24 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.112.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 59D1C2156A27;
+        Wed, 27 Sep 2023 02:52:22 +0000 (UTC)
+From:   Xiao Ni <xni@redhat.com>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH 1/4 v2] mdadm/tests: Fix regular expression failure
+Date:   Wed, 27 Sep 2023 10:52:16 +0800
+Message-Id: <20230927025219.49915-2-xni@redhat.com>
+In-Reply-To: <20230927025219.49915-1-xni@redhat.com>
+References: <20230927025219.49915-1-xni@redhat.com>
 MIME-Version: 1.0
-References: <20230926025827.671407-1-yukuai1@huaweicloud.com> <20230926025827.671407-2-yukuai1@huaweicloud.com>
-In-Reply-To: <20230926025827.671407-2-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 26 Sep 2023 17:15:13 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4dXrwt7VTifcdbdwH6Uz3b4m4Z54fBfD3LDjXy89PTkQ@mail.gmail.com>
-Message-ID: <CAPhsuW4dXrwt7VTifcdbdwH6Uz3b4m4Z54fBfD3LDjXy89PTkQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] md: factor out a new helper to put mddev
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     mariusz.tkaczyk@linux.intel.com, xni@redhat.com,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Sep 25, 2023 at 8:04=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> There are no functional changes, the new helper will still hold
-> 'all_mddevs_lock' after putting mddev, and it will be used to simplify
-> md_seq_ops.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.c | 18 +++++++++++++++---
->  1 file changed, 15 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 10cb4dfbf4ae..a5ef6f7da8ec 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -616,10 +616,15 @@ static inline struct mddev *mddev_get(struct mddev =
-*mddev)
->
->  static void mddev_delayed_delete(struct work_struct *ws);
->
-> -void mddev_put(struct mddev *mddev)
-> +static void __mddev_put(struct mddev *mddev, bool locked)
->  {
-> -       if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
-> +       if (locked) {
-> +               spin_lock(&all_mddevs_lock);
-> +               if (!atomic_dec_and_test(&mddev->active))
-> +                       return;
-> +       } else if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock)=
-)
->                 return;
-> +
+The test fails because of the regular expression.
 
-This condition is indeed very confusing. No matter whether we call the
-flag "locked" or "do_lock", it is not really accurate.
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ tests/06name | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-How about we factor out a helper with the following logic:
+diff --git a/tests/06name b/tests/06name
+index 4d5e824d3e0e..86eaab69e3a1 100644
+--- a/tests/06name
++++ b/tests/06name
+@@ -3,8 +3,8 @@ set -x
+ # create an array with a name
+ 
+ mdadm -CR $md0 -l0 -n2 --metadata=1 --name="Fred" $dev0 $dev1
+-mdadm -E $dev0 | grep 'Name : [^:]*:Fred ' > /dev/null || exit 1
+-mdadm -D $md0 | grep 'Name : [^:]*:Fred ' > /dev/null || exit 1
++mdadm -E $dev0 | grep 'Name : Fred' > /dev/null || exit 1
++mdadm -D $md0 | grep 'Name : Fred' > /dev/null || exit 1
+ mdadm -S $md0
+ 
+ mdadm -A $md0 --name="Fred" $devlist
+-- 
+2.32.0 (Apple Git-132)
 
-        if (!mddev->raid_disks && list_empty(&mddev->disks) &&
-            mddev->ctime =3D=3D 0 && !mddev->hold_active) {
-                /* Array is not configured at all, and not held active,
-                 * so destroy it */
-                set_bit(MD_DELETED, &mddev->flags);
-
-                /*
-                 * Call queue_work inside the spinlock so that
-                 * flush_workqueue() after mddev_find will succeed in waiti=
-ng
-                 * for the work to be done.
-                 */
-                queue_work(md_misc_wq, &mddev->del_work);
-        }
-
-and then use it at the two callers?
-
-Does this make sense?
-
-Thanks,
-Song
