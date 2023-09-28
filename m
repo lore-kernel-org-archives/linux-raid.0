@@ -2,165 +2,101 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03BEECE7B08
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 17:52:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15BB5CE7B08
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 18:46:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231945AbjI1Rwi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 13:52:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44192 "EHLO
+        id S231877AbjI1SqF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 14:46:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230349AbjI1Rwg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 13:52:36 -0400
-Received: from mx0b-002e3701.pphosted.com (mx0b-002e3701.pphosted.com [148.163.143.35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79E0219D;
-        Thu, 28 Sep 2023 10:52:35 -0700 (PDT)
-Received: from pps.filterd (m0134424.ppops.net [127.0.0.1])
-        by mx0b-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38SHhHiB002198;
-        Thu, 28 Sep 2023 17:51:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=pps0720; bh=mZrC/t7ae+Z2o86iz704abLpUMsth0bb5IgGpyWjrnM=;
- b=APaa5kKkE4mpyTjbaPlvnbYIWIT9A784n1fDZhZsP48Q4BO9uSG32bZsfAF52jrU1bOT
- 1h7DtIZq8CfCoiXJzZq8iCLGpdSe2PlQIjBXHSbzsrerYmN3AzKoVoUge3gno+oOKne0
- TZt5ZpPcmFxaL8khHe4Ax9IRzjtiszQvxqsciJsyNpAD6ZY84bLt17ZecVDpe5s/3MjB
- a3q5Nj2zzP41qNl43/8ndPzzA6qoqUz03rp+3yjfOcXzoZpJvReW4KIp/RtMFfifP+Ul
- Z6IbclgwAUZ5SJhoTsDmi8nxYS4v/OvpF1TAywHM0NXqhjlAEPK6WdmkxzbGRG8AthqO KA== 
-Received: from p1lg14881.it.hpe.com ([16.230.97.202])
-        by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 3tde4ur2yg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Sep 2023 17:51:25 +0000
-Received: from p1lg14885.dc01.its.hpecorp.net (unknown [10.119.18.236])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by p1lg14881.it.hpe.com (Postfix) with ESMTPS id A9CF8805E26;
-        Thu, 28 Sep 2023 17:51:23 +0000 (UTC)
-Received: from swahl-home.5wahls.com (unknown [16.231.227.36])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by p1lg14885.dc01.its.hpecorp.net (Postfix) with ESMTPS id DAC6681566E;
-        Thu, 28 Sep 2023 17:51:16 +0000 (UTC)
-Date:   Thu, 28 Sep 2023 12:51:15 -0500
-From:   Steve Wahl <steve.wahl@hpe.com>
-To:     j.granados@samsung.com
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
-        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
-        Phillip Potter <phil@philpotter.co.uk>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        David Ahern <dsahern@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Robin Holt <robinmholt@gmail.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Song Liu <song@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-rdma@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH 11/15] sgi-xp: Remove the now superfluous sentinel
- element from ctl_table array
-Message-ID: <ZRW9Eywl831h/YhW@swahl-home.5wahls.com>
-References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
- <=?utf-8?q?=3C20230928-jag-sysctl=5Fremove=5Fempty=5Felem=5Fdrive?=>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <=?utf-8?q?=3C20230928-jag-sysctl=5Fremove=5Fempty=5Felem=5Fdrive?=>
-X-Proofpoint-GUID: ARXao25-avAoloITuhrfvukM5pXVcFhf
-X-Proofpoint-ORIG-GUID: ARXao25-avAoloITuhrfvukM5pXVcFhf
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S230239AbjI1SqE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 14:46:04 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21D62BF;
+        Thu, 28 Sep 2023 11:46:03 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8E39C433CB;
+        Thu, 28 Sep 2023 18:46:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695926762;
+        bh=IeX1Us+HvLC3WWy3/NtNhm4t19D8HBadibrKzf5JSmI=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ErBC501xTE55+ZNK/ojYVc/tyZWmWwSE2bTtO7LkkrAMdR+FUqXULd2Oj00dzDXDY
+         9VfpC7cLQLzGrcwEL4sxbn4+Ecg3NK7sWUoGPx+8lqcQ4Isd7xWe2IcyKf9XTHHacx
+         cpGaH37OowdmjXDMUsTL2KKlyXsxv/em+gFryb/uzF4AlacU0sBUkkZtuc67Dv6Xac
+         RdpjO+0ItfroQrqJNLQg/+tqKQzlit+Ia0Ynd8rKJIxTk9ourBp9EZXlf8cZPojVGd
+         hpoSwHwY6bSKR97V4AqSRmDrFIdPV2BVHldW/lvED8F5HsMCAErFLIFhm5K5hDn3ke
+         bouY2XWiNtAvg==
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5033918c09eso21121436e87.2;
+        Thu, 28 Sep 2023 11:46:02 -0700 (PDT)
+X-Gm-Message-State: AOJu0YxlsSFKoDBPifZyhBudEtK2zSMG1qYNQZpNp7rSnae2RH1M34FR
+        5HtuQpkmrznzTI0RldXT4Q/fekxB81vuqUWG4KY=
+X-Google-Smtp-Source: AGHT+IEP/A671di6lQEvr4rOqxf6W0ucETdxmobG5KsUclVSSm+4J94KeLxwDjY2OceTV/iDTvypyEilu52yJW74hMo=
+X-Received: by 2002:a19:6557:0:b0:501:b8dc:6c45 with SMTP id
+ c23-20020a196557000000b00501b8dc6c45mr1943815lfj.18.1695926760898; Thu, 28
+ Sep 2023 11:46:00 -0700 (PDT)
 MIME-Version: 1.0
-X-HPE-SCL: -1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-28_16,2023-09-28_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 phishscore=0
- malwarescore=0 adultscore=0 spamscore=0 priorityscore=1501
- lowpriorityscore=0 suspectscore=0 impostorscore=0 mlxlogscore=999
- mlxscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2309280155
+References: <20230928061543.1845742-1-yukuai1@huaweicloud.com> <20230928061543.1845742-4-yukuai1@huaweicloud.com>
+In-Reply-To: <20230928061543.1845742-4-yukuai1@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 28 Sep 2023 11:45:48 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4tQ9A+ddpxGhfza3WSdkL+FXmS-4NLUUN7MNk0TOY0WA@mail.gmail.com>
+Message-ID: <CAPhsuW4tQ9A+ddpxGhfza3WSdkL+FXmS-4NLUUN7MNk0TOY0WA@mail.gmail.com>
+Subject: Re: [PATCH -next v3 03/25] md: add new helpers to suspend/resume array
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
+        dm-devel@redhat.com, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yukuai3@huawei.com,
+        yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Sep 28, 2023 at 03:21:36PM +0200, Joel Granados via B4 Relay wrote:
-> From: Joel Granados <j.granados@samsung.com>
-> 
-> This commit comes at the tail end of a greater effort to remove the
-> empty elements at the end of the ctl_table arrays (sentinels) which
-> will reduce the overall build time size of the kernel and run time
-> memory bloat by ~64 bytes per sentinel (further information Link :
-> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
-> 
-> Remove sentinel from xpc_sys_xpc_hb and xpc_sys_xpc
-> 
-> Signed-off-by: Joel Granados <j.granados@samsung.com>
+On Wed, Sep 27, 2023 at 11:22=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Advantages for new apis:
+>  - reconfig_mutex is not required;
+>  - the weird logical that suspend array hold 'reconfig_mutex' for
+>    mddev_check_recovery() to update superblock is not needed;
+>  - the specail handling, 'pers->prepare_suspend', for raid456 is not
+>    needed;
+>  - It's safe to be called at any time once mddev is allocated, and it's
+>    designed to be used from slow path where array configuration is change=
+d;
+>  - the new helpers is designed to be called before mddev_lock(), hence
+>    it support to be interrupted by user as well.
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  drivers/misc/sgi-xp/xpc_main.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/misc/sgi-xp/xpc_main.c b/drivers/misc/sgi-xp/xpc_main.c
-> index 6da509d692bb..c898092ff3ac 100644
-> --- a/drivers/misc/sgi-xp/xpc_main.c
-> +++ b/drivers/misc/sgi-xp/xpc_main.c
-> @@ -109,8 +109,7 @@ static struct ctl_table xpc_sys_xpc_hb[] = {
->  	 .mode = 0644,
->  	 .proc_handler = proc_dointvec_minmax,
->  	 .extra1 = &xpc_hb_check_min_interval,
-> -	 .extra2 = &xpc_hb_check_max_interval},
-> -	{}
-> +	 .extra2 = &xpc_hb_check_max_interval}
->  };
->  static struct ctl_table xpc_sys_xpc[] = {
->  	{
-> @@ -120,8 +119,7 @@ static struct ctl_table xpc_sys_xpc[] = {
->  	 .mode = 0644,
->  	 .proc_handler = proc_dointvec_minmax,
->  	 .extra1 = &xpc_disengage_min_timelimit,
-> -	 .extra2 = &xpc_disengage_max_timelimit},
-> -	{}
-> +	 .extra2 = &xpc_disengage_max_timelimit}
->  };
->  
->  static struct ctl_table_header *xpc_sysctl;
-> 
-> -- 
-> 2.30.2
-> 
+>  drivers/md/md.c | 102 +++++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/md/md.h |   3 ++
+>  2 files changed, 103 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index e460b380143d..a075d03d03d3 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -443,12 +443,22 @@ void mddev_suspend(struct mddev *mddev)
+>                         lockdep_is_held(&mddev->reconfig_mutex));
+>
+>         WARN_ON_ONCE(thread && current =3D=3D thread->tsk);
+> -       if (mddev->suspended++)
+> +
+> +       /* can't concurrent with __mddev_suspend() and __mddev_resume() *=
+/
+> +       mutex_lock(&mddev->suspend_mutex);
+> +       if (mddev->suspended++) {
+> +               mutex_unlock(&mddev->suspend_mutex);
+>                 return;
 
-I assume you'll match the rest of the changes with regards to the
-trailing comma.
+Can we make mddev->suspended atomic_t, and use atomic_inc_return()
+here?
 
-Reviewed-by: Steve Wahl <steve.wahl@hpe.com>
+Thanks,
+Song
 
--- 
-Steve Wahl, Hewlett Packard Enterprise
+[...]
