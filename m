@@ -2,56 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0377CE7B02
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC04ECE7AFE
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230438AbjI1GW1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 02:22:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44870 "EHLO
+        id S230440AbjI1GW2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 02:22:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230338AbjI1GWI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 02:22:08 -0400
+        with ESMTP id S230385AbjI1GWU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 02:22:20 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C11AB7;
-        Wed, 27 Sep 2023 23:22:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3714121;
+        Wed, 27 Sep 2023 23:22:08 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rx3Kj13cZz4f3k6V;
-        Thu, 28 Sep 2023 14:22:01 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rx3Kn218tz4f3jq5;
+        Thu, 28 Sep 2023 14:22:05 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S17;
-        Thu, 28 Sep 2023 14:22:02 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S26;
+        Thu, 28 Sep 2023 14:22:06 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
         dm-devel@redhat.com, song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v3 13/25] md/raid5: use new apis to suspend array for raid5_store_stripe_size()
-Date:   Thu, 28 Sep 2023 14:15:31 +0800
-Message-Id: <20230928061543.1845742-14-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v3 22/25] md/md-linear: cleanup linear_add()
+Date:   Thu, 28 Sep 2023 14:15:40 +0800
+Message-Id: <20230928061543.1845742-23-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S17
-X-Coremail-Antispam: 1UD129KBjvJXoWrZFWUZF4ftFWrKr4rGF45Jrb_yoW8Jr13pa
-        nFkFyfWr1UZryrX34DZw1q9Fy5Gw4qgrWqk3y7X3Z7Z3Z3Xry2gw4YgFy5Wry8Ja4ft395
-        Gwn8WF95JFy8JrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-        kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAF
-        wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr
-        0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-        SdkUUUUU=
+X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S26
+X-Coremail-Antispam: 1UD129KBjvdXoWrKF17uw18ur13CFWUCrW8tFb_yoWktrbE9F
+        4Du397Ar1UXry7Zr1Yvw4SvF90qryDWw1kZFySgr9aya48Xw1xAr95Jr45A3srZayfGay5
+        Kryxtw4ftr48tjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbq8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+        IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+        F7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_Gc
+        Wl84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
+        e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
+        8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
+        jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0x
+        kIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
+        xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrx
+        kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Xr0_Ar1lIxAIcVC0I7IYx2IY6xkF7I0E14v2
+        6r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F
+        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
+        UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -60,48 +60,36 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Convert to use new apis, the old apis will be removed eventually.
+Now that caller already suspend the array, there is no need to suspend
+array in liner_add().
 
-This is not hot path, so performance is not concerned.
+Note that mddev_suspend/resume() is not used anymore.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid5.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/md/md-linear.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6383723468e5..f1c32b4d190f 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7025,7 +7025,7 @@ raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
- 			new != roundup_pow_of_two(new))
- 		return -EINVAL;
- 
--	err = mddev_lock(mddev);
-+	err = mddev_suspend_and_lock(mddev);
- 	if (err)
- 		return err;
- 
-@@ -7049,7 +7049,6 @@ raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
- 		goto out_unlock;
- 	}
- 
+diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
+index ae2826e9645b..8eca7693b793 100644
+--- a/drivers/md/md-linear.c
++++ b/drivers/md/md-linear.c
+@@ -183,7 +183,6 @@ static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
+ 	 * in linear_congested(), therefore kfree_rcu() is used to free
+ 	 * oldconf until no one uses it anymore.
+ 	 */
 -	mddev_suspend(mddev);
- 	mutex_lock(&conf->cache_size_mutex);
- 	size = conf->max_nr_stripes;
- 
-@@ -7064,10 +7063,9 @@ raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
- 		err = -ENOMEM;
- 	}
- 	mutex_unlock(&conf->cache_size_mutex);
+ 	oldconf = rcu_dereference_protected(mddev->private,
+ 			lockdep_is_held(&mddev->reconfig_mutex));
+ 	mddev->raid_disks++;
+@@ -192,7 +191,6 @@ static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
+ 	rcu_assign_pointer(mddev->private, newconf);
+ 	md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
+ 	set_capacity_and_notify(mddev->gendisk, mddev->array_sectors);
 -	mddev_resume(mddev);
- 
- out_unlock:
--	mddev_unlock(mddev);
-+	mddev_unlock_and_resume(mddev);
- 	return err ?: len;
+ 	kfree_rcu(oldconf, rcu);
+ 	return 0;
  }
- 
 -- 
 2.39.2
 
