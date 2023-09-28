@@ -2,35 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB02E732DA
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 13:37:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7895E732E7
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 15:21:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232152AbjI1NhD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 09:37:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43032 "EHLO
+        id S231817AbjI1PVM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 11:21:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231868AbjI1NhD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 09:37:03 -0400
+        with ESMTP id S231620AbjI1PVK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 11:21:10 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5244519B;
-        Thu, 28 Sep 2023 06:37:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30ED8C433C8;
-        Thu, 28 Sep 2023 13:36:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1695908220;
-        bh=+wQRUm2msRT1Vv6LzHjx16q1r07oTZukLX6w4Q72cRo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fQY4RQBXMdvdqFGAIafv/Phk7Y1oE+EJjzKjC3TRuINAbWxqzcqLPwyX0a9VAn7db
-         lrLv0OwYBTVD2TtgiIEZJRfo0bKqoMi2GBhCLXf4v+k2xekgAHOfI6frhHYfLI3c4k
-         s478XPbm0PhMMeW0NqTPzj3Xl+SvTPCIBgs7SdE0=
-Date:   Thu, 28 Sep 2023 15:36:55 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC2A0EB;
+        Thu, 28 Sep 2023 08:21:09 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D63DC433CA;
+        Thu, 28 Sep 2023 15:21:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695914469;
+        bh=5QGsjlLA6+fSdsYbT2wgVXCyV5RBnz+gCDO8qtKxudM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=RI64Z/ulZuV+NXvyr13D2r3WHJHjvYSEBhhBuHPNVt9kRWrPnmiOgF6ordWF6ikFR
+         xgtdSFzrXqfJBZ5kkT2lmvoB/s5AbaPtBp/tnANflqyoMu0vA4hG+/6XSSId9g12q6
+         KIYQ9idMZhFhYNIT33lFaQWWQ7LAYSXQCODt0fs3+ZcZjnlILWt1TgJuLubdaAGUFf
+         pPbIcFQgW/we/P2hsbBFA0b+8eMvcO7guEHDNRQNPbG/MNmCgntCxM58JaxdGUeun5
+         x06+lzhwwWzX9K72+s9pnzD78ZB62/lme4WNkHldmaYNuNQwSl3mlzfexfOEF6/wbI
+         ZAR46SSqA5oOw==
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-40651a726acso8223865e9.1;
+        Thu, 28 Sep 2023 08:21:09 -0700 (PDT)
+X-Gm-Message-State: AOJu0YxuxNKOgC4u1ePiFMlqKCEMP/zddERIvPni/8kcjiybUUC91JLy
+        RSxD/21B6vHM6Qp+/MI+x+UR1N8BGIs6V0/bc2U=
+X-Google-Smtp-Source: AGHT+IFGxnL1jLxRJ82JHSkotXT+AJQbGwcj+NsBF8Wdz/LihQ1gwaw7yDfPbhv4CL9qBIGKh5TUPhf228x9wFIkjTk=
+X-Received: by 2002:a05:6512:1595:b0:500:b828:7a04 with SMTP id
+ bp21-20020a056512159500b00500b8287a04mr1542995lfb.18.1695914446757; Thu, 28
+ Sep 2023 08:20:46 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+ <65157da7.5d0a0220.13b5e.9e95SMTPIN_ADDED_BROKEN@mx.google.com>
+In-Reply-To: <65157da7.5d0a0220.13b5e.9e95SMTPIN_ADDED_BROKEN@mx.google.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 28 Sep 2023 08:20:34 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6WRen7Udqc+O+haAH8PZXH2jYdpUj1X7UCuQYngVWxoA@mail.gmail.com>
+Message-ID: <CAPhsuW6WRen7Udqc+O+haAH8PZXH2jYdpUj1X7UCuQYngVWxoA@mail.gmail.com>
+Subject: Re: [PATCH 13/15] raid: Remove now superfluous sentinel element from
+ ctl_table array
 To:     j.granados@samsung.com
 Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
         josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
         Phillip Potter <phil@philpotter.co.uk>,
         Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Juergen Gross <jgross@suse.com>,
         Stefano Stabellini <sstabellini@kernel.org>,
         Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
         Jiri Slaby <jirislaby@kernel.org>,
@@ -40,7 +61,8 @@ Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
         Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
         Jason Gunthorpe <jgg@ziepe.ca>,
         Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        Corey Minyard <minyard@acm.org>,
+        "Theodore Ts'o" <tytso@mit.edu>,
         "Jason A. Donenfeld" <Jason@zx2c4.com>,
         David Ahern <dsahern@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -51,7 +73,6 @@ Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
         Steve Wahl <steve.wahl@hpe.com>,
         Russ Weight <russell.h.weight@intel.com>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
-        Song Liu <song@kernel.org>,
         "K. Y. Srinivasan" <kys@microsoft.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
         Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
@@ -67,54 +88,46 @@ Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
         openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
         intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH 01/15] cdrom: Remove now superfluous sentinel element
- from ctl_table array
-Message-ID: <2023092855-cultivate-earthy-4d25@gregkh>
-References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
- <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Sep 28, 2023 at 03:21:26PM +0200, Joel Granados via B4 Relay wrote:
+On Thu, Sep 28, 2023 at 6:20=E2=80=AFAM Joel Granados via B4 Relay
+<devnull+j.granados.samsung.com@kernel.org> wrote:
+>
 > From: Joel Granados <j.granados@samsung.com>
-> 
+>
 > This commit comes at the tail end of a greater effort to remove the
 > empty elements at the end of the ctl_table arrays (sentinels) which
 > will reduce the overall build time size of the kernel and run time
 > memory bloat by ~64 bytes per sentinel (further information Link :
 > https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
-> 
-> Remove sentinel element from cdrom_table
-> 
+>
+> Remove sentinel from raid_table
+>
 > Signed-off-by: Joel Granados <j.granados@samsung.com>
 > ---
->  drivers/cdrom/cdrom.c | 3 +--
+>  drivers/md/md.c | 3 +--
 >  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index cc2839805983..451907ade389 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] = {
->  		.maxlen		= sizeof(int),
->  		.mode		= 0644,
->  		.proc_handler	= cdrom_sysctl_handler
-> -	},
-> -	{ }
-> +	}
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index a104a025084d..3866d8f754a0 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -304,8 +304,7 @@ static struct ctl_table raid_table[] =3D {
+>                 .maxlen         =3D sizeof(int),
+>                 .mode           =3D S_IRUGO|S_IWUSR,
+>                 .proc_handler   =3D proc_dointvec,
+> -       },
+> -       { }
+> +       }
+>  };
 
-You should have the final entry as "}," so as to make any future
-additions to the list to only contain that entry, that's long been the
-kernel style for lists like this.
+Please keep "}," as Greg suggested. Otherwise,
 
-So your patches will just remove one line, not 2 and add 1, making it a
-smaller diff.
+Acked-by: Song Liu <song@kernel.org>
 
-thanks,
-
-greg k-h
+Thanks,
+Song
