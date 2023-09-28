@@ -2,46 +2,46 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15BB5CE7B08
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 18:46:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE81DCE7B1E
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 19:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231877AbjI1SqF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 14:46:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53550 "EHLO
+        id S232084AbjI1TPj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 15:15:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230239AbjI1SqE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 14:46:04 -0400
+        with ESMTP id S232026AbjI1TPi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 15:15:38 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21D62BF;
-        Thu, 28 Sep 2023 11:46:03 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8E39C433CB;
-        Thu, 28 Sep 2023 18:46:02 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F84519F;
+        Thu, 28 Sep 2023 12:15:34 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7827C433C9;
+        Thu, 28 Sep 2023 19:15:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695926762;
-        bh=IeX1Us+HvLC3WWy3/NtNhm4t19D8HBadibrKzf5JSmI=;
+        s=k20201202; t=1695928533;
+        bh=PmSQ/FB4sDVPgHeFaPw6PA6l5YgUDHfxaN1c2oSByZY=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=ErBC501xTE55+ZNK/ojYVc/tyZWmWwSE2bTtO7LkkrAMdR+FUqXULd2Oj00dzDXDY
-         9VfpC7cLQLzGrcwEL4sxbn4+Ecg3NK7sWUoGPx+8lqcQ4Isd7xWe2IcyKf9XTHHacx
-         cpGaH37OowdmjXDMUsTL2KKlyXsxv/em+gFryb/uzF4AlacU0sBUkkZtuc67Dv6Xac
-         RdpjO+0ItfroQrqJNLQg/+tqKQzlit+Ia0Ynd8rKJIxTk9ourBp9EZXlf8cZPojVGd
-         hpoSwHwY6bSKR97V4AqSRmDrFIdPV2BVHldW/lvED8F5HsMCAErFLIFhm5K5hDn3ke
-         bouY2XWiNtAvg==
-Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5033918c09eso21121436e87.2;
-        Thu, 28 Sep 2023 11:46:02 -0700 (PDT)
-X-Gm-Message-State: AOJu0YxlsSFKoDBPifZyhBudEtK2zSMG1qYNQZpNp7rSnae2RH1M34FR
-        5HtuQpkmrznzTI0RldXT4Q/fekxB81vuqUWG4KY=
-X-Google-Smtp-Source: AGHT+IEP/A671di6lQEvr4rOqxf6W0ucETdxmobG5KsUclVSSm+4J94KeLxwDjY2OceTV/iDTvypyEilu52yJW74hMo=
-X-Received: by 2002:a19:6557:0:b0:501:b8dc:6c45 with SMTP id
- c23-20020a196557000000b00501b8dc6c45mr1943815lfj.18.1695926760898; Thu, 28
- Sep 2023 11:46:00 -0700 (PDT)
+        b=BvKdts8kfTlOvNJcvxbEnLGm8Z7iB5UKNZPPVqkGsF0wWQ43r+Od8TNIRDDwqWsDw
+         lTQsUnHirJnIBiOK0sRGnYt6lekGVPbgc+fRsLNPC++IOvzK8rhoWRFvsod6w3ROtF
+         1UQFgr4mzesgWKFlctQvSY/zpRVplItvUpcfB/gnYyTim+rIemrk3sCTP8q+nm2wOY
+         UtG9jun2C0FrJ1iWer/Zw/sb0lcVRkl4m8o2WMlJimeza+JBoLoHEFdoQok9n0Ff3o
+         dQG71oc16g3FZd63HqFx61y4M2w4coBYsiE/2Glffd46gM6mT0EBHy2FiHobRB03Dt
+         PVJ64J/7BWqbA==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5041bb9ce51so21139127e87.1;
+        Thu, 28 Sep 2023 12:15:33 -0700 (PDT)
+X-Gm-Message-State: AOJu0Yx+dFKJwSy5lCbR+V3Ml0JFr7z9xIf9Z/d2ydiVHgohZu6ZlDYr
+        DOR0ZwgAoGj7vTKQkGmz5sOl6Yb7x0WjrRnimhQ=
+X-Google-Smtp-Source: AGHT+IEO1NmBSmnMxdEBJpHkUAXkaiTeoWOqTDYI2wL3GtNpnOuZ8NDHwQUXWf51YZnh8VhWkg0jh50rQABdPgFYg7Y=
+X-Received: by 2002:a05:6512:1388:b0:500:97e4:587e with SMTP id
+ fc8-20020a056512138800b0050097e4587emr2412880lfb.44.1695928532085; Thu, 28
+ Sep 2023 12:15:32 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230928061543.1845742-1-yukuai1@huaweicloud.com> <20230928061543.1845742-4-yukuai1@huaweicloud.com>
-In-Reply-To: <20230928061543.1845742-4-yukuai1@huaweicloud.com>
+References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 28 Sep 2023 11:45:48 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4tQ9A+ddpxGhfza3WSdkL+FXmS-4NLUUN7MNk0TOY0WA@mail.gmail.com>
-Message-ID: <CAPhsuW4tQ9A+ddpxGhfza3WSdkL+FXmS-4NLUUN7MNk0TOY0WA@mail.gmail.com>
-Subject: Re: [PATCH -next v3 03/25] md: add new helpers to suspend/resume array
+Date:   Thu, 28 Sep 2023 12:15:19 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5cUgqy9fqj+Z4nGPQrAok-eQ=NipNxb0TL_kuCFaPMcw@mail.gmail.com>
+Message-ID: <CAPhsuW5cUgqy9fqj+Z4nGPQrAok-eQ=NipNxb0TL_kuCFaPMcw@mail.gmail.com>
+Subject: Re: [PATCH -next v3 00/25] md: synchronize io with array reconfiguration
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
         dm-devel@redhat.com, linux-kernel@vger.kernel.org,
@@ -53,50 +53,39 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi Kuai,
+
+Thanks for the patchset!
+
+A few high level questions/suggestions:
+
+1. This is a big change that needs a lot of explanation. While you managed =
+to
+keep each patch relatively small (great job btw), it is not very clear why =
+we
+need these changes. Specifically, we are adding a new mutex, it is worth
+mentioning why we cannot achieve the same goal without it. Please add
+more information in the cover letter. We will put part of the cover letter =
+in
+the merge commit.
+
+2. In the cover letter, please also highlight that we are removing
+ MD_ALLOW_SB_UPDATE and MD_UPDATING_SB. This is a big improvement.
+
+3. Please rearrange the patch set so that the two "READ_ONCE/WRITE_ONCE"
+patches are at the beginning.
+
+4. Please consider merging some patches. Current "add-api =3D> use-api =3D>
+remove-old-api" makes it tricky to follow what is being changed. For this s=
+et,
+I found the diff of the whole set easier to follow than some of the big pat=
+ches.
+
+Thanks again for your hard work into this!
+Song
+
 On Wed, Sep 27, 2023 at 11:22=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
 wrote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
->
-> Advantages for new apis:
->  - reconfig_mutex is not required;
->  - the weird logical that suspend array hold 'reconfig_mutex' for
->    mddev_check_recovery() to update superblock is not needed;
->  - the specail handling, 'pers->prepare_suspend', for raid456 is not
->    needed;
->  - It's safe to be called at any time once mddev is allocated, and it's
->    designed to be used from slow path where array configuration is change=
-d;
->  - the new helpers is designed to be called before mddev_lock(), hence
->    it support to be interrupted by user as well.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  drivers/md/md.c | 102 +++++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/md/md.h |   3 ++
->  2 files changed, 103 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e460b380143d..a075d03d03d3 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -443,12 +443,22 @@ void mddev_suspend(struct mddev *mddev)
->                         lockdep_is_held(&mddev->reconfig_mutex));
->
->         WARN_ON_ONCE(thread && current =3D=3D thread->tsk);
-> -       if (mddev->suspended++)
-> +
-> +       /* can't concurrent with __mddev_suspend() and __mddev_resume() *=
-/
-> +       mutex_lock(&mddev->suspend_mutex);
-> +       if (mddev->suspended++) {
-> +               mutex_unlock(&mddev->suspend_mutex);
->                 return;
-
-Can we make mddev->suspended atomic_t, and use atomic_inc_return()
-here?
-
-Thanks,
-Song
-
 [...]
