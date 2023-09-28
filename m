@@ -2,56 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C196FCE7AFF
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8818ACE7AFD
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230326AbjI1GWG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 02:22:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60270 "EHLO
+        id S230340AbjI1GWI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 02:22:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230270AbjI1GWC (ORCPT
+        with ESMTP id S230265AbjI1GWC (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 02:22:02 -0400
 Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2DEABE;
-        Wed, 27 Sep 2023 23:22:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFF43AF;
+        Wed, 27 Sep 2023 23:21:59 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rx3KY6J3Qz4f3jRG;
-        Thu, 28 Sep 2023 14:21:53 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rx3KX3djrz4f3jMj;
+        Thu, 28 Sep 2023 14:21:52 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S9;
-        Thu, 28 Sep 2023 14:21:58 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S6;
+        Thu, 28 Sep 2023 14:21:57 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
         dm-devel@redhat.com, song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v3 05/25] md: use new apis to suspend array for suspend_lo/hi_store()
-Date:   Thu, 28 Sep 2023 14:15:23 +0800
-Message-Id: <20230928061543.1845742-6-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v3 02/25] md: replace is_md_suspended() with 'mddev->suspended' in md_check_recovery()
+Date:   Thu, 28 Sep 2023 14:15:20 +0800
+Message-Id: <20230928061543.1845742-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF4fXFy5ZF1kZF43uFWUCFg_yoW8Jw47pF
-        W7ta97Xr1YyFy3Jr1qqa1kKFy5Jw17KrWqyrZrZw1DWa4xJw13GF1Ygrn5Xry0ka4fGFn8
-        Ja15G3W8AFWUJ37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUP214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-        kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-        wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JV
-        WxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbmZ
-        X7UUUUU==
+X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S6
+X-Coremail-Antispam: 1UD129KBjvdXoW7XFyktryDAF1UWryDKr13XFb_yoW3uwbE9F
+        1kW3s7Xr1xXF9Fkw1Yya1Svry8K3WkWrZrZF1Sk34SyFy5A34rGFW8C343Jws29FZrG345
+        Cr1qqr4fZr4SkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb6AFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY02
+        0Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+        wVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
+        8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+        vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+        v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+        Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
+        0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
+        JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
+        AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbdOz7UUUUU=
+        =
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -60,55 +60,31 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Convert to use new apis, the old apis will be removed eventually.
+Prepare to cleanup pers->prepare_suspend(), which is used to fix a
+deadlock in raid456 by returning error for io that is waiting for
+reshape to make progress in mddev_suspend().
 
-These are not hot path, so performance is not concerned.
+This change will allow reshape to make progress while waiting for io to
+be done in mddev_suspend() in following patches.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index a075d03d03d3..d1ec4805aa4e 100644
+index 18a0f12dbf5f..e460b380143d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -5290,15 +5290,13 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (new != (sector_t)new)
- 		return -EINVAL;
+@@ -9415,7 +9415,7 @@ void md_check_recovery(struct mddev *mddev)
+ 		wake_up(&mddev->sb_wait);
+ 	}
  
--	err = mddev_lock(mddev);
-+	err = __mddev_suspend(mddev, true);
- 	if (err)
- 		return err;
+-	if (is_md_suspended(mddev))
++	if (READ_ONCE(mddev->suspended))
+ 		return;
  
--	mddev_suspend(mddev);
- 	WRITE_ONCE(mddev->suspend_lo, new);
--	mddev_resume(mddev);
-+	__mddev_resume(mddev);
- 
--	mddev_unlock(mddev);
- 	return len;
- }
- static struct md_sysfs_entry md_suspend_lo =
-@@ -5323,15 +5321,13 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (new != (sector_t)new)
- 		return -EINVAL;
- 
--	err = mddev_lock(mddev);
-+	err = __mddev_suspend(mddev, true);
- 	if (err)
- 		return err;
- 
--	mddev_suspend(mddev);
- 	WRITE_ONCE(mddev->suspend_hi, new);
--	mddev_resume(mddev);
-+	__mddev_resume(mddev);
- 
--	mddev_unlock(mddev);
- 	return len;
- }
- static struct md_sysfs_entry md_suspend_hi =
+ 	if (mddev->bitmap)
 -- 
 2.39.2
 
