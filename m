@@ -2,138 +2,139 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97AC1E732C8
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 12:55:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB807E732D8
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 13:20:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232580AbjI1Mzt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 08:55:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47506 "EHLO
+        id S232135AbjI1NUk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 09:20:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232548AbjI1Mzs (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 08:55:48 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33C1A19B
-        for <linux-raid@vger.kernel.org>; Thu, 28 Sep 2023 05:55:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695905746; x=1727441746;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=vPNf8AZNP22Pz4yQyd195jd2amGcJxw7wrT//WW2h+Y=;
-  b=dL+EACrJHyuBNpEKJRUGJkSobmu6t9JELrBi7EFv9mq96x9qZIV4vCdd
-   MefNyIBfFLA78hOHKrks99+KdPM09H5NikcmPH9IjF79HP8g8hPoy4cCz
-   Yfb0QR8/362EEzoUpCJoljFfkGZ5NCOP3rrTlcvyf2ZD6y0sPzi6XCszB
-   cjaNke+MeMG+84rabkTG4ClrAhzuadxGApkpYWFgi1Rc1SA5IOqzqy7BD
-   Ni3H9mQtPlCVnQXgFD3HfBaDLqbIbI5bpkq4guWD/sFLLZTkVsby7tR5D
-   UlOSKnLHARxU8LdIyBVdVfdQYXecU+O8oxPahO0pf7jn96yP9aIBX/QbI
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10846"; a="446193308"
-X-IronPort-AV: E=Sophos;i="6.03,184,1694761200"; 
-   d="scan'208";a="446193308"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 05:55:45 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10846"; a="873282576"
-X-IronPort-AV: E=Sophos;i="6.03,184,1694761200"; 
-   d="scan'208";a="873282576"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.105.40])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 05:55:44 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH v2] md: do not require mddev_lock() for all options
-Date:   Thu, 28 Sep 2023 14:55:17 +0200
-Message-Id: <20230928125517.12356-1-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S231296AbjI1NUj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 09:20:39 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD37A19D;
+        Thu, 28 Sep 2023 06:20:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3C67AC433CB;
+        Thu, 28 Sep 2023 13:20:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695907236;
+        bh=j/2eYg//PJ1GbwZhUAaOz18f7AbRQ4O+NNbYuKt3mq4=;
+        h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+        b=WRmGiG4AsourgR8PePRCUHkmrHTjGa0GLOwLlRslD9y6Gxglwb/sKdeaYMIiM+m2U
+         HCEzm7JFG1uUimaSxcCst+jqGOAk+LPd5ofcZjp7Dr/INDF6+dXWJzwECnaIlHFcRw
+         LEZBmRJGbn8CUOMTRZ7oRD405kgYVjEhh4TF32uTBtIqzoTuo9rHeIERNGqM3IsJTd
+         E3AOMsUDv9ORWkadDdcnKmhR9zz5DqiW7MH0ddnh45htLMFfazKbEwb6eN+rYXmR1r
+         qDAClZUoaj39Nqk9YphBEF7rdkqlcU4nn2uOKk0jMqKnWUeeRkM0qbnycd10U9Ld3x
+         iYyDOHPWNIO8w==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF38E732CF;
+        Thu, 28 Sep 2023 13:20:36 +0000 (UTC)
+From:   Joel Granados via B4 Relay 
+        <devnull+j.granados.samsung.com@kernel.org>
+Date:   Thu, 28 Sep 2023 15:21:26 +0200
+Subject: [PATCH 01/15] cdrom: Remove now superfluous sentinel element from
+ ctl_table array
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+In-Reply-To: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
+        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        David Ahern <dsahern@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Song Liu <song@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>
+Cc:     linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-rdma@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        Joel Granados <j.granados@samsung.com>
+X-Mailer: b4 0.13-dev-86aa5
+X-Developer-Signature: v=1; a=openpgp-sha256; l=944; i=j.granados@samsung.com;
+ h=from:subject:message-id; bh=qSsthXDIpINcD2xITRy2TOv8R22x0qMRyMvqjqljpm0=;
+ b=owEB7QES/pANAwAKAbqXzVK3lkFPAcsmYgBlFX3bxBTXVZalX2OxDj+67GtOqe8IxIGJwSLF1
+ iLnIskFGxCJAbMEAAEKAB0WIQSuRwlXJeYxJc7LJ5C6l81St5ZBTwUCZRV92wAKCRC6l81St5ZB
+ T9hZC/wJ7EgDM6vrFYYmNrYQRkQQUSj4jjafOUPMhsZdNSqZu4kVh8xyDtcKgxhctnq+INR87Nr
+ dwm3eyWcssi6Zi3rFSiOI9vdZ2zESFY5OJ4dNUGBRAofgcVpLAvu4ZYQeXaCx7XzSIlzsCyd/dg
+ +Ym3KCHhaY2KSd0wJE8MuZN8/J6RxSwT1SyXgnBMjieGNWnw/mxbi7RnSHxARqjAMrAacvr1pUr
+ vqS9lxYeOv5aKInqTkx7sBu2iXx1/kgQGA7MNqvKgrgooVkICokoKPgcDvDR1nWTDzrnUzKEAa4
+ LroyVmn9iYYNuuXhhBl1BVgWeXVdkN7/r1r69wCAZWcVaadyFOoMNLxRsOvwsw6kynVTfbNOo+4
+ OxoS60XgqKVygBBx6urNukqqtiEYIzpDpU/QU00wUDSoHwIOyq4geKJEjTui+QORzF2/rfMdAii
+ IGAGzQM4oARjvwY26lxvyJdVBd4NtwRMk5g7yxIYVwfBC4G3Y6+/HFF2COHYzGYBEU5es=
+X-Developer-Key: i=j.granados@samsung.com; a=openpgp;
+ fpr=F1F8E46D30F0F6C4A45FF4465895FAAC338C6E77
+X-Endpoint-Received: by B4 Relay for j.granados@samsung.com/default with auth_id=70
+X-Original-From: Joel Granados <j.granados@samsung.com>
+Reply-To: <j.granados@samsung.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-We don't need to lock device to reject not supported request
-in array_state_store(). No functional changes intended.
+From: Joel Granados <j.granados@samsung.com>
 
-There are differences between ioctl and sysfs handling during stopping.
-With this change, it will be easier to add additional steps which needs
-to be completed before mddev_lock() is taken.
+This commit comes at the tail end of a greater effort to remove the
+empty elements at the end of the ctl_table arrays (sentinels) which
+will reduce the overall build time size of the kernel and run time
+memory bloat by ~64 bytes per sentinel (further information Link :
+https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
 
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Remove sentinel element from cdrom_table
+
+Signed-off-by: Joel Granados <j.granados@samsung.com>
 ---
-Song, feel free to remove second chapter if you think it is confusing.
+ drivers/cdrom/cdrom.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
- drivers/md/md.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b8f232840f7c..469b1376e66c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4359,6 +4359,18 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 	int err = 0;
- 	enum array_state st = match_word(buf, array_states);
- 
-+	/* No lock dependent actions */
-+	switch (st) {
-+	case suspended:		/* not supported yet */
-+	case write_pending:	/* cannot be set */
-+	case active_idle:	/* cannot be set */
-+	case broken:		/* cannot be set */
-+	case bad_word:
-+		return -EINVAL;
-+	default:
-+		break;
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index cc2839805983..451907ade389 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] = {
+ 		.maxlen		= sizeof(int),
+ 		.mode		= 0644,
+ 		.proc_handler	= cdrom_sysctl_handler
+-	},
+-	{ }
 +	}
-+
- 	if (mddev->pers && (st == active || st == clean) &&
- 	    mddev->ro != MD_RDONLY) {
- 		/* don't take reconfig_mutex when toggling between
-@@ -4383,23 +4395,16 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 	err = mddev_lock(mddev);
- 	if (err)
- 		return err;
--	err = -EINVAL;
--	switch(st) {
--	case bad_word:
--		break;
--	case clear:
--		/* stopping an active array */
--		err = do_md_stop(mddev, 0, NULL);
--		break;
-+
-+	switch (st) {
- 	case inactive:
--		/* stopping an active array */
-+		/* stop an active array, return 0 otherwise */
- 		if (mddev->pers)
- 			err = do_md_stop(mddev, 2, NULL);
--		else
--			err = 0; /* already inactive */
- 		break;
--	case suspended:
--		break; /* not supported yet */
-+	case clear:
-+		err = do_md_stop(mddev, 0, NULL);
-+		break;
- 	case readonly:
- 		if (mddev->pers)
- 			err = md_set_readonly(mddev, NULL);
-@@ -4450,10 +4455,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 			err = do_md_run(mddev);
- 		}
- 		break;
--	case write_pending:
--	case active_idle:
--	case broken:
--		/* these cannot be set */
-+	default:
-+		err = -EINVAL;
- 		break;
- 	}
+ };
+ static struct ctl_table_header *cdrom_sysctl_header;
  
+
 -- 
-2.26.2
+2.30.2
 
