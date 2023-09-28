@@ -2,96 +2,138 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1D86CE7B17
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 09:53:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97AC1E732C8
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 12:55:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229870AbjI1Jxd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 05:53:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59854 "EHLO
+        id S232580AbjI1Mzt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 08:55:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229713AbjI1Jxc (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 05:53:32 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30F0695
-        for <linux-raid@vger.kernel.org>; Thu, 28 Sep 2023 02:53:30 -0700 (PDT)
+        with ESMTP id S232548AbjI1Mzs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 08:55:48 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33C1A19B
+        for <linux-raid@vger.kernel.org>; Thu, 28 Sep 2023 05:55:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695894810; x=1727430810;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=LemNzHL8c5654c0K6zh86X+GxR9jat9udoispU2z7Ek=;
-  b=NT1rLNAB6+JfhaGiyZ1mnL+dLfT+NFfMWOahne9TeJxnZcHNUhL8qzhZ
-   s4w93gUEs/v73War2NrecHgE7Zy5Eiye7+DLrYY1HOB9umvJRMrXPGWLO
-   KyqMjt9yndTdDPXoMpvPPOrVXz3VyLHAbETLPveppUcYHmBpA+QRtCHoJ
-   rNh1LKVYBzZlR6OZgPXX7+0rFP/32kWWBSOTGHbJfEko+taAlOmY6lNA1
-   jDCv1xWyzImN5XM9x62m3PgnYhVhnuOd4LsPGVUDV+ExzEn9oiffVE8jx
-   Nj7qY0PbWsVFayp1duljRvAXRMcHjun8Kjy7h384fMU+JQivHcoznGRhH
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10846"; a="367083838"
-X-IronPort-AV: E=Sophos;i="6.03,183,1694761200"; 
-   d="scan'208";a="367083838"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 02:53:29 -0700
+  t=1695905746; x=1727441746;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=vPNf8AZNP22Pz4yQyd195jd2amGcJxw7wrT//WW2h+Y=;
+  b=dL+EACrJHyuBNpEKJRUGJkSobmu6t9JELrBi7EFv9mq96x9qZIV4vCdd
+   MefNyIBfFLA78hOHKrks99+KdPM09H5NikcmPH9IjF79HP8g8hPoy4cCz
+   Yfb0QR8/362EEzoUpCJoljFfkGZ5NCOP3rrTlcvyf2ZD6y0sPzi6XCszB
+   cjaNke+MeMG+84rabkTG4ClrAhzuadxGApkpYWFgi1Rc1SA5IOqzqy7BD
+   Ni3H9mQtPlCVnQXgFD3HfBaDLqbIbI5bpkq4guWD/sFLLZTkVsby7tR5D
+   UlOSKnLHARxU8LdIyBVdVfdQYXecU+O8oxPahO0pf7jn96yP9aIBX/QbI
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10846"; a="446193308"
+X-IronPort-AV: E=Sophos;i="6.03,184,1694761200"; 
+   d="scan'208";a="446193308"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 05:55:45 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10846"; a="784635664"
-X-IronPort-AV: E=Sophos;i="6.03,183,1694761200"; 
-   d="scan'208";a="784635664"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.152.98])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 02:53:28 -0700
-Date:   Thu, 28 Sep 2023 11:53:23 +0200
+X-IronPort-AV: E=McAfee;i="6600,9927,10846"; a="873282576"
+X-IronPort-AV: E=Sophos;i="6.03,184,1694761200"; 
+   d="scan'208";a="873282576"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.105.40])
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 05:55:44 -0700
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Xiao Ni <xni@redhat.com>
-Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 4/4] mdadm: Print version to stdout
-Message-ID: <20230928115323.00001e3f@linux.intel.com>
-In-Reply-To: <20230927025219.49915-5-xni@redhat.com>
-References: <20230927025219.49915-1-xni@redhat.com>
-        <20230927025219.49915-5-xni@redhat.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH v2] md: do not require mddev_lock() for all options
+Date:   Thu, 28 Sep 2023 14:55:17 +0200
+Message-Id: <20230928125517.12356-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 27 Sep 2023 10:52:19 +0800
-Xiao Ni <xni@redhat.com> wrote:
+We don't need to lock device to reject not supported request
+in array_state_store(). No functional changes intended.
 
-> The version information is not error information. Print it
-> to stdout.
-> 
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->  mdadm.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mdadm.c b/mdadm.c
-> index 076b45e030b3..0b8854baf1aa 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -128,7 +128,7 @@ int main(int argc, char *argv[])
->  			continue;
->  
->  		case 'V':
-> -			fputs(Version, stderr);
-> +			fputs(Version, stdout);
->  			exit(0);
->  
->  		case 'v': c.verbose++;
+There are differences between ioctl and sysfs handling during stopping.
+With this change, it will be easier to add additional steps which needs
+to be completed before mddev_lock() is taken.
 
-I agree with this change but...
-This one is risky for users. I can realize that some users may check that
-from stderr because it is how we implemented it many years ago.
+Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+---
+Song, feel free to remove second chapter if you think it is confusing.
 
-I remember that I removed calls to mdam --help from dracut in the past:
-https://github.com/mtkaczyk/dracut/commit/d3d37003dcecdf01f6ae0f4764d74cd035aade73#diff-f2466410e3aff8aeba95038d29b1652581c97d8d7d9feb4011d7b8bc103de1b0L64
+ drivers/md/md.c | 37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
-And I can see that it does redirection "2>&1". I think that in general this kind
-of problem is handled this way, so overall I ready to take the risk of changing
-it to stdout by default.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index b8f232840f7c..469b1376e66c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4359,6 +4359,18 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 	int err = 0;
+ 	enum array_state st = match_word(buf, array_states);
+ 
++	/* No lock dependent actions */
++	switch (st) {
++	case suspended:		/* not supported yet */
++	case write_pending:	/* cannot be set */
++	case active_idle:	/* cannot be set */
++	case broken:		/* cannot be set */
++	case bad_word:
++		return -EINVAL;
++	default:
++		break;
++	}
++
+ 	if (mddev->pers && (st == active || st == clean) &&
+ 	    mddev->ro != MD_RDONLY) {
+ 		/* don't take reconfig_mutex when toggling between
+@@ -4383,23 +4395,16 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 	err = mddev_lock(mddev);
+ 	if (err)
+ 		return err;
+-	err = -EINVAL;
+-	switch(st) {
+-	case bad_word:
+-		break;
+-	case clear:
+-		/* stopping an active array */
+-		err = do_md_stop(mddev, 0, NULL);
+-		break;
++
++	switch (st) {
+ 	case inactive:
+-		/* stopping an active array */
++		/* stop an active array, return 0 otherwise */
+ 		if (mddev->pers)
+ 			err = do_md_stop(mddev, 2, NULL);
+-		else
+-			err = 0; /* already inactive */
+ 		break;
+-	case suspended:
+-		break; /* not supported yet */
++	case clear:
++		err = do_md_stop(mddev, 0, NULL);
++		break;
+ 	case readonly:
+ 		if (mddev->pers)
+ 			err = md_set_readonly(mddev, NULL);
+@@ -4450,10 +4455,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 			err = do_md_run(mddev);
+ 		}
+ 		break;
+-	case write_pending:
+-	case active_idle:
+-	case broken:
+-		/* these cannot be set */
++	default:
++		err = -EINVAL;
+ 		break;
+ 	}
+ 
+-- 
+2.26.2
 
-Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-
-Thanks,
-Mariusz
