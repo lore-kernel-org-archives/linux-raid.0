@@ -2,42 +2,42 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7AD0CE7B00
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0377CE7B02
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230434AbjI1GW0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 02:22:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47932 "EHLO
+        id S230438AbjI1GW1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 02:22:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230376AbjI1GWT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 02:22:19 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFA56C1;
-        Wed, 27 Sep 2023 23:22:06 -0700 (PDT)
+        with ESMTP id S230338AbjI1GWI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 02:22:08 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C11AB7;
+        Wed, 27 Sep 2023 23:22:05 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rx3Kg6B1dz4f3kFR;
-        Thu, 28 Sep 2023 14:21:59 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rx3Kj13cZz4f3k6V;
+        Thu, 28 Sep 2023 14:22:01 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S22;
-        Thu, 28 Sep 2023 14:22:04 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S17;
+        Thu, 28 Sep 2023 14:22:02 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
         dm-devel@redhat.com, song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v3 18/25] md: use new apis to suspend array for ioctls involed array reconfiguration
-Date:   Thu, 28 Sep 2023 14:15:36 +0800
-Message-Id: <20230928061543.1845742-19-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v3 13/25] md/raid5: use new apis to suspend array for raid5_store_stripe_size()
+Date:   Thu, 28 Sep 2023 14:15:31 +0800
+Message-Id: <20230928061543.1845742-14-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S22
-X-Coremail-Antispam: 1UD129KBjvJXoWxGF13Cw43KryDJw1UKr43Awb_yoW5Cw1fpr
-        Wxtan5Kr45tFy3WrWUXa4v9a4rXwnrKrZFyrWxW3Z8G3WxArnxuF1ruF18Ar10k34fJF1D
-        Jw4Yk3W8Ga17WFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S17
+X-Coremail-Antispam: 1UD129KBjvJXoWrZFWUZF4ftFWrKr4rGF45Jrb_yoW8Jr13pa
+        nFkFyfWr1UZryrX34DZw1q9Fy5Gw4qgrWqk3y7X3Z7Z3Z3Xry2gw4YgFy5Wry8Ja4ft395
+        Gwn8WF95JFy8JrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -60,110 +60,48 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-'reconfig_mutex' will be grabbed before these ioctls, suspend array
-before holding the lock, so that io won't concurrent with array
-reconfiguration through ioctls.
+Convert to use new apis, the old apis will be removed eventually.
 
 This is not hot path, so performance is not concerned.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 30 ++++++++++++++++++++----------
- 1 file changed, 20 insertions(+), 10 deletions(-)
+ drivers/md/raid5.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0c5a6169453c..957813b7d7e5 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7209,7 +7209,6 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
- 			struct bitmap *bitmap;
- 
- 			bitmap = md_bitmap_create(mddev, -1);
--			mddev_suspend(mddev);
- 			if (!IS_ERR(bitmap)) {
- 				mddev->bitmap = bitmap;
- 				err = md_bitmap_load(mddev);
-@@ -7219,11 +7218,8 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
- 				md_bitmap_destroy(mddev);
- 				fd = -1;
- 			}
--			mddev_resume(mddev);
- 		} else if (fd < 0) {
--			mddev_suspend(mddev);
- 			md_bitmap_destroy(mddev);
--			mddev_resume(mddev);
- 		}
- 	}
- 	if (fd < 0) {
-@@ -7512,7 +7508,6 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 			mddev->bitmap_info.space =
- 				mddev->bitmap_info.default_space;
- 			bitmap = md_bitmap_create(mddev, -1);
--			mddev_suspend(mddev);
- 			if (!IS_ERR(bitmap)) {
- 				mddev->bitmap = bitmap;
- 				rv = md_bitmap_load(mddev);
-@@ -7520,7 +7515,6 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 				rv = PTR_ERR(bitmap);
- 			if (rv)
- 				md_bitmap_destroy(mddev);
--			mddev_resume(mddev);
- 		} else {
- 			/* remove the bitmap */
- 			if (!mddev->bitmap) {
-@@ -7545,9 +7539,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 				module_put(md_cluster_mod);
- 				mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
- 			}
--			mddev_suspend(mddev);
- 			md_bitmap_destroy(mddev);
--			mddev_resume(mddev);
- 			mddev->bitmap_info.offset = 0;
- 		}
- 	}
-@@ -7618,6 +7610,20 @@ static inline bool md_ioctl_valid(unsigned int cmd)
- 	}
- }
- 
-+static bool md_ioctl_need_suspend(unsigned int cmd)
-+{
-+	switch (cmd) {
-+	case ADD_NEW_DISK:
-+	case HOT_ADD_DISK:
-+	case HOT_REMOVE_DISK:
-+	case SET_BITMAP_FILE:
-+	case SET_ARRAY_INFO:
-+		return true;
-+	default:
-+		return false;
-+	}
-+}
-+
- static int __md_set_array_info(struct mddev *mddev, void __user *argp)
- {
- 	mdu_array_info_t info;
-@@ -7750,7 +7756,8 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	if (!md_is_rdwr(mddev))
- 		flush_work(&mddev->sync_work);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 6383723468e5..f1c32b4d190f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7025,7 +7025,7 @@ raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
+ 			new != roundup_pow_of_two(new))
+ 		return -EINVAL;
  
 -	err = mddev_lock(mddev);
-+	err = md_ioctl_need_suspend(cmd) ? mddev_suspend_and_lock(mddev) :
-+					   mddev_lock(mddev);
- 	if (err) {
- 		pr_debug("md: ioctl lock interrupted, reason %d, cmd %d\n",
- 			 err, cmd);
-@@ -7878,7 +7885,10 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	if (mddev->hold_active == UNTIL_IOCTL &&
- 	    err != -EINVAL)
- 		mddev->hold_active = 0;
++	err = mddev_suspend_and_lock(mddev);
+ 	if (err)
+ 		return err;
+ 
+@@ -7049,7 +7049,6 @@ raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
+ 		goto out_unlock;
+ 	}
+ 
+-	mddev_suspend(mddev);
+ 	mutex_lock(&conf->cache_size_mutex);
+ 	size = conf->max_nr_stripes;
+ 
+@@ -7064,10 +7063,9 @@ raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
+ 		err = -ENOMEM;
+ 	}
+ 	mutex_unlock(&conf->cache_size_mutex);
+-	mddev_resume(mddev);
+ 
+ out_unlock:
 -	mddev_unlock(mddev);
-+
-+	md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev) :
-+				     mddev_unlock(mddev);
-+
- out:
- 	if(did_set_md_closing)
- 		clear_bit(MD_CLOSING, &mddev->flags);
++	mddev_unlock_and_resume(mddev);
+ 	return err ?: len;
+ }
+ 
 -- 
 2.39.2
 
