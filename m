@@ -2,42 +2,42 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA3ECE7AFD
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E983CE7AFE
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230401AbjI1GWX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 02:22:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47918 "EHLO
+        id S230406AbjI1GWY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 02:22:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230369AbjI1GWR (ORCPT
+        with ESMTP id S230368AbjI1GWR (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 02:22:17 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E56E5C0;
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66A8FBE;
         Wed, 27 Sep 2023 23:22:05 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rx3Kf6mhKz4f3jY7;
-        Thu, 28 Sep 2023 14:21:58 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rx3Kh53Wzz4f3k5f;
+        Thu, 28 Sep 2023 14:22:00 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S20;
-        Thu, 28 Sep 2023 14:22:03 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S16;
+        Thu, 28 Sep 2023 14:22:01 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
         dm-devel@redhat.com, song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v3 16/25] md/raid5: use new apis to suspend array for raid5_change_consistency_policy()
-Date:   Thu, 28 Sep 2023 14:15:34 +0800
-Message-Id: <20230928061543.1845742-17-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v3 12/25] md/raid5-cache: use new apis to suspend array for r5c_journal_mode_store()
+Date:   Thu, 28 Sep 2023 14:15:30 +0800
+Message-Id: <20230928061543.1845742-13-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S20
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF4DuF4rCw4UKrW8KFyDJrb_yoW8ur48pa
-        nI9as3ur1Uury5Xryjya1DKFy8Jw17KrZ7KrW7Xws3X3Wft34xGFyrXrZrWry8Aa4fJ345
-        Ja15K3W8CF4UJrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S16
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr1fWr4rArWkGF15Ar15CFg_yoW8Gr43pa
+        nFgayru3409rWrA3WkXFWDuF95J3y8KrZF9r9xC3Z3uay5Xr17Gr1FgFyUWr92vFyfGa13
+        Jw4UJ3WkC348tr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
         kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -60,78 +60,44 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Convert to use new apis, the old apis will be removed eventually.
+r5c_journal_mode_set() will suspend array and it has only 2 caller, the
+other caller raid_ctl() already suspend the array with new apis.
 
 This is not hot path, so performance is not concerned.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/raid5.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+ drivers/md/raid5-cache.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 8060d29e99d2..e6b8c0145648 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8967,12 +8967,12 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
- 	struct r5conf *conf;
- 	int err;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 01d33e5c19c1..9909110262ee 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -2585,9 +2585,7 @@ int r5c_journal_mode_set(struct mddev *mddev, int mode)
+ 	    mode == R5C_JOURNAL_MODE_WRITE_BACK)
+ 		return -EINVAL;
  
--	err = mddev_lock(mddev);
-+	err = mddev_suspend_and_lock(mddev);
- 	if (err)
- 		return err;
- 	conf = mddev->private;
- 	if (!conf) {
--		mddev_unlock(mddev);
-+		mddev_unlock_and_resume(mddev);
- 		return -ENODEV;
- 	}
+-	mddev_suspend(mddev);
+ 	conf->log->r5c_journal_mode = mode;
+-	mddev_resume(mddev);
  
-@@ -8982,19 +8982,14 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
- 			err = log_init(conf, NULL, true);
- 			if (!err) {
- 				err = resize_stripes(conf, conf->pool_size);
--				if (err) {
--					mddev_suspend(mddev);
-+				if (err)
- 					log_exit(conf);
--					mddev_resume(mddev);
--				}
- 			}
- 		} else
- 			err = -EINVAL;
- 	} else if (strncmp(buf, "resync", 6) == 0) {
- 		if (raid5_has_ppl(conf)) {
--			mddev_suspend(mddev);
- 			log_exit(conf);
--			mddev_resume(mddev);
- 			err = resize_stripes(conf, conf->pool_size);
- 		} else if (test_bit(MD_HAS_JOURNAL, &conf->mddev->flags) &&
- 			   r5l_log_disk_error(conf)) {
-@@ -9007,11 +9002,9 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
- 					break;
- 				}
- 
--			if (!journal_dev_exists) {
--				mddev_suspend(mddev);
-+			if (!journal_dev_exists)
- 				clear_bit(MD_HAS_JOURNAL, &mddev->flags);
--				mddev_resume(mddev);
--			} else  /* need remove journal device first */
-+			else  /* need remove journal device first */
- 				err = -EBUSY;
- 		} else
- 			err = -EINVAL;
-@@ -9022,7 +9015,7 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
- 	if (!err)
- 		md_update_sb(mddev, 1);
- 
+ 	pr_debug("md/raid:%s: setting r5c cache mode to %d: %s\n",
+ 		 mdname(mddev), mode, r5c_journal_mode_str[mode]);
+@@ -2612,11 +2610,11 @@ static ssize_t r5c_journal_mode_store(struct mddev *mddev,
+ 		if (strlen(r5c_journal_mode_str[mode]) == len &&
+ 		    !strncmp(page, r5c_journal_mode_str[mode], len))
+ 			break;
+-	ret = mddev_lock(mddev);
++	ret = mddev_suspend_and_lock(mddev);
+ 	if (ret)
+ 		return ret;
+ 	ret = r5c_journal_mode_set(mddev, mode);
 -	mddev_unlock(mddev);
 +	mddev_unlock_and_resume(mddev);
- 
- 	return err;
+ 	return ret ?: length;
  }
+ 
 -- 
 2.39.2
 
