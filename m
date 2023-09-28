@@ -2,56 +2,56 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EED6CE7AFD
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CAAFCE7AFE
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Sep 2023 06:22:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230304AbjI1GWD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Sep 2023 02:22:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60256 "EHLO
+        id S230315AbjI1GWF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Sep 2023 02:22:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230220AbjI1GWB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 02:22:01 -0400
+        with ESMTP id S230284AbjI1GWC (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 28 Sep 2023 02:22:02 -0400
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6569DA3;
-        Wed, 27 Sep 2023 23:21:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78E24B7;
+        Wed, 27 Sep 2023 23:22:00 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rx3Kb4TFxz4f3jZR;
-        Thu, 28 Sep 2023 14:21:55 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rx3Kd0BNkz4f3jYm;
+        Thu, 28 Sep 2023 14:21:57 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S5;
-        Thu, 28 Sep 2023 14:21:56 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnvdyCGxVl3v1WBg--.22861S8;
+        Thu, 28 Sep 2023 14:21:57 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
         dm-devel@redhat.com, song@kernel.org
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v3 01/25] md: use READ_ONCE/WRITE_ONCE for 'suspend_lo' and 'suspend_hi'
-Date:   Thu, 28 Sep 2023 14:15:19 +0800
-Message-Id: <20230928061543.1845742-2-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v3 04/25] md: add new helpers to suspend/resume and lock/unlock array
+Date:   Thu, 28 Sep 2023 14:15:22 +0800
+Message-Id: <20230928061543.1845742-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF4fAw13JF4xAF18Kw43trb_yoW8tw4rp3
-        yIqFWYgr45tas5AryUt3WkCFy5XwsxKrWqyrZrWryUG3W7Gw1rGr15XF43XryFvas3CFsx
-        Gws8A3W8A348GFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-        x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-        xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU2_M3UUUUU
-        =
+X-CM-TRANSID: gCh0CgAnvdyCGxVl3v1WBg--.22861S8
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZryrXw48AF45tF48Xw47urg_yoW8Wr43pr
+        W2qFWrGrWUXFWfW3y3A397Ca45Jw10grZFyFW3Wwn7ua43J3srGF15Wr17Xr1qkayfXF1D
+        Ja1jqa48CryUGFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+        kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+        z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+        4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+        3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+        IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+        M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+        kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
+        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
+        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
+        wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+        W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
+        UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -60,72 +60,72 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Because reading 'suspend_lo' and 'suspend_hi' from md_handle_request()
-is not protected, use READ_ONCE/WRITE_ONCE to prevent reading abnormal
-value.
+The new helpers suspend the array first and then lock the array,
+
+Prepare to refactor from:
+
+mddev_lock/lock_nointr
+mddev_suspend
+...
+mddev_resuem
+mddev_lock
+
+With:
+
+mddev_suspend_and_lock/lock_nointr
+...
+mddev_unlock_and_resume
+
+After all the use cases is refactored, mddev_suspend/resume() will be
+removed.
+
+And mddev_suspend_and_lock() will also replace mddev_lock() for the case
+that the array will be reconfigured, in order to synchronize with io to
+prevent problems in many corner cases.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/md/md.h | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0b83a406e797..18a0f12dbf5f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -359,11 +359,11 @@ static bool is_suspended(struct mddev *mddev, struct bio *bio)
- 		return true;
- 	if (bio_data_dir(bio) != WRITE)
- 		return false;
--	if (mddev->suspend_lo >= mddev->suspend_hi)
-+	if (READ_ONCE(mddev->suspend_lo) >= READ_ONCE(mddev->suspend_hi))
- 		return false;
--	if (bio->bi_iter.bi_sector >= mddev->suspend_hi)
-+	if (bio->bi_iter.bi_sector >= READ_ONCE(mddev->suspend_hi))
- 		return false;
--	if (bio_end_sector(bio) < mddev->suspend_lo)
-+	if (bio_end_sector(bio) < READ_ONCE(mddev->suspend_lo))
- 		return false;
- 	return true;
- }
-@@ -5176,7 +5176,8 @@ __ATTR(sync_max, S_IRUGO|S_IWUSR, max_sync_show, max_sync_store);
- static ssize_t
- suspend_lo_show(struct mddev *mddev, char *page)
- {
--	return sprintf(page, "%llu\n", (unsigned long long)mddev->suspend_lo);
-+	return sprintf(page, "%llu\n",
-+		       (unsigned long long)READ_ONCE(mddev->suspend_lo));
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b5894dc64615..5c8f3f045e78 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -858,6 +858,33 @@ static inline void mddev_check_write_zeroes(struct mddev *mddev, struct bio *bio
+ 		mddev->queue->limits.max_write_zeroes_sectors = 0;
  }
  
- static ssize_t
-@@ -5196,7 +5197,7 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
- 		return err;
++static inline int mddev_suspend_and_lock(struct mddev *mddev)
++{
++	int ret;
++
++	ret = __mddev_suspend(mddev, true);
++	if (ret)
++		return ret;
++
++	ret = mddev_lock(mddev);
++	if (ret)
++		__mddev_resume(mddev);
++
++	return ret;
++}
++
++static inline void mddev_suspend_and_lock_nointr(struct mddev *mddev)
++{
++	__mddev_suspend(mddev, false);
++	mutex_lock(&mddev->reconfig_mutex);
++}
++
++static inline void mddev_unlock_and_resume(struct mddev *mddev)
++{
++	mddev_unlock(mddev);
++	__mddev_resume(mddev);
++}
++
+ struct mdu_array_info_s;
+ struct mdu_disk_info_s;
  
- 	mddev_suspend(mddev);
--	mddev->suspend_lo = new;
-+	WRITE_ONCE(mddev->suspend_lo, new);
- 	mddev_resume(mddev);
- 
- 	mddev_unlock(mddev);
-@@ -5208,7 +5209,8 @@ __ATTR(suspend_lo, S_IRUGO|S_IWUSR, suspend_lo_show, suspend_lo_store);
- static ssize_t
- suspend_hi_show(struct mddev *mddev, char *page)
- {
--	return sprintf(page, "%llu\n", (unsigned long long)mddev->suspend_hi);
-+	return sprintf(page, "%llu\n",
-+		       (unsigned long long)READ_ONCE(mddev->suspend_hi));
- }
- 
- static ssize_t
-@@ -5228,7 +5230,7 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
- 		return err;
- 
- 	mddev_suspend(mddev);
--	mddev->suspend_hi = new;
-+	WRITE_ONCE(mddev->suspend_hi, new);
- 	mddev_resume(mddev);
- 
- 	mddev_unlock(mddev);
 -- 
 2.39.2
 
