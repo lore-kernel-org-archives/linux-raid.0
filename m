@@ -2,107 +2,165 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2908DE7734B
-	for <linux-raid@archiver.kernel.org>; Fri, 29 Sep 2023 23:43:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE6FE7737D
+	for <linux-raid@archiver.kernel.org>; Sat, 30 Sep 2023 16:52:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230063AbjI2Xn7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 29 Sep 2023 19:43:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37080 "EHLO
+        id S234594AbjI3Qw3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 30 Sep 2023 12:52:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjI2Xn6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 29 Sep 2023 19:43:58 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD965EB
-        for <linux-raid@vger.kernel.org>; Fri, 29 Sep 2023 16:43:55 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1c723f1c80fso45213605ad.1
-        for <linux-raid@vger.kernel.org>; Fri, 29 Sep 2023 16:43:55 -0700 (PDT)
+        with ESMTP id S234585AbjI3Qw0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 30 Sep 2023 12:52:26 -0400
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C07DCDD
+        for <linux-raid@vger.kernel.org>; Sat, 30 Sep 2023 09:52:22 -0700 (PDT)
+Received: by mail-wr1-x433.google.com with SMTP id ffacd0b85a97d-3231df68584so10961689f8f.1
+        for <linux-raid@vger.kernel.org>; Sat, 30 Sep 2023 09:52:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1696031035; x=1696635835; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=XxXRgVO4X0oKRg65wlMjf/8hMDTc8L5/nBKtcjEkozU=;
-        b=Hmj/u6JX3APrdAtp+lWft1v2b2K7cwvLYfnu+z8b3s1WYhckbuHMr1IBmkzPir84R3
-         OAavnQIx9fgd/xcemBXRDE/upbNAdSLRlMyRXMsxKRzbg/ZLzjopNvNYTGqGeiPnE0in
-         MNE9wzIU6E9nvj8sf2u8oxRs7Br/+50ZuWb9U=
+        d=philpotter-co-uk.20230601.gappssmtp.com; s=20230601; t=1696092741; x=1696697541; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TP49E0lt1lRfwVwEUZNQYaCBfTY4UGz9ptrNHBZhxcM=;
+        b=GODHPJ5OBk5OFYXKYp/AsgCbEs96zHybKMqld2zYIYMA8bWsDO9CD32R4Ve892efWh
+         Rw8h6Qoitfo9fDFRXeGZ1URS0UWu9IJBVx4Vya++BEVhXwx8iJTXEUg7vtyzXuhFlYS7
+         EaYP12e+2yYMGMjH/WAmkF/9TwNHyl/rOxe/+Raw1hFTZ4W/QiD6r+cTfVQujrg4ADiB
+         t0EwhcgT/w1sqCgn4S5QesL/mVLbCPhL0Gs4zfmBWFR0O2+lvC4PwMCbZsvAUBYBpImL
+         7PoPTdEUlEjZSUqF5Cz+l5zBQwpp7snU3QkdNZzBDQG/BZuIT+Nwotv31hy32RoOfd+U
+         mAYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696031035; x=1696635835;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XxXRgVO4X0oKRg65wlMjf/8hMDTc8L5/nBKtcjEkozU=;
-        b=ljAR4i0+cMDqG/OAsPW8x1PZFnt02kZ5T5bT0pr9ysz5ade0UxwjVnZy9TZVirnW3Q
-         I56RLt8Sy+GDvXByFt4rV2ceMSxWU61XSPmts1gjoB3I53K6Qdcw9r2vDfbnv8JFWuRq
-         2Fe1UWjIqjotOEi/hrTPHSr56uK+ugrh5sNn5delNp6CX7GbCmLqMgV96Fa275I8zaMj
-         bQp7THHM4aVVVEfvZVdNF+UVyDLf0wZnAd4V7OlQ5h7hm2fT46BvDGsOM+Zu7m5yjq4k
-         Hdp0oUmCVxkBzMJTtc07HLKzq+NtLlr6gQ5XHIAlNiDOmnyzCW6Dc2EDaKnTama8yY8K
-         Be+Q==
-X-Gm-Message-State: AOJu0YwZmhMLHt5YpdZDeEWPkvM1zvmhrWVor/rewpZEKA373+5pq6Cp
-        eZMRfbzUYh5BmzwcQ4HhAC03jA==
-X-Google-Smtp-Source: AGHT+IFoyjufbN/+tXciMnWrLm1gtDSKSS/anCouRumZaJShGMHHhX6IW7ptFVzMTxsQrVkg++m9jw==
-X-Received: by 2002:a17:903:25d4:b0:1c6:112f:5d02 with SMTP id jc20-20020a17090325d400b001c6112f5d02mr4765528plb.55.1696031035416;
-        Fri, 29 Sep 2023 16:43:55 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id f9-20020a170902ce8900b001c5076ae6absm17466616plg.126.2023.09.29.16.43.54
+        d=1e100.net; s=20230601; t=1696092741; x=1696697541;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TP49E0lt1lRfwVwEUZNQYaCBfTY4UGz9ptrNHBZhxcM=;
+        b=Bd03pkHbu4DoIaGE+UfllXC/xs3Ixy1p9H0dr3uukFJ/ClPQjrl/rAkmkZvM7d8g3y
+         P2WBjKI0UjDlsvb8zETdGBGzIdEyunXeJB/QFNAo3GaIhRqsKK0qJoK2VuwbZ+MpoaDD
+         cZxqJVVF+QuLpdGFMcTlkzSOFfm48eGsXt393EHq0xC0H4/vuQ3mDqwfQ2s4Lp7199CD
+         dwzw0bGtp+w0PtHsdINoSVEk3XRlvOGxlfR4IoKIZUySJh/XeRTpTBs/wmkooADL3CHG
+         IIU/RHiLZcdv/qqbE/+1wv1/UhClB4W3ZkOdT2Zmi13xRp8EKbbrHORUtxDGxBm1AiBM
+         F5OQ==
+X-Gm-Message-State: AOJu0YwtW2L7laep2sjhVbFM++D1M/mqIMSTWl/CIXquHjj8/xM8L7m9
+        URAoglmWldT2Pf+954XUnxnT6g==
+X-Google-Smtp-Source: AGHT+IFufhUosQmDbdYYO0lgqH5WgmabRsKPy1NuiT6FdEpd1klh9Lx806UT3kRvn4yTyQ0Y4WLs9Q==
+X-Received: by 2002:adf:cf0a:0:b0:323:1689:6607 with SMTP id o10-20020adfcf0a000000b0032316896607mr6789063wrj.5.1696092741022;
+        Sat, 30 Sep 2023 09:52:21 -0700 (PDT)
+Received: from equinox (2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.a.1.e.e.d.f.d.0.b.8.0.1.0.0.2.ip6.arpa. [2001:8b0:dfde:e1a0::2])
+        by smtp.gmail.com with ESMTPSA id u1-20020adfed41000000b003247d3e5d99sm4921066wro.55.2023.09.30.09.52.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 Sep 2023 16:43:54 -0700 (PDT)
-Date:   Fri, 29 Sep 2023 16:43:53 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Song Liu <song@kernel.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] md/md-linear: Annotate struct linear_conf with
- __counted_by
-Message-ID: <202309291643.BF67044DA@keescook>
-References: <20230915200328.never.064-kees@kernel.org>
- <169601526973.3013632.16756928162777602693.b4-ty@chromium.org>
- <CAPhsuW6RfCryssufHjWHRdUGCh2DywnNNtidZ-UxEWvwo4gcbQ@mail.gmail.com>
+        Sat, 30 Sep 2023 09:52:20 -0700 (PDT)
+Date:   Sat, 30 Sep 2023 17:52:17 +0100
+From:   Phillip Potter <phil@philpotter.co.uk>
+To:     Joel Granados <j.granados@samsung.com>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
+        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        David Ahern <dsahern@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Song Liu <song@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-rdma@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 01/15] cdrom: Remove now superfluous sentinel element
+ from ctl_table array
+Message-ID: <ZRhSQaNDJih5xABq@equinox>
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+ <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
+ <CGME20230928133705eucas1p182bd81a8e6aff530e43f9b0746a24eaa@eucas1p1.samsung.com>
+ <2023092855-cultivate-earthy-4d25@gregkh>
+ <20230929121730.bwzhrpaptf45smfy@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAPhsuW6RfCryssufHjWHRdUGCh2DywnNNtidZ-UxEWvwo4gcbQ@mail.gmail.com>
+In-Reply-To: <20230929121730.bwzhrpaptf45smfy@localhost>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Sep 29, 2023 at 04:40:13PM -0700, Song Liu wrote:
-> On Fri, Sep 29, 2023 at 12:21 PM Kees Cook <keescook@chromium.org> wrote:
-> >
-> > On Fri, 15 Sep 2023 13:03:28 -0700, Kees Cook wrote:
-> > > Prepare for the coming implementation by GCC and Clang of the __counted_by
-> > > attribute. Flexible array members annotated with __counted_by can have
-> > > their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
-> > > (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
-> > > functions).
-> > >
-> > > As found with Coccinelle[1], add __counted_by for struct linear_conf.
-> > > Additionally, since the element count member must be set before accessing
-> > > the annotated flexible array member, move its initialization earlier.
-> > >
-> > > [...]
-> >
-> > Applied to for-next/hardening, thanks!
-> >
-> > [1/1] md/md-linear: Annotate struct linear_conf with __counted_by
-> >       https://git.kernel.org/kees/c/9add7681e09b
+On Fri, Sep 29, 2023 at 02:17:30PM +0200, Joel Granados wrote:
+> On Thu, Sep 28, 2023 at 03:36:55PM +0200, Greg Kroah-Hartman wrote:
+> > On Thu, Sep 28, 2023 at 03:21:26PM +0200, Joel Granados via B4 Relay wrote:
+> > > From: Joel Granados <j.granados@samsung.com>
+> > > 
+> > > This commit comes at the tail end of a greater effort to remove the
+> > > empty elements at the end of the ctl_table arrays (sentinels) which
+> > > will reduce the overall build time size of the kernel and run time
+> > > memory bloat by ~64 bytes per sentinel (further information Link :
+> > > https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+> > > 
+> > > Remove sentinel element from cdrom_table
+> > > 
+> > > Signed-off-by: Joel Granados <j.granados@samsung.com>
+> > > ---
+> > >  drivers/cdrom/cdrom.c | 3 +--
+> > >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+> > > index cc2839805983..451907ade389 100644
+> > > --- a/drivers/cdrom/cdrom.c
+> > > +++ b/drivers/cdrom/cdrom.c
+> > > @@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] = {
+> > >  		.maxlen		= sizeof(int),
+> > >  		.mode		= 0644,
+> > >  		.proc_handler	= cdrom_sysctl_handler
+> > > -	},
+> > > -	{ }
+> > > +	}
+> > 
+> > You should have the final entry as "}," so as to make any future
+> > additions to the list to only contain that entry, that's long been the
+> > kernel style for lists like this.
+> Will send a V2 with this included. Thx.
 > 
-> Hmm..
+> > 
+> > So your patches will just remove one line, not 2 and add 1, making it a
+> > smaller diff.
+> indeed.
 > 
-> Jens pulled this into his for-next branch and for-6.7/block branch
-> earlier today:
+> > 
+> > thanks,
+> > 
+> > greg k-h
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commit/?h=for-next&id=e887544d7620f1d3cef017e45df7bc625182caff
+> -- 
 > 
-> Do we need to do anything about this (drop one of them)?
+> Joel Granados
 
-Whoops! Sorry, I hadn't seen it picked up. I'll drop it from my tree.
-Thanks!
+Hi Joel,
 
--Kees
+Thank you for your patch. I look forward to seeing V2, and will be happy
+to review it.
 
--- 
-Kees Cook
+Regards,
+Phil
