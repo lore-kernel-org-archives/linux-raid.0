@@ -2,158 +2,89 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C4CEE784BA
-	for <linux-raid@archiver.kernel.org>; Mon,  2 Oct 2023 14:35:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38129E7490C
+	for <linux-raid@archiver.kernel.org>; Mon,  2 Oct 2023 18:37:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237822AbjJBOfX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 2 Oct 2023 10:35:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47860 "EHLO
+        id S229644AbjJBShX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 2 Oct 2023 14:37:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237820AbjJBOfV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Oct 2023 10:35:21 -0400
-Received: from mx0a-002e3701.pphosted.com (mx0a-002e3701.pphosted.com [148.163.147.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B85ED7;
-        Mon,  2 Oct 2023 07:35:14 -0700 (PDT)
-Received: from pps.filterd (m0150242.ppops.net [127.0.0.1])
-        by mx0a-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 392ENRAq010318;
-        Mon, 2 Oct 2023 14:33:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=pps0720; bh=8kcAx3CglGRn94aeo1HK8iAjrJB5McccnOtaRuGBhlE=;
- b=UDDV9blwhOqG6lS3UsYzzUODsb3/Jv7uk7fyfcblbVHD3X/OLXl4ruM75aG/o029gXU4
- wZf0e0FS+UT7qSUuJhyOAyZlj0F1UOHpXDeBwm3+RPme4yGaLrJ9gQFKalvxH7zeW0Q2
- 9Wal0xHDrZAv4zZfk2yPVG5x6KKVR+62Inf2e5CoAJFSvGqa9XRuymOmZ+CVSG7WUZ0j
- MfjwZN1qCeG6CzxC3CgEIgBeZqSkhI/EtLkuSZrJ0vADwcdmTnlSr+XumB84vemz7JXe
- W34mDYx8DuQrTdltPS/YsslQCZKNQYb9m+YSqJL+3jk+uYK+YsSwbmURt2WthssC/6Wq Jw== 
-Received: from p1lg14881.it.hpe.com ([16.230.97.202])
-        by mx0a-002e3701.pphosted.com (PPS) with ESMTPS id 3tfyk4g34b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 02 Oct 2023 14:33:28 +0000
-Received: from p1lg14886.dc01.its.hpecorp.net (unknown [10.119.18.237])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S229450AbjJBShV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Oct 2023 14:37:21 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55E259B
+        for <linux-raid@vger.kernel.org>; Mon,  2 Oct 2023 11:36:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1696271794;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=HbXAkQR9Wr5SD1qFwTNzDFjmMck6x9t/rtKWySttB1g=;
+        b=XIzDDpmCV9pobNGHVPo2lNcz7lCFESVCSw6oEMy3IHRCAhvHnq/wF3XH/35NeoS9bxx1aT
+        eIBBPkmp3SBbpfdFqEfgpZtrTpttTJJBl4+2rB2/xukYx7+SlGJzvbwm5mrTPnYtF40G00
+        NboVqM9LDnTqvGRGAIC1DzJeKltS5ho=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-474-NWAxsdAwOjy0DssPaUlZrA-1; Mon, 02 Oct 2023 14:36:33 -0400
+X-MC-Unique: NWAxsdAwOjy0DssPaUlZrA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by p1lg14881.it.hpe.com (Postfix) with ESMTPS id 20CF0804DF1;
-        Mon,  2 Oct 2023 14:33:14 +0000 (UTC)
-Received: from swahl-home.5wahls.com (unknown [16.231.227.39])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by p1lg14886.dc01.its.hpecorp.net (Postfix) with ESMTPS id 1031080139E;
-        Mon,  2 Oct 2023 14:33:05 +0000 (UTC)
-Date:   Mon, 2 Oct 2023 09:33:04 -0500
-From:   Steve Wahl <steve.wahl@hpe.com>
-To:     j.granados@samsung.com
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
-        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
-        Phillip Potter <phil@philpotter.co.uk>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        David Ahern <dsahern@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Robin Holt <robinmholt@gmail.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Song Liu <song@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-rdma@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v2 11/15] sgi-xp: Remove the now superfluous sentinel
- element from ctl_table array
-Message-ID: <ZRrUoISghotzEeu/@swahl-home.5wahls.com>
-References: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-0-02dd0d46f71e@samsung.com>
- <=?utf-8?q?=3C20231002-jag-sysctl=5Fremove=5Fempty=5Felem=5Fdrive?=>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <=?utf-8?q?=3C20231002-jag-sysctl=5Fremove=5Fempty=5Felem=5Fdrive?=>
-X-Proofpoint-ORIG-GUID: FvQlGBIC2T_f8YdHb4chZeOBKZ5wjbmW
-X-Proofpoint-GUID: FvQlGBIC2T_f8YdHb4chZeOBKZ5wjbmW
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C800B101B045;
+        Mon,  2 Oct 2023 18:36:31 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.18.63])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A4BC351E3;
+        Mon,  2 Oct 2023 18:36:31 +0000 (UTC)
+From:   David Jeffery <djeffery@redhat.com>
+To:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Cc:     David Jeffery <djeffery@redhat.com>
+Subject: [PATCH] md/raid5: release batch_last before waiting for another stripe_head
+Date:   Mon,  2 Oct 2023 14:32:29 -0400
+Message-ID: <20231002183422.13047-1-djeffery@redhat.com>
 MIME-Version: 1.0
-X-HPE-SCL: -1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-02_09,2023-10-02_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- adultscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
- lowpriorityscore=0 suspectscore=0 mlxlogscore=999 phishscore=0
- clxscore=1015 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2310020109
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Oct 02, 2023 at 10:55:28AM +0200, Joel Granados via B4 Relay wrote:
-> From: Joel Granados <j.granados@samsung.com>
-> 
-> This commit comes at the tail end of a greater effort to remove the
-> empty elements at the end of the ctl_table arrays (sentinels) which
-> will reduce the overall build time size of the kernel and run time
-> memory bloat by ~64 bytes per sentinel (further information Link :
-> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
-> 
-> Remove sentinel from xpc_sys_xpc_hb and xpc_sys_xpc
-> 
-> Signed-off-by: Joel Granados <j.granados@samsung.com>
-> ---
->  drivers/misc/sgi-xp/xpc_main.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/misc/sgi-xp/xpc_main.c b/drivers/misc/sgi-xp/xpc_main.c
-> index 6da509d692bb..3186421e82c3 100644
-> --- a/drivers/misc/sgi-xp/xpc_main.c
-> +++ b/drivers/misc/sgi-xp/xpc_main.c
-> @@ -110,7 +110,6 @@ static struct ctl_table xpc_sys_xpc_hb[] = {
->  	 .proc_handler = proc_dointvec_minmax,
->  	 .extra1 = &xpc_hb_check_min_interval,
->  	 .extra2 = &xpc_hb_check_max_interval},
-> -	{}
->  };
->  static struct ctl_table xpc_sys_xpc[] = {
->  	{
-> @@ -121,7 +120,6 @@ static struct ctl_table xpc_sys_xpc[] = {
->  	 .proc_handler = proc_dointvec_minmax,
->  	 .extra1 = &xpc_disengage_min_timelimit,
->  	 .extra2 = &xpc_disengage_max_timelimit},
-> -	{}
->  };
->  
->  static struct ctl_table_header *xpc_sysctl;
-> 
-> -- 
-> 2.30.2
-> 
+When raid5_get_active_stripe is called with a ctx containing a stripe_head in
+its batch_last pointer, it can cause a deadlock if the task sleeps waiting on
+another stripe_head to become available. The stripe_head held by batch_last
+can be blocking the advancement of other stripe_heads, leading to no
+stripe_heads being released so raid5_get_active_stripe waits forever.
 
-Reviewed-by: Steve Wahl <steve.wahl@hpe.com>
+Like with the quiesce state handling earlier in the function, batch_last
+needs to be released by raid5_get_active_stripe before it waits for another
+stripe_head.
 
+
+Fixes: 3312e6c887fe ("md/raid5: Keep a reference to last stripe_head for batch")
+Signed-off-by: David Jeffery <djeffery@redhat.com>
+
+---
+ drivers/md/raid5.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 6383723468e5..0644b83fd3f4 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -854,6 +854,13 @@ struct stripe_head *raid5_get_active_stripe(struct r5conf *conf,
+ 
+ 		set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
+ 		r5l_wake_reclaim(conf->log, 0);
++
++		/* release batch_last before wait to avoid risk of deadlock */
++		if (ctx && ctx->batch_last) {
++			raid5_release_stripe(ctx->batch_last);
++			ctx->batch_last = NULL;
++		}
++
+ 		wait_event_lock_irq(conf->wait_for_stripe,
+ 				    is_inactive_blocked(conf, hash),
+ 				    *(conf->hash_locks + hash));
 -- 
-Steve Wahl, Hewlett Packard Enterprise
+2.41.0
+
