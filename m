@@ -2,127 +2,120 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A592E776C5
-	for <linux-raid@archiver.kernel.org>; Mon,  2 Oct 2023 21:45:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5203AE7542B
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Oct 2023 06:48:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236570AbjJBVpl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 2 Oct 2023 17:45:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59818 "EHLO
+        id S230304AbjJCGs1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 3 Oct 2023 02:48:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229985AbjJBVph (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Oct 2023 17:45:37 -0400
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB36DD8
-        for <linux-raid@vger.kernel.org>; Mon,  2 Oct 2023 14:45:31 -0700 (PDT)
-Received: by mail-wm1-x32a.google.com with SMTP id 5b1f17b1804b1-405417465aaso2607355e9.1
-        for <linux-raid@vger.kernel.org>; Mon, 02 Oct 2023 14:45:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=philpotter-co-uk.20230601.gappssmtp.com; s=20230601; t=1696283130; x=1696887930; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3dA79LkNYU7asBXwt/uQxW8bheOGwedQNE5Z+nFIVT0=;
-        b=jC4WA2n5N6fh0h+8A80v34J674kTNb/dkqkkQ4wr6AQU33VVyNhBrLJ5fIDHvQkiRC
-         YGLtDdF8yOE+UQ1F9TDhWiCE0v6E1PqR6ceCh6wN4S6/wW6QSdK3FhOoyU/zI1HpFs0O
-         +F8KfczwTGXQlzUVF4ka2LhahMo5RG2sNqhG8NaTCIin4KK5EYb9i1itvP4TT4QtItrG
-         6l81HyN+/AWlJTwrcZBsVzzV6zShJd0lbmT0bslRid9k+F5TLRs7b1Nah9+yNFpY15j8
-         CilWH5jhV7Apb9r2YfgO6KBYqg0XMY4yHLusxDU82pYXfBi6WeD9aJ2bVZr42E3kPHhV
-         fbbw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696283130; x=1696887930;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3dA79LkNYU7asBXwt/uQxW8bheOGwedQNE5Z+nFIVT0=;
-        b=MT+hhVPwKad+Dt4kbfhDuMIP6ufcIkrJTH3IRsyaMHjCT0sO082H0LN8WWhNKeP1XO
-         dtvYvGqiduDXu1JXPYnEkd4PyEdSaKKUAO1x8G7p2Et7ZC+CHqqltvKvLNTlEiknezGI
-         bjR8K+IZjVpyuq/QOrwM2hO418gk+24cNI0UlSaHEauVrn2KJhTs2kfGiKP4OCZCrjfo
-         aOp5oRLftkgUVLB/GBhSRL7RPWYcX7FjE+5GbAybZVka2FxjFTMCtPbDtZry1vjTL5T1
-         H0YgURT8K+1eUrX5/1TPhZggE2sS4Vag8Ascs5ochbcCCG9nkz1QGAWwHsXfdhVTGy0X
-         +TrA==
-X-Gm-Message-State: AOJu0YxtYKfQ99ffAqEmvLTbAP9v7PnHiBx38K1ZC9LMKq2tFAI1/snz
-        CrEW0WfHvfHOYDYcwkrzjv8opQ==
-X-Google-Smtp-Source: AGHT+IFQqDHrxS5nLVVcz3uYz3zBoh8PRAUblObfkXMiu+127hGE3d4cKV4jcsCeAwYclm/ssvuz7g==
-X-Received: by 2002:a1c:6a05:0:b0:404:757e:c5ba with SMTP id f5-20020a1c6a05000000b00404757ec5bamr10282866wmc.26.1696283130281;
-        Mon, 02 Oct 2023 14:45:30 -0700 (PDT)
-Received: from localhost.localdomain (3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.1.f.d.0.b.8.0.1.0.0.2.ip6.arpa. [2001:8b0:df16::3])
-        by smtp.gmail.com with ESMTPSA id a11-20020a05600c2d4b00b004065daba6casm7974630wmg.46.2023.10.02.14.45.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Oct 2023 14:45:29 -0700 (PDT)
-From:   Phillip Potter <phil@philpotter.co.uk>
-To:     devnull+j.granados.samsung.com@kernel.org
-Cc:     Jason@zx2c4.com, airlied@gmail.com, arnd@arndb.de,
-        clemens@ladisch.de, daniel@ffwll.ch, davem@davemloft.net,
-        decui@microsoft.com, dgilbert@interlog.com,
-        dri-devel@lists.freedesktop.org, dsahern@kernel.org,
-        edumazet@google.com, gregkh@linuxfoundation.org,
-        haiyangz@microsoft.com, intel-gfx@lists.freedesktop.org,
-        j.granados@samsung.com, jani.nikula@linux.intel.com,
-        jejb@linux.ibm.com, jgg@ziepe.ca, jgross@suse.com,
-        jirislaby@kernel.org, joonas.lahtinen@linux.intel.com,
-        josh@joshtriplett.org, keescook@chromium.org, kuba@kernel.org,
-        kys@microsoft.com, leon@kernel.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-serial@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        martin.petersen@oracle.com, mcgrof@kernel.org, minyard@acm.org,
-        netdev@vger.kernel.org, oleksandr_tyshchenko@epam.com,
-        openipmi-developer@lists.sourceforge.net, pabeni@redhat.com,
-        phil@philpotter.co.uk, rafael@kernel.org, robinmholt@gmail.com,
-        rodrigo.vivi@intel.com, russell.h.weight@intel.com,
-        song@kernel.org, sstabellini@kernel.org, steve.wahl@hpe.com,
-        sudipm.mukherjee@gmail.com, tvrtko.ursulin@linux.intel.com,
-        tytso@mit.edu, wei.liu@kernel.org, willy@infradead.org,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v2 01/15] cdrom: Remove now superfluous sentinel element from ctl_table array
-Date:   Mon,  2 Oct 2023 22:45:28 +0100
-Message-ID: <20231002214528.15529-1-phil@philpotter.co.uk>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-1-02dd0d46f71e@samsung.com>
-References: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-1-02dd0d46f71e@samsung.com>
+        with ESMTP id S229453AbjJCGs0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 3 Oct 2023 02:48:26 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3440FAD
+        for <linux-raid@vger.kernel.org>; Mon,  2 Oct 2023 23:48:24 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD151C433C8
+        for <linux-raid@vger.kernel.org>; Tue,  3 Oct 2023 06:48:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696315703;
+        bh=GVGbDTzmWrwoyQSVYFNVKrviISRURTeizk43/zX4xas=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=lHwQvyHVeBjVaVBc9AGROmx2k5cBDZevnNiZaCM61hmcuViNWuXSVQ5ZQABA1r+Gy
+         2JaFnAe1qEmJbktFf8dpMmXJMiytVaMLlu2Cjr7DM6eJ7gebCJv5cFMgxTqHutEQXl
+         ObTn5QheIEDrXBULC1WkOfOUyypmvRy0E8vqTwZEdjtOrrPngclf5Rre4DUWmiPTiX
+         J4BM50gWtFM+LZYv2Xngfdae0g1ycDSdXB9xeSft0ms/IkoUyBTk9dTcn+jT0Ll7bG
+         ht42Adr/oOv1LSCBmo/9dUnnLMDoAOqRbK9gqvWVy/r/KnG2bLz8s60ieyB+FPH0Wd
+         cJlxWyAtWPFYQ==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-50435ad51bbso603513e87.2
+        for <linux-raid@vger.kernel.org>; Mon, 02 Oct 2023 23:48:23 -0700 (PDT)
+X-Gm-Message-State: AOJu0Yy/kOZQy8j/eSU5X7hMw4rnA2cuxhx7HmQYH2T519M4q2daI5FW
+        jzbOl6UH6E+eYkthn/7773RBK0tVwRdNcuzTxog=
+X-Google-Smtp-Source: AGHT+IEJHWHmEBQSFMSAqBrMpMv9sasQZ+ppN0kPK0XZHkDYwcH0TR+1HjOADopPZecif8rCv17h96IliPecF7AoYGA=
+X-Received: by 2002:a05:6512:ac4:b0:504:3a7c:66ce with SMTP id
+ n4-20020a0565120ac400b005043a7c66cemr12970456lfu.68.1696315701844; Mon, 02
+ Oct 2023 23:48:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20231002183422.13047-1-djeffery@redhat.com> <CA+RJvhxrkSXRPc9wELyfYYCy_dpRaa+9=fTY7NQR0tP=MO8xUQ@mail.gmail.com>
+In-Reply-To: <CA+RJvhxrkSXRPc9wELyfYYCy_dpRaa+9=fTY7NQR0tP=MO8xUQ@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 2 Oct 2023 23:48:09 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6iSTRGFDfbP_nQR5eeKWEY=begDZ_H8QgK+tqhKaqELw@mail.gmail.com>
+Message-ID: <CAPhsuW6iSTRGFDfbP_nQR5eeKWEY=begDZ_H8QgK+tqhKaqELw@mail.gmail.com>
+Subject: Re: [PATCH] md/raid5: release batch_last before waiting for another stripe_head
+To:     John Pittman <jpittman@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Cc:     David Jeffery <djeffery@redhat.com>, linux-raid@vger.kernel.org,
+        Laurence Oberman <loberman@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-> From: Joel Granados <j.granados@samsung.com>
->
-> This commit comes at the tail end of a greater effort to remove the
-> empty elements at the end of the ctl_table arrays (sentinels) which
-> will reduce the overall build time size of the kernel and run time
-> memory bloat by ~64 bytes per sentinel (further information Link :
-> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
->
-> Remove sentinel element from cdrom_table
->
-> Signed-off-by: Joel Granados <j.granados@samsung.com>
-> ---
->  drivers/cdrom/cdrom.c | 1 -
->  1 file changed, 1 deletion(-)
->
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index cc2839805983..a5e07270e0d4 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -3655,7 +3655,6 @@ static struct ctl_table cdrom_table[] = {
->  		.mode		= 0644,
->  		.proc_handler	= cdrom_sysctl_handler
->  	},
-> -	{ }
->  };
->  static struct ctl_table_header *cdrom_sysctl_header;
->
->
-> -- 
-> 2.30.2
+CC Logan.
 
+On Mon, Oct 2, 2023 at 12:22=E2=80=AFPM John Pittman <jpittman@redhat.com> =
+wrote:
+>
+> Thanks a lot David.  Song, as a note, David's patch was tested by a
+> Red Hat customer and it indeed resolved their hit on the deadlock.
+> cc. Laurence Oberman who assisted on that case.
+>
+>
+> On Mon, Oct 2, 2023 at 2:39=E2=80=AFPM David Jeffery <djeffery@redhat.com=
+> wrote:
+> >
+> > When raid5_get_active_stripe is called with a ctx containing a stripe_h=
+ead in
+> > its batch_last pointer, it can cause a deadlock if the task sleeps wait=
+ing on
+> > another stripe_head to become available. The stripe_head held by batch_=
+last
+> > can be blocking the advancement of other stripe_heads, leading to no
+> > stripe_heads being released so raid5_get_active_stripe waits forever.
+> >
+> > Like with the quiesce state handling earlier in the function, batch_las=
+t
+> > needs to be released by raid5_get_active_stripe before it waits for ano=
+ther
+> > stripe_head.
+> >
+> >
+> > Fixes: 3312e6c887fe ("md/raid5: Keep a reference to last stripe_head fo=
+r batch")
+> > Signed-off-by: David Jeffery <djeffery@redhat.com>
 
-Hi Joel,
+Thanks for the fix! I applied it to md-fixes.
 
-Looks good to me, many thanks. I'll send on for inclusion.
+Question: How easy/difficult is it to reproduce this issue?
 
-Reviewed-by: Phillip Potter <phil@philpotter.co.uk>
+Song
 
-Regards,
-Phil
+> > ---
+> >  drivers/md/raid5.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> >
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 6383723468e5..0644b83fd3f4 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -854,6 +854,13 @@ struct stripe_head *raid5_get_active_stripe(struct=
+ r5conf *conf,
+> >
+> >                 set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
+> >                 r5l_wake_reclaim(conf->log, 0);
+> > +
+> > +               /* release batch_last before wait to avoid risk of dead=
+lock */
+> > +               if (ctx && ctx->batch_last) {
+> > +                       raid5_release_stripe(ctx->batch_last);
+> > +                       ctx->batch_last =3D NULL;
+> > +               }
+> > +
+> >                 wait_event_lock_irq(conf->wait_for_stripe,
+> >                                     is_inactive_blocked(conf, hash),
+> >                                     *(conf->hash_locks + hash));
+> > --
+> > 2.41.0
+> >
+>
