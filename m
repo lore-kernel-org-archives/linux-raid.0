@@ -2,97 +2,119 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73EE2E92709
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Oct 2023 15:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF16DE92711
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Oct 2023 15:32:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229811AbjJEPOX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 Oct 2023 11:14:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39802 "EHLO
+        id S232475AbjJEPcw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 5 Oct 2023 11:32:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232518AbjJEPNf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Oct 2023 11:13:35 -0400
-Received: from micaiah.parthemores.com (micaiah.parthemores.com [199.26.172.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12537B28A
-        for <linux-raid@vger.kernel.org>; Thu,  5 Oct 2023 07:36:37 -0700 (PDT)
-Received: from [10.21.1.136] (unknown [193.11.98.138])
-        by micaiah.parthemores.com (Postfix) with ESMTPSA id 0BAA2300314;
-        Thu,  5 Oct 2023 09:27:00 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=parthemores.com;
-        s=micaiah; t=1696490822;
-        bh=DP7w7lHsnorhSlbBVBO12so5vcK/3NARMXHR89c6eV0=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To;
-        b=YvhN69PshBAp1KTHCN3nDR8P2XIZqn+mU9AlBOf43ZNhchXgfmf7A8phvDX6aA9Df
-         lVFsGKFvBFgPuiwM5rAqVnQ/5ApxImHF1lwjAh4mL/qNAxY3iYMYTkE9lO+j68nanY
-         MkErnbwpNjuS1Pm+PG1Hr5TYOkp+gVciMeVhC7UI=
-Message-ID: <37b90505-6bef-6bb8-5576-19b30017697b@parthemores.com>
-Date:   Thu, 5 Oct 2023 09:28:01 +0200
+        with ESMTP id S233322AbjJEPcV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Oct 2023 11:32:21 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89B3C16AA2;
+        Thu,  5 Oct 2023 07:37:31 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C044C433CA;
+        Thu,  5 Oct 2023 04:00:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696478422;
+        bh=FihUa0tBwKjEXiCm8gEOsR7cV+rqgCLeNbM/8aB0Or4=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=XPbmGea8ufH4Es7bR544Ur65RJ/+g4TjOjDlPCSsRE5Gd6QINI9E9iAeqeIloHvPG
+         ZkNFNeowcdhxEd/YYjkMNDHApbTEB3Cnb1XMsicnX4ictwK7SN8Y30DyWRY+rBPBD7
+         1l2xP6HYXD510T+82XzPnuIM6rZF854YM3Lrrv3h4yCxrI9p+wfAh6Wtpvxv6LsClB
+         1IiOTt0G9bzSmamjoc5lcV1UvyD/8a4ysps+UTbEqoSAoTgjVN3nHrzmAtPSRV+FQ3
+         apFmIWmZL1lD43tmsRt8rkQBxZR9ewEKlLcwRWCTAvfV0oNA/MAf5RC/wFzHHLFgkS
+         yBu0jZrptePdQ==
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-2bff936e10fso19907581fa.1;
+        Wed, 04 Oct 2023 21:00:21 -0700 (PDT)
+X-Gm-Message-State: AOJu0YyflS3k+epelRvg8Ba00Pprgy3WqcLF8M/ECJ9CMlhr3hvqUCvm
+        Vt045erQ5VhxjkBxxVhSm2b0fJbOg6RNys3wMwk=
+X-Google-Smtp-Source: AGHT+IFrweThNcOJampPvgPU+EwndkFznX8xeRJ6i/Tv4bnoHj/MpBOiktX/l28+v82Jez83Uz14NbrE9GegQdAU6UI=
+X-Received: by 2002:a2e:b4b3:0:b0:2c1:86da:3f61 with SMTP id
+ q19-20020a2eb4b3000000b002c186da3f61mr116977ljm.9.1696478420086; Wed, 04 Oct
+ 2023 21:00:20 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: request for help on IMSM-metadata RAID-5 array
-Content-Language: en-GB
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Roman Mamedov <rm@romanrm.net>
-Cc:     linux-raid@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <507b6ab0-fd8f-d770-ba82-28def5f53d25@parthemores.com>
- <20230923162449.3ea0d586@nvm>
- <4095b51a-1038-2fd0-6503-64c0daa913d8@parthemores.com>
- <20230923203512.581fcd7d@nvm>
- <72388663-3997-a410-76f0-066dcd7d2a63@parthemores.com>
- <4d606b3d-ccec-e791-97ba-2cb5af0cc226@huaweicloud.com>
- <02a12a6d-eac4-51a1-e5ab-3df4d79bb87b@parthemores.com>
- <86dd0750-d060-eada-dc16-03a783c3bd1d@huaweicloud.com>
- <9c67d4b6-9b7d-467c-827a-729f62348d54@parthemores.com>
- <a0b8a693-5d9c-d354-5afc-4500b78a983e@huaweicloud.com>
-From:   Joel Parthemore <joel@parthemores.com>
-In-Reply-To: <a0b8a693-5d9c-d354-5afc-4500b78a983e@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
+ <20230928061543.1845742-4-yukuai1@huaweicloud.com> <CAPhsuW4tQ9A+ddpxGhfza3WSdkL+FXmS-4NLUUN7MNk0TOY0WA@mail.gmail.com>
+ <0ae441ba-68db-b823-b48c-76e953d22067@huaweicloud.com>
+In-Reply-To: <0ae441ba-68db-b823-b48c-76e953d22067@huaweicloud.com>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 4 Oct 2023 21:00:07 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6ru-Chofq8ki6Xh9U0utH6+_mo0dd3Ty8fZPHGtJ1xvQ@mail.gmail.com>
+Message-ID: <CAPhsuW6ru-Chofq8ki6Xh9U0utH6+_mo0dd3Ty8fZPHGtJ1xvQ@mail.gmail.com>
+Subject: Re: [PATCH -next v3 03/25] md: add new helpers to suspend/resume array
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
+        dm-devel@redhat.com, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-Den 2023-10-05 kl. 04:50, skrev Yu Kuai:
+On Wed, Oct 4, 2023 at 7:59=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
+ote:
+>
 > Hi,
 >
-> 在 2023/09/30 3:44, Joel Parthemore 写道:
->> Den 2023-09-26 kl. 03:10, skrev Yu Kuai:
->>
->>
->>>>> It'll be much helper for developers to collect kernel stack for 
->>>>> all stuck thread(and it'll be much better to use add2line).
->>>>
->>>>
->>>> Presuming I can re-create the problem, let me know what I should do 
->>>> to collect that information for you. I'm very much a newbie in that 
->>>> area.
->>>
->>> You can use following cmd:
->>>
->>> for pid in `ps -elf | grep " D " | awk '{print $4}'`; do ps $pid; 
->>> cat /proc/$pid/stack; done
->>>
->>> Thanks,
->>> Kuai
->>
->>
->> for pid in `ps -elf | grep " D " | awk '{print $4}'`; do ps $pid; cat 
->> /proc/$pid/stack; done
->>    PID TTY      STAT   TIME COMMAND
->>   4017 tty1     D+     0:00 e2fsck /dev/md126
+> =E5=9C=A8 2023/09/29 2:45, Song Liu =E5=86=99=E9=81=93:
+> > On Wed, Sep 27, 2023 at 11:22=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.c=
+om> wrote:
+> >>
+> >> From: Yu Kuai <yukuai3@huawei.com>
+> >>
+> >> Advantages for new apis:
+> >>   - reconfig_mutex is not required;
+> >>   - the weird logical that suspend array hold 'reconfig_mutex' for
+> >>     mddev_check_recovery() to update superblock is not needed;
+> >>   - the specail handling, 'pers->prepare_suspend', for raid456 is not
+> >>     needed;
+> >>   - It's safe to be called at any time once mddev is allocated, and it=
+'s
+> >>     designed to be used from slow path where array configuration is ch=
+anged;
+> >>   - the new helpers is designed to be called before mddev_lock(), henc=
+e
+> >>     it support to be interrupted by user as well.
+> >>
+> >> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> >> ---
+> >>   drivers/md/md.c | 102 ++++++++++++++++++++++++++++++++++++++++++++++=
++-
+> >>   drivers/md/md.h |   3 ++
+> >>   2 files changed, 103 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >> index e460b380143d..a075d03d03d3 100644
+> >> --- a/drivers/md/md.c
+> >> +++ b/drivers/md/md.c
+> >> @@ -443,12 +443,22 @@ void mddev_suspend(struct mddev *mddev)
+> >>                          lockdep_is_held(&mddev->reconfig_mutex));
+> >>
+> >>          WARN_ON_ONCE(thread && current =3D=3D thread->tsk);
+> >> -       if (mddev->suspended++)
+> >> +
+> >> +       /* can't concurrent with __mddev_suspend() and __mddev_resume(=
+) */
+> >> +       mutex_lock(&mddev->suspend_mutex);
+> >> +       if (mddev->suspended++) {
+> >> +               mutex_unlock(&mddev->suspend_mutex);
+> >>                  return;
+> >
+> > Can we make mddev->suspended atomic_t, and use atomic_inc_return()
+> > here?
 >
-> Do you check that this thread is hanged and the e2fsck doesn't make 
-> progress?
+> 'suspend_mutex' is needed, because concurrent caller of
+> mddev_suspend() shound be ordered, they need to wait for the first
+> mddev_suspend() to be done.
+>
+> Updating suspended is protected by 'suspend_mutex' in the new api, so I
+> think it's not necessary to use atomic, WRITE/READ_ONCE() should be
+> enough.
 
+Thanks for the explanation.
 
-I wasn't trying to run e2fsck at the time. Instead I had run mdadm 
---stop /dev/md126, which was hanging. (Sorry; looks like I forgot to 
-include that!) mdadm -D /md126 showed no re-syncing happening at the time.
-
-Unfortunately, I had not heard back from you, and I felt like I couldn't 
-keep the problematic RAID array around any longer, so I wiped it and 
-replaced it with a fully native-Linux RAID5 array instead of one using 
-IMSM metadata.
-
-Joel
-
+Song
