@@ -2,48 +2,47 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF16DE92711
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Oct 2023 15:32:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D231EE92716
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Oct 2023 15:45:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232475AbjJEPcw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 Oct 2023 11:32:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47450 "EHLO
+        id S234025AbjJEPpT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 5 Oct 2023 11:45:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233322AbjJEPcV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Oct 2023 11:32:21 -0400
+        with ESMTP id S233036AbjJEPoz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Oct 2023 11:44:55 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89B3C16AA2;
-        Thu,  5 Oct 2023 07:37:31 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C044C433CA;
-        Thu,  5 Oct 2023 04:00:22 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C17513C89;
+        Thu,  5 Oct 2023 07:32:31 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78E9FC433C9;
+        Thu,  5 Oct 2023 03:55:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696478422;
-        bh=FihUa0tBwKjEXiCm8gEOsR7cV+rqgCLeNbM/8aB0Or4=;
+        s=k20201202; t=1696478137;
+        bh=wuWCiZeLK8eowg0O1RUlNwG96Sm5kArsyTUGbyYKRws=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=XPbmGea8ufH4Es7bR544Ur65RJ/+g4TjOjDlPCSsRE5Gd6QINI9E9iAeqeIloHvPG
-         ZkNFNeowcdhxEd/YYjkMNDHApbTEB3Cnb1XMsicnX4ictwK7SN8Y30DyWRY+rBPBD7
-         1l2xP6HYXD510T+82XzPnuIM6rZF854YM3Lrrv3h4yCxrI9p+wfAh6Wtpvxv6LsClB
-         1IiOTt0G9bzSmamjoc5lcV1UvyD/8a4ysps+UTbEqoSAoTgjVN3nHrzmAtPSRV+FQ3
-         apFmIWmZL1lD43tmsRt8rkQBxZR9ewEKlLcwRWCTAvfV0oNA/MAf5RC/wFzHHLFgkS
-         yBu0jZrptePdQ==
-Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-2bff936e10fso19907581fa.1;
-        Wed, 04 Oct 2023 21:00:21 -0700 (PDT)
-X-Gm-Message-State: AOJu0YyflS3k+epelRvg8Ba00Pprgy3WqcLF8M/ECJ9CMlhr3hvqUCvm
-        Vt045erQ5VhxjkBxxVhSm2b0fJbOg6RNys3wMwk=
-X-Google-Smtp-Source: AGHT+IFrweThNcOJampPvgPU+EwndkFznX8xeRJ6i/Tv4bnoHj/MpBOiktX/l28+v82Jez83Uz14NbrE9GegQdAU6UI=
-X-Received: by 2002:a2e:b4b3:0:b0:2c1:86da:3f61 with SMTP id
- q19-20020a2eb4b3000000b002c186da3f61mr116977ljm.9.1696478420086; Wed, 04 Oct
- 2023 21:00:20 -0700 (PDT)
+        b=rgPbuVAluwPxpi4o0Q5OiMpObQXVAVRC6cUA3FTkSG9X1IDs0OK4RL2F2NNLzkhLN
+         y4tQmU3rWMB/LJNkl+b65SknX11Z+lSH8vqnLn8gNq8NroAWket/rdO79wyXeAgxY7
+         KoMoOvFlKjWuznhJPN3bthvcnXx1LpZ8DHyRUM08s0dn8QdCw9jCsW91LhnGt6H0in
+         w742IPIkZKhMBVWv5xG/NAiAUpIu8shnOBz85h5kFcA8UbSsoK/lxek722OGBpaI7r
+         PFRd5qRY5xIz0WZG+IGsQSo6WnCK8rkJuRp+d/+8oxePcAuS2xqYMd9NMP74NFExKD
+         GznZbPFb0PxOw==
+Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-50337b43ee6so657387e87.3;
+        Wed, 04 Oct 2023 20:55:37 -0700 (PDT)
+X-Gm-Message-State: AOJu0YzwlBqXlCVdBWxqHZYhguBBwtxiiyTo7gTvrd/RtvZ2c0+M6CgJ
+        20v5cod3UP226lP28aov5A39N6lnp/hJXkohGH0=
+X-Google-Smtp-Source: AGHT+IF4f5QmJaGGVsNqoYOF0xWkXAqZSUr24CPLmmG2eoBzxwZx9lS3Df5pF0TkOAs5eR6dHn8LDX9R5GAPIAxf2z8=
+X-Received: by 2002:a19:8c0e:0:b0:500:bc14:3e06 with SMTP id
+ o14-20020a198c0e000000b00500bc143e06mr3731394lfd.44.1696478135549; Wed, 04
+ Oct 2023 20:55:35 -0700 (PDT)
 MIME-Version: 1.0
 References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
- <20230928061543.1845742-4-yukuai1@huaweicloud.com> <CAPhsuW4tQ9A+ddpxGhfza3WSdkL+FXmS-4NLUUN7MNk0TOY0WA@mail.gmail.com>
- <0ae441ba-68db-b823-b48c-76e953d22067@huaweicloud.com>
-In-Reply-To: <0ae441ba-68db-b823-b48c-76e953d22067@huaweicloud.com>
+ <CAPhsuW5cUgqy9fqj+Z4nGPQrAok-eQ=NipNxb0TL_kuCFaPMcw@mail.gmail.com> <f59cbb99-33dd-c427-2e43-5a07ab9fbf51@huaweicloud.com>
+In-Reply-To: <f59cbb99-33dd-c427-2e43-5a07ab9fbf51@huaweicloud.com>
 From:   Song Liu <song@kernel.org>
-Date:   Wed, 4 Oct 2023 21:00:07 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6ru-Chofq8ki6Xh9U0utH6+_mo0dd3Ty8fZPHGtJ1xvQ@mail.gmail.com>
-Message-ID: <CAPhsuW6ru-Chofq8ki6Xh9U0utH6+_mo0dd3Ty8fZPHGtJ1xvQ@mail.gmail.com>
-Subject: Re: [PATCH -next v3 03/25] md: add new helpers to suspend/resume array
+Date:   Wed, 4 Oct 2023 20:55:23 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7TRODsR_N95AmXJCZvpTuSKgbOjnYGxMGAWtmt3x9Vkw@mail.gmail.com>
+Message-ID: <CAPhsuW7TRODsR_N95AmXJCZvpTuSKgbOjnYGxMGAWtmt3x9Vkw@mail.gmail.com>
+Subject: Re: [PATCH -next v3 00/25] md: synchronize io with array reconfiguration
 To:     Yu Kuai <yukuai1@huaweicloud.com>
 Cc:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
         dm-devel@redhat.com, linux-kernel@vger.kernel.org,
@@ -55,66 +54,68 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Oct 4, 2023 at 7:59=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
+On Wed, Oct 4, 2023 at 8:42=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
 ote:
 >
 > Hi,
 >
-> =E5=9C=A8 2023/09/29 2:45, Song Liu =E5=86=99=E9=81=93:
-> > On Wed, Sep 27, 2023 at 11:22=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.c=
-om> wrote:
-> >>
-> >> From: Yu Kuai <yukuai3@huawei.com>
-> >>
-> >> Advantages for new apis:
-> >>   - reconfig_mutex is not required;
-> >>   - the weird logical that suspend array hold 'reconfig_mutex' for
-> >>     mddev_check_recovery() to update superblock is not needed;
-> >>   - the specail handling, 'pers->prepare_suspend', for raid456 is not
-> >>     needed;
-> >>   - It's safe to be called at any time once mddev is allocated, and it=
-'s
-> >>     designed to be used from slow path where array configuration is ch=
-anged;
-> >>   - the new helpers is designed to be called before mddev_lock(), henc=
-e
-> >>     it support to be interrupted by user as well.
-> >>
-> >> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> >> ---
-> >>   drivers/md/md.c | 102 ++++++++++++++++++++++++++++++++++++++++++++++=
-+-
-> >>   drivers/md/md.h |   3 ++
-> >>   2 files changed, 103 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> index e460b380143d..a075d03d03d3 100644
-> >> --- a/drivers/md/md.c
-> >> +++ b/drivers/md/md.c
-> >> @@ -443,12 +443,22 @@ void mddev_suspend(struct mddev *mddev)
-> >>                          lockdep_is_held(&mddev->reconfig_mutex));
-> >>
-> >>          WARN_ON_ONCE(thread && current =3D=3D thread->tsk);
-> >> -       if (mddev->suspended++)
-> >> +
-> >> +       /* can't concurrent with __mddev_suspend() and __mddev_resume(=
-) */
-> >> +       mutex_lock(&mddev->suspend_mutex);
-> >> +       if (mddev->suspended++) {
-> >> +               mutex_unlock(&mddev->suspend_mutex);
-> >>                  return;
+> =E5=9C=A8 2023/09/29 3:15, Song Liu =E5=86=99=E9=81=93:
+> > Hi Kuai,
 > >
-> > Can we make mddev->suspended atomic_t, and use atomic_inc_return()
-> > here?
+> > Thanks for the patchset!
+> >
+> > A few high level questions/suggestions:
 >
-> 'suspend_mutex' is needed, because concurrent caller of
-> mddev_suspend() shound be ordered, they need to wait for the first
-> mddev_suspend() to be done.
+> Thanks a lot for these!
+> >
+> > 1. This is a big change that needs a lot of explanation. While you mana=
+ged to
+> > keep each patch relatively small (great job btw), it is not very clear =
+why we
+> > need these changes. Specifically, we are adding a new mutex, it is wort=
+h
+> > mentioning why we cannot achieve the same goal without it. Please add
+> > more information in the cover letter. We will put part of the cover let=
+ter in
+> > the merge commit.
 >
-> Updating suspended is protected by 'suspend_mutex' in the new api, so I
-> think it's not necessary to use atomic, WRITE/READ_ONCE() should be
-> enough.
+> Yeah, I realize that I explain too little. I will add background and
+> design.
+> >
+> > 2. In the cover letter, please also highlight that we are removing
+> >   MD_ALLOW_SB_UPDATE and MD_UPDATING_SB. This is a big improvement.
+> >
+>
+> Okay.
+> > 3. Please rearrange the patch set so that the two "READ_ONCE/WRITE_ONCE=
+"
+> > patches are at the beginning.
+>
+> Okay.
+> >
+> > 4. Please consider merging some patches. Current "add-api =3D> use-api =
+=3D>
+> > remove-old-api" makes it tricky to follow what is being changed. For th=
+is set,
+> > I found the diff of the whole set easier to follow than some of the big=
+ patches.
+> I refer to some other big patchset to replace an old api, for example:
+>
+> https://lore.kernel.org/all/20230818123232.2269-1-jack@suse.cz/
 
-Thanks for the explanation.
+Yes, this is a safe way to replace old APIs. Since the scale of this
+patchset is
+smaller, I was thinking it might not be necessary to go that path. But
+I will let
+you make the decision.
 
+> Currently I prefer to use one patch for each function point. And I do
+> merged some patches in this version, and for remaining patches, do you
+> prefer to use one patch for one file instead of one function point?(For
+> example, merge patch 10-12 for md/raid5-cache, and 13-16 for md/raid5).
+
+I think 10 should be a separate patch, and we can merge 11 and 12. We can
+merge 13-16, and maybe also 5-7 and 18-20.
+
+Thanks,
 Song
