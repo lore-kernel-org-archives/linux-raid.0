@@ -2,80 +2,101 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3480FE9413E
-	for <linux-raid@archiver.kernel.org>; Sat,  7 Oct 2023 02:49:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03057E9413E
+	for <linux-raid@archiver.kernel.org>; Sat,  7 Oct 2023 03:24:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234088AbjJGCti (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 6 Oct 2023 22:49:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51472 "EHLO
+        id S1343499AbjJGDYk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 6 Oct 2023 23:24:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233513AbjJGCth (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 6 Oct 2023 22:49:37 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ADDABD;
-        Fri,  6 Oct 2023 19:49:35 -0700 (PDT)
+        with ESMTP id S234091AbjJGDYj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 6 Oct 2023 23:24:39 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0D98BD;
+        Fri,  6 Oct 2023 20:24:37 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4S2VBH0rLcz4f3khj;
-        Sat,  7 Oct 2023 10:49:27 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAXrt06xyBlfdFPCQ--.31163S3;
-        Sat, 07 Oct 2023 10:49:32 +0800 (CST)
-Subject: Re: [PATCH -next v3 00/25] md: synchronize io with array
- reconfiguration
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     xni@redhat.com, agk@redhat.com, snitzer@kernel.org,
-        dm-devel@redhat.com, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20230928061543.1845742-1-yukuai1@huaweicloud.com>
- <CAPhsuW5cUgqy9fqj+Z4nGPQrAok-eQ=NipNxb0TL_kuCFaPMcw@mail.gmail.com>
- <f59cbb99-33dd-c427-2e43-5a07ab9fbf51@huaweicloud.com>
- <CAPhsuW7TRODsR_N95AmXJCZvpTuSKgbOjnYGxMGAWtmt3x9Vkw@mail.gmail.com>
- <eb4ea24d-f7b4-899b-9259-2d48dc83e48f@huaweicloud.com>
- <CAPhsuW72zSALeSk96QAdq4cHf=y_n13MOBmxH-dTUKjkbc_jig@mail.gmail.com>
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4S2Vyl6DkHz4f3m6r;
+        Sat,  7 Oct 2023 11:24:31 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgD3jd1tzyBlo9pRCQ--.28427S4;
+        Sat, 07 Oct 2023 11:24:32 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <9ce30c2f-bc45-6072-b454-aca154b779ce@huaweicloud.com>
-Date:   Sat, 7 Oct 2023 10:49:30 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next] md/raid1: don't split discard io for write behind
+Date:   Sat,  7 Oct 2023 19:21:05 +0800
+Message-Id: <20231007112105.407449-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW72zSALeSk96QAdq4cHf=y_n13MOBmxH-dTUKjkbc_jig@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAXrt06xyBlfdFPCQ--.31163S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYk7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-        Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-        6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
-        CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4II
-        rI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr4
-        1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
-        67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
-        8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
-        wI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
-        0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-TRANSID: gCh0CgD3jd1tzyBlo9pRCQ--.28427S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7try8AF18Ar4rXw4DJr4fXwb_yoW8Ww1rp3
+        yqgFWYyr9rXr12yr1DXa4DZFyrtasFqrW7KrWfX3y7Zr13XFyUXa1ktas5Jr1kCrZ3ury3
+        Zr4qyrW8ua4UXrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2ocxC64kIII
+        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xv
+        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
+        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
+        64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r
+        1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAq
+        YI8I648v4I1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
+        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+        0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AK
+        xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
+        TRNgAwUUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: Yu Kuai <yukuai3@huawei.com>
 
-在 2023/10/07 10:40, Song Liu 写道:
->> Can you take a look about this new cover letter?
-> 
-> I don't have time right now to look into all the details, but it looks
-> great at first glance. We can still edit it a little bit when applying the
-> patchset, but that may not be necessary.
+Currently, discad io is treated the same as normal write io, and for
+write behind case, io size is limited to:
 
-Yeah, it's not urgent so you can take it slow, I just want to make sure
-that you're good with it. I'll edit this cover letter a bit and send v4
-soon.
+BIO_MAX_VECS * (PAGE_SIZE >> 9)
 
-Thanks,
-Kuai
+For 0.5KB sector size and 4KB PAGE_SIZE, this is just 1MB. For
+consequence, if 'WriteMostly' is set to one of the underlying disks,
+then diskcard io will be splited into 1MB and it will take a long time
+for the diskcard to finish.
+
+Fix this problem by disable write behind for discard io.
+
+Reported-by: Roman Mamedov <rm@romanrm.net>
+Closes: https://lore.kernel.org/all/6a1165f7-c792-c054-b8f0-1ad4f7b8ae01@ultracoder.org/
+Reported-and-tested-by: Kirill Kirilenko <kirill@ultracoder.org>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/raid1.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 3a78f79ee6d5..35d12948e0a9 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1345,6 +1345,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	int first_clone;
+ 	int max_sectors;
+ 	bool write_behind = false;
++	bool is_discard = (bio_op(bio) == REQ_OP_DISCARD);
+ 
+ 	if (mddev_is_clustered(mddev) &&
+ 	     md_cluster_ops->area_resyncing(mddev, WRITE,
+@@ -1405,7 +1406,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		 * write-mostly, which means we could allocate write behind
+ 		 * bio later.
+ 		 */
+-		if (rdev && test_bit(WriteMostly, &rdev->flags))
++		if (!is_discard && rdev && test_bit(WriteMostly, &rdev->flags))
+ 			write_behind = true;
+ 
+ 		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
+-- 
+2.39.2
 
