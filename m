@@ -2,111 +2,128 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0D3E9371F
-	for <linux-raid@archiver.kernel.org>; Mon,  9 Oct 2023 23:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3F2CD68F5
+	for <linux-raid@archiver.kernel.org>; Tue, 10 Oct 2023 07:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378932AbjJIXdi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 9 Oct 2023 19:33:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54470 "EHLO
+        id S1442444AbjJJHXm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 10 Oct 2023 03:23:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231434AbjJIXdh (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 Oct 2023 19:33:37 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 781D79E;
-        Mon,  9 Oct 2023 16:33:36 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 132A8C433C7;
-        Mon,  9 Oct 2023 23:33:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696894416;
-        bh=XjQLpSnKKBl6+0xF9NMa4bIa1sm/2ewlpC0N4jCimOE=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=B3/Sd+/0rbIP/kuEe8ctsT36Q6YoxRJHI8kIx9Yt41lR/rQVuitEOGD2xWRhnXD/2
-         RfcaOWnTGF+i8VqXIuBcYbPtcz+0bqdarbMFbaPU0BzPbfCSl4M727ymP8KUNpC7lN
-         EcW0I4wfqx9eArZpbAhEEDZG5i6ETgRG5OB3HvS3Yt0rmtYeYGD/vjOktV/MalBNq+
-         o1cOL4RM+elpHRx37c8jImwozWVPxPeGemOprKbHvZTrQ9P70RvoHhkg9edPI+C3Vw
-         o9NbhREJkR3CwToGVpNBVlLSHGCjtiHpTJTkIOyXPyv79LDLKCIdupnMmKjYew+Ofw
-         Ubj9bB7CItMUg==
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5041d6d8b10so6488183e87.2;
-        Mon, 09 Oct 2023 16:33:35 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yzh5emAI5kglN8RA3Y+9ohgRmBknmceQvooYDUQ+xVcndkcvR7M
-        UelUGaSGQcDn80DTFdkOlainoiPT6HBdUmIlmB4=
-X-Google-Smtp-Source: AGHT+IEe8UnWWmB8TjnYm6kXN3/n4gTehWA7M3N+LLdCj3vmBzJ2nj558NPt0sri4b6EqBcTNhACrt/vvi763Dg113M=
-X-Received: by 2002:ac2:58cf:0:b0:502:b1b9:88c5 with SMTP id
- u15-20020ac258cf000000b00502b1b988c5mr12461478lfo.26.1696894414220; Mon, 09
- Oct 2023 16:33:34 -0700 (PDT)
+        with ESMTP id S1442278AbjJJHXl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 10 Oct 2023 03:23:41 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2350B6;
+        Tue, 10 Oct 2023 00:23:39 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4S4S780PJVz4f3kp8;
+        Tue, 10 Oct 2023 15:23:32 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgDHXd31+yRl1AZbCg--.36859S5;
+        Tue, 10 Oct 2023 15:23:37 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org, xni@redhat.com
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next v4 01/19] md: use READ_ONCE/WRITE_ONCE for 'suspend_lo' and 'suspend_hi'
+Date:   Tue, 10 Oct 2023 23:19:40 +0800
+Message-Id: <20231010151958.145896-2-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231010151958.145896-1-yukuai1@huaweicloud.com>
+References: <20231010151958.145896-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-References: <20231007112105.407449-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20231007112105.407449-1-yukuai1@huaweicloud.com>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 9 Oct 2023 16:33:22 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5Lv4SEJtVmH2AO1b0cNxErqazHH8Ew7jXt784rR59c8g@mail.gmail.com>
-Message-ID: <CAPhsuW5Lv4SEJtVmH2AO1b0cNxErqazHH8Ew7jXt784rR59c8g@mail.gmail.com>
-Subject: Re: [PATCH -next] md/raid1: don't split discard io for write behind
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgDHXd31+yRl1AZbCg--.36859S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ww4DuF45KFyfJrW3CrWDtwb_yoW8tF4Up3
+        yIgFWYgw45tas5Aw1Ut3WkCFy5XwsxKrWvyrZrWry7C3W7Ww1rGr15WF43XryFvas7CFsx
+        Gw4DA3WrA348GFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2048vs2IY02
+        0E87I2jVAFwI0_Jr4l82xGYIkIc2x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2
+        F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjx
+        v20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2
+        z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0V
+        AKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1l
+        Ox8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErc
+        IFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
+        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRxhLUUUUUU
+        =
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Oct 6, 2023 at 8:24=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Currently, discad io is treated the same as normal write io, and for
-> write behind case, io size is limited to:
->
-> BIO_MAX_VECS * (PAGE_SIZE >> 9)
->
-> For 0.5KB sector size and 4KB PAGE_SIZE, this is just 1MB. For
-> consequence, if 'WriteMostly' is set to one of the underlying disks,
-> then diskcard io will be splited into 1MB and it will take a long time
-> for the diskcard to finish.
->
-> Fix this problem by disable write behind for discard io.
->
-> Reported-by: Roman Mamedov <rm@romanrm.net>
-> Closes: https://lore.kernel.org/all/6a1165f7-c792-c054-b8f0-1ad4f7b8ae01@=
-ultracoder.org/
-> Reported-and-tested-by: Kirill Kirilenko <kirill@ultracoder.org>
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai3@huawei.com>
 
-Applied to md-next. Thanks!
+Protect 'suspend_lo' and 'suspend_hi' with READ_ONCE/WRITE_ONCE to prevent
+reading abnormal values.
 
-Song
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-> ---
->  drivers/md/raid1.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 3a78f79ee6d5..35d12948e0a9 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1345,6 +1345,7 @@ static void raid1_write_request(struct mddev *mddev=
-, struct bio *bio,
->         int first_clone;
->         int max_sectors;
->         bool write_behind =3D false;
-> +       bool is_discard =3D (bio_op(bio) =3D=3D REQ_OP_DISCARD);
->
->         if (mddev_is_clustered(mddev) &&
->              md_cluster_ops->area_resyncing(mddev, WRITE,
-> @@ -1405,7 +1406,7 @@ static void raid1_write_request(struct mddev *mddev=
-, struct bio *bio,
->                  * write-mostly, which means we could allocate write behi=
-nd
->                  * bio later.
->                  */
-> -               if (rdev && test_bit(WriteMostly, &rdev->flags))
-> +               if (!is_discard && rdev && test_bit(WriteMostly, &rdev->f=
-lags))
->                         write_behind =3D true;
->
->                 if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
-> --
-> 2.39.2
->
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 78853b05f99c..930bcabeec79 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -359,11 +359,11 @@ static bool is_suspended(struct mddev *mddev, struct bio *bio)
+ 		return true;
+ 	if (bio_data_dir(bio) != WRITE)
+ 		return false;
+-	if (mddev->suspend_lo >= mddev->suspend_hi)
++	if (READ_ONCE(mddev->suspend_lo) >= READ_ONCE(mddev->suspend_hi))
+ 		return false;
+-	if (bio->bi_iter.bi_sector >= mddev->suspend_hi)
++	if (bio->bi_iter.bi_sector >= READ_ONCE(mddev->suspend_hi))
+ 		return false;
+-	if (bio_end_sector(bio) < mddev->suspend_lo)
++	if (bio_end_sector(bio) < READ_ONCE(mddev->suspend_lo))
+ 		return false;
+ 	return true;
+ }
+@@ -5179,7 +5179,8 @@ __ATTR(sync_max, S_IRUGO|S_IWUSR, max_sync_show, max_sync_store);
+ static ssize_t
+ suspend_lo_show(struct mddev *mddev, char *page)
+ {
+-	return sprintf(page, "%llu\n", (unsigned long long)mddev->suspend_lo);
++	return sprintf(page, "%llu\n",
++		       (unsigned long long)READ_ONCE(mddev->suspend_lo));
+ }
+ 
+ static ssize_t
+@@ -5199,7 +5200,7 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
+ 		return err;
+ 
+ 	mddev_suspend(mddev);
+-	mddev->suspend_lo = new;
++	WRITE_ONCE(mddev->suspend_lo, new);
+ 	mddev_resume(mddev);
+ 
+ 	mddev_unlock(mddev);
+@@ -5211,7 +5212,8 @@ __ATTR(suspend_lo, S_IRUGO|S_IWUSR, suspend_lo_show, suspend_lo_store);
+ static ssize_t
+ suspend_hi_show(struct mddev *mddev, char *page)
+ {
+-	return sprintf(page, "%llu\n", (unsigned long long)mddev->suspend_hi);
++	return sprintf(page, "%llu\n",
++		       (unsigned long long)READ_ONCE(mddev->suspend_hi));
+ }
+ 
+ static ssize_t
+@@ -5231,7 +5233,7 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
+ 		return err;
+ 
+ 	mddev_suspend(mddev);
+-	mddev->suspend_hi = new;
++	WRITE_ONCE(mddev->suspend_hi, new);
+ 	mddev_resume(mddev);
+ 
+ 	mddev_unlock(mddev);
+-- 
+2.39.2
+
