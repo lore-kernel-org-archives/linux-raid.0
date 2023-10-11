@@ -2,87 +2,85 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADF2BCD98E9
-	for <linux-raid@archiver.kernel.org>; Wed, 11 Oct 2023 03:25:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC352CD6E64
+	for <linux-raid@archiver.kernel.org>; Wed, 11 Oct 2023 13:04:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345026AbjJKDZM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 10 Oct 2023 23:25:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52068 "EHLO
+        id S232270AbjJKNEi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 11 Oct 2023 09:04:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344976AbjJKDZK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 10 Oct 2023 23:25:10 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17EEF9B;
-        Tue, 10 Oct 2023 20:25:08 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4S4ynR4MNPz4f3kj6;
-        Wed, 11 Oct 2023 11:24:59 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAnvdyPFSZlJx6iCg--.58306S3;
-        Wed, 11 Oct 2023 11:25:04 +0800 (CST)
-Subject: Re: [PATCH -next v4 00/19] md: synchronize io with array
- reconfiguration
-To:     Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     xni@redhat.com, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, yi.zhang@huawei.com,
-        yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20231010151958.145896-1-yukuai1@huaweicloud.com>
- <CAPhsuW7A6_YFHtYb6=KUCdm-zf_Rj+UY1hG2_ZFbW6QSVnyCDA@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <e5e75f92-0414-3cf1-7a3f-f35e54fb9801@huaweicloud.com>
-Date:   Wed, 11 Oct 2023 11:25:02 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S234915AbjJKNEh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 11 Oct 2023 09:04:37 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98F6291
+        for <linux-raid@vger.kernel.org>; Wed, 11 Oct 2023 06:03:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1697029429;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=86/TC+TLx7DhcognvIA9PQHSP3QMFd4CdbX/MJycGvQ=;
+        b=Hm3UZzrrDO8xa1t5IRTJ9MwD0ao8qDcfZyjiMmrXxlsH56O3RvQxNZYjQGy9PGLUUb9n6n
+        uYtN7cjsQOpWGIrupzuC/hUoqOeLRE0QdGuWJ70SG1CngROQ+ie1yeu7CaLTZQoT1MYqYA
+        ubjkthDP+Tc8GGdNJ07M5urCvtfxHB4=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-227-eYCIZEY6NcuIIQCwVuf0WA-1; Wed, 11 Oct 2023 09:03:36 -0400
+X-MC-Unique: eYCIZEY6NcuIIQCwVuf0WA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6504C3816C84;
+        Wed, 11 Oct 2023 13:03:36 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.72.113.179])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9ED4463F67;
+        Wed, 11 Oct 2023 13:03:34 +0000 (UTC)
+From:   Xiao Ni <xni@redhat.com>
+To:     jes@trained-monkey.org
+Cc:     mariusz.tkaczyk@linux.intel.com, linux-raid@vger.kernel.org
+Subject: [PATCH 1/1] mdadm/ddf: Abort when raid disk is smaller in getinfo_super_ddf
+Date:   Wed, 11 Oct 2023 21:03:32 +0800
+Message-Id: <20231011130332.78933-1-xni@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW7A6_YFHtYb6=KUCdm-zf_Rj+UY1hG2_ZFbW6QSVnyCDA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnvdyPFSZlJx6iCg--.58306S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYF7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-        Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-        6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
-        CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
-        xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
-        1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
-        14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
-        IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvE
-        x4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnU
-        UI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+The metadata is corrupted when the raid_disk<0. So abort directly.
+This also can avoid a building error:
+super-ddf.c:1988:58: error: array subscript -1 is below array bounds of ‘struct phys_disk_entry[0]’
 
-在 2023/10/11 10:47, Song Liu 写道:
-> On Tue, Oct 10, 2023 at 12:23 AM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Changes in v4:
->>   - add detailed explanation of backgroud and design in cover letter;
->>   - merge some patches;
-> 
-> Thanks for v4!
-> 
-> I applied it to a tmp branch (md-tmp-20231010) with modified cover letter
-> as the merge log. Please let me know what do you think about it.
+Suggested-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Ackedy-by: Xiao Ni <xni@redhat.com>
+---
+ super-ddf.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Thanks, this looks great!
-
-I'll start to cleanup lots of stuff.
-
-Kuai,
-
-> 
-> Thanks,
-> Song
-> .
-> 
+diff --git a/super-ddf.c b/super-ddf.c
+index 7213284e0a59..7b98333ecd51 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -1984,12 +1984,14 @@ static void getinfo_super_ddf(struct supertype *st, struct mdinfo *info, char *m
+ 		info->disk.number = be32_to_cpu(ddf->dlist->disk.refnum);
+ 		info->disk.raid_disk = find_phys(ddf, ddf->dlist->disk.refnum);
+ 
++		if (info->disk.raid_disk < 0)
++			return;
++
+ 		info->data_offset = be64_to_cpu(ddf->phys->
+ 						  entries[info->disk.raid_disk].
+ 						  config_size);
+ 		info->component_size = ddf->dlist->size - info->data_offset;
+-		if (info->disk.raid_disk >= 0)
+-			pde = ddf->phys->entries + info->disk.raid_disk;
++		pde = ddf->phys->entries + info->disk.raid_disk;
+ 		if (pde &&
+ 		    !(be16_to_cpu(pde->state) & DDF_Failed) &&
+ 		    !(be16_to_cpu(pde->state) & DDF_Missing))
+-- 
+2.32.0 (Apple Git-132)
 
