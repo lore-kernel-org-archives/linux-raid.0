@@ -2,121 +2,207 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4A06CD6E64
-	for <linux-raid@archiver.kernel.org>; Wed, 11 Oct 2023 13:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7582CDB46E
+	for <linux-raid@archiver.kernel.org>; Thu, 12 Oct 2023 05:21:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235010AbjJKN0q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 11 Oct 2023 09:26:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60586 "EHLO
+        id S1376867AbjJLFVX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 12 Oct 2023 01:21:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346857AbjJKN0o (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 11 Oct 2023 09:26:44 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65B86AF
-        for <linux-raid@vger.kernel.org>; Wed, 11 Oct 2023 06:25:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697030752;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=PmPvl73WetME6mCWuPQw9Xw20nB7Yjr0cwaL/rXZvcQ=;
-        b=C95c3fuit5sPla8MQozpOYyL9aIBB6F5PaVdm7QQ92KhK2MmaIJtxVfjiRCARhDSuchAtT
-        xOOK1RDacGqpP2++eDv0o56GitqqSs2rli77QVS5j35YixZO6eKHztomzHvoygZvUSzqE2
-        06bFvEBq8rmG+lI/2DSHah2/GnoZ+B0=
-Received: from mail-yb1-f200.google.com (mail-yb1-f200.google.com
- [209.85.219.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-195-JpiVmZmxNLStXT3UxMKwIA-1; Wed, 11 Oct 2023 09:25:51 -0400
-X-MC-Unique: JpiVmZmxNLStXT3UxMKwIA-1
-Received: by mail-yb1-f200.google.com with SMTP id 3f1490d57ef6-d9a4a89ab5fso2971965276.3
-        for <linux-raid@vger.kernel.org>; Wed, 11 Oct 2023 06:25:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697030750; x=1697635550;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PmPvl73WetME6mCWuPQw9Xw20nB7Yjr0cwaL/rXZvcQ=;
-        b=G1Jyo000N4VeJdz+AXWr19/E+sz6cLnigH948SEuU0N6zT3Gk6db4K08lf2gHRg9Vl
-         bIpRCj7DZF/+o8Fo27UmMIbyuD+ojCBNOUFI0gp+cOGz74sRngxgUjzei3TDpX/k1b1a
-         pirb0bQ28gcWYy7JtynSyohgMVCO6jTBcKhFgKerCiDWYNIuR96CD0180FyhBP4uFxb8
-         pn9gwOkqaI8iLCawbPdLrnm9JXRVPxTF+TBHIuwA0AWj5PLDKqA6JnonUOtgNMKYpUsZ
-         OVnACIrgx9zOW5RCGUa8Um0Z3vSDBbUCfHRwSTXI77tmyp47EOLDVjbFIk9OMpUJsthX
-         ghcA==
-X-Gm-Message-State: AOJu0YxK5NVJg2E5ye7rMCv/OodxECHuicc1IJdyV8XFTB1dcro39lhv
-        B+QfEQhBlc++I0KlKJUrjoJuRrbxWjamODMuu9I9SFMJotOQLIIwwqw9Hd6k23aqYl6P2ka+xaZ
-        0p/Mlfo4WI6f8GIxG3/55kJHk8ur0fpNHV0c2bgU3uIOwahZusGQ=
-X-Received: by 2002:a5b:408:0:b0:d81:8c74:8f88 with SMTP id m8-20020a5b0408000000b00d818c748f88mr19188562ybp.25.1697030749667;
-        Wed, 11 Oct 2023 06:25:49 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEJ+eXOwqd5fdKnnvJYhkgaLFnYrOU1+DgP0mZt7vg8uDQy5BBrpSRE41TOQakokbcsU6qCL62jK4KO5pH61Os=
-X-Received: by 2002:a5b:408:0:b0:d81:8c74:8f88 with SMTP id
- m8-20020a5b0408000000b00d818c748f88mr19188543ybp.25.1697030749370; Wed, 11
- Oct 2023 06:25:49 -0700 (PDT)
-MIME-Version: 1.0
-References: <20231011130332.78933-1-xni@redhat.com>
-In-Reply-To: <20231011130332.78933-1-xni@redhat.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 11 Oct 2023 21:25:37 +0800
-Message-ID: <CALTww28hforasc+v3GUWPdoyFyvFZOK8KXeZBKykr_u-2T3K9A@mail.gmail.com>
-Subject: Re: [PATCH 1/1] mdadm/ddf: Abort when raid disk is smaller in getinfo_super_ddf
-To:     jes@trained-monkey.org
-Cc:     mariusz.tkaczyk@linux.intel.com, linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S233879AbjJLFVW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 Oct 2023 01:21:22 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E288B7
+        for <linux-raid@vger.kernel.org>; Wed, 11 Oct 2023 22:21:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697088081; x=1728624081;
+  h=date:from:to:cc:subject:message-id;
+  bh=dYMY4e4CQCmAmFZyioKIspzRrzLAlepiQC7DzTyW3ro=;
+  b=WraqkXtz+h1cPYkKXVwcBKmfgNQevnWsPRqA4XbKfYICEUxwr187BfPt
+   m4UbEHjEjdMLGD1nmzVEyF90ycx5Ftvxmcjq1pdtxpONm2dxW2kdcrcmT
+   Vek0UxkQFYd6L/0eS2O0GQw44NG+sfR12PZQgs3BCHA0jTxhXysCAifuo
+   Cqdv/+O1/o31D5wC/CMdKT61JiTaQ03q6nrReaX10m0PU9g7pjFJ1swk/
+   l2TFq1CBvMHb6OReQ2ecC3Cvz4iuJGRQuetV3hs3C6RWvVY3IRvuKyM1r
+   35blOm7QYUnCoSS0+GD9gbnOdQcvLzCh2WTAXTKT97tRQxxt+WeunIXSL
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10860"; a="471089116"
+X-IronPort-AV: E=Sophos;i="6.03,217,1694761200"; 
+   d="scan'208";a="471089116"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 22:21:21 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10860"; a="824446510"
+X-IronPort-AV: E=Sophos;i="6.03,217,1694761200"; 
+   d="scan'208";a="824446510"
+Received: from lkp-server02.sh.intel.com (HELO f64821696465) ([10.239.97.151])
+  by fmsmga004.fm.intel.com with ESMTP; 11 Oct 2023 22:21:20 -0700
+Received: from kbuild by f64821696465 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qqo8M-0003DM-1A;
+        Thu, 12 Oct 2023 05:21:18 +0000
+Date:   Thu, 12 Oct 2023 13:20:24 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-tmp-20231010] BUILD SUCCESS
+ 9164e4a5af9c5587f8fdddeee30c615d21676e92
+Message-ID: <202310121321.Lp5VMUOK-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Sorry, the title should be [PATCH 1/1] mdadm/ddf: Abort when raid disk
-is smaller than 0 in getinfo_super_ddf
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-tmp-20231010
+branch HEAD: 9164e4a5af9c5587f8fdddeee30c615d21676e92  Merge branch 'md-suspend-rewrite' into md-next
 
-If you want me to send v2, I can do it.
+elapsed time: 1554m
 
-Best Regards
-Xiao
+configs tested: 137
+configs skipped: 2
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-On Wed, Oct 11, 2023 at 9:06=E2=80=AFPM Xiao Ni <xni@redhat.com> wrote:
->
-> The metadata is corrupted when the raid_disk<0. So abort directly.
-> This also can avoid a building error:
-> super-ddf.c:1988:58: error: array subscript -1 is below array bounds of =
-=E2=80=98struct phys_disk_entry[0]=E2=80=99
->
-> Suggested-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> Ackedy-by: Xiao Ni <xni@redhat.com>
-> ---
->  super-ddf.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/super-ddf.c b/super-ddf.c
-> index 7213284e0a59..7b98333ecd51 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -1984,12 +1984,14 @@ static void getinfo_super_ddf(struct supertype *s=
-t, struct mdinfo *info, char *m
->                 info->disk.number =3D be32_to_cpu(ddf->dlist->disk.refnum=
-);
->                 info->disk.raid_disk =3D find_phys(ddf, ddf->dlist->disk.=
-refnum);
->
-> +               if (info->disk.raid_disk < 0)
-> +                       return;
-> +
->                 info->data_offset =3D be64_to_cpu(ddf->phys->
->                                                   entries[info->disk.raid=
-_disk].
->                                                   config_size);
->                 info->component_size =3D ddf->dlist->size - info->data_of=
-fset;
-> -               if (info->disk.raid_disk >=3D 0)
-> -                       pde =3D ddf->phys->entries + info->disk.raid_disk=
-;
-> +               pde =3D ddf->phys->entries + info->disk.raid_disk;
->                 if (pde &&
->                     !(be16_to_cpu(pde->state) & DDF_Failed) &&
->                     !(be16_to_cpu(pde->state) & DDF_Missing))
-> --
-> 2.32.0 (Apple Git-132)
->
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm64                             allnoconfig   gcc  
+arm64                               defconfig   gcc  
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+i386                             allmodconfig   gcc  
+i386                              allnoconfig   gcc  
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-001-20231011   gcc  
+i386         buildonly-randconfig-002-20231011   gcc  
+i386         buildonly-randconfig-003-20231011   gcc  
+i386         buildonly-randconfig-004-20231011   gcc  
+i386         buildonly-randconfig-005-20231011   gcc  
+i386         buildonly-randconfig-006-20231011   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                  randconfig-001-20231011   gcc  
+i386                  randconfig-002-20231011   gcc  
+i386                  randconfig-003-20231011   gcc  
+i386                  randconfig-004-20231011   gcc  
+i386                  randconfig-005-20231011   gcc  
+i386                  randconfig-006-20231011   gcc  
+i386                  randconfig-011-20231011   gcc  
+i386                  randconfig-012-20231011   gcc  
+i386                  randconfig-013-20231011   gcc  
+i386                  randconfig-014-20231011   gcc  
+i386                  randconfig-015-20231011   gcc  
+i386                  randconfig-016-20231011   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                        allyesconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20231011   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                             allmodconfig   gcc  
+mips                              allnoconfig   gcc  
+mips                             allyesconfig   gcc  
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+openrisc                         allmodconfig   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                  randconfig-001-20231011   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                 randconfig-001-20231011   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-005-20231011   gcc  
+x86_64       buildonly-randconfig-006-20231011   gcc  
+x86_64                              defconfig   gcc  
+x86_64                randconfig-001-20231011   gcc  
+x86_64                randconfig-002-20231011   gcc  
+x86_64                randconfig-003-20231011   gcc  
+x86_64                randconfig-004-20231011   gcc  
+x86_64                randconfig-005-20231011   gcc  
+x86_64                randconfig-006-20231011   gcc  
+x86_64                randconfig-011-20231011   gcc  
+x86_64                randconfig-011-20231012   gcc  
+x86_64                randconfig-012-20231011   gcc  
+x86_64                randconfig-012-20231012   gcc  
+x86_64                randconfig-013-20231011   gcc  
+x86_64                randconfig-013-20231012   gcc  
+x86_64                randconfig-014-20231011   gcc  
+x86_64                randconfig-014-20231012   gcc  
+x86_64                randconfig-015-20231011   gcc  
+x86_64                randconfig-015-20231012   gcc  
+x86_64                randconfig-016-20231011   gcc  
+x86_64                randconfig-016-20231012   gcc  
+x86_64                randconfig-071-20231011   gcc  
+x86_64                randconfig-071-20231012   gcc  
+x86_64                randconfig-072-20231011   gcc  
+x86_64                randconfig-072-20231012   gcc  
+x86_64                randconfig-073-20231011   gcc  
+x86_64                randconfig-073-20231012   gcc  
+x86_64                randconfig-074-20231011   gcc  
+x86_64                randconfig-074-20231012   gcc  
+x86_64                randconfig-075-20231011   gcc  
+x86_64                randconfig-075-20231012   gcc  
+x86_64                randconfig-076-20231011   gcc  
+x86_64                randconfig-076-20231012   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
 
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
