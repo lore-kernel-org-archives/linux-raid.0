@@ -2,65 +2,85 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4759ECDB488
-	for <linux-raid@archiver.kernel.org>; Thu, 12 Oct 2023 16:31:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C6DECDB47E
+	for <linux-raid@archiver.kernel.org>; Thu, 12 Oct 2023 17:38:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379631AbjJLQbg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 12 Oct 2023 12:31:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43784 "EHLO
+        id S1347459AbjJLRih (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 12 Oct 2023 13:38:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379625AbjJLQbf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 Oct 2023 12:31:35 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6512AC0;
-        Thu, 12 Oct 2023 09:31:34 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0334FC433CD;
-        Thu, 12 Oct 2023 16:31:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697128294;
-        bh=JXim5GrdkpXeREO7B0wcxs2MBI5cT1lmxX3xULvZSEc=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=gr5cJwUoJZKS97RqfdmNrup96OW2/6YyI07jxvvwjNzJ6nj+pr2z38gxLQ4vxaXfG
-         g0aa95wngXDKsNAyB6I2cGqY1j3BKTOZnGcTlWVKT3d1tK+3RqNkJQ9hgn/ifRaatI
-         wlCJC8beXmIU+UE+XgHEJvqtClA+QzqPC/htuRuU8mvqUKqdNciMGZHUDQ9K3X275k
-         3CS7J0M9dVoqzp3lD2kfLo6lN+3gwmsgDyUK8MIZnvWR0ghnzGSBlBn9W3WCQNQv0O
-         /9YrOx+3Z3M4l/I7Q9Asz5gL1D2263c7+34/DZ3ezr+1Ofd/0boPv2k9pS8guXMuc7
-         iwh8RabIN/47Q==
-Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-505a62d24b9so1537483e87.2;
-        Thu, 12 Oct 2023 09:31:33 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yx9iOD+CltMbtpLm+asvziEcWp1DZR2I4uK7Ekv9yYmoY4vOpUm
-        mLQZrZ7W9M6GmKrb+VwQa/GYXzNPlXwsX82z1pk=
-X-Google-Smtp-Source: AGHT+IHRJ05LP40unJii5NxjwAPAeXOGYT+YjQ1BFGmvvN+O+cwvjNw2YKNV71FaVg1yeI1FLi7x8QoZ1uQtVzICJXM=
-X-Received: by 2002:ac2:505a:0:b0:502:ab7b:e477 with SMTP id
- a26-20020ac2505a000000b00502ab7be477mr20668195lfm.53.1697128292130; Thu, 12
- Oct 2023 09:31:32 -0700 (PDT)
+        with ESMTP id S1347453AbjJLRiY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 Oct 2023 13:38:24 -0400
+Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56A3F1B2
+        for <linux-raid@vger.kernel.org>; Thu, 12 Oct 2023 10:37:15 -0700 (PDT)
+Received: by mail-il1-x136.google.com with SMTP id e9e14a558f8ab-3574c225c14so1604225ab.0
+        for <linux-raid@vger.kernel.org>; Thu, 12 Oct 2023 10:37:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1697132234; x=1697737034; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=3fP3PSonxE3b8oN/BrMP7MMUuVcreoUisJQQ+xM9c3I=;
+        b=yihVtJExzlvPa/22vOLkX6Zvi/GIkVj1OEBRAp0KS1iJYbPzGLGaRr0x9YXl1HXFHo
+         pkzbmKy/91wGBjs/hCSIAOyN7Te2SengX8z84hulcwHEOwfa3aQWUWdappypkH9MIN79
+         Z8+1Kwz0rJbevaYxGYwNRJ2ZcvTH2kQoTvGNR+DUkZ1mvtADOOG8D01HKDz6qSCpOs7R
+         rU4GKkEPXX110jL4vNZ1JtfE64qO9f42Hfe305REQdnX/wYhdsQCq2XIeOniWgcDadOc
+         dc/jGLVGDx6PyOsM+9KbwdyhN1L06AkD56TnLItSPK5VgHeU3gmV7JqH10r2fnvqTVg2
+         HDlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697132234; x=1697737034;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3fP3PSonxE3b8oN/BrMP7MMUuVcreoUisJQQ+xM9c3I=;
+        b=qs2Ay1YWFAokHVBdlj+O+0w16Ikm+upgjdRxGesWaA1Cg+UNsurcovBdYkTj6C2Dxh
+         JofQ/7gNSvMoAgdvs97GXvOSdTI+8I+zZllLw+Vw/upGGQbW2jja3uKyuVBavitG1Y40
+         1sHz7nCtVD4BQE+Ifxx0lui2CiNOjqi9QRTKwysXL3ES7t/C34ZoyJm5oJrTR0qw/QAc
+         twv6oRcyOfdBDip3Cyd+p3h2PwXuy5fC344Eu5cVKiKnsZeHbLCxlsO9DTcNHX49tT+W
+         zm4z3YXqUDx4O3oo4YWGs8DospBRYeb22lQ1HZSSJUs8NQYc7otPYkOAjqsa8F8SbgE4
+         S5eg==
+X-Gm-Message-State: AOJu0YyVivsB4VivBlkNLNfUQC/BSXDBiqdKyfHU4oIZxGJQWZuEKD0l
+        VQVixFItSYAYWoCQKScTkMiZwA==
+X-Google-Smtp-Source: AGHT+IHb0inN/olr/9Ui1zD+9z4EOPwxufTCX8yKF1EdfGSxJRk9IlFKIYZDcMuWO0z1LtzNf6kLfA==
+X-Received: by 2002:a05:6602:2e03:b0:792:6068:dcc8 with SMTP id o3-20020a0566022e0300b007926068dcc8mr32138507iow.2.1697132234578;
+        Thu, 12 Oct 2023 10:37:14 -0700 (PDT)
+Received: from [192.168.1.94] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id fx17-20020a0566381e1100b004317dfe68e7sm3994713jab.153.2023.10.12.10.37.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 Oct 2023 10:37:13 -0700 (PDT)
+Message-ID: <29275e05-21f5-4003-acda-59948bf9c4f0@kernel.dk>
+Date:   Thu, 12 Oct 2023 11:37:11 -0600
 MIME-Version: 1.0
-References: <20230925125940.1542506-1-den-plotnikov@yandex-team.ru>
-In-Reply-To: <20230925125940.1542506-1-den-plotnikov@yandex-team.ru>
-From:   Song Liu <song@kernel.org>
-Date:   Thu, 12 Oct 2023 09:31:19 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6SkP8vq7yYWTrUkCGvtzQqxG-O_Xj5__park4VnDYs6Q@mail.gmail.com>
-Message-ID: <CAPhsuW6SkP8vq7yYWTrUkCGvtzQqxG-O_Xj5__park4VnDYs6Q@mail.gmail.com>
-Subject: Re: [PATCH] md-cluster: check for timeout while a new disk adding
-To:     Denis Plotnikov <den-plotnikov@yandex-team.ru>
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-next 20231012
+Content-Language: en-US
+To:     Song Liu <songliubraving@meta.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Yu Kuai <yukuai3@huawei.com>, Yu Kuai <yukuai1@huaweicloud.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+References: <93D0A7F8-B4DF-43B1-983A-27DF9BF33663@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <93D0A7F8-B4DF-43B1-983A-27DF9BF33663@fb.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Sep 25, 2023 at 5:59=E2=80=AFAM Denis Plotnikov
-<den-plotnikov@yandex-team.ru> wrote:
->
-> A new disk adding may end up with timeout and a new disk won't be added.
-> Add returning the error in that case.
->
-> Found by Linux Verification Center (linuxtesting.org) with SVACE
->
-> Signed-off-by: Denis Plotnikov <den-plotnikov@yandex-team.ru>
+On 10/12/23 12:33 AM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following changes for md-next on top of your
+> for-6.7/block branch. The major changes are:
+> 
+> 1. Rewrite mddev_suspend(), by Yu Kuai;
+> 2. Simplify md_seq_ops, by Yu Kuai;
+> 3. Reduce unnecessary locking array_state_store(), by Mariusz Tkaczyk. 
 
-Applied to md-next.
+Pulled, thanks.
 
-Thanks,
-Song
+-- 
+Jens Axboe
+
+
