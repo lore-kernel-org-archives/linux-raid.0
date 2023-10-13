@@ -2,85 +2,121 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C6DECDB47E
-	for <linux-raid@archiver.kernel.org>; Thu, 12 Oct 2023 17:38:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BA7CDB485
+	for <linux-raid@archiver.kernel.org>; Fri, 13 Oct 2023 08:48:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347459AbjJLRih (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 12 Oct 2023 13:38:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45840 "EHLO
+        id S230187AbjJMIsU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 Oct 2023 04:48:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347453AbjJLRiY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 12 Oct 2023 13:38:24 -0400
-Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56A3F1B2
-        for <linux-raid@vger.kernel.org>; Thu, 12 Oct 2023 10:37:15 -0700 (PDT)
-Received: by mail-il1-x136.google.com with SMTP id e9e14a558f8ab-3574c225c14so1604225ab.0
-        for <linux-raid@vger.kernel.org>; Thu, 12 Oct 2023 10:37:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1697132234; x=1697737034; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=3fP3PSonxE3b8oN/BrMP7MMUuVcreoUisJQQ+xM9c3I=;
-        b=yihVtJExzlvPa/22vOLkX6Zvi/GIkVj1OEBRAp0KS1iJYbPzGLGaRr0x9YXl1HXFHo
-         pkzbmKy/91wGBjs/hCSIAOyN7Te2SengX8z84hulcwHEOwfa3aQWUWdappypkH9MIN79
-         Z8+1Kwz0rJbevaYxGYwNRJ2ZcvTH2kQoTvGNR+DUkZ1mvtADOOG8D01HKDz6qSCpOs7R
-         rU4GKkEPXX110jL4vNZ1JtfE64qO9f42Hfe305REQdnX/wYhdsQCq2XIeOniWgcDadOc
-         dc/jGLVGDx6PyOsM+9KbwdyhN1L06AkD56TnLItSPK5VgHeU3gmV7JqH10r2fnvqTVg2
-         HDlA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697132234; x=1697737034;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3fP3PSonxE3b8oN/BrMP7MMUuVcreoUisJQQ+xM9c3I=;
-        b=qs2Ay1YWFAokHVBdlj+O+0w16Ikm+upgjdRxGesWaA1Cg+UNsurcovBdYkTj6C2Dxh
-         JofQ/7gNSvMoAgdvs97GXvOSdTI+8I+zZllLw+Vw/upGGQbW2jja3uKyuVBavitG1Y40
-         1sHz7nCtVD4BQE+Ifxx0lui2CiNOjqi9QRTKwysXL3ES7t/C34ZoyJm5oJrTR0qw/QAc
-         twv6oRcyOfdBDip3Cyd+p3h2PwXuy5fC344Eu5cVKiKnsZeHbLCxlsO9DTcNHX49tT+W
-         zm4z3YXqUDx4O3oo4YWGs8DospBRYeb22lQ1HZSSJUs8NQYc7otPYkOAjqsa8F8SbgE4
-         S5eg==
-X-Gm-Message-State: AOJu0YyVivsB4VivBlkNLNfUQC/BSXDBiqdKyfHU4oIZxGJQWZuEKD0l
-        VQVixFItSYAYWoCQKScTkMiZwA==
-X-Google-Smtp-Source: AGHT+IHb0inN/olr/9Ui1zD+9z4EOPwxufTCX8yKF1EdfGSxJRk9IlFKIYZDcMuWO0z1LtzNf6kLfA==
-X-Received: by 2002:a05:6602:2e03:b0:792:6068:dcc8 with SMTP id o3-20020a0566022e0300b007926068dcc8mr32138507iow.2.1697132234578;
-        Thu, 12 Oct 2023 10:37:14 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id fx17-20020a0566381e1100b004317dfe68e7sm3994713jab.153.2023.10.12.10.37.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Oct 2023 10:37:13 -0700 (PDT)
-Message-ID: <29275e05-21f5-4003-acda-59948bf9c4f0@kernel.dk>
-Date:   Thu, 12 Oct 2023 11:37:11 -0600
+        with ESMTP id S230197AbjJMIsT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 Oct 2023 04:48:19 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17D9595
+        for <linux-raid@vger.kernel.org>; Fri, 13 Oct 2023 01:48:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697186898; x=1728722898;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=P9CgaW68QxGKjcZggLHyiF313FM+hriHoacPWBmBQTg=;
+  b=NWIpQyTIlRVqpNQjNCl6MpWR0ZPuf8//n2YHDKNDuWnYJYnDfSJWmJfn
+   /7eXbxJ019YSrqzbpS4gDaBADd59NuejVezqtOR0QFq+nuQLvguL9Q1BW
+   OAq+LbDTRN7UjqHY8VsSn7qvP9QXHFfR5BnLxaSxJs2MqJUXjEoPqfrl7
+   BbuH2DNBMr/8EobvOi2+JV6AlkGcCDJOZE4bZWhtQENHzu76IUcyNXo6S
+   PyykK8mfu12q7hIOHFQg6Re/NeadV5R0y3d6mX0FczUHTufnH+5dT7G2s
+   zCNl4dUVNRmP46GZDsxblXCHe8lwbALIMo7j1Tmn7dT+ayRXaGDDm/zMW
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10861"; a="365395887"
+X-IronPort-AV: E=Sophos;i="6.03,221,1694761200"; 
+   d="scan'208";a="365395887"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2023 01:48:17 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10861"; a="758413137"
+X-IronPort-AV: E=Sophos;i="6.03,221,1694761200"; 
+   d="scan'208";a="758413137"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.156.199])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2023 01:48:15 -0700
+Date:   Fri, 13 Oct 2023 10:48:10 +0200
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Xiao Ni <xni@redhat.com>
+Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 1/1] mdadm/ddf: Abort when raid disk is smaller in
+ getinfo_super_ddf
+Message-ID: <20231013104810.00003a60@linux.intel.com>
+In-Reply-To: <CALTww28hforasc+v3GUWPdoyFyvFZOK8KXeZBKykr_u-2T3K9A@mail.gmail.com>
+References: <20231011130332.78933-1-xni@redhat.com>
+        <CALTww28hforasc+v3GUWPdoyFyvFZOK8KXeZBKykr_u-2T3K9A@mail.gmail.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-next 20231012
-Content-Language: en-US
-To:     Song Liu <songliubraving@meta.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Yu Kuai <yukuai3@huawei.com>, Yu Kuai <yukuai1@huaweicloud.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-References: <93D0A7F8-B4DF-43B1-983A-27DF9BF33663@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <93D0A7F8-B4DF-43B1-983A-27DF9BF33663@fb.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 10/12/23 12:33 AM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following changes for md-next on top of your
-> for-6.7/block branch. The major changes are:
-> 
-> 1. Rewrite mddev_suspend(), by Yu Kuai;
-> 2. Simplify md_seq_ops, by Yu Kuai;
-> 3. Reduce unnecessary locking array_state_store(), by Mariusz Tkaczyk. 
+On Wed, 11 Oct 2023 21:25:37 +0800
+Xiao Ni <xni@redhat.com> wrote:
 
-Pulled, thanks.
+> Sorry, the title should be [PATCH 1/1] mdadm/ddf: Abort when raid disk
+> is smaller than 0 in getinfo_super_ddf
+>=20
+> If you want me to send v2, I can do it.
+>=20
+> Best Regards
+> Xiao
+>=20
+>=20
+> On Wed, Oct 11, 2023 at 9:06=E2=80=AFPM Xiao Ni <xni@redhat.com> wrote:
+> >
+> > The metadata is corrupted when the raid_disk<0. So abort directly.
+> > This also can avoid a building error:
+> > super-ddf.c:1988:58: error: array subscript -1 is below array bounds of
+> > =E2=80=98struct phys_disk_entry[0]=E2=80=99
+> >
+> > Suggested-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> > Ackedy-by: Xiao Ni <xni@redhat.com>
+> > ---
+> >  super-ddf.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/super-ddf.c b/super-ddf.c
+> > index 7213284e0a59..7b98333ecd51 100644
+> > --- a/super-ddf.c
+> > +++ b/super-ddf.c
+> > @@ -1984,12 +1984,14 @@ static void getinfo_super_ddf(struct supertype =
+*st,
+> > struct mdinfo *info, char *m info->disk.number =3D
+> > be32_to_cpu(ddf->dlist->disk.refnum); info->disk.raid_disk =3D find_phy=
+s(ddf,
+> > ddf->dlist->disk.refnum);
+> >
+> > +               if (info->disk.raid_disk < 0)
+> > +                       return;
+> > +
+> >                 info->data_offset =3D be64_to_cpu(ddf->phys->
+> >                                                   entries[info->disk.ra=
+id_disk].
+> >                                                   config_size);
+> >                 info->component_size =3D ddf->dlist->size - info->data_=
+offset;
+> > -               if (info->disk.raid_disk >=3D 0)
+> > -                       pde =3D ddf->phys->entries + info->disk.raid_di=
+sk;
+> > +               pde =3D ddf->phys->entries + info->disk.raid_disk;
+> >                 if (pde &&
+> >                     !(be16_to_cpu(pde->state) & DDF_Failed) &&
+> >                     !(be16_to_cpu(pde->state) & DDF_Missing))
+> > --
+> > 2.32.0 (Apple Git-132)
+> > =20
+>=20
 
--- 
-Jens Axboe
+Hi Xiao,
+I don't see a need to send v2. Moving to awaiting upstream:
 
+Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
+Thanks,
+Mariusz
