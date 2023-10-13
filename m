@@ -2,121 +2,137 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BA7CDB485
-	for <linux-raid@archiver.kernel.org>; Fri, 13 Oct 2023 08:48:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A0F5CDB47E
+	for <linux-raid@archiver.kernel.org>; Fri, 13 Oct 2023 09:30:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230187AbjJMIsU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 13 Oct 2023 04:48:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35314 "EHLO
+        id S230523AbjJMJap (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 Oct 2023 05:30:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230197AbjJMIsT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 Oct 2023 04:48:19 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17D9595
-        for <linux-raid@vger.kernel.org>; Fri, 13 Oct 2023 01:48:18 -0700 (PDT)
+        with ESMTP id S230426AbjJMJan (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 Oct 2023 05:30:43 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9D15C9
+        for <linux-raid@vger.kernel.org>; Fri, 13 Oct 2023 02:30:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697186898; x=1728722898;
+  t=1697189442; x=1728725442;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=P9CgaW68QxGKjcZggLHyiF313FM+hriHoacPWBmBQTg=;
-  b=NWIpQyTIlRVqpNQjNCl6MpWR0ZPuf8//n2YHDKNDuWnYJYnDfSJWmJfn
-   /7eXbxJ019YSrqzbpS4gDaBADd59NuejVezqtOR0QFq+nuQLvguL9Q1BW
-   OAq+LbDTRN7UjqHY8VsSn7qvP9QXHFfR5BnLxaSxJs2MqJUXjEoPqfrl7
-   BbuH2DNBMr/8EobvOi2+JV6AlkGcCDJOZE4bZWhtQENHzu76IUcyNXo6S
-   PyykK8mfu12q7hIOHFQg6Re/NeadV5R0y3d6mX0FczUHTufnH+5dT7G2s
-   zCNl4dUVNRmP46GZDsxblXCHe8lwbALIMo7j1Tmn7dT+ayRXaGDDm/zMW
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10861"; a="365395887"
+  bh=zdJDSAJLt5rZPvMdxL2eDaQC8fZ4bm1iyGNHnre8ixg=;
+  b=fHJ1er2dlb714fryVfpAHf8I6Trgy6wimfRosRJ3gmk7PoIJS1MPx7pq
+   SUFp/hgoFLJDHPCn4jR9ELU1GHoG4dx+bDDRKHWqBLXESaPJLWoSDRSdt
+   oqsJfUMmBYkRwCHu3wv/vAScr9gUCIabauQ9qNEcUfkfPkfJb4+KFSICu
+   x4hBk5R2QjmCksZTU2AgLd9GGG+LAY3/EqM1EhlbQZ5KnqF7ire1LXbJl
+   /8KN2A+f5udepFpTPYUBZjvVxRc9sLVhLHzRqGHVEr/P6aIRJ+eupS9kB
+   B50NxQm3ybhK9MOBfDTX06RmAuqOgi/dZmkkIfty/538JLDh5TRBbJkmd
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10861"; a="3738588"
 X-IronPort-AV: E=Sophos;i="6.03,221,1694761200"; 
-   d="scan'208";a="365395887"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2023 01:48:17 -0700
+   d="scan'208";a="3738588"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2023 02:30:41 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10861"; a="758413137"
+X-IronPort-AV: E=McAfee;i="6600,9927,10861"; a="789798642"
 X-IronPort-AV: E=Sophos;i="6.03,221,1694761200"; 
-   d="scan'208";a="758413137"
+   d="scan'208";a="789798642"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.156.199])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2023 01:48:15 -0700
-Date:   Fri, 13 Oct 2023 10:48:10 +0200
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2023 02:30:39 -0700
+Date:   Fri, 13 Oct 2023 11:30:34 +0200
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To:     Xiao Ni <xni@redhat.com>
-Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 1/1] mdadm/ddf: Abort when raid disk is smaller in
- getinfo_super_ddf
-Message-ID: <20231013104810.00003a60@linux.intel.com>
-In-Reply-To: <CALTww28hforasc+v3GUWPdoyFyvFZOK8KXeZBKykr_u-2T3K9A@mail.gmail.com>
-References: <20231011130332.78933-1-xni@redhat.com>
-        <CALTww28hforasc+v3GUWPdoyFyvFZOK8KXeZBKykr_u-2T3K9A@mail.gmail.com>
+Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org, colyli@suse.de,
+        neilb@suse.de
+Subject: Re: [PATCH 1/1] mdadm/super1: Add MD_FEATURE_RAID0_LAYOUT if
+ sb->layout is set
+Message-ID: <20231013113034.0000298a@linux.intel.com>
+In-Reply-To: <20231011130522.78994-1-xni@redhat.com>
+References: <20231011130522.78994-1-xni@redhat.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 11 Oct 2023 21:25:37 +0800
+On Wed, 11 Oct 2023 21:05:22 +0800
 Xiao Ni <xni@redhat.com> wrote:
 
-> Sorry, the title should be [PATCH 1/1] mdadm/ddf: Abort when raid disk
-> is smaller than 0 in getinfo_super_ddf
->=20
-> If you want me to send v2, I can do it.
->=20
-> Best Regards
-> Xiao
->=20
->=20
-> On Wed, Oct 11, 2023 at 9:06=E2=80=AFPM Xiao Ni <xni@redhat.com> wrote:
-> >
-> > The metadata is corrupted when the raid_disk<0. So abort directly.
-> > This also can avoid a building error:
-> > super-ddf.c:1988:58: error: array subscript -1 is below array bounds of
-> > =E2=80=98struct phys_disk_entry[0]=E2=80=99
-> >
-> > Suggested-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> > Ackedy-by: Xiao Ni <xni@redhat.com>
-> > ---
-> >  super-ddf.c | 6 ++++--
-> >  1 file changed, 4 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/super-ddf.c b/super-ddf.c
-> > index 7213284e0a59..7b98333ecd51 100644
-> > --- a/super-ddf.c
-> > +++ b/super-ddf.c
-> > @@ -1984,12 +1984,14 @@ static void getinfo_super_ddf(struct supertype =
-*st,
-> > struct mdinfo *info, char *m info->disk.number =3D
-> > be32_to_cpu(ddf->dlist->disk.refnum); info->disk.raid_disk =3D find_phy=
-s(ddf,
-> > ddf->dlist->disk.refnum);
-> >
-> > +               if (info->disk.raid_disk < 0)
-> > +                       return;
-> > +
-> >                 info->data_offset =3D be64_to_cpu(ddf->phys->
-> >                                                   entries[info->disk.ra=
-id_disk].
-> >                                                   config_size);
-> >                 info->component_size =3D ddf->dlist->size - info->data_=
-offset;
-> > -               if (info->disk.raid_disk >=3D 0)
-> > -                       pde =3D ddf->phys->entries + info->disk.raid_di=
-sk;
-> > +               pde =3D ddf->phys->entries + info->disk.raid_disk;
-> >                 if (pde &&
-> >                     !(be16_to_cpu(pde->state) & DDF_Failed) &&
-> >                     !(be16_to_cpu(pde->state) & DDF_Missing))
-> > --
-> > 2.32.0 (Apple Git-132)
-> > =20
->=20
-
+> In kernel space super_1_validate sets mddev->layout to -1 if
+> MD_FEATURE_RAID0_LAYOUT is not set. MD_FEATURE_RAID0_LAYOUT is set in mdadm
+> write_init_super1. Now only raid with more than one zone can set this bit.
+> But for raid0 with same size member disks, it doesn't set this bit. The
+> layout is *unknown* when running mdadm -D command. In fact it should be
+> RAID0_ORIG_LAYOUT which gets from default_layout.
+> 
+> So set MD_FEATURE_RAID0_LAYOUT when sb->layout has value.
+> 
+> Fixes: 329dfc28debb ('Create: add support for RAID0 layouts.')
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>  super1.c | 21 ++-------------------
+>  1 file changed, 2 insertions(+), 19 deletions(-)
+> 
+> diff --git a/super1.c b/super1.c
+> index 856b02082662..f29751b4a5c7 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1978,26 +1978,10 @@ static int write_init_super1(struct supertype *st)
+>  	unsigned long long sb_offset;
+>  	unsigned long long data_offset;
+>  	long bm_offset;
+> -	int raid0_need_layout = 0;
+>  
+> -	for (di = st->info; di; di = di->next) {
+> +	for (di = st->info; di; di = di->next)
+>  		if (di->disk.state & (1 << MD_DISK_JOURNAL))
+>  			sb->feature_map |= __cpu_to_le32(MD_FEATURE_JOURNAL);
+> -		if (sb->level == 0 && sb->layout != 0) {
+> -			struct devinfo *di2 = st->info;
+> -			unsigned long long s1, s2;
+> -			s1 = di->dev_size;
+> -			if (di->data_offset != INVALID_SECTORS)
+> -				s1 -= di->data_offset;
+> -			s1 /= __le32_to_cpu(sb->chunksize);
+> -			s2 = di2->dev_size;
+> -			if (di2->data_offset != INVALID_SECTORS)
+> -				s2 -= di2->data_offset;
+> -			s2 /= __le32_to_cpu(sb->chunksize);
+> -			if (s1 != s2)
+> -				raid0_need_layout = 1;
+> -		}
+> -	}
+>  
+>  	for (di = st->info; di; di = di->next) {
+>  		if (di->disk.state & (1 << MD_DISK_FAULTY))
+> @@ -2139,8 +2123,7 @@ static int write_init_super1(struct supertype *st)
+>  			sb->bblog_offset = 0;
+>  		}
+>  
+> -		/* RAID0 needs a layout if devices aren't all the same size
+> */
+> -		if (raid0_need_layout)
+> +		if (sb->level == 0 && sb->layout)
+>  			sb->feature_map |=
+> __cpu_to_le32(MD_FEATURE_RAID0_LAYOUT); 
+>  		sb->sb_csum = calc_sb_1_csum(sb);
 Hi Xiao,
-I don't see a need to send v2. Moving to awaiting upstream:
 
-Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+I read Neil patch:
+https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=329dfc28de
+
+For sure Neil has a purpose to make it this way. I think that because it breaks
+creation when layout is not supported by kernel. Neil wanted to keep possible
+largest compatibility so it sets layout feature only if it is necessary.
+Your change forces layout bit to be always used. Can you test this change on
+kernel without raid0_layout support? I expect regression for same dev size raid
+arrays.
+
+I think that before we will set layout bit we should check kernel
+version, it must be higher than 5.4. In the future we would remove this check.
+So, it forces the calculations made by Neil back but I think that we can simply
+compare dev_size and data_offset between members.
 
 Thanks,
 Mariusz
