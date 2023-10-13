@@ -2,137 +2,189 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A88CCDB47E
-	for <linux-raid@archiver.kernel.org>; Fri, 13 Oct 2023 15:54:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 066FACDB482
+	for <linux-raid@archiver.kernel.org>; Fri, 13 Oct 2023 17:58:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232372AbjJMPyb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 13 Oct 2023 11:54:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59448 "EHLO
+        id S230347AbjJMR6M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 Oct 2023 13:58:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232041AbjJMPyb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 Oct 2023 11:54:31 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66E58BB
-        for <linux-raid@vger.kernel.org>; Fri, 13 Oct 2023 08:54:29 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id A8D941FDA2;
-        Fri, 13 Oct 2023 15:54:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1697212467; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9lcmCgHwUjHiyVierdQGNvxmwKF4vIwhvqeEXn2X2YE=;
-        b=tdtwd2wPxYSioR9VgDDzs/4R6kpvvyV+rsav8Tv7Yx8TjAmBRh2JlyhGuvV2DnzVdkZaAu
-        dg4I3oKFzyZWrtCTtyhrPMtqI+7+8TX2uOxZVgtoHygCczAMB2s10zY/QxOKGhk5EH3DSp
-        pLSNS4L4iyFYem9Ifl8ShCCHbjpCqg4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1697212467;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9lcmCgHwUjHiyVierdQGNvxmwKF4vIwhvqeEXn2X2YE=;
-        b=RxbH3dnOMGVAkV1vdKYuGB99p2ia9TWjsTsdYegLGfQpFcTs+tuEHQdSzE2DvshETpOhmK
-        ONd+MiMVDnwWDmAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 69B341358F;
-        Fri, 13 Oct 2023 15:54:26 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id OFuiDTJoKWXnWgAAMHmgww
-        (envelope-from <colyli@suse.de>); Fri, 13 Oct 2023 15:54:26 +0000
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.700.6\))
-Subject: Re: [PATCH 1/1] mdadm/super1: Add MD_FEATURE_RAID0_LAYOUT if
- sb->layout is set
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20231013154402.00003976@linux.intel.com>
-Date:   Fri, 13 Oct 2023 23:54:13 +0800
-Cc:     jes@trained-monkey.org, linux-raid <linux-raid@vger.kernel.org>,
-        NeilBrown <neilb@suse.de>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <645BDF69-0798-4CBB-B2FF-65B1AEF3A787@suse.de>
-References: <20231011130522.78994-1-xni@redhat.com>
- <20231013113034.0000298a@linux.intel.com>
- <CALTww282t6UMePRPPmoxyxBpedbjWC=9ojjHQx8o8sJttnzvSA@mail.gmail.com>
- <20231013135935.00005679@linux.intel.com>
- <CALTww29C_kS9e9hxbz+GFWVvAci1CZSfHxWTigD3zCYdZghmYw@mail.gmail.com>
- <20231013154402.00003976@linux.intel.com>
-To:     Xiao Ni <xni@redhat.com>
-X-Mailer: Apple Mail (2.3731.700.6)
-Authentication-Results: smtp-out2.suse.de;
-        none
-X-Spamd-Result: default: False [-3.64 / 50.00];
-         ARC_NA(0.00)[];
-         RCVD_VIA_SMTP_AUTH(0.00)[];
-         BAYES_HAM(-0.04)[58.51%];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         MV_CASE(0.50)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         MIME_GOOD(-0.10)[text/plain];
-         NEURAL_HAM_LONG(-3.00)[-1.000];
-         RCPT_COUNT_FIVE(0.00)[5];
-         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-         NEURAL_HAM_SHORT(-1.00)[-1.000];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         RCVD_COUNT_TWO(0.00)[2];
-         RCVD_TLS_ALL(0.00)[];
-         MID_RHS_MATCH_FROM(0.00)[]
+        with ESMTP id S229704AbjJMR6L (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 Oct 2023 13:58:11 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27560BB
+        for <linux-raid@vger.kernel.org>; Fri, 13 Oct 2023 10:58:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697219890; x=1728755890;
+  h=date:from:to:cc:subject:message-id;
+  bh=0QpdK4zsntGPst0g0xjCjp/sGQx+RtvAfiYVVxdPKx8=;
+  b=Dpk48KNMi5X5LNQjeNcOhGhb6n9h3KAnyyDKB+hrF+B/eu9Ng5yq2T1L
+   8pUIx7m+8vNAIF3Hv4bcGoIxCpJ6BoLWU2rYtAt23IrIu5iGi9gHx186W
+   es5jxmwhSPst/GGfGN3EpnlFb8MC1VSUOjxC8Gt+bQlLW+l7AioGS6bAp
+   /8cZEr1shC+pI3OYPdcb32v6I7G68TaUObMao/65WNnyh1mv7Sll4eEGI
+   FmyKKWswZwfR24HLhvvaB0j28u5yJRt0Xtu0j1FF/tsC9MLO9MZRMUTwG
+   27V4zvQCCqp6OfmWpp/1AZV/dDnDkHwwSZbcabU3MA41ooWxkE10IM/Bl
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10862"; a="385071849"
+X-IronPort-AV: E=Sophos;i="6.03,222,1694761200"; 
+   d="scan'208";a="385071849"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2023 10:58:07 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10862"; a="704730814"
+X-IronPort-AV: E=Sophos;i="6.03,222,1694761200"; 
+   d="scan'208";a="704730814"
+Received: from lkp-server02.sh.intel.com (HELO f64821696465) ([10.239.97.151])
+  by orsmga003.jf.intel.com with ESMTP; 13 Oct 2023 10:58:01 -0700
+Received: from kbuild by f64821696465 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qrMQA-0005Dj-3C;
+        Fri, 13 Oct 2023 17:57:58 +0000
+Date:   Sat, 14 Oct 2023 01:57:08 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 1bbe254e4336c0944dd4fb6f0b8c9665b81de50f
+Message-ID: <202310140105.8QMELTA0-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 1bbe254e4336c0944dd4fb6f0b8c9665b81de50f  md-cluster: check for timeout while a new disk adding
 
+elapsed time: 1449m
 
-> 2023=E5=B9=B410=E6=9C=8813=E6=97=A5 21:44=EF=BC=8CMariusz Tkaczyk =
-<mariusz.tkaczyk@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> On Fri, 13 Oct 2023 20:12:38 +0800
-> Xiao Ni <xni@redhat.com> wrote:
->=20
->>>>> So, it forces the calculations made by Neil back but I think that =
-we can
->>>>> simply compare dev_size and data_offset between members. =20
->>>>=20
->>>> We don't need to consider the compatibility anymore in future?
->>>>=20
->>> Not sure if I get your question correctly. This property is =
-supported now so
->>> why we should? It is already there so we are safe to set it. =20
->>=20
->> I asked because you said we can remove the check in future. So I =
-don't
->> know why we don't need the check in future. The check here should be
->> the kernel version check, right?
->=20
->=20
-> We are not supporting old kernels forever. At some point of time, we =
-would
-> decide that kernels older than 5.5 are no longer a valid case and then =
-we will
-> free to remove verification. If we are not supporting something older =
-than the
-> version where it was added, we can assume that MD_RAID0_LAYOUT is =
-always
-> available and we don't need to care anymore, right?
->=20
-> Here a recent example:
-> =
-https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3Df8d2c428=
-6a
+configs tested: 119
+configs skipped: 2
 
-Just FYI, we still support Linux v4.12 based kernel for SLES12-SP5.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Coly Li
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                   randconfig-001-20231013   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                   randconfig-001-20231013   gcc  
+arm64                            allmodconfig   gcc  
+arm64                             allnoconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+i386                             allmodconfig   gcc  
+i386                              allnoconfig   gcc  
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                  randconfig-001-20231013   gcc  
+i386                  randconfig-002-20231013   gcc  
+i386                  randconfig-003-20231013   gcc  
+i386                  randconfig-004-20231013   gcc  
+i386                  randconfig-005-20231013   gcc  
+i386                  randconfig-006-20231013   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                        allyesconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20231013   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                             allmodconfig   gcc  
+mips                              allnoconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                        bcm63xx_defconfig   clang
+mips                           ip27_defconfig   clang
+mips                           rs90_defconfig   clang
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+openrisc                         allmodconfig   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   gcc  
+powerpc                      ppc6xx_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                    nommu_virt_defconfig   clang
+riscv                 randconfig-001-20231013   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                  randconfig-001-20231013   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sh                            migor_defconfig   gcc  
+sh                            shmin_defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                 randconfig-001-20231013   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                randconfig-001-20231013   gcc  
+x86_64                randconfig-002-20231013   gcc  
+x86_64                randconfig-003-20231013   gcc  
+x86_64                randconfig-004-20231013   gcc  
+x86_64                randconfig-005-20231013   gcc  
+x86_64                randconfig-006-20231013   gcc  
+x86_64                           rhel-8.3-bpf   gcc  
+x86_64                          rhel-8.3-func   gcc  
+x86_64                    rhel-8.3-kselftests   gcc  
+x86_64                         rhel-8.3-kunit   gcc  
+x86_64                           rhel-8.3-ltp   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                            allnoconfig   gcc  
+xtensa                           allyesconfig   gcc  
 
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
