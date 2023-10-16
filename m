@@ -2,52 +2,52 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12391CDB482
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Oct 2023 01:50:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A89CDB482
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Oct 2023 02:06:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbjJPBua (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 15 Oct 2023 21:50:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57618 "EHLO
+        id S230527AbjJPCGo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 15 Oct 2023 22:06:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbjJPBua (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 15 Oct 2023 21:50:30 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9090C1;
-        Sun, 15 Oct 2023 18:50:27 -0700 (PDT)
+        with ESMTP id S230490AbjJPCGn (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 15 Oct 2023 22:06:43 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1564C1;
+        Sun, 15 Oct 2023 19:06:40 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4S80Rx60WBz4f3lXG;
-        Mon, 16 Oct 2023 09:50:21 +0800 (CST)
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4S80pb4YXgz4f3l7r;
+        Mon, 16 Oct 2023 10:06:31 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgB3BdXdlixl04ZPDA--.43336S4;
-        Mon, 16 Oct 2023 09:50:23 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnt9armixlh4dQDA--.48728S4;
+        Mon, 16 Oct 2023 10:06:37 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next] md: cleanup pers->prepare_suspend()
-Date:   Mon, 16 Oct 2023 17:46:26 +0800
-Message-Id: <20231016094626.496378-1-yukuai1@huaweicloud.com>
+Subject: [PATCH v2] md: cleanup pers->prepare_suspend()
+Date:   Mon, 16 Oct 2023 18:02:40 +0800
+Message-Id: <20231016100240.540474-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgB3BdXdlixl04ZPDA--.43336S4
-X-Coremail-Antispam: 1UD129KBjvJXoW3JryrKF15Ar4DCw1kZr1rtFb_yoWxWF4Dpa
-        9ayF9xZr40vFy3KrWDJr4kWa4Y9r17KrW7ta9rJw1xA3W3tr4rC3W5Way5Zr95Aa48ArWD
+X-CM-TRANSID: gCh0CgAnt9armixlh4dQDA--.48728S4
+X-Coremail-Antispam: 1UD129KBjvJXoW3JryrKF15AF1kWF1xtr4fZrb_yoWxAr4rpa
+        93tF9xZr40qF9xKF4DJr4kWa4Y9rnrKrZrta9rJw1xA3W3tr4rC3W5Way5Zr95Aa48ArWD
         Xa1UJa4Dur4093JanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUv014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2ocxC64kIII
         0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-        wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-        x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
-        64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r
-        1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAq
-        YI8I648v4I1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
-        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-        0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_
-        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRi
-        Pl1DUUUUU==
+        wVC0I7IYx2IY6xkF7I0E14v26F4UJVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7
+        xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40E
+        FcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr
+        0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
+        x2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1l
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v2
+        6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0p
+        RQo7tUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -68,18 +68,21 @@ is interrupted")
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
+Changes in v2:
+ - fix a conflict that is caused from my local branch.
+
  drivers/md/md.c    | 17 ++++++++++++++++-
  drivers/md/md.h    | 18 ------------------
  drivers/md/raid5.c | 44 +-------------------------------------------
  3 files changed, 17 insertions(+), 62 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d89b3b60915c..727f7a8f194b 100644
+index fa6fe1664e78..68f3bb6e89cb 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -91,6 +91,18 @@ static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
+@@ -91,6 +91,18 @@ static void mddev_detach(struct mddev *mddev);
+ static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
  static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
- static bool remove_rdev(struct md_rdev *rdev);
  
 +enum md_ro_state {
 +	MD_RDWR,
@@ -107,7 +110,7 @@ index d89b3b60915c..727f7a8f194b 100644
  /* Rather than calling directly into the personality make_request function,
   * IO requests come here first so that we can check if the device is
   * being suspended pending a reconfiguration.
-@@ -9141,7 +9157,6 @@ void md_do_sync(struct md_thread *thread)
+@@ -9144,7 +9160,6 @@ void md_do_sync(struct md_thread *thread)
  	spin_unlock(&mddev->lock);
  
  	wake_up(&resync_wait);
