@@ -2,55 +2,55 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 895D3CDB483
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAFDDC41513
 	for <linux-raid@archiver.kernel.org>; Mon, 16 Oct 2023 01:28:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231133AbjJPB2s (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        id S231149AbjJPB2s (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
         Sun, 15 Oct 2023 21:28:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35642 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbjJPB2m (ORCPT
+        with ESMTP id S230478AbjJPB2m (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Sun, 15 Oct 2023 21:28:42 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0C25C5;
-        Sun, 15 Oct 2023 18:28:39 -0700 (PDT)
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C501DA;
+        Sun, 15 Oct 2023 18:28:40 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4S7zyl1145z4f3kjR;
-        Mon, 16 Oct 2023 09:28:31 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4S7zyq0c3rz4f3n6M;
+        Mon, 16 Oct 2023 09:28:35 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgB3BdXCkSxl3zBODA--.42064S6;
-        Mon, 16 Oct 2023 09:28:36 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgB3BdXCkSxl3zBODA--.42064S10;
+        Mon, 16 Oct 2023 09:28:37 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next 2/6] md: remove flag RemoveSynchronized
-Date:   Mon, 16 Oct 2023 17:24:35 +0800
-Message-Id: <20231016092439.493646-3-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 6/6] md/md-multipath: remove rcu protection to access rdev from conf
+Date:   Mon, 16 Oct 2023 17:24:39 +0800
+Message-Id: <20231016092439.493646-7-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231016092439.493646-1-yukuai1@huaweicloud.com>
 References: <20231016092439.493646-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgB3BdXCkSxl3zBODA--.42064S6
-X-Coremail-Antispam: 1UD129KBjvJXoW3Xr1DCFyDZFW7AFyfKF15Arb_yoW7XFykpw
-        sxWFy3ur4xXw4Utw4DJrW7CFyrJw1UK3yUCr93u34fZa43AryDX34rJFy5Zr90vFZaya10
-        vF1UJw4DGFy8GF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPSb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M280x2IEY4vEnII2IxkI6r1a6r45M2
-        8IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK
-        0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4
-        x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l
-        84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I
-        8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AK
-        xVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zV
-        CS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E
-        5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAV
-        WUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY
-        1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
-        0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7s
-        RNLvtUUUUUU==
+X-CM-TRANSID: gCh0CgB3BdXCkSxl3zBODA--.42064S10
+X-Coremail-Antispam: 1UD129KBjvJXoWxXw1kJF4UZr43uw17Wr17ZFb_yoW5Jw4kpa
+        yaqasxtr4UXryakrnFka1Uua4Skw43tFWIkryfC3yIva15Gry5XF1rtryUXFn5AFZ5AF45
+        XFn8Kw4DAFyxGaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2048vs2IY02
+        0E87I2jVAFwI0_JF0E3s1l82xGYIkIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0
+        rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6x
+        IIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xv
+        wVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFc
+        xC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_
+        Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2
+        IErcIFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
+        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIx
+        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
+        wI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r
+        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRvJPtU
+        UUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -59,173 +59,83 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-rcu is not used correctly here, because synchronize_rcu() is called
-before replacing old value, for example:
+Because it's safe to accees rdev from conf:
+ - If any spinlock is held, because synchronize_rcu() from
+   md_kick_rdev_from_array() will prevent 'rdev' to be freed until
+   spinlock is released;
+ - If there is normal IO inflight, because mddev_suspend() will prevent
+   rdev to be added or removed from array;
 
-remove_and_add_spares   // other path
- synchronize_rcu
- // called before replacing old value
- set_bit(RemoveSynchronized)
-                        rcu_read_lock()
-                        rdev = conf->mirros[].rdev
- pers->hot_remove_disk
-  conf->mirros[].rdev = NULL;
-  if (!test_bit(RemoveSynchronized))
-   synchronize_rcu
-   /*
-    * won't be called, and won't wait
-    * for concurrent readers to be done.
-    /*
-                        // access rdev after remove_and_add_spares()
-                        rcu_read_unlock()
-
-Hence remove this flag and prepare to remove rcu protection to access
-rdev from 'conf'.
+And these will cover all the scenarios in md-multipath.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-multipath.c |  9 ---------
- drivers/md/md.c           | 37 ++++++-------------------------------
- drivers/md/raid1.c        |  9 ---------
- drivers/md/raid10.c       |  9 ---------
- drivers/md/raid5.c        |  9 ---------
- 5 files changed, 6 insertions(+), 67 deletions(-)
+ drivers/md/md-multipath.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
-index d22276870283..aa77133f3188 100644
+index aa77133f3188..51c5390c517d 100644
 --- a/drivers/md/md-multipath.c
 +++ b/drivers/md/md-multipath.c
-@@ -258,15 +258,6 @@ static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+@@ -32,17 +32,15 @@ static int multipath_map (struct mpconf *conf)
+ 	 * now we use the first available disk.
+ 	 */
+ 
+-	rcu_read_lock();
+ 	for (i = 0; i < disks; i++) {
+-		struct md_rdev *rdev = rcu_dereference(conf->multipaths[i].rdev);
++		struct md_rdev *rdev = conf->multipaths[i].rdev;
++
+ 		if (rdev && test_bit(In_sync, &rdev->flags) &&
+ 		    !test_bit(Faulty, &rdev->flags)) {
+ 			atomic_inc(&rdev->nr_pending);
+-			rcu_read_unlock();
+ 			return i;
+ 		}
+ 	}
+-	rcu_read_unlock();
+ 
+ 	pr_crit_ratelimited("multipath_map(): no more operational IO paths?\n");
+ 	return (-1);
+@@ -137,14 +135,16 @@ static void multipath_status(struct seq_file *seq, struct mddev *mddev)
+ 	struct mpconf *conf = mddev->private;
+ 	int i;
+ 
++	lockdep_assert_held(&mddev->lock);
++
+ 	seq_printf (seq, " [%d/%d] [", conf->raid_disks,
+ 		    conf->raid_disks - mddev->degraded);
+-	rcu_read_lock();
+ 	for (i = 0; i < conf->raid_disks; i++) {
+-		struct md_rdev *rdev = rcu_dereference(conf->multipaths[i].rdev);
+-		seq_printf (seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
++		struct md_rdev *rdev = READ_ONCE(conf->multipaths[i].rdev);
++
++		seq_printf(seq, "%s",
++			   rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
+ 	}
+-	rcu_read_unlock();
+ 	seq_putc(seq, ']');
+ }
+ 
+@@ -231,7 +231,7 @@ static int multipath_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 			rdev->raid_disk = path;
+ 			set_bit(In_sync, &rdev->flags);
+ 			spin_unlock_irq(&conf->device_lock);
+-			rcu_assign_pointer(p->rdev, rdev);
++			WRITE_ONCE(p->rdev, rdev);
+ 			err = 0;
+ 			break;
+ 		}
+@@ -257,7 +257,7 @@ static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 			err = -EBUSY;
  			goto abort;
  		}
- 		p->rdev = NULL;
--		if (!test_bit(RemoveSynchronized, &rdev->flags)) {
--			synchronize_rcu();
--			if (atomic_read(&rdev->nr_pending)) {
--				/* lost the race, try later */
--				err = -EBUSY;
--				p->rdev = rdev;
--				goto abort;
--			}
--		}
+-		p->rdev = NULL;
++		WRITE_ONCE(p->rdev, NULL);
  		err = md_integrity_register(mddev);
  	}
  abort:
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8ee079c4dc1e..fa6fe1664e78 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9235,44 +9235,19 @@ static int remove_and_add_spares(struct mddev *mddev,
- 	struct md_rdev *rdev;
- 	int spares = 0;
- 	int removed = 0;
--	bool remove_some = false;
- 
- 	if (this && test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
- 		/* Mustn't remove devices when resync thread is running */
- 		return 0;
- 
- 	rdev_for_each(rdev, mddev) {
--		if ((this == NULL || rdev == this) &&
--		    rdev->raid_disk >= 0 &&
--		    !test_bit(Blocked, &rdev->flags) &&
--		    test_bit(Faulty, &rdev->flags) &&
--		    atomic_read(&rdev->nr_pending)==0) {
--			/* Faulty non-Blocked devices with nr_pending == 0
--			 * never get nr_pending incremented,
--			 * never get Faulty cleared, and never get Blocked set.
--			 * So we can synchronize_rcu now rather than once per device
--			 */
--			remove_some = true;
--			set_bit(RemoveSynchronized, &rdev->flags);
--		}
--	}
--
--	if (remove_some)
--		synchronize_rcu();
--	rdev_for_each(rdev, mddev) {
--		if ((this == NULL || rdev == this) &&
--		    (test_bit(RemoveSynchronized, &rdev->flags) ||
--		     rdev_removeable(rdev))) {
--			if (mddev->pers->hot_remove_disk(
--				    mddev, rdev) == 0) {
--				sysfs_unlink_rdev(mddev, rdev);
--				rdev->saved_raid_disk = rdev->raid_disk;
--				rdev->raid_disk = -1;
--				removed++;
--			}
-+		if ((this == NULL || rdev == this) && rdev_removeable(rdev) &&
-+		    !mddev->pers->hot_remove_disk(mddev, rdev)) {
-+			sysfs_unlink_rdev(mddev, rdev);
-+			rdev->saved_raid_disk = rdev->raid_disk;
-+			rdev->raid_disk = -1;
-+			removed++;
- 		}
--		if (remove_some && test_bit(RemoveSynchronized, &rdev->flags))
--			clear_bit(RemoveSynchronized, &rdev->flags);
- 	}
- 
- 	if (removed && mddev->kobj.sd)
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index c13088eae401..4348d670439d 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1836,15 +1836,6 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			goto abort;
- 		}
- 		p->rdev = NULL;
--		if (!test_bit(RemoveSynchronized, &rdev->flags)) {
--			synchronize_rcu();
--			if (atomic_read(&rdev->nr_pending)) {
--				/* lost the race, try later */
--				err = -EBUSY;
--				p->rdev = rdev;
--				goto abort;
--			}
--		}
- 		if (conf->mirrors[conf->raid_disks + number].rdev) {
- 			/* We just removed a device that is being replaced.
- 			 * Move down the replacement.  We drain all IO before
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 4b5f34f320c8..33ab00323cae 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2219,15 +2219,6 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		goto abort;
- 	}
- 	*rdevp = NULL;
--	if (!test_bit(RemoveSynchronized, &rdev->flags)) {
--		synchronize_rcu();
--		if (atomic_read(&rdev->nr_pending)) {
--			/* lost the race, try later */
--			err = -EBUSY;
--			*rdevp = rdev;
--			goto abort;
--		}
--	}
- 	if (p->replacement) {
- 		/* We must have just cleared 'rdev' */
- 		p->rdev = p->replacement;
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 17981a889058..209a6a9d4146 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8225,15 +8225,6 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		goto abort;
- 	}
- 	*rdevp = NULL;
--	if (!test_bit(RemoveSynchronized, &rdev->flags)) {
--		lockdep_assert_held(&mddev->reconfig_mutex);
--		synchronize_rcu();
--		if (atomic_read(&rdev->nr_pending)) {
--			/* lost the race, try later */
--			err = -EBUSY;
--			rcu_assign_pointer(*rdevp, rdev);
--		}
--	}
- 	if (!err) {
- 		err = log_modify(conf, rdev, false);
- 		if (err)
 -- 
 2.39.2
 
