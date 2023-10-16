@@ -2,187 +2,125 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C07CDB465
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Oct 2023 08:14:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB7D4CDB465
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Oct 2023 08:14:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230126AbjJPIOQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Oct 2023 04:14:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55350 "EHLO
+        id S231975AbjJPIOw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Oct 2023 04:14:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229501AbjJPIOO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Oct 2023 04:14:14 -0400
+        with ESMTP id S231890AbjJPIOs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Oct 2023 04:14:48 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC2D2A1
-        for <linux-raid@vger.kernel.org>; Mon, 16 Oct 2023 01:13:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76376A2
+        for <linux-raid@vger.kernel.org>; Mon, 16 Oct 2023 01:14:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697444012;
+        s=mimecast20190719; t=1697444041;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Jg8FtnizQvelH1Z+61OibQ0pOC9vyQ6hfXJI0I/tFXM=;
-        b=D0N6DU/YE9tVEUz60GckZZwO3GFTm0xv/0NiGCEjmo8XYGNzN+l5BrMLucxLuwKQuucmul
-        ij+nUxtf4KV5C5jCSx5WQSOAfbuOJflMoirTtqGQO9hsOh71Ki4H8IB9mRgZnP3n4mWO3D
-        OLkiNxr1Ec9yVWJmoJ7Vk70XwjsDH0Q=
+        bh=6d++sD38iQKKHSeLwtvaZxw3lzKd9FUh1dqOfwyd/ac=;
+        b=WQx4czH0PCEiR3g6fm2F1ugEnnfVwD2ISYbpEwtjvOaURGvdV3AvlkM/DRTyz4OVgVczX6
+        gNw8i5s8vWVY4MJnA2Sm6TvNxPlnlAAA9nYJQv3XHruD7NVE56SMCcO4PX94AgDjR5kHN8
+        RC4woRpGITnjyQYu/oaR6zxcvx7xIgg=
 Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
  [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-662-UTMFAs1NMgWxWuWzV_Vhiw-1; Mon, 16 Oct 2023 04:13:28 -0400
-X-MC-Unique: UTMFAs1NMgWxWuWzV_Vhiw-1
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-27d3fe747b1so1779740a91.1
-        for <linux-raid@vger.kernel.org>; Mon, 16 Oct 2023 01:13:28 -0700 (PDT)
+ us-mta-592-BnHOorW1MLqOx1VRciXuKQ-1; Mon, 16 Oct 2023 04:14:00 -0400
+X-MC-Unique: BnHOorW1MLqOx1VRciXuKQ-1
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-27d5ef03892so1717313a91.0
+        for <linux-raid@vger.kernel.org>; Mon, 16 Oct 2023 01:14:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697444008; x=1698048808;
+        d=1e100.net; s=20230601; t=1697444039; x=1698048839;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Jg8FtnizQvelH1Z+61OibQ0pOC9vyQ6hfXJI0I/tFXM=;
-        b=vz4KJexpsQE9+NVfTPpFIWyIgSuCGpd9kUuMAdY4iN7Rsfxfgefm+qPGfR1DIY6v1P
-         8Yo6eCTAmtBk3mteKcr95En5Fxg5HXoA3OMpmPGjZYFvlPU4FjQeu79ypqIFp782vdUT
-         Ybi6eFF5xYDfR3uGKoVjDBtcHlj5TZLq1zwhVKfnwIhQ9unt3HLUYZlrXo42m24Ajtxq
-         4HDFMWNIdHz8Q68z4qPPH3/l88haX1QHCa0G/a5+P7VPrmkLPRDMjjfNCVZbAQKp1GWM
-         /pbWV/A/1/xqxQi8Ww+DwkCx0My6AoUCqfdDt+/qXrpPGErklTLn09960nqCmO2xqgy0
-         9Idg==
-X-Gm-Message-State: AOJu0YzPMGRCJhXg2cf9HZ+KKiREgv9H+0uVhZ8yL4c5VqVoJWvZ52WS
-        3G4FMP2mIn/+vYpIt5mkdvxR//9IOngblpDMy1K7yhazsxeEnH7nT0JbgwkSPJyQdIEC4sQzyWz
-        ndKAvLwEwLVe4YiWoNkF6IPW7Whmht1HnK9OEaA==
-X-Received: by 2002:a17:90b:2788:b0:27d:1c89:2160 with SMTP id pw8-20020a17090b278800b0027d1c892160mr10017590pjb.47.1697444007814;
-        Mon, 16 Oct 2023 01:13:27 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHqnG4A/lmi++DkkpZUH+9g7wcbaXWVnI8p6ZDQ0QCA0QzxxGGWoLHf3nS17Yttcku9urX2z/Xo0yVOKSro0zk=
-X-Received: by 2002:a17:90b:2788:b0:27d:1c89:2160 with SMTP id
- pw8-20020a17090b278800b0027d1c892160mr10017580pjb.47.1697444007455; Mon, 16
- Oct 2023 01:13:27 -0700 (PDT)
+        bh=6d++sD38iQKKHSeLwtvaZxw3lzKd9FUh1dqOfwyd/ac=;
+        b=oChG9lE7vv/ryffy12/SWalUXd1G/rHAhpEGqRMiFtmlPfaLsXthCLaskLvL/CAKU1
+         o0UTZbeTLcZP/Ul/aKNtyA/hqylWdBW67eeQ5yN2AvC+Yykymr1o+ecH9iYiDM92/mFu
+         KHYAK/z7pXQBTtZHHWy4RE3H3ryN9TF3M8mKxB5w7Vk9hE8V5t9pB4PGK6r/wfxLVXI/
+         FLptzbDhRPn02NzosUyUGzMCPJez4LQ4DxyskwXvfGapcqbp5/lrhgl0vYT/5k/oXv2R
+         q7m0CW7AuGsKsagn6LQSYLYUF58mpAFuzzhLL7nWXUzBH8ktENEDfChzhhCDH0J2Nlfz
+         uOBw==
+X-Gm-Message-State: AOJu0YxeRALxUADqAx7uTOfScXR+kFfInsZPkKRYQazUNn2y5aeG9jmT
+        yayVs8yebcR4/2aTcx7qZJAxL++g/sHr00IxMaQlwar2GI8Cqejq9ecLAOpQb+YpgbNEIMgXmyF
+        O7RhH8AsrNvACJNkaR/bAD6tpgipOqCb94czCmg==
+X-Received: by 2002:a17:90a:530f:b0:27c:ea44:928d with SMTP id x15-20020a17090a530f00b0027cea44928dmr17289026pjh.45.1697444039207;
+        Mon, 16 Oct 2023 01:13:59 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFz0sD7fFgyvKkQwFEj1B6mkeKotsaP6svcm2aI8vhqRCjbi6TThbD3V6ohNUWMAedW27SeusMxU+eJRd3fub0=
+X-Received: by 2002:a17:90a:530f:b0:27c:ea44:928d with SMTP id
+ x15-20020a17090a530f00b0027cea44928dmr17289015pjh.45.1697444038912; Mon, 16
+ Oct 2023 01:13:58 -0700 (PDT)
 MIME-Version: 1.0
 References: <20231011130522.78994-1-xni@redhat.com> <20231013113034.0000298a@linux.intel.com>
- <CALTww282t6UMePRPPmoxyxBpedbjWC=9ojjHQx8o8sJttnzvSA@mail.gmail.com> <20231013135935.00005679@linux.intel.com>
-In-Reply-To: <20231013135935.00005679@linux.intel.com>
+ <CALTww282t6UMePRPPmoxyxBpedbjWC=9ojjHQx8o8sJttnzvSA@mail.gmail.com>
+ <20231013135935.00005679@linux.intel.com> <CALTww29C_kS9e9hxbz+GFWVvAci1CZSfHxWTigD3zCYdZghmYw@mail.gmail.com>
+ <20231013154402.00003976@linux.intel.com> <645BDF69-0798-4CBB-B2FF-65B1AEF3A787@suse.de>
+In-Reply-To: <645BDF69-0798-4CBB-B2FF-65B1AEF3A787@suse.de>
 From:   Xiao Ni <xni@redhat.com>
-Date:   Mon, 16 Oct 2023 16:13:16 +0800
-Message-ID: <CALTww288hm71bTWSbpvXFH2dBeOT3nyRws_NCSUtumP+-+MYVw@mail.gmail.com>
+Date:   Mon, 16 Oct 2023 16:13:48 +0800
+Message-ID: <CALTww2_4CCcB=6pB+REwhcNxpsfKb9Qh4aWTqroS9jU9K6MgGQ@mail.gmail.com>
 Subject: Re: [PATCH 1/1] mdadm/super1: Add MD_FEATURE_RAID0_LAYOUT if
  sb->layout is set
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org, colyli@suse.de,
-        neilb@suse.de
+To:     Coly Li <colyli@suse.de>
+Cc:     jes@trained-monkey.org, linux-raid <linux-raid@vger.kernel.org>,
+        NeilBrown <neilb@suse.de>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Oct 13, 2023 at 7:59=E2=80=AFPM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
+On Fri, Oct 13, 2023 at 11:54=E2=80=AFPM Coly Li <colyli@suse.de> wrote:
 >
-> On Fri, 13 Oct 2023 18:59:21 +0800
-> Xiao Ni <xni@redhat.com> wrote:
 >
-> > On Fri, Oct 13, 2023 at 5:31=E2=80=AFPM Mariusz Tkaczyk
-> > <mariusz.tkaczyk@linux.intel.com> wrote:
-> > >
-> > > On Wed, 11 Oct 2023 21:05:22 +0800
-> > > Xiao Ni <xni@redhat.com> wrote:
-> > >
-> > > > In kernel space super_1_validate sets mddev->layout to -1 if
-> > > > MD_FEATURE_RAID0_LAYOUT is not set. MD_FEATURE_RAID0_LAYOUT is set =
-in
-> > > > mdadm write_init_super1. Now only raid with more than one zone can =
-set
-> > > > this bit. But for raid0 with same size member disks, it doesn't set=
- this
-> > > > bit. The layout is *unknown* when running mdadm -D command. In fact=
- it
-> > > > should be RAID0_ORIG_LAYOUT which gets from default_layout.
-> > > >
-> > > > So set MD_FEATURE_RAID0_LAYOUT when sb->layout has value.
-> > > >
-> > > > Fixes: 329dfc28debb ('Create: add support for RAID0 layouts.')
-> > > > Signed-off-by: Xiao Ni <xni@redhat.com>
-> > > > ---
-> > > >  super1.c | 21 ++-------------------
-> > > >  1 file changed, 2 insertions(+), 19 deletions(-)
-> > > >
-> > > > diff --git a/super1.c b/super1.c
-> > > > index 856b02082662..f29751b4a5c7 100644
-> > > > --- a/super1.c
-> > > > +++ b/super1.c
-> > > > @@ -1978,26 +1978,10 @@ static int write_init_super1(struct superty=
-pe *st)
-> > > >       unsigned long long sb_offset;
-> > > >       unsigned long long data_offset;
-> > > >       long bm_offset;
-> > > > -     int raid0_need_layout =3D 0;
-> > > >
-> > > > -     for (di =3D st->info; di; di =3D di->next) {
-> > > > +     for (di =3D st->info; di; di =3D di->next)
-> > > >               if (di->disk.state & (1 << MD_DISK_JOURNAL))
-> > > >                       sb->feature_map |=3D
-> > > > __cpu_to_le32(MD_FEATURE_JOURNAL);
-> > > > -             if (sb->level =3D=3D 0 && sb->layout !=3D 0) {
-> > > > -                     struct devinfo *di2 =3D st->info;
-> > > > -                     unsigned long long s1, s2;
-> > > > -                     s1 =3D di->dev_size;
-> > > > -                     if (di->data_offset !=3D INVALID_SECTORS)
-> > > > -                             s1 -=3D di->data_offset;
-> > > > -                     s1 /=3D __le32_to_cpu(sb->chunksize);
-> > > > -                     s2 =3D di2->dev_size;
-> > > > -                     if (di2->data_offset !=3D INVALID_SECTORS)
-> > > > -                             s2 -=3D di2->data_offset;
-> > > > -                     s2 /=3D __le32_to_cpu(sb->chunksize);
-> > > > -                     if (s1 !=3D s2)
-> > > > -                             raid0_need_layout =3D 1;
-> > > > -             }
-> > > > -     }
-> > > >
-> > > >       for (di =3D st->info; di; di =3D di->next) {
-> > > >               if (di->disk.state & (1 << MD_DISK_FAULTY))
-> > > > @@ -2139,8 +2123,7 @@ static int write_init_super1(struct supertype=
- *st)
-> > > >                       sb->bblog_offset =3D 0;
-> > > >               }
-> > > >
-> > > > -             /* RAID0 needs a layout if devices aren't all the sam=
-e size
-> > > > */
-> > > > -             if (raid0_need_layout)
-> > > > +             if (sb->level =3D=3D 0 && sb->layout)
-> > > >                       sb->feature_map |=3D
-> > > > __cpu_to_le32(MD_FEATURE_RAID0_LAYOUT);
-> > > >               sb->sb_csum =3D calc_sb_1_csum(sb);
-> > > Hi Xiao,
-> > >
-> > > I read Neil patch:
-> > > https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3D329=
-dfc28de
-> > >
-> > > For sure Neil has a purpose to make it this way. I think that because=
- it
-> > > breaks creation when layout is not supported by kernel. Neil wanted t=
-o keep
-> > > possible largest compatibility so it sets layout feature only if it i=
+>
+> > 2023=E5=B9=B410=E6=9C=8813=E6=97=A5 21:44=EF=BC=8CMariusz Tkaczyk <mari=
+usz.tkaczyk@linux.intel.com> =E5=86=99=E9=81=93=EF=BC=9A
+> >
+> > On Fri, 13 Oct 2023 20:12:38 +0800
+> > Xiao Ni <xni@redhat.com> wrote:
+> >
+> >>>>> So, it forces the calculations made by Neil back but I think that w=
+e can
+> >>>>> simply compare dev_size and data_offset between members.
+> >>>>
+> >>>> We don't need to consider the compatibility anymore in future?
+> >>>>
+> >>> Not sure if I get your question correctly. This property is supported=
+ now so
+> >>> why we should? It is already there so we are safe to set it.
+> >>
+> >> I asked because you said we can remove the check in future. So I don't
+> >> know why we don't need the check in future. The check here should be
+> >> the kernel version check, right?
+> >
+> >
+> > We are not supporting old kernels forever. At some point of time, we wo=
+uld
+> > decide that kernels older than 5.5 are no longer a valid case and then =
+we will
+> > free to remove verification. If we are not supporting something older t=
+han the
+> > version where it was added, we can assume that MD_RAID0_LAYOUT is alway=
 s
-> > > necessary. Your change forces layout bit to be always used. Can you t=
-est
-> > > this change on kernel without raid0_layout support? I expect regressi=
-on for
-> > > same dev size raid arrays.
+> > available and we don't need to care anymore, right?
 > >
-> > Hi Mariusz
-> >
-> > Thanks for pointing out this. I only think the kernel which supports
-> > MD_FEATURE_RAID0_LAYOUT
-> >
-> > >
-> > > I think that before we will set layout bit we should check kernel
-> > > version, it must be higher than 5.4. In the future we would remove th=
-is
-> > > check.
+> > Here a recent example:
+> > https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3Df8d2c=
+4286a
+>
+> Just FYI, we still support Linux v4.12 based kernel for SLES12-SP5.
+>
+> Coly Li
+>
 
-Hi Mariusz
+Hi all
 
-I just noticed the kernel version should be 3.14 rather than 5.4. In
-kernel 3.14 (20d0189b1012 block: Introduce new bio_split()) introduces
-this problem. So 5.4 is a typo error?
+Thanks for the explanation.
 
-Regards
+Best Regards
 Xiao
 
