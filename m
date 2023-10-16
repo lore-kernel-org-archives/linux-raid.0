@@ -2,255 +2,187 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A89CDB482
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Oct 2023 02:06:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C07CDB465
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Oct 2023 08:14:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230527AbjJPCGo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 15 Oct 2023 22:06:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40168 "EHLO
+        id S230126AbjJPIOQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Oct 2023 04:14:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230490AbjJPCGn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 15 Oct 2023 22:06:43 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1564C1;
-        Sun, 15 Oct 2023 19:06:40 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4S80pb4YXgz4f3l7r;
-        Mon, 16 Oct 2023 10:06:31 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnt9armixlh4dQDA--.48728S4;
-        Mon, 16 Oct 2023 10:06:37 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
-        yangerkun@huawei.com
-Subject: [PATCH v2] md: cleanup pers->prepare_suspend()
-Date:   Mon, 16 Oct 2023 18:02:40 +0800
-Message-Id: <20231016100240.540474-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S229501AbjJPIOO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Oct 2023 04:14:14 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC2D2A1
+        for <linux-raid@vger.kernel.org>; Mon, 16 Oct 2023 01:13:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1697444012;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Jg8FtnizQvelH1Z+61OibQ0pOC9vyQ6hfXJI0I/tFXM=;
+        b=D0N6DU/YE9tVEUz60GckZZwO3GFTm0xv/0NiGCEjmo8XYGNzN+l5BrMLucxLuwKQuucmul
+        ij+nUxtf4KV5C5jCSx5WQSOAfbuOJflMoirTtqGQO9hsOh71Ki4H8IB9mRgZnP3n4mWO3D
+        OLkiNxr1Ec9yVWJmoJ7Vk70XwjsDH0Q=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-662-UTMFAs1NMgWxWuWzV_Vhiw-1; Mon, 16 Oct 2023 04:13:28 -0400
+X-MC-Unique: UTMFAs1NMgWxWuWzV_Vhiw-1
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-27d3fe747b1so1779740a91.1
+        for <linux-raid@vger.kernel.org>; Mon, 16 Oct 2023 01:13:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697444008; x=1698048808;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Jg8FtnizQvelH1Z+61OibQ0pOC9vyQ6hfXJI0I/tFXM=;
+        b=vz4KJexpsQE9+NVfTPpFIWyIgSuCGpd9kUuMAdY4iN7Rsfxfgefm+qPGfR1DIY6v1P
+         8Yo6eCTAmtBk3mteKcr95En5Fxg5HXoA3OMpmPGjZYFvlPU4FjQeu79ypqIFp782vdUT
+         Ybi6eFF5xYDfR3uGKoVjDBtcHlj5TZLq1zwhVKfnwIhQ9unt3HLUYZlrXo42m24Ajtxq
+         4HDFMWNIdHz8Q68z4qPPH3/l88haX1QHCa0G/a5+P7VPrmkLPRDMjjfNCVZbAQKp1GWM
+         /pbWV/A/1/xqxQi8Ww+DwkCx0My6AoUCqfdDt+/qXrpPGErklTLn09960nqCmO2xqgy0
+         9Idg==
+X-Gm-Message-State: AOJu0YzPMGRCJhXg2cf9HZ+KKiREgv9H+0uVhZ8yL4c5VqVoJWvZ52WS
+        3G4FMP2mIn/+vYpIt5mkdvxR//9IOngblpDMy1K7yhazsxeEnH7nT0JbgwkSPJyQdIEC4sQzyWz
+        ndKAvLwEwLVe4YiWoNkF6IPW7Whmht1HnK9OEaA==
+X-Received: by 2002:a17:90b:2788:b0:27d:1c89:2160 with SMTP id pw8-20020a17090b278800b0027d1c892160mr10017590pjb.47.1697444007814;
+        Mon, 16 Oct 2023 01:13:27 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHqnG4A/lmi++DkkpZUH+9g7wcbaXWVnI8p6ZDQ0QCA0QzxxGGWoLHf3nS17Yttcku9urX2z/Xo0yVOKSro0zk=
+X-Received: by 2002:a17:90b:2788:b0:27d:1c89:2160 with SMTP id
+ pw8-20020a17090b278800b0027d1c892160mr10017580pjb.47.1697444007455; Mon, 16
+ Oct 2023 01:13:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnt9armixlh4dQDA--.48728S4
-X-Coremail-Antispam: 1UD129KBjvJXoW3JryrKF15AF1kWF1xtr4fZrb_yoWxAr4rpa
-        93tF9xZr40qF9xKF4DJr4kWa4Y9rnrKrZrta9rJw1xA3W3tr4rC3W5Way5Zr95Aa48ArWD
-        Xa1UJa4Dur4093JanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2ocxC64kIII
-        0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-        wVC0I7IYx2IY6xkF7I0E14v26F4UJVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7
-        xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40E
-        FcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr
-        0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8v
-        x2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1l
-        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
-        AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v2
-        6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0p
-        RQo7tUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+References: <20231011130522.78994-1-xni@redhat.com> <20231013113034.0000298a@linux.intel.com>
+ <CALTww282t6UMePRPPmoxyxBpedbjWC=9ojjHQx8o8sJttnzvSA@mail.gmail.com> <20231013135935.00005679@linux.intel.com>
+In-Reply-To: <20231013135935.00005679@linux.intel.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Mon, 16 Oct 2023 16:13:16 +0800
+Message-ID: <CALTww288hm71bTWSbpvXFH2dBeOT3nyRws_NCSUtumP+-+MYVw@mail.gmail.com>
+Subject: Re: [PATCH 1/1] mdadm/super1: Add MD_FEATURE_RAID0_LAYOUT if
+ sb->layout is set
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org, colyli@suse.de,
+        neilb@suse.de
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Fri, Oct 13, 2023 at 7:59=E2=80=AFPM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> On Fri, 13 Oct 2023 18:59:21 +0800
+> Xiao Ni <xni@redhat.com> wrote:
+>
+> > On Fri, Oct 13, 2023 at 5:31=E2=80=AFPM Mariusz Tkaczyk
+> > <mariusz.tkaczyk@linux.intel.com> wrote:
+> > >
+> > > On Wed, 11 Oct 2023 21:05:22 +0800
+> > > Xiao Ni <xni@redhat.com> wrote:
+> > >
+> > > > In kernel space super_1_validate sets mddev->layout to -1 if
+> > > > MD_FEATURE_RAID0_LAYOUT is not set. MD_FEATURE_RAID0_LAYOUT is set =
+in
+> > > > mdadm write_init_super1. Now only raid with more than one zone can =
+set
+> > > > this bit. But for raid0 with same size member disks, it doesn't set=
+ this
+> > > > bit. The layout is *unknown* when running mdadm -D command. In fact=
+ it
+> > > > should be RAID0_ORIG_LAYOUT which gets from default_layout.
+> > > >
+> > > > So set MD_FEATURE_RAID0_LAYOUT when sb->layout has value.
+> > > >
+> > > > Fixes: 329dfc28debb ('Create: add support for RAID0 layouts.')
+> > > > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > > > ---
+> > > >  super1.c | 21 ++-------------------
+> > > >  1 file changed, 2 insertions(+), 19 deletions(-)
+> > > >
+> > > > diff --git a/super1.c b/super1.c
+> > > > index 856b02082662..f29751b4a5c7 100644
+> > > > --- a/super1.c
+> > > > +++ b/super1.c
+> > > > @@ -1978,26 +1978,10 @@ static int write_init_super1(struct superty=
+pe *st)
+> > > >       unsigned long long sb_offset;
+> > > >       unsigned long long data_offset;
+> > > >       long bm_offset;
+> > > > -     int raid0_need_layout =3D 0;
+> > > >
+> > > > -     for (di =3D st->info; di; di =3D di->next) {
+> > > > +     for (di =3D st->info; di; di =3D di->next)
+> > > >               if (di->disk.state & (1 << MD_DISK_JOURNAL))
+> > > >                       sb->feature_map |=3D
+> > > > __cpu_to_le32(MD_FEATURE_JOURNAL);
+> > > > -             if (sb->level =3D=3D 0 && sb->layout !=3D 0) {
+> > > > -                     struct devinfo *di2 =3D st->info;
+> > > > -                     unsigned long long s1, s2;
+> > > > -                     s1 =3D di->dev_size;
+> > > > -                     if (di->data_offset !=3D INVALID_SECTORS)
+> > > > -                             s1 -=3D di->data_offset;
+> > > > -                     s1 /=3D __le32_to_cpu(sb->chunksize);
+> > > > -                     s2 =3D di2->dev_size;
+> > > > -                     if (di2->data_offset !=3D INVALID_SECTORS)
+> > > > -                             s2 -=3D di2->data_offset;
+> > > > -                     s2 /=3D __le32_to_cpu(sb->chunksize);
+> > > > -                     if (s1 !=3D s2)
+> > > > -                             raid0_need_layout =3D 1;
+> > > > -             }
+> > > > -     }
+> > > >
+> > > >       for (di =3D st->info; di; di =3D di->next) {
+> > > >               if (di->disk.state & (1 << MD_DISK_FAULTY))
+> > > > @@ -2139,8 +2123,7 @@ static int write_init_super1(struct supertype=
+ *st)
+> > > >                       sb->bblog_offset =3D 0;
+> > > >               }
+> > > >
+> > > > -             /* RAID0 needs a layout if devices aren't all the sam=
+e size
+> > > > */
+> > > > -             if (raid0_need_layout)
+> > > > +             if (sb->level =3D=3D 0 && sb->layout)
+> > > >                       sb->feature_map |=3D
+> > > > __cpu_to_le32(MD_FEATURE_RAID0_LAYOUT);
+> > > >               sb->sb_csum =3D calc_sb_1_csum(sb);
+> > > Hi Xiao,
+> > >
+> > > I read Neil patch:
+> > > https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=3D329=
+dfc28de
+> > >
+> > > For sure Neil has a purpose to make it this way. I think that because=
+ it
+> > > breaks creation when layout is not supported by kernel. Neil wanted t=
+o keep
+> > > possible largest compatibility so it sets layout feature only if it i=
+s
+> > > necessary. Your change forces layout bit to be always used. Can you t=
+est
+> > > this change on kernel without raid0_layout support? I expect regressi=
+on for
+> > > same dev size raid arrays.
+> >
+> > Hi Mariusz
+> >
+> > Thanks for pointing out this. I only think the kernel which supports
+> > MD_FEATURE_RAID0_LAYOUT
+> >
+> > >
+> > > I think that before we will set layout bit we should check kernel
+> > > version, it must be higher than 5.4. In the future we would remove th=
+is
+> > > check.
 
-pers->prepare_suspend() is not used anymore and can be removed.
+Hi Mariusz
 
-Reverts following three commit:
+I just noticed the kernel version should be 3.14 rather than 5.4. In
+kernel 3.14 (20d0189b1012 block: Introduce new bio_split()) introduces
+this problem. So 5.4 is a typo error?
 
- - commit 431e61257d63 ("md: export md_is_rdwr() and is_md_suspended()")
- - commit 3e00777d5157 ("md: add a new api prepare_suspend() in
-md_personality")
- - commit 868bba54a3bc ("md/raid5: fix a deadlock in the case that reshape
-is interrupted")
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
-Changes in v2:
- - fix a conflict that is caused from my local branch.
-
- drivers/md/md.c    | 17 ++++++++++++++++-
- drivers/md/md.h    | 18 ------------------
- drivers/md/raid5.c | 44 +-------------------------------------------
- 3 files changed, 17 insertions(+), 62 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index fa6fe1664e78..68f3bb6e89cb 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -91,6 +91,18 @@ static void mddev_detach(struct mddev *mddev);
- static void export_rdev(struct md_rdev *rdev, struct mddev *mddev);
- static void md_wakeup_thread_directly(struct md_thread __rcu *thread);
- 
-+enum md_ro_state {
-+	MD_RDWR,
-+	MD_RDONLY,
-+	MD_AUTO_READ,
-+	MD_MAX_STATE
-+};
-+
-+static bool md_is_rdwr(struct mddev *mddev)
-+{
-+	return (mddev->ro == MD_RDWR);
-+}
-+
- /*
-  * Default number of read corrections we'll attempt on an rdev
-  * before ejecting it from the array. We divide the read error
-@@ -333,6 +345,10 @@ EXPORT_SYMBOL_GPL(md_new_event);
- static LIST_HEAD(all_mddevs);
- static DEFINE_SPINLOCK(all_mddevs_lock);
- 
-+static bool is_md_suspended(struct mddev *mddev)
-+{
-+	return percpu_ref_is_dying(&mddev->active_io);
-+}
- /* Rather than calling directly into the personality make_request function,
-  * IO requests come here first so that we can check if the device is
-  * being suspended pending a reconfiguration.
-@@ -9144,7 +9160,6 @@ void md_do_sync(struct md_thread *thread)
- 	spin_unlock(&mddev->lock);
- 
- 	wake_up(&resync_wait);
--	wake_up(&mddev->sb_wait);
- 	md_wakeup_thread(mddev->thread);
- 	return;
- }
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 55d01d431418..20f3f96cf4c1 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -565,23 +565,6 @@ enum recovery_flags {
- 	MD_RESYNCING_REMOTE,	/* remote node is running resync thread */
- };
- 
--enum md_ro_state {
--	MD_RDWR,
--	MD_RDONLY,
--	MD_AUTO_READ,
--	MD_MAX_STATE
--};
--
--static inline bool md_is_rdwr(struct mddev *mddev)
--{
--	return (mddev->ro == MD_RDWR);
--}
--
--static inline bool is_md_suspended(struct mddev *mddev)
--{
--	return percpu_ref_is_dying(&mddev->active_io);
--}
--
- static inline int __must_check mddev_lock(struct mddev *mddev)
- {
- 	return mutex_lock_interruptible(&mddev->reconfig_mutex);
-@@ -641,7 +624,6 @@ struct md_personality
- 	int (*start_reshape) (struct mddev *mddev);
- 	void (*finish_reshape) (struct mddev *mddev);
- 	void (*update_reshape_pos) (struct mddev *mddev);
--	void (*prepare_suspend) (struct mddev *mddev);
- 	/* quiesce suspends or resumes internal processing.
- 	 * 1 - stop new actions and wait for action io to complete
- 	 * 0 - return to normal behaviour
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 36ca6db37153..ad6d5138a6bd 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5907,19 +5907,6 @@ static int add_all_stripe_bios(struct r5conf *conf,
- 	return ret;
- }
- 
--static bool reshape_inprogress(struct mddev *mddev)
--{
--	return test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--	       test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
--	       !test_bit(MD_RECOVERY_DONE, &mddev->recovery) &&
--	       !test_bit(MD_RECOVERY_INTR, &mddev->recovery);
--}
--
--static bool reshape_disabled(struct mddev *mddev)
--{
--	return is_md_suspended(mddev) || !md_is_rdwr(mddev);
--}
--
- static enum stripe_result make_stripe_request(struct mddev *mddev,
- 		struct r5conf *conf, struct stripe_request_ctx *ctx,
- 		sector_t logical_sector, struct bio *bi)
-@@ -5951,8 +5938,7 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
- 			if (ahead_of_reshape(mddev, logical_sector,
- 					     conf->reshape_safe)) {
- 				spin_unlock_irq(&conf->device_lock);
--				ret = STRIPE_SCHEDULE_AND_RETRY;
--				goto out;
-+				return STRIPE_SCHEDULE_AND_RETRY;
- 			}
- 		}
- 		spin_unlock_irq(&conf->device_lock);
-@@ -6031,15 +6017,6 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
- 
- out_release:
- 	raid5_release_stripe(sh);
--out:
--	if (ret == STRIPE_SCHEDULE_AND_RETRY && !reshape_inprogress(mddev) &&
--	    reshape_disabled(mddev)) {
--		bi->bi_status = BLK_STS_IOERR;
--		ret = STRIPE_FAIL;
--		pr_err("md/raid456:%s: io failed across reshape position while reshape can't make progress.\n",
--		       mdname(mddev));
--	}
--
- 	return ret;
- }
- 
-@@ -8924,22 +8901,6 @@ static int raid5_start(struct mddev *mddev)
- 	return r5l_start(conf->log);
- }
- 
--static void raid5_prepare_suspend(struct mddev *mddev)
--{
--	struct r5conf *conf = mddev->private;
--
--	wait_event(mddev->sb_wait, !reshape_inprogress(mddev) ||
--				    percpu_ref_is_zero(&mddev->active_io));
--	if (percpu_ref_is_zero(&mddev->active_io))
--		return;
--
--	/*
--	 * Reshape is not in progress, and array is suspended, io that is
--	 * waiting for reshpape can never be done.
--	 */
--	wake_up(&conf->wait_for_overlap);
--}
--
- static struct md_personality raid6_personality =
- {
- 	.name		= "raid6",
-@@ -8960,7 +8921,6 @@ static struct md_personality raid6_personality =
- 	.check_reshape	= raid6_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
--	.prepare_suspend = raid5_prepare_suspend,
- 	.quiesce	= raid5_quiesce,
- 	.takeover	= raid6_takeover,
- 	.change_consistency_policy = raid5_change_consistency_policy,
-@@ -8985,7 +8945,6 @@ static struct md_personality raid5_personality =
- 	.check_reshape	= raid5_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
--	.prepare_suspend = raid5_prepare_suspend,
- 	.quiesce	= raid5_quiesce,
- 	.takeover	= raid5_takeover,
- 	.change_consistency_policy = raid5_change_consistency_policy,
-@@ -9011,7 +8970,6 @@ static struct md_personality raid4_personality =
- 	.check_reshape	= raid5_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
--	.prepare_suspend = raid5_prepare_suspend,
- 	.quiesce	= raid5_quiesce,
- 	.takeover	= raid4_takeover,
- 	.change_consistency_policy = raid5_change_consistency_policy,
--- 
-2.39.2
+Regards
+Xiao
 
