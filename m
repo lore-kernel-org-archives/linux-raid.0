@@ -2,52 +2,50 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F7EACDB474
-	for <linux-raid@archiver.kernel.org>; Tue, 17 Oct 2023 07:36:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A04ACDB474
+	for <linux-raid@archiver.kernel.org>; Tue, 17 Oct 2023 07:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234689AbjJQHgZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 17 Oct 2023 03:36:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40414 "EHLO
+        id S234718AbjJQH5D (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 17 Oct 2023 03:57:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234687AbjJQHgL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 17 Oct 2023 03:36:11 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56F18AB
-        for <linux-raid@vger.kernel.org>; Tue, 17 Oct 2023 00:36:10 -0700 (PDT)
+        with ESMTP id S234701AbjJQH47 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 17 Oct 2023 03:56:59 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7676EF0
+        for <linux-raid@vger.kernel.org>; Tue, 17 Oct 2023 00:56:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697528170; x=1729064170;
+  t=1697529417; x=1729065417;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=QY0ZgugMcOFrM4VoIT2L1Am32SfMhCYQh6Yt3FwsBC8=;
-  b=NREb4gmPG4vlPtB31OfQHWrAed651A8kbMNxwhbo7/g1rZpfYYnpSwsM
-   J7TbhLFTGuns4Z8C8QOAZ15qdlFoOBLSaemPlx2bkXGPjqmXQ7lBuQsTg
-   6X0Z/Muzr0bdNfLcEfz3WAwyTjurBPz4iBjgxGEQXIJZQe/XljRa/amiu
-   G/5ND7AGfeGf0wy9w70hPXFCD8Ggsi58XC5zbhtOYVgMzbHwGLkQm9ECs
-   C135P1Ld+HPQZEpUkih8aAuLnUZol3+5B88ymSUSj6lMgfE6Z+0lnQOjO
-   jTNGdKM42GbA7t+KwLo8qHiv7cku21OsiIpYnise9MoXAaHhV3hK352Tm
+  bh=6ZxTCas6/pyfP2QmnJYOzFB0NzQmviXDbpww5/2D67E=;
+  b=QIAA77155be6w1+6el27ieRwl9wTeW0J8zdIDUVR7mw3LyhAA3QtSc4a
+   QOgvIgZQJQ5hCVaZRyOAmldpueOxcWO1WbwP3r3mDgEWM1XAAhf5Sjwiy
+   dM9p4Z2g22jLGcbEcJEG1V/5m6qkUR6AmYul3sGNP/92/p9DNt2/3YQgb
+   cb4iVTK9kKpy6cLSBwmQN63u/WVPSU8zf6d354TID9ObQiTJGZOlSfpUX
+   K/GE94hBlEXQOEZD2upzgTUhT0JDppgzLF89M1iFjEWe7UCKHgD3XvLpP
+   Ve8BU+WqXKBVizMccuaIzb7xkYzxuCW9ee3oh8ag6Iycy0OY/nejKxRxO
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="370790042"
+X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="389593921"
 X-IronPort-AV: E=Sophos;i="6.03,231,1694761200"; 
-   d="scan'208";a="370790042"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 00:36:08 -0700
+   d="scan'208";a="389593921"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 00:56:57 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="1087401877"
 X-IronPort-AV: E=Sophos;i="6.03,231,1694761200"; 
-   d="scan'208";a="1087401877"
+   d="scan'208";a="3984205"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.158.98])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 00:36:06 -0700
-Date:   Tue, 17 Oct 2023 09:36:01 +0200
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 00:57:01 -0700
+Date:   Tue, 17 Oct 2023 09:56:15 +0200
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To:     Xiao Ni <xni@redhat.com>
-Cc:     jes@trained-monkey.org, colyli@suse.de, neilb@suse.de,
-        linux-raid@vger.kernel.org
-Subject: Re: [PATCH V2 1/1] mdadm/super1: Add MD_FEATURE_RAID0_LAYOUT for
- all raid0 after kernel v5.4
-Message-ID: <20231017093601.000019e5@linux.intel.com>
-In-Reply-To: <20231017035142.41168-1-xni@redhat.com>
-References: <20231017035142.41168-1-xni@redhat.com>
+Cc:     jes@trained-monkey.org, colyli@suse.de, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 1/1] mdadm/udev: Don't add member disk if super is
+ disabled in conf file
+Message-ID: <20231017095615.00000088@linux.intel.com>
+In-Reply-To: <20231017054848.42279-1-xni@redhat.com>
+References: <20231017054848.42279-1-xni@redhat.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -56,74 +54,75 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 17 Oct 2023 11:51:42 +0800
+On Tue, 17 Oct 2023 13:48:48 +0800
 Xiao Ni <xni@redhat.com> wrote:
 
-> After and include kernel v5.4, it adds one feature bit
-> MD_FEATURE_RAID0_LAYOUT. It must need to specify a layout for raid0 with more
-> than one zone. But for raid0 with one zone, in fact it also has a defalut
-> layout.
+> Superblocks can be disabled behind AUTO in mdadm.conf. For this situation udev
+> rule still can handle the member disk. But it's not expected. Change the udev
+> rule to check the conf file before handling member disk.
 > 
-> Now for raid0 with one zone, *unknown* layout can be seen when running mdadm
-> -D command. It's the reason that mdadm doesn't set MD_FEATURE_RAID0_LAYOUT for
-> raid0 with one zone. Then in kernel space, super_1_validate sets mddev->layout
-> to -1 because of no MD_FEATURE_RAID0_LAYOUT. In fact, in raid0 io path, it
-> uses the default layout. So in fact after/include kernel v5.4, all raid0
-> device have layout.
-> 
-> Fixes: 329dfc28debb ('Create: add support for RAID0 layouts.')
+Hi Xiao,
+
+I'm reading manual and for me it is something that should gone. Why we need
+this? Kernel is responsible for bringing up partitions, not udev.
+https://linux.die.net/man/5/mdadm.conf
+
+"From 2.6.28 all md array devices are partitionable, hence this option is not
+needed."
+
+I need from you to deeply understand this feature, why it was needed, what it
+gives now to help community take a decision what is the right thing to do.
+
+I would prefer to ask mdadm to provide such option from config. You
+cannot simply assume that /etc/mdadm.conf is the right conf location. To not
+make it over complicated and bug friendly we should get this by mdadm. mdadm
+has conf file location determination so that should guarantee it is always
+the same value.
+
+Thanks,
+Mariusz
+
 > Signed-off-by: Xiao Ni <xni@redhat.com>
 > ---
->  super1.c | 21 ++-------------------
->  1 file changed, 2 insertions(+), 19 deletions(-)
+>  udev-md-raid-assembly.rules | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
 > 
-> diff --git a/super1.c b/super1.c
-> index 856b02082662..653a2ea6c0e4 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1978,26 +1978,10 @@ static int write_init_super1(struct supertype *st)
->  	unsigned long long sb_offset;
->  	unsigned long long data_offset;
->  	long bm_offset;
-> -	int raid0_need_layout = 0;
+> diff --git a/udev-md-raid-assembly.rules b/udev-md-raid-assembly.rules
+> index d4a7f0a5a049..a0f9494f4461 100644
+> --- a/udev-md-raid-assembly.rules
+> +++ b/udev-md-raid-assembly.rules
+> @@ -16,6 +16,10 @@ ENV{SYSTEMD_READY}=="0", GOTO="md_inc_end"
+>  # Then the change event happens.
+>  # When adding md/dm devices, ID_FS_TYPE can only be linux_raid_member
+>  # after change event happens.
+> +ENV{ID_FS_TYPE}=="linux_raid_member", \
+> +	PROGRAM="/usr/bin/egrep -c ^AUTO.*+1\.x.*-1\.x.*$ /etc/mdadm.conf",
+> GOTO="md_inc" +ENV{ID_FS_TYPE}=="linux_raid_member", \
+> +	PROGRAM="/usr/bin/egrep -c ^AUTO.*-1\.x.*$ /etc/mdadm.conf",
+> GOTO="md_inc_end" ENV{ID_FS_TYPE}=="linux_raid_member", GOTO="md_inc"
 >  
-> -	for (di = st->info; di; di = di->next) {
-> +	for (di = st->info; di; di = di->next)
->  		if (di->disk.state & (1 << MD_DISK_JOURNAL))
->  			sb->feature_map |= __cpu_to_le32(MD_FEATURE_JOURNAL);
-> -		if (sb->level == 0 && sb->layout != 0) {
-> -			struct devinfo *di2 = st->info;
-> -			unsigned long long s1, s2;
-> -			s1 = di->dev_size;
-> -			if (di->data_offset != INVALID_SECTORS)
-> -				s1 -= di->data_offset;
-> -			s1 /= __le32_to_cpu(sb->chunksize);
-> -			s2 = di2->dev_size;
-> -			if (di2->data_offset != INVALID_SECTORS)
-> -				s2 -= di2->data_offset;
-> -			s2 /= __le32_to_cpu(sb->chunksize);
-> -			if (s1 != s2)
-> -				raid0_need_layout = 1;
-> -		}
-> -	}
+>  # "noiswmd" on kernel command line stops mdadm from handling
+> @@ -26,9 +30,20 @@ IMPORT{cmdline}="noiswmd"
+>  IMPORT{cmdline}="nodmraid"
+>  
+>  ENV{nodmraid}=="?*", GOTO="md_inc_end"
+> +
+> +ENV{ID_FS_TYPE}=="ddf_raid_member", \
+> +	PROGRAM="/usr/bin/egrep -c ^AUTO.*+ddf.*-ddf.*$ /etc/mdadm.conf",
+> GOTO="md_inc" +ENV{ID_FS_TYPE}=="ddf_raid_member", \
+> +	PROGRAM="/usr/bin/egrep -c ^AUTO.*-ddf.*$ /etc/mdadm.conf",
+> GOTO="md_inc_end" ENV{ID_FS_TYPE}=="ddf_raid_member", GOTO="md_inc"
+> +
+>  ENV{noiswmd}=="?*", GOTO="md_inc_end"
+> +ENV{ID_FS_TYPE}=="isw_raid_member", \
+> +	PROGRAM="/usr/bin/egrep -c ^AUTO.*+imsm.*-imsm.*$ /etc/mdadm.conf",
+> GOTO="md_inc" +ENV{ID_FS_TYPE}=="isw_raid_member", \
+> +	PROGRAM="/usr/bin/egrep -c ^AUTO.*-imsm.*$ /etc/mdadm.conf",
+> GOTO="md_inc_end" ENV{ID_FS_TYPE}=="isw_raid_member", ACTION!="change",
+> GOTO="md_inc" +
+>  GOTO="md_inc_end"
 
-We need to keep this code. Neil made MD_FEATURE_RAID0_LAYOUT always added for
-device with various sizes. You are extending it not replacing.
-
-I understand that now it sets MD_FEATURE_RAID0_LAYOUT if it detects
-member devices with various sizes. Kernel version is irrelevant so I suspect
-that if someone creates zoned raid0 array, it fails to start array if
-MD_FEATURE_RAID0_LAYOUT is not supported by the MD driver. User must
-acknowledge that by layout=dangerous (it means no layout I think).
-
-We don't want remove this. It prevents users from data corruption.
-
-Your change is to start always setting MD_FEATURE_RAID0_LAYOUT if it seems to be
-safe i.e. kernel is >=5.4 but it does not invalidate the raid0_need_layout
-routine from the reason raised above.
-
-Please correct me if I missed something or if I'm wrong. I did not tested it.
-I trust that you made necessary testing and can provide real-life input here.
+For sure IMSM does not support it.
 
 Thanks,
 Mariusz
