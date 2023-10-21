@@ -2,84 +2,246 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 186A1C001DF
-	for <linux-raid@archiver.kernel.org>; Fri, 20 Oct 2023 16:43:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17370CDB474
+	for <linux-raid@archiver.kernel.org>; Sat, 21 Oct 2023 02:25:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377917AbjJTQnU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 20 Oct 2023 12:43:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55164 "EHLO
+        id S231138AbjJUCZU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 20 Oct 2023 22:25:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377908AbjJTQnT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 20 Oct 2023 12:43:19 -0400
-Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 374D7197
-        for <linux-raid@vger.kernel.org>; Fri, 20 Oct 2023 09:43:17 -0700 (PDT)
-Received: by mail-io1-xd2d.google.com with SMTP id ca18e2360f4ac-79fc0068cb5so10402339f.1
-        for <linux-raid@vger.kernel.org>; Fri, 20 Oct 2023 09:43:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1697820196; x=1698424996; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=gTdxqS67i7ng/6wm9iJH/mU1cpqJgDjmihlnCdwOyak=;
-        b=sGK5aXjFbnfBFInEps06XyEP1YWqfXE+O8IdUHe9TCPH1VPIOwFO4ksU7RekPVWyG6
-         8MHSfYUPSpdnDT0AHzFCndix/qH3lCyCuMYuwWf9KElImZPxABX4YVAuwZugp7XkYY/p
-         2U/7aVXoy+bYbX/SteWj45nsO24MdGJ9Zey0rzIXg9nDQDB8wQF4NbrPKx2fwcPhoEBY
-         uMkLU1MC6YhZOYvc+OPwWfPo4pj1J7OLa9bpudtGRZk9R5KeMDZxteQPSPGGf6cqjpTg
-         3/s7iUgOxmBIGHB1u5DHAbdpRGc2Bh3KbAp8NgTBdAJt2mxGb/pYEgZZvJc5hK/0y7Fe
-         WPwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697820196; x=1698424996;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=gTdxqS67i7ng/6wm9iJH/mU1cpqJgDjmihlnCdwOyak=;
-        b=J9/0Ph87Lg21GwElZ0PpZM7TpvLGJAtXymEuxKlKk0l9dML5eS5Pe1W4Hwv2h8Isuh
-         BtXNaTV78s3q2LF/vPetXXLlrS1lbEFV66BwODDihs45wyjr6vgbvCOYupVI9ByxP42l
-         4me0wK6sibexHplmig4U/bRaaKCQY7xyXkfxhYUtRX0/URjFkJT+FZ8LMoGU04pHDQG0
-         I8UecgYXsLuLlc4DB9AMZIGHvfx5aKCWUQBFUk5SXFIgGdilvZwILfccze9lo3UZ8Oxc
-         49kvOHRU/bqDS9ugs0paB0phkTJSrktNDTwdZgnTrdBasU2vbsJDb3NdqQkUG4oybgTP
-         EhUQ==
-X-Gm-Message-State: AOJu0YwT7S30UhQNqBLvabZZgh71TIlTijGDFeJ2ntYOYSseEMOrDAiY
-        2LvoNApjBMpk+dYxsyvxCicPJw==
-X-Google-Smtp-Source: AGHT+IFg6iGuwudULLeQuaPKN0GR2qL1Z2rupk667kxuGhvDl1hA4p83yTLIOqUkXD45LGlvp1cjsw==
-X-Received: by 2002:a05:6e02:5af:b0:357:9e82:6ca7 with SMTP id k15-20020a056e0205af00b003579e826ca7mr2383768ils.3.1697820195790;
-        Fri, 20 Oct 2023 09:43:15 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id k4-20020a056e02156400b0034cd2c0afe8sm675833ilu.56.2023.10.20.09.43.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 20 Oct 2023 09:43:15 -0700 (PDT)
-Message-ID: <e81df8ad-18f7-4d36-aba8-e99fb1cbe09c@kernel.dk>
-Date:   Fri, 20 Oct 2023 10:43:13 -0600
+        with ESMTP id S229500AbjJUCZT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 20 Oct 2023 22:25:19 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3447ED71;
+        Fri, 20 Oct 2023 19:25:17 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SC4zq74Qdz4f3lWy;
+        Sat, 21 Oct 2023 10:25:11 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgAnt9aHNjNlZ+cUDg--.5642S6;
+        Sat, 21 Oct 2023 10:25:13 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: [PATCH -next v2 2/6] md: remove flag RemoveSynchronized
+Date:   Sat, 21 Oct 2023 18:20:55 +0800
+Message-Id: <20231021102059.3198284-3-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231021102059.3198284-1-yukuai1@huaweicloud.com>
+References: <20231021102059.3198284-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-next 20231020
-Content-Language: en-US
-To:     Song Liu <songliubraving@meta.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Yu Kuai <yukuai3@huawei.com>, Yu Kuai <yukuai1@huaweicloud.com>,
-        Denis Plotnikov <den-plotnikov@yandex-team.ru>
-References: <50A926AD-D6BB-4635-90FF-DB6DEAF62EE0@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <50A926AD-D6BB-4635-90FF-DB6DEAF62EE0@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgAnt9aHNjNlZ+cUDg--.5642S6
+X-Coremail-Antispam: 1UD129KBjvJXoW3WFW3tw1DWF15Cr45KFyfZwb_yoW7CrWkpw
+        s3WFy3ur4DJw4Utw4DJrW7CFyrJw1Utayjkr93u34fZa43ZryDX34rJFy5Zr90vFZaya1j
+        qF1UJw4DGFyxGF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUPSb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M280x2IEY4vEnII2IxkI6r1a6r45M2
+        8IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK
+        0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4
+        x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l
+        84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I
+        8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AK
+        xVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zV
+        CS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E
+        5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAV
+        WUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY
+        1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
+        0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7s
+        RNLvtUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 10/20/23 10:21 AM, Song Liu wrote:
-> Hi Jens,
-> 
-> Please consider pulling the following changes for md-next on top of your 
-> for-6.7/block branch. This batch contains:
-> 
-> 1. Handle timeout in md-cluster, by Denis Plotnikov;
-> 2. Cleanup pers->prepare_suspend, by Yu Kuai. 
+From: Yu Kuai <yukuai3@huawei.com>
 
-Pulled, thanks Song.
+rcu is not used correctly here, because synchronize_rcu() is called
+before replacing old value, for example:
 
+remove_and_add_spares   // other path
+ synchronize_rcu
+ // called before replacing old value
+ set_bit(RemoveSynchronized)
+                        rcu_read_lock()
+                        rdev = conf->mirros[].rdev
+ pers->hot_remove_disk
+  conf->mirros[].rdev = NULL;
+  if (!test_bit(RemoveSynchronized))
+   synchronize_rcu
+   /*
+    * won't be called, and won't wait
+    * for concurrent readers to be done.
+    */
+                        // access rdev after remove_and_add_spares()
+                        rcu_read_unlock()
+
+Fortunately, there is a separate rcu protection to prevent such rdev
+to be freed:
+
+md_kick_rdev_from_array		//other path
+				rcu_read_lock()
+				rdev = conf->mirros[].rdev
+list_del_rcu(&rdev->same_set)
+
+				rcu_read_unlock()
+				/*
+				 * rdev can be removed from conf, but
+				 * rdev won't be freed.
+				 */
+synchronize_rcu()
+free rdev
+
+Hence remove this useless flag and prepare to remove rcu protection to
+access rdev from 'conf'.
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/md/md-multipath.c |  9 ---------
+ drivers/md/md.c           | 37 ++++++-------------------------------
+ drivers/md/raid1.c        |  9 ---------
+ drivers/md/raid10.c       |  9 ---------
+ drivers/md/raid5.c        |  9 ---------
+ 5 files changed, 6 insertions(+), 67 deletions(-)
+
+diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
+index d22276870283..aa77133f3188 100644
+--- a/drivers/md/md-multipath.c
++++ b/drivers/md/md-multipath.c
+@@ -258,15 +258,6 @@ static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 			goto abort;
+ 		}
+ 		p->rdev = NULL;
+-		if (!test_bit(RemoveSynchronized, &rdev->flags)) {
+-			synchronize_rcu();
+-			if (atomic_read(&rdev->nr_pending)) {
+-				/* lost the race, try later */
+-				err = -EBUSY;
+-				p->rdev = rdev;
+-				goto abort;
+-			}
+-		}
+ 		err = md_integrity_register(mddev);
+ 	}
+ abort:
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 09686d8db983..68f3bb6e89cb 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9250,44 +9250,19 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 	struct md_rdev *rdev;
+ 	int spares = 0;
+ 	int removed = 0;
+-	bool remove_some = false;
+ 
+ 	if (this && test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		/* Mustn't remove devices when resync thread is running */
+ 		return 0;
+ 
+ 	rdev_for_each(rdev, mddev) {
+-		if ((this == NULL || rdev == this) &&
+-		    rdev->raid_disk >= 0 &&
+-		    !test_bit(Blocked, &rdev->flags) &&
+-		    test_bit(Faulty, &rdev->flags) &&
+-		    atomic_read(&rdev->nr_pending)==0) {
+-			/* Faulty non-Blocked devices with nr_pending == 0
+-			 * never get nr_pending incremented,
+-			 * never get Faulty cleared, and never get Blocked set.
+-			 * So we can synchronize_rcu now rather than once per device
+-			 */
+-			remove_some = true;
+-			set_bit(RemoveSynchronized, &rdev->flags);
+-		}
+-	}
+-
+-	if (remove_some)
+-		synchronize_rcu();
+-	rdev_for_each(rdev, mddev) {
+-		if ((this == NULL || rdev == this) &&
+-		    (test_bit(RemoveSynchronized, &rdev->flags) ||
+-		     rdev_removeable(rdev))) {
+-			if (mddev->pers->hot_remove_disk(
+-				    mddev, rdev) == 0) {
+-				sysfs_unlink_rdev(mddev, rdev);
+-				rdev->saved_raid_disk = rdev->raid_disk;
+-				rdev->raid_disk = -1;
+-				removed++;
+-			}
++		if ((this == NULL || rdev == this) && rdev_removeable(rdev) &&
++		    !mddev->pers->hot_remove_disk(mddev, rdev)) {
++			sysfs_unlink_rdev(mddev, rdev);
++			rdev->saved_raid_disk = rdev->raid_disk;
++			rdev->raid_disk = -1;
++			removed++;
+ 		}
+-		if (remove_some && test_bit(RemoveSynchronized, &rdev->flags))
+-			clear_bit(RemoveSynchronized, &rdev->flags);
+ 	}
+ 
+ 	if (removed && mddev->kobj.sd)
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index c13088eae401..4348d670439d 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1836,15 +1836,6 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 			goto abort;
+ 		}
+ 		p->rdev = NULL;
+-		if (!test_bit(RemoveSynchronized, &rdev->flags)) {
+-			synchronize_rcu();
+-			if (atomic_read(&rdev->nr_pending)) {
+-				/* lost the race, try later */
+-				err = -EBUSY;
+-				p->rdev = rdev;
+-				goto abort;
+-			}
+-		}
+ 		if (conf->mirrors[conf->raid_disks + number].rdev) {
+ 			/* We just removed a device that is being replaced.
+ 			 * Move down the replacement.  We drain all IO before
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 4b5f34f320c8..33ab00323cae 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2219,15 +2219,6 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		goto abort;
+ 	}
+ 	*rdevp = NULL;
+-	if (!test_bit(RemoveSynchronized, &rdev->flags)) {
+-		synchronize_rcu();
+-		if (atomic_read(&rdev->nr_pending)) {
+-			/* lost the race, try later */
+-			err = -EBUSY;
+-			*rdevp = rdev;
+-			goto abort;
+-		}
+-	}
+ 	if (p->replacement) {
+ 		/* We must have just cleared 'rdev' */
+ 		p->rdev = p->replacement;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 27a4dce51c92..a80be51b4825 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8202,15 +8202,6 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		goto abort;
+ 	}
+ 	*rdevp = NULL;
+-	if (!test_bit(RemoveSynchronized, &rdev->flags)) {
+-		lockdep_assert_held(&mddev->reconfig_mutex);
+-		synchronize_rcu();
+-		if (atomic_read(&rdev->nr_pending)) {
+-			/* lost the race, try later */
+-			err = -EBUSY;
+-			rcu_assign_pointer(*rdevp, rdev);
+-		}
+-	}
+ 	if (!err) {
+ 		err = log_modify(conf, rdev, false);
+ 		if (err)
 -- 
-Jens Axboe
-
+2.39.2
 
