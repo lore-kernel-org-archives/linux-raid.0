@@ -2,55 +2,55 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 353E2CDB474
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B18AC001DF
 	for <linux-raid@archiver.kernel.org>; Sat, 21 Oct 2023 02:25:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233033AbjJUCZd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 20 Oct 2023 22:25:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35660 "EHLO
+        id S231448AbjJUCZ0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 20 Oct 2023 22:25:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231201AbjJUCZV (ORCPT
+        with ESMTP id S231184AbjJUCZV (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Fri, 20 Oct 2023 22:25:21 -0400
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91A4DD7D;
-        Fri, 20 Oct 2023 19:25:18 -0700 (PDT)
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5609D7A;
+        Fri, 20 Oct 2023 19:25:17 -0700 (PDT)
 Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4SC4zn4G3Rz4f3kG1;
-        Sat, 21 Oct 2023 10:25:09 +0800 (CST)
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SC4zp2W17z4f3lfp;
+        Sat, 21 Oct 2023 10:25:10 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP4 (Coremail) with SMTP id gCh0CgAnt9aHNjNlZ+cUDg--.5642S10;
-        Sat, 21 Oct 2023 10:25:15 +0800 (CST)
+        by APP4 (Coremail) with SMTP id gCh0CgAnt9aHNjNlZ+cUDg--.5642S5;
+        Sat, 21 Oct 2023 10:25:13 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
         yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com,
         yangerkun@huawei.com
-Subject: [PATCH -next v2 6/6] md/md-multipath: remove rcu protection to access rdev from conf
-Date:   Sat, 21 Oct 2023 18:20:59 +0800
-Message-Id: <20231021102059.3198284-7-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 1/6] md: remove useless debug code to print configuration
+Date:   Sat, 21 Oct 2023 18:20:54 +0800
+Message-Id: <20231021102059.3198284-2-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231021102059.3198284-1-yukuai1@huaweicloud.com>
 References: <20231021102059.3198284-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnt9aHNjNlZ+cUDg--.5642S10
-X-Coremail-Antispam: 1UD129KBjvJXoWxXw1kJF4UZr43uw17Wr17ZFb_yoW5Jw4kpa
-        yaqasxtr4UXryakrnFka1Uua4Skw43tFWIkryfC3yIva15Gry5XF1rtryUXFn5AFZ5AF45
-        XFn8Kw4DAFyxGaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: gCh0CgAnt9aHNjNlZ+cUDg--.5642S5
+X-Coremail-Antispam: 1UD129KBjvJXoW3Jr1DXry8Kr4xCr17Gr4xXrb_yoWxKF48pw
+        4aqas3JrsFv345JF4DArWDC3Wayw47Ka97tryfC3s7ZanIyrZ3J3WrJFyrJFy5Za45Zw15
+        Z3y5KrWkC3WIgFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2048vs2IY02
-        0E87I2jVAFwI0_JF0E3s1l82xGYIkIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0
-        rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6x
-        IIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xv
-        wVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFc
-        xC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_
-        Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2
-        IErcIFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIx
-        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-        wI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r
-        4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRvJPtU
-        UUUU=
+        0E87I2jVAFwI0_Jr4l82xGYIkIc2x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2
+        F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjx
+        v20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2
+        z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0V
+        AKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1l
+        Ox8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErc
+        IFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2
+        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
+        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRxhLUUUUUU
+        =
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -59,83 +59,254 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Because it's safe to accees rdev from conf:
- - If any spinlock is held, because synchronize_rcu() from
-   md_kick_rdev_from_array() will prevent 'rdev' to be freed until
-   spinlock is released;
- - If there is normal IO inflight, because mddev_suspend() will prevent
-   rdev to be added or removed from array;
+One the one hand, print_conf() can be called without grabbing
+'reconfig_mtuex' and current rcu protection to access rdev through 'conf'
+is not safe. Fortunately, there is a separate rcu protection to access
+rdev from 'mddev->disks', and rdev is always removed from 'conf' before
+'mddev->disks'.
 
-And these will cover all the scenarios in md-multipath.
+On the other hand, print_conf() is just used for debug,
+and user can always grab such information(/proc/mdstat and mdadm).
+
+There is no need to always enable this debug and try to fix misuse rcu
+protection for accessing rdev from 'conf', hence remove print_conf().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-multipath.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/md/raid1.c  | 28 ----------------------------
+ drivers/md/raid10.c | 29 -----------------------------
+ drivers/md/raid5.c  | 34 ----------------------------------
+ 3 files changed, 91 deletions(-)
 
-diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
-index aa77133f3188..51c5390c517d 100644
---- a/drivers/md/md-multipath.c
-+++ b/drivers/md/md-multipath.c
-@@ -32,17 +32,15 @@ static int multipath_map (struct mpconf *conf)
- 	 * now we use the first available disk.
- 	 */
- 
--	rcu_read_lock();
- 	for (i = 0; i < disks; i++) {
--		struct md_rdev *rdev = rcu_dereference(conf->multipaths[i].rdev);
-+		struct md_rdev *rdev = conf->multipaths[i].rdev;
-+
- 		if (rdev && test_bit(In_sync, &rdev->flags) &&
- 		    !test_bit(Faulty, &rdev->flags)) {
- 			atomic_inc(&rdev->nr_pending);
--			rcu_read_unlock();
- 			return i;
- 		}
- 	}
--	rcu_read_unlock();
- 
- 	pr_crit_ratelimited("multipath_map(): no more operational IO paths?\n");
- 	return (-1);
-@@ -137,14 +135,16 @@ static void multipath_status(struct seq_file *seq, struct mddev *mddev)
- 	struct mpconf *conf = mddev->private;
- 	int i;
- 
-+	lockdep_assert_held(&mddev->lock);
-+
- 	seq_printf (seq, " [%d/%d] [", conf->raid_disks,
- 		    conf->raid_disks - mddev->degraded);
--	rcu_read_lock();
- 	for (i = 0; i < conf->raid_disks; i++) {
--		struct md_rdev *rdev = rcu_dereference(conf->multipaths[i].rdev);
--		seq_printf (seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
-+		struct md_rdev *rdev = READ_ONCE(conf->multipaths[i].rdev);
-+
-+		seq_printf(seq, "%s",
-+			   rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
- 	}
--	rcu_read_unlock();
- 	seq_putc(seq, ']');
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 35d12948e0a9..c13088eae401 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1679,30 +1679,6 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ 		mdname(mddev), conf->raid_disks - mddev->degraded);
  }
  
-@@ -231,7 +231,7 @@ static int multipath_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			rdev->raid_disk = path;
- 			set_bit(In_sync, &rdev->flags);
- 			spin_unlock_irq(&conf->device_lock);
--			rcu_assign_pointer(p->rdev, rdev);
-+			WRITE_ONCE(p->rdev, rdev);
- 			err = 0;
- 			break;
- 		}
-@@ -257,7 +257,7 @@ static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			err = -EBUSY;
- 			goto abort;
- 		}
--		p->rdev = NULL;
-+		WRITE_ONCE(p->rdev, NULL);
- 		err = md_integrity_register(mddev);
+-static void print_conf(struct r1conf *conf)
+-{
+-	int i;
+-
+-	pr_debug("RAID1 conf printout:\n");
+-	if (!conf) {
+-		pr_debug("(!conf)\n");
+-		return;
+-	}
+-	pr_debug(" --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
+-		 conf->raid_disks);
+-
+-	rcu_read_lock();
+-	for (i = 0; i < conf->raid_disks; i++) {
+-		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
+-		if (rdev)
+-			pr_debug(" disk %d, wo:%d, o:%d, dev:%pg\n",
+-				 i, !test_bit(In_sync, &rdev->flags),
+-				 !test_bit(Faulty, &rdev->flags),
+-				 rdev->bdev);
+-	}
+-	rcu_read_unlock();
+-}
+-
+ static void close_sync(struct r1conf *conf)
+ {
+ 	int idx;
+@@ -1763,7 +1739,6 @@ static int raid1_spare_active(struct mddev *mddev)
+ 	mddev->degraded -= count;
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
+-	print_conf(conf);
+ 	return count;
+ }
+ 
+@@ -1829,7 +1804,6 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		rcu_assign_pointer(p[conf->raid_disks].rdev, rdev);
+ 	}
+ 
+-	print_conf(conf);
+ 	return err;
+ }
+ 
+@@ -1846,7 +1820,6 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	if (rdev != p->rdev)
+ 		p = conf->mirrors + conf->raid_disks + number;
+ 
+-	print_conf(conf);
+ 	if (rdev == p->rdev) {
+ 		if (test_bit(In_sync, &rdev->flags) ||
+ 		    atomic_read(&rdev->nr_pending)) {
+@@ -1902,7 +1875,6 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
  	}
  abort:
+ 
+-	print_conf(conf);
+ 	return err;
+ }
+ 
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a5927e98dc67..4b5f34f320c8 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2059,31 +2059,6 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+ 		mdname(mddev), conf->geo.raid_disks - mddev->degraded);
+ }
+ 
+-static void print_conf(struct r10conf *conf)
+-{
+-	int i;
+-	struct md_rdev *rdev;
+-
+-	pr_debug("RAID10 conf printout:\n");
+-	if (!conf) {
+-		pr_debug("(!conf)\n");
+-		return;
+-	}
+-	pr_debug(" --- wd:%d rd:%d\n", conf->geo.raid_disks - conf->mddev->degraded,
+-		 conf->geo.raid_disks);
+-
+-	/* This is only called with ->reconfix_mutex held, so
+-	 * rcu protection of rdev is not needed */
+-	for (i = 0; i < conf->geo.raid_disks; i++) {
+-		rdev = conf->mirrors[i].rdev;
+-		if (rdev)
+-			pr_debug(" disk %d, wo:%d, o:%d, dev:%pg\n",
+-				 i, !test_bit(In_sync, &rdev->flags),
+-				 !test_bit(Faulty, &rdev->flags),
+-				 rdev->bdev);
+-	}
+-}
+-
+ static void close_sync(struct r10conf *conf)
+ {
+ 	wait_barrier(conf, false);
+@@ -2136,7 +2111,6 @@ static int raid10_spare_active(struct mddev *mddev)
+ 	mddev->degraded -= count;
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
+-	print_conf(conf);
+ 	return count;
+ }
+ 
+@@ -2207,7 +2181,6 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		rcu_assign_pointer(p->replacement, rdev);
+ 	}
+ 
+-	print_conf(conf);
+ 	return err;
+ }
+ 
+@@ -2219,7 +2192,6 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	struct md_rdev **rdevp;
+ 	struct raid10_info *p;
+ 
+-	print_conf(conf);
+ 	if (unlikely(number >= mddev->raid_disks))
+ 		return 0;
+ 	p = conf->mirrors + number;
+@@ -2271,7 +2243,6 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 
+ abort:
+ 
+-	print_conf(conf);
+ 	return err;
+ }
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4207e945e8c8..27a4dce51c92 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -156,8 +156,6 @@ static int raid6_idx_to_slot(int idx, struct stripe_head *sh,
+ 	return slot;
+ }
+ 
+-static void print_raid5_conf (struct r5conf *conf);
+-
+ static int stripe_operations_active(struct stripe_head *sh)
+ {
+ 	return sh->check_state || sh->reconstruct_state ||
+@@ -7983,8 +7981,6 @@ static int raid5_run(struct mddev *mddev)
+ 		mddev->raid_disks-mddev->degraded, mddev->raid_disks,
+ 		mddev->new_layout);
+ 
+-	print_raid5_conf(conf);
+-
+ 	if (conf->reshape_progress != MaxSector) {
+ 		conf->reshape_safe = conf->reshape_progress;
+ 		atomic_set(&conf->reshape_stripes, 0);
+@@ -8075,7 +8071,6 @@ static int raid5_run(struct mddev *mddev)
+ 	return 0;
+ abort:
+ 	md_unregister_thread(mddev, &mddev->thread);
+-	print_raid5_conf(conf);
+ 	free_conf(conf);
+ 	mddev->private = NULL;
+ 	pr_warn("md/raid:%s: failed to run raid set.\n", mdname(mddev));
+@@ -8107,31 +8102,6 @@ static void raid5_status(struct seq_file *seq, struct mddev *mddev)
+ 	seq_printf (seq, "]");
+ }
+ 
+-static void print_raid5_conf (struct r5conf *conf)
+-{
+-	struct md_rdev *rdev;
+-	int i;
+-
+-	pr_debug("RAID conf printout:\n");
+-	if (!conf) {
+-		pr_debug("(conf==NULL)\n");
+-		return;
+-	}
+-	pr_debug(" --- level:%d rd:%d wd:%d\n", conf->level,
+-	       conf->raid_disks,
+-	       conf->raid_disks - conf->mddev->degraded);
+-
+-	rcu_read_lock();
+-	for (i = 0; i < conf->raid_disks; i++) {
+-		rdev = rcu_dereference(conf->disks[i].rdev);
+-		if (rdev)
+-			pr_debug(" disk %d, o:%d, dev:%pg\n",
+-			       i, !test_bit(Faulty, &rdev->flags),
+-			       rdev->bdev);
+-	}
+-	rcu_read_unlock();
+-}
+-
+ static int raid5_spare_active(struct mddev *mddev)
+ {
+ 	int i;
+@@ -8173,7 +8143,6 @@ static int raid5_spare_active(struct mddev *mddev)
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+ 	mddev->degraded = raid5_calc_degraded(conf);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+-	print_raid5_conf(conf);
+ 	return count;
+ }
+ 
+@@ -8186,7 +8155,6 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	struct disk_info *p;
+ 	struct md_rdev *tmp;
+ 
+-	print_raid5_conf(conf);
+ 	if (test_bit(Journal, &rdev->flags) && conf->log) {
+ 		/*
+ 		 * we can't wait pending write here, as this is called in
+@@ -8266,7 +8234,6 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	clear_bit(WantReplacement, &rdev->flags);
+ abort:
+ 
+-	print_raid5_conf(conf);
+ 	return err;
+ }
+ 
+@@ -8348,7 +8315,6 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		}
+ 	}
+ out:
+-	print_raid5_conf(conf);
+ 	return err;
+ }
+ 
 -- 
 2.39.2
 
