@@ -2,352 +2,900 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77030C4167D
-	for <linux-raid@archiver.kernel.org>; Sat,  4 Nov 2023 10:04:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 271F0C4332F
+	for <linux-raid@archiver.kernel.org>; Sun,  5 Nov 2023 23:14:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230477AbjKDKEZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 4 Nov 2023 06:04:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51826 "EHLO
+        id S229715AbjKEXOi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 5 Nov 2023 18:14:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbjKDKEY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 4 Nov 2023 06:04:24 -0400
-Received: from lists.tip.net.au (pasta.tip.net.au [IPv6:2401:fc00:0:129::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 761D8187
-        for <linux-raid@vger.kernel.org>; Sat,  4 Nov 2023 03:04:19 -0700 (PDT)
-Received: from lists.tip.net.au (pasta.tip.net.au [IPv6:2401:fc00:0:129::2])
-        by mailhost.tip.net.au (Postfix) with ESMTP id 4SMtW45XZGz9QwR
-        for <linux-raid@vger.kernel.org>; Sat,  4 Nov 2023 21:04:16 +1100 (AEDT)
+        with ESMTP id S229447AbjKEXOh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 5 Nov 2023 18:14:37 -0500
+X-Greylist: delayed 478 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 05 Nov 2023 15:14:30 PST
+Received: from lists.tip.net.au (pasta.tip.net.au [203.10.76.2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D2B4E0
+        for <linux-raid@vger.kernel.org>; Sun,  5 Nov 2023 15:14:30 -0800 (PST)
+Received: from lists.tip.net.au (pasta.tip.net.au [203.10.76.2])
+        by mailhost.tip.net.au (Postfix) with ESMTP id 4SNqqB2tykz9R5r
+        for <linux-raid@vger.kernel.org>; Mon,  6 Nov 2023 10:06:30 +1100 (AEDT)
 Received: from [IPV6:2405:6e00:494:92f5:21b:21ff:fe3a:5672] (unknown [IPv6:2405:6e00:494:92f5:21b:21ff:fe3a:5672])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by mailhost.tip.net.au (Postfix) with ESMTPSA id 4SMtW418fzz9Qs4
-        for <linux-raid@vger.kernel.org>; Sat,  4 Nov 2023 21:04:15 +1100 (AEDT)
-Message-ID: <6a8e1be8-f7cc-4027-b702-bf54b5a3519b@eyal.emu.id.au>
-Date:   Sat, 4 Nov 2023 21:04:04 +1100
+        by mailhost.tip.net.au (Postfix) with ESMTPSA id 4SNqq94PP4z9R3S
+        for <linux-raid@vger.kernel.org>; Mon,  6 Nov 2023 10:06:29 +1100 (AEDT)
+Message-ID: <eb9a7323-f955-4b1c-b1c4-7f0723078c42@eyal.emu.id.au>
+Date:   Mon, 6 Nov 2023 10:06:25 +1100
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: problem with recovered array
-Content-Language: en-US
-To:     linux-raid@vger.kernel.org
-References: <87273fc6-9531-4072-ae6c-06306e9a269d@eyal.emu.id.au>
- <CAAMCDecjCJz3qPve-54wpd_eX3dTgLYrMVupX6i3JNfBq2mNPw@mail.gmail.com>
- <ZUByq7Wg-KFcXctW@fisica.ufpr.br>
- <577244fc-f43a-4e1f-bf34-d1c194fd90b4@eyal.emu.id.au>
- <CAAMCDedPoNcdacRHNykOtG0yw4mDV3WFpowU1WtoQJgdNAKjDg@mail.gmail.com>
- <0dc5a117-97be-4ed1-9976-1f754a6abf91@eyal.emu.id.au>
- <CAAMCDecobWVOxGOxFt47Y4ZC2JCNVH1T2oQ8X=6BHOz9PemNEQ@mail.gmail.com>
- <37b6265a-b925-4910-b092-59177b639ca9@eyal.emu.id.au>
- <CAAMCDefUcuz2Nzh7AvP9m50uq86ZBK3AhEAEynVG_mmmY_f0jQ@mail.gmail.com>
- <ZUNfK1jqBNsm97Q-@vault.lan> <ZUUA2U88VsGqGDmj@fisica.ufpr.br>
- <CAAMCDec-=vwLJhpi4VfCXdgGactYWeidqmV=VPphGE6eEUxUQg@mail.gmail.com>
- <a7316cd9-af79-4a43-9433-4d62d5166df4@eyal.emu.id.au>
- <9338d518-b3e6-4c95-bdfb-4815985ea840@eyal.emu.id.au>
- <CAAMCDedpFWwB7e_q9ACLghNpU5pbVZZqcmd9is8F7yb3WLkjJA@mail.gmail.com>
 From:   eyal@eyal.emu.id.au
-In-Reply-To: <CAAMCDedpFWwB7e_q9ACLghNpU5pbVZZqcmd9is8F7yb3WLkjJA@mail.gmail.com>
+Subject: extremely slow writes to degraded array
+To:     linux-raid@vger.kernel.org
+Content-Language: en-US
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-See update at the bottom.
 
-On 04/11/2023 12.01, Roger Heflin wrote:
-> The await being so high on md127, but normish on the underlying disks
-> would seem to point at some kernel issue inside md using raid6 where
-> one disk is out and the data has to be reconstructed.
-
-Should I continue with this thread or should I log a kernel bug report?
-Or maybe there is a more suitable list to post this?
-
-> On Fri, Nov 3, 2023 at 7:54 PM <eyal@eyal.emu.id.au> wrote:
->>
->> On 04/11/2023 09.38, eyal@eyal.emu.id.au wrote:
->>> On 04/11/2023 02.57, Roger Heflin wrote:
->>>> On Fri, Nov 3, 2023 at 9:17 AM Carlos Carvalho <carlos@fisica.ufpr.br> wrote:
->>>>>
->>>>> Johannes Truschnigg (johannes@truschnigg.info) wrote on Thu, Nov 02, 2023 at 05:34:51AM -03:
->>>>>> for the record, I do not think that any of the observations the OP made can be
->>>>>> explained by non-pathological phenomena/patterns of behavior. Something is
->>>>>> very clearly wrong with how this system behaves (the reported figures do not
->>>>>> at all match the expected performance of even a degraded RAID6 array in my
->>>>>> experience) and how data written to the filesystem apparently fails to make it
->>>>>> into the backing devices in acceptable time.
->>>>>>
->>>>>> The whole affair reeks either of "subtle kernel bug", or maybe "subtle
->>>>>> hardware failure", I think.
->>>>>
->>>>> Exactly. That's what I've been saying for months...
->>>>>
->>>>> I found a clear comparison: expanding the kernel tarball in the SAME MACHINE
->>>>> with 6.1.61 and 6.5.10. The raid6 array is working normally in both cases. With
->>>>> 6.1.61 the expansion works fine, finishes with ~100MB of dirty pages and these
->>>>> are quickly sent to permanent storage. With 6.5.* it finishes with ~1.5GB of
->>>>> dirty pages that are never sent to disk (I waited ~3h). The disks are idle, as
->>>>> shown by sar, and the kworker/flushd runs with 100% cpu usage forever.
->>>>>
->>>>> Limiting the dirty*bytes in /proc/sys/vm the dirty pages stay low BUT tar is
->>>>> blocked in D state and the tarball expansion proceeds so slowly that it'd take
->>>>> days to complete (checked with quota).
->>>>>
->>>>> So 6.5 (and 6.4) are unusable in this case. In another machine, which does
->>>>> hundreds of rsync downloads every day, the same problem exists and I also get
->>>>> frequent random rsync timeouts.
->>>>>
->>>>> This is all with raid6 and ext4. One of the machines has a journal disk in the
->>>>> raid and the filesystem is mounted with nobarriers. Both show the same
->>>>> behavior. It'd be interesting to try a different filesystem but these are
->>>>> production machines with many disks and I cannot create another big array to
->>>>> transfer the contents.
->>>>
->>>> My array is running 6.5 + xfs, and mine all seems to work normally
->>>> (speed wise).  And in the perf top call he ran all of the busy
->>>> kworkers were ext4* calls spending a lot of time doing various
->>>> filesystem work.
->>>>
->>>> I did find/debug a situation where dumping the cache caused ext4
->>>> performance to be a disaster (large directories, lots of files).  It
->>>> was tracked back to ext4 relies on the Buffers:  data space in
->>>> /proc/meminfo for at least directory entry caching, and that if there
->>>> were a lot of directories and/or files in directories that Buffer:
->>>> getting dropped and/or getting pruned for any some reason caused the
->>>> fragmented directory entries to have to get reloaded from a spinning
->>>> disk and require the disk to be seeking for  *MINUTES* to reload it
->>>> (there were in this case several million files in a couple of
->>>> directories with the directory entries being allocated over time so
->>>> very likely heavily fragmented).
->>>>
->>>> I wonder if there was some change with how Buffers is
->>>> used/sized/pruned in the recent kernels.   The same drop_cache on an
->>>> XFS filesystem had no effect that I could identify and doing a ls -lR
->>>> on a big xfs filesystem does not make Buffers grow, but doing the same
->>>> ls -lR against an ext3/4 makes Buffers grow quite a bit (how much
->>>> depends on how many files/directories are on the filesystem).
->>>>
->>>> He may want to monitor buffers (cat /proc/meminfo | grep Buffers:) and
->>>> see if the poor performance correlates with Buffers suddenly being
->>>> smaller for some reason.
->>>
->>> As much as I hate this, I started another small test.
->>>
->>> $ uname -a
->>> Linux e7.eyal.emu.id.au 6.5.8-200.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Oct 20 15:53:48 UTC 2023 x86_64 GNU/Linux
->>>
->>> $ df -h /data1
->>> Filesystem      Size  Used Avail Use% Mounted on
->>> /dev/md127       55T   45T  9.8T  83% /data1
->>>
->>> $ sudo du -sm /data2/no-backup/old-backups/tapes/01
->>> 2519    /data2/no-backup/old-backups/tapes/01
->>>
->>> $ sudo find /data2/no-backup/old-backups/tapes/01|wc -l
->>> 92059
->>>
->>> $ sudo rsync -aHSK --stats --progress --checksum-choice=none --no-compress -W /data2/no-backup/old-backups/tapes/01 /data1/no-backup/old-backups/
->>>
->>> It completed in about one minute and it was enough to trigger the problem.
->>>
->>>       PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
->>> 2781097 root      20   0       0      0      0 R  98.3   0.0  36:04.35 kworker/u16:0+flush-9:127
->>>
->>> iostat has nothing unusual, writes to md127 at 10-20KB/s and %util is in the low single digit for all members.
->>>
->>> Here is what meminfo showed in the first 10 minutes (it is still going but the trend is clear):
->>>
->>>                           Dirty   change   Buffers   change
->>> 2023-11-04 08:56:35        44     -580   1170536        8
->>> 2023-11-04 08:56:45        48        4   1170552       16
->>> 2023-11-04 08:56:55    812456   812408   1171008      456
->>> 2023-11-04 08:57:05    538436  -274020   1180820     9812
->>> 2023-11-04 08:57:15    698708   160272   1189368     8548
->>> 2023-11-04 08:57:25    874208   175500   1195620     6252
->>> 2023-11-04 08:57:35    742300  -131908   1202124     6504
->>> 2023-11-04 08:57:45    973528   231228   1209580     7456
->>> 2023-11-04 08:57:55   1269320   295792   1214900     5320
->>> 2023-11-04 08:58:05   1624428   355108   1219764     4864
->>> 2023-11-04 08:58:15   1629484     5056   1219816       52
->>> 2023-11-04 08:58:25   1629372     -112   1219832       16
->>> 2023-11-04 08:58:35   1629028     -344   1219856       24
->>> 2023-11-04 08:58:45   1628928     -100   1219880       24
->>> 2023-11-04 08:58:55   1628552     -376   1219908       28
->>> 2023-11-04 08:59:05   1629252      700   1220072      164
->>> 2023-11-04 08:59:15   1628696     -556   1220132       60
->>> 2023-11-04 08:59:25   1628304     -392   1220156       24
->>> 2023-11-04 08:59:35   1628264      -40   1220188       32
->>> 2023-11-04 08:59:45   1628184      -80   1220340      152
->>> 2023-11-04 08:59:55   1628144      -40   1220364       24
->>> 2023-11-04 09:00:05   1628124      -20   1219940     -424
->>> 2023-11-04 09:00:15   1627908     -216   1219976       36
->>> 2023-11-04 09:00:25   1627840      -68   1220000       24
->>> 2023-11-04 09:00:35   1624276    -3564   1220024       24
->>> 2023-11-04 09:00:45   1624100     -176   1220060       36
->>> 2023-11-04 09:00:55   1623912     -188   1220092       32
->>> 2023-11-04 09:01:05   1624076      164   1220112       20
->>> 2023-11-04 09:01:15   1623368     -708   1220160       48
->>> 2023-11-04 09:01:25   1623176     -192   1220196       36
->>> 2023-11-04 09:01:35   1621872    -1304   1220232       36
->>> 2023-11-04 09:01:45   1621732     -140   1220308       76
->>> 2023-11-04 09:01:55   1612304    -9428   1220392       84
->>> 2023-11-04 09:02:05   1612256      -48   1220420       28
->>> 2023-11-04 09:02:15   1612040     -216   1220444       24
->>> 2023-11-04 09:02:25   1611968      -72   1220476       32
->>> 2023-11-04 09:02:35   1611872      -96   1220492       16
->>> 2023-11-04 09:02:45   1609932    -1940   1220524       32
->>> 2023-11-04 09:02:55   1609828     -104   1220556       32
->>> 2023-11-04 09:03:05   1609916       88   1220572       16
->>> 2023-11-04 09:03:15   1609496     -420   1220608       36
->>> 2023-11-04 09:03:25   1609392     -104   1220632       24
->>> 2023-11-04 09:03:35   1609320      -72   1220648       16
->>> 2023-11-04 09:03:45   1609240      -80   1220672       24
->>> 2023-11-04 09:03:55   1609152      -88   1220688       16
->>> 2023-11-04 09:04:05   1609332      180   1220712       24
->>> 2023-11-04 09:04:15   1608892     -440   1220748       36
->>> 2023-11-04 09:04:25   1608848      -44   1220764       16
->>> 2023-11-04 09:04:35   1608744     -104   1220796       32
->>> 2023-11-04 09:04:45   1608436     -308   1220820       24
->>> 2023-11-04 09:04:55   1607916     -520   1220836       16
->>> 2023-11-04 09:05:05   1608624      708   1220876       40
->>> 2023-11-04 09:05:15   1606556    -2068   1220928       52
->>> 2023-11-04 09:05:25   1602692    -3864   1221016       88
->>> 2023-11-04 09:05:35   1602080     -612   1221052       36
->>> 2023-11-04 09:05:45   1602000      -80   1221080       28
->>> 2023-11-04 09:05:55   1601928      -72   1221096       16
->>> 2023-11-04 09:06:05   1602228      300   1221124       28
->>> 2023-11-04 09:06:15   1601848     -380   1221156       32
->>> 2023-11-04 09:06:25   1601656     -192   1221180       24
->>> 2023-11-04 09:06:35   1601532     -124   1221212       32
->>> 2023-11-04 09:06:45   1601476      -56   1221228       16
->>> 2023-11-04 09:06:55   1601364     -112   1221252       24
->>
->> Another view of interest, is the fact that w_await, which I understand is the total time to service a write request,
->> is high, at 1-2s from this point onward. The components are significantly quicker at the low teens.
->>
->>            Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dkB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
->> 09:00:00 md127            0.02      0.07     0.00   0.00   18.00     4.00    2.33     13.27     0.00   0.00 1268.36     5.69    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    2.96   1.12
->> 09:00:00 sdb              0.10      3.80     0.85  89.47    2.50    38.00    0.85      1.57     0.00   0.00    3.00     1.84    0.00      0.00     0.00   0.00    0.00     0.00    0.83    2.82    0.01   0.35
->> 09:00:00 sdc              0.13      3.93     0.85  86.44    6.00    29.50    1.00      4.17     0.50  33.33    4.38     4.17    0.00      0.00     0.00   0.00    0.00     0.00    0.83    4.72    0.01   0.53
->> 09:00:00 sdd              0.13      3.93     0.85  86.44    7.12    29.50    1.05      3.70     0.33  24.10   13.78     3.52    0.00      0.00     0.00   0.00    0.00     0.00    0.83    2.90    0.02   1.54
->> 09:00:00 sde              0.12      3.87     0.85  87.93    2.29    33.14    0.83      1.50     0.00   0.00   14.02     1.80    0.00      0.00     0.00   0.00    0.00     0.00    0.83    0.42    0.01   1.27
->> 09:00:00 sdf              0.03      0.13     0.00   0.00   12.50     4.00    1.37     14.63     2.75  66.80   13.83    10.71    0.00      0.00     0.00   0.00    0.00     0.00    0.83    4.88    0.02   1.84
->> 09:00:00 sdg              0.02      0.07     0.00   0.00   21.00     4.00    1.40     14.77     2.75  66.27   13.45    10.55    0.00      0.00     0.00   0.00    0.00     0.00    0.83    4.96    0.02   1.77
->> 09:01:00 md127            0.05      0.20     0.00   0.00   26.00     4.00    7.85     83.00     0.00   0.00 2388.76    10.57    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   18.75   1.74
->> 09:01:00 sdb              0.23     15.73     3.70  94.07   20.36    67.43    0.98     29.12     6.68  87.17    5.75    29.62    0.00      0.00     0.00   0.00    0.00     0.00    0.67    7.75    0.02   0.73
->> 09:01:00 sdc              0.20     10.33     2.38  92.26   12.08    51.67    0.77      9.93     2.10  73.26    3.20    12.95    0.00      0.00     0.00   0.00    0.00     0.00    0.67    3.33    0.01   0.36
->> 09:01:00 sdd              0.23     18.60     4.42  94.98   23.07    79.71    1.03     22.38     4.93  82.68   11.61    21.66    0.00      0.00     0.00   0.00    0.00     0.00    0.67    3.62    0.02   1.31
->> 09:01:00 sde              0.22     18.20     4.33  95.24   19.62    84.00    0.98     26.18     5.93  85.78   11.61    26.63    0.00      0.00     0.00   0.00    0.00     0.00    0.67    3.40    0.02   1.35
->> 09:01:00 sdf              0.18     18.67     4.48  96.07   42.64   101.82    1.47     49.72    11.33  88.54   12.03    33.90    0.00      0.00     0.00   0.00    0.00     0.00    0.67    7.67    0.03   1.62
->> 09:01:00 sdg              0.18     19.27     4.63  96.19   39.00   105.09    1.48     46.98    10.63  87.76   12.37    31.67    0.00      0.00     0.00   0.00    0.00     0.00    0.67    7.35    0.03   1.68
->> 09:02:00 md127            0.32      1.27     0.00   0.00   26.95     4.00   14.12    214.93     0.00   0.00  639.34    15.23    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    9.03   2.80
->> 09:02:00 sdb              0.48     51.47    12.38  96.24   18.03   106.48    1.20     63.79    15.13  92.65    3.72    53.16    0.00      0.00     0.00   0.00    0.00     0.00    0.78    3.79    0.02   0.79
->> 09:02:00 sdc              0.53     58.07    13.98  96.33   16.16   108.88    1.30     71.99    17.08  92.93    4.95    55.38    0.00      0.00     0.00   0.00    0.00     0.00    0.78    7.15    0.02   1.08
->> 09:02:00 sdd              0.52     69.13    16.77  97.01   14.13   133.81    1.52     92.27    21.95  93.54   10.38    60.84    0.00      0.00     0.00   0.00    0.00     0.00    0.78    3.60    0.03   1.78
->> 09:02:00 sde              0.50     64.60    15.65  96.90   16.83   129.20    1.87     96.40    22.63  92.38   11.50    51.64    0.00      0.00     0.00   0.00    0.00     0.00    0.78    6.96    0.04   2.20
->> 09:02:00 sdf              0.57     74.80    18.13  96.97   15.65   132.00    1.77     77.60    18.03  91.08   11.51    43.92    0.00      0.00     0.00   0.00    0.00     0.00    0.78    7.23    0.03   2.25
->> 09:02:00 sdg              0.68     64.13    15.35  95.74    9.49    93.85    1.72     68.73    15.87  90.24   11.74    40.04    0.00      0.00     0.00   0.00    0.00     0.00    0.78    7.43    0.03   2.26
->> 09:03:00 md127            0.00      0.00     0.00   0.00    0.00     0.00    6.97     51.00     0.00   0.00 7200.34     7.32    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   50.16   1.38
->> 09:03:00 sdb              0.15      6.53     1.48  90.82   11.78    43.56    0.78      9.87     2.08  72.67    4.40    12.60    0.00      0.00     0.00   0.00    0.00     0.00    0.73    3.09    0.01   0.36
->> 09:03:00 sdc              0.15      6.53     1.48  90.82    9.44    43.56    0.80      9.93     2.08  72.25    4.90    12.42    0.00      0.00     0.00   0.00    0.00     0.00    0.73    3.27    0.01   0.36
->> 09:03:00 sdd              0.23     12.87     2.98  92.75    3.57    55.14    1.02     22.80     5.08  83.33   12.15    22.43    0.00      0.00     0.00   0.00    0.00     0.00    0.73    2.18    0.01   1.17
->> 09:03:00 sde              0.45     17.73     3.98  89.85    1.52    39.41    1.37     29.27     6.35  82.29   13.65    21.41    0.00      0.00     0.00   0.00    0.00     0.00    0.73    5.34    0.02   1.60
->> 09:03:00 sdf              0.37     11.40     2.48  87.13    5.59    31.09    1.13     16.33     3.35  74.72   13.82    14.41    0.00      0.00     0.00   0.00    0.00     0.00    0.73    3.98    0.02   1.60
->> 09:03:00 sdg              0.47     21.67     4.95  91.38    3.11    46.43    1.17     16.60     3.38  74.36   14.50    14.23    0.00      0.00     0.00   0.00    0.00     0.00    0.73    5.23    0.02   1.58
->> 09:04:00 md127            0.00      0.00     0.00   0.00    0.00     0.00    1.88     11.93     0.00   0.00 1439.04     6.34    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    2.71   0.92
->> 09:04:00 sdb              0.38      8.73     1.80  82.44    2.00    22.78    0.90      4.70     0.72  44.33    3.94     5.22    0.00      0.00     0.00   0.00    0.00     0.00    0.82    4.02    0.01   0.48
->> 09:04:00 sdc              0.38      8.73     1.80  82.44    1.74    22.78    0.82      1.50     0.00   0.00    2.69     1.84    0.00      0.00     0.00   0.00    0.00     0.00    0.82    2.47    0.00   0.34
->> 09:04:00 sdd              0.30      3.47     0.57  65.38    0.39    11.56    0.98      9.97     1.95  66.48   13.14    10.14    0.00      0.00     0.00   0.00    0.00     0.00    0.82    2.14    0.01   1.40
->> 09:04:00 sde              0.00      0.00     0.00   0.00    0.00     0.00    1.28     13.43     2.52  66.23   13.51    10.47    0.00      0.00     0.00   0.00    0.00     0.00    0.82    4.53    0.02   1.73
->> 09:04:00 sdf              0.08      5.27     1.23  93.67    3.40    63.20    1.12      4.97     0.57  33.66   14.93     4.45    0.00      0.00     0.00   0.00    0.00     0.00    0.82    3.55    0.02   1.74
->> 09:04:00 sdg              0.00      0.00     0.00   0.00    0.00     0.00    0.82      1.50     0.00   0.00   12.96     1.84    0.00      0.00     0.00   0.00    0.00     0.00    0.82    0.37    0.01   1.12
->> 09:05:00 md127            0.00      0.00     0.00   0.00    0.00     0.00    2.27     19.27     0.00   0.00 1670.65     8.50    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    3.79   1.40
->> 09:05:00 sdb              0.32      4.27     0.75  70.31    0.42    13.47    0.85      8.00     1.55  64.58    3.61     9.41    0.00      0.00     0.00   0.00    0.00     0.00    0.70    3.98    0.01   0.40
->> 09:05:00 sdc              0.42     13.33     2.92  87.50    4.12    32.00    0.87     14.27     3.10  78.15    3.88    16.46    0.00      0.00     0.00   0.00    0.00     0.00    0.70    4.33    0.01   0.52
->> 09:05:00 sdd              0.35      5.67     1.07  75.29    0.76    16.19    0.87     11.73     2.47  74.00   12.62    13.54    0.00      0.00     0.00   0.00    0.00     0.00    0.70    2.86    0.01   1.19
->> 09:05:00 sde              0.00      0.00     0.00   0.00    0.00     0.00    1.23     17.47     3.53  74.13   12.08    14.16    0.00      0.00     0.00   0.00    0.00     0.00    0.70    6.19    0.02   1.51
->> 09:05:00 sdf              0.08      5.53     1.30  93.98   11.40    66.40    1.15     13.47     2.62  69.47   13.26    11.71    0.00      0.00     0.00   0.00    0.00     0.00    0.70    4.21    0.02   1.55
->> 09:05:00 sdg              0.08      5.53     1.30  93.98   12.00    66.40    0.80      9.07     1.87  70.00   12.04    11.33    0.00      0.00     0.00   0.00    0.00     0.00    0.70    1.24    0.01   1.03
->> 09:06:00 md127            0.20      0.80     0.00   0.00   23.17     4.00    3.03    113.80     0.00   0.00 1063.22    37.52    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    3.23   2.60
->> 09:06:00 sdb              0.30     32.80     7.90  96.34   10.56   109.33    1.22     36.85     8.37  87.30    4.70    30.29    0.00      0.00     0.00   0.00    0.00     0.00    0.72    6.56    0.01   0.76
->> 09:06:00 sdc              0.30     37.40     9.05  96.79    8.83   124.67    1.13     42.32     9.82  89.65    4.34    37.34    0.00      0.00     0.00   0.00    0.00     0.00    0.72    4.42    0.01   0.63
->> 09:06:00 sdd              0.58     62.60    15.07  96.27   16.83   107.31    1.43     57.72    13.37  90.32   11.91    40.27    0.00      0.00     0.00   0.00    0.00     0.00    0.72    6.74    0.03   1.79
->> 09:06:00 sde              0.47     64.73    15.72  97.12   10.14   138.71    1.48     45.18    10.18  87.29   11.97    30.46    0.00      0.00     0.00   0.00    0.00     0.00    0.72    7.09    0.03   1.78
->> 09:06:00 sdf              0.35     42.53    10.28  96.71   15.48   121.52    1.48     46.72    10.57  87.69   14.58    31.49    0.00      0.00     0.00   0.00    0.00     0.00    0.72    7.40    0.03   1.97
->> 09:06:00 sdg              0.27     31.93     7.72  96.66   16.38   119.75    1.18     52.58    12.33  91.25   11.63    44.44    0.00      0.00     0.00   0.00    0.00     0.00    0.72    3.70    0.02   1.40
->> 09:07:00 md127            0.00      0.00     0.00   0.00    0.00     0.00    2.10     13.93     0.00   0.00 1405.96     6.63    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    2.95   1.00
->> 09:07:00 sdb              0.00      0.00     0.00   0.00    0.00     0.00    0.97      3.36     0.32  24.68    3.19     3.47    0.00      0.00     0.00   0.00    0.00     0.00    0.80    3.54    0.01   0.39
->> 09:07:00 sdc              0.15      7.47     1.72  91.96    0.44    49.78    1.17     13.43     2.63  69.30    4.29    11.51    0.00      0.00     0.00   0.00    0.00     0.00    0.80    4.31    0.01   0.48
->> 09:07:00 sdd              0.15      7.47     1.72  91.96    0.44    49.78    1.00     11.43     2.30  69.70   11.55    11.43    0.00      0.00     0.00   0.00    0.00     0.00    0.80    1.00    0.01   1.23
->> 09:07:00 sde              0.15      7.47     1.72  91.96    9.44    49.78    1.28     12.83     2.37  64.84   14.22     9.99    0.00      0.00     0.00   0.00    0.00     0.00    0.80    4.27    0.02   1.69
->> 09:07:00 sdf              0.05      2.53     0.58  92.11    4.67    50.67    1.18      7.89     1.23  51.03   13.87     6.67    0.00      0.00     0.00   0.00    0.00     0.00    0.80    4.29    0.02   1.63
->> 09:07:00 sdg              0.00      0.00     0.00   0.00    0.00     0.00    0.80      1.43     0.00   0.00   13.48     1.78    0.00      0.00     0.00   0.00    0.00     0.00    0.80    1.08    0.01   1.14
+This is a more organized summary of a number of recent threads I posted about this problem.
+The last one is titled "problem with recovered array".
 
 
-It finally completed with a bang, and the kthread flush is gone.
+The environment
+===============
 
-                         Dirty   change   Buffers   change
-2023-11-04 20:42:47    117128       -8   1407904       12
-2023-11-04 20:42:57    117068      -60   1407944       40
-2023-11-04 20:43:07    117096       28   1407972       28
-2023-11-04 20:43:17    116972     -124   1408000       28
-2023-11-04 20:43:27    116864     -108   1408032       32
-2023-11-04 20:43:37    116664     -200   1408056       24
-2023-11-04 20:43:47    116664        0   1408092       36
-2023-11-04 20:43:57    116468     -196   1408132       40
-2023-11-04 20:44:07    116480       12   1408168       36
-2023-11-04 20:44:17    116364     -116   1408200       32
-2023-11-04 20:44:27    116284      -80   1408228       28
-2023-11-04 20:44:37    116284        0   1408268       40
-2023-11-04 20:44:47    115956     -328   1408300       32
-2023-11-04 20:44:57    115804     -152   1408324       24
-2023-11-04 20:45:07    115680     -124   1408356       32
-2023-11-04 20:45:17    116216      536   1408392       36
-2023-11-04 20:45:27    115656     -560   1408432       40
-2023-11-04 20:45:37    115744       88   1408460       28
-2023-11-04 20:45:47    115348     -396   1408496       36
-2023-11-04 20:45:57    115948      600   1408528       32
-2023-11-04 20:46:07       428  -115520   1408580       52
-2023-11-04 20:46:17       364      -64   1408592       12
-2023-11-04 20:46:27       608      244   1408612       20
-2023-11-04 20:46:37       808      200   1408636       24
+Fedora 28
 
-So since around 9am, 12 hours!
+$ uname -a
+Linux e7.eyal.emu.id.au 6.5.8-200.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Oct 20 15:53:48 UTC 2023 x86_64 GNU/Linux
 
-The final iostat:
+7 disks raid6 array(*1). boot, root and swap on a separate SSD.
+
+$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md127 : active raid6 sde1[4] sdc1[9] sdf1[5] sdb1[8] sdd1[7] sdg1[6]
+       58593761280 blocks super 1.2 level 6, 512k chunk, algorithm 2 [7/6] [_UUUUUU]
+       bitmap: 88/88 pages [352KB], 65536KB chunk
+
+One disk was removed recently and sent for replacement. The system felt OK but a few days later I noticed an issue...
+
+The problem
+===========
+
+I wanted to copy data from a SATA drive (/data2) into the array (/data1):
+
+I started copying the full dataset (260GB 8,911k files). rsync soon stopped with 100%CPU. It was killed.
+4GB (system limit) dirty blocks were created, which took 12h to clear.
+
+I later used a smaller, partial dataset.
+
+$ sudo find /data2/no-backup/old-backups/tapes/01/file.14.data | wc -l
+5380
+
+$ sudo du -sm /data2/no-backup/old-backups/tapes/01/file.14.data
+93      /data2/no-backup/old-backups/tapes/01/file.14.data
+
+$ sudo rsync -aHSK --stats --progress --checksum-choice=none --no-compress -W /data2/no-backup/old-backups/tapes/01/file.14.data /data1/no-backup/old-backups/
+	In this small test rsync completed quickly.
+
+The copy completed fast but the kthread took about 1.5 hours at 100%CPU  to clear the dirty blocks.
+- When copying more files (3-5GB) the rsync was consuming 100%CPU and started pausing every few files (then killed).
+- The same copy to a plain (non array) disk completes quickly, no issues.
+- A 'dd if=/dev/zero of=/data1/no-backup/old-backups/100GB' completed quickly, no issues.
+- during a test a mythtv recording was going which DID NOT add to the dirty blocks but wrote to disk quickly.
+
+I observed a kthread flush thread running at 100%CPU
+
+     PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+  944760 root      20   0       0      0      0 R 100.0   0.0 164:00.85 kworker/u16:3+flush-9:127
+
+rsync was killed but the kthread remained. Copying less data had rsync complete but the kthread still stayed up for over an hour.
+
+The system became sluggish, even typing into vi had pauses.
+See also (*7) for a side issue.
+
+While the dirty blocks are slowly clearing, at some point it resolves in a burst.
+Another test started with 1.6GB dirty blocks and resolved 12h later at 116MB.
+In a controlled (short) test it started with 260MB and resolved 80m later at 40MB.
+Then another (short) test started with 2.4GB and resolved in 90m at around 1GB.
+
+I cannot see the pattern but clearly the array CAN sustain a high rate of writing, and maybe it is not the array
+that is holding back the flush kthread?
+
+I ran iostat which showed very few writes to the array(*2).
+
+I also ran iostat on the member devices (*3), same low rate.
+
+You can see how the %util of the array is often high (13.86) while the members are in the low single digits. One example:
 
           Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dkB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
-20:45:00 md127            0.00      0.00     0.00   0.00    0.00     0.00    2.12     14.40     0.00   0.00 1402.68     6.80    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    2.97   0.69
-20:45:00 sdb              0.00      0.00     0.00   0.00    0.00     0.00    0.80      1.43     0.00   0.00    2.65     1.78    0.00      0.00     0.00   0.00    0.00     0.00    0.80    2.42    0.00   0.28
-20:45:00 sdc              0.00      0.00     0.00   0.00    0.00     0.00    0.80      1.43     0.00   0.00    2.35     1.78    0.00      0.00     0.00   0.00    0.00     0.00    0.80    2.10    0.00   0.26
-20:45:00 sdd              0.00      0.00     0.00   0.00    0.00     0.00    1.15      5.76     0.73  38.94   14.84     5.01    0.00      0.00     0.00   0.00    0.00     0.00    0.80    4.08    0.02   1.79
-20:45:00 sde              0.03      1.53     0.35  91.30    0.50    46.00    0.98     11.49     2.33  70.35   13.66    11.69    0.00      0.00     0.00   0.00    0.00     0.00    0.80    3.33    0.02   1.37
-20:45:00 sdf              0.03      1.53     0.35  91.30    8.00    46.00    1.33     15.82     3.07  69.70   14.16    11.87    0.00      0.00     0.00   0.00    0.00     0.00    0.80    5.81    0.02   1.89
-20:45:00 sdg              0.03      1.53     0.35  91.30    8.00    46.00    1.33     15.82     3.07  69.70   13.65    11.87    0.00      0.00     0.00   0.00    0.00     0.00    0.80    7.00    0.02   1.82
-20:46:00 md127            0.02      0.07     0.00   0.00   17.00     4.00    2.35     25.20     0.00   0.00 2141.33    10.72    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    5.03   1.15
-20:46:00 sdb              0.12      5.73     1.32  91.86   12.14    49.14    0.75     12.79     2.83  79.07    2.91    17.06    0.00      0.00     0.00   0.00    0.00     0.00    0.68    2.88    0.01   0.32
-20:46:00 sdc              0.12      5.73     1.32  91.86   14.14    49.14    0.72      3.46     0.53  42.67    3.65     4.83    0.00      0.00     0.00   0.00    0.00     0.00    0.68    3.54    0.01   0.36
-20:46:00 sdd              0.10      4.60     1.05  91.30   11.00    46.00    0.82      6.39     1.17  58.82   13.76     7.83    0.00      0.00     0.00   0.00    0.00     0.00    0.68    2.76    0.01   1.22
-20:46:00 sde              0.07      5.47     1.30  95.12    6.00    82.00    1.08     15.26     3.12  74.21   11.97    14.08    0.00      0.00     0.00   0.00    0.00     0.00    0.68    3.29    0.02   1.26
-20:46:00 sdf              0.07      5.47     1.30  95.12    0.50    82.00    1.18     21.86     4.67  79.77   12.14    18.47    0.00      0.00     0.00   0.00    0.00     0.00    0.68    4.27    0.02   1.34
-20:46:00 sdg              0.18     10.13     2.35  92.76    5.09    55.27    1.12     19.53     4.15  78.80   12.21    17.49    0.00      0.00     0.00   0.00    0.00     0.00    0.68    4.66    0.02   1.39
-20:47:00 md127            0.00      0.00     0.00   0.00    0.00     0.00  256.68   1918.53     0.00   0.00 1094.72     7.47    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00  281.00   7.49
-20:47:00 sdb             14.75    382.00    80.75  84.55   89.68    25.90   16.43    557.67   123.10  88.22    7.65    33.94    0.00      0.00     0.00   0.00    0.00     0.00    0.33    5.25    1.45   4.17
-20:47:00 sdc             20.15    596.60   129.00  86.49  144.70    29.61   15.37    558.88   124.47  89.01   18.56    36.37    0.00      0.00     0.00   0.00    0.00     0.00    0.33   14.50    3.21   6.11
-20:47:00 sdd             20.92    613.27   132.40  86.36  330.56    29.32   15.65    544.01   120.47  88.50   37.67    34.76    0.00      0.00     0.00   0.00    0.00     0.00    0.32   41.16    7.52   8.31
-20:47:00 sde             20.07    598.07   129.45  86.58  128.61    29.80   16.03    587.81   131.03  89.10   12.36    36.66    0.00      0.00     0.00   0.00    0.00     0.00    0.32    5.89    2.78   5.96
-20:47:00 sdf             19.93    562.07   120.58  85.81  122.18    28.20   16.92    570.48   125.82  88.15   11.14    33.72    0.00      0.00     0.00   0.00    0.00     0.00    0.32   13.47    2.63   5.82
-20:47:00 sdg             14.47    345.53    71.92  83.25   79.60    23.88   16.88    563.94   124.22  88.03    9.24    33.40    0.00      0.00     0.00   0.00    0.00     0.00    0.32    6.95    1.31   4.42
-20:48:00 md127            0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
-20:48:00 sdb              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
-20:48:00 sdc              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
-20:48:00 sdd              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
-20:48:00 sde              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
-20:48:00 sdf              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
-20:48:00 sdg              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+15:35:52 md127            0.80      3.20     0.00   0.00   13.75     4.00   43.60   1419.60     0.00   0.00   99.34    32.56    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    4.34  13.86
+15:35:52 sdb              0.60     85.20    20.70  97.18   14.33   142.00    2.70    470.15   115.20  97.71    2.07   174.13    0.00      0.00     0.00   0.00    0.00     0.00    0.80    4.25    0.02   1.25
+15:35:52 sdc              1.20     97.20    23.10  95.06   10.50    81.00    2.20    371.75    91.10  97.64    2.59   168.98    0.00      0.00     0.00   0.00    0.00     0.00    0.80    2.12    0.02   1.13
+15:35:52 sdd              2.10    305.60    74.30  97.25   14.62   145.52    1.70    234.95    57.40  97.12    7.71   138.21    0.00      0.00     0.00   0.00    0.00     0.00    0.80    1.12    0.04   2.43
+15:35:52 sde              1.50    288.40    70.60  97.92   17.47   192.27    1.90    278.95    68.20  97.29    9.74   146.82    0.00      0.00     0.00   0.00    0.00     0.00    0.80    0.38    0.05   2.60
+15:35:52 sdf              1.30    334.00    82.20  98.44   26.31   256.92    2.30    351.35    85.90  97.39    7.74   152.76    0.00      0.00     0.00   0.00    0.00     0.00    0.80    2.00    0.05   2.34
+15:35:52 sdg              0.80    215.20    53.00  98.51   18.38   269.00    2.90    510.55   125.10  97.73    7.03   176.05    0.00      0.00     0.00   0.00    0.00     0.00    0.80    3.75    0.04   2.53
+
+Advice from the list suggested I follow some meminfo numbers (Dirty, Buffers, MemFree)(*4).
+
+I was also asked to run 'perf top' (*5).
+
+Also a few sysrq 'w' and 'l' were used to try to see if anything is visible(6).
+I ran sysrq 't' (twice) and kept the huge log.
+
+[BTW, I have the full logs saved in case they are needed].
+
+If necessary, I can trigger the problem easily, if more data is required.
+
+The opinion I received suggests that there may be a kernel problem. another poster has the same issue.
+
+TIA
+
+(*1)
+$ sudo mdadm -D /dev/md127
+/dev/md127:
+            Version : 1.2
+      Creation Time : Fri Oct 26 17:24:59 2018
+         Raid Level : raid6
+         Array Size : 58593761280 (54.57 TiB 60.00 TB)
+      Used Dev Size : 11718752256 (10.91 TiB 12.00 TB)
+       Raid Devices : 7
+      Total Devices : 6
+        Persistence : Superblock is persistent
+
+      Intent Bitmap : Internal
+
+        Update Time : Sun Nov  5 18:15:07 2023
+              State : clean, degraded
+     Active Devices : 6
+    Working Devices : 6
+     Failed Devices : 0
+      Spare Devices : 0
+
+             Layout : left-symmetric
+         Chunk Size : 512K
+
+Consistency Policy : bitmap
+
+               Name : e4.eyal.emu.id.au:127
+               UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+             Events : 5017887
+
+     Number   Major   Minor   RaidDevice State
+        -       0        0        0      removed
+        8       8       17        1      active sync   /dev/sdb1
+        9       8       33        2      active sync   /dev/sdc1
+        7       8       49        3      active sync   /dev/sdd1
+        4       8       65        4      active sync   /dev/sde1
+        5       8       81        5      active sync   /dev/sdf1
+        6       8       97        6      active sync   /dev/sdg1
+
+$ sudo mdadm -E /dev/sd{b,c,d,e,f,g}1
+
+/dev/sdb1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+            Name : e4.eyal.emu.id.au:127
+   Creation Time : Fri Oct 26 17:24:59 2018
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 23437504512 sectors (10.91 TiB 12.00 TB)
+      Array Size : 58593761280 KiB (54.57 TiB 60.00 TB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=0 sectors
+           State : clean
+     Device UUID : 4bfcc6d6:165b6a78:b8fad560:51ff21de
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sun Nov  5 05:09:23 2023
+   Bad Block Log : 512 entries available at offset 56 sectors
+        Checksum : d915eee6 - correct
+          Events : 5014067
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 1
+    Array State : .AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+/dev/sdc1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+            Name : e4.eyal.emu.id.au:127
+   Creation Time : Fri Oct 26 17:24:59 2018
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 23437504512 sectors (10.91 TiB 12.00 TB)
+      Array Size : 58593761280 KiB (54.57 TiB 60.00 TB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=0 sectors
+           State : clean
+     Device UUID : 7fb0b851:c3d0463b:6460ff66:170088b9
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sun Nov  5 05:09:23 2023
+   Bad Block Log : 512 entries available at offset 56 sectors
+        Checksum : f8737f39 - correct
+          Events : 5014067
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 2
+    Array State : .AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+/dev/sdd1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+            Name : e4.eyal.emu.id.au:127
+   Creation Time : Fri Oct 26 17:24:59 2018
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 23437504512 sectors (10.91 TiB 12.00 TB)
+      Array Size : 58593761280 KiB (54.57 TiB 60.00 TB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=0 sectors
+           State : clean
+     Device UUID : ce5bd1bc:3e5c3054:658888dd:9038e09f
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sun Nov  5 05:09:23 2023
+   Bad Block Log : 512 entries available at offset 56 sectors
+        Checksum : d957167c - correct
+          Events : 5014067
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 3
+    Array State : .AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sde1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+            Name : e4.eyal.emu.id.au:127
+   Creation Time : Fri Oct 26 17:24:59 2018
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 23437504512 sectors (10.91 TiB 12.00 TB)
+      Array Size : 58593761280 KiB (54.57 TiB 60.00 TB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=0 sectors
+           State : clean
+     Device UUID : 4706a5ab:e7cea085:9af96e3a:81ac89b1
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sun Nov  5 05:09:23 2023
+   Bad Block Log : 512 entries available at offset 56 sectors
+        Checksum : 682b18c1 - correct
+          Events : 5014067
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 4
+    Array State : .AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+/dev/sdf1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+            Name : e4.eyal.emu.id.au:127
+   Creation Time : Fri Oct 26 17:24:59 2018
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 23437504512 sectors (10.91 TiB 12.00 TB)
+      Array Size : 58593761280 KiB (54.57 TiB 60.00 TB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=0 sectors
+           State : clean
+     Device UUID : b1732c74:a34e121d:8347018e:c42b5085
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sun Nov  5 05:09:23 2023
+   Bad Block Log : 512 entries available at offset 56 sectors
+        Checksum : ef7cd313 - correct
+          Events : 5014067
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 5
+    Array State : .AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+/dev/sdg1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+            Name : e4.eyal.emu.id.au:127
+   Creation Time : Fri Oct 26 17:24:59 2018
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 23437504512 sectors (10.91 TiB 12.00 TB)
+      Array Size : 58593761280 KiB (54.57 TiB 60.00 TB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=0 sectors
+           State : clean
+     Device UUID : b44b1807:ed20c6f9:ec0436d7:744d144a
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sun Nov  5 05:09:23 2023
+   Bad Block Log : 512 entries available at offset 56 sectors
+        Checksum : 6d155c7b - correct
+          Events : 5014067
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 6
+    Array State : .AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+(*2)
+# iostat
+15:35:10 Device             tps    kB_read/s    kB_wrtn/s    kB_dscd/s    kB_read    kB_wrtn    kB_dscd
+15:35:10 md127             0.40         0.00         1.60         0.00          0         16          0
+15:35:20 md127            80.90        23.20       300.40         0.00        232       3004          0
+15:35:30 md127             2.60         0.00        13.60         0.00          0        136          0
+15:35:40 md127             1.20         0.00         5.20         0.00          0         52          0
+15:35:50 md127            46.00         3.60      1455.60         0.00         36      14556          0
+15:36:00 md127             7.50         0.00        43.20         0.00          0        432          0
+15:36:10 md127             1.40         0.00        16.00         0.00          0        160          0
+15:36:20 md127             2.70         0.00        16.00         0.00          0        160          0
+15:36:30 md127             3.20         0.40        37.20         0.00          4        372          0
+15:36:40 md127             1.30         0.00        11.60         0.00          0        116          0
+15:36:50 md127             3.10         0.40        36.40         0.00          4        364          0
+15:37:00 md127             3.00         0.00        98.80         0.00          0        988          0
+15:37:10 md127             2.50         0.00        10.80         0.00          0        108          0
+15:37:20 md127             1.30         0.00         8.40         0.00          0         84          0
+15:37:30 md127             2.60         0.00        16.00         0.00          0        160          0
+15:37:40 md127             9.30         0.40        62.80         0.00          4        628          0
+15:37:50 md127             8.40         0.00        33.60         0.00          0        336          0
+15:38:00 md127             8.80         0.00        42.80         0.00          0        428          0
+15:38:00 2023-11-05
+15:38:00 Device             tps    kB_read/s    kB_wrtn/s    kB_dscd/s    kB_read    kB_wrtn    kB_dscd
+15:38:00 md127             5.65        76.85       953.30         0.00   30896031  383252160          0
+15:38:10 md127             5.30         0.00        24.40         0.00          0        244          0
+15:38:20 md127             1.30         0.00        12.40         0.00          0        124          0
+15:38:30 md127             2.60         0.00        11.20         0.00          0        112          0
+15:38:40 md127             2.60         0.00        16.40         0.00          0        164          0
+15:38:50 md127             3.30         0.40        34.80         0.00          4        348          0
+15:39:00 md127             1.30         0.00        11.60         0.00          0        116          0
+15:39:10 md127             2.50         0.00        10.00         0.00          0        100          0
+15:39:20 md127             2.30         0.00        17.60         0.00          0        176          0
+15:39:30 md127             2.70         0.00        20.40         0.00          0        204          0
+15:39:40 md127             4.90         1.20       132.80         0.00         12       1328          0
+15:39:50 md127             2.70         0.00        11.20         0.00          0        112          0
+15:40:00 md127             1.30         0.00        12.80         0.00          0        128          0
+15:40:10 md127             2.60         0.00        16.00         0.00          0        160          0
+15:40:20 md127             4.30         0.00        64.80         0.00          0        648          0
+15:40:30 md127             3.50         0.00        28.80         0.00          0        288          0
+15:40:40 md127             2.80         0.00        13.20         0.00          0        132          0
+15:40:50 md127             5.00         0.00        23.60         0.00          0        236          0
+15:41:00 md127             3.60         0.00        17.20         0.00          0        172          0
+15:41:10 md127             2.20         1.60        87.20         0.00         16        872          0
+15:41:20 md127             6.00         1.60       361.20         0.00         16       3612          0
+
+(*3)
+# iostat -x
+          Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dkB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
+15:35:02 md127            0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+15:35:02 sdb              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+15:35:02 sdc              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+15:35:02 sdd              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+15:35:02 sde              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+15:35:02 sdf              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+15:35:02 sdg              0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+15:35:12 md127            5.80     23.20     0.00   0.00    1.60     4.00    0.40      1.60     0.00   0.00   13.25     4.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.01   1.83
+15:35:12 sdb              1.60      6.40     0.00   0.00    0.12     4.00    0.70      2.10     0.10  12.50    5.14     3.00    0.00      0.00     0.00   0.00    0.00     0.00    0.50    6.80    0.01   0.58
+15:35:12 sdc              1.70      6.80     0.00   0.00    1.76     4.00    0.70      2.10     0.10  12.50    3.71     3.00    0.00      0.00     0.00   0.00    0.00     0.00    0.50    4.80    0.01   0.76
+15:35:12 sdd              1.70      6.80     0.00   0.00    1.18     4.00    0.60      1.30     0.00   0.00   12.33     2.17    0.00      0.00     0.00   0.00    0.00     0.00    0.50    0.40    0.01   1.16
+15:35:12 sde              0.20      0.80     0.00   0.00   10.50     4.00    0.50      0.90     0.00   0.00   14.60     1.80    0.00      0.00     0.00   0.00    0.00     0.00    0.50    0.40    0.01   0.96
+15:35:12 sdf              0.00      0.00     0.00   0.00    0.00     0.00    0.60      1.30     0.00   0.00   15.67     2.17    0.00      0.00     0.00   0.00    0.00     0.00    0.50    4.40    0.01   0.97
+15:35:12 sdg              0.80      3.60     0.10  11.11    4.50     4.50    0.80      2.50     0.10  11.11   13.12     3.12    0.00      0.00     0.00   0.00    0.00     0.00    0.50    3.80    0.02   1.51
+15:35:22 md127            0.00      0.00     0.00   0.00    0.00     0.00   75.10    300.40     0.00   0.00   15.81     4.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    1.19   6.22
+15:35:22 sdb              0.00      0.00     0.00   0.00    0.00     0.00    1.20    104.15    25.20  95.45    4.00    86.79    0.00      0.00     0.00   0.00    0.00     0.00    0.70    5.57    0.01   0.52
+15:35:22 sdc              0.00      0.00     0.00   0.00    0.00     0.00    1.10    103.75    25.20  95.82    5.73    94.32    0.00      0.00     0.00   0.00    0.00     0.00    0.70    7.71    0.01   0.65
+15:35:22 sdd              0.00      0.00     0.00   0.00    0.00     0.00    1.00     53.75    12.80  92.75   13.80    53.75    0.00      0.00     0.00   0.00    0.00     0.00    0.70    4.29    0.02   1.45
+15:35:22 sde              0.00      0.00     0.00   0.00    0.00     0.00    1.00     52.95    12.60  92.65    9.80    52.95    0.00      0.00     0.00   0.00    0.00     0.00    0.70    2.43    0.01   1.07
+15:35:22 sdf              0.00      0.00     0.00   0.00    0.00     0.00    1.00     52.95    12.60  92.65   13.20    52.95    0.00      0.00     0.00   0.00    0.00     0.00    0.70    3.00    0.02   1.37
+15:35:22 sdg              0.10     23.60     5.80  98.31   15.00   236.00    1.10     45.35    10.60  90.60   13.73    41.23    0.00      0.00     0.00   0.00    0.00     0.00    0.70    3.29    0.02   1.75
+15:35:32 md127            0.00      0.00     0.00   0.00    0.00     0.00    2.60     13.60     0.00   0.00 1410.23     5.23    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    3.67   8.41
+15:35:32 sdb              0.00      0.00     0.00   0.00    0.00     0.00    1.40      6.60     0.80  36.36    4.43     4.71    0.00      0.00     0.00   0.00    0.00     0.00    1.00    5.70    0.01   0.73
+15:35:32 sdc              0.00      0.00     0.00   0.00    0.00     0.00    1.00      1.80     0.00   0.00    2.80     1.80    0.00      0.00     0.00   0.00    0.00     0.00    1.00    2.60    0.01   0.38
+15:35:32 sdd              0.00      0.00     0.00   0.00    0.00     0.00    1.20      9.80     1.80  60.00   12.75     8.17    0.00      0.00     0.00   0.00    0.00     0.00    1.00    2.90    0.02   1.63
+15:35:32 sde              0.00      0.00     0.00   0.00    0.00     0.00    1.00      1.80     0.00   0.00   14.20     1.80    0.00      0.00     0.00   0.00    0.00     0.00    1.00    0.30    0.01   1.49
+15:35:32 sdf              0.00      0.00     0.00   0.00    0.00     0.00    1.10      2.60     0.10   8.33   12.55     2.36    0.00      0.00     0.00   0.00    0.00     0.00    1.00    1.60    0.02   1.48
+15:35:32 sdg              0.00      0.00     0.00   0.00    0.00     0.00    1.70     15.40     2.70  61.36   13.53     9.06    0.00      0.00     0.00   0.00    0.00     0.00    1.00    6.90    0.03   2.36
+15:35:42 md127            0.10      0.40     0.00   0.00   20.00     4.00    2.70     41.20     0.00   0.00 1039.07    15.26    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    2.81   8.88
+15:35:42 sdb              0.40     28.80     6.80  94.44   14.25    72.00    1.50     32.55     7.10  82.56    4.47    21.70    0.00      0.00     0.00   0.00    0.00     0.00    0.90    6.78    0.02   0.95
+15:35:42 sdc              0.40     32.80     7.80  95.12    2.25    82.00    1.10     27.75     6.30  85.14    1.09    25.23    0.00      0.00     0.00   0.00    0.00     0.00    0.90    0.78    0.00   0.28
+15:35:42 sdd              0.20      6.80     1.50  88.24    9.00    34.00    1.00      2.15     0.00   0.00   14.80     2.15    0.00      0.00     0.00   0.00    0.00     0.00    0.90    3.78    0.02   1.58
+15:35:42 sde              0.20      6.80     1.50  88.24    0.50    34.00    0.90      1.75     0.00   0.00   14.78     1.94    0.00      0.00     0.00   0.00    0.00     0.00    0.90    0.44    0.01   1.43
+15:35:42 sdf              0.20     26.00     6.30  96.92   11.50   130.00    1.70     38.15     8.30  83.00    8.35    22.44    0.00      0.00     0.00   0.00    0.00     0.00    0.90    3.00    0.02   1.74
+15:35:42 sdg              0.00      0.00     0.00   0.00    0.00     0.00    1.90     16.95     2.80  59.57   12.32     8.92    0.00      0.00     0.00   0.00    0.00     0.00    0.90    7.22    0.03   2.02
+15:35:52 md127            0.80      3.20     0.00   0.00   13.75     4.00   43.60   1419.60     0.00   0.00   99.34    32.56    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    4.34  13.86
+15:35:52 sdb              0.60     85.20    20.70  97.18   14.33   142.00    2.70    470.15   115.20  97.71    2.07   174.13    0.00      0.00     0.00   0.00    0.00     0.00    0.80    4.25    0.02   1.25
+15:35:52 sdc              1.20     97.20    23.10  95.06   10.50    81.00    2.20    371.75    91.10  97.64    2.59   168.98    0.00      0.00     0.00   0.00    0.00     0.00    0.80    2.12    0.02   1.13
+15:35:52 sdd              2.10    305.60    74.30  97.25   14.62   145.52    1.70    234.95    57.40  97.12    7.71   138.21    0.00      0.00     0.00   0.00    0.00     0.00    0.80    1.12    0.04   2.43
+15:35:52 sde              1.50    288.40    70.60  97.92   17.47   192.27    1.90    278.95    68.20  97.29    9.74   146.82    0.00      0.00     0.00   0.00    0.00     0.00    0.80    0.38    0.05   2.60
+15:35:52 sdf              1.30    334.00    82.20  98.44   26.31   256.92    2.30    351.35    85.90  97.39    7.74   152.76    0.00      0.00     0.00   0.00    0.00     0.00    0.80    2.00    0.05   2.34
+15:35:52 sdg              0.80    215.20    53.00  98.51   18.38   269.00    2.90    510.55   125.10  97.73    7.03   176.05    0.00      0.00     0.00   0.00    0.00     0.00    0.80    3.75    0.04   2.53
+15:36:02 md127            0.00      0.00     0.00   0.00    0.00     0.00    7.50     43.20     0.00   0.00  500.76     5.76    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    3.76   9.00
+15:36:02 sdb              0.20     18.40     4.40  95.65   13.00    92.00    1.90     45.40    10.00  84.03    6.37    23.89    0.00      0.00     0.00   0.00    0.00     0.00    1.20    8.25    0.02   1.17
+15:36:02 sdc              0.60     32.40     7.50  92.59    9.00    54.00    1.40     21.00     4.40  75.86    3.64    15.00    0.00      0.00     0.00   0.00    0.00     0.00    1.20    3.83    0.01   0.89
+15:36:02 sdd              0.40     14.00     3.10  88.57    0.50    35.00    1.20      2.60     0.00   0.00   14.33     2.17    0.00      0.00     0.00   0.00    0.00     0.00    1.20    0.33    0.02   1.89
+15:36:02 sde              0.40     14.00     3.10  88.57    2.50    35.00    1.20      2.60     0.00   0.00   14.17     2.17    0.00      0.00     0.00   0.00    0.00     0.00    1.20    0.33    0.02   1.97
+15:36:02 sdf              0.60     32.40     7.50  92.59    6.67    54.00    1.50     21.40     4.40  74.58   12.73    14.27    0.00      0.00     0.00   0.00    0.00     0.00    1.20    2.50    0.03   2.19
+15:36:02 sdg              0.00      0.00     0.00   0.00    0.00     0.00    1.80     27.40     5.60  75.68   13.44    15.22    0.00      0.00     0.00   0.00    0.00     0.00    1.20    3.67    0.03   2.52
+15:36:12 md127            0.00      0.00     0.00   0.00    0.00     0.00    2.80     24.40     0.00   0.00 1312.57     8.71    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    3.68   6.54
+15:36:12 sdb              0.10     10.40     2.50  96.15    0.00   104.00    1.60     18.20     3.50  68.63    3.56    11.38    0.00      0.00     0.00   0.00    0.00     0.00    1.10    4.73    0.01   0.67
+15:36:12 sdc              0.50     16.00     3.50  87.50    3.40    32.00    1.20     12.60     2.50  67.57    3.00    10.50    0.00      0.00     0.00   0.00    0.00     0.00    1.10    3.00    0.01   0.50
+15:36:12 sdd              0.40      5.60     1.00  71.43    0.25    14.00    1.10      2.20     0.00   0.00   14.45     2.00    0.00      0.00     0.00   0.00    0.00     0.00    1.10    0.45    0.02   1.76
+15:36:12 sde              0.40      5.60     1.00  71.43    0.25    14.00    1.10      2.20     0.00   0.00   14.73     2.00    0.00      0.00     0.00   0.00    0.00     0.00    1.10    0.36    0.02   1.74
+15:36:12 sdf              0.50     16.00     3.50  87.50    3.20    32.00    1.40     21.00     4.40  75.86   13.57    15.00    0.00      0.00     0.00   0.00    0.00     0.00    1.10    2.91    0.02   1.99
+15:36:12 sdg              0.00      0.00     0.00   0.00    0.00     0.00    1.70     16.20     2.90  63.04   13.53     9.53    0.00      0.00     0.00   0.00    0.00     0.00    1.10    4.64    0.03   2.41
+15:36:22 md127            0.00      0.00     0.00   0.00    0.00     0.00    1.30      7.60     0.00   0.00 1415.46     5.85    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    1.84  12.01
+15:36:22 sdb              0.00      0.00     0.00   0.00    0.00     0.00    0.80      3.70     0.40  33.33    2.62     4.62    0.00      0.00     0.00   0.00    0.00     0.00    0.60    3.00    0.00   0.26
+15:36:22 sdc              0.20      2.40     0.40  66.67    0.50    12.00    0.60      1.30     0.00   0.00    0.83     2.17    0.00      0.00     0.00   0.00    0.00     0.00    0.60    0.67    0.00   0.13
+15:36:22 sdd              0.20      2.40     0.40  66.67    0.50    12.00    0.60      1.30     0.00   0.00   16.17     2.17    0.00      0.00     0.00   0.00    0.00     0.00    0.60    0.33    0.01   1.05
+15:36:22 sde              0.20      2.40     0.40  66.67    0.50    12.00    0.60      1.30     0.00   0.00   14.00     2.17    0.00      0.00     0.00   0.00    0.00     0.00    0.60    0.33    0.01   0.91
+15:36:22 sdf              0.20      2.40     0.40  66.67    0.50    12.00    0.70      6.50     1.20  63.16   14.71     9.29    0.00      0.00     0.00   0.00    0.00     0.00    0.60    3.17    0.01   1.12
+15:36:22 sdg              0.00      0.00     0.00   0.00    0.00     0.00    0.90      8.90     1.60  64.00   14.89     9.89    0.00      0.00     0.00   0.00    0.00     0.00    0.60    4.50    0.02   1.39
+
+(*4)
+2023-11-05 15:34:42 Dirty:        60 kB  Buffers:   3990316 kB  MemFree:   1276448 kB
+2023-11-05 15:34:52 Dirty:        88 kB  Buffers:   3990332 kB  MemFree:   1292280 kB
+2023-11-05 15:35:02 Dirty:       544 kB  Buffers:   3990344 kB  MemFree:   1292780 kB
+2023-11-05 15:35:12 Dirty:     94128 kB  Buffers:   3993288 kB  MemFree:   1189540 kB
+2023-11-05 15:35:22 Dirty:     96756 kB  Buffers:   3993328 kB  MemFree:   1194372 kB
+2023-11-05 15:35:32 Dirty:     96696 kB  Buffers:   3993364 kB  MemFree:   1189540 kB
+2023-11-05 15:35:42 Dirty:     96176 kB  Buffers:   3993408 kB  MemFree:   1199604 kB
+2023-11-05 15:35:52 Dirty:     81980 kB  Buffers:   3993468 kB  MemFree:   1137836 kB
+2023-11-05 15:36:02 Dirty:     82180 kB  Buffers:   3993504 kB  MemFree:   1132644 kB
+2023-11-05 15:36:12 Dirty:     81884 kB  Buffers:   3993532 kB  MemFree:   1164068 kB
+2023-11-05 15:36:22 Dirty:     81956 kB  Buffers:   3993556 kB  MemFree:   1155296 kB
+2023-11-05 15:36:32 Dirty:     81468 kB  Buffers:   3993600 kB  MemFree:   1148428 kB
+2023-11-05 15:36:42 Dirty:     81184 kB  Buffers:   3993632 kB  MemFree:   1203772 kB
+2023-11-05 15:36:52 Dirty:     80956 kB  Buffers:   3993652 kB  MemFree:   1168112 kB
+2023-11-05 15:37:02 Dirty:     80360 kB  Buffers:   3993684 kB  MemFree:   1164228 kB
+2023-11-05 15:37:12 Dirty:     80280 kB  Buffers:   3993720 kB  MemFree:   1200968 kB
+2023-11-05 15:37:22 Dirty:     80052 kB  Buffers:   3993736 kB  MemFree:   1165204 kB
+2023-11-05 15:37:32 Dirty:     79828 kB  Buffers:   3993768 kB  MemFree:   1144772 kB
+2023-11-05 15:37:42 Dirty:     79488 kB  Buffers:   3993876 kB  MemFree:   1148376 kB
+2023-11-05 15:37:52 Dirty:     79500 kB  Buffers:   3993964 kB  MemFree:   1144604 kB
+2023-11-05 15:38:02 Dirty:     79652 kB  Buffers:   3994088 kB  MemFree:   1229132 kB
+2023-11-05 15:38:12 Dirty:     79308 kB  Buffers:   3994136 kB  MemFree:   1222776 kB
+2023-11-05 15:38:22 Dirty:     79132 kB  Buffers:   3994168 kB  MemFree:   1216236 kB
+2023-11-05 15:38:32 Dirty:     79112 kB  Buffers:   3994196 kB  MemFree:   1205308 kB
+2023-11-05 15:38:42 Dirty:     78980 kB  Buffers:   3994228 kB  MemFree:   1213188 kB
+2023-11-05 15:38:52 Dirty:     79160 kB  Buffers:   3994268 kB  MemFree:   1199640 kB
+2023-11-05 15:39:02 Dirty:     79304 kB  Buffers:   3994308 kB  MemFree:   1195604 kB
+2023-11-05 15:39:12 Dirty:     78832 kB  Buffers:   3994340 kB  MemFree:   1215976 kB
+2023-11-05 15:39:22 Dirty:     78872 kB  Buffers:   3994380 kB  MemFree:   1196416 kB
+2023-11-05 15:39:32 Dirty:     78236 kB  Buffers:   3994420 kB  MemFree:   1198744 kB
+2023-11-05 15:39:42 Dirty:     77188 kB  Buffers:   3994456 kB  MemFree:   1224896 kB
+2023-11-05 15:39:52 Dirty:     77356 kB  Buffers:   3994488 kB  MemFree:   1219820 kB
+2023-11-05 15:40:02 Dirty:     77520 kB  Buffers:   3994520 kB  MemFree:   1216344 kB
+2023-11-05 15:40:12 Dirty:     77452 kB  Buffers:   3994548 kB  MemFree:   1197372 kB
+2023-11-05 15:40:22 Dirty:     76652 kB  Buffers:   3994580 kB  MemFree:   1181344 kB
+2023-11-05 15:40:32 Dirty:     76620 kB  Buffers:   3994604 kB  MemFree:   1188504 kB
+2023-11-05 15:40:42 Dirty:     76516 kB  Buffers:   3994636 kB  MemFree:   1202256 kB
+2023-11-05 15:40:52 Dirty:     76544 kB  Buffers:   3994708 kB  MemFree:   1181708 kB
+2023-11-05 15:41:02 Dirty:     76716 kB  Buffers:   3994748 kB  MemFree:   1183688 kB
+2023-11-05 15:41:12 Dirty:     74888 kB  Buffers:   3994796 kB  MemFree:   1168440 kB
+2023-11-05 15:41:22 Dirty:     72064 kB  Buffers:   3994836 kB  MemFree:   1167124 kB
+2023-11-05 15:41:32 Dirty:     71520 kB  Buffers:   3994860 kB  MemFree:   1160128 kB
+2023-11-05 15:41:42 Dirty:     71464 kB  Buffers:   3994892 kB  MemFree:   1154912 kB
+2023-11-05 15:41:52 Dirty:     71504 kB  Buffers:   3994932 kB  MemFree:   1160312 kB
+2023-11-05 15:42:02 Dirty:     71404 kB  Buffers:   3994956 kB  MemFree:   1204212 kB
+2023-11-05 15:42:12 Dirty:     70812 kB  Buffers:   3994988 kB  MemFree:   1163440 kB
+2023-11-05 15:42:22 Dirty:     69880 kB  Buffers:   3995024 kB  MemFree:   1160820 kB
+
+Then at some point all the dirty blocks are written quickly:
+
+2023-11-05 16:34:13 Dirty:      7876 kB  Buffers:   4042032 kB  MemFree:    628004 kB
+2023-11-05 16:34:23 Dirty:      7836 kB  Buffers:   4042056 kB  MemFree:    626240 kB
+2023-11-05 16:34:33 Dirty:      7628 kB  Buffers:   4042080 kB  MemFree:    624728 kB
+2023-11-05 16:34:43 Dirty:      7540 kB  Buffers:   4042112 kB  MemFree:    622464 kB
+2023-11-05 16:34:53 Dirty:      7496 kB  Buffers:   4042136 kB  MemFree:    620448 kB
+2023-11-05 16:35:03 Dirty:      8224 kB  Buffers:   4042164 kB  MemFree:    635820 kB
+2023-11-05 16:35:13 Dirty:      7544 kB  Buffers:   4042212 kB  MemFree:    631848 kB
+2023-11-05 16:35:23 Dirty:      7524 kB  Buffers:   4042236 kB  MemFree:    631092 kB
+2023-11-05 16:35:33 Dirty:      7472 kB  Buffers:   4042260 kB  MemFree:    630084 kB
+2023-11-05 16:35:43 Dirty:      7320 kB  Buffers:   4042300 kB  MemFree:    625044 kB
+2023-11-05 16:35:53 Dirty:      7244 kB  Buffers:   4042324 kB  MemFree:    623788 kB
+2023-11-05 16:36:03 Dirty:      7516 kB  Buffers:   4042348 kB  MemFree:    631476 kB
+2023-11-05 16:36:13 Dirty:      7216 kB  Buffers:   4042376 kB  MemFree:    636232 kB
+2023-11-05 16:36:23 Dirty:      6368 kB  Buffers:   4042408 kB  MemFree:    633964 kB
+2023-11-05 16:36:33 Dirty:      5564 kB  Buffers:   4042424 kB  MemFree:    632464 kB
+2023-11-05 16:36:43 Dirty:      4452 kB  Buffers:   4042456 kB  MemFree:    630704 kB
+2023-11-05 16:36:53 Dirty:      4344 kB  Buffers:   4042480 kB  MemFree:    628688 kB
+2023-11-05 16:37:03 Dirty:       296 kB  Buffers:   4042524 kB  MemFree:    625196 kB
+2023-11-05 16:37:13 Dirty:       312 kB  Buffers:   4042540 kB  MemFree:    623948 kB
+2023-11-05 16:37:23 Dirty:       204 kB  Buffers:   4042548 kB  MemFree:    622216 kB
+2023-11-05 16:37:33 Dirty:       240 kB  Buffers:   4042564 kB  MemFree:    620704 kB
+2023-11-05 16:37:43 Dirty:        84 kB  Buffers:   4042580 kB  MemFree:    619192 kB
+2023-11-05 16:37:53 Dirty:        84 kB  Buffers:   4042588 kB  MemFree:    617428 kB
+
+I have a script that displays progress in this log:
+
+                         Dirty               Buffers               MemFree
+2023-11-05 15:34:42        60 kB    -7560   3990316 kB       24   1276448 kB   -43800
+2023-11-05 15:34:52        88 kB       28   3990332 kB       16   1292280 kB    15832
+2023-11-05 15:35:02       544 kB      456   3990344 kB       12   1292780 kB      500
+2023-11-05 15:35:12     94128 kB    93584   3993288 kB     2944   1189540 kB  -103240
+2023-11-05 15:35:22     96756 kB     2628   3993328 kB       40   1194372 kB     4832
+2023-11-05 15:35:32     96696 kB      -60   3993364 kB       36   1189540 kB    -4832
+2023-11-05 15:35:42     96176 kB     -520   3993408 kB       44   1199604 kB    10064
+2023-11-05 15:35:52     81980 kB   -14196   3993468 kB       60   1137836 kB   -61768
+2023-11-05 15:36:02     82180 kB      200   3993504 kB       36   1132644 kB    -5192
+2023-11-05 15:36:12     81884 kB     -296   3993532 kB       28   1164068 kB    31424
+2023-11-05 15:36:22     81956 kB       72   3993556 kB       24   1155296 kB    -8772
+2023-11-05 15:36:32     81468 kB     -488   3993600 kB       44   1148428 kB    -6868
+2023-11-05 15:36:42     81184 kB     -284   3993632 kB       32   1203772 kB    55344
+2023-11-05 15:36:52     80956 kB     -228   3993652 kB       20   1168112 kB   -35660
+2023-11-05 15:37:02     80360 kB     -596   3993684 kB       32   1164228 kB    -3884
+2023-11-05 15:37:12     80280 kB      -80   3993720 kB       36   1200968 kB    36740
+2023-11-05 15:37:22     80052 kB     -228   3993736 kB       16   1165204 kB   -35764
+2023-11-05 15:37:32     79828 kB     -224   3993768 kB       32   1144772 kB   -20432
+2023-11-05 15:37:42     79488 kB     -340   3993876 kB      108   1148376 kB     3604
+2023-11-05 15:37:52     79500 kB       12   3993964 kB       88   1144604 kB    -3772
+2023-11-05 15:38:02     79652 kB      152   3994088 kB      124   1229132 kB    84528
+2023-11-05 15:38:12     79308 kB     -344   3994136 kB       48   1222776 kB    -6356
+2023-11-05 15:38:22     79132 kB     -176   3994168 kB       32   1216236 kB    -6540
+2023-11-05 15:38:32     79112 kB      -20   3994196 kB       28   1205308 kB   -10928
+2023-11-05 15:38:42     78980 kB     -132   3994228 kB       32   1213188 kB     7880
+2023-11-05 15:38:52     79160 kB      180   3994268 kB       40   1199640 kB   -13548
+2023-11-05 15:39:02     79304 kB      144   3994308 kB       40   1195604 kB    -4036
+2023-11-05 15:39:12     78832 kB     -472   3994340 kB       32   1215976 kB    20372
+2023-11-05 15:39:22     78872 kB       40   3994380 kB       40   1196416 kB   -19560
+2023-11-05 15:39:32     78236 kB     -636   3994420 kB       40   1198744 kB     2328
+2023-11-05 15:39:42     77188 kB    -1048   3994456 kB       36   1224896 kB    26152
+2023-11-05 15:39:52     77356 kB      168   3994488 kB       32   1219820 kB    -5076
+2023-11-05 15:40:02     77520 kB      164   3994520 kB       32   1216344 kB    -3476
+2023-11-05 15:40:12     77452 kB      -68   3994548 kB       28   1197372 kB   -18972
+2023-11-05 15:40:22     76652 kB     -800   3994580 kB       32   1181344 kB   -16028
+2023-11-05 15:40:32     76620 kB      -32   3994604 kB       24   1188504 kB     7160
+2023-11-05 15:40:42     76516 kB     -104   3994636 kB       32   1202256 kB    13752
+2023-11-05 15:40:52     76544 kB       28   3994708 kB       72   1181708 kB   -20548
+2023-11-05 15:41:02     76716 kB      172   3994748 kB       40   1183688 kB     1980
+2023-11-05 15:41:12     74888 kB    -1828   3994796 kB       48   1168440 kB   -15248
+2023-11-05 15:41:22     72064 kB    -2824   3994836 kB       40   1167124 kB    -1316
+2023-11-05 15:41:32     71520 kB     -544   3994860 kB       24   1160128 kB    -6996
+2023-11-05 15:41:42     71464 kB      -56   3994892 kB       32   1154912 kB    -5216
+2023-11-05 15:41:52     71504 kB       40   3994932 kB       40   1160312 kB     5400
+2023-11-05 15:42:02     71404 kB     -100   3994956 kB       24   1204212 kB    43900
+2023-11-05 15:42:12     70812 kB     -592   3994988 kB       32   1163440 kB   -40772
+2023-11-05 15:42:22     69880 kB     -932   3995024 kB       36   1160820 kB    -2620
+
+(*5)
+
+$ sudo perf top --pid 4164147 -g
+Samples: 261K of event 'cycles:P', 4000 Hz, Event count (approx.): 70413169119 lost: 0/0 drop: 0/0
+   Children      Self  Shared O  Symbol
++  100.00%     1.60%  [kernel]  [k] ext4_mb_regular_allocator
++   67.08%     5.93%  [kernel]  [k] ext4_mb_find_good_group_avg_frag_lists
++   62.47%    42.34%  [kernel]  [k] ext4_mb_good_group
++   22.51%    11.36%  [kernel]  [k] ext4_get_group_info
++   19.70%    10.80%  [kernel]  [k] ext4_mb_scan_aligned
++   13.13%     0.00%  [kernel]  [k] ret_from_fork_asm
++   13.13%     0.00%  [kernel]  [k] ret_from_fork
++   13.13%     0.00%  [kernel]  [k] kthread
++   13.13%     0.00%  [kernel]  [k] worker_thread
++   13.13%     0.00%  [kernel]  [k] process_one_work
++   13.13%     0.00%  [kernel]  [k] wb_workfn
++   13.13%     0.00%  [kernel]  [k] wb_writeback
++   13.13%     0.00%  [kernel]  [k] __writeback_inodes_wb
++   13.13%     0.00%  [kernel]  [k] writeback_sb_inodes
++   13.13%     0.00%  [kernel]  [k] __writeback_single_inode
++   13.13%     0.00%  [kernel]  [k] do_writepages
++   13.13%     0.00%  [kernel]  [k] ext4_writepages
++   13.13%     0.00%  [kernel]  [k] ext4_do_writepages
++   13.13%     0.00%  [kernel]  [k] ext4_map_blocks
++   13.13%     0.00%  [kernel]  [k] ext4_ext_map_blocks
++   13.13%     0.00%  [kernel]  [k] ext4_mb_new_blocks
++    8.95%     1.80%  [kernel]  [k] mb_find_extent
++    7.11%     1.41%  [kernel]  [k] ext4_mb_load_buddy_gfp
++    6.94%     6.89%  [kernel]  [k] mb_find_order_for_block
++    5.89%     5.79%  [kernel]  [k] __rcu_read_unlock
++    5.43%     0.19%  [kernel]  [k] pagecache_get_page
++    5.14%     0.47%  [kernel]  [k] __filemap_get_folio
++    4.53%     1.61%  [kernel]  [k] filemap_get_entry
++    3.81%     3.75%  [kernel]  [k] __rcu_read_lock
++    2.75%     0.95%  [kernel]  [k] xas_load
++    1.73%     1.53%  [kernel]  [k] xas_descend
++    1.08%     1.08%  [kernel]  [k] ext4_mb_unload_buddy
++    0.76%     0.53%  [kernel]  [k] _raw_read_unlock
++    0.55%     0.55%  [kernel]  [k] _raw_spin_trylock
+      0.44%     0.43%  [kernel]  [k] _raw_read_lock
+      0.26%     0.24%  [kernel]  [k] xas_start
+      0.22%     0.18%  [kernel]  [k] mb_find_buddy
+      0.19%     0.14%  [kernel]  [k] folio_mark_accessed
+      0.15%     0.15%  [kernel]  [k] _raw_spin_unlock
+      0.13%     0.09%  [kernel]  [k] __cond_resched
+      0.09%     0.09%  [kernel]  [k] folio_test_hugetlb
+      0.09%     0.00%  [kernel]  [k] hrtimer_interrupt
+      0.07%     0.00%  [kernel]  [k] __hrtimer_run_queues
+      0.04%     0.00%  [kernel]  [k] scheduler_tick
+      0.03%     0.00%  [kernel]  [k] __sysvec_apic_timer_interrupt
+      0.01%     0.00%  [kernel]  [k] perf_adjust_freq_unthr_context
+      0.01%     0.00%  [kernel]  [k] clockevents_program_event
+      0.01%     0.00%  [kernel]  [k] arch_scale_freq_tick
+      0.01%     0.00%  [kernel]  [k] asm_sysvec_apic_timer_interrupt
+      0.01%     0.00%  [kernel]  [k] sysvec_apic_timer_interrupt
+      0.01%     0.01%  [kernel]  [k] native_write_msr
+      0.01%     0.00%  [kernel]  [k] sched_clock_cpu
+      0.01%     0.00%  [kernel]  [k] lapic_next_deadline
+      0.01%     0.01%  [kernel]  [k] native_irq_return_iret
+      0.01%     0.01%  [kernel]  [k] read_tsc
+      0.01%     0.00%  [kernel]  [k] timekeeping_advance
+      0.01%     0.01%  [kernel]  [k] native_read_msr
+      0.01%     0.00%  [kernel]  [k] ktime_get
+      0.01%     0.00%  [kernel]  [k] tick_sched_timer
+      0.01%     0.01%  [kernel]  [k] native_sched_clock
+      0.01%     0.01%  [kernel]  [k] trigger_load_balance
+      0.01%     0.00%  [kernel]  [k] update_rq_clock
+      0.00%     0.00%  [kernel]  [k] tick_sched_handle
+      0.00%     0.00%  [kernel]  [k] update_process_times
+      0.00%     0.00%  [kernel]  [k] irqtime_account_irq
+      0.00%     0.00%  [kernel]  [k] __irq_exit_rcu
+      0.00%     0.00%  [kernel]  [k] update_curr
+      0.00%     0.00%  [kernel]  [k] update_load_avg
+      0.00%     0.00%  [kernel]  [k] native_apic_msr_eoi_write
+      0.00%     0.00%  [kernel]  [k] wq_worker_tick
+      0.00%     0.00%  [kernel]  [k] psi_account_irqtime
+      0.00%     0.00%  [kernel]  [k] error_entry
+      0.00%     0.00%  [kernel]  [k] _raw_spin_lock_irqsave
+      0.00%     0.00%  [kernel]  [k] _raw_spin_lock
+      0.00%     0.00%  [kernel]  [k] hrtimer_active
+      0.00%     0.00%  [kernel]  [k] __update_load_avg_cfs_rq
+      0.00%     0.00%  [kernel]  [k] generic_exec_single
+      0.00%     0.00%  [kernel]  [k] perf_pmu_nop_void
+      0.00%     0.00%  [kernel]  [k] perf_event_task_tick
+      0.00%     0.00%  [kernel]  [k] __intel_pmu_enable_all.isra.0
+      0.00%     0.00%  [kernel]  [k] task_tick_fair
+      0.00%     0.00%  [kernel]  [k] timerqueue_del
+      0.00%     0.00%  [kernel]  [k] timekeeping_update
+      0.00%     0.00%  [kernel]  [k] rb_erase
+      0.00%     0.00%  [kernel]  [k] cpuacct_charge
+      0.00%     0.00%  [kernel]  [k] profile_tick
+      0.00%     0.00%  [kernel]  [k] hrtimer_forward
+      0.00%     0.00%  [kernel]  [k] irqtime_account_process_tick
+      0.00%     0.00%  [kernel]  [k] update_irq_load_avg
+      0.00%     0.00%  [kernel]  [k] raid5_get_active_stripe
+      0.00%     0.00%  [kernel]  [k] rcu_sched_clock_irq
+      0.00%     0.00%  [kernel]  [k] kthread_data
+      0.00%     0.00%  [kernel]  [k] rcu_segcblist_ready_cbs
+      0.00%     0.00%  [kernel]  [k] irqentry_enter
+      0.00%     0.00%  [kernel]  [k] hrtimer_run_queues
+      0.00%     0.00%  [kernel]  [k] perf_event_nmi_handler
+      0.00%     0.00%  [kernel]  [k] enqueue_hrtimer
+      0.00%     0.00%  [kernel]  [k] _raw_spin_unlock_irqrestore
+      0.00%     0.00%  [kernel]  [k] wbc_detach_inode
+      0.00%     0.00%  [kernel]  [k] update_vsyscall
+      0.00%     0.00%  [kernel]  [k] timerqueue_add
+      0.00%     0.00%  [kernel]  [k] _raw_spin_lock_irq
+      0.00%     0.00%  [kernel]  [k] llist_add_batch
+      0.00%     0.00%  [kernel]  [k] tick_do_update_jiffies64
+      0.00%     0.00%  [kernel]  [k] call_function_single_prep_ipi
+      0.00%     0.00%  [kernel]  [k] update_cfs_group
+      0.00%     0.00%  [kernel]  [k] __hrtimer_next_event_base
+      0.00%     0.00%  [kernel]  [k] notifier_call_chain
+      0.00%     0.00%  [kernel]  [k] bio_alloc_bioset
+      0.00%     0.00%  [kernel]  [k] __update_load_avg_se
+      0.00%     0.00%  [kernel]  [k] account_process_tick
+      0.00%     0.00%  [kernel]  [k] pvclock_gtod_notify
+      0.00%     0.00%  [kernel]  [k] kmem_cache_free
+      0.00%     0.00%  [kernel]  [k] ktime_get_update_offsets_now
+      0.00%     0.00%  [kernel]  [k] load_balance
+      0.00%     0.00%  [kernel]  [k] update_fast_timekeeper
+      0.00%     0.00%  [kernel]  [k] restore_regs_and_return_to_kernel
+      0.00%     0.00%  [kernel]  [k] find_get_stripe
+      0.00%     0.00%  [kernel]  [k] set_next_buddy
+      0.00%     0.00%  [kernel]  [k] ext4_sb_block_valid
+      0.00%     0.00%  [kernel]  [k] update_min_vruntime
+      0.00%     0.00%  [kernel]  [k] irq_work_tick
+      0.00%     0.00%  [kernel]  [k] md_account_bio
+      0.00%     0.00%  [kernel]  [k] run_posix_cpu_timers
+      0.00%     0.00%  [kernel]  [k] __accumulate_pelt_segments
+      0.00%     0.00%  [kernel]  [k] __es_remove_extent
+      0.00%     0.00%  [kernel]  [k] ntp_tick_length
+      0.00%     0.00%  [kernel]  [k] tick_program_event
+      0.00%     0.00%  [kernel]  [k] kmem_cache_alloc
+      0.00%     0.00%  [kernel]  [k] __sysvec_call_function_single
 
 
-I expect to receive a new disk early next week and I hope the issue goes away when the array is not degraded.
+(*6)
+
+# echo w > /proc/sysrq-trigger
+Nov  5 15:39:42 e7 kernel: sysrq: Show Blocked State
+Nov  5 15:39:42 e7 kernel: task:md127_raid6     state:D stack:0     pid:909   ppid:2      flags:0x00004000
+Nov  5 15:39:42 e7 kernel: Call Trace:
+Nov  5 15:39:42 e7 kernel: <TASK>
+Nov  5 15:39:42 e7 kernel: ? __pfx_md_thread+0x10/0x10
+Nov  5 15:39:42 e7 kernel: __schedule+0x3ee/0x14c0
+Nov  5 15:39:42 e7 kernel: ? update_load_avg+0x7e/0x780
+Nov  5 15:39:42 e7 kernel: ? __pfx_md_thread+0x10/0x10
+Nov  5 15:39:42 e7 kernel: schedule+0x5e/0xd0
+Nov  5 15:39:42 e7 kernel: percpu_ref_switch_to_atomic_sync+0x9a/0xf0
+Nov  5 15:39:42 e7 kernel: ? __pfx_autoremove_wake_function+0x10/0x10
+Nov  5 15:39:42 e7 kernel: set_in_sync+0x5c/0xc0
+Nov  5 15:39:42 e7 kernel: md_check_recovery+0x356/0x5a0
+Nov  5 15:39:42 e7 kernel: raid5d+0x76/0x750 [raid456]
+Nov  5 15:39:42 e7 kernel: ? lock_timer_base+0x61/0x80
+Nov  5 15:39:42 e7 kernel: ? prepare_to_wait_event+0x60/0x180
+Nov  5 15:39:42 e7 kernel: ? __pfx_md_thread+0x10/0x10
+Nov  5 15:39:42 e7 kernel: md_thread+0xab/0x190
+Nov  5 15:39:42 e7 kernel: ? __pfx_autoremove_wake_function+0x10/0x10
+Nov  5 15:39:42 e7 kernel: kthread+0xe5/0x120
+Nov  5 15:39:42 e7 kernel: ? __pfx_kthread+0x10/0x10
+Nov  5 15:39:42 e7 kernel: ret_from_fork+0x31/0x50
+Nov  5 15:39:42 e7 kernel: ? __pfx_kthread+0x10/0x10
+Nov  5 15:39:42 e7 kernel: ret_from_fork_asm+0x1b/0x30
+Nov  5 15:39:42 e7 kernel: </TASK>
+
+# echo l > /proc/sysrq-trigger
+Nov  5 15:42:41 e7 kernel: Sending NMI from CPU 3 to CPUs 0-2,4-7:
+Nov  5 15:42:41 e7 kernel: NMI backtrace for cpu 1
+Nov  5 15:42:41 e7 kernel: CPU: 1 PID: 4164147 Comm: kworker/u16:3 Not tainted 6.5.8-200.fc38.x86_64 #1
+Nov  5 15:42:41 e7 kernel: Hardware name: Gigabyte Technology Co., Ltd. Z390 UD/Z390 UD, BIOS F8 05/24/2019
+Nov  5 15:42:41 e7 kernel: Workqueue: writeback wb_workfn (flush-9:127)
+Nov  5 15:42:41 e7 kernel: RIP: 0010:ext4_mb_good_group+0x60/0xf0
+Nov  5 15:42:41 e7 kernel: Code: 48 8b 00 a8 04 75 2c 8b 46 14 85 c0 74 25 8b 4e 18 85 c9 74 1e 83 fb 03 74 3c 83 fb 04 74 23 83 eb 01 83 fb 01 77 38 99 f7 f9 <41> 3b 45 2c 0f 9d c2 eb 02 31 d2 5b 89 d0 5d 41 5c 41 5d c3 cc cc
+Nov  5 15:42:41 e7 kernel: RSP: 0018:ffffb7be054ef6a0 EFLAGS: 00000246
+Nov  5 15:42:41 e7 kernel: RAX: 0000000000000201 RBX: 0000000000000001 RCX: 000000000000000d
+Nov  5 15:42:41 e7 kernel: RDX: 0000000000000003 RSI: ffff892f46d37450 RDI: ffff893019445280
+Nov  5 15:42:41 e7 kernel: RBP: 0000000000001306 R08: ffff892f49711000 R09: 0000000000000280
+Nov  5 15:42:41 e7 kernel: R10: 0000000000000001 R11: 0000000000000100 R12: 0000000000000004
+Nov  5 15:42:41 e7 kernel: R13: ffff892f486d31c8 R14: 0000000000000002 R15: ffff892f46d37450
+Nov  5 15:42:41 e7 kernel: FS:  0000000000000000(0000) GS:ffff8936de440000(0000) knlGS:0000000000000000
+Nov  5 15:42:41 e7 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+Nov  5 15:42:41 e7 kernel: CR2: 000055d6aaa70af8 CR3: 000000050f222003 CR4: 00000000003706e0
+Nov  5 15:42:41 e7 kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+Nov  5 15:42:41 e7 kernel: DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Nov  5 15:42:41 e7 kernel: Call Trace:
+Nov  5 15:42:41 e7 kernel: <NMI>
+Nov  5 15:42:41 e7 kernel: ? nmi_cpu_backtrace+0x99/0x110
+Nov  5 15:42:41 e7 kernel: ? nmi_cpu_backtrace_handler+0x11/0x20
+Nov  5 15:42:41 e7 kernel: ? nmi_handle+0x5e/0x150
+Nov  5 15:42:41 e7 kernel: ? default_do_nmi+0x40/0x100
+Nov  5 15:42:41 e7 kernel: ? exc_nmi+0x139/0x1c0
+Nov  5 15:42:41 e7 kernel: ? end_repeat_nmi+0x16/0x67
+Nov  5 15:42:41 e7 kernel: ? ext4_mb_good_group+0x60/0xf0
+Nov  5 15:42:41 e7 kernel: ? ext4_mb_good_group+0x60/0xf0
+Nov  5 15:42:41 e7 kernel: ? ext4_mb_good_group+0x60/0xf0
+Nov  5 15:42:41 e7 kernel: </NMI>
+Nov  5 15:42:41 e7 kernel: <TASK>
+Nov  5 15:42:41 e7 kernel: ext4_mb_find_good_group_avg_frag_lists+0x8e/0xe0
+Nov  5 15:42:41 e7 kernel: ext4_mb_regular_allocator+0x473/0xe00
+Nov  5 15:42:41 e7 kernel: ext4_mb_new_blocks+0xa74/0x11e0
+Nov  5 15:42:41 e7 kernel: ? ext4_find_extent+0x3c6/0x420
+Nov  5 15:42:41 e7 kernel: ext4_ext_map_blocks+0x5f8/0x1930
+Nov  5 15:42:41 e7 kernel: ? release_pages+0x177/0x510
+Nov  5 15:42:41 e7 kernel: ? filemap_get_folios_tag+0x1d0/0x200
+Nov  5 15:42:41 e7 kernel: ? __folio_batch_release+0x1f/0x60
+Nov  5 15:42:41 e7 kernel: ? mpage_prepare_extent_to_map+0x494/0x4d0
+Nov  5 15:42:41 e7 kernel: ext4_map_blocks+0x1ba/0x5f0
+Nov  5 15:42:41 e7 kernel: ext4_do_writepages+0x76a/0xc90
+Nov  5 15:42:41 e7 kernel: ext4_writepages+0xad/0x180
+Nov  5 15:42:41 e7 kernel: do_writepages+0xcf/0x1e0
+Nov  5 15:42:41 e7 kernel: __writeback_single_inode+0x3d/0x360
+Nov  5 15:42:41 e7 kernel: ? wbc_detach_inode+0x101/0x220
+Nov  5 15:42:41 e7 kernel: writeback_sb_inodes+0x1ed/0x4b0
+Nov  5 15:42:41 e7 kernel: __writeback_inodes_wb+0x4c/0xf0
+Nov  5 15:42:41 e7 kernel: wb_writeback+0x298/0x310
+Nov  5 15:42:41 e7 kernel: wb_workfn+0x35b/0x510
+Nov  5 15:42:41 e7 kernel: ? __schedule+0x3f6/0x14c0
+Nov  5 15:42:41 e7 kernel: process_one_work+0x1de/0x3f0
+Nov  5 15:42:41 e7 kernel: worker_thread+0x51/0x390
+Nov  5 15:42:41 e7 kernel: ? __pfx_worker_thread+0x10/0x10
+Nov  5 15:42:41 e7 kernel: kthread+0xe5/0x120
+Nov  5 15:42:41 e7 kernel: ? __pfx_kthread+0x10/0x10
+Nov  5 15:42:41 e7 kernel: ret_from_fork+0x31/0x50
+Nov  5 15:42:41 e7 kernel: ? __pfx_kthread+0x10/0x10
+Nov  5 15:42:41 e7 kernel: ret_from_fork_asm+0x1b/0x30
+Nov  5 15:42:41 e7 kernel: </TASK>
+
+# echo l > /proc/sysrq-trigger
+Nov  5 15:45:47 e7 kernel: sysrq: Show backtrace of all active CPUs
+Nov  5 15:45:47 e7 kernel: Sending NMI from CPU 3 to CPUs 0-2,4-7:
+Nov  5 15:45:47 e7 kernel: NMI backtrace for cpu 1
+Nov  5 15:45:47 e7 kernel: CPU: 1 PID: 4164147 Comm: kworker/u16:3 Not tainted 6.5.8-200.fc38.x86_64 #1
+Nov  5 15:45:47 e7 kernel: Hardware name: Gigabyte Technology Co., Ltd. Z390 UD/Z390 UD, BIOS F8 05/24/2019
+Nov  5 15:45:47 e7 kernel: Workqueue: writeback wb_workfn (flush-9:127)
+Nov  5 15:45:47 e7 kernel: RIP: 0010:ext4_get_group_info+0x47/0x70
+Nov  5 15:45:47 e7 kernel: Code: fd 53 8b 88 b0 00 00 00 89 f3 48 8b 40 38 41 d3 ec 48 83 e8 01 21 c3 e8 47 3c c9 ff 48 8b 85 80 03 00 00 48 8b 80 b8 02 00 00 <4a> 8b 2c e0 e8 b0 6a c9 ff 48 8b 44 dd 00 5b 5d 41 5c c3 cc cc cc
+Nov  5 15:45:47 e7 kernel: RSP: 0018:ffffb7be054ef680 EFLAGS: 00000202
+Nov  5 15:45:47 e7 kernel: RAX: ffff892f5cc30000 RBX: 0000000000000029 RCX: 0000000000000006
+Nov  5 15:45:47 e7 kernel: RDX: ffff893019445280 RSI: 00000000000012e9 RDI: ffff892f49711000
+Nov  5 15:45:47 e7 kernel: RBP: ffff892f49711000 R08: ffff892f49711000 R09: 0000000000000023
+Nov  5 15:45:47 e7 kernel: R10: 0000000000000000 R11: 0000000000000000 R12: 000000000000004b
+Nov  5 15:45:47 e7 kernel: R13: ffff892f486d31c8 R14: 0000000000000001 R15: ffff892f46d36730
+Nov  5 15:45:47 e7 kernel: FS:  0000000000000000(0000) GS:ffff8936de440000(0000) knlGS:0000000000000000
+Nov  5 15:45:47 e7 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+Nov  5 15:45:47 e7 kernel: CR2: 000055d6aaa70af8 CR3: 000000050f222003 CR4: 00000000003706e0
+Nov  5 15:45:47 e7 kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+Nov  5 15:45:47 e7 kernel: DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Nov  5 15:45:47 e7 kernel: Call Trace:
+Nov  5 15:45:47 e7 kernel: <NMI>
+Nov  5 15:45:47 e7 kernel: ? nmi_cpu_backtrace+0x99/0x110
+Nov  5 15:45:47 e7 kernel: ? nmi_cpu_backtrace_handler+0x11/0x20
+Nov  5 15:45:47 e7 kernel: ? nmi_handle+0x5e/0x150
+Nov  5 15:45:47 e7 kernel: ? default_do_nmi+0x40/0x100
+Nov  5 15:45:47 e7 kernel: ? exc_nmi+0x139/0x1c0
+Nov  5 15:45:47 e7 kernel: ? end_repeat_nmi+0x16/0x67
+Nov  5 15:45:47 e7 kernel: ? ext4_get_group_info+0x47/0x70
+Nov  5 15:45:47 e7 kernel: ? ext4_get_group_info+0x47/0x70
+Nov  5 15:45:47 e7 kernel: ? ext4_get_group_info+0x47/0x70
+Nov  5 15:45:47 e7 kernel: </NMI>
+Nov  5 15:45:47 e7 kernel: <TASK>
+Nov  5 15:45:47 e7 kernel: ext4_mb_good_group+0x29/0xf0
+Nov  5 15:45:47 e7 kernel: ext4_mb_find_good_group_avg_frag_lists+0x8e/0xe0
+Nov  5 15:45:47 e7 kernel: ext4_mb_regular_allocator+0xb74/0xe00
+Nov  5 15:45:47 e7 kernel: ext4_mb_new_blocks+0xa74/0x11e0
+Nov  5 15:45:47 e7 kernel: ? ext4_find_extent+0x3c6/0x420
+Nov  5 15:45:47 e7 kernel: ext4_ext_map_blocks+0x5f8/0x1930
+Nov  5 15:45:47 e7 kernel: ? release_pages+0x177/0x510
+Nov  5 15:45:47 e7 kernel: ? filemap_get_folios_tag+0x1d0/0x200
+Nov  5 15:45:47 e7 kernel: ? __folio_batch_release+0x1f/0x60
+Nov  5 15:45:47 e7 kernel: ? mpage_prepare_extent_to_map+0x494/0x4d0
+Nov  5 15:45:47 e7 kernel: ext4_map_blocks+0x1ba/0x5f0
+Nov  5 15:45:47 e7 kernel: ext4_do_writepages+0x76a/0xc90
+Nov  5 15:45:47 e7 kernel: ext4_writepages+0xad/0x180
+Nov  5 15:45:47 e7 kernel: do_writepages+0xcf/0x1e0
+Nov  5 15:45:47 e7 kernel: __writeback_single_inode+0x3d/0x360
+Nov  5 15:45:47 e7 kernel: ? wbc_detach_inode+0x101/0x220
+Nov  5 15:45:47 e7 kernel: writeback_sb_inodes+0x1ed/0x4b0
+Nov  5 15:45:47 e7 kernel: __writeback_inodes_wb+0x4c/0xf0
+Nov  5 15:45:47 e7 kernel: wb_writeback+0x298/0x310
+Nov  5 15:45:47 e7 kernel: wb_workfn+0x35b/0x510
+Nov  5 15:45:47 e7 kernel: ? __schedule+0x3f6/0x14c0
+Nov  5 15:45:47 e7 kernel: process_one_work+0x1de/0x3f0
+Nov  5 15:45:47 e7 kernel: worker_thread+0x51/0x390
+Nov  5 15:45:47 e7 kernel: ? __pfx_worker_thread+0x10/0x10
+Nov  5 15:45:47 e7 kernel: kthread+0xe5/0x120
+Nov  5 15:45:47 e7 kernel: ? __pfx_kthread+0x10/0x10
+Nov  5 15:45:47 e7 kernel: ret_from_fork+0x31/0x50
+Nov  5 15:45:47 e7 kernel: ? __pfx_kthread+0x10/0x10
+Nov  5 15:45:47 e7 kernel: ret_from_fork_asm+0x1b/0x30
+Nov  5 15:45:47 e7 kernel: </TASK>
+
+(*7)
+When the rsync ran the first time I did not see the kthread but decided a restart will clear the issue (I blamed rsyn).
+The system could not shutdown and a syseq 'b' was required.
+On restart the array was all spares. It was reassembled with
+	mdadm --assemble --force /dev/md127 /dev/sd{b,c,d,e,f,g}1
+and then a boot looked OK.
+
+Later, examining the logs I saw this message as the array was assembled:
+	2023-10-30T01:08:25+1100 kernel: md: requested-resync of RAID array md127
+I did not see a resync in mdstat after a restart.
+
+All of the tests in this report were done after these events.
 
 -- 
 Eyal at Home (eyal@eyal.emu.id.au)
-
