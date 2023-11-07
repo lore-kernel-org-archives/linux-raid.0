@@ -2,84 +2,79 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B64C4332F
-	for <linux-raid@archiver.kernel.org>; Tue,  7 Nov 2023 12:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D84F4C4332F
+	for <linux-raid@archiver.kernel.org>; Tue,  7 Nov 2023 15:23:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234676AbjKGMuD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 7 Nov 2023 07:50:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52938 "EHLO
+        id S235371AbjKGPXD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 7 Nov 2023 10:23:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233877AbjKGM2b (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Nov 2023 07:28:31 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36208262F5;
-        Tue,  7 Nov 2023 04:19:43 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA7E1C43391;
-        Tue,  7 Nov 2023 12:19:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699359569;
-        bh=g22D1Atd4dAcFgs25qXekSdfdiW5ufji0kSmh6Hwzlc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VrkICrvKa0rBzvlI9YGovDbtvD/R0oDNlXe1LcLnLTdg8iBuodrDk8e5/6cDmklW4
-         a/KRu0K3ER+aHfBao3yubAMU5f/Adzz8A3bwcXv1dsNnZjmGOV0cO4uVgY6JM8oeos
-         fGPyFdFGH0B60+nrVR3K77/dfAVW80h3XFjkvrQ+K9aPOH4CATY514hFrqa8MIGJOX
-         CPOWgC1Tr3abklRlMXbBhxEjBPmLfFPmtDd1RNGzOc1lG2JeLRUSNZCyprOjtW5ZX4
-         SN2TOdICAW2YfA29EOYY3rsRO8QJqdsgtls0ttiizfoF5qitIp3ocUlT7WhfSfT/5w
-         GN9JLN+F69fJg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 08/40] md: don't rely on 'mddev->pers' to be set in mddev_suspend()
-Date:   Tue,  7 Nov 2023 07:16:10 -0500
-Message-ID: <20231107121837.3759358-8-sashal@kernel.org>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231107121837.3759358-1-sashal@kernel.org>
-References: <20231107121837.3759358-1-sashal@kernel.org>
+        with ESMTP id S234253AbjKGPWw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Nov 2023 10:22:52 -0500
+Received: from mail-io1-xd2f.google.com (mail-io1-xd2f.google.com [IPv6:2607:f8b0:4864:20::d2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A2D2AD1F
+        for <linux-raid@vger.kernel.org>; Tue,  7 Nov 2023 07:14:14 -0800 (PST)
+Received: by mail-io1-xd2f.google.com with SMTP id ca18e2360f4ac-7a66bf80fa3so35942439f.0
+        for <linux-raid@vger.kernel.org>; Tue, 07 Nov 2023 07:14:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=brooks-nu.20230601.gappssmtp.com; s=20230601; t=1699370053; x=1699974853; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=q8zEAvmY6PIYXmSFL0Zu1zKnP7X4pyukIUQT0i8e7FU=;
+        b=BvVjbXMRvTLaL4kYXSbN1m4AIpsB5RaA1EdhsLfPusAQ6KgKZUho+/ukSKZc91OfXF
+         2xLhgU/XJfMgJ6ywWfYERUmjOJagqmj1XFmmdn/FEySbz+0rfEsd/7P0bzx5bVyPBz7F
+         aOz+chr3hN6W0IoGehhur/CRUixv8h3zKR10WuoPQJUy++xQ+Ncxt6aK/J/MqaLqSU9J
+         KM9spCvr6Hgal0/NBmSCJex+J5doFA52Pjt3ofZ6nM52/AzWdr7I9Z/xH7trhTPJzBhR
+         2IH140K1fgeKPZSVLwygXC+BTsQZ3CH2FDN73aY0A2Br1Z7m1vlNA2jUorcPv/XtTaMc
+         kuZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699370053; x=1699974853;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=q8zEAvmY6PIYXmSFL0Zu1zKnP7X4pyukIUQT0i8e7FU=;
+        b=jQibgqeYywwIbX1slth07sfyaoh2m3qBDI7R/rs4V6q8Xb14Vqrt3j37m2ns8MQxtV
+         Uli149nOgnHNGmfjqx89AtTFZkXe5KpdLvzjnFdagbLnLCHywVbHXCWHhBmVSDvCUCB5
+         tfRxZoQ8MfpXhekZWz24mQadLhZSmCZ7mxNAAXacQ/hhvkZMDLeEArqz4OKJKLPSwScK
+         +hcYd2VkABeJskjTnngFiKWwwzgOetqDCLhMJs2MTh9u9VIDzWIaaZTM4drC8QoCmZ9K
+         d19yrgPRZtO47izK/18ZotNeb1uiomWdsL7RPhpSkgG1DVu53QoKqoKPVT1yfUNUzCGV
+         7jcw==
+X-Gm-Message-State: AOJu0Yyvy+0Jvz2sNTZUe6KYJvWEM3dHLVwJ/HlW8n1hSkkqVz+nAWMj
+        w1etVWbePv/QkN8f+5HL5eBxEyhxcH05zQiIqPQUIKmldXJNCX5cIjS0lQ==
+X-Google-Smtp-Source: AGHT+IGBDkillloiTaunmYMxef5q/pDEEn0xjnFWIRvXiqAXblsHggyx1NGvq8U8vqbO01YL7SB0PaZn3e6ueYu842s=
+X-Received: by 2002:a5d:924a:0:b0:7a9:7aa9:c175 with SMTP id
+ e10-20020a5d924a000000b007a97aa9c175mr33979241iol.1.1699370053328; Tue, 07
+ Nov 2023 07:14:13 -0800 (PST)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6
-Content-Transfer-Encoding: 8bit
+From:   Lane Brooks <lane@brooks.nu>
+Date:   Tue, 7 Nov 2023 08:14:02 -0700
+Message-ID: <CAE1wYva7ArH+=okXPWBG7r7EYj-3_Ph3OM3OXHvGLEHOp+tK-A@mail.gmail.com>
+Subject: Issues restoring a degraded array
+To:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+I have a 14 drive RAID5 array with 1 spare. Each drive is a 2TB SSD.
+One of the drives failed. I replaced it, and while it was rebuilding,
+one of the original drives experienced some read errors and seems to
+have been marked bad. I have since cloned that drive (first using dd
+and the nddrescue), and it clones without any read errors. I think the
+read errors were coming from a faulty SATA cable.
 
-[ Upstream commit b721e7885eb242aa2459ee66bb42ceef1bcf0f0c ]
+But now when I run the 'mdadm --assemble --scan' command, I get:
+mdadm: failed to add /dev/sdi to /dev/md/0: Invalid argument
+mdadm: /dev/md/0 assembled from 12 drives and 1 spare - not enough to
+start the array while not clean - consider --force
+mdadm: No arrays foudn in config file or automatically
 
-'active_io' used to be initialized while the array is running, and
-'mddev->pers' is set while the array is running as well. Hence caller
-must hold 'reconfig_mutex' and guarantee 'mddev->pers' is set before
-calling mddev_suspend().
+The sdi drive is the cloned drive. My googling for the "Invalid
+argument" error have come up dry. Both the original and the cloned
+drive give the same error.
 
-Now that 'active_io' is initialized when mddev is allocated, such
-restriction doesn't exist anymore. In the meantime, follow up patches
-will refactor mddev_suspend(), hence add checking for 'mddev->pers' to
-prevent null-ptr-deref.
+If I try the --force, I get the same Invalid argument error but also a
+'not enough operational devices (2/14 failed).
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Signed-off-by: Song Liu <song@kernel.org>
-Link: https://lore.kernel.org/r/20230825030956.1527023-4-yukuai1@huaweicloud.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/md/md.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Any suggestions on how to recover from this situation?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index a104a025084dc..9247e55c7eafc 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -449,7 +449,7 @@ void mddev_suspend(struct mddev *mddev)
- 	set_bit(MD_ALLOW_SB_UPDATE, &mddev->flags);
- 	percpu_ref_kill(&mddev->active_io);
- 
--	if (mddev->pers->prepare_suspend)
-+	if (mddev->pers && mddev->pers->prepare_suspend)
- 		mddev->pers->prepare_suspend(mddev);
- 
- 	wait_event(mddev->sb_wait, percpu_ref_is_zero(&mddev->active_io));
--- 
-2.42.0
-
+Lane
