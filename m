@@ -2,181 +2,225 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97239C4332F
-	for <linux-raid@archiver.kernel.org>; Tue,  7 Nov 2023 21:12:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D596C4332F
+	for <linux-raid@archiver.kernel.org>; Tue,  7 Nov 2023 21:24:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234062AbjKGVMW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 7 Nov 2023 16:12:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43252 "EHLO
+        id S234720AbjKGVYl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 7 Nov 2023 16:24:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343770AbjKGVMV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Nov 2023 16:12:21 -0500
+        with ESMTP id S234348AbjKGVYj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Nov 2023 16:24:39 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69DD41994
-        for <linux-raid@vger.kernel.org>; Tue,  7 Nov 2023 13:12:19 -0800 (PST)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A7GeSkL023606;
-        Tue, 7 Nov 2023 21:12:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-03-30;
- bh=Q0Cn29Kt7Jv2kzFLHAgfBRIxWErlimu0O42SwxAdo/Q=;
- b=hhR+QfU5D73TWejkFjfIZlpoTsopZ0/Fw+yHUeUgPAbaZ7nyHKNT5+r7nGvGXWxjFby6
- PS/p/ogi6ZjGkVu6ddDZShMcy2Abvf1FirigYKmUdSR46n19PdR1gRc4+XP5ikyonjsW
- 5N1UJb05Yg1LIN4eUfFSDN/8eFTlKz2NjTqRoiZhM+Pn2jc3UHOUI8xgEzKh2P15Au1/
- 66hcncwvBsvcAp4XHw0pgAE4dBTkrMEvaEksxl4djAc5oTfLvAIv604peV0o/Pi8JIXT
- k8MRl+tDgnqQmtDMN21mdxaN0OC7pH7XNmTbZaRKAgKrpDhAtnWrY5yvNojEdl4Uhek0 Ng== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3u679tnxn5-1
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCCDFD79
+        for <linux-raid@vger.kernel.org>; Tue,  7 Nov 2023 13:24:37 -0800 (PST)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A7LJxD6022783;
+        Tue, 7 Nov 2023 21:24:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references :
+ content-transfer-encoding : content-type : mime-version;
+ s=corp-2023-03-30; bh=1kvZZe3+PECc/UyF/1LkSORsjNredWh8+SfnQRhmzFI=;
+ b=2sfmgCMWU9KsjZLRoRVS2Q7GBKhlAOLX16sHucYFgfOfBzkjad6yqKT8cqEcl1Ccq6Fe
+ 3VALGf3YesJBmOPekfIY/ooN/S7CLZv043v6Dj3Ccsr/p107FdTrhfYodVJq7sQ7uiGs
+ 5K+YnSpNJ2uevXPpQC5EuCJh10+bzjhqNjnx75JoZAnAiQGcEx6z6C2rGZhmt8J7HqSw
+ X9UXgTqApY4lsd23bd+/PzV/zPWMHizXGuPV0T1yEZOCPVbQ4zTeCwK/iNW8IlOD/bCJ
+ aeg2gwlK7T4wzmMJoOgTDr4Zu0uHw+782/qzjv9MN71DrTK17EzcxWApDCT+o6QxHqmv lA== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3u7w20007c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 07 Nov 2023 21:12:00 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3A7KsCg4002327;
-        Tue, 7 Nov 2023 21:11:59 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2101.outbound.protection.outlook.com [104.47.55.101])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3u5cdek4n9-1
+        Tue, 07 Nov 2023 21:24:24 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3A7LIo9T000483;
+        Tue, 7 Nov 2023 21:24:23 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2100.outbound.protection.outlook.com [104.47.58.100])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3u7w1v86tx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 07 Nov 2023 21:11:59 +0000
+        Tue, 07 Nov 2023 21:24:23 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kG0hldQKg5TJqNUMklJ5oPDQTMlhJs11DPry4th97MeFe6BdFVOuW9a7DPYzEugZU4De8kPDQ13lsARj8qr6NckyBrqKw+unW/LsLX7mn6kaus4mtoH1WJBlcLvJyuOyx+vBf65mjtbvhdziR/e0Fd+8LbYw7Nlt/vlghhxBJi+q1GXZQQBUMtNTzIj3BTC3ySjRbUuOm70NSQfbva5unZtn/aR8wUyfHIvHybIxX3szw5JALnuidHc8ljaeO4YuBj+Wae7D7NcP8zGDh1lEOAaoAei0s0ZgcYGRzAUuUQq0C7J/Ur2yxNsot4R4wOzio+3VL2Llz3ezW0WjAmA0ew==
+ b=Ax03AMhQz6s5DOXbBs8WTcF5p3CiouGxUwXlZA2TihAQoCmWatueSLQOH1Ky/R2iSXEKhz4zl2El9s64CDNS/Ny3pbRFLMKmkw0M/QKfnmkvzrobm3fdqRBjn1AyQFx3s4JULcK+xVyAEmh5xDisvOC3p14GKqHGBGTcDCRRJ01mKHRH/GYU1TRdorIkdWRhHxzaO7hn+HQBgFvzSjPWBss72q6SpOKHhjbkTpe50ERvCay/fWxH8JfwR8sIlo6F8zcoxD5mIl3wrV7qbwCr+Z6aM/kWZXIhhnCs9lTecUR1Q5solMnbtZHFnaEJvcMimxEKO1Qw7QmsT9BwQLPQXA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Q0Cn29Kt7Jv2kzFLHAgfBRIxWErlimu0O42SwxAdo/Q=;
- b=ciKaFaMbh/KJzRKNBUdXlVWbEF6sJ2kCoCS5jn1bNXg13zFfBXMCXngMUURp2wZACncPwKn41lulBBGhuF/V4Y8UoxhZ3dro7sNv5dR5KKJgVPDJRVlN2mKXA3VperZmVQeh4U4GgRyp7V3K0yh98tlQvDLeWxYooYVm1bXMg39a5tdMIhQpz69LjgugetuBNUgJpCrgLTeJ4RXlJHteoLh0OYZDCRvdSs5W7yoq64jzjnZYAGBdZ51UhMzzsY8U3PfNQtjNGq6cQWdhrM1C6nLwNebSdZ4mbuC3ok/JkbEEMvbFDjzxzQlP2+HGhBXJ3O3lhmUxERawlp9BgKRdbQ==
+ bh=1kvZZe3+PECc/UyF/1LkSORsjNredWh8+SfnQRhmzFI=;
+ b=e2D7TBpjvPKbNfEyjHGCtRaTPXowqWjz5zmmRIOKLC03m9MiKK/ph1VAmrUZlSR7fPKrPCrjjKs+VN0TJTVyBNe2as3Ew6HlGxFqXdj1RcitAkKthUv1gTxtZVa+rUqDCHz8plCd9gTsRHjuiTL/V0UNlGKPam6Daumpcqg2HQIgNjYglVWy0XjeLShm0HyQ8RJFFv+zgDazIaMz/b6QQgn/om1YYP7yc0/RKDIsT5LC1kTHCVJLXPFaEN6sL0P56WV0WwCyCniv0gf7p20c+BEI9C3pW94U27g+QWs5Inn+bU9QDje1GaNpAIlehNzncY2FvIFg2dEIu0g7+NETxQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q0Cn29Kt7Jv2kzFLHAgfBRIxWErlimu0O42SwxAdo/Q=;
- b=ZaoL2N7dYsjBSy4Vn4DY+Gq7hdQIclsaqFmtFv5Uhb+z6B6QYQGMfLhg3mueW2fos4LjMYsgB+Xh/88eFZQmQqXb5dI21psG9B2DuN+4+XF23HDwZOGmdM00ovrieTP7Tp9MIGWD+U3Kb02uDRpOvYPaHkORYxbAYX8Nm0FA3D0=
+ bh=1kvZZe3+PECc/UyF/1LkSORsjNredWh8+SfnQRhmzFI=;
+ b=QnKmHGlr0Q1ZHwXDE/qmgLAkVB3fHUbep5gLu4a9FD0PDOw1n7odIbm+Vqixq9nqud0Wce4Te9aWXnqmM/9JFU5ZRH0nAufdpSYyoX6/P5Rixt6hsbr7ZpD6bsvrcCDvYKd37tB4QlQKcQ6ZQ2ZsSwM9kz5VeKae9wWZ62ob+XM=
 Received: from SJ0PR10MB4752.namprd10.prod.outlook.com (2603:10b6:a03:2d7::19)
- by DS7PR10MB7226.namprd10.prod.outlook.com (2603:10b6:8:ed::6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6954.28; Tue, 7 Nov 2023 21:11:56 +0000
+ by SA1PR10MB6366.namprd10.prod.outlook.com (2603:10b6:806:256::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6954.28; Tue, 7 Nov
+ 2023 21:24:21 +0000
 Received: from SJ0PR10MB4752.namprd10.prod.outlook.com
  ([fe80::915a:381e:a853:cf7f]) by SJ0PR10MB4752.namprd10.prod.outlook.com
  ([fe80::915a:381e:a853:cf7f%3]) with mapi id 15.20.6954.028; Tue, 7 Nov 2023
- 21:11:56 +0000
-Message-ID: <36fb534d-dac7-4480-94a5-976bcd58ec59@oracle.com>
-Date:   Tue, 7 Nov 2023 13:11:54 -0800
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] md: bypass block throttle for superblock update
-Content-Language: en-US
-To:     Logan Gunthorpe <logang@deltatee.com>, linux-raid@vger.kernel.org
-Cc:     song@kernel.org, yukuai1@huaweicloud.com
-References: <20231107175736.47522-1-junxiao.bi@oracle.com>
- <20231107175736.47522-2-junxiao.bi@oracle.com>
- <9b95971b-ac76-46d4-83b8-aa1f67c6c0c9@deltatee.com>
-From:   junxiao.bi@oracle.com
-In-Reply-To: <9b95971b-ac76-46d4-83b8-aa1f67c6c0c9@deltatee.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR03CA0061.namprd03.prod.outlook.com
- (2603:10b6:a03:331::6) To SJ0PR10MB4752.namprd10.prod.outlook.com
+ 21:24:21 +0000
+From:   Junxiao Bi <junxiao.bi@oracle.com>
+To:     linux-raid@vger.kernel.org
+Cc:     song@kernel.org, logang@deltatee.com, yukuai1@huaweicloud.com,
+        junxiao.bi@oracle.com
+Subject: [PATCH V2 2/2] Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d"
+Date:   Tue,  7 Nov 2023 13:24:12 -0800
+Message-Id: <20231107212412.51470-2-junxiao.bi@oracle.com>
+X-Mailer: git-send-email 2.39.3 (Apple Git-145)
+In-Reply-To: <20231107212412.51470-1-junxiao.bi@oracle.com>
+References: <20231107212412.51470-1-junxiao.bi@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0P220CA0021.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:a03:41b::8) To SJ0PR10MB4752.namprd10.prod.outlook.com
  (2603:10b6:a03:2d7::19)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ0PR10MB4752:EE_|DS7PR10MB7226:EE_
-X-MS-Office365-Filtering-Correlation-Id: f27ab1af-ca4e-4237-c1d3-08dbdfd62c6d
+X-MS-TrafficTypeDiagnostic: SJ0PR10MB4752:EE_|SA1PR10MB6366:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2a86237d-fb2d-44ea-aea3-08dbdfd7e868
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 5ch2r0DbN2DVg1e18nfQrU0sqyBGZlH04QR5lF1yawPRx2NRRcnU9ajEbuq6jgwHX3818mz2OORLVwJCkdgAmaDLfZtgl6DPsyBAvj3QnO1IPhl82+sTLCZonQECiTTJAin6NH3/IwXVfJsz3TeTxxG0Q0jJA+vWgNQ/PNDVsShVzyBt5cdR6Z2N47G7vtqi8yi7w9WTj4ul/5qIvirITHmErrfxem3wNGXgT8ODMitm/bVFWZDtjDIzaGIMkP3gayDK+VU+exnYPQTT7U+p+xBMst6+gHYV3gXNL1wzss4xz/slx8w8tJKKCYl8LLBc2zG8itmdr5eic85AxQsP7bvMLgJcmx8GnP0/9l7846at2y+bxVcNqWKq16K6TACKiE0wE8ftr7Y5CtqBtIshTd2sLmddfVYCtOS40Zs6lR7ZECT1exGmiPrsRvCxb5qeB8TWcLqodzGKAeJMMPAMjF7T9ul3KAXyH+PZUTtVTxsT35NcA5Z0j3ZdbDWQ8258voUY+El5vwzIi7B8/9dXR/f96urAguvdWFuVl/GqVv71Iz5DXaQ3+xLPsuRct0Fi3AMS7LNAb6V/l+F/8+0Oi4mM8m611nzerxxKHQ+WSJaCW0o/5jpKHfMUlmYYDTvB
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4752.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(39860400002)(396003)(136003)(346002)(376002)(230922051799003)(64100799003)(451199024)(186009)(1800799009)(31686004)(2616005)(26005)(53546011)(41300700001)(6506007)(9686003)(6512007)(38100700002)(86362001)(31696002)(5660300002)(6486002)(2906002)(4326008)(83380400001)(8676002)(8936002)(478600001)(66556008)(36756003)(316002)(66946007)(66476007)(43740500002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: xNaTgrqua2eULvL1a9yk7iEd+5+we5Bf11ZdLf6LpTaDMGyyI4wcOLqR/bJ4JvBuzgFMCBCmcsReySbdjPZiw8dKxIViDE1LKvzuCoXJhWSLIidfOryFInwbdRtoo3yHgBIhyt1Z0bTk6Jri0DMC3UzHslZeluWft5c2YeuzinU/wPyBf4oLcG6sBfyEZC2YD6mfHe6whYJzf/9J1PTvPSZOPjdGXvs8G96YioPGfmO9f3U7bc5vEI49JOsp/W/GfUX4qwvk4JBS9rTcvqTXH5VIrO/Nyf1X2ZK8kq5hiklv210wR4jd+fdn/Cl3fryOAg4I4B7mHEe+hIXo4y5HbZmf2XqTc9j/1OFh866dW53Cxa4yROpGgd5SPHS4zmzBjk1fEcgB5wdolymLmBrUNysMoMjiV25FySX7LUV71o68++RXbyLSdTmPwdvwrreed/3C2J0KHc99PhEpTXS/FlNb0wTcR+yANnjVpUoIJn56wUNQks/lhWD49k5c1xKEO016Q+aI96jJ6fKVA+SwwNRIwzhzGf49jh68+hdS3Sc3PTDVlTdn01/izyyWMme7ZLeVzRB7Bu8CHGFe3nJZYtDf4i1crrBvrVTxQ21iwBM=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4752.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(39860400002)(396003)(346002)(376002)(366004)(230922051799003)(1800799009)(451199024)(64100799003)(186009)(2906002)(5660300002)(86362001)(8936002)(316002)(6916009)(66946007)(66556008)(66476007)(4326008)(44832011)(8676002)(36756003)(41300700001)(1076003)(26005)(107886003)(2616005)(83380400001)(6666004)(6512007)(6506007)(38100700002)(478600001)(6486002)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?WU1DMERLYWVCN25qRDVRU0FleE5udStZK3UzNzZVcXJCTjhsY0RyNi9GeHo1?=
- =?utf-8?B?L0l6dXBwWENsREZ6UWw4ZDUybkdNNVQ2b05GZGtFNERUSXFBTWZZQ21ua1dO?=
- =?utf-8?B?TW5PSVVnN0ZxcE15N1EybXJMK0JCTFZWbXd1ejZjaHZKWmtyejEreGRvVDMw?=
- =?utf-8?B?UmhkSkFlN0xhQ1hoQ2NWRERwbmNUMWNpM0lXZXVFUHIxenlPNzFNcENaTldG?=
- =?utf-8?B?N3JOZjd4VWczS2I4ZHp6bkNVN05lVnBWTThhbm1LcXZOWnVFbFNZWlJaZE85?=
- =?utf-8?B?Yk84d1BVK1Q4Y0tZaGxBNC9aTDcyQnYwbW44VG1GK3dQcnpvTHBvOFpqUCsv?=
- =?utf-8?B?KzU0c211K0cyL2wyVTdNM3lYMzMxZUg4VlhrSStsdWgzbHhWNFBldnNrQTRp?=
- =?utf-8?B?aks5NW1DOEkwYlVTRWNhd3dkMkRKRDljZWg2c1pESDlodHFPcjJQb1FtWkpM?=
- =?utf-8?B?SE1MYnUxVWdOMVFqVjR0VGh4ZUJJL1h0WVBURHJUL001dEJ1NzlCeXZUK1Zt?=
- =?utf-8?B?MU5XaXBBUW12TEx2dDduUlY0T0w4MEtPeXlJbUxaREZJK3oreDJ5cVd2NGlS?=
- =?utf-8?B?cDNhUzg3VDhYTlp6S3NCVXIrekxMblFhNjJHbXhka1ZwWU1NR085RHlGc3I1?=
- =?utf-8?B?TjZ2d2VPK3hyVHcza1NnSjFhQmlFMGJRc2gxcFFEYi9KdFJqaE5EcW0zaERG?=
- =?utf-8?B?bUx0T2k5dDlubkhEbWs2Y1J3Q2tieVJWSm5ZMFE3WjAydXVLR1JiMFJ6cXNN?=
- =?utf-8?B?aTQwOE9zdmV1L2o0RFpGU2wxdWdQa2liMkhISjJkVlk2U3lSdU5Jc2lLZzEz?=
- =?utf-8?B?RW5ER1lwalEvay9IRUhUV082YTBEUXFPbmwybnBUd0o0NEZ5TFRraE9JOXRB?=
- =?utf-8?B?aUVWS3JpRzZibzBsMkZaei95OTFJTmxmY0V0VDdDeXVjNTZEaVY4b2dXOGpN?=
- =?utf-8?B?TnY0YlFaK2swWkVScjNMTFJiZGNIS3dxWlBBWFFVYjRMcGUrd1kzWDhIbGls?=
- =?utf-8?B?L21mSVZXcFFNbTV3OEZ1RjkzYkVqL2tRSkJ2K0cyeGNXVm1DVmIxVW5paWhJ?=
- =?utf-8?B?YlBHWGJKaGpVcDNhTGFuN2lGZ2ZJZFhkN2tRbUlXd2NhUnduN2NvcWJ4VVBz?=
- =?utf-8?B?UjVCYVpCQnJoZ1d6Uk1qRGtrNXI1OHAwclptZ3BCTk12YTgvVDRFNXczcDIw?=
- =?utf-8?B?eDg3ZGtVQStHMGZmOVdScm9pUnc0UVBYbmRJRXAwVXh1V051ODJIMUdocDhI?=
- =?utf-8?B?OURmMjA4dWpvbmIydjd6a0R3d3JlVTNtTWw4L0UwYWhTdUhGMTh6a1dBVUtm?=
- =?utf-8?B?WnI4SzUrZzc1Um1MeDdxckJyMFNFMlFadnordEF1SmQvdE5PdlkraVpDTHcy?=
- =?utf-8?B?VlE2dG8zcDd0VWFpeEFaS1ozWi9wMDZscUM5cVI3NDQzNGZOVkNaRHZtb01X?=
- =?utf-8?B?UERrTHFKZ3N0Y3pyTVJES2wrb2hrQ3FYenE4NGU1TWZpQXJObU1Sdi9laCtQ?=
- =?utf-8?B?USt3ZndWRC9xYUtZYWY5eCtVS1FmWHJiRzFtbjY1UFNPUDFubUFLWEN1bDdl?=
- =?utf-8?B?QlhnQWRsMDNlNzZZczcwaG1YYlQwaTdjYTA1UXl1MGZ6K1ozaTJhY3pZTEQ3?=
- =?utf-8?B?NGRCTkFDeHRhaTlrV0k0bjdVNFhoMEN5N2hGeGZKYlQrRXJhQUk2eEJwdVRC?=
- =?utf-8?B?QXBmZGhVWWpMdjRWODFpSld6WFJ1Qlp3TnpVdXgza2VtaHY4M0FOVE9xYWVl?=
- =?utf-8?B?RGVmSWdzMVVVWEg5R014RWU4TnMyZGFLdE5ZVzlDYy9QNkt1OUcvMnNDaTNZ?=
- =?utf-8?B?MitDeFlMSXVSdmhQVVdVazFsSmpXRWhOMnVpR2wyTXkybGRldmREY3NvSjRX?=
- =?utf-8?B?TzA2cFl2YW90cDBibXFRM1lGclJBa2Rxc1pVK1RnNlJwRWZBZmJMZTN4N2Z4?=
- =?utf-8?B?WUtIM2kzTEhLRVdKU01kYlhKeExYNGRJVEhOdVRtK3JuQklKdVM1QUhZeFBs?=
- =?utf-8?B?eG13RVpRcm1SL3VaMDF1RzVCWXB5UWlTQndlUFdzMW1uUHgxRjlOajVUWHBQ?=
- =?utf-8?B?cXJhQ3VOTE5Eei80U08xMnEyOFhuVVBnMzRtVzgrVC9wYTVUc3R5bHNJbDlV?=
- =?utf-8?Q?uQUit4kTGdhpirONBG8ar00Fp?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?6rxgpN9/+R/yJCiawKXS9HjhzxeyWbR4fiMRFm2sQUgkR1hTYl56VTpiFQI7?=
+ =?us-ascii?Q?jSYlrZOCjZGeSML7f3OrtPyKRwoOUWeytuJfFsfFOcGyTzFaqQYdtaUF+jWg?=
+ =?us-ascii?Q?SZvbriaF2awSS2QgpyBS/j5qME0kQrfzC0YX5h+wd7ZKkZhDCLAqyPo6FlFO?=
+ =?us-ascii?Q?76cqY1thOAPL2LGo/ML91SYtWO9VBjxGRRkw883m4F86m1Pw1hRkPYc/sSf4?=
+ =?us-ascii?Q?4s9yBYLYFFYyi9k5l/ggwH6Eq8Ay2Gp5+hAhf55cKHm9znYucoFWev0iKYSh?=
+ =?us-ascii?Q?Rt21jFF2NbDCyPkP+bu/QTA88dYscQ8nGvdbWc9V+SpeDGGdBJHIVVlCFgnQ?=
+ =?us-ascii?Q?25nEJ2RUMnSDjCZAL/OAbiThF9PtQZjBlcPLAVQNI8SfDzQsH+o+kNLktRwM?=
+ =?us-ascii?Q?ihlEKivREUc6B+UC4409axJs/auvtCZNSJC5BFusMdHqdAdFO0aBH+a3KvLd?=
+ =?us-ascii?Q?S41ahhJvXgYu32VU776YB7ol/YlpAuTpuWs9QE/WRNhje1UjPk/okd1W6lw8?=
+ =?us-ascii?Q?B4/C5PHZcs6J0ODfsbTpk6PTa1Wxq4sAvUrvYoLh5WFLhXGO4ICiOLyBfbvs?=
+ =?us-ascii?Q?HITIjXOXin6dXlccOYM7YXz9eHTrfqHCC9ZWExXAHhXj65wlIsXPfmBQhiOx?=
+ =?us-ascii?Q?C7r+UxgK4K3RtPNqDCkCTcVyrFLWUNUoG98IcttPoFrJ7h7Rm57oik5cmZQS?=
+ =?us-ascii?Q?jTnZ9O66zO1ZzPqSocgZFOEmQYgqm5vfnHdNh0RG9n+i+hB7DHCPC2BjPAyS?=
+ =?us-ascii?Q?E7DMW4FthSzl+J1G252O8AbspI29DVbWjwyxXWBVIYtO5cejnKQaX95A0m6Q?=
+ =?us-ascii?Q?3u/3gJj9pJDnJgxI6jrvDMbsSdZZnicaHWG8xgXnyesKyQTwToOFWoAPgElW?=
+ =?us-ascii?Q?ONDHmdHSZVZdl+LP3t0urPT2zDenq5TJwtV9cAjza5H47VnbNneZT20mB2tV?=
+ =?us-ascii?Q?1yNGgWFIUmEbOqgyvuAupRx5TL7M0BmaqPcjlvb03RWc2bFdqVn0osk+bLkq?=
+ =?us-ascii?Q?lSfyZaoJRmqEkKyB53ZWph4m2qsqS32uHXmJ9OpX32xuGz+8JfrWiYZSNMQz?=
+ =?us-ascii?Q?gRlgnG7syV78Z3Iij/1WSH1qZhZfhXqUBujHCbQLJbwg2A7op5guvvqiKLhK?=
+ =?us-ascii?Q?xvLnGtz9FoadTkWefSHTW35j5RPGK1lTI9OO3ta4SRca7D4s8NzkgRnY2Q+6?=
+ =?us-ascii?Q?QShOpeeV+W1oquZa2vF2u1uT1QDqaEUGhpQkpU2TXCUw9Ms/pvVuR9k3b/IP?=
+ =?us-ascii?Q?mXTqJQMyPUApTGtnZNV3i/Z8a4AzNK0LoSmE/GlBvGxwpfqw+kQXCiu6CKkA?=
+ =?us-ascii?Q?ndaIAKCm7b5R1I2NOQF0s4H0w5VLhtmOpo7N2NAjnNIFqQ6ijdBi+IxxmmD3?=
+ =?us-ascii?Q?F5Rth80jISaMWeW1DHHgG6QXK4CyFDJ0Jws8ENMrMaP/jYhaMflh9ZAmIhgZ?=
+ =?us-ascii?Q?4CrjSq5KFzy4a7TU0bFQlnzawkl0jtKEfFykO+2JeYeZ0wREtBx2Z10oorxv?=
+ =?us-ascii?Q?d5ROZYAKbKwzloDkpG81wxXdoj3LtBeOqfvnfvPA6zcauPrGlx6bkocNRi8X?=
+ =?us-ascii?Q?niSbVWw861nJ8yuZV7PPpcx16l86OtcXQ2Bu5LN3?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: UTLD+QBsSLqAtzoOc662L52W8QBg7QEx5PvRfAW85nXwGKQtXjN74TR3oGM/hdytQsm5MSR55up1B665OJP36jplQQkFjmgTFhZUuv/KH3QEv/2fDrENY5WhgfFi7FVFrvpnXEG/dZIZNMF8tWyfN2h+7skwt/QbsWiYBFcnPzs+TZ8sfIMwTVrJxqC8FKX5QKX8ZLGoLBSSSEOZig/+Cy2X8PpR26VkSeDaP+4WUnu8IFp4qMjyXJ+eT+dK0dd/3Em5EDePXj8YXQiOOUQsynmtaiPywWBi8ppy6xHtHv9Wv4doI2P9t3Oygi2/BVyM8pFswhnlV/Q+7/Kp0MF/pzhDTAhGmg1duJ+/kpIE8fhW8eHzugiiyGBU45AKCyQoupiwWvP1FeONzw+MDFm+SLUVfDG4XYF95iQByj5VxJPp4DPHgGxfREc4BOXmkh6lgSBCYh4k1E4kbYd5T0ThpIVObZohMRMCGSWo5IcNGODYn+cszuEfVBPbmOMJ13klXx5Jb+FD4kGCye68PifcjFP2ASa+iQ6PU0baCIF0ON0kqjkvbcdnhQt9gAKxelj+8MegH6oMGKHwzgBNNdk0HZPjjhKSJLmKXssIpb6gZb5K7yI5spukrfk4qAcJJHAXX3HuPnj/VaQzS3HTXnDYWR91A73MjndQ3VEbwCKBZTpf7U+qX4yNlmpcxcwIBOdAB8/aFkiACCdPjSCSHoKVQuRedashdoMrskj6UOvWlFaz7N00TQ0K0u2nVeP1pkAJblqOScGzAlyqSbFdyw/3Egw0klA6pTOx8wLdD74zrN74F1q1IAZlH5eIUv5B0LEW0iasWLB9BkBJXiI6H1YV4P9BE2fMGCnyv+ewyoz1H6ioUoS2ufVp5TxpFueae5Ba
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 8cO7OEPaFPpIk7jTB109rgcHrQ/evsgFABiiGRZFX/0q7FiScUEY5piP5hYji3B4dikyafFZ7EhMDeprBW3crJkHg8F5HfcxCeFNOoG2ws09PNUreZbFqp1032mBcbkka47ILIdiyTlzKzT9HoRJJhxcCThi9xm02kKtNv3Dis4sGJK5x4waV9tc2TD32nBhDnhM9Kl9+PUFs7YARW9WLtuyr6O6wb12gGgHcnr9bYLTL0S2oFnrd+b6e9A1anFXDh/fPbGKXHn/hzqnzYOTFNEb7wZW8tykdva9x0T/QufTTOVLbAVtDWu6JnfA9qLL4w/6VPbJc5/qjij+oCjeu+RyOhYT07aWVqGYSTbPpbECX0BaJrJtA1pHajKsQrLth4Pok1yKIUts7f41vseD/utIyH4+EPSi7RI7oDqcHsEAFwTZAVubrwTux1wbVvvGmdOwxV6V5Cpn/GAPFYXL2aLciLBW+AWiis+wSfiiS16cqIV/Qlv+uY47Q+RYviZGzfRP4hMIIsMYlYkX57iyPkyrZbwDx5sv0EKacgEoumimRUszK4wnirTjGI7MvEqInTjKE4A74mpHR7EPGayGz341vw+H/a1+MfxP55BI3PHhpvJgKVxTqWBGWttvCe7aO+krdU2n0A5Xy6BSOe5Lhu5jU/I8419I4Gwsh7S5TL4ueMy55oQKvr286k4RvvI/jc+5c9j6AwV+dLeuQ/zgvdiRNlKkEU4NL/JNcWj2YbvrHvK/cEbRIa3XIYZcML2X+MkGXa2oBTaAlWJJIeRaH3o6Qffj+Ct14+OeS8AedUysDE25oBK9piVBTpRfQzfswYOAIpux1msWLQHjRT++Xu2NkbxDOWb3h2s+MXewTapSgpjsenP/qKTo4i6OF5+Q
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f27ab1af-ca4e-4237-c1d3-08dbdfd62c6d
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2a86237d-fb2d-44ea-aea3-08dbdfd7e868
 X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4752.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Nov 2023 21:11:56.6038
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Nov 2023 21:24:21.4983
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: mqp5Zhn2USB/LrFwCOeTTIC6yvh2r4RMHPRnoboeY5KhaOYswkw6LqVt7M+WJ5MUwbdPqU3J9moG+3GClT/yEg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB7226
+X-MS-Exchange-CrossTenant-UserPrincipalName: O6xDKvmHphtUL7vLsn5GA9jgGd1lY4Z0DoZU/qpIqA2UH+OB+jpN7TYPGfi2WaxLYrL2rTsXo+i8sH8aal/X7Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB6366
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-11-07_13,2023-11-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 spamscore=0 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2310240000
- definitions=main-2311070175
-X-Proofpoint-ORIG-GUID: 9fo0CiWt-UveLiHxBEQVDg38b44oBepl
-X-Proofpoint-GUID: 9fo0CiWt-UveLiHxBEQVDg38b44oBepl
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
+ suspectscore=0 adultscore=0 bulkscore=0 mlxlogscore=999 phishscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311070177
+X-Proofpoint-ORIG-GUID: MzSjj2qMhrb6vjYrgEuQcdtZ58XPtkpN
+X-Proofpoint-GUID: MzSjj2qMhrb6vjYrgEuQcdtZ58XPtkpN
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 11/7/23 11:33 AM, Logan Gunthorpe wrote:
+This reverts commit 5e2cf333b7bd5d3e62595a44d598a254c697cd74.
 
->
-> On 2023-11-07 10:57, Junxiao Bi wrote:
->> commit 5e2cf333b7bd ("md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d")
->> introduced a hung bug and got reverted in last patch, since the issue
->> that commit is fixing is due to md superblock write is throttled by wbt,
->> to fix it, we can have superblock write bypass block layer throttle.
->>
->> Fixes: 5e2cf333b7bd ("md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d")
->> Suggested-by: Yu Kuai <yukuai1@huaweicloud.com>
->> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
-> This makes sense to me. However, I haven't looked at that bug in a long
-> time though and I haven't tested the proposed solution to ensure the bug
-> is indeed fixed.
->
-> Would it not make sense to have the fixing commit first before the
-> revert? So there isn't a spot in the history with a known bug?
+That commit introduced the following race and can cause system hung.
 
-Yea, that makes sense.
+ md_write_start:                                                                        raid5d:
+ if (mddev->safemode == 1)
+     mddev->safemode = 0;
+ /* sync_checkers is always 0 when writes_pending is in per-cpu mode */
+ if (mddev->in_sync || mddev->sync_checkers) {
+     spin_lock(&mddev->lock);
+     if (mddev->in_sync) {
+         mddev->in_sync = 0;
+         set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+         set_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
+                                                                                        >>> running before md_write_start wake up it
+                                                                                        if (mddev->sb_flags & ~(1 << MD_SB_CHANGE_PENDING)) {
+                                                                                              spin_unlock_irq(&conf->device_lock);
+                                                                                              md_check_recovery(mddev);
+                                                                                              spin_lock_irq(&conf->device_lock);
 
-Thanks for the review.
+                                                                                              /*
+                                                                                               * Waiting on MD_SB_CHANGE_PENDING below may deadlock
+                                                                                               * seeing md_check_recovery() is needed to clear
+                                                                                               * the flag when using mdmon.
+                                                                                               */
+                                                                                              continue;
+                                                                                         }
 
->
-> Besides that,
->
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
->
-> Thanks!
->
-> Logan
+                                                                                         wait_event_lock_irq(mddev->sb_wait,     >>>>>>>>>>> hung
+                                                                                             !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags),
+                                                                                             conf->device_lock);
+         md_wakeup_thread(mddev->thread);
+         did_change = 1;
+     }
+     spin_unlock(&mddev->lock);
+ }
+
+ ...
+
+ wait_event(mddev->sb_wait,    >>>>>>>>>> hung
+    !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
+    mddev->suspended);
+
+The issue that reverted commit is fixing is fixed by last patch in a new way.
+
+Fixes: 5e2cf333b7bd ("md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d")
+Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
+---
+ drivers/md/raid5.c | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index dc031d42f53b..fcc8a44dd4fd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -36,7 +36,6 @@
+  */
+ 
+ #include <linux/blkdev.h>
+-#include <linux/delay.h>
+ #include <linux/kthread.h>
+ #include <linux/raid/pq.h>
+ #include <linux/async_tx.h>
+@@ -6820,18 +6819,7 @@ static void raid5d(struct md_thread *thread)
+ 			spin_unlock_irq(&conf->device_lock);
+ 			md_check_recovery(mddev);
+ 			spin_lock_irq(&conf->device_lock);
+-
+-			/*
+-			 * Waiting on MD_SB_CHANGE_PENDING below may deadlock
+-			 * seeing md_check_recovery() is needed to clear
+-			 * the flag when using mdmon.
+-			 */
+-			continue;
+ 		}
+-
+-		wait_event_lock_irq(mddev->sb_wait,
+-			!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags),
+-			conf->device_lock);
+ 	}
+ 	pr_debug("%d stripes handled\n", handled);
+ 
+-- 
+2.39.3 (Apple Git-145)
+
