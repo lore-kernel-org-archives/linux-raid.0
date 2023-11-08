@@ -2,180 +2,156 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15B19C4332F
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Nov 2023 01:28:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD01C4332F
+	for <linux-raid@archiver.kernel.org>; Wed,  8 Nov 2023 01:39:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344336AbjKHB2v (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 7 Nov 2023 20:28:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58240 "EHLO
+        id S234279AbjKHBjb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 7 Nov 2023 20:39:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344383AbjKHB2r (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Nov 2023 20:28:47 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1799210EC;
-        Tue,  7 Nov 2023 17:28:45 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A7LJwDJ004992;
-        Wed, 8 Nov 2023 01:28:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2023-03-30;
- bh=mM24EpShFpk88nOlYIOCr/oMAUhnexH0+KpVjZWSBOY=;
- b=tjFRP+nIDJ1NjLo/shAQFtIEjlIxRBT88LikAUSOGGa1TEVGcJHnLq0brnGDz180FtnM
- ohZ1J6eCZVTUMwm6jlbyac3rpY1Gl4/XZ8L+g4eSP0HkqHiidgdaHkQny/SHP+DqHIeG
- PnL+nlqa4Kkwh0hSZmOXsNHzD2bQNO6cCTodVjVNf4IC9nAw38rfpKpttvrNfk+2AOSf
- 5pWNdVYrY0nsctNKZueFhft7E0Bdse/CX2tfaYzvpNQ80C2dcOb+ytn6h1+XXApeOqEE
- 3jrI4JTXQoVcLS2abDTqJHhbb2QscH5RNuHquQRMxggJ0zeZgY4jvdDegCj+Tapt7VMr cQ== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3u7w22gb9j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Nov 2023 01:28:40 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3A81DstX000370;
-        Wed, 8 Nov 2023 01:28:40 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2040.outbound.protection.outlook.com [104.47.74.40])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3u7w1vgges-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Nov 2023 01:28:39 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZLE4S4qrBwFnWeiLtx5Ll9T8Eyman2Sh4wOdx/p2kH3iLh+abazKRvB4Jdtf+KJf+N6YXmdbnlUdZBjnJ+ZxePgoSPJReWZ8i9pyE17OwXQ5jp3pZZFvcWNOCr+o/WyyFr4seFQuTF8406bnzG+y5Xnr5a2gcIN9hDvNfQXZbfDxzm/FvYO0b8vSxAiJVI2X1if3ZCnL/UMt9OKrl7MCNtB/3O/iwE5pdCRZjNqmQmvKYZ2txDy1zWPw9EExo0c4YeJYaUxd6uGKu6EiT+3gW7YzQgvO4QImHniiR5EE3VP6mTAQu7bwsGxftbXQRWhl+oILQqw3e8YnC1SL+qZtZw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mM24EpShFpk88nOlYIOCr/oMAUhnexH0+KpVjZWSBOY=;
- b=b9j6CTP/OyxxH14AauJN5bbcGLJyIbbss9ZFNW2VzLGaTEvpcglIbdSXmWkrAhywL74jxSDQiPV6PruAffPmVVMAoU7R/QmDX7w5B7dw1b+PbZYCbqkKvnGeYMoC8HDcMnlaQKjM5zkD4e5z2naEXTXGLLDURzWlPGCmhtXvMwDVGQpebM/u/4SOot3q/ZOm/4DiYROb/3+mxTPHFYYBhdH+bY8UN4lXgx2IWrQeivwxU3Xkl0MUeE0IYPO0wRRPIQbf1Zt4dvJc/P4J3x8wag85kdvvUzY9cQuDoHZIKr1PBmyrDEHMVnW/jDe8ghC4ucvmZJr/rsmHYd4h5pObxQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mM24EpShFpk88nOlYIOCr/oMAUhnexH0+KpVjZWSBOY=;
- b=kG09kYCuiE1zqacZ88C5N0dxO6FtDoBM6cFWSGdU9UaYqa6xiMxu//QHvccmRgS9xd3bvSqFWuiwsb3/8805x87s/gFSYY+KxOYBbV4OlMsfpHirEBS9NrjpMg/yUxnVLTLz+3PI2lA4lxAOo8hsBkGbm18eanzT9jebUtb7qhM=
-Received: from SJ0PR10MB4752.namprd10.prod.outlook.com (2603:10b6:a03:2d7::19)
- by CO1PR10MB4708.namprd10.prod.outlook.com (2603:10b6:303:90::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6954.28; Wed, 8 Nov
- 2023 01:28:29 +0000
-Received: from SJ0PR10MB4752.namprd10.prod.outlook.com
- ([fe80::915a:381e:a853:cf7f]) by SJ0PR10MB4752.namprd10.prod.outlook.com
- ([fe80::915a:381e:a853:cf7f%3]) with mapi id 15.20.6954.028; Wed, 8 Nov 2023
- 01:28:29 +0000
-From:   Junxiao Bi <junxiao.bi@oracle.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     linux-raid@vger.kernel.org, tj@kernel.org, jiangshanlai@gmail.com,
-        song@kernel.org, junxiao.bi@oracle.com
-Subject: [RFC] workqueue: allow system workqueue be used in memory reclaim
-Date:   Tue,  7 Nov 2023 17:28:21 -0800
-Message-Id: <20231108012821.56104-1-junxiao.bi@oracle.com>
-X-Mailer: git-send-email 2.39.3 (Apple Git-145)
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BY3PR10CA0008.namprd10.prod.outlook.com
- (2603:10b6:a03:255::13) To SJ0PR10MB4752.namprd10.prod.outlook.com
- (2603:10b6:a03:2d7::19)
+        with ESMTP id S232292AbjKHBja (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 7 Nov 2023 20:39:30 -0500
+Received: from lists.tip.net.au (pasta.tip.net.au [203.10.76.2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A93DAD79
+        for <linux-raid@vger.kernel.org>; Tue,  7 Nov 2023 17:39:28 -0800 (PST)
+Received: from lists.tip.net.au (pasta.tip.net.au [203.10.76.2])
+        by mailhost.tip.net.au (Postfix) with ESMTP id 4SQ76k6XMYz9BTC
+        for <linux-raid@vger.kernel.org>; Wed,  8 Nov 2023 12:39:26 +1100 (AEDT)
+Received: from [IPV6:2405:6e00:4ed:cdf7:21b:21ff:fe3a:5672] (unknown [IPv6:2405:6e00:4ed:cdf7:21b:21ff:fe3a:5672])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mailhost.tip.net.au (Postfix) with ESMTPSA id 4SQ74n3s4Mz9R4W
+        for <linux-raid@vger.kernel.org>; Wed,  8 Nov 2023 12:37:45 +1100 (AEDT)
+Message-ID: <3a6d41e6-7e49-4d6d-acb4-f10b05b02ee5@eyal.emu.id.au>
+Date:   Wed, 8 Nov 2023 12:37:38 +1100
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ0PR10MB4752:EE_|CO1PR10MB4708:EE_
-X-MS-Office365-Filtering-Correlation-Id: e0d3dbac-8acf-4845-6df6-08dbdffa0361
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 6FPjgUp7YhF3m+ntQvNC2Lu3LsmHEiVKnHkQVpqcP49vvKMrwhWybksA5oYz43gzdfDOd+zhwKsjbj3fBAzAl32X1tGNIoJiwycnot6yDSyEO7wbI/2n5Y6iYudjomCplW+D4aZQQ6snOf0gGyDS15asRlc3BH52dGgFEKAmTWMb60bd6oVIppsQ+xqTuY5Dmuurs1JiX+E8nToCVIKU80K2xTVZ3yQkC2qLIhgUQ9/xjS2p/uioung+6Ki8fV84RqDe7Ww77cSsZoFSSkcn33Ro/dFs62/1h5+uQBXxIudTtGv8j36MZ10V6gK93DxFuL/9uj6fCB1sn9XNCHAuHXiirQHYbu2ZB3j9Qp+L5LpthdfpMnoVbEEQEQ4yZAPGG4/ZVi1rvyKkO0j71fuScQv8ZycTiOg/3X2GbbExAMyU2uKKyedd3sVJkxCj23cmtaqvu8n/KEICU3O6XjE0JwIAd06fhu7xPA5cHsfGT9Oxq18Lx9ewKXikAn9ep+LjsOLndmFQRa5zE5kUFj/VQqokBiOj05f+dueVL7mpw2bQGtgTTGO5K2JTx6lBW4kx
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4752.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(39860400002)(366004)(376002)(346002)(136003)(230922051799003)(1800799009)(451199024)(64100799003)(186009)(6486002)(8936002)(107886003)(83380400001)(26005)(2616005)(1076003)(38100700002)(44832011)(316002)(5660300002)(2906002)(41300700001)(8676002)(6916009)(4326008)(6666004)(66556008)(478600001)(6512007)(6506007)(66946007)(36756003)(86362001)(66476007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?gP2V83EtPvaHdLtMzSFPb+kC87NWBMK/evDGIYjU0EomuGvSSx9MRbTO/t8V?=
- =?us-ascii?Q?dG6Kj71MIKUURidaCKVOrw61oFXp7vIxeNQwToGEP4FUQ7YnVusv4X5CYSTt?=
- =?us-ascii?Q?jICrZPy5LTi9sRrZzSw2p06Nt/6qXcGR1Q9LxbLDQYLaWyxbjjPbzU386YNp?=
- =?us-ascii?Q?xrQzZaPycvs6Bj/V7hjvgodeTIlkQwQbWO1Ybvm5TahPdbHjaIsXOK01p9tM?=
- =?us-ascii?Q?K4lQrfyEz55y3ey3WJUEJv+/Qbb4QfGKS2NVoqwBUubLELtfqkn2NUIgEq8S?=
- =?us-ascii?Q?A5Nod9hii9AWbI5h0wUHdmTvsDFopncHCVxhcJxF8GSi+b9Nx8mUBa15IgXA?=
- =?us-ascii?Q?uxpG+R5ZQCW2eVf4CDBJez97ch3tkd79A9fcuANJaDYcJWdfwBVPPs0Wx1sB?=
- =?us-ascii?Q?4Riau4M1e+RYQRG1anDkituWm7sE3pWkReS5HHtPg8RILnzRFDIRxEKt0lqG?=
- =?us-ascii?Q?3RAKwjkukhjynci/VzqotCPXjMJT1H+JXKboMYwIgyO3SG9nlJ/ywcTORlMM?=
- =?us-ascii?Q?MSnbMlkSndF2U7T5w3iXvGpKZ+bfEpU8w9Gpr9F5riAy/mNonsanvjd7vOjd?=
- =?us-ascii?Q?TfB0y6pUsEHdwURIJrjr+HrmgqWkfbYvc30Q/vBU4Y7q2UeW0qDixvCB9g30?=
- =?us-ascii?Q?z2COVQR1Mqr1k/+lwOcbKQSSVDvEyf9svMU26NmD7vsDGq7coxKog9uOi5Fm?=
- =?us-ascii?Q?1ZovzatoIHSgWiPNO3f7WLKhRrtCn7cTs+kJuS2VWP/AmMpI7fVTyg8qMObs?=
- =?us-ascii?Q?pMLj1KCXtKnntiM22p00qeQn/Ay1qy3oh5XFIC5PwCPX1XYrpc/yGWs+Wc6S?=
- =?us-ascii?Q?vY7JF6VaSPfT2s9UGNzvmGXEXqVoUiN1Q5HvKeQSKNXYowp4ZMpX7X+KbA0L?=
- =?us-ascii?Q?Q8ZypwMToYEE+w4HHNg7UQPTGJrbhacWUfc9qml64qxAKcMeIiM+QOJSnLNI?=
- =?us-ascii?Q?Co9y7aVbCdXz73cUZmLtOX2xtVUcE/eb7pkmIzgeMWoIg7sLxgBj3cjSwRC8?=
- =?us-ascii?Q?RbID+l0H8mkzRDedXU1qC1/pINWC3Jkis9y5qxwRYFJrRUfvy4czJ2rYs9da?=
- =?us-ascii?Q?UMuqupdm4c+o4dnMMjCEQy+dFZXkslA9/iQnu3LqhcUyA9oDHQbNr2p63pBH?=
- =?us-ascii?Q?dhPoOx8LVeUMxKNiRs4k6CMz1l5Vwo6I+CooIc0uJKEncAd7mZYV43Fb22SA?=
- =?us-ascii?Q?NGjDmodPbRnqkhCOU/zwWrJXuZvT4TTKjYt1qsqnH3mZ4h/J0sEyYzeNDovs?=
- =?us-ascii?Q?LmR0E9R2O9VUDz2MoQxL5cGVjVTsqulD+ZzxLsVmSfrKL6S5NJReQgZacEmU?=
- =?us-ascii?Q?CPHN7OIOC3LVwpsXU7f8hRB+OWl20QRnsK4gUlspsGYscLfNLkN/MoRPfl1m?=
- =?us-ascii?Q?a+CXT/u/Z95qXG2EJqaZu1MffJakBL8RISH7nSDg7E1lsybfQLB5f87PJ5Au?=
- =?us-ascii?Q?Q4cUJ5sGXcrvjVXOZK/fUhTijmDrF4RBXirqMMQfW6BYdJeqB3C8RNNhGejP?=
- =?us-ascii?Q?AQ77BcuZM87bAco7yMbwX5ilmhPj8IsoZrDP0VqCXiyJZcl9H+hVTJZuTZuK?=
- =?us-ascii?Q?waaq1QfFkGUvYksC4Yq4wVK0kD0FHewE3g4a4I3k?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 9xC0cXBuYoflfCabmkwm6D+HqnSElcqNdJZxjI48gBrU3+2tnG33dV1YBRbERZ4k/ZL223uZ0gDtFqK/ygoP8j8yi+lKP4cDBOiuD1x6UJYbUvA7qorXvB7S8KlmzmWR9k41fV/Sg7T4kNk/k1TxlzOmDcjWReHF1EOyQ2TK2pqjKaKUi/v07WktI3++iv0t/UdaJmBQzHDbz8F+kpgh0zMXuE3GBesbsixt8Z0FwHvJq+8giWYboUOQZBh4PpcC8iUFt/yWzeqdKsBsFt232YO2+w9XqZJM6KjEd3FqZM1sr794DIPCOyG/Yf1gKfoqn5uUqegQh8lXQ5S+xfS2ckFBDMOK3zVKotpQgIW6+hzuBT/IvujVpGMHS2uy4RNGAiSodS1nyzHKtrCI8pSVYYVQV8lSeFlFC3Lsw6FaZbWZwRKdtHJSjai/jihVge1duCJev0i/74Qo5SfMQ5zH4GztDNInneBosoNKYfHpsyXOT7BKx+pDCGwa/NiSkj/aV6xU++8W+wlG7YUa8HqxAdKxbvXCCtqX8Y0lXStpFKQNVHnBK7LsRCYZ1Q1f//R9tYdMCDWt7BcoXEVcUleFFDBJMPdac7xm/vpExkNNl1GGmctyaVGSfGKUci1u2VMutkBISoQrw65bg/rV+23PonLbng1KKLqXGzH5nETYJbpEVbPmwn6+bCaK+nuMEcSkixPRoFVa35MD3ayj1DnHt8ztYwbjEalV2kvzSt045tqn90daihO09l7d4cX+qfv1vHmIvHHkq0BvjhZOQXATGepEScwI5KSiMPPyzzqXgl32PV0nmKonoP2q01h3HHiP
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e0d3dbac-8acf-4845-6df6-08dbdffa0361
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4752.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Nov 2023 01:28:29.6512
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: MyGRFAdTd/tEg3/4nXflvEJsqm567F8sqlnJrw4/YvNLJwXrfX5ApE683Ilgee/pRVSR4hbbEOTfs50dp/5XqA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4708
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-08_01,2023-11-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- suspectscore=0 adultscore=0 bulkscore=0 mlxlogscore=999 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311080011
-X-Proofpoint-ORIG-GUID: llof-xG6e9BgWK6ZqV8X3fgDgo95Cq2F
-X-Proofpoint-GUID: llof-xG6e9BgWK6ZqV8X3fgDgo95Cq2F
+User-Agent: Mozilla Thunderbird
+Subject: Re: extremely slow writes to degraded array
+Content-Language: en-US
+To:     list Linux RAID <linux-raid@vger.kernel.org>
+References: <eb9a7323-f955-4b1c-b1c4-7f0723078c42@eyal.emu.id.au>
+ <25930.43201.247015.388374@petal.ty.sabi.co.uk>
+From:   eyal@eyal.emu.id.au
+In-Reply-To: <25930.43201.247015.388374@petal.ty.sabi.co.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The following deadlock was triggered on Intel IMSM raid1 volumes.
+On 08/11/2023 08.14, Peter Grandi wrote:
+>> 7 disks raid6 array(*1). boot, root and swap on a separate
+>> SSD. [...] One disk was removed recently and sent for
+>> replacement. The system felt OK but a few days later I noticed
+>> an issue... I started copying the full dataset (260GB 8,911k
+>> files). [...] 4GB (system limit) dirty blocks were created,
+>> which took 12h to clear.
+> 
+> The MD RAID set is performing well as designed. The achievable
+> speed is very low except on special workloads, but that low
+> speed is still good performance for that design, which is close
+> to optimal for maximizing wait times on your workload.
+> Maximizing storage wait times is a common optimization in many
+> IT places.
+> https://www.sabi.co.uk/blog/17-one.html?170610#170610
+> https://www.sabi.co.uk/blog/15-one.html?150305#150305
+> 
+>> [...] The copy completed fast but the kthread took about 1.5
+>> hours at 100%CPU to clear the dirty blocks.
+>> - When copying more files (3-5GB) the rsync was consuming
+>>    100%CPU and started pausing every few files (then killed). A
+>> - 'dd if=/dev/zero of=/data1/no-backup/old-backups/100GB'
+>>    completed quickly, no issues. [...]
+> [...]
+>> +  100.00%     1.60%  [kernel]  [k] ext4_mb_regular_allocator
+>> +   67.08%     5.93%  [kernel]  [k] ext4_mb_find_good_group_avg_frag_lists
+>> +   62.47%    42.34%  [kernel]  [k] ext4_mb_good_group
+>> +   22.51%    11.36%  [kernel]  [k] ext4_get_group_info
+>> +   19.70%    10.80%  [kernel]  [k] ext4_mb_scan_aligned
+> 
+> My guess is that the filesystem residing on that RAID set is
+> nearly full, has lots of fragmentation, has lots of small files
+> and likely two out of three or even all three. Those are also
+> common optimizations used in many IT places to maximize storage
+> wait times.
 
-The sequence of the event is this:
+Most of the files a re not tiny as I archive and compress and significant collections.
+What I copied in the test IS a collection of very small files (see further down).
 
-1. memory reclaim was waiting xfs journal flushing and get stucked by
-md flush work.
+> https://www.techrepublic.com/forums/discussions/low-disk-performance-after-reching-75-of-disk-space/
+> https://www.spinics.net/lists/linux-ext4/msg26470.html
 
-2. md flush work was queued into "md" workqueue, but never get executed,
-kworker thread can not be created and also the rescuer thread was executing
-md flush work for another md disk and get stuck because
-"MD_SB_CHANGE_PENDING" flag was set.
+I plan to reboot at some point soon, in case a clean restart will fix the problem,
+but I first want to get what I can from the current situation.
+I also fear that the restart may not be straight forward. One hopes though.
 
-3. That flag should be set by some md write process which was asking to
-update md superblock to change in_sync status to 0, and then it used
-kernfs_notify to ask "mdmon" process to update superblock, after that,
-write process waited that flag to be cleared.
+While the fs is at about 83% full (10TB free out of 60TB) I had the array almost 100% full in the past
+(it was then a 20TB array) and did not notice such a drastic slowdown.
 
-4. But "mdmon" was never wake up, because kernfs_notify() depended on
-system wide workqueue "system_wq" to do the notify, but since that
-workqueue doesn't have a rescuer thread, notify will not happen.
+$ df -h /data1
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md127       55T   45T  9.8T  83% /data1
 
-Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
----
- kernel/workqueue.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Now the recovery finished and it is not degraded, yet the problem remains. The bitmap is now clear.
 
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 6e578f576a6f..e3338e3be700 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -6597,7 +6597,7 @@ void __init workqueue_init_early(void)
- 		ordered_wq_attrs[i] = attrs;
- 	}
- 
--	system_wq = alloc_workqueue("events", 0, 0);
-+	system_wq = alloc_workqueue("events", WQ_MEM_RECLAIM, 0);
- 	system_highpri_wq = alloc_workqueue("events_highpri", WQ_HIGHPRI, 0);
- 	system_long_wq = alloc_workqueue("events_long", 0, 0);
- 	system_unbound_wq = alloc_workqueue("events_unbound", WQ_UNBOUND,
+$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md127 : active raid6 sdh1[10] sde1[4] sdc1[9] sdf1[5] sdb1[8] sdd1[7] sdg1[6]
+       58593761280 blocks super 1.2 level 6, 512k chunk, algorithm 2 [7/7] [UUUUUUU]
+       bitmap: 0/88 pages [0KB], 65536KB chunk
+
+I copied (rsync) files to the array
+	Number of created files: 15,754 (reg: 13,056, dir: 2,435, link: 1, dev: 260, special: 2)
+	Total transferred file size: 242,397,771 bytes
+Which completed rapidly. It created a bunch of dirty blocks
+	2023-11-08 11:04:52 Dirty:    254328 kB  Buffers:   4190376 kB  MemFree:   1480148 kB
+which took 20m to drain:
+	2023-11-08 11:24:33 Dirty:     44624 kB  Buffers:   4565116 kB  MemFree:    888884 kB
+	2023-11-08 11:24:43 Dirty:     44548 kB  Buffers:   4565136 kB  MemFree:    894436 kB
+	2023-11-08 11:24:53 Dirty:        56 kB  Buffers:   4565192 kB  MemFree:    894052 kB
+
+%util is not that bad, though the array is significantly higher than the members, and there is still much reading while writing.
+
+11:08:58 Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dkB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
+11:08:58 md127            0.00      0.00     0.00   0.00    0.00     0.00    3.80     21.60     0.00   0.00 3669.63     5.68    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   13.94  12.37
+11:08:58 sdb              0.40     16.40     3.70  90.24    0.25    41.00    1.60     19.00     3.70  69.81    2.19    11.88    0.00      0.00     0.00   0.00    0.00     0.00    1.20    2.42    0.01   0.30
+11:08:58 sdc              0.40     16.40     3.70  90.24   11.50    41.00    2.00     24.20     4.60  69.70    6.75    12.10    0.00      0.00     0.00   0.00    0.00     0.00    1.20    7.00    0.03   1.01
+11:08:58 sdd              0.00      0.00     0.00   0.00    0.00     0.00    1.60      7.80     0.90  36.00   18.94     4.88    0.00      0.00     0.00   0.00    0.00     0.00    1.20    3.00    0.03   2.87
+11:08:58 sde              0.40     16.40     3.70  90.24    4.25    41.00    1.60     19.00     3.70  69.81   13.31    11.88    0.00      0.00     0.00   0.00    0.00     0.00    1.20    2.33    0.03   1.97
+11:08:58 sdf              0.40      5.20     0.90  69.23    0.50    13.00    1.60      7.80     0.90  36.00   14.00     4.88    0.00      0.00     0.00   0.00    0.00     0.00    1.20    2.67    0.03   2.18
+11:08:58 sdg              0.00      0.00     0.00   0.00    0.00     0.00    1.20      2.60     0.00   0.00   15.58     2.17    0.00      0.00     0.00   0.00    0.00     0.00    1.20    0.42    0.02   1.77
+11:08:58 sdh              0.00      0.00     0.00   0.00    0.00     0.00    1.20      2.60     0.00   0.00    1.50     2.17    0.00      0.00     0.00   0.00    0.00     0.00    1.20    1.17    0.00   0.28
+
+I also noticed that I have an old (since 2012) stanza in rc.local to set stripe_cache_size:
+	# cat /sys/block/md127/md/stripe_cache_size
+	16384
+Is it possibly unsuitable for this array?
+Any other setting I should investigate?
+
+
+Finally (important? I think it is OK), I see different UUIDs in different places:
+
+/dev/disk/by-uuid
+         378e74a6-e379-4bd5-ade5-f3cd85952099 -> ../../md127
+
+/etc/fstab
+         UUID=378e74a6-e379-4bd5-ade5-f3cd85952099 /data1 ext4   noatime 0 0
+
+/dev/disk/by-id
+	md-uuid-15d250cf:fe43eafb:5779f3d8:7e79affc -> ../../md127
+
+mdadm -D /dev/md127	# also in mdadm -E
+         UUID : 15d250cf:fe43eafb:5779f3d8:7e79affc
+
+/etc/mdadm.conf
+         ARRAY /dev/md127 metadata=1.2 name=e4.eyal.emu.id.au:127 UUID=15d250cf:fe43eafb:5779f3d8:7e79affc
+
+The first  (f3cd85952099) is the UUID of the ext4 fs,
+The second (:7e79affc) is what I see in my array logs since it was created 5 years ago.
+
+TIA
+
 -- 
-2.39.3 (Apple Git-145)
+Eyal at Home (eyal@eyal.emu.id.au)
 
