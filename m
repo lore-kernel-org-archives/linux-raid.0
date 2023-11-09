@@ -2,79 +2,107 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CF53C4167B
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Nov 2023 13:17:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF9DC4332F
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Nov 2023 18:58:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231438AbjKINRG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Nov 2023 08:17:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52876 "EHLO
+        id S1344916AbjKIS6o (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Nov 2023 13:58:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230055AbjKINRF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Nov 2023 08:17:05 -0500
-Received: from mail-il1-x133.google.com (mail-il1-x133.google.com [IPv6:2607:f8b0:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77D3830CD
-        for <linux-raid@vger.kernel.org>; Thu,  9 Nov 2023 05:17:03 -0800 (PST)
-Received: by mail-il1-x133.google.com with SMTP id e9e14a558f8ab-359d559766cso1400695ab.1
-        for <linux-raid@vger.kernel.org>; Thu, 09 Nov 2023 05:17:03 -0800 (PST)
+        with ESMTP id S229560AbjKIS6n (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Nov 2023 13:58:43 -0500
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0865B3C11;
+        Thu,  9 Nov 2023 10:58:41 -0800 (PST)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1cc1e1e74beso11079585ad.1;
+        Thu, 09 Nov 2023 10:58:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1699535823; x=1700140623; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=6f58aWxzQb+LWLTnTNWDmKaDVh23pRcJkOY97//UkNI=;
-        b=lZnn7zZ9tbs2+1N5wnQurbWexBcYdIjwbD9infqpuUonunh0ILVQu3B4TAIJID5M8L
-         eNfgpnKHwJSmmC0D6RLJ380F0fadLqygzypiSs1z6+TDEr3rQwhQS6+54fw4gTYlFJQ7
-         816jM+O5H+nrqBjW8RI70TjFlZLPW7xlogKgilwrRMQTfsKqX0lYBDkwqRRe1kwAQE40
-         bFKYdaCndkRyqlm3/C0Ls2xzEAxFlJpRG4cvh8Pmv+5FioXZx+mP6U3ATMEaEK8eRM1W
-         ACP86byQILL59VeGxLo2IAnpyXXi5NwFdV6sletKicWsakxH2wlnN4dHXBOfTwPEsb5B
-         XBpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699535823; x=1700140623;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=gmail.com; s=20230601; t=1699556320; x=1700161120; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=6f58aWxzQb+LWLTnTNWDmKaDVh23pRcJkOY97//UkNI=;
-        b=WZeOdCwcR/0JlE4PO5RYah5QZYenhdwy5hi4iYdtcYhojDOSMVmOwCFW/KlP+tOU/s
-         b46E0MSEAeyOCI4nJmlkM/fToDLm0zIIoKaw9kNpF9EDfwlOoJN+u8qehUkSk7bD4Fhw
-         2a4XMxisfYh8Ls6nWsWIecUuVJBoO/NmT//lcVS8tpdVN4tTzCGrhWSFgyQsu1tW+xYT
-         txT88AHvuN2ZWfwLP3OfXIpURmZrblZtFIiJnhSB73vfRoPiENmDv/8IYbJUBrldkIbO
-         jLiF/J7xjAjcmeVFwpOXA6gVNtdKfuovQKDLMQN7jc2EP4HKMgrrj6pWI55bmYyIQmy3
-         a4sg==
-X-Gm-Message-State: AOJu0YzkYYHwGyJ38YhNAO57VJdYka64TvMuKOhCQ5myVdg1NGQbMQ7l
-        sIMI7lBtnrswOgln9+/EICv0aE7eEkafmwmHALyak0e1
-X-Google-Smtp-Source: AGHT+IF35+JU1pu5EQjcw7Gri9wl9vkiCYHRivvzy1e/cRBqA+pN7YOel+CKGLF7DZeipsEzl8SLhanNhy4Idr6v6Q4=
-X-Received: by 2002:a05:6602:b84:b0:7ac:cb6b:616a with SMTP id
- fm4-20020a0566020b8400b007accb6b616amr2263586iob.8.1699535822791; Thu, 09 Nov
- 2023 05:17:02 -0800 (PST)
+        bh=Six/9bBjHcTyI2QBtTW3JkpzmsPtCMRe0zm/Z/EU684=;
+        b=jPO5SeILCNU138ka9ItnxLIWtecyNATqOav4D0IDsn18TrZ8NHBTjpuoZSahwGnybh
+         776mW6VhyHu1eyeYiu+d5mYjRV/aaXI0vvk28Y4CFjKkTCJ61+r9RWtO0bhf0xKY+ZWs
+         104UfymOt2Mm2cwG0ENX2oDcX4gJF6VjrGq44hZl14iw+2F2hHhID557Yns3YU/0bOQz
+         OFOVt4JM6Hn+iW2m9CeCBy4GyC39W4bR4reVC297KuC4V9bTFTlxWLvZwH+pJuzlosrQ
+         Q1fsNwzyt8kN48QwQW2il80tshqz6LG8kvK3Umd3lRDcRQjO09VaUOmKGkgRQVAHlb+Y
+         Wk6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699556320; x=1700161120;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Six/9bBjHcTyI2QBtTW3JkpzmsPtCMRe0zm/Z/EU684=;
+        b=nsAoajJaJi3IUIzK5Lf6F15vWGpUp5iOjcd35DtMXcTFJhs6nRm8I5rNJK03adCV3f
+         mZATTYEIgapWv8TZtgym1wF3qONMg/g4TLJCOe+GQps2xW3U28sPfF+rggxHbCn21X8g
+         x+sMRyh7aEmq3POx7pDqW2oXLZ7jdncRCpyGTISa4oBAL0rO4gTVHMV3x+q5QIHT9i8Z
+         cGEsotFcDHI9RTQ9UkgNXHv5bwl29XEMPE5dkR09oQLTLk1Yyvp2Vk+dJWBGZL4/O6G/
+         hv4DV9T7jtWzxxUbx8SsbgKtFRntpDGoM6W04Kuf7eMxi8hSrCKUJLPlDJXo5aUtL0bU
+         COdQ==
+X-Gm-Message-State: AOJu0Yw2T3CjAgZaSRdMz/5RH725Mbyw8lGZPQQjsJOYxwJPCs4yebzj
+        AGHGr2UNDrWRnMmU5nvk0DE=
+X-Google-Smtp-Source: AGHT+IFliqdoDfydMjE0QryOcjH8kwV2y9hGfW2Q/6rQp6nI7gIrGvf4y6vocxCwRMvgq8KWMUwVXg==
+X-Received: by 2002:a17:902:8c86:b0:1cc:7e40:de4a with SMTP id t6-20020a1709028c8600b001cc7e40de4amr5824643plo.58.1699556320425;
+        Thu, 09 Nov 2023 10:58:40 -0800 (PST)
+Received: from localhost ([2620:10d:c090:400::4:7384])
+        by smtp.gmail.com with ESMTPSA id c5-20020a170902d90500b001c9b35287aesm3866699plz.88.2023.11.09.10.58.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Nov 2023 10:58:40 -0800 (PST)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Thu, 9 Nov 2023 08:58:38 -1000
+From:   Tejun Heo <tj@kernel.org>
+To:     Junxiao Bi <junxiao.bi@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        jiangshanlai@gmail.com, song@kernel.org
+Subject: Re: [RFC] workqueue: allow system workqueue be used in memory reclaim
+Message-ID: <ZU0r3rzjH1cIzqvH@slm.duckdns.org>
+References: <20231108012821.56104-1-junxiao.bi@oracle.com>
 MIME-Version: 1.0
-References: <eb9a7323-f955-4b1c-b1c4-7f0723078c42@eyal.emu.id.au> <e25d99ef-89e2-4cba-92ae-4bbe1506a1e4@eyal.emu.id.au>
-In-Reply-To: <e25d99ef-89e2-4cba-92ae-4bbe1506a1e4@eyal.emu.id.au>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Thu, 9 Nov 2023 07:16:51 -0600
-Message-ID: <CAAMCDedC-Rgrd_7R8kpzA5CV1nA_mZaibUL7wGVGJS3tVbyK=w@mail.gmail.com>
-Subject: Re: extremely slow writes to array [now not degraded]
-To:     eyal@eyal.emu.id.au
-Cc:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231108012821.56104-1-junxiao.bi@oracle.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The issue he is asking about is why does the md127 device have a
-w_await time of 1473.96ms when the highest response time on the
-underlying device is 15.94ms.  %util of all devices is low.
+Hello,
 
-Something has to be going on inside the kernel to cause there to be
-that sort of a difference.
+On Tue, Nov 07, 2023 at 05:28:21PM -0800, Junxiao Bi wrote:
+> The following deadlock was triggered on Intel IMSM raid1 volumes.
+> 
+> The sequence of the event is this:
+> 
+> 1. memory reclaim was waiting xfs journal flushing and get stucked by
+> md flush work.
+> 
+> 2. md flush work was queued into "md" workqueue, but never get executed,
+> kworker thread can not be created and also the rescuer thread was executing
+> md flush work for another md disk and get stuck because
+> "MD_SB_CHANGE_PENDING" flag was set.
+> 
+> 3. That flag should be set by some md write process which was asking to
+> update md superblock to change in_sync status to 0, and then it used
+> kernfs_notify to ask "mdmon" process to update superblock, after that,
+> write process waited that flag to be cleared.
+> 
+> 4. But "mdmon" was never wake up, because kernfs_notify() depended on
+> system wide workqueue "system_wq" to do the notify, but since that
+> workqueue doesn't have a rescuer thread, notify will not happen.
 
-He is also doing about 3 io/second which is significantly under the
-capacity of a spinning disk.
+Things like this can't be fixed by adding RECLAIM to system_wq because
+system_wq is shared and someone else might occupy that rescuer thread. The
+flag doesn't guarantee unlimited forward progress. It only guarantees
+forward progress of one work item.
 
-If a disk was having issues with bad sectors/failed sectors/silent
-retries then the %util/awaits should show that.
+That seems to be where the problem is in #2 in the first place. If a work
+item is required during memory reclaim, it must have guaranteed forward
+progress but it looks like that's waiting for someone else who can end up
+waiting for userspace?
 
-So between when the write gets to the md  device and when the io gets
-to the physical device there are 1000+ ms (on average).
+You'll need to untangle the dependencies earlier.
 
-And this is a typical sample that is being seen when the array is not
-functioning fast, and this issue clears (all by itself) some minutes
-or hours later and continues as if nothing happened.
+Thanks.
+
+-- 
+tejun
