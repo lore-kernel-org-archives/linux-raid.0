@@ -2,57 +2,57 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62505C4167B
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Nov 2023 17:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC0DC4332F
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Nov 2023 17:58:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230188AbjKJRyV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Nov 2023 12:54:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60022 "EHLO
+        id S229616AbjKJR6u (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Nov 2023 12:58:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229741AbjKJRx0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Nov 2023 12:53:26 -0500
+        with ESMTP id S234606AbjKJRzi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Nov 2023 12:55:38 -0500
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B19F244B3;
-        Fri, 10 Nov 2023 01:34:01 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SRYYG4TX1z4f4BLR;
-        Fri, 10 Nov 2023 17:33:54 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22226244BF;
+        Fri, 10 Nov 2023 01:34:02 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SRYYH31MLz4f4PNh;
+        Fri, 10 Nov 2023 17:33:55 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-        by mail.maildlp.com (Postfix) with ESMTP id 7AECE1A019B;
-        Fri, 10 Nov 2023 17:33:58 +0800 (CST)
+        by mail.maildlp.com (Postfix) with ESMTP id 4A8781A0181;
+        Fri, 10 Nov 2023 17:33:59 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-        by APP1 (Coremail) with SMTP id cCh0CgA3iA4E+U1l0pQlAg--.33627S7;
-        Fri, 10 Nov 2023 17:33:58 +0800 (CST)
+        by APP1 (Coremail) with SMTP id cCh0CgA3iA4E+U1l0pQlAg--.33627S9;
+        Fri, 10 Nov 2023 17:33:59 +0800 (CST)
 From:   Yu Kuai <yukuai1@huaweicloud.com>
 To:     song@kernel.org, xni@redhat.com, yukuai3@huawei.com, neilb@suse.de
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: [PATCH -next 3/8] md: return error to user if idle/frozen_sync_thread() is interrupted
-Date:   Sat, 11 Nov 2023 01:28:29 +0800
-Message-Id: <20231110172834.3939490-4-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 5/8] md: don't leave 'MD_RECOVERY_FROZEN' in error path of md_set_readonly()
+Date:   Sat, 11 Nov 2023 01:28:31 +0800
+Message-Id: <20231110172834.3939490-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231110172834.3939490-1-yukuai1@huaweicloud.com>
 References: <20231110172834.3939490-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: cCh0CgA3iA4E+U1l0pQlAg--.33627S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxur4UWr1UJFW5Xr4xAFWfuFg_yoWrCr1xp3
-        yxJF98Ar4YyrZ3Zry7t3WDAay5uw1IqrWqyry3W34fAFn3tr47KF1Y9F1UAFykKayrAa1U
-        XayrtF4fuFyrWr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: cCh0CgA3iA4E+U1l0pQlAg--.33627S9
+X-Coremail-Antispam: 1UD129KBjvJXoW7uFWkXryrtw18CrWfXryDtrb_yoW8Kr4fp3
+        yftF98Cry8Jry3Ar4Dt3WDXa45Zw12q3yqkFy3u34rJF1ftrZxCFyF9348JrWktas2v345
+        Xa1rGFW7u3W2gaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2jI8I6cxK62vIxIIY0VWUZVW8XwA2048vs2IY02
-        0E87I2jVAFwI0_JrWl82xGYIkIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2
-        F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjx
-        v20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2
-        z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0V
-        AKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1l
-        Ox8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErc
-        IFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-        6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-        Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-        Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-        IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pR_-BtUUUUU
-        =
+        0E87I2jVAFwI0_JF0E3s1l82xGYIkIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0
+        rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6x
+        IIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xv
+        wVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFc
+        xC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_
+        Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2
+        IErcIFxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
+        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
+        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
+        wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+        W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRi4SO
+        UUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
@@ -60,150 +60,75 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-It doesn't make sense that "echo idle/forzon > sync_action" doesn't
-return error to user if idle/frozen_sync_thread() is interrupted.
+If md_set_readonly() failed, the array could still be read-write, however
+'MD_RECOVERY_FROZEN' could still be set, which leave the array in an
+abnormal state that sync or recovery can't continue anymore.
+Hence make sure the flag is cleared after md_set_readonly() returns.
 
-Also make sure array recovery flags is not changed if error is returned.
-
-Fixes: 8e8e2518fcec ("md: Close race when setting 'action' to 'idle'.")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Signed-off-by: Yu Kuai <yukuai1@huaweicloud.com>
 ---
- drivers/md/md.c | 70 +++++++++++++++++++++++++++++++++----------------
- 1 file changed, 48 insertions(+), 22 deletions(-)
+ drivers/md/md.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5c9387369de1..d7b9d597b54d 100644
+index a0ec01048ede..c0f2bdafe46a 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4848,13 +4848,16 @@ action_show(struct mddev *mddev, char *page)
- 	return sprintf(page, "%s\n", type);
- }
+@@ -6394,6 +6394,9 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+ 	int err = 0;
+ 	int did_freeze = 0;
  
--static void stop_sync_thread(struct mddev *mddev)
-+static int stop_sync_thread(struct mddev *mddev)
- {
-+	int ret = 0;
++	if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
++		return -EBUSY;
 +
- 	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
--		return;
-+		return 0;
- 
--	if (mddev_lock(mddev))
--		return;
-+	ret = mddev_lock(mddev);
-+	if (ret)
-+		return ret;
- 
- 	/*
- 	 * Check again in case MD_RECOVERY_RUNNING is cleared before lock is
-@@ -4862,7 +4865,7 @@ static void stop_sync_thread(struct mddev *mddev)
+ 	if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+ 		did_freeze = 1;
+ 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+@@ -6407,8 +6410,6 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
  	 */
- 	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
- 		mddev_unlock(mddev);
--		return;
-+		return 0;
- 	}
- 
- 	if (work_pending(&mddev->sync_work))
-@@ -4876,50 +4879,69 @@ static void stop_sync_thread(struct mddev *mddev)
  	md_wakeup_thread_directly(mddev->sync_thread);
  
+-	if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
+-		return -EBUSY;
  	mddev_unlock(mddev);
-+	return 0;
- }
- 
--static void idle_sync_thread(struct mddev *mddev)
-+static int idle_sync_thread(struct mddev *mddev)
- {
-+	int ret;
- 	int sync_seq = atomic_read(&mddev->sync_seq);
-+	bool flag;
- 
--	if (mutex_lock_interruptible(&mddev->sync_mutex))
--		return;
-+	ret = mutex_lock_interruptible(&mddev->sync_mutex);
-+	if (ret)
-+		return ret;
- 
--	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	stop_sync_thread(mddev);
-+	flag = test_and_clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	ret = stop_sync_thread(mddev);
-+	if (ret)
-+		goto out;
- 
--	wait_event_interruptible(resync_wait,
-+	ret = wait_event_interruptible(resync_wait,
- 			sync_seq != atomic_read(&mddev->sync_seq) ||
- 			!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
--
-+out:
-+	if (ret && flag)
-+		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	mutex_unlock(&mddev->sync_mutex);
-+	return ret;
- }
- 
--static void frozen_sync_thread(struct mddev *mddev)
-+static int frozen_sync_thread(struct mddev *mddev)
- {
--	if (mutex_lock_interruptible(&mddev->sync_mutex))
--		return;
-+	int ret = mutex_lock_interruptible(&mddev->sync_mutex);
-+	bool flag;
- 
--	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--	stop_sync_thread(mddev);
-+	if (ret)
-+		return ret;
- 
--	wait_event_interruptible(resync_wait, mddev->sync_thread == NULL &&
--			!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-+	flag = test_and_set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	ret = stop_sync_thread(mddev);
-+	if (ret)
-+		goto out;
- 
-+	ret = wait_event_interruptible(resync_wait,
-+			mddev->sync_thread == NULL &&
-+			!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
-+out:
-+	if (ret && !flag)
-+		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	mutex_unlock(&mddev->sync_mutex);
-+	return ret;
- }
- 
- static ssize_t
- action_store(struct mddev *mddev, const char *page, size_t len)
- {
-+	int ret = 0;
-+
- 	if (!mddev->pers || !mddev->pers->sync_request)
- 		return -EINVAL;
- 
--
- 	if (cmd_match(page, "idle"))
--		idle_sync_thread(mddev);
-+		ret = idle_sync_thread(mddev);
- 	else if (cmd_match(page, "frozen"))
--		frozen_sync_thread(mddev);
-+		ret = frozen_sync_thread(mddev);
- 	else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
- 		return -EBUSY;
- 	else if (cmd_match(page, "resync"))
-@@ -4963,6 +4985,10 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
- 		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 	wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
+ 					  &mddev->recovery));
+@@ -6421,27 +6422,26 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
+ 	    mddev->sync_thread ||
+ 	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+ 		pr_warn("md: %s still in use.\n",mdname(mddev));
+-		if (did_freeze) {
+-			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-		}
+ 		err = -EBUSY;
+ 		goto out;
  	}
+ 	if (mddev->pers) {
+ 		__md_stop_writes(mddev);
+ 
+-		err  = -ENXIO;
+-		if (mddev->ro == MD_RDONLY)
++		if (mddev->ro == MD_RDONLY) {
++			err  = -ENXIO;
+ 			goto out;
++		}
+ 		mddev->ro = MD_RDONLY;
+ 		set_disk_ro(mddev->gendisk, 1);
++	}
++out:
++	if ((mddev->pers && !err) || did_freeze) {
+ 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 		sysfs_notify_dirent_safe(mddev->sysfs_state);
+-		err = 0;
+ 	}
+-out:
 +
-+	if (ret)
-+		return ret;
-+
- 	if (mddev->ro == MD_AUTO_READ) {
- 		/* A write to sync_action is enough to justify
- 		 * canceling read-auto mode
+ 	mutex_unlock(&mddev->open_mutex);
+ 	return err;
+ }
 -- 
 2.39.2
 
