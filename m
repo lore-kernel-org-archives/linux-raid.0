@@ -2,177 +2,100 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35D00C197A0
-	for <linux-raid@archiver.kernel.org>; Fri, 17 Nov 2023 01:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4985C072A2
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Nov 2023 08:36:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345608AbjKQBFb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 16 Nov 2023 20:05:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52956 "EHLO
+        id S230293AbjKQIgx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Nov 2023 03:36:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjKQBFa (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 16 Nov 2023 20:05:30 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99B3C182
-        for <linux-raid@vger.kernel.org>; Thu, 16 Nov 2023 17:05:26 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SWdxD6kLNz4f3kkD
-        for <linux-raid@vger.kernel.org>; Fri, 17 Nov 2023 09:05:20 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-        by mail.maildlp.com (Postfix) with ESMTP id 7F92F1A0173
-        for <linux-raid@vger.kernel.org>; Fri, 17 Nov 2023 09:05:23 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP1 (Coremail) with SMTP id cCh0CgDnNw5RvFZlnWeFBA--.9623S3;
-        Fri, 17 Nov 2023 09:05:23 +0800 (CST)
-Subject: Re: [REGRESSION] Data read from a degraded RAID 4/5/6 array could be
- silently corrupted.
-To:     Song Liu <song@kernel.org>,
-        Bhanu Victor DiCara <00bvd0+linux@gmail.com>,
-        Xiao Ni <xni@redhat.com>,
-        Mateusz Grzonka <mateusz.grzonka@intel.com>
-Cc:     linux-raid@vger.kernel.org, regressions@lists.linux.dev,
-        jiangguoqing@kylinos.cn, jgq516@gmail.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <5727380.DvuYhMxLoT@bvd0>
- <CAPhsuW4+Ktd7mzTQ6M4n9-=8vgyMDJUi8Xkcv50JXTf_2yqTFA@mail.gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <1956a189-107b-4445-9e53-336f1533c4b9@huaweicloud.com>
-Date:   Fri, 17 Nov 2023 09:05:21 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S229599AbjKQIgw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Nov 2023 03:36:52 -0500
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51BBFB0;
+        Fri, 17 Nov 2023 00:36:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1700210209; x=1731746209;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=sPWTdnpNJUc5dfTVsK5EG0pPjOoquKeW81JBrUka9FU=;
+  b=KszBwRCPxDfZpAYOgB5Veh/w/NHuy7gT+EFX+Hy3cvNXdIw0RgeBAEbW
+   Qhezz7BHud4Hzr8D0kOreGnYdVNH/aR5SohGZuDvWGYNaQG9Q2jpBcNit
+   DKOpDpjIpmCIAMLiiI7jT22A7oKGZisW9sSqMo2FFLhvw5EX1b4NShG0/
+   xigbUqtXmkn4jKpsMl9j8UClYKPIVCEXF/La7dttmhyuZdrugpHzs9HrK
+   0Y7pPZZl6L/B9ew1XP38tPSFfqgft6gq5Ou4qoiSP264VWfY15K39i2pv
+   QFrnozt2HAcba8f1KDogvQu1guGL0tC1DIIjVkNoRTEhZBBzeVhgDk5ZN
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10896"; a="9920714"
+X-IronPort-AV: E=Sophos;i="6.04,206,1695711600"; 
+   d="scan'208";a="9920714"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2023 00:36:48 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10896"; a="769165246"
+X-IronPort-AV: E=Sophos;i="6.04,206,1695711600"; 
+   d="scan'208";a="769165246"
+Received: from kkrolx-mobl2.ger.corp.intel.com (HELO localhost) ([10.249.134.254])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2023 00:36:46 -0800
+Date:   Fri, 17 Nov 2023 09:36:40 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     junxiao.bi@oracle.com
+Cc:     Song Liu <song@kernel.org>, Tejun Heo <tj@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        gregkh@linuxfoundation.org
+Subject: Re: [PATCH] kernfs: support kernfs notify in memory recliam context
+Message-ID: <20231117093640.00006b70@linux.intel.com>
+In-Reply-To: <c13b580b-434f-4a4b-b0b4-917f8b042de3@oracle.com>
+References: <20231114185947.42829-1-junxiao.bi@oracle.com>
+        <ZVPFMzHAx9JVz2ak@slm.duckdns.org>
+        <c71f1cb7-14d6-45e4-9df1-dc9bc82deda8@oracle.com>
+        <ZVPXd-3TshjeScek@slm.duckdns.org>
+        <443775e1-ed94-452e-8f06-eadb777bede4@oracle.com>
+        <20231115162915.000064f8@linux.intel.com>
+        <c13b580b-434f-4a4b-b0b4-917f8b042de3@oracle.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW4+Ktd7mzTQ6M4n9-=8vgyMDJUi8Xkcv50JXTf_2yqTFA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: cCh0CgDnNw5RvFZlnWeFBA--.9623S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuryUJF4rGw4DXryUAr4Utwb_yoWrXF17pa
-        y7AF1Y9rZ8JF45WryDC3W8W3WrKrZFvrWjgry8X34xAFn8Zr1avrZ7KrZ09F95Jr4fWw12
-        va15Xr9rWFWqkFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
-        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-        xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-        c7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+On Thu, 16 Nov 2023 09:04:34 -0800
+junxiao.bi@oracle.com wrote:
 
-在 2023/11/17 0:24, Song Liu 写道:
-> + more folks.
+> On 11/15/23 7:30 AM, Mariusz Tkaczyk wrote:
 > 
-> On Fri, Nov 10, 2023 at 7:00 PM Bhanu Victor DiCara
-> <00bvd0+linux@gmail.com> wrote:
->>
->> A degraded RAID 4/5/6 array can sometimes read 0s instead of the actual data.
->>
->>
->> #regzbot introduced: 10764815ff4728d2c57da677cd5d3dd6f446cf5f
->> (The problem does not occur in the previous commit.)
->>
->> In commit 10764815ff4728d2c57da677cd5d3dd6f446cf5f, file drivers/md/raid5.c, line 5808, there is `md_account_bio(mddev, &bi);`. When this line (and the previous line) is removed, the problem does not occur.
+> > On Tue, 14 Nov 2023 15:53:47 -0800
+> > junxiao.bi@oracle.com wrote:
+> >  
+> >> Understood, thanks. Sound like depending on Userspace on memory reclaim
+> >> path is really bad idea and the only option for fixing it is to remove
+> >> that dependency, but i am not sure that is possible without breaking the
+> >> consistency of metadata.
+> >>
+> >> Thanks,
+> >>
+> >> Junxiao.  
+> > Indeed the project of external metadata management if fragile. You cares
+> > about IMSM here (same as me) so ideally we should implement metadata
+> > management in kernel- I think that IMSM deserved that after 10 years on the
+> > market. There is no better option, other options are just "workarounds" for
+> > the lack of metadata management in kernel.  
+> Agree, sound like that's the way to proceed.
+> >
+> > Song, any comments here?
+> >
+> >  From the second hand, there is native raid which should just work, so
+> > maybe you can switch to the native raid?  
 > 
-> The patch below should fix it. Please give it more thorough tests and
-> let me know whether it fixes everything. I will send patch later with
-> more details.
-> 
-> Thanks,
-> Song
-> 
-> diff --git i/drivers/md/md.c w/drivers/md/md.c
-> index 68f3bb6e89cb..d4fb1aa5c86f 100644
-> --- i/drivers/md/md.c
-> +++ w/drivers/md/md.c
-> @@ -8674,7 +8674,8 @@ static void md_end_clone_io(struct bio *bio)
->          struct bio *orig_bio = md_io_clone->orig_bio;
->          struct mddev *mddev = md_io_clone->mddev;
-> 
-> -       orig_bio->bi_status = bio->bi_status;
-> +       if (bio->bi_status)
-> +               orig_bio->bi_status = bio->bi_status;
+> Unfortunately that's is not possible, it's a production setup to use 
+> imsm raid.
 
-I'm confused, do you mean that orig_bio can have error while bio
-doesn't? If this is the case, can you explain more how this is
-possible?
+Implementing IMSM in kernel is a goal for months/ years so I don't
+see it in a timeline you would need that on to fix your production setup. It
+will be a big feature, but let's wait for Song voice first.
 
 Thanks,
-Kuai
-
-> 
->          if (md_io_clone->start_time)
->                  bio_end_io_acct(orig_bio, md_io_clone->start_time);
-> 
-> 
->>
->> Similarly, in commit ffc253263a1375a65fa6c9f62a893e9767fbebfa (v6.6), file drivers/md/raid5.c, when line 6200 is removed, the problem does not occur.
->>
->>
->> Steps to reproduce the problem (using bash or similar):
->> 1. Create a degraded RAID 4/5/6 array:
->> fallocate -l 2056M test_array_part_1.img
->> fallocate -l 2056M test_array_part_2.img
->> lo1=$(losetup --sector-size 4096 --find --nooverlap --direct-io --show  test_array_part_1.img)
->> lo2=$(losetup --sector-size 4096 --find --nooverlap --direct-io --show  test_array_part_2.img)
->> # The RAID level must be 4 or 5 or 6 with at least 1 missing drive in any order. The following configuration seems to be the most effective:
->> mdadm --create /dev/md/tmp_test_array --level=4 --raid-devices=3 --chunk=1M --size=2G  $lo1 missing $lo2
->>
->> 2. Create the test file system and clone it to the degraded array:
->> fallocate -l 4G test_fs.img
->> mke2fs -t ext4 -b 4096 -i 65536 -m 0 -E stride=256,stripe_width=512 -L test_fs  test_fs.img
->> lo3=$(losetup --sector-size 4096 --find --nooverlap --direct-io --show  test_fs.img)
->> mount $lo3 /mnt/1
->> python3 create_test_fs.py /mnt/1
->> umount /mnt/1
->> cat test_fs.img > /dev/md/tmp_test_array
->> cmp -l test_fs.img /dev/md/tmp_test_array  # Optionally verify the clone
->> mount --read-only $lo3 /mnt/1
->>
->> 3. Mount the degraded array:
->> mount --read-only /dev/md/tmp_test_array /mnt/2
->>
->> 4. Compare the files:
->> diff -q /mnt/1 /mnt/2
->>
->> If no files are detected as different, do `umount /mnt/2` and `echo 2 > /proc/sys/vm/drop_caches`, and then go to step 3.
->> (Doing `echo 3 > /proc/sys/vm/drop_caches` and then going to step 4 is less effective.)
->> (Only doing `umount /mnt/2` and/or `echo 1 > /proc/sys/vm/drop_caches` is much less effective and the effectiveness wears off.)
->>
->>
->> create_test_fs.py:
->> import errno
->> import itertools
->> import os
->> import random
->> import sys
->>
->>
->> def main(test_fs_path):
->>          rng = random.Random(0)
->>          try:
->>                  for i in itertools.count():
->>                          size = int(2**rng.uniform(12, 24))
->>                          with open(os.path.join(test_fs_path, str(i).zfill(4) + '.bin'), 'xb') as f:
->>                                  f.write(b'\xff' * size)
->>                          print(f'Created file {f.name!r} with size {size}')
->>          except OSError as e:
->>                  if e.errno != errno.ENOSPC:
->>                          raise
->>                  print(f'Done: {e.strerror} (partially created file {f.name!r})')
->>
->>
->> if __name__ == '__main__':
->>          main(sys.argv[1])
->>
->>
->>
-> .
-> 
-
+Mariusz
