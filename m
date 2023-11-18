@@ -2,80 +2,64 @@ Return-Path: <linux-raid-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0E17C072A2
-	for <linux-raid@archiver.kernel.org>; Sat, 18 Nov 2023 00:40:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89C32C072A2
+	for <linux-raid@archiver.kernel.org>; Sat, 18 Nov 2023 01:14:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234566AbjKRAkK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 17 Nov 2023 19:40:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60716 "EHLO
+        id S232593AbjKRBO2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Nov 2023 20:14:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232422AbjKRAkJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Nov 2023 19:40:09 -0500
+        with ESMTP id S232422AbjKRBO1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Nov 2023 20:14:27 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EDD493
-        for <linux-raid@vger.kernel.org>; Fri, 17 Nov 2023 16:40:06 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A28DC433C8;
-        Sat, 18 Nov 2023 00:40:05 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4AAF85
+        for <linux-raid@vger.kernel.org>; Fri, 17 Nov 2023 17:14:24 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B4C2C433CC
+        for <linux-raid@vger.kernel.org>; Sat, 18 Nov 2023 01:14:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700268006;
-        bh=bONo3JWLmmf5t4W5DM3Xs4WIwL5POGRaxigm9Sd0Uqg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=cHnoRoGpXIOcF6EJGmUP5vWpPCkkvciU3JOQh8tq00aBNAUmwal6kudTqsTpCmqVd
-         Ac17IbrjkxG8Ez5xuqmLdaDXzhsMzZr/jCefhbfBigRR8qtItGOBR9KnrL2Ib7VH03
-         eoR5DaH8Tqztixp2Nz7LHD0ScCJYorh4ca2dOJtLfa8pDfZDMEH0h07O7pIM3xmpyE
-         IhO5CTt7BRO7SSjLR5eQmNHj9H0HvHxbncGrtSR+2ewkguqCqmSxwYlf6xcYuxwdke
-         V/ZCzOYZZZMLSD68Tnc9Jy5oJrKIJ4t3PeroSpq80eRXZMtCLzx/HK8UYGXu4U9Qj8
-         b8mbtA6MWtwJA==
-From:   Song Liu <song@kernel.org>
-To:     linux-raid@vger.kernel.org
-Cc:     Song Liu <song@kernel.org>,
-        Bhanu Victor DiCara <00bvd0+linux@gmail.com>,
-        Xiao Ni <xni@redhat.com>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>
-Subject: [PATCH] md: fix bi_status reporting in md_end_clone_io
-Date:   Fri, 17 Nov 2023 16:39:58 -0800
-Message-Id: <20231118003958.2740032-1-song@kernel.org>
-X-Mailer: git-send-email 2.34.1
+        s=k20201202; t=1700270064;
+        bh=892wvsBjWlHKUUt/Q57gwURs4cLrzSWzCyk9SfxDYR8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=VEJm/xvzW0LuX1VDL3JcSn03dNPDl1f2YUPlMHUlNAtq5Zb8bLR+1Ti9kj1mCeeYm
+         Iupk+sv4iyOjUvD9m38Gw4+i+duKPjsFyjraLaIvDaDr31ezoVi2zW5wUi/i+1dXGj
+         XFCo0i3RPoa1GXKCqyP3p+/aWa51mKLRNtlq258ESWP8hiXADSXU3762P63txL23Cn
+         pmw1UZq3GYTPlOuUe1JqjE9lHrdMnnYgR/38L2ALK5fw3GteylLefsei/9qz4CUt0a
+         9ZgdR1r0pRoEUfAZFdmoEdKuLSR7FnzskiQV94b9uJVM8UANjrCeirBolBwKMOfOwp
+         laXK8ZWmxJiPQ==
+Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-5099184f8a3so3771689e87.2
+        for <linux-raid@vger.kernel.org>; Fri, 17 Nov 2023 17:14:24 -0800 (PST)
+X-Gm-Message-State: AOJu0YydoFi8G9RIzw2EsT3Ba0tlY9yxoV1vQc4a1o0iMVfp7cZPyF6J
+        1mZeok0zo3njfl37OfE8axIjGYI+uL8CaB3ureE=
+X-Google-Smtp-Source: AGHT+IFiF1KylJk6XpCG5LYIFRBESIO3+Hpjp3PperV8mJxCMkTwQP8wSl1oTYvTHfwxu0wp/SMtUjtkZNseLSD5hCA=
+X-Received: by 2002:a05:6512:23aa:b0:507:b15b:8b92 with SMTP id
+ c42-20020a05651223aa00b00507b15b8b92mr1006901lfv.59.1700270062409; Fri, 17
+ Nov 2023 17:14:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20231108182216.73611-1-junxiao.bi@oracle.com> <20231108182216.73611-2-junxiao.bi@oracle.com>
+ <a08baf6c-ae35-f83d-2524-4715263c512a@huaweicloud.com> <ee2330ea-6fca-4360-a981-26df47d68cff@oracle.com>
+In-Reply-To: <ee2330ea-6fca-4360-a981-26df47d68cff@oracle.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 17 Nov 2023 17:14:10 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6TTf2n7B01Y+ZJYCtxsgGdaNf5Zo-99og5nvwedqSp4Q@mail.gmail.com>
+Message-ID: <CAPhsuW6TTf2n7B01Y+ZJYCtxsgGdaNf5Zo-99og5nvwedqSp4Q@mail.gmail.com>
+Subject: Re: [PATCH V3 2/2] Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d"
+To:     junxiao.bi@oracle.com
+Cc:     Yu Kuai <yukuai1@huaweicloud.com>, linux-raid@vger.kernel.org,
+        logang@deltatee.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-md_end_clone_io() may overwrite error status in orig_bio->bi_status with
-BLK_STS_OK. This could happen when orig_bio has BIO_CHAIN (split by
-md_submit_bio => bio_split_to_limits, for example). As a result, upper
-layer may miss error reported from md (or the device) and consider the
-failed IO was successful.
+On Tue, Nov 14, 2023 at 5:00=E2=80=AFPM <junxiao.bi@oracle.com> wrote:
+>
+> Hi Song,
+>
+> These two patches get reviewed-by from Kuai and Logan, I didn't see them
+> in your tree yet, would you like review it and pick it up?
 
-Fix this by only update orig_bio->bi_status when current bio reports
-error and orig_bio is BLK_STS_OK. This is the same behavior as
-__bio_chain_endio().
+Sorry for the delay. I was traveling for LPC. I will look into these soon.
 
-Fixes: 10764815ff47 ("md: add io accounting for raid0 and raid5")
-Reported-by: Bhanu Victor DiCara <00bvd0+linux@gmail.com>
-Closes: https://lore.kernel.org/regressions/5727380.DvuYhMxLoT@bvd0/
-Signed-off-by: Song Liu <song@kernel.org>
-Tested-by: Xiao Ni <xni@redhat.com>
-Cc: Guoqing Jiang <guoqing.jiang@linux.dev>
----
- drivers/md/md.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4ee4593c874a..c94373d64f2c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8666,7 +8666,8 @@ static void md_end_clone_io(struct bio *bio)
- 	struct bio *orig_bio = md_io_clone->orig_bio;
- 	struct mddev *mddev = md_io_clone->mddev;
- 
--	orig_bio->bi_status = bio->bi_status;
-+	if (bio->bi_status && !orig_bio->bi_status)
-+		orig_bio->bi_status = bio->bi_status;
- 
- 	if (md_io_clone->start_time)
- 		bio_end_io_acct(orig_bio, md_io_clone->start_time);
--- 
-2.34.1
-
+Thanks,
+Song
