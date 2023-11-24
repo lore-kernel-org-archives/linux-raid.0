@@ -1,138 +1,231 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 731693D3A0
-	for <linux-raid@vger.kernel.org>; Thu, 23 Nov 2023 23:58:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mSUbOlDU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50C2DC433C7
-	for <linux-raid@vger.kernel.org>; Thu, 23 Nov 2023 23:58:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700783904;
-	bh=Z3/8egssVM2gTH3peqhhle6o6wSrSj9+BzrYmnTEyL0=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=mSUbOlDUTaIx71AblSeIrABUkLuEvCZDv449Cmd97mDY3FoK/L7/dRR+AV+1iGOvT
-	 XbVqwmI2gkK9w7vNz9X31VU8LnE/u9/U9Dw7BlmDW7dEPfKWNBeK5rhn+F1BbtM6jT
-	 PWrNQ2avKAahgne2XZq0G6AVa8CyemKTpEcPBmx5oPaMWWHAQCP8f23cYLE3hJe/wk
-	 vrVNo+1bRvJgquJ6ZxYkiBJHPbxEM6zVSrzhnUwpdxXN75uts8FPMbcwchhBUdjKdm
-	 rEtKltFcaMlWbVfBPqOIb83t1s4aKQ6HuCARmFlTtnOEE/5POBkYDGi715T6s6XEWg
-	 ysoXsnsge97/g==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-50943ccbbaeso1843741e87.2
-        for <linux-raid@vger.kernel.org>; Thu, 23 Nov 2023 15:58:24 -0800 (PST)
-X-Gm-Message-State: AOJu0YxtdunJcVlnHPrP8Ue4DXmo+3RedDE8CPnoz3zg4Y7HgpHLk5BH
-	8FXkHy7H7CgCYLHdnrtgULKdjHKylodshuHzCQU=
-X-Google-Smtp-Source: AGHT+IF68B6JoyUrCTNB+tjkYLKRYyXubJT1QiW1bVrah1x2Db5/wD44X4wWkf80rkfPY4ecRAQjJ1jDf05LSoSlxZE=
-X-Received: by 2002:ac2:488d:0:b0:509:7915:a1d6 with SMTP id
- x13-20020ac2488d000000b005097915a1d6mr451288lfc.58.1700783902510; Thu, 23 Nov
- 2023 15:58:22 -0800 (PST)
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0369F1A5;
+	Thu, 23 Nov 2023 17:59:50 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Sbypp15P7z4f3jry;
+	Fri, 24 Nov 2023 09:59:46 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id D936C1A05C4;
+	Fri, 24 Nov 2023 09:59:47 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgCnqxGSA2BlSO0SBw--.61513S3;
+	Fri, 24 Nov 2023 09:59:47 +0800 (CST)
+Subject: Re: [PATCH -next 6/8] md: factor out a helper to stop sync_thread
+To: Yu Kuai <yukuai1@huaweicloud.com>, Xiao Ni <xni@redhat.com>
+Cc: song@kernel.org, neilb@suse.de, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231110172834.3939490-1-yukuai1@huaweicloud.com>
+ <20231110172834.3939490-7-yukuai1@huaweicloud.com>
+ <CALTww2-ivzhRRMYBoVSZ32uRUPL8Lii=z3SHGbMijsximdn=7A@mail.gmail.com>
+ <CALTww2-YiGbw9HAA-hvEbCmWuOHpdHkx1KCBciRW9d6r=j44nQ@mail.gmail.com>
+ <df362513-42a5-ea85-6bc4-784bba263f1b@huaweicloud.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <b94b2298-2ffb-23f2-ab1b-157ab786d6a1@huaweicloud.com>
+Date: Fri, 24 Nov 2023 09:59:46 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGRgLy5E3cb=MS8eSMH03fa27tgFnZp0hwrrobyQMuUU_Axiag@mail.gmail.com>
-In-Reply-To: <CAGRgLy5E3cb=MS8eSMH03fa27tgFnZp0hwrrobyQMuUU_Axiag@mail.gmail.com>
-From: Song Liu <song@kernel.org>
-Date: Thu, 23 Nov 2023 15:58:09 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4z7U-Aq=YemQjFKtcaB7k9x+T_=zM8oBkR3aK2fRzo=A@mail.gmail.com>
-Message-ID: <CAPhsuW4z7U-Aq=YemQjFKtcaB7k9x+T_=zM8oBkR3aK2fRzo=A@mail.gmail.com>
-Subject: Re: raid6 corruption after assembling with event counter difference
- of 1
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <df362513-42a5-ea85-6bc4-784bba263f1b@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgCnqxGSA2BlSO0SBw--.61513S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3Jr45Kw48JFyDJrWxAr17trb_yoW7Ar43p3
+	yfJas8Jr48Jry3ZrZrK3WDAayrZw12vrWDtry3Wa4fJw1Syr47KFyY9F18AFWkta95ta1U
+	Zw4rJFW3uFy8Gr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
+	IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+	0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+	Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
+	UUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi Alexander,
+Hi,
 
-Thanks for the report.
+在 2023/11/21 21:01, Yu Kuai 写道:
+>>>
+>>> It looks like the three roles (md_set_readonly, do_md_stop and
+>>> stop_sync_thread) need to wait for different events. We can move these
+>>> codes out this helper function and make this helper function to be
+>>> more common.
+>>
+>> Or get lock again before returning this function and leave the wait here?
 
-On Wed, Nov 22, 2023 at 1:42=E2=80=AFAM Alexander Lyakas <alex.bolshoy@gmai=
-l.com> wrote:
->
-> Hello Song Liu,
->
-> We had a raid6 with 6 drives, all drives marked as In_sync. At some
-> point drive in slot 5 (last drive) was marked as Faulty, due to
-> timeout IO error. Superblocks of all other drives got updated with
-> event count higher by 1. However, the Faulty drive was still not
-> ejected from the array by remove_and_add_spares(), probably because it
-> still had nr_pending. This situation was going on for 20 minutes, and
-> the Faulty drive was still not being removed from the array. But array
-> continued serving writes, skipping the Faulty drive as designed.
->
-> After about 20 minutes, the machine got rebooted due to some other reason=
-.
->
-> After reboot, the array got assembled, and the event counter
-> difference was 1 between the problematic drive and all other drives.
-> Even count on all drives was 2834681, but on the problematic drive it
-> was 2834680. As a result, mdadm considered the problematic drive as
-> up-to-date, due to this code in mdadm[1]. Kernel also accepted such
-> difference of 1, as can be seen in super_1_validate() [2].
+How about following patch?
 
-Did super_1_validate() set the bad drive as Faulty?
+  drivers/md/md.c | 89 
++++++++++++++++++++++++++++++++++++------------------------------------------------------
+  1 file changed, 35 insertions(+), 54 deletions(-)
 
-                switch(role) {
-                case MD_DISK_ROLE_SPARE: /* spare */
-                        break;
-                case MD_DISK_ROLE_FAULTY: /* faulty */
-                        set_bit(Faulty, &rdev->flags);
-                        break;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 78f32a2e434c..fe46b67f6e87 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4868,35 +4868,18 @@ action_show(struct mddev *mddev, char *page)
+         return sprintf(page, "%s\n", action_names[get_sync_action(mddev)]);
+  }
 
-AFAICT, this should stop the bad drive from going bad to the array.
-If this doesn't work, there might be some bug somewhere.
+-static int stop_sync_thread(struct mddev *mddev)
++static void prepare_to_stop_sync_thread(struct mddev *mddev)
++       __releases(&mddev->reconfig_mutex)
+  {
+-       int err = mddev_lock(mddev);
+-
+-       if (err)
+-               return err;
+-
+-       /*
+-        * Check again in case MD_RECOVERY_RUNNING is cleared before lock is
+-        * held.
+-        */
+-       if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+-               mddev_unlock(mddev);
+-               return 0;
+-       }
+-
+-       if (work_pending(&mddev->sync_work))
+-               flush_workqueue(md_misc_wq);
+-
+         set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+         /*
+-        * Thread might be blocked waiting for metadata update which 
+will now
+-        * never happen
++        * Thread might be blocked waiting for metadata update which
++        * will now never happen.
+          */
+         md_wakeup_thread_directly(mddev->sync_thread);
+-
+         mddev_unlock(mddev);
+-
+-       return 0;
++       if (work_pending(&mddev->sync_work))
++               flush_work(&mddev->sync_work);
+  }
 
-Thanks,
-Song
+  static int idle_sync_thread(struct mddev *mddev)
+@@ -4905,13 +4888,17 @@ static int idle_sync_thread(struct mddev *mddev)
+         int err;
 
->
-> In addition, the array was marked as dirty, so RESYNC of the array
-> started. For raid6, to my understanding, resync re-calculates parity
-> blocks based on data blocks. But many data blocks on the problematic
-> drive were not up to date, because this drive was marked as Faulty for
-> 20 minutes and writes to it were skipped. As a result, REYNC made the
-> parity blocks to match the not-up-to-date data blocks from the
-> problematic drive. Data on the array became unusable.
->
-> Many years ago, I asked Neil why event count difference of 1 was
-> allowed. He responded that this was to address the case when the
-> machine crashes in the middle of superblock writes, so some superblock
-> writes succeeded and some failed. In such case, allowing event count
-> difference of 1 is legitimate.
->
-> Can you please comment of whether this behavior seems correct, in
-> light of the scenario above?
->
-> Thanks,
-> Alex.
->
-> [1]
-> int event_margin =3D 1; /* always allow a difference of '1'
->        * like the kernel does
->        */
-> ...
-> /* Require event counter to be same as, or just less than,
-> * most recent.  If it is bigger, it must be a stray spare and
-> * should be ignored.
-> */
-> if (devices[j].i.events+event_margin >=3D
->     devices[most_recent].i.events &&
->     devices[j].i.events <=3D
->     devices[most_recent].i.events
-> ) {
-> devices[j].uptodate =3D 1;
->
-> [2]
-> } else if (mddev->pers =3D=3D NULL) {
-> /* Insist of good event counter while assembling, except for
-> * spares (which don't need an event count) */
-> ++ev1;
-> if (rdev->desc_nr >=3D 0 &&
->     rdev->desc_nr < le32_to_cpu(sb->max_dev) &&
->     (le16_to_cpu(sb->dev_roles[rdev->desc_nr]) < MD_DISK_ROLE_MAX ||
->      le16_to_cpu(sb->dev_roles[rdev->desc_nr]) =3D=3D MD_DISK_ROLE_JOURNA=
-L))
-> if (ev1 < mddev->events)
-> return -EINVAL;
+         clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-       err = stop_sync_thread(mddev);
++       err = mddev_lock(mddev);
+         if (err)
+                 return err;
+
+-       err = wait_event_interruptible(resync_wait,
++       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
++               prepare_to_stop_sync_thread(mddev);
++               err = wait_event_interruptible(resync_wait,
+                         sync_seq != atomic_read(&mddev->sync_seq) ||
+                         !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
++       }
++
+         return err;
+  }
+
+@@ -4920,12 +4907,15 @@ static int frozen_sync_thread(struct mddev *mddev)
+         int err;
+
+         set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-       err = stop_sync_thread(mddev);
++       err = mddev_lock(mddev);
+         if (err)
+                 return err;
+
+-       err = wait_event_interruptible(resync_wait,
++       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
++               prepare_to_stop_sync_thread(mddev);
++               err = wait_event_interruptible(resync_wait,
+                         !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
++       }
+
+         return err;
+  }
+@@ -6350,11 +6340,11 @@ static void md_clean(struct mddev *mddev)
+  static void __md_stop_writes(struct mddev *mddev)
+  {
+         set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-       if (work_pending(&mddev->sync_work))
+-               flush_workqueue(md_misc_wq);
+-       if (mddev->sync_thread) {
+-               set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-               md_reap_sync_thread(mddev);
++       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
++               prepare_to_stop_sync_thread(mddev);
++               wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
++                                                 &mddev->recovery));
++               mddev_lock_nointr(mddev);
+         }
+
+         del_timer_sync(&mddev->safemode_timer);
+@@ -6447,18 +6437,15 @@ static int md_set_readonly(struct mddev *mddev, 
+struct block_device *bdev)
+                 did_freeze = 1;
+                 set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+         }
+-       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+-               set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+
+-       /*
+-        * Thread might be blocked waiting for metadata update which 
+will now
+-        * never happen
+-        */
+-       md_wakeup_thread_directly(mddev->sync_thread);
++       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
++               prepare_to_stop_sync_thread(mddev);
++               wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
++                                                 &mddev->recovery));
++       } else {
++               mddev_unlock(mddev);
++       }
+
+-       mddev_unlock(mddev);
+-       wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
+-                                         &mddev->recovery));
+         wait_event(mddev->sb_wait,
+                    !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+         mddev_lock_nointr(mddev);
+@@ -6509,19 +6496,13 @@ static int do_md_stop(struct mddev *mddev, int mode,
+                 did_freeze = 1;
+                 set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+         }
+-       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+-               set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-
+-       /*
+-        * Thread might be blocked waiting for metadata update which 
+will now
+-        * never happen
+-        */
+-       md_wakeup_thread_directly(mddev->sync_thread);
+
+-       mddev_unlock(mddev);
+-       wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
+-                                         &mddev->recovery));
+-       mddev_lock_nointr(mddev);
++       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
++               prepare_to_stop_sync_thread(mddev);
++               wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
++                                                 &mddev->recovery));
++               mddev_lock_nointr(mddev);
++       }
+
+         mutex_lock(&mddev->open_mutex);
+         if ((mddev->pers && atomic_read(&mddev->openers) > !!bdev) ||
+
