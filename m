@@ -1,130 +1,146 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 810CB423C;
-	Fri, 24 Nov 2023 00:00:23 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Sc6pp6yxDz4f3mJM;
-	Fri, 24 Nov 2023 16:00:18 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id B2C711A0352;
-	Fri, 24 Nov 2023 16:00:20 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDX2xERWGBlUnAqBw--.22901S8;
-	Fri, 24 Nov 2023 16:00:20 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: song@kernel.org,
-	yukuai3@huawei.com,
-	xni@redhat.com
-Cc: linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH v2 4/6] md: don't leave 'MD_RECOVERY_FROZEN' in error path of md_set_readonly()
-Date: Fri, 24 Nov 2023 15:59:51 +0800
-Message-Id: <20231124075953.1932764-5-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231124075953.1932764-1-yukuai1@huaweicloud.com>
-References: <20231124075953.1932764-1-yukuai1@huaweicloud.com>
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6C8E945A
+	for <linux-raid@vger.kernel.org>; Fri, 24 Nov 2023 08:14:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tSFjxlsV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A708C433C8;
+	Fri, 24 Nov 2023 08:14:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1700813645;
+	bh=yY7r0NmTSZjwOmhPQa1HduXqguztxuo72o3wVU0BM/8=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=tSFjxlsV4uUVdscw2Un4otEoKDU8EHh/lJWjPTYF1X81EbiWZaKqCJ0fB2QoYv0wY
+	 dZ2ae0GtK3jH6bDEZlBDTlDBv0cgtcxK3KuMSAT7SBXyOIZXbLXqAl+b2QQwnO57lY
+	 l3cK0ykmmlHxNSRichzloioBCm16fpJyIIMcN/TxRboVjCtZj6SKyxk/qz/AiEgrY9
+	 5IxuIAaocEqD7y3lCunXXMei/7QSlvd+/xFzSO697iKFUgIKGwX9nAR9DAqEJyuplV
+	 BIkFmd4f7V8Ve0QKWOlhlRVHPSIox/SjBrvLRpudL6AGKfwR/i0EgqmdRtq3G83Bnn
+	 Rn+m+2BA8RHHA==
+Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-507962561adso2468390e87.0;
+        Fri, 24 Nov 2023 00:14:05 -0800 (PST)
+X-Gm-Message-State: AOJu0YzB8y7ZDCjmZwalUhyE6DV/5gkB7SyCjXVHuUh35iNrcgisp8P9
+	/MCO1G/r5jBKTtSX3dBTOVF2vuAUt+PCQjE/pG8=
+X-Google-Smtp-Source: AGHT+IE3KT95bqnnUerosyzzgkim9S3Sv+AY1QhFZK/9JDq0XzMUAQIcC7eMMz5H2OuLGtaw1ByW6nqT9rBVBprx4Ls=
+X-Received: by 2002:a19:6415:0:b0:504:4165:54ab with SMTP id
+ y21-20020a196415000000b00504416554abmr946580lfb.56.1700813643560; Fri, 24 Nov
+ 2023 00:14:03 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDX2xERWGBlUnAqBw--.22901S8
-X-Coremail-Antispam: 1UD129KBjvJXoW7uFWfWF17Jry8CF13Xr1kXwb_yoW8Kr4rp3
-	yftF98CryUJry3Zr4Dta4DXa45Zw12q3yqyFy3u3s5JF1ftrsxCFyrW34xJrWkKas2v3W5
-	Xw48JrW7u342g3JanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9C14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrw
-	CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-	14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-	IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxK
-	x2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
-	0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQSdkUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20231021102059.3198284-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20231021102059.3198284-1-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 24 Nov 2023 00:13:50 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7gJkcpEV32EUesMNycRbN0t7t+00-q9RiVTgRiY2sFwA@mail.gmail.com>
+Message-ID: <CAPhsuW7gJkcpEV32EUesMNycRbN0t7t+00-q9RiVTgRiY2sFwA@mail.gmail.com>
+Subject: Re: [PATCH -next v2 0/6] md: remove rcu protection to access rdev
+ from conf
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Fri, Oct 20, 2023 at 7:25=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> The lifetime of rdev:
+>
+> 1. md_import_device() generate a rdev based on underlying disk;
+>
+>    mddev_lock()
+>    rdev =3D kzalloc();
+>    rdev->bdev =3D blkdev_get_by_dev();
+>    mddev_unlock()
+>
+> 2. bind_rdev_to_array() add this rdev to mddev->disks;
+>
+>    mddev_lock()
+>    kobject_add(&rdev->kobj, &mddev->kobj, ...);
+>    list_add_rcu(&rdev->same_set, &mddev->disks);
+>    mddev_unlock()
+>
+> 3. remove_and_add_spares() add this rdev to conf;
+>
+>    mddev_lock()
+>    rdev_addable();
+>    pers->hot_add_disk();
+>    rcu_assign_pointer(conf->rdev, rdev);
+>    mddev_unlock()
+>
+> 4. Use this array with rdev;
+>
+> 5. remove_and_add_spares() remove rdev from conf;
+>
+>    mddev_lock()
+>    // triggered by sysfs/ioctl
+>    rdev_removeable();
+>    pers->hot_remove_disk();
+>     rcu_assign_pointer(conf->rdev, NULL);
+>     synchronize_rcu();
+>    mddev_unlock()
+>
+>    // triggered by daemon
+>    mddev_lock()
+>    rdev_removeable();
+>    synchronize_rcu(); -> this can't protect accessing rdev from conf
+>    pers->hot_remove_disk();
+>     rcu_assign_pointer(conf->rdev, NULL);
+>    mddev_unlock()
+>
+> 6. md_kick_rdev_from_array() remove rdev from mddev->disks;
+>
+>    mddev_lock()
+>    list_del_rcu(&rdev->same_set);
+>    synchronize_rcu();
+>    list_add(&rdev->same_set, &mddev->deleting)
+>    mddev_unlock()
+>     export_rdev
+>
+> There are two separate rcu protection for rdev, and this pathset remove
+> the protection of conf(step 3 and 5), because it's safe to access rdev
+> from conf in following cases:
+>
+>  - If 'reconfig_mutex' is held, because rdev can't be added or rmoved to
+>  conf;
+>  - If there is normal IO inflight, because mddev_suspend() will wait for
+>  IO to be done and prevent rdev to be added or removed to conf;
+>  - If sync thread is running, because remove_and_add_spares() can only be
+>  called from daemon thread when sync thread is done, and
+>  'MD_RECOVERY_RUNNING' is also checked for ioctl/sysfs;
+>  - if any spinlock or rcu_read_lock() is held, because synchronize_rcu()
+>  from step 6 prevent rdev to be freed until spinlock is released or
+>  rcu_read_unlock();
 
-If md_set_readonly() failed, the array could still be read-write, however
-'MD_RECOVERY_FROZEN' could still be set, which leave the array in an
-abnormal state that sync or recovery can't continue anymore.
-Hence make sure the flag is cleared after md_set_readonly() returns.
+Thanks for the cover letter.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+Song
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b4e21db71454..5af67748e53e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6360,6 +6360,9 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
- 	int err = 0;
- 	int did_freeze = 0;
- 
-+	if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
-+		return -EBUSY;
-+
- 	if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
- 		did_freeze = 1;
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-@@ -6373,8 +6376,6 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
- 	 */
- 	md_wakeup_thread_directly(mddev->sync_thread);
- 
--	if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags))
--		return -EBUSY;
- 	mddev_unlock(mddev);
- 	wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
- 					  &mddev->recovery));
-@@ -6386,27 +6387,29 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
- 	if ((mddev->pers && atomic_read(&mddev->openers) > !!bdev) ||
- 	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
- 		pr_warn("md: %s still in use.\n",mdname(mddev));
--		if (did_freeze) {
--			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
--			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
--		}
- 		err = -EBUSY;
- 		goto out;
- 	}
-+
- 	if (mddev->pers) {
- 		__md_stop_writes(mddev);
- 
--		err  = -ENXIO;
--		if (mddev->ro == MD_RDONLY)
-+		if (mddev->ro == MD_RDONLY) {
-+			err  = -ENXIO;
- 			goto out;
-+		}
-+
- 		mddev->ro = MD_RDONLY;
- 		set_disk_ro(mddev->gendisk, 1);
-+	}
-+
-+out:
-+	if ((mddev->pers && !err) || did_freeze) {
- 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
--		err = 0;
- 	}
--out:
-+
- 	mutex_unlock(&mddev->open_mutex);
- 	return err;
- }
--- 
-2.39.2
-
+>
+> Yu Kuai (6):
+>   md: remove useless debug code to print configuration
+>   md: remove flag RemoveSynchronized
+>   md/raid1: remove rcu protection to access rdev from conf
+>   md/raid10: remove rcu protection to access rdev from conf
+>   md/raid5: remove rcu protection to access rdev from conf
+>   md/md-multipath: remove rcu protection to access rdev from conf
+>
+>  drivers/md/md-multipath.c |  29 ++---
+>  drivers/md/md.c           |  37 +-----
+>  drivers/md/raid1.c        |  94 ++++-----------
+>  drivers/md/raid10.c       | 248 +++++++++-----------------------------
+>  drivers/md/raid5-cache.c  |  11 +-
+>  drivers/md/raid5-ppl.c    |  16 +--
+>  drivers/md/raid5.c        | 225 ++++++++++------------------------
+>  drivers/md/raid5.h        |   4 +-
+>  8 files changed, 163 insertions(+), 501 deletions(-)
+>
+> --
+> 2.39.2
+>
