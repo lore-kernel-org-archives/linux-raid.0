@@ -1,100 +1,97 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78E4C35F18
+	for <linux-raid@vger.kernel.org>; Fri, 24 Nov 2023 16:49:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QDjeimSa"
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A4DFA8
-	for <linux-raid@vger.kernel.org>; Fri, 24 Nov 2023 04:04:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1700827473; x=1732363473;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=NEiox36NcWmJ/gH3fJXHCgAHDG/155kjruJi/y9ccX8=;
-  b=QDjeimSaOU2Il0e84D4839UVADNYpz0yCDWXZLlinU0SSXruz8eKXiQm
-   QdS+0w01IPnXy/4875UZhBpyJkYML4mxU7eF8mhwUaHNgz+UMqcMQC8kK
-   zVP/NfeJg8F+cb+U4R9PNCeC1XBPT4jzxRDhuVP6odJSXOSOcn/bM5PpG
-   idXbtGwVRjPJi3lVJ/uYh9P0hhsw23ppa1x8eg4+WrSVy4B/woYPMZdbh
-   oVjd1Z1RKx0pQYvaF5MM0NcQI59zKcjGmMw0bzuHkUYl/JRsvq/eD30GC
-   h5lHltRdPAgwZ2I3NPeZVSvq+ulYZ0udB86d0Fl3gDip8u7iwuOdWkqln
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10902"; a="391288430"
-X-IronPort-AV: E=Sophos;i="6.04,224,1695711600"; 
-   d="scan'208";a="391288430"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2023 04:04:32 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10902"; a="1099074162"
-X-IronPort-AV: E=Sophos;i="6.04,224,1695711600"; 
-   d="scan'208";a="1099074162"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.138.202])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2023 04:04:31 -0800
-Date: Fri, 24 Nov 2023 13:04:26 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Erik =?ISO-8859-1?Q?Starb=E4ck?= <erik.starback@uppmax.uu.se>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Subject: Re: SMART-info used by mdadm/mdmon?
-Message-ID: <20231124130426.00006609@linux.intel.com>
-In-Reply-To: <e7dd3ccf8b7c42298b49f17b3ba0794c@uppmax.uu.se>
-References: <e7dd3ccf8b7c42298b49f17b3ba0794c@uppmax.uu.se>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s0ZiCfq2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FBBBC433C7;
+	Fri, 24 Nov 2023 16:49:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1700844561;
+	bh=Fkv7S7T1c3p07xBeyAOIkgcnZBtOBErEbzabrMqijuo=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=s0ZiCfq2SxmdqlKvYoVPt2US2SeGksv6h7U//ZkEIU47MVVxNDOEw4a3UHXf+l4f+
+	 NPT8ncWmIRTQDsMhTAPVbaZpYVaAkMwiDN5XFPd87aH6g2c8/zpnLhSAfG/Xvgbt9i
+	 AAVLgpaSYsrRiucrbLTUvfk2/uJVzf3AGh9EMdZd1YcJDMJwbVnoil6ZjtRWoAXg3Z
+	 h+gJazM/aJKcEw8rWXxtr7fLNj5elRChYuFC8EIasIcJy6jthEmDODTV90Ld0cY4lr
+	 0caEaVM0DUqz5tzhXUqQG9fECU86px647MlYrIu7Ca6fzxvfzowGAiUNmRRdR7jOre
+	 Q5/iQQ/3LWO+w==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5079f3f3d7aso2981173e87.1;
+        Fri, 24 Nov 2023 08:49:21 -0800 (PST)
+X-Gm-Message-State: AOJu0Yx7JKdAjhJNgfPpCPQ1w/oeUN+eudlj4riftblwNfG9MRu/jWMU
+	WTEl6NvffQVtFxW8DL4EEQ/eI2YxyW5PG6TLkw4=
+X-Google-Smtp-Source: AGHT+IGeK+8nt2GDtNKqNhYU2TqqgPt4FdEDMQwF96TjonxqToicZMjEM0/E5/eXz31EA1YEiLQiVPH94s0CWVt5Af8=
+X-Received: by 2002:ac2:5a59:0:b0:50a:a6d2:b631 with SMTP id
+ r25-20020ac25a59000000b0050aa6d2b631mr2516579lfn.53.1700844559515; Fri, 24
+ Nov 2023 08:49:19 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+References: <20231021102059.3198284-1-yukuai1@huaweicloud.com>
+ <20231021102059.3198284-2-yukuai1@huaweicloud.com> <CAPhsuW5=fDpsAofik+4jHObFkRMcTTeQPbtXSBG_KAes0YgQGA@mail.gmail.com>
+ <1f3080ca-cde6-2473-4679-a79fa744eb70@huaweicloud.com>
+In-Reply-To: <1f3080ca-cde6-2473-4679-a79fa744eb70@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 24 Nov 2023 08:49:07 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4d4mHQ9C=3gGKOG=QuXVH11ZtksQV3WV3CbYANgq7FYw@mail.gmail.com>
+Message-ID: <CAPhsuW4d4mHQ9C=3gGKOG=QuXVH11ZtksQV3WV3CbYANgq7FYw@mail.gmail.com>
+Subject: Re: [PATCH -next v2 1/6] md: remove useless debug code to print configuration
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 24 Nov 2023 10:41:37 +0000
-Erik Starb=E4ck <erik.starback@uppmax.uu.se> wrote:
+On Fri, Nov 24, 2023 at 1:12=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> Hi,
+>
+> =E5=9C=A8 2023/11/24 16:17, Song Liu =E5=86=99=E9=81=93:
+> > On Fri, Oct 20, 2023 at 7:25=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.co=
+m> wrote:
+> >>
+> >> From: Yu Kuai <yukuai3@huawei.com>
+> >>
+> >> One the one hand, print_conf() can be called without grabbing
+> >> 'reconfig_mtuex' and current rcu protection to access rdev through 'co=
+nf'
+> >> is not safe. Fortunately, there is a separate rcu protection to access
+> >> rdev from 'mddev->disks', and rdev is always removed from 'conf' befor=
+e
+> >> 'mddev->disks'.
+> >>
+> >> On the other hand, print_conf() is just used for debug,
+> >> and user can always grab such information(/proc/mdstat and mdadm).
+> >>
+> >> There is no need to always enable this debug and try to fix misuse rcu
+> >> protection for accessing rdev from 'conf', hence remove print_conf().
+> >>
+> >> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> >
+> > I wouldn't call these debug functions useless. There is probably some
+> > users who use them for debugging (or even in some automations).
+> > How hard is it to keep these functions? Can we just add some lockdep
+> > to these functions to make sure they are called from safe places?
+>
+> Okay, I can keep these debug code, and since these code are
+> dereferencing rdev from conf, and they need new syncronization:
+>
+> 1) dereference rdev from mddev->disks instead of conf, and use
+> rdev->raid_disk >=3D 0 to judge if this rdev is in conf. There might
+> be a race window that rdev can be removed from conf, however, I think
+> this dones't matter. Or:
+>
+> 2) grab 'active_io' before print_conf(), to make sure rdev won't be
+> removed from conf.
 
-> Hi!
->=20
-> I try to understand if mdadm/mdmon use SMART-information to realize if a =
-disk
-> is broken (or will soon be broken), or if they only use more concrete
-> information about read/writes and different response times to kick out a =
-disk
-> from a mdadm-raid.
+I think for most of these cases, we can already do print_conf()
+safely (holding mutex/lock), no? We can grab active_io when it is
+really necessary.
 
-Hello Erik,
-No mdadm and mdmon do not use SMART to make decision about disk in raid
-array. I think that it is not a task for mdadm to do so. mdadm is a MD mana=
-ger-
-it cares about making requesting action possible when the problem is you as=
-king
-about it more predicting drive failure.
-mdadm will complete the action requested by other utility which may be
-projected to track and analyze SMARTs.
-
-mdadm reacts on "remove" event triggered by udev so it means that device
-must be removed by the device driver first.
-Another way is high error rate from device - in this case MD drives kicks o=
-ut
-the drive itself. However it is rather sporadic and happens only on certain
-conditions like high workload.
-
-Hope it is helpful!
-Mariusz
->=20
-> /Erik Starb=E4ck, UPPMAX Uppsala University
->=20
->=20
->=20
->=20
->=20
->=20
->=20
->=20
-> N=E4r du har kontakt med oss p=E5 Uppsala universitet med e-post s=E5 inn=
-eb=E4r det
-> att vi behandlar dina personuppgifter. F=F6r att l=E4sa mer om hur vi g=
-=F6r det kan
-> du l=E4sa h=E4r: http://www.uu.se/om-uu/dataskydd-personuppgifter/
->=20
-> E-mailing Uppsala University means that we will process your personal dat=
-a.
-> For more information on how this is performed, please read here:
-> http://www.uu.se/en/about-uu/data-protection-policy
->=20
-
+Thanks,
+Song
