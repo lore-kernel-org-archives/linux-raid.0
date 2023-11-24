@@ -1,77 +1,151 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08263381BE
-	for <linux-raid@vger.kernel.org>; Fri, 24 Nov 2023 17:29:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A4E0381BF
+	for <linux-raid@vger.kernel.org>; Fri, 24 Nov 2023 17:36:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gq+zegA+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8254EC433C9
-	for <linux-raid@vger.kernel.org>; Fri, 24 Nov 2023 17:29:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VwkZ4VqH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00F2FC433C8;
+	Fri, 24 Nov 2023 17:36:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700846970;
-	bh=iMqDhiSQQ2GZy6dDGVvI9bb6a/sU1ztLX5yB9WRpFOY=;
+	s=k20201202; t=1700847409;
+	bh=Olz0jPHIcl5EtQacm8JgI+yY2ypimzcwd2gPIun1kJU=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=gq+zegA+JdQXOcm9cfU1hnzsMEt56KwIvl1d44m+Q6WREm4vm7asNVD9A6Leo47QU
-	 50CvLPYC4hPktxgLuJXqMFPGDEmoc+r6Cx7kvlyLKBqOQ2NmVw2wZlqZzIkFNHCMeC
-	 S0Ah/MsRApb6rIQU9PoobyJBXXvlx3/6X7ux4LnSQM5g6y6sKv0wlyg+RU63KPC6rP
-	 PdlPz3egumqB0KE6aS4TJpsoCBONFXjBAE6t+hZILlsxc3QvBbMAKddFKan4eqHQ/c
-	 sAgBogblqXsu7N4ORy1M3gHKCCOYr+tU4MEdhu0bdo7YAJk0LRM2F7cgiUP4YRm6S5
-	 l9FBJPStPBefA==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-507cd62472dso3314929e87.0
-        for <linux-raid@vger.kernel.org>; Fri, 24 Nov 2023 09:29:30 -0800 (PST)
-X-Gm-Message-State: AOJu0Yy7rBpgkpVh5wZu91Ns8DNX1QaWIn8a1WJYSH48FV/wq6OVPAlQ
-	y4kdOgKV+DyIKHJ8Sfw2hWQiFgqY2nlNWYsgkFg=
-X-Google-Smtp-Source: AGHT+IGFh1Vg1fxRNFICppaeYGeqTmtcS7tmxaWesq93cOTysLVaReLT14cA9EOWMzvogLPTCasfUaHMq4ROjYOYDhY=
-X-Received: by 2002:a05:6512:31c6:b0:50a:6fb8:a0c0 with SMTP id
- j6-20020a05651231c600b0050a6fb8a0c0mr1360532lfe.19.1700846968757; Fri, 24 Nov
- 2023 09:29:28 -0800 (PST)
+	b=VwkZ4VqH5T10liHNpHjVoi9JlOybx52kdqVVO4yhpZGutmm/piF9vuNJS5XBtqIdE
+	 SpDAF61n+kwvtxRmrQupv1NrFzOMnRlgurUgSP7O34cvpDzJAGdvIXQ0KF9ZoIgWLJ
+	 iHF2XB1FjRjRfKTynWaoPQZTEcivjT8xMSDTfixsotbC9khsh+3d05zrfXAQKEAGwn
+	 99VdsAFwdQLNlhDNYBP6/6he74hWgpVjdfNjQa0GteqtftoUgy2AwK0/vVi9JzXTjZ
+	 mfuv+v9XmhXOA3eD4ZCKUUwPwCMdPPDqOSuj1OafPb84CXBYrtEbEXghgf93E+KhTp
+	 F8RVGg8fnyMlQ==
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-2c5071165d5so28356541fa.0;
+        Fri, 24 Nov 2023 09:36:48 -0800 (PST)
+X-Gm-Message-State: AOJu0YxD2TO9Rf6eG4VJZuDdjoyDgtbW0ZvehKOeaRxVFGzloe1K9Ckd
+	QDrILutbwIQGxp8xfkmrUVgoX3nZVbJOBSxqJCY=
+X-Google-Smtp-Source: AGHT+IHcsAirvViTKl3O44TbsIBneeUalhap9x+zLwuPia+nDDJSnoYb4cciYXrR0waMFJNpUdnsmB7sgxjhN826v6Q=
+X-Received: by 2002:a2e:9d09:0:b0:2bc:c650:81b with SMTP id
+ t9-20020a2e9d09000000b002bcc650081bmr2475428lji.15.1700847407182; Fri, 24 Nov
+ 2023 09:36:47 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231108182216.73611-1-junxiao.bi@oracle.com> <20231108182216.73611-2-junxiao.bi@oracle.com>
-In-Reply-To: <20231108182216.73611-2-junxiao.bi@oracle.com>
+References: <20231108180210.3657203-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20231108180210.3657203-1-yukuai1@huaweicloud.com>
 From: Song Liu <song@kernel.org>
-Date: Fri, 24 Nov 2023 09:29:16 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5HCEbxTciUDiBJ-RkNBbmf76RSZZWvc88ABX172CCsOw@mail.gmail.com>
-Message-ID: <CAPhsuW5HCEbxTciUDiBJ-RkNBbmf76RSZZWvc88ABX172CCsOw@mail.gmail.com>
-Subject: Re: [PATCH V3 2/2] Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d"
-To: Junxiao Bi <junxiao.bi@oracle.com>
-Cc: linux-raid@vger.kernel.org, logang@deltatee.com, yukuai1@huaweicloud.com
+Date: Fri, 24 Nov 2023 09:36:35 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7kkSMNpo9cm3L23o7T676iLa=7gq8V9YkCx0MA6ad+QQ@mail.gmail.com>
+Message-ID: <CAPhsuW7kkSMNpo9cm3L23o7T676iLa=7gq8V9YkCx0MA6ad+QQ@mail.gmail.com>
+Subject: Re: [PATCH -next] md: synchronize flush io with array reconfiguration
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: xni@redhat.com, maan@systemlinux.org, neilb@suse.de, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Nov 8, 2023 at 10:22=E2=80=AFAM Junxiao Bi <junxiao.bi@oracle.com> =
-wrote:
+On Wed, Nov 8, 2023 at 2:07=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
+ote:
 >
-> This reverts commit 5e2cf333b7bd5d3e62595a44d598a254c697cd74.
+> From: Yu Kuai <yukuai3@huawei.com>
 >
-> That commit introduced the following race and can cause system hung.
+> Currently rcu is used to protect iterating rdev from submit_flushes():
 >
->  md_write_start:             raid5d:
->  // mddev->in_sync =3D=3D 1
->  set "MD_SB_CHANGE_PENDING"
->                             // running before md_write_start wakeup it
->                              waiting "MD_SB_CHANGE_PENDING" cleared
->                              >>>>>>>>> hung
->  wakeup mddev->thread
->  ...
->  waiting "MD_SB_CHANGE_PENDING" cleared
->  >>>> hung, raid5d should clear this flag
->  but get hung by same flag.
+> submit_flushes                  remove_and_add_spares
+>                                  synchronize_rcu
+>                                  pers->hot_remove_disk()
+>  rcu_read_lock()
+>  rdev_for_each_rcu
+>   if (rdev->raid_disk >=3D 0)
+>                                  rdev->radi_disk =3D -1;
+>    atomic_inc(&rdev->nr_pending)
+>    rcu_read_unlock()
+>    bi =3D bio_alloc_bioset()
+>    bi->bi_end_io =3D md_end_flush
+>    bi->private =3D rdev
+>    submit_bio
+>    // issue io for removed rdev
 >
-> The issue reverted commit fixing is fixed by last patch in a new way.
+> Fix this problem by grabbing 'acive_io' before iterating rdev, make sure
+> that remove_and_add_spares() won't concurrent with submit_flushes().
 >
-> Fixes: 5e2cf333b7bd ("md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d")
-> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
+> Fixes: a2826aa92e2e ("md: support barrier requests on all personalities."=
+)
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-The set looks good to me. Thanks!
+LGTM.
 
-Quick question: from the earlier thread, the issue was observed in
-production. Have you reproduced the issue and thus verified the fix
-works as expected?
+> ---
+>  drivers/md/md.c | 21 +++++++++++++++------
+>  1 file changed, 15 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 4ee4593c874a..eb3e455bcbae 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -529,6 +529,9 @@ static void md_end_flush(struct bio *bio)
+>         rdev_dec_pending(rdev, mddev);
+>
+>         if (atomic_dec_and_test(&mddev->flush_pending)) {
+> +               /* The pair is percpu_ref_tryget() from md_flush_request(=
+) */
+> +               percpu_ref_put(&mddev->active_io);
+> +
+>                 /* The pre-request flush has finished */
+>                 queue_work(md_wq, &mddev->flush_work);
+>         }
+> @@ -548,12 +551,8 @@ static void submit_flushes(struct work_struct *ws)
+>         rdev_for_each_rcu(rdev, mddev)
+>                 if (rdev->raid_disk >=3D 0 &&
+>                     !test_bit(Faulty, &rdev->flags)) {
+> -                       /* Take two references, one is dropped
+> -                        * when request finishes, one after
+> -                        * we reclaim rcu_read_lock
+> -                        */
+>                         struct bio *bi;
+> -                       atomic_inc(&rdev->nr_pending);
+> +
+>                         atomic_inc(&rdev->nr_pending);
+>                         rcu_read_unlock();
+>                         bi =3D bio_alloc_bioset(rdev->bdev, 0,
+> @@ -564,7 +563,6 @@ static void submit_flushes(struct work_struct *ws)
+>                         atomic_inc(&mddev->flush_pending);
+>                         submit_bio(bi);
+>                         rcu_read_lock();
+> -                       rdev_dec_pending(rdev, mddev);
+>                 }
+>         rcu_read_unlock();
+>         if (atomic_dec_and_test(&mddev->flush_pending))
+> @@ -617,6 +615,17 @@ bool md_flush_request(struct mddev *mddev, struct bi=
+o *bio)
+>         /* new request after previous flush is completed */
+>         if (ktime_after(req_start, mddev->prev_flush_start)) {
+>                 WARN_ON(mddev->flush_bio);
+> +               /*
+> +                * Grab a reference to make sure mddev_suspend() will wai=
+t for
+> +                * this flush to be done.
+> +                *
+> +                * md_flush_reqeust() is called under md_handle_request()=
+ and
+> +                * 'active_io' is already grabbed, hence percpu_ref_tryge=
+t()
+> +                * won't fail, percpu_ref_tryget_live() can't be used bec=
+ause
+> +                * percpu_ref_kill() can be called by mddev_suspend()
+> +                * concurrently.
+> +                */
+> +               percpu_ref_tryget(&mddev->active_io);
+
+Probably add an warn_on here to catch any issues in the future.
 
 Thanks,
 Song
+
+>                 mddev->flush_bio =3D bio;
+>                 bio =3D NULL;
+>         }
+> --
+> 2.39.2
+>
