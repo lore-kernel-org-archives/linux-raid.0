@@ -1,58 +1,119 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=strugglers.net header.i=@strugglers.net header.b="VETu5hMm"
-X-Greylist: delayed 1061 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 26 Nov 2023 02:55:29 PST
-Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CC4EDE
-	for <linux-raid@vger.kernel.org>; Sun, 26 Nov 2023 02:55:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=strugglers.net; s=alpha; h=In-Reply-To:Content-Type:MIME-Version:References
-	:Message-ID:Subject:To:From:Date:Content-Transfer-Encoding:Sender:Reply-To:Cc
-	:Content-ID:Content-Description:Resent-To;
-	bh=LcJsC4KH4Kv9CFTyGY5hogR+dFjWJpc+/azJv5eusBw=; b=VETu5hMmgsYd7hY9BkYEN9RtoQ
-	yXlzmLP0ZO6M5hrBhuUlMzWD4fJVpdQ4oYL0KkCCHu2QazsEse1CTLIMc0vxvXiY9yovSnF1Fqtnb
-	c6gKYAUGyJKp2WWmzHHCUbWuDZZwPjaS8/A9o1hQTbJ3oXvE2nPICIQE7p0HxHIfRVY3/5VnxQbJz
-	2etLk4VCqCfTAuFV9c3gZuexQigC5mcMWHWOBoZ7K9hnhipcc8gdHkFkP6vK2M/Tg6zRm+bX0B6O6
-	8hpJCjftjBHEwPK1HAbInkwFtsUGs44ntGa+Ho6Lpmc6g52CjrfwT3tRX8eDQw1ONZSJ8Zsff7p8C
-	Luoj2Mww==;
-Received: from andy by mail.bitfolk.com with local (Exim 4.94.2)
-	(envelope-from <andy@strugglers.net>)
-	id 1r7CWI-0002Kq-NN
-	for linux-raid@vger.kernel.org; Sun, 26 Nov 2023 10:37:46 +0000
-Date: Sun, 26 Nov 2023 10:37:46 +0000
-From: Andy Smith <andy@strugglers.net>
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
-Subject: Re: SMR or SSD disks?
-Message-ID: <ZWMf+lg/CgRlxKtb@mail.bitfolk.com>
-Mail-Followup-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
-References: <CAJH6TXh-FB0HaCJGFKHHgzaSqh+cQefPsK45Y_UBTsrcxaa6ww@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VWGKDik+";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zFfLnjNi"
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2a07:de40:b251:101:10:150:64:1])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52766FA
+	for <linux-raid@vger.kernel.org>; Sun, 26 Nov 2023 03:55:06 -0800 (PST)
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 6417121B15
+	for <linux-raid@vger.kernel.org>; Sun, 26 Nov 2023 11:55:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1700999704; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=P0p3FHwmvmXu9HgaVpcqitG0dgS1aUzupu1QOQsmyxg=;
+	b=VWGKDik+4KTAp06Jk2U6aOpajfG7S4icnnH4Ew1kvLzOK9HusBu9x1/UZJZyNOl9so8DPL
+	7Glsv9ymli+baNpXF7NsGN/QWjT2pg1PQX0B65YRtZxe/WOKoLHU6ZBZCihhKZxkGM6ILn
+	5k0bE/VxwaBzovuLwCfyIKJRC3q5zJo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1700999704;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=P0p3FHwmvmXu9HgaVpcqitG0dgS1aUzupu1QOQsmyxg=;
+	b=zFfLnjNi2gaVszRYurjzUoVvVX6US9UD7F+yr0pHY3VtGf+aulz+l7q07gAMSETu+EeI/7
+	/u9DvH4XET/+wvDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 506C413488
+	for <linux-raid@vger.kernel.org>; Sun, 26 Nov 2023 11:55:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id gygWEhgyY2VjGAAAD6G6ig
+	(envelope-from <hare@suse.de>)
+	for <linux-raid@vger.kernel.org>; Sun, 26 Nov 2023 11:55:04 +0000
+Message-ID: <20938de4-65f2-4bab-90c0-018fe485c0e7@suse.de>
+Date: Sun, 26 Nov 2023 12:55:03 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJH6TXh-FB0HaCJGFKHHgzaSqh+cQefPsK45Y_UBTsrcxaa6ww@mail.gmail.com>
-OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
-X-URL: http://strugglers.net/wiki/User:Andy
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: andy@strugglers.net
-X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
+User-Agent: Mozilla Thunderbird
+Subject: Re: SMR or SSD disks?
+Content-Language: en-US
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+References: <CAJH6TXh-FB0HaCJGFKHHgzaSqh+cQefPsK45Y_UBTsrcxaa6ww@mail.gmail.com>
+ <ZWMf+lg/CgRlxKtb@mail.bitfolk.com>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <ZWMf+lg/CgRlxKtb@mail.bitfolk.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Authentication-Results: smtp-out1.suse.de;
+	none
+X-Spam-Score: 7.23
+X-Spamd-Result: default: False [7.23 / 50.00];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 XM_UA_NO_VERSION(0.01)[];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 TO_DN_ALL(0.00)[];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 SUBJECT_ENDS_QUESTION(1.00)[];
+	 MID_RHS_MATCH_FROM(0.00)[];
+	 BAYES_HAM(-0.06)[61.63%];
+	 ARC_NA(0.00)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 NEURAL_SPAM_SHORT(3.00)[1.000];
+	 MIME_GOOD(-0.10)[text/plain];
+	 PREVIOUSLY_DELIVERED(0.00)[linux-raid@vger.kernel.org];
+	 RCPT_COUNT_ONE(0.00)[1];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 NEURAL_SPAM_LONG(3.39)[0.968];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 RCVD_TLS_ALL(0.00)[]
 
-Hello,
-
-On Sun, Nov 26, 2023 at 11:18:39AM +0100, Gandalf Corvotempesta wrote:
-> i'm doing some maintenance replacing some not-yet-failed HDD with WD RED SSD.
-> I've read the warning on the homepage
-> https://raid.wiki.kernel.org/index.php/Linux_Raid
+On 11/26/23 11:37, Andy Smith wrote:
+> Hello,
 > 
-> Are SSD drives still subject to SMR ? I've thought that it was related
-> only to magnetic drives not on SSD.
+> On Sun, Nov 26, 2023 at 11:18:39AM +0100, Gandalf Corvotempesta wrote:
+>> i'm doing some maintenance replacing some not-yet-failed HDD with WD RED SSD.
+>> I've read the warning on the homepage
+>> https://raid.wiki.kernel.org/index.php/Linux_Raid
+>>
+>> Are SSD drives still subject to SMR ? I've thought that it was related
+>> only to magnetic drives not on SSD.
+> 
+> SMR is not applicable to flash-based storage. I expect the warning
+> on the wiki was written at a time when the only drives bearing the
+> WD Red brand were HDDs, not any SSDs.
+> 
+Correct. Typically SATA SSDs do not expose SMR capabilities; it's all
+hidden by the FTL there.
 
-SMR is not applicable to flash-based storage. I expect the warning
-on the wiki was written at a time when the only drives bearing the
-WD Red brand were HDDs, not any SSDs.
+And the warning really is outdated. What matters is that the HDD needs
+to support TLER (ie scterc capabilities); the brand or series really is 
+immaterial. There are plenty of non-SMR HDDs which do not support it. 
+Sadly it's not well advertised, so you really have to test
+(or invest in the HDD range which is geared up for this kind of usage.)
 
-Thanks,
-Andy
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Ivo Totev, Andrew McDonald,
+Werner Knoblich
+
