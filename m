@@ -1,79 +1,69 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UkPzaIjQ"
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B63D6F5
-	for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 04:21:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1701087710; x=1732623710;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=N6O7KSlgZkTTDgZPIEVbV5nH9TojttJ95dfdKCb25vk=;
-  b=UkPzaIjQ01jb5RAuAcSkFeXOcLgY1NgxqrxOkoaxyzV1uBL89jXZefCI
-   guBKfrzbu6n2ulkwBSs+CyJAXkTSzMiFbfuK8Imcy1Hj9o/xM5gap/tGw
-   JEIZmGufcbisT032yi6K1c+ixQVK8Ej221bMDZuAZ3Mnav6O0inn9pzFw
-   CgiR0LzoVYHOGV40kaAb8bnHxac31nTL68A9KzDuwSKzaPcuEYnsJnfoA
-   wpSKH2OBQS8fKCTCn9hOoW4IhCpkt5pMIAPyNDbCy8BC7QR494UVUo3Nu
-   b+SZgCADC/FnsIFAOGZ8SzV/Vqe2XgmiLxSTjOrcSSKf2JfV7D1iI9Z/j
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10906"; a="395507510"
-X-IronPort-AV: E=Sophos;i="6.04,230,1695711600"; 
-   d="scan'208";a="395507510"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Nov 2023 04:21:50 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10906"; a="941542642"
-X-IronPort-AV: E=Sophos;i="6.04,230,1695711600"; 
-   d="scan'208";a="941542642"
-Received: from cdewhirx-mobl.amr.corp.intel.com (HELO peluse-desk5) ([10.209.163.221])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Nov 2023 04:21:49 -0800
-Date: Mon, 27 Nov 2023 04:21:48 -0800
-From: Paul E Luse <paul.e.luse@linux.intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Yiming Xu <teddyxym@outlook.com>, song@kernel.org,
- linux-raid@vger.kernel.org, paul.e.luse@intel.com, firnyee@gmail.com
-Subject: Re: [RFC] md/raid5: optimize RAID5 performance.
-Message-ID: <20231127042148.3b9bee3f@peluse-desk5>
-In-Reply-To: <ZWQ63SpjIE4bc+pi@infradead.org>
-References: <SJ2PR11MB75742EC42986F1532F7A0977D8BEA@SJ2PR11MB7574.namprd11.prod.outlook.com>
-	<ZWQ63SpjIE4bc+pi@infradead.org>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; aarch64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qs4w5kGU"
+Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90CFB182
+	for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 04:35:23 -0800 (PST)
+Received: by mail-ed1-x534.google.com with SMTP id 4fb4d7f45d1cf-54afd43c83cso3746543a12.0
+        for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 04:35:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1701088522; x=1701693322; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=C6kx3N8/oH7gfZKwX/S1pdO7plDz5iUi9AfBmB8HIFs=;
+        b=Qs4w5kGUxh3jr1k0qHvyOHm8Yh/v4AMkTRi37FDllult2FK4jJvoA37Dk1RwL0B3Ho
+         w2D4Xxc0AfMUWw7i/RXNJSPZgK5Gb9Mec2BLK1HkRBUlSfdk9CxFweIIKSgSQyHt0nwN
+         ZXrSYUPnNxHP4HF17HzfAgRk9Ip47FwLR5L0BUyYQYTnymJqnFt7xZ9UxwPv2UzSsB9C
+         Kn4+Zht16tLqDydO6YeBK5q8aHdndqrvTFof2NJWrs/5W6UQp+FJ09e8eBpmHETG5Fly
+         eNKeBaoPa9m4x2S0tFvW/u8lMCP5odl+B2owTIJQCAJ60bsnSy1nCLIaP5UdM9QqgQ9u
+         7PtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701088522; x=1701693322;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=C6kx3N8/oH7gfZKwX/S1pdO7plDz5iUi9AfBmB8HIFs=;
+        b=hMuimgR9xrBXxrZh5fRsvrIQdmaZDtA0lsEgxXqv/91TLlQCKo3kMf84RUkwt4HsoE
+         UmMAdK2laTj4uVR2+egZ3yW5sgd0iZcW5d97QAsXSa2CBwsHd0+EeEx585wfkag0M2Ox
+         gYrWJo6wmsL7LHgvigl5kLwJCwFq3++GPyXHS4Wwz7+R3VNZCq0YgV5eyecDYy3cn1Uw
+         kjYwSMNSd+kT6To4juegGGSd2eVu+gmuw0otJjMI+8ZLEN8Op9K0XwG22nkV8gniWpUS
+         8F0RnnZ6HydajwHRMCrYTeonYY3S3Z3arFXorLKw6ooPh9IsbZOWa6LsJP57HBQUSOlP
+         SAag==
+X-Gm-Message-State: AOJu0YwB9P5uWy/DbFZjTkKWiec1V26vstQHXffRPXzL69u0ks7aIkjw
+	GnKGCEluDC542pwZTGtk0hI8MiwBBg2T0XzimpMkVU09cPlqaw==
+X-Google-Smtp-Source: AGHT+IGHLa7H+oPF+Y2TGsuDLTumnNLiuwIzvpZXCrHIUBt4f6+oyjx6WRMzl3rnJFKZRwzZ1J/2znDBmWxCmafbeMY=
+X-Received: by 2002:aa7:c608:0:b0:54a:f1db:c2b4 with SMTP id
+ h8-20020aa7c608000000b0054af1dbc2b4mr8553502edq.12.1701088521880; Mon, 27 Nov
+ 2023 04:35:21 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <CAJH6TXh-FB0HaCJGFKHHgzaSqh+cQefPsK45Y_UBTsrcxaa6ww@mail.gmail.com>
+ <ZWMf+lg/CgRlxKtb@mail.bitfolk.com> <20938de4-65f2-4bab-90c0-018fe485c0e7@suse.de>
+ <d1ab59c2-e172-400d-8d6c-68f4bfce3a65@youngman.org.uk> <CAJH6TXiKLitvausMWgwZ_kNQbvp7sDA4AfaLvO2M54E7qLq8cg@mail.gmail.com>
+ <20231127035237.3e7d78da@nvm> <CAJH6TXi2xc9o95qp_UfyyqSW=H2ssK-ZBvnfP3vpw89umoqD5A@mail.gmail.com>
+ <CAJH6TXihycKVWNFYn9VLUG5_7rG6P-3ZQoJsVORPTCER1OQttQ@mail.gmail.com> <4a29e1d1-8ef1-4505-a197-46518fd3025f@thelounge.net>
+In-Reply-To: <4a29e1d1-8ef1-4505-a197-46518fd3025f@thelounge.net>
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Date: Mon, 27 Nov 2023 13:35:09 +0100
+Message-ID: <CAJH6TXjFqq1tV9kTYicLVRKv3+cfXtjDEyKRpGe6H5NWqjBmgw@mail.gmail.com>
+Subject: Re: SMR or SSD disks?
+To: Reindl Harald <h.reindl@thelounge.net>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On Sun, 26 Nov 2023 22:44:45 -0800
-Christoph Hellwig <hch@infradead.org> wrote:
+Il giorno lun 27 nov 2023 alle ore 10:15 Reindl Harald
+<h.reindl@thelounge.net> ha scritto:
+> i started to replace HDDs with "Samsung Evo 850 2 TB" 7 years ago
+> in which country you coudn't buy them (now 870) from Amazon 2023?
 
-> Hi Shushu,
-> 
-> the work certainly looks interesting!
-> 
-> However:
-> 
-> > Optimized by using fine-grained locks, customized data structures,
-> > and scattered address space. Achieves significant improvements in
-> > both throughput and latency.
-> 
-> this is a lot of work for a single Linux patch, we usually do that
-> work pice by pice instead of complete rewrite, and for such
-> signigicant changes the commit logs also tend to be a bit extensive.
-> 
-> I'm also not quite sure what scattered address spaces are - I bet
-> reading the paper (I plan to get to that) would explain it, but it
-> also helps to explain the idea in the commit message.
-> 
-> That's my high level nitpicking for now, I'll try to read the paper
-> and the patch in detail and come back later.
-> 
-> 
+Samsung are my first choise for desktop drives, (second choice, after
+intel, for the DC drives)
+but i've read somewhere that the latest SSDs had some issues,
+particularly under linux, with a
+lot of write errors, that's why i've purchased a different brand (and,
+honestly, I hate WD)
 
-For sure the paper provides a lot more context. Is there more
-performance data avialble, like a general sweep of various IO sizes,
-patterns and queue depths?  ALso, what kind of data integrity testing
-has been done?
+Did you had any issue with the Evo drives under RAID ?
