@@ -1,16 +1,16 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
 Received: from mail.thelounge.net (mail.thelounge.net [91.118.73.15])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79AC1189
-	for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 09:18:30 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A31685
+	for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 09:23:53 -0800 (PST)
 Received: from [10.10.10.2] (rh.vpn.thelounge.net [10.10.10.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: h.reindl@thelounge.net)
-	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4SfC3R2J09zXLT;
-	Mon, 27 Nov 2023 18:18:27 +0100 (CET)
-Message-ID: <65e9fca0-ab54-4be4-84e7-3a800adab22b@thelounge.net>
-Date: Mon, 27 Nov 2023 18:18:27 +0100
+	by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4SfC9d5x59zXLT;
+	Mon, 27 Nov 2023 18:23:49 +0100 (CET)
+Message-ID: <2cc1dc2d-8599-4076-a6d6-aeb0932b61e5@thelounge.net>
+Date: Mon, 27 Nov 2023 18:23:49 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -32,6 +32,7 @@ References: <CAJH6TXh-FB0HaCJGFKHHgzaSqh+cQefPsK45Y_UBTsrcxaa6ww@mail.gmail.com>
  <CAJH6TXihycKVWNFYn9VLUG5_7rG6P-3ZQoJsVORPTCER1OQttQ@mail.gmail.com>
  <4a29e1d1-8ef1-4505-a197-46518fd3025f@thelounge.net>
  <CAJH6TXjFqq1tV9kTYicLVRKv3+cfXtjDEyKRpGe6H5NWqjBmgw@mail.gmail.com>
+ <CAJH6TXgR346bkR2sLQL-=UEWG5KWCMNFbXtA_FuiYtG3V25nwA@mail.gmail.com>
 From: Reindl Harald <h.reindl@thelounge.net>
 Autocrypt: addr=h.reindl@thelounge.net; keydata=
  xsDNBFq9ahEBDADEQKxJxY4WUy7Ukg6JbzwAUI+VQYpnRuFKLIvcU+2x8zzf8cLaPUiNhJKN
@@ -68,28 +69,27 @@ Autocrypt: addr=h.reindl@thelounge.net; keydata=
  cTqn2HJNlhMSV0ZocQ0888Zaq2S5totXr7yuiDzwrp70m9bJY+VPDjaUtWruf2Yiez3EAhtU
  K4rYsjPimkSIVdrNM//wVKdCTbO+
 Organization: the lounge interactive design
-In-Reply-To: <CAJH6TXjFqq1tV9kTYicLVRKv3+cfXtjDEyKRpGe6H5NWqjBmgw@mail.gmail.com>
+In-Reply-To: <CAJH6TXgR346bkR2sLQL-=UEWG5KWCMNFbXtA_FuiYtG3V25nwA@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
 
-Am 27.11.23 um 13:35 schrieb Gandalf Corvotempesta:
-> Il giorno lun 27 nov 2023 alle ore 10:15 Reindl Harald
-> <h.reindl@thelounge.net> ha scritto:
->> i started to replace HDDs with "Samsung Evo 850 2 TB" 7 years ago
->> in which country you coudn't buy them (now 870) from Amazon 2023?
+Am 27.11.23 um 13:36 schrieb Gandalf Corvotempesta:
+> Il giorno lun 27 nov 2023 alle ore 13:35 Gandalf Corvotempesta
+> <gandalf.corvotempesta@gmail.com> ha scritto:
+>> but i've read somewhere that the latest SSDs had some issues,
+>> particularly under linux, with a
+>> lot of write errors, that's why i've purchased a different brand (and,
+>> honestly, I hate WD)
 > 
-> Samsung are my first choise for desktop drives, (second choice, after
-> intel, for the DC drives)
-> but i've read somewhere that the latest SSDs had some issues,
-> particularly under linux, with a
-> lot of write errors, that's why i've purchased a different brand (and,
-> honestly, I hate WD)
-> 
-> Did you had any issue with the Evo drives under RAID ?
+> In example
+> https://www.techpowerup.com/forums/threads/samsung-870-evo-beware-certain-batches-prone-to-failure.291504/
 
-no
+my 870 are from 2022 and most likely not affacted at all
+these seem to be early produced ones
 
-i have 2/4 TB 850/860/870 over the past years in several machines with 
-RAID1 and RAID10 without any issue
+when you make decisions on such threads you can't buy anything at all no 
+matter SSD or HDD - Samsgung SSD at least have some reputation over the 
+past 10 years
+
