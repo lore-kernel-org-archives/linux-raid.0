@@ -1,153 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4D2346543
-	for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 22:16:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D9822DF91
+	for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 23:21:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DSkfdMLQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 617FEC433CA;
-	Mon, 27 Nov 2023 22:16:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oTiw86ou"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C009DC433CB
+	for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 23:21:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701123390;
-	bh=GZZZizaQ2JGBGghW8BdCWRMnKc60BblYbZVXriQsgfM=;
+	s=k20201202; t=1701127318;
+	bh=oKnbllMAAkvDXG82wUF7zT+BWof1jpVZ8QZinnczaYs=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=DSkfdMLQ8pmpDVfd5IQRuWjLD47xG1hlaqdwCX1t136Gng0x2WShn54MVzcADy4ye
-	 DdC8h6Rdgw1PtLZUgrDwGc0hvrVUdhZ2nETg72k5Z58Y8eaGUAnD4z9TeNY7eRu6Im
-	 Ia1raqOhsloE/zZ+837ejdU83iSGs5c+uX77UW06H12jt+s4Wap1gDrk5nLlSJ7K2u
-	 Qjag8wjGzRYr4KMpQN43Hf8fwL7DItP1VIAwXQF8BSEsqd7j+srS3ce0RqFREoxQ20
-	 ashRKjfy0yRBiQf2Rr17DCOqSc2K61X8wIDyM6cdyRW+JQiCgfLMWpsx5MAHUZQr8F
-	 zd5sdfNW8RPNw==
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5079f3f3d7aso6869215e87.1;
-        Mon, 27 Nov 2023 14:16:30 -0800 (PST)
-X-Gm-Message-State: AOJu0YwmQL8F7iaQ2MiX1l7jmfnSFq1gHyN7DlpWp7HiyjNlYyTH/LVf
-	/7td7k7JjOypTbJdZ+8jKRfaFO1GLpKfSLHixlA=
-X-Google-Smtp-Source: AGHT+IFfm+9VZJPViMMma0yHMioJXnOhPbRgYu2jVjKJLyBsPv8CY57k8dFJhatnrQzy5PYA1T+wfbYDR9xrM9flXcg=
-X-Received: by 2002:a19:7507:0:b0:50a:778b:590 with SMTP id
- y7-20020a197507000000b0050a778b0590mr7617033lfe.68.1701123388506; Mon, 27 Nov
- 2023 14:16:28 -0800 (PST)
+	b=oTiw86ouiTMYQydjde7CdoYnNKKimoHRa3f43FHOboOVkWrvcp+D9wI8UfOXPO1JZ
+	 gsWZeQpK04gVTLjyZGPJpvudJmxS1SZ13nO7+nllISXhbEr2st85WSudDTTiUcvb4u
+	 tvmfyvf9jqyt0UKib2oaEB69vBaPoBOcaqn79UzGc4Edtq5ul+x9MkAfB8tg6Wfl/2
+	 Y4NupJc5aHbVQ05xWaeIAB6/g75otRHygjA1q91GEPovAGY0YXPgDslP1t0Ya1sPrG
+	 4hGCKceQBPIGXVe41aAoH4nVemaQjpFl9UPiFisQngCHwmSnzwksICWsU2cxYWJftl
+	 D45ASkBGONgYQ==
+Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-50bb8ff22e6so133191e87.0
+        for <linux-raid@vger.kernel.org>; Mon, 27 Nov 2023 15:21:58 -0800 (PST)
+X-Gm-Message-State: AOJu0YxEyI9j8T5oEbf+kG8ftwflvlAueXH9xUIHJBPbrIyeClqnrUuN
+	5c3PbMeB6xHCNJ2tJcDcpDJl/wtr2t6I/4lNzeE=
+X-Google-Smtp-Source: AGHT+IED/ZyWGYphlId7pgY4uu3pWt1mkRInttKypH4wykvGVGx825T5pNEMuUgCvWonJkAjZrxkFyS6oV1/Gj/G4lA=
+X-Received: by 2002:a05:6512:31c6:b0:50a:6fb8:a0c0 with SMTP id
+ j6-20020a05651231c600b0050a6fb8a0c0mr4699007lfe.19.1701127316941; Mon, 27 Nov
+ 2023 15:21:56 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231125065419.3518254-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20231125065419.3518254-1-yukuai1@huaweicloud.com>
+References: <SJ2PR11MB75742EC42986F1532F7A0977D8BEA@SJ2PR11MB7574.namprd11.prod.outlook.com>
+ <ZWQ63SpjIE4bc+pi@infradead.org> <20231127042148.3b9bee3f@peluse-desk5>
+In-Reply-To: <20231127042148.3b9bee3f@peluse-desk5>
 From: Song Liu <song@kernel.org>
-Date: Mon, 27 Nov 2023 14:16:16 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4YsDXdpHMuscQrW4NdXZxhg8-k4J0Xt_47twA8sG_Fmg@mail.gmail.com>
-Message-ID: <CAPhsuW4YsDXdpHMuscQrW4NdXZxhg8-k4J0Xt_47twA8sG_Fmg@mail.gmail.com>
-Subject: Re: [PATCH -next v2] md: synchronize flush io with array reconfiguration
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: maan@systemlinux.org, neilb@suse.de, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
-	yangerkun@huawei.com
+Date: Mon, 27 Nov 2023 15:21:44 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7Rnf+tyYN=9pKg6avSi8=ab-XnGW0-O2AxdpMTiBFdKw@mail.gmail.com>
+Message-ID: <CAPhsuW7Rnf+tyYN=9pKg6avSi8=ab-XnGW0-O2AxdpMTiBFdKw@mail.gmail.com>
+Subject: Re: [RFC] md/raid5: optimize RAID5 performance.
+To: Paul E Luse <paul.e.luse@linux.intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Yiming Xu <teddyxym@outlook.com>, linux-raid@vger.kernel.org, 
+	paul.e.luse@intel.com, firnyee@gmail.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 24, 2023 at 10:54=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
-wrote:
+On Mon, Nov 27, 2023 at 4:21=E2=80=AFAM Paul E Luse <paul.e.luse@linux.inte=
+l.com> wrote:
 >
-> From: Yu Kuai <yukuai3@huawei.com>
+> On Sun, 26 Nov 2023 22:44:45 -0800
+> Christoph Hellwig <hch@infradead.org> wrote:
 >
-> Currently rcu is used to protect iterating rdev from submit_flushes():
+> > Hi Shushu,
+> >
+> > the work certainly looks interesting!
+> >
+> > However:
+> >
+> > > Optimized by using fine-grained locks, customized data structures,
+> > > and scattered address space. Achieves significant improvements in
+> > > both throughput and latency.
+> >
+> > this is a lot of work for a single Linux patch, we usually do that
+> > work pice by pice instead of complete rewrite, and for such
+> > signigicant changes the commit logs also tend to be a bit extensive.
+> >
+> > I'm also not quite sure what scattered address spaces are - I bet
+> > reading the paper (I plan to get to that) would explain it, but it
+> > also helps to explain the idea in the commit message.
+> >
+> > That's my high level nitpicking for now, I'll try to read the paper
+> > and the patch in detail and come back later.
+> >
+> >
 >
-> submit_flushes                  remove_and_add_spares
->                                 synchronize_rcu
->                                 pers->hot_remove_disk()
->  rcu_read_lock()
->  rdev_for_each_rcu
->   if (rdev->raid_disk >=3D 0)
->                                 rdev->radi_disk =3D -1;
->    atomic_inc(&rdev->nr_pending)
->    rcu_read_unlock()
->    bi =3D bio_alloc_bioset()
->    bi->bi_end_io =3D md_end_flush
->    bi->private =3D rdev
->    submit_bio
->    // issue io for removed rdev
->
-> Fix this problem by grabbing 'acive_io' before iterating rdev, make sure
-> that remove_and_add_spares() won't concurrent with submit_flushes().
->
-> Fixes: a2826aa92e2e ("md: support barrier requests on all personalities."=
-)
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
-> Changes v2:
->  - Add WARN_ON in case md_flush_request() is not called from
->  md_handle_request() in future.
->
->  drivers/md/md.c | 22 ++++++++++++++++------
->  1 file changed, 16 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 86efc9c2ae56..2ffedc39edd6 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -538,6 +538,9 @@ static void md_end_flush(struct bio *bio)
->         rdev_dec_pending(rdev, mddev);
->
->         if (atomic_dec_and_test(&mddev->flush_pending)) {
-> +               /* The pair is percpu_ref_tryget() from md_flush_request(=
-) */
-> +               percpu_ref_put(&mddev->active_io);
-> +
->                 /* The pre-request flush has finished */
->                 queue_work(md_wq, &mddev->flush_work);
->         }
-> @@ -557,12 +560,8 @@ static void submit_flushes(struct work_struct *ws)
->         rdev_for_each_rcu(rdev, mddev)
->                 if (rdev->raid_disk >=3D 0 &&
->                     !test_bit(Faulty, &rdev->flags)) {
-> -                       /* Take two references, one is dropped
-> -                        * when request finishes, one after
-> -                        * we reclaim rcu_read_lock
-> -                        */
->                         struct bio *bi;
-> -                       atomic_inc(&rdev->nr_pending);
-> +
->                         atomic_inc(&rdev->nr_pending);
->                         rcu_read_unlock();
->                         bi =3D bio_alloc_bioset(rdev->bdev, 0,
-> @@ -573,7 +572,6 @@ static void submit_flushes(struct work_struct *ws)
->                         atomic_inc(&mddev->flush_pending);
->                         submit_bio(bi);
->                         rcu_read_lock();
-> -                       rdev_dec_pending(rdev, mddev);
->                 }
->         rcu_read_unlock();
->         if (atomic_dec_and_test(&mddev->flush_pending))
-> @@ -626,6 +624,18 @@ bool md_flush_request(struct mddev *mddev, struct bi=
-o *bio)
->         /* new request after previous flush is completed */
->         if (ktime_after(req_start, mddev->prev_flush_start)) {
->                 WARN_ON(mddev->flush_bio);
-> +               /*
-> +                * Grab a reference to make sure mddev_suspend() will wai=
-t for
-> +                * this flush to be done.
-> +                *
-> +                * md_flush_reqeust() is called under md_handle_request()=
- and
-> +                * 'active_io' is already grabbed, hence percpu_ref_tryge=
-t()
-> +                * won't fail, percpu_ref_tryget_live() can't be used bec=
-ause
-> +                * percpu_ref_kill() can be called by mddev_suspend()
-> +                * concurrently.
-> +                */
-> +               if (WARN_ON(percpu_ref_tryget(&mddev->active_io)))
+> For sure the paper provides a lot more context. Is there more
+> performance data avialble, like a general sweep of various IO sizes,
+> patterns and queue depths?  ALso, what kind of data integrity testing
+> has been done?
 
-This should be "if (!WARN_ON(..))", right?
+Echo comments from Christoph and Paul. Also, please run
+./scripts/checkpatch.pl on the patches before sending. It will catch a lot
+of issues. Please also clean up the code before sending the patches.
+Something like the following should not be included in the patch.
 
++       // new_bmclocks =3D kcalloc(num_bmclocks, sizeof(*new_bmclocks),
+GFP_KERNEL);
+
+Thanks,
 Song
-
-> +                       percpu_ref_get(&mddev->active_io);
->                 mddev->flush_bio =3D bio;
->                 bio =3D NULL;
->         }
-> --
-> 2.39.2
->
->
