@@ -1,179 +1,104 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fA0LnfDX"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3587110C1
-	for <linux-raid@vger.kernel.org>; Tue, 28 Nov 2023 11:01:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1701198098;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2I3hbaCerYSJrfrScAIbUgdYhnkOYSj3ADEFMEMpp9Q=;
-	b=fA0LnfDXfaMNHzgVqXbsKtj8vDd3ENwUtZmACBx2gL23IXUhrZeFjuXZA3TDZaq82cG8k7
-	8XAXpB/RVF83cnuCfyBlJhIr060+GB8V3KC/4PVRpWr0bdI6q4MFbBRhqyLSLeC+n0fVKs
-	j1X5Hk4OeETYUcdyZmFsN0iTccI5EPc=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-57-pqxnXveuNwK9hDZmHJR9_A-1; Tue, 28 Nov 2023 14:01:36 -0500
-X-MC-Unique: pqxnXveuNwK9hDZmHJR9_A-1
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-677fc779771so79594446d6.0
-        for <linux-raid@vger.kernel.org>; Tue, 28 Nov 2023 11:01:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E5DRzk8r"
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F8721A5;
+	Tue, 28 Nov 2023 15:47:28 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-6b20577ef7bso5344191b3a.3;
+        Tue, 28 Nov 2023 15:47:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1701215248; x=1701820048; darn=vger.kernel.org;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MoJTdvnUva0vOEP8D6/hcODd/TZNf7EsXrddDwBiX0Q=;
+        b=E5DRzk8rGW/Pbws90gavOxsed/CK8SD6UkI6S+T267cUqL96rS6LQNcVZV89n57xkq
+         wQ8onMppPsHwbZmM2QbmxUN2Acv1mjGi5BwA45KGpHTafUrwiqVYzMOCyLASGuVzZ5sZ
+         cWtfOf1EcH0yIiaAV3uiulNtdqRM2QU4ixxNfD8DtUSgT4teW/p65JIZ1p3cSDBAIW8I
+         oSbqvMneA7X66b1W0EE3WJj/ueyn+kUw1D8AOaTJ2LGDC/PdWbplY+LFuY/mntOiq1VS
+         3U5t8w0PsAxvE/XcsuMq1m3/FAQ+aBNOot6Xmhs1bxBImdySS4mEg2ADBpl6MC6fHTlJ
+         Bbbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701198095; x=1701802895;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=2I3hbaCerYSJrfrScAIbUgdYhnkOYSj3ADEFMEMpp9Q=;
-        b=ASUUCvI+T+NLt1OrWaTlbnXJrk3MQu7DTVasMV6mDwOVCJSX4SqiKkGfVdLJSNovmo
-         1RZ+BJLBQiFE5223qV/FG4OqQNbUgcDjgbtqQ1J8ahgMDMCiDuu8B92Nv+WEodPcbpx9
-         AMxbBiYrKdRxSI7RHSOY7GlyQr183AUkNvJ4PYoNAnuI0qh7EnmZQ4k3l+j7OEXBfETw
-         XI3ke3CtGJLa/lKVgQo/X/OBkNvYvbt7z+REPo5b9NlpQTxffth7y3oYzIdprXvKF/pu
-         rXVpBlelroftW5iotouj0AaDUoNQfvw+S1ZVAeiPuK0G11XRrmpu5kRf4G0CHyoq/2lj
-         FpQg==
-X-Gm-Message-State: AOJu0Yw+fzEWSxaswYpRtxWO0jTvxVI6Ho5K1ogupssF4t2StJPdFr8r
-	9hULM/mtitEmN+Grytbp/3TMAfaciNJlkrrkeVO4LLEX8g6zvCFQJ6NpBO37xV3YS8m6aFfQbUR
-	VYCRwjFlCOGRSdGdG1TZKzmSA12aOQQ==
-X-Received: by 2002:ad4:4147:0:b0:67a:2426:260f with SMTP id z7-20020ad44147000000b0067a2426260fmr13250889qvp.53.1701198095085;
-        Tue, 28 Nov 2023 11:01:35 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEpg8VcQlfVX9efD4g+0Wp2l0P0/R9tJ+ED5Gb/rQl5m/v5/QiYIfqWFC7sBZxCajn1euUSWQ==
-X-Received: by 2002:ad4:4147:0:b0:67a:2426:260f with SMTP id z7-20020ad44147000000b0067a2426260fmr13250856qvp.53.1701198094763;
-        Tue, 28 Nov 2023 11:01:34 -0800 (PST)
-Received: from ?IPv6:2600:6c64:4e7f:603b:7f10:16a0:5672:9abf? ([2600:6c64:4e7f:603b:7f10:16a0:5672:9abf])
-        by smtp.gmail.com with ESMTPSA id p15-20020a0cf68f000000b0067a35c1d10csm3095947qvn.114.2023.11.28.11.01.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Nov 2023 11:01:34 -0800 (PST)
-Message-ID: <3704907f5dfef98a3dc9d5675b05c731e86e2cd5.camel@redhat.com>
-Subject: Re: [PATCH] md/raid6: use valid sector values to determine if an
- I/O should wait on the reshape
-From: Laurence Oberman <loberman@redhat.com>
-To: Song Liu <song@kernel.org>, David Jeffery <djeffery@redhat.com>
-Cc: linux-raid@vger.kernel.org
-Date: Tue, 28 Nov 2023 14:01:33 -0500
-In-Reply-To: <CAPhsuW7V1H9xJ+ihC21B8S+cp4QZDz32a0YJPfELt=va3xpBZQ@mail.gmail.com>
-References: <20231128181233.6187-1-djeffery@redhat.com>
-	 <CAPhsuW7V1H9xJ+ihC21B8S+cp4QZDz32a0YJPfELt=va3xpBZQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+        d=1e100.net; s=20230601; t=1701215248; x=1701820048;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=MoJTdvnUva0vOEP8D6/hcODd/TZNf7EsXrddDwBiX0Q=;
+        b=nqZffRfLYvARz3cOgyV2ArbhNFj/A103taq5RFdGYu+8IXG2mqtpYDEHcgPpNpEJz6
+         PIGLWi+cbWlLRdiy0J58kbGBPv2a8oQyHc8E3L2CovtCC2BQRRmh+csAysgaPKfxCZvd
+         ATdCMnlKzR3k7daJ/3bEGaQ0vvqt6nRM7cXSSiBe05x/Ws26NTuC63mSEeQJDjurvaCO
+         qT6T6udl/wiY5r40BcMf/vT+EGgEzG+mrQuI0YLXfaFEs9ZVVjxvhHhnafHn20D/bWQH
+         ODdjXG6PYvXs/i8XKUrgiXJ1NTHoVf5RLzorv1LnFcT065gZ52uvmljZp+KzDaOy+g06
+         lAKA==
+X-Gm-Message-State: AOJu0YxqEol1aBzSAJPC3jvNj2yMfVDI1uL+YiLlg2H1V/w2nQH3D9JN
+	KVTYwWHCxdtqIuIngl38AeKbEPdLdEVYeQ==
+X-Google-Smtp-Source: AGHT+IG0ToBag8VkYoAH8p7bmSYPEOYkke5pJZNFz0uaMrE6AdCr1IG7P+8YPR2dMp9dwjbggk5bbg==
+X-Received: by 2002:a05:6a00:1d01:b0:6be:4228:698b with SMTP id a1-20020a056a001d0100b006be4228698bmr19323394pfx.20.1701215247817;
+        Tue, 28 Nov 2023 15:47:27 -0800 (PST)
+Received: from [192.168.0.106] ([103.131.18.64])
+        by smtp.gmail.com with ESMTPSA id l65-20020a639144000000b005c2130fd8d7sm10038106pge.91.2023.11.28.15.47.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 28 Nov 2023 15:47:27 -0800 (PST)
+Message-ID: <562a2442-d098-4972-baa1-5a843e06b180@gmail.com>
+Date: Wed, 29 Nov 2023 06:47:20 +0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Linux Regressions <regressions@lists.linux.dev>,
+ Linux Block Devices <linux-block@vger.kernel.org>,
+ Linux RAID <linux-raid@vger.kernel.org>,
+ Linux bcachefs <linux-bcachefs@vger.kernel.org>
+Cc: Coly Li <colyli@suse.de>, Xiao Ni <xni@redhat.com>,
+ Geliang Tang <geliang.tang@suse.com>, Jens Axboe <axboe@kernel.dk>,
+ Song Liu <song@kernel.org>, Kent Overstreet <kent.overstreet@linux.dev>,
+ Janpieter Sollie <janpieter.sollie@edpnet.be>
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: Fwd: block/badblocks.c warning in 6.7-rc2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, 2023-11-28 at 10:44 -0800, Song Liu wrote:
-> Hi David and Laurence,
->=20
-> On Tue, Nov 28, 2023 at 10:13=E2=80=AFAM David Jeffery <djeffery@redhat.c=
-om>
-> wrote:
-> >=20
-> > During a reshape or a RAID6 array such as expanding by adding an
-> > additional
-> > disk, I/Os to the region of the array which have not yet been
-> > reshaped can
-> > stall indefinitely. This is from errors in the
-> > stripe_ahead_of_reshape
-> > function causing md to think the I/O is to a region in the actively
-> > undergoing the reshape.
-> >=20
-> > stripe_ahead_of_reshape fails to account for the q disk having a
-> > sector
-> > value of 0. By not excluding the q disk from the for loop, raid6
-> > will always
-> > generate a min_sector value of 0, causing a return value which
-> > stalls.
-> >=20
-> > The function's max_sector calculation also uses min() when it
-> > should use
-> > max(), causing the max_sector value to always be 0. During a
-> > backwards
-> > rebuild this can cause the opposite problem where it allows I/O to
-> > advance
-> > when it should wait.
-> >=20
-> > Fixing these errors will allow safe I/O to advance in a timely
-> > manner and
-> > delay only I/O which is unsafe due to stripes in the middle of
-> > undergoing
-> > the reshape.
-> >=20
-> > Fixes: 486f60558607 ("md/raid5: Check all disks in a stripe_head
-> > for reshape progress")
-> > Signed-off-by: David Jeffery <djeffery@redhat.com>
-> > Tested-by: Laurence Oberman <loberman@redhat.com>
->=20
-> Thanks for the fix!
->=20
-> Can we add a test to mdadm/tests to cover this case? (Not sure how
-> reliable
-> the test will be).
->=20
-> Song
->=20
-> > ---
-> > =C2=A0drivers/md/raid5.c | 4 ++--
-> > =C2=A01 file changed, 2 insertions(+), 2 deletions(-)
-> >=20
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index dc031d42f53b..26e1e8a5e941 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -5892,11 +5892,11 @@ static bool stripe_ahead_of_reshape(struct
-> > mddev *mddev, struct r5conf *conf,
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int dd_idx;
-> >=20
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 for (dd_idx =3D 0; dd_idx < =
-sh->disks; dd_idx++) {
-> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 if (dd_idx =3D=3D sh->pd_idx)
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 if (dd_idx =3D=3D sh->pd_idx || dd_idx =3D=3D sh->qd_idx)
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 conti=
-nue;
-> >=20
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 min_sector =3D min(min_sector, sh-
-> > >dev[dd_idx].sector);
-> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 max_sector =3D min(max_sector, sh-
-> > >dev[dd_idx].sector);
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 max_sector =3D max(max_sector, sh-
-> > >dev[dd_idx].sector);
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
-> >=20
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_lock_irq(&conf->device_=
-lock);
-> > --
-> > 2.43.0
-> >=20
-> >=20
->=20
-Hello Song
+Hi,
 
-The way this was discovered is the customer forced a reshape of a raid6
-device by adding an additional device.=C2=A0
-The reshape then sess the hang.
+I notice a regression report that is rather well-handled on Bugzilla [1].
+Quoting from it:
 
-# mdadm /dev/md0 -a /dev/nvme18n1
-mdadm: added /dev/nvme18n1
+> 
+> when booting from 6.7-rc2, compiled with clang, I get this warning on one of my 3 bcachefs volumes:
+> WARNING: CPU: 3 PID: 712 at block/badblocks.c:1284 badblocks_check (block/badblocks.c:1284) 
+> The reason why isn't clear, but the stack trace points to an error in md error handling.
+> This bug didn't happen in 6.6
+> there are 3 commits in 6.7-rc2 which may cause them,
+> in attachment:
+> - decoded stacktrace of dmesg
+> - kernel .config
 
-# mdadm --grow --raid-devices=3D6 /dev/md0
+The culprit author then replied:
 
-The problem was we needed a test kernel just for the customer to
-recover, because on reboot the reshape starts again and hangs the
-device access.
+> The warning is from this line of code in _badblocks_check(),
+> 1284         WARN_ON(bb->shift < 0 || sectors == 0);
+> 
+> It means the caller sent an invalid range to check. From the oops information,
+> "RDX: 0000000000000000" means parameter 'sectors' is 0.
+> 
+> So the question is, why does md raid code send a 0-length range for badblocks check? Is this behavior on purpose, or improper?
+> ...
+> IMHO, it doesn't make sense for caller to check a zero-length LBA range. The warning works as expect to detect improper call to badblocks_check().
 
-Such steps could be added for a test but David will know maybe an
-easier way for a test.
+See Bugzilla for the full thread and attached decoded dmesg and kernel config.
 
-Regards
-Laurence
+Anyway, I'm adding this regression to regzbot:
 
+#regzbot introduced: 3ea3354cb9f03e https://bugzilla.kernel.org/show_bug.cgi?id=218184
+#regzbot title: badblocks_check regression (md error handling) on bcachefs volume
 
+Thanks.
 
+[1]: https://bugzilla.kernel.org/show_bug.cgi?id=218184
+
+-- 
+An old man doll... just what I always wanted! - Clara
