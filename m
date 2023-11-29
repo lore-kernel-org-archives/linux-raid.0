@@ -1,261 +1,180 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Pm4rKqO3"
-Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22D46C1
-	for <linux-raid@vger.kernel.org>; Wed, 29 Nov 2023 04:15:46 -0800 (PST)
-Received: by mail-wr1-x42f.google.com with SMTP id ffacd0b85a97d-3331752d2b9so435487f8f.3
-        for <linux-raid@vger.kernel.org>; Wed, 29 Nov 2023 04:15:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701260144; x=1701864944; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=5swqXhS1U5U3RhAq8ZMgbaXuu8V3U7BQD7if+bTGcSU=;
-        b=Pm4rKqO3ZdgA9BsmwsgPkSgb94R0GlEFqUO7eTbsx2hR913lzsZVMdkgK/qNgulqEn
-         DPZUYCFZw/fUKHvTmPw0NwKX3EzbZ3qiQp/qMvYQtKsQxKtS2yn7KjKKhYmy8iY6u1oz
-         9DiHMVMenXC+l55+lux9nEmbh5RmecHRH9Js1Vtqcg00EDFZMQkBmGv9ubq8uftoUuwk
-         +sXpAY5cVLSUy1sDrI9rhTNQUHNhbQD5OxtfaR4+kRBAnBLHi4JkXybi6VkNcXXjzTeq
-         tdyYl8DMMCizaKJAGHzCYDZatgcOR6DctEb+FCYRRMA7grvsCrI5sDGnw+R1AU3lAR5n
-         TRrQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701260144; x=1701864944;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5swqXhS1U5U3RhAq8ZMgbaXuu8V3U7BQD7if+bTGcSU=;
-        b=Uz+93HZpN4YXrq8nq7/ggr38Hu88Ci86jij8VIYf9KRUnSdnzphrbh9Wu2w0Mko94d
-         0oFrKGTEKqmi7gf0mU4zpcXfDjMp0xR11tw7QmzCHaw5grQR3akXPXFgDi8OBxbxkmaU
-         U0jR65iqUCkJNOt/VhF4JTm9Kh/Z6+r4/MjYd2VXwnWK1H/24+1XtlwGkFba3lNRONDT
-         WnU4U9EvPGg4PmkX6Wv+6WbCiiDx3J9QKu3ymgBY2Z0+Bu5KqfZYyP14ESDPpR8xEdvn
-         DAZheU1qLCMfIxKeRsWxD4/2i/GpIYWNo2XS1wnLegrFYyQksN2xK6nukHxDScGxVIZJ
-         UBYg==
-X-Gm-Message-State: AOJu0YzGkrTHGGpfzddKONdJTk8nuyHcYijNbJ8/9IpqrVlb5hdiXqM7
-	YXdNjqvCsM+Mi1JS/tyyDVY2iXLSLfZTEHGSfoJtqSCbA04=
-X-Google-Smtp-Source: AGHT+IEKYNaoKk9FDCw7M0xzcn0dxSoT9lCUaY+7I2NIfBT5+WcseWm/tdtndAxN5J1edrDUiBIbyENpEduHqnEgbqo=
-X-Received: by 2002:a5d:4e4a:0:b0:332:f895:f598 with SMTP id
- r10-20020a5d4e4a000000b00332f895f598mr8412244wrt.61.1701260144260; Wed, 29
- Nov 2023 04:15:44 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PY3efa6N"
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B29C4D7F
+	for <linux-raid@vger.kernel.org>; Wed, 29 Nov 2023 13:34:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1701293695; x=1732829695;
+  h=date:from:to:cc:subject:message-id;
+  bh=dqD4g6MEHmd6u5o/HqVWYMHf6NsXEq2SBqqJn/JZ5ns=;
+  b=PY3efa6N43xB/JdOahsN5PQuPkl4s5Qr3UIaP9sJ3008bHcwo6MeESM4
+   eFSzAimBIkaB4dQPOJ6SPMrCT+2WCQb02N0IY2L+ZfK0n7mo0rmPcnxoJ
+   uaH4U89FUJY7EmnLTKz5fo4q4l6zgDOAhQoDcdCFooHDNy6/ep6lO3rLL
+   bz3UjTmmorNCRfjbGm/1ujB5Zo24vz19C0GfQrsYOARXyNMKTNJqjgLgh
+   f7JFfdCQeIr8/kJ9mHONiYJIk1ez48PoYMFpSZxLbYz+DnJfCjG9SWyUY
+   2rVqOPUvVaeRe5qSWBDNsVUmjn67g8jZm3sfEEEQR5w20wlngZNgwKmYy
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10909"; a="390388637"
+X-IronPort-AV: E=Sophos;i="6.04,237,1695711600"; 
+   d="scan'208";a="390388637"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2023 13:34:55 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.04,237,1695711600"; 
+   d="scan'208";a="17150174"
+Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
+  by orviesa001.jf.intel.com with ESMTP; 29 Nov 2023 13:34:54 -0800
+Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1r8SCp-0000py-0E;
+	Wed, 29 Nov 2023 21:34:51 +0000
+Date: Thu, 30 Nov 2023 05:33:52 +0800
+From: kernel test robot <lkp@intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 15da990f8dd7e9d0e1fd0275730f6fed6f6a8a57
+Message-ID: <202311300550.mt9I5P1j-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <CAGRgLy5E3cb=MS8eSMH03fa27tgFnZp0hwrrobyQMuUU_Axiag@mail.gmail.com>
- <CAPhsuW4z7U-Aq=YemQjFKtcaB7k9x+T_=zM8oBkR3aK2fRzo=A@mail.gmail.com>
- <CAGRgLy6KH9WfqHzN2OkFg5tb49Y=wKnBqQCdWifoFV13aD17Dg@mail.gmail.com> <CAPhsuW6AT5_=d9ibfwBedsd-aVrdM1tfBnJpYD=hoiOeKMCpAw@mail.gmail.com>
-In-Reply-To: <CAPhsuW6AT5_=d9ibfwBedsd-aVrdM1tfBnJpYD=hoiOeKMCpAw@mail.gmail.com>
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Date: Wed, 29 Nov 2023 14:15:33 +0200
-Message-ID: <CAGRgLy6H0q+VEGBeG5bqs-=826cZyGZYVq9_7ZG453n+XXJBcQ@mail.gmail.com>
-Subject: Re: raid6 corruption after assembling with event counter difference
- of 1
-To: Song Liu <song@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 
-Hi Song,
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 15da990f8dd7e9d0e1fd0275730f6fed6f6a8a57  MAINTAINERS: SOFTWARE RAID: Add Yu Kuai as Reviewer
 
-> Thanks for pointing this out. I think this is the actual problem here. In
-> analyze_sbs() we first run validate_super() on the freshest device.
-> Then, we run validate_super() on other devices. We should mark the
-> device as faulty based on the sb from the freshest device. (which is
-> not the case at the moment). I think we need to fix this.
-Thanks for your suggestion. Based on it, I prepared a patch[1], which,
-after manually reproducing the problem, addresses the issue.
+elapsed time: 1556m
 
-The device with less-by-1 event counter is added to the array as
-Faulty when the array is started. Then remove_and_add_spares() ejects
-this device from the array, as expected. Later, the user performs:
-"mdadm --remove" and "madam --re-add", which rebuilds the device. Data
-corruption is avoided with this.
+configs tested: 119
+configs skipped: 2
 
-Please kindly note the following:
-- md has many features, which we don't use, such as: "non-persistent
-arrays", "clustered arrays", "autostart", "journal devices",
-"write-behind", "multipath arrays" and others. I cannot say how this
-fix will interoperate with these features.
-- I tested the fix only on superblock version 1.2. I don't know how
-0.9 superblocks work (because I never used them), so I did not change
-anything in super_90_validate().
-- I tested the fix on our production kernel 4.14 LTS. I ported the
-changes to the mainline kernel 6.7-rc3, but I do not have the ability
-at the moment to test it on this kernel.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Can you please comment on the patch?
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                          axs101_defconfig   gcc  
+arc                                 defconfig   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                       aspeed_g5_defconfig   gcc  
+arm                                 defconfig   clang
+arm                        realview_defconfig   gcc  
+arm64                            allmodconfig   clang
+arm64                             allnoconfig   gcc  
+arm64                               defconfig   gcc  
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+hexagon                          allmodconfig   clang
+hexagon                           allnoconfig   clang
+hexagon                          allyesconfig   clang
+hexagon                             defconfig   clang
+i386                             allmodconfig   clang
+i386                              allnoconfig   clang
+i386                             allyesconfig   clang
+i386                                defconfig   gcc  
+i386                  randconfig-011-20231130   clang
+i386                  randconfig-012-20231130   clang
+i386                  randconfig-013-20231130   clang
+i386                  randconfig-014-20231130   clang
+i386                  randconfig-015-20231130   clang
+i386                  randconfig-016-20231130   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                         amcore_defconfig   gcc  
+m68k                       bvme6000_defconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                        m5407c3_defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                              allnoconfig   clang
+mips                             allyesconfig   gcc  
+mips                      loongson3_defconfig   gcc  
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   clang
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   clang
+powerpc                     ep8248e_defconfig   gcc  
+powerpc                    klondike_defconfig   gcc  
+powerpc                     mpc83xx_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   clang
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                    nommu_k210_defconfig   gcc  
+riscv                          rv32_defconfig   clang
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   clang
+x86_64       buildonly-randconfig-001-20231130   gcc  
+x86_64       buildonly-randconfig-002-20231130   gcc  
+x86_64       buildonly-randconfig-003-20231130   gcc  
+x86_64       buildonly-randconfig-004-20231130   gcc  
+x86_64       buildonly-randconfig-005-20231130   gcc  
+x86_64       buildonly-randconfig-006-20231130   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                randconfig-011-20231130   gcc  
+x86_64                randconfig-012-20231130   gcc  
+x86_64                randconfig-013-20231130   gcc  
+x86_64                randconfig-014-20231130   gcc  
+x86_64                randconfig-015-20231130   gcc  
+x86_64                randconfig-016-20231130   gcc  
+x86_64                randconfig-071-20231130   gcc  
+x86_64                randconfig-072-20231130   gcc  
+x86_64                randconfig-073-20231130   gcc  
+x86_64                randconfig-074-20231130   gcc  
+x86_64                randconfig-075-20231130   gcc  
+x86_64                randconfig-076-20231130   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                            allnoconfig   gcc  
+xtensa                  cadence_csp_defconfig   gcc  
 
-> With the above issue fixed, allowing the event counter to be off by 1 is safe.
-> Does this make sense? Did I miss cases?
-Yes, now it should be safe.
-
-Thanks,
-Alex.
-
-[1]
-From 13ba53f3bc99b207386a69e3ef176fb5113d7ee3 Mon Sep 17 00:00:00 2001
-From: Alex Lyakas <alex@zadara.com>
-Date: Wed, 29 Nov 2023 13:38:22 +0200
-Subject: [PATCH] md: upon assembling the array, consult the superblock of the
- freshest device
-
-In case we are adding to the array a device, whose event counter
-is less by 1 then the one of the freshest device.
-
-Signed-off-by: Alex Lyakas <alex@zadara.com>
----
- drivers/md/md.c | 53 +++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 43 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c94373d..e490275 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1195,6 +1195,7 @@ struct super_type  {
-                                          struct md_rdev *refdev,
-                                          int minor_version);
-        int                 (*validate_super)(struct mddev *mddev,
-+                                             struct md_rdev *freshest,
-                                              struct md_rdev *rdev);
-        void                (*sync_super)(struct mddev *mddev,
-                                          struct md_rdev *rdev);
-@@ -1333,7 +1334,7 @@ static int super_90_load(struct md_rdev *rdev,
-struct md_rdev *refdev, int minor
- /*
-  * validate_super for 0.90.0
-  */
--static int super_90_validate(struct mddev *mddev, struct md_rdev *rdev)
-+static int super_90_validate(struct mddev *mddev, struct md_rdev
-*freshest, struct md_rdev *rdev)
- {
-        mdp_disk_t *desc;
-        mdp_super_t *sb = page_address(rdev->sb_page);
-@@ -1845,7 +1846,7 @@ static int super_1_load(struct md_rdev *rdev,
-struct md_rdev *refdev, int minor_
-        return ret;
- }
-
--static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
-+static int super_1_validate(struct mddev *mddev, struct md_rdev
-*freshest, struct md_rdev *rdev)
- {
-        struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
-        __u64 ev1 = le64_to_cpu(sb->events);
-@@ -1941,13 +1942,15 @@ static int super_1_validate(struct mddev
-*mddev, struct md_rdev *rdev)
-                }
-        } else if (mddev->pers == NULL) {
-                /* Insist of good event counter while assembling, except for
--                * spares (which don't need an event count) */
--               ++ev1;
-+                * spares (which don't need an event count).
-+                * Similar to mdadm, we allow event counter difference of 1
-+                * from the freshest device.
-+                */
-                if (rdev->desc_nr >= 0 &&
-                    rdev->desc_nr < le32_to_cpu(sb->max_dev) &&
-                    (le16_to_cpu(sb->dev_roles[rdev->desc_nr]) <
-MD_DISK_ROLE_MAX ||
-                     le16_to_cpu(sb->dev_roles[rdev->desc_nr]) ==
-MD_DISK_ROLE_JOURNAL))
--                       if (ev1 < mddev->events)
-+                       if (ev1 + 1 < mddev->events)
-                                return -EINVAL;
-        } else if (mddev->bitmap) {
-                /* If adding to array with a bitmap, then we can accept an
-@@ -1968,8 +1971,38 @@ static int super_1_validate(struct mddev
-*mddev, struct md_rdev *rdev)
-                    rdev->desc_nr >= le32_to_cpu(sb->max_dev)) {
-                        role = MD_DISK_ROLE_SPARE;
-                        rdev->desc_nr = -1;
--               } else
-+               } else if (mddev->pers == NULL && freshest != NULL &&
-ev1 < mddev->events) {
-+                       /*
-+                        * If we are assembling, and our event counter
-is smaller than the
-+                        * highest event counter, we cannot trust our
-superblock about the role.
-+                        * It could happen that our rdev was marked as
-Faulty, and all other
-+                        * superblocks were updated with +1 event counter.
-+                        * Then, before the next superblock update,
-which typically happens when
-+                        * remove_and_add_spares() removes the device
-from the array, there was
-+                        * a crash or reboot.
-+                        * If we allow current rdev without consulting
-the freshest superblock,
-+                        * we could cause data corruption.
-+                        * Note that in this case our event counter is
-smaller by 1 than the
-+                        * highest, otherwise, this rdev would not be
-allowed into array;
-+                        * both kernel and mdadm allow event counter
-difference of 1.
-+                        */
-+                       struct mdp_superblock_1 *freshest_sb =
-page_address(freshest->sb_page);
-+                       u32 freshest_max_dev =
-le32_to_cpu(freshest_sb->max_dev);
-+
-+                       if (rdev->desc_nr >= freshest_max_dev) {
-+                               /* this is unexpected, better not proceed */
-+                               pr_warn("md: %s: rdev[%pg]:
-desc_nr(%d) >= freshest(%pg)->sb->max_dev(%u)\n",
-+                                               mdname(mddev),
-rdev->bdev, rdev->desc_nr, freshest->bdev,
-+                                               freshest_max_dev);
-+                               return -EUCLEAN;
-+                       }
-+
-+                       role =
-le16_to_cpu(freshest_sb->dev_roles[rdev->desc_nr]);
-+                       pr_warn("md: %s: rdev[%pg]: role=%d(0x%x)
-according to freshest %pg\n",
-+                                   mdname(mddev), rdev->bdev, role,
-role, freshest->bdev);
-+               } else {
-                        role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
-+               }
-                switch(role) {
-                case MD_DISK_ROLE_SPARE: /* spare */
-                        break;
-@@ -2876,7 +2909,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
-                 * and should be added immediately.
-                 */
-                super_types[mddev->major_version].
--                       validate_super(mddev, rdev);
-+                       validate_super(mddev, NULL/*freshest*/, rdev);
-                err = mddev->pers->hot_add_disk(mddev, rdev);
-                if (err) {
-                        md_kick_rdev_from_array(rdev);
-@@ -3813,7 +3846,7 @@ static int analyze_sbs(struct mddev *mddev)
-        }
-
-        super_types[mddev->major_version].
--               validate_super(mddev, freshest);
-+               validate_super(mddev, NULL/*freshest*/, freshest);
-
-        i = 0;
-        rdev_for_each_safe(rdev, tmp, mddev) {
-@@ -3828,7 +3861,7 @@ static int analyze_sbs(struct mddev *mddev)
-                }
-                if (rdev != freshest) {
-                        if (super_types[mddev->major_version].
--                           validate_super(mddev, rdev)) {
-+                           validate_super(mddev, freshest, rdev)) {
-                                pr_warn("md: kicking non-fresh %pg
-from array!\n",
-                                        rdev->bdev);
-                                md_kick_rdev_from_array(rdev);
-@@ -6836,7 +6869,7 @@ int md_add_new_disk(struct mddev *mddev, struct
-mdu_disk_info_s *info)
-                        rdev->saved_raid_disk = rdev->raid_disk;
-                } else
-                        super_types[mddev->major_version].
--                               validate_super(mddev, rdev);
-+                               validate_super(mddev, NULL/*freshest*/, rdev);
-                if ((info->state & (1<<MD_DISK_SYNC)) &&
-                     rdev->raid_disk != info->raid_disk) {
-                        /* This was a hot-add request, but events doesn't
---
-1.9.1
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
