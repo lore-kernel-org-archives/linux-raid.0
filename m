@@ -1,157 +1,261 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="NOfwYpFJ";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Fajihkt2"
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B2661735;
-	Wed, 29 Nov 2023 00:08:53 -0800 (PST)
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 1B7172191E;
-	Wed, 29 Nov 2023 08:08:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1701245331; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ff6pAJpcX3l7MPwnKq6UwMRVAXT7uHWdW8qXvtQnSOM=;
-	b=NOfwYpFJNcsLFFNezw3nE+validjAfo58PcPGDSRV0buD137yKHXFJ7G92GDcPWj4szyoz
-	dtLZMMYPXoXbO9yVEL4dekjRADnKnq7YvzHQ0I+GI0CEakOC5fxWOFjq0TW7+k6VEeBAe5
-	ES/3+v9IiMm+o8KAvr3OVolM8LexlxA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1701245331;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ff6pAJpcX3l7MPwnKq6UwMRVAXT7uHWdW8qXvtQnSOM=;
-	b=Fajihkt29yGkLJ/h1MKUkmz5ITB1D575FcaVndQTfOxzbg06bVbgWVGTeDxiW161xs897u
-	PF+jaL1D0JtY53Ag==
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id E6E561377E;
-	Wed, 29 Nov 2023 08:08:46 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id b1IhJY7xZmWkNwAAn2gu4w
-	(envelope-from <colyli@suse.de>); Wed, 29 Nov 2023 08:08:46 +0000
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Pm4rKqO3"
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22D46C1
+	for <linux-raid@vger.kernel.org>; Wed, 29 Nov 2023 04:15:46 -0800 (PST)
+Received: by mail-wr1-x42f.google.com with SMTP id ffacd0b85a97d-3331752d2b9so435487f8f.3
+        for <linux-raid@vger.kernel.org>; Wed, 29 Nov 2023 04:15:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1701260144; x=1701864944; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=5swqXhS1U5U3RhAq8ZMgbaXuu8V3U7BQD7if+bTGcSU=;
+        b=Pm4rKqO3ZdgA9BsmwsgPkSgb94R0GlEFqUO7eTbsx2hR913lzsZVMdkgK/qNgulqEn
+         DPZUYCFZw/fUKHvTmPw0NwKX3EzbZ3qiQp/qMvYQtKsQxKtS2yn7KjKKhYmy8iY6u1oz
+         9DiHMVMenXC+l55+lux9nEmbh5RmecHRH9Js1Vtqcg00EDFZMQkBmGv9ubq8uftoUuwk
+         +sXpAY5cVLSUy1sDrI9rhTNQUHNhbQD5OxtfaR4+kRBAnBLHi4JkXybi6VkNcXXjzTeq
+         tdyYl8DMMCizaKJAGHzCYDZatgcOR6DctEb+FCYRRMA7grvsCrI5sDGnw+R1AU3lAR5n
+         TRrQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701260144; x=1701864944;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=5swqXhS1U5U3RhAq8ZMgbaXuu8V3U7BQD7if+bTGcSU=;
+        b=Uz+93HZpN4YXrq8nq7/ggr38Hu88Ci86jij8VIYf9KRUnSdnzphrbh9Wu2w0Mko94d
+         0oFrKGTEKqmi7gf0mU4zpcXfDjMp0xR11tw7QmzCHaw5grQR3akXPXFgDi8OBxbxkmaU
+         U0jR65iqUCkJNOt/VhF4JTm9Kh/Z6+r4/MjYd2VXwnWK1H/24+1XtlwGkFba3lNRONDT
+         WnU4U9EvPGg4PmkX6Wv+6WbCiiDx3J9QKu3ymgBY2Z0+Bu5KqfZYyP14ESDPpR8xEdvn
+         DAZheU1qLCMfIxKeRsWxD4/2i/GpIYWNo2XS1wnLegrFYyQksN2xK6nukHxDScGxVIZJ
+         UBYg==
+X-Gm-Message-State: AOJu0YzGkrTHGGpfzddKONdJTk8nuyHcYijNbJ8/9IpqrVlb5hdiXqM7
+	YXdNjqvCsM+Mi1JS/tyyDVY2iXLSLfZTEHGSfoJtqSCbA04=
+X-Google-Smtp-Source: AGHT+IEKYNaoKk9FDCw7M0xzcn0dxSoT9lCUaY+7I2NIfBT5+WcseWm/tdtndAxN5J1edrDUiBIbyENpEduHqnEgbqo=
+X-Received: by 2002:a5d:4e4a:0:b0:332:f895:f598 with SMTP id
+ r10-20020a5d4e4a000000b00332f895f598mr8412244wrt.61.1701260144260; Wed, 29
+ Nov 2023 04:15:44 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3774.200.91.1.1\))
-Subject: Re: block/badblocks.c warning in 6.7-rc2
-From: Coly Li <colyli@suse.de>
-In-Reply-To: <562a2442-d098-4972-baa1-5a843e06b180@gmail.com>
-Date: Wed, 29 Nov 2023 16:08:25 +0800
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Linux Regressions <regressions@lists.linux.dev>,
- Linux Block Devices <linux-block@vger.kernel.org>,
- Linux RAID <linux-raid@vger.kernel.org>,
- Linux bcachefs <linux-bcachefs@vger.kernel.org>,
- Xiao Ni <xni@redhat.com>,
- Geliang Tang <geliang.tang@suse.com>,
- Jens Axboe <axboe@kernel.dk>,
- Song Liu <song@kernel.org>,
- Kent Overstreet <kent.overstreet@linux.dev>,
- Janpieter Sollie <janpieter.sollie@edpnet.be>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <C8305655-3749-411B-A696-E07E95882215@suse.de>
-References: <562a2442-d098-4972-baa1-5a843e06b180@gmail.com>
-To: Bagas Sanjaya <bagasdotme@gmail.com>
-X-Mailer: Apple Mail (2.3774.200.91.1.1)
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spam-Level: 
-X-Spamd-Result: default: False [-2.15 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 BAYES_HAM(-1.35)[90.51%];
-	 FROM_HAS_DN(0.00)[];
-	 MV_CASE(0.50)[];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 MIME_GOOD(-0.10)[text/plain];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 TO_DN_ALL(0.00)[];
-	 NEURAL_HAM_SHORT(-0.20)[-0.989];
-	 RCPT_COUNT_TWELVE(0.00)[12];
-	 FREEMAIL_TO(0.00)[gmail.com];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
-X-Spam-Score: -2.15
+MIME-Version: 1.0
+References: <CAGRgLy5E3cb=MS8eSMH03fa27tgFnZp0hwrrobyQMuUU_Axiag@mail.gmail.com>
+ <CAPhsuW4z7U-Aq=YemQjFKtcaB7k9x+T_=zM8oBkR3aK2fRzo=A@mail.gmail.com>
+ <CAGRgLy6KH9WfqHzN2OkFg5tb49Y=wKnBqQCdWifoFV13aD17Dg@mail.gmail.com> <CAPhsuW6AT5_=d9ibfwBedsd-aVrdM1tfBnJpYD=hoiOeKMCpAw@mail.gmail.com>
+In-Reply-To: <CAPhsuW6AT5_=d9ibfwBedsd-aVrdM1tfBnJpYD=hoiOeKMCpAw@mail.gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Date: Wed, 29 Nov 2023 14:15:33 +0200
+Message-ID: <CAGRgLy6H0q+VEGBeG5bqs-=826cZyGZYVq9_7ZG453n+XXJBcQ@mail.gmail.com>
+Subject: Re: raid6 corruption after assembling with event counter difference
+ of 1
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
+Hi Song,
 
+> Thanks for pointing this out. I think this is the actual problem here. In
+> analyze_sbs() we first run validate_super() on the freshest device.
+> Then, we run validate_super() on other devices. We should mark the
+> device as faulty based on the sb from the freshest device. (which is
+> not the case at the moment). I think we need to fix this.
+Thanks for your suggestion. Based on it, I prepared a patch[1], which,
+after manually reproducing the problem, addresses the issue.
 
-> 2023=E5=B9=B411=E6=9C=8829=E6=97=A5 07:47=EF=BC=8CBagas Sanjaya =
-<bagasdotme@gmail.com> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Hi,
->=20
-> I notice a regression report that is rather well-handled on Bugzilla =
-[1].
-> Quoting from it:
->=20
->>=20
->> when booting from 6.7-rc2, compiled with clang, I get this warning on =
-one of my 3 bcachefs volumes:
->> WARNING: CPU: 3 PID: 712 at block/badblocks.c:1284 badblocks_check =
-(block/badblocks.c:1284)=20
->> The reason why isn't clear, but the stack trace points to an error in =
-md error handling.
->> This bug didn't happen in 6.6
->> there are 3 commits in 6.7-rc2 which may cause them,
->> in attachment:
->> - decoded stacktrace of dmesg
->> - kernel .config
->=20
-> The culprit author then replied:
->=20
->> The warning is from this line of code in _badblocks_check(),
->> 1284         WARN_ON(bb->shift < 0 || sectors =3D=3D 0);
->>=20
->> It means the caller sent an invalid range to check. =46rom the oops =
-information,
->> "RDX: 0000000000000000" means parameter 'sectors' is 0.
->>=20
->> So the question is, why does md raid code send a 0-length range for =
-badblocks check? Is this behavior on purpose, or improper?
->> ...
->> IMHO, it doesn't make sense for caller to check a zero-length LBA =
-range. The warning works as expect to detect improper call to =
-badblocks_check().
->=20
-> See Bugzilla for the full thread and attached decoded dmesg and kernel =
-config.
->=20
-> Anyway, I'm adding this regression to regzbot:
->=20
-> #regzbot introduced: 3ea3354cb9f03e =
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218184
-> #regzbot title: badblocks_check regression (md error handling) on =
-bcachefs volume
->=20
-> Thanks.
->=20
-> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=3D218184
+The device with less-by-1 event counter is added to the array as
+Faulty when the array is started. Then remove_and_add_spares() ejects
+this device from the array, as expected. Later, the user performs:
+"mdadm --remove" and "madam --re-add", which rebuilds the device. Data
+corruption is avoided with this.
 
-It seems the improved bad blocks code caught a zero-size bio request =
-from upper layer, this improper behavior was silently neglected before. =
-It might be too early or simple to decide this is a regression, =
-especially Janpieter closes the report for now.
+Please kindly note the following:
+- md has many features, which we don't use, such as: "non-persistent
+arrays", "clustered arrays", "autostart", "journal devices",
+"write-behind", "multipath arrays" and others. I cannot say how this
+fix will interoperate with these features.
+- I tested the fix only on superblock version 1.2. I don't know how
+0.9 superblocks work (because I never used them), so I did not change
+anything in super_90_validate().
+- I tested the fix on our production kernel 4.14 LTS. I ported the
+changes to the mainline kernel 6.7-rc3, but I do not have the ability
+at the moment to test it on this kernel.
 
-Thanks.
+Can you please comment on the patch?
 
-Coly Li
+> With the above issue fixed, allowing the event counter to be off by 1 is safe.
+> Does this make sense? Did I miss cases?
+Yes, now it should be safe.
 
+Thanks,
+Alex.
+
+[1]
+From 13ba53f3bc99b207386a69e3ef176fb5113d7ee3 Mon Sep 17 00:00:00 2001
+From: Alex Lyakas <alex@zadara.com>
+Date: Wed, 29 Nov 2023 13:38:22 +0200
+Subject: [PATCH] md: upon assembling the array, consult the superblock of the
+ freshest device
+
+In case we are adding to the array a device, whose event counter
+is less by 1 then the one of the freshest device.
+
+Signed-off-by: Alex Lyakas <alex@zadara.com>
+---
+ drivers/md/md.c | 53 +++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 43 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c94373d..e490275 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1195,6 +1195,7 @@ struct super_type  {
+                                          struct md_rdev *refdev,
+                                          int minor_version);
+        int                 (*validate_super)(struct mddev *mddev,
++                                             struct md_rdev *freshest,
+                                              struct md_rdev *rdev);
+        void                (*sync_super)(struct mddev *mddev,
+                                          struct md_rdev *rdev);
+@@ -1333,7 +1334,7 @@ static int super_90_load(struct md_rdev *rdev,
+struct md_rdev *refdev, int minor
+ /*
+  * validate_super for 0.90.0
+  */
+-static int super_90_validate(struct mddev *mddev, struct md_rdev *rdev)
++static int super_90_validate(struct mddev *mddev, struct md_rdev
+*freshest, struct md_rdev *rdev)
+ {
+        mdp_disk_t *desc;
+        mdp_super_t *sb = page_address(rdev->sb_page);
+@@ -1845,7 +1846,7 @@ static int super_1_load(struct md_rdev *rdev,
+struct md_rdev *refdev, int minor_
+        return ret;
+ }
+
+-static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
++static int super_1_validate(struct mddev *mddev, struct md_rdev
+*freshest, struct md_rdev *rdev)
+ {
+        struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
+        __u64 ev1 = le64_to_cpu(sb->events);
+@@ -1941,13 +1942,15 @@ static int super_1_validate(struct mddev
+*mddev, struct md_rdev *rdev)
+                }
+        } else if (mddev->pers == NULL) {
+                /* Insist of good event counter while assembling, except for
+-                * spares (which don't need an event count) */
+-               ++ev1;
++                * spares (which don't need an event count).
++                * Similar to mdadm, we allow event counter difference of 1
++                * from the freshest device.
++                */
+                if (rdev->desc_nr >= 0 &&
+                    rdev->desc_nr < le32_to_cpu(sb->max_dev) &&
+                    (le16_to_cpu(sb->dev_roles[rdev->desc_nr]) <
+MD_DISK_ROLE_MAX ||
+                     le16_to_cpu(sb->dev_roles[rdev->desc_nr]) ==
+MD_DISK_ROLE_JOURNAL))
+-                       if (ev1 < mddev->events)
++                       if (ev1 + 1 < mddev->events)
+                                return -EINVAL;
+        } else if (mddev->bitmap) {
+                /* If adding to array with a bitmap, then we can accept an
+@@ -1968,8 +1971,38 @@ static int super_1_validate(struct mddev
+*mddev, struct md_rdev *rdev)
+                    rdev->desc_nr >= le32_to_cpu(sb->max_dev)) {
+                        role = MD_DISK_ROLE_SPARE;
+                        rdev->desc_nr = -1;
+-               } else
++               } else if (mddev->pers == NULL && freshest != NULL &&
+ev1 < mddev->events) {
++                       /*
++                        * If we are assembling, and our event counter
+is smaller than the
++                        * highest event counter, we cannot trust our
+superblock about the role.
++                        * It could happen that our rdev was marked as
+Faulty, and all other
++                        * superblocks were updated with +1 event counter.
++                        * Then, before the next superblock update,
+which typically happens when
++                        * remove_and_add_spares() removes the device
+from the array, there was
++                        * a crash or reboot.
++                        * If we allow current rdev without consulting
+the freshest superblock,
++                        * we could cause data corruption.
++                        * Note that in this case our event counter is
+smaller by 1 than the
++                        * highest, otherwise, this rdev would not be
+allowed into array;
++                        * both kernel and mdadm allow event counter
+difference of 1.
++                        */
++                       struct mdp_superblock_1 *freshest_sb =
+page_address(freshest->sb_page);
++                       u32 freshest_max_dev =
+le32_to_cpu(freshest_sb->max_dev);
++
++                       if (rdev->desc_nr >= freshest_max_dev) {
++                               /* this is unexpected, better not proceed */
++                               pr_warn("md: %s: rdev[%pg]:
+desc_nr(%d) >= freshest(%pg)->sb->max_dev(%u)\n",
++                                               mdname(mddev),
+rdev->bdev, rdev->desc_nr, freshest->bdev,
++                                               freshest_max_dev);
++                               return -EUCLEAN;
++                       }
++
++                       role =
+le16_to_cpu(freshest_sb->dev_roles[rdev->desc_nr]);
++                       pr_warn("md: %s: rdev[%pg]: role=%d(0x%x)
+according to freshest %pg\n",
++                                   mdname(mddev), rdev->bdev, role,
+role, freshest->bdev);
++               } else {
+                        role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
++               }
+                switch(role) {
+                case MD_DISK_ROLE_SPARE: /* spare */
+                        break;
+@@ -2876,7 +2909,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+                 * and should be added immediately.
+                 */
+                super_types[mddev->major_version].
+-                       validate_super(mddev, rdev);
++                       validate_super(mddev, NULL/*freshest*/, rdev);
+                err = mddev->pers->hot_add_disk(mddev, rdev);
+                if (err) {
+                        md_kick_rdev_from_array(rdev);
+@@ -3813,7 +3846,7 @@ static int analyze_sbs(struct mddev *mddev)
+        }
+
+        super_types[mddev->major_version].
+-               validate_super(mddev, freshest);
++               validate_super(mddev, NULL/*freshest*/, freshest);
+
+        i = 0;
+        rdev_for_each_safe(rdev, tmp, mddev) {
+@@ -3828,7 +3861,7 @@ static int analyze_sbs(struct mddev *mddev)
+                }
+                if (rdev != freshest) {
+                        if (super_types[mddev->major_version].
+-                           validate_super(mddev, rdev)) {
++                           validate_super(mddev, freshest, rdev)) {
+                                pr_warn("md: kicking non-fresh %pg
+from array!\n",
+                                        rdev->bdev);
+                                md_kick_rdev_from_array(rdev);
+@@ -6836,7 +6869,7 @@ int md_add_new_disk(struct mddev *mddev, struct
+mdu_disk_info_s *info)
+                        rdev->saved_raid_disk = rdev->raid_disk;
+                } else
+                        super_types[mddev->major_version].
+-                               validate_super(mddev, rdev);
++                               validate_super(mddev, NULL/*freshest*/, rdev);
+                if ((info->state & (1<<MD_DISK_SYNC)) &&
+                     rdev->raid_disk != info->raid_disk) {
+                        /* This was a hot-add request, but events doesn't
+--
+1.9.1
