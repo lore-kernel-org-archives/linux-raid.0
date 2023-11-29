@@ -1,104 +1,143 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E5DRzk8r"
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F8721A5;
-	Tue, 28 Nov 2023 15:47:28 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-6b20577ef7bso5344191b3a.3;
-        Tue, 28 Nov 2023 15:47:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701215248; x=1701820048; darn=vger.kernel.org;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MoJTdvnUva0vOEP8D6/hcODd/TZNf7EsXrddDwBiX0Q=;
-        b=E5DRzk8rGW/Pbws90gavOxsed/CK8SD6UkI6S+T267cUqL96rS6LQNcVZV89n57xkq
-         wQ8onMppPsHwbZmM2QbmxUN2Acv1mjGi5BwA45KGpHTafUrwiqVYzMOCyLASGuVzZ5sZ
-         cWtfOf1EcH0yIiaAV3uiulNtdqRM2QU4ixxNfD8DtUSgT4teW/p65JIZ1p3cSDBAIW8I
-         oSbqvMneA7X66b1W0EE3WJj/ueyn+kUw1D8AOaTJ2LGDC/PdWbplY+LFuY/mntOiq1VS
-         3U5t8w0PsAxvE/XcsuMq1m3/FAQ+aBNOot6Xmhs1bxBImdySS4mEg2ADBpl6MC6fHTlJ
-         Bbbw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701215248; x=1701820048;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=MoJTdvnUva0vOEP8D6/hcODd/TZNf7EsXrddDwBiX0Q=;
-        b=nqZffRfLYvARz3cOgyV2ArbhNFj/A103taq5RFdGYu+8IXG2mqtpYDEHcgPpNpEJz6
-         PIGLWi+cbWlLRdiy0J58kbGBPv2a8oQyHc8E3L2CovtCC2BQRRmh+csAysgaPKfxCZvd
-         ATdCMnlKzR3k7daJ/3bEGaQ0vvqt6nRM7cXSSiBe05x/Ws26NTuC63mSEeQJDjurvaCO
-         qT6T6udl/wiY5r40BcMf/vT+EGgEzG+mrQuI0YLXfaFEs9ZVVjxvhHhnafHn20D/bWQH
-         ODdjXG6PYvXs/i8XKUrgiXJ1NTHoVf5RLzorv1LnFcT065gZ52uvmljZp+KzDaOy+g06
-         lAKA==
-X-Gm-Message-State: AOJu0YxqEol1aBzSAJPC3jvNj2yMfVDI1uL+YiLlg2H1V/w2nQH3D9JN
-	KVTYwWHCxdtqIuIngl38AeKbEPdLdEVYeQ==
-X-Google-Smtp-Source: AGHT+IG0ToBag8VkYoAH8p7bmSYPEOYkke5pJZNFz0uaMrE6AdCr1IG7P+8YPR2dMp9dwjbggk5bbg==
-X-Received: by 2002:a05:6a00:1d01:b0:6be:4228:698b with SMTP id a1-20020a056a001d0100b006be4228698bmr19323394pfx.20.1701215247817;
-        Tue, 28 Nov 2023 15:47:27 -0800 (PST)
-Received: from [192.168.0.106] ([103.131.18.64])
-        by smtp.gmail.com with ESMTPSA id l65-20020a639144000000b005c2130fd8d7sm10038106pge.91.2023.11.28.15.47.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Nov 2023 15:47:27 -0800 (PST)
-Message-ID: <562a2442-d098-4972-baa1-5a843e06b180@gmail.com>
-Date: Wed, 29 Nov 2023 06:47:20 +0700
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E9ED198D;
+	Tue, 28 Nov 2023 18:03:19 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Sg2fT1Hrhz4f3jZB;
+	Wed, 29 Nov 2023 10:03:13 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 0CB171A0C0D;
+	Wed, 29 Nov 2023 10:03:16 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDHyhDim2ZlfZTmCA--.8717S4;
+	Wed, 29 Nov 2023 10:03:15 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: song@kernel.org,
+	neilb@suse.de,
+	maan@systemlinux.org
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH v3] md: synchronize flush io with array reconfiguration
+Date: Wed, 29 Nov 2023 10:02:34 +0800
+Message-Id: <20231129020234.1586910-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Linux Regressions <regressions@lists.linux.dev>,
- Linux Block Devices <linux-block@vger.kernel.org>,
- Linux RAID <linux-raid@vger.kernel.org>,
- Linux bcachefs <linux-bcachefs@vger.kernel.org>
-Cc: Coly Li <colyli@suse.de>, Xiao Ni <xni@redhat.com>,
- Geliang Tang <geliang.tang@suse.com>, Jens Axboe <axboe@kernel.dk>,
- Song Liu <song@kernel.org>, Kent Overstreet <kent.overstreet@linux.dev>,
- Janpieter Sollie <janpieter.sollie@edpnet.be>
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: Fwd: block/badblocks.c warning in 6.7-rc2
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDHyhDim2ZlfZTmCA--.8717S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxWry8uFW5Kw1DZw4xtr1UWrg_yoW5AFy3p3
+	yFq3Zxtr4UXFZ8KwsxJa1kGr1rWa1jvFW0yay3Z343Zw13Xrn8G3yfKF95Xr98CFyfu3y3
+	ur4qgw4Dua4jqFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+	AvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+	7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+From: Yu Kuai <yukuai3@huawei.com>
 
-I notice a regression report that is rather well-handled on Bugzilla [1].
-Quoting from it:
+Currently rcu is used to protect iterating rdev from submit_flushes():
 
-> 
-> when booting from 6.7-rc2, compiled with clang, I get this warning on one of my 3 bcachefs volumes:
-> WARNING: CPU: 3 PID: 712 at block/badblocks.c:1284 badblocks_check (block/badblocks.c:1284) 
-> The reason why isn't clear, but the stack trace points to an error in md error handling.
-> This bug didn't happen in 6.6
-> there are 3 commits in 6.7-rc2 which may cause them,
-> in attachment:
-> - decoded stacktrace of dmesg
-> - kernel .config
+submit_flushes			remove_and_add_spares
+				synchronize_rcu
+				pers->hot_remove_disk()
+ rcu_read_lock()
+ rdev_for_each_rcu
+  if (rdev->raid_disk >= 0)
+				rdev->radi_disk = -1;
+   atomic_inc(&rdev->nr_pending)
+   rcu_read_unlock()
+   bi = bio_alloc_bioset()
+   bi->bi_end_io = md_end_flush
+   bi->private = rdev
+   submit_bio
+   // issue io for removed rdev
 
-The culprit author then replied:
+Fix this problem by grabbing 'acive_io' before iterating rdev, make sure
+that remove_and_add_spares() won't concurrent with submit_flushes().
 
-> The warning is from this line of code in _badblocks_check(),
-> 1284         WARN_ON(bb->shift < 0 || sectors == 0);
-> 
-> It means the caller sent an invalid range to check. From the oops information,
-> "RDX: 0000000000000000" means parameter 'sectors' is 0.
-> 
-> So the question is, why does md raid code send a 0-length range for badblocks check? Is this behavior on purpose, or improper?
-> ...
-> IMHO, it doesn't make sense for caller to check a zero-length LBA range. The warning works as expect to detect improper call to badblocks_check().
+Fixes: a2826aa92e2e ("md: support barrier requests on all personalities.")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+Changes in v3:
+ - use WARN_ON(percpu_ref_is_zero()) and use percpu_ref_get().
+Changes in v2:
+ - Add WARN_ON in case md_flush_request() is not called from
+ md_handle_request() in future.
+ drivers/md/md.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-See Bugzilla for the full thread and attached decoded dmesg and kernel config.
-
-Anyway, I'm adding this regression to regzbot:
-
-#regzbot introduced: 3ea3354cb9f03e https://bugzilla.kernel.org/show_bug.cgi?id=218184
-#regzbot title: badblocks_check regression (md error handling) on bcachefs volume
-
-Thanks.
-
-[1]: https://bugzilla.kernel.org/show_bug.cgi?id=218184
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 05902e36db66..75ff96d53266 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -529,6 +529,9 @@ static void md_end_flush(struct bio *bio)
+ 	rdev_dec_pending(rdev, mddev);
+ 
+ 	if (atomic_dec_and_test(&mddev->flush_pending)) {
++		/* The pair is percpu_ref_get() from md_flush_request() */
++		percpu_ref_put(&mddev->active_io);
++
+ 		/* The pre-request flush has finished */
+ 		queue_work(md_wq, &mddev->flush_work);
+ 	}
+@@ -548,12 +551,8 @@ static void submit_flushes(struct work_struct *ws)
+ 	rdev_for_each_rcu(rdev, mddev)
+ 		if (rdev->raid_disk >= 0 &&
+ 		    !test_bit(Faulty, &rdev->flags)) {
+-			/* Take two references, one is dropped
+-			 * when request finishes, one after
+-			 * we reclaim rcu_read_lock
+-			 */
+ 			struct bio *bi;
+-			atomic_inc(&rdev->nr_pending);
++
+ 			atomic_inc(&rdev->nr_pending);
+ 			rcu_read_unlock();
+ 			bi = bio_alloc_bioset(rdev->bdev, 0,
+@@ -564,7 +563,6 @@ static void submit_flushes(struct work_struct *ws)
+ 			atomic_inc(&mddev->flush_pending);
+ 			submit_bio(bi);
+ 			rcu_read_lock();
+-			rdev_dec_pending(rdev, mddev);
+ 		}
+ 	rcu_read_unlock();
+ 	if (atomic_dec_and_test(&mddev->flush_pending))
+@@ -617,6 +615,18 @@ bool md_flush_request(struct mddev *mddev, struct bio *bio)
+ 	/* new request after previous flush is completed */
+ 	if (ktime_after(req_start, mddev->prev_flush_start)) {
+ 		WARN_ON(mddev->flush_bio);
++		/*
++		 * Grab a reference to make sure mddev_suspend() will wait for
++		 * this flush to be done.
++		 *
++		 * md_flush_reqeust() is called under md_handle_request() and
++		 * 'active_io' is already grabbed, hence percpu_ref_is_zero()
++		 * won't pass, percpu_ref_tryget_live() can't be used because
++		 * percpu_ref_kill() can be called by mddev_suspend()
++		 * concurrently.
++		 */
++		WARN_ON(percpu_ref_is_zero(&mddev->active_io));
++		percpu_ref_get(&mddev->active_io);
+ 		mddev->flush_bio = bio;
+ 		bio = NULL;
+ 	}
 -- 
-An old man doll... just what I always wanted! - Clara
+2.39.2
+
