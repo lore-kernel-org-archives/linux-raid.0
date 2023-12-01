@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BBF04E62B
-	for <linux-raid@vger.kernel.org>; Fri,  1 Dec 2023 20:53:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5055417C0
+	for <linux-raid@vger.kernel.org>; Fri,  1 Dec 2023 22:08:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F+zt3yjy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACF65C433C9;
-	Fri,  1 Dec 2023 20:53:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qfXuNNAC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D893BC433C7;
+	Fri,  1 Dec 2023 22:08:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701464023;
-	bh=wD6Jai5Z6eOt34oUVbS2GgQXkDc/gl9dotnnn2cqqgE=;
+	s=k20201202; t=1701468505;
+	bh=J5w34K9IrU/nR2a8B14bwImOYjReMdTVS9JU/XNvSsM=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=F+zt3yjybvfdRpuXOCYuMprFSepkR5tEJl93tYALkj7A7UOGb57vOwgaMV12mYZbD
-	 3V5uneF/jocIAOliE3T4X11e2wxcj78/zo06tXffb6pub2cbJuT0AhP5NKqENfPD1H
-	 R5nRw7DI90Q3wO6yNkSm0BLu7xqjgsVRvu/VLbedtzJEaeXkjTuJCUYgsIzq+dW2XR
-	 +Di/dIpHDxo7YVbcJ9FkB+pjsED0/I0iVX84f+NFh0Sg2udEkIkqmq9BWwMGX4vI5y
-	 c6+figDUcvvOEn8ytN0gfkBEUBsCeJ5gy0XZF6wTtRVmwIOnmxjhUNGDkOTLMF2VQj
-	 lxO7t8l0Ml95w==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-50bce42295eso3037829e87.2;
-        Fri, 01 Dec 2023 12:53:43 -0800 (PST)
-X-Gm-Message-State: AOJu0Yx+7ospLi1kQzn9FzQNqr1h+qqT4GCnyBQ1cm2CL9OgXw9XND7r
-	yjXFTqzXCESpQ1IoAQnLkRi2gM8z4MoliCD1b6s=
-X-Google-Smtp-Source: AGHT+IHa0ADuo5W7wjVuQiyPdvhr+vVxBJ9UQ9nycBbdc3wukIBfY9EVdWxYP4xpxmL5MhQz99GdgsHqbrkgeHvKjys=
-X-Received: by 2002:a05:6512:3b23:b0:509:49fc:c261 with SMTP id
- f35-20020a0565123b2300b0050949fcc261mr1738205lfv.51.1701464021881; Fri, 01
- Dec 2023 12:53:41 -0800 (PST)
+	b=qfXuNNACF7hA0zP4Ro4689MIjK0/2F1aOBAT/G0zwtzTIjnYMcoxCWS6RjHDeVk/x
+	 xZu0qNhJlmR9figpgQo5rTN1w+7GOjYTz3FoZPYMwrDQG+zQ7rsG8dnfrO81tO0o1P
+	 aoEzy25IPws+/yPeAB6HkdxNzdmNHXqc6FPGU/n9qxk3v3Gyn1ElCs3W+hqdUN95pW
+	 emw6LaECUJNUM3oyvzY11C98NWqYRF4LmMa5MSBe9XeRAGE2g+RBlEEpf8i4GE/N+m
+	 V8RPAxz998LeavKHGQdSdaO8mIwp0G26dy2y5wIkCw8CjHCNGcilVyTT4dhNhFPoEN
+	 naaRKXvkSlueA==
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-2c9ee6fed3eso1451721fa.0;
+        Fri, 01 Dec 2023 14:08:25 -0800 (PST)
+X-Gm-Message-State: AOJu0YwfMraCFkEz1mh/xCiWER8971UVzPUVe/r7Wm3VuuKUAVFv6Clo
+	t258WL5//KVk+9Dsav8GXKjJSwsErdhI0N+qVPk=
+X-Google-Smtp-Source: AGHT+IFyU0hHoUTao7qYuN1h9ap95jN4vHRIrlLsDHJbqiCnwLomDQNsV4I8eA8CmODrnx8Irt6bLh40Ub599KVaRh8=
+X-Received: by 2002:a2e:99c5:0:b0:2c9:e9eb:8ccb with SMTP id
+ l5-20020a2e99c5000000b002c9e9eb8ccbmr345272ljj.69.1701468504052; Fri, 01 Dec
+ 2023 14:08:24 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231129043127.2245901-1-yukuai1@huaweicloud.com> <20231129043127.2245901-3-yukuai1@huaweicloud.com>
-In-Reply-To: <20231129043127.2245901-3-yukuai1@huaweicloud.com>
+References: <20231129043127.2245901-1-yukuai1@huaweicloud.com> <20231129043127.2245901-4-yukuai1@huaweicloud.com>
+In-Reply-To: <20231129043127.2245901-4-yukuai1@huaweicloud.com>
 From: Song Liu <song@kernel.org>
-Date: Fri, 1 Dec 2023 12:53:29 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW75Qmn1QamykogAnMBDMGwMrfTKh+VeNCtxmjkyszgEag@mail.gmail.com>
-Message-ID: <CAPhsuW75Qmn1QamykogAnMBDMGwMrfTKh+VeNCtxmjkyszgEag@mail.gmail.com>
-Subject: Re: [PATCH v3 2/3] md: don't leave 'MD_RECOVERY_FROZEN' in error path
- of md_set_readonly()
+Date: Fri, 1 Dec 2023 14:08:11 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6ato6HNAosJZa1o2WHpoF1Y+qcSPLd3Y_rwW1ZiHAydQ@mail.gmail.com>
+Message-ID: <CAPhsuW6ato6HNAosJZa1o2WHpoF1Y+qcSPLd3Y_rwW1ZiHAydQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/3] md: fix stopping sync thread
 To: Yu Kuai <yukuai1@huaweicloud.com>
 Cc: xni@redhat.com, yukuai3@huawei.com, linux-raid@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
@@ -50,96 +49,142 @@ rote:
 >
 > From: Yu Kuai <yukuai3@huawei.com>
 >
-> If md_set_readonly() failed, the array could still be read-write, however
-> 'MD_RECOVERY_FROZEN' could still be set, which leave the array in an
-> abnormal state that sync or recovery can't continue anymore.
-> Hence make sure the flag is cleared after md_set_readonly() returns.
+> Currently sync thread is stopped from multiple contex:
+>  - idle_sync_thread
+>  - frozen_sync_thread
+>  - __md_stop_writes
+>  - md_set_readonly
+>  - do_md_stop
+>
+> And there are some problems:
+> 1) sync_work is flushed while reconfig_mutex is grabbed, this can
+>    deadlock because the work function will grab reconfig_mutex as well.
+> 2) md_reap_sync_thread() can't be called directly while md_do_sync() is
+>    not finished yet, for example, commit 130443d60b1b ("md: refactor
+>    idle/frozen_sync_thread() to fix deadlock").
+> 3) If MD_RECOVERY_RUNNING is not set, there is no need to stop
+>    sync_thread at all because sync_thread must not be registered.
+>
+> Factor out a helper prepare_to_stop_sync_thread(), so that above contex
+> will behave the same. Fix 1) by flushing sync_work after reconfig_mutex
+> is released, before waiting for sync_thread to be done; Fix 2) bt
+> letting daemon thread to unregister sync_thread; Fix 3) by always
+> checking MD_RECOVERY_RUNNING first.
+>
+> Fixes: db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
+> Acked-by: Xiao Ni <xni@redhat.com>
 >
 > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> Acked-by: Xiao Ni <xni@redhat.com>
-
-Since we are shipping this via the md-fixes branch, we need a Fixes tag.
-
 > ---
->  drivers/md/md.c | 24 +++++++++++++-----------
->  1 file changed, 13 insertions(+), 11 deletions(-)
+>  drivers/md/md.c | 96 +++++++++++++++++++++++--------------------------
+>  1 file changed, 45 insertions(+), 51 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 5640a948086b..2d8e45a1af23 100644
+> index 2d8e45a1af23..05902e36db66 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -6355,6 +6355,9 @@ static int md_set_readonly(struct mddev *mddev, str=
-uct block_device *bdev)
->         int err =3D 0;
->         int did_freeze =3D 0;
+> @@ -4840,26 +4840,9 @@ action_show(struct mddev *mddev, char *page)
+>         return sprintf(page, "%s\n", type);
+>  }
 >
-> +       if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_=
-flags))
-> +               return -EBUSY;
-> +
->         if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
->                 did_freeze =3D 1;
->                 set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> @@ -6369,8 +6372,6 @@ static int md_set_readonly(struct mddev *mddev, str=
-uct block_device *bdev)
->          */
+> -static void stop_sync_thread(struct mddev *mddev)
+> +static void prepare_to_stop_sync_thread(struct mddev *mddev)
+> +       __releases(&mddev->reconfig_mutex)
+>  {
+> -       if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+> -               return;
+> -
+> -       if (mddev_lock(mddev))
+> -               return;
+> -
+> -       /*
+> -        * Check again in case MD_RECOVERY_RUNNING is cleared before lock=
+ is
+> -        * held.
+> -        */
+> -       if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+> -               mddev_unlock(mddev);
+> -               return;
+> -       }
+> -
+> -       if (work_pending(&mddev->sync_work))
+> -               flush_workqueue(md_misc_wq);
+> -
+>         set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>         /*
+>          * Thread might be blocked waiting for metadata update which will=
+ now
+> @@ -4868,6 +4851,8 @@ static void stop_sync_thread(struct mddev *mddev)
 >         md_wakeup_thread_directly(mddev->sync_thread);
 >
-> -       if (mddev->external && test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_=
-flags))
-> -               return -EBUSY;
 >         mddev_unlock(mddev);
->         wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
->                                           &mddev->recovery));
-> @@ -6383,29 +6384,30 @@ static int md_set_readonly(struct mddev *mddev, s=
-truct block_device *bdev)
->             mddev->sync_thread ||
->             test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
->                 pr_warn("md: %s still in use.\n",mdname(mddev));
-> -               if (did_freeze) {
-> -                       clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> -                       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -                       md_wakeup_thread(mddev->thread);
-> -               }
+> +       if (work_pending(&mddev->sync_work))
+> +               flush_work(&mddev->sync_work);
+>  }
+>
+>  static void idle_sync_thread(struct mddev *mddev)
+> @@ -4876,10 +4861,20 @@ static void idle_sync_thread(struct mddev *mddev)
+>
+>         mutex_lock(&mddev->sync_mutex);
+>         clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> -       stop_sync_thread(mddev);
+>
+> -       wait_event(resync_wait, sync_seq !=3D atomic_read(&mddev->sync_se=
+q) ||
+> +       if (mddev_lock(mddev)) {
+> +               mutex_unlock(&mddev->sync_mutex);
+> +               return;
+> +       }
+> +
+> +       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+> +               prepare_to_stop_sync_thread(mddev);
+> +               wait_event(resync_wait,
+> +                       sync_seq !=3D atomic_read(&mddev->sync_seq) ||
+>                         !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))=
+;
+> +       } else {
+> +               mddev_unlock(mddev);
+> +       }
 
-This change (move did_freeze, etc.) is not explained in the commit log.
-Is it just refactor?
+We have a few patterns like this:
+
+        if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+                prepare_to_stop_sync_thread(mddev);
+                wait_event(resync_wait,
+                        sync_seq !=3D atomic_read(&mddev->sync_seq) ||
+                        !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
+        } else {
+                mddev_unlock(mddev);
+        }
+
+This is pretty confusing. Maybe try something like (untested)
+
+static void stop_sync_thread(struct mddev *mddev,
+                             bool do_unlock, bool check_sync_seq)
+{
+        if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+                if (do_unlock)
+                        mddev_unlock(mddev);
+                return;
+        }
+        set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+        /*
+         * Thread might be blocked waiting for metadata update which will n=
+ow
+         * never happen
+         */
+        md_wakeup_thread_directly(mddev->sync_thread);
+
+        mddev_unlock(mddev);
+        if (work_pending(&mddev->sync_work))
+                flush_work(&mddev->sync_work);
+        wait_event(resync_wait,
+                   !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
+                   (check_sync_seq && sync_seq !=3D
+atomic_read(&mddev->sync_seq)));
+        if (!do_unlock)
+                mddev_lock_nointr(mddev);
+}
 
 Thanks,
 Song
-
-
->                 err =3D -EBUSY;
->                 goto out;
->         }
-> +
->         if (mddev->pers) {
->                 __md_stop_writes(mddev);
->
-> -               err  =3D -ENXIO;
-> -               if (mddev->ro =3D=3D MD_RDONLY)
-> +               if (mddev->ro =3D=3D MD_RDONLY) {
-> +                       err  =3D -ENXIO;
->                         goto out;
-> +               }
-> +
->                 mddev->ro =3D MD_RDONLY;
->                 set_disk_ro(mddev->gendisk, 1);
-> +       }
-> +
-> +out:
-> +       if ((mddev->pers && !err) || did_freeze) {
->                 clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->                 set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->                 md_wakeup_thread(mddev->thread);
->                 sysfs_notify_dirent_safe(mddev->sysfs_state);
-> -               err =3D 0;
->         }
-> -out:
-> +
->         mutex_unlock(&mddev->open_mutex);
->         return err;
->  }
-> --
-> 2.39.2
->
