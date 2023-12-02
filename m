@@ -1,154 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA73193
-	for <linux-raid@vger.kernel.org>; Sat,  2 Dec 2023 00:09:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rsgmBaxf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08173C433C8;
-	Sat,  2 Dec 2023 00:09:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701475796;
-	bh=LvQ+hpkBsu8TeEFks/pEelULPxEdZN5/1mEWxIG41QY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=rsgmBaxf3DHbUkV7ZKatrfyqAvyIR8UNw55ENxmdZJ+F6m6JSvOO2mmPKNOBfIQeQ
-	 Kd0r8k0lBpxmC3jIU2k+MH1kURbiGX1VGwm/cs8XB8suzUzxJEu1/u1/mTthJfr+jG
-	 Q1pzTtcNAYZJoUpLpuvzDsLauqf0AmcBpqnSw1ODIErol7eQ8nRO5NQgfWxIwQn8C4
-	 o7sxTMJn25R/caDxthGF8r2AfnqfJytBwhCRBGLHG1uCAWVmdlY1jaqJtUyu/Jn/U5
-	 ppKV8g99C1MElVge9hH78Fj/53sOnW+YwSkdwo1BF8id17UnbOqSgUvwuw6czKC7u7
-	 78+joPo376vzw==
-Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2c9b7bd6fffso37039671fa.3;
-        Fri, 01 Dec 2023 16:09:55 -0800 (PST)
-X-Gm-Message-State: AOJu0YwTBKDHg2RQ6gqlzMsQ8JPxoRtOtErIjnQcWt+ZurNO9lkdErPJ
-	IoETgiwc5WXldR44uq5KpJ026XOoBlW70DhBSHc=
-X-Google-Smtp-Source: AGHT+IG9J89jAlcdA4aNs6b3791DSFKoZ076ordsTFP4k9d4OWL7hdCdU7pVpEqHL+y+MJK4+qzmxwXqBVtOW2KU3Zs=
-X-Received: by 2002:a2e:b712:0:b0:2c9:d863:2c35 with SMTP id
- j18-20020a2eb712000000b002c9d8632c35mr1359085ljo.94.1701475794205; Fri, 01
- Dec 2023 16:09:54 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="vWIcI0yD"
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E1D810E5
+	for <linux-raid@vger.kernel.org>; Fri,  1 Dec 2023 17:38:02 -0800 (PST)
+Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1d03f90b0cbso3961425ad.1
+        for <linux-raid@vger.kernel.org>; Fri, 01 Dec 2023 17:38:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1701481082; x=1702085882; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gXgCsR6L0W5rVyHKd0o5tY8hcBRdiMWodCwSN7IfIbE=;
+        b=vWIcI0yDjBLy6i860fvXYcVeBKZltHF+IZS7crfz5ZpjGICFX+LIegk2C15Pfe1iUH
+         yxMwm9p0kdRjTSlFfAA7U2dp2p71jTvLCxi0IhQyAttGJHpz/jpKM4Ylq6GwMSegi2Gt
+         nnxu99Ejw6sDer7CUfmJaJ9dNfPWcpmD8SNjf87VeJb99e7yvfztROjMczXCo72XyVVo
+         wBEo3M0ZAeDv0tcmDqDqayabgollIqP4IsEAjXh6SNJID4iv0jSF1rNwMtM3uedZpB59
+         PH8KnH4zdh3P6cNW7uKTWP3VU3vpkeX1e+f2OVdHCXhId8gQPdecG7hUzG44rLN/fKdi
+         YqsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701481082; x=1702085882;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=gXgCsR6L0W5rVyHKd0o5tY8hcBRdiMWodCwSN7IfIbE=;
+        b=tMls54sNmOxM5KR0pUPpdQ267roi/+NvdRRmMccI8Q9dO3MZOyh2Vqzl3rFswsD6H7
+         Ap8EpVOkFOQMdZa3zsqCq3WmPJWI8ARZp7KwfKf4WblM6XKvLaFlOxcREIWHqGE7YMym
+         qtToMYtl6GOEeX3YDXEwuZfkIhAg0/L6Wn2gtgrlSUgBkYpAVXUJ/NbHlUBrkpuLhkZv
+         Xl/VU0+JecV6HjBpD7moSN5kGS5BDEsK2DFs72kvKkoxJ9yLfLiC8I+lZLzkO/Qwk/fK
+         NO/iGXrDBOvvHo5xRJR3KQ4V/7RC8d5VVITwRHg0EsBZxZV3iG3zGq5jNPsZ/bY+qdiU
+         K8Pg==
+X-Gm-Message-State: AOJu0Yx/1N6camsBhRGIFzCn/KfPLvfSX2Wni+h7uS4CiW2ua52LFpmX
+	2p9SkOD+f3BWxrM2FGvTKVJeHg==
+X-Google-Smtp-Source: AGHT+IHASsLGwjTZO7Y7Y4hlrvBB4iBAEwxA7iSU2VhXAogEloXa2q5XVEKXzm9ZnGJH/xhPnbYRLw==
+X-Received: by 2002:a17:902:d501:b0:1cf:7962:656d with SMTP id b1-20020a170902d50100b001cf7962656dmr7288341plg.3.1701481081585;
+        Fri, 01 Dec 2023 17:38:01 -0800 (PST)
+Received: from [10.0.0.185] (50-255-6-74-static.hfc.comcastbusiness.net. [50.255.6.74])
+        by smtp.gmail.com with ESMTPSA id z14-20020a170903018e00b001cfcd4eca11sm194911plg.114.2023.12.01.17.38.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 01 Dec 2023 17:38:00 -0800 (PST)
+Message-ID: <4c67f6c1-6804-4dbb-8388-48d27632cd15@kernel.dk>
+Date: Fri, 1 Dec 2023 18:37:59 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231129020234.1586910-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20231129020234.1586910-1-yukuai1@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Fri, 1 Dec 2023 16:09:42 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4P9Zd9nzVW=_4BieEAe4zdQtFEoBc9VLEnWDGTuOo+OA@mail.gmail.com>
-Message-ID: <CAPhsuW4P9Zd9nzVW=_4BieEAe4zdQtFEoBc9VLEnWDGTuOo+OA@mail.gmail.com>
-Subject: Re: [PATCH v3] md: synchronize flush io with array reconfiguration
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: neilb@suse.de, maan@systemlinux.org, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
-	yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-fixes 20231201
+Content-Language: en-US
+To: Song Liu <songliubraving@meta.com>,
+ linux-raid <linux-raid@vger.kernel.org>
+Cc: David Jeffery <djeffery@redhat.com>,
+ Laurence Oberman <loberman@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+References: <DA07D7E2-9386-4816-8EC8-4420A026181A@fb.com>
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <DA07D7E2-9386-4816-8EC8-4420A026181A@fb.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Nov 28, 2023 at 6:03=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Currently rcu is used to protect iterating rdev from submit_flushes():
->
-> submit_flushes                  remove_and_add_spares
->                                 synchronize_rcu
->                                 pers->hot_remove_disk()
->  rcu_read_lock()
->  rdev_for_each_rcu
->   if (rdev->raid_disk >=3D 0)
->                                 rdev->radi_disk =3D -1;
->    atomic_inc(&rdev->nr_pending)
->    rcu_read_unlock()
->    bi =3D bio_alloc_bioset()
->    bi->bi_end_io =3D md_end_flush
->    bi->private =3D rdev
->    submit_bio
->    // issue io for removed rdev
->
-> Fix this problem by grabbing 'acive_io' before iterating rdev, make sure
-> that remove_and_add_spares() won't concurrent with submit_flushes().
->
-> Fixes: a2826aa92e2e ("md: support barrier requests on all personalities."=
-)
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+On 12/1/23 4:48 PM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following change for md-fixes on top of your
+> block-6.7 branch. This change fixes issue with raid456 reshape. 
 
-Applied to md-next. Thanks!
+Pulled, thanks.
 
-Song
+-- 
+Jens Axboe
 
-> ---
-> Changes in v3:
->  - use WARN_ON(percpu_ref_is_zero()) and use percpu_ref_get().
-> Changes in v2:
->  - Add WARN_ON in case md_flush_request() is not called from
->  md_handle_request() in future.
->  drivers/md/md.c | 22 ++++++++++++++++------
->  1 file changed, 16 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 05902e36db66..75ff96d53266 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -529,6 +529,9 @@ static void md_end_flush(struct bio *bio)
->         rdev_dec_pending(rdev, mddev);
->
->         if (atomic_dec_and_test(&mddev->flush_pending)) {
-> +               /* The pair is percpu_ref_get() from md_flush_request() *=
-/
-> +               percpu_ref_put(&mddev->active_io);
-> +
->                 /* The pre-request flush has finished */
->                 queue_work(md_wq, &mddev->flush_work);
->         }
-> @@ -548,12 +551,8 @@ static void submit_flushes(struct work_struct *ws)
->         rdev_for_each_rcu(rdev, mddev)
->                 if (rdev->raid_disk >=3D 0 &&
->                     !test_bit(Faulty, &rdev->flags)) {
-> -                       /* Take two references, one is dropped
-> -                        * when request finishes, one after
-> -                        * we reclaim rcu_read_lock
-> -                        */
->                         struct bio *bi;
-> -                       atomic_inc(&rdev->nr_pending);
-> +
->                         atomic_inc(&rdev->nr_pending);
->                         rcu_read_unlock();
->                         bi =3D bio_alloc_bioset(rdev->bdev, 0,
-> @@ -564,7 +563,6 @@ static void submit_flushes(struct work_struct *ws)
->                         atomic_inc(&mddev->flush_pending);
->                         submit_bio(bi);
->                         rcu_read_lock();
-> -                       rdev_dec_pending(rdev, mddev);
->                 }
->         rcu_read_unlock();
->         if (atomic_dec_and_test(&mddev->flush_pending))
-> @@ -617,6 +615,18 @@ bool md_flush_request(struct mddev *mddev, struct bi=
-o *bio)
->         /* new request after previous flush is completed */
->         if (ktime_after(req_start, mddev->prev_flush_start)) {
->                 WARN_ON(mddev->flush_bio);
-> +               /*
-> +                * Grab a reference to make sure mddev_suspend() will wai=
-t for
-> +                * this flush to be done.
-> +                *
-> +                * md_flush_reqeust() is called under md_handle_request()=
- and
-> +                * 'active_io' is already grabbed, hence percpu_ref_is_ze=
-ro()
-> +                * won't pass, percpu_ref_tryget_live() can't be used bec=
-ause
-> +                * percpu_ref_kill() can be called by mddev_suspend()
-> +                * concurrently.
-> +                */
-> +               WARN_ON(percpu_ref_is_zero(&mddev->active_io));
-> +               percpu_ref_get(&mddev->active_io);
->                 mddev->flush_bio =3D bio;
->                 bio =3D NULL;
->         }
-> --
-> 2.39.2
->
->
+
