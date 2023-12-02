@@ -1,149 +1,154 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA73193
+	for <linux-raid@vger.kernel.org>; Sat,  2 Dec 2023 00:09:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="VyeJp7ry"
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B06BD50
-	for <linux-raid@vger.kernel.org>; Fri,  1 Dec 2023 15:48:45 -0800 (PST)
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B1LESa9008317
-	for <linux-raid@vger.kernel.org>; Fri, 1 Dec 2023 15:48:45 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from : to : cc :
- subject : date : message-id : content-type : content-id : mime-version;
- s=s2048-2021-q4; bh=/5fXw8Xakxn7tv7yE3tYuiNVuzAwsZFsGvA1oH5T7QE=;
- b=VyeJp7ryMk4U6/ZpzZGV8sfgKUIa8qBYtK/ykjyTPTtDKG5fS4OHzizmkoQNa7Idym3n
- F1uqGBfXPLqgENiramVeG/u/E4Y36KKb2Y+2h5gkdrIYLmnE7etUBZm+nYfi9iUWjm1E
- ElO4iEjjgTsdHKY9CR+l+mkUxXmn0HVXPnOsdX5DjmYs+r3Klz+iStvf0G6UtX/K+rl/
- 0ZQCi44C5EXq1dD96X8uyd1VT/8Lt0sIMRfNfnsk9KnuJw69KJXH8Cc+Q37VQk2vQrVy
- uXoS3S4VpXovYiHOvyXFS0bo+H0H1oGh1r57JtFUL5xhqUKMK8b1AGzwK3mJzntFQejH IQ== 
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2169.outbound.protection.outlook.com [104.47.57.169])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3uqb185f9v-2
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-	for <linux-raid@vger.kernel.org>; Fri, 01 Dec 2023 15:48:45 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AxLBP8U1eNndLvPVRASRRBRJNkIGz7Qs4mRNbbIHLY8deigSKQnOCtT5W188SBBDkZcjTuWKMRqMf4fWSPrHYDHGgcPoxf7jvMeDn+p40YaVAV5QnMM8vxM90Dcj5qKZ0PenFiYrZGbls85VEVP1JmodK2V31ktNRefnvf75shNKCsP4cIvZzSBhCo+/W7pwZmScy5PJwmGsFCXi+uSPrrEKjr0FWTOHTUFzS/tmzNEI/pCjq5qyt+cGHjlLjx6+4Hyltib07UMGWuuK2TqCYKrOgB16WANdy6nTzsWUMmlOTIaZIFNEff3nBS37b5GNaeatOUk4Rs8FO2T3X6P5sg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/5fXw8Xakxn7tv7yE3tYuiNVuzAwsZFsGvA1oH5T7QE=;
- b=EitPejqTWAbl9RcEGIul+DijiiXL1hiclmo+xIlS6x7UVQooKW2PrykL9E94xqLv0EnnBflR4g5IoQXTv03ERT2QEgV/MnUU4I7JdLW0pwNWPpFCTDp0JWszem0qB+/TETo3eyRoCNVY11phpd1EOgDEc9x07d2kUINCsUcgUqu+rJozl3wEKoj3xZeK4usIGhlBmkK57AiHTmLAJ9+JTmnvsCxGoQqVPXJIKEp7m0LrzNtvcG0tipZ/Xc0vXLn53zElKp022nVJBWfdwohfFPznA651SC50bzSf6UhQeM9XeexdP4gmrRVvO4fRYCEabkQ4yxyf6t4bhPbdOrI+Xw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
- dkim=pass header.d=meta.com; arc=none
-Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
- by SA1PR15MB5797.namprd15.prod.outlook.com (2603:10b6:806:339::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7068.8; Fri, 1 Dec
- 2023 23:48:42 +0000
-Received: from SA1PR15MB5109.namprd15.prod.outlook.com
- ([fe80::9052:3362:76e2:146d]) by SA1PR15MB5109.namprd15.prod.outlook.com
- ([fe80::9052:3362:76e2:146d%7]) with mapi id 15.20.7068.016; Fri, 1 Dec 2023
- 23:48:41 +0000
-From: Song Liu <songliubraving@meta.com>
-To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
-CC: David Jeffery <djeffery@redhat.com>,
-        Laurence Oberman
-	<loberman@redhat.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [GIT PULL] md-fixes 20231201
-Thread-Topic: [GIT PULL] md-fixes 20231201
-Thread-Index: AQHaJLDpshiGjfRnAkKhgM96iLPx/g==
-Date: Fri, 1 Dec 2023 23:48:41 +0000
-Message-ID: <DA07D7E2-9386-4816-8EC8-4420A026181A@fb.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3774.200.91.1.1)
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR15MB5109:EE_|SA1PR15MB5797:EE_
-x-ms-office365-filtering-correlation-id: 6016cab5-974a-421b-cc07-08dbf2c80c4e
-x-fb-source: Internal
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 
- zWxDyyv5bBZ+a28rsVLn8sJ+b5nP7TaF7Urguqvxom0WOOOTQlDkRejaHXCVlXnwJXRCCIBNbEvS1XQjPCbJytBOlc0kMo45oXg5O/dLcLYhqjFEwdiIMxvV2LqQP1xtgbhiRBSrV37YTbXEl6/01tTXkFABt4QsCPZWfFP8Tqf6b5CLg/9e/Xgw35fXyejfghy/w0xoGLUebYOIx+t1W393eGQyq1JM720YCF5aRn3YO4g90Mmbg0wty/XUlHE3diOFZ4Q1GmBmo6BAwKhS6OdQdzvPholk57f+VSFE280xx2GzoJvc1+XL6ADlp94gXaCwzHXWmTtN0V5stA9DB0Uhfon6LoxHYvuWdjcHYoItzYEQUAJanWWSxdFzdHeDaZsud2A8/KXwPQtqehp21n33IMy3a9+qo265lpXqEwlRkBNxAD/lqs/qaQQQ/8PXHNrMyk+Gcw02A16JnVa2PgtdiGgGPyZR+T/PmYnm+8JMvZDP9JH7f+Jb0XuxRkBW8akD9r/jH/4lvsQUJTd6AahCCmbKIXgX/kE2otg9OEvHX0ALdM6BcjYAf+ni2Gxr2tCigerg+1slAK5yaxO2/NQK4dckZl9r7nB6+5Yxfmc=
-x-forefront-antispam-report: 
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(136003)(346002)(39860400002)(396003)(376002)(230922051799003)(1800799012)(451199024)(186009)(64100799003)(6512007)(83380400001)(64756008)(122000001)(38070700009)(76116006)(54906003)(66476007)(316002)(66946007)(2906002)(66446008)(110136005)(86362001)(66556008)(966005)(91956017)(8936002)(8676002)(4326008)(5660300002)(4001150100001)(71200400001)(6506007)(33656002)(478600001)(41300700001)(6486002)(4744005)(9686003)(36756003)(38100700002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: 
- =?us-ascii?Q?6XTn1xaCbUfXXogdZDOE5bneQccWW/Levt4IQEypDT83rRgQkeTlvL242MvF?=
- =?us-ascii?Q?o8xPHZn5iuaHywp3flXbuXJa2TBGrbAAYpudXY6Cdxs890nbNyy/QCEhk18m?=
- =?us-ascii?Q?hrYVTcrHCn4G2hw6gG38viH2XRJMU6KnMvsTMdNzdvSUT7Hj2tymKW/RGyt9?=
- =?us-ascii?Q?ixVCbm2w7sjLha9bwHkCQ1ioauVR69bQzL9lImldLP3R5rCq+b0d+iG07QG8?=
- =?us-ascii?Q?HLO9ZTJRbV0yA1PObA/FjlaqU1tnwrS/WHE8VE78yVP1wdA0B1gEVi16N1n8?=
- =?us-ascii?Q?6/afL28iHbpBOznA2p5V5JUzlWr3Wocl4bZVnd51nyUaO79cBxrmbD+pol9M?=
- =?us-ascii?Q?Agn3xb/mnntJIxSdRW+DRVHpW9rBqkyW/Hz4QvEt7yUiBwleoLlq1ASstnxh?=
- =?us-ascii?Q?d7vZl8k25c6aNriihoWqy7GGnCah59pirQZIF9m4jjA7MIoVwle633vHONXj?=
- =?us-ascii?Q?LGqUqaqlmpPso75Je278TuHv0VOo5B0xcVIK29udqsSv5ZNk+8uMcDzFYC09?=
- =?us-ascii?Q?qeFJOll4usvifCevFfoTtN0obQhml0ViFG7QysGt0xONIacTqa6Uvj9e3L8W?=
- =?us-ascii?Q?1Tl8CM6PDAuZcMIxH2noG99JAYz3QLTpcA/fRi4pgQUlgw6KFl+sgTvQzMJc?=
- =?us-ascii?Q?gG4NSX5pXRawtv+IqkMqUGIp3AM0pBnH9wnOg2efyRR1pIWa8ljYofCX360A?=
- =?us-ascii?Q?RcECRymQRfA2ayYP873cyLRSeYbxyduyTLDkx3jZ1W8OGAhNXrxfaZHD19af?=
- =?us-ascii?Q?QS+efoownSpdQzQnjXOE5TJy11yehCP5B45k8ir5XiYKCtE71GgE4oLZ5N3V?=
- =?us-ascii?Q?SrwvDmgu7y+wD+qxNRmlVBRZe1TTWDLuIBCcYP+n3aKgWh3k1KSDx2AD8y08?=
- =?us-ascii?Q?zPo95kZ5OyI9nS+skpbNtFYn6ghK4stNQJPkEfwvR35egffka5vbDC7racB7?=
- =?us-ascii?Q?HqzN6tN2CxWefbI7SMEzk1bANmeV4sYVXvC+ghz+Ry8DER0zdvEEqQlZpt0y?=
- =?us-ascii?Q?QRV45iNc8tZnbzVwXb/kNCRABBPdi3tu3nEQRul6Sgqx+BEMOaGfJ520BO51?=
- =?us-ascii?Q?HVfIlPLtFryGBWzTKHRPfrwCrlaNWtvYSKGODLF4SaVGXPwNNdeeHFJZF8Eg?=
- =?us-ascii?Q?eA+k0Ycp8KnfFZoes/ahh0+27KOJaRUsGkT47iRHSx9EmZ/GlCobs0wTq8GV?=
- =?us-ascii?Q?Jjc398c3B3DMneMQp8+bpl2aPc9nhUk0LFyzQh0bF6DxGcmHPbBs5fA8q6Rh?=
- =?us-ascii?Q?44dbZRbLyI5vNyyCsEKkotQWkqOsYAwsO9yIHe39UPwqZC4zLfMdC5ZZUh5V?=
- =?us-ascii?Q?BilGFPYun4CB0PBzcD9xmg1EXskPmq4Kmeor+dtERA1GCzhxDxsk81nfGbzI?=
- =?us-ascii?Q?J9k6cuoZ3f4RRvEdmEcPo9zZAH5icvxS6F6hMfhZukJWAAqNnr1/ZH6dqxhl?=
- =?us-ascii?Q?ZSo58bXiGVMKEFUz+uNl87Z55jYjLr+OifCfaG56pXshfH9TOH1oCyr8Anuc?=
- =?us-ascii?Q?KnJCWidrsHojML0ctEx1zpeflcYaDU1uXBjostRxRHED0naMctZ5kNB3XTM6?=
- =?us-ascii?Q?yDKt3cWmVpsM3WK803VLc+4t+rT6hbyj5T774sSKRaGMOw0/aO+3A7EV03cy?=
- =?us-ascii?Q?lw6ntRA0EMnKgHVmssQ9p8w=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <9E32AA4653B02D42B2F4EC71170D9F9B@namprd15.prod.outlook.com>
-X-OriginatorOrg: meta.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6016cab5-974a-421b-cc07-08dbf2c80c4e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Dec 2023 23:48:41.6471
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: nd91mtYyyRKzXQiK3I4HfdOpJ2gCOoQ/sLIey0/n3tfaxozyqGFfKIochiw2l/GdcLur/U/iUgGaI2OLAiSQBA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR15MB5797
-X-Proofpoint-ORIG-GUID: riXYVmFPt9z2ciDUFGsMqMxFwySq9HIO
-X-Proofpoint-GUID: riXYVmFPt9z2ciDUFGsMqMxFwySq9HIO
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rsgmBaxf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08173C433C8;
+	Sat,  2 Dec 2023 00:09:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701475796;
+	bh=LvQ+hpkBsu8TeEFks/pEelULPxEdZN5/1mEWxIG41QY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=rsgmBaxf3DHbUkV7ZKatrfyqAvyIR8UNw55ENxmdZJ+F6m6JSvOO2mmPKNOBfIQeQ
+	 Kd0r8k0lBpxmC3jIU2k+MH1kURbiGX1VGwm/cs8XB8suzUzxJEu1/u1/mTthJfr+jG
+	 Q1pzTtcNAYZJoUpLpuvzDsLauqf0AmcBpqnSw1ODIErol7eQ8nRO5NQgfWxIwQn8C4
+	 o7sxTMJn25R/caDxthGF8r2AfnqfJytBwhCRBGLHG1uCAWVmdlY1jaqJtUyu/Jn/U5
+	 ppKV8g99C1MElVge9hH78Fj/53sOnW+YwSkdwo1BF8id17UnbOqSgUvwuw6czKC7u7
+	 78+joPo376vzw==
+Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2c9b7bd6fffso37039671fa.3;
+        Fri, 01 Dec 2023 16:09:55 -0800 (PST)
+X-Gm-Message-State: AOJu0YwTBKDHg2RQ6gqlzMsQ8JPxoRtOtErIjnQcWt+ZurNO9lkdErPJ
+	IoETgiwc5WXldR44uq5KpJ026XOoBlW70DhBSHc=
+X-Google-Smtp-Source: AGHT+IG9J89jAlcdA4aNs6b3791DSFKoZ076ordsTFP4k9d4OWL7hdCdU7pVpEqHL+y+MJK4+qzmxwXqBVtOW2KU3Zs=
+X-Received: by 2002:a2e:b712:0:b0:2c9:d863:2c35 with SMTP id
+ j18-20020a2eb712000000b002c9d8632c35mr1359085ljo.94.1701475794205; Fri, 01
+ Dec 2023 16:09:54 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-01_22,2023-11-30_01,2023-05-22_02
+References: <20231129020234.1586910-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20231129020234.1586910-1-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 1 Dec 2023 16:09:42 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4P9Zd9nzVW=_4BieEAe4zdQtFEoBc9VLEnWDGTuOo+OA@mail.gmail.com>
+Message-ID: <CAPhsuW4P9Zd9nzVW=_4BieEAe4zdQtFEoBc9VLEnWDGTuOo+OA@mail.gmail.com>
+Subject: Re: [PATCH v3] md: synchronize flush io with array reconfiguration
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: neilb@suse.de, maan@systemlinux.org, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
+	yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Jens, 
+On Tue, Nov 28, 2023 at 6:03=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
+rote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Currently rcu is used to protect iterating rdev from submit_flushes():
+>
+> submit_flushes                  remove_and_add_spares
+>                                 synchronize_rcu
+>                                 pers->hot_remove_disk()
+>  rcu_read_lock()
+>  rdev_for_each_rcu
+>   if (rdev->raid_disk >=3D 0)
+>                                 rdev->radi_disk =3D -1;
+>    atomic_inc(&rdev->nr_pending)
+>    rcu_read_unlock()
+>    bi =3D bio_alloc_bioset()
+>    bi->bi_end_io =3D md_end_flush
+>    bi->private =3D rdev
+>    submit_bio
+>    // issue io for removed rdev
+>
+> Fix this problem by grabbing 'acive_io' before iterating rdev, make sure
+> that remove_and_add_spares() won't concurrent with submit_flushes().
+>
+> Fixes: a2826aa92e2e ("md: support barrier requests on all personalities."=
+)
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-Please consider pulling the following change for md-fixes on top of your
-block-6.7 branch. This change fixes issue with raid456 reshape. 
+Applied to md-next. Thanks!
 
-Thanks,
 Song
 
-
-The following changes since commit 45b478951b2ba5aea70b2850c49c1aa83aedd0d2:
-
-  md: fix bi_status reporting in md_end_clone_io (2023-11-19 20:51:25 -0800)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git tags/md-fixes-20231201-1
-
-for you to fetch changes up to c467e97f079f0019870c314996fae952cc768e82:
-
-  md/raid6: use valid sector values to determine if an I/O should wait on the reshape (2023-12-01 14:43:29 -0800)
-
-----------------------------------------------------------------
-David Jeffery (1):
-      md/raid6: use valid sector values to determine if an I/O should wait on the reshape
-
- drivers/md/raid5.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> ---
+> Changes in v3:
+>  - use WARN_ON(percpu_ref_is_zero()) and use percpu_ref_get().
+> Changes in v2:
+>  - Add WARN_ON in case md_flush_request() is not called from
+>  md_handle_request() in future.
+>  drivers/md/md.c | 22 ++++++++++++++++------
+>  1 file changed, 16 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 05902e36db66..75ff96d53266 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -529,6 +529,9 @@ static void md_end_flush(struct bio *bio)
+>         rdev_dec_pending(rdev, mddev);
+>
+>         if (atomic_dec_and_test(&mddev->flush_pending)) {
+> +               /* The pair is percpu_ref_get() from md_flush_request() *=
+/
+> +               percpu_ref_put(&mddev->active_io);
+> +
+>                 /* The pre-request flush has finished */
+>                 queue_work(md_wq, &mddev->flush_work);
+>         }
+> @@ -548,12 +551,8 @@ static void submit_flushes(struct work_struct *ws)
+>         rdev_for_each_rcu(rdev, mddev)
+>                 if (rdev->raid_disk >=3D 0 &&
+>                     !test_bit(Faulty, &rdev->flags)) {
+> -                       /* Take two references, one is dropped
+> -                        * when request finishes, one after
+> -                        * we reclaim rcu_read_lock
+> -                        */
+>                         struct bio *bi;
+> -                       atomic_inc(&rdev->nr_pending);
+> +
+>                         atomic_inc(&rdev->nr_pending);
+>                         rcu_read_unlock();
+>                         bi =3D bio_alloc_bioset(rdev->bdev, 0,
+> @@ -564,7 +563,6 @@ static void submit_flushes(struct work_struct *ws)
+>                         atomic_inc(&mddev->flush_pending);
+>                         submit_bio(bi);
+>                         rcu_read_lock();
+> -                       rdev_dec_pending(rdev, mddev);
+>                 }
+>         rcu_read_unlock();
+>         if (atomic_dec_and_test(&mddev->flush_pending))
+> @@ -617,6 +615,18 @@ bool md_flush_request(struct mddev *mddev, struct bi=
+o *bio)
+>         /* new request after previous flush is completed */
+>         if (ktime_after(req_start, mddev->prev_flush_start)) {
+>                 WARN_ON(mddev->flush_bio);
+> +               /*
+> +                * Grab a reference to make sure mddev_suspend() will wai=
+t for
+> +                * this flush to be done.
+> +                *
+> +                * md_flush_reqeust() is called under md_handle_request()=
+ and
+> +                * 'active_io' is already grabbed, hence percpu_ref_is_ze=
+ro()
+> +                * won't pass, percpu_ref_tryget_live() can't be used bec=
+ause
+> +                * percpu_ref_kill() can be called by mddev_suspend()
+> +                * concurrently.
+> +                */
+> +               WARN_ON(percpu_ref_is_zero(&mddev->active_io));
+> +               percpu_ref_get(&mddev->active_io);
+>                 mddev->flush_bio =3D bio;
+>                 bio =3D NULL;
+>         }
+> --
+> 2.39.2
+>
+>
