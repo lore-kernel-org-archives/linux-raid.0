@@ -1,202 +1,285 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C56E1A6;
-	Fri,  1 Dec 2023 23:50:47 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Sj2D20HDqz4f3jXM;
-	Sat,  2 Dec 2023 15:50:42 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 1C8501A09E4;
-	Sat,  2 Dec 2023 15:50:44 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgDX2xHS4WplopETCg--.58925S3;
-	Sat, 02 Dec 2023 15:50:43 +0800 (CST)
-Subject: Re: [PATCH v3 3/3] md: fix stopping sync thread
-To: Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: xni@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20231129043127.2245901-1-yukuai1@huaweicloud.com>
- <20231129043127.2245901-4-yukuai1@huaweicloud.com>
- <CAPhsuW6ato6HNAosJZa1o2WHpoF1Y+qcSPLd3Y_rwW1ZiHAydQ@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <03003a7d-d712-3a23-8a0f-54862852e6f2@huaweicloud.com>
-Date: Sat, 2 Dec 2023 15:50:42 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n42EW7wq"
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8054E116
+	for <linux-raid@vger.kernel.org>; Sat,  2 Dec 2023 15:14:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1701558858; x=1733094858;
+  h=date:from:to:cc:subject:message-id;
+  bh=D68BuSAs5KFu+nd57WzoDKLBKGP6iTL6yudK5gKtI7Q=;
+  b=n42EW7wq3wKPsCnL4vLqvxAWYZm/B8Pqkd6i4JVp3qYUA+pj3KHsyozL
+   7D4sJQkHxUyF9gTTy+Tf9nkjJrg1iTJXbFjzvQ3DTzMa9s1pDJbTQZ/18
+   ziKLvMGPb2XOmT7rlA6ejNbkNMVVCpXK2rWKfooH3wR+2REAQ3YkwX20B
+   VX98PLgHxNTmAetwU4kuqWBO/VXpalZxcUOB/QgBM46lH2lckmJ544W04
+   KKjdjXJVJY09xTOf4HhTI3Ce4hG9M5FcxkVKk41yKpz9q0eqYhZNNNzMw
+   661MKGnHE5K88QrzcF28SBoVO4cTeXMwbfZYgzVNWeORgJHB4hxXutcJ8
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10912"; a="397504788"
+X-IronPort-AV: E=Sophos;i="6.04,246,1695711600"; 
+   d="scan'208";a="397504788"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2023 15:14:18 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10912"; a="1017436692"
+X-IronPort-AV: E=Sophos;i="6.04,246,1695711600"; 
+   d="scan'208";a="1017436692"
+Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
+  by fmsmga006.fm.intel.com with ESMTP; 02 Dec 2023 15:14:16 -0800
+Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1r9ZBc-0005uy-39;
+	Sat, 02 Dec 2023 23:14:13 +0000
+Date: Sun, 03 Dec 2023 07:13:44 +0800
+From: kernel test robot <lkp@intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ c467e97f079f0019870c314996fae952cc768e82
+Message-ID: <202312030741.5AjxiTY7-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAPhsuW6ato6HNAosJZa1o2WHpoF1Y+qcSPLd3Y_rwW1ZiHAydQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDX2xHS4WplopETCg--.58925S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWryxGFyruryrZr4xCw4DJwb_yoWrKrW7pr
-	WftF98Jr48AFW3Zry2g3Wqva4rZw1jvrWDtrW3Wa4fJwnYkr47KFyY9Fy8AFykZa4ftr48
-	ZayrtFWfuFykKrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j
-	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUZa9
-	-UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+branch HEAD: c467e97f079f0019870c314996fae952cc768e82  md/raid6: use valid sector values to determine if an I/O should wait on the reshape
 
-在 2023/12/02 6:08, Song Liu 写道:
-> On Tue, Nov 28, 2023 at 8:32 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Currently sync thread is stopped from multiple contex:
->>   - idle_sync_thread
->>   - frozen_sync_thread
->>   - __md_stop_writes
->>   - md_set_readonly
->>   - do_md_stop
->>
->> And there are some problems:
->> 1) sync_work is flushed while reconfig_mutex is grabbed, this can
->>     deadlock because the work function will grab reconfig_mutex as well.
->> 2) md_reap_sync_thread() can't be called directly while md_do_sync() is
->>     not finished yet, for example, commit 130443d60b1b ("md: refactor
->>     idle/frozen_sync_thread() to fix deadlock").
->> 3) If MD_RECOVERY_RUNNING is not set, there is no need to stop
->>     sync_thread at all because sync_thread must not be registered.
->>
->> Factor out a helper prepare_to_stop_sync_thread(), so that above contex
->> will behave the same. Fix 1) by flushing sync_work after reconfig_mutex
->> is released, before waiting for sync_thread to be done; Fix 2) bt
->> letting daemon thread to unregister sync_thread; Fix 3) by always
->> checking MD_RECOVERY_RUNNING first.
->>
->> Fixes: db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
->> Acked-by: Xiao Ni <xni@redhat.com>
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   drivers/md/md.c | 96 +++++++++++++++++++++++--------------------------
->>   1 file changed, 45 insertions(+), 51 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 2d8e45a1af23..05902e36db66 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -4840,26 +4840,9 @@ action_show(struct mddev *mddev, char *page)
->>          return sprintf(page, "%s\n", type);
->>   }
->>
->> -static void stop_sync_thread(struct mddev *mddev)
->> +static void prepare_to_stop_sync_thread(struct mddev *mddev)
->> +       __releases(&mddev->reconfig_mutex)
->>   {
->> -       if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
->> -               return;
->> -
->> -       if (mddev_lock(mddev))
->> -               return;
->> -
->> -       /*
->> -        * Check again in case MD_RECOVERY_RUNNING is cleared before lock is
->> -        * held.
->> -        */
->> -       if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
->> -               mddev_unlock(mddev);
->> -               return;
->> -       }
->> -
->> -       if (work_pending(&mddev->sync_work))
->> -               flush_workqueue(md_misc_wq);
->> -
->>          set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->>          /*
->>           * Thread might be blocked waiting for metadata update which will now
->> @@ -4868,6 +4851,8 @@ static void stop_sync_thread(struct mddev *mddev)
->>          md_wakeup_thread_directly(mddev->sync_thread);
->>
->>          mddev_unlock(mddev);
->> +       if (work_pending(&mddev->sync_work))
->> +               flush_work(&mddev->sync_work);
->>   }
->>
->>   static void idle_sync_thread(struct mddev *mddev)
->> @@ -4876,10 +4861,20 @@ static void idle_sync_thread(struct mddev *mddev)
->>
->>          mutex_lock(&mddev->sync_mutex);
->>          clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->> -       stop_sync_thread(mddev);
->>
->> -       wait_event(resync_wait, sync_seq != atomic_read(&mddev->sync_seq) ||
->> +       if (mddev_lock(mddev)) {
->> +               mutex_unlock(&mddev->sync_mutex);
->> +               return;
->> +       }
->> +
->> +       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
->> +               prepare_to_stop_sync_thread(mddev);
->> +               wait_event(resync_wait,
->> +                       sync_seq != atomic_read(&mddev->sync_seq) ||
->>                          !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
->> +       } else {
->> +               mddev_unlock(mddev);
->> +       }
-> 
-> We have a few patterns like this:
-> 
->          if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
->                  prepare_to_stop_sync_thread(mddev);
->                  wait_event(resync_wait,
->                          sync_seq != atomic_read(&mddev->sync_seq) ||
->                          !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery));
->          } else {
->                  mddev_unlock(mddev);
->          }
-> 
-> This is pretty confusing. Maybe try something like (untested)
-> 
-> static void stop_sync_thread(struct mddev *mddev,
->                               bool do_unlock, bool check_sync_seq)
-Yes, if we can accept use parameter to distinguish different use case.
+elapsed time: 1444m
 
-Thanks,
-Kuai
+configs tested: 223
+configs skipped: 2
 
-> {
->          if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
->                  if (do_unlock)
->                          mddev_unlock(mddev);
->                  return;
->          }
->          set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->          /*
->           * Thread might be blocked waiting for metadata update which will now
->           * never happen
->           */
->          md_wakeup_thread_directly(mddev->sync_thread);
-> 
->          mddev_unlock(mddev);
->          if (work_pending(&mddev->sync_work))
->                  flush_work(&mddev->sync_work);
->          wait_event(resync_wait,
->                     !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
->                     (check_sync_seq && sync_seq !=
-> atomic_read(&mddev->sync_seq)));
->          if (!do_unlock)
->                  mddev_lock_nointr(mddev);
-> }
-> 
-> Thanks,
-> Song
-> 
-> .
-> 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              alldefconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                          axs103_defconfig   gcc  
+arc                                 defconfig   gcc  
+arc                     haps_hs_smp_defconfig   gcc  
+arc                   randconfig-001-20231202   gcc  
+arc                   randconfig-002-20231202   gcc  
+arc                        vdk_hs38_defconfig   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                         axm55xx_defconfig   gcc  
+arm                        clps711x_defconfig   gcc  
+arm                                 defconfig   clang
+arm                          gemini_defconfig   gcc  
+arm                         lpc18xx_defconfig   gcc  
+arm                          pxa3xx_defconfig   gcc  
+arm                   randconfig-001-20231202   clang
+arm                   randconfig-002-20231202   clang
+arm                   randconfig-003-20231202   clang
+arm                   randconfig-004-20231202   clang
+arm                        realview_defconfig   gcc  
+arm                           sunxi_defconfig   gcc  
+arm64                            allmodconfig   clang
+arm64                             allnoconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                 randconfig-001-20231202   clang
+arm64                 randconfig-002-20231202   clang
+arm64                 randconfig-003-20231202   clang
+arm64                 randconfig-004-20231202   clang
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+csky                  randconfig-001-20231202   gcc  
+csky                  randconfig-002-20231202   gcc  
+hexagon                          allmodconfig   clang
+hexagon                           allnoconfig   clang
+hexagon                          allyesconfig   clang
+hexagon                             defconfig   clang
+hexagon               randconfig-001-20231202   clang
+hexagon               randconfig-002-20231202   clang
+i386                             allmodconfig   clang
+i386                              allnoconfig   clang
+i386                             allyesconfig   clang
+i386                                defconfig   gcc  
+i386                  randconfig-011-20231202   gcc  
+i386                  randconfig-011-20231203   clang
+i386                  randconfig-012-20231202   gcc  
+i386                  randconfig-012-20231203   clang
+i386                  randconfig-013-20231202   gcc  
+i386                  randconfig-013-20231203   clang
+i386                  randconfig-014-20231202   gcc  
+i386                  randconfig-014-20231203   clang
+i386                  randconfig-015-20231202   gcc  
+i386                  randconfig-015-20231203   clang
+i386                  randconfig-016-20231202   gcc  
+i386                  randconfig-016-20231203   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                        allyesconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20231202   gcc  
+loongarch             randconfig-002-20231202   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                         amcore_defconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                       m5249evb_defconfig   gcc  
+m68k                        m5272c3_defconfig   gcc  
+m68k                       m5475evb_defconfig   gcc  
+m68k                        mvme147_defconfig   gcc  
+m68k                          sun3x_defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+microblaze                      mmu_defconfig   gcc  
+mips                             allmodconfig   gcc  
+mips                              allnoconfig   clang
+mips                             allyesconfig   gcc  
+mips                      loongson3_defconfig   gcc  
+mips                          rb532_defconfig   gcc  
+nios2                         10m50_defconfig   gcc  
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                 randconfig-001-20231202   gcc  
+nios2                 randconfig-002-20231202   gcc  
+openrisc                         allmodconfig   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+openrisc                       virt_defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc                randconfig-001-20231202   gcc  
+parisc                randconfig-002-20231202   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   clang
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   clang
+powerpc                      arches_defconfig   gcc  
+powerpc                     asp8347_defconfig   gcc  
+powerpc                   currituck_defconfig   gcc  
+powerpc                      ep88xc_defconfig   gcc  
+powerpc                      mgcoge_defconfig   gcc  
+powerpc                 mpc837x_rdb_defconfig   gcc  
+powerpc                     mpc83xx_defconfig   gcc  
+powerpc                       ppc64_defconfig   gcc  
+powerpc               randconfig-001-20231202   clang
+powerpc               randconfig-002-20231202   clang
+powerpc               randconfig-003-20231202   clang
+powerpc                     sequoia_defconfig   gcc  
+powerpc64             randconfig-001-20231202   clang
+powerpc64             randconfig-002-20231202   clang
+powerpc64             randconfig-003-20231202   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   clang
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv             nommu_k210_sdcard_defconfig   gcc  
+riscv                 randconfig-001-20231202   clang
+riscv                 randconfig-002-20231202   clang
+riscv                          rv32_defconfig   clang
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                  randconfig-001-20231202   gcc  
+s390                  randconfig-002-20231202   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                         apsh4a3a_defconfig   gcc  
+sh                        apsh4ad0a_defconfig   gcc  
+sh                                  defconfig   gcc  
+sh                         ecovec24_defconfig   gcc  
+sh                 kfr2r09-romimage_defconfig   gcc  
+sh                            migor_defconfig   gcc  
+sh                    randconfig-001-20231202   gcc  
+sh                    randconfig-002-20231202   gcc  
+sh                           se7206_defconfig   gcc  
+sh                           se7712_defconfig   gcc  
+sh                           se7721_defconfig   gcc  
+sh                   sh7724_generic_defconfig   gcc  
+sh                        sh7763rdp_defconfig   gcc  
+sh                          urquell_defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc64                          alldefconfig   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+sparc64               randconfig-001-20231202   gcc  
+sparc64               randconfig-002-20231202   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                    randconfig-001-20231202   clang
+um                    randconfig-002-20231202   clang
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   clang
+x86_64       buildonly-randconfig-001-20231202   clang
+x86_64       buildonly-randconfig-001-20231203   gcc  
+x86_64       buildonly-randconfig-002-20231202   clang
+x86_64       buildonly-randconfig-002-20231203   gcc  
+x86_64       buildonly-randconfig-003-20231202   clang
+x86_64       buildonly-randconfig-003-20231203   gcc  
+x86_64       buildonly-randconfig-004-20231202   clang
+x86_64       buildonly-randconfig-004-20231203   gcc  
+x86_64       buildonly-randconfig-005-20231202   clang
+x86_64       buildonly-randconfig-005-20231203   gcc  
+x86_64       buildonly-randconfig-006-20231202   clang
+x86_64       buildonly-randconfig-006-20231203   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                randconfig-011-20231202   clang
+x86_64                randconfig-011-20231203   gcc  
+x86_64                randconfig-012-20231202   clang
+x86_64                randconfig-012-20231203   gcc  
+x86_64                randconfig-013-20231202   clang
+x86_64                randconfig-013-20231203   gcc  
+x86_64                randconfig-014-20231202   clang
+x86_64                randconfig-014-20231203   gcc  
+x86_64                randconfig-015-20231202   clang
+x86_64                randconfig-015-20231203   gcc  
+x86_64                randconfig-016-20231202   clang
+x86_64                randconfig-016-20231203   gcc  
+x86_64                randconfig-071-20231202   clang
+x86_64                randconfig-071-20231203   gcc  
+x86_64                randconfig-072-20231202   clang
+x86_64                randconfig-072-20231203   gcc  
+x86_64                randconfig-073-20231202   clang
+x86_64                randconfig-073-20231203   gcc  
+x86_64                randconfig-074-20231202   clang
+x86_64                randconfig-074-20231203   gcc  
+x86_64                randconfig-075-20231202   clang
+x86_64                randconfig-075-20231203   gcc  
+x86_64                randconfig-076-20231202   clang
+x86_64                randconfig-076-20231203   gcc  
+x86_64                           rhel-8.3-bpf   gcc  
+x86_64                          rhel-8.3-func   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                            allnoconfig   gcc  
+xtensa                           allyesconfig   gcc  
+xtensa                  audio_kc705_defconfig   gcc  
+xtensa                          iss_defconfig   gcc  
+xtensa                randconfig-001-20231202   gcc  
+xtensa                randconfig-002-20231202   gcc  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
