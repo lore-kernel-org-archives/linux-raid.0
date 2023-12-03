@@ -1,239 +1,269 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TW7RLdGY"
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75F99FD
-	for <linux-raid@vger.kernel.org>; Sat,  2 Dec 2023 16:42:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1701564143; x=1733100143;
-  h=date:from:to:cc:subject:message-id;
-  bh=AZCloqHlXTMxUoBxDECAnfeU1KIvVAB/Ij4wMnASk1I=;
-  b=TW7RLdGYrwzqeqgYWN3QKmhx4MLeAEOV7F2DlTQcs9QRs+GP6Kyxy1E1
-   msay80yTjeglJSZdn2nY0liWBuhLzIe4lR/U9F7Hmfe6NEIqYMY8v69oQ
-   V71Y4400/c/0KePfb9bfN3uWFYiUHwieDpD/L/J6bWxudRAEumJ4Ha1Q7
-   S7AH2Pzz/mjRdPkQh8d9wNmxQ9QGWmubRNSvGD50/fPeMJTCsyLx5esCv
-   sF92WzR8JZj2B1JMj4St/0MYhiqq8Qg4yWHwh6CMphkGfUVnNPEVwSWuO
-   q0YOdZd7ytmn+Xx5tlrrvYAxbmHFvU3hZRY1cL4ZjyhMjPVJ9HvKqx8cc
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10912"; a="504013"
-X-IronPort-AV: E=Sophos;i="6.04,246,1695711600"; 
-   d="scan'208";a="504013"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2023 16:42:23 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10912"; a="914021000"
-X-IronPort-AV: E=Sophos;i="6.04,246,1695711600"; 
-   d="scan'208";a="914021000"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by fmsmga001.fm.intel.com with ESMTP; 02 Dec 2023 16:42:21 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1r9aYt-00061n-1Y;
-	Sun, 03 Dec 2023 00:42:19 +0000
-Date: Sun, 03 Dec 2023 08:41:25 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- fa2bbff7b0b4e211fec5e5686ef96350690597b5
-Message-ID: <202312030822.9frWZchE-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y6odWFlo"
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 776A5101
+	for <linux-raid@vger.kernel.org>; Sun,  3 Dec 2023 04:16:24 -0800 (PST)
+Received: by mail-wr1-x434.google.com with SMTP id ffacd0b85a97d-3333127685bso2004359f8f.0
+        for <linux-raid@vger.kernel.org>; Sun, 03 Dec 2023 04:16:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1701605783; x=1702210583; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pPrLmL0Scoj2/346Zzfl8Ur/MY5gFKnPdc5J6DwG1as=;
+        b=Y6odWFlohaWbW2UzAecsbH4aJxzkU/kapRbX0FXzDOuuGu8euzEl9TbqH1fPHiWpbq
+         ECZD5UYNeIJdBr6K8RDQcDRji52bPV4CdVv1kQxwUaNKoBDGGJfWvtHEoiqVBafOQ9PG
+         ROG63dhVHbFib5s3IHkSpVjY0Q9jtk61RgiWNHb/g9Hx1Isdafidya3Czo944gSZmYC2
+         bINbCXce2PqwkAILaTJ1S//YiWOEFUHxMbO/GoUrutHFTK/y84hgNEzWQXv0fIqb9mqO
+         3tkDzC5nEG5Pt0BWbi09+Cu0PKfDpSg6Lzkhg/q6eLF+Ck/28M2Ojc4ttP2MtIajeiRo
+         jEFg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701605783; x=1702210583;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=pPrLmL0Scoj2/346Zzfl8Ur/MY5gFKnPdc5J6DwG1as=;
+        b=xA+9jzQN3NY8VHgMZc/xj6y2ey/0Ndrau2t1/nV12EqcocuzKFPXUvHJRtb5YZHwlf
+         mA56E06UGXPmREd3CNGPRwijn2TLoq+mfitLSeJWDNEL5PdZvvNzA6sqyv4r+wgc7OnC
+         AXFgODCY51bRrtT8WPnY+ZhDpCYFCxYnl3aWerdexJu6KmBz5uBoQHO3fv21tM4d/3Kp
+         xQMeejCGS4m2AhoqvQIzch70dSyk5lztNU8iJbs1MlEdlot4WbQEDaAIzbwObJ5fYir2
+         mBwOLgB5sSpnJdidKfaZ7LCj1qkkGvt0M/BAjpeigx6HNl0P7UiiWktEG56XdJ1HrKLp
+         gAGw==
+X-Gm-Message-State: AOJu0YyD2knsgrntWNMaX5/TMceJrUKj4NP9b5t5g5WDiYFgryNwEHAe
+	DWJpc6hywj9R8WkHP9VIAATzI3LSjtSOwdDyKd6tmHbW
+X-Google-Smtp-Source: AGHT+IH/BfT4fyEDAyjNJF35sN964pbWpyM+wiP5kthy0iJ+LC9x68s3w80R2QJmI5WJRni31x1ameRiFfhLHxo58mc=
+X-Received: by 2002:a5d:690d:0:b0:333:3949:98ad with SMTP id
+ t13-20020a5d690d000000b00333394998admr1256550wru.209.1701605782495; Sun, 03
+ Dec 2023 04:16:22 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <CAGRgLy5E3cb=MS8eSMH03fa27tgFnZp0hwrrobyQMuUU_Axiag@mail.gmail.com>
+ <CAPhsuW4z7U-Aq=YemQjFKtcaB7k9x+T_=zM8oBkR3aK2fRzo=A@mail.gmail.com>
+ <CAGRgLy6KH9WfqHzN2OkFg5tb49Y=wKnBqQCdWifoFV13aD17Dg@mail.gmail.com>
+ <CAPhsuW6AT5_=d9ibfwBedsd-aVrdM1tfBnJpYD=hoiOeKMCpAw@mail.gmail.com>
+ <CAGRgLy6H0q+VEGBeG5bqs-=826cZyGZYVq9_7ZG453n+XXJBcQ@mail.gmail.com> <CAPhsuW64xuwxJzbz+KHbot1_gJyM2bSMmT8R+HQwhhCpc0WC5g@mail.gmail.com>
+In-Reply-To: <CAPhsuW64xuwxJzbz+KHbot1_gJyM2bSMmT8R+HQwhhCpc0WC5g@mail.gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Date: Sun, 3 Dec 2023 14:16:17 +0200
+Message-ID: <CAGRgLy7KGmX4zG_9CZ8NrFp4RKoN6CwFNTCKo8E+5iff790m8Q@mail.gmail.com>
+Subject: Re: raid6 corruption after assembling with event counter difference
+ of 1
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: fa2bbff7b0b4e211fec5e5686ef96350690597b5  md: synchronize flush io with array reconfiguration
+Hi Song,
 
-elapsed time: 1454m
+Thank you for your comments. I will address them. How do you want to
+proceed? Do you want me to send a formal patch to the list (with
+proper formatting this time)? As mentioned, I am not able to test this
+fix on one of the latest kernels, but only on 4.14.99.
 
-configs tested: 177
-configs skipped: 2
+Thanks,
+Alex.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                        nsimosci_defconfig   gcc  
-arc                   randconfig-001-20231202   gcc  
-arc                   randconfig-002-20231202   gcc  
-arc                        vdk_hs38_defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                   milbeaut_m10v_defconfig   clang
-arm                   randconfig-001-20231202   clang
-arm                   randconfig-002-20231202   clang
-arm                   randconfig-003-20231202   clang
-arm                   randconfig-004-20231202   clang
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20231202   clang
-arm64                 randconfig-002-20231202   clang
-arm64                 randconfig-003-20231202   clang
-arm64                 randconfig-004-20231202   clang
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20231202   gcc  
-csky                  randconfig-002-20231202   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20231202   clang
-hexagon               randconfig-002-20231202   clang
-i386                             allmodconfig   clang
-i386                              allnoconfig   clang
-i386                             allyesconfig   clang
-i386         buildonly-randconfig-001-20231202   clang
-i386         buildonly-randconfig-002-20231202   clang
-i386         buildonly-randconfig-003-20231202   clang
-i386         buildonly-randconfig-004-20231202   clang
-i386         buildonly-randconfig-005-20231202   clang
-i386         buildonly-randconfig-006-20231202   clang
-i386                                defconfig   gcc  
-i386                  randconfig-001-20231202   clang
-i386                  randconfig-002-20231202   clang
-i386                  randconfig-003-20231202   clang
-i386                  randconfig-004-20231202   clang
-i386                  randconfig-005-20231202   clang
-i386                  randconfig-006-20231202   clang
-i386                  randconfig-011-20231202   gcc  
-i386                  randconfig-012-20231202   gcc  
-i386                  randconfig-013-20231202   gcc  
-i386                  randconfig-014-20231202   gcc  
-i386                  randconfig-015-20231202   gcc  
-i386                  randconfig-016-20231202   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20231202   gcc  
-loongarch             randconfig-002-20231202   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                        m5307c3_defconfig   gcc  
-m68k                            mac_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                              allnoconfig   clang
-mips                             allyesconfig   gcc  
-mips                        maltaup_defconfig   clang
-mips                           mtx1_defconfig   clang
-nios2                         10m50_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20231202   gcc  
-nios2                 randconfig-002-20231202   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20231202   gcc  
-parisc                randconfig-002-20231202   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   clang
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                    gamecube_defconfig   clang
-powerpc                 mpc834x_itx_defconfig   gcc  
-powerpc               randconfig-001-20231202   clang
-powerpc               randconfig-002-20231202   clang
-powerpc               randconfig-003-20231202   clang
-powerpc64             randconfig-001-20231202   clang
-powerpc64             randconfig-002-20231202   clang
-powerpc64             randconfig-003-20231202   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   clang
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20231202   clang
-riscv                 randconfig-002-20231202   clang
-riscv                          rv32_defconfig   clang
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20231202   gcc  
-s390                  randconfig-002-20231202   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                         ap325rxa_defconfig   gcc  
-sh                                  defconfig   gcc  
-sh                    randconfig-001-20231202   gcc  
-sh                    randconfig-002-20231202   gcc  
-sh                      rts7751r2d1_defconfig   gcc  
-sh                           se7619_defconfig   gcc  
-sh                           se7724_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc64                          alldefconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20231202   gcc  
-sparc64               randconfig-002-20231202   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20231202   clang
-um                    randconfig-002-20231202   clang
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20231202   clang
-x86_64       buildonly-randconfig-002-20231202   clang
-x86_64       buildonly-randconfig-003-20231202   clang
-x86_64       buildonly-randconfig-004-20231202   clang
-x86_64       buildonly-randconfig-005-20231202   clang
-x86_64       buildonly-randconfig-006-20231202   clang
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20231202   gcc  
-x86_64                randconfig-002-20231202   gcc  
-x86_64                randconfig-003-20231202   gcc  
-x86_64                randconfig-004-20231202   gcc  
-x86_64                randconfig-005-20231202   gcc  
-x86_64                randconfig-006-20231202   gcc  
-x86_64                randconfig-011-20231202   clang
-x86_64                randconfig-012-20231202   clang
-x86_64                randconfig-013-20231202   clang
-x86_64                randconfig-014-20231202   clang
-x86_64                randconfig-015-20231202   clang
-x86_64                randconfig-016-20231202   clang
-x86_64                randconfig-071-20231202   clang
-x86_64                randconfig-072-20231202   clang
-x86_64                randconfig-073-20231202   clang
-x86_64                randconfig-074-20231202   clang
-x86_64                randconfig-075-20231202   clang
-x86_64                randconfig-076-20231202   clang
-x86_64                          rhel-8.3-rust   clang
-xtensa                            allnoconfig   gcc  
-xtensa                randconfig-001-20231202   gcc  
-xtensa                randconfig-002-20231202   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+On Thu, Nov 30, 2023 at 2:38=E2=80=AFAM Song Liu <song@kernel.org> wrote:
+>
+> Hi Alexander,
+>
+> Thanks for working on this.
+>
+> The patch looks good overall. A few comments below.
+>
+> On Wed, Nov 29, 2023 at 4:15=E2=80=AFAM Alexander Lyakas <alex.bolshoy@gm=
+ail.com> wrote:
+> >
+> [...]
+> >
+> > Please kindly note the following:
+> > - md has many features, which we don't use, such as: "non-persistent
+> > arrays", "clustered arrays", "autostart", "journal devices",
+> > "write-behind", "multipath arrays" and others. I cannot say how this
+> > fix will interoperate with these features.
+> > - I tested the fix only on superblock version 1.2. I don't know how
+> > 0.9 superblocks work (because I never used them), so I did not change
+> > anything in super_90_validate().
+>
+> I think we can leave 0.9 as-is.
+>
+> > - I tested the fix on our production kernel 4.14 LTS. I ported the
+> > changes to the mainline kernel 6.7-rc3, but I do not have the ability
+> > at the moment to test it on this kernel.
+> [...]
+> >  drivers/md/md.c | 53 +++++++++++++++++++++++++++++++++++++++++++------=
+----
+> >  1 file changed, 43 insertions(+), 10 deletions(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index c94373d..e490275 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -1195,6 +1195,7 @@ struct super_type  {
+> >                                           struct md_rdev *refdev,
+> >                                           int minor_version);
+> >         int                 (*validate_super)(struct mddev *mddev,
+> > +                                             struct md_rdev *freshest,
+> >                                               struct md_rdev *rdev);
+> >         void                (*sync_super)(struct mddev *mddev,
+> >                                           struct md_rdev *rdev);
+> > @@ -1333,7 +1334,7 @@ static int super_90_load(struct md_rdev *rdev,
+> > struct md_rdev *refdev, int minor
+> >  /*
+> >   * validate_super for 0.90.0
+> >   */
+> > -static int super_90_validate(struct mddev *mddev, struct md_rdev *rdev=
+)
+> > +static int super_90_validate(struct mddev *mddev, struct md_rdev
+> > *freshest, struct md_rdev *rdev)
+> >  {
+> >         mdp_disk_t *desc;
+> >         mdp_super_t *sb =3D page_address(rdev->sb_page);
+> > @@ -1845,7 +1846,7 @@ static int super_1_load(struct md_rdev *rdev,
+> > struct md_rdev *refdev, int minor_
+> >         return ret;
+> >  }
+> >
+> > -static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+> > +static int super_1_validate(struct mddev *mddev, struct md_rdev
+> > *freshest, struct md_rdev *rdev)
+> >  {
+> >         struct mdp_superblock_1 *sb =3D page_address(rdev->sb_page);
+> >         __u64 ev1 =3D le64_to_cpu(sb->events);
+> > @@ -1941,13 +1942,15 @@ static int super_1_validate(struct mddev
+> > *mddev, struct md_rdev *rdev)
+> >                 }
+> >         } else if (mddev->pers =3D=3D NULL) {
+> >                 /* Insist of good event counter while assembling, excep=
+t for
+> > -                * spares (which don't need an event count) */
+> > -               ++ev1;
+> > +                * spares (which don't need an event count).
+> > +                * Similar to mdadm, we allow event counter difference =
+of 1
+> > +                * from the freshest device.
+> > +                */
+> >                 if (rdev->desc_nr >=3D 0 &&
+> >                     rdev->desc_nr < le32_to_cpu(sb->max_dev) &&
+> >                     (le16_to_cpu(sb->dev_roles[rdev->desc_nr]) <
+> > MD_DISK_ROLE_MAX ||
+> >                      le16_to_cpu(sb->dev_roles[rdev->desc_nr]) =3D=3D
+> > MD_DISK_ROLE_JOURNAL))
+> > -                       if (ev1 < mddev->events)
+> > +                       if (ev1 + 1 < mddev->events)
+> >                                 return -EINVAL;
+> >         } else if (mddev->bitmap) {
+> >                 /* If adding to array with a bitmap, then we can accept=
+ an
+> > @@ -1968,8 +1971,38 @@ static int super_1_validate(struct mddev
+> > *mddev, struct md_rdev *rdev)
+> >                     rdev->desc_nr >=3D le32_to_cpu(sb->max_dev)) {
+> >                         role =3D MD_DISK_ROLE_SPARE;
+> >                         rdev->desc_nr =3D -1;
+> > -               } else
+> > +               } else if (mddev->pers =3D=3D NULL && freshest !=3D NUL=
+L &&
+> > ev1 < mddev->events) {
+> > +                       /*
+> > +                        * If we are assembling, and our event counter
+> > is smaller than the
+> > +                        * highest event counter, we cannot trust our
+> > superblock about the role.
+> > +                        * It could happen that our rdev was marked as
+> > Faulty, and all other
+> > +                        * superblocks were updated with +1 event count=
+er.
+> > +                        * Then, before the next superblock update,
+> > which typically happens when
+> > +                        * remove_and_add_spares() removes the device
+> > from the array, there was
+> > +                        * a crash or reboot.
+> > +                        * If we allow current rdev without consulting
+> > the freshest superblock,
+> > +                        * we could cause data corruption.
+> > +                        * Note that in this case our event counter is
+> > smaller by 1 than the
+> > +                        * highest, otherwise, this rdev would not be
+> > allowed into array;
+> > +                        * both kernel and mdadm allow event counter
+> > difference of 1.
+> > +                        */
+> > +                       struct mdp_superblock_1 *freshest_sb =3D
+> > page_address(freshest->sb_page);
+> > +                       u32 freshest_max_dev =3D
+> > le32_to_cpu(freshest_sb->max_dev);
+> > +
+> > +                       if (rdev->desc_nr >=3D freshest_max_dev) {
+> > +                               /* this is unexpected, better not proce=
+ed */
+> > +                               pr_warn("md: %s: rdev[%pg]:
+> > desc_nr(%d) >=3D freshest(%pg)->sb->max_dev(%u)\n",
+> > +                                               mdname(mddev),
+> > rdev->bdev, rdev->desc_nr, freshest->bdev,
+> > +                                               freshest_max_dev);
+> > +                               return -EUCLEAN;
+> > +                       }
+> > +
+> > +                       role =3D
+> > le16_to_cpu(freshest_sb->dev_roles[rdev->desc_nr]);
+> > +                       pr_warn("md: %s: rdev[%pg]: role=3D%d(0x%x)
+> > according to freshest %pg\n",
+> > +                                   mdname(mddev), rdev->bdev, role,
+> > role, freshest->bdev);
+>
+> I think this should be a pr_debug(). Or maybe only warn when
+> freshest and current rdev disagree.
+>
+> > +               } else {
+> >                         role =3D le16_to_cpu(sb->dev_roles[rdev->desc_n=
+r]);
+> > +               }
+> >                 switch(role) {
+> >                 case MD_DISK_ROLE_SPARE: /* spare */
+> >                         break;
+> > @@ -2876,7 +2909,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+> >                  * and should be added immediately.
+> >                  */
+> >                 super_types[mddev->major_version].
+> > -                       validate_super(mddev, rdev);
+> > +                       validate_super(mddev, NULL/*freshest*/, rdev);
+> >                 err =3D mddev->pers->hot_add_disk(mddev, rdev);
+> >                 if (err) {
+> >                         md_kick_rdev_from_array(rdev);
+> > @@ -3813,7 +3846,7 @@ static int analyze_sbs(struct mddev *mddev)
+> >         }
+> >
+> >         super_types[mddev->major_version].
+> > -               validate_super(mddev, freshest);
+> > +               validate_super(mddev, NULL/*freshest*/, freshest);
+> >
+> >         i =3D 0;
+> >         rdev_for_each_safe(rdev, tmp, mddev) {
+> > @@ -3828,7 +3861,7 @@ static int analyze_sbs(struct mddev *mddev)
+> >                 }
+> >                 if (rdev !=3D freshest) {
+> >                         if (super_types[mddev->major_version].
+> > -                           validate_super(mddev, rdev)) {
+> > +                           validate_super(mddev, freshest, rdev)) {
+> >                                 pr_warn("md: kicking non-fresh %pg
+> > from array!\n",
+> >                                         rdev->bdev);
+> >                                 md_kick_rdev_from_array(rdev);
+> > @@ -6836,7 +6869,7 @@ int md_add_new_disk(struct mddev *mddev, struct
+> > mdu_disk_info_s *info)
+> >                         rdev->saved_raid_disk =3D rdev->raid_disk;
+> >                 } else
+> >                         super_types[mddev->major_version].
+> > -                               validate_super(mddev, rdev);
+> > +                               validate_super(mddev, NULL/*freshest*/,=
+ rdev);
+> >                 if ((info->state & (1<<MD_DISK_SYNC)) &&
+> >                      rdev->raid_disk !=3D info->raid_disk) {
+> >                         /* This was a hot-add request, but events doesn=
+'t
+> > --
+> > 1.9.1
