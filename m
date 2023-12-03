@@ -1,269 +1,212 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y6odWFlo"
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 776A5101
-	for <linux-raid@vger.kernel.org>; Sun,  3 Dec 2023 04:16:24 -0800 (PST)
-Received: by mail-wr1-x434.google.com with SMTP id ffacd0b85a97d-3333127685bso2004359f8f.0
-        for <linux-raid@vger.kernel.org>; Sun, 03 Dec 2023 04:16:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701605783; x=1702210583; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pPrLmL0Scoj2/346Zzfl8Ur/MY5gFKnPdc5J6DwG1as=;
-        b=Y6odWFlohaWbW2UzAecsbH4aJxzkU/kapRbX0FXzDOuuGu8euzEl9TbqH1fPHiWpbq
-         ECZD5UYNeIJdBr6K8RDQcDRji52bPV4CdVv1kQxwUaNKoBDGGJfWvtHEoiqVBafOQ9PG
-         ROG63dhVHbFib5s3IHkSpVjY0Q9jtk61RgiWNHb/g9Hx1Isdafidya3Czo944gSZmYC2
-         bINbCXce2PqwkAILaTJ1S//YiWOEFUHxMbO/GoUrutHFTK/y84hgNEzWQXv0fIqb9mqO
-         3tkDzC5nEG5Pt0BWbi09+Cu0PKfDpSg6Lzkhg/q6eLF+Ck/28M2Ojc4ttP2MtIajeiRo
-         jEFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701605783; x=1702210583;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=pPrLmL0Scoj2/346Zzfl8Ur/MY5gFKnPdc5J6DwG1as=;
-        b=xA+9jzQN3NY8VHgMZc/xj6y2ey/0Ndrau2t1/nV12EqcocuzKFPXUvHJRtb5YZHwlf
-         mA56E06UGXPmREd3CNGPRwijn2TLoq+mfitLSeJWDNEL5PdZvvNzA6sqyv4r+wgc7OnC
-         AXFgODCY51bRrtT8WPnY+ZhDpCYFCxYnl3aWerdexJu6KmBz5uBoQHO3fv21tM4d/3Kp
-         xQMeejCGS4m2AhoqvQIzch70dSyk5lztNU8iJbs1MlEdlot4WbQEDaAIzbwObJ5fYir2
-         mBwOLgB5sSpnJdidKfaZ7LCj1qkkGvt0M/BAjpeigx6HNl0P7UiiWktEG56XdJ1HrKLp
-         gAGw==
-X-Gm-Message-State: AOJu0YyD2knsgrntWNMaX5/TMceJrUKj4NP9b5t5g5WDiYFgryNwEHAe
-	DWJpc6hywj9R8WkHP9VIAATzI3LSjtSOwdDyKd6tmHbW
-X-Google-Smtp-Source: AGHT+IH/BfT4fyEDAyjNJF35sN964pbWpyM+wiP5kthy0iJ+LC9x68s3w80R2QJmI5WJRni31x1ameRiFfhLHxo58mc=
-X-Received: by 2002:a5d:690d:0:b0:333:3949:98ad with SMTP id
- t13-20020a5d690d000000b00333394998admr1256550wru.209.1701605782495; Sun, 03
- Dec 2023 04:16:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="MS4EngJt"
+Received: from smtp.smtpout.orange.fr (smtp-16.smtpout.orange.fr [80.12.242.16])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2E5DA4
+	for <linux-raid@vger.kernel.org>; Sun,  3 Dec 2023 11:48:15 -0800 (PST)
+Received: from pop-os.home ([92.140.202.140])
+	by smtp.orange.fr with ESMTPA
+	id 9sRor2SAvaCTP9sRprMITc; Sun, 03 Dec 2023 20:48:14 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1701632894;
+	bh=TtuieOqB3d5/4LucYB7b5rnfDifiCNhm6IjslDyNUYo=;
+	h=From:To:Cc:Subject:Date;
+	b=MS4EngJtRAiKHXOhDy56XDRMvJvD38MihZwlUI9BM1bvLFwWgSWqc7ARwSYqGx4+M
+	 9aUEU2XHOXW/zTqWH9JCKxmxNHJqJOi6GyXM8jZA6tdC9Cm0RpQRZC/vKOThwNyhkc
+	 Kk4pdzOxdqhd3Z16ftNUZtK0cgW9wgUHfqwoAFiG2A6AlCS/+r0dl0Bc4h1rKonw3P
+	 83axw2HhH/MCu290ZmatMZIFnHJCOjU4SZEmumRe7klgCZ2mtKqQ1s4+9T34CmsWr7
+	 54WEOyacF3tDZjfJ25dy/AyUsd4z/ETkLBuXJ6B3tHjWfObNnjv3GCNEWKLe5t5wmg
+	 5uqzNG4j/Cthg==
+X-ME-Helo: pop-os.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sun, 03 Dec 2023 20:48:14 +0100
+X-ME-IP: 92.140.202.140
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: Song Liu <song@kernel.org>,
+	Kees Cook <keescook@chromium.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-raid@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH] md/md-multipath: Convert "struct mpconf" to flexible array
+Date: Sun,  3 Dec 2023 20:48:06 +0100
+Message-Id: <03dd7de1cecdb7084814f2fab300c9bc716aff3e.1701632867.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGRgLy5E3cb=MS8eSMH03fa27tgFnZp0hwrrobyQMuUU_Axiag@mail.gmail.com>
- <CAPhsuW4z7U-Aq=YemQjFKtcaB7k9x+T_=zM8oBkR3aK2fRzo=A@mail.gmail.com>
- <CAGRgLy6KH9WfqHzN2OkFg5tb49Y=wKnBqQCdWifoFV13aD17Dg@mail.gmail.com>
- <CAPhsuW6AT5_=d9ibfwBedsd-aVrdM1tfBnJpYD=hoiOeKMCpAw@mail.gmail.com>
- <CAGRgLy6H0q+VEGBeG5bqs-=826cZyGZYVq9_7ZG453n+XXJBcQ@mail.gmail.com> <CAPhsuW64xuwxJzbz+KHbot1_gJyM2bSMmT8R+HQwhhCpc0WC5g@mail.gmail.com>
-In-Reply-To: <CAPhsuW64xuwxJzbz+KHbot1_gJyM2bSMmT8R+HQwhhCpc0WC5g@mail.gmail.com>
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Date: Sun, 3 Dec 2023 14:16:17 +0200
-Message-ID: <CAGRgLy7KGmX4zG_9CZ8NrFp4RKoN6CwFNTCKo8E+5iff790m8Q@mail.gmail.com>
-Subject: Re: raid6 corruption after assembling with event counter difference
- of 1
-To: Song Liu <song@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi Song,
+The 'multipaths' field of 'struct mpconf' can be declared as a flexible
+array.
 
-Thank you for your comments. I will address them. How do you want to
-proceed? Do you want me to send a formal patch to the list (with
-proper formatting this time)? As mentioned, I am not able to test this
-fix on one of the latest kernels, but only on 4.14.99.
+The advantages are:
+   - 1 less indirection when accessing to the 'multipaths' array
+   - save 1 pointer in the structure
+   - improve memory usage
+   - give the opportunity to use __counted_by() for additional safety
 
-Thanks,
-Alex.
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+On my x86_64 system, with configured with allmodconfig, I have:
 
-On Thu, Nov 30, 2023 at 2:38=E2=80=AFAM Song Liu <song@kernel.org> wrote:
->
-> Hi Alexander,
->
-> Thanks for working on this.
->
-> The patch looks good overall. A few comments below.
->
-> On Wed, Nov 29, 2023 at 4:15=E2=80=AFAM Alexander Lyakas <alex.bolshoy@gm=
-ail.com> wrote:
-> >
-> [...]
-> >
-> > Please kindly note the following:
-> > - md has many features, which we don't use, such as: "non-persistent
-> > arrays", "clustered arrays", "autostart", "journal devices",
-> > "write-behind", "multipath arrays" and others. I cannot say how this
-> > fix will interoperate with these features.
-> > - I tested the fix only on superblock version 1.2. I don't know how
-> > 0.9 superblocks work (because I never used them), so I did not change
-> > anything in super_90_validate().
->
-> I think we can leave 0.9 as-is.
->
-> > - I tested the fix on our production kernel 4.14 LTS. I ported the
-> > changes to the mainline kernel 6.7-rc3, but I do not have the ability
-> > at the moment to test it on this kernel.
-> [...]
-> >  drivers/md/md.c | 53 +++++++++++++++++++++++++++++++++++++++++++------=
-----
-> >  1 file changed, 43 insertions(+), 10 deletions(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index c94373d..e490275 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -1195,6 +1195,7 @@ struct super_type  {
-> >                                           struct md_rdev *refdev,
-> >                                           int minor_version);
-> >         int                 (*validate_super)(struct mddev *mddev,
-> > +                                             struct md_rdev *freshest,
-> >                                               struct md_rdev *rdev);
-> >         void                (*sync_super)(struct mddev *mddev,
-> >                                           struct md_rdev *rdev);
-> > @@ -1333,7 +1334,7 @@ static int super_90_load(struct md_rdev *rdev,
-> > struct md_rdev *refdev, int minor
-> >  /*
-> >   * validate_super for 0.90.0
-> >   */
-> > -static int super_90_validate(struct mddev *mddev, struct md_rdev *rdev=
-)
-> > +static int super_90_validate(struct mddev *mddev, struct md_rdev
-> > *freshest, struct md_rdev *rdev)
-> >  {
-> >         mdp_disk_t *desc;
-> >         mdp_super_t *sb =3D page_address(rdev->sb_page);
-> > @@ -1845,7 +1846,7 @@ static int super_1_load(struct md_rdev *rdev,
-> > struct md_rdev *refdev, int minor_
-> >         return ret;
-> >  }
-> >
-> > -static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
-> > +static int super_1_validate(struct mddev *mddev, struct md_rdev
-> > *freshest, struct md_rdev *rdev)
-> >  {
-> >         struct mdp_superblock_1 *sb =3D page_address(rdev->sb_page);
-> >         __u64 ev1 =3D le64_to_cpu(sb->events);
-> > @@ -1941,13 +1942,15 @@ static int super_1_validate(struct mddev
-> > *mddev, struct md_rdev *rdev)
-> >                 }
-> >         } else if (mddev->pers =3D=3D NULL) {
-> >                 /* Insist of good event counter while assembling, excep=
-t for
-> > -                * spares (which don't need an event count) */
-> > -               ++ev1;
-> > +                * spares (which don't need an event count).
-> > +                * Similar to mdadm, we allow event counter difference =
-of 1
-> > +                * from the freshest device.
-> > +                */
-> >                 if (rdev->desc_nr >=3D 0 &&
-> >                     rdev->desc_nr < le32_to_cpu(sb->max_dev) &&
-> >                     (le16_to_cpu(sb->dev_roles[rdev->desc_nr]) <
-> > MD_DISK_ROLE_MAX ||
-> >                      le16_to_cpu(sb->dev_roles[rdev->desc_nr]) =3D=3D
-> > MD_DISK_ROLE_JOURNAL))
-> > -                       if (ev1 < mddev->events)
-> > +                       if (ev1 + 1 < mddev->events)
-> >                                 return -EINVAL;
-> >         } else if (mddev->bitmap) {
-> >                 /* If adding to array with a bitmap, then we can accept=
- an
-> > @@ -1968,8 +1971,38 @@ static int super_1_validate(struct mddev
-> > *mddev, struct md_rdev *rdev)
-> >                     rdev->desc_nr >=3D le32_to_cpu(sb->max_dev)) {
-> >                         role =3D MD_DISK_ROLE_SPARE;
-> >                         rdev->desc_nr =3D -1;
-> > -               } else
-> > +               } else if (mddev->pers =3D=3D NULL && freshest !=3D NUL=
-L &&
-> > ev1 < mddev->events) {
-> > +                       /*
-> > +                        * If we are assembling, and our event counter
-> > is smaller than the
-> > +                        * highest event counter, we cannot trust our
-> > superblock about the role.
-> > +                        * It could happen that our rdev was marked as
-> > Faulty, and all other
-> > +                        * superblocks were updated with +1 event count=
-er.
-> > +                        * Then, before the next superblock update,
-> > which typically happens when
-> > +                        * remove_and_add_spares() removes the device
-> > from the array, there was
-> > +                        * a crash or reboot.
-> > +                        * If we allow current rdev without consulting
-> > the freshest superblock,
-> > +                        * we could cause data corruption.
-> > +                        * Note that in this case our event counter is
-> > smaller by 1 than the
-> > +                        * highest, otherwise, this rdev would not be
-> > allowed into array;
-> > +                        * both kernel and mdadm allow event counter
-> > difference of 1.
-> > +                        */
-> > +                       struct mdp_superblock_1 *freshest_sb =3D
-> > page_address(freshest->sb_page);
-> > +                       u32 freshest_max_dev =3D
-> > le32_to_cpu(freshest_sb->max_dev);
-> > +
-> > +                       if (rdev->desc_nr >=3D freshest_max_dev) {
-> > +                               /* this is unexpected, better not proce=
-ed */
-> > +                               pr_warn("md: %s: rdev[%pg]:
-> > desc_nr(%d) >=3D freshest(%pg)->sb->max_dev(%u)\n",
-> > +                                               mdname(mddev),
-> > rdev->bdev, rdev->desc_nr, freshest->bdev,
-> > +                                               freshest_max_dev);
-> > +                               return -EUCLEAN;
-> > +                       }
-> > +
-> > +                       role =3D
-> > le16_to_cpu(freshest_sb->dev_roles[rdev->desc_nr]);
-> > +                       pr_warn("md: %s: rdev[%pg]: role=3D%d(0x%x)
-> > according to freshest %pg\n",
-> > +                                   mdname(mddev), rdev->bdev, role,
-> > role, freshest->bdev);
->
-> I think this should be a pr_debug(). Or maybe only warn when
-> freshest and current rdev disagree.
->
-> > +               } else {
-> >                         role =3D le16_to_cpu(sb->dev_roles[rdev->desc_n=
-r]);
-> > +               }
-> >                 switch(role) {
-> >                 case MD_DISK_ROLE_SPARE: /* spare */
-> >                         break;
-> > @@ -2876,7 +2909,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
-> >                  * and should be added immediately.
-> >                  */
-> >                 super_types[mddev->major_version].
-> > -                       validate_super(mddev, rdev);
-> > +                       validate_super(mddev, NULL/*freshest*/, rdev);
-> >                 err =3D mddev->pers->hot_add_disk(mddev, rdev);
-> >                 if (err) {
-> >                         md_kick_rdev_from_array(rdev);
-> > @@ -3813,7 +3846,7 @@ static int analyze_sbs(struct mddev *mddev)
-> >         }
-> >
-> >         super_types[mddev->major_version].
-> > -               validate_super(mddev, freshest);
-> > +               validate_super(mddev, NULL/*freshest*/, freshest);
-> >
-> >         i =3D 0;
-> >         rdev_for_each_safe(rdev, tmp, mddev) {
-> > @@ -3828,7 +3861,7 @@ static int analyze_sbs(struct mddev *mddev)
-> >                 }
-> >                 if (rdev !=3D freshest) {
-> >                         if (super_types[mddev->major_version].
-> > -                           validate_super(mddev, rdev)) {
-> > +                           validate_super(mddev, freshest, rdev)) {
-> >                                 pr_warn("md: kicking non-fresh %pg
-> > from array!\n",
-> >                                         rdev->bdev);
-> >                                 md_kick_rdev_from_array(rdev);
-> > @@ -6836,7 +6869,7 @@ int md_add_new_disk(struct mddev *mddev, struct
-> > mdu_disk_info_s *info)
-> >                         rdev->saved_raid_disk =3D rdev->raid_disk;
-> >                 } else
-> >                         super_types[mddev->major_version].
-> > -                               validate_super(mddev, rdev);
-> > +                               validate_super(mddev, NULL/*freshest*/,=
- rdev);
-> >                 if ((info->state & (1<<MD_DISK_SYNC)) &&
-> >                      rdev->raid_disk !=3D info->raid_disk) {
-> >                         /* This was a hot-add request, but events doesn=
-'t
-> > --
-> > 1.9.1
+Before the change:
+=================
+struct mpconf {
+	struct mddev *             mddev;                /*     0     8 */
+	struct multipath_info *    multipaths;           /*     8     8 */
+	int                        raid_disks;           /*    16     4 */
+
+	/* XXX 4 bytes hole, try to pack */
+
+	spinlock_t                 device_lock;          /*    24    72 */
+	/* --- cacheline 1 boundary (64 bytes) was 32 bytes ago --- */
+	struct list_head           retry_list;           /*    96    16 */
+	mempool_t                  pool;                 /*   112   200 */
+
+	/* size: 312, cachelines: 5, members: 6 */
+	/* sum members: 308, holes: 1, sum holes: 4 */
+	/* last cacheline: 56 bytes */
+};
+
+struct multipath_info {
+	struct md_rdev *           rdev;                 /*     0     8 */
+
+	/* size: 8, cachelines: 1, members: 1 */
+	/* last cacheline: 8 bytes */
+};
+
+size drivers/md/md-multipath.o
+   text	   data	    bss	    dec	    hex	filename
+  12863	   1041	     16	  13920	   3660	drivers/md/md-multipath.o
+
+
+After the change:
+================
+struct mpconf {
+	struct mddev *             mddev;                /*     0     8 */
+	int                        raid_disks;           /*     8     4 */
+
+	/* XXX 4 bytes hole, try to pack */
+
+	spinlock_t                 device_lock;          /*    16    72 */
+	/* --- cacheline 1 boundary (64 bytes) was 24 bytes ago --- */
+	struct list_head           retry_list;           /*    88    16 */
+	mempool_t                  pool;                 /*   104   200 */
+	/* --- cacheline 4 boundary (256 bytes) was 48 bytes ago --- */
+	struct multipath_info      multipaths[];         /*   304     0 */
+
+	/* size: 304, cachelines: 5, members: 6 */
+	/* sum members: 300, holes: 1, sum holes: 4 */
+	/* last cacheline: 48 bytes */
+};
+
+struct multipath_info {
+	struct md_rdev *           rdev;                 /*     0     8 */
+
+	/* size: 8, cachelines: 1, members: 1 */
+	/* last cacheline: 8 bytes */
+};
+
+size drivers/md/md-multipath.o
+   text	   data	    bss	    dec	    hex	filename
+  12470	   1041	     16	  13527	   34d7	drivers/md/md-multipath.o
+
+
+So:
+  - about 400 bytes of code are saved.
+  - because of the way memory allocation works, 'struct mpconf' really
+    uses 512 bytes of memory when allocated. So the "extra" memory that is
+    allocated (512-304 = 208) can be used to store up to 26 multipaths,
+    for free.
+
+Finally, several places use pointer arithmetic to access the desired
+structure, such as:
+	for (i = 0; i < conf->raid_disks; i++) {
+		tmp = conf->multipaths + i;
+		if (tmp->rdev)
+
+Should this be rewritten as:
+	for (i = 0; i < conf->raid_disks; i++) {
+		if (tmpconf->multipaths[i]->rdev)
+in order to have the compiler be able to check boundaries defined by
+__counted_by()?
+---
+ drivers/md/md-multipath.c | 12 +++---------
+ drivers/md/md-multipath.h |  3 ++-
+ 2 files changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
+index d22276870283..6a23065a65f7 100644
+--- a/drivers/md/md-multipath.c
++++ b/drivers/md/md-multipath.c
+@@ -357,16 +357,13 @@ static int multipath_run (struct mddev *mddev)
+ 	 * should be freed in multipath_free()]
+ 	 */
+ 
+-	conf = kzalloc(sizeof(struct mpconf), GFP_KERNEL);
++	conf = kzalloc(struct_size(conf, multipaths, mddev->raid_disks),
++		       GFP_KERNEL);
+ 	mddev->private = conf;
+ 	if (!conf)
+ 		goto out;
+ 
+-	conf->multipaths = kcalloc(mddev->raid_disks,
+-				   sizeof(struct multipath_info),
+-				   GFP_KERNEL);
+-	if (!conf->multipaths)
+-		goto out_free_conf;
++	conf->raid_disks = mddev->raid_disks;
+ 
+ 	working_disks = 0;
+ 	rdev_for_each(rdev, mddev) {
+@@ -384,7 +381,6 @@ static int multipath_run (struct mddev *mddev)
+ 			working_disks++;
+ 	}
+ 
+-	conf->raid_disks = mddev->raid_disks;
+ 	conf->mddev = mddev;
+ 	spin_lock_init(&conf->device_lock);
+ 	INIT_LIST_HEAD(&conf->retry_list);
+@@ -421,7 +417,6 @@ static int multipath_run (struct mddev *mddev)
+ 
+ out_free_conf:
+ 	mempool_exit(&conf->pool);
+-	kfree(conf->multipaths);
+ 	kfree(conf);
+ 	mddev->private = NULL;
+ out:
+@@ -433,7 +428,6 @@ static void multipath_free(struct mddev *mddev, void *priv)
+ 	struct mpconf *conf = priv;
+ 
+ 	mempool_exit(&conf->pool);
+-	kfree(conf->multipaths);
+ 	kfree(conf);
+ }
+ 
+diff --git a/drivers/md/md-multipath.h b/drivers/md/md-multipath.h
+index b3099e5fc4d7..fb49e151ac94 100644
+--- a/drivers/md/md-multipath.h
++++ b/drivers/md/md-multipath.h
+@@ -8,12 +8,13 @@ struct multipath_info {
+ 
+ struct mpconf {
+ 	struct mddev			*mddev;
+-	struct multipath_info	*multipaths;
+ 	int			raid_disks;
+ 	spinlock_t		device_lock;
+ 	struct list_head	retry_list;
+ 
+ 	mempool_t		pool;
++
++	struct multipath_info	multipaths[] __counted_by(raid_disks);
+ };
+ 
+ /*
+-- 
+2.34.1
+
