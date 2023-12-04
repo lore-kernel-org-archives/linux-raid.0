@@ -1,32 +1,30 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B32C7E6;
-	Sun,  3 Dec 2023 19:18:08 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Sk84X1Pq3z4f3jql;
-	Mon,  4 Dec 2023 11:18:04 +0800 (CST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CFF9D5;
+	Sun,  3 Dec 2023 23:04:31 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SkF5g51Crz4f3lgC;
+	Mon,  4 Dec 2023 15:04:23 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 355A01A0D34;
-	Mon,  4 Dec 2023 11:18:05 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 5A9AA1A0E29;
+	Mon,  4 Dec 2023 15:04:28 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDX2hDoRG1l06W7Cg--.50821S4;
-	Mon, 04 Dec 2023 11:18:02 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: agk@redhat.com,
-	snitzer@kernel.org,
-	mpatocka@redhat.com,
-	dm-devel@lists.linux.dev,
-	song@kernel.org,
-	yukuai3@huawei.com
-Cc: janpieter.sollie@edpnet.be,
+	by APP1 (Coremail) with SMTP id cCh0CgDX2hD5eW1lTQvKCg--.62157S6;
+	Mon, 04 Dec 2023 15:04:28 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	yukuai1@huaweicloud.com,
+	linan122@huawei.com,
+	yukuai3@huawei.com,
 	yi.zhang@huawei.com,
+	houtao1@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH -next] md: split MD_RECOVERY_NEEDED out of mddev_resume
-Date: Mon,  4 Dec 2023 11:17:03 +0800
-Message-Id: <20231204031703.3102254-1-yukuai1@huaweicloud.com>
+Subject: [PATCH 2/2] md/raid1: support read error check
+Date: Mon,  4 Dec 2023 15:03:27 +0800
+Message-Id: <20231204070327.3150356-3-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231204070327.3150356-1-linan666@huaweicloud.com>
+References: <20231204070327.3150356-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -34,172 +32,78 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDX2hDoRG1l06W7Cg--.50821S4
-X-Coremail-Antispam: 1UD129KBjvJXoW3Jw4xtry3ZrWDZw4xJw43Wrg_yoW7Xw1Dpa
-	97Jas3uw47WFWrXrWDAF1qga45Aw4jgrZFyrW3u3s7AFy5t34fuF15WFyqqrZ5ta4kAFW5
-	Xw15JFs7ZryIgr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v2
-	6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
-	UdHUDUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:cCh0CgDX2hD5eW1lTQvKCg--.62157S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr1kZF13uF17JryxGF17Wrg_yoW8Aw4kpa
+	15AF95ArW5J345Zw1DJFWDC3WFk34fKay8Ar95Jw4Ig3s3trZ8KFWjga4agrn8GFn8Gr13
+	X398Gr4DCFs7tFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBlb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
+	A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrV
+	ACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWU
+	JVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lw4CEc2x0rVAKj4xxMx
+	AIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_
+	Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwI
+	xGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWx
+	JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcV
+	C2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU89L05UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Li Nan <linan122@huawei.com>
 
-New mddev_resume() calls are added to synchroniza IO with array
-reconfiguration, however, this introduce a regression while adding it in
-md_start_sync():
+After commit 1e50915fe0bb ("raid: improve MD/raid10 handling of correctable
+read errors."), rdev will be set to faulty if it reads data error to many
+times in raid10. Add this mechanism to raid1 now.
 
-1) someone set MD_RECOVERY_NEEDED first;
-2) daemon thread grab reconfig_mutex, then clear MD_RECOVERY_NEEDED and
-   queue a new sync work;
-3) daemon thread release reconfig_mutex;
-4) in md_start_sync
-   a) check that there are spares that can be added/removed, then suspend
-      the array;
-   b) remove_and_add_spares may not be called, or called without really
-      add/remove spares;
-   c) resume the array, then set MD_RECOVERY_NEEDED again!
-
-Loop between 2 - 4, then mddev_suspend() will be called quite often, for
-consequence, normal IO will be quite slow.
-
-Fix this problem by spliting MD_RECOVERY_NEEDED out of mddev_resume(), so
-that md_start_sync() won't set such flag and hence the loop will be broken.
-
-Fixes: bc08041b32ab ("md: suspend array in md_start_sync() if array need reconfiguration")
-Reported-and-tested-by: Janpieter Sollie <janpieter.sollie@edpnet.be>
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218200
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- drivers/md/dm-raid.c   | 1 +
- drivers/md/md-bitmap.c | 2 ++
- drivers/md/md.c        | 6 +++++-
- drivers/md/raid5.c     | 4 ++++
- 4 files changed, 12 insertions(+), 1 deletion(-)
+ drivers/md/raid1.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index eb009d6bb03a..e9c0d70f7fe5 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -4059,6 +4059,7 @@ static void raid_resume(struct dm_target *ti)
- 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		mddev->ro = 0;
- 		mddev->in_sync = 0;
-+		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 		mddev_unlock_and_resume(mddev);
- 	}
- }
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 9672f75c3050..16112750ee64 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2428,6 +2428,7 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 	}
- 	rv = 0;
- out:
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 	if (rv)
- 		return rv;
-@@ -2571,6 +2572,7 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (old_mwb != backlog)
- 		md_bitmap_update_sb(mddev->bitmap);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 9348f1709512..be4e654744c1 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2257,16 +2257,24 @@ static void sync_request_write(struct mddev *mddev, struct r1bio *r1_bio)
+  *	3.	Performs writes following reads for array synchronising.
+  */
  
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 	return len;
- }
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4b1e8007dd15..48a1b12f3c2c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -515,7 +515,6 @@ void mddev_resume(struct mddev *mddev)
- 	percpu_ref_resurrect(&mddev->active_io);
- 	wake_up(&mddev->sb_wait);
+-static void fix_read_error(struct r1conf *conf, int read_disk,
+-			   sector_t sect, int sectors)
++static void fix_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ {
++	sector_t sect = r1_bio->sector;
++	int sectors = r1_bio->sectors;
++	int read_disk = r1_bio->read_disk;
+ 	struct mddev *mddev = conf->mddev;
++	struct md_rdev *rdev = rcu_dereference(conf->mirrors[read_disk].rdev);
++
++	if (exceed_read_errors(mddev, rdev)) {
++		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
++		return;
++	}
++
+ 	while(sectors) {
+ 		int s = sectors;
+ 		int d = read_disk;
+ 		int success = 0;
+ 		int start;
+-		struct md_rdev *rdev;
  
--	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	md_wakeup_thread(mddev->thread);
- 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
- 
-@@ -4146,6 +4145,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
- 	md_new_event();
- 	rv = len;
- out_unlock:
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 	return rv;
- }
-@@ -4652,6 +4652,8 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
-  out:
- 	if (err)
- 		export_rdev(rdev, mddev);
-+	else
-+		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 	if (!err)
- 		md_new_event();
-@@ -5533,6 +5535,7 @@ serialize_policy_store(struct mddev *mddev, const char *buf, size_t len)
- 		mddev_destroy_serial_pool(mddev, NULL);
- 	mddev->serialize_policy = value;
- unlock:
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 	return err ?: len;
- }
-@@ -6593,6 +6596,7 @@ static void autorun_devices(int part)
- 					export_rdev(rdev, mddev);
- 			}
- 			autorun_array(mddev);
-+			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 			mddev_unlock_and_resume(mddev);
- 		}
- 		/* on success, candidates will be empty, on error
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 42ba3581cfea..f88f92517a18 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6989,6 +6989,7 @@ raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
- 	mutex_unlock(&conf->cache_size_mutex);
- 
- out_unlock:
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 	return err ?: len;
- }
-@@ -7090,6 +7091,7 @@ raid5_store_skip_copy(struct mddev *mddev, const char *page, size_t len)
- 		else
- 			blk_queue_flag_clear(QUEUE_FLAG_STABLE_WRITES, q);
- 	}
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 	return err ?: len;
- }
-@@ -7169,6 +7171,7 @@ raid5_store_group_thread_cnt(struct mddev *mddev, const char *page, size_t len)
- 			kfree(old_groups);
- 		}
- 	}
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 
- 	return err ?: len;
-@@ -8920,6 +8923,7 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
- 	if (!err)
- 		md_update_sb(mddev, 1);
- 
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	mddev_unlock_and_resume(mddev);
- 
- 	return err;
+ 		if (s > (PAGE_SIZE>>9))
+ 			s = PAGE_SIZE >> 9;
+@@ -2507,8 +2515,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 	if (mddev->ro == 0
+ 	    && !test_bit(FailFast, &rdev->flags)) {
+ 		freeze_array(conf, 1);
+-		fix_read_error(conf, r1_bio->read_disk,
+-			       r1_bio->sector, r1_bio->sectors);
++		fix_read_error(conf, r1_bio);
+ 		unfreeze_array(conf);
+ 	} else if (mddev->ro == 0 && test_bit(FailFast, &rdev->flags)) {
+ 		md_error(mddev, rdev);
 -- 
 2.39.2
 
