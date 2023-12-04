@@ -1,63 +1,74 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5740ED8;
-	Sun,  3 Dec 2023 23:04:31 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4SkF5j3NWgz4f3jMV;
-	Mon,  4 Dec 2023 15:04:25 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 9B15B1A0285;
-	Mon,  4 Dec 2023 15:04:27 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDX2hD5eW1lTQvKCg--.62157S4;
-	Mon, 04 Dec 2023 15:04:27 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linan122@huawei.com,
-	yukuai3@huawei.com,
-	yi.zhang@huawei.com,
-	houtao1@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH 0/2] support read error check in raid1
-Date: Mon,  4 Dec 2023 15:03:25 +0800
-Message-Id: <20231204070327.3150356-1-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A671FD2;
+	Mon,  4 Dec 2023 04:10:49 -0800 (PST)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	id 1rA7mh-0000e8-Iq; Mon, 04 Dec 2023 13:10:47 +0100
+Message-ID: <17bd838f-12a0-43c2-a45c-46021083170b@leemhuis.info>
+Date: Mon, 4 Dec 2023 13:10:46 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: block/badblocks.c warning in 6.7-rc2
+Content-Language: en-US, de-DE
+To: Coly Li <colyli@suse.de>, Bagas Sanjaya <bagasdotme@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Linux Regressions <regressions@lists.linux.dev>,
+ Linux Block Devices <linux-block@vger.kernel.org>,
+ Linux RAID <linux-raid@vger.kernel.org>,
+ Linux bcachefs <linux-bcachefs@vger.kernel.org>, Xiao Ni <xni@redhat.com>,
+ Geliang Tang <geliang.tang@suse.com>, Jens Axboe <axboe@kernel.dk>,
+ Song Liu <song@kernel.org>, Kent Overstreet <kent.overstreet@linux.dev>,
+ Janpieter Sollie <janpieter.sollie@edpnet.be>
+References: <562a2442-d098-4972-baa1-5a843e06b180@gmail.com>
+ <C8305655-3749-411B-A696-E07E95882215@suse.de>
+From: "Linux regression tracking #update (Thorsten Leemhuis)"
+ <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <C8305655-3749-411B-A696-E07E95882215@suse.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDX2hD5eW1lTQvKCg--.62157S4
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYF7kC6x804xWl14x267AKxVW8JVW5JwAF
-	c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-	0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-	wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-	x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY
-	6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr
-	0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0E
-	wIxGrwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
-	1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
-	14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
-	IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvE
-	x4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnU
-	UI43ZEXa7IU1kpnJUUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1701691849;400920e5;
+X-HE-SMSGID: 1rA7mh-0000e8-Iq
 
-From: Li Nan <linan122@huawei.com>
+On 29.11.23 09:08, Coly Li wrote:
+>> 2023年11月29日 07:47，Bagas Sanjaya <bagasdotme@gmail.com> 写道：
+>>
+>> I notice a regression report that is rather well-handled on Bugzilla [1].
+>> Quoting from it:
+>>
+>>>
+>>> when booting from 6.7-rc2, compiled with clang, I get this warning on one of my 3 bcachefs volumes:
+>>> WARNING: CPU: 3 PID: 712 at block/badblocks.c:1284 badblocks_check (block/badblocks.c:1284) 
+>>> The reason why isn't clear, but the stack trace points to an error in md error handling.
+>>> This bug didn't happen in 6.6
+>>> there are 3 commits in 6.7-rc2 which may cause them,
+>>> in attachment:
+>>> - decoded stacktrace of dmesg
+>>> - kernel .config
+>> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=218184
+> 
+> It seems the improved bad blocks code caught a zero-size bio request
+> from upper layer, this improper behavior was silently neglected before.
+> It might be too early or simple to decide this is a regression,
 
-Li Nan (2):
-  md: factor out a helper exceed_read_errors() to check read_errors
-  md/raid1: support read error check
+Well, it's often better to add an issue to the tracking even if there is
+a chance that it's not a real regression, as the issue might otherwise
+fall through the cracks. But given...
 
- drivers/md/raid1-10.c | 54 +++++++++++++++++++++++++++++++++++++++++++
- drivers/md/raid1.c    | 17 ++++++++++----
- drivers/md/raid10.c   | 47 +------------------------------------
- 3 files changed, 67 insertions(+), 51 deletions(-)
+> especially Janpieter closes the report for now.
 
--- 
-2.39.2
+...this I agree that this is likely not worth tracking, hence:
 
+#regzbot inconclusive: maybe not a regression and report can not
+reproduce it anymore
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
