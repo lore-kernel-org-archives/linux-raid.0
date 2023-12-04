@@ -1,223 +1,228 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zadara.com header.i=@zadara.com header.b="M9ImUM6s"
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC468CA
-	for <linux-raid@vger.kernel.org>; Mon,  4 Dec 2023 09:00:40 -0800 (PST)
-Received: by mail-wr1-x434.google.com with SMTP id ffacd0b85a97d-33339d843b9so1983498f8f.0
-        for <linux-raid@vger.kernel.org>; Mon, 04 Dec 2023 09:00:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Sbzk/cJa"
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 816DD129;
+	Mon,  4 Dec 2023 10:07:10 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6ce46470647so821732b3a.1;
+        Mon, 04 Dec 2023 10:07:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zadara.com; s=google; t=1701709239; x=1702314039; darn=vger.kernel.org;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ed40W60gNIeTeudT1ds77B+kz+vzslVsFaXUParCr/M=;
-        b=M9ImUM6sX99BlP2/KkcqmOW/JSQf80N8CJM2wmxAEFDyqYhwAu5GB/z5vHFOCBKU1U
-         v8xkMQ+9LF9n6aa820+fBFo77KjCXh33RDk95W9mAto3nA1DT4jrNHANFkU18NLuUz+M
-         UgUO4a5aSyw+TPD4S0s0TSQp7wESXPB76rpmiLl8YFLXNRo4HJpKSkzQrvdHWQ48XbvJ
-         D+NoTaqMzjeJtD/Pszwn/Y/dhNt5ca+qeiRUW3IBpCwsU351fsDKg+a3vjS8WVQcYZPA
-         kCeXFqPmdPEJ9zMQk8SS95pgV7+LKxYd94VMnPeNaMNGlMk5F6h7ZsE/g3sklAaUUO0C
-         Lnrw==
+        d=gmail.com; s=20230601; t=1701713230; x=1702318030; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vnKGL9rVmaXJ0k7UQTGGb8qgGBw3yaFYXulmlj0ClVk=;
+        b=Sbzk/cJarJS+HKABhyq9ZXjIKHReZXRZD2BmG6K1tjWjkQP6qWn2M1Hej+A0irmaku
+         MiQQibihKqnyE5TVi9uvaP+TQXi4717965Cj5SWoxsFXT08rL/dq7gcQha9HMJ+iJ6E4
+         BVSsykoGX1GtN128YVvHFOLoVXyY9pSvbwxF1qFD/Yff8eCGgX7GFA1jKFa07niVVpY4
+         d9OCXuF3WhLpOcz+yEjCxARi6Zebpvmf8U8x8xjf+1Jj/H4bG5JnvtbOkN1l+9J9gmEl
+         oiEG7ELXzD08vZaeO7QyUcVFM2Rqj1v3KKn+P22m3559f6bBVfzqLvxbIyP1mZuhfgJK
+         shBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701709239; x=1702314039;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1701713230; x=1702318030;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ed40W60gNIeTeudT1ds77B+kz+vzslVsFaXUParCr/M=;
-        b=NA4421PWAhrGivCApiaY91Nur5222oBvjzKkEjHLvU9GcZPTxTfiVeqIDEUUA7Bpp0
-         7bE0ssile+hWLJ8knLuFMwPljSRKgVewoYY5NSGZgRVq4iLPWgFtVtmykWUPfr9+cmcb
-         I/qkqX+N8sfbChPDB0xW5IKhZ/OIsT7KG4axeue7sBteBdr9fc+C4vL5Xpd+dIQCmOt2
-         FZx0UDOYT9Yl7jDJE4JDedLCNW71R1d0KTFC78dE/SN6fWw55U1OZuvM2cPkG2McCRV1
-         tTBkzoUwSrZV3eivMdtuKd3qGyD66wsM/RKdoMIQPNBRitzgWoi/XiF+UgggmBiGHnqC
-         ECjQ==
-X-Gm-Message-State: AOJu0YznOozMcpOCFFzrcy2QyKceLIoPNIzqKLjoHWD8L89dVwHC0bsf
-	x1aUal/+U8qGS/etlCq3v+/Ss6iV+G+iu4zrv0E=
-X-Google-Smtp-Source: AGHT+IF0ActTofz1OMpE/KW3axEPsBDbngszExwrMjjf1l8sXJtNp64l6QbgssInQ0UO4/0ADggBnw==
-X-Received: by 2002:a05:600c:5119:b0:40a:42dd:c82c with SMTP id o25-20020a05600c511900b0040a42ddc82cmr2676239wms.27.1701709238751;
-        Mon, 04 Dec 2023 09:00:38 -0800 (PST)
-Received: from localhost.localdomain ([82.166.81.77])
-        by smtp.gmail.com with ESMTPSA id v15-20020a5d4a4f000000b0033328f47c83sm11403615wrs.2.2023.12.04.09.00.37
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 04 Dec 2023 09:00:38 -0800 (PST)
-From: Alex Lyakas <alex.lyakas@zadara.com>
-To: linux-raid@vger.kernel.org
-Cc: song@kernel.org,
-	alex.lyakas@zadara.com,
-	Alex Lyakas <alex@zadara.com>
-Subject: [PATCH] md: upon assembling the array, consult the superblock of the freshest device
-Date: Mon,  4 Dec 2023 18:54:15 +0200
-Message-Id: <1701708855-17404-1-git-send-email-alex.lyakas@zadara.com>
-X-Mailer: git-send-email 1.9.1
+        bh=vnKGL9rVmaXJ0k7UQTGGb8qgGBw3yaFYXulmlj0ClVk=;
+        b=AYyMCAiofwW1w8/LKfRAUteUMOKs3IGWzjKZ81HOLm4Qog7YCel+I5tMBELYkYd3Ic
+         C4T4qpkFlGZeeXP+bncCihQfhjeGD3TsJFVqGBXi/XIjoPO4B2kA2Qlk2CwoPwhDujan
+         +NNUBj2hdZwzJF+J3y4w2hEVmDWduaQnATolFiBBR9nrKzAorPwLhVN5eBryUxtqzHrX
+         V+Fk7vGMXsTDRx7WiPSB9OD38PTNnbefsY008s69lgAXGCZSuKzQm1is49s8RxAW7uOj
+         fmc91cbZIRseHKFcBH1ZvFv+pbAs/b98BwWxq9xVaO3s3RAhfCBsGBSyGFZhNwjbcZOo
+         v/lw==
+X-Gm-Message-State: AOJu0YygE6uwIjeYYcpP+0PeLWzLwNjgGit6simtM/p2Q2tE1GHwtNrK
+	68fyZnN9/CqU4w30ZC6sDjE=
+X-Google-Smtp-Source: AGHT+IGDIGeeBa7UWPj4E4w2SIGHBjZgGz8oxGqwAWzNb+KD7mpnEvIno4bt3NIHORxil3wMtNwC4w==
+X-Received: by 2002:a05:6a20:1448:b0:18c:374c:6e64 with SMTP id a8-20020a056a20144800b0018c374c6e64mr27716780pzi.36.1701713229690;
+        Mon, 04 Dec 2023 10:07:09 -0800 (PST)
+Received: from localhost ([2620:10d:c090:400::4:27ef])
+        by smtp.gmail.com with ESMTPSA id u2-20020a056a00158200b006cdd507ca2esm7943470pfk.167.2023.12.04.10.07.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Dec 2023 10:07:09 -0800 (PST)
+Sender: Tejun Heo <htejun@gmail.com>
+Date: Mon, 4 Dec 2023 08:07:07 -1000
+From: Tejun Heo <tj@kernel.org>
+To: Naohiro Aota <Naohiro.Aota@wdc.com>
+Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	"ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
+	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
+	"coreteam@netfilter.org" <coreteam@netfilter.org>,
+	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"gfs2@lists.linux.dev" <gfs2@lists.linux.dev>,
+	"intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
+	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"linux-bcachefs@vger.kernel.org" <linux-bcachefs@vger.kernel.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-cachefs@redhat.com" <linux-cachefs@redhat.com>,
+	"linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"linux-erofs@lists.ozlabs.org" <linux-erofs@lists.ozlabs.org>,
+	"linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>,
+	"linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-remoteproc@vger.kernel.org" <linux-remoteproc@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-trace-kernel@vger.kernel.org" <linux-trace-kernel@vger.kernel.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"nbd@other.debian.org" <nbd@other.debian.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"ntb@lists.linux.dev" <ntb@lists.linux.dev>,
+	"open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+	"oss-drivers@corigine.com" <oss-drivers@corigine.com>,
+	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>,
+	"samba-technical@lists.samba.org" <samba-technical@lists.samba.org>,
+	"target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+	"virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
+	"wireguard@lists.zx2c4.com" <wireguard@lists.zx2c4.com>
+Subject: Re: Performance drop due to alloc_workqueue() misuse and recent
+ change
+Message-ID: <ZW4VS3Z0auYCjg-W@slm.duckdns.org>
+References: <dbu6wiwu3sdhmhikb2w6lns7b27gbobfavhjj57kwi2quafgwl@htjcc5oikcr3>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dbu6wiwu3sdhmhikb2w6lns7b27gbobfavhjj57kwi2quafgwl@htjcc5oikcr3>
 
-From: Alex Lyakas <alex@zadara.com>
+Hello,
 
-Upon assembling the array, both kernel and mdadm allow the devices to have event
-counter difference of 1, and still consider them as up-to-date.
-However, a device whose event count is behind by 1, may in fact not be up-to-date,
-and array resync with such a device may cause data corruption.
-To avoid this, consult the superblock of the freshest device about the status
-of a device, whose event counter is behind by 1.
+On Mon, Dec 04, 2023 at 04:03:47PM +0000, Naohiro Aota wrote:
+> Recently, commit 636b927eba5b ("workqueue: Make unbound workqueues to use
+> per-cpu pool_workqueues") changed WQ_UNBOUND workqueue's behavior. It
+> changed the meaning of alloc_workqueue()'s max_active from an upper limit
+> imposed per NUMA node to a limit per CPU. As a result, massive number of
+> workers can be running at the same time, especially if the workqueue user
+> thinks the max_active is a global limit.
+> 
+> Actually, it is already written it is per-CPU limit in the documentation
+> before the commit. However, several callers seem to misuse max_active,
+> maybe thinking it is a global limit. It is an unexpected behavior change
+> for them.
 
-Signed-off-by: Alex Lyakas <alex.lyakas@zadara.com>
+Right, and the behavior has been like that for a very long time and there
+was no other way to achieve reasonable level of concurrency, so the current
+situation is expected.
 
-Disclaimer: I was not able to test this change on one of the latest 6.7 kernels.
-I tested it on kernel 4.14 LTS and then ported the changes.
+> For example, these callers set max_active = num_online_cpus(), which is a
+> suspicious limit applying to per-CPU. This config means we can have nr_cpu
+> * nr_cpu active tasks working at the same time.
 
-To test this change, I modified the code of remove_and_add_spares():
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ad68b5e..f57854e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9341,6 +9341,7 @@ static int remove_and_add_spares(struct mddev *mddev,
-                }
-        }
- no_add:
-+       removed = 0;
-        if (removed)
-                set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-        return spares;
+Yeah, that sounds like a good indicator.
 
-With this change, when a device fails, the superblock of all other devices
-is only updated once. During test, I sumulated a failure of one of the devices,
-and then rebooted the machine. After reboot, I re-assembled the array
-with all devices, including the device that I failed.
-Event counter difference between the failed device and the other devices
-was 1, and then with my change the role of the problematic device was taken
-from the superblock of one of the higher devices, which indicated
-the role to be MD_DISK_ROLE_FAULTY. After array assembly completed,
-remove_and_add_spares() ejected the problematic disk from the array,
-as expected.
----
- drivers/md/md.c | 53 +++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 43 insertions(+), 10 deletions(-)
+> fs/f2fs/data.c: sbi->post_read_wq = alloc_workqueue("f2fs_post_read_wq",
+> fs/f2fs/data.c-                                          WQ_UNBOUND | WQ_HIGHPRI,
+> fs/f2fs/data.c-                                          num_online_cpus());
+> 
+> fs/crypto/crypto.c:     fscrypt_read_workqueue = alloc_workqueue("fscrypt_read_queue",
+> fs/crypto/crypto.c-                                              WQ_UNBOUND | WQ_HIGHPRI,
+> fs/crypto/crypto.c-                                              num_online_cpus());
+> 
+> fs/verity/verify.c:     fsverity_read_workqueue = alloc_workqueue("fsverity_read_queue",
+> fs/verity/verify.c-                                               WQ_HIGHPRI,
+> fs/verity/verify.c-                                               num_online_cpus());
+> 
+> drivers/crypto/hisilicon/qm.c:  qm->wq = alloc_workqueue("%s", WQ_HIGHPRI | WQ_MEM_RECLAIM |
+> drivers/crypto/hisilicon/qm.c-                           WQ_UNBOUND, num_online_cpus(),
+> drivers/crypto/hisilicon/qm.c-                           pci_name(qm->pdev));
+> 
+> block/blk-crypto-fallback.c:    blk_crypto_wq = alloc_workqueue("blk_crypto_wq",
+> block/blk-crypto-fallback.c-                                    WQ_UNBOUND | WQ_HIGHPRI |
+> block/blk-crypto-fallback.c-                                    WQ_MEM_RECLAIM, num_online_cpus());
+> 
+> drivers/md/dm-crypt.c:          cc->crypt_queue = alloc_workqueue("kcryptd/%s",
+> drivers/md/dm-crypt.c-                                            WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND,
+> drivers/md/dm-crypt.c-                                            num_online_cpus(), devname);
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c94373d..ad68b5e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1195,6 +1195,7 @@ struct super_type  {
- 					  struct md_rdev *refdev,
- 					  int minor_version);
- 	int		    (*validate_super)(struct mddev *mddev,
-+					      struct md_rdev *freshest,
- 					      struct md_rdev *rdev);
- 	void		    (*sync_super)(struct mddev *mddev,
- 					  struct md_rdev *rdev);
-@@ -1333,7 +1334,7 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
- /*
-  * validate_super for 0.90.0
-  */
--static int super_90_validate(struct mddev *mddev, struct md_rdev *rdev)
-+static int super_90_validate(struct mddev *mddev, struct md_rdev *freshest, struct md_rdev *rdev)
- {
- 	mdp_disk_t *desc;
- 	mdp_super_t *sb = page_address(rdev->sb_page);
-@@ -1845,7 +1846,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 	return ret;
- }
- 
--static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
-+static int super_1_validate(struct mddev *mddev, struct md_rdev *freshest, struct md_rdev *rdev)
- {
- 	struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
- 	__u64 ev1 = le64_to_cpu(sb->events);
-@@ -1941,13 +1942,15 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
- 		}
- 	} else if (mddev->pers == NULL) {
- 		/* Insist of good event counter while assembling, except for
--		 * spares (which don't need an event count) */
--		++ev1;
-+		 * spares (which don't need an event count).
-+		 * Similar to mdadm, we allow event counter difference of 1
-+		 * from the freshest device.
-+		 */
- 		if (rdev->desc_nr >= 0 &&
- 		    rdev->desc_nr < le32_to_cpu(sb->max_dev) &&
- 		    (le16_to_cpu(sb->dev_roles[rdev->desc_nr]) < MD_DISK_ROLE_MAX ||
- 		     le16_to_cpu(sb->dev_roles[rdev->desc_nr]) == MD_DISK_ROLE_JOURNAL))
--			if (ev1 < mddev->events)
-+			if (ev1 + 1 < mddev->events)
- 				return -EINVAL;
- 	} else if (mddev->bitmap) {
- 		/* If adding to array with a bitmap, then we can accept an
-@@ -1968,8 +1971,38 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
- 		    rdev->desc_nr >= le32_to_cpu(sb->max_dev)) {
- 			role = MD_DISK_ROLE_SPARE;
- 			rdev->desc_nr = -1;
--		} else
-+		} else if (mddev->pers == NULL && freshest != NULL && ev1 < mddev->events) {
-+			/*
-+			 * If we are assembling, and our event counter is smaller than the
-+			 * highest event counter, we cannot trust our superblock about the role.
-+			 * It could happen that our rdev was marked as Faulty, and all other
-+			 * superblocks were updated with +1 event counter.
-+			 * Then, before the next superblock update, which typically happens when
-+			 * remove_and_add_spares() removes the device from the array, there was
-+			 * a crash or reboot.
-+			 * If we allow current rdev without consulting the freshest superblock,
-+			 * we could cause data corruption.
-+			 * Note that in this case our event counter is smaller by 1 than the
-+			 * highest, otherwise, this rdev would not be allowed into array;
-+			 * both kernel and mdadm allow event counter difference of 1.
-+			 */
-+			struct mdp_superblock_1 *freshest_sb = page_address(freshest->sb_page);
-+			u32 freshest_max_dev = le32_to_cpu(freshest_sb->max_dev);
-+
-+			if (rdev->desc_nr >= freshest_max_dev) {
-+				/* this is unexpected, better not proceed */
-+				pr_warn("md: %s: rdev[%pg]: desc_nr(%d) >= freshest(%pg)->sb->max_dev(%u)\n",
-+						mdname(mddev), rdev->bdev, rdev->desc_nr, freshest->bdev,
-+						freshest_max_dev);
-+				return -EUCLEAN;
-+			}
-+
-+			role = le16_to_cpu(freshest_sb->dev_roles[rdev->desc_nr]);
-+			pr_debug("md: %s: rdev[%pg]: role=%d(0x%x) according to freshest %pg\n",
-+				     mdname(mddev), rdev->bdev, role, role, freshest->bdev);
-+		} else {
- 			role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
-+		}
- 		switch(role) {
- 		case MD_DISK_ROLE_SPARE: /* spare */
- 			break;
-@@ -2876,7 +2909,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
- 		 * and should be added immediately.
- 		 */
- 		super_types[mddev->major_version].
--			validate_super(mddev, rdev);
-+			validate_super(mddev, NULL/*freshest*/, rdev);
- 		err = mddev->pers->hot_add_disk(mddev, rdev);
- 		if (err) {
- 			md_kick_rdev_from_array(rdev);
-@@ -3813,7 +3846,7 @@ static int analyze_sbs(struct mddev *mddev)
- 	}
- 
- 	super_types[mddev->major_version].
--		validate_super(mddev, freshest);
-+		validate_super(mddev, NULL/*freshest*/, freshest);
- 
- 	i = 0;
- 	rdev_for_each_safe(rdev, tmp, mddev) {
-@@ -3828,7 +3861,7 @@ static int analyze_sbs(struct mddev *mddev)
- 		}
- 		if (rdev != freshest) {
- 			if (super_types[mddev->major_version].
--			    validate_super(mddev, rdev)) {
-+			    validate_super(mddev, freshest, rdev)) {
- 				pr_warn("md: kicking non-fresh %pg from array!\n",
- 					rdev->bdev);
- 				md_kick_rdev_from_array(rdev);
-@@ -6836,7 +6869,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info)
- 			rdev->saved_raid_disk = rdev->raid_disk;
- 		} else
- 			super_types[mddev->major_version].
--				validate_super(mddev, rdev);
-+				validate_super(mddev, NULL/*freshest*/, rdev);
- 		if ((info->state & (1<<MD_DISK_SYNC)) &&
- 		     rdev->raid_disk != info->raid_disk) {
- 			/* This was a hot-add request, but events doesn't
+Most of these work items are CPU bound but not completley so. e.g.
+kcrypt_crypt_write_continue() does wait_for_completion(), so setting
+max_active to 1 likely isn't what they want either. They mostly want some
+reasonable system-wide concurrency limit w.r.t. the CPU count while keeping
+some level of flexibility in terms of task placement.
+
+The previous max_active wasn't great for this because its meaning changed
+depending on the number of nodes. Now, the meaning doesn't change but it's
+not really useful for the above purpose. It's only useful for avoiding
+melting the system completely.
+
+One way to go about it is to declare that concurrency level management for
+unbound workqueue is on users but that seems not ideal given many use cases
+would want it anyway.
+
+Let me think it over but I think the right way to go about it is going the
+other direction - ie. making max_active apply to the whole system regardless
+of the number of nodes / ccx's / whatever.
+
+> Furthermore, the change affects performance in a certain case.
+> 
+> Btrfs creates several WQ_UNBOUND workqueues with a default max_active =
+> min(NRCPUS + 2, 8). As my machine has 96 CPUs with NUMA disabled, this
+> max_active config allows running over 700 active works. Before the commit,
+> it is limited to 8 if NUMA is disabled or limited to 16 if NUMA nodes is 2.
+> 
+> I reverted the workqueue code back to before the commit, and I ran the
+> following fio command on RAID0 btrfs on 6 SSDs.
+> 
+> fio --group_reporting --eta=always --eta-interval=30s --eta-newline=30s \
+>     --rw=write --fallocate=none \
+>     --direct=1 --ioengine=libaio --iodepth=32 \
+>     --filesize=100G \
+>     --blocksize=64k \
+>     --time_based --runtime=300s \
+>     --end_fsync=1 \
+>     --directory=${MNT} \
+>     --name=writer --numjobs=32
+> 
+> By changing workqueue's max_active, the result varies.
+> 
+> - wq max_active=8   (intended limit by btrfs?)
+>   WRITE: bw=2495MiB/s (2616MB/s), 2495MiB/s-2495MiB/s (2616MB/s-2616MB/s), io=753GiB (808GB), run=308953-308953msec
+> - wq max_active=16  (actual limit on 2 NUMA nodes setup)
+>   WRITE: bw=1736MiB/s (1820MB/s), 1736MiB/s-1736MiB/s (1820MB/s-1820MB/s), io=670GiB (720GB), run=395532-395532msec
+> - wq max_active=768 (simulating current limit)
+>   WRITE: bw=1276MiB/s (1338MB/s), 1276MiB/s-1276MiB/s (1338MB/s-1338MB/s), io=375GiB (403GB), run=300984-300984msec
+> 
+> The current performance is slower than the previous limit (max_active=16)
+> by 27%, or it is 50% slower than the intended limit.  The performance drop
+> might be due to contention of the btrfs-endio-write works. There are over
+> 700 kworker instances were created and 100 works are on the 'D' state
+> competing for a lock.
+> 
+> More specifically, I tested the same workload on the commit.
+> 
+> - At commit 636b927eba5b ("workqueue: Make unbound workqueues to use per-cpu pool_workqueues")
+>   WRITE: bw=1191MiB/s (1249MB/s), 1191MiB/s-1191MiB/s (1249MB/s-1249MB/s), io=350GiB (376GB), run=300714-300714msec
+> - At the previous commit = 4cbfd3de73 ("workqueue: Call wq_update_unbound_numa() on all CPUs in NUMA node on CPU hotplug")
+>   WRITE: bw=1747MiB/s (1832MB/s), 1747MiB/s-1747MiB/s (1832MB/s-1832MB/s), io=748GiB (803GB), run=438134-438134msec
+> 
+> So, it is -31.8% performance down with the commit.
+> 
+> In summary, we misuse max_active, considering it is a global limit. And,
+> the recent commit introduced a huge performance drop in some cases.  We
+> need to review alloc_workqueue() usage to check if its max_active setting
+> is proper or not.
+
+Thanks a lot for the report. I think it's a lot more reasonable to assume
+that max_active is global for unbound workqueues. The current workqueue
+behavior is not very intuitive or useful. I'll try to find something more
+reasonable. Thanks for the report and analysis. Much appreciated.
+
+Thanks.
+
 -- 
-1.9.1
-
+tejun
