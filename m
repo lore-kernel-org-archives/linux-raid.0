@@ -1,107 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OUrt7c0t"
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52335C6;
-	Tue,  5 Dec 2023 01:14:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1701767681; x=1733303681;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=p4stTAxg/E6CGJ2w183041PPmkmXBFYcKXIEEcx8kFE=;
-  b=OUrt7c0tLLosuC+vqix9tqnBMe0+pBiurEW4yj1i0h9VbUQwjS2AQzFn
-   W1ejcxM9TirBehz6DUMuMBE0npy4NIw0I7hwr803DjKzyqzoTxnzEE4a1
-   V7YNoW/29lKSqHwIQvQjwCBTZi+GVXFQ6PCMiiRaon3kqlI8aLkEAiBD5
-   ZtoGswmuCG7N4KoLD8jUhHgXK4SMtzHcODOIdqIo/z0NtnKiRuUY3ujNu
-   gD9D8WjaiAi4lshS6IxGT8DAHlfaleM5nT8wmyDDl2A30teHIZhU1EA7L
-   Kfby9MMcwVYWxHz8YXQ4btSm25v/cExnwPV9Z0TOcxVwjWk3HiwBikEaA
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10914"; a="945185"
-X-IronPort-AV: E=Sophos;i="6.04,251,1695711600"; 
-   d="scan'208";a="945185"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2023 01:14:41 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10914"; a="1102389833"
-X-IronPort-AV: E=Sophos;i="6.04,251,1695711600"; 
-   d="scan'208";a="1102389833"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by fmsmga005.fm.intel.com with ESMTP; 05 Dec 2023 01:14:30 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rARVc-0008dg-05;
-	Tue, 05 Dec 2023 09:14:28 +0000
-Date: Tue, 5 Dec 2023 17:14:25 +0800
-From: kernel test robot <lkp@intel.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, xni@redhat.com,
-	yukuai3@huawei.com, neilb@suse.com
-Cc: oe-kbuild-all@lists.linux.dev, linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org, yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH v4 md-fixes 3/3] md: fix stopping sync thread
-Message-ID: <202312051758.ZlpYxGpJ-lkp@intel.com>
-References: <20231204135732.3647886-4-yukuai1@huaweicloud.com>
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64FEFA7;
+	Tue,  5 Dec 2023 01:43:21 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4SkwZX4XLRz4f3kG4;
+	Tue,  5 Dec 2023 17:43:16 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id CD94C1A0A82;
+	Tue,  5 Dec 2023 17:43:18 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgBHShC18G5lWm4xCw--.9041S5;
+	Tue, 05 Dec 2023 17:43:18 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: song@kernel.org,
+	yukuai3@huawei.com,
+	xni@redhat.com,
+	neilb@suse.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH v5 md-fixes 1/3] md: fix missing flush of sync_work
+Date: Tue,  5 Dec 2023 17:42:13 +0800
+Message-Id: <20231205094215.1824240-2-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231205094215.1824240-1-yukuai1@huaweicloud.com>
+References: <20231205094215.1824240-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231204135732.3647886-4-yukuai1@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBHShC18G5lWm4xCw--.9041S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7tr18WF13Cr18Cr4kJw13Jwb_yoW8XF4rpa
+	yfAa45ArW8Aay5tryUGa4qvFyrWw18t3yDtrW3W345JF1Yqr45G3WY93WjqFyDJF93Xwnx
+	Za10ya9xZa40vr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9v14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+	vE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC20s
+	026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
+	JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
+	v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
+	j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JV
+	W8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbLFxUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi Yu,
+From: Yu Kuai <yukuai3@huawei.com>
 
-kernel test robot noticed the following build warnings:
+Commit ac619781967b ("md: use separate work_struct for md_start_sync()")
+use a new sync_work to replace del_work, however, stop_sync_thread() and
+__md_stop_writes() was trying to wait for sync_thread to be done, hence
+they should switch to use sync_work as well.
 
-[auto build test WARNING on song-md/md-next]
-[also build test WARNING on linus/master v6.7-rc4 next-20231205]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Noted that md_start_sync() from sync_work will grab 'reconfig_mutex',
+hence other contex can't held the same lock to flush work, and this will
+be fixed in later patches.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-fix-missing-flush-of-sync_work/20231204-215956
-base:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-patch link:    https://lore.kernel.org/r/20231204135732.3647886-4-yukuai1%40huaweicloud.com
-patch subject: [PATCH v4 md-fixes 3/3] md: fix stopping sync thread
-config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20231205/202312051758.ZlpYxGpJ-lkp@intel.com/config)
-compiler: alpha-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231205/202312051758.ZlpYxGpJ-lkp@intel.com/reproduce)
+Fixes: ac619781967b ("md: use separate work_struct for md_start_sync()")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Xiao Ni <xni@redhat.com>
+---
+ drivers/md/md.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202312051758.ZlpYxGpJ-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   drivers/md/md.c: In function 'idle_sync_thread':
->> drivers/md/md.c:4897:13: warning: unused variable 'sync_seq' [-Wunused-variable]
-    4897 |         int sync_seq = atomic_read(&mddev->sync_seq);
-         |             ^~~~~~~~
-
-
-vim +/sync_seq +4897 drivers/md/md.c
-
-64e5e09afc14f8 Yu Kuai 2023-05-29  4894  
-64e5e09afc14f8 Yu Kuai 2023-05-29  4895  static void idle_sync_thread(struct mddev *mddev)
-64e5e09afc14f8 Yu Kuai 2023-05-29  4896  {
-130443d60b1b8c Yu Kuai 2023-05-29 @4897  	int sync_seq = atomic_read(&mddev->sync_seq);
-130443d60b1b8c Yu Kuai 2023-05-29  4898  
-6f56f0c4f1241f Yu Kuai 2023-05-29  4899  	mutex_lock(&mddev->sync_mutex);
-64e5e09afc14f8 Yu Kuai 2023-05-29  4900  	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-130443d60b1b8c Yu Kuai 2023-05-29  4901  
-fde7b408a7cb14 Yu Kuai 2023-12-04  4902  	if (mddev_lock(mddev)) {
-fde7b408a7cb14 Yu Kuai 2023-12-04  4903  		mutex_unlock(&mddev->sync_mutex);
-fde7b408a7cb14 Yu Kuai 2023-12-04  4904  		return;
-fde7b408a7cb14 Yu Kuai 2023-12-04  4905  	}
-130443d60b1b8c Yu Kuai 2023-05-29  4906  
-fde7b408a7cb14 Yu Kuai 2023-12-04  4907  	stop_sync_thread(mddev, false, true);
-6f56f0c4f1241f Yu Kuai 2023-05-29  4908  	mutex_unlock(&mddev->sync_mutex);
-64e5e09afc14f8 Yu Kuai 2023-05-29  4909  }
-64e5e09afc14f8 Yu Kuai 2023-05-29  4910  
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c94373d64f2c..5640a948086b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4857,7 +4857,7 @@ static void stop_sync_thread(struct mddev *mddev)
+ 		return;
+ 	}
+ 
+-	if (work_pending(&mddev->del_work))
++	if (work_pending(&mddev->sync_work))
+ 		flush_workqueue(md_misc_wq);
+ 
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+@@ -6265,7 +6265,7 @@ static void md_clean(struct mddev *mddev)
+ static void __md_stop_writes(struct mddev *mddev)
+ {
+ 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-	if (work_pending(&mddev->del_work))
++	if (work_pending(&mddev->sync_work))
+ 		flush_workqueue(md_misc_wq);
+ 	if (mddev->sync_thread) {
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.2
+
