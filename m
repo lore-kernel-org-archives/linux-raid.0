@@ -1,50 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="lf0Tbx4p"
-Received: from mail-oo1-xc2e.google.com (mail-oo1-xc2e.google.com [IPv6:2607:f8b0:4864:20::c2e])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 438611713
-	for <linux-raid@vger.kernel.org>; Mon,  4 Dec 2023 14:20:06 -0800 (PST)
-Received: by mail-oo1-xc2e.google.com with SMTP id 006d021491bc7-58d5979c676so3240474eaf.1
-        for <linux-raid@vger.kernel.org>; Mon, 04 Dec 2023 14:20:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1701728405; x=1702333205; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=c+WzlKb2MQSHfnGqBE/e5O7OA37FmS5jYCRCA/LLsH0=;
-        b=lf0Tbx4pZSpplXVE+zqYxKYOIwCE2xAIUgcZiK3fCq6WNOA8asMjsl+yN0MHxt2eDn
-         rbaiZLPUY41HHiP3/HfHTDEMuBNSsqFAfOwLCszTWL335Aat5ZHiNUr8kTLUlWLeMVgK
-         Ko4WxPKFTphxd51BX4j69weJgwWn21SSL2GP0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701728405; x=1702333205;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=c+WzlKb2MQSHfnGqBE/e5O7OA37FmS5jYCRCA/LLsH0=;
-        b=Jzl6XQl7MM3QYhbG7PS5/9s48uCEn1fBOtC6cUEQCTLZyFn+Jn7iLlS/zWRRa8ZTD0
-         GqDmlcBjYdWJX0Us4HDviVYE25qrSvgBv/DLjiXR8vqUy5AylzcPWWQpI9NsGT+VWGlR
-         yQetMeSRPcOUeRexxtp2y3I374H135pxvm6WnUmxA8JMdLWJCm0ZsxGQ4duT8f9aNSwL
-         ZA7pG8+9JUZyZHIV2qpRfGypFo8L4C/2VBOqFdVkTXNyZVQvU1sUaaGaHnRC6zY9TYJ0
-         5M3iEeqEFRcpShznjYnPs1UZKBUcMFF/MaPZwFif1kLn+wDkzt8sVAQeivzBob3shjtf
-         Ta0w==
-X-Gm-Message-State: AOJu0Yz1TnrpT9Bj38Nio6aWMYKXm4kbNFG5QUccM/dAwcz45O+l5CNp
-	LfYfIYsSOhkv/48rqtPo0OuIIw==
-X-Google-Smtp-Source: AGHT+IGC7BzaBQCIfZe1vXo4mx3JRiDIzetuPnC9oVZ29pkisPeQ4hM13pxSUb9WDQN6k46hgaEL7w==
-X-Received: by 2002:a05:6358:9106:b0:170:302b:545f with SMTP id q6-20020a056358910600b00170302b545fmr2543842rwq.56.1701728405319;
-        Mon, 04 Dec 2023 14:20:05 -0800 (PST)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id ey5-20020a056a0038c500b006cde75646d3sm4718759pfb.179.2023.12.04.14.20.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Dec 2023 14:20:04 -0800 (PST)
-Date: Mon, 4 Dec 2023 14:20:04 -0800
-From: Kees Cook <keescook@chromium.org>
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: Song Liu <song@kernel.org>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux-raid@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] md/md-multipath: Convert "struct mpconf" to flexible
- array
-Message-ID: <202312041419.81EF03F7B7@keescook>
-References: <03dd7de1cecdb7084814f2fab300c9bc716aff3e.1701632867.git.christophe.jaillet@wanadoo.fr>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OUrt7c0t"
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52335C6;
+	Tue,  5 Dec 2023 01:14:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1701767681; x=1733303681;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=p4stTAxg/E6CGJ2w183041PPmkmXBFYcKXIEEcx8kFE=;
+  b=OUrt7c0tLLosuC+vqix9tqnBMe0+pBiurEW4yj1i0h9VbUQwjS2AQzFn
+   W1ejcxM9TirBehz6DUMuMBE0npy4NIw0I7hwr803DjKzyqzoTxnzEE4a1
+   V7YNoW/29lKSqHwIQvQjwCBTZi+GVXFQ6PCMiiRaon3kqlI8aLkEAiBD5
+   ZtoGswmuCG7N4KoLD8jUhHgXK4SMtzHcODOIdqIo/z0NtnKiRuUY3ujNu
+   gD9D8WjaiAi4lshS6IxGT8DAHlfaleM5nT8wmyDDl2A30teHIZhU1EA7L
+   Kfby9MMcwVYWxHz8YXQ4btSm25v/cExnwPV9Z0TOcxVwjWk3HiwBikEaA
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10914"; a="945185"
+X-IronPort-AV: E=Sophos;i="6.04,251,1695711600"; 
+   d="scan'208";a="945185"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2023 01:14:41 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10914"; a="1102389833"
+X-IronPort-AV: E=Sophos;i="6.04,251,1695711600"; 
+   d="scan'208";a="1102389833"
+Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
+  by fmsmga005.fm.intel.com with ESMTP; 05 Dec 2023 01:14:30 -0800
+Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rARVc-0008dg-05;
+	Tue, 05 Dec 2023 09:14:28 +0000
+Date: Tue, 5 Dec 2023 17:14:25 +0800
+From: kernel test robot <lkp@intel.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, xni@redhat.com,
+	yukuai3@huawei.com, neilb@suse.com
+Cc: oe-kbuild-all@lists.linux.dev, linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org, yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH v4 md-fixes 3/3] md: fix stopping sync thread
+Message-ID: <202312051758.ZlpYxGpJ-lkp@intel.com>
+References: <20231204135732.3647886-4-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -53,24 +49,59 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <03dd7de1cecdb7084814f2fab300c9bc716aff3e.1701632867.git.christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20231204135732.3647886-4-yukuai1@huaweicloud.com>
 
-On Sun, Dec 03, 2023 at 08:48:06PM +0100, Christophe JAILLET wrote:
-> The 'multipaths' field of 'struct mpconf' can be declared as a flexible
-> array.
-> 
-> The advantages are:
->    - 1 less indirection when accessing to the 'multipaths' array
->    - save 1 pointer in the structure
->    - improve memory usage
->    - give the opportunity to use __counted_by() for additional safety
-> 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Hi Yu,
 
-This looks like a really nice conversion. I haven't run-tested this, but
-it reads correct to me.
+kernel test robot noticed the following build warnings:
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+[auto build test WARNING on song-md/md-next]
+[also build test WARNING on linus/master v6.7-rc4 next-20231205]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-fix-missing-flush-of-sync_work/20231204-215956
+base:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+patch link:    https://lore.kernel.org/r/20231204135732.3647886-4-yukuai1%40huaweicloud.com
+patch subject: [PATCH v4 md-fixes 3/3] md: fix stopping sync thread
+config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20231205/202312051758.ZlpYxGpJ-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231205/202312051758.ZlpYxGpJ-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202312051758.ZlpYxGpJ-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/md/md.c: In function 'idle_sync_thread':
+>> drivers/md/md.c:4897:13: warning: unused variable 'sync_seq' [-Wunused-variable]
+    4897 |         int sync_seq = atomic_read(&mddev->sync_seq);
+         |             ^~~~~~~~
+
+
+vim +/sync_seq +4897 drivers/md/md.c
+
+64e5e09afc14f8 Yu Kuai 2023-05-29  4894  
+64e5e09afc14f8 Yu Kuai 2023-05-29  4895  static void idle_sync_thread(struct mddev *mddev)
+64e5e09afc14f8 Yu Kuai 2023-05-29  4896  {
+130443d60b1b8c Yu Kuai 2023-05-29 @4897  	int sync_seq = atomic_read(&mddev->sync_seq);
+130443d60b1b8c Yu Kuai 2023-05-29  4898  
+6f56f0c4f1241f Yu Kuai 2023-05-29  4899  	mutex_lock(&mddev->sync_mutex);
+64e5e09afc14f8 Yu Kuai 2023-05-29  4900  	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+130443d60b1b8c Yu Kuai 2023-05-29  4901  
+fde7b408a7cb14 Yu Kuai 2023-12-04  4902  	if (mddev_lock(mddev)) {
+fde7b408a7cb14 Yu Kuai 2023-12-04  4903  		mutex_unlock(&mddev->sync_mutex);
+fde7b408a7cb14 Yu Kuai 2023-12-04  4904  		return;
+fde7b408a7cb14 Yu Kuai 2023-12-04  4905  	}
+130443d60b1b8c Yu Kuai 2023-05-29  4906  
+fde7b408a7cb14 Yu Kuai 2023-12-04  4907  	stop_sync_thread(mddev, false, true);
+6f56f0c4f1241f Yu Kuai 2023-05-29  4908  	mutex_unlock(&mddev->sync_mutex);
+64e5e09afc14f8 Yu Kuai 2023-05-29  4909  }
+64e5e09afc14f8 Yu Kuai 2023-05-29  4910  
 
 -- 
-Kees Cook
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
