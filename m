@@ -1,114 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACCB249F66
-	for <linux-raid@vger.kernel.org>; Wed,  6 Dec 2023 17:25:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F4EC6F623
+	for <linux-raid@vger.kernel.org>; Wed,  6 Dec 2023 20:39:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sc/mjRZU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49F90C433C8;
-	Wed,  6 Dec 2023 17:25:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GACbAINA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88B1EC433C8
+	for <linux-raid@vger.kernel.org>; Wed,  6 Dec 2023 20:39:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701883508;
-	bh=cTsb/UUe/7c50IQGHlJ5frauXTjRzXHTTCqGuvYx7Ys=;
+	s=k20201202; t=1701895145;
+	bh=ZIWSEcH/7tJjnsrAwxDzkOc7qnzvry2pa9PcGX3OwHw=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=Sc/mjRZUJ3dnU4TEueWhY5Cesz7wCFYS63sbRpDT9rWZmeozgUxdqIpQNIGGCrPon
-	 8JIg3kcscEdyrOZAkrsHryihS8evbvVSgFuKEPDNZkOX7B3MT5S7HEl2iiO2ESNzfF
-	 0vuheCGXJXy0So23AgNzGz6vcXLexnSDoE+JVdCPYBhNzC91TFi780rWYqBgn6TtTz
-	 2FIedVRgbZr97ESDnjDa3M+0ZTybzcfdmHHiUzQg2u8kXPmnclQClq7MnOKkHELdaZ
-	 hAjaok80KERa/QERWVrN4nfhY0mf6EDOLM4vMJ5LVDW0xdJUUV4HiWSavZlRDMmQAN
-	 COSt6ZQYO48zg==
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-50bef9b7a67so1172e87.1;
-        Wed, 06 Dec 2023 09:25:08 -0800 (PST)
-X-Gm-Message-State: AOJu0YwSOrinNPz2qMJSxukWF8+gel4sP8REi5kDD8E9PIfqpXxCar8M
-	I/ceISx3plXTN4M3ZSwJHI/+WqSnRnLgQSCvqkc=
-X-Google-Smtp-Source: AGHT+IHT1kpTKlXAwY6gHfg8PdXTVmwgYffVePOsfH7VO3lnRkQcNzkn7H0RXNt5Jg6sS0YQO0gWte3wMHqntnZPKbU=
-X-Received: by 2002:a05:6512:33cf:b0:50b:eedd:edd0 with SMTP id
- d15-20020a05651233cf00b0050beeddedd0mr962504lfg.105.1701883506495; Wed, 06
- Dec 2023 09:25:06 -0800 (PST)
+	b=GACbAINAoTp2vgAp59SBRu0mukXPbmMfBGnhT9R0OYRd49wT+SE/DhewMJ7q+QPOg
+	 JMjQBLfmwOHY2oLaN6kRiBUxVZKTp94qMtEU7cH6YldeSQLfBLHobxYnt/o2cascNr
+	 7qBZxc/gCLe7DYx9tKfUwvQqUEnxFBEHFMk8DMS03dSswhKb8RMqfD7R2QP8zOFhgR
+	 mvZQUonumCMYlmsbrqVCxjzuPL585dwOnGfHW1gowOZcxTDVZFTPjKvdgO4EkVluTk
+	 lspXgJ15ss73KG25jEEIYdi/R1XkuY6t+4mdqyreWSS2DFEXgiESdzmTNfCgnw/nK8
+	 LJGkh3I+ZX1hw==
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-2ca0715f0faso2884171fa.0
+        for <linux-raid@vger.kernel.org>; Wed, 06 Dec 2023 12:39:05 -0800 (PST)
+X-Gm-Message-State: AOJu0YzgeFqNvUClCpLY9Oc+iSZTznZSY2lKhugm4zssGfWEUU2Sk1ud
+	Jea/3T80sW1ivVX4iVq/Bj08r1ueTCiaiUBvVoo=
+X-Google-Smtp-Source: AGHT+IHaSGtC4NGSH3C9OJJ/MsSVStv3e4X2Vfr9n49FoqotGaqMgwgmBvCSAMVRTZ5SENinH4Sfy0sZrOVxY8GfPjo=
+X-Received: by 2002:a2e:361a:0:b0:2c9:f49b:d4b1 with SMTP id
+ d26-20020a2e361a000000b002c9f49bd4b1mr897983lja.96.1701895143761; Wed, 06 Dec
+ 2023 12:39:03 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231204031703.3102254-1-yukuai1@huaweicloud.com>
- <CAPhsuW4sF=jAyA+Q=2tFBBAApjcW=gWXndDNX6t3nrAfnk_zZA@mail.gmail.com> <269ac5cb-aa09-02ca-4150-c90cd5a72e06@huaweicloud.com>
-In-Reply-To: <269ac5cb-aa09-02ca-4150-c90cd5a72e06@huaweicloud.com>
+References: <20231206083356.9796-1-fujita.yuya-00@fujitsu.com>
+In-Reply-To: <20231206083356.9796-1-fujita.yuya-00@fujitsu.com>
 From: Song Liu <song@kernel.org>
-Date: Wed, 6 Dec 2023 09:24:54 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW7US8f7gR+Eo=hYU0RF+L8YkF6ebiWG+FDO6frAxoBarw@mail.gmail.com>
-Message-ID: <CAPhsuW7US8f7gR+Eo=hYU0RF+L8YkF6ebiWG+FDO6frAxoBarw@mail.gmail.com>
-Subject: Re: [PATCH -next] md: split MD_RECOVERY_NEEDED out of mddev_resume
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
-	dm-devel@lists.linux.dev, janpieter.sollie@edpnet.be, 
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, yi.zhang@huawei.com, 
-	yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Date: Wed, 6 Dec 2023 12:38:51 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7WE8p+ijAx3rJEeafJV8-EtJ+KOaZayUap0G6JpFpdGg@mail.gmail.com>
+Message-ID: <CAPhsuW7WE8p+ijAx3rJEeafJV8-EtJ+KOaZayUap0G6JpFpdGg@mail.gmail.com>
+Subject: Re: [PATCH] md: Do not unlock all_mddevs_lock in md_seq_show()
+To: Yuya Fujita <fujita.yuya-00@fujitsu.com>
+Cc: yukuai3@huawei.com, mariusz.tkaczyk@linux.intel.com, 
+	linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Dec 6, 2023 at 3:36=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
+On Wed, Dec 6, 2023 at 12:37=E2=80=AFAM Yuya Fujita <fujita.yuya-00@fujitsu=
+.com> wrote:
 >
-> Hi,
+> Do not unlock all_mddevs_lock in md_seq_show() and keep the lock until
+> md_seq_stop().
 >
-> =E5=9C=A8 2023/12/06 16:30, Song Liu =E5=86=99=E9=81=93:
-> > On Sun, Dec 3, 2023 at 7:18=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com=
-> wrote:
-> >>
-> >> From: Yu Kuai <yukuai3@huawei.com>
-> >>
-> >> New mddev_resume() calls are added to synchroniza IO with array
-> >> reconfiguration, however, this introduce a regression while adding it =
-in
-> >> md_start_sync():
-> >>
-> >> 1) someone set MD_RECOVERY_NEEDED first;
-> >> 2) daemon thread grab reconfig_mutex, then clear MD_RECOVERY_NEEDED an=
-d
-> >>     queue a new sync work;
-> >> 3) daemon thread release reconfig_mutex;
-> >> 4) in md_start_sync
-> >>     a) check that there are spares that can be added/removed, then sus=
-pend
-> >>        the array;
-> >>     b) remove_and_add_spares may not be called, or called without real=
-ly
-> >>        add/remove spares;
-> >>     c) resume the array, then set MD_RECOVERY_NEEDED again!
-> >>
-> >> Loop between 2 - 4, then mddev_suspend() will be called quite often, f=
-or
-> >> consequence, normal IO will be quite slow.
-> >>
-> >> Fix this problem by spliting MD_RECOVERY_NEEDED out of mddev_resume(),=
- so
-> >> that md_start_sync() won't set such flag and hence the loop will be br=
-oken.
-> >
-> > I hope we don't leak set_bit MD_RECOVERY_NEEDED to all call
-> > sites of mddev_resume().
+> The list of all_mddevs may be deleted in md_seq_show() because
+> all_mddevs_lock is temporarily unlocked.
+> The list should not be deleted while iterating over all_mddevs.
+> (Just as the list should not be deleted during list_for_each_entry().)
 >
-> There are also some other mddev_resume() that is added later and don't
-> need recovery, so md_start_sync() is not the only place:
->
->   - md_setup_drive
->   - rdev_attr_store
->   - suspend_lo_store
->   - suspend_hi_store
->   - autorun_devices
->   - md_ioct
->   - r5c_disable_writeback_async
->   - error path from new_dev_store(), ...
->
-> I'm not sure add a new helper is a good idea, because all above apis
-> should use new helper as well.
+> Fixes: cf1b6d4441ff ("md: simplify md_seq_ops")
+> Signed-off-by: Yuya Fujita <fujita.yuya-00@fujitsu.com>
 
-I think for most of these call sites, it is OK to set MD_RECOVERY_NEEDED
-(although it is not needed), and md_start_sync() is the only one that may
-trigger "loop between 2 - 4" scenario. Did I miss something?
+Looks reasonable to me.
 
-It is already rc4, so we need to send the fix soon.
+Yu Kuai, what do you think about this?
 
 Thanks,
 Song
+> ---
+>  drivers/md/md.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c94373d64f2c..97ef08608848 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8293,7 +8293,6 @@ static int md_seq_show(struct seq_file *seq, void *=
+v)
+>         if (!mddev_get(mddev))
+>                 return 0;
+>
+> -       spin_unlock(&all_mddevs_lock);
+>         spin_lock(&mddev->lock);
+>         if (mddev->pers || mddev->raid_disks || !list_empty(&mddev->disks=
+)) {
+>                 seq_printf(seq, "%s : %sactive", mdname(mddev),
+> @@ -8364,7 +8363,6 @@ static int md_seq_show(struct seq_file *seq, void *=
+v)
+>                 seq_printf(seq, "\n");
+>         }
+>         spin_unlock(&mddev->lock);
+> -       spin_lock(&all_mddevs_lock);
+>         if (atomic_dec_and_test(&mddev->active))
+>                 __mddev_put(mddev);
+>
+> --
+> 2.31.1
+>
+>
