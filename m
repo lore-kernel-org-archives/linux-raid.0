@@ -1,151 +1,75 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="KJizT9qz"
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BC3010D8
-	for <linux-raid@vger.kernel.org>; Wed,  6 Dec 2023 13:04:50 -0800 (PST)
-Received: from pps.filterd (m0148461.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B6IgnCu009409
-	for <linux-raid@vger.kernel.org>; Wed, 6 Dec 2023 13:04:50 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from : to : cc :
- subject : date : message-id : content-type : content-id : mime-version;
- s=s2048-2021-q4; bh=mdONSzWo62d8Cx2yqbwe7CMltPKIgW2lcaR2gMA65ic=;
- b=KJizT9qzqwNXwZAoXw7q84tVcoV4B/iwVVUaVB6SMvr4tvdfvZ8E23KWKEmkaIhGN9hL
- B17GEBYmd+wWd1VkQ+ix6lrDOedt2oHgOvMUG1Gk2rlboXPUYGE6umeq5hMP2oDwpM/8
- 16YZEC1IzQom5A1Y4d8met6mozZU0OLzFRCp5+Yu0GEabdeMfd6UT8GV21oh9KW9dDOQ
- hdpRmSKZ/ndFGzj3Q+YI/i8fJpkcmdydTEKJjUPd+2Q+KAbCLAB++Hfi7Eq2dn3fbW3T
- QOFosgnN+5FBGzmbt6k5jBuQr/XmuAwDk0UMxz8V1zEC3IAzSbInQpg0Axl/10tr9XYJ aQ== 
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2169.outbound.protection.outlook.com [104.47.56.169])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3utd31fwa2-2
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-	for <linux-raid@vger.kernel.org>; Wed, 06 Dec 2023 13:04:49 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NdyaUGvBxTQYVGiid88mZ7Y3xItYJZzEcKB/3mnO8LRPDEObQxG4JTEeysi/+i/Ylv5b8dEFoJnyfhohqvtEYs1vLh8TwKBeiwRuSX7o8PilWDlvPqoR1F89Xi9OClLbSePUnOKOGiXIKKVYI6Odj9rDddt2XS4QLiheDHWCJoqc6TI3SiklPKviJ+xZ6r1KXgMl8QclJ4bo8oVSnK78/9I8zgHrB0kn/EzSnXkSWgeihgR1OvrEIWwCJQCbEMdiIrK8Ij8CALpyF+hB6auOCCXrXaKDiH8CcdSLTQQdmkd7cQe79eWou78WD2fosrfgfToTGZEsrXmaWi2fcEj0Mg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mdONSzWo62d8Cx2yqbwe7CMltPKIgW2lcaR2gMA65ic=;
- b=UWRF2eVdAYfw4kXuPK2B/ZX5/j5EBLJ3tKi2z+JAeuTnXnmOuEIiBKq5ZhNIQatSzFACohsYngeqe/k/guAZ+9vSTqA0A5+t2c4H+CWYk/k5Gep12DLWQO3fDjYEUH/ULfC/WWnhuNwKuPJ+iX5w1278owUF9p7f/+h+517QZ6tGDR1UnrKY4L+6mVfCJ3BHsTkGxi/iGFIxlyp6/RySEqPcxzcqLx0+tR4YUBhwFeKLiISuYDA84XCwVuJzZs2sOUeuc/XiFq0d5+QiPfgZPxvtAeHU58ZxuECE+l4+ugSqENkSab2hWd2524VfQ1e0TjAAJbv2nGwZNysM1KMMxw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
- dkim=pass header.d=meta.com; arc=none
-Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
- by BLAPR15MB3795.namprd15.prod.outlook.com (2603:10b6:208:27b::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7068.25; Wed, 6 Dec
- 2023 21:04:47 +0000
-Received: from SA1PR15MB5109.namprd15.prod.outlook.com
- ([fe80::9052:3362:76e2:146d]) by SA1PR15MB5109.namprd15.prod.outlook.com
- ([fe80::9052:3362:76e2:146d%7]) with mapi id 15.20.7068.022; Wed, 6 Dec 2023
- 21:04:47 +0000
-From: Song Liu <songliubraving@meta.com>
-To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
-CC: Yu Kuai <yukuai1@huaweicloud.com>, Yu Kuai <yukuai3@huawei.com>
-Subject: [GIT PULL] md-fixes 20231206
-Thread-Topic: [GIT PULL] md-fixes 20231206
-Thread-Index: AQHaKIfXbSf05bxZ/EiSz9/R6KfPNA==
-Date: Wed, 6 Dec 2023 21:04:46 +0000
-Message-ID: <8D537C9C-81AD-4906-8A8B-3F103D53C655@fb.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3774.200.91.1.1)
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR15MB5109:EE_|BLAPR15MB3795:EE_
-x-ms-office365-filtering-correlation-id: d5e29b56-f3b7-44ff-e2ce-08dbf69efa70
-x-fb-source: Internal
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 
- 00zO4IenoGP1cxLET9DLVvt9wa0pf+nGAJ7/jtyTbSEo/Vlr0prkrS8kAcF2l8WgmxexUoM4koD+haYt2kNPLWHmM6rFCey4kqPIjG+tsvB9+8/m/U3kNPnzCca16fNJl6OU13nWyLQTLI4h/uDLRbmgyClMRulH5So1e58D0B2VSmN6ZqvXV2D8gKvSbo1CXxfGs/QwwPsBRSDQOTocPcdM2PaxDzN6p3toE91FPBkCs/gqEopUpOdAIs8Xc6US/dyu0f4eL+16rYxPI+awfPJ9VK+Ntj5iBRFRVzrM5adMc5ZIgYcNsRoZ67PXYXs6K/uoIaYVZXEeX31RD9gleKhg2AUdYsQsgxHkuwowJp4WAc4DLLc9vQc9sVcNaA3Jjg43od9nXNiPw1+wLLZUUdQive12ADPbWPpdzyEwBKhgu+Sub82jFZQydc2aM7Xc3GL3J1w8MbuUDdtrhNmYdU4VwKxUzVrACperavkSoANWU7zE+SDPSLOnKD2HQivE9copcPXdK/c1m8uAxy0DLINYNPkNyrZ8ongBlO3jAA8N+qlwWqW6w3GVnrGFuVV14ztu60aMs9IoDjCfGkyb7Zgw2yeqq55Mdz2CT4W4dX8=
-x-forefront-antispam-report: 
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(376002)(39860400002)(346002)(396003)(366004)(230922051799003)(64100799003)(451199024)(1800799012)(186009)(6512007)(9686003)(41300700001)(83380400001)(66946007)(76116006)(66476007)(66556008)(64756008)(66446008)(316002)(91956017)(54906003)(110136005)(5660300002)(38100700002)(38070700009)(8936002)(86362001)(8676002)(4326008)(33656002)(36756003)(122000001)(71200400001)(6506007)(478600001)(2906002)(966005)(6486002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: 
- =?us-ascii?Q?tMlp5gR3OPvWu8n45ARPoXE4C56r22o0eC4UhwVikRST5urWpYjhA/NdaFOy?=
- =?us-ascii?Q?WX7DLHNJ6EelaEbYKhuk/n6Gp9MX6xVuOeDdDZpmsGOTxL8QKf2IX3iObdE8?=
- =?us-ascii?Q?5KL868bIK40s5tAtdzWSEYpozhkE04VZFUJjL38t/q7iOVyWeLj3q2mlU9OG?=
- =?us-ascii?Q?BH4x34mu/nUSIsCh/Zi2GbB+YpS6Cm/I6d6sGo1TXqN4n5eKycJkXFJuGeYS?=
- =?us-ascii?Q?Q6PZrNmZ4D6HHSHDJjPxvhfTmFOcGyfKqUwjFI9ydzGqaaGHlEN9Tr5l4WyC?=
- =?us-ascii?Q?f9YC9OUwD0LXLop8E8m3jV4UCU7cMNXldMKEYqcfPt7t/Xs3QFTch213oCE8?=
- =?us-ascii?Q?g5idLBfRkfVFThlCfaH4FQ/ORMjvdf34JM1L7CJkhpmCqyh8UZHPJE5QyXy3?=
- =?us-ascii?Q?+os++Fe2UAO/cO4w253pwuaHVFA5fthju1eAvq2jgVV+Lu0Suu6QZeYY9mJG?=
- =?us-ascii?Q?Av5Kt17VztcMQTOceDHxwy5fbPVziLDW/pLKXyyeQ8M1yuwKF00n+KkNeuXq?=
- =?us-ascii?Q?8VZSv15h3TZP4/fjvJgK9HCqMEzBJ9dF9RzqR3284z5ETAjxF8hzxZki5b7J?=
- =?us-ascii?Q?on5OK8urM8OGgTSeGbOlYxlpEsPe4d5O3V95ox57/Q3qVWurrRUqGVD+asNP?=
- =?us-ascii?Q?YPGswRzj1Bn0ywl9WvAX2itmKzUeq/r6rVilOJf937gKQ/4jgyLrjyGMUCzJ?=
- =?us-ascii?Q?wxcD9AzgfgNIVSk2TnEGLsF5wJQA149NYyt0VWQIxeQVVGKS1yPczduCGO/f?=
- =?us-ascii?Q?9OPMUvd4RFEPHcvUODQANphWykheigO05X/kg5PPc2gfyK4tWuxnSj+h7FbJ?=
- =?us-ascii?Q?i8Y37Nza9pZBypCHYmnFsAuSZ8jCQUUc0umkIPrU4WT+ePt/BVouLGts2BoE?=
- =?us-ascii?Q?Q9K+hjJBQwOsDLiYvt972g5cwbuPfLqt+otF6hJZ/20Ys/yJ1Ogzoc/CZRHE?=
- =?us-ascii?Q?dUpcyXab/ciTpvXH86avQk9LTEFMXhKqmIiDAGvhYlZlCm9/PcggkG9aD2a1?=
- =?us-ascii?Q?xCz4csarI8v0ZKq7O/z69YrvHImsahU53JOBcqnsv6Pjf1XvRefuaN1n3Oyn?=
- =?us-ascii?Q?WAlBki/uAjqbqVczEw3m4GEy5WUVKZaXGycIIQ54YxJkJGMZsUI6ounON1nD?=
- =?us-ascii?Q?xM3uS1nXXgIAoutH1O3IkbAUzHMKtrNdJwHGWUi8IcC7iW3Ug3Op5cdv8IYk?=
- =?us-ascii?Q?bSr2YuNxeu0eGcQmwPJtUpUhnT0u1IkwPgR3pBmQq/sT3sznsXmGt52p6eve?=
- =?us-ascii?Q?EEaVyi5eTmlxPkhYCFlGkmBPTXGS/ka9NaOIR79MEpkHkFCrjKhu5SiC73a7?=
- =?us-ascii?Q?3tXKJwxL02nF+/hPWmEm7DzzIwFgFIZVJC9FFsfDYUTUMoMuMsHX7baNashd?=
- =?us-ascii?Q?8cp3+4uigE8+ZuYB6d5cJimSj6tTB+VXxkUtikRdMKSQXvkty0jFbLeq+iHP?=
- =?us-ascii?Q?yzgdK5MIaq/p4GD2jT0GEJQFC0OhOeXuVWZYg8tJGpmeakysByWv6B0r1NBY?=
- =?us-ascii?Q?iryugj6no9rI5YMBYogNr6Wz85tuaf33QTLUJkeI/jNm8M6F7OYOtTGOU0sQ?=
- =?us-ascii?Q?rWfIP9CdaFdIzX+gBiWItIyM4D8tV6FwWTReY+Gy49E+Ns0IseJ+Y/ryYths?=
- =?us-ascii?Q?HtBa+911RKA0CibA9NAw9tI=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <DFEFD8D786EB8E409B111AC04BA1ACCE@namprd15.prod.outlook.com>
-X-OriginatorOrg: meta.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d5e29b56-f3b7-44ff-e2ce-08dbf69efa70
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Dec 2023 21:04:46.9650
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: dtXFBAiWKeUr6LAtCWPflXMK995s/Ql3CBZMK29S3IhBKlWk+ONMpzpozmwNn5ZkUizMucBAhiQYc0rsDS7XWQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR15MB3795
-X-Proofpoint-ORIG-GUID: ERmFNUtuSEYtGMhHoN_AntqArmmbMo0N
-X-Proofpoint-GUID: ERmFNUtuSEYtGMhHoN_AntqArmmbMo0N
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="Qox3LECj"
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13EA6D5F
+	for <linux-raid@vger.kernel.org>; Wed,  6 Dec 2023 14:32:38 -0800 (PST)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1d05a2307a5so506675ad.1
+        for <linux-raid@vger.kernel.org>; Wed, 06 Dec 2023 14:32:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1701901957; x=1702506757; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xWAZQtJdfr8/UgExyXi1ZZoZmX5ehqJ6+RZNXO4YLb4=;
+        b=Qox3LECjuCU7tlKEXiia+tpkbzylozblkv3NPe4QrcKOklnW8qS+b0qRh79TmVshz5
+         oor2ooKil2QqjzqC6TOF6jjfd2Q08AcdqxqWWqAxNtlZdhH3UoKoi5WVN7K1OlIJx8dm
+         8lGUxeGxefvoOe1rgyckNxonHFwuQMSUmiKZYXc1ziaIqdEMxK2FnBflqdyfNzDAthcS
+         EwWSDCMqRTyfVAXZu1dtFx1yPq3dQGypCGzBxUcehkFV4adqxbrSLQ64uo6+WHMmt7fT
+         3K1+u3PyBBer88xfIHo2I184xYO392L5HsHwpsQv5wOip5y8MFwldCFWqGptnbWjnNDu
+         0NKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701901957; x=1702506757;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=xWAZQtJdfr8/UgExyXi1ZZoZmX5ehqJ6+RZNXO4YLb4=;
+        b=dLL0kHHiQbrG0rZ3hGJRdfEyA66ir7CcjBRaIg74ZRTWXbeN62TnRL3m+t1HBkHcNy
+         M8V9plCR5c7ioTqkWrGxQTxnClIG9iSHJQ5EUrj510s0RV+WNHN0iOvD78viNv2znhxP
+         fAKO9+yBfi307hxdJnZO3sGQbcdZLy7U8td8NvOoW+7lK44gzHWb7Ov/ZTfOWORAJKwB
+         deKUeeezt27OldB2DUN0bAunrjtxJkYVN4hRfVUlabm13o80yz0+wxOvTfRVy/kaOPFm
+         RER9dsLe8PfOPodR/4n6Xz0re6adXhthLoYQBtT6C1CeVMouyqeaunD0YWV3OOEYzNID
+         j6bg==
+X-Gm-Message-State: AOJu0YzqfZ/S7UG5L3s6Rng2gzohvtig4JASuWdzKXQnJhx6zCUeGuyF
+	76A1T7aY8urkpgDXNP1ivHnIYor5gOv2UomW4CY0Zw==
+X-Google-Smtp-Source: AGHT+IH64UzayIFouWLgOQEo46PfEEERkShubNVtc5YG3/evcNexP4nP8PyGHq6MXJ8GoZ5nJGuG6w==
+X-Received: by 2002:a17:902:ee45:b0:1d0:9661:161b with SMTP id 5-20020a170902ee4500b001d09661161bmr3155385plo.6.1701901957428;
+        Wed, 06 Dec 2023 14:32:37 -0800 (PST)
+Received: from [192.168.1.150] ([198.8.77.194])
+        by smtp.gmail.com with ESMTPSA id q3-20020a170902dac300b001c5b8087fe5sm311470plx.94.2023.12.06.14.32.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 06 Dec 2023 14:32:36 -0800 (PST)
+Message-ID: <2c02db20-2046-4a32-89ef-b5e0e71925c2@kernel.dk>
+Date: Wed, 6 Dec 2023 15:32:35 -0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-06_16,2023-12-06_01,2023-05-22_02
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-fixes 20231206
+Content-Language: en-US
+To: Song Liu <songliubraving@meta.com>,
+ linux-raid <linux-raid@vger.kernel.org>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, Yu Kuai <yukuai3@huawei.com>
+References: <8D537C9C-81AD-4906-8A8B-3F103D53C655@fb.com>
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <8D537C9C-81AD-4906-8A8B-3F103D53C655@fb.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Jens, 
+On 12/6/23 2:04 PM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following changes for md-fixes on top of your
+> block-6.7 branch. 
+> 
+> This set from Yu Kuai fixes issues around sync_work, which was introduced 
+> in 6.7 kernels. 
 
-Please consider pulling the following changes for md-fixes on top of your
-block-6.7 branch. 
+Pulled, thanks.
 
-This set from Yu Kuai fixes issues around sync_work, which was introduced 
-in 6.7 kernels. 
-
-Thanks,
-Song
+-- 
+Jens Axboe
 
 
-The following changes since commit c467e97f079f0019870c314996fae952cc768e82:
-
-  md/raid6: use valid sector values to determine if an I/O should wait on the reshape (2023-12-01 14:43:29 -0800)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git tags/md-fixes-20231206
-
-for you to fetch changes up to f52f5c71f3d4bb0992800139d2f35cf9f6f6e0ee:
-
-  md: fix stopping sync thread (2023-12-06 12:44:00 -0800)
-
-----------------------------------------------------------------
-Yu Kuai (3):
-      md: fix missing flush of sync_work
-      md: don't leave 'MD_RECOVERY_FROZEN' in error path of md_set_readonly()
-      md: fix stopping sync thread
-
- drivers/md/md.c | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------------------------------------------
- 1 file changed, 50 insertions(+), 64 deletions(-)
