@@ -1,104 +1,291 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C93D763A3
+	for <linux-raid@vger.kernel.org>; Fri,  8 Dec 2023 05:28:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RSVFGHiW"
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01B4F121;
-	Thu,  7 Dec 2023 18:05:40 -0800 (PST)
-Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-6cea2a38b48so1229260b3a.3;
-        Thu, 07 Dec 2023 18:05:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1702001140; x=1702605940; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=5p96aV1jD/kmwOXUo+oTVCU+80IQN61LG9xj68A9h98=;
-        b=RSVFGHiWw2GWaqTVcc5XneW0/RGugvagjAkUDAiY3rELN3MxWsAl1xtmGVINbgPfcT
-         q5nWqixM0kKJc4kbKvjfzVEd1NlHSrbmflxvzFQGho3GSMSM7/bkSg4QOaNQqXbTZOOt
-         j2Oun9z+HQFtoUKHwJSENh6IuzRfvcstP10VBwYJLVmAQvHvTraOihxbfeGRGkYrlKS3
-         ysxmc0zWXCmNKFFU2b7B/tq5nHRSYmLVQzGERd1t74PVthwimgN+mPJCaE7waEdHjV8B
-         ln7HH4OyAwntU/bUyqXToyigFp0drxhgAJTbvjBCVwQylh8wy0TuBsr3fk3Qryr1QKqQ
-         eX1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702001140; x=1702605940;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5p96aV1jD/kmwOXUo+oTVCU+80IQN61LG9xj68A9h98=;
-        b=ftdzebXFyIZkxIj2Yt9FoO6mGH3J2ElxX+XDbbLzruwomWjFJ1OP9/G9nqVL236Bqx
-         DUMdRtvhIn9P6Y53OiTmpkknt3P3e31WhwEXM9YoEHTLe2YkocH7/2xpsyI4WX84reia
-         ueh53ZvyCfhdvYauhofY1pDIu1NMlII4H5+neVxz7nTJYt/4pa7xGteTeMejsVr139YQ
-         ueEh1NyzVDQNK/7fzfS9V2HJymfOD3e95k+W2OISwCwdkXr0un+uZGgYjRW3KEUt/WSM
-         6f2gkcwHyktei7AkkwGPCl2k7IHqps7k/Jy1LiLa+dEL+rtsjc8yOB6/4QLFJc64ooUj
-         eSlA==
-X-Gm-Message-State: AOJu0Yy1A0wZry9mdzA9UplZos3V6ggYsrcHs4M/i3tTpRYcs5zH/kuc
-	BsD4yqMaj790DO0OX+GfjKs=
-X-Google-Smtp-Source: AGHT+IFMmgiD674YTc4A3jEartJ8gR3NDksSfuREBAIVu8xW2/AiH4VD9wzfTunJJW0wRT/TRMKLJQ==
-X-Received: by 2002:a05:6a20:cea7:b0:187:5a4d:7061 with SMTP id if39-20020a056a20cea700b001875a4d7061mr3543631pzb.44.1702001140334;
-        Thu, 07 Dec 2023 18:05:40 -0800 (PST)
-Received: from [192.168.0.106] ([103.131.18.64])
-        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm448219pgb.30.2023.12.07.18.05.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 07 Dec 2023 18:05:39 -0800 (PST)
-Message-ID: <f6fc246f-4f57-4340-a967-396047e2924d@gmail.com>
-Date: Fri, 8 Dec 2023 09:05:33 +0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="grECRR+l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E09EC433C7
+	for <linux-raid@vger.kernel.org>; Fri,  8 Dec 2023 05:28:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702013331;
+	bh=+JsqRWHHKekzH+3r+c6xca7mpfHrpuAzB2AWMZLUtm4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=grECRR+lBLlQTeDvHvOf1Knkh5W3XtSSwRZFdndHAlGb9OgrqT4tLJ5WHWZFt4aU7
+	 XW7lC3vyFmTRXFwbbpgp9DhKrlkjHcjl4W+sbFaNhO844r/zz1dP7EBXkF54G8PHwy
+	 UpNPfLpLLZtp1km3ZrvcHS02cINdRqVT7H7ke6hBEuZuoaDkiijtp2K8BzOlq9mOXZ
+	 x1Na5zxCf6FyMk4zz0U7/Cz0ijimMjQCdUvpvpIK4WbIgKy0NBDWuvX7cjmNAdKyAB
+	 aTXCOT4x3qUkLI4FNotq2QePjc23sfuL+VbSe/tGC05m7aTFrUQUcOy0+pw40XBBsu
+	 8a1Sl/miaBWRA==
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-2ca0c36f5beso21295351fa.1
+        for <linux-raid@vger.kernel.org>; Thu, 07 Dec 2023 21:28:51 -0800 (PST)
+X-Gm-Message-State: AOJu0YyTfKD0WG+NimBIJwHMuB58nrkJtQWEvSPl4wpnRf//qoqb+GXm
+	UbUG7Uz9iR6o7rD3cM2LIM7BlOwLF7AEwGX29dI=
+X-Google-Smtp-Source: AGHT+IFqZBZYOD2VC5DByGWhGoqqs8I8x5/B6fQcm8n2TakZZug4adCK+e80UGQH7fKLNh27wWLoHjw4jVTHXyRlUy0=
+X-Received: by 2002:ac2:4156:0:b0:50b:ffb9:be80 with SMTP id
+ c22-20020ac24156000000b0050bffb9be80mr1910660lfi.119.1702013329375; Thu, 07
+ Dec 2023 21:28:49 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: md raid6 oops in 6.6.4 stable
-Content-Language: en-US
-To: Thorsten Leemhuis <regressions@leemhuis.info>,
- Genes Lists <lists@sapience.com>, snitzer@kernel.org, song@kernel.org,
- yukuai3@huawei.com, axboe@kernel.dk, mpatocka@redhat.com, heinzm@redhat.com,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Linux RAID <linux-raid@vger.kernel.org>,
- Linux Regressions <regressions@lists.linux.dev>
-Cc: Bhanu Victor DiCara <00bvd0+linux@gmail.com>, Xiao Ni <xni@redhat.com>,
- Guoqing Jiang <guoqing.jiang@linux.dev>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <6e6816dd-2ec5-4bca-9558-60cfde46ef8c@sapience.com>
- <ZXHJEkwIJ5zKTMjV@archie.me>
- <e2d47b6c-3420-4785-8e04-e5f217d09a46@leemhuis.info>
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-In-Reply-To: <e2d47b6c-3420-4785-8e04-e5f217d09a46@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <1701708855-17404-1-git-send-email-alex.lyakas@zadara.com>
+In-Reply-To: <1701708855-17404-1-git-send-email-alex.lyakas@zadara.com>
+From: Song Liu <song@kernel.org>
+Date: Thu, 7 Dec 2023 21:28:38 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7YQek6EEp31mokqwUQ0KBjthgqVZFLz8C0N6rz_cGY+g@mail.gmail.com>
+Message-ID: <CAPhsuW7YQek6EEp31mokqwUQ0KBjthgqVZFLz8C0N6rz_cGY+g@mail.gmail.com>
+Subject: Re: [PATCH] md: upon assembling the array, consult the superblock of
+ the freshest device
+To: Alex Lyakas <alex.lyakas@zadara.com>
+Cc: linux-raid@vger.kernel.org, Alex Lyakas <alex@zadara.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 12/7/23 20:58, Thorsten Leemhuis wrote:
-> On 07.12.23 14:30, Bagas Sanjaya wrote:
->> On Thu, Dec 07, 2023 at 08:10:04AM -0500, Genes Lists wrote:
->>> I have not had chance to git bisect this but since it happened in stable I
->>> thought it was important to share sooner than later.
->>>
->>> One possibly relevant commit between 6.6.3 and 6.6.4 could be:
->>>
->>>   commit 2c975b0b8b11f1ffb1ed538609e2c89d8abf800e
->>>   Author: Song Liu <song@kernel.org>
->>>   Date:   Fri Nov 17 15:56:30 2023 -0800
->>>
->>>     md: fix bi_status reporting in md_end_clone_io
->>>
->>> log attached shows page_fault_oops.
->>> Machine was up for 3 days before crash happened.
->>
->> Can you confirm that culprit by bisection?
-> 
-> Bagas, I know you are trying to help, but sorry, I'd say this is not
-> helpful at all -- any maybe even harmful.
-> 
-> From the quoted texts it's pretty clear that the reporter knows that a
-> bisection would be helpful, but currently is unable to perform one --
-> and even states reasons for reporting it without having it bisected. So
-> your message afaics doesn't bring anything new to the table; and I might
-> be wrong with that, but I fear some people in a situation like this
-> might even be offended by a reply like that, as it states something
-> already obvious.
-> 
+Hi Alex,
 
-Oops, I didn't fully understand the context. Thanks anyway.
+On Mon, Dec 4, 2023 at 9:00=E2=80=AFAM Alex Lyakas <alex.lyakas@zadara.com>=
+ wrote:
+>
+> From: Alex Lyakas <alex@zadara.com>
+>
+> Upon assembling the array, both kernel and mdadm allow the devices to hav=
+e event
+> counter difference of 1, and still consider them as up-to-date.
+> However, a device whose event count is behind by 1, may in fact not be up=
+-to-date,
+> and array resync with such a device may cause data corruption.
+> To avoid this, consult the superblock of the freshest device about the st=
+atus
+> of a device, whose event counter is behind by 1.
+>
+> Signed-off-by: Alex Lyakas <alex.lyakas@zadara.com>
 
--- 
-An old man doll... just what I always wanted! - Clara
+You are using two different emails for "From:" and "Signed-off-by", which o=
+ne
+would you prefer?
 
+Please run ./scripts/checkpatch.pl on the .patch file before sending them. =
+It
+would help catch issues like code format and email mismatch
+
+>
+> Disclaimer: I was not able to test this change on one of the latest 6.7 k=
+ernels.
+> I tested it on kernel 4.14 LTS and then ported the changes.
+>
+> To test this change, I modified the code of remove_and_add_spares():
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index ad68b5e..f57854e 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+
+This part confuses b4 (patch handling script used by many). It looks like t=
+wo
+patches bundled together.
+
+> @@ -9341,6 +9341,7 @@ static int remove_and_add_spares(struct mddev *mdde=
+v,
+>                 }
+>         }
+>  no_add:
+> +       removed =3D 0;
+>         if (removed)
+>                 set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>         return spares;
+>
+> With this change, when a device fails, the superblock of all other device=
+s
+> is only updated once. During test, I sumulated a failure of one of the de=
+vices,
+> and then rebooted the machine. After reboot, I re-assembled the array
+> with all devices, including the device that I failed.
+> Event counter difference between the failed device and the other devices
+> was 1, and then with my change the role of the problematic device was tak=
+en
+> from the superblock of one of the higher devices, which indicated
+> the role to be MD_DISK_ROLE_FAULTY. After array assembly completed,
+> remove_and_add_spares() ejected the problematic disk from the array,
+> as expected.
+> ---
+>  drivers/md/md.c | 53 +++++++++++++++++++++++++++++++++++++++++++--------=
+--
+>  1 file changed, 43 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c94373d..ad68b5e 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1195,6 +1195,7 @@ struct super_type  {
+>                                           struct md_rdev *refdev,
+>                                           int minor_version);
+>         int                 (*validate_super)(struct mddev *mddev,
+> +                                             struct md_rdev *freshest,
+>                                               struct md_rdev *rdev);
+>         void                (*sync_super)(struct mddev *mddev,
+>                                           struct md_rdev *rdev);
+> @@ -1333,7 +1334,7 @@ static int super_90_load(struct md_rdev *rdev, stru=
+ct md_rdev *refdev, int minor
+>  /*
+>   * validate_super for 0.90.0
+>   */
+> -static int super_90_validate(struct mddev *mddev, struct md_rdev *rdev)
+> +static int super_90_validate(struct mddev *mddev, struct md_rdev *freshe=
+st, struct md_rdev *rdev)
+
+Please add a comment saying we are not using "freshest for 0.9 superblock.
+
+>  {
+>         mdp_disk_t *desc;
+>         mdp_super_t *sb =3D page_address(rdev->sb_page);
+> @@ -1845,7 +1846,7 @@ static int super_1_load(struct md_rdev *rdev, struc=
+t md_rdev *refdev, int minor_
+>         return ret;
+>  }
+>
+> -static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+> +static int super_1_validate(struct mddev *mddev, struct md_rdev *freshes=
+t, struct md_rdev *rdev)
+>  {
+>         struct mdp_superblock_1 *sb =3D page_address(rdev->sb_page);
+>         __u64 ev1 =3D le64_to_cpu(sb->events);
+> @@ -1941,13 +1942,15 @@ static int super_1_validate(struct mddev *mddev, =
+struct md_rdev *rdev)
+>                 }
+>         } else if (mddev->pers =3D=3D NULL) {
+>                 /* Insist of good event counter while assembling, except =
+for
+> -                * spares (which don't need an event count) */
+> -               ++ev1;
+> +                * spares (which don't need an event count).
+> +                * Similar to mdadm, we allow event counter difference of=
+ 1
+> +                * from the freshest device.
+> +                */
+>                 if (rdev->desc_nr >=3D 0 &&
+>                     rdev->desc_nr < le32_to_cpu(sb->max_dev) &&
+>                     (le16_to_cpu(sb->dev_roles[rdev->desc_nr]) < MD_DISK_=
+ROLE_MAX ||
+>                      le16_to_cpu(sb->dev_roles[rdev->desc_nr]) =3D=3D MD_=
+DISK_ROLE_JOURNAL))
+> -                       if (ev1 < mddev->events)
+> +                       if (ev1 + 1 < mddev->events)
+>                                 return -EINVAL;
+>         } else if (mddev->bitmap) {
+>                 /* If adding to array with a bitmap, then we can accept a=
+n
+> @@ -1968,8 +1971,38 @@ static int super_1_validate(struct mddev *mddev, s=
+truct md_rdev *rdev)
+>                     rdev->desc_nr >=3D le32_to_cpu(sb->max_dev)) {
+>                         role =3D MD_DISK_ROLE_SPARE;
+>                         rdev->desc_nr =3D -1;
+> -               } else
+> +               } else if (mddev->pers =3D=3D NULL && freshest !=3D NULL =
+&& ev1 < mddev->events) {
+> +                       /*
+> +                        * If we are assembling, and our event counter is=
+ smaller than the
+> +                        * highest event counter, we cannot trust our sup=
+erblock about the role.
+> +                        * It could happen that our rdev was marked as Fa=
+ulty, and all other
+> +                        * superblocks were updated with +1 event counter=
+.
+> +                        * Then, before the next superblock update, which=
+ typically happens when
+> +                        * remove_and_add_spares() removes the device fro=
+m the array, there was
+> +                        * a crash or reboot.
+> +                        * If we allow current rdev without consulting th=
+e freshest superblock,
+> +                        * we could cause data corruption.
+> +                        * Note that in this case our event counter is sm=
+aller by 1 than the
+> +                        * highest, otherwise, this rdev would not be all=
+owed into array;
+> +                        * both kernel and mdadm allow event counter diff=
+erence of 1.
+> +                        */
+> +                       struct mdp_superblock_1 *freshest_sb =3D page_add=
+ress(freshest->sb_page);
+> +                       u32 freshest_max_dev =3D le32_to_cpu(freshest_sb-=
+>max_dev);
+> +
+> +                       if (rdev->desc_nr >=3D freshest_max_dev) {
+> +                               /* this is unexpected, better not proceed=
+ */
+> +                               pr_warn("md: %s: rdev[%pg]: desc_nr(%d) >=
+=3D freshest(%pg)->sb->max_dev(%u)\n",
+> +                                               mdname(mddev), rdev->bdev=
+, rdev->desc_nr, freshest->bdev,
+
+There is probably some format issue here. checkpatch.pl should also
+warn about it.
+
+Please address the feedback and send v2 of the patch.
+
+Thanks,
+Song
+
+
+> +                                               freshest_max_dev);
+> +                               return -EUCLEAN;
+> +                       }
+> +
+> +                       role =3D le16_to_cpu(freshest_sb->dev_roles[rdev-=
+>desc_nr]);
+> +                       pr_debug("md: %s: rdev[%pg]: role=3D%d(0x%x) acco=
+rding to freshest %pg\n",
+> +                                    mdname(mddev), rdev->bdev, role, rol=
+e, freshest->bdev);
+> +               } else {
+>                         role =3D le16_to_cpu(sb->dev_roles[rdev->desc_nr]=
+);
+> +               }
+>                 switch(role) {
+>                 case MD_DISK_ROLE_SPARE: /* spare */
+>                         break;
+> @@ -2876,7 +2909,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+>                  * and should be added immediately.
+>                  */
+>                 super_types[mddev->major_version].
+> -                       validate_super(mddev, rdev);
+> +                       validate_super(mddev, NULL/*freshest*/, rdev);
+>                 err =3D mddev->pers->hot_add_disk(mddev, rdev);
+>                 if (err) {
+>                         md_kick_rdev_from_array(rdev);
+> @@ -3813,7 +3846,7 @@ static int analyze_sbs(struct mddev *mddev)
+>         }
+>
+>         super_types[mddev->major_version].
+> -               validate_super(mddev, freshest);
+> +               validate_super(mddev, NULL/*freshest*/, freshest);
+>
+>         i =3D 0;
+>         rdev_for_each_safe(rdev, tmp, mddev) {
+> @@ -3828,7 +3861,7 @@ static int analyze_sbs(struct mddev *mddev)
+>                 }
+>                 if (rdev !=3D freshest) {
+>                         if (super_types[mddev->major_version].
+> -                           validate_super(mddev, rdev)) {
+> +                           validate_super(mddev, freshest, rdev)) {
+>                                 pr_warn("md: kicking non-fresh %pg from a=
+rray!\n",
+>                                         rdev->bdev);
+>                                 md_kick_rdev_from_array(rdev);
+> @@ -6836,7 +6869,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu=
+_disk_info_s *info)
+>                         rdev->saved_raid_disk =3D rdev->raid_disk;
+>                 } else
+>                         super_types[mddev->major_version].
+> -                               validate_super(mddev, rdev);
+> +                               validate_super(mddev, NULL/*freshest*/, r=
+dev);
+>                 if ((info->state & (1<<MD_DISK_SYNC)) &&
+>                      rdev->raid_disk !=3D info->raid_disk) {
+>                         /* This was a hot-add request, but events doesn't
+> --
+> 1.9.1
+>
