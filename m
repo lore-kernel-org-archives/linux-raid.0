@@ -1,47 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=permerror (0-bit key) header.d=sapience.com header.i=@sapience.com header.b="nsmcUvce";
-	dkim=pass (2048-bit key) header.d=sapience.com header.i=@sapience.com header.b="OZroOCkb"
-Received: from s1.sapience.com (s1.sapience.com [72.84.236.66])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2765610DE;
-	Thu,  7 Dec 2023 11:27:51 -0800 (PST)
-Authentication-Results: dkim-srvy7; dkim=pass (Good ed25519-sha256 
-   signature) header.d=sapience.com header.i=@sapience.com 
-   header.a=ed25519-sha256; dkim=pass (Good 2048 bit rsa-sha256 signature) 
-   header.d=sapience.com header.i=@sapience.com header.a=rsa-sha256
-Received: from srv8.prv.sapience.com (srv8.prv.sapience.com [x.x.x.x])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384)
-	(No client certificate requested)
-	by s1.sapience.com (Postfix) with ESMTPS id 47B23480A23;
-	Thu,  7 Dec 2023 14:27:50 -0500 (EST)
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=sapience.com;
- i=@sapience.com; q=dns/txt; s=dk-ed25519-220413; t=1701977270;
- h=message-id : date : mime-version : subject : to : cc : references :
- from : in-reply-to : content-type : content-transfer-encoding : from;
- bh=4i5/9nfQlV86kED7DPbGdfTM4TOhi8BGyriw3fEKRNA=;
- b=nsmcUvcednOtnZcix5iWPyvr8GhxzsRzqIMaynSOxvlg+fsWJ5oA0Wy8EvPmBF240k2j8
- MpC7iqswngF0o3xCQ==
-ARC-Seal: i=1; a=rsa-sha256; d=sapience.com; s=arc6-rsa-220412; t=1701977270;
-	cv=none; b=P4CZnLPt7agcjZA6ksJSOkd788ExUGmhoea2VPyU+mmHi209L/djcI4YRaRSjKkilmLOtmOrVLwsv3FHNWl0sBPch+AYevmcEUryrK976hL0mKQPE3Rtmyq9NhzN8reEgU4I3ZtPNu+zgyl0v78xk2sb9SRXrxPL+wNG6zGVPUESytYYuwKUUGQezq7/dQdEyZz2nf6YV3ncYS3hsOwcqyuwNyl8CrU9GJeWHuEZRICc+jCw1IVwVvEYMQyg02utJmj7qNXOpb5gIUvhBV73B2dSqERWz3mm67twLCRGI/FXS3JhrEogDpMe1Ud1Dxl8Eu5SNVz6G4ligh+wIXEB/g==
-ARC-Message-Signature: i=1; a=rsa-sha256; d=sapience.com; s=arc6-rsa-220412;
-	t=1701977270; c=relaxed/simple;
-	bh=uGVR9oLUFneRcPGITBY+3/IWza7Q5SPIxmo3ZH6tRWU=;
-	h=DKIM-Signature:DKIM-Signature:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:Content-Language:To:Cc:References:From:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding; b=aR2LUlKGrMyvv6l4KEY1sAkVmptAqziW0Epj3vVyss2o3wkS0s1KcF0Jhd6jhjhmP1ZY2GEabWeUTd0FLfd1DPmse24QCyge8OQnxGuupY+voS831FFiZg6HsSjqxXawsS73F+lDtJYQpCDWoMiEOMlcXCwYuozRfymFfT0Ad7tMgAVt/mYJ1QNEQ34t+4+9f/G9ikNIDQPiU9YMmO2EMEJq5j0J0wgkoNQ216MmW2+Yc1egvomHusZ/QHnk2f/8liBBO2snGsQPfJMZtp/89mv0CC9y0hwchncMG3Xc71aT7/4jbRJVyBbnKw8ewt6iwYr5mEJRwXLqeYNB3W+FlQ==
-ARC-Authentication-Results: i=1; arc-srv8.sapience.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sapience.com;
- i=@sapience.com; q=dns/txt; s=dk-rsa-220413; t=1701977270;
- h=message-id : date : mime-version : subject : to : cc : references :
- from : in-reply-to : content-type : content-transfer-encoding : from;
- bh=4i5/9nfQlV86kED7DPbGdfTM4TOhi8BGyriw3fEKRNA=;
- b=OZroOCkbxsKBs41pkXaYgQdZHBhhY6Nh9kCkgLhvm8p/g5jSoZwSDE4CKHNFz/5T2dee4
- 0j+5jCHFcDVsRZyqsXp0FXxyRzlOc81pAIktlEia2GMwwPniSeADYM+5Ly0h0QyYb5wSHyk
- 3MwzRAfdtkSd4tp8726XlV4cRl2zxM/d9GXtdBYVIHz9VpXv5J5VDwA+skP39HJ57m3T2Qm
- wW3hSfYyJupvFtTOUE0u7GiPrP8fVLP9A4RR4IZUSzMQ8RjpXpWtznInZA1BXpVGHJhZRtD
- Axgp+5W2djtzE2mTKNASOVqFkIE8vBFuUPNXXUfF5u4JR2q4wDY4Ql/X96dA==
-Message-ID: <673230ba-61d7-4c7f-aaf4-d5e2fc54944e@sapience.com>
-Date: Thu, 7 Dec 2023 14:27:49 -0500
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RSVFGHiW"
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01B4F121;
+	Thu,  7 Dec 2023 18:05:40 -0800 (PST)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-6cea2a38b48so1229260b3a.3;
+        Thu, 07 Dec 2023 18:05:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1702001140; x=1702605940; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=5p96aV1jD/kmwOXUo+oTVCU+80IQN61LG9xj68A9h98=;
+        b=RSVFGHiWw2GWaqTVcc5XneW0/RGugvagjAkUDAiY3rELN3MxWsAl1xtmGVINbgPfcT
+         q5nWqixM0kKJc4kbKvjfzVEd1NlHSrbmflxvzFQGho3GSMSM7/bkSg4QOaNQqXbTZOOt
+         j2Oun9z+HQFtoUKHwJSENh6IuzRfvcstP10VBwYJLVmAQvHvTraOihxbfeGRGkYrlKS3
+         ysxmc0zWXCmNKFFU2b7B/tq5nHRSYmLVQzGERd1t74PVthwimgN+mPJCaE7waEdHjV8B
+         ln7HH4OyAwntU/bUyqXToyigFp0drxhgAJTbvjBCVwQylh8wy0TuBsr3fk3Qryr1QKqQ
+         eX1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702001140; x=1702605940;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5p96aV1jD/kmwOXUo+oTVCU+80IQN61LG9xj68A9h98=;
+        b=ftdzebXFyIZkxIj2Yt9FoO6mGH3J2ElxX+XDbbLzruwomWjFJ1OP9/G9nqVL236Bqx
+         DUMdRtvhIn9P6Y53OiTmpkknt3P3e31WhwEXM9YoEHTLe2YkocH7/2xpsyI4WX84reia
+         ueh53ZvyCfhdvYauhofY1pDIu1NMlII4H5+neVxz7nTJYt/4pa7xGteTeMejsVr139YQ
+         ueEh1NyzVDQNK/7fzfS9V2HJymfOD3e95k+W2OISwCwdkXr0un+uZGgYjRW3KEUt/WSM
+         6f2gkcwHyktei7AkkwGPCl2k7IHqps7k/Jy1LiLa+dEL+rtsjc8yOB6/4QLFJc64ooUj
+         eSlA==
+X-Gm-Message-State: AOJu0Yy1A0wZry9mdzA9UplZos3V6ggYsrcHs4M/i3tTpRYcs5zH/kuc
+	BsD4yqMaj790DO0OX+GfjKs=
+X-Google-Smtp-Source: AGHT+IFMmgiD674YTc4A3jEartJ8gR3NDksSfuREBAIVu8xW2/AiH4VD9wzfTunJJW0wRT/TRMKLJQ==
+X-Received: by 2002:a05:6a20:cea7:b0:187:5a4d:7061 with SMTP id if39-20020a056a20cea700b001875a4d7061mr3543631pzb.44.1702001140334;
+        Thu, 07 Dec 2023 18:05:40 -0800 (PST)
+Received: from [192.168.0.106] ([103.131.18.64])
+        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm448219pgb.30.2023.12.07.18.05.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 07 Dec 2023 18:05:39 -0800 (PST)
+Message-ID: <f6fc246f-4f57-4340-a967-396047e2924d@gmail.com>
+Date: Fri, 8 Dec 2023 09:05:33 +0700
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -51,52 +49,56 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: md raid6 oops in 6.6.4 stable
 Content-Language: en-US
-To: Song Liu <song@kernel.org>
-Cc: Guoqing Jiang <guoqing.jiang@linux.dev>,
- Bagas Sanjaya <bagasdotme@gmail.com>, snitzer@kernel.org,
+To: Thorsten Leemhuis <regressions@leemhuis.info>,
+ Genes Lists <lists@sapience.com>, snitzer@kernel.org, song@kernel.org,
  yukuai3@huawei.com, axboe@kernel.dk, mpatocka@redhat.com, heinzm@redhat.com,
  Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
  Linux RAID <linux-raid@vger.kernel.org>,
- Linux Regressions <regressions@lists.linux.dev>,
- Bhanu Victor DiCara <00bvd0+linux@gmail.com>, Xiao Ni <xni@redhat.com>,
+ Linux Regressions <regressions@lists.linux.dev>
+Cc: Bhanu Victor DiCara <00bvd0+linux@gmail.com>, Xiao Ni <xni@redhat.com>,
+ Guoqing Jiang <guoqing.jiang@linux.dev>,
  Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 References: <6e6816dd-2ec5-4bca-9558-60cfde46ef8c@sapience.com>
  <ZXHJEkwIJ5zKTMjV@archie.me>
- <be56b5df-fef8-4dbe-bb98-f6370a692d6e@sapience.com>
- <714b22c7-b8dd-008d-a1ea-a184dc8ec1cf@linux.dev>
- <c866bcfa-85cc-44fb-9b54-bb4840f588e6@sapience.com>
- <CAPhsuW4Cu5DdxZtZDbwLJ85oUpN9prS78Rr9UeFtgx88OGxUcA@mail.gmail.com>
-From: Genes Lists <lists@sapience.com>
-In-Reply-To: <CAPhsuW4Cu5DdxZtZDbwLJ85oUpN9prS78Rr9UeFtgx88OGxUcA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <e2d47b6c-3420-4785-8e04-e5f217d09a46@leemhuis.info>
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+In-Reply-To: <e2d47b6c-3420-4785-8e04-e5f217d09a46@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 12/7/23 12:37, Song Liu wrote:
-...
->    kernel:  md_end_clone_io+0x75/0xa0     <<< change in md_end_clone_io
+On 12/7/23 20:58, Thorsten Leemhuis wrote:
+> On 07.12.23 14:30, Bagas Sanjaya wrote:
+>> On Thu, Dec 07, 2023 at 08:10:04AM -0500, Genes Lists wrote:
+>>> I have not had chance to git bisect this but since it happened in stable I
+>>> thought it was important to share sooner than later.
+>>>
+>>> One possibly relevant commit between 6.6.3 and 6.6.4 could be:
+>>>
+>>>   commit 2c975b0b8b11f1ffb1ed538609e2c89d8abf800e
+>>>   Author: Song Liu <song@kernel.org>
+>>>   Date:   Fri Nov 17 15:56:30 2023 -0800
+>>>
+>>>     md: fix bi_status reporting in md_end_clone_io
+>>>
+>>> log attached shows page_fault_oops.
+>>> Machine was up for 3 days before crash happened.
+>>
+>> Can you confirm that culprit by bisection?
 > 
-> The commit only changes how we update bi_status. But bi_status was not
-> used/checked at all between md_end_clone_io and the trap (lock cmpxchg).
-> Did I miss something?
+> Bagas, I know you are trying to help, but sorry, I'd say this is not
+> helpful at all -- any maybe even harmful.
 > 
-> Given the issue takes very long to reproduce. Maybe we have the issue
-> before 6.6.4?
+> From the quoted texts it's pretty clear that the reporter knows that a
+> bisection would be helpful, but currently is unable to perform one --
+> and even states reasons for reporting it without having it bisected. So
+> your message afaics doesn't bring anything new to the table; and I might
+> be wrong with that, but I fear some people in a situation like this
+> might even be offended by a reply like that, as it states something
+> already obvious.
 > 
-> Thanks,
-> Song
 
-Thanks for clarifying that point.
+Oops, I didn't fully understand the context. Thanks anyway.
 
-In meantime I rebooted server (shutdown was a struggle) - finally I 
-fsck'd the filesystem (ext4) sitting on the raid6 - and manually ran the 
-triggering rsync. This of course completed normally. That's either good 
-or bad depending on your perspective :)
-
-If I can get it to crash again, I will either start a git bisect (from 
-6.6.3) or see if 6.7rc4 shows same issue.
-
-thanks,
-
-gene
-
+-- 
+An old man doll... just what I always wanted! - Clara
 
