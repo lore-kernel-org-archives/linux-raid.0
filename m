@@ -1,176 +1,524 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="m8IZy5MS"
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2DF1E0
-	for <linux-raid@vger.kernel.org>; Fri,  8 Dec 2023 10:53:43 -0800 (PST)
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B8IrhIb000362
-	for <linux-raid@vger.kernel.org>; Fri, 8 Dec 2023 10:53:43 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from : to : cc :
- subject : date : message-id : content-type : content-id : mime-version;
- s=s2048-2021-q4; bh=Vx085R2o4YDUWY5jrrsEp2RBMFM72xNVZWXqW9ONhYo=;
- b=m8IZy5MSIXSuhWd+k41pVV+ln27PHLCTl7EHmguK2ssmf4+2p/UIwId6wwtNJ10VLnom
- k0++gV9sXHZqPRaFzSLY2gj9pxylTr+PCUiGZBJs/XiEFRT7Qt8drb8lszh7wOOX6QR5
- 7LBrAog1y0hAi2gqmw8zI44HlcAdf1dqI7uxmpAk8j76yvtgKSeUVjl00dAFtI5xJTaj
- cQkxM4NeFjw0R6eNvCHzKJ5MR3/0i4M7Fz2VSw7ArdhzuEmk7nYeqDkiZvf1E2A+AUTl
- JwhYOfidA+M8LFy4eGVVNRPpOOLMiARhPGV5FlxvuNZVT2wK6e5kwDtfnXSGJswk/tje tA== 
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2040.outbound.protection.outlook.com [104.47.74.40])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3uudj63p4m-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-	for <linux-raid@vger.kernel.org>; Fri, 08 Dec 2023 10:53:43 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RadORpC8yfLw8eVnpoWcYniXhg+dPVfNxf8bH+gccx6D3bChtm8RvAoyMZcf9Bk5z51cbr1bTrNztAI1tQF/Fwk/4DMbn0rZU4pptsJL9wL2Tf/qme27GE7NRnqHmvX3RzAZ3rBxVkepo9u/Jz9oIFIrPKB2zlUFgnA1Ug5ifxBOTDu8YSTZg5AZgOhnmAU1MGS/CFh9tivX2v/sxmle0PupfOGAY8tpMFz6eltKdEJwZDQ5XdCYJRe0k1XM7cp6pY8J8bhOa/DEwl9gqaGTGECffViwRK1VgggRtXjqEPpmZcDDwwJKaz1vS2forlun2Ly5AD4usO5Hyv/b+djBHg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Vx085R2o4YDUWY5jrrsEp2RBMFM72xNVZWXqW9ONhYo=;
- b=IbblA/MxWSDTil8IL+WaBq6BPJ4EBnqsiR++XPzNBgUoZVNv8FUsEz0fO6jdyRz7gsHdC7G4mmWNEgzf38lGVaCSiA+l7EZnfC9WZQSlsbJp+2nJTzpSXj1+7/m4gDNp/Rl8f5HShCNTJ1/kwGipaRmaurnL9Dqnjlt5LreS3AHYdVWSlAtV4SqgG2Fn07LpufGZYvt6dbcflbN14c/utw1GVG1CjhF/xIv/7MpGE5rMaKV76ZGVde+0b4eeVmW5s2J3exG+IDPhPzFxd6JNN5QcpBUZiBoeUKD0X2C3Lxdmz6ix83HiI39lzcT2Sw5PF0mCqir702KctcX/YN6u2w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=meta.com; dmarc=pass action=none header.from=meta.com;
- dkim=pass header.d=meta.com; arc=none
-Received: from SA1PR15MB5109.namprd15.prod.outlook.com (2603:10b6:806:1dc::10)
- by IA1PR15MB5443.namprd15.prod.outlook.com (2603:10b6:208:3ad::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7068.18; Fri, 8 Dec
- 2023 18:52:18 +0000
-Received: from SA1PR15MB5109.namprd15.prod.outlook.com
- ([fe80::9052:3362:76e2:146d]) by SA1PR15MB5109.namprd15.prod.outlook.com
- ([fe80::9052:3362:76e2:146d%7]) with mapi id 15.20.7068.028; Fri, 8 Dec 2023
- 18:52:18 +0000
-From: Song Liu <songliubraving@meta.com>
-To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
-CC: Yu Kuai <yukuai1@huaweicloud.com>, Yu Kuai <yukuai3@huawei.com>,
-        Junxiao
- Bi <junxiao.bi@oracle.com>, Song Liu <song@kernel.org>
-Subject: [GIT PULL] md-next 20231208
-Thread-Topic: [GIT PULL] md-next 20231208
-Thread-Index: AQHaKgeqRosqBgKUrkiWgkyEcs6oYA==
-Date: Fri, 8 Dec 2023 18:52:18 +0000
-Message-ID: <20C9A854-73A4-4FBE-9857-BB52C7701FAE@fb.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3774.200.91.1.1)
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR15MB5109:EE_|IA1PR15MB5443:EE_
-x-ms-office365-filtering-correlation-id: e5ee462f-54e0-4884-8ca0-08dbf81ecd62
-x-fb-source: Internal
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 
- BsSd8ako6C8b+0A0Yz/K+j3ac96kdEWHW+L3laWre64u4vFwIhb6B1CuXuj647Wb3CYcuEjYS6Bwyccg6EuIQsflzuXHdC5/NEGlWZ4LqzgbI7V8s/CYR9n2JADsM5u8X/L5GZ9rC6G8PHSXQ4v0PAt95aDfv/mJEpEOBAa3MtMx4gMr8AtDnoVv7YzftRgFjnGYAE0Now7TgPE3gyalbEouxzwL+ykSsEgETFwsHyc4ik74r0hynNo/8RF7voCgQisJwzcNGNgswTByRw0wqO+LuGKeBfloB849Wd3k1zvC9RaCICKrZec6Fmek1jg/qmzcJizKG1kdeUC358rpO88zIMQVnWpk7lhOw1jHCuSpsYw4nh32FwLPPaWKBaxyVvqtbLXpC5D3I50CWmQsCzgrQXnATMQyyDa//rkPur1wcNEjjmTej0CrNs6q8rIBd+Di423m3eYv0k9DKn6yGdb2/hAshaves1fRgNNfo/5bMt1nEhg62REZ1UIJ35lhP/KmLu9du5dEoLgWhXpBykjl6tDfmcl/b9uzJdPJgGxgHgcluR/gJlwhyniJC7n1rIKiNJ7fHRUZlPt75bR+puKTaAyor85TL5qZYphVUYU=
-x-forefront-antispam-report: 
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR15MB5109.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(136003)(39860400002)(376002)(396003)(366004)(230922051799003)(451199024)(186009)(1800799012)(64100799003)(9686003)(6512007)(478600001)(6486002)(71200400001)(966005)(6506007)(76116006)(66946007)(41300700001)(4001150100001)(83380400001)(66556008)(2906002)(66446008)(64756008)(5660300002)(54906003)(316002)(8676002)(8936002)(4326008)(110136005)(66476007)(38070700009)(38100700002)(122000001)(33656002)(86362001)(36756003)(91956017);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: 
- =?us-ascii?Q?3rQTIW/3CIcQBgdls5/CR6IjBFk8/1W674X6UtrjA1a9jB6oqq/CbgNMsNji?=
- =?us-ascii?Q?IUeqv67eZVBrhr5olfxqQxJK2FCLW+L7itkSzmT4Pr0/7rSI2eQTg1szBkJU?=
- =?us-ascii?Q?ub2HnRHD2IeBB1MmokSeZU8/H/h0jNzkCloCU09FVsjvOyiBQP4YdQXeyKRe?=
- =?us-ascii?Q?Zv99zlmgHVzzp3hLTvq8sSxNod4Ij4W02FCWkbyVjdiP1e5SXj5BTmJIwNEd?=
- =?us-ascii?Q?gz3kG9ndp2jFers+d0YVKBmlQGsYZFEq2h8sy1ZkIsUeXMn9X/RrvDxeOfIQ?=
- =?us-ascii?Q?zdKWlzyAyCh4fIhf/pSkad4kmK5X5+5XhwF4kWZLsxv5ofHHI7OvmEbM+UdR?=
- =?us-ascii?Q?ZKqcDZeWK5yl70onEW0CXVr/HZRYZa1z8nPGraGHYxw7Oz+dXgOl1n/v/eBB?=
- =?us-ascii?Q?KnVD/e+fiqbLsKPLdTosMjij1Jcb2mKwzrOVt5WjHlN4Ycks8DEnQ2h4VpV6?=
- =?us-ascii?Q?t1AR1W6zb4UAO1s7lxE9hf+o2gAaWKmdrXT0FatN4v9mnyv5iC7tFpa/5zJC?=
- =?us-ascii?Q?Mf/jQSdkymxSESfkOujAChAvlog2BfT4tNnFv6FZEJytp2+hED1er7mNwMV9?=
- =?us-ascii?Q?92IwMULwcKmn/nH3r2fEjSebKKHpa6jdPadEx/juPuOuM6w5LERtB4S3AR30?=
- =?us-ascii?Q?Qz4JwwKw5kOs6z9zQu2TegwA4Sm7df8ML7WcuuAJ3zAwj25EE3dbk043vkS2?=
- =?us-ascii?Q?AgajYFPgQKfbJ8cN15uT4YTs3jF2uoWSR4pGB/tIz05PAVul1R+iHiYorJLW?=
- =?us-ascii?Q?R2VBT9bBmoUDIq+YtVcXNu0rCLaqwba4h/mFmzrFqZ8RndLRdH1wtAK05e6+?=
- =?us-ascii?Q?c2gva4veL6v5ikGP/OIoPdvYxVWPLjQ0H8+3MyB1XUKNVSTKnU4d1dSRMm6U?=
- =?us-ascii?Q?yiXt+QC5XGJgIvFAnu5HFFcS4gW1f+vd19opji+xdvDRWIfDoFvr6BdUC6FZ?=
- =?us-ascii?Q?KXXvNsAGhHLywrcrw5XRY3TeSt4KY3ZJCOylO7uyR04GO1JMESnqmw6Bb05H?=
- =?us-ascii?Q?gB/NGCE97EIyB4oVOzaCtR3TiLvZ0JOOuzwr4etL2HzXDflKaJujIQH/I3Sq?=
- =?us-ascii?Q?7BzIWIAcYD1BKnD0ZnT0ilClF/eiopLnyCzFdPjyZpnyOzlW/duPAo4S33Vh?=
- =?us-ascii?Q?rXPHNX4eb1zDFxZ7kCzVgP4ec6keoh3tH4+H08s/uPZqtRGsjU0/rEB1Rs1H?=
- =?us-ascii?Q?N3NoCGjG2i1IWfRueOL0HmzvJeXpVxyOPzYZKp0cf9ahUeZzOly9Yh5jqDLV?=
- =?us-ascii?Q?dTsxCqO7aZY4oi5DC5fhSpWRwRoSFHcXmwXis2Cl/5A3zUIO/MxMA9tZaNPt?=
- =?us-ascii?Q?2QPNXafBwBzICckcnfFzz3U+sENBJiX1CdHkQHipKD8sAQDbICsm3Q+ExnL6?=
- =?us-ascii?Q?ofw5zKQ5FHbwS/r/tOOuqs8QgYi0ch/AzSHmhtnr45+fVCQ4aRVo7NDWMSuq?=
- =?us-ascii?Q?NuGXEVAdSy6MJSs3xSFKAGVyMz8qDvknZdxr3IBxsuOWgxDUcrg45cORB8tm?=
- =?us-ascii?Q?8AuVybjjkUoW8yT+dWylGW3FR8T53zP7A3fO1XMONUSe5kfhn6kWUjQ/zQnU?=
- =?us-ascii?Q?xPULTOZSpnLd0zo5eEDK1vt711mHE4ICbalOAtO09cDDG9EQ2LU/zMnGHFxE?=
- =?us-ascii?Q?bAbZ4nsyTI14GH77Xyx9lzk=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <A113DDB936F27F419AAA6211A0C4DD55@namprd15.prod.outlook.com>
-X-OriginatorOrg: meta.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR15MB5109.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e5ee462f-54e0-4884-8ca0-08dbf81ecd62
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Dec 2023 18:52:18.1253
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kgy1u1gdXX/QzYOIPmb19tT6qoaLNptr8PSCQtf7fWEPU7Ee6gJjIN/pfeVCHI+LiyIc1EV0LmuYNsXMdAPz+A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR15MB5443
-X-Proofpoint-GUID: _pxtevmfzbF4tqCtpjw2wmFZfNoKu3uT
-X-Proofpoint-ORIG-GUID: _pxtevmfzbF4tqCtpjw2wmFZfNoKu3uT
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="W6356Bs2"
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F67A10DF
+	for <linux-raid@vger.kernel.org>; Fri,  8 Dec 2023 15:13:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1702077218; x=1733613218;
+  h=date:from:to:cc:subject:message-id;
+  bh=ntRZhhTvPqaFIm9msXjTAtqkiuG/vcRcSDxa5RqkT/k=;
+  b=W6356Bs2/gehf3vNP0R11Ayy1qF8gUwIpsOzbU1JRTadbgJIFmpDRKxp
+   B1Kdnc/nHtM22cfpaRN4Jc03r1jWvd6e1S4Tpiup2EmzXlAUJlP/YQAKt
+   56BNayYDXuk/Q8Po09thsfGGZiHYPxvCcZTlL9rVWkYqJYYucIknSOqUU
+   1/02LsD1KgdlvG3+lyFJFMT0U0HXv/P3JchAqSlTwEQ60Pg5C5Sh1qHyS
+   hwCWZvscSnxEaenNR6bCiJ+OsHxTKJT3HtEDAGiWCSFUVc5oz6OZaL2Hh
+   Y4oNy01cihN5Zrv91OTtgepPdkystqCmqotitnLn19wb1EY86fnazueqY
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10918"; a="480672390"
+X-IronPort-AV: E=Sophos;i="6.04,262,1695711600"; 
+   d="scan'208";a="480672390"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2023 15:13:37 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10918"; a="765643615"
+X-IronPort-AV: E=Sophos;i="6.04,262,1695711600"; 
+   d="scan'208";a="765643615"
+Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
+  by orsmga007.jf.intel.com with ESMTP; 08 Dec 2023 15:13:36 -0800
+Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rBk2I-000EWi-0L;
+	Fri, 08 Dec 2023 23:13:34 +0000
+Date: Sat, 09 Dec 2023 07:13:17 +0800
+From: kernel test robot <lkp@intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ b39113349de60e9b0bc97c2e129181b193c45054
+Message-ID: <202312090714.3gfjerRK-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-08_13,2023-12-07_01,2023-05-22_02
 
-Hi Jens, 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+branch HEAD: b39113349de60e9b0bc97c2e129181b193c45054  md: split MD_RECOVERY_NEEDED out of mddev_resume
 
-Please consider pulling the following changes for md-next on top of your
-for-6.8/block branch. The major changes in this set are:
+Warning ids grouped by kconfigs:
 
-1. Fix/Cleanup RCU usage from conf->disks[i].rdev, by Yu Kuai;
-2. Fix raid5 hang issue, by Junxiao Bi;
-3. Add Yu Kuai as Reviewer of the md subsystem. 
+gcc_recent_errors
+|-- arc-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arc-defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm-randconfig-001-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm-randconfig-002-20231209
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-algif_hash.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-curve25519-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-w1.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-core-pwrseq_emmc.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-core-pwrseq_simple.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-chips-cfi_util.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-maps-map_funcs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-perf-arm-ccn.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-regulator-rt4831-regulator.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-spmi-hisi-spmi-controller.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-mac-gaelic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp1250.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-caif-chnl_net.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-vmw_vsock-vsock_diag.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm-randconfig-003-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm-randconfig-004-20231209
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-slimbus.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-spmi.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-w1.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-hw_random-omap-rng.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-core-mmc_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-core-pwrseq_simple.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-host-renesas_sdhi_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-host-tmio_mmc_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pci-controller-pcie-mediatek.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pci-pci-stub.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pmdomain-amlogic-meson-ee-pwrc.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-spmi-hisi-spmi-controller.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-spmi-spmi-pmic-arb.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-adfs-adfs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp1250.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp737.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp950.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-qnx6-qnx6.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-sysv-sysv.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-locking-test-ww_mutex.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-scftorture.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm64-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm64-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-curve25519-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-slimbus.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-hte-hte-tegra194-test.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme-core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-perf-arm-ccn.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-soc-qcom-spm.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm64-randconfig-001-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm64-randconfig-002-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm64-randconfig-003-20231209
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-curve25519-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-slimbus.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-hw_random-omap-rng.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-hw_random-omap3-rom-rng.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-gpu-drm-tiny-cirrus.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-phy-broadcom-phy-bcm-ns-usb2.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_DAC1064.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_Ti3026.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_accel.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-fat-fat.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp737.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_ucs2_utils.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- arm64-randconfig-004-20231209
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-curve25519-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-hw_random-omap-rng.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-gpu-drm-tiny-cirrus.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-core-mmc_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pci-pci-stub.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-regulator-rt4831-regulator.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-spmi-hisi-spmi-controller.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-tty-serial-owl-uart.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-fat-fat.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp1250.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp860.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-rcu-rcuscale.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-scftorture.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- csky-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- csky-defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- csky-randconfig-001-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- csky-randconfig-002-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- i386-defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- loongarch-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- loongarch-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-algif_hash.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-chips-cfi_cmdset_0020.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-chips-cfi_util.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-cramfs-cramfs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-fat-fat.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_ucs2_utils.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-sysv-sysv.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-crypto-libpoly1305.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-vmw_vsock-vsock_diag.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- loongarch-randconfig-001-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- loongarch-randconfig-002-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- m68k-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- m68k-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-algif_hash.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-curve25519-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-cramfs-cramfs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-fat-fat.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-mac-gaelic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp1250.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp737.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp775.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp860.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp861.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp865.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp950.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_ucs2_utils.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-qnx6-qnx6.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-sysv-sysv.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-locking-test-ww_mutex.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-crypto-libpoly1305.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-packet-af_packet_diag.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- microblaze-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- microblaze-defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- nios2-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- nios2-defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- nios2-randconfig-001-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- openrisc-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- openrisc-defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- parisc-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- parisc-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_DAC1064.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_Ti3026.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_accel.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_ucs2_utils.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- parisc64-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_DAC1064.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_Ti3026.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_accel.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_ucs2_utils.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- powerpc-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- riscv-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme-core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- s390-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- s390-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-algif_hash.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-curve25519-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme-core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-cramfs-cramfs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-fat-fat.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_ucs2_utils.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-crypto-libpoly1305.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-packet-af_packet_diag.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-vmw_vsock-vsock_diag.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- sh-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- sh-defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- um-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- um-i386_defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- um-x86_64_defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+`-- xtensa-allnoconfig
+    `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+clang_recent_errors
+|-- arm-defconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-algif_hash.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-crypto_simd.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- hexagon-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- hexagon-defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- hexagon-randconfig-001-20231209
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- hexagon-randconfig-002-20231209
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-curve25519-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-spmi.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-hw_random-omap-rng.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-i2c-busses-i2c-qup.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-host-renesas_sdhi_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-host-tmio_mmc_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-chips-cfi_cmdset_0020.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-chips-cfi_util.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-maps-map_funcs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-perf-arm-ccn.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-regulator-rt4831-regulator.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-reset-hisilicon-hi6220_reset.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-soc-ixp4xx-ixp4xx-qmgr.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-soc-qcom-spm.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-spmi-hisi-spmi-controller.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-spmi-spmi-pmic-arb.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp775.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp861.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-rcu-rcuscale.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- i386-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- i386-buildonly-randconfig-006-20231208
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-block-t10-pi.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-algif_hash.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-crypto_simd.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-crypto-curve25519-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-slimbus.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-spmi.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-base-regmap-regmap-w1.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-agp-amd-k7-agp.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-agp-ati-agp.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-agp-efficeon-agp.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-agp-intel-agp.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-agp-intel-gtt.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-agp-nvidia-agp.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-agp-sis-agp.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-agp-sworks-agp.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-hw_random-omap-rng.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-hw_random-omap3-rom-rng.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-nvram.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-char-ttyprintk.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-crypto-xilinx-zynqmp-aes-gcm.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-cxl-core-cxl_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-cxl-cxl_pci.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-cxl-cxl_port.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-gpio-gpio-gw-pld.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-gpu-drm-tiny-cirrus.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-hte-hte-tegra194-test.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-i2c-busses-i2c-pxa.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-i2c-busses-i2c-qup.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-iio-adc-ingenic-adc.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-core-mmc_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-core-pwrseq_emmc.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-core-pwrseq_simple.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-host-renesas_sdhi_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mmc-host-tmio_mmc_core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-chips-cfi_cmdset_0020.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-chips-cfi_util.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-maps-map_funcs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-mtd-parsers-brcm_u-boot.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme-core.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvme-host-nvme.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-nvmem-nvmem_u-boot-env.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pci-controller-pci-host-generic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pci-controller-pcie-apple.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pci-controller-pcie-mediatek.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pci-controller-pcie-mt7621.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pci-pci-stub.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-perf-arm-ccn.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-perf-arm_cspmu-nvidia_cspmu.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-perf-cxl_pmu.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-phy-broadcom-phy-bcm-ns-usb2.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-pmdomain-amlogic-meson-ee-pwrc.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-regulator-rt4831-regulator.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-reset-hisilicon-hi6220_reset.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-soc-ixp4xx-ixp4xx-qmgr.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-soc-qcom-spm.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-spmi-hisi-spmi-controller.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-spmi-spmi-pmic-arb.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-tty-n_gsm.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-tty-serial-owl-uart.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_DAC1064.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_Ti3026.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-video-fbdev-matrox-matroxfb_accel.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-watchdog-omap_wdt.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-adfs-adfs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-binfmt_script.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-cramfs-cramfs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-efs-efs.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-fat-fat.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-mac-gaelic.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp1250.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp737.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp775.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp860.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp861.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp865.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_cp950.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_iso8859-.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-nls-nls_ucs2_utils.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-qnx6-qnx6.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-fs-sysv-sysv.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-locking-test-ww_mutex.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-rcu-rcuscale.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-kernel-scftorture.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-crypto-libpoly1305.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-caif-chnl_net.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-packet-af_packet_diag.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-net-vmw_vsock-vsock_diag.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-configfs-configfs_sample.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kfifo-bytestream-example.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kfifo-dma-example.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kfifo-inttype-example.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kfifo-record-example.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kprobes-kprobe_example.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- mips-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- riscv-allnoconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- um-allmodconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- um-allnoconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+|-- um-allyesconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-block-loop.o
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
+`-- x86_64-allyesconfig
+    |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-configfs-configfs_sample.o
+    |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kfifo-bytestream-example.o
+    |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kfifo-dma-example.o
+    |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kfifo-inttype-example.o
+    |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kfifo-record-example.o
+    |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-samples-kprobes-kprobe_example.o
+    `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-vmlinux.o
 
-Thanks,
-Song
+elapsed time: 1696m
 
+configs tested: 91
+configs skipped: 2
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-The following changes since commit 668bfeeabb5e402e3b36992f7859c284cc6e594d:
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                               defconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                                 defconfig   gcc  
+arc                   randconfig-001-20231209   gcc  
+arc                   randconfig-002-20231209   gcc  
+arm                               allnoconfig   gcc  
+arm                                 defconfig   clang
+arm                   randconfig-001-20231209   gcc  
+arm                   randconfig-002-20231209   gcc  
+arm                   randconfig-003-20231209   gcc  
+arm                   randconfig-004-20231209   gcc  
+arm64                             allnoconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                 randconfig-001-20231209   gcc  
+arm64                 randconfig-002-20231209   gcc  
+arm64                 randconfig-003-20231209   gcc  
+arm64                 randconfig-004-20231209   gcc  
+csky                              allnoconfig   gcc  
+csky                                defconfig   gcc  
+csky                  randconfig-001-20231209   gcc  
+csky                  randconfig-002-20231209   gcc  
+hexagon                           allnoconfig   clang
+hexagon                             defconfig   clang
+hexagon               randconfig-001-20231209   clang
+hexagon               randconfig-002-20231209   clang
+i386                             allmodconfig   clang
+i386                              allnoconfig   clang
+i386                             allyesconfig   clang
+i386         buildonly-randconfig-001-20231208   clang
+i386         buildonly-randconfig-002-20231208   clang
+i386         buildonly-randconfig-003-20231208   clang
+i386         buildonly-randconfig-004-20231208   clang
+i386         buildonly-randconfig-005-20231208   clang
+i386         buildonly-randconfig-006-20231208   clang
+i386                                defconfig   gcc  
+i386                  randconfig-001-20231208   clang
+i386                  randconfig-002-20231208   clang
+i386                  randconfig-003-20231208   clang
+i386                  randconfig-004-20231208   clang
+i386                  randconfig-005-20231208   clang
+i386                  randconfig-006-20231208   clang
+i386                  randconfig-011-20231208   gcc  
+i386                  randconfig-012-20231208   gcc  
+i386                  randconfig-013-20231208   gcc  
+i386                  randconfig-014-20231208   gcc  
+i386                  randconfig-015-20231208   gcc  
+i386                  randconfig-016-20231208   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20231209   gcc  
+loongarch             randconfig-002-20231209   gcc  
+m68k                              allnoconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                              allnoconfig   clang
+nios2                             allnoconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                 randconfig-001-20231209   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                           allnoconfig   gcc  
+riscv                             allnoconfig   clang
+riscv                               defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   clang
+x86_64                              defconfig   gcc  
+x86_64                          rhel-8.3-rust   clang
+xtensa                            allnoconfig   gcc  
 
-  block: move a few definitions out of CONFIG_BLK_DEV_ZONED (2023-11-27 09:11:35 -0700)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git tags/md-next-20231208
-
-for you to fetch changes up to fa2bbff7b0b4e211fec5e5686ef96350690597b5:
-
-  md: synchronize flush io with array reconfiguration (2023-12-01 15:49:42 -0800)
-
-----------------------------------------------------------------
-Junxiao Bi (2):
-      md: bypass block throttle for superblock update
-      Revert "md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d"
-
-Song Liu (2):
-      Merge branch 'md-next-rcu-cleanup' into md-next
-      MAINTAINERS: SOFTWARE RAID: Add Yu Kuai as Reviewer
-
-Yu Kuai (6):
-      md: remove flag RemoveSynchronized
-      md/raid10: remove rcu protection to access rdev from conf
-      md/raid1: remove rcu protection to access rdev from conf
-      md/raid5: remove rcu protection to access rdev from conf
-      md/md-multipath: remove rcu protection to access rdev from conf
-      md: synchronize flush io with array reconfiguration
-
- MAINTAINERS               |   1 +
- drivers/md/md-multipath.c |  32 ++++++++++++--------------------
- drivers/md/md.c           |  66 ++++++++++++++++++++++++++----------------------------------------
- drivers/md/md.h           |   5 -----
- drivers/md/raid1.c        |  71 +++++++++++++++++++++++------------------------------------------------
- drivers/md/raid10.c       | 222 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-------------------------------------------------------------------------------------------------------------------------------------------------------------------
- drivers/md/raid5-cache.c  |  11 ++---------
- drivers/md/raid5-ppl.c    |  16 ++++------------
- drivers/md/raid5.c        | 203 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---------------------------------------------------------------------------------------------------------------------------------------------
- drivers/md/raid5.h        |   4 ++--
- 10 files changed, 189 insertions(+), 442 deletions(-)
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
