@@ -1,149 +1,144 @@
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08021F4;
-	Sun, 10 Dec 2023 23:57:41 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SpYxr4QF6z4f3k60;
-	Mon, 11 Dec 2023 15:57:36 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id C394D1A0B65;
-	Mon, 11 Dec 2023 15:57:37 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgCnqxHwwHZlw69ZDQ--.3210S5;
-	Mon, 11 Dec 2023 15:57:37 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org,
-	axboe@kernel.dk
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linan666@huaweicloud.com,
-	yukuai3@huawei.com,
-	yi.zhang@huawei.com,
-	houtao1@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH 1/2] md: Fix overflow in is_mddev_idle
-Date: Mon, 11 Dec 2023 15:56:13 +0800
-Message-Id: <20231211075614.1850003-2-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231211075614.1850003-1-linan666@huaweicloud.com>
-References: <20231211075614.1850003-1-linan666@huaweicloud.com>
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F38BD5;
+	Sun, 10 Dec 2023 23:59:45 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SpZ0F42GCz4f3k5x;
+	Mon, 11 Dec 2023 15:59:41 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id B6FBF1A09F8;
+	Mon, 11 Dec 2023 15:59:42 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+	by APP2 (Coremail) with SMTP id Syh0CgDnP05rwXZljFDDDQ--.46165S3;
+	Mon, 11 Dec 2023 15:59:42 +0800 (CST)
+Message-ID: <95b13a5c-7926-9c8f-8836-85aa3ab6c620@huaweicloud.com>
+Date: Mon, 11 Dec 2023 15:59:39 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 1/2] md: factor out a helper exceed_read_errors() to check
+ read_errors
+To: Song Liu <song@kernel.org>, linan666@huaweicloud.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+ yangerkun@huawei.com
+References: <20231204070327.3150356-1-linan666@huaweicloud.com>
+ <20231204070327.3150356-2-linan666@huaweicloud.com>
+ <CAPhsuW6Zr-ztojUtf9=g8Tj0pyS9cHLY0hnoJ85mFcSEZaAY3Q@mail.gmail.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <CAPhsuW6Zr-ztojUtf9=g8Tj0pyS9cHLY0hnoJ85mFcSEZaAY3Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCnqxHwwHZlw69ZDQ--.3210S5
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF45Zw1xGw1fur1kXw43ZFb_yoW5Ar43pF
-	WUJFyakrWUXr4Uuw4DZayDCa4rK34ay3y3KrW7C3yaqFySg3ZIqF48GFyYqFnrZFW8ZFW2
-	q34UKFZ0va40qrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmK14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
-	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
-	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S
-	6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxw
-	ACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I
-	3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxV
-	WUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAF
-	wI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcI
-	k0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j
-	6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYv38DUUUU
+X-CM-TRANSID:Syh0CgDnP05rwXZljFDDDQ--.46165S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF18GryrKr1ruFy8tFWkJFb_yoW5XF1kpa
+	1DAas8Wr4UGay5Ca4DXryq9a4Fywn5KrWUtrW8Gw43X3ZrZr98JayUWayjgr1kWr1fta4a
+	qrW5GrZrC3WUKFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
+	4I1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWUJwCI
+	42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWI
+	evJa73UjIFyTuYvjfUOlksUUUUU
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-From: Li Nan <linan122@huawei.com>
 
-UBSAN reports this problem:
 
-  UBSAN: Undefined behaviour in drivers/md/md.c:8175:15
-  signed integer overflow:
-  -2147483291 - 2072033152 cannot be represented in type 'int'
-  Call trace:
-   dump_backtrace+0x0/0x310
-   show_stack+0x28/0x38
-   dump_stack+0xec/0x15c
-   ubsan_epilogue+0x18/0x84
-   handle_overflow+0x14c/0x19c
-   __ubsan_handle_sub_overflow+0x34/0x44
-   is_mddev_idle+0x338/0x3d8
-   md_do_sync+0x1bb8/0x1cf8
-   md_thread+0x220/0x288
-   kthread+0x1d8/0x1e0
-   ret_from_fork+0x10/0x18
+在 2023/12/9 2:38, Song Liu 写道:
+> On Sun, Dec 3, 2023 at 11:04 PM <linan666@huaweicloud.com> wrote:
+>>
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> Move check_decay_read_errors() to raid1-10.c and factor out a helper
+>> exceed_read_errors() to check if read_errors exceeds the limit, so that
+>> raid1 can also use it. There are no functional changes.
+>>
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+> [...]
+>> +static inline bool exceed_read_errors(struct mddev *mddev, struct md_rdev *rdev)
+>> +{
+>> +       int max_read_errors = atomic_read(&mddev->max_corr_read_errors);
+>> +       int read_errors;
+>> +
+>> +       check_decay_read_errors(mddev, rdev);
+>> +       read_errors =  atomic_inc_return(&rdev->read_errors);
+>> +       if (read_errors > max_read_errors) {
+>> +               pr_notice("md:%s: %pg: Raid device exceeded read_error threshold [cur %d:max %d]\n",
+>> +                         mdname(mddev), rdev->bdev, read_errors, max_read_errors);
+>> +               pr_notice("md:%s: %pg: Failing raid device\n",
+>> +                         mdname(mddev), rdev->bdev);
+> 
+> This changed the print message from "md/raid10:" to "md:". We should
+> try to avoid
+> such changes. How about we do something like the following?
+> 
+> Thanks,
+> Song
+> 
+> diff --git i/drivers/md/raid1-10.c w/drivers/md/raid1-10.c
+> index 3f22edec70e7..6c0ef0fe6ba7 100644
+> --- i/drivers/md/raid1-10.c
+> +++ w/drivers/md/raid1-10.c
+> @@ -173,3 +173,10 @@ static inline void
+> raid1_prepare_flush_writes(struct bitmap *bitmap)
+>          else
+>                  md_bitmap_unplug(bitmap);
+>   }
+> +
+> +static inline bool exceed_read_errors(struct mddev *mddev, struct
+> md_rdev *rdev)
+> +{
+> +       pr_notice("md/" RAID_1_10_NAME ":%s: %pg: Raid device ...\n",
+> +                 ...);
+> +       ...
+> +}
+> diff --git i/drivers/md/raid1.c w/drivers/md/raid1.c
+> index 9348f1709512..412e98d02a05 100644
+> --- i/drivers/md/raid1.c
+> +++ w/drivers/md/raid1.c
+> @@ -49,6 +49,7 @@ static void lower_barrier(struct r1conf *conf,
+> sector_t sector_nr);
+>   #define raid1_log(md, fmt, args...)                            \
+>          do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid1 "
+> fmt, ##args); } while (0)
+> 
+> +#define RAID_1_10_NAME "raid1"
+>   #include "raid1-10.c"
+> 
+>   #define START(node) ((node)->start)
+> diff --git i/drivers/md/raid10.c w/drivers/md/raid10.c
+> index 375c11d6159f..a1531b5f15e3 100644
+> --- i/drivers/md/raid10.c
+> +++ w/drivers/md/raid10.c
+> @@ -77,6 +77,8 @@ static void end_reshape(struct r10conf *conf);
+>   #define raid10_log(md, fmt, args...)                           \
+>          do { if ((md)->queue) blk_add_trace_msg((md)->queue, "raid10 "
+> fmt, ##args); } while (0)
+> 
+> +#define RAID_1_10_NAME "raid10"
+> +
+>   #include "raid1-10.c"
+> 
+>   #define NULL_CMD
+> 
+> [...]
+> 
+> .
 
-'curr_events' will overflow when stat accum or 'sync_io' is greater than
-INT_MAX.
+I agree. Let me improve this in v2.
 
-Fix it by changing sync_io, last_events and curr_events to 64bit.
 
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/md.h        | 4 ++--
- include/linux/blkdev.h | 2 +-
- drivers/md/md.c        | 7 ++++---
- 3 files changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index ade83af123a2..1a4f976951c1 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -50,7 +50,7 @@ struct md_rdev {
- 
- 	sector_t sectors;		/* Device size (in 512bytes sectors) */
- 	struct mddev *mddev;		/* RAID array if running */
--	int last_events;		/* IO event timestamp */
-+	long long last_events;		/* IO event timestamp */
- 
- 	/*
- 	 * If meta_bdev is non-NULL, it means that a separate device is
-@@ -584,7 +584,7 @@ extern void mddev_unlock(struct mddev *mddev);
- 
- static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
- {
--	atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
-+	atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
- }
- 
- static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 3f8a21cd9233..d28b98adf457 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -170,7 +170,7 @@ struct gendisk {
- 	struct list_head slave_bdevs;
- #endif
- 	struct timer_rand_state *random;
--	atomic_t sync_io;		/* RAID */
-+	atomic64_t sync_io;		/* RAID */
- 	struct disk_events *ev;
- 
- #ifdef CONFIG_BLK_DEV_ZONED
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c94373d64f2c..1d71b2a9af03 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8496,14 +8496,15 @@ static int is_mddev_idle(struct mddev *mddev, int init)
- {
- 	struct md_rdev *rdev;
- 	int idle;
--	int curr_events;
-+	long long curr_events;
- 
- 	idle = 1;
- 	rcu_read_lock();
- 	rdev_for_each_rcu(rdev, mddev) {
- 		struct gendisk *disk = rdev->bdev->bd_disk;
--		curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
--			      atomic_read(&disk->sync_io);
-+		curr_events =
-+			(long long)part_stat_read_accum(disk->part0, sectors) -
-+			      atomic64_read(&disk->sync_io);
- 		/* sync IO will cause sync_io to increase before the disk_stats
- 		 * as sync_io is counted when a request starts, and
- 		 * disk_stats is counted when it completes.
 -- 
-2.39.2
+Thanks,
+Nan
 
