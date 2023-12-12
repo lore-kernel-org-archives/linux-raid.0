@@ -1,76 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D63DA17736;
-	Tue, 12 Dec 2023 07:46:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gIAZ0t27"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E68EC433C9;
-	Tue, 12 Dec 2023 07:46:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702367212;
-	bh=Ry+0HOKGnrROeRDuXfVg3iVo2Hj0Ooc8riVJECBIRVY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=gIAZ0t27m2A4ZTpCVBQuIu2wQkSlygEsFdxVu017zBIB2lD7vOST7aIXouds16+6U
-	 IO0DE8aJMEI4zcReGH69LFua0fj3qWHjIybDh/rkPHsbnIQs5cIzTYjcBMzpfKPI6u
-	 cvpQIRaskJKmpzrw2UgMSy6RuH51FaSRpBlEF88KU9mtn5tXL+oWfjNSbUalkmg8Jf
-	 GV/JhpV0g9uRjxevSRkz+xX6wcKJvcwRvPhpaCtfgSO3mj+XWXbIrOSRkZdp1of8Ar
-	 6b3H4bZUVnvma+al9VRkq8Bz9VWFkmT50soPfpEQBFqyptuyNs3AyaXFX1gxMC4tXh
-	 W3MUD2YvP+8/A==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-50c0f13ea11so6083660e87.3;
-        Mon, 11 Dec 2023 23:46:52 -0800 (PST)
-X-Gm-Message-State: AOJu0Yyp6P5Ii5s+STtgq6Akwvi6dM3Wzrj7MpAoCL3TF9z+y/Pg6gb2
-	N+TXHAWgbsWLM+THAaCIzcsrfBbBM2lj28PQ3t0=
-X-Google-Smtp-Source: AGHT+IG3bR3Lcd82FvG3az8HYJgPLAE9nxxNkTnuKqti/naUDTGHp1e/eeep5o1bVubLakxCtKpQyd2g6CehqN6XxKI=
-X-Received: by 2002:ac2:5e9b:0:b0:50b:e625:3009 with SMTP id
- b27-20020ac25e9b000000b0050be6253009mr2296886lfq.97.1702367210579; Mon, 11
- Dec 2023 23:46:50 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JrGdOvJA"
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A720DB;
+	Tue, 12 Dec 2023 01:35:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1702373704; x=1733909704;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=MHJAz3v3MCO7iUNVoczO1+k4R+v5yY9xBnHLxI+eAq8=;
+  b=JrGdOvJA4V9zs9c4AvF0uzRtYvXs5VBWD3ksOmNO3ldxwTubEEbRBQGo
+   h1rbziswX5Qg6HTXJU8RdAwNM4mXthTrvWnDBn4YY5eHhlqLVdNhOPj7S
+   6AepYPF2KEFc3NLNbdZExPKYdp8y07dpxtLw5J4KlLWmNAIZR0RHLp/wl
+   7uXIBORsb9XOSkUjGIa23ZaGYsqKMge5QNsDSRIu/P+BUcYrXvQgZA9YB
+   oucs2gkAvHeP13dm1DKcYpAU5VkCH7+4PSFexklE4MbBUdUH96Now1Wvb
+   z0B7uupvYWJ6HxKqdSGjmzvPfR/Np47OgV+N6N8NJ7DAd5aqpAs5ZTFHH
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10921"; a="16331454"
+X-IronPort-AV: E=Sophos;i="6.04,269,1695711600"; 
+   d="scan'208";a="16331454"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Dec 2023 01:35:03 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.04,269,1695711600"; 
+   d="scan'208";a="14890458"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.144.153])
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Dec 2023 01:34:59 -0800
+Date: Tue, 12 Dec 2023 10:34:46 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linan666@huaweicloud.com, song@kernel.org, zlliu@suse.com,
+ neilb@suse.com, shli@fb.com, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
+ yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH] md: Don't clear MD_CLOSING when the raid is about to
+ stop
+Message-ID: <20231212103446.00007e41@linux.intel.com>
+In-Reply-To: <f0ab24e5-eb0a-d564-19d4-b72ecedff34f@huaweicloud.com>
+References: <20231211081714.1923567-1-linan666@huaweicloud.com>
+	<20231211105620.00001753@linux.intel.com>
+	<f0ab24e5-eb0a-d564-19d4-b72ecedff34f@huaweicloud.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <03dd7de1cecdb7084814f2fab300c9bc716aff3e.1701632867.git.christophe.jaillet@wanadoo.fr>
- <202312041419.81EF03F7B7@keescook> <CAPhsuW43g-M+xvzD0N1JsJ_zGnvZQOw2Bi1TEqoHKanPnvMHLQ@mail.gmail.com>
- <202312080926.FBF7A2DDD2@keescook> <CAPhsuW5F1aRrCRW-ad5Sq=cgxHX+QgXgYZyMX17Zj4Mj=Jnhjw@mail.gmail.com>
- <ZXfzqsstA6tTPpF8@infradead.org>
-In-Reply-To: <ZXfzqsstA6tTPpF8@infradead.org>
-From: Song Liu <song@kernel.org>
-Date: Mon, 11 Dec 2023 23:46:39 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6k_Kh+iFq5jpbkn+-zFScg1_EpfEPRtMNDtyxhMsj0vQ@mail.gmail.com>
-Message-ID: <CAPhsuW6k_Kh+iFq5jpbkn+-zFScg1_EpfEPRtMNDtyxhMsj0vQ@mail.gmail.com>
-Subject: Re: [PATCH] md/md-multipath: Convert "struct mpconf" to flexible array
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Kees Cook <keescook@chromium.org>, 
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>, 
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>, linux-kernel@vger.kernel.org, 
-	kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-hardening@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=gbk
+Content-Transfer-Encoding: 8bit
 
-Hi Christoph,
+On Tue, 12 Dec 2023 11:21:28 +0800
+Yu Kuai <yukuai1@huaweicloud.com> wrote:
 
-On Mon, Dec 11, 2023 at 9:46=E2=80=AFPM Christoph Hellwig <hch@infradead.or=
-g> wrote:
->
-> On Fri, Dec 08, 2023 at 10:11:10AM -0800, Song Liu wrote:
-> > We marked it as deprecated about 2.5 years ago. But to be honest,
-> > I currently don't have a plan to remove it. I guess I should start thin=
-king
-> > about it.
->
-> Let's just kill it off ASAP.  It never had a large user base and based
-> by dm-multipath not long after it has been added.  It also doesn't
-> support any uniqueue hardware and has no on-disk format.
+> Hi,
+> 
+> ÔÚ 2023/12/11 17:56, Mariusz Tkaczyk Ð´µÀ:
+> > On Mon, 11 Dec 2023 16:17:14 +0800
+> > linan666@huaweicloud.com wrote:
+> >   
+> >> From: Li Nan <linan122@huawei.com>
+> >>
+> >> The raid should not be opened anymore when it is about to be stopped.
+> >> However, other processes can open it again if the flag MD_CLOSING is
+> >> cleared before exiting. From now on, this flag will not be cleared when
+> >> the raid will be stopped.
+> >>
+> >> Fixes: 065e519e71b2 ("md: MD_CLOSING needs to be cleared after called
+> >> md_set_readonly or do_md_stop") Signed-off-by: Li Nan
+> >> <linan122@huawei.com>  
+> > 
+> > Hello Li Nan,
+> > I was there when I needed to fix this:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?h=md-next&id=c8870379a21fbd9ad14ca36204ccfbe9d25def43
+> > 
+> > For sure, you have to consider applying same solution for array_store
+> > "clear". Minor nit below.
+> > 
+> > Thanks,
+> > Mariusz
+> >   
+> >> ---
+> >>   drivers/md/md.c | 8 +++-----
+> >>   1 file changed, 3 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >> index 4e9fe5cbeedc..ebdfc9068a60 100644
+> >> --- a/drivers/md/md.c
+> >> +++ b/drivers/md/md.c
+> >> @@ -6238,7 +6238,6 @@ static void md_clean(struct mddev *mddev)
+> >>   	mddev->persistent = 0;
+> >>   	mddev->level = LEVEL_NONE;
+> >>   	mddev->clevel[0] = 0;
+> >> -	mddev->flags = 0;  
+> > 
+> > I recommend (safety recommendation):
+> > 	mddev->flags = MD_CLOSING;  
+> 
+> Taking a look I think both MD_CLOSING and MD_DELETED should not be
+> cleared, however, there is no guarantee that MD_CLOSING will be set
+> before md_clean, because mdadm can be removed without running. Hence I
+> think just set MD_CLOSING is werid.
+> 
+> I think the proper way is to keep MD_CLOSING and MD_DELETED if they are
+> set. However, there is no such api to clear other bits at once. Since
+> we're not expecting anyone else to write flags, following maybe
+> acceptable:
+> 
+> mddev->flags &= BIT_ULL_MASK(MD_CLOSING) | BIT_ULL_MASK(MD_DELETED);
 
-Thanks for the suggestion.
+Yes, MD_CLOSING is a bit number to not a bit value I can assign directly.
+Thanks for clarifying!
 
-> If you want any blame deflected from you I'd be happy to send the patch
-> to remove it.
+Mariusz
+> 
+> Or after making sure other flags cannot race, this patch is ok.
+> 
+> Thanks,
+> Kuai
+> 
+> > 
+> > Unless you can prove that other flags cannot race.
+> >   
+> >>   	mddev->sb_flags = 0;
+> >>   	mddev->ro = MD_RDWR;
+> >>   	mddev->metadata_type[0] = 0;  
+> > 
+> > .
+> >   
+> 
 
-Let me give it a try. I am kinda curious what gonna happen. :)
-
-Thanks,
-Song
