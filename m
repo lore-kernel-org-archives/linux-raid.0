@@ -1,56 +1,76 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D63DA17736;
+	Tue, 12 Dec 2023 07:46:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rVXrIHDI"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AAE999;
-	Mon, 11 Dec 2023 21:46:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=rswgQXutE23EE2adeFRVlY8v1PLpQypzn/gMfnKSSok=; b=rVXrIHDIzJhF4HMqm4VfVY00IB
-	sIqfR/Cd+JP6Xs2v0k2Eme38qoI8mUEYTXbnrhQSzfO379TtdKtZbTYHUM9Ca6gRyKluTOeJ1hmNS
-	iCkRmLgFdJ8Gej8fBoQ1FJ7AzpJ43A25+Ns42U7EORWN+pNex0CrBQj4nFY1kaZqc6P6xODVp29DO
-	f8Zt/9N7UrsGkzSpo65wBeqSJBlQdYaElxXLwr5vnUvV206qfmR3HLnS5cYiMSVJmZvZfsWmdgzwn
-	A1Q9PxnlbZd/s2wbROi+Vu7dyQdsfq/oc0XvSh6udsVR+XHC4pT1Che7NVCQHGx2mePothYZ/St6i
-	42qTB2rg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rCvb0-00Ap6A-0r;
-	Tue, 12 Dec 2023 05:46:18 +0000
-Date: Mon, 11 Dec 2023 21:46:18 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Song Liu <song@kernel.org>
-Cc: Kees Cook <keescook@chromium.org>,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux-raid@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] md/md-multipath: Convert "struct mpconf" to flexible
- array
-Message-ID: <ZXfzqsstA6tTPpF8@infradead.org>
-References: <03dd7de1cecdb7084814f2fab300c9bc716aff3e.1701632867.git.christophe.jaillet@wanadoo.fr>
- <202312041419.81EF03F7B7@keescook>
- <CAPhsuW43g-M+xvzD0N1JsJ_zGnvZQOw2Bi1TEqoHKanPnvMHLQ@mail.gmail.com>
- <202312080926.FBF7A2DDD2@keescook>
- <CAPhsuW5F1aRrCRW-ad5Sq=cgxHX+QgXgYZyMX17Zj4Mj=Jnhjw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gIAZ0t27"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E68EC433C9;
+	Tue, 12 Dec 2023 07:46:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702367212;
+	bh=Ry+0HOKGnrROeRDuXfVg3iVo2Hj0Ooc8riVJECBIRVY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=gIAZ0t27m2A4ZTpCVBQuIu2wQkSlygEsFdxVu017zBIB2lD7vOST7aIXouds16+6U
+	 IO0DE8aJMEI4zcReGH69LFua0fj3qWHjIybDh/rkPHsbnIQs5cIzTYjcBMzpfKPI6u
+	 cvpQIRaskJKmpzrw2UgMSy6RuH51FaSRpBlEF88KU9mtn5tXL+oWfjNSbUalkmg8Jf
+	 GV/JhpV0g9uRjxevSRkz+xX6wcKJvcwRvPhpaCtfgSO3mj+XWXbIrOSRkZdp1of8Ar
+	 6b3H4bZUVnvma+al9VRkq8Bz9VWFkmT50soPfpEQBFqyptuyNs3AyaXFX1gxMC4tXh
+	 W3MUD2YvP+8/A==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-50c0f13ea11so6083660e87.3;
+        Mon, 11 Dec 2023 23:46:52 -0800 (PST)
+X-Gm-Message-State: AOJu0Yyp6P5Ii5s+STtgq6Akwvi6dM3Wzrj7MpAoCL3TF9z+y/Pg6gb2
+	N+TXHAWgbsWLM+THAaCIzcsrfBbBM2lj28PQ3t0=
+X-Google-Smtp-Source: AGHT+IG3bR3Lcd82FvG3az8HYJgPLAE9nxxNkTnuKqti/naUDTGHp1e/eeep5o1bVubLakxCtKpQyd2g6CehqN6XxKI=
+X-Received: by 2002:ac2:5e9b:0:b0:50b:e625:3009 with SMTP id
+ b27-20020ac25e9b000000b0050be6253009mr2296886lfq.97.1702367210579; Mon, 11
+ Dec 2023 23:46:50 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPhsuW5F1aRrCRW-ad5Sq=cgxHX+QgXgYZyMX17Zj4Mj=Jnhjw@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <03dd7de1cecdb7084814f2fab300c9bc716aff3e.1701632867.git.christophe.jaillet@wanadoo.fr>
+ <202312041419.81EF03F7B7@keescook> <CAPhsuW43g-M+xvzD0N1JsJ_zGnvZQOw2Bi1TEqoHKanPnvMHLQ@mail.gmail.com>
+ <202312080926.FBF7A2DDD2@keescook> <CAPhsuW5F1aRrCRW-ad5Sq=cgxHX+QgXgYZyMX17Zj4Mj=Jnhjw@mail.gmail.com>
+ <ZXfzqsstA6tTPpF8@infradead.org>
+In-Reply-To: <ZXfzqsstA6tTPpF8@infradead.org>
+From: Song Liu <song@kernel.org>
+Date: Mon, 11 Dec 2023 23:46:39 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6k_Kh+iFq5jpbkn+-zFScg1_EpfEPRtMNDtyxhMsj0vQ@mail.gmail.com>
+Message-ID: <CAPhsuW6k_Kh+iFq5jpbkn+-zFScg1_EpfEPRtMNDtyxhMsj0vQ@mail.gmail.com>
+Subject: Re: [PATCH] md/md-multipath: Convert "struct mpconf" to flexible array
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Kees Cook <keescook@chromium.org>, 
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>, 
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>, linux-kernel@vger.kernel.org, 
+	kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org, 
+	linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Dec 08, 2023 at 10:11:10AM -0800, Song Liu wrote:
-> We marked it as deprecated about 2.5 years ago. But to be honest,
-> I currently don't have a plan to remove it. I guess I should start thinking
-> about it.
+Hi Christoph,
 
-Let's just kill it off ASAP.  It never had a large user base and based
-by dm-multipath not long after it has been added.  It also doesn't
-support any uniqueue hardware and has no on-disk format.
+On Mon, Dec 11, 2023 at 9:46=E2=80=AFPM Christoph Hellwig <hch@infradead.or=
+g> wrote:
+>
+> On Fri, Dec 08, 2023 at 10:11:10AM -0800, Song Liu wrote:
+> > We marked it as deprecated about 2.5 years ago. But to be honest,
+> > I currently don't have a plan to remove it. I guess I should start thin=
+king
+> > about it.
+>
+> Let's just kill it off ASAP.  It never had a large user base and based
+> by dm-multipath not long after it has been added.  It also doesn't
+> support any uniqueue hardware and has no on-disk format.
 
-If you want any blame deflected from you I'd be happy to send the patch
-to remove it.
+Thanks for the suggestion.
+
+> If you want any blame deflected from you I'd be happy to send the patch
+> to remove it.
+
+Let me give it a try. I am kinda curious what gonna happen. :)
+
+Thanks,
+Song
