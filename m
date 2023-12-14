@@ -1,51 +1,59 @@
-Received: from sender-op-o10.zoho.eu (sender-op-o10.zoho.eu [136.143.169.10])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05C799C
-	for <linux-raid@vger.kernel.org>; Thu, 14 Dec 2023 06:18:29 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1702563491; cv=none; 
-	d=zohomail.eu; s=zohoarc; 
-	b=W4XuenMwgw9NZtdfub776lspTb3HBTjkJth6oQ4mr6qDk29VK1D6djIK+ZQiKmef50YOhoLeZiKsb1QT+AFsJ4ohCyXWxSVeabidGeY5CCADraYdOqxai2TdI5DkfbS2vnmrwvsjXzvyvRpqo9m+9u0341vBLavrl31YjK0YvDs=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1702563491; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=0TLqI2A21OQ1cOFimBKXCD2gEdlxdRtNh9HmYKRk3BY=; 
-	b=loa9PU4RixtsBAZUARnRrB5yIWJDqjo1WRoaGj7cb1cjR/r6ydOeoJCgTrGoYs5FLt8wHIxoVBcxK3OSW1LhhSgXcW77SMINc0eNi4G/78FFTFGdUY5ELAs2/0kykdfhKbG8/6Lxlz0hiWe3nskkOTp/FISZytRWp3y20luv8Zk=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-	spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-	dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.4.106] (85.184.187.58.dynamic.dhcp.aura-net.dk [85.184.187.58]) by mx.zoho.eu
-	with SMTPS id 1702563489190819.094208613851; Thu, 14 Dec 2023 15:18:09 +0100 (CET)
-Message-ID: <e5c7971f-a600-08ec-0f31-8f255bd99979@trained-monkey.org>
-Date: Thu, 14 Dec 2023 09:18:07 -0500
+Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 771CF10E9;
+	Thu, 14 Dec 2023 07:15:15 -0800 (PST)
+X-QQ-mid: bizesmtp65t1702566900tw788o8z
+Received: from localhost.localdomain ( [125.76.217.162])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 14 Dec 2023 23:14:58 +0800 (CST)
+X-QQ-SSF: 01400000000000E0H000000A0000000
+X-QQ-FEAT: kUim6XnhvqXLGVCGif12YpsOAXyfr323UC3dd/L/ZZMRExUmZKiKHx5oLDwbc
+	LZzHsLq4aDfbgSQBoakNgqyPtoAG8ML/TL2OLcIplBRfcTGJV3PPVGtuuGQ8pxWx/vIbIwR
+	5ZAFYsHnG0GHnlOQuCfHCgj5BCPU+Sp5ikANO2re6gi78KCC4oZ2SlOTAZZdmUfd/tpqRLx
+	BCIp/8BX6nhxXydNyFpX4qd9MEtqTJO0gbbOdgkurPdXoX4elaPv0zkzjXbvy4mDwgJ+u5T
+	SEbIvwlMP2On1e7fyOe2gsqtX6nCX33EzaxInBrs5an8wRXUQ4NmpffwfQHuFBCyyZKaakA
+	IN5FFUpjE52KjRyGo9s3SmS9ZPTkBVhRvTH+JHNnfvuzTCtz8YlBuXkRf7qbUW64QU13N4m
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 16267120763352956004
+From: Gou Hao <gouhao@uniontech.com>
+To: song@kernel.org,
+	linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	gouhaojake@163.com
+Subject: [PATCH] md/raid1: remove unnecessary null checking
+Date: Thu, 14 Dec 2023 23:14:58 +0800
+Message-Id: <20231214151458.28970-1-gouhao@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Content-Language: en-US
-To: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
-Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
- Song Liu <songliubraving@fb.com>, Coly Li <colyli@suse.de>,
- "Luse, Paul E" <paul.e.luse@intel.com>
-From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Announcement: mdadm maintainer update
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:uniontech.com:qybglogicsvrgz:qybglogicsvrgz7a-0
 
-Hi
+If %__GFP_DIRECT_RECLAIM is set then bio_alloc_bioset will always
+be able to allocate a bio. See comment of bio_alloc_bioset.
 
-I wanted to let everyone know that Mariusz Tkaczyk is joining as mdadm
-co-maintainer.
+Signed-off-by: Gou Hao <gouhao@uniontech.com>
+---
+ drivers/md/raid1.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Anyone who has spent time on this list over the last couple of years
-knows Mariusz as a serious and thorough patch reviewer and I believe he
-will do a great job as co-maintainer. Most people will also have noticed
-I have been struggling keeping up due to lack of time, especially since
-mdadm is no longer directly linked to my daytime job. Having Mariusz
-onboard should help us progress faster.
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 35d12948e0a9..e77dc95d4a75 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1126,8 +1126,6 @@ static void alloc_behind_master_bio(struct r1bio *r1_bio,
+ 
+ 	behind_bio = bio_alloc_bioset(NULL, vcnt, 0, GFP_NOIO,
+ 				      &r1_bio->mddev->bio_set);
+-	if (!behind_bio)
+-		return;
+ 
+ 	/* discard op, we don't support writezero/writesame yet */
+ 	if (!bio_has_data(bio)) {
+-- 
+2.34.1
 
-Thanks for stepping up Mariusz!
-
-Jes
