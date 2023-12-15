@@ -1,36 +1,32 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1144650;
-	Fri, 15 Dec 2023 01:41:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64D2AFC14;
+	Fri, 15 Dec 2023 02:40:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SrsPX0QrRz4f3lVV;
-	Fri, 15 Dec 2023 09:41:04 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Srtk44WB6z4f3jqG;
+	Fri, 15 Dec 2023 10:40:28 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 16F811A0554;
-	Fri, 15 Dec 2023 09:41:09 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id DDBB51A01F9;
+	Fri, 15 Dec 2023 10:40:29 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgD3Rg2yrntlPtG0Dg--.46759S6;
-	Fri, 15 Dec 2023 09:41:08 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDn6hCbvHtlSqe4Dg--.24310S4;
+	Fri, 15 Dec 2023 10:40:29 +0800 (CST)
 From: linan666@huaweicloud.com
-To: song@kernel.org,
-	axboe@kernel.dk
+To: song@kernel.org
 Cc: linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
 	linan666@huaweicloud.com,
 	yukuai3@huawei.com,
 	yi.zhang@huawei.com,
 	houtao1@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v2 2/2] md: don't account sync_io if iostats of the disk is disabled
-Date: Fri, 15 Dec 2023 09:39:31 +0800
-Message-Id: <20231215013931.3329455-3-linan666@huaweicloud.com>
+Subject: [PATCH v2 0/2] support read error check in raid1 
+Date: Fri, 15 Dec 2023 10:38:50 +0800
+Message-Id: <20231215023852.3478228-1-linan666@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231215013931.3329455-1-linan666@huaweicloud.com>
-References: <20231215013931.3329455-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -38,68 +34,37 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgD3Rg2yrntlPtG0Dg--.46759S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7KFWxKF4kKr1xuF18try7Jrb_yoW8Gw1fpa
-	ykAFyayryjqrW5u3WUX34Dua4rW3srKFW7ArW3A393ZFy3Jr9xKryrXayqqryDWFyrWFWa
-	va4DGFZ8ua10yr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
-	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
-	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S
-	6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxw
-	ACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I
-	3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxV
-	WUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAF
-	wI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcI
-	k0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j
-	6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU1xhLUUUUU
+X-CM-TRANSID:cCh0CgDn6hCbvHtlSqe4Dg--.24310S4
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYS7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+	Iv6xkF7I0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvE
+	ncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I
+	8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I2
+	1c0EjII2zVCS5cI20VAGYxC7M4kE6xkIj40Ew7xC0wCF04k20xvY0x0EwIxGrwCFx2IqxV
+	CFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r10
+	6r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxV
+	WUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG
+	6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
+	0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUBSoJUUUUU=
 X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
 From: Li Nan <linan122@huawei.com>
 
-If iostats is disabled, disk_stats will not be updated and
-part_stat_read_accum() only returns a constant value. In this case,
-continuing to count sync_io and to check is_mddev_idle() is no longer
-meaningful.
+Changes in v2:
+ - Add RAID_1_10_NAME to distinguish name between raid1 and raid10.
 
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/md.h | 3 ++-
- drivers/md/md.c | 4 ++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+Li Nan (2):
+  md: factor out a helper exceed_read_errors() to check read_errors
+  md/raid1: support read error check
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 1a4f976951c1..75f5c5d04e71 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -589,7 +589,8 @@ static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sect
- 
- static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
- {
--	md_sync_acct(bio->bi_bdev, nr_sectors);
-+	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
-+		md_sync_acct(bio->bi_bdev, nr_sectors);
- }
- 
- struct md_personality
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1d71b2a9af03..18bbceb0ffd6 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8502,6 +8502,10 @@ static int is_mddev_idle(struct mddev *mddev, int init)
- 	rcu_read_lock();
- 	rdev_for_each_rcu(rdev, mddev) {
- 		struct gendisk *disk = rdev->bdev->bd_disk;
-+
-+		if (blk_queue_io_stat(mddev->queue))
-+			continue;
-+
- 		curr_events =
- 			(long long)part_stat_read_accum(disk->part0, sectors) -
- 			      atomic64_read(&disk->sync_io);
+ drivers/md/raid1-10.c | 54 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid1.c    | 18 +++++++++++----
+ drivers/md/raid10.c   | 49 +++------------------------------------
+ 3 files changed, 70 insertions(+), 51 deletions(-)
+
 -- 
 2.39.2
 
