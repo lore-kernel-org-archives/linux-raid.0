@@ -1,64 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBA5418ECD
-	for <linux-raid@vger.kernel.org>; Fri, 15 Dec 2023 23:30:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 654202C699;
+	Fri, 15 Dec 2023 23:31:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mRmd7gye"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42252C433C8
-	for <linux-raid@vger.kernel.org>; Fri, 15 Dec 2023 23:30:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="svkCN4ao"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAEEBC433C8;
+	Fri, 15 Dec 2023 23:31:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702683024;
-	bh=QeVfjK/QwUqDJW4CHMTfA0w2mXg4so8Dlgx5Hcqz9gg=;
+	s=k20201202; t=1702683077;
+	bh=8vuBe28Hp3dJiXwpDuxt10walGUsS6E6bLz5BamOg38=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=mRmd7gye8lbhpNHxPArxFg+ZB/GhouHvKE+Tcy/i5e+7njmsh6AOS50qDPEYeybXL
-	 V5D7Rp1d/u/O4JXDWsZzW5UAOskBDpMHR6oJjQgj0pI9zE8hEiieixUelpB+DRZ2s+
-	 T2VRwlv8MkPv3w1auw1tRbDe9+YibFLGBT9eHC+VBwZ9q+D1P/GRpcMZO9ghlhIAga
-	 3zyxQq1Wwa33V5sZ2vIqcuBaWvWkQUrRhndXy615t8M5Q4nxD4LQF1pXq/oIqZPyl6
-	 0HMpjpmt2PfoLmrbG0r4FJ/ooqi9FWXNlmeXoOWhVNz4Egjuv32M3sKTdVZKxP9Awg
-	 5XYxVcxD7sGaw==
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-50e0d1f9fe6so1443199e87.1
-        for <linux-raid@vger.kernel.org>; Fri, 15 Dec 2023 15:30:24 -0800 (PST)
-X-Gm-Message-State: AOJu0YxAx7ofDvGF/AXlm1WRzQfVP2AmwwTx68t+FFenv1pfFwoT9JCT
-	L0MtVs2J0bbjBwIb+lGOyqSvveOGTFo/gEvEK/E=
-X-Google-Smtp-Source: AGHT+IHBPJaejZoDBeNbRfiSrLAL1xoyvtXu7GvdI+xBdRcLFizYOxlCxalNgSvZ0icqu3Lq/vN/611sR/B5cOIvGq8=
-X-Received: by 2002:a05:6512:3604:b0:50d:2f84:759c with SMTP id
- f4-20020a056512360400b0050d2f84759cmr3980554lfs.103.1702683022518; Fri, 15
- Dec 2023 15:30:22 -0800 (PST)
+	b=svkCN4aoTr0Nau1NuvvW1ehkW4tGbbX58IKkV3kMRark4x2lk1FX57a2IBN4nx/7i
+	 qJEF1xSsKnm2pzQEVN8HcI/P9ihiEtUzpjBv0VnwKGCqFBxuTII9p6IMSQkwAaUKlW
+	 KXT3dwT9jZQdEBbr0rBVcVl4BtjEZ63ZF/sntsSATN850a0+Wzo/UT/mcmf8Eo0zl5
+	 WsrFIfLiucJVFDvHgW/ZVO9Vb/wgaKhj1FApySVVGxUHuXnEcv6P09bgy51YAi9YGl
+	 LxoWb76ykMR03r0gys2L5N5SMaUL1qUoIpktuHZ/cBsc4MlgPYES3wnXPgUMMAq53g
+	 p9h024NCJrOjg==
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-50bdec453c8so1359924e87.3;
+        Fri, 15 Dec 2023 15:31:17 -0800 (PST)
+X-Gm-Message-State: AOJu0YxYNKIxZdcKgQ+rPhoB56YwKA9M1dQxSGq7PLy0kJu/0rBEOo7c
+	utqWLOzTPcdauqDmNNPMtJIjfkFy10EAbHs0d3E=
+X-Google-Smtp-Source: AGHT+IGvN1Aom7Bvl1CDgcH/Hk02HUZayJ54ctvNg7jL/MLayG/FUhxNCVMQTCy6+9FWVxEsCetyxQpbfTgrxMe6SSw=
+X-Received: by 2002:ac2:419a:0:b0:50d:13f5:9bca with SMTP id
+ z26-20020ac2419a000000b0050d13f59bcamr5327104lfh.63.1702683076075; Fri, 15
+ Dec 2023 15:31:16 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <1702470271-16073-1-git-send-email-alex.lyakas@zadara.com>
-In-Reply-To: <1702470271-16073-1-git-send-email-alex.lyakas@zadara.com>
+References: <20231214151458.28970-1-gouhao@uniontech.com>
+In-Reply-To: <20231214151458.28970-1-gouhao@uniontech.com>
 From: Song Liu <song@kernel.org>
-Date: Fri, 15 Dec 2023 15:30:11 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4C9qzDSoPjNWSK70y0jGcFU6h+LXGvXyyNmQNLmmqbHQ@mail.gmail.com>
-Message-ID: <CAPhsuW4C9qzDSoPjNWSK70y0jGcFU6h+LXGvXyyNmQNLmmqbHQ@mail.gmail.com>
-Subject: Re: [PATCH v2] md: upon assembling the array, consult the superblock
- of the freshest device
-To: Alex Lyakas <alex.lyakas@zadara.com>
-Cc: linux-raid@vger.kernel.org
+Date: Fri, 15 Dec 2023 15:31:04 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5Oj67XR6EhndSXCkd52h8P4nAXipxrhG31fy7YNOZg6g@mail.gmail.com>
+Message-ID: <CAPhsuW5Oj67XR6EhndSXCkd52h8P4nAXipxrhG31fy7YNOZg6g@mail.gmail.com>
+Subject: Re: [PATCH] md/raid1: remove unnecessary null checking
+To: Gou Hao <gouhao@uniontech.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	gouhaojake@163.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Dec 13, 2023 at 4:31=E2=80=AFAM Alex Lyakas <alex.lyakas@zadara.com=
-> wrote:
+On Thu, Dec 14, 2023 at 7:15=E2=80=AFAM Gou Hao <gouhao@uniontech.com> wrot=
+e:
 >
-> Upon assembling the array, both kernel and mdadm allow the devices to hav=
-e event
-> counter difference of 1, and still consider them as up-to-date.
-> However, a device whose event count is behind by 1, may in fact not be up=
--to-date,
-> and array resync with such a device may cause data corruption.
-> To avoid this, consult the superblock of the freshest device about the st=
-atus
-> of a device, whose event counter is behind by 1.
+> If %__GFP_DIRECT_RECLAIM is set then bio_alloc_bioset will always
+> be able to allocate a bio. See comment of bio_alloc_bioset.
 >
-> Signed-off-by: Alex Lyakas <alex.lyakas@zadara.com>
+> Signed-off-by: Gou Hao <gouhao@uniontech.com>
 
-Applied to md-next with some minor changes (format, commit log). Thanks!
+Applied to md-next. Thanks!
 
 Song
+
+> ---
+>  drivers/md/raid1.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 35d12948e0a9..e77dc95d4a75 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1126,8 +1126,6 @@ static void alloc_behind_master_bio(struct r1bio *r=
+1_bio,
+>
+>         behind_bio =3D bio_alloc_bioset(NULL, vcnt, 0, GFP_NOIO,
+>                                       &r1_bio->mddev->bio_set);
+> -       if (!behind_bio)
+> -               return;
+>
+>         /* discard op, we don't support writezero/writesame yet */
+>         if (!bio_has_data(bio)) {
+> --
+> 2.34.1
+>
+>
