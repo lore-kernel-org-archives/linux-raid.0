@@ -1,151 +1,160 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1368F4184E
-	for <linux-raid@vger.kernel.org>; Fri, 15 Dec 2023 18:28:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04FEB18EB5;
+	Fri, 15 Dec 2023 23:13:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="vg9Ub1cj";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fEk1aR66";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="0ynlNqpu";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="p3VjQTPU"
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 04206220AA;
-	Fri, 15 Dec 2023 18:28:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1702664921; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+vnWAzuX52MjSQq2Sk17+Zq4D1+N7whmeWeTmKX6uBo=;
-	b=vg9Ub1cjnSVsrkTIbNIbtaDGHrat0KxkN6sRxIpdig8ZyPm25C7EaISlf90D3E3MMFW45L
-	2gzXoGy7VqyPxB0Y0ZNPB2J9rWkPHIQXZ93D+9LQ3/nEKAJVJ0jfrCxCarsYpQgwUB5AzV
-	y8q72TBpcwPlOf1K8zqWbaA5xa3r8bk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1702664921;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+vnWAzuX52MjSQq2Sk17+Zq4D1+N7whmeWeTmKX6uBo=;
-	b=fEk1aR66FlbiWisbpJ/Eeu1o+OXdtZ2W2n2UyQqB/UDoGzb9wAcDrKA3sS4HdCUwNC55et
-	MufQN8B0ouJ4UHBg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1702664920; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+vnWAzuX52MjSQq2Sk17+Zq4D1+N7whmeWeTmKX6uBo=;
-	b=0ynlNqpurU6kiJswWHDd24GTzSA74XvqlK7R7x25EEEVYEhIki+sspswEzuN6ygIQ9oWQN
-	oQ/4vJevyQy6y/Lv4ocCen4SUkkFnU8dAljU5spDEVB8Msr/1aJJVKKaLKVhTDlYBya0pC
-	LjsPYVrzfvQmmJVRpSHGNNHfBDZgtic=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1702664920;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+vnWAzuX52MjSQq2Sk17+Zq4D1+N7whmeWeTmKX6uBo=;
-	b=p3VjQTPUlBn5OGTZ1X6R2B43yzXUXaMay026TPS9VxCD4VGkKtdX0MdTe1ABu2BrNwr9AK
-	ZZcK+V2+V8c2ytDw==
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 0B0DF13A08;
-	Fri, 15 Dec 2023 18:28:37 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id 8JXMKtWafGX8LgAAn2gu4w
-	(envelope-from <colyli@suse.de>); Fri, 15 Dec 2023 18:28:37 +0000
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e8CI79A4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84261C433C8;
+	Fri, 15 Dec 2023 23:13:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702681985;
+	bh=lOtRbEGfqiGEbQ0Iv6/I87uvPvm4WKKzJ4UF0h0ROhM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=e8CI79A4uWpqv3e8++yIGvLbJcwEmzRAZxs2zKqSpFnvhmZ96NhmIBk5BnCJG+dmq
+	 b7tyca8Q26fddtsf2+QyK4j2VJbslA2sWkv2PmAmvIy4U4MkGWABpsTCB79kV5+a65
+	 VXIEOrj3gi3OdMvnE3vOP8yvveSO8m7YPKQuwj09NMzQEYuz5dUg5hOXDk3GntEu4G
+	 RReYCh71L96D/qXZ2IcymwpZNShses6g4+JHHBgIF/z1shRPdhlXPvonCk4zwWeYOP
+	 Idk6Y4tsAHgHB5CfHtna+vN9ExJF0EtwgKx6caFtyqck9tn33SuY2HjcltuWiD+m3p
+	 l2i9gdLjWOJNQ==
+Received: by mail-lj1-f179.google.com with SMTP id 38308e7fff4ca-2cc5a0130faso3762201fa.1;
+        Fri, 15 Dec 2023 15:13:05 -0800 (PST)
+X-Gm-Message-State: AOJu0YzKFisrbavygv4ykhWQYCgDjUbIOAwgWpWiHqkEB17bUMlhCkoq
+	VC+hxqR797AOc/GWFOx1NlFvtRLB9fiNGWHWVqo=
+X-Google-Smtp-Source: AGHT+IFBJ0uAqyf0H1dPTomrQhiPhWzSDsrhPegRJjTqzVhJ3Ev4EX7icvs5iUP03R7W3AD50ffhcah6PTWEfGpZASs=
+X-Received: by 2002:a2e:a5c4:0:b0:2cc:1dd2:2f66 with SMTP id
+ n4-20020a2ea5c4000000b002cc1dd22f66mr7197507ljp.38.1702681983682; Fri, 15 Dec
+ 2023 15:13:03 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3774.300.61.1.2\))
-Subject: Re: Announcement: mdadm maintainer update
-From: Coly Li <colyli@suse.de>
-In-Reply-To: <e5c7971f-a600-08ec-0f31-8f255bd99979@trained-monkey.org>
-Date: Sat, 16 Dec 2023 02:28:24 +0800
-Cc: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>,
- Song Liu <songliubraving@fb.com>,
- "Luse, Paul E" <paul.e.luse@intel.com>
+MIME-Version: 1.0
+References: <20231215013931.3329455-1-linan666@huaweicloud.com> <20231215013931.3329455-2-linan666@huaweicloud.com>
+In-Reply-To: <20231215013931.3329455-2-linan666@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 15 Dec 2023 15:12:52 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6VTvXy3L9CUhTrSC3+_-_n9FDVrtdzQ7SWWkukoQg13Q@mail.gmail.com>
+Message-ID: <CAPhsuW6VTvXy3L9CUhTrSC3+_-_n9FDVrtdzQ7SWWkukoQg13Q@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] md: Fix overflow in is_mddev_idle
+To: linan666@huaweicloud.com
+Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-block@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
+	houtao1@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <846BACCC-5CF2-4ABB-A31B-DE4D3C2C443F@suse.de>
-References: <e5c7971f-a600-08ec-0f31-8f255bd99979@trained-monkey.org>
-To: Jes Sorensen <jes@trained-monkey.org>,
- Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-X-Mailer: Apple Mail (2.3774.300.61.1.2)
-X-Spam-Level: *
-X-Spam-Level: 
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=0ynlNqpu;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=p3VjQTPU
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-1.13 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 BAYES_HAM(-0.12)[66.60%];
-	 FROM_HAS_DN(0.00)[];
-	 MV_CASE(0.50)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 RCPT_COUNT_FIVE(0.00)[5];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 DKIM_TRACE(0.00)[suse.de:+];
-	 MX_GOOD(-0.01)[];
-	 TO_DN_ALL(0.00)[];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 NEURAL_HAM_SHORT(-0.20)[-0.995];
-	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
-X-Spam-Score: -1.13
-X-Rspamd-Queue-Id: 04206220AA
-X-Spam-Flag: NO
 
-Hi Jes,
+On Thu, Dec 14, 2023 at 5:41=E2=80=AFPM <linan666@huaweicloud.com> wrote:
+>
+> From: Li Nan <linan122@huawei.com>
+>
+> UBSAN reports this problem:
+>
+>   UBSAN: Undefined behaviour in drivers/md/md.c:8175:15
+>   signed integer overflow:
+>   -2147483291 - 2072033152 cannot be represented in type 'int'
+>   Call trace:
+>    dump_backtrace+0x0/0x310
+>    show_stack+0x28/0x38
+>    dump_stack+0xec/0x15c
+>    ubsan_epilogue+0x18/0x84
+>    handle_overflow+0x14c/0x19c
+>    __ubsan_handle_sub_overflow+0x34/0x44
+>    is_mddev_idle+0x338/0x3d8
+>    md_do_sync+0x1bb8/0x1cf8
+>    md_thread+0x220/0x288
+>    kthread+0x1d8/0x1e0
+>    ret_from_fork+0x10/0x18
+>
+> 'curr_events' will overflow when stat accum or 'sync_io' is greater than
+> INT_MAX.
+>
+> Fix it by changing sync_io, last_events and curr_events to 64bit.
+>
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>  drivers/md/md.h        | 4 ++--
+>  include/linux/blkdev.h | 2 +-
+>  drivers/md/md.c        | 7 ++++---
+>  3 files changed, 7 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index ade83af123a2..1a4f976951c1 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -50,7 +50,7 @@ struct md_rdev {
+>
+>         sector_t sectors;               /* Device size (in 512bytes secto=
+rs) */
+>         struct mddev *mddev;            /* RAID array if running */
+> -       int last_events;                /* IO event timestamp */
+> +       long long last_events;          /* IO event timestamp */
+>
+>         /*
+>          * If meta_bdev is non-NULL, it means that a separate device is
+> @@ -584,7 +584,7 @@ extern void mddev_unlock(struct mddev *mddev);
+>
+>  static inline void md_sync_acct(struct block_device *bdev, unsigned long=
+ nr_sectors)
+>  {
+> -       atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
+> +       atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
+>  }
+>
+>  static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_se=
+ctors)
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 3f8a21cd9233..d28b98adf457 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -170,7 +170,7 @@ struct gendisk {
+>         struct list_head slave_bdevs;
+>  #endif
+>         struct timer_rand_state *random;
+> -       atomic_t sync_io;               /* RAID */
+> +       atomic64_t sync_io;             /* RAID */
+>         struct disk_events *ev;
 
-Thanks for extending the maintainer list by adding Mariusz.=20
+As we are on this, I wonder whether we really need this.
+AFAICT, is_mddev_idle() is the only consumer of sync_io.
+We can probably do the same check in is_mddev_idle()
+without sync_io.
 
-Hi Mariusz,
+Thanks,
+Song
 
-Congratulations! And thank you for the long time contribution, in the =
-past and in the future :-)
 
-Coly Li
-
-> 2023=E5=B9=B412=E6=9C=8814=E6=97=A5 22:18=EF=BC=8CJes Sorensen =
-<jes@trained-monkey.org> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> Hi
->=20
-> I wanted to let everyone know that Mariusz Tkaczyk is joining as mdadm
-> co-maintainer.
->=20
-> Anyone who has spent time on this list over the last couple of years
-> knows Mariusz as a serious and thorough patch reviewer and I believe =
-he
-> will do a great job as co-maintainer. Most people will also have =
-noticed
-> I have been struggling keeping up due to lack of time, especially =
-since
-> mdadm is no longer directly linked to my daytime job. Having Mariusz
-> onboard should help us progress faster.
->=20
-> Thanks for stepping up Mariusz!
->=20
-> Jes
-
+>
+>  #ifdef CONFIG_BLK_DEV_ZONED
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c94373d64f2c..1d71b2a9af03 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8496,14 +8496,15 @@ static int is_mddev_idle(struct mddev *mddev, int=
+ init)
+>  {
+>         struct md_rdev *rdev;
+>         int idle;
+> -       int curr_events;
+> +       long long curr_events;
+>
+>         idle =3D 1;
+>         rcu_read_lock();
+>         rdev_for_each_rcu(rdev, mddev) {
+>                 struct gendisk *disk =3D rdev->bdev->bd_disk;
+> -               curr_events =3D (int)part_stat_read_accum(disk->part0, se=
+ctors) -
+> -                             atomic_read(&disk->sync_io);
+> +               curr_events =3D
+> +                       (long long)part_stat_read_accum(disk->part0, sect=
+ors) -
+> +                             atomic64_read(&disk->sync_io);
+>                 /* sync IO will cause sync_io to increase before the disk=
+_stats
+>                  * as sync_io is counted when a request starts, and
+>                  * disk_stats is counted when it completes.
+> --
+> 2.39.2
+>
+>
