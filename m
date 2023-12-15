@@ -1,91 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from hermes.turmel.org (hermes.turmel.org [192.73.239.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 445DA374E6;
-	Fri, 15 Dec 2023 15:38:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9C243EA6F
+	for <linux-raid@vger.kernel.org>; Fri, 15 Dec 2023 16:49:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=turmel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=turmel.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YyLP0V55"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B31BAC433C8;
-	Fri, 15 Dec 2023 15:38:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702654687;
-	bh=x62x6NYP9yRE2oI6l70jSejMRfQlxBsF7W56q+aZzXM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=YyLP0V550r0J42MzYaM+fh9x16QkiLirDBV+ev3nM/dMxEM/tIWeNgdP7VGaHY4re
-	 vmZCe/MyyH0dKzHE0E7OZY2g4o4Ji1S5AicP+zGMUyX+5wI+3yF18jCzic9tCLWqg8
-	 iMVfC3C6zh8ezJCk4aqyYWMIXax6ZQdGyciyHmPUBQXQUV/REjmzZto0pMHp7RCMOB
-	 y4Y3w07lmwo3Dn26huf0KFTtaTgddlbFxXJ2seImYkE49cpAmzMSp7SImkFGfWc9T+
-	 ewGuAdursxUAtZxw5NmaEKo/sXifX7I8+XQYXcjieCTn2yEtp+5fWhRxrsQWwDc804
-	 XfD9S6wmSDA5Q==
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-50bf8843a6fso736859e87.0;
-        Fri, 15 Dec 2023 07:38:07 -0800 (PST)
-X-Gm-Message-State: AOJu0Yx7MU5SKSvGjpy43nmB1sHRBukz+7Gb9NeaYlZHxv63snGBMEbK
-	B04aT2bxgRlJ55x8WhNKLynz2xBJKIF2S0XNS9k=
-X-Google-Smtp-Source: AGHT+IF2o19iSjuma7z1rViUr4sWABiy6wlRLdIwp5Tpkbtge9DERt9+zTTFZPwV1qlJD1XBSN92MPB6o6otz7AUm6Y=
-X-Received: by 2002:a19:8c47:0:b0:50b:ca4c:fedd with SMTP id
- i7-20020a198c47000000b0050bca4cfeddmr5404455lfj.31.1702654685913; Fri, 15 Dec
- 2023 07:38:05 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=turmel.org header.i=@turmel.org header.b="BmgxeaXX"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+	 s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc
+	:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=uM3Zy/AOrEsl3JHnUTZqMT1OdXjwKo1g1lPDJzIpBCM=; b=BmgxeaXXKIU1qabilfAhQ05WqT
+	pr6H1Waxi66QrilWN97MktdGdFS7y5/4POhItFIxo9fl8qshtg+1M/ohnFkZjnel8q7qinQf13tdA
+	cO8KHeie82lWUvLYECqicuLITc/VVMNfWVE+lvxI8SOmVlNX0HpJEleMxFeIYEGO6/hBOYSIwaJK0
+	XyQb1QRkhOXQz0eX9wlPy1vNah4tGaYRCtf4dA5y+xkw0Xj42EhHslcpsHytsRcr678oOTL3R0Z9p
+	pFA8X2xkP8NJtCZL37vStI5Bco64JGVkvnkcHjB+qHtOQPITqj0uC2BBAA3M5Og0yz1PQODb/H6QV
+	Y9lHJuGw==;
+Received: from [98.97.179.140] (helo=[192.168.19.197])
+	by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.90_1)
+	(envelope-from <philip@turmel.org>)
+	id 1rEAjf-00072B-Rl; Fri, 15 Dec 2023 16:08:23 +0000
+Message-ID: <ce2f6d3c-6486-43bc-991a-897ebe20fd46@turmel.org>
+Date: Fri, 15 Dec 2023 11:08:21 -0500
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231214222107.2016042-1-song@kernel.org> <20231215125059.00006270@linux.intel.com>
-In-Reply-To: <20231215125059.00006270@linux.intel.com>
-From: Song Liu <song@kernel.org>
-Date: Fri, 15 Dec 2023 07:37:54 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6GZnufqFseLvgpMrrX6qRXodX1n89vEbbC-FqTjsWPDg@mail.gmail.com>
-Message-ID: <CAPhsuW6GZnufqFseLvgpMrrX6qRXodX1n89vEbbC-FqTjsWPDg@mail.gmail.com>
-Subject: Re: [PATCH 0/3] md: Remove deprecated flavors
-To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-block@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: Announcement: mdadm maintainer update
+To: Jes Sorensen <jes@trained-monkey.org>,
+ "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+ Song Liu <songliubraving@fb.com>, Coly Li <colyli@suse.de>,
+ "Luse, Paul E" <paul.e.luse@intel.com>
+References: <e5c7971f-a600-08ec-0f31-8f255bd99979@trained-monkey.org>
+Content-Language: en-US
+From: Phil Turmel <philip@turmel.org>
+In-Reply-To: <e5c7971f-a600-08ec-0f31-8f255bd99979@trained-monkey.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Mariusz,
+Congratulations Mariusz!  And *thank you* !!
 
-On Fri, Dec 15, 2023 at 3:51=E2=80=AFAM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
->
-> On Thu, 14 Dec 2023 14:21:04 -0800
-> Song Liu <song@kernel.org> wrote:
->
-> > Linear, multipath, and faulty have been marked as deprecated for 2.5 ye=
-ars.
-> > Let's remove them.
-> >
-> > Thanks,
-> > Song
->
-> Hi Song,
-> Great idea!
->
-> Please note that there are mdadm tests for those levels. I can approve it=
- only
-> when mdadm clean-up is merged. Our tests must pass continuously.
+On 12/14/23 09:18, Jes Sorensen wrote:
+> Hi
+> 
+> I wanted to let everyone know that Mariusz Tkaczyk is joining as mdadm
+> co-maintainer.
+> 
+> Anyone who has spent time on this list over the last couple of years
+> knows Mariusz as a serious and thorough patch reviewer and I believe he
+> will do a great job as co-maintainer. Most people will also have noticed
+> I have been struggling keeping up due to lack of time, especially since
+> mdadm is no longer directly linked to my daytime job. Having Mariusz
+> onboard should help us progress faster.
+> 
+> Thanks for stepping up Mariusz!
+> 
+> Jes
+> 
 
-Is the continuous test result available publicly?
-
->
-> It is a nice code complexity improvement so let me know if you would
-> like to get my help with mdadm patches.
-
-On my local tests with mdadm, I need to make changes to the following
-tests:
-
-00linear...
-00names...
-00raid0...
-00readonly...
-02lineargrow...
-03r0assem...
-04r0update...
-04update-metadata...
-
-The changes are all straightforward (just remove things related to
-linear/multipath/faulty).
-
-Thanks,
-Song
