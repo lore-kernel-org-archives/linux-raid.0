@@ -1,61 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2483C5638C;
-	Fri, 15 Dec 2023 23:28:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBA5418ECD
+	for <linux-raid@vger.kernel.org>; Fri, 15 Dec 2023 23:30:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i+R2FKmz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6283C433C8;
-	Fri, 15 Dec 2023 23:28:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mRmd7gye"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42252C433C8
+	for <linux-raid@vger.kernel.org>; Fri, 15 Dec 2023 23:30:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702682926;
-	bh=veadB982YLbyHCViqI+QSCopSnDgm5/6Vr03+g8/JLE=;
+	s=k20201202; t=1702683024;
+	bh=QeVfjK/QwUqDJW4CHMTfA0w2mXg4so8Dlgx5Hcqz9gg=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=i+R2FKmz8nGHNHey5zgwGf4eYEKRSHYvmDm24PP2lwyYVG9JzEIZ3NqvXKSLxz2rp
-	 EuPYBKxSFQ9tFML0veWQP//SHl6FoVHzrzAL2XiwjyKHcFpqJ1aB3gkHo7uyJ/Mity
-	 0KktetWrnccMbuvyI2NP8QT3q/p1g891AhQ3dB0FX9aoGXzs1ycEX8zqWdy6jtf4p3
-	 t9Zv502ma6WHnDYR0DJXBB2vjI1mkcYZhsjuujODc51r5TBgngvXWhiKRwEvh4izmk
-	 OYrWi/euP3Rmd+KlCrHbSDh/ysCd/6L7S9l/ux5hFwtB6wXmA1YQDialgEhKmCQM7O
-	 2+Y/4mAbd7Q8Q==
-Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2cc55698c81so7615551fa.0;
-        Fri, 15 Dec 2023 15:28:46 -0800 (PST)
-X-Gm-Message-State: AOJu0YyA0mO9vUlM8oLMk2cnplRLVwtCEGLcd0+kFUIPHrM/ISvtiprw
-	l3pJEWM+Bj9BW9VHS/VTDVPDkklAzfSgQeAxiGs=
-X-Google-Smtp-Source: AGHT+IG0QW5VoJQKWqSlVXO5LuKRfOYueRM4izJQsXJdv6jqa6irdg/gE/fh/9iHPvKEKItXrSTJyg6C8mAVMYCFwnc=
-X-Received: by 2002:a05:651c:1145:b0:2cc:1f9a:e1fa with SMTP id
- h5-20020a05651c114500b002cc1f9ae1famr7896670ljo.19.1702682924864; Fri, 15 Dec
- 2023 15:28:44 -0800 (PST)
+	b=mRmd7gye8lbhpNHxPArxFg+ZB/GhouHvKE+Tcy/i5e+7njmsh6AOS50qDPEYeybXL
+	 V5D7Rp1d/u/O4JXDWsZzW5UAOskBDpMHR6oJjQgj0pI9zE8hEiieixUelpB+DRZ2s+
+	 T2VRwlv8MkPv3w1auw1tRbDe9+YibFLGBT9eHC+VBwZ9q+D1P/GRpcMZO9ghlhIAga
+	 3zyxQq1Wwa33V5sZ2vIqcuBaWvWkQUrRhndXy615t8M5Q4nxD4LQF1pXq/oIqZPyl6
+	 0HMpjpmt2PfoLmrbG0r4FJ/ooqi9FWXNlmeXoOWhVNz4Egjuv32M3sKTdVZKxP9Awg
+	 5XYxVcxD7sGaw==
+Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-50e0d1f9fe6so1443199e87.1
+        for <linux-raid@vger.kernel.org>; Fri, 15 Dec 2023 15:30:24 -0800 (PST)
+X-Gm-Message-State: AOJu0YxAx7ofDvGF/AXlm1WRzQfVP2AmwwTx68t+FFenv1pfFwoT9JCT
+	L0MtVs2J0bbjBwIb+lGOyqSvveOGTFo/gEvEK/E=
+X-Google-Smtp-Source: AGHT+IHBPJaejZoDBeNbRfiSrLAL1xoyvtXu7GvdI+xBdRcLFizYOxlCxalNgSvZ0icqu3Lq/vN/611sR/B5cOIvGq8=
+X-Received: by 2002:a05:6512:3604:b0:50d:2f84:759c with SMTP id
+ f4-20020a056512360400b0050d2f84759cmr3980554lfs.103.1702683022518; Fri, 15
+ Dec 2023 15:30:22 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231215023852.3478228-1-linan666@huaweicloud.com>
-In-Reply-To: <20231215023852.3478228-1-linan666@huaweicloud.com>
+References: <1702470271-16073-1-git-send-email-alex.lyakas@zadara.com>
+In-Reply-To: <1702470271-16073-1-git-send-email-alex.lyakas@zadara.com>
 From: Song Liu <song@kernel.org>
-Date: Fri, 15 Dec 2023 15:28:33 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4dziX5VPzWu5RX6OPfXdXu9M8Ktk+H_d0+CvnhiqQ0Cg@mail.gmail.com>
-Message-ID: <CAPhsuW4dziX5VPzWu5RX6OPfXdXu9M8Ktk+H_d0+CvnhiqQ0Cg@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] support read error check in raid1
-To: linan666@huaweicloud.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com, 
-	yangerkun@huawei.com
+Date: Fri, 15 Dec 2023 15:30:11 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4C9qzDSoPjNWSK70y0jGcFU6h+LXGvXyyNmQNLmmqbHQ@mail.gmail.com>
+Message-ID: <CAPhsuW4C9qzDSoPjNWSK70y0jGcFU6h+LXGvXyyNmQNLmmqbHQ@mail.gmail.com>
+Subject: Re: [PATCH v2] md: upon assembling the array, consult the superblock
+ of the freshest device
+To: Alex Lyakas <alex.lyakas@zadara.com>
+Cc: linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Dec 14, 2023 at 6:40=E2=80=AFPM <linan666@huaweicloud.com> wrote:
+On Wed, Dec 13, 2023 at 4:31=E2=80=AFAM Alex Lyakas <alex.lyakas@zadara.com=
+> wrote:
 >
-> From: Li Nan <linan122@huawei.com>
+> Upon assembling the array, both kernel and mdadm allow the devices to hav=
+e event
+> counter difference of 1, and still consider them as up-to-date.
+> However, a device whose event count is behind by 1, may in fact not be up=
+-to-date,
+> and array resync with such a device may cause data corruption.
+> To avoid this, consult the superblock of the freshest device about the st=
+atus
+> of a device, whose event counter is behind by 1.
 >
-> Changes in v2:
->  - Add RAID_1_10_NAME to distinguish name between raid1 and raid10.
->
-> Li Nan (2):
->   md: factor out a helper exceed_read_errors() to check read_errors
->   md/raid1: support read error check
+> Signed-off-by: Alex Lyakas <alex.lyakas@zadara.com>
 
-Applied to md-next. Thanks,
+Applied to md-next with some minor changes (format, commit log). Thanks!
 
 Song
