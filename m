@@ -1,13 +1,13 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 057EA5697;
-	Fri, 15 Dec 2023 04:33:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB7D5882D;
+	Fri, 15 Dec 2023 04:33:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id F189168AFE; Fri, 15 Dec 2023 05:32:58 +0100 (CET)
-Date: Fri, 15 Dec 2023 05:32:58 +0100
+	id A243168AFE; Fri, 15 Dec 2023 05:33:10 +0100 (CET)
+Date: Fri, 15 Dec 2023 05:33:10 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Song Liu <song@kernel.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -16,9 +16,9 @@ Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Guoqing Jiang <guoqing.jiang@linux.dev>,
 	Mateusz Grzonka <mateusz.grzonka@intel.com>,
 	Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH 1/3] md: Remove deprecated CONFIG_MD_LINEAR
-Message-ID: <20231215043258.GA15593@lst.de>
-References: <20231214222107.2016042-1-song@kernel.org> <20231214222107.2016042-2-song@kernel.org>
+Subject: Re: [PATCH 2/3] md: Remove deprecated CONFIG_MD_MULTIPATH
+Message-ID: <20231215043310.GB15593@lst.de>
+References: <20231214222107.2016042-1-song@kernel.org> <20231214222107.2016042-3-song@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -27,7 +27,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231214222107.2016042-2-song@kernel.org>
+In-Reply-To: <20231214222107.2016042-3-song@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
 Looks good:
