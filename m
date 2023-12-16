@@ -1,80 +1,199 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 654202C699;
-	Fri, 15 Dec 2023 23:31:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="svkCN4ao"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAEEBC433C8;
-	Fri, 15 Dec 2023 23:31:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702683077;
-	bh=8vuBe28Hp3dJiXwpDuxt10walGUsS6E6bLz5BamOg38=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=svkCN4aoTr0Nau1NuvvW1ehkW4tGbbX58IKkV3kMRark4x2lk1FX57a2IBN4nx/7i
-	 qJEF1xSsKnm2pzQEVN8HcI/P9ihiEtUzpjBv0VnwKGCqFBxuTII9p6IMSQkwAaUKlW
-	 KXT3dwT9jZQdEBbr0rBVcVl4BtjEZ63ZF/sntsSATN850a0+Wzo/UT/mcmf8Eo0zl5
-	 WsrFIfLiucJVFDvHgW/ZVO9Vb/wgaKhj1FApySVVGxUHuXnEcv6P09bgy51YAi9YGl
-	 LxoWb76ykMR03r0gys2L5N5SMaUL1qUoIpktuHZ/cBsc4MlgPYES3wnXPgUMMAq53g
-	 p9h024NCJrOjg==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-50bdec453c8so1359924e87.3;
-        Fri, 15 Dec 2023 15:31:17 -0800 (PST)
-X-Gm-Message-State: AOJu0YxYNKIxZdcKgQ+rPhoB56YwKA9M1dQxSGq7PLy0kJu/0rBEOo7c
-	utqWLOzTPcdauqDmNNPMtJIjfkFy10EAbHs0d3E=
-X-Google-Smtp-Source: AGHT+IGvN1Aom7Bvl1CDgcH/Hk02HUZayJ54ctvNg7jL/MLayG/FUhxNCVMQTCy6+9FWVxEsCetyxQpbfTgrxMe6SSw=
-X-Received: by 2002:ac2:419a:0:b0:50d:13f5:9bca with SMTP id
- z26-20020ac2419a000000b0050d13f59bcamr5327104lfh.63.1702683076075; Fri, 15
- Dec 2023 15:31:16 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78F5010A02;
+	Sat, 16 Dec 2023 02:24:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4SsVJz2r3Lz4f3jLt;
+	Sat, 16 Dec 2023 10:24:19 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 04D501A08D2;
+	Sat, 16 Dec 2023 10:24:22 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgC3BQxUCn1lhvkTDw--.2147S3;
+	Sat, 16 Dec 2023 10:24:21 +0800 (CST)
+Subject: Re: [PATCH v2 1/2] md: Fix overflow in is_mddev_idle
+To: Song Liu <song@kernel.org>, linan666@huaweicloud.com
+Cc: axboe@kernel.dk, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231215013931.3329455-1-linan666@huaweicloud.com>
+ <20231215013931.3329455-2-linan666@huaweicloud.com>
+ <CAPhsuW6VTvXy3L9CUhTrSC3+_-_n9FDVrtdzQ7SWWkukoQg13Q@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <be8d9147-4f7f-2fab-da2a-bb4cde46fd12@huaweicloud.com>
+Date: Sat, 16 Dec 2023 10:24:20 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231214151458.28970-1-gouhao@uniontech.com>
-In-Reply-To: <20231214151458.28970-1-gouhao@uniontech.com>
-From: Song Liu <song@kernel.org>
-Date: Fri, 15 Dec 2023 15:31:04 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5Oj67XR6EhndSXCkd52h8P4nAXipxrhG31fy7YNOZg6g@mail.gmail.com>
-Message-ID: <CAPhsuW5Oj67XR6EhndSXCkd52h8P4nAXipxrhG31fy7YNOZg6g@mail.gmail.com>
-Subject: Re: [PATCH] md/raid1: remove unnecessary null checking
-To: Gou Hao <gouhao@uniontech.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	gouhaojake@163.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CAPhsuW6VTvXy3L9CUhTrSC3+_-_n9FDVrtdzQ7SWWkukoQg13Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgC3BQxUCn1lhvkTDw--.2147S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCw45uryUKF18Kr4rKr15Jwb_yoWrZFy3pF
+	W8AFySkrWUJr4j9w47Z3yDCa4rK34ftrZ3Gry2k34IqF1agrnIgFW8WF4YqFnrur1xCry2
+	qa4jgFZ09a4vqFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvFb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
+	07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
+	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
+	GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
+	CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAF
+	wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvj
+	xUrR6zUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Thu, Dec 14, 2023 at 7:15=E2=80=AFAM Gou Hao <gouhao@uniontech.com> wrot=
-e:
->
-> If %__GFP_DIRECT_RECLAIM is set then bio_alloc_bioset will always
-> be able to allocate a bio. See comment of bio_alloc_bioset.
->
-> Signed-off-by: Gou Hao <gouhao@uniontech.com>
+Hi,
 
-Applied to md-next. Thanks!
+在 2023/12/16 7:12, Song Liu 写道:
+> On Thu, Dec 14, 2023 at 5:41 PM <linan666@huaweicloud.com> wrote:
+>>
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> UBSAN reports this problem:
+>>
+>>    UBSAN: Undefined behaviour in drivers/md/md.c:8175:15
+>>    signed integer overflow:
+>>    -2147483291 - 2072033152 cannot be represented in type 'int'
+>>    Call trace:
+>>     dump_backtrace+0x0/0x310
+>>     show_stack+0x28/0x38
+>>     dump_stack+0xec/0x15c
+>>     ubsan_epilogue+0x18/0x84
+>>     handle_overflow+0x14c/0x19c
+>>     __ubsan_handle_sub_overflow+0x34/0x44
+>>     is_mddev_idle+0x338/0x3d8
+>>     md_do_sync+0x1bb8/0x1cf8
+>>     md_thread+0x220/0x288
+>>     kthread+0x1d8/0x1e0
+>>     ret_from_fork+0x10/0x18
+>>
+>> 'curr_events' will overflow when stat accum or 'sync_io' is greater than
+>> INT_MAX.
+>>
+>> Fix it by changing sync_io, last_events and curr_events to 64bit.
+>>
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>>   drivers/md/md.h        | 4 ++--
+>>   include/linux/blkdev.h | 2 +-
+>>   drivers/md/md.c        | 7 ++++---
+>>   3 files changed, 7 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index ade83af123a2..1a4f976951c1 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -50,7 +50,7 @@ struct md_rdev {
+>>
+>>          sector_t sectors;               /* Device size (in 512bytes sectors) */
+>>          struct mddev *mddev;            /* RAID array if running */
+>> -       int last_events;                /* IO event timestamp */
+>> +       long long last_events;          /* IO event timestamp */
+>>
+>>          /*
+>>           * If meta_bdev is non-NULL, it means that a separate device is
+>> @@ -584,7 +584,7 @@ extern void mddev_unlock(struct mddev *mddev);
+>>
+>>   static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
+>>   {
+>> -       atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
+>> +       atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
+>>   }
+>>
+>>   static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
+>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>> index 3f8a21cd9233..d28b98adf457 100644
+>> --- a/include/linux/blkdev.h
+>> +++ b/include/linux/blkdev.h
+>> @@ -170,7 +170,7 @@ struct gendisk {
+>>          struct list_head slave_bdevs;
+>>   #endif
+>>          struct timer_rand_state *random;
+>> -       atomic_t sync_io;               /* RAID */
+>> +       atomic64_t sync_io;             /* RAID */
+>>          struct disk_events *ev;
+> 
+> As we are on this, I wonder whether we really need this.
+> AFAICT, is_mddev_idle() is the only consumer of sync_io.
+> We can probably do the same check in is_mddev_idle()
+> without sync_io.
 
-Song
+After reviewing some code, what I'm understand is following:
 
-> ---
->  drivers/md/raid1.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 35d12948e0a9..e77dc95d4a75 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1126,8 +1126,6 @@ static void alloc_behind_master_bio(struct r1bio *r=
-1_bio,
->
->         behind_bio =3D bio_alloc_bioset(NULL, vcnt, 0, GFP_NOIO,
->                                       &r1_bio->mddev->bio_set);
-> -       if (!behind_bio)
-> -               return;
->
->         /* discard op, we don't support writezero/writesame yet */
->         if (!bio_has_data(bio)) {
-> --
-> 2.34.1
->
->
+I think 'sync_io' is used to distinguish 'sync io' from raid(this can
+from different raid, for example, different partition is used for
+different array) and other io(any io, even it's not from raid). And
+if there are any other IO, sync speed is limited to min, otherwise it's
+limited to max.
+
+If we want to keep this behaviour, I can't think of any other way for
+now...
+
+> 
+> Thanks,
+> Song
+> 
+> 
+>>
+>>   #ifdef CONFIG_BLK_DEV_ZONED
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index c94373d64f2c..1d71b2a9af03 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -8496,14 +8496,15 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+>>   {
+>>          struct md_rdev *rdev;
+>>          int idle;
+>> -       int curr_events;
+>> +       long long curr_events;
+>>
+>>          idle = 1;
+>>          rcu_read_lock();
+>>          rdev_for_each_rcu(rdev, mddev) {
+>>                  struct gendisk *disk = rdev->bdev->bd_disk;
+>> -               curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
+>> -                             atomic_read(&disk->sync_io);
+>> +               curr_events =
+>> +                       (long long)part_stat_read_accum(disk->part0, sectors) -
+>> +                             atomic64_read(&disk->sync_io);
+
+By the way, I don't think this overflow is problematic, assume that
+sectors accumulate by 'A' and sync_io accumulate by 'B':
+
+(setros + A) - (sync_io + B) -(sectors - sync_io) = (A - B)
+
+Nomatter overflow or truncation happened of not in the abouve addition
+and subtraction, the result is correct.
+
+And even if io accounting is disabled, which means sectors and A is
+always 0, the result will always be -B that is <= 0, hence
+is_mddev_idle() will always return true, and sync_speed will be limited
+to max in this case.
+
+Thanks,
+Kuai
+
+>>                  /* sync IO will cause sync_io to increase before the disk_stats
+>>                   * as sync_io is counted when a request starts, and
+>>                   * disk_stats is counted when it completes.
+>> --
+>> 2.39.2
+>>
+>>
+> .
+> 
+
