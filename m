@@ -1,270 +1,150 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09555A29
-	for <linux-raid@vger.kernel.org>; Sun, 17 Dec 2023 00:45:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UpoP42LF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1702773914; x=1734309914;
-  h=date:from:to:cc:subject:message-id;
-  bh=n/UhZ9Mb8TFvHPPpBnwJwbQPB72i+d1xYRSe/y1uQuE=;
-  b=UpoP42LFKSByXg76DaSLDZEhU9eeMTXNvJQYPnqXPwpIlR1+OMNhK6LS
-   aNHl9vA+as3TJ+peRX321HBI2OW4/veQSI4cNz/UHBh7NvDSe1eHVGXAq
-   SFrtd+PCeKr7aaYmpQ3IrescOLpynRGz9xPGKROlgcg7tkBOdhCb3s66A
-   0kT/J8jxiyZLR1+Mua7GKwLsSAKs2t+hzUaFzSrCZ3NVjeqrJ37r/Zh7n
-   YNbi3jkppdKCJO/6by8iGy5NN2hraATtsVxObsckDZbMY4uKE5Qr4OyN0
-   2DDRtTnJDN34xvHfZihVgA1/1vkukBpiTZVOHGnSrCUNU2FjlhMzNeB4M
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10926"; a="395130750"
-X-IronPort-AV: E=Sophos;i="6.04,282,1695711600"; 
-   d="scan'208";a="395130750"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2023 16:45:14 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10926"; a="1106533441"
-X-IronPort-AV: E=Sophos;i="6.04,282,1695711600"; 
-   d="scan'208";a="1106533441"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by fmsmga005.fm.intel.com with ESMTP; 16 Dec 2023 16:45:07 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rEfHE-0002Pe-3A;
-	Sun, 17 Dec 2023 00:45:04 +0000
-Date: Sun, 17 Dec 2023 08:44:56 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- ca294b34aaf3a417fe9069b174e52508ac918ec8
-Message-ID: <202312170853.XUnjm2Ii-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE6D1FBF;
+	Mon, 18 Dec 2023 01:39:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4StjD23JZWz4f3kFT;
+	Mon, 18 Dec 2023 09:39:14 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 24AD91A0787;
+	Mon, 18 Dec 2023 09:39:17 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgCX5QvDon9lx6vIDw--.40516S3;
+	Mon, 18 Dec 2023 09:39:16 +0800 (CST)
+Subject: Re: [PATCH v2 1/2] md: Fix overflow in is_mddev_idle
+To: Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linan666@huaweicloud.com, axboe@kernel.dk, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231215013931.3329455-1-linan666@huaweicloud.com>
+ <20231215013931.3329455-2-linan666@huaweicloud.com>
+ <CAPhsuW6VTvXy3L9CUhTrSC3+_-_n9FDVrtdzQ7SWWkukoQg13Q@mail.gmail.com>
+ <be8d9147-4f7f-2fab-da2a-bb4cde46fd12@huaweicloud.com>
+ <CAPhsuW6kv7FRB_1NoheiDqvmLmongiJ-ty9mYRNvFw3yecE_Ug@mail.gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <baf95bd0-0378-9b3a-9ab9-473baa35ebbc@huaweicloud.com>
+Date: Mon, 18 Dec 2023 09:39:15 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAPhsuW6kv7FRB_1NoheiDqvmLmongiJ-ty9mYRNvFw3yecE_Ug@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgCX5QvDon9lx6vIDw--.40516S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJF4DGrWxtFyDXw48JF1rtFb_yoW5CF18pF
+	WUAF48Kr4DJr45uw1jq3y7A34rK3yUKrZ3GryYkry2qr1agFnIgF40gr4Y9Fn3Zw1xCrW0
+	qa4j9FZxu34kAaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+	sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: ca294b34aaf3a417fe9069b174e52508ac918ec8  md/raid1: support read error check
+Hi,
 
-elapsed time: 1490m
+在 2023/12/17 8:28, Song Liu 写道:
+> On Fri, Dec 15, 2023 at 6:24 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> [...]
+>>>>    static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
+>>>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>>>> index 3f8a21cd9233..d28b98adf457 100644
+>>>> --- a/include/linux/blkdev.h
+>>>> +++ b/include/linux/blkdev.h
+>>>> @@ -170,7 +170,7 @@ struct gendisk {
+>>>>           struct list_head slave_bdevs;
+>>>>    #endif
+>>>>           struct timer_rand_state *random;
+>>>> -       atomic_t sync_io;               /* RAID */
+>>>> +       atomic64_t sync_io;             /* RAID */
+>>>>           struct disk_events *ev;
+>>>
+>>> As we are on this, I wonder whether we really need this.
+>>> AFAICT, is_mddev_idle() is the only consumer of sync_io.
+>>> We can probably do the same check in is_mddev_idle()
+>>> without sync_io.
+>>
+>> After reviewing some code, what I'm understand is following:
+>>
+>> I think 'sync_io' is used to distinguish 'sync io' from raid(this can
+>> from different raid, for example, different partition is used for
+>> different array) and other io(any io, even it's not from raid). And
+>> if there are any other IO, sync speed is limited to min, otherwise it's
+>> limited to max.
+>>
+>> If we want to keep this behaviour, I can't think of any other way for
+>> now...
+> 
+> Thanks for looking into this. To keep current behavior, we will need it
+> in gendisk.
+> 
+> [...]
+> 
+>>>> @@ -8496,14 +8496,15 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+>>>>    {
+>>>>           struct md_rdev *rdev;
+>>>>           int idle;
+>>>> -       int curr_events;
+>>>> +       long long curr_events;
+>>>>
+>>>>           idle = 1;
+>>>>           rcu_read_lock();
+>>>>           rdev_for_each_rcu(rdev, mddev) {
+>>>>                   struct gendisk *disk = rdev->bdev->bd_disk;
+>>>> -               curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
+>>>> -                             atomic_read(&disk->sync_io);
+>>>> +               curr_events =
+>>>> +                       (long long)part_stat_read_accum(disk->part0, sectors) -
+>>>> +                             atomic64_read(&disk->sync_io);
+>>
+>> By the way, I don't think this overflow is problematic, assume that
+>> sectors accumulate by 'A' and sync_io accumulate by 'B':
+>>
+>> (setros + A) - (sync_io + B) -(sectors - sync_io) = (A - B)
+>>
+>> Nomatter overflow or truncation happened of not in the abouve addition
+>> and subtraction, the result is correct.
+>>
+>> And even if io accounting is disabled, which means sectors and A is
+>> always 0, the result will always be -B that is <= 0, hence
+>> is_mddev_idle() will always return true, and sync_speed will be limited
+>> to max in this case.
+> 
+> We only use  this for idle or not check, the behavior is OK (I think).
+> However, this logic is error prone.
+> 
+> On 64-bit systems, there is a 4-byte hole behind sync_io. I think we can
+> just use it for atomic64_t so that we don't have to worry about overflow.
 
-configs tested: 204
-configs skipped: 2
+I'm not sure about this, because other than this ubsan warning, this
+overflow doesn't have any impact on functionality to me.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+If we care about this 'hole', there are lots of holes in gendisk, and
+can be avoiled, for example, moving 'sync_io' near  to 'node_id'.
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                     haps_hs_smp_defconfig   gcc  
-arc                        nsim_700_defconfig   gcc  
-arc                     nsimosci_hs_defconfig   gcc  
-arc                   randconfig-001-20231216   gcc  
-arc                   randconfig-002-20231216   gcc  
-arc                    vdk_hs38_smp_defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                                 defconfig   clang
-arm                       omap2plus_defconfig   gcc  
-arm                   randconfig-001-20231216   gcc  
-arm                   randconfig-002-20231216   gcc  
-arm                   randconfig-003-20231216   gcc  
-arm                   randconfig-004-20231216   gcc  
-arm                             rpc_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20231216   gcc  
-arm64                 randconfig-002-20231216   gcc  
-arm64                 randconfig-003-20231216   gcc  
-arm64                 randconfig-004-20231216   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20231216   gcc  
-csky                  randconfig-002-20231216   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-i386                             allmodconfig   clang
-i386                              allnoconfig   clang
-i386                             allyesconfig   clang
-i386                                defconfig   gcc  
-i386                  randconfig-011-20231216   clang
-i386                  randconfig-011-20231217   gcc  
-i386                  randconfig-012-20231216   clang
-i386                  randconfig-012-20231217   gcc  
-i386                  randconfig-013-20231216   clang
-i386                  randconfig-013-20231217   gcc  
-i386                  randconfig-014-20231216   clang
-i386                  randconfig-014-20231217   gcc  
-i386                  randconfig-015-20231216   clang
-i386                  randconfig-015-20231217   gcc  
-i386                  randconfig-016-20231216   clang
-i386                  randconfig-016-20231217   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20231216   gcc  
-loongarch             randconfig-002-20231216   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                          atari_defconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                        mvme16x_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   clang
-mips                             allyesconfig   gcc  
-mips                         bigsur_defconfig   gcc  
-mips                           gcw0_defconfig   gcc  
-mips                           ip32_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20231216   gcc  
-nios2                 randconfig-002-20231216   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           alldefconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20231216   gcc  
-parisc                randconfig-002-20231216   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   clang
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                    amigaone_defconfig   gcc  
-powerpc                       holly_defconfig   gcc  
-powerpc                  iss476-smp_defconfig   gcc  
-powerpc                 linkstation_defconfig   gcc  
-powerpc                   motionpro_defconfig   gcc  
-powerpc                 mpc837x_rdb_defconfig   gcc  
-powerpc                     ppa8548_defconfig   gcc  
-powerpc               randconfig-001-20231216   gcc  
-powerpc               randconfig-002-20231216   gcc  
-powerpc               randconfig-003-20231216   gcc  
-powerpc                     redwood_defconfig   gcc  
-powerpc                    sam440ep_defconfig   gcc  
-powerpc                     tqm8560_defconfig   gcc  
-powerpc                        warp_defconfig   gcc  
-powerpc                         wii_defconfig   gcc  
-powerpc64             randconfig-001-20231216   gcc  
-powerpc64             randconfig-002-20231216   gcc  
-powerpc64             randconfig-003-20231216   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   clang
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20231216   gcc  
-riscv                 randconfig-002-20231216   gcc  
-riscv                          rv32_defconfig   clang
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                        apsh4ad0a_defconfig   gcc  
-sh                                  defconfig   gcc  
-sh                 kfr2r09-romimage_defconfig   gcc  
-sh                    randconfig-001-20231216   gcc  
-sh                    randconfig-002-20231216   gcc  
-sh                          sdk7786_defconfig   gcc  
-sh                           se7724_defconfig   gcc  
-sh                   sh7724_generic_defconfig   gcc  
-sh                        sh7757lcr_defconfig   gcc  
-sh                        sh7785lcr_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20231216   gcc  
-sparc64               randconfig-002-20231216   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20231216   gcc  
-um                    randconfig-002-20231216   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20231216   gcc  
-x86_64       buildonly-randconfig-001-20231217   clang
-x86_64       buildonly-randconfig-002-20231216   gcc  
-x86_64       buildonly-randconfig-002-20231217   clang
-x86_64       buildonly-randconfig-003-20231216   gcc  
-x86_64       buildonly-randconfig-003-20231217   clang
-x86_64       buildonly-randconfig-004-20231216   gcc  
-x86_64       buildonly-randconfig-004-20231217   clang
-x86_64       buildonly-randconfig-005-20231216   gcc  
-x86_64       buildonly-randconfig-005-20231217   clang
-x86_64       buildonly-randconfig-006-20231216   gcc  
-x86_64       buildonly-randconfig-006-20231217   clang
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                randconfig-011-20231216   gcc  
-x86_64                randconfig-011-20231217   clang
-x86_64                randconfig-012-20231216   gcc  
-x86_64                randconfig-012-20231217   clang
-x86_64                randconfig-013-20231216   gcc  
-x86_64                randconfig-013-20231217   clang
-x86_64                randconfig-014-20231216   gcc  
-x86_64                randconfig-014-20231217   clang
-x86_64                randconfig-015-20231216   gcc  
-x86_64                randconfig-015-20231217   clang
-x86_64                randconfig-016-20231216   gcc  
-x86_64                randconfig-016-20231217   clang
-x86_64                randconfig-071-20231216   gcc  
-x86_64                randconfig-071-20231217   clang
-x86_64                randconfig-072-20231216   gcc  
-x86_64                randconfig-072-20231217   clang
-x86_64                randconfig-073-20231216   gcc  
-x86_64                randconfig-073-20231217   clang
-x86_64                randconfig-074-20231216   gcc  
-x86_64                randconfig-074-20231217   clang
-x86_64                randconfig-075-20231216   gcc  
-x86_64                randconfig-075-20231217   clang
-x86_64                randconfig-076-20231216   gcc  
-x86_64                randconfig-076-20231217   clang
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                           alldefconfig   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                  cadence_csp_defconfig   gcc  
-xtensa                       common_defconfig   gcc  
-xtensa                randconfig-001-20231216   gcc  
-xtensa                randconfig-002-20231216   gcc  
-xtensa                    xip_kc705_defconfig   gcc  
+Thanks,
+Kuai
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> 
+> Thanks,
+> Song
+> .
+> 
+
