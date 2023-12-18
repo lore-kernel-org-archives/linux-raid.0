@@ -1,81 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FA193D54C;
-	Mon, 18 Dec 2023 16:05:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 638AA42390;
+	Mon, 18 Dec 2023 16:12:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W2ULm2DH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F595C433C9;
-	Mon, 18 Dec 2023 16:05:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hm+Ex8Zi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5C57C433C8;
+	Mon, 18 Dec 2023 16:12:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702915503;
-	bh=YKnvFnU90MLtOfW7ZUGVnLDGtzT+XNtezHnJjjlx3W4=;
+	s=k20201202; t=1702915926;
+	bh=+gDFHiUihVO9YBtJ8DDjinIUtn2dVVzpQVgSxl0p0lI=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=W2ULm2DHLvbKgwufoXz2eG7C0DCc2cZA5ADG1JYOZJkarrfvBCa7mIRPhjQhyfuFf
-	 GK+MUvYbyKACtve62uXxQoEDx6eAEzWGn1fsPbfjKQKx7F0cPvmzZydXNgg6P40sVg
-	 8j2jSJvnH912ldoUXzQMIiG+CNv1176HUTg8b0mTDlEuGGBnqOuo9MRUhkNMHAcYLF
-	 2xYJDcmpt9borp/yNzZJ5imcFBWNERprz91h0Kc5ac9+JllMuSCAzM0sy8H87t8Y4n
-	 rzPa4UmgFyRcWXNqLiVt2T9/1TlJiBqiZF63bO6R5rpdp/UInbcS5eCjVjt3ebE2G3
-	 28hySGJKpa+rA==
-Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-2cc3f5e7451so39120811fa.2;
-        Mon, 18 Dec 2023 08:05:03 -0800 (PST)
-X-Gm-Message-State: AOJu0YxnQZR3Bki2E3Xpj3IvMOXkkmO7iP2dYfHs0QlLSb7tjweVo7+G
-	DcErfH9v8d3Sjth8b2yaW1aSqJijT4W1DDh0ZX8=
-X-Google-Smtp-Source: AGHT+IF/1c2sVKIWhklkyKwxs+e/TlmjZyKZ44P+rlu8hMftsh8338VA9tYvJ1f4yipZyHIykWTNfiJ5aJO7SaPFQt4=
-X-Received: by 2002:a05:651c:506:b0:2cb:3ece:1235 with SMTP id
- o6-20020a05651c050600b002cb3ece1235mr6781953ljp.38.1702915501728; Mon, 18 Dec
- 2023 08:05:01 -0800 (PST)
+	b=Hm+Ex8ZiURA0F5paydO7ZLLIg3KNQQlTFBJ0mw6XFkJlZz0Z8GltQT//tsgdtVJ1f
+	 yWpOK5soe6FtNz61AaJ2UjDAqWhyxOueiT+NHqHVaoq70dxYXKKPsJkiXaFsVyB+SX
+	 ZgvpxEDJNhJ5T3zufg2R1EI7oentL9EQntXtrRU06IykKyA7ncUCEzcDAcBjNV+poM
+	 BdKuO8M8ksN7Ccx4qFpiiftObmtA+bfPndtmPzOECOLHk7h2zfjPsrvHXPh1UuhObB
+	 d6XcyLAUnPmuVblEKfXGpaXz0Or3kPqPMpYf5uYbC8FNLDEVSbdVIjiINhzVRsvuxr
+	 4wSmFWSM0Evhg==
+Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-50e3845abdaso1611300e87.3;
+        Mon, 18 Dec 2023 08:12:06 -0800 (PST)
+X-Gm-Message-State: AOJu0YxxcHHlvyKkBDH3JYA6yB6ZPiJkCQo/tIsN1pqcRtYz3G9iWjy1
+	wJYa6HyoMRT1rAhs+60H2OfY4+B10W+ydZC2gsM=
+X-Google-Smtp-Source: AGHT+IFX38T/oiryJnVRtGF33LbC+xeoNQMiXNLbUmvcuvnSgPEGquuxe9tB7QSqJygcut2TdqNcVjLjBSpbpJMiM3o=
+X-Received: by 2002:ac2:4c42:0:b0:50e:ce9:b2f6 with SMTP id
+ o2-20020ac24c42000000b0050e0ce9b2f6mr6348086lfk.125.1702915925051; Mon, 18
+ Dec 2023 08:12:05 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231215013931.3329455-1-linan666@huaweicloud.com>
- <20231215013931.3329455-2-linan666@huaweicloud.com> <CAPhsuW6VTvXy3L9CUhTrSC3+_-_n9FDVrtdzQ7SWWkukoQg13Q@mail.gmail.com>
- <be8d9147-4f7f-2fab-da2a-bb4cde46fd12@huaweicloud.com> <CAPhsuW6kv7FRB_1NoheiDqvmLmongiJ-ty9mYRNvFw3yecE_Ug@mail.gmail.com>
- <baf95bd0-0378-9b3a-9ab9-473baa35ebbc@huaweicloud.com>
-In-Reply-To: <baf95bd0-0378-9b3a-9ab9-473baa35ebbc@huaweicloud.com>
+References: <20231214222107.2016042-1-song@kernel.org> <20231215125059.00006270@linux.intel.com>
+ <CAPhsuW6GZnufqFseLvgpMrrX6qRXodX1n89vEbbC-FqTjsWPDg@mail.gmail.com> <20231218093201.000020dd@linux.intel.com>
+In-Reply-To: <20231218093201.000020dd@linux.intel.com>
 From: Song Liu <song@kernel.org>
-Date: Mon, 18 Dec 2023 08:04:50 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW61yzkH5Tp0ku37DBjnQzT81yJUx0F4bag4xdq1rX5gsA@mail.gmail.com>
-Message-ID: <CAPhsuW61yzkH5Tp0ku37DBjnQzT81yJUx0F4bag4xdq1rX5gsA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] md: Fix overflow in is_mddev_idle
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: linan666@huaweicloud.com, axboe@kernel.dk, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com, 
-	"yukuai (C)" <yukuai3@huawei.com>
+Date: Mon, 18 Dec 2023 08:11:53 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7w7WbWePpQd4aqnvXHwbdEJzw9efEP_r6tJwpeg0_qLw@mail.gmail.com>
+Message-ID: <CAPhsuW7w7WbWePpQd4aqnvXHwbdEJzw9efEP_r6tJwpeg0_qLw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] md: Remove deprecated flavors
+To: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-block@vger.kernel.org, Paul E Luse <paul.e.luse@linux.intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Dec 17, 2023 at 5:39=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> w=
-rote:
+Hi Mariusz,
+
+On Mon, Dec 18, 2023 at 12:32=E2=80=AFAM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
 >
 [...]
+> > >
+> > > Please note that there are mdadm tests for those levels. I can approv=
+e it
+> > > only when mdadm clean-up is merged. Our tests must pass continuously.
 > >
-> > We only use  this for idle or not check, the behavior is OK (I think).
-> > However, this logic is error prone.
-> >
-> > On 64-bit systems, there is a 4-byte hole behind sync_io. I think we ca=
-n
-> > just use it for atomic64_t so that we don't have to worry about overflo=
-w.
+> > Is the continuous test result available publicly?
 >
-> I'm not sure about this, because other than this ubsan warning, this
-> overflow doesn't have any impact on functionality to me.
+> We are working on public CI (Paul owns it). On my side I'm not executing =
+all
+> tests, IMSM only. In this case it is obvious that mdadm tests will stop p=
+assing,
+> I don't need results to see that. We should keep both mdadm and md compat=
+ible.
+> We are continuously adding new MD regression tests to mdadm (at least Kua=
+i is
+> doing that) so we should also care about removing things.
+>
+> >
+> > >
+> > > It is a nice code complexity improvement so let me know if you would
+> > > like to get my help with mdadm patches.
+> >
+> > On my local tests with mdadm, I need to make changes to the following
+> > tests:
+> >
+> > 00linear...
+> > 00names...
+> > 00raid0...
+> > 00readonly...
+> > 02lineargrow...
+> > 03r0assem...
+> > 04r0update...
+> > 04update-metadata...
+> >
+> > The changes are all straightforward (just remove things related to
+> > linear/multipath/faulty).
+> >
+>
+> Please do not forgot remove dead code from mdadm. For example simple find
+> "multipath" (case insensitive) reefers me to multiple places with special
+> handling for this level. We need to remove it from code and documentation=
+.
+> Can you handle this too?
 
-Fixing warnings for zero or low cost is always a good idea. It helps boost
-the signal when UBSAN (and other debug features) detects real issues.
+I think this is a bigger discussion: will mdadm stop supporting these
+flavors on
+older kernels? Say, mdadm-5.0+ (or a different number) will not support
+multipath flavor on older kernels?
 
-> If we care about this 'hole', there are lots of holes in gendisk, and
-> can be avoiled, for example, moving 'sync_io' near  to 'node_id'.
+>
+> Oh and last one, I can't find update for md man in your changes. Could yo=
+u
+> please remove those levels from md man?
 
-The point was not "let's fill the hole", but "we can use atomic64_t
-without extra memory cost". In general, I don't think we care too
-much about holes in "struct gendisk".
-
-Does this make sense?
+man side is easier. Once we know which major will have this set (6.8 or lat=
+er),
+we can update the man pages with the information.
 
 Thanks,
 Song
