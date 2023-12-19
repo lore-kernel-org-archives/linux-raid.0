@@ -1,103 +1,140 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8F3615C3;
-	Tue, 19 Dec 2023 01:40:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SvKBD1kdpz4f3jLZ;
-	Tue, 19 Dec 2023 09:39:48 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 652DD1A087A;
-	Tue, 19 Dec 2023 09:39:53 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgDn6xFn9IBlFywiEA--.41035S3;
-	Tue, 19 Dec 2023 09:39:53 +0800 (CST)
-Subject: Re: [PATCH v2 1/2] md: Fix overflow in is_mddev_idle
-To: Song Liu <song@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: linan666@huaweicloud.com, axboe@kernel.dk, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
- yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20231215013931.3329455-1-linan666@huaweicloud.com>
- <20231215013931.3329455-2-linan666@huaweicloud.com>
- <CAPhsuW6VTvXy3L9CUhTrSC3+_-_n9FDVrtdzQ7SWWkukoQg13Q@mail.gmail.com>
- <be8d9147-4f7f-2fab-da2a-bb4cde46fd12@huaweicloud.com>
- <CAPhsuW6kv7FRB_1NoheiDqvmLmongiJ-ty9mYRNvFw3yecE_Ug@mail.gmail.com>
- <baf95bd0-0378-9b3a-9ab9-473baa35ebbc@huaweicloud.com>
- <CAPhsuW61yzkH5Tp0ku37DBjnQzT81yJUx0F4bag4xdq1rX5gsA@mail.gmail.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <8713b617-db39-113a-377f-f97e123dbf9b@huaweicloud.com>
-Date: Tue, 19 Dec 2023 09:39:51 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F560156EC;
+	Tue, 19 Dec 2023 10:46:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VlOeb6q7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1702982806; x=1734518806;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=huJKnFT1fUWL+Xrruc9EYHcavn2dIZ966k3dBgI5pJQ=;
+  b=VlOeb6q79L1faf18Txt5b1xHvYBV7xB62WlgDIUKSRzBdZHFIHH67SrE
+   PFI5IwpyjN9FxQiZpoVTx/4Iy5H+hzawQHyI3WgDemmjAPQkDWez0YsCB
+   hrjxJ2DzAUykTLYxeo8LQZL0nOj8+/IjOgwve5CELYyBRmkk6fBcmF3QY
+   /myxC/k3WD7y2xpdHnpejYL6hlLRwXMcPelxtqYHdmEKf6oVwZIq0sOZW
+   zeDHxLPs3UfnHdsde8zRKNE0AhNb1ujyigihAXhiC/4nvJb+eNJgfRY+D
+   D58gM0WJ1MpgXJY+rg4RHFlpHVCwb+yfxvwReJRyrmPxuQs90gn21+6gA
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10928"; a="386064409"
+X-IronPort-AV: E=Sophos;i="6.04,288,1695711600"; 
+   d="scan'208";a="386064409"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2023 02:46:45 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10928"; a="725692427"
+X-IronPort-AV: E=Sophos;i="6.04,288,1695711600"; 
+   d="scan'208";a="725692427"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.237.142.133])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2023 02:46:43 -0800
+Date: Tue, 19 Dec 2023 11:46:39 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-block@vger.kernel.org, Paul E Luse <paul.e.luse@linux.intel.com>
+Subject: Re: [PATCH 0/3] md: Remove deprecated flavors
+Message-ID: <20231219114639.0000689d@linux.intel.com>
+In-Reply-To: <CAPhsuW7w7WbWePpQd4aqnvXHwbdEJzw9efEP_r6tJwpeg0_qLw@mail.gmail.com>
+References: <20231214222107.2016042-1-song@kernel.org>
+	<20231215125059.00006270@linux.intel.com>
+	<CAPhsuW6GZnufqFseLvgpMrrX6qRXodX1n89vEbbC-FqTjsWPDg@mail.gmail.com>
+	<20231218093201.000020dd@linux.intel.com>
+	<CAPhsuW7w7WbWePpQd4aqnvXHwbdEJzw9efEP_r6tJwpeg0_qLw@mail.gmail.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW61yzkH5Tp0ku37DBjnQzT81yJUx0F4bag4xdq1rX5gsA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDn6xFn9IBlFywiEA--.41035S3
-X-Coremail-Antispam: 1UD129KBjvJXoWrKr1fXF4ktF43uF18GFW8Xrb_yoW8JF1DpF
-	Wav3Wjkrs8CF92y34ftwnrtr1rtw4UC3yrKFyFkr4xKr93W39xAFn7Kr1Y9r95Zws3uryY
-	v3yagFW3A34qk3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-	sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Mon, 18 Dec 2023 08:11:53 -0800
+Song Liu <song@kernel.org> wrote:
 
-在 2023/12/19 0:04, Song Liu 写道:
-> On Sun, Dec 17, 2023 at 5:39 PM Yu Kuai <yukuai1@huaweicloud.com> wrote:
->>
+> Hi Mariusz,
+>=20
+> On Mon, Dec 18, 2023 at 12:32=E2=80=AFAM Mariusz Tkaczyk
+> <mariusz.tkaczyk@linux.intel.com> wrote:
+> > =20
 > [...]
->>>
->>> We only use  this for idle or not check, the behavior is OK (I think).
->>> However, this logic is error prone.
->>>
->>> On 64-bit systems, there is a 4-byte hole behind sync_io. I think we can
->>> just use it for atomic64_t so that we don't have to worry about overflow.
->>
->> I'm not sure about this, because other than this ubsan warning, this
->> overflow doesn't have any impact on functionality to me.
-> 
-> Fixing warnings for zero or low cost is always a good idea. It helps boost
-> the signal when UBSAN (and other debug features) detects real issues.
-> 
->> If we care about this 'hole', there are lots of holes in gendisk, and
->> can be avoiled, for example, moving 'sync_io' near  to 'node_id'.
-> 
-> The point was not "let's fill the hole", but "we can use atomic64_t
-> without extra memory cost". In general, I don't think we care too
-> much about holes in "struct gendisk".
-> 
-> Does this make sense?
+> > > >
+> > > > Please note that there are mdadm tests for those levels. I can appr=
+ove
+> > > > it only when mdadm clean-up is merged. Our tests must pass
+> > > > continuously. =20
+> > >
+> > > Is the continuous test result available publicly? =20
+> >
+> > We are working on public CI (Paul owns it). On my side I'm not executin=
+g all
+> > tests, IMSM only. In this case it is obvious that mdadm tests will stop
+> > passing, I don't need results to see that. We should keep both mdadm an=
+d md
+> > compatible. We are continuously adding new MD regression tests to mdadm=
+ (at
+> > least Kuai is doing that) so we should also care about removing things.
+> > =20
+> > > =20
+> > > >
+> > > > It is a nice code complexity improvement so let me know if you would
+> > > > like to get my help with mdadm patches. =20
+> > >
+> > > On my local tests with mdadm, I need to make changes to the following
+> > > tests:
+> > >
+> > > 00linear...
+> > > 00names...
+> > > 00raid0...
+> > > 00readonly...
+> > > 02lineargrow...
+> > > 03r0assem...
+> > > 04r0update...
+> > > 04update-metadata...
+> > >
+> > > The changes are all straightforward (just remove things related to
+> > > linear/multipath/faulty).
+> > > =20
+> >
+> > Please do not forgot remove dead code from mdadm. For example simple fi=
+nd
+> > "multipath" (case insensitive) reefers me to multiple places with speci=
+al
+> > handling for this level. We need to remove it from code and documentati=
+on.
+> > Can you handle this too? =20
+>=20
+> I think this is a bigger discussion: will mdadm stop supporting these
+> flavors on
+> older kernels? Say, mdadm-5.0+ (or a different number) will not support
+> multipath flavor on older kernels?
+>=20
 
-Of course, I don't have strong preference on this. Because our syzkaller
-reported lots of UBSAN warnings, hence only fix real issues is how we do
-it. For upstream, I'm good at fix this warning with zero or low cost.
+Good point, I forgot that we are keeping backward compatibility with old
+kernels. Currently 3.10 is the lowest one supported so agree, we need to ke=
+ep
+this code. Thanks for clarifying!
+
+> >
+> > Oh and last one, I can't find update for md man in your changes. Could =
+you
+> > please remove those levels from md man? =20
+>=20
+> man side is easier. Once we know which major will have this set (6.8 or
+> later), we can update the man pages with the information.
+
+Understood!
+
+No further questions, please just remove tests and eventually add warning w=
+hen
+creating those levels in mdadm i.e "Linear/Multipath/Faulty are deprecated =
+and
+will be removed in next releases".
 
 Thanks,
-Kuai
-
-> 
-> Thanks,
-> Song
-> .
-> 
-
+Mariusz
