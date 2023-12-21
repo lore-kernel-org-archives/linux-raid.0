@@ -1,202 +1,132 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FEC320DC6;
-	Thu, 21 Dec 2023 08:49:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Swkcv3MNKz4f3jqc;
-	Thu, 21 Dec 2023 16:49:19 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D69EF1A0B5A;
-	Thu, 21 Dec 2023 16:49:20 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgD3RQwO_INlQ2LuEA--.33218S3;
-	Thu, 21 Dec 2023 16:49:20 +0800 (CST)
-Subject: Re: [PATCH 2/2] md: create symlink with disk holder after mddev
- resume
-To: linan666@huaweicloud.com, song@kernel.org
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20231221071109.1562530-1-linan666@huaweicloud.com>
- <20231221071109.1562530-3-linan666@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <3b240652-580e-73d5-a318-612984902aad@huaweicloud.com>
-Date: Thu, 21 Dec 2023 16:49:18 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BA8A6E2A0;
+	Thu, 21 Dec 2023 10:44:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dMUtexx/"
+Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-5cd54e5fbb2so255266a12.2;
+        Thu, 21 Dec 2023 02:44:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1703155443; x=1703760243; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Bo5HJl27sw1CMSOKy+oOqaIrDQeJX/kJbyC1rLu2v4w=;
+        b=dMUtexx/KE1PzAoch6XRtlFsEksjvIreexOf1j08l8igJb7XXWXWLGSLfgxV6ELLIn
+         V51k/xfwcgDz8vgS31vWu5bUapYULUuPOuA6ojdESopb3efm3pPlQw7ZYLQlOCxZP+Rx
+         r4+xPIQQ8UShwmRB/ju/Bb9Zs0dDvO3Wzd2Pf4Ev73V+xyAAOfjiOGsndt+rFC+QqlNx
+         IgS6NOEKqiOG8AM2GKt02QP6sPjL8dgPsiGPEMzzP3oajhEjF2LGKHahTDbq7mEKDWbR
+         lZoT5nJWrVD+vUlYFIJjevIuV3CbERSNZ3ZLBbefXdXBOzd6qg9qBEMX3wu4fSZRnzbK
+         rf4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1703155443; x=1703760243;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Bo5HJl27sw1CMSOKy+oOqaIrDQeJX/kJbyC1rLu2v4w=;
+        b=jp7mEc235Y6mnjMfdIhyHBpc2cgYpdxJaGPJkYYMMGbCTamDVgi3RTdJkdq5FQ5Mqc
+         b4yawj1HPh1LE8dhYBKhMgXaf8X2cS2Ajiwc7x+KmGnUaY//+G5sq+PNjk9AQ+W2rNf4
+         aDKTI2DpMVkY0Ec2DD5zaEYvacOfcDzOuzNDWePOMBogfXx50hOR77G5lTdzMJhwGle6
+         GWbWhv9dZRbkYP3pxOhhZzCssSeTZYp6j2GP/ZuA4oeLD5wzYf/8fOjDhJYjs8sG/upr
+         WukgxtQx84ZMAuJOGox7dyQa0PTM8MusXNM4HTpsiqiYw9bHsUo9m+yEKt2bW3LUakcW
+         Bqfg==
+X-Gm-Message-State: AOJu0YyjcapEPF3CLrstS7r5zsajXGulEOqlwx9UDxWb3ZpHTNtRyrxb
+	kk8IUPKJOvViRk6n+IJz6Pc=
+X-Google-Smtp-Source: AGHT+IEXCGLsKGUvqFYBb1EDPhNJjKoCtRN8qbD51wyTxoqlw+tZIBw9kcFX9bbMUt30akC+jrBlbA==
+X-Received: by 2002:a05:6a20:a10e:b0:190:8c90:c310 with SMTP id q14-20020a056a20a10e00b001908c90c310mr795053pzk.42.1703155443225;
+        Thu, 21 Dec 2023 02:44:03 -0800 (PST)
+Received: from g2039B650.. ([106.39.42.144])
+        by smtp.gmail.com with ESMTPSA id ei8-20020a17090ae54800b0028bd9f88576sm1470111pjb.26.2023.12.21.02.43.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Dec 2023 02:44:02 -0800 (PST)
+From: Gui-Dong Han <2045gemini@gmail.com>
+To: song@kernel.org,
+	yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	baijiaju1990@outlook.com,
+	Gui-Dong Han <2045gemini@gmail.com>,
+	BassCheck <bass@buaa.edu.cn>
+Subject: [PATCH] md/raid5: fix atomicity violation in raid5_cache_count
+Date: Thu, 21 Dec 2023 18:43:43 +0800
+Message-Id: <20231221104343.5557-1-2045gemini@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20231221071109.1562530-3-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgD3RQwO_INlQ2LuEA--.33218S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCFyrAF13ZryDuw1rJw1DZFb_yoWrZFyrpa
-	yfWFy5GrWUXr9xZrWUXasxGF15Xw18Krs7try3u34IgasxArsIkr1rury5Xry8t3sxZF4D
-	X3W5Xw4DuF1IgFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
-	wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
-	80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0
-	I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
-	k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
-	1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+In raid5_cache_count():
+	if (conf->max_nr_stripes < conf->min_nr_stripes)
+		return 0;
+	return conf->max_nr_stripes - conf->min_nr_stripes;
+The current check is ineffective, as the values could change immediately
+after being checked.
 
-ÔÚ 2023/12/21 15:11, linan666@huaweicloud.com Ð´µÀ:
-> From: Li Nan <linan122@huawei.com>
-> 
-> There is a risk of deadlock when a process gets disk->open_mutex after
-> suspending mddev, because other processes may hold open_mutex while
-> submitting io. For example:
-> 
->    T1				T2
->    blkdev_open
->     bdev_open_by_dev
->      mutex_lock(&disk->open_mutex)
->    				md_ioctl
->    				 mddev_suspend_and_lock
->    				  mddev_suspend
->    				 md_add_new_disk
->    				  bind_rdev_to_array
->    				   bd_link_disk_holder
->    				    //wait open_mutex
->      blkdev_get_whole
->       bdev_disk_changed
->        efi_partition
->         read_lba
->          ...
->           md_submit_bio
->            md_handle_request
->             //wait resume
-> 
+In raid5_set_cache_size():
+	...
+	conf->min_nr_stripes = size;
+	...
+	while (size > conf->max_nr_stripes)
+		conf->min_nr_stripes = conf->max_nr_stripes;
+	...
 
-Nice catch! This patch looks good except that the new flag
-'SymlinkCreated' doesn't look accurate, perhaps 'HolderLinked'
-will make more sense.
+Due to intermediate value updates in raid5_set_cache_size(), concurrent
+execution of raid5_cache_count() and raid5_set_cache_size() may lead to
+inconsistent reads of conf->max_nr_stripes and conf->min_nr_stripes.
+The current checks are ineffective as values could change immediately
+after being checked, raising the risk of conf->min_nr_stripes exceeding
+conf->max_nr_stripes and potentially causing an integer overflow.
 
-Thanks,
-Kuai
+This possible bug is found by an experimental static analysis tool
+developed by our team. This tool analyzes the locking APIs to extract
+function pairs that can be concurrently executed, and then analyzes the
+instructions in the paired functions to identify possible concurrency bugs
+including data races and atomicity violations. The above possible bug is
+reported when our tool analyzes the source code of Linux 6.2.
 
-> Fix it by getting disk->open_mutex after mddev resume, iterating each
-> mddev->disk to create symlink for rdev which has not been created yet.
-> and moving bd_unlink_disk_holder() to mddev_unlock(), rdev has been
-> deleted from mddev->disks here, which can avoid concurrent bind and unbind,
-> 
-> Fixes: 1b0a2d950ee2 ("md: use new apis to suspend array for ioctls involed array reconfiguration")
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/md.c | 39 +++++++++++++++++++++++++++++----------
->   1 file changed, 29 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d6612b922c76..c128570f2a5d 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -521,6 +521,20 @@ void mddev_resume(struct mddev *mddev)
->   }
->   EXPORT_SYMBOL_GPL(mddev_resume);
->   
-> +static void md_link_disk_holder(struct mddev *mddev)
-> +{
-> +	struct md_rdev *rdev;
-> +
-> +	rcu_read_lock();
-> +	rdev_for_each_rcu(rdev, mddev) {
-> +		if (test_bit(SymlinkCreated, &rdev->flags))
-> +			continue;
-> +		if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
-> +			set_bit(SymlinkCreated, &rdev->flags);
-> +	}
-> +	rcu_read_unlock();
-> +}
-> +
->   /*
->    * Generic flush handling for md
->    */
-> @@ -902,6 +916,11 @@ void mddev_unlock(struct mddev *mddev)
->   
->   	list_for_each_entry_safe(rdev, tmp, &delete, same_set) {
->   		list_del_init(&rdev->same_set);
-> +		if (test_bit(SymlinkCreated, &rdev->flags)) {
-> +			bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
-> +			clear_bit(SymlinkCreated, &rdev->flags);
-> +		}
-> +		rdev->mddev = NULL;
->   		kobject_del(&rdev->kobj);
->   		export_rdev(rdev, mddev);
->   	}
-> @@ -2526,8 +2545,6 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
->   		sysfs_get_dirent_safe(rdev->kobj.sd, "bad_blocks");
->   
->   	list_add_rcu(&rdev->same_set, &mddev->disks);
-> -	if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
-> -		set_bit(SymlinkCreated, &rdev->flags);
->   
->   	/* May as well allow recovery to be retried once */
->   	mddev->recovery_disabled++;
-> @@ -2562,14 +2579,9 @@ static void md_kick_rdev_from_array(struct md_rdev *rdev)
->   {
->   	struct mddev *mddev = rdev->mddev;
->   
-> -	if (test_bit(SymlinkCreated, &rdev->flags)) {
-> -		bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
-> -		clear_bit(SymlinkCreated, &rdev->flags);
-> -	}
->   	list_del_rcu(&rdev->same_set);
->   	pr_debug("md: unbind<%pg>\n", rdev->bdev);
->   	mddev_destroy_serial_pool(rdev->mddev, rdev);
-> -	rdev->mddev = NULL;
->   	sysfs_remove_link(&rdev->kobj, "block");
->   	sysfs_put(rdev->sysfs_state);
->   	sysfs_put(rdev->sysfs_unack_badblocks);
-> @@ -4667,8 +4679,10 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
->   	if (err)
->   		export_rdev(rdev, mddev);
->   	mddev_unlock_and_resume(mddev);
-> -	if (!err)
-> +	if (!err) {
-> +		md_link_disk_holder(mddev);
->   		md_new_event();
-> +	}
->   	return err ? err : len;
->   }
->   
-> @@ -6606,6 +6620,7 @@ static void autorun_devices(int part)
->   			}
->   			autorun_array(mddev);
->   			mddev_unlock_and_resume(mddev);
-> +			md_link_disk_holder(mddev);
->   		}
->   		/* on success, candidates will be empty, on error
->   		 * it won't...
-> @@ -7832,8 +7847,12 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
->   	    err != -EINVAL)
->   		mddev->hold_active = 0;
->   
-> -	md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev) :
-> -				     mddev_unlock(mddev);
-> +	if (md_ioctl_need_suspend(cmd)) {
-> +		mddev_unlock_and_resume(mddev);
-> +		md_link_disk_holder(mddev);
-> +	} else {
-> +		mddev_unlock(mddev);
-> +	}
->   
->   out:
->   	if(did_set_md_closing)
-> 
+To resolve this issue, it is suggested to introduce local variables
+'min_stripes' and 'max_stripes' in raid5_cache_count() to ensure the
+values remain stable throughout the check. Adding locks in
+raid5_cache_count() fails to resolve atomicity violations, as
+raid5_set_cache_size() may hold intermediate values of
+conf->min_nr_stripes while unlocked. With this patch applied, our tool no
+longer reports the bug, with the kernel configuration allyesconfig for
+x86_64. Due to the lack of associated hardware, we cannot test the patch
+in runtime testing, and just verify it according to the code logic.
+
+Fixes: edbe83ab4c27e ("md/raid5: allow the stripe_cache to grow and ...")
+Reported-by: BassCheck <bass@buaa.edu.cn>
+Signed-off-by: Gui-Dong Han <2045gemini@gmail.com>
+---
+ drivers/md/raid5.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8497880135ee..62ebf33402cc 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7390,11 +7390,12 @@ static unsigned long raid5_cache_count(struct shrinker *shrink,
+ 				       struct shrink_control *sc)
+ {
+ 	struct r5conf *conf = shrink->private_data;
+-
+-	if (conf->max_nr_stripes < conf->min_nr_stripes)
++	int max_stripes = conf->max_nr_stripes;
++	int min_stripes = conf->min_nr_stripes;
++	if (max_stripes < min_stripes)
+ 		/* unlikely, but not impossible */
+ 		return 0;
+-	return conf->max_nr_stripes - conf->min_nr_stripes;
++	return max_stripes - min_stripes;
+ }
+ 
+ static struct r5conf *setup_conf(struct mddev *mddev)
+-- 
+2.34.1
 
