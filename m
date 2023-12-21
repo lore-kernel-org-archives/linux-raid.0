@@ -1,194 +1,79 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9044DD309;
-	Thu, 21 Dec 2023 07:13:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SwhTt53ypz4f3jLc;
-	Thu, 21 Dec 2023 15:13:06 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 1AB7B1A49B8;
-	Thu, 21 Dec 2023 15:13:08 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgCn9QuB5YNlzFboEA--.31997S6;
-	Thu, 21 Dec 2023 15:13:07 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org,
-	yukuai3@huawei.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linan666@huaweicloud.com,
-	yi.zhang@huawei.com,
-	houtao1@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH 2/2] md: create symlink with disk holder after mddev resume
-Date: Thu, 21 Dec 2023 15:11:09 +0800
-Message-Id: <20231221071109.1562530-3-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231221071109.1562530-1-linan666@huaweicloud.com>
-References: <20231221071109.1562530-1-linan666@huaweicloud.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 067FF154BB;
+	Thu, 21 Dec 2023 07:53:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kZ2Ga1OS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85AD8C433C9;
+	Thu, 21 Dec 2023 07:53:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1703145237;
+	bh=Zniq9fFh7CYXfCkclrR1BmQlS9tAvfFqLd2yx4PM9qg=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=kZ2Ga1OSSas/8HrDA0DHBfSa0urFoG8iWMiKaAPUuOQ61OYEXPphP5UUaUreKXpRZ
+	 /jc63UtFGHYTTDqYAyiqnKfYysQ74w8olCK0mce1n5EAsUiaocWv+6C0pAIOY3+QSr
+	 1hZOd/VNNfCyQKkjLONcDd1bxIhqKlwBJ0Mp4l4hfb0+Z+qzRSDhb1zsIg2z95WcbO
+	 OI8mBKn8gsbFiU8sCEYcl/rWLJ/MmaAoMqSY8/zhSj5DUGi/tCUUXpb4N8hTCbNeiV
+	 fd9GVWM3A3ubZJiXvaryz8e2nqxw+8E0PWLNCVtTsPJDi/oyERwapuHtkSqIXb4eW+
+	 Zs/zcbS4Py8iw==
+Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2cc259392a6so4785141fa.2;
+        Wed, 20 Dec 2023 23:53:57 -0800 (PST)
+X-Gm-Message-State: AOJu0Yx66DJItg+zQWuYK7C4hLy0cFqQvQ0LZENLqck7BS0k3DZg6qjZ
+	l02IBUMmAbDgyXeteXAziyTKfNBFg+Dm5cFy2tc=
+X-Google-Smtp-Source: AGHT+IGOoTMIt9w7fzlnd56F3v3rdh7FCJZC5qY+o4sQUK8vbjsKPHfoXAV77RrE97CwlYH7Ya3kR62WAfNz8SVdeXI=
+X-Received: by 2002:a05:6512:1322:b0:50d:1f0c:2b24 with SMTP id
+ x34-20020a056512132200b0050d1f0c2b24mr10407561lfu.20.1703145235724; Wed, 20
+ Dec 2023 23:53:55 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCn9QuB5YNlzFboEA--.31997S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxCFyrAF13WFy7ArW7tFW7twb_yoWrWF4Up3
-	ySga45KrWUJr9xXr4UtasxW3W5Xw18K397try3uryIga43twsIkr1rury5Xryrtas3ZFWD
-	Xa15Xw4UuF18uFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPv14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
-	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
-	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S
-	6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxw
-	AKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2Iq
-	xVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r
-	1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY
-	6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67
-	AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuY
-	vjfU1xhLUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+References: <20231221012715.3048221-1-song@kernel.org> <20231221012715.3048221-2-song@kernel.org>
+ <ZYPXYdBAdNoKXI8b@infradead.org>
+In-Reply-To: <ZYPXYdBAdNoKXI8b@infradead.org>
+From: Song Liu <song@kernel.org>
+Date: Wed, 20 Dec 2023 23:53:44 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7qg0OwE3wx-mgcdZHUM1o7XY5CXMqJajtuib+sSEwxQw@mail.gmail.com>
+Message-ID: <CAPhsuW7qg0OwE3wx-mgcdZHUM1o7XY5CXMqJajtuib+sSEwxQw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] block: Check REQ_OP_FLUSH in op_is_flush()
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, 
+	kent.overstreet@linux.dev, janpieter.sollie@edpnet.be, colyli@suse.de, 
+	bagasdotme@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Li Nan <linan122@huawei.com>
+On Wed, Dec 20, 2023 at 10:12=E2=80=AFPM Christoph Hellwig <hch@infradead.o=
+rg> wrote:
+>
+> On Wed, Dec 20, 2023 at 05:27:14PM -0800, Song Liu wrote:
+> > Upper layer (fs, etc.) may issue flush with something like:
+> >
+> >   bio_reset(bio, bdev, REQ_OP_FLUSH);
+> >   bio->bi_end_io =3D xxx;
+> >   submit_bio(bio);
+>
+> No, they can't.  REQ_OP_FLUSH is currently only used by request
+> based drivers and only generated by the flush state machine.
 
-There is a risk of deadlock when a process gets disk->open_mutex after
-suspending mddev, because other processes may hold open_mutex while
-submitting io. For example:
+Hmm... Then this call trace from bcachefs is the exception here:
 
-  T1				T2
-  blkdev_open
-   bdev_open_by_dev
-    mutex_lock(&disk->open_mutex)
-  				md_ioctl
-  				 mddev_suspend_and_lock
-  				  mddev_suspend
-  				 md_add_new_disk
-  				  bind_rdev_to_array
-  				   bd_link_disk_holder
-  				    //wait open_mutex
-    blkdev_get_whole
-     bdev_disk_changed
-      efi_partition
-       read_lba
-        ...
-         md_submit_bio
-          md_handle_request
-           //wait resume
+bch2_journal_write=3D>
+  submit_bio=3D>
+    ...
+    md_handle_request =3D>
+      raid5_make_request =3D>
+        chunk_aligned_read =3D>
+          raid5_read_one_chunk =3D>
 
-Fix it by getting disk->open_mutex after mddev resume, iterating each
-mddev->disk to create symlink for rdev which has not been created yet.
-and moving bd_unlink_disk_holder() to mddev_unlock(), rdev has been
-deleted from mddev->disks here, which can avoid concurrent bind and unbind,
+> (Not that I particularly like this wart, I'd much prefer file systems
+> to submit a REQ_OP_FLUSH than an empty write with a preflush flag,
+> but that's not a trivial change).
 
-Fixes: 1b0a2d950ee2 ("md: use new apis to suspend array for ioctls involed array reconfiguration")
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/md.c | 39 +++++++++++++++++++++++++++++----------
- 1 file changed, 29 insertions(+), 10 deletions(-)
+ Kent, I think we need to update how bcachefs issue flushes.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d6612b922c76..c128570f2a5d 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -521,6 +521,20 @@ void mddev_resume(struct mddev *mddev)
- }
- EXPORT_SYMBOL_GPL(mddev_resume);
- 
-+static void md_link_disk_holder(struct mddev *mddev)
-+{
-+	struct md_rdev *rdev;
-+
-+	rcu_read_lock();
-+	rdev_for_each_rcu(rdev, mddev) {
-+		if (test_bit(SymlinkCreated, &rdev->flags))
-+			continue;
-+		if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
-+			set_bit(SymlinkCreated, &rdev->flags);
-+	}
-+	rcu_read_unlock();
-+}
-+
- /*
-  * Generic flush handling for md
-  */
-@@ -902,6 +916,11 @@ void mddev_unlock(struct mddev *mddev)
- 
- 	list_for_each_entry_safe(rdev, tmp, &delete, same_set) {
- 		list_del_init(&rdev->same_set);
-+		if (test_bit(SymlinkCreated, &rdev->flags)) {
-+			bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
-+			clear_bit(SymlinkCreated, &rdev->flags);
-+		}
-+		rdev->mddev = NULL;
- 		kobject_del(&rdev->kobj);
- 		export_rdev(rdev, mddev);
- 	}
-@@ -2526,8 +2545,6 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
- 		sysfs_get_dirent_safe(rdev->kobj.sd, "bad_blocks");
- 
- 	list_add_rcu(&rdev->same_set, &mddev->disks);
--	if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
--		set_bit(SymlinkCreated, &rdev->flags);
- 
- 	/* May as well allow recovery to be retried once */
- 	mddev->recovery_disabled++;
-@@ -2562,14 +2579,9 @@ static void md_kick_rdev_from_array(struct md_rdev *rdev)
- {
- 	struct mddev *mddev = rdev->mddev;
- 
--	if (test_bit(SymlinkCreated, &rdev->flags)) {
--		bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
--		clear_bit(SymlinkCreated, &rdev->flags);
--	}
- 	list_del_rcu(&rdev->same_set);
- 	pr_debug("md: unbind<%pg>\n", rdev->bdev);
- 	mddev_destroy_serial_pool(rdev->mddev, rdev);
--	rdev->mddev = NULL;
- 	sysfs_remove_link(&rdev->kobj, "block");
- 	sysfs_put(rdev->sysfs_state);
- 	sysfs_put(rdev->sysfs_unack_badblocks);
-@@ -4667,8 +4679,10 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (err)
- 		export_rdev(rdev, mddev);
- 	mddev_unlock_and_resume(mddev);
--	if (!err)
-+	if (!err) {
-+		md_link_disk_holder(mddev);
- 		md_new_event();
-+	}
- 	return err ? err : len;
- }
- 
-@@ -6606,6 +6620,7 @@ static void autorun_devices(int part)
- 			}
- 			autorun_array(mddev);
- 			mddev_unlock_and_resume(mddev);
-+			md_link_disk_holder(mddev);
- 		}
- 		/* on success, candidates will be empty, on error
- 		 * it won't...
-@@ -7832,8 +7847,12 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	    err != -EINVAL)
- 		mddev->hold_active = 0;
- 
--	md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev) :
--				     mddev_unlock(mddev);
-+	if (md_ioctl_need_suspend(cmd)) {
-+		mddev_unlock_and_resume(mddev);
-+		md_link_disk_holder(mddev);
-+	} else {
-+		mddev_unlock(mddev);
-+	}
- 
- out:
- 	if(did_set_md_closing)
--- 
-2.39.2
-
+Thanks,
+Song
