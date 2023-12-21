@@ -1,178 +1,168 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C55258F47;
-	Thu, 21 Dec 2023 03:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E64C8C01
+	for <linux-raid@vger.kernel.org>; Thu, 21 Dec 2023 04:49:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Fhe9yD8J";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="VUilSDTG"
-X-UUID: 2a5950ee9fb211eeba30773df0976c77-20231221
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=u79u3nrEszlnx2bXwBvmStlsjbEPYjcwwLOlNL4EupE=;
-	b=Fhe9yD8Jv7qIQlP4Sc/+szTASXY3qDkmj7BsQ4tnrVngiq9oeMhSGXnX/6V8CJ6JTOef2n86/8czYAnJhnoGEdegBsA5Qy2a52LySN4z40eoWinsHeH0WAfovm66RCdiknb3eFBc5TRWEjkPtVpvIoLbZChWmLAPawn6e7AeYL4=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:6d4cfa0c-2fe0-4a68-80b5-923ce1056ccd,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:5d391d7,CLOUDID:0ba7522e-1ab8-4133-9780-81938111c800,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
-	DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
-X-UUID: 2a5950ee9fb211eeba30773df0976c77-20231221
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
-	(envelope-from <ed.tsai@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1345405011; Thu, 21 Dec 2023 11:36:45 +0800
-Received: from mtkmbs10n2.mediatek.inc (172.21.101.183) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Thu, 21 Dec 2023 11:36:44 +0800
-Received: from APC01-TYZ-obe.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Thu, 21 Dec 2023 11:36:44 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=P2m0B9TNme/xsO0JVtGIsXgvaEn80B2JlGF2yrba+w21pACWbKAq7qpV0z37RLNe/aX/anK0Ijn8ecpyVf6VOW1YZgrbIKdSibhj5egAFOl52qKa7q12G4QIk2mTV+UxZJkpfPKKgk1rFA/GNvpKAO26JChbyUjl7QomJTrzSt/nP+CAPgr9V3lNQyL6dFPVFDnd4AQH7i7WFBYK1oFRjITLxfmF/n9nhsTa6ZNhgvabNpK+dIfd+0MwITV47EJDkazfRDq+ZnCtc7tYc1WbPHhCLUrHDokzsiMg4zlQ6M1+Z4hv2yTE/Uz+btwb0CT9zHw/iHMFGq1WGpkXcvTItA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=u79u3nrEszlnx2bXwBvmStlsjbEPYjcwwLOlNL4EupE=;
- b=csJIAw8Qn1J3luhszr7lgVCb0uYjPdKWNR/QEY1zECuA71fEvQR+I3RJLU5enRvqr5+uYv1M/25TJ/aElU5ZKLUmCfYT4INzyYOnXmICpGPuk/TYcs7Bdx6wzIwtLCdWLZ7GPUeWmMEjvsfE74ndXCQEAYc530XtgNikCErclAMe+3HJepmiRo10zCQOjUIlFoYcsm+e9YNK3DsxOFzyYvZ+CxzHS6vHNlqSnVk5zJVlMZp6Mo73yX/rIMJDj4hPnCpDCEm6zWNP54rUfxMctsjzWT2WL3QQYuh7q7F4OWsDLWmKxr5vf7MZM7utAqPMYLCVXiV+PAnycV4vFn8ujA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=u79u3nrEszlnx2bXwBvmStlsjbEPYjcwwLOlNL4EupE=;
- b=VUilSDTGBOld1aa91GUVtV6MCQXOqm7fi4GaV9N05367ZTcrMAoZt1fHah0UA9Yh/VS/vTIYlmymmaITP+4dH6sMgJ+z8U4e7x9IRYRHd4BBID60ObViIHP4Gtkp9xUx76Pz4/Wx4UIUHRSzgP0qD6XQDUSOpW3dhdoIOXtrAtg=
-Received: from SI2PR03MB5545.apcprd03.prod.outlook.com (2603:1096:4:131::9) by
- TYSPR03MB8081.apcprd03.prod.outlook.com (2603:1096:400:470::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7091.37; Thu, 21 Dec
- 2023 03:36:41 +0000
-Received: from SI2PR03MB5545.apcprd03.prod.outlook.com
- ([fe80::d398:103e:796d:76b9]) by SI2PR03MB5545.apcprd03.prod.outlook.com
- ([fe80::d398:103e:796d:76b9%5]) with mapi id 15.20.7113.019; Thu, 21 Dec 2023
- 03:36:41 +0000
-From: =?utf-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>
-To: "song@kernel.org" <song@kernel.org>
-CC: "bagasdotme@gmail.com" <bagasdotme@gmail.com>, "colyli@suse.de"
-	<colyli@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"janpieter.sollie@edpnet.be" <janpieter.sollie@edpnet.be>, "axboe@kernel.dk"
-	<axboe@kernel.dk>, "kent.overstreet@linux.dev" <kent.overstreet@linux.dev>
-Subject: Re: [PATCH 0/2] block, md: Better handle REQ_OP_FLUSH
-Thread-Topic: [PATCH 0/2] block, md: Better handle REQ_OP_FLUSH
-Thread-Index: AQHaM60rpds0RfSqekKon2ULHGSqc7CzFnWA
-Date: Thu, 21 Dec 2023 03:36:40 +0000
-Message-ID: <9dfc7e93f49f5b3595985ce6ed60e4c08cf05a4c.camel@mediatek.com>
-References: <20231221012715.3048221-1-song@kernel.org>
-In-Reply-To: <20231221012715.3048221-1-song@kernel.org>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SI2PR03MB5545:EE_|TYSPR03MB8081:EE_
-x-ms-office365-filtering-correlation-id: ec32105d-15e0-4e1f-786f-08dc01d60ba8
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 1WVDsEBlWbwCaFKLhHIgVQDCxzohMt2QtCLZEp3piM4AqG+BKlsWpZ+HLp6N3lTdWRg/MJ6zNNDDx3n11ExC68TyNccvJH2DTGfpNgqEg0mayJ2sUmPleOWm/Gr5D/NEQXpqTI6+KG+BXewGdqrhm+WYluDUNXb0oweRkfpldxvMuW6NrRYi2s9MilPM5V1+mabJyrUWpjUCg5rHiXGzWVfv/vPKFeIE1HjuIvQUrGEt5PC7NSTgnqEJNl+bkeBRly87ijJfybKVpLjPvrL8TIu7OR0d0CW0Ne/5RSC5kCLO0eZOHxmcNF/LIO6erPvsX4bQVoBppM3zNv4ldhgm9kqJpRZKR0dFR23F9NzpYy3dzyS3nEbs0MMgWRgv8mwlHZeZ6ILPtTctpmW1AP0JqsnAb71vkOUo9IxkxJBcCevAYmQpokvBPxkOXneDWIXcxOrIVWTF0to4Lm3T5BSmdTPjwIqoc8SOmwzwZ2U7BK72THbTpA9160zXN3Wy2HQlhRpKmDJ8Y1CVEs2QZmCwKAFonhfSTT8hYw/pLDLRCHtdKWtgyZy4BJKX1VJo2q/N6v9Tn/t1MTAeDcZBhWBIizE6tQEoHlO8pqLpOX4A4sOrr3Ojq6oh4n/353nghujfv/mB0Z0Ixe2xBbci1GV0WhzHwG1psjw6sFlV35SBPpMca5K441Csw+D5gzoS6uCt
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SI2PR03MB5545.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(396003)(136003)(346002)(39860400002)(376002)(230922051799003)(230273577357003)(230173577357003)(186009)(451199024)(64100799003)(1800799012)(38070700009)(4001150100001)(85182001)(38100700002)(36756003)(2906002)(122000001)(41300700001)(83380400001)(86362001)(8676002)(8936002)(6486002)(4326008)(71200400001)(966005)(478600001)(2616005)(26005)(66476007)(76116006)(91956017)(54906003)(66946007)(6916009)(316002)(66556008)(5660300002)(6506007)(66446008)(6512007)(64756008);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?K1dKUmUva2R4d21kL3NjdnVmMCtwN1pwOWdUb1hWUFU4RjJvM3NjRkUrTTJF?=
- =?utf-8?B?ZkhkWHFkOFYzcFpuQ3FqV1dmWXpkZ3JsZ285K1lHU3l5a0NucmNQMXlBcjlF?=
- =?utf-8?B?d0hJZmVEZkgzVVdiM1lOMktyaHkwczgybk1lclpiZ1hjaHVLckpRL3U3NjFB?=
- =?utf-8?B?eGp5OHVLV0l3SWQ2endWdTlqSE5wVHUxY0dlb2lVV2swRzJQaXpBYlZvK1Aw?=
- =?utf-8?B?Tnh0MFFhZTQwUis4TExNQVZGWDdZbVJIUDJGOHlzODc2Ukk2L2ZoZEEybnNk?=
- =?utf-8?B?R0ZCbWQvVEE0QUNtQk4rRmRZeE1ncllOMEYwWUJ4bVAvc2hvdGFSRTgreU5U?=
- =?utf-8?B?QUNnNm1MMDZsSjdvNE1oYjBUTmJLZlRLZWhtdlNBaHZNbUNJbkRiUXR6RnBV?=
- =?utf-8?B?Yy9pTUtIUGsyc09RUzRtTW04MFNmWm1RbERyMzFwQ0xtd2NyMVArK2s1cjc5?=
- =?utf-8?B?WkluU3kxSm04QTg2N2F6em1aN3B4TmxtNEhJN2I1dG5ZeTdUdWg1ZTRFSlZl?=
- =?utf-8?B?TTU1TWkyc3pnR0NlTnRCaTg0RStWS3E2eno1ZTl2Z0dKR0NLaHVoRnlKcmJS?=
- =?utf-8?B?Kzh1WGNNSnYvbUV5SG43MmZDOFVEU2pRWlh5SzFmMlpxOXdKUHFyS2RTSW5L?=
- =?utf-8?B?c09maFk5TGVaUnk4dTkrd21zWXZOSmwwZ1paUkx1N01OTTlkQ2JoNEd5azFz?=
- =?utf-8?B?M0MxN3hZUHkrQ3d1U2ZLV3d3WUpvSEpjYUk3TGx1QjB6WDFPbmhCdzZUWko1?=
- =?utf-8?B?OFhXTitqRDdwZDNmQml4VStnY1lMNEJHYWNacjl2RllWWGVRc3ZLbi9vMUwr?=
- =?utf-8?B?K2ZXNmd5VmxGVFREcUR3b3JoNUFDWjdlN21PekQzeFlHOHVENUZYSmtyZ0lv?=
- =?utf-8?B?eFhHTGpuMk51S0l2MFowZjMvZkhCRHhONmxBUHpQM0FaK2tGWENmR2ZkS1ll?=
- =?utf-8?B?M3lTdTV0MWtKZCtIQnJJSGhIUUZGR2RrSWxna3F2VFV6eWFvYmFTaFM5U25l?=
- =?utf-8?B?Y01uaE1zR2M0d2dQVy9xZ01jYnJzRnlsN1JjenhUVDUzV0NuKzl3K1l1ajhX?=
- =?utf-8?B?WnU5cXZDMlMxaW8rTWdqaGdRVlN6cFVwRGd6aDRaamhqR2NFVGQ5alA5WEJH?=
- =?utf-8?B?ajJrU1dqRExlVkZ5dkptT1M3ZGRhQjFKZmRPT3BhM2h2cGpBUWtDcVVnVjBF?=
- =?utf-8?B?S2xBeUlyUC9tcjlsR3djLzRORWxqaEVvWkZBK00zL282OWRHdC8rckJrZnd5?=
- =?utf-8?B?VGJkcDRpcHA0emsxbjZIMzZ1OVFENUFvRTFtb3lhaWJqaE5UWUE2UUNza3NT?=
- =?utf-8?B?aktRQ1BIK0NoQWluS0JDU1VoRUFWdTJOejgyOGxxSTAySXFjLy9Bc3FYQkp2?=
- =?utf-8?B?aFFsSTlrNFMwcUp2RmIxQUpDUGs1MDIwbC8rUldRdlg1L3dpZTB4eG1UeGc0?=
- =?utf-8?B?bElPbjBjRWV1UWVQdmV6MGoxK3ZYQi9IZHNzRnZHa1NLY2tRVEJ3MFNqOGRt?=
- =?utf-8?B?c0l5RDRJcDVWK3lmK21tVUlyT0xXdjFnSHgycmRjcHAvNEcxeVF4dkQ0bjZY?=
- =?utf-8?B?TG1pNTBIVjhpL2ZFWFFzUnZrSGJuQWlydTUzeGRjZjVhY1ZSdjBrUWlNV3Bm?=
- =?utf-8?B?OVk3SDJUbHFZRE1yaUdqQ2dQQTB3bmRaRE9FZ1B4NnNTVk54M3FGblZodGFs?=
- =?utf-8?B?VzBuaG1Ga1ZTOXNYb0ZZdVpoMlYxS0RxRGd5QmdvSnd5QWthVitscnJwOUMx?=
- =?utf-8?B?U056dzUwRXRPWGEyQVMwbnJzeEhweGpNbzdCTDNaZlZVTXAvZGNuVGNoSXRV?=
- =?utf-8?B?SVh1enlEMFYxTTBWZVArZmFBYU91SUxzamxqNy94WUdUU2UvWjR5amRoTk9F?=
- =?utf-8?B?d2RlVlZ2VU84ZGJzYXVKaG10Z0h1M3EvZ2l5RkphMnR2c0phU2tqc1VuR1FS?=
- =?utf-8?B?eXhSWk1PUlJyTG04QXlDV3lER3lKSEVWRzFDN3lEYW53OU9BdjR4cXdjQzlT?=
- =?utf-8?B?NnQ4LzExT1g2RmNFZ05la3NqUlU0dlJiMXNhVll5NEtsaUg5ZnU2WGl2REFl?=
- =?utf-8?B?TGI0eExENXJsNTVSRUhVV3VlNWczS0JHM0wzRWt3dnl5czBYakNTL09ISTJm?=
- =?utf-8?B?NkVHclpwaHB1aFJ0V3lFTzd5QzlHbXlHZm50TUFhZDBWeUltM2tMcXVhVWVF?=
- =?utf-8?B?bnc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <0CE2AB3FB26C2143AD9CBC307A28B734@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gpkSYwtb";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="6IawB2DN";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gpkSYwtb";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="6IawB2DN"
+Received: from studio.lan (unknown [10.149.192.130])
+	by smtp-out1.suse.de (Postfix) with ESMTP id 256A8220D5;
+	Thu, 21 Dec 2023 04:49:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1703134171; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=Agoo+sdSFiHgwEWyvcqoL63Anj3TKxeTF6PK3zNQIG0=;
+	b=gpkSYwtb8ls0Kz+RoZerY+X49szueZMcsjdZiZKCwD0NdsPoB2/sR3tHO2HEyQHkkER4Bd
+	oxguMG3oswft6Avlp4cMv18mDXlwqnEjZ3+0I0SRGexCRy6vBjQbroFUzx46DYJMXmnkEA
+	nqPaUdpfEVMMh/PW0Ce+HYawrOS6+Ew=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1703134171;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=Agoo+sdSFiHgwEWyvcqoL63Anj3TKxeTF6PK3zNQIG0=;
+	b=6IawB2DN7NBYQ0aJXlhpFmASi587AmgAotyZGnRT0ZoV+mejzaJslB4J/fLqDr4DUdfkmy
+	rqtRJJoFs2wyoUBA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1703134171; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=Agoo+sdSFiHgwEWyvcqoL63Anj3TKxeTF6PK3zNQIG0=;
+	b=gpkSYwtb8ls0Kz+RoZerY+X49szueZMcsjdZiZKCwD0NdsPoB2/sR3tHO2HEyQHkkER4Bd
+	oxguMG3oswft6Avlp4cMv18mDXlwqnEjZ3+0I0SRGexCRy6vBjQbroFUzx46DYJMXmnkEA
+	nqPaUdpfEVMMh/PW0Ce+HYawrOS6+Ew=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1703134171;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=Agoo+sdSFiHgwEWyvcqoL63Anj3TKxeTF6PK3zNQIG0=;
+	b=6IawB2DN7NBYQ0aJXlhpFmASi587AmgAotyZGnRT0ZoV+mejzaJslB4J/fLqDr4DUdfkmy
+	rqtRJJoFs2wyoUBA==
+From: Coly Li <colyli@suse.de>
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org,
+	Coly Li <colyli@suse.de>,
+	Joel Granados <j.granados@samsung.com>,
+	Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH] Revert "raid: Remove now superfluous sentinel element from ctl_table array"
+Date: Thu, 21 Dec 2023 12:49:25 +0800
+Message-Id: <20231221044925.10178-1-colyli@suse.de>
+X-Mailer: git-send-email 2.39.3 (Apple Git-145)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SI2PR03MB5545.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ec32105d-15e0-4e1f-786f-08dc01d60ba8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Dec 2023 03:36:40.9233
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: AqLhjgLRezlKCTDaeoIS1tCXhx/on99G2mTmoFHHxbEMdZg2qp1h5ga/zfoOGYwRajXBEdDrfzvQqGzKEHXM2g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYSPR03MB8081
+Content-Transfer-Encoding: 8bit
+Authentication-Results: smtp-out1.suse.de;
+	none
+X-Spam-Level: ***
+X-Spam-Score: 3.70
+X-Spamd-Result: default: False [3.70 / 50.00];
+	 ARC_NA(0.00)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 R_MISSING_CHARSET(2.50)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 BROKEN_CONTENT_TYPE(1.50)[];
+	 RCPT_COUNT_FIVE(0.00)[5];
+	 NEURAL_HAM_LONG(-1.00)[-1.000];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 NEURAL_HAM_SHORT(-0.20)[-1.000];
+	 MID_CONTAINS_FROM(1.00)[];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 RCVD_COUNT_ZERO(0.00)[0];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+]
+X-Spam-Flag: NO
 
-T24gV2VkLCAyMDIzLTEyLTIwIGF0IDE3OjI3IC0wODAwLCBTb25nIExpdSB3cm90ZToNCj4gIAkg
-DQo+IEV4dGVybmFsIGVtYWlsIDogUGxlYXNlIGRvIG5vdCBjbGljayBsaW5rcyBvciBvcGVuIGF0
-dGFjaG1lbnRzIHVudGlsDQo+IHlvdSBoYXZlIHZlcmlmaWVkIHRoZSBzZW5kZXIgb3IgdGhlIGNv
-bnRlbnQuDQo+ICBBIHJlY2VudCBidWcgcmVwb3J0IFsxXSBzaG93cyBtZCBpcyBoYW5kbGluZyBh
-IGZsdXNoIGZyb20gYmNhY2hlZnMNCj4gYXMgcmVhZDoNCj4gDQo+IGJjaDJfam91cm5hbF93cml0
-ZT0+DQo+ICAgc3VibWl0X2Jpbz0+DQo+ICAgICAuLi4NCj4gICAgIG1kX2hhbmRsZV9yZXF1ZXN0
-ID0+DQo+ICAgICAgIHJhaWQ1X21ha2VfcmVxdWVzdCA9Pg0KPiAgICAgICAgIGNodW5rX2FsaWdu
-ZWRfcmVhZCA9Pg0KPiAgICAgICAgICAgcmFpZDVfcmVhZF9vbmVfY2h1bmsgPT4NCj4gCSAgICAu
-Li4NCj4gDQo+IEl0IGFwcGVhcnMgbWQgY29kZSBvbmx5IGNoZWNrcyBSRVFfUFJFRkxVU0ggZm9y
-IGZsdXNoIHJlcXVlc3RzLCB3aGljaA0KPiBkb2Vzbid0IGNvdmVyIGFsbCBjYXNlcy4gT1RPSCwg
-b3BfaXNfZmx1c2goKSBkb2Vzbid0IGNoZWNrDQo+IFJFUV9PUF9GTFVTSA0KPiBlaXRoZXIuDQo+
-IA0KPiBGaXggdGhpcyBieToNCj4gMSkgQ2hlY2sgUkVRX1BSRUZMVVNIIGluIG9wX2lzX2ZsdXNo
-KCk7DQo+IDIpIFVzZSBvcF9pc19mbHVzaCgpIGluIG1kIGNvZGUuDQo+IA0KPiBUaGFua3MsDQo+
-IFNvbmcNCj4gDQo+IFsxXSANCj4gaHR0cHM6Ly91cmxkZWZlbnNlLmNvbS92My9fX2h0dHBzOi8v
-YnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MjE4MTg0X187ISFDVFJOS0E5d01n
-MEFSYnchZ1FianRTX2Y1ZDNEdTJwcnBJVDh6VU00bWtaZjdxRGxleWFBdUVmRzhqNXRNckR2dzdj
-ZkpVQjA0VldsMHVWQUw0Qko0WVdiVm9wcCQNCj4gDQoNClJFUV9PUF9GTFVTSCBpcyBvbmx5IHVz
-ZWQgYnkgdGhlIGJsb2NrIGxheWVyJ3MgZmx1c2ggY29kZSwgYW5kIHRoZQ0KZmlsZXN5c3RlbSBz
-aG91bGQgdXNlIFJFUV9QUkVGTFVTSCB3aXRoIGFuIGVtcHR5IHdyaXRlIGJpby4NCg0KSWYgd2Ug
-d2FudCB1cHBlciBsYXllciB0byBiZSBhYmxlIHRvIGRpcmVjdGx5IHNlbmQgUkVRX09QX0ZMVVNI
-IGJpbywNCnRoZW4gd2Ugc2hvdWxkIHJldHJpZXZlIGFsbCBSRVFfUFJFRkxVU0ggdG8gY29uZmly
-bS4gQXQgbGVhc3QgZm9yIG5vdywNCml0IHNlZW1zIHRoYXQgUkVRX09QX0ZMVVNIIHdpdGhvdXQg
-UkVRX1BSRUZMVVNIIGluIGBibGtfZmx1c2hfcG9saWN5YA0Kd2lsbCBkaXJlY3RseSByZXR1cm4g
-MCBhbmQgbm8gZmx1c2ggb3BlcmF0aW9uIHdpbGwgYmUgc2VudCB0byB0aGUNCmRyaXZlci4NCg0K
-PiAgDQo+IA0KPiBTb25nIExpdSAoMik6DQo+ICAgYmxvY2s6IENoZWNrIFJFUV9PUF9GTFVTSCBp
-biBvcF9pc19mbHVzaCgpDQo+ICAgbWQ6IFVzZSBvcF9pc19mbHVzaCgpIHRvIGNoZWNrIGZsdXNo
-IGJpbw0KPiANCj4gIGRyaXZlcnMvbWQvcmFpZDAuYyAgICAgICAgfCAyICstDQo+ICBkcml2ZXJz
-L21kL3JhaWQxLmMgICAgICAgIHwgMiArLQ0KPiAgZHJpdmVycy9tZC9yYWlkMTAuYyAgICAgICB8
-IDIgKy0NCj4gIGRyaXZlcnMvbWQvcmFpZDUuYyAgICAgICAgfCAyICstDQo+ICBpbmNsdWRlL2xp
-bnV4L2Jsa190eXBlcy5oIHwgMyArKy0NCj4gIDUgZmlsZXMgY2hhbmdlZCwgNiBpbnNlcnRpb25z
-KCspLCA1IGRlbGV0aW9ucygtKQ0KPiANCj4gLS0NCj4gMi4zNC4xDQo=
+This reverts commit dd6291c506490c195620b394dc96763675e7e5f4.
+
+With this patch, a kernel oops triggered when creating a md device,
+[  311.224353][ T3545] BUG: unable to handle page fault for address: 000003e800030d40
+[  311.314951][ T3545] #PF: supervisor read access in kernel mode
+[  311.384748][ T3545] #PF: error_code(0x0000) - not-present page
+[  311.454538][ T3545] PGD 12be1c067 P4D 0
+[  311.501451][ T3545] Oops: 0000 [#1] PREEMPT SMP NOPTI
+[  311.561888][ T3545] CPU: 19 PID: 3545 Comm: modprobe [snipped...]
+[  311.869958][ T3545] RIP: 0010:string+0x48/0xe0
+[  311.923116][ T3545] Code: 3b 45 89 d1 45 31 c0 49 01 f9 66 45 85 d2 75 1a eb 1f 48 39 f7 73 02 88 07 48 83 c7 01 41 83 c0 01 48 83 c2 01 4c 39 cf 74 07 <0f> b6 02 84 c0 75 e1 48 89 f2 44 89 c6 e9 c6 e3 ff ff 48 c7 c0 3d
+[  312.156194][ T3545] RSP: 0018:ffa000000b877a70 EFLAGS: 00010086
+[  312.227025][ T3545] RAX: 000003e80002fd40 RBX: ffa000000b877b86 RCX: ffff0a00ffffff04
+[  312.320737][ T3545] RDX: 000003e800030d40 RSI: ffa000000b877b68 RDI: ffa000000b877b86
+[  312.414449][ T3545] RBP: ffa000000b877b48 R08: 0000000000000000 R09: ffa000010b877b85
+[  312.508160][ T3545] R10: ffffffffffffffff R11: 0000000000000040 R12: ffa000000b877b68
+[  312.601873][ T3545] R13: ffffffff99c221fa R14: 0000000000000008 R15: ffffffff99c221fa
+[  312.695583][ T3545] FS:  00007fea7a856740(0000) GS:ff11000fffd80000(0000) knlGS:0000000000000000
+[  312.800733][ T3545] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  312.877805][ T3545] CR2: 000003e800030d40 CR3: 0000000123790001 CR4: 0000000000771ee0
+[  312.971518][ T3545] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  313.065229][ T3545] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[  313.158940][ T3545] PKRU: 55555554
+[  313.199610][ T3545] Call Trace:
+[  313.237162][ T3545]  <TASK>
+[  313.270554][ T3545]  ? __die+0x23/0x70
+[  313.315391][ T3545]  ? page_fault_oops+0x14d/0x490
+[  313.372701][ T3545]  ? update_load_avg+0x7e/0x7d0
+[  313.428972][ T3545]  ? exc_page_fault+0x71/0x160
+[  313.484203][ T3545]  ? asm_exc_page_fault+0x26/0x30
+[  313.542555][ T3545]  ? string+0x48/0xe0
+[  313.588426][ T3545]  vsnprintf+0x2d5/0x5a0
+[  313.637417][ T3545]  vprintk_store+0x15e/0x4b0
+[  313.690567][ T3545]  ? schedule_timeout+0x147/0x160
+[  313.748918][ T3545]  ? wait_for_completion_killable+0x1a6/0x1d0
+[  313.819750][ T3545]  vprintk_emit+0xc9/0x230
+[  313.870823][ T3545]  _printk+0x5c/0x80
+[  313.915657][ T3545]  sysctl_err+0x6a/0x90
+[  313.963610][ T3545]  ? __kmalloc+0x4d/0x150
+[  314.013639][ T3545]  __register_sysctl_table+0x144/0x7d0
+[  314.077192][ T3545]  ? kmalloc_trace+0x2a/0xa0
+[  314.130341][ T3545]  md_init+0xd2/0xff0 [snipped...]
+[  314.228226][ T3545]  ? __pfx_md_init+0x10/0x10 [snipped...]
+[  314.333383][ T3545]  do_one_initcall+0x47/0x220
+[  314.387576][ T3545]  ? kmalloc_trace+0x2a/0xa0
+[  314.440726][ T3545]  do_init_module+0x60/0x240
+[  314.493878][ T3545]  __do_sys_finit_module+0xac/0x120
+[  314.554308][ T3545]  do_syscall_64+0x5d/0x90
+[  314.605380][ T3545]  ? ksys_lseek+0x66/0xb0
+[  314.655411][ T3545]  ? syscall_exit_to_user_mode+0x2b/0x40
+[  314.721042][ T3545]  ? do_syscall_64+0x6c/0x90
+[  314.774194][ T3545]  ? exit_to_user_mode_prepare+0x142/0x1f0
+[  314.841906][ T3545]  ? syscall_exit_to_user_mode+0x2b/0x40
+[  314.907535][ T3545]  ? do_syscall_64+0x6c/0x90
+[  314.960685][ T3545]  ? exc_page_fault+0x71/0x160
+[  315.015917][ T3545]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
+[  315.084667][ T3545] RIP: 0033:0x7fea79f161bd
+
+The last NULL element in raid_table[] is necessary, after reverting this
+patch, the above oops message is removed.
+
+Fixes: dd6291c50649 ("raid: Remove now superfluous sentinel element from ctl_table array")
+Signed-off-by: Coly Li <colyli@suse.de>
+Cc: Joel Granados <j.granados@samsung.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>
+---
+ drivers/md/md.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 9bdd57324c37..90481ed6fdbb 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -312,6 +312,7 @@ static struct ctl_table raid_table[] = {
+ 		.mode		= S_IRUGO|S_IWUSR,
+ 		.proc_handler	= proc_dointvec,
+ 	},
++	{ }
+ };
+ 
+ static int start_readonly;
+-- 
+2.35.3
+
