@@ -1,136 +1,139 @@
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33DB020FB;
-	Fri, 22 Dec 2023 01:17:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 816AD8F40;
+	Fri, 22 Dec 2023 01:37:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Sx8XM4wgJz4f3l1C;
-	Fri, 22 Dec 2023 09:16:51 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id E9DDA1A01CA;
-	Fri, 22 Dec 2023 09:16:56 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP2 (Coremail) with SMTP id Syh0CgAHqkiH44RlAqSoEQ--.6406S3;
-	Fri, 22 Dec 2023 09:16:56 +0800 (CST)
-Message-ID: <d00e6729-6e13-b1ab-0991-ce79b1245cfd@huaweicloud.com>
-Date: Fri, 22 Dec 2023 09:16:55 +0800
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Sx8zg3W14z4f3lgL;
+	Fri, 22 Dec 2023 09:37:03 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id BA12C1A07FF;
+	Fri, 22 Dec 2023 09:37:08 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgBHSQ8r6IRlJ+0uEQ--.47074S3;
+	Fri, 22 Dec 2023 09:37:08 +0800 (CST)
+Subject: Re: [PATCH] md/raid5: fix atomicity violation in raid5_cache_count
+To: Gui-Dong Han <2045gemini@gmail.com>, song@kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ baijiaju1990@outlook.com, BassCheck <bass@buaa.edu.cn>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231221104343.5557-1-2045gemini@gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <abc324aa-1ccc-c8fd-1437-a77465f6e4be@huaweicloud.com>
+Date: Fri, 22 Dec 2023 09:36:43 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH 1/2] md: fix WARN_ON if create symlink fail in
- bind_rdev_to_array()
-To: Song Liu <song@kernel.org>, linan666@huaweicloud.com
-Cc: yukuai3@huawei.com, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
- yangerkun@huawei.com
-References: <20231221071109.1562530-1-linan666@huaweicloud.com>
- <20231221071109.1562530-2-linan666@huaweicloud.com>
- <CAPhsuW5SPiy5bsSfagYrSLa3JTn2Gw0VJKUToS2PS9h4w2=zSA@mail.gmail.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <CAPhsuW5SPiy5bsSfagYrSLa3JTn2Gw0VJKUToS2PS9h4w2=zSA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20231221104343.5557-1-2045gemini@gmail.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgAHqkiH44RlAqSoEQ--.6406S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJr17Gr4fArWrtF1kKw48Zwb_yoW8tr17pF
-	W8GFy3Ar4UJr1Uu3Wjqay5CFyYg3W7tFW8JFy3C34Sva43Ars3Cr10gFW7XryDWrnxCF47
-	X3WUG397ua9Y9F7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
-	4I1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1l
-	IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWI
-	evJa73UjIFyTuYvjfUOlksUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CM-TRANSID:cCh0CgBHSQ8r6IRlJ+0uEQ--.47074S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGrWDXryrJFyxKFyrGFykXwb_yoW5uw1Dpr
+	Z5Ca4UXr4kXwn5tFyDZr4v9rWfC39xJFyxJw4UXw4kZasYgFWxtw47Ka4UJ348ZrW8Gayx
+	tFn0934kur4qyFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+	xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
+	c7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
+Hi,
 
-
-åœ¨ 2023/12/22 2:58, Song Liu å†™é“:
-> Hi,
+ÔÚ 2023/12/21 18:43, Gui-Dong Han Ð´µÀ:
+> In raid5_cache_count():
+> 	if (conf->max_nr_stripes < conf->min_nr_stripes)
+> 		return 0;
+> 	return conf->max_nr_stripes - conf->min_nr_stripes;
+> The current check is ineffective, as the values could change immediately
+> after being checked.
 > 
-> On Wed, Dec 20, 2023 at 11:13â€¯PM <linan666@huaweicloud.com> wrote:
->>
->> From: Li Nan <linan122@huawei.com>
->>
->> Removing a device can trigger WARN_ON in bd_unlink_disk_holder() if creating
->> symlink failed while adding device.
->>
->>    WARNING: CPU: 0 PID: 742 at block/holder.c:145 bd_unlink_disk_holder+0x17b/0x1a0
->>
->> Fix it by adding the flag 'SymlinkCreated', which only be set after
->> creating symlink success.
->>
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>   drivers/md/md.h | 3 +++
->>   drivers/md/md.c | 8 ++++++--
->>   2 files changed, 9 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 8d881cc59799..427d17713a8c 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -207,6 +207,9 @@ enum flag_bits {
->>                                   * check if there is collision between raid1
->>                                   * serial bios.
->>                                   */
->> +       SymlinkCreated,         /* This device has created the symlink
->> +                                * with gendisk.
->> +                                */
-> 
-> In general, I would like to avoid adding flags if possible.
+> In raid5_set_cache_size():
+> 	...
+> 	conf->min_nr_stripes = size;
+> 	...
+> 	while (size > conf->max_nr_stripes)
+> 		conf->min_nr_stripes = conf->max_nr_stripes;
+> 	...
 > 
 
-This flag is mainly used to fix deadlock in next patch. Or should we
-export bd_find_holder_disk()? Link hodler if it return NULL.
-just like:
+raid5_cache_count() is called from setup_conf() where reconfig_mtuex is
+held.
 
-   rdev_for_each_rcu
-     if (!bd_find_holder_disk)
-       bd_link_disk_holder
+raid5_set_cache_size() is called from:
+1) raid5_store_stripe_cache_size(), reconfig_mutex is held
+2) r5l_start() from raid5_add_disk(), reconfig_mutex is held
+3) raid_ctr(), reconfig_mutex is held
 
+So, how can they concurrent in the first place?
 
->>   };
->>
->>   static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index e05858653a41..d6612b922c76 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -2526,7 +2526,8 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
->>                  sysfs_get_dirent_safe(rdev->kobj.sd, "bad_blocks");
->>
->>          list_add_rcu(&rdev->same_set, &mddev->disks);
->> -       bd_link_disk_holder(rdev->bdev, mddev->gendisk);
->> +       if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
->> +               set_bit(SymlinkCreated, &rdev->flags);
-> 
-> Shall we just fail bind_rdev_to_array() if bd_link_disk_holder()
-> returns non-zero?
-> 
-
-I keep this action because of commit 00bcb4ac7ee7 ("md: reduce
-dependence on sysfs."). Fail bind_rdev_to_array is good to me.
-
-> Thanks,
-> Song
-> 
-> .
-
--- 
 Thanks,
-Nan
+Kuai
+
+> Due to intermediate value updates in raid5_set_cache_size(), concurrent
+> execution of raid5_cache_count() and raid5_set_cache_size() may lead to
+> inconsistent reads of conf->max_nr_stripes and conf->min_nr_stripes.
+> The current checks are ineffective as values could change immediately
+> after being checked, raising the risk of conf->min_nr_stripes exceeding
+> conf->max_nr_stripes and potentially causing an integer overflow.
+> 
+> This possible bug is found by an experimental static analysis tool
+> developed by our team. This tool analyzes the locking APIs to extract
+> function pairs that can be concurrently executed, and then analyzes the
+> instructions in the paired functions to identify possible concurrency bugs
+> including data races and atomicity violations. The above possible bug is
+> reported when our tool analyzes the source code of Linux 6.2.
+> 
+> To resolve this issue, it is suggested to introduce local variables
+> 'min_stripes' and 'max_stripes' in raid5_cache_count() to ensure the
+> values remain stable throughout the check. Adding locks in
+> raid5_cache_count() fails to resolve atomicity violations, as
+> raid5_set_cache_size() may hold intermediate values of
+> conf->min_nr_stripes while unlocked. With this patch applied, our tool no
+> longer reports the bug, with the kernel configuration allyesconfig for
+> x86_64. Due to the lack of associated hardware, we cannot test the patch
+> in runtime testing, and just verify it according to the code logic.
+> 
+> Fixes: edbe83ab4c27e ("md/raid5: allow the stripe_cache to grow and ...")
+> Reported-by: BassCheck <bass@buaa.edu.cn>
+> Signed-off-by: Gui-Dong Han <2045gemini@gmail.com>
+> ---
+>   drivers/md/raid5.c | 7 ++++---
+>   1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 8497880135ee..62ebf33402cc 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7390,11 +7390,12 @@ static unsigned long raid5_cache_count(struct shrinker *shrink,
+>   				       struct shrink_control *sc)
+>   {
+>   	struct r5conf *conf = shrink->private_data;
+> -
+> -	if (conf->max_nr_stripes < conf->min_nr_stripes)
+> +	int max_stripes = conf->max_nr_stripes;
+> +	int min_stripes = conf->min_nr_stripes;
+> +	if (max_stripes < min_stripes)
+>   		/* unlikely, but not impossible */
+>   		return 0;
+> -	return conf->max_nr_stripes - conf->min_nr_stripes;
+> +	return max_stripes - min_stripes;
+>   }
+>   
+>   static struct r5conf *setup_conf(struct mddev *mddev)
+> 
 
