@@ -1,123 +1,140 @@
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6419AB64C;
-	Fri, 22 Dec 2023 04:56:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jJtwuhWS"
-Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-5c66b093b86so1908737a12.0;
-        Thu, 21 Dec 2023 20:56:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1703221002; x=1703825802; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dWqsP0YUMP6a7cu2oaHJUgxIQ36xA/a/DzZjUjmtwic=;
-        b=jJtwuhWS2xg0MEYz3cR/aqAo3s3e0dWU1gHyI30l2FbspXwQYH1cMftsZUewH4RsLn
-         c7qd5Uk6SU9zynEcb2I5Eb4dclM9AP1IikOP27+oE+/CAY82x0U+M2Cxz8tGxCsKX41c
-         Rflrs7YZvRT98aWupOvUx1COMrujMhSHrENbBm+IFbZvfIJDaD1BYntHEmwURTh/g8oV
-         l3xkbB69A9J4JHOj15rjHdiXt0o50rGaMXqTk7S5/OAG/Kw6WqZCT8ufqdmmsPMgBwkP
-         8Px5dRSheUEOWXjz3YoqdmjUHTXWtrbCH96ochvX+wujo+rd7hXr/dQmrop2v3hwFxKv
-         rAuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703221002; x=1703825802;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=dWqsP0YUMP6a7cu2oaHJUgxIQ36xA/a/DzZjUjmtwic=;
-        b=cCUL1aSBlIAU2X0OIVFxHUJ6Jm+h9hV9casF5m6waMPQOuX4oGyuBUdsIBeOhKKc2H
-         QlO4gVXP+ns3srQbHdgIwRSjfvAu/lBi4DFgi51Il3d+4ERNmYOahmzX3F6Q/JFMgC8+
-         31QLxnZHSaJ5MfZjEFyNBdu2iq5uJ5QjW0NfuppfQa9Mkpj7zgUDx/HdC+USsY33fsT4
-         69KnOEWZxDLN0JltjW+2BSh8C5vcVtORWS+8eTzoXH3g1HyrVhzGeKUhNGumyxbpS6Qt
-         lNT3JrZvOxUMU0abkHIXCSamytZd4wkh8U8CXVxdxrhKQT6nneIUxgLxTPnBQwLibvFY
-         XZVg==
-X-Gm-Message-State: AOJu0YwGgZEDDBcryjr3H18Dx5SYLgMbkVvfxGE3gSM0YIvR6Qr1h2US
-	1fOCQhV4KWCkdkpUfTJEfTwPTjCp6NHuuk9NGcA=
-X-Google-Smtp-Source: AGHT+IGVJQsE6p52eLFhSLFIKzi97L31nRMNk+0XS/0jAbSL9nFWpk19E7VqjdYceCuuABPSwaacuEqItbhpCkg3+dk=
-X-Received: by 2002:a17:90a:d158:b0:28b:8fe8:3e95 with SMTP id
- t24-20020a17090ad15800b0028b8fe83e95mr2051176pjw.29.1703221001685; Thu, 21
- Dec 2023 20:56:41 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD28FBE4;
+	Fri, 22 Dec 2023 09:16:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4SxM971yYWz4f3kFc;
+	Fri, 22 Dec 2023 17:15:55 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 1D7DD1A01CE;
+	Fri, 22 Dec 2023 17:15:58 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgDnNw7MU4VlRmBLEQ--.44328S3;
+	Fri, 22 Dec 2023 17:15:57 +0800 (CST)
+Subject: Re: [PATCH v2] md/raid5: fix atomicity violation in raid5_cache_count
+To: Gui-Dong Han <2045gemini@gmail.com>, song@kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ baijiaju1990@outlook.com, BassCheck <bass@buaa.edu.cn>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231222045224.4439-1-2045gemini@gmail.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <97363298-7aa1-cd42-d2cf-c7e2bbeb179f@huaweicloud.com>
+Date: Fri, 22 Dec 2023 17:15:55 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231221104343.5557-1-2045gemini@gmail.com> <abc324aa-1ccc-c8fd-1437-a77465f6e4be@huaweicloud.com>
- <CAOPYjvbfGZObUa+P5Bo_syLMpyMNEPU6SNm6xJPSqSZYREmNfw@mail.gmail.com>
- <CAOPYjvYhEzeF3vdd9GXCX+k_-OmsE1yP7VNozcMt4vOyFLDAfw@mail.gmail.com> <ae9fc764-4765-8c13-8d59-56bc8582c094@huaweicloud.com>
-In-Reply-To: <ae9fc764-4765-8c13-8d59-56bc8582c094@huaweicloud.com>
-From: 20 39 <2045gemini@gmail.com>
-Date: Fri, 22 Dec 2023 12:56:06 +0800
-Message-ID: <CAOPYjvaDCFhFCSc+LhpDRq2ZB0jOP8xx0t3OVL95C3WfG-NimA@mail.gmail.com>
-Subject: Re: [PATCH] md/raid5: fix atomicity violation in raid5_cache_count
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: song@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	baijiaju1990@outlook.com, BassCheck <bass@buaa.edu.cn>, 
-	"yukuai (C)" <yukuai3@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20231222045224.4439-1-2045gemini@gmail.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDnNw7MU4VlRmBLEQ--.44328S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGrWDXryrJFyfArWfZF1kKrg_yoW5Kr1fpF
+	ZYka4UXr4kXw1vyryDZr4kuFWfGa93JFy7Jw47X3ykZas0vFWftw4xKFy5J348ArW8Gayx
+	tF1Y93s5ur4qyFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+	xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv
+	6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUrR6zUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 Hi,
-We've updated to use READ_ONCE() in PATCH v2, Thank you for helpful advice.
-Best regards,
-Han
 
-Yu Kuai <yukuai1@huaweicloud.com> =E4=BA=8E2023=E5=B9=B412=E6=9C=8822=E6=97=
-=A5=E5=91=A8=E4=BA=94 10:53=E5=86=99=E9=81=93=EF=BC=9A
->
-> Hi,
->
-> =E5=9C=A8 2023/12/22 10:34, 20 39 =E5=86=99=E9=81=93:
-> > Hi Kuai,
-> >
-> > Thank you for your patience. This email is essentially the same as my
-> > previous one, only now adjusted to plain text format. I apologize for
-> > any inconvenience caused earlier.
-> >
-> > Thanks for your email and the insightful points you've raised. Let me
-> > clarify a few aspects regarding the raid5_cache_count() and
-> > raid5_set_cache_size() functions.
-> >
-> > 1. Callback Function in setup_conf(): You mentioned that
-> > raid5_cache_count() is called from setup_conf() where reconfig_mutex
-> > is held. While this is true, it's important to note that
-> > raid5_cache_count() is actually initialized as a callback function in
-> > setup_conf(), as described in /include/linux/shrinker.h. This means it
-> > could be invoked later in a context where the reconfig_mutex isn't
-> > necessarily held. The documentation in shrinker.h indicates potential
-> > invocation scenarios beyond the initial setup context.
->
-> Yes, you're right. I misread the code. Then this patch looks good to me,
-> just one nit below.
->
-> >>>> @@ -7390,11 +7390,12 @@ static unsigned long raid5_cache_count(struc=
-t shrinker *shrink,
-> >>>>                                       struct shrink_control *sc)
-> >>>>    {
-> >>>>        struct r5conf *conf =3D shrink->private_data;
-> >>>> -
-> >>>> -     if (conf->max_nr_stripes < conf->min_nr_stripes)
-> >>>> +     int max_stripes =3D conf->max_nr_stripes;
-> >>>> +     int min_stripes =3D conf->min_nr_stripes;
->
-> Since read and write can concurrent, I'll suggest to use READ_ONCE() and
-> WRITE_ONCE() for max/min_nr_stripes.
->
-> Thanks,
-> Kuai
-> >>>> +     if (max_stripes < min_stripes)
-> >>>>                /* unlikely, but not impossible */
-> >>>>                return 0;
-> >>>> -     return conf->max_nr_stripes - conf->min_nr_stripes;
-> >>>> +     return max_stripes - min_stripes;
-> >>>>    }
-> >>>>
-> >>>>    static struct r5conf *setup_conf(struct mddev *mddev)
-> >>>>
-> >>>
-> > .
-> >
->
+ÔÚ 2023/12/22 12:52, Gui-Dong Han Ð´µÀ:
+> In raid5_cache_count():
+> 	if (conf->max_nr_stripes < conf->min_nr_stripes)
+> 		return 0;
+> 	return conf->max_nr_stripes - conf->min_nr_stripes;
+> The current check is ineffective, as the values could change immediately
+> after being checked.
+> 
+> In raid5_set_cache_size():
+> 	...
+> 	conf->min_nr_stripes = size;
+> 	...
+> 	while (size > conf->max_nr_stripes)
+> 		conf->min_nr_stripes = conf->max_nr_stripes;
+> 	...
+> 
+> Due to intermediate value updates in raid5_set_cache_size(), concurrent
+> execution of raid5_cache_count() and raid5_set_cache_size() may lead to
+> inconsistent reads of conf->max_nr_stripes and conf->min_nr_stripes.
+> The current checks are ineffective as values could change immediately
+> after being checked, raising the risk of conf->min_nr_stripes exceeding
+> conf->max_nr_stripes and potentially causing an integer overflow.
+> 
+> This possible bug is found by an experimental static analysis tool
+> developed by our team. This tool analyzes the locking APIs to extract
+> function pairs that can be concurrently executed, and then analyzes the
+> instructions in the paired functions to identify possible concurrency bugs
+> including data races and atomicity violations. The above possible bug is
+> reported when our tool analyzes the source code of Linux 6.2.
+> 
+> To resolve this issue, it is suggested to introduce local variables
+> 'min_stripes' and 'max_stripes' in raid5_cache_count() to ensure the
+> values remain stable throughout the check. Adding locks in
+> raid5_cache_count() fails to resolve atomicity violations, as
+> raid5_set_cache_size() may hold intermediate values of
+> conf->min_nr_stripes while unlocked. With this patch applied, our tool no
+> longer reports the bug, with the kernel configuration allyesconfig for
+> x86_64. Due to the lack of associated hardware, we cannot test the patch
+> in runtime testing, and just verify it according to the code logic.
+> 
+> Fixes: edbe83ab4c27e ("md/raid5: allow the stripe_cache to grow and ...")
+> Reported-by: BassCheck <bass@buaa.edu.cn>
+> Signed-off-by: Gui-Dong Han <2045gemini@gmail.com>
+> 
+> ---
+> v2:
+> * In this patch v2, we've updated to use READ_ONCE() instead of direct
+> reads for accessing max_nr_stripes and min_nr_stripes, since read and
+> write can concurrent.
+>    Thank Yu Kuai for helpful advice.
+> ---
+>   drivers/md/raid5.c | 6 ++++--
+>   1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 8497880135ee..9037e46de0e2 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7391,10 +7391,12 @@ static unsigned long raid5_cache_count(struct shrinker *shrink,
+>   {
+>   	struct r5conf *conf = shrink->private_data;
+>   
+> -	if (conf->max_nr_stripes < conf->min_nr_stripes)
+> +	int max_stripes = READ_ONCE(conf->max_nr_stripes);
+> +	int min_stripes = READ_ONCE(conf->min_nr_stripes);
+
+READ_ONCE() itself is meaningless, it should pair with WRITE_ONCE(),
+this will prevent reading abnormal value in some arch. Please also
+update raid5_set_cache_size(), grow_one_stripe() and drop_one_stripe()
+to use WRITE_ONCE(). (setup_conf() is not necessary).
+
+Thanks,
+Kuai
+
+> +	if (max_stripes < min_stripes)
+>   		/* unlikely, but not impossible */
+>   		return 0;
+> -	return conf->max_nr_stripes - conf->min_nr_stripes;
+> +	return max_stripes - min_stripes;
+>   }
+>   
+>   static struct r5conf *setup_conf(struct mddev *mddev)
+> 
+
