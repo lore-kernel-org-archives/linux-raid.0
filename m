@@ -1,125 +1,136 @@
-Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12FFF634FF
-	for <linux-raid@vger.kernel.org>; Thu, 21 Dec 2023 19:19:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ovewfNVW"
-Date: Thu, 21 Dec 2023 14:19:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1703186373;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=an/cZCCqS5zxJSkNET76Ye0giZrXilZyvowEVOx+MQY=;
-	b=ovewfNVWzTJ5/+VPMNm+np7pe6MWmkpAxMXribZGBxjpwXaPzz+UFxHbSv0KEBJG4G1WNi
-	gOhO7sGPK7aPok4opifF0c7udDOMy0jCuXG/qjrv3QouBS3gZCws6aYI1pfcxxDr1M2VpE
-	xSJPRz9kGBeMgSSE0eOOxZu+Gi0k8oM=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Ed Tsai =?utf-8?B?KOiUoeWul+i7kik=?= <Ed.Tsai@mediatek.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"colyli@suse.de" <colyli@suse.de>,
-	"song@kernel.org" <song@kernel.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"bagasdotme@gmail.com" <bagasdotme@gmail.com>,
-	"janpieter.sollie@edpnet.be" <janpieter.sollie@edpnet.be>,
-	"axboe@kernel.dk" <axboe@kernel.dk>
-Subject: Re: [PATCH 0/2] block, md: Better handle REQ_OP_FLUSH
-Message-ID: <20231221191930.fubcmftjkec42wsc@moria.home.lan>
-References: <20231221012715.3048221-1-song@kernel.org>
- <9dfc7e93f49f5b3595985ce6ed60e4c08cf05a4c.camel@mediatek.com>
- <20231221053016.72cqcfg46vxwohcj@moria.home.lan>
- <fb146972062ea1547eaa809817237f7c546a9e88.camel@mediatek.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33DB020FB;
+	Fri, 22 Dec 2023 01:17:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Sx8XM4wgJz4f3l1C;
+	Fri, 22 Dec 2023 09:16:51 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id E9DDA1A01CA;
+	Fri, 22 Dec 2023 09:16:56 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+	by APP2 (Coremail) with SMTP id Syh0CgAHqkiH44RlAqSoEQ--.6406S3;
+	Fri, 22 Dec 2023 09:16:56 +0800 (CST)
+Message-ID: <d00e6729-6e13-b1ab-0991-ce79b1245cfd@huaweicloud.com>
+Date: Fri, 22 Dec 2023 09:16:55 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 1/2] md: fix WARN_ON if create symlink fail in
+ bind_rdev_to_array()
+To: Song Liu <song@kernel.org>, linan666@huaweicloud.com
+Cc: yukuai3@huawei.com, linux-raid@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
+ yangerkun@huawei.com
+References: <20231221071109.1562530-1-linan666@huaweicloud.com>
+ <20231221071109.1562530-2-linan666@huaweicloud.com>
+ <CAPhsuW5SPiy5bsSfagYrSLa3JTn2Gw0VJKUToS2PS9h4w2=zSA@mail.gmail.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <CAPhsuW5SPiy5bsSfagYrSLa3JTn2Gw0VJKUToS2PS9h4w2=zSA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <fb146972062ea1547eaa809817237f7c546a9e88.camel@mediatek.com>
-X-Migadu-Flow: FLOW_OUT
+X-CM-TRANSID:Syh0CgAHqkiH44RlAqSoEQ--.6406S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJr17Gr4fArWrtF1kKw48Zwb_yoW8tr17pF
+	W8GFy3Ar4UJr1Uu3Wjqay5CFyYg3W7tFW8JFy3C34Sva43Ars3Cr10gFW7XryDWrnxCF47
+	X3WUG397ua9Y9F7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
+	4I1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1l
+	IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWI
+	evJa73UjIFyTuYvjfUOlksUUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-On Thu, Dec 21, 2023 at 07:56:45AM +0000, Ed Tsai (蔡宗軒) wrote:
-> On Thu, 2023-12-21 at 00:30 -0500, Kent Overstreet wrote:
-> >  On Thu, Dec 21, 2023 at 03:36:40AM +0000, Ed Tsai (蔡宗軒) wrote:
-> > > On Wed, 2023-12-20 at 17:27 -0800, Song Liu wrote:
-> > > > you have verified the sender or the content.
-> > > >  A recent bug report [1] shows md is handling a flush from
-> > bcachefs
-> > > > as read:
-> > > > 
-> > > > bch2_journal_write=>
-> > > >   submit_bio=>
-> > > >     ...
-> > > >     md_handle_request =>
-> > > >       raid5_make_request =>
-> > > >         chunk_aligned_read =>
-> > > >           raid5_read_one_chunk =>
-> > > >     ...
-> > > > 
-> > > > It appears md code only checks REQ_PREFLUSH for flush requests,
-> > which
-> > > > doesn't cover all cases. OTOH, op_is_flush() doesn't check
-> > > > REQ_OP_FLUSH
-> > > > either.
-> > > > 
-> > > > Fix this by:
-> > > > 1) Check REQ_PREFLUSH in op_is_flush();
-> > > > 2) Use op_is_flush() in md code.
-> > > > 
-> > > > Thanks,
-> > > > Song
-> > > > 
-> > > > [1] 
-> > > > 
-> > https://urldefense.com/v3/__https://bugzilla.kernel.org/show_bug.cgi?id=218184__;!!CTRNKA9wMg0ARbw!gQbjtS_f5d3Du2prpIT8zUM4mkZf7qDleyaAuEfG8j5tMrDvw7cfJUB04VWl0uVAL4BJ4YWbVopp$
-> > > > 
-> > > 
-> > > REQ_OP_FLUSH is only used by the block layer's flush code, and the
-> > > filesystem should use REQ_PREFLUSH with an empty write bio.
-> > > 
-> > > If we want upper layer to be able to directly send REQ_OP_FLUSH
-> > bio,
-> > > then we should retrieve all REQ_PREFLUSH to confirm. At least for
-> > now,
-> > > it seems that REQ_OP_FLUSH without REQ_PREFLUSH in
-> > `blk_flush_policy`
-> > > will directly return 0 and no flush operation will be sent to the
-> > > driver.
-> > 
-> > If that's the case, then it should be documented and there should be
-> > a
-> > WARN_ON() in generic_make_request().
+
+
+在 2023/12/22 2:58, Song Liu 写道:
+> Hi,
 > 
-> Please refer to the writeback_cache_control.rst. Use an empty write bio
-> with the REQ_PREFLUSH flag for an explicit flush, or as commonly
-> practiced by most filesystems, use blkdev_issue_flush for a pure flush.
-
-That's not a substitute for a proper comment in the code.
-
+> On Wed, Dec 20, 2023 at 11:13 PM <linan666@huaweicloud.com> wrote:
+>>
+>> From: Li Nan <linan122@huawei.com>
+>>
+>> Removing a device can trigger WARN_ON in bd_unlink_disk_holder() if creating
+>> symlink failed while adding device.
+>>
+>>    WARNING: CPU: 0 PID: 742 at block/holder.c:145 bd_unlink_disk_holder+0x17b/0x1a0
+>>
+>> Fix it by adding the flag 'SymlinkCreated', which only be set after
+>> creating symlink success.
+>>
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>>   drivers/md/md.h | 3 +++
+>>   drivers/md/md.c | 8 ++++++--
+>>   2 files changed, 9 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/md/md.h b/drivers/md/md.h
+>> index 8d881cc59799..427d17713a8c 100644
+>> --- a/drivers/md/md.h
+>> +++ b/drivers/md/md.h
+>> @@ -207,6 +207,9 @@ enum flag_bits {
+>>                                   * check if there is collision between raid1
+>>                                   * serial bios.
+>>                                   */
+>> +       SymlinkCreated,         /* This device has created the symlink
+>> +                                * with gendisk.
+>> +                                */
 > 
-> > 
-> > Also, glancing at blk_types.h, we have the req_op and req_flag_bits
-> > both
-> > using (__force blk_opf_t), but using the same bit range - what the
-> > hell?
-> > That's seriously broken...
+> In general, I would like to avoid adding flags if possible.
 > 
-> No, read the comment before req_op. We do not need to use the entire 32
-> bits to represent OP; only 8 bits for OP, while the remaning 24 bits is
-> used for FLAG.
 
-No, this is just broken; it's using the same bitwise enum for two
-different enums.
+This flag is mainly used to fix deadlock in next patch. Or should we
+export bd_find_holder_disk()? Link hodler if it return NULL.
+just like:
 
-bitwise exists for a reason - C enums are not natively type safe, and
-mixing up enums/bitflags and using them in the wrong context is a
-serious source of bugs. If it would be incorrect to or the two different
-flags together, you can't use the same bitwise type.
+   rdev_for_each_rcu
+     if (!bd_find_holder_disk)
+       bd_link_disk_holder
+
+
+>>   };
+>>
+>>   static inline int is_badblock(struct md_rdev *rdev, sector_t s, int sectors,
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index e05858653a41..d6612b922c76 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -2526,7 +2526,8 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+>>                  sysfs_get_dirent_safe(rdev->kobj.sd, "bad_blocks");
+>>
+>>          list_add_rcu(&rdev->same_set, &mddev->disks);
+>> -       bd_link_disk_holder(rdev->bdev, mddev->gendisk);
+>> +       if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
+>> +               set_bit(SymlinkCreated, &rdev->flags);
+> 
+> Shall we just fail bind_rdev_to_array() if bd_link_disk_holder()
+> returns non-zero?
+> 
+
+I keep this action because of commit 00bcb4ac7ee7 ("md: reduce
+dependence on sysfs."). Fail bind_rdev_to_array is good to me.
+
+> Thanks,
+> Song
+> 
+> .
+
+-- 
+Thanks,
+Nan
+
