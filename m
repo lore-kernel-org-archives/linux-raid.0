@@ -1,83 +1,105 @@
-Received: from lists.tip.net.au (pasta.tip.net.au [203.10.76.2])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10B6833064;
-	Fri, 22 Dec 2023 23:06:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tip.net.au
-Received: from lists.tip.net.au (pasta.tip.net.au [203.10.76.2])
-	by mailhost.tip.net.au (Postfix) with ESMTP id 4SxjSL5Zp3z9R3h;
-	Sat, 23 Dec 2023 10:00:18 +1100 (AEDT)
-Received: from [192.168.2.7] (unknown [101.115.64.11])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mailhost.tip.net.au (Postfix) with ESMTPSA id 4SxjSK60j3z9QyH;
-	Sat, 23 Dec 2023 10:00:16 +1100 (AEDT)
-Message-ID: <c4f84de0-ee0e-4e29-a9f5-346823bb3d53@eyal.emu.id.au>
-Date: Sat, 23 Dec 2023 10:00:05 +1100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABBCDED9;
+	Sat, 23 Dec 2023 03:39:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Sxqdz6grDz4f3lCy;
+	Sat, 23 Dec 2023 11:39:03 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 39A331A0743;
+	Sat, 23 Dec 2023 11:39:09 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgD3Rg1aVoZl1dePEQ--.1070S6;
+	Sat, 23 Dec 2023 11:39:09 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	axboe@kernel.dk
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yukuai3@huawei.com,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH v3 2/2] md: don't account sync_io if iostats of the disk is disabled
+Date: Sat, 23 Dec 2023 11:37:03 +0800
+Message-Id: <20231223033703.2949831-3-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231223033703.2949831-1-linan666@huaweicloud.com>
+References: <20231223033703.2949831-1-linan666@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: parity raid and ext4 get stuck in writes
-To: linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
- carlos@fisica.ufpr.br
-References: <ZYX2AS8isUHtbMXe@fisica.ufpr.br>
-Content-Language: en-US
-From: eyal@eyal.emu.id.au
-In-Reply-To: <ZYX2AS8isUHtbMXe@fisica.ufpr.br>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgD3Rg1aVoZl1dePEQ--.1070S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7KFWxKF4kKr1xuF15Jr4DCFg_yoW8XryfpF
+	Z5AF9ay34UXr45Wa4DXryDCa4rW3srKFWUArW7u3yfXFyaqr9xGFWrXayqqF1DXFWrGFWa
+	v3Wjy39093W0yr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
+	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
+	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S
+	6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxw
+	ACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I
+	3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxV
+	WUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAF
+	wI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcI
+	k0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j
+	6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU1xhLUUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-On 23/12/23 07:48, Carlos Carvalho wrote:
-> This is finally a summary of a long standing problem. When lots of writes to
-> many files are sent in a short time the kernel gets stuck and stops sending
-> write requests to the disks. Sometimes it recovers and finally sends the
-> modified pages to permanent storage, sometimes not and eventually other
-> functions degrade and the machine crashes.
-> 
-> A simple way to reproduce: expand a kernel source tree, like
-> xzcat linux-6.5.tar.xz | tar x -f -
-> 
-> With the default vm settings for dirty_background_ratio and dirty_ratio this
-> will finish quickly with ~1.5GB of dirty pages in ram and ~100k inodes to be
-> written and the kernel gets stuck.
-> 
-> The bug exists in all 6.* kernels; I've tested the latest release of all
-> 6.[1-6]. However some conditions must exist for the problem to appear:
-> 
-> - there must be many inodes to be flushed; just many bytes in a few files don't
->    show the problem
-> - it happens only with ext4 on a parity raid array
+From: Li Nan <linan122@huawei.com>
 
-This may be unrelated but there is an open problem that looks somewhat similar.
-It is tracked at
-	https://bugzilla.kernel.org/show_bug.cgi?id=217965
+If iostats is disabled, disk_stats will not be updated and
+part_stat_read_accum() only returns a constant value. In this case,
+continuing to count sync_io and to check is_mddev_idle() is no longer
+meaningful.
 
-If your fs is mounted with a non-zero 'stripe=' (as RAID arrays usually are),
-try to get around the issue with
-	$ sudo mount -o remount,stripe=0 YourFS
-If it makes a difference then you may be looking at a similar issue.
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/md/md.h | 3 ++-
+ drivers/md/md.c | 4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-> I've moved one of our arrays to xfs and everything works fine, so it's either
-> specific to ext4 or xfs is not affected. When the lockup happens the flush
-> kworker starts using 100% cpu permanently. I have not observed the bug in
-> raid10, only in raid[56].
-> 
-> The problem is more easily triggered with 6.[56] but 6.1 is also affected.
-
-The issue was seen in kernels 6.5 and later but not in 6.4, so maybe not the same thing.
-
-> Limiting dirty_bytes and dirty_background_bytes to low values reduce the
-> probability of lockup, probably because the process generating writes is
-> stopped before too many files are created.
-
-HTH
-
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 1a4f976951c1..e2d03a7a858c 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -584,7 +584,8 @@ extern void mddev_unlock(struct mddev *mddev);
+ 
+ static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
+ {
+-	atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
++	if (blk_queue_io_stat(bdev->bd_disk->queue))
++		atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
+ }
+ 
+ static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index a6829ea5b560..b56614eae8dc 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8502,6 +8502,10 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+ 	rcu_read_lock();
+ 	rdev_for_each_rcu(rdev, mddev) {
+ 		struct gendisk *disk = rdev->bdev->bd_disk;
++
++		if (!blk_queue_io_stat(disk->queue))
++			continue;
++
+ 		curr_events =
+ 			(long long)part_stat_read_accum(disk->part0, sectors) -
+ 			atomic64_read(&disk->sync_io);
 -- 
-Eyal at Home (eyal@eyal.emu.id.au)
+2.39.2
 
