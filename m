@@ -1,271 +1,218 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49F8210946;
-	Thu, 28 Dec 2023 12:58:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4T17pr3CZQz4f3lDJ;
-	Thu, 28 Dec 2023 20:58:12 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id DDF2B1A017F;
-	Thu, 28 Dec 2023 20:58:17 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBHlQvmcI1lvcx3Ew--.36075S7;
-	Thu, 28 Dec 2023 20:58:17 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: song@kernel.org,
-	yukuai3@huawei.com,
-	neilb@suse.de
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH -next 3/3] md: use interruptible apis in idle/frozen_sync_thread()
-Date: Thu, 28 Dec 2023 20:55:53 +0800
-Message-Id: <20231228125553.2697765-4-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231228125553.2697765-1-yukuai1@huaweicloud.com>
-References: <20231228125553.2697765-1-yukuai1@huaweicloud.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8552AF4E3
+	for <linux-raid@vger.kernel.org>; Thu, 28 Dec 2023 14:52:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TS/IUFYY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1703775168; x=1735311168;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Ihlio8ttL5GJWE3GjPFxvPKBAByWA9lL1mrihrI6lTI=;
+  b=TS/IUFYYsf9jZHGVzVJTpvaQMSTHV+dQWv4+toNKel0gnJ/5EJ9wXg4I
+   n5RPGl2pLBUt4CcW/+W4ROysE3RHBZaUcxnzREHRYIv/w/d0dpZCj3O8c
+   us/tOUSYitqbUXhGCiSyQi0OB/DZWP4K3BBqN3PvMgmNnoV6mChow3UVc
+   ZjR85WoA3zDiCRt7Z36nqNtVni37xS2yrFobOyXH+ygf3P2haJK2Qy1j0
+   1AAwmbL3Rngncjv6DkLeGjwdrpWG9N1AVW9HBGPEXC8IsebbaDwabGyoB
+   ZNb+njJ7GTBlVH8Pl/V1RBUF0LXhZBnxe0aaBmEpXkigPWGqHdSJHSboq
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10936"; a="3349202"
+X-IronPort-AV: E=Sophos;i="6.04,312,1695711600"; 
+   d="scan'208";a="3349202"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Dec 2023 06:52:47 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10936"; a="754750186"
+X-IronPort-AV: E=Sophos;i="6.04,312,1695711600"; 
+   d="scan'208";a="754750186"
+Received: from mkusiak-mobl1.ger.corp.intel.com (HELO [10.213.30.67]) ([10.213.30.67])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Dec 2023 06:52:45 -0800
+Message-ID: <b6fbcd89-fa46-4b7c-a495-d0c87cf491f0@linux.intel.com>
+Date: Thu, 28 Dec 2023 15:52:43 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHlQvmcI1lvcx3Ew--.36075S7
-X-Coremail-Antispam: 1UD129KBjvJXoW3JFyrKFyfAFW3Aw13Jr4Utwb_yoWxury3p3
-	yIgF98Ar45JrZ3Zr4DK3WkAayrZw1IqayDtry7Wa4fJw1fKrsrKFyY9a4UZFykCa4rAw4U
-	Ja1rJF4fCFZ7Wr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9m14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2
-	IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
-	6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
-	AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
-	s7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
-	0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd8n5UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH mdadm] tests: Gate tests for linear flavor with variable
+ LINEAR
+Content-Language: pl, en-US
+To: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Cc: mariusz.tkaczyk@linux.intel.com, jes@trained-monkey.org
+References: <20231221013914.3108026-1-song@kernel.org>
+From: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+In-Reply-To: <20231221013914.3108026-1-song@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 21.12.2023 02:39, Song Liu wrote:
 
-Before refactoring idle and frozen from action_store, interruptible apis
-is used so that hungtask warning won't be triggered if it takes too long
-to finish idle/frozen sync_thread. So change to use interruptible apis.
+> linear flavor is being removed in the kernel [1], so tests for the linear
+> flavor will fail. Gate tests for linear flavor with LINEAR=yes, so that we
+> can still run these tests for older kernels.
+>
+> [1] https://lore.kernel.org/linux-raid/20231214222107.2016042-1-song@kernel.org/
+> Signed-off-by: Song Liu <song@kernel.org>
+> ---
+>   tests/00linear     | 5 +++++
+>   tests/00names      | 8 +++++++-
+>   tests/00raid0      | 4 ++++
+>   tests/00readonly   | 8 +++++++-
+>   tests/02lineargrow | 5 +++++
+>   tests/03assem-incr | 8 +++++++-
+>   tests/03r0assem    | 4 ++++
+>   tests/04r0update   | 6 ++++++
+>   8 files changed, 45 insertions(+), 3 deletions(-)
+>
+> diff --git a/tests/00linear b/tests/00linear
+> index e3ac6555c9dd..5a1160851af2 100644
+> --- a/tests/00linear
+> +++ b/tests/00linear
+> @@ -1,6 +1,11 @@
+>   
+>   # create a simple linear
+>   
+> +if [ "$LINEAR" != "yes" ]; then
+> +  echo -ne 'skipping... '
+> +  exit 0
+> +fi
+> +
+>   mdadm -CR $md0 -l linear -n3 $dev0 $dev1 $dev2
+>   check linear
+>   testdev $md0 3 $mdsize2_l 1
+> diff --git a/tests/00names b/tests/00names
+> index 7a066d8fb2b7..d996befc5e8b 100644
+> --- a/tests/00names
+> +++ b/tests/00names
+> @@ -4,7 +4,13 @@ set -x -e
+>   conf=$targetdir/mdadm.conf
+>   echo "CREATE names=yes" > $conf
+>   
+> -for i in linear raid0 raid1 raid4 raid5 raid6
+> +levels=(raid0 raid1 raid4 raid5 raid6)
+> +
+> +if [ "$LINEAR" == "yes" ]; then
+> +  levels+=( linear )
+> +fi
+> +
+> +for i in ${levels[@]}
+>   do
+>     mdadm -CR --config $conf /dev/md/$i -l $i -n 4 $dev4 $dev3 $dev2 $dev1
+>     check $i
+> diff --git a/tests/00raid0 b/tests/00raid0
+> index 9b8896cbdc52..6407c320fd65 100644
+> --- a/tests/00raid0
+> +++ b/tests/00raid0
+> @@ -16,6 +16,10 @@ check raid0
+>   testdev $md0 5 $size 512
+>   mdadm -S $md0
+>   
+> +if [ "$LINEAR" != "yes" ]; then
+> +  echo -ne 'skipping... '
+> +  exit 0
+> +fi
+>   
+>   # now same again with different chunk size
+>   for chunk in 4 32 256
+> diff --git a/tests/00readonly b/tests/00readonly
+> index afe243b3a0b0..80b63629e4f9 100644
+> --- a/tests/00readonly
+> +++ b/tests/00readonly
+> @@ -1,8 +1,14 @@
+>   #!/bin/bash
+>   
+> +levels=(raid0 raid1 raid4 raid5 raid6 raid10)
+> +
+> +if [ "$LINEAR" == "yes" ]; then
+> +  levels+=( linear )
+> +fi
+> +
+>   for metadata in 0.9 1.0 1.1 1.2
+>   do
+> -	for level in linear raid0 raid1 raid4 raid5 raid6 raid10
+> +	for level in ${levels[@]}
+>   	do
+>   		if [[ $metadata == "0.9" && $level == "raid0" ]];
+>   		then
+> diff --git a/tests/02lineargrow b/tests/02lineargrow
+> index 595bf9f20802..d17e2326d13f 100644
+> --- a/tests/02lineargrow
+> +++ b/tests/02lineargrow
+> @@ -1,6 +1,11 @@
+>   
+>   # create a liner array, and add more drives to to.
+>   
+> +if [ "$LINEAR" != "yes" ]; then
+> +  echo -ne 'skipping... '
+> +  exit 0
+> +fi
+> +
+>   for e in 0.90 1 1.1 1.2
+>   do
+>     case $e in
+> diff --git a/tests/03assem-incr b/tests/03assem-incr
+> index f10a1a48ee5c..38880a7fed10 100644
+> --- a/tests/03assem-incr
+> +++ b/tests/03assem-incr
+> @@ -6,7 +6,13 @@ set -x -e
+>   # Here just test that a partly "-I" assembled array can
+>   # be completed with "-A"
+>   
+> -for l in 0 1 5 linear
+> +levels=(raid0 raid1 raid5)
+> +
+> +if [ "$LINEAR" == "yes" ]; then
+> +  levels+=( linear )
+> +fi
+> +
+> +for l in ${levels[@]}
+>   do
+>     mdadm -CR $md0 -l $l -n5 $dev0 $dev1 $dev2 $dev3 $dev4 --assume-clean
+>     mdadm -S md0
+> diff --git a/tests/03r0assem b/tests/03r0assem
+> index 44df06456233..f7c29e8c1ab6 100644
+> --- a/tests/03r0assem
+> +++ b/tests/03r0assem
+> @@ -64,6 +64,10 @@ mdadm --assemble --scan --config=$conf $md2
+>   $tst
+>   mdadm -S $md2
+>   
+> +if [ "$LINEAR" != "yes" ]; then
+> +  echo -ne 'skipping... '
+> +  exit 0
+> +fi
+>   
+>   ### Now for version 0...
+>   
+> diff --git a/tests/04r0update b/tests/04r0update
+> index b95efb06c761..c495f34a0a79 100644
+> --- a/tests/04r0update
+> +++ b/tests/04r0update
+> @@ -1,5 +1,11 @@
+>   
+>   # create a raid0, re-assemble with a different super-minor
+> +
+> +if [ "$LINEAR" != "yes" ]; then
+> +  echo -ne 'skipping... '
+> +  exit 0
+> +fi
+> +
+>   mdadm -CR -e 0.90 $md0 -llinear -n3 $dev0 $dev1 $dev2
+>   testdev $md0 3 $mdsize0 1
+>   minor1=`mdadm -E $dev0 | sed -n -e 's/.*Preferred Minor : //p'`
+Hi Song, this approach looks a bit dirty to me as it's omitting what's 
+already in the test suite. I would prefer adding additional param rather 
+than setting environment variable, so test execution flow stays unified 
+(as far as I'm aware we do not use flags for now). Adding param is also 
+a good excuse to explain why linear is not tested by default in "--help".
 
-In order not to make stop_sync_thread() more complicated, factor out a
-helper prepare_to_stop_sync_thread() to replace stop_sync_thread().
+Another thing is "--raidtype=linear" option, is probably redundant now.
 
-Also return error to user if idle/frozen_sync_thread() failed, otherwise
-user will be misleaded.
-
-Fixes: 130443d60b1b ("md: refactor idle/frozen_sync_thread() to fix deadlock")
-Fixes: 8e8e2518fcec ("md: Close race when setting 'action' to 'idle'.")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 105 ++++++++++++++++++++++++++++++------------------
- 1 file changed, 67 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 60f99768a1a9..9ea05de79fe4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4846,26 +4846,34 @@ action_show(struct mddev *mddev, char *page)
- 	return sprintf(page, "%s\n", type);
- }
- 
-+static bool sync_thread_stopped(struct mddev *mddev, int *sync_seq)
-+{
-+	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-+		return true;
-+
-+	if (sync_seq && *sync_seq != atomic_read(&mddev->sync_seq))
-+		return true;
-+
-+	return false;
-+}
-+
- /**
-- * stop_sync_thread() - wait for sync_thread to stop if it's running.
-+ * prepare_to_stop_sync_thread() - prepare to stop sync_thread if it's running.
-  * @mddev:	the array.
-- * @locked:	if set, reconfig_mutex will still be held after this function
-- *		return; if not set, reconfig_mutex will be released after this
-- *		function return.
-- * @check_seq:	if set, only wait for curent running sync_thread to stop, noted
-- *		that new sync_thread can still start.
-+ * @unlock:	whether or not caller want to release reconfig_mutex if
-+ *		sync_thread is not running.
-+ *
-+ * Return true if sync_thread is running, release reconfig_mutex and do
-+ * preparatory work to stop sync_thread, caller should wait for
-+ * sync_thread_stopped() to return true. Return false if sync_thread is not
-+ * running, reconfig_mutex will be released if @unlock is set.
-  */
--static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
-+static bool prepare_to_stop_sync_thread(struct mddev *mddev, bool unlock)
- {
--	int sync_seq;
--
--	if (check_seq)
--		sync_seq = atomic_read(&mddev->sync_seq);
--
- 	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
--		if (!locked)
-+		if (unlock)
- 			mddev_unlock(mddev);
--		return;
-+		return false;
- 	}
- 
- 	mddev_unlock(mddev);
-@@ -4879,53 +4887,67 @@ static void stop_sync_thread(struct mddev *mddev, bool locked, bool check_seq)
- 	if (work_pending(&mddev->sync_work))
- 		flush_work(&mddev->sync_work);
- 
--	wait_event(resync_wait,
--		   !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
--		   (check_seq && sync_seq != atomic_read(&mddev->sync_seq)));
--
--	if (locked)
--		mddev_lock_nointr(mddev);
-+	return true;
- }
- 
--static void idle_sync_thread(struct mddev *mddev)
-+static int idle_sync_thread(struct mddev *mddev)
- {
--	mutex_lock(&mddev->sync_mutex);
-+	int sync_seq = atomic_read(&mddev->sync_seq);
-+	int err = mutex_lock_interruptible(&mddev->sync_mutex);
-+
-+	if (err)
-+		return err;
- 	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 
--	if (mddev_lock(mddev)) {
-+	err = mddev_lock(mddev);
-+	if (err) {
- 		mutex_unlock(&mddev->sync_mutex);
--		return;
-+		return err;
- 	}
- 
--	stop_sync_thread(mddev, false, true);
-+	if (prepare_to_stop_sync_thread(mddev, true))
-+		err = wait_event_interruptible(resync_wait,
-+			   sync_thread_stopped(mddev, &sync_seq));
-+
- 	mutex_unlock(&mddev->sync_mutex);
-+
-+	return err;
- }
- 
--static void frozen_sync_thread(struct mddev *mddev)
-+static int frozen_sync_thread(struct mddev *mddev)
- {
--	mutex_lock(&mddev->sync_mutex);
-+	int err = mutex_lock_interruptible(&mddev->sync_mutex);
-+
-+	if (err)
-+		return err;
- 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 
--	if (mddev_lock(mddev)) {
-+	err = mddev_lock(mddev);
-+	if (err) {
- 		mutex_unlock(&mddev->sync_mutex);
--		return;
-+		return err;
- 	}
- 
--	stop_sync_thread(mddev, false, false);
-+	if (prepare_to_stop_sync_thread(mddev, true))
-+		err = wait_event_interruptible(resync_wait,
-+			   sync_thread_stopped(mddev, NULL));
- 	mutex_unlock(&mddev->sync_mutex);
-+
-+	return err;
- }
- 
- static ssize_t
- action_store(struct mddev *mddev, const char *page, size_t len)
- {
-+	int err = 0;
-+
- 	if (!mddev->pers || !mddev->pers->sync_request)
- 		return -EINVAL;
- 
--
- 	if (cmd_match(page, "idle"))
--		idle_sync_thread(mddev);
-+		err = idle_sync_thread(mddev);
- 	else if (cmd_match(page, "frozen"))
--		frozen_sync_thread(mddev);
-+		err = frozen_sync_thread(mddev);
- 	else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
- 		return -EBUSY;
- 	else if (cmd_match(page, "resync"))
-@@ -4934,7 +4956,6 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
- 	} else if (cmd_match(page, "reshape")) {
--		int err;
- 		if (mddev->pers->start_reshape == NULL)
- 			return -EINVAL;
- 		err = mddev_lock(mddev);
-@@ -4980,7 +5001,7 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	md_wakeup_thread(mddev->thread);
- 	sysfs_notify_dirent_safe(mddev->sysfs_action);
--	return len;
-+	return err ? err : len;
- }
- 
- static struct md_sysfs_entry md_scan_mode =
-@@ -6280,7 +6301,11 @@ static void md_clean(struct mddev *mddev)
- 
- static void __md_stop_writes(struct mddev *mddev)
- {
--	stop_sync_thread(mddev, true, false);
-+	if (prepare_to_stop_sync_thread(mddev, false)) {
-+		wait_event(resync_wait, sync_thread_stopped(mddev, NULL));
-+		mddev_lock_nointr(mddev);
-+	}
-+
- 	del_timer_sync(&mddev->safemode_timer);
- 
- 	if (mddev->pers && mddev->pers->quiesce) {
-@@ -6369,7 +6394,8 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	}
- 
--	stop_sync_thread(mddev, false, false);
-+	if (prepare_to_stop_sync_thread(mddev, true))
-+		wait_event(resync_wait, sync_thread_stopped(mddev, NULL));
- 	wait_event(mddev->sb_wait,
- 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
- 	mddev_lock_nointr(mddev);
-@@ -6421,7 +6447,10 @@ static int do_md_stop(struct mddev *mddev, int mode,
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	}
- 
--	stop_sync_thread(mddev, true, false);
-+	if (prepare_to_stop_sync_thread(mddev, false)) {
-+		wait_event(resync_wait, sync_thread_stopped(mddev, NULL));
-+		mddev_lock_nointr(mddev);
-+	}
- 
- 	mutex_lock(&mddev->open_mutex);
- 	if ((mddev->pers && atomic_read(&mddev->openers) > !!bdev) ||
--- 
-2.39.2
+Thanks, Mateusz
 
