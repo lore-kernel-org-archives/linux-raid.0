@@ -1,91 +1,77 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF177612A;
-	Fri, 29 Dec 2023 07:24:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4T1bzZ5NZlz4f3jR9;
-	Fri, 29 Dec 2023 15:07:22 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id CBE701A01C8;
-	Fri, 29 Dec 2023 15:07:25 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHFQwscI5l6ou9Ew--.50337S4;
-	Fri, 29 Dec 2023 15:07:25 +0800 (CST)
-From: Li Lingfeng <lilingfeng@huaweicloud.com>
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai3@huawei.com,
-	linan122@huawei.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com,
-	lilingfeng@huaweicloud.com,
-	lilingfeng3@huawei.com
-Subject: [PATCH] md: get rdev->mddev with READ_ONCE()
-Date: Fri, 29 Dec 2023 15:05:00 +0800
-Message-Id: <20231229070500.3602712-1-lilingfeng@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4058D63BD
+	for <linux-raid@vger.kernel.org>; Fri, 29 Dec 2023 08:12:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vef+F/Sz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B391BC433C9
+	for <linux-raid@vger.kernel.org>; Fri, 29 Dec 2023 08:12:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1703837576;
+	bh=w3vA8ZKiLVh1wuF9H5R+MzRlojd03warFYel/GQlPh4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=Vef+F/SzP1vP1iEUARvT0Bp48yFz88MCVGZbDXFchzB35Jt+bS5YHhr1bfQR77mB3
+	 5U/8v1gcldT4BS20dKgbl7G0+P81FtesyaiBeOA4obAoUWbGyNkADZnY3VNGZ+ij48
+	 PoNqUoykhG5eqPlC02bj5rrcldYMFnxwnFYktHx14yYKSWoDV9uXVpaAG6ySMbRYD1
+	 FJIwksnlNfdja/CLowFz+aUcxEUaSX8ITZYOh90WX3syqdnzuf0DtGc5438SZH79OT
+	 n0rEbZL2N2is576aIE971tp4LuWuzuzykYzMr8zqTU9tmLg0hLnWc07qB9iIVvqgbE
+	 iNraQmSdB4FXA==
+Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-50e8ca6c76dso1204240e87.3
+        for <linux-raid@vger.kernel.org>; Fri, 29 Dec 2023 00:12:56 -0800 (PST)
+X-Gm-Message-State: AOJu0YwXm4W+DolyKUOirFh5l4rrsMulyX1zbIltIrn0PFMBvhCOdWpg
+	EeM4lOoyu6S3YualQ4FnyhuOrkEgEymT0pli5a8=
+X-Google-Smtp-Source: AGHT+IG+R3P8ParxC4+YlV4dsaTJxDsjL4Vh+dDPUgRRRGfk8kK9gzgjyAzm2Ig3jQGcMxC+1evqjkxMOAe0tLF10hs=
+X-Received: by 2002:ac2:4882:0:b0:50e:4e6c:ea8f with SMTP id
+ x2-20020ac24882000000b0050e4e6cea8fmr4598985lfc.41.1703837574811; Fri, 29 Dec
+ 2023 00:12:54 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHFQwscI5l6ou9Ew--.50337S4
-X-Coremail-Antispam: 1UD129KBjvdXoWruw4xtw17ur4xZw43ZF1UJrb_yoWkKrcEgF
-	WYvryrG34agryxKr13Cw4Sv3s0yayvgwnrWFySqFZIyr98tFykAryruw15A3ya9F1fCFs8
-	KF1Ykr1aqFWrCjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbwAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
-	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48J
-	MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwV
-	AFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv2
-	0xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4
-	v20xvaj40_Zr0_Wr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAF
-	wI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUp6wZUUUUU=
-X-CM-SenderInfo: polox0xjih0w46kxt4xhlfz01xgou0bp/
+References: <20231221013914.3108026-1-song@kernel.org> <1faa5e2e-e4c6-4f82-9ceb-7440939bc167@linux.intel.com>
+In-Reply-To: <1faa5e2e-e4c6-4f82-9ceb-7440939bc167@linux.intel.com>
+From: Song Liu <song@kernel.org>
+Date: Fri, 29 Dec 2023 00:12:43 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4L_nZwMfUYMzNg9_p5OyePpy2H2sFqC5-cVcHgFh48Sw@mail.gmail.com>
+Message-ID: <CAPhsuW4L_nZwMfUYMzNg9_p5OyePpy2H2sFqC5-cVcHgFh48Sw@mail.gmail.com>
+Subject: Re: [PATCH mdadm] tests: Gate tests for linear flavor with variable LINEAR
+To: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>
+Cc: linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com, 
+	jes@trained-monkey.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Li Lingfeng <lilingfeng3@huawei.com>
+On Thu, Dec 28, 2023 at 6:28=E2=80=AFAM Mateusz Kusiak
+<mateusz.kusiak@linux.intel.com> wrote:
+[...]
+>
+>  # create a raid0, re-assemble with a different super-minor
+> +
+> +if [ "$LINEAR" !=3D "yes" ]; then
+> +  echo -ne 'skipping... '
+> +  exit 0
+> +fi
+> +
+>  mdadm -CR -e 0.90 $md0 -llinear -n3 $dev0 $dev1 $dev2
+>  testdev $md0 3 $mdsize0 1
+>  minor1=3D`mdadm -E $dev0 | sed -n -e 's/.*Preferred Minor : //p'`
+>
+> Hi Song, this approach looks a bit dirty to me as it's omitting what's al=
+ready in the test suite. I would prefer adding additional param rather than=
+ setting environment variable, so test execution flow stays unified (as far=
+ as I'm aware we do not use flags for now). Adding param is also a good exc=
+use to explain why linear is not tested by default in "--help".
 
-Users may get rdev->mddev by sysfs while rdev is releasing.
-So use both READ_ONCE() and WRITE_ONCE() to prevent load/store tearing
-and to read/write mddev atomically.
+We have something similar to this in tests/00multipath, so I used
+this pattern.
 
-Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
----
- drivers/md/md.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks,
+Song
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9bdd57324c37..3b38a565bffa 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2562,7 +2562,7 @@ static void md_kick_rdev_from_array(struct md_rdev *rdev)
- 	list_del_rcu(&rdev->same_set);
- 	pr_debug("md: unbind<%pg>\n", rdev->bdev);
- 	mddev_destroy_serial_pool(rdev->mddev, rdev);
--	rdev->mddev = NULL;
-+	WRITE_ONCE(rdev->mddev, NULL);
- 	sysfs_remove_link(&rdev->kobj, "block");
- 	sysfs_put(rdev->sysfs_state);
- 	sysfs_put(rdev->sysfs_unack_badblocks);
-@@ -3646,7 +3646,7 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
- 	struct kernfs_node *kn = NULL;
- 	bool suspend = false;
- 	ssize_t rv;
--	struct mddev *mddev = rdev->mddev;
-+	struct mddev *mddev = READ_ONCE(rdev->mddev);
- 
- 	if (!entry->store)
- 		return -EIO;
--- 
-2.39.2
-
+>
+> Another thing is "--raidtype=3Dlinear" option, is probably redundant now.
+>
+> Thanks, Mateusz
