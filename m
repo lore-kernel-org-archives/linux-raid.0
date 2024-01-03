@@ -1,125 +1,137 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49AF714F6C;
-	Wed,  3 Jan 2024 06:35:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4T4g2X3RVvz4f3kq0;
-	Wed,  3 Jan 2024 14:35:32 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 39ECE1A0216;
-	Wed,  3 Jan 2024 14:35:34 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP2 (Coremail) with SMTP id Syh0CgA320k0AJVlkkIVFg--.59295S3;
-	Wed, 03 Jan 2024 14:35:34 +0800 (CST)
-Message-ID: <d766a9cc-df46-5f0c-184d-19f4b9b2a8b7@huaweicloud.com>
-Date: Wed, 3 Jan 2024 14:35:32 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8EE5182A8
+	for <linux-raid@vger.kernel.org>; Wed,  3 Jan 2024 08:55:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Wpa9OVRJ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1704272142; x=1735808142;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=v7WWO8SdNxRAD2B73N7zp5OF3+Ev3qg50SCsuIhRnTY=;
+  b=Wpa9OVRJlHKaiHfHVTz+ZC8rsS5kvfDzcu1coQI4NoKnODSY1F+v80Z/
+   6xiy1YqHudS7uXWOoDVzANkQ/gFvbYAtRKxkSeCCiUDe/KRMWDe4dY7pQ
+   XrjBzZfvUYXOmKXmQCIH41GIuBQTPX56rNoEQR7QQJmMxRUMaoeMrI+To
+   vTLUYpenGdDj0mnGlAy6UnZW0tjP23sdqw+2ihD0UIm9KhLj94aMozbUf
+   Ipc7svvaLRl0qxfN4VlnEuDGN2bEvLdl9QwIMk6qzvNDB2ptfWKMHy+/8
+   /xMPYnM6nzmiQrILKWH+K6Kjqmr/0fKD+wy8Bqx3bK5Z+Z3ur5UvJR38A
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10941"; a="3750504"
+X-IronPort-AV: E=Sophos;i="6.04,327,1695711600"; 
+   d="scan'208";a="3750504"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jan 2024 00:55:41 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10941"; a="870506496"
+X-IronPort-AV: E=Sophos;i="6.04,327,1695711600"; 
+   d="scan'208";a="870506496"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.132.134])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jan 2024 00:55:38 -0800
+Date: Wed, 3 Jan 2024 09:53:23 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Stefan Fleischmann <sfle@kth.se>
+Cc: Jes Sorensen <jes@trained-monkey.org>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH v2 0/6] mdadm: POSIX portable naming rules
+Message-ID: <20240103095323.00002d36@linux.intel.com>
+In-Reply-To: <20240101133255.520a6149@vinyamar>
+References: <20240101133255.520a6149@vinyamar>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v3 2/2] md: don't account sync_io if iostats of the disk
- is disabled
-To: Yu Kuai <yukuai1@huaweicloud.com>, song@kernel.org, axboe@kernel.dk
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-block@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
- yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20231223033703.2949831-1-linan666@huaweicloud.com>
- <20231223033703.2949831-3-linan666@huaweicloud.com>
- <e2305cc4-dc3e-7693-9b61-33896c1b7a37@huaweicloud.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <e2305cc4-dc3e-7693-9b61-33896c1b7a37@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgA320k0AJVlkkIVFg--.59295S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF4rXr4kZF4rJr4rtrWkWFg_yoW8tF17pa
-	ykJFySkryUZr4rWw1UXryUCFyrWw17tayDJry7Aa43XFy3JrnIgFWUWFZ0gF1DXFW8GF1U
-	tw1UXFZ8Za10vrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUB214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
-	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
-	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
-	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x
-	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
-	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
-	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF
-	04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aV
-	CY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUOlksUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
+On Mon, 1 Jan 2024 13:32:55 +0100
+Stefan Fleischmann <sfle@kth.se> wrote:
 
-
-在 2024/1/3 11:16, Yu Kuai 写道:
+> On 6/1/23 03:27, Mariusz Tkaczyk wrote:
+> > Hi Jes,
+> > To avoid problem with udev and VROC UEFI driver I developed stronger
+> > naming policy, basing on POSIX portable names standard. Verification is
+> > added for names and config entries. In case of an issue, user can update
+> > name to make it compatible (for IMSM and native).
+> > 
+> > The changes here may cause /dev/md/ link will be different than before
+> > mdadm update. To make any of that happen user need to use unusual naming
+> > convention, like:
+> > - special, non standard signs like, $,%,&,* or space.
+> > - '-' used as first sign.
+> > - locals.
+> > 
+> > Note: I didn't analyze configurations with "names=1". If name cannot be
+> > determined mdadm should fallback to default numbered dev creation.
+> > 
+> > If you are planning release soon then feel free to merge it after the
+> > release. It is a potential regression point.
+> > 
+> > It is a new version of [1] but it is strongly rebuild. Here is a list
+> > of changes:
+> > 1. negative and positive test scenarios for both create and config
+> >    entries are added.
+> > 2. Save parsed parameters in dedicated structs. It is a way to control
+> >    what is parsed, assuming that we should use dedicated set_* function.
+> > 3. Verification for config entries is added.
+> > 5. Improved error logging for names:
+> >    - during creation, these messages are errors, printed to stderr.
+> >    - for config entries, messages are just a warnings printed to stdout.
+> > 6. Error messages reworked.
+> > 7. Updates in manual.
+> > 
+> > [1]
+> > https://lore.kernel.org/linux-raid/20221221115019.26276-1-mariusz.tkaczyk@linux.intel.com/
+> > 
+> > Mariusz Tkaczyk (6):
+> >   tests: create names_template
+> >   tests: create 00confnames
+> >   mdadm: set ident.devname if applicable
+> >   mdadm: refactor ident->name handling
+> >   mdadm: define ident_set_devname()
+> >   mdadm: Follow POSIX Portable Character Set  
 > 
 > 
-> 在 2023/12/23 11:37, linan666@huaweicloud.com 写道:
->> From: Li Nan <linan122@huawei.com>
->>
->> If iostats is disabled, disk_stats will not be updated and
->> part_stat_read_accum() only returns a constant value. In this case,
->> continuing to count sync_io and to check is_mddev_idle() is no longer
->> meaningful.
->>
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>   drivers/md/md.h | 3 ++-
->>   drivers/md/md.c | 4 ++++
->>   2 files changed, 6 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 1a4f976951c1..e2d03a7a858c 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -584,7 +584,8 @@ extern void mddev_unlock(struct mddev *mddev);
->>   static inline void md_sync_acct(struct block_device *bdev, unsigned 
->> long nr_sectors)
->>   {
->> -    atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
->> +    if (blk_queue_io_stat(bdev->bd_disk->queue))
->> +        atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
->>   }
->>   static inline void md_sync_acct_bio(struct bio *bio, unsigned long 
->> nr_sectors)
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index a6829ea5b560..b56614eae8dc 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -8502,6 +8502,10 @@ static int is_mddev_idle(struct mddev *mddev, 
->> int init)
->>       rcu_read_lock();
->>       rdev_for_each_rcu(rdev, mddev) {
->>           struct gendisk *disk = rdev->bdev->bd_disk;
->> +
->> +        if (!blk_queue_io_stat(disk->queue))
->> +            continue;
+> Hi,
 > 
-> Consider that the queue flag can be set/cleared through sysfs, let's
-> keep set rdev->last_events in the case 'init'. To prevent a false
-> positive(althrough highly unlikely) if iostat is enabled during
-> md_do_sync().
+> it seems to me that the behavior after this change is inconsistent. The
+> default naming scheme for a created device is still <HOSTNAME>:<ID>. When
+> I create a new MD device with:
 > 
-
-Thanks for your review, I will add checks of 'init' in next version.
-
-> Thanks,
-> Kuai
+>  # mdadm --version
+>  mdadm - v4.2 - 2021-12-30 - Debian 4.2+20231121-1
+>  # mdadm --create /dev/md32 -l 1 -n 2 /dev/loop2 /dev/loop3
+>  [...]
+>  # mdadm --detail /dev/md32
+>   /dev/md32:
+>            Version : 1.2
+>      Creation Time : Mon Jan  1 12:33:05 2024
+>   [...]
+>               Name : gondolin:32  (local to host gondolin)
+>               UUID : d84b8e26:3675a722:61869b83:670699da
 > 
->> +
->>           curr_events =
->>               (long long)part_stat_read_accum(disk->part0, sectors) -
->>               atomic64_read(&disk->sync_io);
->>
+> The name set automatically by mdadm is not allowed by the new naming
+> rules, and mdadm complains about that later on. So for consistency one
+> would either have to include : in the allowed character list or change
+> the default naming scheme. Or am I missing something here?
+> 
+> Happy new year!
+> Stefan
 
--- 
+Hi Stefan,
+Yeah, I noticed this problem recently but I do not fixed it yet. For sure it
+will be fixed before release.
+It does not prompt about the name in metadata but about name entry in config
+file. I analyzed the usage on name from config and it seems to be something
+which can be dropped but I will reconsider it deeper later.
+
+Could you please test if removing "name=hostanme:id" from ARRAYLINE in
+mdadm.conf fixes issue for you?
+
 Thanks,
-Nan
-
+Mariusz
