@@ -1,137 +1,125 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8EE5182A8
-	for <linux-raid@vger.kernel.org>; Wed,  3 Jan 2024 08:55:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7396618B00;
+	Thu,  4 Jan 2024 06:08:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Wpa9OVRJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1704272142; x=1735808142;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=v7WWO8SdNxRAD2B73N7zp5OF3+Ev3qg50SCsuIhRnTY=;
-  b=Wpa9OVRJlHKaiHfHVTz+ZC8rsS5kvfDzcu1coQI4NoKnODSY1F+v80Z/
-   6xiy1YqHudS7uXWOoDVzANkQ/gFvbYAtRKxkSeCCiUDe/KRMWDe4dY7pQ
-   XrjBzZfvUYXOmKXmQCIH41GIuBQTPX56rNoEQR7QQJmMxRUMaoeMrI+To
-   vTLUYpenGdDj0mnGlAy6UnZW0tjP23sdqw+2ihD0UIm9KhLj94aMozbUf
-   Ipc7svvaLRl0qxfN4VlnEuDGN2bEvLdl9QwIMk6qzvNDB2ptfWKMHy+/8
-   /xMPYnM6nzmiQrILKWH+K6Kjqmr/0fKD+wy8Bqx3bK5Z+Z3ur5UvJR38A
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10941"; a="3750504"
-X-IronPort-AV: E=Sophos;i="6.04,327,1695711600"; 
-   d="scan'208";a="3750504"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jan 2024 00:55:41 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10941"; a="870506496"
-X-IronPort-AV: E=Sophos;i="6.04,327,1695711600"; 
-   d="scan'208";a="870506496"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.132.134])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jan 2024 00:55:38 -0800
-Date: Wed, 3 Jan 2024 09:53:23 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Stefan Fleischmann <sfle@kth.se>
-Cc: Jes Sorensen <jes@trained-monkey.org>, linux-raid@vger.kernel.org
-Subject: Re: [PATCH v2 0/6] mdadm: POSIX portable naming rules
-Message-ID: <20240103095323.00002d36@linux.intel.com>
-In-Reply-To: <20240101133255.520a6149@vinyamar>
-References: <20240101133255.520a6149@vinyamar>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="iXBBL4OX"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40467dEv007812;
+	Thu, 4 Jan 2024 06:08:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=pp1; bh=70S7qYQKKcMn+scPYOA5e4JsLFPvqLitGESCI99G+ng=;
+ b=iXBBL4OXEXfZkdUQzJvkicPrMmcqaEvh6soeaT9CJ7KghEgNeVu5J9/8coATBLeSWCSY
+ k4vDTFjSVnZZXcXU3xa619v7IZqAvWf9/ls2L8udF0eZZDZZiBWYMVeLhrJuJNsPfOqP
+ OywThZEXZC+Q5T2nhyiuW4AtFhhLvhmq1ZjFV3UWwLZwtvanoVgid+OPWysqnEaWXo3R
+ LLTiYlXBlw4CFLezfoBgGVM/gM+4RCp03hMpGNnHmu6o9Y65QDtZ+oQBmhXSiNxfD2qe
+ 9A+i4WYOSULaM7vmHU6PvrjzCDigGHvqJTCt2u/e6fqLiAszkL7F1b6ofTPdurN7wCVr NA== 
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vdq4h00e4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Jan 2024 06:08:18 +0000
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 4045Vue6027266;
+	Thu, 4 Jan 2024 06:08:18 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3vawhtft3w-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Jan 2024 06:08:17 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40468GkD5178078
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 4 Jan 2024 06:08:16 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5002A20043;
+	Thu,  4 Jan 2024 06:08:16 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4A00C20040;
+	Thu,  4 Jan 2024 06:08:15 +0000 (GMT)
+Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com (unknown [9.109.253.82])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Thu,  4 Jan 2024 06:08:15 +0000 (GMT)
+Date: Thu, 4 Jan 2024 11:38:13 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc: linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org
+Subject: Re: parity raid and ext4 get stuck in writes
+Message-ID: <ZZZLTSTwP/e/9DCx@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
+References: <ZYX2AS8isUHtbMXe@fisica.ufpr.br>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZYX2AS8isUHtbMXe@fisica.ufpr.br>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: TvCBCLFLea5EwVNDudji_pKVo9iTMulm
+X-Proofpoint-ORIG-GUID: TvCBCLFLea5EwVNDudji_pKVo9iTMulm
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-04_02,2024-01-03_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ adultscore=0 impostorscore=0 clxscore=1011 malwarescore=0 spamscore=0
+ mlxscore=0 lowpriorityscore=0 mlxlogscore=733 priorityscore=1501
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2401040042
 
-On Mon, 1 Jan 2024 13:32:55 +0100
-Stefan Fleischmann <sfle@kth.se> wrote:
+On Fri, Dec 22, 2023 at 05:48:01PM -0300, Carlos Carvalho wrote:
+> This is finally a summary of a long standing problem. When lots of writes to
+> many files are sent in a short time the kernel gets stuck and stops sending
+> write requests to the disks. Sometimes it recovers and finally sends the
+> modified pages to permanent storage, sometimes not and eventually other
+> functions degrade and the machine crashes.
+> 
+> A simple way to reproduce: expand a kernel source tree, like
+> xzcat linux-6.5.tar.xz | tar x -f -
+> 
+> With the default vm settings for dirty_background_ratio and dirty_ratio this
+> will finish quickly with ~1.5GB of dirty pages in ram and ~100k inodes to be
+> written and the kernel gets stuck.
+> 
+> The bug exists in all 6.* kernels; I've tested the latest release of all
+> 6.[1-6]. However some conditions must exist for the problem to appear:
+> 
+> - there must be many inodes to be flushed; just many bytes in a few files don't
+>   show the problem
+> - it happens only with ext4 on a parity raid array
+> 
+> I've moved one of our arrays to xfs and everything works fine, so it's either
+> specific to ext4 or xfs is not affected. When the lockup happens the flush
+> kworker starts using 100% cpu permanently. I have not observed the bug in
+> raid10, only in raid[56].
+> 
+> The problem is more easily triggered with 6.[56] but 6.1 is also affected.
+> 
+> Limiting dirty_bytes and dirty_background_bytes to low values reduce the
+> probability of lockup, probably because the process generating writes is
+> stopped before too many files are created.
+ 
+ Hey Carlos,
 
-> On 6/1/23 03:27, Mariusz Tkaczyk wrote:
-> > Hi Jes,
-> > To avoid problem with udev and VROC UEFI driver I developed stronger
-> > naming policy, basing on POSIX portable names standard. Verification is
-> > added for names and config entries. In case of an issue, user can update
-> > name to make it compatible (for IMSM and native).
-> > 
-> > The changes here may cause /dev/md/ link will be different than before
-> > mdadm update. To make any of that happen user need to use unusual naming
-> > convention, like:
-> > - special, non standard signs like, $,%,&,* or space.
-> > - '-' used as first sign.
-> > - locals.
-> > 
-> > Note: I didn't analyze configurations with "names=1". If name cannot be
-> > determined mdadm should fallback to default numbered dev creation.
-> > 
-> > If you are planning release soon then feel free to merge it after the
-> > release. It is a potential regression point.
-> > 
-> > It is a new version of [1] but it is strongly rebuild. Here is a list
-> > of changes:
-> > 1. negative and positive test scenarios for both create and config
-> >    entries are added.
-> > 2. Save parsed parameters in dedicated structs. It is a way to control
-> >    what is parsed, assuming that we should use dedicated set_* function.
-> > 3. Verification for config entries is added.
-> > 5. Improved error logging for names:
-> >    - during creation, these messages are errors, printed to stderr.
-> >    - for config entries, messages are just a warnings printed to stdout.
-> > 6. Error messages reworked.
-> > 7. Updates in manual.
-> > 
-> > [1]
-> > https://lore.kernel.org/linux-raid/20221221115019.26276-1-mariusz.tkaczyk@linux.intel.com/
-> > 
-> > Mariusz Tkaczyk (6):
-> >   tests: create names_template
-> >   tests: create 00confnames
-> >   mdadm: set ident.devname if applicable
-> >   mdadm: refactor ident->name handling
-> >   mdadm: define ident_set_devname()
-> >   mdadm: Follow POSIX Portable Character Set  
-> 
-> 
-> Hi,
-> 
-> it seems to me that the behavior after this change is inconsistent. The
-> default naming scheme for a created device is still <HOSTNAME>:<ID>. When
-> I create a new MD device with:
-> 
->  # mdadm --version
->  mdadm - v4.2 - 2021-12-30 - Debian 4.2+20231121-1
->  # mdadm --create /dev/md32 -l 1 -n 2 /dev/loop2 /dev/loop3
->  [...]
->  # mdadm --detail /dev/md32
->   /dev/md32:
->            Version : 1.2
->      Creation Time : Mon Jan  1 12:33:05 2024
->   [...]
->               Name : gondolin:32  (local to host gondolin)
->               UUID : d84b8e26:3675a722:61869b83:670699da
-> 
-> The name set automatically by mdadm is not allowed by the new naming
-> rules, and mdadm complains about that later on. So for consistency one
-> would either have to include : in the allowed character list or change
-> the default naming scheme. Or am I missing something here?
-> 
-> Happy new year!
-> Stefan
+ Thanks for sharing this. So as per your comment on the kernel bugzilla,
+ it seems like the issue gets fixed for you with stripe=0 as well, so it
+ might actually be the same issue. However, most of the people there are
+ not able to replicate this in kernel before 6.5, so I'm interested in
+ your statement that you see this in 6.1 as well.
 
-Hi Stefan,
-Yeah, I noticed this problem recently but I do not fixed it yet. For sure it
-will be fixed before release.
-It does not prompt about the name in metadata but about name entry in config
-file. I analyzed the usage on name from config and it seems to be something
-which can be dropped but I will reconsider it deeper later.
+ Would it possible to replicate this on 6.1 or any pre 6.5 kernel with
+ some perf probes and share the report? I've added the steps to add the
+ probes in pre 6.4 kernel here [1] (although it should hopefully work
+ with 6.1 - 6.3 as well, since I don't think there'll be much change in
+ the functions probed there). The probe would be helpful to confirm if
+ the issue we see ion 6.5+ kernels and the one you are seeing in 6.1 is
+ the same.
 
-Could you please test if removing "name=hostanme:id" from ARRAYLINE in
-mdadm.conf fixes issue for you?
+ Thanks,
+ ojaswin
 
-Thanks,
-Mariusz
+ [1] https://bugzilla.kernel.org/show_bug.cgi?id=217965#c36
