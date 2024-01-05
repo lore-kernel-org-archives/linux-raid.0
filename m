@@ -1,97 +1,130 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E72E82232E;
-	Thu,  4 Jan 2024 13:39:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4T5SNw0Sxjz4f3jM1;
-	Thu,  4 Jan 2024 21:39:12 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 5FDF91A026E;
-	Thu,  4 Jan 2024 21:39:15 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDn6hACtZZlhgMKFg--.12033S4;
-	Thu, 04 Jan 2024 21:39:15 +0800 (CST)
-From: Li Lingfeng <lilingfeng@huaweicloud.com>
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai3@huawei.com,
-	yukuai1@huaweicloud.com,
-	linan122@huawei.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com,
-	lilingfeng@huaweicloud.com,
-	lilingfeng3@huawei.com
-Subject: [PATCH] md: use RCU lock to protect traversal in md_spares_need_change()
-Date: Thu,  4 Jan 2024 21:36:29 +0800
-Message-Id: <20240104133629.1277517-1-lilingfeng@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69FF6250E7
+	for <linux-raid@vger.kernel.org>; Fri,  5 Jan 2024 09:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kI9+B9Vs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1704448727; x=1735984727;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=2KkKqxuIAA5INOrR5c2jJjdKplze9tk/W2QDQ+V0fZ8=;
+  b=kI9+B9VscjCJ/Iyq9ghTYtKI7mxvIZgkoz69Cw8eEXwsbR20VV03sXlk
+   ealvPXKiF1aEnNkVbi/nKPPSIvQuspX1OFfhqSyRnILnyeonQSrsNlSjH
+   3CEUh1GfXworjcATqHPFENqhE0GMy2/mN4qPFI369ZcVoyAqsAOarp6V8
+   ZcObIftVtwCPy51WKoUvICCkGX2+oJpB17cHkbHQxbpL8fQeQxPrkyK0E
+   m4EsOVgWM4QHfizWJEdGygna1aZPiBBkBrCZYUcub/TU0QYO/OaBKz2z5
+   n6v7i496OU305ecglgCX+IPbWacIRSoOfshOl1GGH6F0t/r+JIy9iHOMq
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10943"; a="4845444"
+X-IronPort-AV: E=Sophos;i="6.04,333,1695711600"; 
+   d="scan'208";a="4845444"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jan 2024 01:58:44 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10943"; a="809503814"
+X-IronPort-AV: E=Sophos;i="6.04,333,1695711600"; 
+   d="scan'208";a="809503814"
+Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.149.42])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jan 2024 01:58:32 -0800
+Date: Fri, 5 Jan 2024 10:58:27 +0100
+From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To: Song Liu <song@kernel.org>
+Cc: Mateusz Kusiak <mateusz.kusiak@linux.intel.com>,
+ linux-raid@vger.kernel.org, jes@trained-monkey.org
+Subject: Re: [PATCH mdadm] tests: Gate tests for linear flavor with variable
+ LINEAR
+Message-ID: <20240105105827.00007e96@linux.intel.com>
+In-Reply-To: <CAPhsuW4L_nZwMfUYMzNg9_p5OyePpy2H2sFqC5-cVcHgFh48Sw@mail.gmail.com>
+References: <20231221013914.3108026-1-song@kernel.org>
+	<1faa5e2e-e4c6-4f82-9ceb-7440939bc167@linux.intel.com>
+	<CAPhsuW4L_nZwMfUYMzNg9_p5OyePpy2H2sFqC5-cVcHgFh48Sw@mail.gmail.com>
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDn6hACtZZlhgMKFg--.12033S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFyxKr1DZr1DZFWfJryxXwb_yoW8JF4xpF
-	s2gFy5uw48X3yrGa45uF95WF1rXw1rKFWjyF97C3y8Z3WDAr1qkry3K390qrZ5GFyIyFyj
-	q3W2va1ku3W3AFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VU1
-	a9aPUUUUU==
-X-CM-SenderInfo: polox0xjih0w46kxt4xhlfz01xgou0bp/
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-From: Li Lingfeng <lilingfeng3@huawei.com>
+On Fri, 29 Dec 2023 00:12:43 -0800
+Song Liu <song@kernel.org> wrote:
 
-Since md_start_sync() will be called without the protect of mddev_lock,
-and it can run concurrently with array reconfiguration, traversal of rdev
-in it should be protected by RCU lock.
-Commit bc08041b32ab ("md: suspend array in md_start_sync() if array need
-reconfiguration") added md_spares_need_change() to md_start_sync(),
-casusing use of rdev without any protection.
-Fix this by adding RCU lock in md_spares_need_change().
+> On Thu, Dec 28, 2023 at 6:28=E2=80=AFAM Mateusz Kusiak
+> <mateusz.kusiak@linux.intel.com> wrote:
+> [...]
+> >
+> >  # create a raid0, re-assemble with a different super-minor
+> > +
+> > +if [ "$LINEAR" !=3D "yes" ]; then
+> > +  echo -ne 'skipping... '
+> > +  exit 0
+> > +fi
+> > +
+> >  mdadm -CR -e 0.90 $md0 -llinear -n3 $dev0 $dev1 $dev2
+> >  testdev $md0 3 $mdsize0 1
+> >  minor1=3D`mdadm -E $dev0 | sed -n -e 's/.*Preferred Minor : //p'`
+> >
+> > Hi Song, this approach looks a bit dirty to me as it's omitting what's
+> > already in the test suite. I would prefer adding additional param rather
+> > than setting environment variable, so test execution flow stays unified=
+ (as
+> > far as I'm aware we do not use flags for now). Adding param is also a g=
+ood
+> > excuse to explain why linear is not tested by default in "--help". =20
+>=20
+> We have something similar to this in tests/00multipath, so I used
+> this pattern.
 
-Fixes: bc08041b32ab ("md: suspend array in md_start_sync() if array need reconfiguration")
-Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
----
- drivers/md/md.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+Hi Song,
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9bdd57324c37..902b43b65052 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9228,9 +9228,14 @@ static bool md_spares_need_change(struct mddev *mddev)
- {
- 	struct md_rdev *rdev;
- 
--	rdev_for_each(rdev, mddev)
--		if (rdev_removeable(rdev) || rdev_addable(rdev))
-+	rcu_read_lock();
-+	rdev_for_each_rcu(rdev, mddev) {
-+		if (rdev_removeable(rdev) || rdev_addable(rdev)) {
-+			rcu_read_unlock();
- 			return true;
-+		}
-+	}
-+	rcu_read_unlock();
- 	return false;
- }
- 
--- 
-2.31.1
+Please note that MULTIPATH env variable is handled inside testing
+framework. This variable is set to yes if multipath module is available. It=
+ can
+be also disabled by --disable-multipath. It is described in help.
 
+it is invoked by main() -> do_setup() -> check_env().
+
+Now we need to handle both linear and multipath same way. There are two opt=
+ions:
+- disable them by default and add --enable-multipath and --enable-linear
+  options,
+- make linear to work same as multipath now, add --disable-linear flag.
+
+I don't have strong preference. Both ways are acceptable for me.=20
+
+You disabled testing those levels by default. It looks good to me but we ne=
+ed
+to explain it little in message to give user clue why those levels are
+skipped. Test result should be possible straightforward for less experienced
+users so please expand messages, like:
+"Skipping, \$LINEAR set to \"$LINEAR\""
+
+It i just an example, I didn't test it. The final message depends on
+option you will choose.
+
+Mdadm is a kind of user interface for MD driver. I expect that not only
+developers are using this test suite. We need to keep it easy to use, messa=
+ges
+should be meaningful and helpful.=20
+
+> >
+> > Another thing is "--raidtype=3Dlinear" option, is probably redundant no=
+w.
+> >
+
+Env variable are better implemented now than this --raidtype option. There =
+is
+more work to do to make --raidtype fully valid because --raidtype uses
+filtering by test name. Test may define set of levels used, even if the name
+doesn't point to any level. So yes, I think that we can eventually remove
+--raidtype=3Dlinear as it is not really useful but I give it up to Song.
+
+Thanks,
+Mariusz
