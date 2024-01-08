@@ -1,119 +1,91 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93AF61400B
-	for <linux-raid@vger.kernel.org>; Mon,  8 Jan 2024 11:02:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ABC9611A;
+	Mon,  8 Jan 2024 23:38:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VB4ubK0Q"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1704711758; x=1736247758;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Gwx8ZotCAKgx9Q6QqxOtWkmnhcKi8SXp3+r5JDZbxCc=;
-  b=VB4ubK0QNbhZTWU4OzbuXJ4LlFCyPeFKrGZANB5bI5LsTWaLDEWa+OtI
-   SvhTAVLdQCmLm2jy1TO9LKUFQLI76UQqjIfd9/B4NvgLwraPDDRFqQOcO
-   uLXFFgzVDTqM7vJH2H5pm9qSHLN3+rMxZsReFNFA0xEDKu64TkDCqgBBD
-   Mw33vmbTH+OoUiy00k7p4j9rNHsvGdPu/nJIn3nGR/30qjgJc/PKtvHiq
-   9m7WfaGaAFN2XSApDQvJsTLs9LODhSJhTWTtTGHhKN2cOZLaCc+ZPR1nS
-   2YlctSnmHjGamDn1jFoc8qUc1wh/xHyUSSffNCxqK29FVMk6vAhqLexiT
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10946"; a="16451458"
-X-IronPort-AV: E=Sophos;i="6.04,340,1695711600"; 
-   d="scan'208";a="16451458"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jan 2024 03:02:37 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10946"; a="815571984"
-X-IronPort-AV: E=Sophos;i="6.04,340,1695711600"; 
-   d="scan'208";a="815571984"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.249.133.118])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jan 2024 03:02:35 -0800
-Date: Mon, 8 Jan 2024 12:02:30 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: Andrea Janna <andrea1@newsletter.dpss.psy.unipd.it>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: mdadm: --update=resync not understood for 1.x metadata
-Message-ID: <20240108120230.00004b80@linux.intel.com>
-In-Reply-To: <ZZqJlCToUS3Qrl4J@bianca.dpss.psy.unipd.it>
-References: <ZZqJlCToUS3Qrl4J@bianca.dpss.psy.unipd.it>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZYah3iZg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9AAFC433A6;
+	Mon,  8 Jan 2024 23:38:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704757137;
+	bh=O3RdfilGcrGZ4KUQFADcPBBu77P7ASqCUFMp09ah60A=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=ZYah3iZgaBzUvPXExfCgs7qO4qhqij/8ybf6JmCOIZ3ILw9TCDOUbFnzmtMHjrjFP
+	 T4pXUq/SBX8lZYs6cOG62PmQ3UMqCuXSRBSX7nh++rBogZniJienSfmw6zNXhl9W15
+	 LNq5lC4smK1B3z/od9YYWVPPG3O9k4eClNs5r93GHKVoDurcME2hyEGJm//1vAehdx
+	 G7jUIxgLsDaMRvHEH+Fc4U6JdboNsO2yOpvXrOnc6f0TtQ7cYzE/uTBh0uEfPx9+Z5
+	 ixO16Q22+IQFKE2Cu/E/vpPCuiz9QwW09/8lA8QGgbYa8xQsEG7hwtGvYGSmjJwhHf
+	 8vrtJHSx0HJGQ==
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-50e7dd8bce8so2612590e87.1;
+        Mon, 08 Jan 2024 15:38:56 -0800 (PST)
+X-Gm-Message-State: AOJu0YyYTXZ/yWb/Jh+L37aQZSAtQFD4ykEMzPGObboDGvBr+abTEv+q
+	lMql5UItvim7pb9CPtGwCe8V3y13KGxYno556Jg=
+X-Google-Smtp-Source: AGHT+IEjKzJzesoM5Y0ZY3bx3g9U1c07w0OsfFR9W3ZFvTl4s5Uiy8mr7o9s/LidF+0Ofj7TvfldNIm6EVB53SK521o=
+X-Received: by 2002:a05:6512:219:b0:50e:9c17:24d2 with SMTP id
+ a25-20020a056512021900b0050e9c1724d2mr1756873lfo.18.1704757135177; Mon, 08
+ Jan 2024 15:38:55 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20230927061241.1552837-1-yukuai1@huaweicloud.com> <20230927061241.1552837-3-yukuai1@huaweicloud.com>
+In-Reply-To: <20230927061241.1552837-3-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Mon, 8 Jan 2024 15:38:43 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6sdnJYtE+iy+x=C2qVKzeN18zibx+qQBF4Y=KRsAmTTg@mail.gmail.com>
+Message-ID: <CAPhsuW6sdnJYtE+iy+x=C2qVKzeN18zibx+qQBF4Y=KRsAmTTg@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] md: simplify md_seq_ops
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mariusz.tkaczyk@linux.intel.com, xni@redhat.com, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello Andrea,
-Thanks for your patch. It looks reasonable.
-Please resolve few nits and I will take it.
+On Tue, Sep 26, 2023 at 11:19=E2=80=AFPM Yu Kuai <yukuai1@huaweicloud.com> =
+wrote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Before this patch, the implementation is hacky and hard to understand:
+>
+> 1) md_seq_start set pos to 1;
+> 2) md_seq_show found pos is 1, then print Personalities;
+> 3) md_seq_next found pos is 1, then it update pos to the first mddev;
+> 4) md_seq_show found pos is not 1 or 2, show mddev;
+> 5) md_seq_next found pos is not 1 or 2, update pos to next mddev;
+> 6) loop 4-5 until the last mddev, then md_seq_next update pos to 2;
+> 7) md_seq_show found pos is 2, then print unused devices;
+> 8) md_seq_next found pos is 2, stop;
+>
+> This patch remove the magic value and use seq_list_start/next/stop()
+> directly, and move printing "Personalities" to md_seq_start(),
+> "unsed devices" to md_seq_stop():
+>
+> 1) md_seq_start print Personalities, and then set pos to first mddev;
+> 2) md_seq_show show mddev;
+> 3) md_seq_next update pos to next mddev;
+> 4) loop 2-3 until the last mddev;
+> 5) md_seq_stop print unsed devices;
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-On Sun, 7 Jan 2024 12:23:00 +0100
-Andrea Janna <andrea1@newsletter.dpss.psy.unipd.it> wrote:
+Just realized this introduced a behavior change:
 
-I'm not familiar with your mail domain, "newsletter" suggest me that it is not
-something I can trust. Could you please update mail address?
-I'm afraid that accidentally I may record list for a spam messages as
-"newsletter" generally provides them.
+When there is not md devices, before this patch, we have
 
-> After upgrading mdadm from released version mdadm-4.2 to the current git
-> version the command mdadm --assemble --update=resync
-> started failing with the error "mdadm: --update=resync not understood for 1.x
-> metadata". My array superblock version is 1.0.
-> 
-> I think this is a regression introduced by
-> https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=7e8daba8b7937716dce8ea28298a4e2e72cb829e
-> This commit deleted the "else if (strcmp(update, "resync") == 0)" code block
-> without replacing it with a switch case.
+[root@eth50-1 ~]# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+unused devices: <none>
 
-"I think" it is not something that we can accept in commit message. You provided
-patch so I must believe that you are familiar with problem and it is properly
-root causes.
-In this case, it is obvious that the problem is introduced by this
-patch because the solution is a partial revert of the change so please be more
-direct, (just skip "I think").
+After this patch, "cat /proc/mdstat" returns nothing. This causes
+some confusion for users who want to read "Personalities" line,
+for example, the mdadm test suite reads it.
 
-Please read sending patches best practices carefully:
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html
-
-Please run checkpatch script, before sending the patch, it is really helpful:
-https://docs.kernel.org/dev-tools/checkpatch.html
-
-Me <mariusz.tkaczyk@linux.intel.com> and Jes <jes@trained-monkey.org> should be
-added in --to or --Cc for mdadm patches.
-
-> 
-> The following patch fixed the error for me.
-> 
-> diff --git a/super1.c b/super1.c
-> index dfde4629..6f23b9eb 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1356,6 +1356,10 @@ static int update_super1(struct supertype *st, struct
-> mdinfo *info, __cpu_to_le16(info->disk.raid_disk);
->  		break;
->  	}
-> +	case UOPT_RESYNC:
-> +		/* make sure resync happens */
-> +		sb->resync_offset = 0;
-> +		break;
->  	case UOPT_UUID:
->  		copy_uuid(sb->set_uuid, info->uuid, super1.swapuuid);
->  
-> 
-> Regards,
-> Andrea Janna
-> 
-Please sign-off your patch!
-
-Do not forgot to add v2 for sending new version. You can search for examples in
-list history:
-https://lore.kernel.org/linux-raid/
+I haven't figured out the best fix yet.
 
 Thanks,
-Mariusz
+Song
