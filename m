@@ -1,74 +1,238 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 523C33C07B;
-	Tue,  9 Jan 2024 19:15:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 950273F8C8
+	for <linux-raid@vger.kernel.org>; Tue,  9 Jan 2024 23:07:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jCOehkuf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C720AC43394;
-	Tue,  9 Jan 2024 19:15:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jmlp7krz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B4D4C433F1;
+	Tue,  9 Jan 2024 23:07:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704827712;
-	bh=Q8C1+ejFECnjGdpfPU+CdyrV1UwUh3RMKZG5x0HTquo=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=jCOehkufsUMqP14SDeEYEAGs9cU7h8NsJzU+DbuHNTFVkLkswlyw5FwHb+WBhoGmk
-	 TzsZTHmy3JIR1brF7ClTRPbMG3dIFvSwHHE+p8W33thlciRbGzXjq9dFOGaxngFwyg
-	 RnlSjHkErBSl5TZND7pW5CPG34DgY3T4tuxFTw3FOXODj23wenRL3FWeYACaJ2VYc3
-	 Z4D72jKZAqqqHegnViZspAKlIUgnk3u9JBIzH/GKHUWJ5xkiHfIRJxb5weejql6Gdt
-	 Uz4oLhuvZeyNZ289N7LBqtgaoL9S3ttfnNC5+VxLRJwetUCqtMzDM20jKqLPbOBARh
-	 GxkCksU6ygSBw==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-50e80d40a41so4050283e87.1;
-        Tue, 09 Jan 2024 11:15:12 -0800 (PST)
-X-Gm-Message-State: AOJu0YzeGIQ/SPDSKVHIst5GgZ1MfYkDv/fWdHZ8a4Xx5BQ7Ns6Q9WDM
-	M75MukC3cDq4FvrsXuWtxjin7j2vgsk7s0O2Akg=
-X-Google-Smtp-Source: AGHT+IEt/cGf2NTIcuFbXoWT/s+SJgCbO7FZbjgN4gWqH4e4FO60/h379pbjS17wwcCalH8Ke1axpeXDf1kNIk3rxRc=
-X-Received: by 2002:a05:6512:787:b0:50e:9fa0:c1ec with SMTP id
- x7-20020a056512078700b0050e9fa0c1ecmr2463663lfr.109.1704827710960; Tue, 09
- Jan 2024 11:15:10 -0800 (PST)
+	s=k20201202; t=1704841671;
+	bh=6YH5pCeWleGaoDttPiZxbfa3y0xz7uMwGMlhbx6z3To=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Jmlp7krz+JVboChNnP0RcGOAUuJ5Rul0Z0L0Z3hYyJa4DsnzdIox1C7VBb4n9JZac
+	 dhqq0g6/JPWymsD16jkslO1Vt2Q6Xt4OnDp1KwOLxiMgjaXBuHM2P2z8IxZBoyCdvL
+	 NfEdMsAFfnOlYbthIf4ayWgxhT1TTBTgg4z3g8sMx2cnKaHbceY2gF/XCNkbRg8M/9
+	 XB3HtYm6cH20atOQ6kbnpG/+6y9NbOtj3mPRiS3a+GXixRfrm8FM8eIcwjQgx2D+8l
+	 u4fwCL9lx9l6h/BvDLKgrg60RrPJ8Tk5bBW4eaVuEUVIS8z1FiQavCH2GFJTaUMFfT
+	 XPBwjWhIxzJdQ==
+From: Song Liu <song@kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: mariusz.tkaczyk@linux.intel.com,
+	jes@trained-monkey.org,
+	Song Liu <song@kernel.org>
+Subject: [PATCH v2 mdadm] tests: Gate tests for linear flavor with variable LINEAR
+Date: Tue,  9 Jan 2024 15:07:16 -0800
+Message-Id: <20240109230716.2433929-1-song@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240109133957.2975272-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20240109133957.2975272-1-yukuai1@huaweicloud.com>
-From: Song Liu <song@kernel.org>
-Date: Tue, 9 Jan 2024 11:14:59 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6zxf-5NOJHbpBVhXLM+MzKn4upgHqU+=Z+Owp9yocdKQ@mail.gmail.com>
-Message-ID: <CAPhsuW6zxf-5NOJHbpBVhXLM+MzKn4upgHqU+=Z+Owp9yocdKQ@mail.gmail.com>
-Subject: Re: [PATCH] md: fix md_seq_ops() regressions
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jan 9, 2024 at 5:43=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
-ote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Commit cf1b6d4441ff ("md: simplify md_seq_ops") introduce following
-> regressions:
->
-> 1) If list all_mddevs is emptly, personalities and unused devices won't
->    be showed to user anymore.
-> 2) If seq_file buffer overflowed from md_seq_show(), then md_seq_start()
->    will be called again, hence personalities will be showed to user
->    again.
-> 3) If seq_file buffer overflowed from md_seq_stop(), seq_read_iter()
->    doesn't handle this, hence unused devices won't be showed to user.
->
-> Fix above problems by print personalities and unused devices in
-> md_seq_show(), as it used to be.
->
-> Fixes: cf1b6d4441ff ("md: simplify md_seq_ops")
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+linear flavor is being removed in the kernel [1], so tests for the linear
+flavor will fail. Add detection for linear flavor and --disable-linear
+option, with the same logic as multipath.
 
-Applied to md-6.8 branch. (Yes, I am trying to make some changes to the
-branches we use. )
+[1] https://lore.kernel.org/linux-raid/20231214222107.2016042-1-song@kernel.org/
+Signed-off-by: Song Liu <song@kernel.org>
+---
+ test               |  4 ++++
+ tests/00linear     |  5 +++++
+ tests/00names      |  8 +++++++-
+ tests/00raid0      |  4 ++++
+ tests/00readonly   |  8 +++++++-
+ tests/02lineargrow |  5 +++++
+ tests/03assem-incr |  8 +++++++-
+ tests/03r0assem    |  4 ++++
+ tests/04r0update   |  6 ++++++
+ tests/func.sh      | 11 +++++++++++
+ 10 files changed, 60 insertions(+), 3 deletions(-)
 
-Thanks,
-Song
+diff --git a/test b/test
+index b244453b1cec..49a36c3b8ef2 100755
+--- a/test
++++ b/test
+@@ -140,6 +140,7 @@ do_help() {
+ 		--raidtype=                 raid0|linear|raid1|raid456|raid10|ddf|imsm
+ 		--disable-multipath         Disable any tests involving multipath
+ 		--disable-integrity         Disable slow tests of RAID[56] consistency
++		--disable-linear            Disable any tests involving linear
+ 		--logdir=directory          Directory to save all logfiles in
+ 		--save-logs                 Usually use with --logdir together
+ 		--keep-going | --no-error   Don't stop on error, ie. run all tests
+@@ -255,6 +256,9 @@ parse_args() {
+ 		--disable-integrity )
+ 			unset INTEGRITY
+ 			;;
++		--disable-linear )
++			unset LINEAR
++			;;
+ 		--dev=* )
+ 			case ${i##*=} in
+ 			loop )
+diff --git a/tests/00linear b/tests/00linear
+index e3ac6555c9dd..5a1160851af2 100644
+--- a/tests/00linear
++++ b/tests/00linear
+@@ -1,6 +1,11 @@
+ 
+ # create a simple linear
+ 
++if [ "$LINEAR" != "yes" ]; then
++  echo -ne 'skipping... '
++  exit 0
++fi
++
+ mdadm -CR $md0 -l linear -n3 $dev0 $dev1 $dev2
+ check linear
+ testdev $md0 3 $mdsize2_l 1
+diff --git a/tests/00names b/tests/00names
+index 7a066d8fb2b7..d996befc5e8b 100644
+--- a/tests/00names
++++ b/tests/00names
+@@ -4,7 +4,13 @@ set -x -e
+ conf=$targetdir/mdadm.conf
+ echo "CREATE names=yes" > $conf
+ 
+-for i in linear raid0 raid1 raid4 raid5 raid6
++levels=(raid0 raid1 raid4 raid5 raid6)
++
++if [ "$LINEAR" == "yes" ]; then
++  levels+=( linear )
++fi
++
++for i in ${levels[@]}
+ do
+   mdadm -CR --config $conf /dev/md/$i -l $i -n 4 $dev4 $dev3 $dev2 $dev1
+   check $i
+diff --git a/tests/00raid0 b/tests/00raid0
+index 9b8896cbdc52..6407c320fd65 100644
+--- a/tests/00raid0
++++ b/tests/00raid0
+@@ -16,6 +16,10 @@ check raid0
+ testdev $md0 5 $size 512
+ mdadm -S $md0
+ 
++if [ "$LINEAR" != "yes" ]; then
++  echo -ne 'skipping... '
++  exit 0
++fi
+ 
+ # now same again with different chunk size
+ for chunk in 4 32 256
+diff --git a/tests/00readonly b/tests/00readonly
+index afe243b3a0b0..80b63629e4f9 100644
+--- a/tests/00readonly
++++ b/tests/00readonly
+@@ -1,8 +1,14 @@
+ #!/bin/bash
+ 
++levels=(raid0 raid1 raid4 raid5 raid6 raid10)
++
++if [ "$LINEAR" == "yes" ]; then
++  levels+=( linear )
++fi
++
+ for metadata in 0.9 1.0 1.1 1.2
+ do
+-	for level in linear raid0 raid1 raid4 raid5 raid6 raid10
++	for level in ${levels[@]}
+ 	do
+ 		if [[ $metadata == "0.9" && $level == "raid0" ]];
+ 		then
+diff --git a/tests/02lineargrow b/tests/02lineargrow
+index 595bf9f20802..d17e2326d13f 100644
+--- a/tests/02lineargrow
++++ b/tests/02lineargrow
+@@ -1,6 +1,11 @@
+ 
+ # create a liner array, and add more drives to to.
+ 
++if [ "$LINEAR" != "yes" ]; then
++  echo -ne 'skipping... '
++  exit 0
++fi
++
+ for e in 0.90 1 1.1 1.2
+ do
+   case $e in
+diff --git a/tests/03assem-incr b/tests/03assem-incr
+index f10a1a48ee5c..38880a7fed10 100644
+--- a/tests/03assem-incr
++++ b/tests/03assem-incr
+@@ -6,7 +6,13 @@ set -x -e
+ # Here just test that a partly "-I" assembled array can
+ # be completed with "-A"
+ 
+-for l in 0 1 5 linear
++levels=(raid0 raid1 raid5)
++
++if [ "$LINEAR" == "yes" ]; then
++  levels+=( linear )
++fi
++
++for l in ${levels[@]}
+ do
+   mdadm -CR $md0 -l $l -n5 $dev0 $dev1 $dev2 $dev3 $dev4 --assume-clean
+   mdadm -S md0
+diff --git a/tests/03r0assem b/tests/03r0assem
+index 44df06456233..f7c29e8c1ab6 100644
+--- a/tests/03r0assem
++++ b/tests/03r0assem
+@@ -64,6 +64,10 @@ mdadm --assemble --scan --config=$conf $md2
+ $tst
+ mdadm -S $md2
+ 
++if [ "$LINEAR" != "yes" ]; then
++  echo -ne 'skipping... '
++  exit 0
++fi
+ 
+ ### Now for version 0...
+ 
+diff --git a/tests/04r0update b/tests/04r0update
+index b95efb06c761..c495f34a0a79 100644
+--- a/tests/04r0update
++++ b/tests/04r0update
+@@ -1,5 +1,11 @@
+ 
+ # create a raid0, re-assemble with a different super-minor
++
++if [ "$LINEAR" != "yes" ]; then
++  echo -ne 'skipping... '
++  exit 0
++fi
++
+ mdadm -CR -e 0.90 $md0 -llinear -n3 $dev0 $dev1 $dev2
+ testdev $md0 3 $mdsize0 1
+ minor1=`mdadm -E $dev0 | sed -n -e 's/.*Preferred Minor : //p'`
+diff --git a/tests/func.sh b/tests/func.sh
+index 5053b0121f1d..1c1a28a2a9c8 100644
+--- a/tests/func.sh
++++ b/tests/func.sh
+@@ -123,6 +123,17 @@ check_env() {
+ 	modprobe multipath 2> /dev/null
+ 	grep -sq 'Personalities : .*multipath' /proc/mdstat &&
+ 		MULTIPATH="yes"
++	if [ "$MULTIPATH" != "yes" ]; then
++		echo "test: skipping tests for multipath, which is removed in upstream 6.8+ kernels"
++	fi
++
++	# Check whether to run linear tests
++	modprobe linear 2> /dev/null
++	grep -sq 'Personalities : .*linear' /proc/mdstat &&
++		LINEAR="yes"
++	if [ "$LINEAR" != "yes" ]; then
++		echo "test: skipping tests for linear, which is removed in upstream 6.8+ kernels"
++	fi
+ }
+ 
+ do_setup() {
+-- 
+2.34.1
+
