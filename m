@@ -1,162 +1,74 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7274739AC0;
-	Tue,  9 Jan 2024 13:43:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4T8XDy6YpWz4f3jJH;
-	Tue,  9 Jan 2024 21:42:58 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 66EBE1A0272;
-	Tue,  9 Jan 2024 21:43:02 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBnOBFkTZ1lVgZPAQ--.55732S4;
-	Tue, 09 Jan 2024 21:43:02 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai3@huawei.com,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH] md: fix md_seq_ops() regressions
-Date: Tue,  9 Jan 2024 21:39:57 +0800
-Message-Id: <20240109133957.2975272-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 523C33C07B;
+	Tue,  9 Jan 2024 19:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jCOehkuf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C720AC43394;
+	Tue,  9 Jan 2024 19:15:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704827712;
+	bh=Q8C1+ejFECnjGdpfPU+CdyrV1UwUh3RMKZG5x0HTquo=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=jCOehkufsUMqP14SDeEYEAGs9cU7h8NsJzU+DbuHNTFVkLkswlyw5FwHb+WBhoGmk
+	 TzsZTHmy3JIR1brF7ClTRPbMG3dIFvSwHHE+p8W33thlciRbGzXjq9dFOGaxngFwyg
+	 RnlSjHkErBSl5TZND7pW5CPG34DgY3T4tuxFTw3FOXODj23wenRL3FWeYACaJ2VYc3
+	 Z4D72jKZAqqqHegnViZspAKlIUgnk3u9JBIzH/GKHUWJ5xkiHfIRJxb5weejql6Gdt
+	 Uz4oLhuvZeyNZ289N7LBqtgaoL9S3ttfnNC5+VxLRJwetUCqtMzDM20jKqLPbOBARh
+	 GxkCksU6ygSBw==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-50e80d40a41so4050283e87.1;
+        Tue, 09 Jan 2024 11:15:12 -0800 (PST)
+X-Gm-Message-State: AOJu0YzeGIQ/SPDSKVHIst5GgZ1MfYkDv/fWdHZ8a4Xx5BQ7Ns6Q9WDM
+	M75MukC3cDq4FvrsXuWtxjin7j2vgsk7s0O2Akg=
+X-Google-Smtp-Source: AGHT+IEt/cGf2NTIcuFbXoWT/s+SJgCbO7FZbjgN4gWqH4e4FO60/h379pbjS17wwcCalH8Ke1axpeXDf1kNIk3rxRc=
+X-Received: by 2002:a05:6512:787:b0:50e:9fa0:c1ec with SMTP id
+ x7-20020a056512078700b0050e9fa0c1ecmr2463663lfr.109.1704827710960; Tue, 09
+ Jan 2024 11:15:10 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBnOBFkTZ1lVgZPAQ--.55732S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxAw17uFWDXrW8Jw47Ww47twb_yoW5ZFy8pF
-	sxZFW3ArWUXrWxKwsxAa1ku3WFq3Wvy34qgr9rG395Cr1UXrnru3W3Xay7XFn8Way8Wwn8
-	Xa1DKFy5GrWUJwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
-	rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
-	vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IY
-	x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
-	xKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
-	67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20240109133957.2975272-1-yukuai1@huaweicloud.com>
+In-Reply-To: <20240109133957.2975272-1-yukuai1@huaweicloud.com>
+From: Song Liu <song@kernel.org>
+Date: Tue, 9 Jan 2024 11:14:59 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6zxf-5NOJHbpBVhXLM+MzKn4upgHqU+=Z+Owp9yocdKQ@mail.gmail.com>
+Message-ID: <CAPhsuW6zxf-5NOJHbpBVhXLM+MzKn4upgHqU+=Z+Owp9yocdKQ@mail.gmail.com>
+Subject: Re: [PATCH] md: fix md_seq_ops() regressions
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Tue, Jan 9, 2024 at 5:43=E2=80=AFAM Yu Kuai <yukuai1@huaweicloud.com> wr=
+ote:
+>
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Commit cf1b6d4441ff ("md: simplify md_seq_ops") introduce following
+> regressions:
+>
+> 1) If list all_mddevs is emptly, personalities and unused devices won't
+>    be showed to user anymore.
+> 2) If seq_file buffer overflowed from md_seq_show(), then md_seq_start()
+>    will be called again, hence personalities will be showed to user
+>    again.
+> 3) If seq_file buffer overflowed from md_seq_stop(), seq_read_iter()
+>    doesn't handle this, hence unused devices won't be showed to user.
+>
+> Fix above problems by print personalities and unused devices in
+> md_seq_show(), as it used to be.
+>
+> Fixes: cf1b6d4441ff ("md: simplify md_seq_ops")
+>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-Commit cf1b6d4441ff ("md: simplify md_seq_ops") introduce following
-regressions:
+Applied to md-6.8 branch. (Yes, I am trying to make some changes to the
+branches we use. )
 
-1) If list all_mddevs is emptly, personalities and unused devices won't
-   be showed to user anymore.
-2) If seq_file buffer overflowed from md_seq_show(), then md_seq_start()
-   will be called again, hence personalities will be showed to user
-   again.
-3) If seq_file buffer overflowed from md_seq_stop(), seq_read_iter()
-   doesn't handle this, hence unused devices won't be showed to user.
-
-Fix above problems by print personalities and unused devices in
-md_seq_show(), as it used to be.
-
-Fixes: cf1b6d4441ff ("md: simplify md_seq_ops")
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/md/md.c | 40 +++++++++++++++++++++++++++-------------
- 1 file changed, 27 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e351e6c51cc7..ff3057c787c1 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8135,6 +8135,19 @@ static void status_unused(struct seq_file *seq)
- 	seq_printf(seq, "\n");
- }
- 
-+static void status_personalities(struct seq_file *seq)
-+{
-+	struct md_personality *pers;
-+
-+	seq_puts(seq, "Personalities : ");
-+	spin_lock(&pers_lock);
-+	list_for_each_entry(pers, &pers_list, list)
-+		seq_printf(seq, "[%s] ", pers->name);
-+
-+	spin_unlock(&pers_lock);
-+	seq_puts(seq, "\n");
-+}
-+
- static int status_resync(struct seq_file *seq, struct mddev *mddev)
- {
- 	sector_t max_sectors, resync, res;
-@@ -8276,20 +8289,10 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
- static void *md_seq_start(struct seq_file *seq, loff_t *pos)
- 	__acquires(&all_mddevs_lock)
- {
--	struct md_personality *pers;
--
--	seq_puts(seq, "Personalities : ");
--	spin_lock(&pers_lock);
--	list_for_each_entry(pers, &pers_list, list)
--		seq_printf(seq, "[%s] ", pers->name);
--
--	spin_unlock(&pers_lock);
--	seq_puts(seq, "\n");
- 	seq->poll_event = atomic_read(&md_event_count);
--
- 	spin_lock(&all_mddevs_lock);
- 
--	return seq_list_start(&all_mddevs, *pos);
-+	return seq_list_start_head(&all_mddevs, *pos);
- }
- 
- static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-@@ -8300,16 +8303,23 @@ static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
- static void md_seq_stop(struct seq_file *seq, void *v)
- 	__releases(&all_mddevs_lock)
- {
--	status_unused(seq);
- 	spin_unlock(&all_mddevs_lock);
- }
- 
- static int md_seq_show(struct seq_file *seq, void *v)
- {
--	struct mddev *mddev = list_entry(v, struct mddev, all_mddevs);
-+	struct mddev *mddev;
- 	sector_t sectors;
- 	struct md_rdev *rdev;
- 
-+	if (v == &all_mddevs) {
-+		status_personalities(seq);
-+		if (list_empty(&all_mddevs))
-+			status_unused(seq);
-+		return 0;
-+	}
-+
-+	mddev = list_entry(v, struct mddev, all_mddevs);
- 	if (!mddev_get(mddev))
- 		return 0;
- 
-@@ -8385,6 +8395,10 @@ static int md_seq_show(struct seq_file *seq, void *v)
- 	}
- 	spin_unlock(&mddev->lock);
- 	spin_lock(&all_mddevs_lock);
-+
-+	if (mddev == list_last_entry(&all_mddevs, struct mddev, all_mddevs))
-+		status_unused(seq);
-+
- 	if (atomic_dec_and_test(&mddev->active))
- 		__mddev_put(mddev);
- 
--- 
-2.39.2
-
+Thanks,
+Song
