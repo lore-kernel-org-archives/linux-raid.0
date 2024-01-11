@@ -1,209 +1,151 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4594F190
-	for <linux-raid@vger.kernel.org>; Thu, 11 Jan 2024 00:27:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C593C7E4;
+	Thu, 11 Jan 2024 01:51:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ixCTCL3E"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1704932864; x=1736468864;
-  h=date:from:to:cc:subject:message-id;
-  bh=Y1Z2HLyx/4/vfTAvM+3MRxjxSVyfpEGEWwGLKbDNiwY=;
-  b=ixCTCL3E3Sa3z9HolX/tx97JRigXeOzpUMZiCCzIQfkuRE7vh/3aB20Y
-   0IIU2VC8q9e710ta2cuwYWDGpLPLPJHwgHYZfmPnVyvCud8k7tE0t2+Uv
-   GUrFRC6A4GMfmYbXg9Mm9W4z/kYujxjLMUXTK0aqcvtoy54bU3VZ70f9q
-   +ve2EOby9RjWA953ucU82IDVOFkMXGN3SW3bfhjFscEtfBA5xo2YIX9/I
-   PhiK7WU03j4d9AzPUNf0/e5ZbKZOZGkwrF69Z/za6x5z8C/DbOj8VMGf1
-   jg6OyGPMSyIo0DlKBXuw3ryOlA7Wc0pcFIcIWSEPt+vwylKsgOr5WEvA4
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10949"; a="20177171"
-X-IronPort-AV: E=Sophos;i="6.04,184,1695711600"; 
-   d="scan'208";a="20177171"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2024 16:27:43 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.04,184,1695711600"; 
-   d="scan'208";a="16847086"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by fmviesa002.fm.intel.com with ESMTP; 10 Jan 2024 16:27:42 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rNiv3-0007ca-1e;
-	Thu, 11 Jan 2024 00:27:37 +0000
-Date: Thu, 11 Jan 2024 08:26:01 +0800
-From: kernel test robot <lkp@intel.com>
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Subject: [song-md:md-6.8] BUILD SUCCESS
- 7dab24554dedd4e6f408af8eb2d25c89997a6a1f
-Message-ID: <202401110859.ziGDnOUp-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MBihNb2u"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-5cdfed46372so3726494a12.3;
+        Wed, 10 Jan 2024 17:51:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1704937890; x=1705542690; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FMIskJxktvX8pZROvNZl4o7mnKJ3HRgXu770e+dA5fM=;
+        b=MBihNb2uFX4Ev9RIF7oMiALLkITInFDEH2x2tnBkBGF+3R7EeC10KVrjffmeJaJnGZ
+         BG9Lz5uG2SB7RiazjpQ6QRsZ6LK71CjFmzsN3UWCvwAczmKIXBS/FIZvTRTrkdUYPT9+
+         5jRN3K1x8MSBJxqLVZbWHurwTEn7TAuk2HdFDbewanGpq3bh8Pr+zwVzv7jl52TE67Dr
+         1J7GE+N/vpn05P9m0BBXk7I3DIKxwF/5yhaEaGOT1a7M1+jIOuMspQriige5NjQohGqZ
+         cfamJeEYPT9/wzPQVIPUDOmJ/O2adbvFM6j1y6syACSkfYLOdAGtyEETdlOFnMUUySuM
+         hfbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704937890; x=1705542690;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=FMIskJxktvX8pZROvNZl4o7mnKJ3HRgXu770e+dA5fM=;
+        b=Vkcp6ycE4l33o0zMKxu+uL0joNxpHv8RNKEq3GmhTfw3eHhqUBzwcrCA/jy30raS0k
+         6TQuXpbiN0OGAlhLq5gbPcM520TlviktyG1l3QxEM6izY5d8OfdWRl2l/BxPGIuZSmwG
+         XmrE9sXbYFDBbK6B69ncZml3By3V56OhZoBy4/eNhyRAJxGZa00c/0Xvx2ry3cBKE87B
+         DiEIfRewpkf61MPeMnz+DtnUeQvSD7mRdroVs6DEmm9waKkqab54eF7ERtbwQJKfIOXU
+         JE9tdAUBkobPHW2UUcal0+gcPKYsPUen2nd5xCqYoSisov7bck9Bk5RMqdrp1aKjG+Oh
+         sbvw==
+X-Gm-Message-State: AOJu0YxFly5iuoS3kk00CHci1C0bqQobtVAybW06Vricy8QDROdDNd86
+	BqOYx2dFnFrTOKaU391n1E1JY9CfI18=
+X-Google-Smtp-Source: AGHT+IEQpTCjlvAfJVAATUMx+KZ96DvSL3c0T/fUiE47R/kkkf3OMR4oWu42/h3e09LvJOHc3kVneQ==
+X-Received: by 2002:a05:6a20:728f:b0:19a:19aa:cd03 with SMTP id o15-20020a056a20728f00b0019a19aacd03mr460518pzk.0.1704937890070;
+        Wed, 10 Jan 2024 17:51:30 -0800 (PST)
+Received: from [10.193.226.49] ([106.39.42.235])
+        by smtp.gmail.com with ESMTPSA id x5-20020a170902e04500b001d05fb4cf2csm4563plx.15.2024.01.10.17.51.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 10 Jan 2024 17:51:29 -0800 (PST)
+Message-ID: <f311998f-303f-44a6-9525-0611152d521a@gmail.com>
+Date: Thu, 11 Jan 2024 09:51:25 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] md/raid5: fix atomicity violation in raid5_cache_count
+To: song@kernel.org, yukuai3@huawei.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ baijiaju1990@outlook.com, BassCheck <bass@buaa.edu.cn>
+References: <20231222045224.4439-1-2045gemini@gmail.com>
+From: Gui-Dong Han <2045gemini@gmail.com>
+In-Reply-To: <20231222045224.4439-1-2045gemini@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-6.8
-branch HEAD: 7dab24554dedd4e6f408af8eb2d25c89997a6a1f  md/raid1: Use blk_opf_t for read and write operations
+Dear All:
 
-elapsed time: 1462m
+I hope this email finds you well. I hope you haven't missed my previous 
+email, as I understand that everyone has a busy schedule. I just wanted 
+to follow up on my previous message sent.
+I understand that you may be occupied with other tasks or priorities. 
+However, I would greatly appreciate it if you could spare a few moments 
+to check the patch in my previous email. Your prompt response would be 
+highly valuable to me.
+Thank you for your attention to this matter, and I look forward to 
+hearing from you soon.
 
-configs tested: 144
-configs skipped: 2
+Thanks,
+Han
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20240110   gcc  
-arc                   randconfig-002-20240110   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                                 defconfig   clang
-arm                   randconfig-001-20240110   clang
-arm                   randconfig-002-20240110   clang
-arm                   randconfig-003-20240110   clang
-arm                   randconfig-004-20240110   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20240110   clang
-arm64                 randconfig-002-20240110   clang
-arm64                 randconfig-003-20240110   clang
-arm64                 randconfig-004-20240110   clang
-csky                              allnoconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240110   gcc  
-csky                  randconfig-002-20240110   gcc  
-hexagon                           allnoconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20240110   clang
-hexagon               randconfig-002-20240110   clang
-i386                             allmodconfig   clang
-i386                              allnoconfig   clang
-i386                             allyesconfig   clang
-i386         buildonly-randconfig-001-20240110   clang
-i386         buildonly-randconfig-002-20240110   clang
-i386         buildonly-randconfig-003-20240110   clang
-i386         buildonly-randconfig-004-20240110   clang
-i386         buildonly-randconfig-005-20240110   clang
-i386         buildonly-randconfig-006-20240110   clang
-i386                                defconfig   gcc  
-i386                  randconfig-001-20240110   clang
-i386                  randconfig-002-20240110   clang
-i386                  randconfig-003-20240110   clang
-i386                  randconfig-004-20240110   clang
-i386                  randconfig-005-20240110   clang
-i386                  randconfig-006-20240110   clang
-i386                  randconfig-011-20240110   gcc  
-i386                  randconfig-012-20240110   gcc  
-i386                  randconfig-013-20240110   gcc  
-i386                  randconfig-014-20240110   gcc  
-i386                  randconfig-015-20240110   gcc  
-i386                  randconfig-016-20240110   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240110   gcc  
-loongarch             randconfig-002-20240110   gcc  
-m68k                              allnoconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                              allnoconfig   clang
-nios2                             allnoconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240110   gcc  
-nios2                 randconfig-002-20240110   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240110   gcc  
-parisc                randconfig-002-20240110   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   clang
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc               randconfig-001-20240110   clang
-powerpc               randconfig-002-20240110   clang
-powerpc               randconfig-003-20240110   clang
-powerpc64             randconfig-001-20240110   clang
-powerpc64             randconfig-002-20240110   clang
-powerpc64             randconfig-003-20240110   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   clang
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20240110   clang
-riscv                 randconfig-002-20240110   clang
-riscv                          rv32_defconfig   clang
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20240110   gcc  
-s390                  randconfig-002-20240110   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                    randconfig-001-20240110   gcc  
-sh                    randconfig-002-20240110   gcc  
-sparc                            allmodconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240110   gcc  
-sparc64               randconfig-002-20240110   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20240110   clang
-um                    randconfig-002-20240110   clang
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20240111   gcc  
-x86_64       buildonly-randconfig-002-20240111   gcc  
-x86_64       buildonly-randconfig-003-20240111   gcc  
-x86_64       buildonly-randconfig-004-20240111   gcc  
-x86_64       buildonly-randconfig-005-20240111   gcc  
-x86_64       buildonly-randconfig-006-20240111   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20240111   clang
-x86_64                randconfig-002-20240111   clang
-x86_64                randconfig-003-20240111   clang
-x86_64                randconfig-004-20240111   clang
-x86_64                randconfig-005-20240111   clang
-x86_64                randconfig-006-20240111   clang
-x86_64                randconfig-011-20240111   gcc  
-x86_64                randconfig-012-20240111   gcc  
-x86_64                randconfig-013-20240111   gcc  
-x86_64                randconfig-014-20240111   gcc  
-x86_64                randconfig-015-20240111   gcc  
-x86_64                randconfig-016-20240111   gcc  
-x86_64                randconfig-071-20240111   gcc  
-x86_64                randconfig-072-20240111   gcc  
-x86_64                          rhel-8.3-rust   clang
-xtensa                            allnoconfig   gcc  
-xtensa                randconfig-001-20240110   gcc  
-xtensa                randconfig-002-20240110   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+On 22/12/2023 下午12:52, Gui-Dong Han wrote:
+> In raid5_cache_count():
+> 	if (conf->max_nr_stripes < conf->min_nr_stripes)
+> 		return 0;
+> 	return conf->max_nr_stripes - conf->min_nr_stripes;
+> The current check is ineffective, as the values could change immediately
+> after being checked.
+>
+> In raid5_set_cache_size():
+> 	...
+> 	conf->min_nr_stripes = size;
+> 	...
+> 	while (size > conf->max_nr_stripes)
+> 		conf->min_nr_stripes = conf->max_nr_stripes;
+> 	...
+>
+> Due to intermediate value updates in raid5_set_cache_size(), concurrent
+> execution of raid5_cache_count() and raid5_set_cache_size() may lead to
+> inconsistent reads of conf->max_nr_stripes and conf->min_nr_stripes.
+> The current checks are ineffective as values could change immediately
+> after being checked, raising the risk of conf->min_nr_stripes exceeding
+> conf->max_nr_stripes and potentially causing an integer overflow.
+>
+> This possible bug is found by an experimental static analysis tool
+> developed by our team. This tool analyzes the locking APIs to extract
+> function pairs that can be concurrently executed, and then analyzes the
+> instructions in the paired functions to identify possible concurrency bugs
+> including data races and atomicity violations. The above possible bug is
+> reported when our tool analyzes the source code of Linux 6.2.
+>
+> To resolve this issue, it is suggested to introduce local variables
+> 'min_stripes' and 'max_stripes' in raid5_cache_count() to ensure the
+> values remain stable throughout the check. Adding locks in
+> raid5_cache_count() fails to resolve atomicity violations, as
+> raid5_set_cache_size() may hold intermediate values of
+> conf->min_nr_stripes while unlocked. With this patch applied, our tool no
+> longer reports the bug, with the kernel configuration allyesconfig for
+> x86_64. Due to the lack of associated hardware, we cannot test the patch
+> in runtime testing, and just verify it according to the code logic.
+>
+> Fixes: edbe83ab4c27e ("md/raid5: allow the stripe_cache to grow and ...")
+> Reported-by: BassCheck <bass@buaa.edu.cn>
+> Signed-off-by: Gui-Dong Han <2045gemini@gmail.com>
+>
+> ---
+> v2:
+> * In this patch v2, we've updated to use READ_ONCE() instead of direct
+> reads for accessing max_nr_stripes and min_nr_stripes, since read and
+> write can concurrent.
+>    Thank Yu Kuai for helpful advice.
+> ---
+>   drivers/md/raid5.c | 6 ++++--
+>   1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 8497880135ee..9037e46de0e2 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7391,10 +7391,12 @@ static unsigned long raid5_cache_count(struct shrinker *shrink,
+>   {
+>   	struct r5conf *conf = shrink->private_data;
+>   
+> -	if (conf->max_nr_stripes < conf->min_nr_stripes)
+> +	int max_stripes = READ_ONCE(conf->max_nr_stripes);
+> +	int min_stripes = READ_ONCE(conf->min_nr_stripes);
+> +	if (max_stripes < min_stripes)
+>   		/* unlikely, but not impossible */
+>   		return 0;
+> -	return conf->max_nr_stripes - conf->min_nr_stripes;
+> +	return max_stripes - min_stripes;
+>   }
+>   
+>   static struct r5conf *setup_conf(struct mddev *mddev)
