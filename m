@@ -1,137 +1,126 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15CFB14003;
-	Wed, 17 Jan 2024 09:40:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD461EB39
+	for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 16:06:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705484446; cv=none; b=kbV+jxLpstL2qlDbDf7YsunbhOK837xG7umHtrzcOrdibTRG1YwOLKHUVmUohKT3bUFliMbOwG+U6DT4EcmHOnd4qFR3ZOqiQqsyQbkE2g3s9KJ5lvQstXaqoFVEj5Qcj//QC+WfiIPPzg0GLN8gcpJJWk22lU96wXQnQMqVGN4=
+	t=1705507608; cv=none; b=SSLyMkREMwnnNraAEGebT+9tuPeJAw/biHjEyNPEZufUYHYSzQyoDKQTiiRVFrcMTnub+UJL+RiylgEOKs0FiwRKIiOeYz5kWSj4noPzyjYbNISqURiSh1a9aPYRExgdoLBM3L93L0LcX0u1CVk3BmjQZ1cw5u2iQV8ae6TJy/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705484446; c=relaxed/simple;
-	bh=h3dNTuPG6vpBMY8jUp4OPZ0rLICpUpwRIhIAeUnDYu4=;
-	h=Received:Received:Received:From:To:Cc:Subject:Date:Message-Id:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo; b=KIULjxX0QpddjPxuPRm5tEPXg46e/WYuywwUmaW+mDVFUJUu79/lhK2N4WYMlCfdvLbQm6E3/2KxhZdTAzrHHZbZ92SqOismKe4EkOZq1Nnn/u7FaAP/2rBwUXL4an/ssJEHDtmbJ5L/6WDfCfxPO+JjjSDwxECVfc91gSDU4YE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TFLTf0pT1z4f3k5n;
-	Wed, 17 Jan 2024 17:40:38 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 424B11A0840;
-	Wed, 17 Jan 2024 17:40:40 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBGUoKdlvS9nBA--.17816S6;
-	Wed, 17 Jan 2024 17:40:40 +0800 (CST)
-From: linan666@huaweicloud.com
-To: song@kernel.org,
-	shli@fb.com,
-	neilb@suse.com,
-	zlliu@suse.com,
-	mariusz.tkaczyk@linux.intel.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linan666@huaweicloud.com,
-	yukuai3@huawei.com,
-	yi.zhang@huawei.com,
-	houtao1@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH v2 2/3] md: factor out a helper mddev_sync_blockdev() to sync mddev
-Date: Wed, 17 Jan 2024 17:37:06 +0800
-Message-Id: <20240117093707.2767209-3-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240117093707.2767209-1-linan666@huaweicloud.com>
-References: <20240117093707.2767209-1-linan666@huaweicloud.com>
+	s=arc-20240116; t=1705507608; c=relaxed/simple;
+	bh=4SO5gJg61qQ+xDNYMh9UjBXJcwyOObG+r/dhNtm//xs=;
+	h=DKIM-Signature:X-IronPort-AV:X-IronPort-AV:Received:X-ExtLoop1:
+	 X-IronPort-AV:Received:Date:From:To:Cc:Subject:Message-ID:
+	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding; b=HcS3M0KN9lHAL31wPIksacPOCt0MFXv2PAJP3By1kNG7oXJc8MUzwd6VmDbnpnkebDcyk6eKBmaG2FGMq7gujrTAm3vcLnNxfNZmQLgHVNcUSas+69bShgK8X8BTvdI2utMwPC4odcschJjqSzmT0rJxYQSZAvGK8dGf7TFBOiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=R4jY++AZ; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="R4jY++AZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1705507608; x=1737043608;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=4SO5gJg61qQ+xDNYMh9UjBXJcwyOObG+r/dhNtm//xs=;
+  b=R4jY++AZrbypHnPWv1Ue2iPKinKGaylq0js72uB0eSP8o7KtjspU0djB
+   qMashLLO5H/9uz7sA7uS54Jd8FCF6o78Yc4p+EvYT5++kpLdCrd7mAEon
+   qu2mDhEwEUyLvo4fJKH89+POdUtZS/JdrcFMtkdOR1DsBBEaizhjWKj7+
+   pOBJIsFg2dApk8TL/hDw5EwhvLhqvYURy8Qxu5z19CZ6tSUfvH+ccho60
+   9vyk8cmea2ivDzcTtC7H5ZXAn5BIJBsVtlN3txvXx+A+A/5MdbYGu+VUp
+   8/FIK69WSqal2WXx+O6y1neQ1m55nmD4xL/rGcQ9zc8MbW923nAZVPThK
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="18795025"
+X-IronPort-AV: E=Sophos;i="6.05,200,1701158400"; 
+   d="scan'208";a="18795025"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2024 08:06:47 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.05,200,1701158400"; 
+   d="scan'208";a="52802"
+Received: from jbelkin-mobl.amr.corp.intel.com (HELO peluse-desk5) ([10.212.92.214])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2024 08:06:46 -0800
+Date: Tue, 16 Jan 2024 01:31:36 -0700
+From: Paul E Luse <paul.e.luse@linux.intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Yiming Xu <teddyxym@outlook.com>, song@kernel.org,
+ linux-raid@vger.kernel.org, paul.e.luse@intel.com, firnyee@gmail.com
+Subject: Re: [RFC] md/raid5: optimize RAID5 performance.
+Message-ID: <20240116013136.06d3d173@peluse-desk5>
+In-Reply-To: <ZWQ63SpjIE4bc+pi@infradead.org>
+References: <SJ2PR11MB75742EC42986F1532F7A0977D8BEA@SJ2PR11MB7574.namprd11.prod.outlook.com>
+	<ZWQ63SpjIE4bc+pi@infradead.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; aarch64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBGUoKdlvS9nBA--.17816S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7tFWrZF4DXFW5AF48Kr4kWFg_yoW8Ar43pa
-	yftF9xKr1UJrZxAr47JwnruF1Ygw1IkayvyrW7Ca4xZF9rArsruryFvry8GrykK34xAFWU
-	t3WrXa15W347GrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAa
-	c4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzV
-	Aqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S
-	6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxw
-	ACI402YVCY1x02628vn2kIc2xKxwAKzVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I
-	3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxV
-	WUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAF
-	wI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcI
-	k0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j
-	6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYSoXUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-From: Li Nan <linan122@huawei.com>
+On Sun, 26 Nov 2023 22:44:45 -0800
+Christoph Hellwig <hch@infradead.org> wrote:
 
-There are no functional changes, prepare to sync mddev in
-array_state_store().
+> Hi Shushu,
+> 
+> the work certainly l-ooks interesting!
+> 
+> However:
+> 
+> > Optimized by using fine-grained locks, customized data structures,
+> > and scattered address space. Achieves significant improvements in
+> > both throughput and latency.
+> 
+> this is a lot of work for a single Linux patch, we usually do that
+> work pice by pice instead of complete rewrite, and for such
+> signigicant changes the commit logs also tend to be a bit extensive.
+> 
+> I'm also not quite sure what scattered address spaces are - I bet
+> reading the paper (I plan to get to that) would explain it, but it
+> also helps to explain the idea in the commit message.
+> 
+> That's my high level nitpicking for now, I'll try to read the paper
+> and the patch in detail and come back later.
+> 
+> 
 
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/md/md.c | 31 +++++++++++++++++++------------
- 1 file changed, 19 insertions(+), 12 deletions(-)
+Hi Everyone,
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4bf821b89415..2c793992a604 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -529,6 +529,23 @@ void mddev_resume(struct mddev *mddev)
- }
- EXPORT_SYMBOL_GPL(mddev_resume);
- 
-+/* sync bdev before setting device to readonly or stopping raid*/
-+static int mddev_sync_blockdev(struct mddev *mddev) {
-+	mutex_lock(&mddev->open_mutex);
-+	if (mddev->pers && atomic_read(&mddev->openers) > 1) {
-+		mutex_unlock(&mddev->open_mutex);
-+		return -EBUSY;
-+	}
-+	if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
-+		mutex_unlock(&mddev->open_mutex);
-+		return -EBUSY;
-+	}
-+	mutex_unlock(&mddev->open_mutex);
-+
-+	sync_blockdev(mddev->gendisk->part0);
-+	return 0;
-+}
-+
- /*
-  * Generic flush handling for md
-  */
-@@ -7681,20 +7698,10 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		/* Need to flush page cache, and ensure no-one else opens
- 		 * and writes
- 		 */
--		mutex_lock(&mddev->open_mutex);
--		if (mddev->pers && atomic_read(&mddev->openers) > 1) {
--			mutex_unlock(&mddev->open_mutex);
--			err = -EBUSY;
--			goto out;
--		}
--		if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
--			mutex_unlock(&mddev->open_mutex);
--			err = -EBUSY;
-+		err = mddev_sync_blockdev(mddev);
-+		if (err)
- 			goto out;
--		}
- 		did_set_md_closing = true;
--		mutex_unlock(&mddev->open_mutex);
--		sync_blockdev(bdev);
- 	}
- 
- 	if (!md_is_rdwr(mddev))
--- 
-2.39.2
+I went ahead and ran a series of performance tests on this patch to
+help the community understand the value.Here's a summary of what have
+completed and am happy to run some more to keep the patch moving.
+
+I have not yet reviewed the code as I wanted to make sure it provided
+good benefit first and it does for sure. I will be reviewing shortly.
+Here is a summary of my tests:
+
+* Kioxia CM7 drives
+  https://americas.kioxia.com/content/dam/kioxia/shared/business/ssd/enterprise-ssd/asset/productbrief/eSSD-CM7-V-product-brief.pdf
+* Dual Socket Xeon 8368 2.4GHz 256G RAM
+* Results are the average of just 2 60 second runs per data point, if
+  interest continues I can re-run to eliminate any potential anomalies
+* I used 8 fio jobs per disk and 2 group_thread_cnt per disk so when
+  reading the graph, for example, 8DR5_patch_64j15gtc means an 8 Disk
+  RAID5 run against the patch with 64 fio jobs and group-thread_cnt set
+  to 16.  'base' in the name is md-next branch as of yesterday.
+* Sample fio command: fio --filename=/dev/md0 --direct=1
+  --output=/root/remote/8DR5_patch_64j16gtc_1/randrw_131072_1.json
+  --rw=randrw --bs=131072 --ioengine=libaio --ramp_time=3 --runtime=60
+  --iodepth=1 --numjobs=64 --time_based --group_reporting
+  --name=131072_1_randrw --output-format=json --numa_cpu_nodes=0
+
+Results: https://photos.app.goo.gl/Cip1rU3spbD8nvG28 
+
+-Paul
+
+
+
+
+
+
+
+
 
