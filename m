@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B3A15622A;
-	Tue, 16 Jan 2024 19:59:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C29160866;
+	Tue, 16 Jan 2024 20:02:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705435188; cv=none; b=AH8PeGYjm5Zz/vllyR/xCcCgH1nYA4cLH1pJIfyeRTp1VFLIHK2gV+1RzT7zivBugMNmMI2/LgWIEklUG7eVHSPt7Xr29JKbjHvja1LfiZLMA6wEBolU7UOb+ZVbMeSgTgh8hr+GZs57nJp91+eGkloBQGKJtIW+/A4LaEc6XRc=
+	t=1705435333; cv=none; b=qLFfhxNmIgOGscZdu2uOpIIVjV4z3Ym/zIcVi5xcCLlRUpB9bP38nHn7O4uiiZr5TQCq4CLA2hVBp0RjUQDmyPrLwhU6o8bLUxLMksHR8gelONHvfYehucTXIQGCC+0fVuKb0fX8sUJLibgE2nP2bqSaOEeK7j2A4Fhp8dGEmf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705435188; c=relaxed/simple;
-	bh=17OV4TdWpNOtkjRfg3KiC0mIr7KGeghlFbe5rICHqN8=;
+	s=arc-20240116; t=1705435333; c=relaxed/simple;
+	bh=5AP7d+nAanHXFMU0IfS+tjbP2ft9cYVoVCx9UGb0rws=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=JEKUZKEz0aeBoiA1yhPE/DJUiCqvAMioZ/eK4NwumcF+v5Hrmat1wvn88+Pqm/pwnOvDtllq9z/UfDxmURUdmLNUblsc4hGtzZZ0C4k2+xfua/VfIAXftCP/6MoOImm2+WszXUh1UN0iJYQXshVAKLCgBYsJ0hUtsbw04A7Tklk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gJESy1uR; arc=none smtp.client-ip=10.30.226.201
+	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=JiVfk5V0/QxkpgkXg69lW/s8DeJPyVkcPLwB7L7/lfG16fduRer+3MqvIMscLkCex7WdG23DYkW+WERXytBAJD7vsPmY0NKciVvFqA9WSTpwSOpH/xtTVDaPymBzaIy+LOYb8iVeyUt1OL0SR9freLz2ut+zA0IuHrAJ7NRsJGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V63st/io; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gJESy1uR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD18AC43399;
-	Tue, 16 Jan 2024 19:59:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V63st/io"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 792D8C43390;
+	Tue, 16 Jan 2024 20:02:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705435187;
-	bh=17OV4TdWpNOtkjRfg3KiC0mIr7KGeghlFbe5rICHqN8=;
+	s=k20201202; t=1705435333;
+	bh=5AP7d+nAanHXFMU0IfS+tjbP2ft9cYVoVCx9UGb0rws=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=gJESy1uRBbZBpDve5uMd9ZQ2OudMj8GkKrhfgxqRapyRGrbZ5VYkha+z2A9SkeUFp
-	 kCCrhWMT5bl77PLx+jpmEj/VNaLKAUt8OAggbpAPpN5Ib8M1Apgw3hgg8Gm1w9FLX6
-	 ToLKg0315z7EmedbBNAjTOMXOwdDwa/Wtjxq0DGAmBV0Dw9uhRx0984/k0EXHsuaNW
-	 OQ5xsEaSWxz5iEU9w1CvNSxYl/x1AlbLUgY5TAhay8Iu5cmu2EfYEnhTzFkHAZj2/4
-	 wg84+lPABzEDKHyepV0Tu5fgkJdqTA57UljShVGBy3lAOJOdvQYsVANZL/pXrFevYG
-	 icL3Hir2CPjdA==
+	b=V63st/ioayKKmhZvsBcFUxNtDZAKINWbQKqp8oHrZp6KJqP6yhtAObPRNzyzfApJw
+	 vQG9GXWNo7meHrKh14+859c3vbvZOXcVOpOOtc5k9BsZoKM924dg7S+1wBxYIUN86C
+	 H5KR4J+bx5D8M+XQHMABJ+3hDEBR8gz07uy/skl1wqdYSCUsehuKGlqbi/Lfga15VS
+	 Ud8Cy5vTWSOsfQ4bSvTNYBjpBMrDNrJTNylictvUNcOPfAeQbM7uRDiR4ScHrDw0sm
+	 MVxaPPOKkiSsMYtYADhvPn5xpKWgmNWmHiRxMzVwVK+JOT8FYaUO1eUxN8Zx+bMnbL
+	 xEQq47Hxe+Z/A==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -34,12 +34,12 @@ Cc: Alex Lyakas <alex.lyakas@zadara.com>,
 	Song Liu <song@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 35/47] md: Whenassemble the array, consult the superblock of the freshest device
-Date: Tue, 16 Jan 2024 14:57:38 -0500
-Message-ID: <20240116195834.257313-35-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 34/44] md: Whenassemble the array, consult the superblock of the freshest device
+Date: Tue, 16 Jan 2024 15:00:03 -0500
+Message-ID: <20240116200044.258335-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240116195834.257313-1-sashal@kernel.org>
-References: <20240116195834.257313-1-sashal@kernel.org>
+In-Reply-To: <20240116200044.258335-1-sashal@kernel.org>
+References: <20240116200044.258335-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,7 +48,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.147
+X-stable-base: Linux 5.10.208
 Content-Transfer-Encoding: 8bit
 
 From: Alex Lyakas <alex.lyakas@zadara.com>
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 44 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index aae9ec78c0e8..ff65e5eddfa1 100644
+index 6efe49f7bdf5..03d2e31dda2f 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -1162,6 +1162,7 @@ struct super_type  {
+@@ -1179,6 +1179,7 @@ struct super_type  {
  					  struct md_rdev *refdev,
  					  int minor_version);
  	int		    (*validate_super)(struct mddev *mddev,
@@ -82,7 +82,7 @@ index aae9ec78c0e8..ff65e5eddfa1 100644
  					      struct md_rdev *rdev);
  	void		    (*sync_super)(struct mddev *mddev,
  					  struct md_rdev *rdev);
-@@ -1300,8 +1301,9 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
+@@ -1317,8 +1318,9 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
  
  /*
   * validate_super for 0.90.0
@@ -93,7 +93,7 @@ index aae9ec78c0e8..ff65e5eddfa1 100644
  {
  	mdp_disk_t *desc;
  	mdp_super_t *sb = page_address(rdev->sb_page);
-@@ -1816,7 +1818,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
+@@ -1833,7 +1835,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
  	return ret;
  }
  
@@ -102,7 +102,7 @@ index aae9ec78c0e8..ff65e5eddfa1 100644
  {
  	struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
  	__u64 ev1 = le64_to_cpu(sb->events);
-@@ -1912,13 +1914,15 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+@@ -1929,13 +1931,15 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
  		}
  	} else if (mddev->pers == NULL) {
  		/* Insist of good event counter while assembling, except for
@@ -121,7 +121,7 @@ index aae9ec78c0e8..ff65e5eddfa1 100644
  				return -EINVAL;
  	} else if (mddev->bitmap) {
  		/* If adding to array with a bitmap, then we can accept an
-@@ -1939,8 +1943,38 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+@@ -1956,8 +1960,38 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
  		    rdev->desc_nr >= le32_to_cpu(sb->max_dev)) {
  			role = MD_DISK_ROLE_SPARE;
  			rdev->desc_nr = -1;
@@ -161,7 +161,7 @@ index aae9ec78c0e8..ff65e5eddfa1 100644
  		switch(role) {
  		case MD_DISK_ROLE_SPARE: /* spare */
  			break;
-@@ -2890,7 +2924,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+@@ -2896,7 +2930,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
  		 * and should be added immediately.
  		 */
  		super_types[mddev->major_version].
@@ -170,7 +170,7 @@ index aae9ec78c0e8..ff65e5eddfa1 100644
  		if (add_journal)
  			mddev_suspend(mddev);
  		err = mddev->pers->hot_add_disk(mddev, rdev);
-@@ -3809,7 +3843,7 @@ static int analyze_sbs(struct mddev *mddev)
+@@ -3814,7 +3848,7 @@ static int analyze_sbs(struct mddev *mddev)
  	}
  
  	super_types[mddev->major_version].
@@ -179,7 +179,7 @@ index aae9ec78c0e8..ff65e5eddfa1 100644
  
  	i = 0;
  	rdev_for_each_safe(rdev, tmp, mddev) {
-@@ -3824,7 +3858,7 @@ static int analyze_sbs(struct mddev *mddev)
+@@ -3829,7 +3863,7 @@ static int analyze_sbs(struct mddev *mddev)
  		}
  		if (rdev != freshest) {
  			if (super_types[mddev->major_version].
@@ -188,7 +188,7 @@ index aae9ec78c0e8..ff65e5eddfa1 100644
  				pr_warn("md: kicking non-fresh %s from array!\n",
  					bdevname(rdev->bdev,b));
  				md_kick_rdev_from_array(rdev);
-@@ -6795,7 +6829,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info)
+@@ -6817,7 +6851,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info)
  			rdev->saved_raid_disk = rdev->raid_disk;
  		} else
  			super_types[mddev->major_version].
