@@ -1,59 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C9151171E
-	for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 16:34:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.134.136.31
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2CCD23763
+	for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 18:17:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705509252; cv=none; b=GZsWGPK2mxFriKCLwCvM9ot/ISLNTqLnrg1MMbiKSjS18FbldBRf8atOfe76vsmqsMweyfXSb1l5mafgZIGdVfY/kqJpOT2GIdvKWy1iPduyS+pG4P6eu+6k3peMbhZErWyxpdt7GZHtTuXEqkcOGOHt8TuqQgufyuh6girizJA=
+	t=1705515425; cv=none; b=HClD7WRImqx8js7VurhLMCwrd8vLjgCGw5plnqDlv1aJZgXpGu0x+6qUKnArL3wmIpflj+KMDHlf7H1aeNN/fW3NbQVO2SJSzSML1Pe6X8vBrjZUv+exxCra7Q4JQRG2FNE/PZf8DhELADmz7YIqliG7w8/XtDdxtC/Mw6JC4jA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705509252; c=relaxed/simple;
-	bh=3IrtxIpk0+8vCPKM4Ca3ZAkilIDI5yCqUvqrmjwghKw=;
-	h=DKIM-Signature:X-IronPort-AV:X-IronPort-AV:Received:X-ExtLoop1:
-	 X-IronPort-AV:X-IronPort-AV:Received:Date:From:To:Cc:Subject:
-	 Message-ID:In-Reply-To:References:X-Mailer:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding; b=vDIHlrAxrhq+z92d5tTu0HSzAat8loItnIXrqJbjDMVAZGul1iTRobrpL5Jg4o8MhmssE2v3ASyX4h3avcKcLVs7A59P6LchiO9AxV5xTP1cGnCgIu9bN0BpN4mtC/Kfvof9xguFjTDgVpkUypqWqTV98GqVV4X5M4rFEuoxu4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CgoUNWmD; arc=none smtp.client-ip=134.134.136.31
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1705515425; c=relaxed/simple;
+	bh=/Bwqt2zwkQo2RSJqt7glIplObBcQMf/piC86phvvbqY=;
+	h=DKIM-Signature:Received:X-MC-Unique:Received:Received:Received:
+	 Received:Date:From:To:cc:Subject:Message-ID:MIME-Version:
+	 Content-Type:X-Scanned-By; b=hLfo8qtZ9MpDi/aAgOJtKqZvrxtl1vGqItZFMXlxhNU/30Aj1IxaNddIqvFgpQgkfrJA8QzmUxVrVGR2LzAPID1UZArrQ6zKbiCQQEVV+jdHMSgVfi4BbkhCS52WuXEC5WGQrgZmWuTpr1W4xEb7HWjNlxJfotWYq++B71ztd9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dfcZ45Ei; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CgoUNWmD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705509250; x=1737045250;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=3IrtxIpk0+8vCPKM4Ca3ZAkilIDI5yCqUvqrmjwghKw=;
-  b=CgoUNWmDbZWlMaOaV2QHCeE4YcV8p8oq27qA3cRDDPS89PZFMYTIqYC2
-   kK9Ays1qHWsGZyFFrSuZKNEz5K/LU2sFIHZPYu0Ie4kutNBGJrM1TEetf
-   uTNOtdUF4aCet8y9fDD6cDQEktTR0vVeOsxiyYvB5XBGIDRqp2wb8d8es
-   tln3rXat88yWRu0iXmEFdCwtoQB7gm8Gdy2GyTt7qCdZO6DfWFaA0iqxz
-   tormqapMvumqy9Yta/OXWQeY2ozkN93ud+oP1IQUoJTvrQs06EqX6LM50
-   3DPeoPnnzXg66k8v0NiBzrBl22IsWBx+A3J3bKWhyzXmQWIRaBANMp8wb
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="464497561"
-X-IronPort-AV: E=Sophos;i="6.05,200,1701158400"; 
-   d="scan'208";a="464497561"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2024 08:34:09 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="854738677"
-X-IronPort-AV: E=Sophos;i="6.05,200,1701158400"; 
-   d="scan'208";a="854738677"
-Received: from jbelkin-mobl.amr.corp.intel.com (HELO peluse-desk5) ([10.212.92.214])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2024 08:34:08 -0800
-Date: Wed, 17 Jan 2024 09:34:05 -0700
-From: Paul E Luse <paul.e.luse@linux.intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Yiming Xu <teddyxym@outlook.com>, song@kernel.org,
- linux-raid@vger.kernel.org, paul.e.luse@intel.com, firnyee@gmail.com
-Subject: Re: [RFC] md/raid5: optimize RAID5 performance.
-Message-ID: <20240117093405.655b6b99@peluse-desk5>
-In-Reply-To: <20240116013136.06d3d173@peluse-desk5>
-References: <SJ2PR11MB75742EC42986F1532F7A0977D8BEA@SJ2PR11MB7574.namprd11.prod.outlook.com>
-	<ZWQ63SpjIE4bc+pi@infradead.org>
-	<20240116013136.06d3d173@peluse-desk5>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; aarch64-redhat-linux-gnu)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dfcZ45Ei"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1705515422;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=01qOeuTtwuT4QtrnMlATRFjFhlWBZPmNAkzB3btIlGQ=;
+	b=dfcZ45EibNHxQ8lmLLA0XvL9C0tbPIykyesKCNwcAMqNTdN4zQYmj+hLjF8HinKTBGvM3E
+	2ARSHYBp5u0ZZBIyiKM8Rfc6vk1lcGAxpV7U4QYnPZIjv76QPiTD2Sm0TuDP58dK3EbHWZ
+	67/1IUq8fjwgqjb7KFP3N7DovfcugI0=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-483-WV5SPFb7MeqCa2ruMUcvLQ-1; Wed, 17 Jan 2024 13:16:58 -0500
+X-MC-Unique: WV5SPFb7MeqCa2ruMUcvLQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 22602185A781;
+	Wed, 17 Jan 2024 18:16:58 +0000 (UTC)
+Received: from file1-rdu.file-001.prod.rdu2.dc.redhat.com (unknown [10.11.5.21])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 12EF71BDB1;
+	Wed, 17 Jan 2024 18:16:57 +0000 (UTC)
+Received: by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix, from userid 12668)
+	id D8FF630C039C; Wed, 17 Jan 2024 18:16:57 +0000 (UTC)
+Received: from localhost (localhost [127.0.0.1])
+	by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix) with ESMTP id D25D13FB50;
+	Wed, 17 Jan 2024 19:16:57 +0100 (CET)
+Date: Wed, 17 Jan 2024 19:16:57 +0100 (CET)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Yu Kuai <yukuai3@huawei.com>, Song Liu <song@kernel.org>, 
+    David Jeffery <djeffery@redhat.com>, Li Nan <linan122@huawei.com>
+cc: dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, 
+    Mike Snitzer <msnitzer@redhat.com>, Heinz Mauelshagen <heinzm@redhat.com>, 
+    Benjamin Marzinski <bmarzins@redhat.com>
+Subject: [PATCH 0/7] MD fixes for the LVM2 testsuite
+Message-ID: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -61,69 +60,23 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
 
-On Tue, 16 Jan 2024 01:31:36 -0700
-Paul E Luse <paul.e.luse@linux.intel.com> wrote:
+Hi
 
-> On Sun, 26 Nov 2023 22:44:45 -0800
-> Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> > Hi Shushu,
-> > 
-> > the work certainly l-ooks interesting!
-> > 
-> > However:
-> > 
-> > > Optimized by using fine-grained locks, customized data structures,
-> > > and scattered address space. Achieves significant improvements in
-> > > both throughput and latency.
-> > 
-> > this is a lot of work for a single Linux patch, we usually do that
-> > work pice by pice instead of complete rewrite, and for such
-> > signigicant changes the commit logs also tend to be a bit extensive.
-> > 
-> > I'm also not quite sure what scattered address spaces are - I bet
-> > reading the paper (I plan to get to that) would explain it, but it
-> > also helps to explain the idea in the commit message.
-> > 
-> > That's my high level nitpicking for now, I'll try to read the paper
-> > and the patch in detail and come back later.
-> > 
-> > 
-> 
-> Hi Everyone,
-> 
-> I went ahead and ran a series of performance tests on this patch to
-> help the community understand the value.Here's a summary of what have
-> completed and am happy to run some more to keep the patch moving.
-> 
-> I have not yet reviewed the code as I wanted to make sure it provided
-> good benefit first and it does for sure. I will be reviewing shortly.
-> Here is a summary of my tests:
-> 
-> * Kioxia CM7 drives
->   https://americas.kioxia.com/content/dam/kioxia/shared/business/ssd/enterprise-ssd/asset/productbrief/eSSD-CM7-V-product-brief.pdf
-> * Dual Socket Xeon 8368 2.4GHz 256G RAM
-> * Results are the average of just 2 60 second runs per data point, if
->   interest continues I can re-run to eliminate any potential anomalies
-> * I used 8 fio jobs per disk and 2 group_thread_cnt per disk so when
->   reading the graph, for example, 8DR5_patch_64j15gtc means an 8 Disk
->   RAID5 run against the patch with 64 fio jobs and group-thread_cnt
-> set to 16.  'base' in the name is md-next branch as of yesterday.
-> * Sample fio command: fio --filename=/dev/md0 --direct=1
->   --output=/root/remote/8DR5_patch_64j16gtc_1/randrw_131072_1.json
->   --rw=randrw --bs=131072 --ioengine=libaio --ramp_time=3 --runtime=60
->   --iodepth=1 --numjobs=64 --time_based --group_reporting
->   --name=131072_1_randrw --output-format=json --numa_cpu_nodes=0
-> 
-> Results: https://photos.app.goo.gl/Cip1rU3spbD8nvG28 
-> 
-> -Paul
-> 
+Here I'm sending MD patches that fix the LVM2 testsuite for the kernels 
+6.7 and 6.8. The testsuite was broken in the 6.6 -> 6.7 window, there are 
+multiple tests that deadlock.
 
-I should also mention I did run this patch 24 hrs w/data integrity on,
-fio crc32c and it passed.
+I fixed some of the bugs. And I reverted some patches that claim to be 
+fixing bugs but they break the testsuite.
 
--Paul 
+I'd like to ask you - please, next time when you are going to commit 
+something into the MD subsystem, download the LVM2 package from 
+git://sourceware.org/git/lvm2.git and run the testsuite ("./configure && 
+make && make check") to make sure that your bugfix doesn't introduce 
+another bug. You can run a specific test with the "T" parameter - for 
+example "make check T=shell/integrity-caching.sh"
+
+Mikulas
 
