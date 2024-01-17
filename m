@@ -1,54 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1B9C249EA
-	for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 19:27:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E720528694
+	for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 23:56:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705519670; cv=none; b=IcjeiOidN+lfkCmq4c35oLAsTTTUjtiUHC+zE7cTd33hcoMf20UAezh2uW58GwxAeUkvTcDvGCAStowfTPb/xXiaUHxLLJ1MhSWPjFVhnCDP9H3EC/3gSgI0bAvz4YA/1f9USR3E6EeDqcM1Voa+IAbqPRwzb0TfnwRRgVW0tNQ=
+	t=1705535802; cv=none; b=MSrc2W6xXAgNGhqjtVIu6DFQoAd980+wcTEvScJBENa3LGhoQVBy/jeNc2JM/Flnd3EW1gDl151hZpKYsqNrxk+G10V6E98wDqE0gmP/MCdOtP2cfbdQzewwy6ceEPCRWGCxF1VJqG0zFVeMzOVYiiAjIOPGQR/F4XteHxpkqJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705519670; c=relaxed/simple;
-	bh=J5Qt0OQzLo+VgwJlPGC/ZASQHyYROtme2Zcup4bNbJU=;
+	s=arc-20240116; t=1705535802; c=relaxed/simple;
+	bh=CntgxQaTxh0EgJQZSkevz0FGLV1FUcxwwWCbwLmDIFA=;
 	h=Received:DKIM-Signature:Received:X-Gm-Message-State:
 	 X-Google-Smtp-Source:X-Received:MIME-Version:References:
 	 In-Reply-To:From:Date:X-Gmail-Original-Message-ID:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding; b=q8ByyNpXxqMTutPVLAtcGTxEXuNB/G7WhhDkLl6Etu6BDUOrszdfot7aUWE+ZiEx4XfiNFJk9AxIdYGqGLJfhEDSYlYauhuRNt6FlXecicIGywadN5cz3TyVtlaXe1N2auwKC/VU4r8ikEdFDKtnQHmKmG3rXl8P61o9iDug680=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KtCXcc1o; arc=none smtp.client-ip=10.30.226.201
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding; b=dmQNNEwpTtrOalHpifgR0HUUtgA93TLLPr3ao+C/7HxX94RIe7Ea45jnKjQ0ZGLPObyZUs4xnvOj0NMsrZjJBp6JWgEhLsv+rkp0TvgMl+0s03gteWzB601SrxUwnGFYkkPcUPhMImX8VWIVBpS3V1IxOa6wtWb9TdxM+lA5a1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NwCQw/Fj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KtCXcc1o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A28BC433F1
-	for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 19:27:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NwCQw/Fj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62B3BC43390
+	for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 23:56:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705519670;
-	bh=J5Qt0OQzLo+VgwJlPGC/ZASQHyYROtme2Zcup4bNbJU=;
+	s=k20201202; t=1705535801;
+	bh=CntgxQaTxh0EgJQZSkevz0FGLV1FUcxwwWCbwLmDIFA=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=KtCXcc1oPK2Lv0NMwbW2xPhpdUEt+aYypbXw/OKTOydfoz24UcYMfWptIstnQyI0x
-	 7NBGH5FT9Td2zl5rx7rAQVPb9pUmEJHQig1pDdmnWObcziCLRixQe3ewDeCNGNib5W
-	 m5sVFS1QmhQeeHhghfRfJTGXdyO65UnAtAkJDbmpzpqhyKIW7/fUW5Sm1YB+5pwQj8
-	 KR1YQwGzkeW22TmpNLGt/OuX/+TszmKfLGubwRTRnkYPbMPCyNqFkqoeBeSrYAWoFA
-	 1Sq6vW1Nn+oIbKHgwZHAmLiwSYH/ukmnCU498b80/KO3vBNBtUzohenZZoDXbI5Kcd
-	 TgL0Eb/ZegX1g==
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2cdeb808889so14680541fa.3
-        for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 11:27:50 -0800 (PST)
-X-Gm-Message-State: AOJu0YzU+cqyRTCalbVsfSllSSmc1eFvhKvWsWvZzJ5aFxCRJs0W91v3
-	ZykSc80HkxaOLFh+/U8KwT963IyWxfsVK/Z3JCM=
-X-Google-Smtp-Source: AGHT+IHTPnSVMG724WM2AW/x85fIZ+Xr62JXPkjS9R2FpfNqV+6ixXO+NucMCyM926pfyxd4L4efbWeEiuQLoG/qD0I=
-X-Received: by 2002:a05:651c:206:b0:2cd:46cb:7b53 with SMTP id
- y6-20020a05651c020600b002cd46cb7b53mr4575871ljn.91.1705519668329; Wed, 17 Jan
- 2024 11:27:48 -0800 (PST)
+	b=NwCQw/FjHhdLsAIp1Zv22WICcwvjnrYCobWz1W5LVCAuRq1e3g78KR1Lslw2zVWu3
+	 UDjDVui6/8vMAryGsAYLTy8eLoshltIlNyF63vZIjiB2Zcag+aKegxf/X09adlAodh
+	 e/EaSKrj9c22e5AYp9wIJ2v6zdpQCFdfFXS3NwabtAP5K6KWunJQYk4yx/9kluLg2W
+	 Oyjs0tSs2RgFF+EiGyiOVQvpnR3gGcJ9qajpJFF9cd36gCnebVas0+L1by7mBhd6sS
+	 LRwazS5hByxbNOtzru6LFDIsx3wb1f3ktmd5UIATbF9158yod4ztnMBzfQbCc/MdmI
+	 zkvR1mHrz63cg==
+Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2cdc1af60b2so45406611fa.1
+        for <linux-raid@vger.kernel.org>; Wed, 17 Jan 2024 15:56:41 -0800 (PST)
+X-Gm-Message-State: AOJu0YwaKOSml+dpkfqPbz/PmdXX8R84EzI6U9fqYYqDSBiFMsu+xs7o
+	qhvRMYtk0/y7hhYcF+MfiyeMLeQeEMP1dVwXNfSic98KJsh1iQfAPJDuIOtap/Eq5ozfTe7v0oI
+	MCRuAWctJ7EckRMLA3hoZqDsn/Qc=
+X-Google-Smtp-Source: AGHT+IFevecB3RKZJ082rjSepGH825X82msrGFOiERkUV6eFHKmnViXa2C1kjlzgGSRNjZ+s7Pu+Oeoq204euuGtsUo=
+X-Received: by 2002:a2e:9d99:0:b0:2cc:a72c:9d with SMTP id c25-20020a2e9d99000000b002cca72c009dmr20135ljj.37.1705535799617;
+ Wed, 17 Jan 2024 15:56:39 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com>
-In-Reply-To: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com>
+References: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com> <b725da99-d649-6f1d-af82-c3e482f7f6e@redhat.com>
+In-Reply-To: <b725da99-d649-6f1d-af82-c3e482f7f6e@redhat.com>
 From: Song Liu <song@kernel.org>
-Date: Wed, 17 Jan 2024 11:27:36 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW40f2SQqzcRkCxu-9=or=3HNiDBHirHO4F=BjAn_ufZgg@mail.gmail.com>
-Message-ID: <CAPhsuW40f2SQqzcRkCxu-9=or=3HNiDBHirHO4F=BjAn_ufZgg@mail.gmail.com>
-Subject: Re: [PATCH 0/7] MD fixes for the LVM2 testsuite
+Date: Wed, 17 Jan 2024 15:56:28 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5xnJZWDg5XiD5-5z4312PUJipYq+H3q-V2A-N5+M7SzQ@mail.gmail.com>
+Message-ID: <CAPhsuW5xnJZWDg5XiD5-5z4312PUJipYq+H3q-V2A-N5+M7SzQ@mail.gmail.com>
+Subject: Re: [PATCH 6/7] md: partially revert "md/raid6: use valid sector
+ values to determine if an I/O should wait on the reshape"
 To: Mikulas Patocka <mpatocka@redhat.com>
 Cc: Yu Kuai <yukuai3@huawei.com>, David Jeffery <djeffery@redhat.com>, 
 	Li Nan <linan122@huawei.com>, dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, 
@@ -57,31 +58,41 @@ Cc: Yu Kuai <yukuai3@huawei.com>, David Jeffery <djeffery@redhat.com>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Mikulas,
-
-On Wed, Jan 17, 2024 at 10:17=E2=80=AFAM Mikulas Patocka <mpatocka@redhat.c=
+On Wed, Jan 17, 2024 at 10:22=E2=80=AFAM Mikulas Patocka <mpatocka@redhat.c=
 om> wrote:
 >
-> Hi
+[...]
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> Fixes: c467e97f079f ("md/raid6: use valid sector values to determine if a=
+n I/O should wait on the reshape")
+> Cc: stable@vger.kernel.org      # v6.1+
 >
-> Here I'm sending MD patches that fix the LVM2 testsuite for the kernels
-> 6.7 and 6.8. The testsuite was broken in the 6.6 -> 6.7 window, there are
-> multiple tests that deadlock.
+> ---
+>  drivers/md/raid5.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> I fixed some of the bugs. And I reverted some patches that claim to be
-> fixing bugs but they break the testsuite.
+> Index: linux-2.6/drivers/md/raid5.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.orig/drivers/md/raid5.c
+> +++ linux-2.6/drivers/md/raid5.c
+> @@ -5851,7 +5851,7 @@ static bool stripe_ahead_of_reshape(stru
+>                         continue;
 >
-> I'd like to ask you - please, next time when you are going to commit
-> something into the MD subsystem, download the LVM2 package from
-> git://sourceware.org/git/lvm2.git and run the testsuite ("./configure &&
-> make && make check") to make sure that your bugfix doesn't introduce
-> another bug. You can run a specific test with the "T" parameter - for
-> example "make check T=3Dshell/integrity-caching.sh"
+>                 min_sector =3D min(min_sector, sh->dev[dd_idx].sector);
+> -               max_sector =3D max(max_sector, sh->dev[dd_idx].sector);
+> +               max_sector =3D min(max_sector, sh->dev[dd_idx].sector);
 
-Thanks for the report and fixes!
+This looks wrong. max_sector was initialized to 0, so
+min(max_sector, sh->dev[dd_idx].sector) will always be 0.
 
-We will look into the fixes and process them ASAP.
+Did I miss/misread something here?
 
-We will also add the lvm2 testsuite to the test framework.
-
+Thanks,
 Song
+
+>         }
+>
+>         spin_lock_irq(&conf->device_lock);
+>
