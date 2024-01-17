@@ -1,117 +1,85 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9154F14A97;
-	Wed, 17 Jan 2024 09:35:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D3514264;
+	Wed, 17 Jan 2024 09:40:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705484116; cv=none; b=QmkU1bVJZnxQPRFWggcDRZ00SsXEJR8DzI/+t+6AOidVielj60mTrnLEt5tSpjS/ybok5sbIfpbg/NMo3orMpsVMxpMzOQeR1znmuIZeiWL7UbiXplnsA41C/GGbJWefpnpftYoIADJWtihO9DCVfsRoM93KkMV7tFclFiH7YlQ=
+	t=1705484444; cv=none; b=ICVxJX/nfZsAwoHJUFONTof7lfiBTxYTuM9jp/Y02QSG3xR5D/h47RLCe9YLMkE7it5aUbR4dm1aphw73xr/VkGBgiMPVNbPKSCx/xQnNDq9OJGMPuWtK0tEFrgeKHlzabYx7WNUczcKc9SbVtYxOrj04dhbRPXfkGHO42k8ViU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705484116; c=relaxed/simple;
-	bh=MhLCYMADdYGVjaEBH/w4U5E+UR/EiGHvoQw/szfsRak=;
-	h=Received:Received:Received:Subject:To:Cc:References:From:
-	 Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo; b=WUQwS+HoHMZb9pZ7ZvEi+0OLVB+NWVX8zAlLUmsscMrxLqchoBb5iFpaQPm6Kru8+4PZHNpl/xcsGvNNFll4xZKtgELzUrSVcX5M5GJur2wNF5Raus/dP2AqzJhtefl1H6tLL+FktAfpgt6fOD7gZdQyBTncw4AJi7UoSNAsggI=
+	s=arc-20240116; t=1705484444; c=relaxed/simple;
+	bh=upSSo9Xl/uk7+ffXNRXGZZilv0LRdQWz20Yw4t+ptjk=;
+	h=Received:Received:Received:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-CM-SenderInfo; b=tWOmzeie/7qRyovgytuYX6FUrIwU+EF3h5gyXz3XHinbFR4bLoSQT1eHY0/hUvw8lDZxGIyrvhN3Z20d548bUomraIZINfI8r4DzWPn812y+nErIPCFYUpNIEtB5yFtxqs6GFNMAxLb9/N0g8C1cMXDDCV9oM8TeZA0BLLkM9Q4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TFLM93x10z4f3k60;
-	Wed, 17 Jan 2024 17:35:01 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TFLTd0m7Yz4f3k5x;
+	Wed, 17 Jan 2024 17:40:37 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id A9F791A0E05;
-	Wed, 17 Jan 2024 17:35:03 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBFFn6dlc8dmBA--.17489S3;
-	Wed, 17 Jan 2024 17:35:03 +0800 (CST)
-Subject: Re: [PATCH v4 2/2] md: don't account sync_io if iostats of the disk
- is disabled
-To: linan666@huaweicloud.com, song@kernel.org, axboe@kernel.dk
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-block@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
- yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240117031946.2324519-1-linan666@huaweicloud.com>
- <20240117031946.2324519-3-linan666@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6f9618f1-3656-ccb5-25de-13e98d8f46b9@huaweicloud.com>
-Date: Wed, 17 Jan 2024 17:35:01 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	by mail.maildlp.com (Postfix) with ESMTP id 40D1F1A0840;
+	Wed, 17 Jan 2024 17:40:39 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgCXaBGUoKdlvS9nBA--.17816S4;
+	Wed, 17 Jan 2024 17:40:39 +0800 (CST)
+From: linan666@huaweicloud.com
+To: song@kernel.org,
+	shli@fb.com,
+	neilb@suse.com,
+	zlliu@suse.com,
+	mariusz.tkaczyk@linux.intel.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yukuai3@huawei.com,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH v2 0/3] md: Don't clear MD_CLOSING when the raid is about to stop
+Date: Wed, 17 Jan 2024 17:37:04 +0800
+Message-Id: <20240117093707.2767209-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240117031946.2324519-3-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBFFn6dlc8dmBA--.17489S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF1xCFyDuw4fGrWUJFyDAwb_yoW8WFy8pa
-	ykAa4fC34UZr45Ww1DX34UCas5Ww17KFW8ArW7A34fXFyaqr9xGF4SgFWqqF1kWFWrWFWa
-	v3WjyFs09a10yrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
-	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCT
-	nIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:cCh0CgCXaBGUoKdlvS9nBA--.17816S4
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYG7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+	Iv6xkF7I0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvE
+	ncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I
+	8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I2
+	1c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7M4kE6xkIj40Ew7xC0w
+	CF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j
+	6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64
+	vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+	Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
+	AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbSApUUUUUU=
+	=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-ÔÚ 2024/01/17 11:19, linan666@huaweicloud.com Ð´µÀ:
-> From: Li Nan <linan122@huawei.com>
-> 
-> If iostats is disabled, disk_stats will not be updated and
-> part_stat_read_accum() only returns a constant value. In this case,
-> continuing to count sync_io and to check is_mddev_idle() is no longer
-> meaningful.
+From: Li Nan <linan122@huawei.com>
 
-LGTM
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+Changes in v2:
+ - don't clear MD_CLOSING in md_clean().
+ - set MD_CLOSING and sync blockdev in array_state_store().
 
-> 
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/md/md.h | 3 ++-
->   drivers/md/md.c | 4 ++++
->   2 files changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 1a4f976951c1..e2d03a7a858c 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -584,7 +584,8 @@ extern void mddev_unlock(struct mddev *mddev);
->   
->   static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
->   {
-> -	atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
-> +	if (blk_queue_io_stat(bdev->bd_disk->queue))
-> +		atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
->   }
->   
->   static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index a6829ea5b560..919d6affc0ac 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8502,6 +8502,10 @@ static int is_mddev_idle(struct mddev *mddev, int init)
->   	rcu_read_lock();
->   	rdev_for_each_rcu(rdev, mddev) {
->   		struct gendisk *disk = rdev->bdev->bd_disk;
-> +
-> +		if (!init && !blk_queue_io_stat(disk->queue))
-> +			continue;
-> +
->   		curr_events =
->   			(long long)part_stat_read_accum(disk->part0, sectors) -
->   			atomic64_read(&disk->sync_io);
-> 
+Li Nan (3):
+  md: Don't clear MD_CLOSING when the raid is about to stop
+  md: factor out a helper mddev_sync_blockdev() to sync mddev
+  md: sync blockdev before stopping raid or setting readonly
+
+ drivers/md/md.c | 62 ++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 49 insertions(+), 13 deletions(-)
+
+-- 
+2.39.2
 
