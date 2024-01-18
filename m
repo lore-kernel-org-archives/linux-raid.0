@@ -1,100 +1,99 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F13D1D69F;
-	Thu, 18 Jan 2024 08:08:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.55.52.115
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B389B208A6
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 10:29:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.55.52.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705565307; cv=none; b=YRfUEFcThx4OnOS2e06xvo0GENCHprGwQ9g/ArPOJzkQDD2whjBuhSFWzL3fnCNfX1cTBmmsujQ5DFOVjgUyXtbo5Sy0K8UykCS1Ea3khWG6OpsXL/w0AR0unxEcj+L4FxNhd3+zFr+0J+32StOG9JUzqUxh6wQRJ1OZGv7Wd1A=
+	t=1705573768; cv=none; b=M4IArRSFcSursrLEWaPHURRlfxJmh73hUEFRhpH1NZGaQOUEn/mwp46CGRWy0Jv6++Y+2B8cuLpHhAJEIftp/vz1gGHzjg/8ht6PYYt1Q/9JcuFQotwbvLH7Dh5PC5u+jS7PqGieeggSPcw9PTgh4gs84L3+QbTpuOn3aCwwFtg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705565307; c=relaxed/simple;
-	bh=zd1UV6eXmnQI/ncNg9lE1AehtvdK32jRC/nujt6eyzw=;
+	s=arc-20240116; t=1705573768; c=relaxed/simple;
+	bh=fzJarOmPy/WDb3qerWx2rZBLPcRLboXLj4usnhFHui0=;
 	h=DKIM-Signature:X-IronPort-AV:X-IronPort-AV:Received:X-ExtLoop1:
-	 X-IronPort-AV:X-IronPort-AV:Received:Date:From:To:Cc:Subject:
-	 Message-ID:In-Reply-To:References:X-Mailer:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding; b=NhWf8Ck5JTvmODpwt2AOfq5Knxf5ZKya276dxEF9vpT4hNZrVnGItPXenTr8qb5awSndXkBcQI0LEKWH0pISMqSvKEe8pi9IdcxD6CygqTFysilkINKksYHrASg1YCSToF4t3+MXuVoKnlp0wnTz7Azx7b9J7jyH+w4yxjCpFgI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c4Cv8eUI; arc=none smtp.client-ip=192.55.52.115
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	 X-IronPort-AV:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding; b=pnnPJhSlz7OYT4ScDyflIFORmSAxO5Kp2qV2qKHEVVSc9MsprMYIJ4x3LUSXlUpcGtbHWT34ej7F/HA5Rr1SKptOQYUdACKIf4eWmvnvIfmeSw+yEJirOAo4nLqEj7ULVjQQjJGac8YcDo3pvefHowSQDoqQpTn+pEr1QOa2yL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nZKFN9gI; arc=none smtp.client-ip=192.55.52.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c4Cv8eUI"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nZKFN9gI"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705565305; x=1737101305;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=zd1UV6eXmnQI/ncNg9lE1AehtvdK32jRC/nujt6eyzw=;
-  b=c4Cv8eUIpUFlBteniyQVk81f9P+KffRR4bNQKZDywrjkhkLjP37gojpW
-   TFke6ZMPAPsTOQ1pruMGHzK8c3YbgqNZZ+DAXRuhKQCfp/TbtWxd7NXD0
-   /BjF8yrkbXcSHXN8fcZVz3PY80/Kq5Q4IIR3WQ7zafs8N9FLd/DRmHoel
-   aVhMpcounvzUe08rg6rzCZAnlO67D0VsvMl+gd1FazNzGR94XQ//oLM3B
-   YGJmCjBnQBGu/vEXFONT/9Pj7gw/fHG5vmM7hqleaDBwX91y+btibVCZ+
-   H6ibgCQc8N5cTHfVpD3koxF20VQ7Ir9UdxoenbweSRfwqcY3X1QrO2vRL
+  t=1705573766; x=1737109766;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=fzJarOmPy/WDb3qerWx2rZBLPcRLboXLj4usnhFHui0=;
+  b=nZKFN9gIE0ZpeBAjOfajdN8zit0o3om4UOk5fbUf+BEXEGwVTG8yzi1H
+   NLCDO+o4gYvD3NAWYWGywfCzsYLZ0GKbR2HZCcLHrqY8lReBj0zUtKpTX
+   4AWO1uRlh/+BTradO4ZaBe/YHHlypm2YGNMGo3iaVGgDGQgM2Z6tfGRQh
+   h7k1UzKeRNLKHdCH0xrTIN1h/YX2qB1insynVSaGYHZKcwd8BBT+Bz3oD
+   YNN1ZxvEh9O/fDkc0ICLeNqnnRgXqwPGQWZKPVPysRktEm7owprtQ1yBd
+   6S2Fyx78Lv0xEiRdX2uZyNvBB8XM2u/DfwVVz/UBo4l1D6OeZ+GrYp4xz
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="400045527"
+X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="486563730"
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="400045527"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 00:08:24 -0800
+   d="scan'208";a="486563730"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 02:29:25 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="1031573618"
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="1031573618"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.82.157])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 00:08:21 -0800
-Date: Thu, 18 Jan 2024 09:08:14 +0100
-From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To: linan666@huaweicloud.com
-Cc: song@kernel.org, shli@fb.com, neilb@suse.com, zlliu@suse.com,
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
- yangerkun@huawei.com
-Subject: Re: [PATCH v2 2/3] md: factor out a helper mddev_sync_blockdev() to
- sync mddev
-Message-ID: <20240118090814.00001d0d@linux.intel.com>
-In-Reply-To: <20240117093707.2767209-3-linan666@huaweicloud.com>
-References: <20240117093707.2767209-1-linan666@huaweicloud.com>
-	<20240117093707.2767209-3-linan666@huaweicloud.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+   d="scan'208";a="26735622"
+Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
+  by fmviesa001.fm.intel.com with ESMTP; 18 Jan 2024 02:29:25 -0800
+From: Mateusz Kusiak <mateusz.kusiak@intel.com>
+To: linux-raid@vger.kernel.org
+Cc: jes@trained-monkey.org,
+	mariusz.tkaczyk@linux.intel.com
+Subject: [PATCH v2 0/3] Fix checkpointing - minors
+Date: Thu, 18 Jan 2024 11:28:39 +0100
+Message-Id: <20240118102842.12304-1-mateusz.kusiak@intel.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On Wed, 17 Jan 2024 17:37:06 +0800
-linan666@huaweicloud.com wrote:
+This is the first half of splitted patchset "Fix checkpointing" as
+asked. It contains minor changes that should be safe to merge prior to
+release.
 
-> From: Li Nan <linan122@huawei.com>
-> 
-> There are no functional changes, prepare to sync mddev in
-> array_state_store().
-> 
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->  drivers/md/md.c | 31 +++++++++++++++++++------------
->  1 file changed, 19 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4bf821b89415..2c793992a604 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -529,6 +529,23 @@ void mddev_resume(struct mddev *mddev)
->  }
->  EXPORT_SYMBOL_GPL(mddev_resume);
->  
-> +/* sync bdev before setting device to readonly or stopping raid*/
-> +static int mddev_sync_blockdev(struct mddev *mddev) {
+Fixed minor things in "Replace "none" with macro":
+- Replaced hardcoded "null" size to "sizeof(STR_COMMON_NONE) - 1"
+  in str_is_none().
+- Removed is_none() on optarg as it checked only first four chars,
+  bad for user input.
 
-Please add something about MD_CLOSING to the function name. Comment is good but
-you need open function to get it. Something like:
-mddev_set_closing_and_sync_blockdev() is more reader friendly.
+I included "Add understanding output section in man" in second patchset
+to preserve history (adding it here, prior to release might seem
+random).
 
-Anyway, LGTM.
-Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Mateusz Kusiak (3):
+  Define sysfs max buffer size
+  Replace "none" with macro
+  super-intel: Remove inaccessible code
 
-Thanks,
-Mariusz
+ Assemble.c    |  3 +--
+ Build.c       |  4 ++--
+ Create.c      |  2 +-
+ Grow.c        | 51 +++++++++++++++++++++++++--------------------------
+ Incremental.c |  4 ++--
+ Manage.c      | 10 +++++-----
+ Monitor.c     |  6 +++---
+ config.c      |  2 +-
+ managemon.c   |  6 +++---
+ maps.c        |  4 ++--
+ mdadm.c       |  7 +++----
+ mdadm.h       | 18 ++++++++++++++++++
+ monitor.c     | 24 ++++++++++++------------
+ msg.c         |  4 ++--
+ super-intel.c | 35 +++++++++--------------------------
+ sysfs.c       | 12 ++++++------
+ util.c        |  2 +-
+ 17 files changed, 96 insertions(+), 98 deletions(-)
+
+-- 
+2.35.3
+
