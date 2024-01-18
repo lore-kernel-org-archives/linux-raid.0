@@ -1,59 +1,60 @@
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D56D411C80;
-	Thu, 18 Jan 2024 08:02:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.134.136.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F13D1D69F;
+	Thu, 18 Jan 2024 08:08:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.55.52.115
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705564936; cv=none; b=tqrhJZIa+caE2s1V2lEzXDYJJcgPIGWas5fzvuVvb3qdzfftSlAtEmNved60zC6Nnc2L6vaqGaLAHUQ2gcd/dtOKvj60kfOrSKMFVCnAu88IDxoZiCwOjasSz/rIwS5IqPUYx5DN/eUGLUekBFtfeaZGRh3vrcM/jCGwZz+WWFA=
+	t=1705565307; cv=none; b=YRfUEFcThx4OnOS2e06xvo0GENCHprGwQ9g/ArPOJzkQDD2whjBuhSFWzL3fnCNfX1cTBmmsujQ5DFOVjgUyXtbo5Sy0K8UykCS1Ea3khWG6OpsXL/w0AR0unxEcj+L4FxNhd3+zFr+0J+32StOG9JUzqUxh6wQRJ1OZGv7Wd1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705564936; c=relaxed/simple;
-	bh=OALzICepfRDRFg9fUGRC5iG9WOyOuoZA3htK7BIML9k=;
+	s=arc-20240116; t=1705565307; c=relaxed/simple;
+	bh=zd1UV6eXmnQI/ncNg9lE1AehtvdK32jRC/nujt6eyzw=;
 	h=DKIM-Signature:X-IronPort-AV:X-IronPort-AV:Received:X-ExtLoop1:
-	 X-IronPort-AV:Received:Date:From:To:Cc:Subject:Message-ID:
-	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding; b=FG2VaPWrZ+jBGH+89gdZm25c4NZIDdd1YScYxHeG9E+9GM7DIQDxxEKsL+oJ5DTgA/uhVOEsRC8DYMKP0gojVMPApGexGLAmkbL70HAawGGtAMpest5jkyfUwCBuiYZOrHg0h55j3xj2Z+qKx4K+tely4+p1doMq/xM+j3gT5SQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cRh78Q+N; arc=none smtp.client-ip=134.134.136.20
+	 X-IronPort-AV:X-IronPort-AV:Received:Date:From:To:Cc:Subject:
+	 Message-ID:In-Reply-To:References:X-Mailer:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding; b=NhWf8Ck5JTvmODpwt2AOfq5Knxf5ZKya276dxEF9vpT4hNZrVnGItPXenTr8qb5awSndXkBcQI0LEKWH0pISMqSvKEe8pi9IdcxD6CygqTFysilkINKksYHrASg1YCSToF4t3+MXuVoKnlp0wnTz7Azx7b9J7jyH+w4yxjCpFgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c4Cv8eUI; arc=none smtp.client-ip=192.55.52.115
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cRh78Q+N"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c4Cv8eUI"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705564934; x=1737100934;
+  t=1705565305; x=1737101305;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=OALzICepfRDRFg9fUGRC5iG9WOyOuoZA3htK7BIML9k=;
-  b=cRh78Q+NAjacPhFH8pqA1vz54x+qd7J5Ceycod87SIHWylKc6ppz3do/
-   6OG9O1TDGYdhKgkUQQD55BaV+yHAurW70TMx+WCGxCVeqJe7qsAJKBwJ0
-   X/hihTOZzSJJkt8GLs3WLdOgP5+hOcoTitwP80YLTtkumMx6TLgnT7FZb
-   e9Zd7DZvD+2ZqRTHuK8kzuUnoZA/1cwuQamBX/StHNWFZ2AyEOvRmonVg
-   AbvueTm4HoYecrA0oRZzwQitLqGllLqNGrH7fDlwt0orbLwTNGO8ZwQSl
-   tTfP+1qrAa2U6Lg/vmp3EcEiXoHzeq5Dx4wzH4UCu3vbbJ+LI+cBunI0r
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="390825917"
+  bh=zd1UV6eXmnQI/ncNg9lE1AehtvdK32jRC/nujt6eyzw=;
+  b=c4Cv8eUIpUFlBteniyQVk81f9P+KffRR4bNQKZDywrjkhkLjP37gojpW
+   TFke6ZMPAPsTOQ1pruMGHzK8c3YbgqNZZ+DAXRuhKQCfp/TbtWxd7NXD0
+   /BjF8yrkbXcSHXN8fcZVz3PY80/Kq5Q4IIR3WQ7zafs8N9FLd/DRmHoel
+   aVhMpcounvzUe08rg6rzCZAnlO67D0VsvMl+gd1FazNzGR94XQ//oLM3B
+   YGJmCjBnQBGu/vEXFONT/9Pj7gw/fHG5vmM7hqleaDBwX91y+btibVCZ+
+   H6ibgCQc8N5cTHfVpD3koxF20VQ7Ir9UdxoenbweSRfwqcY3X1QrO2vRL
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="400045527"
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="390825917"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 00:02:13 -0800
+   d="scan'208";a="400045527"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 00:08:24 -0800
 X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="1031573618"
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="33032144"
+   d="scan'208";a="1031573618"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.82.157])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 00:02:10 -0800
-Date: Thu, 18 Jan 2024 09:02:05 +0100
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 00:08:21 -0800
+Date: Thu, 18 Jan 2024 09:08:14 +0100
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To: linan666@huaweicloud.com
 Cc: song@kernel.org, shli@fb.com, neilb@suse.com, zlliu@suse.com,
  linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
  yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
  yangerkun@huawei.com
-Subject: Re: [PATCH v2 3/3] md: sync blockdev before stopping raid or
- setting readonly
-Message-ID: <20240118090205.00000212@linux.intel.com>
-In-Reply-To: <20240117093707.2767209-4-linan666@huaweicloud.com>
+Subject: Re: [PATCH v2 2/3] md: factor out a helper mddev_sync_blockdev() to
+ sync mddev
+Message-ID: <20240118090814.00001d0d@linux.intel.com>
+In-Reply-To: <20240117093707.2767209-3-linan666@huaweicloud.com>
 References: <20240117093707.2767209-1-linan666@huaweicloud.com>
-	<20240117093707.2767209-4-linan666@huaweicloud.com>
+	<20240117093707.2767209-3-linan666@huaweicloud.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -64,97 +65,36 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, 17 Jan 2024 17:37:07 +0800
+On Wed, 17 Jan 2024 17:37:06 +0800
 linan666@huaweicloud.com wrote:
 
 > From: Li Nan <linan122@huawei.com>
 > 
-> Commit a05b7ea03d72 ("md: avoid crash when stopping md array races
-> with closing other open fds.") added sync_block before stopping raid and
-> setting readonly. Later in commit 260fa034ef7a ("md: avoid deadlock when
-> dirty buffers during md_stop.") it is moved to ioctl. array_state_store()
-> was ignored. Add sync blockdev to array_state_store() now.
+> There are no functional changes, prepare to sync mddev in
+> array_state_store().
 > 
 > Signed-off-by: Li Nan <linan122@huawei.com>
 > ---
->  drivers/md/md.c | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
+>  drivers/md/md.c | 31 +++++++++++++++++++------------
+>  1 file changed, 19 insertions(+), 12 deletions(-)
 > 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 2c793992a604..aea39598457c 100644
+> index 4bf821b89415..2c793992a604 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -4477,6 +4477,7 @@ array_state_store(struct mddev *mddev, const char *buf,
-> size_t len) {
->  	int err = 0;
->  	enum array_state st = match_word(buf, array_states);
-> +	bool clear_md_closing = false;
->  
->  	/* No lock dependent actions */
->  	switch (st) {
-> @@ -4511,6 +4512,16 @@ array_state_store(struct mddev *mddev, const char
-> *buf, size_t len) spin_unlock(&mddev->lock);
->  		return err ?: len;
->  	}
-> +
-> +	/* we will call set readonly or stop raid, sync blockdev */
-> +	if (st == clear || (mddev->pers && (st == readonly ||
-> +	    st == inactive || (st == read_auto && md_is_rdwr(mddev))))) {
-> +		err = mddev_sync_blockdev(mddev);
-> +		if (err)
-> +			return err;
-> +		clear_md_closing = true;
-> +	}
-> +
-
-Please reorganize it a little for readability:
-I think if no mddev->pers we don't need to consider sync_blockdev at all. If
-personality is there we can probably check for read-write. If it is not
-read-write then nothing to sync. What about that:
-
-if (mddev->pers && md_is_rdwr(mddev) &&
-    (st == clear || st == readonly || st == inactive || st == read_auto)) 
-
-Please note that I didn't test it so please let me know if you see issue in
-proposed logic.
-I think that we may be able to include it in "/* No lock dependent actions */"
-switch. Please consider it too:
-
-case clear:
-case readonly:
-case inactive:
-case read_auto:
-    if(!mddev->pers || !md_is_rdwr(mddev))
-          break;
-    err = mddev_sync_blockdev(mddev);
-    if (err)
-        return err;
-    clear_md_closing = true;
-    
->  	err = mddev_lock(mddev);
->  	if (err)
->  		return err;
-> @@ -4523,6 +4534,8 @@ array_state_store(struct mddev *mddev, const char *buf,
-> size_t len) break;
->  	case clear:
->  		err = do_md_stop(mddev, 0, NULL);
-> +		if (!err)
-> +			clear_md_closing = false;
->  		break;
->  	case readonly:
->  		if (mddev->pers)
-> @@ -4585,6 +4598,8 @@ array_state_store(struct mddev *mddev, const char *buf,
-> size_t len) sysfs_notify_dirent_safe(mddev->sysfs_state);
->  	}
->  	mddev_unlock(mddev);
-> +	if (clear_md_closing)
-> +		clear_bit(MD_CLOSING, &mddev->flags);
-
-Please add spaces before and after if.
-
->  	return err ?: len;
+> @@ -529,6 +529,23 @@ void mddev_resume(struct mddev *mddev)
 >  }
->  static struct md_sysfs_entry md_array_state =
+>  EXPORT_SYMBOL_GPL(mddev_resume);
+>  
+> +/* sync bdev before setting device to readonly or stopping raid*/
+> +static int mddev_sync_blockdev(struct mddev *mddev) {
+
+Please add something about MD_CLOSING to the function name. Comment is good but
+you need open function to get it. Something like:
+mddev_set_closing_and_sync_blockdev() is more reader friendly.
+
+Anyway, LGTM.
+Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
 Thanks,
 Mariusz
