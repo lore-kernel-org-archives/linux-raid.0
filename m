@@ -1,100 +1,126 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38F7C250E1
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 13:07:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8DD325753
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 13:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705583258; cv=none; b=G3/N/S0LTD+ccxTwepqH9Bg5lmLtZrGQ6XMW6DlQzOz3KhtTlO0+DIr6LS/ksu7cE8k4r4hozDVAbp7tw6TlD8c0VGWnAao9qQTtc665osk51pnhmaq781FipG+Ui7jntLoYyf+HKp/99BG1JPvW2LXfcFgr7nI4DCkgC0aLQqc=
+	t=1705584019; cv=none; b=HLiOKata98CkdoWMAFRZBPZSiTxiF4dJ64JrWycOF01JVNknsEN/QkhzkpD0hmlFejIRrSfGKKk3IhuGm9o9lN1uFPduES6SZWqhUfYlc4TW/k4JX/iUBjJkEf9jNVlIQ8z2b1aSfL5/a9De0NJP85dO3TzY2QgO5BgrRNwaqTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705583258; c=relaxed/simple;
-	bh=1FhKSlwdqM2HAjbFVWUQ6/ZDQ4seBXrE/UY63G6Ex34=;
-	h=DKIM-Signature:Received:X-MC-Unique:Received:Received:Received:
-	 Received:Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type:X-Scanned-By; b=bwQ5s+S1IaVzs9F9HkdnHXeQE0OCWiNj1P/sJNJVpxNJUO+WjJ8zqEIF1Fat8k7x3Ol20PfUlmM7vaaL4+BUgCoS/HQcl9a4R6FGo+HIMfvMIC9JrPleeEIzphuMI638cXeFV7DNTSHeqnXoSMzLdJ0TX3oDD8YRzqtUBEX0VCY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BkG93mWK; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BkG93mWK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705583256;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VExoJBKhM2VGSreOTmpBtRNasbnC/MNtr+/gJyFW3fU=;
-	b=BkG93mWKMJgEaClPvzbQf10NOIn4LsHZ/aU3SYwFUNtyBKBpAHJOLaY1Ug9ZCYVOW7OBIX
-	rlxqAxnTJNHALnUPot3863bt4LoPIL+gWN3dFBlHvK7rTS6gaY4B/jfPGGKfZrgJZ1/gnx
-	GClK0NHDbdoXD8tT45ri5B5q9vCekYY=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-124-7qJKrgaGPiOdTDngx87dYA-1; Thu, 18 Jan 2024 08:07:32 -0500
-X-MC-Unique: 7qJKrgaGPiOdTDngx87dYA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4B56F85A589;
-	Thu, 18 Jan 2024 13:07:32 +0000 (UTC)
-Received: from file1-rdu.file-001.prod.rdu2.dc.redhat.com (unknown [10.11.5.21])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id F3DFA111FF;
-	Thu, 18 Jan 2024 13:07:31 +0000 (UTC)
-Received: by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix, from userid 12668)
-	id A4C3130C1B8F; Thu, 18 Jan 2024 13:07:31 +0000 (UTC)
-Received: from localhost (localhost [127.0.0.1])
-	by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix) with ESMTP id A06B33FFC5;
-	Thu, 18 Jan 2024 14:07:31 +0100 (CET)
-Date: Thu, 18 Jan 2024 14:07:31 +0100 (CET)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-cc: Song Liu <song@kernel.org>, David Jeffery <djeffery@redhat.com>, 
-    Li Nan <linan122@huawei.com>, dm-devel@lists.linux.dev, 
-    linux-raid@vger.kernel.org, Mike Snitzer <msnitzer@redhat.com>, 
-    Heinz Mauelshagen <heinzm@redhat.com>, 
-    Benjamin Marzinski <bmarzins@redhat.com>, 
-    "yukuai (C)" <yukuai3@huawei.com>
+	s=arc-20240116; t=1705584019; c=relaxed/simple;
+	bh=j7zaxoLraX+dhX4O0YdY7eYxFpraVHTFYYhOncGYyPw=;
+	h=Received:Received:Received:Subject:To:Cc:References:From:
+	 Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
+	 X-CM-SenderInfo; b=fZ9F+ODQVvkRfp8T5ggU7Vs3L1IbvhGUVVrvx6xqCMUW7YQhpOhQAaooG6BehaV+XF82HZz9uSB6D0v836vhxYMb/OYG606dZGvVkdz2r1hrB5fPorwX7spVVNN8925bEsQTzRFvkUtaWICF8lQOwKf63OlG04p9/u1D/BvUfqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TG3JV416Yz4f3kKV
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 21:20:10 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id B9F411A0171
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 21:20:12 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgAX6RGKJallo6TfBA--.46929S3;
+	Thu, 18 Jan 2024 21:20:12 +0800 (CST)
 Subject: Re: [PATCH 2/7] md: fix a race condition when stopping the sync
  thread
-In-Reply-To: <dcf29bba-4762-84ad-f60e-3607cf6779f9@huaweicloud.com>
-Message-ID: <66fda537-9d25-77e7-754f-2627e35fb8a4@redhat.com>
-References: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com> <8fb335e-6d2c-dbb5-d7-ded8db5145a@redhat.com> <dcf29bba-4762-84ad-f60e-3607cf6779f9@huaweicloud.com>
+To: Mikulas Patocka <mpatocka@redhat.com>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Song Liu <song@kernel.org>, David Jeffery <djeffery@redhat.com>,
+ Li Nan <linan122@huawei.com>, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, Mike Snitzer <msnitzer@redhat.com>,
+ Heinz Mauelshagen <heinzm@redhat.com>,
+ Benjamin Marzinski <bmarzins@redhat.com>, "yukuai (C)" <yukuai3@huawei.com>
+References: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com>
+ <8fb335e-6d2c-dbb5-d7-ded8db5145a@redhat.com>
+ <dcf29bba-4762-84ad-f60e-3607cf6779f9@huaweicloud.com>
+ <66fda537-9d25-77e7-754f-2627e35fb8a4@redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <4af9fe2b-7f5a-59d6-0b5e-762ecae1b007@huaweicloud.com>
+Date: Thu, 18 Jan 2024 21:20:10 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="185210117-611424774-1705583251=:1547117"
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
+In-Reply-To: <66fda537-9d25-77e7-754f-2627e35fb8a4@redhat.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAX6RGKJallo6TfBA--.46929S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7CF1kJr1UZFy5tw1kKF1xZrb_yoW8WFyrp3
+	y0ka4UKrWDZrsrurZ2va1jyFy8Ar17Xay7JryUCFy5A34UGa1SvFyayFy5AFWqkFs3Jw1q
+	yr45ta95Zw4qkFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+	sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi,
 
---185210117-611424774-1705583251=:1547117
-Content-Type: text/plain; charset=gbk
-Content-Transfer-Encoding: 8BIT
-
-
-
-On Thu, 18 Jan 2024, Yu Kuai wrote:
-
-> Hi,
+在 2024/01/18 21:07, Mikulas Patocka 写道:
 > 
-> 在 2024/01/18 2:18, Mikulas Patocka 写道:
-> > Note that md_wakeup_thread_directly is racy - it will do nothing if the
-> > thread is already running or it may cause spurious wake-up if the thread
-> > is blocked in another subsystem.
 > 
-> No, as the comment said, md_wakeup_thread_directly() is just to prevent
-> that md_wakeup_thread() can't wake up md_do_sync() if it's waiting for
-> metadata update.
+> On Thu, 18 Jan 2024, Yu Kuai wrote:
+> 
+>> Hi,
+>>
+>> 在 2024/01/18 2:18, Mikulas Patocka 写道:
+>>> Note that md_wakeup_thread_directly is racy - it will do nothing if the
+>>> thread is already running or it may cause spurious wake-up if the thread
+>>> is blocked in another subsystem.
+>>
+>> No, as the comment said, md_wakeup_thread_directly() is just to prevent
+>> that md_wakeup_thread() can't wake up md_do_sync() if it's waiting for
+>> metadata update.
+> 
+> Yes - but what happens if you wake up the thread just a few instructions
+> before it is going to sleep for metadata update? wake_up_process does
+> nothing on a running process and the thread proceeds with waiting. This is
+> what I thought could happen when I was making the patch.
 
-Yes - but what happens if you wake up the thread just a few instructions 
-before it is going to sleep for metadata update? wake_up_process does 
-nothing on a running process and the thread proceeds with waiting. This is 
-what I thought could happen when I was making the patch.
+Please notice that in the orginal code md_wakeup_thread_directly() is
+used for sync_thread, and md_wakeup_thread() should be used for
+*mddev->thread* (mddev_unlock always do that) to clear
+MD_RECOVERY_RUNNING.
 
-Mikulas
---185210117-611424774-1705583251=:1547117--
+By the way, the root cause that MD_RECOVERY_RUNNING is not cleared is
+that mddev_suspend() never stop sync_thread at all, while
+md_check_recovery() won't do anything when mddev is suspended.
+
+Before:
+1. suspend
+2. call md_reap_sync_thread() directly to unregister sync_thread
+     -> notice that this is not safe.
+3. resume
+
+Now:
+1. suspend
+2. call stop_sync_thread() to unregister sync_thread interrupt
+md_do_sync() and wait for md_check_recovery() to clear
+MD_RECOVERY_RUNNING.
+    -> which will never happen now;
+3. resume
+
+I fixed this locally and the test integrity-caching.sh passed in my VM.
+
+Thanks,
+Kuai
+> 
+> Mikulas
+> 
 
