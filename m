@@ -1,59 +1,59 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9488947A;
-	Thu, 18 Jan 2024 07:35:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D56D411C80;
+	Thu, 18 Jan 2024 08:02:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.134.136.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705563338; cv=none; b=HaIu9sffC5rxgbUwAVigm7zbnpnEW6rDQDyhwWTlDr4mFNOQYAQRXO0Zst8YhvNXTTWLqTBd9pb2iQrLpHWS/3B8PQAlvs02jIbllPNksVPRuDLSR27pGI+ShQ1h0Wtb43885KVyP7arP9uQePNLCdv6uJeim3zSAEcxShjqKn0=
+	t=1705564936; cv=none; b=tqrhJZIa+caE2s1V2lEzXDYJJcgPIGWas5fzvuVvb3qdzfftSlAtEmNved60zC6Nnc2L6vaqGaLAHUQ2gcd/dtOKvj60kfOrSKMFVCnAu88IDxoZiCwOjasSz/rIwS5IqPUYx5DN/eUGLUekBFtfeaZGRh3vrcM/jCGwZz+WWFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705563338; c=relaxed/simple;
-	bh=OX3x/t7S5eYlemp0ECxrgPOLlFI4fZcRLUMx0aAs7nI=;
+	s=arc-20240116; t=1705564936; c=relaxed/simple;
+	bh=OALzICepfRDRFg9fUGRC5iG9WOyOuoZA3htK7BIML9k=;
 	h=DKIM-Signature:X-IronPort-AV:X-IronPort-AV:Received:X-ExtLoop1:
 	 X-IronPort-AV:Received:Date:From:To:Cc:Subject:Message-ID:
 	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding; b=o0MjZU7Tlj6lmtyow6RWWFOAcHPHfzU9QgfO8kYW+blL7/72SocnFWCnnvIVVp4mk4UP8G5x3mtuhYz2bvvP93wwrOeyiO5ftpaKPI4/Y8UbNGzHJctYlXNvdSnigjiadxVEcNOhnEfeLqBsH0l9APKBvk1FjdsD004e2g0Yqf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iKA7nlHW; arc=none smtp.client-ip=198.175.65.11
+	 Content-Transfer-Encoding; b=FG2VaPWrZ+jBGH+89gdZm25c4NZIDdd1YScYxHeG9E+9GM7DIQDxxEKsL+oJ5DTgA/uhVOEsRC8DYMKP0gojVMPApGexGLAmkbL70HAawGGtAMpest5jkyfUwCBuiYZOrHg0h55j3xj2Z+qKx4K+tely4+p1doMq/xM+j3gT5SQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cRh78Q+N; arc=none smtp.client-ip=134.134.136.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iKA7nlHW"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cRh78Q+N"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705563336; x=1737099336;
+  t=1705564934; x=1737100934;
   h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=OX3x/t7S5eYlemp0ECxrgPOLlFI4fZcRLUMx0aAs7nI=;
-  b=iKA7nlHWLI9Q22jR603zMvvMhyViy6ILJuOPm7YQZQd7S2lheIt1K606
-   AunPK/fnksvZa7kWdBZSSKKWW1eitXw5kJMekUSj23oKLhjGYmmLkz5D/
-   wPuluL3YiKjUADTvk/iikXU+FFp/GCIfRGezE3/GQXphj3K70eTgkn0Is
-   30+qhMj05laAbDe17irKF3YNK5apP9br6j2Z0LY5VEgfhZcmGgKdgj1Pi
-   UxBxjMKfsegK18JQgxUAqqVnK4QaeP+ode3r6f/tW2x8IQVPPxL3AcwEf
-   0yokM6o/d6zfxAQ5qvRvtOFMDU2Y5ZvyE7MK+Jz6XS0rLNkfpvRGdqtcS
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="7067652"
+  bh=OALzICepfRDRFg9fUGRC5iG9WOyOuoZA3htK7BIML9k=;
+  b=cRh78Q+NAjacPhFH8pqA1vz54x+qd7J5Ceycod87SIHWylKc6ppz3do/
+   6OG9O1TDGYdhKgkUQQD55BaV+yHAurW70TMx+WCGxCVeqJe7qsAJKBwJ0
+   X/hihTOZzSJJkt8GLs3WLdOgP5+hOcoTitwP80YLTtkumMx6TLgnT7FZb
+   e9Zd7DZvD+2ZqRTHuK8kzuUnoZA/1cwuQamBX/StHNWFZ2AyEOvRmonVg
+   AbvueTm4HoYecrA0oRZzwQitLqGllLqNGrH7fDlwt0orbLwTNGO8ZwQSl
+   tTfP+1qrAa2U6Lg/vmp3EcEiXoHzeq5Dx4wzH4UCu3vbbJ+LI+cBunI0r
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="390825917"
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="7067652"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2024 23:35:36 -0800
+   d="scan'208";a="390825917"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 00:02:13 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="26391581"
+   d="scan'208";a="33032144"
 Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.245.82.157])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2024 23:35:33 -0800
-Date: Thu, 18 Jan 2024 08:35:25 +0100
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 00:02:10 -0800
+Date: Thu, 18 Jan 2024 09:02:05 +0100
 From: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To: linan666@huaweicloud.com
 Cc: song@kernel.org, shli@fb.com, neilb@suse.com, zlliu@suse.com,
  linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
  yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
  yangerkun@huawei.com
-Subject: Re: [PATCH v2 1/3] md: Don't clear MD_CLOSING when the raid is
- about to stop
-Message-ID: <20240118083525.00002b15@linux.intel.com>
-In-Reply-To: <20240117093707.2767209-2-linan666@huaweicloud.com>
+Subject: Re: [PATCH v2 3/3] md: sync blockdev before stopping raid or
+ setting readonly
+Message-ID: <20240118090205.00000212@linux.intel.com>
+In-Reply-To: <20240117093707.2767209-4-linan666@huaweicloud.com>
 References: <20240117093707.2767209-1-linan666@huaweicloud.com>
-	<20240117093707.2767209-2-linan666@huaweicloud.com>
+	<20240117093707.2767209-4-linan666@huaweicloud.com>
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -64,63 +64,97 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, 17 Jan 2024 17:37:05 +0800
+On Wed, 17 Jan 2024 17:37:07 +0800
 linan666@huaweicloud.com wrote:
 
 > From: Li Nan <linan122@huawei.com>
 > 
-> The raid should not be opened anymore when it is about to be stopped.
-> However, other processes can open it again if the flag MD_CLOSING is
-> cleared before exiting. From now on, this flag will not be cleared when
-> the raid will be stopped.
+> Commit a05b7ea03d72 ("md: avoid crash when stopping md array races
+> with closing other open fds.") added sync_block before stopping raid and
+> setting readonly. Later in commit 260fa034ef7a ("md: avoid deadlock when
+> dirty buffers during md_stop.") it is moved to ioctl. array_state_store()
+> was ignored. Add sync blockdev to array_state_store() now.
 > 
-> Fixes: 065e519e71b2 ("md: MD_CLOSING needs to be cleared after called
-> md_set_readonly or do_md_stop") Signed-off-by: Li Nan <linan122@huawei.com>
+> Signed-off-by: Li Nan <linan122@huawei.com>
 > ---
->  drivers/md/md.c | 16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
+>  drivers/md/md.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
 > 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9bdd57324c37..4bf821b89415 100644
+> index 2c793992a604..aea39598457c 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -6254,7 +6254,15 @@ static void md_clean(struct mddev *mddev)
->  	mddev->persistent = 0;
->  	mddev->level = LEVEL_NONE;
->  	mddev->clevel[0] = 0;
-> -	mddev->flags = 0;
-> +	/*
-> +	 * Don't clear MD_CLOSING, or mddev can be opened again.
-> +	 * 'hold_active != 0' means mddev is still in the creation
-> +	 * process and will be used later.
-> +	 */
-> +	if (mddev->hold_active)
-> +		mddev->flags = 0;
-> +	else
-> +		mddev->flags &= BIT_ULL_MASK(MD_CLOSING);
->  	mddev->sb_flags = 0;
->  	mddev->ro = MD_RDWR;
->  	mddev->metadata_type[0] = 0;
-> @@ -7728,6 +7736,12 @@ static int md_ioctl(struct block_device *bdev,
-> blk_mode_t mode, 
->  	case STOP_ARRAY:
->  		err = do_md_stop(mddev, 0, bdev);
+> @@ -4477,6 +4477,7 @@ array_state_store(struct mddev *mddev, const char *buf,
+> size_t len) {
+>  	int err = 0;
+>  	enum array_state st = match_word(buf, array_states);
+> +	bool clear_md_closing = false;
+>  
+>  	/* No lock dependent actions */
+>  	switch (st) {
+> @@ -4511,6 +4512,16 @@ array_state_store(struct mddev *mddev, const char
+> *buf, size_t len) spin_unlock(&mddev->lock);
+>  		return err ?: len;
+>  	}
+> +
+> +	/* we will call set readonly or stop raid, sync blockdev */
+> +	if (st == clear || (mddev->pers && (st == readonly ||
+> +	    st == inactive || (st == read_auto && md_is_rdwr(mddev))))) {
+> +		err = mddev_sync_blockdev(mddev);
+> +		if (err)
+> +			return err;
+> +		clear_md_closing = true;
+> +	}
+> +
+
+Please reorganize it a little for readability:
+I think if no mddev->pers we don't need to consider sync_blockdev at all. If
+personality is there we can probably check for read-write. If it is not
+read-write then nothing to sync. What about that:
+
+if (mddev->pers && md_is_rdwr(mddev) &&
+    (st == clear || st == readonly || st == inactive || st == read_auto)) 
+
+Please note that I didn't test it so please let me know if you see issue in
+proposed logic.
+I think that we may be able to include it in "/* No lock dependent actions */"
+switch. Please consider it too:
+
+case clear:
+case readonly:
+case inactive:
+case read_auto:
+    if(!mddev->pers || !md_is_rdwr(mddev))
+          break;
+    err = mddev_sync_blockdev(mddev);
+    if (err)
+        return err;
+    clear_md_closing = true;
+    
+>  	err = mddev_lock(mddev);
+>  	if (err)
+>  		return err;
+> @@ -4523,6 +4534,8 @@ array_state_store(struct mddev *mddev, const char *buf,
+> size_t len) break;
+>  	case clear:
+>  		err = do_md_stop(mddev, 0, NULL);
 > +		if (!err)
-> +			/*
-> +			 * mddev has been stopped, keep flag the
-> +			 * MD_CLOSING to prevent reuse.
-> +			 */
-> +			did_set_md_closing = false;
+> +			clear_md_closing = false;
+>  		break;
+>  	case readonly:
+>  		if (mddev->pers)
+> @@ -4585,6 +4598,8 @@ array_state_store(struct mddev *mddev, const char *buf,
+> size_t len) sysfs_notify_dirent_safe(mddev->sysfs_state);
+>  	}
+>  	mddev_unlock(mddev);
+> +	if (clear_md_closing)
+> +		clear_bit(MD_CLOSING, &mddev->flags);
 
-Hello Nan,
-The meaning of the "did_set_md_closing" is to notify that MD_CLOSING was set in
-this function, to know how to behave on error.
-You gave it another meaning "Do not clear MD_CLOSING because we want it to stay"
-Please consider how to solve this confusion. I see the comment you added but I
-think we can have this solved better, maybe just name it as "clear_md_closing"?
+Please add spaces before and after if.
 
-Anyway it looks acceptable to me:
-Acked-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+>  	return err ?: len;
+>  }
+>  static struct md_sysfs_entry md_array_state =
 
 Thanks,
 Mariusz
