@@ -1,52 +1,52 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B528208A6
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 10:29:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF221208A6
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 10:29:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.55.52.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705573778; cv=none; b=PX093xxz0FDG/AnYhMGQJ+In2RdXmDCwpLMDGeBJGeSDBQ0P9DDuqV4B5L8WkXJ9rAZr270CQeXLcusCe+Dk+hKk2mXB0o5cSA/cLGRckrWti0UclQrtsUGOG2TfLOH+3j6eThiFL7/vGmnOJ10gDN2+CXmVTOETLpUDXaaMrXw=
+	t=1705573788; cv=none; b=KyiQtn3hZpMae2llv8eHzEmq5Q7CSdlcwr7AoxXtfgm326n+6BJnT2TGumb/BxdvJBUj9JYUh/cVgn0E17LiHytfvewrwS4f8yTwFTl9rzyrS1MTu5lKOGGuVhr7NWH/9Ov6HbPV3ARirS9HYasAXX8YhzexSzMU7xlfrF/HMrM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705573778; c=relaxed/simple;
-	bh=ylKlVMMig6OQ3rh6A0xfqa48sxHDjDH1JA8mhhYHRhM=;
+	s=arc-20240116; t=1705573788; c=relaxed/simple;
+	bh=QfU9zSmv29s76Ygc5bsqVYUdV8YDQv+8p84GNySDFb0=;
 	h=DKIM-Signature:X-IronPort-AV:X-IronPort-AV:Received:X-ExtLoop1:
 	 X-IronPort-AV:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding; b=bzfHuLKSjBe3VwUmX0v2E57bxHcYk/pfUe0LfwMWXHbcM0cZfj2Np92HZfOrJX3f5ju9wpdGUdmj4x0+vYbqY9EfDs9paz/N2QtF6/VwklC+Z4PdG12HvJuNhSv76HuAJfti42RdRiJFPDvw9Mk61cDI5pvXu8OVl/Eq5CK7+bA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kRggl65x; arc=none smtp.client-ip=192.55.52.43
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding; b=OI80R6+orFceV6aB/+4e17U6votFn3xF85k7nuWiqjoUWjgrKVbOyjxkns6sn2hET4Ee00/Ds8u6jC+zNxP9Ch4WTfjsFh3C1Vljs8IHr4oepMC4YrjCmDqRS8/n4XmevOAuJixuqetNj167ofIvnD6XhBGYTFD6pYIVexgxzQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Dv7Xs5u/; arc=none smtp.client-ip=192.55.52.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kRggl65x"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Dv7Xs5u/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705573776; x=1737109776;
+  t=1705573785; x=1737109785;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ylKlVMMig6OQ3rh6A0xfqa48sxHDjDH1JA8mhhYHRhM=;
-  b=kRggl65x5tdS+tuICSSUO489vadjV46HNuNaKcDurYH0l4mxBg/yKF73
-   v4NsQUXmnp8w9LHv5iRm19pO3fYYbnUh8o7yOzrVrHZoWXT/ItXSHo3Yv
-   gAaGUVqLtD/v9ZNSdv+tXvevVFXIlFSrpEJh4ldHjRyyzu9znVP0CYz1u
-   tFrMX+cmZZ+rsFk3luRvWhzALRTAxdgIH06b0eJSFZ1/QJg45laENZtfJ
-   bCwfL5JKiO0t6bfcMncie2E5Z595VOuT4yBxE5r81jM4c1+vK5pYx+wLV
-   U18c0On+S2mBKgkDi13PqwYTbUoZzmyyxrQFkqNFQhKOMp3BCbCyNu67E
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="486563758"
+  bh=QfU9zSmv29s76Ygc5bsqVYUdV8YDQv+8p84GNySDFb0=;
+  b=Dv7Xs5u/n6K1KQowjMg/VkJDcuUk1DH3POHQM4HHz9sCqjA92v8Iibdj
+   TYi4nukFdbR/04gZBIIMUVVNG2JmD1FQkXLOKL+FgADDqpWEch7hPmsx+
+   5Fsuvj395iswlGlP24DB88SV1Bepf37WHeE0upFqSoRpmpqE/+ZLLcc5M
+   PnOhKHFdF+VxKUApHxwsPyDH+FwG9RzwR4uvkU1FlmCYyH2HqnUsiNwfm
+   kOjaWBamtJbKkADFx7EbMZg6um4QNhG9XF8ISnUKgdxHX24DzHorp0PfX
+   HC6536kguD8+wb9+TUWoM8XIbcLBr3cqbTa6qt8BWOL21ROSiPu+N6Xyd
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="486563795"
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="486563758"
+   d="scan'208";a="486563795"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 02:29:35 -0800
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 02:29:45 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="26735660"
+   d="scan'208";a="26735683"
 Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
-  by fmviesa001.fm.intel.com with ESMTP; 18 Jan 2024 02:29:34 -0800
+  by fmviesa001.fm.intel.com with ESMTP; 18 Jan 2024 02:29:44 -0800
 From: Mateusz Kusiak <mateusz.kusiak@intel.com>
 To: linux-raid@vger.kernel.org
 Cc: jes@trained-monkey.org,
 	mariusz.tkaczyk@linux.intel.com
-Subject: [PATCH v2 1/3] Define sysfs max buffer size
-Date: Thu, 18 Jan 2024 11:28:40 +0100
-Message-Id: <20240118102842.12304-2-mateusz.kusiak@intel.com>
+Subject: [PATCH v2 2/3] Replace "none" with macro
+Date: Thu, 18 Jan 2024 11:28:41 +0100
+Message-Id: <20240118102842.12304-3-mateusz.kusiak@intel.com>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20240118102842.12304-1-mateusz.kusiak@intel.com>
 References: <20240118102842.12304-1-mateusz.kusiak@intel.com>
@@ -58,464 +58,332 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-sysfs_get_str() usages have inconsistant buffer size.
-This results in wild buffer declarations and redundant memory usage.
+String "none" is used many times throughout the code.
+Replace "none" strings with predefined macro.
 
-Define maximum buffer size for sysfs strings.
-Replace wild sysfs string buffer sizes for globaly defined value.
+Add str_is_none() for comparing strings with "none".
+Replace str(n)cmp calls with function.
 
 Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
 ---
- Grow.c        | 36 ++++++++++++++++++------------------
+ Assemble.c    |  3 +--
+ Build.c       |  4 ++--
+ Create.c      |  2 +-
+ Grow.c        | 15 +++++++--------
  Incremental.c |  2 +-
- Manage.c      |  8 ++++----
- Monitor.c     |  6 +++---
- managemon.c   |  6 +++---
- mdadm.h       |  2 ++
- monitor.c     | 20 ++++++++++----------
- msg.c         |  4 ++--
- super-intel.c | 14 +++++++-------
- sysfs.c       |  8 ++++----
- 10 files changed, 54 insertions(+), 52 deletions(-)
+ Manage.c      |  2 +-
+ config.c      |  2 +-
+ maps.c        |  4 ++--
+ mdadm.c       |  7 +++----
+ mdadm.h       | 16 ++++++++++++++++
+ monitor.c     |  4 ++--
+ super-intel.c |  4 ++--
+ sysfs.c       |  4 ++--
+ util.c        |  2 +-
+ 14 files changed, 42 insertions(+), 29 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 8fa978756a82..8ca8ee781d1b 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -545,7 +545,7 @@ int Grow_consistency_policy(char *devname, int fd, struct context *c, struct sha
- 	char *subarray = NULL;
- 	int ret = 0;
- 	char container_dev[PATH_MAX];
--	char buf[20];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 
- 	if (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
- 	    s->consistency_policy != CONSISTENCY_POLICY_PPL) {
-@@ -594,7 +594,7 @@ int Grow_consistency_policy(char *devname, int fd, struct context *c, struct sha
+diff --git a/Assemble.c b/Assemble.c
+index 0879c2ed5473..9d042055ad4e 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -2015,8 +2015,7 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 		if (dev)
+ 			continue;
+ 		/* Don't want this one any more */
+-		if (sysfs_set_str(sra, dev2, "slot", "none") < 0 &&
+-		    errno == EBUSY) {
++		if (sysfs_set_str(sra, dev2, "slot", STR_COMMON_NONE) < 0 && errno == EBUSY) {
+ 			pr_err("Cannot remove old device %s: not updating %s\n", dev2->sys_name, sra->sys_name);
+ 			sysfs_free(sra);
+ 			return 1;
+diff --git a/Build.c b/Build.c
+index 657ab315de62..1fbf8596a9dd 100644
+--- a/Build.c
++++ b/Build.c
+@@ -82,7 +82,7 @@ int Build(struct mddev_ident *ident, struct mddev_dev *devlist, struct shape *s,
+ 		return 1;
  	}
  
- 	if (s->consistency_policy == CONSISTENCY_POLICY_PPL) {
--		if (sysfs_get_str(sra, NULL, "sync_action", buf, 20) <= 0) {
-+		if (sysfs_get_str(sra, NULL, "sync_action", buf, sizeof(buf)) <= 0) {
- 			ret = 1;
- 			goto free_info;
- 		} else if (strcmp(buf, "reshape\n") == 0) {
-@@ -817,12 +817,12 @@ static int freeze(struct supertype *st)
- 	else {
- 		struct mdinfo *sra = sysfs_read(-1, st->devnm, GET_VERSION);
- 		int err;
--		char buf[20];
-+		char buf[SYSFS_MAX_BUF_SIZE];
+-	map_update(&map, fd2devnm(mdfd), "none", uuid, chosen_name);
++	map_update(&map, fd2devnm(mdfd), STR_COMMON_NONE, uuid, chosen_name);
+ 	map_unlock(&map);
  
- 		if (!sra)
- 			return -1;
- 		/* Need to clear any 'read-auto' status */
--		if (sysfs_get_str(sra, NULL, "array_state", buf, 20) > 0 &&
-+		if (sysfs_get_str(sra, NULL, "array_state", buf, sizeof(buf)) > 0 &&
- 		    strncmp(buf, "read-auto", 9) == 0)
- 			sysfs_set_str(sra, NULL, "array_state", "clean");
+ 	array.level = s->level;
+@@ -111,7 +111,7 @@ int Build(struct mddev_ident *ident, struct mddev_dev *devlist, struct shape *s,
+ 		goto abort;
+ 	}
  
-@@ -838,10 +838,10 @@ static void unfreeze(struct supertype *st)
- 		return unfreeze_container(st);
- 	else {
- 		struct mdinfo *sra = sysfs_read(-1, st->devnm, GET_VERSION);
--		char buf[20];
-+		char buf[SYSFS_MAX_BUF_SIZE];
+-	if (s->bitmap_file && strcmp(s->bitmap_file, "none") == 0)
++	if (s->bitmap_file && str_is_none(s->bitmap_file) == true)
+ 		s->bitmap_file = NULL;
+ 	if (s->bitmap_file && s->level <= 0) {
+ 		pr_err("bitmaps not meaningful with level %s\n",
+diff --git a/Create.c b/Create.c
+index ddd1a79bf393..8082f54a8fdc 100644
+--- a/Create.c
++++ b/Create.c
+@@ -938,7 +938,7 @@ int Create(struct supertype *st, struct mddev_ident *ident, int subdevs,
+ 			pr_err("automatically enabling write-intent bitmap on large array\n");
+ 		s->bitmap_file = "internal";
+ 	}
+-	if (s->bitmap_file && strcmp(s->bitmap_file, "none") == 0)
++	if (s->bitmap_file && str_is_none(s->bitmap_file) == true)
+ 		s->bitmap_file = NULL;
  
- 		if (sra &&
--		    sysfs_get_str(sra, NULL, "sync_action", buf, 20) > 0 &&
-+		    sysfs_get_str(sra, NULL, "sync_action", buf, sizeof(buf)) > 0 &&
- 		    strcmp(buf, "frozen\n") == 0)
- 			sysfs_set_str(sra, NULL, "sync_action", "idle");
- 		sysfs_free(sra);
-@@ -851,12 +851,12 @@ static void unfreeze(struct supertype *st)
- static void wait_reshape(struct mdinfo *sra)
- {
- 	int fd = sysfs_get_fd(sra, NULL, "sync_action");
--	char action[20];
-+	char action[SYSFS_MAX_BUF_SIZE];
+ 	if (s->consistency_policy == CONSISTENCY_POLICY_PPL &&
+diff --git a/Grow.c b/Grow.c
+index 8ca8ee781d1b..f95dae82ef0d 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -309,7 +309,7 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 		return 1;
+ 	}
+ 	if (bmf.pathname[0]) {
+-		if (strcmp(s->bitmap_file,"none") == 0) {
++		if (str_is_none(s->bitmap_file) == true) {
+ 			if (ioctl(fd, SET_BITMAP_FILE, -1) != 0) {
+ 				pr_err("failed to remove bitmap %s\n",
+ 					bmf.pathname);
+@@ -325,7 +325,7 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 		return 1;
+ 	}
+ 	if (array.state & (1 << MD_SB_BITMAP_PRESENT)) {
+-		if (strcmp(s->bitmap_file, "none")==0) {
++		if (str_is_none(s->bitmap_file) == true) {
+ 			array.state &= ~(1 << MD_SB_BITMAP_PRESENT);
+ 			if (md_set_array_info(fd, &array) != 0) {
+ 				if (array.state & (1 << MD_SB_CLUSTERED))
+@@ -340,7 +340,7 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 		return 1;
+ 	}
  
- 	if (fd < 0)
- 		return;
+-	if (strcmp(s->bitmap_file, "none") == 0) {
++	if (str_is_none(s->bitmap_file) == true) {
+ 		pr_err("no bitmap found on %s\n", devname);
+ 		return 1;
+ 	}
+@@ -1067,7 +1067,7 @@ int remove_disks_for_takeover(struct supertype *st,
+ 		remaining = sd->next;
  
--	while (sysfs_fd_get_str(fd, action, 20) > 0 &&
-+	while (sysfs_fd_get_str(fd, action, sizeof(action)) > 0 &&
- 	       strncmp(action, "reshape", 7) == 0)
- 		sysfs_wait(fd, NULL);
- 	close(fd);
-@@ -902,7 +902,7 @@ static int subarray_set_num(char *container, struct mdinfo *sra, char *name, int
- 	 * to close a race with the array_state going clean before the
- 	 * next write to raid_disks / stripe_cache_size
+ 		sysfs_set_str(sra, sd, "state", "faulty");
+-		sysfs_set_str(sra, sd, "slot", "none");
++		sysfs_set_str(sra, sd, "slot", STR_COMMON_NONE);
+ 		/* for external metadata disks should be removed in mdmon */
+ 		if (!st->ss->external)
+ 			sysfs_set_str(sra, sd, "state", "remove");
+@@ -2145,8 +2145,7 @@ size_change_error:
+ 			 * a backport has been arranged.
+ 			 */
+ 			if (sra == NULL ||
+-			    sysfs_set_str(sra, NULL, "resync_start",
+-					  "none") < 0)
++			    sysfs_set_str(sra, NULL, "resync_start", STR_COMMON_NONE) < 0)
+ 				pr_err("--assume-clean not supported with --grow on this kernel\n");
+ 		}
+ 		md_get_array_info(fd, &array);
+@@ -4159,8 +4158,8 @@ check_progress:
+ 	 * it was just a device failure that leaves us degraded but
+ 	 * functioning.
  	 */
--	char safe[50];
-+	char safe[SYSFS_MAX_BUF_SIZE];
- 	int rc;
- 
- 	/* only 'raid_disks' and 'stripe_cache_size' trigger md_allow_write */
-@@ -2396,11 +2396,11 @@ release:
- static int verify_reshape_position(struct mdinfo *info, int level)
- {
- 	int ret_val = 0;
--	char buf[40];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 	int rv;
- 
- 	/* read sync_max, failure can mean raid0 array */
--	rv = sysfs_get_str(info, NULL, "sync_max", buf, 40);
-+	rv = sysfs_get_str(info, NULL, "sync_max", buf, sizeof(buf));
- 
- 	if (rv > 0) {
- 		char *ep;
-@@ -3040,7 +3040,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 	unsigned long long array_size;
- 	int done;
- 	struct mdinfo *sra = NULL;
--	char buf[20];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 
- 	/* when reshaping a RAID0, the component_size might be zero.
- 	 * So try to fix that up.
-@@ -3916,7 +3916,7 @@ int progress_reshape(struct mdinfo *info, struct reshape *reshape,
- 	unsigned long long array_size = (info->component_size
- 					 * reshape->before.data_disks);
- 	int fd;
--	char buf[20];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 
- 	/* First, we unsuspend any region that is now known to be safe.
- 	 * If suspend_point is on the 'wrong' side of reshape_progress, then
-@@ -4094,8 +4094,8 @@ int progress_reshape(struct mdinfo *info, struct reshape *reshape,
- 		/* Check that sync_action is still 'reshape' to avoid
- 		 * waiting forever on a dead array
+-	if (sysfs_get_str(info, NULL, "reshape_position", buf,
+-			  sizeof(buf)) < 0 || strncmp(buf, "none", 4) != 0) {
++	if (sysfs_get_str(info, NULL, "reshape_position", buf, sizeof(buf)) < 0 ||
++	    str_is_none(buf) == false) {
+ 		/* The abort might only be temporary.  Wait up to 10
+ 		 * seconds for fd to contain a valid number again.
  		 */
--		char action[20];
--		if (sysfs_get_str(info, NULL, "sync_action", action, 20) <= 0 ||
-+		char action[SYSFS_MAX_BUF_SIZE];
-+		if (sysfs_get_str(info, NULL, "sync_action", action, sizeof(action)) <= 0 ||
- 		    strncmp(action, "reshape", 7) != 0)
- 			break;
- 		/* Some kernels reset 'sync_completed' to zero
-@@ -4121,8 +4121,8 @@ int progress_reshape(struct mdinfo *info, struct reshape *reshape,
- 	 */
- 	if (completed == 0) {
- 		unsigned long long reshapep;
--		char action[20];
--		if (sysfs_get_str(info, NULL, "sync_action", action, 20) > 0 &&
-+		char action[SYSFS_MAX_BUF_SIZE];
-+		if (sysfs_get_str(info, NULL, "sync_action", action, sizeof(action)) > 0 &&
- 		    strncmp(action, "idle", 4) == 0 &&
- 		    sysfs_get_ll(info, NULL,
- 				 "reshape_position", &reshapep) == 0)
-@@ -4240,7 +4240,7 @@ static int grow_backup(struct mdinfo *sra,
- 			if (sd->disk.state & (1<<MD_DISK_FAULTY))
- 				continue;
- 			if (sd->disk.state & (1<<MD_DISK_SYNC)) {
--				char sbuf[100];
-+				char sbuf[SYSFS_MAX_BUF_SIZE];
- 
- 				if (sysfs_get_str(sra, sd, "state",
- 						  sbuf, sizeof(sbuf)) < 0 ||
 diff --git a/Incremental.c b/Incremental.c
-index 3551c65ba753..52e396237e64 100644
+index 52e396237e64..6cbc164a27b9 100644
 --- a/Incremental.c
 +++ b/Incremental.c
-@@ -1650,7 +1650,7 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
- 	struct mdstat_ent *ent;
- 	struct mddev_dev devlist;
- 	struct mdinfo mdi;
--	char buf[32];
-+	char buf[SYSFS_MAX_BUF_SIZE];
+@@ -670,7 +670,7 @@ static void find_reject(int mdfd, struct supertype *st, struct mdinfo *sra,
+ 			continue;
  
- 	if (!id_path)
- 		dprintf("incremental removal without --path <id_path> lacks the possibility to re-add new device in this port\n");
+ 		if (d->disk.raid_disk > -1)
+-			sysfs_set_str(sra, d, "slot", "none");
++			sysfs_set_str(sra, d, "slot", STR_COMMON_NONE);
+ 		if (sysfs_set_str(sra, d, "state", "remove") == 0)
+ 			if (verbose >= 0)
+ 				pr_err("removing old device %s from %s\n",
 diff --git a/Manage.c b/Manage.c
-index 915322667788..d66dc7b8af91 100644
+index d66dc7b8af91..30302ac833f2 100644
 --- a/Manage.c
 +++ b/Manage.c
-@@ -181,7 +181,7 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- 	char container[32];
- 	int err;
- 	int count;
--	char buf[32];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 	unsigned long long rd1, rd2;
+@@ -402,7 +402,7 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
+ 			unsigned long long max_completed;
+ 			sysfs_get_ll(mdi, NULL, "reshape_position", &curr);
+ 			sysfs_fd_get_str(scfd, buf, sizeof(buf));
+-			if (strncmp(buf, "none", 4) == 0) {
++			if (str_is_none(buf) == true) {
+ 				/* Either reshape has aborted, or hasn't
+ 				 * quite started yet.  Wait a bit and
+ 				 * check  'sync_action' to see.
+diff --git a/config.c b/config.c
+index 5f12a1f8641c..9a04cae85f52 100644
+--- a/config.c
++++ b/config.c
+@@ -998,7 +998,7 @@ void load_conffile(void)
+ 		dl_add(list, dl_strdup("partitions"));
+ 		devline(list);
+ 		free_line(list);
+-	} else if (strcmp(conffile, "none") != 0) {
++	} else if (str_is_none(conffile) == false) {
+ 		f = fopen(conffile, "r");
+ 		/* Debian chose to relocate mdadm.conf into /etc/mdadm/.
+ 		 * To allow Debian users to compile from clean source and still
+diff --git a/maps.c b/maps.c
+index b586679acc74..17f8b54dc40f 100644
+--- a/maps.c
++++ b/maps.c
+@@ -137,14 +137,14 @@ mapping_t faultylayout[] = {
  
- 	if (will_retry && verbose == 0)
-@@ -312,7 +312,7 @@ int Manage_stop(char *devname, int fd, int verbose, int will_retry)
- 	if (mdi && is_level456(mdi->array.level) &&
- 	    sysfs_attribute_available(mdi, NULL, "sync_action") &&
- 	    sysfs_attribute_available(mdi, NULL, "reshape_direction") &&
--	    sysfs_get_str(mdi, NULL, "sync_action", buf, 20) > 0 &&
-+	    sysfs_get_str(mdi, NULL, "sync_action", buf, sizeof(buf)) > 0 &&
- 	    strcmp(buf, "reshape\n") == 0 &&
- 	    sysfs_get_two(mdi, NULL, "raid_disks", &rd1, &rd2) == 2) {
- 		unsigned long long position, curr;
-@@ -1519,8 +1519,8 @@ int Manage_subdevs(char *devname, int fd,
- 			sprintf(dname, "dev-%s", dv->devname);
- 			sysfd = sysfs_open(fd2devnm(fd), dname, "block/dev");
- 			if (sysfd >= 0) {
--				char dn[20];
--				if (sysfs_fd_get_str(sysfd, dn, 20) > 0 &&
-+				char dn[SYSFS_MAX_BUF_SIZE];
-+				if (sysfs_fd_get_str(sysfd, dn, sizeof(dn)) > 0 &&
- 				    sscanf(dn, "%d:%d", &mj,&mn) == 2) {
- 					rdev = makedev(mj,mn);
- 					found = 1;
-diff --git a/Monitor.c b/Monitor.c
-index 9a1f2514534e..824a69fc6b79 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -1309,12 +1309,12 @@ int Wait(char *dev)
- 			 * sync_action does.
- 			 */
- 			struct mdinfo mdi;
--			char buf[21];
-+			char buf[SYSFS_MAX_BUF_SIZE];
- 
- 			if (sysfs_init(&mdi, -1, devnm))
- 				return 2;
- 			if (sysfs_get_str(&mdi, NULL, "sync_action",
--					  buf, 20) > 0 &&
-+					  buf, sizeof(buf)) > 0 &&
- 			    strcmp(buf,"idle\n") != 0) {
- 				e->percent = RESYNC_UNKNOWN;
- 				if (strcmp(buf, "frozen\n") == 0) {
-@@ -1393,7 +1393,7 @@ int WaitClean(char *dev, int verbose)
- 
- 	if (rv) {
- 		int state_fd = sysfs_open(fd2devnm(fd), NULL, "array_state");
--		char buf[20];
-+		char buf[SYSFS_MAX_BUF_SIZE];
- 		int delay = 5000;
- 
- 		/* minimize the safe_mode_delay and prepare to wait up to 5s
-diff --git a/managemon.c b/managemon.c
-index a7bfa8f618a4..358459e79435 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -454,7 +454,7 @@ static void manage_member(struct mdstat_ent *mdstat,
- 	 * trying to find and assign a spare.
- 	 * We do that whenever the monitor tells us too.
- 	 */
--	char buf[64];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 	int frozen;
- 	struct supertype *container = a->container;
- 	struct mdinfo *mdi;
-@@ -664,7 +664,7 @@ static void manage_new(struct mdstat_ent *mdstat,
- 	struct mdinfo *mdi = NULL, *di;
- 	int i, inst;
- 	int failed = 0;
--	char buf[40];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 
- 	/* check if array is ready to be monitored */
- 	if (!mdstat->active || !mdstat->level)
-@@ -738,7 +738,7 @@ static void manage_new(struct mdstat_ent *mdstat,
- 	 * read this information for new arrays only (empty victim)
- 	 */
- 	if ((victim == NULL) &&
--	    (sysfs_get_str(mdi, NULL, "sync_action", buf, 40) > 0) &&
-+	    (sysfs_get_str(mdi, NULL, "sync_action", buf, sizeof(buf)) > 0) &&
- 	    (strncmp(buf, "reshape", 7) == 0)) {
- 		if (sysfs_get_ll(mdi, NULL, "reshape_position",
- 			&new->last_checkpoint) != 0)
-diff --git a/mdadm.h b/mdadm.h
-index 8dcd8b86f35a..46692730801e 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -767,6 +767,8 @@ enum sysfs_read_flags {
- 	GET_DEVS_ALL	= (1 << 27),
+ 	{ "clear", ClearErrors},
+ 	{ "flush", ClearFaults},
+-	{ "none", ClearErrors},
++	{ STR_COMMON_NONE, ClearErrors},
+ 	{ "default", ClearErrors},
+ 	{ NULL, UnSet }
  };
  
-+#define SYSFS_MAX_BUF_SIZE 64
+ mapping_t consistency_policies[] = {
+ 	{ "unknown", CONSISTENCY_POLICY_UNKNOWN},
+-	{ "none", CONSISTENCY_POLICY_NONE},
++	{ STR_COMMON_NONE, CONSISTENCY_POLICY_NONE},
+ 	{ "resync", CONSISTENCY_POLICY_RESYNC},
+ 	{ "bitmap", CONSISTENCY_POLICY_BITMAP},
+ 	{ "journal", CONSISTENCY_POLICY_JOURNAL},
+diff --git a/mdadm.c b/mdadm.c
+index 62f981dfbd15..3f1912884d49 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1099,7 +1099,7 @@ int main(int argc, char *argv[])
+ 				exit(2);
+ 			}
+ 			if (strcmp(optarg, "internal") == 0 ||
+-			    strcmp(optarg, "none") == 0 ||
++			    strcmp(optarg, STR_COMMON_NONE) == 0 ||
+ 			    strchr(optarg, '/') != NULL) {
+ 				s.bitmap_file = optarg;
+ 				continue;
+@@ -1234,13 +1234,12 @@ int main(int argc, char *argv[])
+ 			pr_err("PPL consistency policy is only supported for RAID level 5.\n");
+ 			exit(2);
+ 		} else if (s.consistency_policy == CONSISTENCY_POLICY_BITMAP &&
+-			   (!s.bitmap_file ||
+-			    strcmp(s.bitmap_file, "none") == 0)) {
++			  (!s.bitmap_file || str_is_none(s.bitmap_file) == true)) {
+ 			pr_err("--bitmap is required for consistency policy: %s\n",
+ 			       map_num_s(consistency_policies, s.consistency_policy));
+ 			exit(2);
+ 		} else if (s.bitmap_file &&
+-			   strcmp(s.bitmap_file, "none") != 0 &&
++			   str_is_none(s.bitmap_file) == false &&
+ 			   s.consistency_policy != CONSISTENCY_POLICY_BITMAP &&
+ 			   s.consistency_policy != CONSISTENCY_POLICY_JOURNAL) {
+ 			pr_err("--bitmap is not compatible with consistency policy: %s\n",
+diff --git a/mdadm.h b/mdadm.h
+index 46692730801e..709b6104c401 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -2027,3 +2027,19 @@ static inline int is_container(const int level)
+ 		return 1;
+ 	return 0;
+ }
 +
- /* If fd >= 0, get the array it is open on,
-  * else use devnm.
-  */
++#define STR_COMMON_NONE "none"
++
++/**
++ * str_is_none() - check if @str starts with "none".
++ * @str: string
++ *
++ * return:
++ * true if string starts with "none", false otherwise.
++ */
++static inline bool str_is_none(char *str)
++{
++	if (strncmp(str, STR_COMMON_NONE, sizeof(STR_COMMON_NONE) - 1) == 0)
++		return true;
++	return false;
++}
 diff --git a/monitor.c b/monitor.c
-index 820a93d0ceaf..f54d07b24f59 100644
+index f54d07b24f59..4acec6783e6e 100644
 --- a/monitor.c
 +++ b/monitor.c
-@@ -81,10 +81,10 @@ static int read_attr(char *buf, int len, int fd)
- 
- static void read_resync_start(int fd, unsigned long long *v)
- {
--	char buf[30];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 	int n;
- 
--	n = read_attr(buf, 30, fd);
-+	n = read_attr(buf, sizeof(buf), fd);
- 	if (n <= 0) {
+@@ -89,7 +89,7 @@ static void read_resync_start(int fd, unsigned long long *v)
  		dprintf("Failed to read resync_start (%d)\n", fd);
  		return;
-@@ -98,11 +98,11 @@ static void read_resync_start(int fd, unsigned long long *v)
- static unsigned long long read_sync_completed(int fd)
- {
- 	unsigned long long val;
--	char buf[50];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 	int n;
- 	char *ep;
- 
--	n = read_attr(buf, 50, fd);
-+	n = read_attr(buf, sizeof(buf), fd);
- 
- 	if (n <= 0)
- 		return 0;
-@@ -115,8 +115,8 @@ static unsigned long long read_sync_completed(int fd)
- 
- static enum array_state read_state(int fd)
- {
--	char buf[20];
--	int n = read_attr(buf, 20, fd);
-+	char buf[SYSFS_MAX_BUF_SIZE];
-+	int n = read_attr(buf, sizeof(buf), fd);
- 
- 	if (n <= 0)
- 		return bad_word;
-@@ -125,8 +125,8 @@ static enum array_state read_state(int fd)
- 
- static enum sync_action read_action( int fd)
- {
--	char buf[20];
--	int n = read_attr(buf, 20, fd);
-+	char buf[SYSFS_MAX_BUF_SIZE];
-+	int n = read_attr(buf, sizeof(buf), fd);
- 
- 	if (n <= 0)
- 		return bad_action;
-@@ -135,7 +135,7 @@ static enum sync_action read_action( int fd)
- 
- int read_dev_state(int fd)
- {
--	char buf[100];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 	int n = read_attr(buf, sizeof(buf), fd);
- 	char *cp;
- 	int rv = 0;
-@@ -595,7 +595,7 @@ static int read_and_act(struct active_array *a, fd_set *fds)
- 		 */
- 		if ((a->curr_action != reshape) &&
- 		    (a->prev_action == reshape)) {
--			char buf[40];
-+			char buf[SYSFS_MAX_BUF_SIZE];
- 			if ((sysfs_get_str(&a->info, NULL,
+ 	}
+-	if (strncmp(buf, "none", 4) == 0)
++	if (str_is_none(buf) == true)
+ 		*v = MaxSector;
+ 	else
+ 		*v = strtoull(buf, NULL, 10);
+@@ -600,7 +600,7 @@ static int read_and_act(struct active_array *a, fd_set *fds)
  					  "reshape_position",
  					  buf,
-diff --git a/msg.c b/msg.c
-index 45cd45040a61..ba0e25be906d 100644
---- a/msg.c
-+++ b/msg.c
-@@ -324,7 +324,7 @@ int block_monitor(char *container, const int freeze)
- {
- 	struct mdstat_ent *ent, *e, *e2;
- 	struct mdinfo *sra = NULL;
--	char buf[64];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 	int rv = 0;
- 
- 	if (check_mdmon_version(container))
-@@ -366,7 +366,7 @@ int block_monitor(char *container, const int freeze)
- 		     !sysfs_attribute_available(sra, NULL, "sync_action")) ||
- 		    (freeze &&
- 		     sysfs_attribute_available(sra, NULL, "sync_action") &&
--		     sysfs_get_str(sra, NULL, "sync_action", buf, 20) > 0 &&
-+		     sysfs_get_str(sra, NULL, "sync_action", buf, sizeof(buf)) > 0 &&
- 		     strcmp(buf, "frozen\n") == 0))
- 			/* pass */;
- 		else {
+ 					  sizeof(buf)) >= 0) &&
+-			     strncmp(buf, "none", 4) == 0)
++			     str_is_none(buf) == true)
+ 				a->last_checkpoint = a->info.component_size;
+ 		}
+ 		a->container->ss->set_array_state(a, a->curr_state <= clean);
 diff --git a/super-intel.c b/super-intel.c
-index efac07d59c53..c3e832686578 100644
+index c3e832686578..01fcc6b3bfb6 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -11156,11 +11156,11 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
- 	unsigned int sector_size = super->sector_size;
- 	unsigned long long curr_migr_unit = current_migr_unit(migr_rec);
- 	unsigned long long num_migr_units = get_num_migr_units(migr_rec);
--	char buffer[20];
-+	char buffer[SYSFS_MAX_BUF_SIZE];
- 	int skipped_disks = 0;
- 	struct dl *dl_disk;
- 
--	err = sysfs_get_str(info, NULL, "array_state", (char *)buffer, 20);
-+	err = sysfs_get_str(info, NULL, "array_state", (char *)buffer, sizeof(buffer));
- 	if (err < 1)
- 		return 1;
- 
-@@ -12079,9 +12079,9 @@ exit_imsm_reshape_super:
- static int read_completed(int fd, unsigned long long *val)
- {
- 	int ret;
--	char buf[50];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 
--	ret = sysfs_fd_get_str(fd, buf, 50);
-+	ret = sysfs_fd_get_str(fd, buf, sizeof(buf));
- 	if (ret < 0)
+@@ -1825,7 +1825,7 @@ static void print_imsm_dev(struct intel_super *super,
+ 	printf("\n");
+ 	printf("    Failed disk : ");
+ 	if (map->failed_disk_num == 0xff)
+-		printf("none");
++		printf(STR_COMMON_NONE);
+ 	else
+ 		printf("%i", map->failed_disk_num);
+ 	printf("\n");
+@@ -12086,7 +12086,7 @@ static int read_completed(int fd, unsigned long long *val)
  		return ret;
  
-@@ -12154,12 +12154,12 @@ int wait_for_reshape_imsm(struct mdinfo *sra, int ndata)
- 
- 	do {
- 		int rc;
--		char action[20];
-+		char action[SYSFS_MAX_BUF_SIZE];
- 		int timeout = 3000;
- 
- 		sysfs_wait(fd, &timeout);
- 		if (sysfs_get_str(sra, NULL, "sync_action",
--				  action, 20) > 0 &&
-+				  action, sizeof(action)) > 0 &&
- 				strncmp(action, "reshape", 7) != 0) {
- 			if (strncmp(action, "idle", 4) == 0)
- 				break;
-@@ -12206,7 +12206,7 @@ int check_degradation_change(struct mdinfo *info,
- 			if (sd->disk.state & (1<<MD_DISK_FAULTY))
- 				continue;
- 			if (sd->disk.state & (1<<MD_DISK_SYNC)) {
--				char sbuf[100];
-+				char sbuf[SYSFS_MAX_BUF_SIZE];
- 				int raid_disk = sd->disk.raid_disk;
- 
- 				if (sysfs_get_str(info,
+ 	ret = COMPLETED_OK;
+-	if (strncmp(buf, "none", 4) == 0) {
++	if (str_is_none(buf) == true) {
+ 		ret = COMPLETED_NONE;
+ 	} else if (strncmp(buf, "delayed", 7) == 0) {
+ 		ret = COMPLETED_DELAYED;
 diff --git a/sysfs.c b/sysfs.c
-index decb02b8d80f..0dc7badfc4b7 100644
+index 0dc7badfc4b7..f95ef7013e84 100644
 --- a/sysfs.c
 +++ b/sysfs.c
-@@ -664,7 +664,7 @@ int sysfs_set_array(struct mdinfo *info, int vers)
- 	ver[0] = 0;
- 	if (info->array.major_version == -1 &&
- 	    info->array.minor_version == -2) {
--		char buf[1024];
-+		char buf[SYSFS_MAX_BUF_SIZE];
+@@ -148,7 +148,7 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 		strcpy(base, "metadata_version");
+ 		if (load_sys(fname, buf, sizeof(buf)))
+ 			goto abort;
+-		if (strncmp(buf, "none", 4) == 0) {
++		if (str_is_none(buf) == true) {
+ 			sra->array.major_version =
+ 				sra->array.minor_version = -1;
+ 			strcpy(sra->text_version, "");
+@@ -244,7 +244,7 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned long options)
+ 			goto abort;
+ 		if (strncmp(buf, "file", 4) == 0)
+ 			sra->bitmap_offset = 1;
+-		else if (strncmp(buf, "none", 4) == 0)
++		else if (str_is_none(buf) == true)
+ 			sra->bitmap_offset = 0;
+ 		else if (buf[0] == '+')
+ 			sra->bitmap_offset = strtol(buf+1, NULL, 10);
+diff --git a/util.c b/util.c
+index fa378ebac6ef..b145447370b3 100644
+--- a/util.c
++++ b/util.c
+@@ -1852,7 +1852,7 @@ int remove_disk(int mdfd, struct supertype *st,
  
- 		strcat(strcpy(ver, "external:"), info->text_version);
- 
-@@ -675,7 +675,7 @@ int sysfs_set_array(struct mdinfo *info, int vers)
- 		 * version first, and preserve the flag
- 		 */
- 		if (sysfs_get_str(info, NULL, "metadata_version",
--				  buf, 1024) > 0)
-+				  buf, sizeof(buf)) > 0)
- 			if (strlen(buf) >= 9 && buf[9] == '-')
- 				ver[9] = '-';
- 
-@@ -900,11 +900,11 @@ int sysfs_freeze_array(struct mdinfo *sra)
- 	 * return 0 if this kernel doesn't support 'frozen'
- 	 * return 1 if it worked.
- 	 */
--	char buf[20];
-+	char buf[SYSFS_MAX_BUF_SIZE];
- 
- 	if (!sysfs_attribute_available(sra, NULL, "sync_action"))
- 		return 1; /* no sync_action == frozen */
--	if (sysfs_get_str(sra, NULL, "sync_action", buf, 20) <= 0)
-+	if (sysfs_get_str(sra, NULL, "sync_action", buf, sizeof(buf)) <= 0)
- 		return 0;
- 	if (strcmp(buf, "frozen\n") == 0)
- 		/* Already frozen */
+ 	/* Remove the disk given by 'info' from the array */
+ 	if (st->ss->external)
+-		rv = sysfs_set_str(sra, info, "slot", "none");
++		rv = sysfs_set_str(sra, info, "slot", STR_COMMON_NONE);
+ 	else
+ 		rv = ioctl(mdfd, HOT_REMOVE_DISK, makedev(info->disk.major,
+ 							  info->disk.minor));
 -- 
 2.35.3
 
