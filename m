@@ -1,112 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5307BA42
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 10:31:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.134.136.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38F7C250E1
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 13:07:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705573874; cv=none; b=l7vdECezo+d2ozec1R0Ly6dYPss4d2QZfLzZX1m60gkAFyy6yh69SUjCsp0fJobKiZF8UajCcMz2Y0jjF274Bozbc18F28l1zjuNFWavavjZLgsIfNSB5pSIh1/v87nVIQugmOvlbtG7GN6TIY8fgdo0S1uC8y7iDWNuWRKQolk=
+	t=1705583258; cv=none; b=G3/N/S0LTD+ccxTwepqH9Bg5lmLtZrGQ6XMW6DlQzOz3KhtTlO0+DIr6LS/ksu7cE8k4r4hozDVAbp7tw6TlD8c0VGWnAao9qQTtc665osk51pnhmaq781FipG+Ui7jntLoYyf+HKp/99BG1JPvW2LXfcFgr7nI4DCkgC0aLQqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705573874; c=relaxed/simple;
-	bh=TsOnc7GNV0SObV+4PfgwOMJXy/qUy2Pz9QqDtlNX+m8=;
-	h=DKIM-Signature:X-IronPort-AV:X-IronPort-AV:Received:X-ExtLoop1:
-	 X-IronPort-AV:X-IronPort-AV:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding; b=PRhHq0Pgh/QWK0Wh5Lk6NW6RkRzSn1jbTOQcxAW7eVAH3RX/OPTFHkn/Nz0vAIDBISFQDg+EfNAs9VKX7lCvM6ux/k82W5qcaGINxRYr7D4Pe+RhSPfT4K5jdDyPYGC8O+saHr6EB3fvlmy4ksHzIYIRW6WwpFqAhXsiyILPckg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HVql9Ky9; arc=none smtp.client-ip=134.134.136.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1705583258; c=relaxed/simple;
+	bh=1FhKSlwdqM2HAjbFVWUQ6/ZDQ4seBXrE/UY63G6Ex34=;
+	h=DKIM-Signature:Received:X-MC-Unique:Received:Received:Received:
+	 Received:Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type:X-Scanned-By; b=bwQ5s+S1IaVzs9F9HkdnHXeQE0OCWiNj1P/sJNJVpxNJUO+WjJ8zqEIF1Fat8k7x3Ol20PfUlmM7vaaL4+BUgCoS/HQcl9a4R6FGo+HIMfvMIC9JrPleeEIzphuMI638cXeFV7DNTSHeqnXoSMzLdJ0TX3oDD8YRzqtUBEX0VCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BkG93mWK; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HVql9Ky9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705573873; x=1737109873;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=TsOnc7GNV0SObV+4PfgwOMJXy/qUy2Pz9QqDtlNX+m8=;
-  b=HVql9Ky9y7VUkdMCBgeWSRegNVfKXRyYt6aN7TFVrvs9SnalRRghuiFN
-   ZciBOh+urBHo1Oac5cNSbNEOkh9YY59ZHHbU+A5GPVpv+Jt+D7rCuLI2n
-   VR6JKiPiEJoERsF1GMG+I/6GuVPZOoGIblDLLfQJY7zzll6WMepjl4WDF
-   heSLr8AF6iD+ZpfjkPFiaLKcgRufKdqpZT11bjkgjducmXC7m4YBJ0s9p
-   CHobKHC2IEMu8vj6FhLLbITpg6pznSqEX/q1Nw6U69+BO/AN5xDSZFpSs
-   PEsMAiVFtI76l1OMYDgMU+m8XLuPXJKIhy+9JRlUI2MwblZ2pG3vlzFgz
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="390858579"
-X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="390858579"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 02:31:12 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="1115927105"
-X-IronPort-AV: E=Sophos;i="6.05,201,1701158400"; 
-   d="scan'208";a="1115927105"
-Received: from patodeveloperka.igk.intel.com ([10.102.109.29])
-  by fmsmga005.fm.intel.com with ESMTP; 18 Jan 2024 02:31:11 -0800
-From: Mateusz Kusiak <mateusz.kusiak@intel.com>
-To: linux-raid@vger.kernel.org
-Cc: jes@trained-monkey.org,
-	mariusz.tkaczyk@linux.intel.com
-Subject: [PATCH v2 5/5] Add understanding output section in man
-Date: Thu, 18 Jan 2024 11:30:19 +0100
-Message-Id: <20240118103019.12385-6-mateusz.kusiak@intel.com>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20240118103019.12385-1-mateusz.kusiak@intel.com>
-References: <20240118103019.12385-1-mateusz.kusiak@intel.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BkG93mWK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1705583256;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VExoJBKhM2VGSreOTmpBtRNasbnC/MNtr+/gJyFW3fU=;
+	b=BkG93mWKMJgEaClPvzbQf10NOIn4LsHZ/aU3SYwFUNtyBKBpAHJOLaY1Ug9ZCYVOW7OBIX
+	rlxqAxnTJNHALnUPot3863bt4LoPIL+gWN3dFBlHvK7rTS6gaY4B/jfPGGKfZrgJZ1/gnx
+	GClK0NHDbdoXD8tT45ri5B5q9vCekYY=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-124-7qJKrgaGPiOdTDngx87dYA-1; Thu, 18 Jan 2024 08:07:32 -0500
+X-MC-Unique: 7qJKrgaGPiOdTDngx87dYA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4B56F85A589;
+	Thu, 18 Jan 2024 13:07:32 +0000 (UTC)
+Received: from file1-rdu.file-001.prod.rdu2.dc.redhat.com (unknown [10.11.5.21])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id F3DFA111FF;
+	Thu, 18 Jan 2024 13:07:31 +0000 (UTC)
+Received: by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix, from userid 12668)
+	id A4C3130C1B8F; Thu, 18 Jan 2024 13:07:31 +0000 (UTC)
+Received: from localhost (localhost [127.0.0.1])
+	by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix) with ESMTP id A06B33FFC5;
+	Thu, 18 Jan 2024 14:07:31 +0100 (CET)
+Date: Thu, 18 Jan 2024 14:07:31 +0100 (CET)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+cc: Song Liu <song@kernel.org>, David Jeffery <djeffery@redhat.com>, 
+    Li Nan <linan122@huawei.com>, dm-devel@lists.linux.dev, 
+    linux-raid@vger.kernel.org, Mike Snitzer <msnitzer@redhat.com>, 
+    Heinz Mauelshagen <heinzm@redhat.com>, 
+    Benjamin Marzinski <bmarzins@redhat.com>, 
+    "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH 2/7] md: fix a race condition when stopping the sync
+ thread
+In-Reply-To: <dcf29bba-4762-84ad-f60e-3607cf6779f9@huaweicloud.com>
+Message-ID: <66fda537-9d25-77e7-754f-2627e35fb8a4@redhat.com>
+References: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com> <8fb335e-6d2c-dbb5-d7-ded8db5145a@redhat.com> <dcf29bba-4762-84ad-f60e-3607cf6779f9@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; boundary="185210117-611424774-1705583251=:1547117"
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
 
-Add new section in man for explaining mdadm outputs.
-Describe checkpoint entry.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
----
- mdadm.8.in | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+--185210117-611424774-1705583251=:1547117
+Content-Type: text/plain; charset=gbk
+Content-Transfer-Encoding: 8BIT
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 3142436f728c..e3033a957bb3 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -3179,7 +3179,7 @@ environment.  This can be useful for testing or for disaster
- recovery.  You should be aware that interoperability may be
- compromised by setting this value.
- 
--These change can also be suppressed by adding 
-+These change can also be suppressed by adding
- .B mdadm.imsm.test=1
- to the kernel command line. This makes it easy to test IMSM
- code in a virtual machine that doesn't have IMSM virtual hardware.
-@@ -3454,6 +3454,25 @@ is any string.  These names are supported by
- since version 3.3 provided they are enabled in
- .IR mdadm.conf .
- 
-+.SH UNDERSTANDING OUTPUT
-+
-+.TP
-+EXAMINE
-+
-+.TP
-+.B checkpoint
-+Checkpoint value is reported when array is performing some action including
-+resync, recovery or reshape. Checkpoints allow resuming action from certain
-+point if it was interrupted.
-+
-+Checkpoint is reported as combination of two values: current migration unit
-+and number of blocks per unit. By multiplying those values and dividing by
-+array size checkpoint progress percentage can be obtained in relation to
-+current progress reported in /proc/mdstat. Checkpoint is also related to (and
-+sometimes based on) sysfs entry sync_completed but depending on action units
-+may differ. Even if units are the same, it should not be expected that
-+checkpoint and sync_completed will be exact match nor updated simultaneously.
-+
- .SH NOTE
- .I mdadm
- was previously known as
--- 
-2.35.3
+
+
+On Thu, 18 Jan 2024, Yu Kuai wrote:
+
+> Hi,
+> 
+> ÔÚ 2024/01/18 2:18, Mikulas Patocka Ð´µÀ:
+> > Note that md_wakeup_thread_directly is racy - it will do nothing if the
+> > thread is already running or it may cause spurious wake-up if the thread
+> > is blocked in another subsystem.
+> 
+> No, as the comment said, md_wakeup_thread_directly() is just to prevent
+> that md_wakeup_thread() can't wake up md_do_sync() if it's waiting for
+> metadata update.
+
+Yes - but what happens if you wake up the thread just a few instructions 
+before it is going to sleep for metadata update? wake_up_process does 
+nothing on a running process and the thread proceeds with waiting. This is 
+what I thought could happen when I was making the patch.
+
+Mikulas
+--185210117-611424774-1705583251=:1547117--
 
