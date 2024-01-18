@@ -1,114 +1,158 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46F6E186C
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 01:38:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB7D16104;
+	Thu, 18 Jan 2024 01:49:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705541912; cv=none; b=uQ+KkLdydMtvNUuGTpusQvlBG8oFj7OrsBDU/BBkGCOXlLJnH5PlAp6CNQ/O7hefMoDwbgkeT3Xzicr5WaMEX1OWRFT0HL6zZTUV4IpfKpGRvktgOoUFLUUCDofYXpQAvhSm/nlZLIaBayb0OIh0ConGIlf+lTzVlgNBVn1H+p8=
+	t=1705542599; cv=none; b=QNAZcfoh1AVHR6o3DikVn7PrKyMOC2siWd5klFlw/4bfS9vs3CdiL61N8KyFkVug0xqT6cdCDJUkWRpEpKkRlBPAdnDLBL0Vb7ERJ/EblkrR0OdUoY7byCPK1L6NiJyKVzKusIDx6ZJijOj6gNWx6aNP6RtrE9LbZH8UxvKuBSk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705541912; c=relaxed/simple;
-	bh=kvY6aq6aiZTEhNJ/hVQmhim6tnXRmjCZLKqNocrwsEk=;
-	h=Received:Received:Received:Subject:To:Cc:References:From:
-	 Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:Content-Type:
+	s=arc-20240116; t=1705542599; c=relaxed/simple;
+	bh=/2EcgLIdjLkuVOwnCVBDIsmvCmTGxn7eKXilJfkoMRk=;
+	h=Received:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo; b=FwLCg1I8RMq09WJW40kTQjawWSit0RbzrHfB7fkqBtdr6VVrMg1L9liG9Og6rpAVcCt07HMqOJISEOhNzGX2k8YZUtcEAFulD/HFXSq7OwEaVw0WTLCCiD8LTHd2vD67uaF1onDj6vNRe/ahtn4kMn2xAorYyFLZlQqi9FjtByY=
+	 X-CM-SenderInfo; b=Fmvu1EaGu/2joDI7ExlbUcG6MxjfScEEzuUPb38GAJbm7jUFtoyvgYh4VfliOveXDevhmtSFL+sYyDZF9BLbSomnNaiyNkQA+T6snteIS1d61gfVL4q0NmPTC+nq9BdXZfzKh9rFOBkjMyp4LcpOdYxkTCxqxr/P3GBenswfjf4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TFlkk2JGmz4f3knq
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 09:38:22 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 151291A0171
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jan 2024 09:38:26 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBEQgahl7ZqsBA--.6704S3;
-	Thu, 18 Jan 2024 09:38:25 +0800 (CST)
-Subject: Re: [PATCH 4/7] md: call md_reap_sync_thread from __md_stop_writes
-To: Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
- David Jeffery <djeffery@redhat.com>, Li Nan <linan122@huawei.com>
-Cc: dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
- Mike Snitzer <msnitzer@redhat.com>, Heinz Mauelshagen <heinzm@redhat.com>,
- Benjamin Marzinski <bmarzins@redhat.com>, "yukuai (C)" <yukuai3@huawei.com>
-References: <e5e8afe2-e9a8-49a2-5ab0-958d4065c55e@redhat.com>
- <ceeca667-ecc5-a776-8c89-9bf6facb93c9@redhat.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <e72fde6f-8556-a0ba-ecf4-c4b9102e8345@huaweicloud.com>
-Date: Thu, 18 Jan 2024 09:38:24 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TFlzx67Qcz4f3jHy;
+	Thu, 18 Jan 2024 09:49:49 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 9747F1A0A10;
+	Thu, 18 Jan 2024 09:49:53 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+	by APP2 (Coremail) with SMTP id Syh0CgDH6w68g6hlTIu5BA--.57019S3;
+	Thu, 18 Jan 2024 09:49:52 +0800 (CST)
+Message-ID: <19ff9020-043c-ffc1-c09c-3c40814620b2@huaweicloud.com>
+Date: Thu, 18 Jan 2024 09:49:48 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ceeca667-ecc5-a776-8c89-9bf6facb93c9@redhat.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] md: Don't clear MD_CLOSING when the raid is about to stop
+To: Yu Kuai <yukuai1@huaweicloud.com>,
+ Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>, linan666@huaweicloud.com
+Cc: song@kernel.org, zlliu@suse.com, neilb@suse.com, shli@fb.com,
+ linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231211081714.1923567-1-linan666@huaweicloud.com>
+ <20231211105620.00001753@linux.intel.com>
+ <f0ab24e5-eb0a-d564-19d4-b72ecedff34f@huaweicloud.com>
+From: Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <f0ab24e5-eb0a-d564-19d4-b72ecedff34f@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBEQgahl7ZqsBA--.6704S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF48uFW3try5urWkKw1DAwb_yoW8GrWrpa
-	yktFyfCr15ArW5Ary7W3WkZa4ru3W7trW7tryxC34rAr1UGwn8Jr1YgFW5XFyDCa48AF43
-	Jr4rJFs5Zr4kJrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv2b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
-	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
-	6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAF
-	wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa
-	7IU189N3UUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:Syh0CgDH6w68g6hlTIu5BA--.57019S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCw1UGr13WF4xJryUtr4fKrg_yoW5Gryfpa
+	97JF13tan0k348Gw4jqw1DJFyYqwn3JFWDAry8WF95Aa4vyryjgr4Sg390gr4DWFWfKF4U
+	K3W5J3ZrZr4vgw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBI14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v
+	4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x
+	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
+	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
+	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF
+	04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aV
+	CY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbHa0DUUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-Hi,
 
-�� 2024/01/18 2:20, Mikulas Patocka д��:
-> The commit f52f5c71f3d4 ("md: fix stopping sync thread") breaks the LVM2
-> test shell/lvconvert-raid-reshape-linear_to_raid6-single-type.sh
+
+在 2023/12/12 11:21, Yu Kuai 写道:
+> Hi,
 > 
-> There are many places that test for MD_RECOVERY_RUNNING or
-> mddev->sync_thread. If we don't reap the thread, they would be confused.
-
-Please stop this... make sure you understand the lifetime of
-sync_thread before you send such patch. I already explained in
-f52f5c71f3d4 why md_reap_sync_thread() can't be called here.
-
-Thanks,
-Kuai
-
+> 在 2023/12/11 17:56, Mariusz Tkaczyk 写道:
+>> On Mon, 11 Dec 2023 16:17:14 +0800
+>> linan666@huaweicloud.com wrote:
+>>
+>>> From: Li Nan <linan122@huawei.com>
+>>>
+>>> The raid should not be opened anymore when it is about to be stopped.
+>>> However, other processes can open it again if the flag MD_CLOSING is
+>>> cleared before exiting. From now on, this flag will not be cleared when
+>>> the raid will be stopped.
+>>>
+>>> Fixes: 065e519e71b2 ("md: MD_CLOSING needs to be cleared after called
+>>> md_set_readonly or do_md_stop") Signed-off-by: Li Nan 
+>>> <linan122@huawei.com>
+>>
+>> Hello Li Nan,
+>> I was there when I needed to fix this:
+>> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?h=md-next&id=c8870379a21fbd9ad14ca36204ccfbe9d25def43 
+>>
+>>
+>> For sure, you have to consider applying same solution for array_store 
+>> "clear".
+>> Minor nit below.
+>>
+>> Thanks,
+>> Mariusz
+>>
+>>> ---
+>>>   drivers/md/md.c | 8 +++-----
+>>>   1 file changed, 3 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index 4e9fe5cbeedc..ebdfc9068a60 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -6238,7 +6238,6 @@ static void md_clean(struct mddev *mddev)
+>>>       mddev->persistent = 0;
+>>>       mddev->level = LEVEL_NONE;
+>>>       mddev->clevel[0] = 0;
+>>> -    mddev->flags = 0;
+>>
+>> I recommend (safety recommendation):
+>>     mddev->flags = MD_CLOSING;
 > 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
-> Cc: stable@vger.kernel.org	# v6.7
+> Taking a look I think both MD_CLOSING and MD_DELETED should not be
+> cleared, however, there is no guarantee that MD_CLOSING will be set
+> before md_clean, because mdadm can be removed without running. Hence I
+> think just set MD_CLOSING is werid.
 > 
-> ---
->   drivers/md/md.c |    6 ++++++
->   1 file changed, 6 insertions(+)
+> I think the proper way is to keep MD_CLOSING and MD_DELETED if they are
+> set. However, there is no such api to clear other bits at once. Since
+> we're not expecting anyone else to write flags, following maybe
+> acceptable:
 > 
-> Index: linux-2.6/drivers/md/md.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/md/md.c
-> +++ linux-2.6/drivers/md/md.c
-> @@ -6308,6 +6308,12 @@ static void md_clean(struct mddev *mddev
->   static void __md_stop_writes(struct mddev *mddev)
->   {
->   	stop_sync_thread(mddev, true, false);
-> +
-> +	if (mddev->sync_thread) {
-> +		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> +		md_reap_sync_thread(mddev);
-> +	}
-> +
->   	del_timer_sync(&mddev->safemode_timer);
->   
->   	if (mddev->pers && mddev->pers->quiesce) {
+> mddev->flags &= BIT_ULL_MASK(MD_CLOSING) | BIT_ULL_MASK(MD_DELETED);
+> 
+
+MD_DELETED is only set after mddev->active is put to 0. We need to open 
+mddev and get it before stropping raid, so the active must not be 0 and
+MD_DELETED  will not be set in md_clean.
+
+> Or after making sure other flags cannot race, this patch is ok.
+> 
+> Thanks,
+> Kuai
+> 
+>>
+>> Unless you can prove that other flags cannot race.
+>>
+>>>       mddev->sb_flags = 0;
+>>>       mddev->ro = MD_RDWR;
+>>>       mddev->metadata_type[0] = 0;
+>>
+>> .
+>>
+> 
 > 
 > .
-> 
+
+-- 
+Thanks,
+Nan
 
